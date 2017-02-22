@@ -91,18 +91,18 @@ ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)
 	return {true, _in.toBytes()};
 }
 
-ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
 {
-	dev::snark::alt_bn128_pairing_product(_in, _out);
+	return dev::snark::alt_bn128_pairing_product(_in);
 }
 
-ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in)
 {
-	dev::snark::alt_bn128_G1_add(_in, _out);
+	return dev::snark::alt_bn128_G1_add(_in);
 }
-ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in)
 {
-	dev::snark::alt_bn128_G1_mul(_in, _out);
+	return dev::snark::alt_bn128_G1_mul(_in);
 }
 
 

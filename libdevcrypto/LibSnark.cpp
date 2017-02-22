@@ -88,13 +88,14 @@ libsnark::alt_bn128_G1 decodePointG1(dev::bytesConstRef _data)
 	);
 }
 
-void encodePointG1(libsnark::alt_bn128_G1 _p, dev::bytesRef _out)
+bytes encodePointG1(libsnark::alt_bn128_G1 _p)
 {
 	libsnark::alt_bn128_G1 p_norm = _p;
 	p_norm.to_affine_coordinates();
-	fromLibsnarkBigint(p_norm.X.as_bigint()).ref().copyTo(_out);
-	fromLibsnarkBigint(p_norm.Y.as_bigint()).ref().copyTo(_out.cropped(32));
-	fromLibsnarkBigint(p_norm.Z.as_bigint()).ref().copyTo(_out.cropped(64));
+	return
+		fromLibsnarkBigint(p_norm.X.as_bigint()).asBytes() +
+		fromLibsnarkBigint(p_norm.Y.as_bigint()).asBytes() +
+		fromLibsnarkBigint(p_norm.Z.as_bigint()).asBytes();
 }
 
 libsnark::alt_bn128_Fq2 decodeFq2Element(dev::bytesConstRef _data)
@@ -118,7 +119,7 @@ libsnark::alt_bn128_G2 decodePointG2(dev::bytesConstRef _data)
 }
 
 
-void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef _out)
+bytes dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in)
 {
 	initLibSnark();
 	// Input: list of pairs of G1 and G2 points
@@ -143,10 +144,10 @@ void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef
 
 	bytes res(32, 0);
 	res[31] = unsigned(result);
-	ref(res).copyTo(_out);
+	return res;
 }
 
-void dev::snark::alt_bn128_G1_add(dev::bytesConstRef _in, dev::bytesRef _out)
+bytes dev::snark::alt_bn128_G1_add(dev::bytesConstRef _in)
 {
 	initLibSnark();
 	// Elliptic curve point addition in Jacobian, big endian encoding:
@@ -158,10 +159,10 @@ void dev::snark::alt_bn128_G1_add(dev::bytesConstRef _in, dev::bytesRef _out)
 	libsnark::alt_bn128_G1 p1 = decodePointG1(_in);
 	libsnark::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 3));
 
-	encodePointG1(p1 + p2, _out);
+	return encodePointG1(p1 + p2);
 }
 
-void dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in, dev::bytesRef _out)
+bytes dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in)
 {
 	initLibSnark();
 	// Scalar multiplication with a curve point in Jacobian encoding, big endian:
@@ -174,7 +175,7 @@ void dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in, dev::bytesRef _out)
 
 	libsnark::alt_bn128_G1 result = libsnark::bigint<libsnark::alt_bn128_q_limbs>(s.str().c_str()) * p;
 
-	encodePointG1(result, _out);
+	return encodePointG1(result);
 }
 
 std::string outputPointG1Affine(libsnark::alt_bn128_G1 _p)
@@ -283,7 +284,7 @@ void dev::snark::exportVK(string const& _VKFilename)
 	std::ifstream fh(_VKFilename, std::ios::binary);
 
 	if (!fh.is_open())
-		throw std::runtime_error((boost::format("could not load param file at %s") % _VKFilename).str());
+		throw std::runtime_error("could not load param file at " +  _VKFilename);
 
 	ss << fh.rdbuf();
 	fh.close();
