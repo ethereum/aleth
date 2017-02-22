@@ -131,7 +131,7 @@ namespace eth
 	#define INIT_CASES if (!m_caseInit) { m_caseInit = true; return; }
 	#define DO_CASES for(;;) { fetchInstruction(); switch(m_OP) {
 	#define CASE(name) case Instruction::name:
-	#define NEXT break;
+	#define NEXT ++m_PC; break;
 	#define CONTINUE continue;
 	#define BREAK return;
 	#define DEFAULT default:
@@ -414,12 +414,12 @@ namespace eth
 
 	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_OP];
 	#define CASE(name) name:
-	#define NEXT fetchInstruction(); goto *jumpTable[m_code[m_PC]];
-	#define CONTINUE NEXT
+	#define NEXT ++m_PC; fetchInstruction(); goto *jumpTable[m_code[m_PC]];
+	#define CONTINUE fetchInstruction(); goto *jumpTable[m_code[m_PC]];
 	#define BREAK return;
 	#define DEFAULT INVALID:
 	#define WHILE_CASES
-	
+
 #else
 	#error No opcode dispatch configured
 #endif
