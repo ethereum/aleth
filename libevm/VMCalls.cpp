@@ -100,7 +100,7 @@ void VM::caseCreate()
 {
 	m_bounce = &VM::interpretCases;
 	m_newMemSize = memNeed(*(m_SP - 1), *(m_SP - 2));
-	m_runGas = toUint64(m_schedule->createGas);
+	m_runGas = toInt63(m_schedule->createGas);
 	updateMem();
 	ON_OP();
 	updateIOGas();
@@ -148,14 +148,14 @@ void VM::caseCall()
 
 bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 {
-	m_runGas = toUint64(m_schedule->callGas);
+	m_runGas = toInt63(m_schedule->callGas);
 
 	if (m_OP == Instruction::CALL && !m_ext->exists(asAddress(*(m_SP - 1))))
 		if (*(m_SP - 2) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
-			m_runGas += toUint64(m_schedule->callNewAccountGas);
+			m_runGas += toInt63(m_schedule->callNewAccountGas);
 
 	if (m_OP != Instruction::DELEGATECALL && *(m_SP - 2) > 0)
-		m_runGas += toUint64(m_schedule->callValueTransferGas);
+		m_runGas += toInt63(m_schedule->callValueTransferGas);
 
 	size_t sizesOffset = m_OP == Instruction::DELEGATECALL ? 3 : 4;
 	u256 inputOffset = m_stack[(1 + m_SP - m_stack) - sizesOffset];
@@ -180,7 +180,7 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 		callParams->gas = std::min(*m_SP, maxAllowedCallGas);
 	}
 
-	m_runGas = toUint64(callParams->gas);
+	m_runGas = toInt63(callParams->gas);
 	ON_OP();
 	updateIOGas();
 

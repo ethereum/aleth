@@ -171,7 +171,7 @@ private:
 	uint64_t decodeJumpDest(const byte* const _code, uint64_t& _pc);
 	uint64_t decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp);
 
-	template<class T> uint64_t toUint64(T v)
+	template<class T> uint64_t toInt63(T v)
 	{
 		// check for overflow
 		if (v > 0x7FFFFFFFFFFFFFFF)

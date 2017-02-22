@@ -35,7 +35,7 @@ namespace eth
 
 #ifndef EVM_JUMP_DISPATCH
 	#ifdef __GNUC__
-		#define EVM_JUMP_DISPATCH true
+		#define EVM_JUMP_DISPATCH false
 	#else
 		#define EVM_JUMP_DISPATCH false
 	#endif

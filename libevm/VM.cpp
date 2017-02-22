@@ -29,7 +29,7 @@ using namespace dev::eth;
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
-	return toUint64(_size ? u512(_offset) + _size : u512(0));
+	return toInt63(_size ? u512(_offset) + _size : u512(0));
 }
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
@@ -99,7 +99,7 @@ void VM::checkStack(unsigned _removed, unsigned _added)
 uint64_t VM::gasForMem(u512 _size)
 {
 	u512 s = _size / 32;
-	return toUint64((u512)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv);
+	return toInt63((u512)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv);
 }
 
 void VM::updateIOGas()
@@ -112,7 +112,7 @@ void VM::updateIOGas()
 void VM::updateGas()
 {
 	if (m_newMemSize > m_mem.size())
-		m_runGas += toUint64(gasForMem(m_newMemSize) - gasForMem(m_mem.size()));
+		m_runGas += toInt63(gasForMem(m_newMemSize) - gasForMem(m_mem.size()));
 	m_runGas += (m_schedule->copyGas * ((m_copyMemSize + 31) / 32));
 	if (m_io_gas < m_runGas)
 		throwOutOfGas();
@@ -129,7 +129,7 @@ void VM::updateMem()
 void VM::logGasMem()
 {
 	unsigned n = (unsigned)m_OP - (unsigned)Instruction::LOG0;
-	m_runGas = toUint64(m_schedule->logGas + m_schedule->logTopicGas * n + u512(m_schedule->logDataGas) * *(m_SP - 1));
+	m_runGas = toInt63(m_schedule->logGas + m_schedule->logTopicGas * n + u512(m_schedule->logDataGas) * *(m_SP - 1));
 	m_newMemSize = memNeed(*m_SP, *(m_SP - 1));
 	updateMem();
 }
@@ -141,7 +141,7 @@ void VM::fetchInstruction()
 	checkStack(metric.args, metric.ret);
 
 	// FEES...
-	m_runGas = toUint64(m_schedule->tierStepGas[static_cast<unsigned>(metric.gasPriceTier)]);
+	m_runGas = toInt63(m_schedule->tierStepGas[static_cast<unsigned>(metric.gasPriceTier)]);
 	m_newMemSize = m_mem.size();
 	m_copyMemSize = 0;
 }
@@ -235,7 +235,7 @@ void VM::interpretCases()
 
 		CASE(SUICIDE)
 		{
-			m_runGas = toUint64(m_schedule->suicideGas);
+			m_runGas = toInt63(m_schedule->suicideGas);
 			Address dest = asAddress(*m_SP);
 
 			// After EIP158 zero-value suicides do not have to pay account creation gas.
@@ -267,7 +267,7 @@ void VM::interpretCases()
 		
 		CASE(MLOAD)
 		{
-			m_newMemSize = toUint64(*m_SP) + 32;
+			m_newMemSize = toInt63(*m_SP) + 32;
 			updateMem();
 			ON_OP();
 			updateIOGas();
@@ -278,7 +278,7 @@ void VM::interpretCases()
 
 		CASE(MSTORE)
 		{
-			m_newMemSize = toUint64(*m_SP) + 32;
+			m_newMemSize = toInt63(*m_SP) + 32;
 			updateMem();
 			ON_OP();
 			updateIOGas();
@@ -290,7 +290,7 @@ void VM::interpretCases()
 
 		CASE(MSTORE8)
 		{
-			m_newMemSize = toUint64(*m_SP) + 1;
+			m_newMemSize = toInt63(*m_SP) + 1;
 			updateMem();
 			ON_OP();
 			updateIOGas();
@@ -302,7 +302,7 @@ void VM::interpretCases()
 
 		CASE(SHA3)
 		{
-			m_runGas = toUint64(m_schedule->sha3Gas + (u512(*(m_SP - 1)) + 31) / 32 * m_schedule->sha3WordGas);
+			m_runGas = toInt63(m_schedule->sha3Gas + (u512(*(m_SP - 1)) + 31) / 32 * m_schedule->sha3WordGas);
 			m_newMemSize = memNeed(*m_SP, *(m_SP - 1));
 			updateMem();
 			ON_OP();
@@ -372,7 +372,7 @@ void VM::interpretCases()
 		CASE(EXP)
 		{
 			u256 expon = *(m_SP - 1);
-			m_runGas = toUint64(m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8)));
+			m_runGas = toInt63(m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8)));
 			ON_OP();
 			updateIOGas();
 
@@ -628,7 +628,7 @@ void VM::interpretCases()
 
 		CASE(BALANCE)
 		{
-			m_runGas = toUint64(m_schedule->balanceGas);
+			m_runGas = toInt63(m_schedule->balanceGas);
 			ON_OP();
 			updateIOGas();
 
@@ -696,7 +696,7 @@ void VM::interpretCases()
 
 		CASE(EXTCODESIZE)
 		{
-			m_runGas = toUint64(m_schedule->extcodesizeGas);
+			m_runGas = toInt63(m_schedule->extcodesizeGas);
 			ON_OP();
 			updateIOGas();
 
@@ -706,7 +706,7 @@ void VM::interpretCases()
 
 		CASE(CALLDATACOPY)
 		{
-			m_copyMemSize = toUint64(*(m_SP - 2));
+			m_copyMemSize = toInt63(*(m_SP - 2));
 			m_newMemSize = memNeed(*m_SP, *(m_SP - 2));
 			updateMem();
 			ON_OP();
@@ -718,7 +718,7 @@ void VM::interpretCases()
 
 		CASE(CODECOPY)
 		{
-			m_copyMemSize = toUint64(*(m_SP - 2));
+			m_copyMemSize = toInt63(*(m_SP - 2));
 			m_newMemSize = memNeed(*m_SP, *(m_SP - 2));
 			updateMem();
 			ON_OP();
@@ -730,8 +730,8 @@ void VM::interpretCases()
 
 		CASE(EXTCODECOPY)
 		{
-			m_runGas = toUint64(m_schedule->extcodecopyGas);
-			m_copyMemSize = toUint64(*(m_SP - 3));
+			m_runGas = toInt63(m_schedule->extcodecopyGas);
+			m_copyMemSize = toInt63(*(m_SP - 3));
 			m_newMemSize = memNeed(*(m_SP - 1), *(m_SP - 3));
 			updateMem();
 			ON_OP();
@@ -1072,7 +1072,7 @@ void VM::interpretCases()
 
 		CASE(SLOAD)
 		{
-			m_runGas = toUint64(m_schedule->sloadGas);
+			m_runGas = toInt63(m_schedule->sloadGas);
 			ON_OP();
 			updateIOGas();
 
@@ -1083,14 +1083,14 @@ void VM::interpretCases()
 		CASE(SSTORE)
 		{
 			if (!m_ext->store(*m_SP) && *(m_SP - 1))
-				m_runGas = toUint64(m_schedule->sstoreSetGas);
+				m_runGas = toInt63(m_schedule->sstoreSetGas);
 			else if (m_ext->store(*m_SP) && !*(m_SP - 1))
 			{
-				m_runGas = toUint64(m_schedule->sstoreResetGas);
+				m_runGas = toInt63(m_schedule->sstoreResetGas);
 				m_ext->sub.refunds += m_schedule->sstoreRefundGas;
 			}
 			else
-				m_runGas = toUint64(m_schedule->sstoreResetGas);
+				m_runGas = toInt63(m_schedule->sstoreResetGas);
 			ON_OP();
 			updateIOGas();
 	

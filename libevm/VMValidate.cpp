@@ -154,7 +154,7 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 		{
 			// return to top level
 		}
-		RETURN;
+		BREAK;
 		
 		CASE(BEGINSUB)
 		CASE(BEGINDATA)
