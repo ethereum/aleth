@@ -58,7 +58,7 @@ void VM::validate(ExtVMFace& _ext)
 
 // we validate each subroutine individually, as if at top level
 // - PC is the offset in the code to start validating at
-// - RP is the top PC on return stack that CASE_RETURNSUB returns to
+// - RP is the top PC on return stack that RETURNSUB returns to
 // - SP = FP at the top level, so the stack size is also the frame size
 void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 {
@@ -68,7 +68,7 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 	INIT_CASES
 	DO_CASES
 	{	
-		CASE_BEGIN(JUMPDEST)
+		CASE(JUMPDEST)
 		{
 			// if frame size is set then we have been here before
 			ptrdiff_t frameSize = m_frameSize[m_PC];
@@ -85,16 +85,16 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 			m_frameSize[m_PC] = stackSize();
 			++m_PC;
 		}
-		CASE_END
+		NEXT
 
-		CASE_BEGIN(JUMPTO)
+		CASE(JUMPTO)
 		{
 			// extract jump destination from bytecode
 			m_PC = decodeJumpDest(m_code, m_PC);
 		}
-		CASE_END
+		NEXT
 
-		CASE_BEGIN(JUMPIF)
+		CASE(JUMPIF)
 		{
 			// recurse to validate code to jump to, saving and restoring
 			// interpreter state around call
@@ -103,9 +103,9 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 			m_PC = _PC, m_RP = _RP, m_SP = _SP;
 			++m_PC;
 		}
-		CASE_END
+		NEXT
 
-		CASE_BEGIN(JUMPV)
+		CASE(JUMPV)
 		{
 			// for every jump destination in jump vector
 			for (size_t dest = 0, nDests = m_code[m_PC+1]; dest < nDests; ++dest)
@@ -117,9 +117,9 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 				m_PC = _PC, m_RP = _RP, m_SP = _SP;
 			}
 		}
-		CASE_RETURN
+		RETURN
 
-		CASE_BEGIN(JUMPSUB)
+		CASE(JUMPSUB)
 		{
 			// check for enough arguments on stack
 			size_t destPC = decodeJumpDest(m_code, m_PC);
@@ -127,9 +127,9 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 			if (stackSize() < nArgs) 
 				throwBadStack(stackSize(), nArgs, 0);
 		}
-		CASE_END
+		NEXT
 
-		CASE_BEGIN(JUMPSUBV)
+		CASE(JUMPSUBV)
 		{
 			// for every subroutine in jump vector
 			_PC = m_PC;
@@ -145,25 +145,24 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 			}
 			m_PC = _PC;
 		}
-		CASE_END
+		NEXT
 
-		CASE_BEGIN(RETURNSUB)
-		CASE_BEGIN(RETURN)
-		CASE_BEGIN(SUICIDE)
-		CASE_BEGIN(STOP)
+		CASE(RETURNSUB)
+		CASE(RETURN)
+		CASE(SUICIDE)
+		CASE(STOP)
 		{
 			// return to top level
 		}
-		CASE_RETURN;
+		RETURN;
 		
-		CASE_BEGIN(BEGINSUB)
-		CASE_BEGIN(BEGINDATA)
-		CASE_BEGIN(BAD)
-		CASE_DEFAULT
+		CASE(BEGINSUB)
+		CASE(BEGINDATA)
+		CASE(BAD)
+		DEFAULT
 		{
 			throwBadInstruction();
 		}
-		CASE_END		
 	}
 	END_CASES
 }
