@@ -14,10 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file AES.cpp
- * @author Christoph Jentzsch <cj@ethdev.com>
- * @date 2015
- */
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Common.h>
@@ -25,12 +21,13 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Log.h>
 #include <libdevcrypto/AES.h>
-#include <libdevcore/FixedHash.h>
 #include <test/TestHelper.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::test;
+
+BOOST_AUTO_TEST_SUITE(Crypto)
 
 BOOST_FIXTURE_TEST_SUITE(AES, TestOutputHelper)
 
@@ -78,5 +75,7 @@ BOOST_AUTO_TEST_CASE(AesDecryptFailInvalidSeed2)
 	bytes seed = fromHex("000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f");
 	BOOST_CHECK(bytes() == aesDecrypt(&seed, "test"));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

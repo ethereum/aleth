@@ -14,11 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file SecretStore.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2015
- * Secret store test functions.
- */
 
 #include <fstream>
 #include <boost/test/unit_test.hpp>
@@ -31,12 +26,15 @@
 #include <libdevcore/TransientDirectory.h>
 #include "MemTrie.h"
 #include <test/TestHelper.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::test;
 
 namespace js = json_spirit;
 namespace fs = boost::filesystem;
+
+BOOST_AUTO_TEST_SUITE(Crypto)
 
 BOOST_FIXTURE_TEST_SUITE(KeyStore, TestOutputHelper)
 
@@ -218,4 +216,5 @@ BOOST_AUTO_TEST_CASE(recode)
 	}
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

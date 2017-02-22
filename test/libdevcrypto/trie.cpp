@@ -14,11 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file trie.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * Trie test functions.
- */
 
 #include <fstream>
 #include <boost/test/unit_test.hpp>
@@ -35,22 +30,16 @@ using namespace dev::test;
 
 namespace js = json_spirit;
 
-namespace dev
-{
-namespace test
-{
-
 static unsigned fac(unsigned _i)
 {
 	return _i > 2 ? _i * fac(_i - 1) : _i;
 }
 
-}
-}
-
 using dev::operator <<;
 
-BOOST_FIXTURE_TEST_SUITE(TrieTests, TestOutputHelper)
+BOOST_AUTO_TEST_SUITE(Crypto)
+
+BOOST_FIXTURE_TEST_SUITE(Trie, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(fat_trie)
 {
@@ -96,7 +85,7 @@ BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 			if (!ss.back().second.find("0x"))
 				ss.back().second = asString(fromHex(ss.back().second.substr(2)));
 		}
-		for (unsigned j = 0; j < min(1000000000u, dev::test::fac((unsigned)ss.size())); ++j)
+		for (unsigned j = 0; j < min(1000000000u, fac((unsigned)ss.size())); ++j)
 		{
 			next_permutation(ss.begin(), ss.end());
 			MemoryDB m;
@@ -163,7 +152,7 @@ BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 			if (!ss.back().second.find("0x"))
 				ss.back().second = asString(fromHex(ss.back().second.substr(2)));
 		}
-		for (unsigned j = 0; j < min(1000u, dev::test::fac((unsigned)ss.size())); ++j)
+		for (unsigned j = 0; j < min(1000u, fac((unsigned)ss.size())); ++j)
 		{
 			next_permutation(ss.begin(), ss.end());
 			MemoryDB m;
@@ -624,5 +613,4 @@ BOOST_AUTO_TEST_CASE(triePerf)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
+BOOST_AUTO_TEST_SUITE_END()
