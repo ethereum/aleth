@@ -116,3 +116,13 @@ void ClientTest::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 	if(--m_blocksToMine <= 0)
 		stopSealing();
 }
+
+bool ClientTest::completeSync()
+{
+	auto h = m_host.lock();
+	if (!h)
+		return false;
+
+	h->completeSync();
+	return true;
+}

@@ -51,6 +51,7 @@ public:
 	void modifyTimestamp(u256 const& _timestamp);
 	void rewindToBlock(unsigned _number);
 	bool addBlock(std::string const& _rlp);
+	bool completeSync();
 
 protected:
 	unsigned m_blocksToMine;

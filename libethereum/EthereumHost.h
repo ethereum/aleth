@@ -70,6 +70,8 @@ public:
 	void setNetworkId(u256 _n) { m_networkId = _n; }
 
 	void reset();
+	/// Don't sync further - used only in test mode
+	void completeSync();
 
 	bool isSyncing() const;
 	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }

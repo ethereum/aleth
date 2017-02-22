@@ -58,6 +58,10 @@ public:
 	/// Restart sync
 	void restartSync();
 
+	/// Called after all blocks have been downloaded
+	/// Public only for test mode
+	void completeSync();
+
 	/// Called by peer to report status
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
 
@@ -83,9 +87,6 @@ public:
 private:
 	/// Resume downloading after witing state
 	void continueSync();
-
-	/// Called after all blocks have been donloaded
-	void completeSync();
 
 	/// Enter waiting state
 	void pauseSync();

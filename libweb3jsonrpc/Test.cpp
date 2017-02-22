@@ -94,6 +94,7 @@ bool Test::test_rewindToBlock(int _number)
 	try
 	{
 		m_eth.rewind(_number);
+		asClientTest(m_eth).completeSync();
 	}
 	catch (std::exception const&)
 	{
