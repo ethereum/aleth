@@ -35,7 +35,7 @@ namespace eth
 
 #ifndef EVM_JUMP_DISPATCH
 	#ifdef __GNUC__
-		#define EVM_JUMP_DISPATCH true
+		#define EVM_JUMP_DISPATCH false
 	#else
 		#define EVM_JUMP_DISPATCH false
 	#endif
@@ -54,7 +54,10 @@ namespace eth
 #if EVM_OPTIMIZE
 	#define EVM_REPLACE_CONST_JUMP true
 	#define EVM_USE_CONSTANT_POOL false
-	#define EVM_DO_FIRST_PASS_OPTIMIZATION true
+	#define EVM_DO_FIRST_PASS_OPTIMIZATION ( \
+				EVM_REPLACE_CONST_JUMP || \
+				EVM_USE_CONSTANT_POOL \
+			)
 #endif
 
 #define EVM_JUMPS_AND_SUBS false
@@ -73,7 +76,7 @@ namespace eth
 	#if EVM_TRACE > 1
 		#define ON_OP() \
 			(onOperation(), \
-			(cerr <<"### "<< m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl))
+			(cerr <<"### "<< m_nSteps <<" @"<< m_PC <<" "<< instructionInfo(m_OP).name <<endl))
 	#else
 		#define ON_OP() onOperation()
 	#endif
@@ -126,12 +129,13 @@ namespace eth
 #if defined(EVM_SWITCH_DISPATCH)
 
 	#define INIT_CASES if (!m_caseInit) { m_caseInit = true; return; }
-	#define DO_CASES for(;;) { fetchInstruction(); switch(m_op) {
-	#define CASE_BEGIN(name) case Instruction::name:
-	#define CASE_END break;
-	#define CASE_RETURN return;
-	#define CASE_DEFAULT default:
-	#define END_CASES } }
+	#define DO_CASES for(;;) { fetchInstruction(); switch(m_OP) {
+	#define CASE(name) case Instruction::name:
+	#define NEXT ++m_PC; break;
+	#define CONTINUE continue;
+	#define BREAK return;
+	#define DEFAULT default:
+	#define WHILE_CASES } }
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -408,13 +412,14 @@ namespace eth
 			return;  \
 		}
 
-	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_op];
-	#define CASE_BEGIN(name) name:
-	#define CASE_END fetchInstruction(); goto *jumpTable[m_code[m_pc]];
-	#define CASE_RETURN return;
-	#define CASE_DEFAULT INVALID:
-	#define END_CASES
-	
+	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_OP];
+	#define CASE(name) name:
+	#define NEXT ++m_PC; fetchInstruction(); goto *jumpTable[m_code[m_PC]];
+	#define CONTINUE fetchInstruction(); goto *jumpTable[m_code[m_PC]];
+	#define BREAK return;
+	#define DEFAULT INVALID:
+	#define WHILE_CASES
+
 #else
 	#error No opcode dispatch configured
 #endif
