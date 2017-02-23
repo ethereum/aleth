@@ -23,6 +23,7 @@
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
 #include <secp256k1/include/secp256k1.h>
+#include <secp256k1/include/secp256k1_recovery.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
@@ -30,6 +31,7 @@
 #include <libscrypt/libscrypt.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
+#include <utils/secp256k1/include/secp256k1.h>
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"
@@ -41,7 +43,7 @@ using namespace CryptoPP;
 class Secp256k1Context
 {
 public:
-	static secp256k1_context_t const* get()
+	static secp256k1_context const* get()
 	{
 		static Secp256k1Context s_ctx;
 		return s_ctx.m_ctx;
@@ -52,7 +54,7 @@ private:
 		m_ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY)) {}
 	~Secp256k1Context() { secp256k1_context_destroy(m_ctx); }
 
-	secp256k1_context_t* const m_ctx = nullptr;
+	secp256k1_context* const m_ctx = nullptr;
 };
 
 
@@ -76,11 +78,21 @@ Address dev::ZeroAddress = Address();
 
 Public dev::toPublic(Secret const& _secret)
 {
-	bytes o(65);
-	int pubkeylen;
-	if (!secp256k1_ec_pubkey_create(Secp256k1Context::get(), o.data(), &pubkeylen, _secret.data(), false))
-		return Public();
-	return FixedHash<64>(o.data()+1, Public::ConstructFromPointer);
+	auto* ctx = Secp256k1Context::get();
+	secp256k1_pubkey rawPubkey;
+	if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, _secret.data()))
+		return {};
+	std::array<byte, 65> serializedPubkey;
+	size_t serializedPubkeySize = serializedPubkey.size();
+	secp256k1_ec_pubkey_serialize(
+			ctx, serializedPubkey.data(), &serializedPubkeySize,
+			&rawPubkey, SECP256K1_EC_UNCOMPRESSED
+	);
+	assert(serializedPubkeySize == serializedPubkey.size());
+	// Expect single byte header of value 0x04 -- uncompressed public key.
+	assert(serializedPubkey[0] == 0x04);
+	// Create the Public skipping the header.
+	return Public{&serializedPubkey[1], Public::ConstructFromPointer};
 }
 
 Address dev::toAddress(Public const& _public)
@@ -205,31 +217,50 @@ static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
 
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
-	Public ret;
-	bytes o(65);
-	int pubkeylen;
-	if (_sig[64] > 3 || !secp256k1_ecdsa_recover_compact(Secp256k1Context::get(), _message.data(), _sig.data(), o.data(), &pubkeylen, false, _sig[64]))
-		return Public();
-	ret = FixedHash<64>(o.data() + 1, Public::ConstructFromPointer);
-	if (ret == c_zeroKey)
-		return Public();
-	return ret;
+	int v = _sig[64];
+	if (v > 3)
+		return {};
+
+	auto* ctx = Secp256k1Context::get();
+	secp256k1_ecdsa_recoverable_signature rawSig;
+	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, _sig.data(), v))
+		return {};
+
+	secp256k1_pubkey rawPubkey;
+	if (!secp256k1_ecdsa_recover(ctx, &rawPubkey, &rawSig, _message.data()))
+		return {};
+
+	std::array<byte, 65> serializedPubkey;
+	size_t serializedPubkeySize = serializedPubkey.size();
+	secp256k1_ec_pubkey_serialize(
+			ctx, serializedPubkey.data(), &serializedPubkeySize,
+			&rawPubkey, SECP256K1_EC_UNCOMPRESSED
+	);
+	assert(serializedPubkeySize == serializedPubkey.size());
+	// Expect single byte header of value 0x04 -- uncompressed public key.
+	assert(serializedPubkey[0] == 0x04);
+	// Create the Public skipping the header.
+	return Public{&serializedPubkey[1], Public::ConstructFromPointer};
 }
 
 static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
 
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
-	Signature s;
-	SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
+	auto* ctx = Secp256k1Context::get();
+	secp256k1_ecdsa_recoverable_signature rawSig;
+	if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr))
+		return {};
 
-	int v;
-	if (!secp256k1_ecdsa_sign_compact(Secp256k1Context::get(), _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
-		return Signature();
+	Signature s;
+	int v = 0;
+	secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, s.data(), &v, &rawSig);
+
+	SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
 	ss.v = static_cast<byte>(v);
 	if (ss.s > c_secp256k1n / 2)
 	{
-		ss.v = ss.v ^ 1;
+		ss.v = static_cast<byte>(ss.v ^ 1);
 		ss.s = h256(c_secp256k1n - u256(ss.s));
 	}
 	assert(ss.s <= c_secp256k1n / 2);
