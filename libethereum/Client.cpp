@@ -674,7 +674,7 @@ void Client::doWork(bool _doWait)
 	bool isSealed = false;
 	DEV_READ_GUARDED(x_working)
 		isSealed = m_working.isSealed();
-	if (!isSealed && !isSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
+	if (!isSealed && !isSyncing() && !m_remoteWorking && !m_syncBlockQueue && m_syncTransactionQueue.compare_exchange_strong(t, false))
 		syncTransactionQueue();
 
 	tick();
