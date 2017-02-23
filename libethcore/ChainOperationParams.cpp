@@ -26,14 +26,19 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-PrecompiledContract::PrecompiledContract(unsigned _base, unsigned _word, std::function<bytes(bytesConstRef)> const& _exec):
+PrecompiledContract::PrecompiledContract(
+	unsigned _base,
+	unsigned _word,
+	std::function<bytes(bytesConstRef)> const& _exec,
+	u256 const& _startingBlock
+):
 	PrecompiledContract([=](unsigned size) -> bigint
 	{
 		bigint s = size;
 		bigint b = _base;
 		bigint w = _word;
 		return b + (s + 31) / 32 * w;
-	}, _exec)
+	}, _exec, _startingBlock)
 {}
 
 ChainOperationParams::ChainOperationParams()
