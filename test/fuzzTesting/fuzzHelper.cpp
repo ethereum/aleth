@@ -19,12 +19,12 @@
  * @date 2015
  */
 
-#include "fuzzHelper.h"
-
 #include <chrono>
 #include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
 #include <libevmcore/Instruction.h>
+#include <test/libtesteth/TestOutputHelper.h>
+#include <test/fuzzTesting/fuzzHelper.h>
 
 namespace dev
 {

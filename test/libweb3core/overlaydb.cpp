@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/TransientDirectory.h>
 #include <libdevcore/OverlayDB.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

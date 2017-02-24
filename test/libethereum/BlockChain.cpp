@@ -22,8 +22,8 @@
 
 #include <libethereum/Block.h>
 #include <libethereum/BlockChain.h>
-#include <test/TestHelper.h>
-#include <test/BlockChainHelper.h>
+#include <test/libtesteth/TestHelper.h>
+#include <test/libtesteth/BlockChainHelper.h>
 #include <libethereum/GenesisInfo.h>
 #include <libethashseal/GenesisInfo.h>
 

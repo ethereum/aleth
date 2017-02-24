@@ -27,7 +27,7 @@
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <libethereum/Transaction.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

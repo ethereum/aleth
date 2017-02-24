@@ -26,7 +26,7 @@
 #include <test/libtestutils/Common.h>
 #include <test/libtestutils/BlockChainLoader.h>
 #include <test/libtestutils/FixedClient.h>
-#include <test/TestUtils.h>
+#include <test/libtesteth/TestUtils.h>
 
 using namespace std;
 using namespace dev;

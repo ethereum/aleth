@@ -25,10 +25,10 @@
 #include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
 #include <libethashseal/Ethash.h>
-#include <test/TestHelper.h>
-#include <test/BlockChainHelper.h>
-#include <test/JsonSpiritHeaders.h>
-#include "test/fuzzTesting/fuzzHelper.h"
+#include <test/libtesteth/TestHelper.h>
+#include <test/libtesteth/BlockChainHelper.h>
+#include <test/libtesteth/JsonSpiritHeaders.h>
+#include <test/fuzzTesting/fuzzHelper.h>
 using namespace std;
 using namespace json_spirit;
 using namespace dev;

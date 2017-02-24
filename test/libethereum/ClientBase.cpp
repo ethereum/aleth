@@ -22,8 +22,8 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
 #include <libethashseal/Ethash.h>
-#include <test/TestHelper.h>
-#include <test/TestUtils.h>
+#include <test/libtesteth/TestHelper.h>
+#include <test/libtesteth/TestUtils.h>
 #include <test/libtestutils/FixedClient.h>
 
 using namespace std;

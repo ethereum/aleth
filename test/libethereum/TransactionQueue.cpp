@@ -21,8 +21,8 @@
  */
 
 #include <libethereum/TransactionQueue.h>
-#include <test/TestHelper.h>
-#include <test/BlockChainHelper.h>
+#include <test/libtesteth/TestHelper.h>
+#include <test/libtesteth/BlockChainHelper.h>
 
 using namespace std;
 using namespace dev;
