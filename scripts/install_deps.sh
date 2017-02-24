@@ -181,7 +181,7 @@ Linux)
 # It would be good to add armel, armhf and arm64.
 # See https://github.com/ethereum/webthree-umbrella/issues/228.
 #------------------------------------------------------------------------------
-        Ubuntu|LinuxMint)
+        Ubuntu|"Linux Mint")
             echo "Installing cpp-ethereum dependencies on Ubuntu."
             if [ "$TRAVIS" ]; then
                 # Setup prebuilt LLVM on Travis CI:
