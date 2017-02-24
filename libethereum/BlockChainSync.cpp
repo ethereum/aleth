@@ -179,8 +179,15 @@ BlockChainSync::~BlockChainSync()
 
 void BlockChainSync::onBlockImported(BlockHeader const& _info)
 {
-	string number = dev::toString(_info.number());
-	m_lastImportedBlock = atoi(number.c_str());
+	//if a block has been added via mining or other block import function
+	//through RPC, then we should count it as a last imported block
+	RecursiveGuard l(x_sync);
+	if (_info.number() > m_lastImportedBlock)
+	{
+		m_lastImportedBlock = static_cast<unsigned>(_info.number());
+		m_lastImportedBlockHash = _info.hash();
+		m_highestBlock = max(m_lastImportedBlock, m_highestBlock);
+	}
 }
 
 void BlockChainSync::abortSync()
@@ -841,11 +848,7 @@ bool BlockChainSync::invariants() const
 	if (!isSyncing() && !m_bodies.empty())
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got bodies while not syncing"));
 	if (isSyncing() && m_host.chain().number() > 0 && m_haveCommonHeader && m_lastImportedBlock == 0)
-	{
-		std::cerr << "Have common header " << m_haveCommonHeader;
-		std::cerr << "Last Imported block " << m_lastImportedBlock;
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Common block not found"));
-	}
 	if (isSyncing() && !m_headers.empty() &&  m_lastImportedBlock >= m_headers.begin()->first)
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header is too old"));
 	if (m_headerSyncPeers.empty() != m_downloadingHeaders.empty())

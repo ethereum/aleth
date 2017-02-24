@@ -34,10 +34,10 @@
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
 #include <libdevcore/OverlayDB.h>
+#include <libethcore/BlockHeader.h>
+#include <libethereum/BlockChainSync.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
-#include "BlockChainSync.h"
-#include "libethcore/BlockHeader.h"
 
 namespace dev
 {

@@ -290,10 +290,10 @@ public:
 	void garbageCollect(bool _force = false);
 
 	/// Change the function that is called with a bad block.
-	template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
+	void setOnBad(std::function<void(Exception&)> _t) { m_onBad = _t; }
 
 	/// Change the function that is called when a new block is imported
-	template <class T> void setOnBlockImport(T const& _t) { m_onBlockImport = _t; }
+	void setOnBlockImport(std::function<void(BlockHeader const&)> _t) { m_onBlockImport = _t; }
 
 	/// Get a pre-made genesis State object.
 	Block genesisBlock(OverlayDB const& _db) const;
