@@ -29,7 +29,7 @@ using namespace eth;
 PrecompiledContract::PrecompiledContract(
 	unsigned _base,
 	unsigned _word,
-	std::function<bytes(bytesConstRef)> const& _exec,
+	PrecompiledExecutor const& _exec,
 	u256 const& _startingBlock
 ):
 	PrecompiledContract([=](unsigned size) -> bigint

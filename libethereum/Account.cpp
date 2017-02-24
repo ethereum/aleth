@@ -116,9 +116,9 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 		{
 			js::mObject p = o["precompiled"].get_obj();
 			auto n = p["name"].get_str();
-			if (!o.count("linear"))
+			if (!p.count("linear"))
 			{
-				cwarn << "No gas cost given for precompiled contract " << n << endl;
+				cwarn << "No gas cost given for precompiled contract " << n;
 				throw;
 			}
 			try
@@ -126,7 +126,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 				auto l = p["linear"].get_obj();
 				u256 startingBlock = 0;
 				if (p.count("startingBlock"))
-					startingBlock = u256(p["startingBlock"]);
+					startingBlock = u256(p["startingBlock"].get_str());
 				unsigned base = toUnsigned(l["base"]);
 				unsigned word = toUnsigned(l["word"]);
 				o_precompiled->insert(make_pair(a, PrecompiledContract(base, word, PrecompiledRegistrar::executor(n), startingBlock)));

@@ -31,7 +31,7 @@ namespace dev
 namespace eth
 {
 
-using PrecompiledExecutor = std::function<bytes(bytesConstRef _in)>;
+using PrecompiledExecutor = std::function<std::pair<bool, bytes>(bytesConstRef _in)>;
 
 DEV_SIMPLE_EXCEPTION(ExecutorNotFound);
 
@@ -54,7 +54,7 @@ private:
 };
 
 // TODO: unregister on unload with a static object.
-#define ETH_REGISTER_PRECOMPILED(Name) static bytes __eth_registerPrecompiledFunction ## Name(bytesConstRef _in); static PrecompiledExecutor __eth_registerPrecompiledFactory ## Name = ::dev::eth::PrecompiledRegistrar::registerPrecompiled(#Name, &__eth_registerPrecompiledFunction ## Name); static bytes __eth_registerPrecompiledFunction ## Name
+#define ETH_REGISTER_PRECOMPILED(Name) static std::pair<bool, bytes> __eth_registerPrecompiledFunction ## Name(bytesConstRef _in); static PrecompiledExecutor __eth_registerPrecompiledFactory ## Name = ::dev::eth::PrecompiledRegistrar::registerPrecompiled(#Name, &__eth_registerPrecompiledFunction ## Name); static std::pair<bool, bytes> __eth_registerPrecompiledFunction ## Name
 
 }
 }
