@@ -31,18 +31,20 @@
 #include <libsnark/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
 
+#include <libdevcrypto/Exceptions.h>
+
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/Log.h>
 #include <libdevcore/FixedHash.h>
 
 #include <fstream>
 
 using namespace std;
 using namespace dev;
-using namespace dev::snark;
+using namespace dev::crypto;
 
 namespace
 {
-
 
 void initLibSnark()
 {
@@ -52,8 +54,6 @@ void initLibSnark()
 		libsnark::alt_bn128_pp::init_public_params();
 		initialized = true;
 	}
-}
-
 }
 
 libsnark::bigint<libsnark::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
@@ -76,26 +76,34 @@ h256 fromLibsnarkBigint(libsnark::bigint<libsnark::alt_bn128_q_limbs> _x)
 
 libsnark::alt_bn128_Fq decodeFqElement(dev::bytesConstRef _data)
 {
-	return toLibsnarkBigint(h256(_data.cropped(0, 32)));
+	// h256::AlignLeft ensures that the h256 is zero-filled on the right if _data
+	// is too short.
+	h256 xbin(_data, h256::AlignLeft);
+	if (u256(xbin) >= u256(fromLibsnarkBigint(libsnark::alt_bn128_Fq::mod)))
+		BOOST_THROW_EXCEPTION(InvalidEncoding());
+	return toLibsnarkBigint(xbin);
 }
 
 libsnark::alt_bn128_G1 decodePointG1(dev::bytesConstRef _data)
 {
-	return libsnark::alt_bn128_G1(
-		decodeFqElement(_data.cropped(0, 32)),
-		decodeFqElement(_data.cropped(32, 32)),
-		decodeFqElement(_data.cropped(64, 32))
-	);
+	libsnark::alt_bn128_Fq X =  decodeFqElement(_data.cropped(0));
+	libsnark::alt_bn128_Fq Y =  decodeFqElement(_data.cropped(32));
+	if (X == libsnark::alt_bn128_Fq::zero() && Y == libsnark::alt_bn128_Fq::zero())
+		return libsnark::alt_bn128_G1::zero();
+	libsnark::alt_bn128_G1 p(X, Y, libsnark::alt_bn128_Fq::one());
+	if (!p.is_well_formed())
+		BOOST_THROW_EXCEPTION(InvalidEncoding());
+	return p;
 }
 
 bytes encodePointG1(libsnark::alt_bn128_G1 _p)
 {
-	libsnark::alt_bn128_G1 p_norm = _p;
-	p_norm.to_affine_coordinates();
+	if (_p.is_zero())
+		return h256().asBytes() + h256().asBytes();
+	_p.to_affine_coordinates();
 	return
-		fromLibsnarkBigint(p_norm.X.as_bigint()).asBytes() +
-		fromLibsnarkBigint(p_norm.Y.as_bigint()).asBytes() +
-		fromLibsnarkBigint(p_norm.Z.as_bigint()).asBytes();
+		fromLibsnarkBigint(_p.X.as_bigint()).asBytes() +
+		fromLibsnarkBigint(_p.Y.as_bigint()).asBytes();
 }
 
 libsnark::alt_bn128_Fq2 decodeFq2Element(dev::bytesConstRef _data)
@@ -103,79 +111,111 @@ libsnark::alt_bn128_Fq2 decodeFq2Element(dev::bytesConstRef _data)
 	// Encoding: c1 (256 bits) c0 (256 bits)
 	// "Big endian", just like the numbers
 	return libsnark::alt_bn128_Fq2(
-		decodeFqElement(_data.cropped(32, 32)),
-		decodeFqElement(_data.cropped(0, 32))
+		decodeFqElement(_data.cropped(32)),
+		decodeFqElement(_data.cropped(0))
 	);
 }
 
 
 libsnark::alt_bn128_G2 decodePointG2(dev::bytesConstRef _data)
 {
-	return libsnark::alt_bn128_G2(
-		decodeFq2Element(_data.cropped(0, 64)),
-		decodeFq2Element(_data.cropped(64, 64)),
-		decodeFq2Element(_data.cropped(128, 64))
-	);
+	libsnark::alt_bn128_Fq2 X = decodeFq2Element(_data);
+	libsnark::alt_bn128_Fq2 Y = decodeFq2Element(_data.cropped(64));
+	if (X == libsnark::alt_bn128_Fq2::zero() && Y == libsnark::alt_bn128_Fq2::zero())
+		return libsnark::alt_bn128_G2::zero();
+	libsnark::alt_bn128_G2 p(X, Y, libsnark::alt_bn128_Fq2::one());
+	if (!p.is_well_formed())
+		BOOST_THROW_EXCEPTION(InvalidEncoding());
+	return p;
 }
 
+}
 
-bytes dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in)
+pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 {
-	initLibSnark();
 	// Input: list of pairs of G1 and G2 points
 	// Output: 1 if pairing evaluates to 1, 0 otherwise (left-padded to 32 bytes)
 
-	// TODO catch exceptions from assertions
-	// TODO check that the second points are part of the correct subgroup
-
-	size_t const pairSize = 3 * 32 + 3 * 64;
-	// TODO this does not round correctly
+	bool result = true;
+	size_t const pairSize = 2 * 32 + 2 * 64;
 	size_t const pairs = _in.size() / pairSize;
-	libsnark::alt_bn128_Fq12 x = libsnark::alt_bn128_Fq12::one();
-	for (size_t i = 0; i < pairs; ++i)
+	if (pairs * pairSize != _in.size())
 	{
-		dev::bytesConstRef pair = _in.cropped(i * pairSize, pairSize);
-		x = x * libsnark::alt_bn128_miller_loop(
-			libsnark::alt_bn128_precompute_G1(decodePointG1(pair)),
-			libsnark::alt_bn128_precompute_G2(decodePointG2(pair.cropped(3 * 32)))
-		);
+		// Invalid length.
+		return make_pair(false, bytes());
 	}
-	bool result = libsnark::alt_bn128_final_exponentiation(x) == libsnark::alt_bn128_GT::one();
+	try
+	{
+		initLibSnark();
+		libsnark::alt_bn128_Fq12 x = libsnark::alt_bn128_Fq12::one();
+		for (size_t i = 0; i < pairs; ++i)
+		{
+			dev::bytesConstRef pair = _in.cropped(i * pairSize, pairSize);
+			libsnark::alt_bn128_G2 p = decodePointG2(pair.cropped(2 * 32));
+			if (-libsnark::alt_bn128_G2::scalar_field::one() * p + p != libsnark::alt_bn128_G2::zero())
+				// p is not an element of the group (has wrong order)
+				return {false, bytes()};
+			x = x * libsnark::alt_bn128_miller_loop(
+				libsnark::alt_bn128_precompute_G1(decodePointG1(pair)),
+				libsnark::alt_bn128_precompute_G2(p)
+			);
+		}
+		result = libsnark::alt_bn128_final_exponentiation(x) == libsnark::alt_bn128_GT::one();
+	}
+	catch (InvalidEncoding const&)
+	{
+		return make_pair(false, bytes());
+	}
+	catch (...)
+	{
+		cwarn << "Internal exception from libsnark. Forwarding as precompiled contract failure.";
+		return make_pair(false, bytes());
+	}
 
 	bytes res(32, 0);
 	res[31] = unsigned(result);
-	return res;
+	return {true, res};
 }
 
-bytes dev::snark::alt_bn128_G1_add(dev::bytesConstRef _in)
+pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
 {
-	initLibSnark();
-	// Elliptic curve point addition in Jacobian, big endian encoding:
-	// (P1.X: 256 bits, P1.Y: 256 bits, P1.Z: 256 bits,
-	//  P2.X: 256 bits, P2.Y: 256 bits, P2.Z: 256 bits)
+	try
+	{
+		initLibSnark();
+		libsnark::alt_bn128_G1 p1 = decodePointG1(_in);
+		libsnark::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 3));
 
-	// TODO: This cannot be final code because it behaves incorrectly if
-	// the input is too short (decoder returns zero instead of filling with zeros).
-	libsnark::alt_bn128_G1 p1 = decodePointG1(_in);
-	libsnark::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 3));
-
-	return encodePointG1(p1 + p2);
+		return {true, encodePointG1(p1 + p2)};
+	}
+	catch (InvalidEncoding const&)
+	{
+	}
+	catch (...)
+	{
+		cwarn << "Internal exception from libsnark. Forwarding as precompiled contract failure.";
+	}
+	return make_pair(false, bytes());
 }
 
-bytes dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in)
+pair<bool, bytes> dev::crypto::alt_bn128_G1_mul(dev::bytesConstRef _in)
 {
-	initLibSnark();
-	// Scalar multiplication with a curve point in Jacobian encoding, big endian:
-	// (s: u256, X: 256 bits, Y: 256 bits, Z: 256 bits)
+	try
+	{
+		initLibSnark();
+		libsnark::alt_bn128_G1 p = decodePointG1(_in.cropped(0));
 
-	// TODO: This cannot be final code because it behaves incorrectly if
-	// the input is too short (decoder returns zero instead of filling with zeros).
-	u256 s = h256(_in.cropped(0, 32));
-	libsnark::alt_bn128_G1 p = decodePointG1(_in.cropped(32));
+		libsnark::alt_bn128_G1 result = toLibsnarkBigint(h256(_in.cropped(64), h256::AlignLeft)) * p;
 
-	libsnark::alt_bn128_G1 result = libsnark::bigint<libsnark::alt_bn128_q_limbs>(s.str().c_str()) * p;
-
-	return encodePointG1(result);
+		return {true, encodePointG1(result)};
+	}
+	catch (InvalidEncoding const&)
+	{
+	}
+	catch (...)
+	{
+		cwarn << "Internal exception from libsnark. Forwarding as precompiled contract failure.";
+	}
+	return make_pair(false, bytes());
 }
 
 std::string outputPointG1Affine(libsnark::alt_bn128_G1 _p)
@@ -276,7 +316,7 @@ void testProof(libsnark::r1cs_ppzksnark_verification_key<libsnark::alt_bn128_pp>
 	cout << "Verified: " << verified << endl;
 }
 
-void dev::snark::exportVK(string const& _VKFilename)
+void dev::crypto::exportVK(string const& _VKFilename)
 {
 	initLibSnark();
 

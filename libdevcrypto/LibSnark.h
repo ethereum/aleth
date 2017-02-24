@@ -24,12 +24,12 @@
 
 namespace dev
 {
-namespace snark
+namespace crypto
 {
 
-bytes alt_bn128_pairing_product(bytesConstRef _in);
-bytes alt_bn128_G1_add(bytesConstRef _in);
-bytes alt_bn128_G1_mul(bytesConstRef _in);
+std::pair<bool, bytes> alt_bn128_pairing_product(bytesConstRef _in);
+std::pair<bool, bytes> alt_bn128_G1_add(bytesConstRef _in);
+std::pair<bool, bytes> alt_bn128_G1_mul(bytesConstRef _in);
 
 void exportVK(std::string const& _VKFilename);
 

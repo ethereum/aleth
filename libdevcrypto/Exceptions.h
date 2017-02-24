@@ -30,6 +30,7 @@ namespace crypto
 
 /// Rare malfunction of cryptographic functions.
 DEV_SIMPLE_EXCEPTION(CryptoException);
+DEV_SIMPLE_EXCEPTION(InvalidEncoding);
 
 }
 }
