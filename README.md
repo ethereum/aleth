@@ -22,8 +22,8 @@ Please do come and chat to us on the [cpp-ethereum](https://gitter.im/ethereum/c
 
                  | Status
 -----------------|-----------
-Ubuntu and macOS | [![Build Status](https://travis-ci.org/ethereum/cpp-ethereum.svg?branch=develop)](https://travis-ci.org/ethereum/cpp-ethereum/branches)
-Windows          | [![Build Status](https://ci.appveyor.com/api/projects/status/gj9d6wvs08cg85cv/branch/develop?svg=true)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
+Ubuntu and macOS | [![Build Status](https://travis-ci.org/ethereumproject/cpp-ethereum.svg?branch=develop)](https://travis-ci.org/ethereumproject/cpp-ethereum/branches)
+Windows          | [![Build Status](https://ci.appveyor.com/api/projects/status/6b8fl9av4vuf602a/branch/develop?svg=true)](https://ci.appveyor.com/project/igetgames/cpp-ethereum)
 
 ## Contributing
 
