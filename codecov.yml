@@ -16,6 +16,6 @@ coverage:
         target: auto
     changes:
       default:
-        enabled: yes
+        enabled: no
 comment:
   layout: header, diff, changes, sunburst, suggestions, tree
