@@ -307,7 +307,7 @@ int main(int argc, char** argv)
 
 	if (mode == Mode::Statistics)
 	{
-		cout << "Gas used: " << res.gasUsed << " (+" << t.gasRequired(se->evmSchedule(envInfo)) << " for transaction, -" << res.gasRefunded << " refunded)" << endl;
+		cout << "Gas used: " << res.gasUsed << " (+" << t.baseGasRequired(se->evmSchedule(envInfo)) << " for transaction, -" << res.gasRefunded << " refunded)" << endl;
 		cout << "Output: " << toHex(output) << endl;
 		LogEntries logs = executive.logs();
 		cout << logs.size() << " logs" << (logs.empty() ? "." : ":") << endl;

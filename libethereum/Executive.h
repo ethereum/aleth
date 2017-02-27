@@ -192,7 +192,7 @@ private:
 
 	unsigned m_depth = 0;				///< The context's call-depth.
 	TransactionException m_excepted = TransactionException::None;	///< Details if the VM's execution resulted in an exception.
-	bigint m_baseGasRequired;				///< The base amount of gas requried for executing this transactions.
+	int64_t m_baseGasRequired;			///< The base amount of gas requried for executing this transaction.
 	u256 m_gas = 0;						///< The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
 	u256 m_refunded = 0;				///< The amount of gas refunded.
 
