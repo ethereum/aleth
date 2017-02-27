@@ -198,25 +198,28 @@ void Executive::initialize(Transaction const& _transaction)
 		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(m_baseGasRequired, (bigint)m_t.gas()));
 	}
 
-	// Avoid invalid transactions.
-	u256 nonceReq;
-	try
-	{
-		nonceReq = m_s.getNonce(m_t.sender());
+	if (!m_t.hasZeroSignature()) {
+		// Avoid invalid transactions.
+		u256 nonceReq;
+		try
+		{
+			nonceReq = m_s.getNonce(m_t.sender());
+		}
+		catch (...)
+		{
+			clog(ExecutiveWarnChannel) << "Invalid Signature";
+			m_excepted = TransactionException::InvalidSignature;
+			throw;
+		}
+		if (m_t.nonce() != nonceReq)
+		{
+			clog(ExecutiveWarnChannel) << "Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
+			m_excepted = TransactionException::InvalidNonce;
+			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
+		}
+	} else {
+		m_t.forceSender(Address(-1)); // https://github.com/ethereum/EIPs/issues/86
 	}
-	catch (...)
-	{
-		clog(ExecutiveWarnChannel) << "Invalid Signature";
-		m_excepted = TransactionException::InvalidSignature;
-		throw;
-	}
-	if (m_t.nonce() != nonceReq)
-	{
-		clog(ExecutiveWarnChannel) << "Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
-		m_excepted = TransactionException::InvalidNonce;
-		BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
-	}
-
 	// Avoid unaffordable transactions.
 	bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
 	bigint totalCost = m_t.value() + gasCost;

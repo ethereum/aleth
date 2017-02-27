@@ -63,7 +63,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			try
 			{
 				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
-				if (!txFromFields.signature().isValid())
+				if (!txFromFields.signature().isValid() && !txFromFields.signature().zeroSignature())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh);
 
@@ -115,7 +115,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				RLP rlp(stream);
 				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
 				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh);
-				if (!txFromRlp.signature().isValid())
+				if (!txFromRlp.signature().isValid() && !txFromRlp.signature().zeroSignature())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 			}
 			catch(Exception const& _e)

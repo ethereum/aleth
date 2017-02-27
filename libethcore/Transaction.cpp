@@ -83,7 +83,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("to many fields in the transaction RLP"));
 
 		m_vrs = SignatureStruct{ r, s, v };
-		if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid())
+		if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid() && !m_vrs.zeroSignature())
 			BOOST_THROW_EXCEPTION(InvalidSignature());
 		if (_checkSig == CheckTransaction::Everything)
 			m_sender = sender();
@@ -112,9 +112,9 @@ Address const& TransactionBase::sender() const
 	if (!m_sender)
 	{
 		auto p = recover(m_vrs, sha3(WithoutSignature));
-		if (!p)
-			BOOST_THROW_EXCEPTION(InvalidSignature());
-		m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
+		if (p) {
+			m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
+		}
 	}
 	return m_sender;
 }
@@ -153,7 +153,7 @@ static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279
 
 void TransactionBase::checkLowS() const
 {
-	if (m_vrs.s > c_secp256k1n / 2)
+	if (!m_vrs.zeroSignature() && m_vrs.s > c_secp256k1n / 2)
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 }
 
