@@ -91,7 +91,7 @@ matrix:
         # See https://github.com/ethereum/cpp-ethereum/issues/3268
 
         - os: osx
-          osx_image: xcode8
+          osx_image: xcode8.2
           env:
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
