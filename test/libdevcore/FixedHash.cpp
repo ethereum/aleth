@@ -21,7 +21,7 @@
 
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/SHA3.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

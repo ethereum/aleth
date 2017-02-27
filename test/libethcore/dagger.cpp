@@ -26,7 +26,7 @@
 #include <libethashseal/Ethash.h>
 #include <libethashseal/EthashAux.h>
 #include <boost/test/unit_test.hpp>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

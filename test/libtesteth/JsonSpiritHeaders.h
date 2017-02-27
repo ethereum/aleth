@@ -14,9 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file JsonSpiritHeaders.h
- * @author Tim Hughes <tim@twistedfury.com>
- * @date 2014
+/** @file
  */
 #pragma once
 

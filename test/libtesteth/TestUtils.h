@@ -14,9 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file TestUtils.h
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2015
+/** @file
  */
 
 #pragma once

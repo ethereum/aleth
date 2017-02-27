@@ -14,9 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file boostTest.cpp
- * @author Dimitry Khokhlov <dimitry@ethdev.com>
- * @date 2015
+/** @file
  * Stub for generating main boost.test module.
  * Original code taken from boost sources.
  */
@@ -40,7 +38,7 @@
 
 #include <clocale>
 #include <stdlib.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 #include <boost/version.hpp>
 
 using namespace boost::unit_test;
