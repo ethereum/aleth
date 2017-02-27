@@ -21,7 +21,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Log.h>
 #include <libdevcrypto/AES.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

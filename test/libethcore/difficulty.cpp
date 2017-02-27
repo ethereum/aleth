@@ -21,7 +21,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 #include <test/fuzzTesting/fuzzHelper.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>

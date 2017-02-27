@@ -24,7 +24,7 @@
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
 #include <test/libtestutils/Common.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 #include <test/fuzzTesting/fuzzHelper.h>
 
 using namespace std;

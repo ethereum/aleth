@@ -44,10 +44,13 @@ include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
 
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/deps/boost.cmake)
+    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
+endif()
+include(deps/boost.cmake)
 include(deps/jsoncpp.cmake)
 include(deps/jsonrpc.cmake)
 include(deps/cryptopp.cmake)
-include(deps/boost.cmake)
 
 configure_project(CPUID CURL EVMJIT FATDB MINIUPNPC ROCKSDB PARANOID TESTS VMTRACE)
 

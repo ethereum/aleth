@@ -34,6 +34,8 @@
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
 #include <libdevcore/OverlayDB.h>
+#include <libethcore/BlockHeader.h>
+#include <libethereum/BlockChainSync.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
 
@@ -78,6 +80,7 @@ public:
 
 	void noteNewTransactions() { m_newTransactions = true; }
 	void noteNewBlocks() { m_newBlocks = true; }
+	void onBlockImported(BlockHeader const& _info) { m_sync->onBlockImported(_info); }
 
 	BlockChain const& chain() const { return m_chain; }
 	OverlayDB const& db() const { return m_db; }

@@ -23,8 +23,8 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
-#include <test/TestHelper.h>
-#include <test/BlockChainHelper.h>
+#include <test/libtesteth/TestHelper.h>
+#include <test/libtesteth/BlockChainHelper.h>
 
 class frontierFixture { public:	frontierFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest; } };
 class homesteadFixture { public:	homesteadFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest; } };

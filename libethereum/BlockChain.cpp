@@ -799,6 +799,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	h256s route;
 	h256 common;
+	bool isImportedAndBest = false;
 	// This might be the new best block...
 	h256 last = currentHash();
 	if (td > details(last).totalDifficulty || (m_sealEngine->chainParams().tieBreakingGas && td == details(last).totalDifficulty && _block.info.gasUsed() > info(last).gasUsed()))
@@ -864,6 +865,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		{
 			newLastBlockHash = _block.info.hash();
 			newLastBlockNumber = (unsigned)_block.info.number();
+			isImportedAndBest = true;
 		}
 
 		clog(BlockChainNote) << "   Imported and best" << td << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
@@ -958,6 +960,9 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	if (!route.empty())
 		noteCanonChanged();
+
+	if (isImportedAndBest && m_onBlockImport)
+		m_onBlockImport(_block.info);
 
 	h256s fresh;
 	h256s dead;

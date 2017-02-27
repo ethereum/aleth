@@ -28,7 +28,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libethereum/BlockChain.h>
 #include <libethashseal/GenesisInfo.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

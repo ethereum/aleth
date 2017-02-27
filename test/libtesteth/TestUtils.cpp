@@ -14,9 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file TestUtils.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2015
+/** @file
  */
 
 #include <thread>
@@ -26,7 +24,7 @@
 #include <test/libtestutils/Common.h>
 #include <test/libtestutils/BlockChainLoader.h>
 #include <test/libtestutils/FixedClient.h>
-#include <test/TestUtils.h>
+#include <test/libtesteth/TestUtils.h>
 
 using namespace std;
 using namespace dev;

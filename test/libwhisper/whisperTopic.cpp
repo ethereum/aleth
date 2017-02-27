@@ -26,7 +26,7 @@
 #include <libp2p/Session.h>
 #include <libwhisper/WhisperPeer.h>
 #include <libwhisper/WhisperHost.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

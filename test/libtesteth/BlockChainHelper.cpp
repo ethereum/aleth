@@ -14,9 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file BlockChainHelper.cpp
- * @author Dimitry Khokhlov <dimitry@ethdev.com>
- * @date 2015
+/** @file
+ * Incapsulation of libetehreum blockchain logic into test classes
+ * that manage block/transaction import and test mining
  */
 
 #include <libdevcore/TransientDirectory.h>
@@ -25,8 +25,8 @@
 #include <libethereum/TransactionQueue.h>
 #include <libethereum/GenesisInfo.h>
 #include <libethashseal/GenesisInfo.h>
-#include <test/BlockChainHelper.h>
-#include <test/TestHelper.h>
+#include <test/libtesteth/BlockChainHelper.h>
+#include <test/libtesteth/TestHelper.h>
 using namespace std;
 using namespace json_spirit;
 using namespace dev;

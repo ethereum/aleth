@@ -1108,10 +1108,11 @@ int main(int argc, char** argv)
 			}
 		}
 
-		while (web3.ethereum()->blockQueue().items().first + web3.ethereum()->blockQueue().items().second > 0)
+		bool moreToImport = true;
+		while (moreToImport)
 		{
 			this_thread::sleep_for(chrono::seconds(1));
-			web3.ethereum()->syncQueue(100000);
+			tie(ignore, moreToImport, ignore) = web3.ethereum()->syncQueue(100000);
 		}
 		double e = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - t).count() / 1000.0;
 		cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")" << endl;
