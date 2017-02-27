@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TestOutputHelper.cpp
+/** @file
  * Fixture class for boost output when running testeth
  */
 

@@ -14,9 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file BlockChainHelper.cpp
- * @author Dimitry Khokhlov <dimitry@ethdev.com>
- * @date 2015
+/** @file
+ * Incapsulation of libetehreum blockchain logic into test classes
+ * that manage block/transaction import and test mining
  */
 
 #include <libdevcore/TransientDirectory.h>

@@ -14,9 +14,8 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TestHelper.cpp
- * @author Marko Simovic <markobarko@gmail.com>
- * @date 2014
+/** @file
+ * Helper functions to work with json::spirit and test files
  */
 
 #include <test/libtesteth/TestHelper.h>

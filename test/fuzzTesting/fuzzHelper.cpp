@@ -23,8 +23,8 @@
 #include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
 #include <libevmcore/Instruction.h>
-#include <test/libtesteth/TestOutputHelper.h>
 #include <test/fuzzTesting/fuzzHelper.h>
+#include <test/libtesteth/TestOutputHelper.h>
 
 namespace dev
 {
