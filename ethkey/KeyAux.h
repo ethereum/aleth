@@ -33,7 +33,6 @@
 #include <libethcore/KeyManager.h>
 #include <libethcore/ICAP.h>
 #include <libethcore/Transaction.h>
-#include <libdevcrypto/WordList.h>
 
 using namespace std;
 using namespace dev;
@@ -109,8 +108,6 @@ public:
 		Export,
 		Recode,
 		Kill,
-		NewBrain,
-		ImportBrain,
 		Inspect,
 		SignTx,
 		DecodeTx,
@@ -254,16 +251,6 @@ public:
 		{
 			m_mode = OperationMode::ImportPresale;
 			m_inputs = strings(1, argv[++i]);
-			m_name = argv[++i];
-		}
-		else if ((arg == "--new-brain" || arg == "newbrain") && i + 1 < argc)
-		{
-			m_mode = OperationMode::NewBrain;
-			m_name = argv[++i];
-		}
-		else if ((arg == "--import-brain" || arg == "importbrain") && i + 1 < argc)
-		{
-			m_mode = OperationMode::ImportBrain;
 			m_name = argv[++i];
 		}
 		else if ((arg == "--import-with-address" || arg == "importwithaddress") && i + 3 < argc)
@@ -426,28 +413,6 @@ public:
 				{
 					cerr << "Invalid transaction: " << ex.what() << endl;
 				}
-			}
-			break;
-		}
-		case OperationMode::NewBrain:
-		{
-			if (m_name != "--")
-				keyManager();
-			boost::random_device d;
-			boost::random::uniform_int_distribution<unsigned> pickWord(0, WordList.size() - 1);
-			string seed;
-			for (int i = 0; i < 13; ++i)
-				seed += (seed.size() ? " " : "") + std::string{WordList[pickWord(d)]};
-			cout << "Your brain key phrase: <<" << seed << ">>" << endl;
-			if (m_name != "--")
-			{
-				std::string hint;
-				cout << "Enter a hint for the phrase if you want: " << flush;
-				getline(cin, hint);
-				Address a = keyManager().importBrain(seed, m_name, hint);
-				cout << a.abridged() << endl;
-				cout << "  ICAP: " << ICAP(a).encoded() << endl;
-				cout << "  Raw hex: " << a.hex() << endl;
 			}
 			break;
 		}
@@ -646,19 +611,6 @@ public:
 			cout << "  Name: " << m_name << endl;
 			cout << "  UUID: " << toUUID(u) << endl;
 			cout << "  Raw hex: " << m_address << endl;
-			break;
-		}
-		case OperationMode::ImportBrain:
-		{
-			keyManager();
-			std::string seed = getPassword("Enter brain wallet key phrase: ");
-			std::string hint;
-			cout << "Enter a hint for the phrase if you want: " << flush;
-			getline(cin, hint);
-			Address a = keyManager().importBrain(seed, m_name, hint);
-			cout << a << endl;
-			cout << "  ICAP: " << ICAP(a).encoded() << endl;
-			cout << "  Raw hex: " << a.hex() << endl;
 			break;
 		}
 		case OperationMode::ImportPresale:
