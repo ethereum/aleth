@@ -102,6 +102,10 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
 	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
+	bc().setOnBlockImport([=](BlockHeader const& _info){
+		if (auto h = m_host.lock())
+			h->onBlockImported(_info);
+	});
 
 	if (_forceAction == WithExisting::Rescue)
 		bc().rescue(m_stateDB);
@@ -110,7 +114,9 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 
 	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
 	m_host = host;
+
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
+
 
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);

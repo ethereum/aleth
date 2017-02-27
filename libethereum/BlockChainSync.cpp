@@ -177,6 +177,19 @@ BlockChainSync::~BlockChainSync()
 	abortSync();
 }
 
+void BlockChainSync::onBlockImported(BlockHeader const& _info)
+{
+	//if a block has been added via mining or other block import function
+	//through RPC, then we should count it as a last imported block
+	RecursiveGuard l(x_sync);
+	if (_info.number() > m_lastImportedBlock)
+	{
+		m_lastImportedBlock = static_cast<unsigned>(_info.number());
+		m_lastImportedBlockHash = _info.hash();
+		m_highestBlock = max(m_lastImportedBlock, m_highestBlock);
+	}
+}
+
 void BlockChainSync::abortSync()
 {
 	resetSync();
@@ -641,7 +654,6 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
-
 
 	if (_r.itemCount() != 2)
 	{
