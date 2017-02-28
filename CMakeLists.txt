@@ -60,8 +60,7 @@ include(ProjectCryptopp)
 include(ProjectJsonCpp)
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
-
-
+include(deps/snark.cmake)
 
 configure_project()
 
