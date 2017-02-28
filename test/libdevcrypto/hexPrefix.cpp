@@ -14,16 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file hexPrefix.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * Main test functions.
- */
 
 #include <fstream>
-
 #include <boost/test/unit_test.hpp>
-
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
@@ -36,7 +29,9 @@ using namespace dev;
 using namespace dev::test;
 namespace js = json_spirit;
 
-BOOST_FIXTURE_TEST_SUITE(BasicTests, TestOutputHelper)
+BOOST_AUTO_TEST_SUITE(Crypto)
+
+BOOST_FIXTURE_TEST_SUITE(Basic, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
@@ -100,4 +95,5 @@ BOOST_AUTO_TEST_CASE(base64)
 	}
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

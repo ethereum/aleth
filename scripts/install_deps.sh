@@ -188,7 +188,7 @@ Linux)
                 $SUDO apt-get -qy remove llvm  # Remove confilicting package.
                 echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | \
                     $SUDO tee -a /etc/apt/sources.list > /dev/null
-                LLVM_PACKAGES="llvm-3.9-dev libz-dev"
+                TRAVIS_PACKAGES="llvm-3.9-dev libz-dev"
             fi
             $SUDO apt-get -q update
             $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
@@ -198,7 +198,7 @@ Linux)
                 libleveldb-dev \
                 libmicrohttpd-dev \
                 libminiupnpc-dev \
-                $LLVM_PACKAGES
+                $TRAVIS_PACKAGES
             ;;
 
         CentOS*)
