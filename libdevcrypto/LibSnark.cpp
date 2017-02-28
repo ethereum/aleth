@@ -52,6 +52,9 @@ void initLibSnark()
 	if (!initialized)
 	{
 		libsnark::alt_bn128_pp::init_public_params();
+		// Otherwise the library would output profiling info for each run.
+		libsnark::inhibit_profiling_counters = true;
+		libsnark::inhibit_profiling_info = true;
 		initialized = true;
 	}
 }
