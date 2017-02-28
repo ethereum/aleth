@@ -426,11 +426,6 @@ int main(int argc, char** argv)
 		if (m.interpretOption(i, argc, argv))
 		{
 		}
-		else if (arg == "--export-vk" && i + 1 < argc)
-		{
-			dev::snark::exportVK(argv[++i]);
-			return 0;
-		}
 		else if (arg == "--listen-ip" && i + 1 < argc)
 		{
 			listenIP = argv[++i];
