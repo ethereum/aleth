@@ -37,6 +37,7 @@
 #include <iostream>
 #include <chrono>
 #include "Common.h"
+#include "CommonData.h"
 #include "Base64.h"
 
 namespace dev
@@ -76,6 +77,7 @@ std::string memDump(bytes const& _bytes, unsigned _width = 8, bool _html = false
 template <class S, class T> struct StreamOut { static S& bypass(S& _out, T const& _t) { _out << _t; return _out; } };
 template <class S> struct StreamOut<S, uint8_t> { static S& bypass(S& _out, uint8_t const& _t) { _out << (int)_t; return _out; } };
 
+inline std::ostream& operator<<(std::ostream& _out, bytes const& _e) { _out << toHex(_e, 2, HexPrefix::Add); return _out; }
 template <class T> inline std::ostream& operator<<(std::ostream& _out, std::vector<T> const& _e);
 template <class T, std::size_t Z> inline std::ostream& operator<<(std::ostream& _out, std::array<T, Z> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::pair<T, U> const& _e);
