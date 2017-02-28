@@ -38,6 +38,9 @@ namespace test
 
 namespace
 {
+
+static u256 groupOrder = u256("21888242871839275222246405745257275088548364400416034343698204186575808495617");
+
 pair<bool, bytes> ecmul_helper(bytes const& _a, u256 const& _scalar)
 {
 	bytes input = _a + toBigEndian(_scalar);
@@ -48,6 +51,25 @@ pair<bool, bytes> ecadd_helper(bytes const& _a, bytes const& _b)
 {
 	bytes input = _a + _b;
 	return alt_bn128_G1_add(ref(input));
+}
+
+pair<bool, bytes> pairingprod_helper(bytes const& _input)
+{
+	return alt_bn128_pairing_product(ref(_input));
+}
+
+bytes negateG1(bytes const& _input)
+{
+	auto ret = ecmul_helper(_input, groupOrder - 1);
+	BOOST_REQUIRE(ret.first);
+	return ret.second;
+}
+
+bytes addG1(bytes const& _x, bytes const& _y)
+{
+	auto ret = ecadd_helper(_x, _y);
+	BOOST_REQUIRE(ret.first);
+	return ret.second;
 }
 
 }
@@ -93,7 +115,6 @@ BOOST_AUTO_TEST_CASE(ecmul_add)
 	BOOST_CHECK(ecmul_helper(x, u256(2)).first);
 	// x + x == x * 2
 	BOOST_CHECK(ecadd_helper(x, x).second == ecmul_helper(x, u256(2)).second);
-	u256 groupOrder("21888242871839275222246405745257275088548364400416034343698204186575808495617");
 	// x * -1 + x == 0
 	BOOST_CHECK(ecmul_helper(x, groupOrder - 1).first);
 	BOOST_CHECK(ecadd_helper(ecmul_helper(x, groupOrder - 1).second, x).second == bytes(0x40, 0));
@@ -230,9 +251,15 @@ BOOST_AUTO_TEST_CASE(pairing)
 	input.push_back(u256("9643208548031422463313148630985736896287522941726746581856185889848792022807"));
 	input.push_back(u256("18066496933330839731877828156604"));
 
+	bytes P2 =
+		toBigEndian(u256("11559732032986387107991004021392285783925812861821192530917403151452391805634")) +
+		toBigEndian(u256("10857046999023057135944570762232829481370756359578518086990519993285655852781")) +
+		toBigEndian(u256("4082367875863433681332203403145435568316851327593401208105741076214120093531")) +
+		toBigEndian(u256("8495653923123431417604973247489272438418190587263600148770280649306958101930"));
+
 	pair<bool, bytes> ret;
 	// Compute the linear combination vk_x
-	bytes vkx = toBigEndian(u256(0)) + toBigEndian(u256(1));
+	bytes vkx = toBigEndian(u256(0)) + toBigEndian(u256(0));
 	for (size_t i = 0; i < input.size(); ++i)
 	{
 		ret = ecmul_helper(vk.IC[i + 1], input[i]);
@@ -244,22 +271,36 @@ BOOST_AUTO_TEST_CASE(pairing)
 	ret = ecadd_helper(vkx, vk.IC[0]);
 	BOOST_REQUIRE(ret.first);
 	vkx = ret.second;
-//	if (!Pairing.pairingProd2(proof.A, vk.A, Pairing.negate(proof.A_p), Pairing.P2())) return 1;
-//	if (!Pairing.pairingProd2(vk.B, proof.B, Pairing.negate(proof.B_p), Pairing.P2())) return 2;
-//	if (!Pairing.pairingProd2(proof.C, vk.C, Pairing.negate(proof.C_p), Pairing.P2())) return 3;
-//	if (!Pairing.pairingProd3(
-//		proof.K, vk.gamma,
-//		Pairing.negate(Pairing.add(vk_x, Pairing.add(proof.A, proof.C))), vk.gammaBeta2,
-//		Pairing.negate(vk.gammaBeta1), proof.B
-//	)) return 4;
-//	if (!Pairing.pairingProd3(
-//			Pairing.add(vk_x, proof.A), proof.B,
-//			Pairing.negate(proof.H), vk.Z,
-//			Pairing.negate(proof.C), Pairing.P2()
-//	)) return 5;
-//	return 0;
-//	}
 
+	// Now run the pairing checks.
+	ret = pairingprod_helper(proof.A + vk.A + negateG1(proof.Ap) + P2);
+	BOOST_REQUIRE(ret.first);
+	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ret = pairingprod_helper(vk.B + proof.B + negateG1(proof.Bp) + P2);
+	BOOST_REQUIRE(ret.first);
+	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ret = pairingprod_helper(proof.C + vk.C + negateG1(proof.Cp) + P2);
+	BOOST_REQUIRE(ret.first);
+	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ret = pairingprod_helper(
+		proof.K + vk.gamma +
+		negateG1(addG1(vkx, addG1(proof.A, proof.C))) + vk.gammaBeta2 +
+		negateG1(vk.gammaBeta1) + proof.B
+	);
+	BOOST_REQUIRE(ret.first);
+	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ret = pairingprod_helper(
+		addG1(vkx, proof.A) + proof.B +
+		negateG1(proof.H) + vk.Z +
+		negateG1(proof.C) + P2
+	);
+	BOOST_REQUIRE(ret.first);
+	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+
+	// Just for the fun of it, try a wrong check.
+	ret = pairingprod_helper(proof.A + vk.A + proof.Ap + P2);
+	BOOST_REQUIRE(ret.first);
+	BOOST_REQUIRE(ret.second == toBigEndian(u256(0)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

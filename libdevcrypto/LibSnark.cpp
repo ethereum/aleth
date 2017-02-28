@@ -86,8 +86,8 @@ libsnark::alt_bn128_Fq decodeFqElement(dev::bytesConstRef _data)
 
 libsnark::alt_bn128_G1 decodePointG1(dev::bytesConstRef _data)
 {
-	libsnark::alt_bn128_Fq X =  decodeFqElement(_data.cropped(0));
-	libsnark::alt_bn128_Fq Y =  decodeFqElement(_data.cropped(32));
+	libsnark::alt_bn128_Fq X = decodeFqElement(_data.cropped(0));
+	libsnark::alt_bn128_Fq Y = decodeFqElement(_data.cropped(32));
 	if (X == libsnark::alt_bn128_Fq::zero() && Y == libsnark::alt_bn128_Fq::zero())
 		return libsnark::alt_bn128_G1::zero();
 	libsnark::alt_bn128_G1 p(X, Y, libsnark::alt_bn128_Fq::one());
