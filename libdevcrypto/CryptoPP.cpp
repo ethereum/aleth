@@ -421,12 +421,11 @@ void Secp256k1PPCtx::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> co
 
 void Secp256k1PPCtx::exponentToPublic(Integer const& _e, Public& o_p)
 {
-	auto& ctx = Secp256k1PPCtx::get();
 	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pk;
 	
 	{
-		Guard l(ctx.x_params);
-		pk.Initialize(ctx.m_params, ctx.m_params.ExponentiateBase(_e));
+		Guard l(x_params);
+		pk.Initialize(m_params, m_params.ExponentiateBase(_e));
 	}
 	
 	exportPublicKey(pk, o_p);

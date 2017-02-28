@@ -87,6 +87,32 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 	BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);
 }
 
+BOOST_AUTO_TEST_CASE(pubkeyOfZero)
+{
+	auto pub = toPublic({});
+	BOOST_REQUIRE_EQUAL(pub, Public{});
+
+	Secp256k1PP::get()->toPublic({}, pub);
+	BOOST_REQUIRE_EQUAL(pub, Public{});
+}
+
+BOOST_AUTO_TEST_CASE(createPublic_cryptopp_vs_libsecp256k1)
+{
+	Secret sec{"0x0000000000000000000000000000000000000000000000000000000000000001"};
+
+	Public cryptoppPub;
+	Public libsecpPub;
+	BOOST_REQUIRE_EQUAL(cryptoppPub, libsecpPub);
+
+	Secp256k1PP::get()->toPublic(sec, cryptoppPub);
+	BOOST_REQUIRE_NE(cryptoppPub, Public{});
+
+	libsecpPub = toPublic(sec);
+	BOOST_REQUIRE_NE(cryptoppPub, Public{});
+
+	BOOST_CHECK_EQUAL(cryptoppPub, libsecpPub);
+}
+
 BOOST_AUTO_TEST_CASE(secp256k1lib)
 {
 	KeyPair k = KeyPair::create();
@@ -270,8 +296,8 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 	string original = message;
 	bytes b = asBytes(message);
 
-	bytesConstRef shared("shared MAC data");
-	bytesConstRef wrongShared("wrong shared MAC data");
+	string shared("shared MAC data");
+	string wrongShared("wrong shared MAC data");
 
 	s_secp256k1->encryptECIES(k.pub(), shared, b);
 	BOOST_REQUIRE(b != asBytes(original));
@@ -714,7 +740,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	StringSource source(string192, true, aesStream);
 	BOOST_REQUIRE(cipher.size() == 32);
 
-	cbcDecryption.ProcessData((byte*)&cipher[0], (byte*)&string192[0], cipher.size());
+	byte* pOut = reinterpret_cast<byte*>(&string192[0]);
+	byte const* pIn = reinterpret_cast<byte const*>(cipher.data());
+	cbcDecryption.ProcessData(pOut, pIn, cipher.size());
 	BOOST_REQUIRE(string192 == plainOriginal);
 }
 
