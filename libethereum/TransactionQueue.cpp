@@ -100,6 +100,8 @@ ImportResult TransactionQueue::check_WITH_LOCK(h256 const& _h, IfDropped _ik)
 
 ImportResult TransactionQueue::import(Transaction const& _transaction, IfDropped _ik)
 {
+	if (t.hasZeroSignature())
+		return ImportResult::ZeroSignature;
 	// Check if we already know this transaction.
 	h256 h = _transaction.sha3(WithSignature);
 
