@@ -183,7 +183,7 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
 	{
 		initLibSnark();
 		libsnark::alt_bn128_G1 p1 = decodePointG1(_in);
-		libsnark::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 3));
+		libsnark::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 2));
 
 		return {true, encodePointG1(p1 + p2)};
 	}
