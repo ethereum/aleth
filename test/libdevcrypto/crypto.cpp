@@ -270,8 +270,8 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 	string original = message;
 	bytes b = asBytes(message);
 
-	bytesConstRef shared("shared MAC data");
-	bytesConstRef wrongShared("wrong shared MAC data");
+	string shared("shared MAC data");
+	string wrongShared("wrong shared MAC data");
 
 	s_secp256k1->encryptECIES(k.pub(), shared, b);
 	BOOST_REQUIRE(b != asBytes(original));
