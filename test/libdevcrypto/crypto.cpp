@@ -714,7 +714,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	StringSource source(string192, true, aesStream);
 	BOOST_REQUIRE(cipher.size() == 32);
 
-	cbcDecryption.ProcessData((byte*)&cipher[0], (byte*)&string192[0], cipher.size());
+	byte* pOut = reinterpret_cast<byte*>(&string192[0]);
+	byte const* pIn = reinterpret_cast<byte const*>(cipher.data());
+	cbcDecryption.ProcessData(pOut, pIn, cipher.size());
 	BOOST_REQUIRE(string192 == plainOriginal);
 }
 
