@@ -23,6 +23,8 @@
 
 #include <libdevcore/Common.h>
 #include "Common.h"
+#include <libethcore/Precompiled.h>
+
 #include <libevmcore/EVMSchedule.h>
 
 namespace dev
@@ -34,18 +36,31 @@ class PrecompiledContract
 {
 public:
 	PrecompiledContract() = default;
-	PrecompiledContract(std::function<bigint(size_t)> const& _cost, std::function<bytes(bytesConstRef)> const& _exec):
+	PrecompiledContract(
+		std::function<bigint(size_t)> const& _cost,
+		PrecompiledExecutor const& _exec,
+		u256 const& _startingBlock = 0
+	):
 		m_cost(_cost),
-		m_execute(_exec)
+		m_execute(_exec),
+		m_startingBlock(_startingBlock)
 	{}
-	PrecompiledContract(unsigned _base, unsigned _word, std::function<bytes(bytesConstRef)> const& _exec);
+	PrecompiledContract(
+		unsigned _base,
+		unsigned _word,
+		PrecompiledExecutor const& _exec,
+		u256 const& _startingBlock = 0
+	);
 
 	bigint cost(bytesConstRef _in) const { return m_cost(_in.size()); }
-	bytes execute(bytesConstRef _in) const { return m_execute(_in); }
+	std::pair<bool, bytes> execute(bytesConstRef _in) const { return m_execute(_in); }
+
+	u256 const& startingBlock() const { return m_startingBlock; }
 
 private:
 	std::function<bigint(size_t)> m_cost;
-	std::function<bytes(bytesConstRef)> m_execute;
+	PrecompiledExecutor m_execute;
+	u256 m_startingBlock = 0;
 };
 
 struct ChainOperationParams
