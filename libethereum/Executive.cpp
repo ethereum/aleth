@@ -190,12 +190,12 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 
 	// Check gas cost is enough.
-	m_baseGasRequired = m_t.gasRequired(m_sealEngine.evmSchedule(m_envInfo));
+	m_baseGasRequired = m_t.baseGasRequired(m_sealEngine.evmSchedule(m_envInfo));
 	if (m_baseGasRequired > m_t.gas())
 	{
 		clog(ExecutiveWarnChannel) << "Not enough gas to pay for the transaction: Require >" << m_baseGasRequired << " Got" << m_t.gas();
 		m_excepted = TransactionException::OutOfGasBase;
-		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(m_baseGasRequired, (bigint)m_t.gas()));
+		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError((bigint)m_baseGasRequired, (bigint)m_t.gas()));
 	}
 
 	// Avoid invalid transactions.

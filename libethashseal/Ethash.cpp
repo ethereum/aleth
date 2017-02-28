@@ -159,7 +159,7 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 			_t.checkChainId(-4);
 	}
 	// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
-	if (_ir & ImportRequirements::TransactionBasic && _t.gasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
+	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
 }
 

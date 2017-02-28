@@ -163,12 +163,16 @@ void TransactionBase::checkChainId(int chainId) const
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 }
 
-bigint TransactionBase::gasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es, u256 const& _gas)
+int64_t TransactionBase::baseGasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es)
 {
-	bigint ret = (_contractCreation ? _es.txCreateGas : _es.txGas) + _gas;
+	int64_t g = _contractCreation ? _es.txCreateGas : _es.txGas;
+
+	// Calculate the cost of input data.
+	// No risk of overflow by using int64 until txDataNonZeroGas is quite small
+	// (the value not in billions).
 	for (auto i: _data)
-		ret += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
-	return ret;
+		g += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
+	return g;
 }
 
 h256 TransactionBase::sha3(IncludeSignature _sig) const

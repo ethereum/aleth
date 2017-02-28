@@ -35,7 +35,7 @@ const char* WorkInChannel::name() { return EthOrange "⚒" EthGreen "▬▶"; }
 const char* WorkOutChannel::name() { return EthOrange "⚒" EthNavy "◀▬"; }
 const char* WorkChannel::name() { return EthOrange "⚒" EthWhite "  "; }
 
-namespace dev { namespace eth { const u256 c_maxGasEstimate = 50000000; } }
+static const int64_t c_maxGasEstimate = 50000000;
 
 pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
 {
@@ -100,14 +100,14 @@ ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes cons
 	return ret;
 }
 
-std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, u256 _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback)
+std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, int64_t _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback)
 {
 	try
 	{
-		u256 upperBound = _maxGas;
+		int64_t upperBound = _maxGas;
 		if (upperBound == Invalid256 || upperBound > c_maxGasEstimate)
 			upperBound = c_maxGasEstimate;
-		u256 lowerBound = (u256)Transaction::gasRequired(!_dest, &_data, EVMSchedule(), 0);
+		int64_t lowerBound = Transaction::baseGasRequired(!_dest, &_data, EVMSchedule());
 		Block bk = block(_blockNumber);
 		u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
 		ExecutionResult er;
@@ -115,7 +115,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 		bool good = false;
 		while (upperBound != lowerBound)
 		{
-			u256 mid = (lowerBound + upperBound) / 2;
+			int64_t mid = (lowerBound + upperBound) / 2;
 			u256 n = bk.transactionsFrom(_from);
 			Transaction t;
 			if (_dest)
@@ -124,7 +124,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 				t = Transaction(_value, gasPrice, mid, _data, n);
 			t.forceSender(_from);
 			EnvInfo env(bk.info(), bc().lastHashes(), 0);
-			env.setGasLimit(mid.convert_to<int64_t>());
+			env.setGasLimit(mid);
 			State tempState(bk.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 			er = tempState.execute(env, *bc().sealEngine(), t, Permanence::Reverted).first;

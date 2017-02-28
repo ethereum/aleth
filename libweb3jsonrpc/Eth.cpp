@@ -363,7 +363,8 @@ string Eth::eth_estimateGas(Json::Value const& _json)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		return toJS(client()->estimateGas(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, PendingBlock).first);
+		int64_t gas = static_cast<int64_t>(t.gas);
+		return toJS(client()->estimateGas(t.from, t.value, t.to, t.data, gas, t.gasPrice, PendingBlock).first);
 	}
 	catch (...)
 	{
