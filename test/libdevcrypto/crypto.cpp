@@ -87,6 +87,32 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 	BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);
 }
 
+BOOST_AUTO_TEST_CASE(pubkeyOfZero)
+{
+	auto pub = toPublic({});
+	BOOST_REQUIRE_EQUAL(pub, Public{});
+
+	Secp256k1PP::get()->toPublic({}, pub);
+	BOOST_REQUIRE_EQUAL(pub, Public{});
+}
+
+BOOST_AUTO_TEST_CASE(createPublic_cryptopp_vs_libsecp256k1)
+{
+	Secret sec{"0x0000000000000000000000000000000000000000000000000000000000000001"};
+
+	Public cryptoppPub;
+	Public libsecpPub;
+	BOOST_REQUIRE_EQUAL(cryptoppPub, libsecpPub);
+
+	Secp256k1PP::get()->toPublic(sec, cryptoppPub);
+	BOOST_REQUIRE_NE(cryptoppPub, Public{});
+
+	libsecpPub = toPublic(sec);
+	BOOST_REQUIRE_NE(cryptoppPub, Public{});
+
+	BOOST_CHECK_EQUAL(cryptoppPub, libsecpPub);
+}
+
 BOOST_AUTO_TEST_CASE(secp256k1lib)
 {
 	KeyPair k = KeyPair::create();
