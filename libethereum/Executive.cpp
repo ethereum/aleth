@@ -198,7 +198,8 @@ void Executive::initialize(Transaction const& _transaction)
 		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(m_baseGasRequired, (bigint)m_t.gas()));
 	}
 
-	if (!m_t.hasZeroSignature()) {
+	if (!m_t.hasZeroSignature())
+	{
 		// Avoid invalid transactions.
 		u256 nonceReq;
 		try
@@ -217,9 +218,10 @@ void Executive::initialize(Transaction const& _transaction)
 			m_excepted = TransactionException::InvalidNonce;
 			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
 		}
-	} else {
-		m_t.forceSender(LastAddress); // https://github.com/ethereum/EIPs/issues/86
 	}
+	else
+		m_t.forceSender(LastAddress); // https://github.com/ethereum/EIPs/issues/86
+
 	// Avoid unaffordable transactions.
 	bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
 	bigint totalCost = m_t.value() + gasCost;

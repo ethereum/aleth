@@ -72,7 +72,7 @@ using Address = h160;
 extern Address ZeroAddress;
 
 /// The last address.
-extern Address LastAddress("0xffffffffffffffffffffffffffffffffffffffff");
+extern Address LastAddress;
 
 /// A vector of Ethereum addresses.
 using Addresses = h160s;
