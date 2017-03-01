@@ -21,20 +21,27 @@ cppHead=$(git rev-parse HEAD)
 mkdir build
 cd build
 echo "Make cpp-ethereum develop:"
-cmake ..
+cmake .. -DCOVERAGE=On
 make -j8
-cd test
 echo "Running all tests:"
 echo "cpp-ethereum repository at commit $cppHead"
 echo "tests repository at commit $testHead"
 exec 2> $workdir/testlog.txt
 timestart=$(date +%s.%N)
-./testeth -- --all --exectimelog
+test/testeth -- --all --exectimelog
 timeend=$(date +%s.%N)
+date=$(date +%Y-%m-%d)
+
+# Upload coverage report
+if [ -z "$CODECOV_TOKEN" ]; then
+    echo "Warning! CODECOV_TOKEN not set. See https://codecov.io/gh/ethereum/cpp-ethereum/settings."
+else
+    bash <(curl -s https://codecov.io/bash) -n alltests -b "$date" -F alltests -a '>/dev/null 2>&1'
+fi
+
 
 #Send Mails
 RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org"
-date=$(date +%Y-%m-%d)
 (
 echo "REPORT"
 exectime=$(echo "$timeend - $timestart" | bc)
