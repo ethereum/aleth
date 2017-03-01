@@ -218,7 +218,7 @@ void Executive::initialize(Transaction const& _transaction)
 			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
 		}
 	} else {
-		m_t.forceSender(Address(-1)); // https://github.com/ethereum/EIPs/issues/86
+		m_t.forceSender(LastAddress); // https://github.com/ethereum/EIPs/issues/86
 	}
 	// Avoid unaffordable transactions.
 	bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
