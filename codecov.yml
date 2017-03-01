@@ -19,3 +19,6 @@ coverage:
         enabled: no
 comment:
   layout: header, diff, changes, sunburst, suggestions, tree
+flags:
+  alltests:
+    joined: false
