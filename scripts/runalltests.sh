@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
+workdir=$(pwd)
+
 #Clean the previous build
 rm -rf cpp-ethereum 2>/dev/null || true
 rm -rf tests 2>/dev/null || true
-exec &> buildlog.txt
+exec &> $workdir/buildlog.txt
 export ETHEREUM_TEST_PATH="$(pwd)/tests"
 
 #Clonning Repositories
@@ -25,7 +27,7 @@ make -j8
 echo "Running all tests:"
 echo "cpp-ethereum repository at commit $cppHead"
 echo "tests repository at commit $testHead"
-exec 2> testlog.txt
+exec 2> $workdir/testlog.txt
 timestart=$(date +%s.%N)
 test/testeth -- --all --exectimelog
 timeend=$(date +%s.%N)
@@ -38,14 +40,17 @@ else
     bash <(curl -s https://codecov.io/bash) -n alltests -b "$date" -F alltests -a '>/dev/null 2>&1'
 fi
 
-
-#Send Mails
-RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org"
+# Make report
+cd $workdir
 (
 echo "REPORT"
 exectime=$(echo "$timeend - $timestart" | bc)
 echo "Test execution time: $exectime s"
-echo "Coverage analyze: https://codecov.io/gh/ethereum/cpp-ethereum/commit/$cppHead"
+echo "Coverage: https://codecov.io/gh/ethereum/cpp-ethereum/commit/$cppHead"
 cat testlog.txt
 cat buildlog.txt
-) | mail -s "cpp-ethereum test results $date" $RECIPIENTS
+) > report.txt
+
+# Send mail
+RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org"
+mail < report.txt -s "cpp-ethereum alltests $date" $RECIPIENTS
