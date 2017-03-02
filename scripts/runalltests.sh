@@ -10,8 +10,8 @@ export ETHEREUM_TEST_PATH="$(pwd)/tests"
 
 #Clonning Repositories
 echo "Cloning Repositories"
-git clone https://github.com/ethereum/tests.git
-git clone --recursive https://github.com/ethereum/cpp-ethereum.git
+git clone --depth 1 --single-branch https://github.com/ethereum/tests.git
+git clone --recursive --depth 1 --single-branch https://github.com/ethereum/cpp-ethereum.git
 cd tests
 testHead=$(git rev-parse HEAD)
 cd ..
