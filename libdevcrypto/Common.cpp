@@ -67,7 +67,7 @@ bool dev::SignatureStruct::isValid() const noexcept
 	return true;
 }
 
-bool dev::SignatureStruct::zeroSignature() const noexcept
+bool dev::SignatureStruct::isZeroSignature() const noexcept
 {
 	return (r == h256(0) && s == h256(0) && v == 0);
 }

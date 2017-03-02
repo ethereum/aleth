@@ -142,7 +142,7 @@ public:
 	/// @returns the signature of the transaction. Encodes the sender.
 	SignatureStruct const& signature() const { return m_vrs; }
 
-	bool hasZeroSignature() const { return m_vrs.zeroSignature(); }
+	bool hasZeroSignature() const { return m_vrs.isZeroSignature(); }
 
 	void sign(Secret const& _priv);			///< Sign the transaction.
 
