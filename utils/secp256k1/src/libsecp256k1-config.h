@@ -21,7 +21,9 @@
 /* #undef ENABLE_OPENSSL_TESTS */
 
 /* Define this symbol if __builtin_expect is available */
+#if !defined(_MSC_VER)
 #define HAVE_BUILTIN_EXPECT 1
+#endif
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -60,7 +62,9 @@
 #define HAVE_UNISTD_H 1
 
 /* Define to 1 if the system has the type `__int128'. */
+#if !defined(_MSC_VER)
 #define HAVE___INT128 1
+#endif
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
@@ -103,10 +107,14 @@
 /* #undef USE_EXTERNAL_ASM */
 
 /* Define this symbol to use the FIELD_10X26 implementation */
-/* #undef USE_FIELD_10X26 */
+#if defined(_MSC_VER)
+#define USE_FIELD_10X26 1
+#endif
 
 /* Define this symbol to use the FIELD_5X52 implementation */
+#if !defined(_MSC_VER)
 #define USE_FIELD_5X52 1
+#endif
 
 /* Define this symbol to use the native field inverse implementation */
 #define USE_FIELD_INV_BUILTIN 1
@@ -121,10 +129,14 @@
 #define USE_NUM_NONE 1
 
 /* Define this symbol to use the 4x64 scalar implementation */
+#if !defined(_MSC_VER)
 #define USE_SCALAR_4X64 1
+#endif
 
 /* Define this symbol to use the 8x32 scalar implementation */
-/* #undef USE_SCALAR_8X32 */
+#if defined(_MSC_VER)
+#define USE_SCALAR_8X32 1
+#endif
 
 /* Define this symbol to use the native scalar inverse implementation */
 #define USE_SCALAR_INV_BUILTIN 1

@@ -10,7 +10,7 @@
 #
 # Copy src and include dirs.
 #
-# Copy CFLAGS from Makefile to target_compile_options().
+# Copy CFLAGS from Makefile to COMPILE_OPTIONS.
 
 # Reset definitions and includes.
 # TODO: We should avoid using directory based configurations like add_definitions()
@@ -21,10 +21,13 @@ set(CMAKE_C_FLAGS "")
 set(CMAKE_C_FLAGS_RELEASE "")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "")
 set(CMAKE_C_FLAGS_DEBUG "")
+if (MSVC)
+	set(COMPILE_OPTIONS "")
+else()
+	set(COMPILE_OPTIONS -O3 -W -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings -fvisibility=hidden)
+endif()
 
 add_library(secp256k1 STATIC src/secp256k1.c)
 target_compile_definitions(secp256k1 INTERFACE ETH_HAVE_SECP256K1 PRIVATE HAVE_CONFIG_H)
 target_include_directories(secp256k1 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_options(secp256k1 PRIVATE -O3 -W -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings -fvisibility=hidden)
-
-
+target_compile_options(secp256k1 PRIVATE ${COMPILE_OPTIONS})
