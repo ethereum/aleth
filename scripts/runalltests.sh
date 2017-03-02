@@ -47,6 +47,7 @@ RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@et
 echo "REPORT"
 exectime=$(echo "$timeend - $timestart" | bc)
 echo "Test execution time: $exectime s"
+echo "Coverage analyze: https://codecov.io/gh/ethereum/cpp-ethereum/commit/$cppHead"
 cat $workdir/testlog.txt
 cat $workdir/buildlog.txt
 ) | mail -s "cpp-ethereum test results $date" $RECIPIENTS
