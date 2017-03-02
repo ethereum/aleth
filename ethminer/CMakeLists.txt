@@ -9,7 +9,7 @@ jsonrpcstub_client_create(ethminer minerfarm.json FarmClient ${CMAKE_CURRENT_SOU
 find_package(Eth)
 
 target_include_directories(ethminer PRIVATE ..)
-target_link_libraries(ethminer ${Eth_ETHASHSEAL_LIBRARIES} jsonrpc::client)
+target_link_libraries(ethminer ${Eth_ETHASHSEAL_LIBRARIES} JsonRpcCpp::Client)
 
 if (UNIX AND NOT APPLE)
 	target_link_libraries(ethminer pthread)

@@ -34,8 +34,10 @@ build_xc
 
 # build system
 build.*/
+/deps/
 extdep/install
 extdep/download
+/cmake-build-*/
 
 *.pyc
 
