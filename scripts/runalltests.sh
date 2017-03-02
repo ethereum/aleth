@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-workdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+workdir=$(pwd)
+
 #Clean the previous build
-cd $workdir
-rm -r cpp-ethereum
-rm -r tests
+rm -rf cpp-ethereum 2>/dev/null || true
+rm -rf tests 2>/dev/null || true
 exec &> $workdir/buildlog.txt
-ETHEREUM_TEST_PATH=$workdir/tests
+export ETHEREUM_TEST_PATH="$(pwd)/tests"
 
 #Clonning Repositories
 echo "Cloning Repositories"
-git clone https://github.com/ethereum/tests.git
-git clone --recursive https://github.com/ethereum/cpp-ethereum.git
+git clone --depth 1 --single-branch https://github.com/ethereum/tests.git
+git clone --recursive --depth 1 --single-branch https://github.com/ethereum/cpp-ethereum.git
 cd tests
 testHead=$(git rev-parse HEAD)
 cd ..
@@ -40,14 +40,17 @@ else
     bash <(curl -s https://codecov.io/bash) -n alltests -b "$date" -F alltests -a '>/dev/null 2>&1'
 fi
 
-
-#Send Mails
-RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org"
+# Make report
+cd $workdir
 (
 echo "REPORT"
 exectime=$(echo "$timeend - $timestart" | bc)
 echo "Test execution time: $exectime s"
-echo "Coverage analyze: https://codecov.io/gh/ethereum/cpp-ethereum/commit/$cppHead"
-cat $workdir/testlog.txt
-cat $workdir/buildlog.txt
-) | mail -s "cpp-ethereum test results $date" $RECIPIENTS
+echo "Coverage: https://codecov.io/gh/ethereum/cpp-ethereum/commit/$cppHead"
+cat testlog.txt
+cat buildlog.txt
+) > report.txt
+
+# Send mail
+RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org"
+mail < report.txt -s "cpp-ethereum alltests $date" $RECIPIENTS
