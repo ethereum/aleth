@@ -6,6 +6,7 @@ cd $workdir
 rm -r cpp-ethereum
 rm -r tests
 exec &> $workdir/buildlog.txt
+ETHEREUM_TEST_PATH=$workdir/tests
 
 #Clonning Repositories
 echo "Cloning Repositories"
