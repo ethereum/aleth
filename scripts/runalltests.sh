@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
-workdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #Clean the previous build
-cd $workdir
-rm -r cpp-ethereum 2>/dev/null || true
-rm -r tests 2>/dev/null || true
-exec &> $workdir/buildlog.txt
-ETHEREUM_TEST_PATH=$workdir/tests
+rm -rf cpp-ethereum 2>/dev/null || true
+rm -rf tests 2>/dev/null || true
+exec &> buildlog.txt
+export ETHEREUM_TEST_PATH="$(pwd)/tests"
 
 #Clonning Repositories
 echo "Cloning Repositories"
@@ -27,7 +25,7 @@ make -j8
 echo "Running all tests:"
 echo "cpp-ethereum repository at commit $cppHead"
 echo "tests repository at commit $testHead"
-exec 2> $workdir/testlog.txt
+exec 2> testlog.txt
 timestart=$(date +%s.%N)
 test/testeth -- --all --exectimelog
 timeend=$(date +%s.%N)
@@ -48,6 +46,6 @@ echo "REPORT"
 exectime=$(echo "$timeend - $timestart" | bc)
 echo "Test execution time: $exectime s"
 echo "Coverage analyze: https://codecov.io/gh/ethereum/cpp-ethereum/commit/$cppHead"
-cat $workdir/testlog.txt
-cat $workdir/buildlog.txt
+cat testlog.txt
+cat buildlog.txt
 ) | mail -s "cpp-ethereum test results $date" $RECIPIENTS
