@@ -39,6 +39,7 @@ public:
 	static std::string const& testName() { return m_currentTestName; }
 	static std::string const& caseName() { return m_currentTestCaseName; }
 	static std::string const& testFileName() { return m_currentTestFileName; }
+	static void printWarn(std::string const& _str) {std::cerr << _str << std::endl;}
 	static void finishTest();
 	static void printTestExecStats();
 	~TestOutputHelper() { TestOutputHelper::finishTest(); }
