@@ -47,8 +47,7 @@ clone_script:
       }
 cache:
     - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
-    - deps/boost -> deps/boost.cmake
-    - deps/tmp/boost -> deps/boost.cmake
+    - deps
 #RDP LOGIN details for trouble shooting
 #init:
 #    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
