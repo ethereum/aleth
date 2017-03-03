@@ -47,7 +47,7 @@ ExternalProject_Add(jsonrpccpp
     PATCH_COMMAND cmake -E make_directory <SOURCE_DIR>/win32-deps/include
     CMAKE_ARGS ${CMAKE_ARGS}
     LOG_CONFIGURE 1
-    # Overwtire build and install commands to force Release build on MSVC.
+    # Overwrite build and install commands to force Release build on MSVC.
     BUILD_COMMAND cmake --build <BINARY_DIR> --config Release
     INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install
     LOG_INSTALL 1
