@@ -31,6 +31,11 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+namespace
+{
+int const c_chainIdInNonceBits = 64;
+}
+
 TransactionBase::TransactionBase(TransactionSkeleton const& _ts, Secret const& _s):
 	m_type(_ts.creation ? ContractCreation : MessageCall),
 	m_nonce(_ts.nonce),
@@ -172,6 +177,13 @@ void TransactionBase::checkChainId(int chainId) const
 {
 	if (m_chainId != chainId && m_chainId != -4)
 		BOOST_THROW_EXCEPTION(InvalidSignature());
+}
+
+void TransactionBase::checkNonceChainId(unsigned _chainId) const
+{
+	unsigned const nonceChainId = static_cast<unsigned>(m_nonce >> c_chainIdInNonceBits);
+	if (nonceChainId != _chainId && nonceChainId != 0)
+		BOOST_THROW_EXCEPTION(InvalidChainIdInNonce());
 }
 
 int64_t TransactionBase::baseGasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es)

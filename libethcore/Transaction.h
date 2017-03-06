@@ -86,13 +86,17 @@ public:
 	/// Force the sender to a particular value. This will result in an invalid transaction RLP.
 	void forceSender(Address const& _a) { m_sender = _a; }
 
-	/// @throws InvalidSValue if the signature has an invalid S value.
+	/// @throws InvalidSignature if the signature has an invalid S value.
 	void checkLowS() const;
 
-	/// @throws InvalidSValue if the chain id is neither -4 nor equal to @a chainId
+	/// @throws InvalidSignature if the chain id is neither -4 nor equal to @a chainId
 	/// Note that "-4" is the chain ID of the pre-155 rules, which should also be considered valid
 	/// after EIP155
 	void checkChainId(int chainId = -4) const;
+
+	/// @throws InvalidChainIdInNonce if the chain id encoded in high-order bits of nonce is neither 0 nor equal to @a _chainId
+	/// 0 is the chain ID of the pre-EIP166 rules, which should also be considered valid after EIP166
+	void checkNonceChainId(unsigned _chainId) const;
 
 	/// @returns true if transaction is non-null.
 	explicit operator bool() const { return m_type != NullTransaction; }

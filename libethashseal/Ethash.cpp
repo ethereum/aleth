@@ -158,9 +158,18 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 		else
 			_t.checkChainId(-4);
 	}
-	// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
-	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
-		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
+	if (_ir & ImportRequirements::TransactionBasic)
+	{
+		if (_bi.number() >= chainParams().u256Param("metropolisForkBlock"))
+		{
+			unsigned const nonceChainId(chainParams().u256Param("nonceChainID"));
+			_t.checkNonceChainId(nonceChainId);
+		}
+
+		// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
+		if (_t.baseGasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
+			BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
+	}
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
