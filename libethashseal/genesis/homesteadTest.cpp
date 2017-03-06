@@ -29,7 +29,7 @@ R"E(
 		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0xfffffffffffffff",
 		"EIP158ForkBlock": "0xfffffffffffffff",
-		"MetropolistForkBlock": "0xfffffffffffffff",
+		"metropolisForkBlock": "0xfffffffffffffff",
 		"networkID" : "0x01",
 		"chainID": "0x01",
 		"minGasLimit": "0x1388",

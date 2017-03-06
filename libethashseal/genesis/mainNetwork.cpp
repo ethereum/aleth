@@ -27,7 +27,7 @@ R"E(
 		"daoHardforkBlock": "0x1d4c00",
 		"EIP150ForkBlock": "0x259518",
 		"EIP158ForkBlock": "0x28d138",
-		"MetropolistForkBlock": "0xffffffffffffffffff",
+		"metropolisForkBlock": "0xffffffffffffffffff",
 		"networkID" : "0x01",
 		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",
