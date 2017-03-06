@@ -109,11 +109,16 @@ Address const& TransactionBase::safeSender() const noexcept
 
 Address const& TransactionBase::sender() const
 {
-	if (!m_sender && !hasZeroSignature())
+	if (!m_sender)
 	{
-		auto p = recover(m_vrs, sha3(WithoutSignature));
-		if (p)
-			m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
+		if (hasZeroSignature())
+			m_sender = MaxAddress;
+		else
+		{
+			auto p = recover(m_vrs, sha3(WithoutSignature));
+			if (p)
+				m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
+		}
 	}
 	return m_sender;
 }

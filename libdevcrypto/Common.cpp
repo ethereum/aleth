@@ -79,7 +79,7 @@ Public SignatureStruct::recover(h256 const& _hash) const
 
 Address dev::ZeroAddress = Address();
 
-Address dev::LastAddress = Address("0xffffffffffffffffffffffffffffffffffffffff");
+Address dev::MaxAddress = Address("0xffffffffffffffffffffffffffffffffffffffff");
 
 Public dev::toPublic(Secret const& _secret)
 {
