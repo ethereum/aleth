@@ -150,8 +150,6 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 
 	if (_ir & ImportRequirements::TransactionSignatures)
 	{
-		if (_bi.number() >= chainParams().u256Param("homsteadForkBlock"))
-			_t.checkLowS();
 		if (_bi.number() >= chainParams().u256Param("EIP158ForkBlock"))
 		{
 			int chainID(chainParams().u256Param("chainID"));
