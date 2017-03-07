@@ -44,12 +44,12 @@ ExternalProject_Add(jsonrpccpp
     URL https://github.com/cinemast/libjson-rpc-cpp/archive/v0.7.0.tar.gz
     URL_HASH SHA256=669c2259909f11a8c196923a910f9a16a8225ecc14e6c30e2bcb712bab9097eb
     # On Windows it tries to install this dir. Create it to prevent failure.
-    PATCH_COMMAND cmake -E make_directory <SOURCE_DIR>/win32-deps/include
+    PATCH_COMMAND ${CMAKE_COMMAND} -E make_directory <SOURCE_DIR>/win32-deps/include
     CMAKE_ARGS ${CMAKE_ARGS}
     LOG_CONFIGURE 1
     # Overwrite build and install commands to force Release build on MSVC.
-    BUILD_COMMAND cmake --build <BINARY_DIR> --config Release
-    INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install
+    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
     LOG_INSTALL 1
 )
 

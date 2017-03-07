@@ -20,8 +20,8 @@ ExternalProject_Add(jsoncpp
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=Off
     LOG_CONFIGURE 1
     # Overwrite build and install commands to force Release build on MSVC.
-    BUILD_COMMAND cmake --build <BINARY_DIR> --config Release
-    INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install
+    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
     LOG_INSTALL 1
 )
 
