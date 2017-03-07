@@ -61,7 +61,7 @@ public:
 	int trValueIndex; ///< GeneralState value
 	bool performance = false;
 	bool nonetwork = false;///< For libp2p
-	bool quadratic = false;
+	bool quadratic = false;///< Time consuming tests
 	bool memory = false;
 	bool inputLimits = false;
 	bool bigData = false;
