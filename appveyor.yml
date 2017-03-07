@@ -55,7 +55,7 @@ cache:
 #    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 install:
     - scripts/install_deps.bat
-    - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
+    - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps
 before_build:
     - if not exist build mkdir build
     - cd build
