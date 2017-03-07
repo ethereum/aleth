@@ -22,6 +22,9 @@
 #include <libdevcrypto/LibSnark.h>
 
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/SHA3.h>
+#include <libdevcore/Hash.h>
+#include <libdevcrypto/Common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -72,6 +75,93 @@ bytes addG1(bytes const& _x, bytes const& _y)
 	return ret.second;
 }
 
+std::chrono::duration<double, std::milli> timePairing(bytes const& _input)
+{
+	auto start = std::chrono::steady_clock::now();
+	auto res = pairingprod_helper(_input);
+	auto end = std::chrono::steady_clock::now();
+	BOOST_REQUIRE(res.first);
+	BOOST_REQUIRE(res.second == toBigEndian(u256(1)));
+	return end - start;
+}
+
+std::chrono::duration<double, std::milli> timeSha3(bytes const& _input)
+{
+	auto start = std::chrono::steady_clock::now();
+	sha3(_input);
+	auto end = std::chrono::steady_clock::now();
+	return end - start;
+}
+
+std::chrono::duration<double, std::milli> timeSha256(bytes const& _input)
+{
+	auto start = std::chrono::steady_clock::now();
+	sha256(ref(_input));
+	auto end = std::chrono::steady_clock::now();
+	return end - start;
+}
+
+double timeECRecover()
+{
+	struct
+	{
+		h256 hash;
+		h256 v;
+		h256 r;
+		h256 s;
+	} in;
+
+	in.hash = h256::random();
+	in.v = h256(u256(27));
+	in.r = h256::random();
+	in.s = h256::random();
+
+	auto start = std::chrono::steady_clock::now();
+	h256 ret;
+	u256 v = (u256)in.v;
+	if (v >= 27 && v <= 28)
+	{
+		SignatureStruct sig(in.r, in.s, (byte)((int)v - 27));
+		if (sig.isValid())
+		{
+			try
+			{
+				if (Public rec = recover(sig, in.hash))
+				{
+					ret = sha3(rec);
+					memset(ret.data(), 0, 12);
+				}
+			}
+			catch (...) {
+				return 0;
+			}
+		}
+		else
+			return 0;
+	}
+	else
+		return 0;
+
+	auto end = std::chrono::steady_clock::now();
+	return std::chrono::duration<double, std::milli>(end - start).count();
+}
+
+}
+
+u256 mulmod(u256 x, u256 y, u256 m)
+{
+	return m ? u256((u512(x) * u512(y)) % m) : 0;
+}
+
+double timeMulMod()
+{
+	auto start = std::chrono::steady_clock::now();
+	u256 a = 3;
+	u256 p = u256(-189);
+	for (unsigned i = 0; i < 10000; i++)
+		a = mulmod(a, a, p);
+	auto end = std::chrono::steady_clock::now();
+	return std::chrono::duration<double, std::milli>(end - start).count();
 }
 
 BOOST_AUTO_TEST_CASE(ecadd)
@@ -301,6 +391,50 @@ BOOST_AUTO_TEST_CASE(pairing)
 	ret = pairingprod_helper(proof.A + vk.A + proof.Ap + P2);
 	BOOST_REQUIRE(ret.first);
 	BOOST_REQUIRE(ret.second == toBigEndian(u256(0)));
+
+	cout << "====================================" << endl;
+	cout << "Timing pairings" << endl << endl;
+	cout << "pairings = [" << endl;
+	for (unsigned i = 0; i < 20; i++)
+	{
+		bytes zeroPairings;
+		bytes twoPairings = vk.B + proof.B + negateG1(proof.Bp) + P2;
+		bytes threePairings =
+			addG1(vkx, proof.A) + proof.B +
+			negateG1(proof.H) + vk.Z +
+			negateG1(proof.C) + P2;
+		bytes fivePairings = twoPairings + threePairings;
+		bytes tenPairings = fivePairings + fivePairings;
+		bytes hundredPairings;
+		for (unsigned j = 0; j < 10; ++j)
+			hundredPairings += tenPairings;
+
+		cout << "(0, " << timePairing(zeroPairings).count() << "), ";
+		cout << "(2, " << timePairing(twoPairings).count() << "), ";
+		cout << "(3, " << timePairing(threePairings).count() << "), ";
+		cout << "(5, " << timePairing(fivePairings).count() << "), ";
+		cout << "(10, " << timePairing(tenPairings).count() << "), ";
+		cout << "(100, " << timePairing(hundredPairings).count() << "), ";
+	}
+	cout << "]" << endl;
+	cout << endl << endl << "====================================" << endl;
+	cout << "Timing sha3" << endl << endl;
+	cout << "sha3 = [" << endl;
+	for (unsigned i = 0; i < 2000; i+= 10)
+		cout << "(" << boost::lexical_cast<string>(i) << "," << timeSha3(bytes(i, 5)).count() << "),";
+	cout << "]" << endl;
+	cout << "sha256 = [" << endl;
+	for (unsigned i = 0; i < 2000; i+= 10)
+		cout << "(" << boost::lexical_cast<string>(i) << "," << timeSha256(bytes(i, 5)).count() << "),";
+	cout << "]" << endl;
+	cout << "ecrecover = [" << endl;
+	for (unsigned i = 0; i < 2000; i+= 10)
+		cout << "(" << 0 << "," << timeECRecover() << "),";
+	cout << "]" << endl;
+	cout << "mulmod = [" << endl;
+	for (unsigned i = 0; i < 20; ++i)
+		cout << "(" << 0 << "," << timeMulMod() << "),";
+	cout << "]" << endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
