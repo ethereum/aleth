@@ -146,6 +146,8 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
 {
+	SealEngineFace::verifyTransaction(_ir, _t, _bi);
+
 	if (_ir & ImportRequirements::TransactionSignatures)
 	{
 		if (_bi.number() >= chainParams().u256Param("homsteadForkBlock"))
@@ -157,8 +159,6 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 		}
 		else
 			_t.checkChainId(-4);
-		if (_bi.number() < chainParams().u256Param("metropolisForkBlock") && _t.hasZeroSignature())
-			BOOST_THROW_EXCEPTION(InvalidSignature());
 	}
 	// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
 	if (_ir & ImportRequirements::TransactionBasic && _t.gasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())

@@ -47,7 +47,7 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
 {
 	if (_bi.number() < chainParams().u256Param("metropolisForkBlock") && _t.hasZeroSignature())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
-	if (_ir & ImportRequirements::TransactionSignatures)
+	if (_bi.number() >= chainParams().u256Param("homsteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures))
 		_t.checkLowS();
 }
 
