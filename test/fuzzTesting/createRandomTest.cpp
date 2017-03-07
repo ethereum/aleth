@@ -119,14 +119,6 @@ int createRandomTest(std::vector<char*> const& _parameters)
 				fillRandomTest(dev::test::doTransactionTests, (filltest) ? testFillString : c_testExampleTransactionTest, filldebug);
 		}
 		else
-		if (testSuite == "StateTests")
-		{
-			if (checktest)
-				return checkRandomTest(dev::test::doStateTests, testmValue, debug);
-			else
-				fillRandomTest(dev::test::doStateTests, (filltest) ? testFillString : c_testExampleStateTest, filldebug);
-		}
-		else
 		if (testSuite == "VMTests")
 		{
 			if (checktest)
