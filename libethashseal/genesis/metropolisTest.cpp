@@ -28,7 +28,7 @@ R"E(
 		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x00",
-		"MetropolistForkBlock": "0x00",
+		"metropolisForkBlock": "0x00",
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,
