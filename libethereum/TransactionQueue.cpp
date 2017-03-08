@@ -57,13 +57,12 @@ TransactionQueue::~TransactionQueue()
 
 ImportResult TransactionQueue::import(bytesConstRef _transactionRLP, IfDropped _ik)
 {
-	Transaction t;
 	try
 	{
-		t = Transaction(_transactionRLP, CheckTransaction::Everything);
+		Transaction t = Transaction(_transactionRLP, CheckTransaction::Everything);
 		return import(t, _ik);
 	}
-	catch (Exception const& e)
+	catch (Exception const&)
 	{
 		return ImportResult::Malformed;
 	}

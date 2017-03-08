@@ -69,7 +69,7 @@ bool dev::SignatureStruct::isValid() const noexcept
 
 bool dev::SignatureStruct::isZeroSignature() const noexcept
 {
-	return (r == h256(0) && s == h256(0) && v == 0);
+	return (!r && !s && !v);
 }
 
 Public SignatureStruct::recover(h256 const& _hash) const
