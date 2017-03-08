@@ -115,8 +115,10 @@ install:
     - ./scripts/install_deps.sh
 before_script:
     - ccache -s
+    - du -sh $TRAVIS_BUILD_DIR/deps
     - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
     - ccache -s
+    - du -sh $TRAVIS_BUILD_DIR/deps
 script:
     - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
 after_success:
