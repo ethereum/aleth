@@ -36,6 +36,10 @@ eth_policy()
 # project name and version should be set after cmake_policy CMP0048
 project(cpp-ethereum VERSION "1.3.0")
 
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmjit/.git)
+    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
+endif()
+
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY On)
 
 include(EthOptions)
@@ -44,13 +48,12 @@ include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
 
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/deps/boost.cmake)
-    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
-endif()
-include(deps/boost.cmake)
-include(deps/jsoncpp.cmake)
-include(deps/jsonrpc.cmake)
-include(deps/cryptopp.cmake)
+include(ProjectBoost)
+include(ProjectCryptopp)
+include(ProjectJsonCpp)
+include(ProjectJsonRpcCpp)
+
+
 
 configure_project(CPUID CURL EVMJIT FATDB MINIUPNPC ROCKSDB PARANOID TESTS VMTRACE)
 

@@ -9,7 +9,6 @@ add_sources(
 	EthereumPeerTest.cpp
 	GasPricer.cpp
 	Genesis.cpp
-	State.cpp
 	StateTests.cpp
 	StateUnitTests.cpp
 	Transaction.cpp

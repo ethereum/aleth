@@ -39,12 +39,7 @@ if (MSVC)
 	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
 		message(FATAL_ERROR "ERROR - As of the 1.3.0 release, cpp-ethereum only supports Visual Studio 2015 or newer.\nPlease download from https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx.")
 	else()
-		get_filename_component(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/../deps/install" ABSOLUTE)
-		set(ETH_DEPENDENCY_INSTALL_DIR
-			"${DEPS_DIR}/x64"					# Old location for deps.
-			"${DEPS_DIR}/win64"					# New location for deps.
-			"${DEPS_DIR}/win64/Release/share"	# LLVM shared cmake files.
-		)
+		get_filename_component(ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../deps/x64" ABSOLUTE)
 	endif()
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
 endif()

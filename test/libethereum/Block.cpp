@@ -50,6 +50,8 @@ BOOST_AUTO_TEST_CASE(bStructures)
 
 BOOST_AUTO_TEST_CASE(bStates)
 {
+	if (!dev::test::Options::get().quadratic)
+		return;
 	try
 	{
 		TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());

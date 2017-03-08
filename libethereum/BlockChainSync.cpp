@@ -554,6 +554,11 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 			continue;
 		}
 		unsigned blockNumber = iter->second;
+		if (haveItem(m_bodies, blockNumber))
+		{
+			clog(NetMessageSummary) << "Skipping already downloaded block body " << blockNumber;
+			continue;
+		}
 		m_headerIdToNumber.erase(id);
 		mergeInto(m_bodies, blockNumber, body.data().toBytes());
 	}

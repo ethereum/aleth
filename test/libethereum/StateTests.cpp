@@ -39,7 +39,7 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-void doStateTests2(json_spirit::mValue& _v, bool _fillin)
+void doStateTests(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())
 	{
@@ -128,7 +128,7 @@ public:
 			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
 			{
 				string fileboost = iterator->path().filename().string();
-				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests2);
+				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
 			}
 		dev::test::TestOutputHelper::finishTest();
 	}
