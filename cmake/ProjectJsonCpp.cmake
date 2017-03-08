@@ -6,6 +6,11 @@ else()
     set(JSONCPP_CMAKE_COMMAND ${CMAKE_COMMAND})
 endif()
 
+if (MSVC)
+    set(_only_release_configuration -DCMAKE_CONFIGURATION_TYPES=Release)
+    set(_overwrite_install_command INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install)
+endif()
+
 ExternalProject_Add(jsoncpp
     PREFIX ${CMAKE_SOURCE_DIR}/deps
     DOWNLOAD_NAME jsoncpp-1.7.7.tar.gz
@@ -16,12 +21,12 @@ ExternalProject_Add(jsoncpp
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                # Build static lib but suitable to be included in a shared lib.
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
+               ${_only_release_configuration}
                -DJSONCPP_WITH_TESTS=Off
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=Off
     LOG_CONFIGURE 1
-    # Overwrite build and install commands to force Release build on MSVC.
-    BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
-    INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
+    BUILD_COMMAND ""
+    ${_overwrite_install_command}
     LOG_INSTALL 1
 )
 

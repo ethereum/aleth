@@ -22,7 +22,7 @@
  */
 
 #include <libdevcore/Guards.h>
-#include <secp256k1/include/secp256k1.h>
+#include <secp256k1.h>
 #include <cryptopp/keccak.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
@@ -121,7 +121,37 @@ BOOST_AUTO_TEST_CASE(secp256k1lib)
 	BOOST_REQUIRE(!!k.sec());
 	BOOST_REQUIRE(!!k.pub());
 	Public test = toPublic(k.sec());
-	BOOST_REQUIRE(k.pub() == test);
+	BOOST_CHECK_EQUAL(k.pub(), test);
+}
+
+BOOST_AUTO_TEST_CASE(keypairs)
+{
+	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
+	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
+	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
+	eth::Transaction t(1000, 0, 0, h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b")), {}, 0, p.secret());
+	auto rlp = t.rlp(eth::WithoutSignature);
+	auto expectedRlp = "dc80808094944400f4b88ac9589a0f17ed4671da26bddb668b8203e880";
+	BOOST_CHECK_EQUAL(toHex(rlp), expectedRlp);
+	rlp = t.rlp(eth::WithSignature);
+	auto expectedRlp2 = "f85f80808094944400f4b88ac9589a0f17ed4671da26bddb668b8203e8801ca0bd2402a510c9c9afddf2a3f63c869573bd257475bea91d6f164638134a3386d6a0609ad9775fd2715e6a359c627e9338478e4adba65dd0dc6ef2bcbe6398378984";
+	BOOST_CHECK_EQUAL(toHex(rlp), expectedRlp2);
+	BOOST_CHECK_EQUAL(t.sender(), p.address());
+}
+
+BOOST_AUTO_TEST_CASE(SignAndRecover)
+{
+	// This basic test that compares **fixed** results. Useful to test new
+	// implementations or changes to implementations.
+	auto sec = Secret{sha3("sec")};
+	auto msg = sha3("msg");
+	auto sig = sign(sec, msg);
+	auto expectedSig = "b826808a8c41e00b7c5d71f211f005a84a7b97949d5e765831e1da4e34c9b8295d2a622eee50f25af78241c1cb7cfff11bcf2a13fe65dee1e3b86fd79a4e3ed000";
+	BOOST_CHECK_EQUAL(sig.hex(), expectedSig);
+
+	auto pub = recover(sig, msg);
+	auto expectedPub = "e40930c838d6cca526795596e368d16083f0672f4ab61788277abfa23c3740e1cc84453b0b24f49086feba0bd978bb4446bae8dff1e79fcc1e9cf482ec2d07c3";
+	BOOST_CHECK_EQUAL(pub.hex(), expectedPub);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_patch)
@@ -157,61 +187,6 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 	
 	BOOST_REQUIRE(asString(plain) == message);
 	BOOST_REQUIRE(plain == asBytes(message));
-}
-
-BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
-{
-	secp256k1_context_t* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
-
-	// base secret
-	Secret secret(sha3("privacy"));
-	
-	// we get ec params from signer
-	ECDSA<ECP, Keccak_256>::Signer signer;
-	
-	// e := sha3(msg)
-	bytes e(fromHex("0x01"));
-	e.resize(32);
-	int tests = 2;
-	while (sha3(&e, &e), secret = sha3(secret), tests--)
-	{
-		KeyPair key(secret);
-		Public pkey = key.pub();
-		signer.AccessKey().Initialize(params(), Integer(secret.data(), Secret::size));
-		
-		h256 he(sha3(e));
-		Integer heInt(he.asBytes().data(), 32);
-		h256 k(kdf(secret, he));
-		Integer kInt(k.asBytes().data(), 32);
-		kInt %= params().GetSubgroupOrder()-1;
-
-		ECP::Point rp = params().ExponentiateBase(kInt);
-		Integer const& q = params().GetGroupOrder();
-		Integer r = params().ConvertElementToInteger(rp);
-
-		Integer kInv = kInt.InverseMod(q);
-		Integer s = (kInv * (Integer(secret.data(), 32) * r + heInt)) % q;
-		BOOST_REQUIRE(!!r && !!s);
-
-		Signature sig;
-		sig[64] = rp.y.IsOdd() ? 1 : 0;
-		r.Encode(sig.data(), 32);
-		s.Encode(sig.data() + 32, 32);
-
-		Public p = dev::recover(sig, he);
-		BOOST_REQUIRE(p == pkey);
-		
-		// verify w/cryptopp
-		BOOST_REQUIRE(s_secp256k1->verify(pkey, sig, bytesConstRef(&e)));
-		
-		// verify with secp256k1lib
-		byte encpub[65] = {0x04};
-		memcpy(&encpub[1], pkey.data(), 64);
-		byte dersig[72];
-		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sig.data(), 64, DSA_P1363);
-		BOOST_CHECK(cssz <= 72);
-		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(ctx, he.data(), dersig, cssz, encpub, 65));
-	}
 }
 
 BOOST_AUTO_TEST_CASE(sha3_norestart)
@@ -333,8 +308,6 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 
 BOOST_AUTO_TEST_CASE(ecdh)
 {
-	cnote << "Testing ecdh...";
-
 	ECDH<ECP>::Domain dhLocal(curveOID());
 	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
 	SecByteBlock pubLocal(dhLocal.PublicKeyLength());
@@ -383,8 +356,6 @@ BOOST_AUTO_TEST_CASE(ecdh)
 
 BOOST_AUTO_TEST_CASE(ecdhe)
 {
-	cnote << "Testing ecdhe...";
-	
 	ECDHE a, b;
 	BOOST_CHECK_NE(a.pubkey(), b.pubkey());
 	
