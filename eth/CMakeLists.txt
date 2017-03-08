@@ -11,7 +11,7 @@ target_include_directories(eth PRIVATE ..)
 target_link_libraries(eth ${Eth_EVM_LIBRARIES})
 target_link_libraries(eth ${Web3_WEB3JSONRPC_LIBRARIES})
 target_link_libraries(eth ${Web3_WEBTHREE_LIBRARIES})
-target_link_libraries(eth jsonrpc::client)
+target_link_libraries(eth JsonRpcCpp::Client)
 
 if (EVMJIT)
 	# Do we need include paths here?

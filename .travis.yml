@@ -91,7 +91,7 @@ matrix:
         # See https://github.com/ethereum/cpp-ethereum/issues/3268
 
         - os: osx
-          osx_image: xcode8
+          osx_image: xcode8.2
           env:
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
@@ -102,13 +102,21 @@ cache:
     directories:
         - ~/.ethash
         - ~/.local
+        - ~/Library/Caches/Homebrew
+        # Cache whole deps dir hoping you will not need to download and
+        # build external dependencies next build.
+        - $TRAVIS_BUILD_DIR/deps
+before_install:
+    # Install ccache on osx
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
 install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh; fi
     - ./scripts/install_deps.sh
 before_script:
-    - if type ccache; then ccache -M 2G; ccache -s; fi
+    - ccache -s
     - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
-    - if type ccache; then ccache -s; fi
+    - ccache -s
 script:
     - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
 after_success:
