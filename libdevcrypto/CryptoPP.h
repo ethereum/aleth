@@ -41,8 +41,6 @@ class Secp256k1PP
 public:
 	static Secp256k1PP* get();
 
-	void toPublic(Secret const& _s, Public& o_public);
-
 	/// Encrypts text (replace input). (ECIES w/XOR-SHA1)
 	void encrypt(Public const& _k, bytes& io_cipher);
 	

@@ -101,9 +101,7 @@ Address dev::toAddress(Public const& _public)
 
 Address dev::toAddress(Secret const& _secret)
 {
-	Public p;
-	Secp256k1PP::get()->toPublic(_secret, p);
-	return toAddress(p);
+	return toAddress(toPublic(_secret));
 }
 
 Address dev::toAddress(Address const& _from, u256 const& _nonce)

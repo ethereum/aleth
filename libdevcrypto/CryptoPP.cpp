@@ -65,8 +65,6 @@ public:
 
 	void exportPublicKey(DL_PublicKey_EC<ECP> const& _k, Public& o_p);
 
-	void exponentToPublic(Integer const& _e, Public& o_p);
-
 private:
 	Secp256k1PPCtx():
 		m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()),
@@ -84,11 +82,6 @@ Secp256k1PP* Secp256k1PP::get()
 {
 	static Secp256k1PP s_this;
 	return &s_this;
-}
-
-void Secp256k1PP::toPublic(Secret const& _s, Public& o_public)
-{
-	Secp256k1PPCtx::get().exponentToPublic(Integer(_s.data(), sizeof(_s)), o_public);
 }
 
 bytes Secp256k1PP::eciesKDF(Secret const& _z, bytes _s1, unsigned kdByteLen)
@@ -417,18 +410,6 @@ void Secp256k1PPCtx::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> co
 	}
 
 	memcpy(o_p.data(), &prefixedKey[1], Public::size);
-}
-
-void Secp256k1PPCtx::exponentToPublic(Integer const& _e, Public& o_p)
-{
-	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pk;
-	
-	{
-		Guard l(x_params);
-		pk.Initialize(m_params, m_params.ExponentiateBase(_e));
-	}
-	
-	exportPublicKey(pk, o_p);
 }
 
 #if defined(__GNUC__)
