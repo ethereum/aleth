@@ -206,7 +206,7 @@ void Executive::initialize(Transaction const& _transaction)
 		{
 			nonceReq = m_s.getNonce(m_t.sender());
 		}
-		catch (...)
+		catch (InvalidSignature const& e)
 		{
 			clog(ExecutiveWarnChannel) << "Invalid Signature";
 			m_excepted = TransactionException::InvalidSignature;

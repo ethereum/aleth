@@ -60,13 +60,13 @@ ImportResult TransactionQueue::import(bytesConstRef _transactionRLP, IfDropped _
 	Transaction t;
 	try
 	{
-		Transaction(_transactionRLP, CheckTransaction::Everything);
+		t = Transaction(_transactionRLP, CheckTransaction::Everything);
+		return import(t, _ik);
 	}
-	catch (...)
+	catch (Exception const& e)
 	{
 		return ImportResult::Malformed;
 	}
-	return import(t, _ik);
 }
 
 ImportResult TransactionQueue::check_WITH_LOCK(h256 const& _h, IfDropped _ik)
