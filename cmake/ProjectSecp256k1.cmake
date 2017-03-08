@@ -11,16 +11,15 @@ ExternalProject_Add(secp256k1
     DOWNLOAD_NO_PROGRESS 1
     URL https://github.com/bitcoin-core/secp256k1/archive/9d560f992db26612ce2630b194aef5f44d63a530.tar.gz
     URL_HASH SHA256=910b2535bdbb5d235e9212c92050e0f9b327e05129b449f8f3d3c6d558121284
-    PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_LIST_DIR}/secp256k1
-        <SOURCE_DIR>
+    PATCH_COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_LIST_DIR}/secp256k1/CMakeLists.txt <SOURCE_DIR>
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
                ${_only_release_configuration}
-    LOG_CONFIGURE 0
+    LOG_CONFIGURE 1
     BUILD_COMMAND ""
     ${_overwrite_install_command}
-    LOG_INSTALL 0
+    LOG_INSTALL 1
 )
 
 # Create imported library
