@@ -17,10 +17,10 @@ ExternalProject_Add(secp256k1
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
                ${_only_release_configuration}
-    LOG_CONFIGURE 1
+    LOG_CONFIGURE 0
     BUILD_COMMAND ""
     ${_overwrite_install_command}
-    LOG_INSTALL 1
+    LOG_INSTALL 0
 )
 
 # Create imported library

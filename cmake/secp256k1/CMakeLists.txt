@@ -19,9 +19,16 @@ if (NOT MSVC)
 	set(COMPILE_OPTIONS -O3 -W -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings -fvisibility=hidden)
 endif()
 
+add_executable(gen_context src/gen_context.c)
+target_include_directories(gen_context PRIVATE ${CMAKE_SOURCE_DIR})
+
+add_custom_target(ecmult_static_context gen_context WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 add_library(secp256k1 STATIC src/secp256k1.c)
 target_compile_definitions(secp256k1 PRIVATE HAVE_CONFIG_H)
-target_include_directories(secp256k1 PRIVATE . src)
+target_include_directories(secp256k1 PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)
 target_compile_options(secp256k1 PRIVATE ${COMPILE_OPTIONS})
+add_dependencies(secp256k1 ecmult_static_context)
+
 install(TARGETS secp256k1 ARCHIVE DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
