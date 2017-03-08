@@ -52,6 +52,7 @@ include(ProjectBoost)
 include(ProjectCryptopp)
 include(ProjectJsonCpp)
 include(ProjectJsonRpcCpp)
+include(ProjectSecp256k1)
 
 
 
