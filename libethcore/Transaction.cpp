@@ -34,6 +34,7 @@ using namespace dev::eth;
 namespace
 {
 int const c_chainIdInNonceBits = 64;
+u256 const c_nonceLowMask = 0xffffffffffffffff;
 }
 
 TransactionBase::TransactionBase(TransactionSkeleton const& _ts, Secret const& _s):
@@ -133,6 +134,11 @@ Address const& TransactionBase::sender() const
 		}
 	}
 	return m_sender;
+}
+
+u256 TransactionBase::nonceLow() const
+{
+	return m_nonce & c_nonceLowMask;
 }
 
 void TransactionBase::sign(Secret const& _priv)

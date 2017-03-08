@@ -137,6 +137,9 @@ public:
 	/// @returns the transaction-count of the sender.
 	u256 nonce() const { return m_nonce; }
 
+	/// @returns low-order of bits of nonce that should be used to check against sender nonce according to EIP-166
+	u256 nonceLow() const;
+
 	/// Sets the nonce to the given value. Clears any signature.
 	void setNonce(u256 const& _n) { clearSignature(); m_nonce = _n; }
 

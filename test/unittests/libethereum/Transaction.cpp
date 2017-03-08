@@ -168,4 +168,11 @@ BOOST_AUTO_TEST_CASE(IncorrectChainIdNotAllowed)
 	BOOST_CHECK_THROW(tr.checkNonceChainId(18), InvalidChainIdInNonce);
 }
 
+BOOST_AUTO_TEST_CASE(TransactionNonceLow)
+{
+	u256 nonce = (u256(28) << 64) + 123;
+	Transaction tr(1, 1, 1, Address(), bytes(), nonce);
+	BOOST_CHECK_EQUAL(tr.nonceLow(), 123);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
