@@ -46,7 +46,6 @@ clone_script:
           git submodule -q update --init --recursive
       }
 cache:
-    - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
     - deps
 #RDP LOGIN details for trouble shooting
 #init:
