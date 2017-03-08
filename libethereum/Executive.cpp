@@ -180,6 +180,22 @@ void Executive::initialize(Transaction const& _transaction)
 {
 	m_t = _transaction;
 
+	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
+	{
+		try
+		{
+			unsigned const nonceChainId(m_sealEngine.chainParams().u256Param("nonceChainID"));
+			m_t.checkNonceChainId(nonceChainId);
+		}
+		catch (InvalidChainIdInNonce const&)
+		{
+			unsigned const nonceChainId(m_sealEngine.chainParams().u256Param("nonceChainID"));
+			clog(ExecutiveWarnChannel) << "Invalid ChainID in tx nonce" << ": Require <" << nonceChainId << " Got" << (m_t.nonce() >> 64);
+			m_excepted = TransactionException::InvalidChainIdInNonce;
+			BOOST_THROW_EXCEPTION(InvalidChainIdInNonce());
+		}
+	}
+
 	// Avoid transactions that would take us beyond the block gas limit.
 	u256 startGasUsed = m_envInfo.gasUsed();
 	if (startGasUsed + (bigint)m_t.gas() > m_envInfo.gasLimit())
