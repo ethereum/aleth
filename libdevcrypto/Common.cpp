@@ -22,8 +22,8 @@
 
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
-#include <secp256k1/include/secp256k1.h>
-#include <secp256k1/include/secp256k1_recovery.h>
+#include <secp256k1.h>
+#include <secp256k1_recovery.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
@@ -31,7 +31,6 @@
 #include <libscrypt/libscrypt.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
-#include <utils/secp256k1/include/secp256k1.h>
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"

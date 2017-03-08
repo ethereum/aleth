@@ -4,7 +4,7 @@ if (MSVC)
     set(_only_release_configuration -DCMAKE_CONFIGURATION_TYPES=Release)
 endif()
 
-ExternalProject_Add(ep-secp256k1
+ExternalProject_Add(secp256k1
     PREFIX ${CMAKE_SOURCE_DIR}/deps
     DOWNLOAD_NAME secp256k1-9d560f99.tar.gz
     DOWNLOAD_NO_PROGRESS 1
@@ -21,12 +21,12 @@ ExternalProject_Add(ep-secp256k1
 )
 
 # Create imported library
-ExternalProject_Get_Property(ep-secp256k1 INSTALL_DIR)
+ExternalProject_Get_Property(secp256k1 INSTALL_DIR)
 add_library(Secp256k1 STATIC IMPORTED)
 set(SECP256K1_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}secp256k1${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(SECP256K1_INCLUDE_DIR ${INSTALL_DIR}/include)
 file(MAKE_DIRECTORY ${SECP256K1_INCLUDE_DIR})  # Must exist.
 set_property(TARGET Secp256k1 PROPERTY IMPORTED_LOCATION ${SECP256K1_LIBRARY})
 set_property(TARGET Secp256k1 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SECP256K1_INCLUDE_DIR})
-add_dependencies(Secp256k1 ep-secp256k1)
+add_dependencies(Secp256k1 secp256k1)
 unset(INSTALL_DIR)
