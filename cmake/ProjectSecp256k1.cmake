@@ -2,6 +2,7 @@ include(ExternalProject)
 
 if (MSVC)
     set(_only_release_configuration -DCMAKE_CONFIGURATION_TYPES=Release)
+    set(_overwrite_install_command INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install)
 endif()
 
 ExternalProject_Add(secp256k1
@@ -17,6 +18,8 @@ ExternalProject_Add(secp256k1
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
                ${_only_release_configuration}
     LOG_CONFIGURE 1
+    BUILD_COMMAND ""
+    ${_overwrite_install_command}
     LOG_INSTALL 1
 )
 
