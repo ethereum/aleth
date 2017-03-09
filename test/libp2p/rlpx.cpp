@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	
 	// shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
 	Secret ephemeralShared;
-	s_secp256k1->agree(initR.secret(), recvR.pub(), ephemeralShared);
+	ecdh::agree(initR.secret(), recvR.pub(), ephemeralShared);
 	Secret expected(fromHex("20d82c1092f351dc217bd66fa183e801234af14ead40423b6ee25112201c6e5a"));
 	BOOST_REQUIRE(expected == ephemeralShared);
 	
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	
 	// shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
 	Secret ephemeralShared;
-	s_secp256k1->agree(initR.secret(), recvR.pub(), ephemeralShared);
+	ecdh::agree(initR.secret(), recvR.pub(), ephemeralShared);
 	Secret expected(fromHex("0xe3f407f83fc012470c26a93fdff534100f2c6f736439ce0ca90e9914f7d1c381"));
 	BOOST_REQUIRE(expected == ephemeralShared);
 	
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
 	Public p(fromHex("0xf0d2b97981bd0d415a843b5dfe8ab77a30300daab3658c578f2340308a2da1a07f0821367332598b6aa4e180a41e92f4ebbae3518da847f0b1c0bbfe20bcf4e1"));
 	Secret agreeExpected(fromHex("0xee1418607c2fcfb57fda40380e885a707f49000a5dda056d828b7d9bd1f29a08"));
 	Secret agreeTest;
-	s_secp256k1->agree(k.secret(), p, agreeTest);
+	ecdh::agree(k.secret(), p, agreeTest);
 	BOOST_REQUIRE(agreeExpected == agreeTest);
 	
 	KeyPair kmK(Secret(fromHex("0x57baf2c62005ddec64c357d96183ebc90bf9100583280e848aa31d683cad73cb")));

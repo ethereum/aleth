@@ -217,6 +217,11 @@ private:
 	Secret m_value;
 };
 
-}
+namespace ecdh
+{
 
+void agree(Secret const& _s, Public const& _r, Secret& o_s);
+
+}
+}
 }

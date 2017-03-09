@@ -23,6 +23,7 @@
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
 #include <secp256k1.h>
+#include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
@@ -39,6 +40,9 @@ using namespace dev;
 using namespace dev::crypto;
 using namespace CryptoPP;
 
+namespace
+{
+
 class Secp256k1Context
 {
 public:
@@ -50,12 +54,14 @@ public:
 
 private:
 	Secp256k1Context():
-		m_ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY)) {}
+		m_ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY))
+	{}
 	~Secp256k1Context() { secp256k1_context_destroy(m_ctx); }
 
 	secp256k1_context* const m_ctx = nullptr;
 };
 
+}
 
 bool dev::SignatureStruct::isValid() const noexcept
 {
@@ -356,4 +362,17 @@ Secret Nonce::next()
 	}
 	m_value = sha3Secure(m_value.ref());
 	return sha3(~m_value);
+}
+
+void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
+{
+	auto* ctx = Secp256k1Context::get();
+	static_assert(sizeof(Secret) == 32, "Invalid Secret type size");
+	secp256k1_pubkey rawPubkey;
+	std::array<byte, 65> serializedPubKey = {0x04};
+	std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
+	auto r = secp256k1_ec_pubkey_parse(ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size());
+	assert(r == 1);
+	r = secp256k1_ecdh(ctx, o_s.writable().data(), &rawPubkey, _s.data());
+	assert(r == 1);  // TODO: This should be "invalid secret key" exception.
 }
