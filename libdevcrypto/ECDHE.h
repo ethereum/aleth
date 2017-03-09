@@ -66,7 +66,7 @@ public:
 	/// Public key sent to remote.
 	Public pubkey() { return m_ephemeral.pub(); }
 	
-	Secret seckey() { return m_ephemeral.sec(); }
+	Secret seckey() { return m_ephemeral.secret(); }
 	
 	/// Input public key for dh agreement, output generated shared secret.
 	void agree(Public const& _remoteEphemeral, Secret& o_sharedSecret) const;

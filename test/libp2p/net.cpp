@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 			out.neighbours.push_back(neighbour);
 		}
 		
-		out.sign(k.sec());
+		out.sign(k.secret());
 		BOOST_REQUIRE_LE(out.data.size(), 1280);
 	}
 }
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacket)
 		Neighbours::Neighbour neighbour(node);
 		out.neighbours.push_back(neighbour);
 	}
-	out.sign(k.sec());
+	out.sign(k.secret());
 
 	bytesConstRef packet(out.data.data(), out.data.size());
 	auto in = DiscoveryDatagram::interpretUDP(to, packet);

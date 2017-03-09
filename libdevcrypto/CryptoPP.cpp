@@ -63,8 +63,6 @@ public:
 		return ctx;
 	}
 
-	void exportPublicKey(DL_PublicKey_EC<ECP> const& _k, Public& o_p);
-
 private:
 	Secp256k1PPCtx():
 		m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()),
@@ -124,7 +122,7 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 	// interop w/go ecies implementation
 	auto r = KeyPair::create();
 	Secret z;
-	ecdh::agree(r.sec(), _k, z);
+	ecdh::agree(r.secret(), _k, z);
 	auto key = eciesKDF(z, bytes(), 32);
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
@@ -370,23 +368,6 @@ Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
 	return recovered;
 }
 
-bool Secp256k1PP::verifySecret(Secret const& _s, Public& _p)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	DL_PrivateKey_EC<ECP> k;
-	k.Initialize(ctx.m_params, secretToExponent(_s));
-	if (!k.Validate(ctx.m_rng, 3))
-		return false;
-	
-	DL_PublicKey_EC<CryptoPP::ECP> pub;
-	k.MakePublicKey(pub);
-	if (!k.Validate(ctx.m_rng, 3))
-		return false;
-
-	ctx.exportPublicKey(pub, _p);
-	return true;
-}
-
 void Secp256k1PP::agree(Secret const& _s, Public const& _r, Secret& o_s)
 {
 	// TODO: mutex ASN1::secp256k1() singleton
@@ -396,20 +377,6 @@ void Secp256k1PP::agree(Secret const& _s, Public const& _r, Secret& o_s)
 	byte remote[65] = {0x04};
 	memcpy(&remote[1], _r.data(), 64);
 	d.Agree(o_s.writable().data(), _s.data(), remote);
-}
-
-void Secp256k1PPCtx::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& _k, Public& o_p)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	bytes prefixedKey(_k.GetGroupParameters().GetEncodedElementSize(true));
-	
-	{
-		Guard l(ctx.x_params);
-		ctx.m_params.GetCurve().EncodePoint(prefixedKey.data(), _k.GetPublicElement(), false);
-		assert(Public::size + 1 == _k.GetGroupParameters().GetEncodedElementSize(true));
-	}
-
-	memcpy(o_p.data(), &prefixedKey[1], Public::size);
 }
 
 #if defined(__GNUC__)

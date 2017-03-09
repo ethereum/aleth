@@ -50,7 +50,6 @@ BOOST_AUTO_TEST_SUITE(Crypto)
 
 struct DevcryptoTestFixture: public TestOutputHelper {
 	DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
-	~DevcryptoTestFixture() {}
 
 	Secp256k1PP* s_secp256k1;
 };
@@ -98,9 +97,9 @@ BOOST_AUTO_TEST_CASE(pubkeyOfZero)
 BOOST_AUTO_TEST_CASE(KeyPairMix)
 {
 	KeyPair k = KeyPair::create();
-	BOOST_REQUIRE(!!k.sec());
+	BOOST_REQUIRE(!!k.secret());
 	BOOST_REQUIRE(!!k.pub());
-	Public test = toPublic(k.sec());
+	Public test = toPublic(k.secret());
 	BOOST_CHECK_EQUAL(k.pub(), test);
 }
 
@@ -117,6 +116,14 @@ BOOST_AUTO_TEST_CASE(keypairs)
 	auto expectedRlp2 = "f85f80808094944400f4b88ac9589a0f17ed4671da26bddb668b8203e8801ca0bd2402a510c9c9afddf2a3f63c869573bd257475bea91d6f164638134a3386d6a0609ad9775fd2715e6a359c627e9338478e4adba65dd0dc6ef2bcbe6398378984";
 	BOOST_CHECK_EQUAL(toHex(rlp), expectedRlp2);
 	BOOST_CHECK_EQUAL(t.sender(), p.address());
+}
+
+BOOST_AUTO_TEST_CASE(KeyPairVerifySecret)
+{
+	auto keyPair = KeyPair::create();
+	auto* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
+	BOOST_CHECK(secp256k1_ec_seckey_verify(ctx, keyPair.secret().data()));
+	secp256k1_context_destroy(ctx);
 }
 
 BOOST_AUTO_TEST_CASE(SignAndRecover)
@@ -138,7 +145,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_patch)
 {
 	KeyPair k = KeyPair::create();
 	bytes io_text;
-	s_secp256k1->decrypt(k.sec(), io_text);
+	s_secp256k1->decrypt(k.secret(), io_text);
 	BOOST_REQUIRE_EQUAL(io_text.size(), 0);
 }
 
@@ -163,7 +170,7 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 	BOOST_REQUIRE(cipher != asBytes(message) && cipher.size() > 0);
 	
 	bytes plain;
-	decrypt(k.sec(), bytesConstRef(&cipher), plain);
+	decrypt(k.secret(), bytesConstRef(&cipher), plain);
 	
 	BOOST_REQUIRE(asString(plain) == message);
 	BOOST_REQUIRE(plain == asBytes(message));
@@ -206,14 +213,14 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	KeyPair remote = KeyPair::create();
 	// nonce
 	Secret z1;
-	ecdh::agree(local.sec(), remote.pub(), z1);
+	ecdh::agree(local.secret(), remote.pub(), z1);
 	auto key1 = s_secp256k1->eciesKDF(z1, bytes(), 64);
 	bytesConstRef eKey1 = bytesConstRef(&key1).cropped(0, 32);
 	bytesRef mKey1 = bytesRef(&key1).cropped(32, 32);
 	sha3(mKey1, mKey1);
 	
 	Secret z2;
-	ecdh::agree(remote.sec(), local.pub(), z2);
+	ecdh::agree(remote.secret(), local.pub(), z2);
 	auto key2 = s_secp256k1->eciesKDF(z2, bytes(), 64);
 	bytesConstRef eKey2 = bytesConstRef(&key2).cropped(0, 32);
 	bytesRef mKey2 = bytesRef(&key2).cropped(32, 32);
@@ -241,7 +248,7 @@ BOOST_AUTO_TEST_CASE(ecies_standard)
 	BOOST_REQUIRE(b != asBytes(original));
 	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
 	
-	s_secp256k1->decryptECIES(k.sec(), b);
+	s_secp256k1->decryptECIES(k.secret(), b);
 	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
 }
 
@@ -260,9 +267,9 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 	BOOST_REQUIRE(b != asBytes(original));
 	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
 
-	BOOST_REQUIRE(!s_secp256k1->decryptECIES(k.sec(), wrongShared, b));
+	BOOST_REQUIRE(!s_secp256k1->decryptECIES(k.secret(), wrongShared, b));
 
-	s_secp256k1->decryptECIES(k.sec(), shared, b);
+	s_secp256k1->decryptECIES(k.secret(), shared, b);
 
 	// Temporary disable this assertion, which is failing in TravisCI only for Ubuntu Trusty.		
 	// See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/143250866.
@@ -282,7 +289,7 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	s_secp256k1->encrypt(k.pub(), b);
 	BOOST_REQUIRE(b != asBytes(original));
 
-	s_secp256k1->decrypt(k.sec(), b);
+	s_secp256k1->decrypt(k.secret(), b);
 	BOOST_REQUIRE(b == asBytes(original));
 }
 
@@ -330,7 +337,7 @@ BOOST_AUTO_TEST_CASE(ecdh)
 	
 	ECDH<ECP>::Domain dhA(curveOID());
 	Secret shared;
-	BOOST_REQUIRE(dhA.Agree(shared.writable().data(), a.sec().data(), pubb));
+	BOOST_REQUIRE(dhA.Agree(shared.writable().data(), a.secret().data(), pubb));
 	BOOST_REQUIRE(shared);
 }
 
@@ -371,7 +378,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	KeyPair nodeB(nodeBsecret);
 	BOOST_REQUIRE(nodeB.pub());
 	
-	BOOST_REQUIRE_NE(nodeA.sec(), nodeB.sec());
+	BOOST_REQUIRE_NE(nodeA.secret(), nodeB.secret());
 	
 	// Initiator is Alice (nodeA)
 	ECDHE eA;
@@ -385,7 +392,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		bytesRef pubk(&auth[Signature::size + h256::size], Public::size);
 		bytesRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
 		
-		crypto::ecdh::agree(nodeA.sec(), nodeB.pub(), ssA);
+		crypto::ecdh::agree(nodeA.secret(), nodeB.pub(), ssA);
 		sign(eA.seckey(), (ssA ^ nonceA).makeInsecure()).ref().copyTo(sig);
 		sha3(eA.pubkey().ref(), hepubk);
 		nodeA.pub().ref().copyTo(pubk);
@@ -405,7 +412,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		// todo: replace nodeA.pub() in encrypt()
 		// decrypt public key from auth
 		bytes authdecrypted;
-		decrypt(nodeB.sec(), &authcipher, authdecrypted);
+		decrypt(nodeB.secret(), &authcipher, authdecrypted);
 		Public node;
 		bytesConstRef pubk(&authdecrypted[Signature::size + h256::size], Public::size);
 		pubk.copyTo(node.ref());
@@ -432,7 +439,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	Secret aIngressMac;
 	{
 		bytes ackdecrypted;
-		decrypt(nodeA.sec(), &ackcipher, ackdecrypted);
+		decrypt(nodeA.secret(), &ackcipher, ackdecrypted);
 		BOOST_REQUIRE(ackdecrypted.size());
 		bytesConstRef ackRef(&ackdecrypted);
 		Public eBAck;
@@ -473,7 +480,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	
 	/// Bob (after sending ack)
 	Secret ssB;
-	crypto::ecdh::agree(nodeB.sec(), nodeA.pub(), ssB);
+	crypto::ecdh::agree(nodeB.secret(), nodeA.pub(), ssB);
 	BOOST_REQUIRE_EQUAL(ssA, ssB);
 	
 	Secret bEncryptK;
@@ -482,7 +489,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	Secret bIngressMac;
 	{
 		bytes authdecrypted;
-		decrypt(nodeB.sec(), &authcipher, authdecrypted);
+		decrypt(nodeB.secret(), &authcipher, authdecrypted);
 		BOOST_REQUIRE(authdecrypted.size());
 		bytesConstRef ackRef(&authdecrypted);
 		Signature sigAuth;
@@ -505,7 +512,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		sig.copyTo(sigAuth.ref());
 		
 		Secret ss;
-		s_secp256k1->agree(nodeB.sec(), nodeAAuth, ss);
+		s_secp256k1->agree(nodeB.secret(), nodeAAuth, ss);
 		eAAuth = recover(sigAuth, (ss ^ nonceAAuth).makeInsecure());
 		// todo: test when this fails; means remote is bad or packet bits were flipped
 		BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));

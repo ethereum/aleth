@@ -77,9 +77,6 @@ public:
 	/// Recovers public key from compact signature. Uses libsecp256k1.
 	Public recover(Signature _signature, bytesConstRef _message);
 	
-	/// Verifies _s is a valid secret key and returns corresponding public key in o_p.
-	bool verifySecret(Secret const& _s, Public& o_p);
-	
 	void agree(Secret const& _s, Public const& _r, Secret& o_s);
 
 private:

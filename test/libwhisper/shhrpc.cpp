@@ -239,7 +239,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 //	KeyPair us = KeyPair::create();
 //	for (unsigned i = 0; i < messageCount; ++i)
 //	{
-//		web3->whisper()->post(us.sec(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), 777000, 1);
+//		web3->whisper()->post(us.secret(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), 777000, 1);
 //		this_thread::sleep_for(chrono::milliseconds(50));
 //	}
 	
@@ -312,7 +312,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 //	KeyPair us = KeyPair::create();
 //	for (unsigned i = 0; i < messageCount; ++i)
 //	{
-//		web3->whisper()->post(us.sec(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), c_ttl, 1);
+//		web3->whisper()->post(us.secret(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), c_ttl, 1);
 //		this_thread::sleep_for(chrono::milliseconds(50));
 //	}
 	
@@ -572,7 +572,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 //	KeyPair us = KeyPair::create();
 //	for (unsigned i = 0; i < messageCount; ++i)
 //	{
-//		web3->whisper()->post(us.sec(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), c_ttl, 1);
+//		web3->whisper()->post(us.secret(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), c_ttl, 1);
 //		this_thread::sleep_for(chrono::milliseconds(50));
 //	}
 
