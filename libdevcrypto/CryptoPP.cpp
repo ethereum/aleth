@@ -265,61 +265,6 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	io_text = std::move(plain);
 }
 
-bool Secp256k1PP::verify(Signature const& _signature, bytesConstRef _message)
-{
-	return !!recover(_signature, _message);
-}
-
-bool Secp256k1PP::verify(Public const& _p, Signature const& _sig, bytesConstRef _message, bool _hashed)
-{
-	return _p == (_hashed ? recover(_sig, _message) : recover(_sig, sha3(_message).ref()));
-}
-
-Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	Public recovered;
-	
-	Integer r(_signature.data(), 32);
-	Integer s(_signature.data()+32, 32);
-	// cryptopp encodes sign of y as 0x02/0x03 instead of 0/1 or 27/28
-	byte encodedpoint[33];
-	encodedpoint[0] = _signature[64] | 2;
-	memcpy(&encodedpoint[1], _signature.data(), 32);
-	
-	ECP::Element x;
-	{
-		ctx.m_curve.DecodePoint(x, encodedpoint, 33);
-		if (!ctx.m_curve.VerifyPoint(x))
-			return recovered;
-	}
-	
-//	if (_signature[64] & 2)
-//	{
-//		r += m_q;
-//		Guard l(x_params);
-//		if (r >= m_params.GetMaxExponent())
-//			return recovered;
-//	}
-	
-	Integer z(_message.data(), 32);
-	Integer rn = r.InverseMod(ctx.m_q);
-	Integer u1 = ctx.m_q - (rn.Times(z)).Modulo(ctx.m_q);
-	Integer u2 = (rn.Times(s)).Modulo(ctx.m_q);
-	
-	ECP::Point p;
-	byte recoveredbytes[65];
-	{
-		// todo: make generator member
-		p = ctx.m_curve.CascadeMultiply(u2, x, u1, ctx.m_params.GetSubgroupGenerator());
-		if (p.identity)
-			return Public();
-		ctx.m_curve.EncodePoint(recoveredbytes, p, false);
-	}
-	memcpy(recovered.data(), &recoveredbytes[1], 64);
-	return recovered;
-}
-
 void Secp256k1PP::agree(Secret const& _s, Public const& _r, Secret& o_s)
 {
 	// TODO: mutex ASN1::secp256k1() singleton
