@@ -267,6 +267,7 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 
 bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 {
+	// TODO: Verify w/o recovery (if faster).
 	if (!_p)
 		return false;
 	return _p == recover(_s, _hash);

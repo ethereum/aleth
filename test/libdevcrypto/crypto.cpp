@@ -141,6 +141,21 @@ BOOST_AUTO_TEST_CASE(SignAndRecover)
 	BOOST_CHECK_EQUAL(pub.hex(), expectedPub);
 }
 
+BOOST_AUTO_TEST_CASE(SignAndRecoverLoop)
+{
+	auto num = 13;
+	auto msg = h256::random();
+	while (--num)
+	{
+		msg = sha3(msg);
+		auto kp = KeyPair::create();
+		auto sig = sign(kp.secret(), msg);
+		BOOST_CHECK(verify(kp.pub(), sig, msg));
+		auto pub = recover(sig, msg);
+		BOOST_CHECK_EQUAL(kp.pub(), pub);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(cryptopp_patch)
 {
 	KeyPair k = KeyPair::create();
@@ -717,7 +732,7 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	// e := sha3(msg)
 	bytes e(fromHex("0x01"));
 	e.resize(32);
-	int tests = 2;
+	int tests = 13;
 	while (sha3(&e, &e), secret = sha3(secret), tests--)
 	{
 		KeyPair key(secret);
