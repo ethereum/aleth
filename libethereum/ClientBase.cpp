@@ -35,7 +35,8 @@ const char* WorkInChannel::name() { return EthOrange "⚒" EthGreen "▬▶"; }
 const char* WorkOutChannel::name() { return EthOrange "⚒" EthNavy "◀▬"; }
 const char* WorkChannel::name() { return EthOrange "⚒" EthWhite "  "; }
 
-static const int64_t c_maxGasEstimate = 50000000;
+static int64_t const c_maxGasEstimate = 50000000;
+static int const c_chainIdInNonceShift = 64;
 
 pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
 {
@@ -44,7 +45,13 @@ pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t,
 	TransactionSkeleton ts(_t);
 	ts.from = toAddress(_secret);
 	if (_t.nonce == Invalid256)
+	{
 		ts.nonce = max<u256>(postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
+		if (postSeal().info().number() >= bc().chainParams().u256Param("metropolisForkBlock"))
+		{
+			ts.nonce &= (bc().chainParams().u256Param("nonceChainID") << c_chainIdInNonceShift);
+		}
+	}
 	if (ts.gasPrice == Invalid256)
 		ts.gasPrice = gasBidPrice();
 	if (ts.gas == Invalid256)
