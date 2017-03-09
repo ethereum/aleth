@@ -62,12 +62,6 @@ public:
 	/// Key derivation function used by encryptECIES and decryptECIES.
 	bytes eciesKDF(Secret const& _z, bytes _s1, unsigned kdBitLen = 256);
 	
-	/// @returns siganture of message.
-	Signature sign(Secret const& _k, bytesConstRef _message);
-	
-	/// @returns compact siganture of provided hash.
-	Signature sign(Secret const& _k, h256 const& _hash);
-	
 	/// Verify compact signature (public key is extracted from signature).
 	bool verify(Signature const& _signature, bytesConstRef _message);
 	

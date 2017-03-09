@@ -265,53 +265,6 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	io_text = std::move(plain);
 }
 
-Signature Secp256k1PP::sign(Secret const& _k, bytesConstRef _message)
-{
-	return sign(_k, sha3(_message));
-}
-
-Signature Secp256k1PP::sign(Secret const& _key, h256 const& _hash)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	// assumption made by signing alogrithm
-	asserts(ctx.m_q == ctx.m_qs);
-	
-	Signature sig;
-	
-	Integer k(kdf(_key, _hash).data(), 32);
-	if (k == 0)
-		BOOST_THROW_EXCEPTION(InvalidState());
-	k = 1 + (k % (ctx.m_qs - 1));
-	
-	ECP::Point rp;
-	Integer r;
-	{
-		Guard l(ctx.x_params);
-		rp = ctx.m_params.ExponentiateBase(k);
-		r = ctx.m_params.ConvertElementToInteger(rp);
-	}
-	sig[64] = 0;
-//	sig[64] = (r >= m_q) ? 2 : 0;
-	
-	Integer kInv = k.InverseMod(ctx.m_q);
-	Integer z(_hash.asBytes().data(), 32);
-	Integer s = (kInv * (Integer(_key.data(), 32) * r + z)) % ctx.m_q;
-	if (r == 0 || s == 0)
-		BOOST_THROW_EXCEPTION(InvalidState());
-	
-//	if (s > m_qs)
-//	{
-//		s = m_q - s;
-//		if (sig[64])
-//			sig[64] ^= 1;
-//	}
-	
-	sig[64] |= rp.y.IsOdd() ? 1 : 0;
-	r.Encode(sig.data(), 32);
-	s.Encode(sig.data() + 32, 32);
-	return sig;
-}
-
 bool Secp256k1PP::verify(Signature const& _signature, bytesConstRef _message)
 {
 	return !!recover(_signature, _message);
