@@ -55,7 +55,7 @@ void agree(Secret const& _s, Public const& _r, Secret& o_s);
 	
 /**
  * @brief Derive DH shared secret from EC keypairs.
- * As ephemeral keys are single-use, agreement is limited to a single occurence.
+ * As ephemeral keys are single-use, agreement is limited to a single occurrence.
  */
 class ECDHE
 {

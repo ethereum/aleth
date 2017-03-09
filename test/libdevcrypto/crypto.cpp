@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	BOOST_REQUIRE(b == asBytes(original));
 }
 
-BOOST_AUTO_TEST_CASE(ecdh)
+BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 {
 	ECDH<ECP>::Domain dhLocal(curveOID());
 	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
@@ -358,12 +358,10 @@ BOOST_AUTO_TEST_CASE(ecdh)
 
 BOOST_AUTO_TEST_CASE(ecdhe)
 {
-	ECDHE a, b;
-	BOOST_CHECK_NE(a.pubkey(), b.pubkey());
-	
 	ECDHE local;
 	ECDHE remote;
-	
+	BOOST_CHECK_NE(local.pubkey(), remote.pubkey());
+
 	// local tx pubkey -> remote
 	Secret sremote;
 	remote.agree(local.pubkey(), sremote);
@@ -374,7 +372,18 @@ BOOST_AUTO_TEST_CASE(ecdhe)
 
 	BOOST_REQUIRE(sremote);
 	BOOST_REQUIRE(slocal);
-	BOOST_REQUIRE_EQUAL(sremote, slocal);
+	BOOST_CHECK_EQUAL(sremote, slocal);
+}
+
+BOOST_AUTO_TEST_CASE(ecdhAgree)
+{
+	auto sec = Secret{sha3("ecdhAgree")};
+	auto pub = toPublic(sec);
+	Secret sharedSec;
+	ecdh::agree(sec, pub, sharedSec);
+	BOOST_CHECK(sharedSec);
+	auto expectedSharedSec = "8ac7e464348b85d9fdfc0a81f2fdc0bbbb8ee5fb3840de6ed60ad9372e718977";
+	BOOST_CHECK_EQUAL(sharedSec.makeInsecure().hex(), expectedSharedSec);
 }
 
 BOOST_AUTO_TEST_CASE(handshakeNew)
