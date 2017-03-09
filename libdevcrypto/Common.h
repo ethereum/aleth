@@ -28,7 +28,6 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Exceptions.h>
-#include <libdevcore/FileSystem.h>
 
 namespace dev
 {
