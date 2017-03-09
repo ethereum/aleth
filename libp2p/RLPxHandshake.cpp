@@ -39,7 +39,7 @@ void RLPXHandshake::writeAuth()
 	
 	// E(remote-pubk, S(ecdhe-random, ecdh-shared-secret^nonce) || H(ecdhe-random-pubk) || pubk || nonce || 0x0)
 	Secret staticShared;
-	crypto::ecdh::agree(m_host->m_alias.sec(), m_remote, staticShared);
+	crypto::ecdh::agree(m_host->m_alias.secret(), m_remote, staticShared);
 	sign(m_ecdhe.seckey(), staticShared.makeInsecure() ^ m_nonce).ref().copyTo(sig);
 	sha3(m_ecdhe.pubkey().ref(), hepubk);
 	m_host->m_alias.pub().ref().copyTo(pubk);
@@ -103,7 +103,7 @@ void RLPXHandshake::setAuthValues(Signature const& _sig, Public const& _remotePu
 	_remoteNonce.ref().copyTo(m_remoteNonce.ref());
 	m_remoteVersion = _remoteVersion;
 	Secret sharedSecret;
-	crypto::ecdh::agree(m_host->m_alias.sec(), _remotePubk, sharedSecret);
+	crypto::ecdh::agree(m_host->m_alias.secret(), _remotePubk, sharedSecret);
 	m_remoteEphemeral = recover(_sig, sharedSecret.makeInsecure() ^ _remoteNonce);
 }
 
@@ -116,7 +116,7 @@ void RLPXHandshake::readAuth()
 	{
 		if (ec)
 			transition(ec);
-		else if (decryptECIES(m_host->m_alias.sec(), bytesConstRef(&m_authCipher), m_auth))
+		else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_authCipher), m_auth))
 		{
 			bytesConstRef data(&m_auth);
 			Signature sig(data.cropped(0, Signature::size));
@@ -143,7 +143,7 @@ void RLPXHandshake::readAuthEIP8()
 		bytesConstRef ct(&m_authCipher);
 		if (ec)
 			transition(ec);
-		else if (decryptECIES(m_host->m_alias.sec(), ct.cropped(0, 2), ct.cropped(2), m_auth))
+		else if (decryptECIES(m_host->m_alias.secret(), ct.cropped(0, 2), ct.cropped(2), m_auth))
 		{
 			RLP rlp(m_auth, RLP::ThrowOnFail | RLP::FailIfTooSmall);
 			setAuthValues(
@@ -173,7 +173,7 @@ void RLPXHandshake::readAck()
 	{
 		if (ec)
 			transition(ec);
-		else if (decryptECIES(m_host->m_alias.sec(), bytesConstRef(&m_ackCipher), m_ack))
+		else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_ackCipher), m_ack))
 		{
 			bytesConstRef(&m_ack).cropped(0, Public::size).copyTo(m_remoteEphemeral.ref());
 			bytesConstRef(&m_ack).cropped(Public::size, h256::size).copyTo(m_remoteNonce.ref());
@@ -198,7 +198,7 @@ void RLPXHandshake::readAckEIP8()
 		bytesConstRef ct(&m_ackCipher);
 		if (ec)
 			transition(ec);
-		else if (decryptECIES(m_host->m_alias.sec(), ct.cropped(0, 2), ct.cropped(2), m_ack))
+		else if (decryptECIES(m_host->m_alias.secret(), ct.cropped(0, 2), ct.cropped(2), m_ack))
 		{
 			RLP rlp(m_ack, RLP::ThrowOnFail | RLP::FailIfTooSmall);
 			m_remoteEphemeral = rlp[0].toHash<Public>();

@@ -63,10 +63,6 @@ public:
 		return ctx;
 	}
 
-	void exportPublicKey(DL_PublicKey_EC<ECP> const& _k, Public& o_p);
-
-	void exponentToPublic(Integer const& _e, Public& o_p);
-
 private:
 	Secp256k1PPCtx():
 		m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()),
@@ -84,11 +80,6 @@ Secp256k1PP* Secp256k1PP::get()
 {
 	static Secp256k1PP s_this;
 	return &s_this;
-}
-
-void Secp256k1PP::toPublic(Secret const& _s, Public& o_public)
-{
-	Secp256k1PPCtx::get().exponentToPublic(Integer(_s.data(), sizeof(_s)), o_public);
 }
 
 bytes Secp256k1PP::eciesKDF(Secret const& _z, bytes _s1, unsigned kdByteLen)
@@ -131,7 +122,7 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 	// interop w/go ecies implementation
 	auto r = KeyPair::create();
 	Secret z;
-	ecdh::agree(r.sec(), _k, z);
+	ecdh::agree(r.secret(), _k, z);
 	auto key = eciesKDF(z, bytes(), 32);
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
@@ -274,126 +265,6 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	io_text = std::move(plain);
 }
 
-Signature Secp256k1PP::sign(Secret const& _k, bytesConstRef _message)
-{
-	return sign(_k, sha3(_message));
-}
-
-Signature Secp256k1PP::sign(Secret const& _key, h256 const& _hash)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	// assumption made by signing alogrithm
-	asserts(ctx.m_q == ctx.m_qs);
-	
-	Signature sig;
-	
-	Integer k(kdf(_key, _hash).data(), 32);
-	if (k == 0)
-		BOOST_THROW_EXCEPTION(InvalidState());
-	k = 1 + (k % (ctx.m_qs - 1));
-	
-	ECP::Point rp;
-	Integer r;
-	{
-		Guard l(ctx.x_params);
-		rp = ctx.m_params.ExponentiateBase(k);
-		r = ctx.m_params.ConvertElementToInteger(rp);
-	}
-	sig[64] = 0;
-//	sig[64] = (r >= m_q) ? 2 : 0;
-	
-	Integer kInv = k.InverseMod(ctx.m_q);
-	Integer z(_hash.asBytes().data(), 32);
-	Integer s = (kInv * (Integer(_key.data(), 32) * r + z)) % ctx.m_q;
-	if (r == 0 || s == 0)
-		BOOST_THROW_EXCEPTION(InvalidState());
-	
-//	if (s > m_qs)
-//	{
-//		s = m_q - s;
-//		if (sig[64])
-//			sig[64] ^= 1;
-//	}
-	
-	sig[64] |= rp.y.IsOdd() ? 1 : 0;
-	r.Encode(sig.data(), 32);
-	s.Encode(sig.data() + 32, 32);
-	return sig;
-}
-
-bool Secp256k1PP::verify(Signature const& _signature, bytesConstRef _message)
-{
-	return !!recover(_signature, _message);
-}
-
-bool Secp256k1PP::verify(Public const& _p, Signature const& _sig, bytesConstRef _message, bool _hashed)
-{
-	// todo: verify w/o recovery (if faster)
-	return _p == (_hashed ? recover(_sig, _message) : recover(_sig, sha3(_message).ref()));
-}
-
-Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	Public recovered;
-	
-	Integer r(_signature.data(), 32);
-	Integer s(_signature.data()+32, 32);
-	// cryptopp encodes sign of y as 0x02/0x03 instead of 0/1 or 27/28
-	byte encodedpoint[33];
-	encodedpoint[0] = _signature[64] | 2;
-	memcpy(&encodedpoint[1], _signature.data(), 32);
-	
-	ECP::Element x;
-	{
-		ctx.m_curve.DecodePoint(x, encodedpoint, 33);
-		if (!ctx.m_curve.VerifyPoint(x))
-			return recovered;
-	}
-	
-//	if (_signature[64] & 2)
-//	{
-//		r += m_q;
-//		Guard l(x_params);
-//		if (r >= m_params.GetMaxExponent())
-//			return recovered;
-//	}
-	
-	Integer z(_message.data(), 32);
-	Integer rn = r.InverseMod(ctx.m_q);
-	Integer u1 = ctx.m_q - (rn.Times(z)).Modulo(ctx.m_q);
-	Integer u2 = (rn.Times(s)).Modulo(ctx.m_q);
-	
-	ECP::Point p;
-	byte recoveredbytes[65];
-	{
-		// todo: make generator member
-		p = ctx.m_curve.CascadeMultiply(u2, x, u1, ctx.m_params.GetSubgroupGenerator());
-		if (p.identity)
-			return Public();
-		ctx.m_curve.EncodePoint(recoveredbytes, p, false);
-	}
-	memcpy(recovered.data(), &recoveredbytes[1], 64);
-	return recovered;
-}
-
-bool Secp256k1PP::verifySecret(Secret const& _s, Public& _p)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	DL_PrivateKey_EC<ECP> k;
-	k.Initialize(ctx.m_params, secretToExponent(_s));
-	if (!k.Validate(ctx.m_rng, 3))
-		return false;
-	
-	DL_PublicKey_EC<CryptoPP::ECP> pub;
-	k.MakePublicKey(pub);
-	if (!k.Validate(ctx.m_rng, 3))
-		return false;
-
-	ctx.exportPublicKey(pub, _p);
-	return true;
-}
-
 void Secp256k1PP::agree(Secret const& _s, Public const& _r, Secret& o_s)
 {
 	// TODO: mutex ASN1::secp256k1() singleton
@@ -403,32 +274,6 @@ void Secp256k1PP::agree(Secret const& _s, Public const& _r, Secret& o_s)
 	byte remote[65] = {0x04};
 	memcpy(&remote[1], _r.data(), 64);
 	d.Agree(o_s.writable().data(), _s.data(), remote);
-}
-
-void Secp256k1PPCtx::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& _k, Public& o_p)
-{
-	auto& ctx = Secp256k1PPCtx::get();
-	bytes prefixedKey(_k.GetGroupParameters().GetEncodedElementSize(true));
-	
-	{
-		Guard l(ctx.x_params);
-		ctx.m_params.GetCurve().EncodePoint(prefixedKey.data(), _k.GetPublicElement(), false);
-		assert(Public::size + 1 == _k.GetGroupParameters().GetEncodedElementSize(true));
-	}
-
-	memcpy(o_p.data(), &prefixedKey[1], Public::size);
-}
-
-void Secp256k1PPCtx::exponentToPublic(Integer const& _e, Public& o_p)
-{
-	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pk;
-	
-	{
-		Guard l(x_params);
-		pk.Initialize(m_params, m_params.ExponentiateBase(_e));
-	}
-	
-	exportPublicKey(pk, o_p);
 }
 
 #if defined(__GNUC__)

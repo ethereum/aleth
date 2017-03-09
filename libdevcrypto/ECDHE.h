@@ -23,39 +23,20 @@
 
 #pragma once
 
-#include "AES.h"
+#include "Common.h"
 
 namespace dev
 {
 namespace crypto
 {
-	
-/// Public key of remote and corresponding shared secret.
-using AliasSession = std::pair<Public,h256>;
-	
-/**
- * @brief An addressable EC key pair.
- */
-class Alias
-{
-public:
-	Alias(Secret const& _s): m_secret(_s) {};
-	
-	AliasSession session(Address _a) { return m_sessions.count(_a) ? m_sessions.find(_a)->second : AliasSession(); }
-	
-private:
-	std::map<Address,AliasSession> m_sessions;
-	Secret m_secret;
-};
-
 namespace ecdh
 {
 void agree(Secret const& _s, Public const& _r, Secret& o_s);
 }
-	
+
 /**
  * @brief Derive DH shared secret from EC keypairs.
- * As ephemeral keys are single-use, agreement is limited to a single occurence.
+ * As ephemeral keys are single-use, agreement is limited to a single occurrence.
  */
 class ECDHE
 {
@@ -66,7 +47,7 @@ public:
 	/// Public key sent to remote.
 	Public pubkey() { return m_ephemeral.pub(); }
 	
-	Secret seckey() { return m_ephemeral.sec(); }
+	Secret seckey() { return m_ephemeral.secret(); }
 	
 	/// Input public key for dh agreement, output generated shared secret.
 	void agree(Public const& _remoteEphemeral, Secret& o_sharedSecret) const;

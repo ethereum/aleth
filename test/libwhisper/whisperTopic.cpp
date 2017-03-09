@@ -117,7 +117,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 //	KeyPair us = KeyPair::create();
 //	for (int i = 0; i < 10; ++i)
 //	{
-//		whost2->post(us.sec(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"));
+//		whost2->post(us.secret(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"));
 //		this_thread::sleep_for(chrono::milliseconds(50));
 //	}
 
@@ -225,7 +225,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 //		this_thread::sleep_for(chrono::milliseconds(10));
 
 //	KeyPair us = KeyPair::create();
-//	wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
+//	wh->post(us.secret(), RLPStream().append(1).out(), BuildTopic("test"));
 //	this_thread::sleep_for(chrono::milliseconds(250));
 
 //	listener.join();
@@ -292,7 +292,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 //			this_thread::sleep_for(chrono::milliseconds(5));
 
 //		KeyPair us = KeyPair::create();
-//		whost2->post(us.sec(), RLPStream().append(TestValue).out(), BuildTopic("test"), 777000);
+//		whost2->post(us.secret(), RLPStream().append(TestValue).out(), BuildTopic("test"), 777000);
 //		this_thread::sleep_for(chrono::milliseconds(250));
 //	}
 
@@ -421,10 +421,10 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 
 //	unsigned const sample = 0xFEED;
 //	KeyPair us = KeyPair::create();
-//	wh->post(us.sec(), RLPStream().append(sample).out(), BuildTopic(text));
+//	wh->post(us.secret(), RLPStream().append(sample).out(), BuildTopic(text));
 
 //	TopicBloomFilterHash f = wh->bloom();
-//	Envelope e = Message(RLPStream().append(sample).out()).seal(us.sec(), BuildTopic(text), 50, 50);
+//	Envelope e = Message(RLPStream().append(sample).out()).seal(us.secret(), BuildTopic(text), 50, 50);
 //	bool ok = e.matchesBloomFilter(f);
 //	BOOST_REQUIRE(ok);
 

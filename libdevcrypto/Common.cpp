@@ -79,6 +79,7 @@ Public dev::toPublic(Secret const& _secret)
 {
 	auto* ctx = Secp256k1Context::get();
 	secp256k1_pubkey rawPubkey;
+	// Creation will fail if the secret key is invalid.
 	if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, _secret.data()))
 		return {};
 	std::array<byte, 65> serializedPubkey;
@@ -101,9 +102,7 @@ Address dev::toAddress(Public const& _public)
 
 Address dev::toAddress(Secret const& _secret)
 {
-	Public p;
-	Secp256k1PP::get()->toPublic(_secret, p);
-	return toAddress(p);
+	return toAddress(toPublic(_secret));
 }
 
 Address dev::toAddress(Address const& _from, u256 const& _nonce)
@@ -268,6 +267,7 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 
 bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 {
+	// TODO: Verify w/o recovery (if faster).
 	if (!_p)
 		return false;
 	return _p == recover(_s, _hash);
@@ -308,22 +308,23 @@ bytesSec dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, 
 	return ret;
 }
 
-void KeyPair::populateFromSecret(Secret const& _sec)
+KeyPair::KeyPair(Secret const& _sec):
+	m_secret(_sec),
+	m_public(toPublic(_sec))
 {
-	m_secret = _sec;
-	if (Secp256k1PP::get()->verifySecret(m_secret, m_public))
+	// Assign address only if the secret key is valid.
+	if (m_public)
 		m_address = toAddress(m_public);
 }
 
 KeyPair KeyPair::create()
 {
-	for (int i = 0; i < 100; ++i)
+	while (true)
 	{
-		KeyPair ret(Secret::random());
-		if (ret.address())
-			return ret;
+		KeyPair keyPair(Secret::random());
+		if (keyPair.address())
+			return keyPair;
 	}
-	return KeyPair();
 }
 
 KeyPair KeyPair::fromEncryptedSeed(bytesConstRef _seed, std::string const& _password)

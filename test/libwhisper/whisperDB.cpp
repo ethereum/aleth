@@ -162,7 +162,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperDB, P2PFixture)
 //		wh->installWatch(BuildTopic("test"));
 
 //		for (unsigned i = 0; i < TestSize; ++i)
-//			wh->post(us.sec(), RLPStream().append(i).out(), BuildTopic("test"), 0xFFFFF);
+//			wh->post(us.secret(), RLPStream().append(i).out(), BuildTopic("test"), 0xFFFFF);
 
 //		m1 = wh->all();
 //	}

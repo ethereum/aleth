@@ -54,13 +54,14 @@ bool AccountManager::execute(int argc, char** argv)
 			string file = argv[3];
 			string name = "presale wallet";
 			string pw;
-			KeyPair k;
 			try
 			{
-				k = m_keyManager->presaleSecret(
+				KeyPair k = m_keyManager->presaleSecret(
 					contentsString(file),
 					[&](bool){ return (pw = getPassword("Enter the passphrase for the presale key: "));}
 				);
+				m_keyManager->import(k.secret(), name, pw, "Same passphrase as used for presale key");
+				cout << "  Address: {" << k.address().hex() << "}" << endl;
 			}
 			catch (Exception const& _e)
 			{
@@ -70,8 +71,6 @@ bool AccountManager::execute(int argc, char** argv)
 					cout << "  Decryption failed: Unknown reason." << endl;
 				return false;
 			}
-			m_keyManager->import(k.secret(), name, pw, "Same passphrase as used for presale key");
-			cout << "  Address: {" << k.address().hex() << "}" << endl;
 		}
 		else
 			streamWalletHelp(cout);
