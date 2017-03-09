@@ -81,7 +81,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 			else
 				BOOST_THROW_EXCEPTION(InvalidSignature());
 
-			v = v - (m_chainId * 2 + 35);
+			m_vrs.v = v - (m_chainId * 2 + 35);
 
 			if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid())
 				BOOST_THROW_EXCEPTION(InvalidSignature());
