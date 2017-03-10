@@ -350,7 +350,7 @@ void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
 	auto* ctx = getCtx();
 	static_assert(sizeof(Secret) == 32, "Invalid Secret type size");
 	secp256k1_pubkey rawPubkey;
-	std::array<byte, 65> serializedPubKey = {0x04};
+	std::array<byte, 65> serializedPubKey{{0x04}};
 	std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
 	auto r = secp256k1_ec_pubkey_parse(ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size());
 	assert(r == 1);
