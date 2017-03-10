@@ -56,18 +56,10 @@ secp256k1_context const* getCtx()
 
 bool dev::SignatureStruct::isValid() const noexcept
 {
-	if (v > 1 ||
-		r >= h256("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141") ||
-		s >= h256("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141") ||
-		s < h256(1) ||
-		r < h256(1))
-		return false;
-	return true;
-}
+	static const h256 s_max{"0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"};
+	static const h256 s_zero;
 
-Public SignatureStruct::recover(h256 const& _hash) const
-{
-	return dev::recover((Signature)*this, _hash);
+	return (v <= 1 && r > s_zero && s > s_zero && r < s_max && s < s_max);
 }
 
 Address dev::ZeroAddress = Address();
