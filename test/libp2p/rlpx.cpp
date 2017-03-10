@@ -418,13 +418,13 @@ BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
 	Secret input1(fromHex("0x0de72f1223915fa8b8bf45dffef67aef8d89792d116eb61c9a1eb02c422a4663"));
 	bytes expect1(fromHex("0x1d0c446f9899a3426f2b89a8cb75c14b"));
 	bytes test1;
-	test1 = s_secp256k1->eciesKDF(input1, bytes(), 16);
+	test1 = ecies::kdf(input1, bytes(), 16);
 	BOOST_REQUIRE(test1 == expect1);
 	
 	Secret kdfInput2(fromHex("0x961c065873443014e0371f1ed656c586c6730bf927415757f389d92acf8268df"));
 	bytes kdfExpect2(fromHex("0x4050c52e6d9c08755e5a818ac66fabe478b825b1836fd5efc4d44e40d04dabcc"));
 	bytes kdfTest2;
-	kdfTest2 = s_secp256k1->eciesKDF(kdfInput2, bytes(), 32);
+	kdfTest2 = ecies::kdf(kdfInput2, bytes(), 32);
 	BOOST_REQUIRE(kdfTest2 == kdfExpect2);
 	
 	KeyPair k(Secret(fromHex("0x332143e9629eedff7d142d741f896258f5a1bfab54dab2121d3ec5000093d74b")));

@@ -58,9 +58,6 @@ public:
 	
 	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytes& io_text);
-	
-	/// Key derivation function used by encryptECIES and decryptECIES.
-	bytes eciesKDF(Secret const& _z, bytes _s1, unsigned kdBitLen = 256);
 
 private:
 	Secp256k1PP() = default;

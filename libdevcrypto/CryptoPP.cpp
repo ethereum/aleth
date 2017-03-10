@@ -26,7 +26,6 @@
 #include <cryptopp/oids.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
-#include <libscrypt/sha256.h>
 #include "ECDHE.h"
 
 static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
@@ -83,37 +82,6 @@ Secp256k1PP* Secp256k1PP::get()
 	return &s_this;
 }
 
-bytes Secp256k1PP::eciesKDF(Secret const& _z, bytes _s1, unsigned kdByteLen)
-{
-	static_assert(CryptoPP::SHA256::BLOCKSIZE == 64, "Block size");
-	auto reps = ((kdByteLen + 7) * 8) / 512;
-	// SEC/ISO/Shoup specify counter size SHOULD be equivalent
-	// to size of hash output, however, it also notes that
-	// the 4 bytes is okay. NIST specifies 4 bytes.
-	bytes ctr({0, 0, 0, 1});
-	bytes k;
-	libscrypt_SHA256Context ctx;
-	for (unsigned i = 0; i <= reps; i++)
-	{
-		libscrypt_SHA256_Init(&ctx);
-		libscrypt_SHA256_Update(&ctx, ctr.data(), ctr.size());
-		libscrypt_SHA256_Update(&ctx, _z.data(), Secret::size);
-		libscrypt_SHA256_Update(&ctx, _s1.data(), _s1.size());
-		// append hash to k
-		bytes digest(32);
-		libscrypt_SHA256_Final(digest.data(), &ctx);
-		
-		k.reserve(k.size() + h256::size);
-		move(digest.begin(), digest.end(), back_inserter(k));
-		
-		if (++ctr[3] || ++ctr[2] || ++ctr[1] || ++ctr[0])
-			continue;
-	}
-	
-	k.resize(kdByteLen);
-	return k;
-}
-
 void Secp256k1PP::encryptECIES(Public const& _k, bytes& io_cipher)
 {
 	encryptECIES(_k, bytesConstRef(), io_cipher);
@@ -125,7 +93,7 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 	auto r = KeyPair::create();
 	Secret z;
 	ecdh::agree(r.secret(), _k, z);
-	auto key = eciesKDF(z, bytes(), 32);
+	auto key = ecies::kdf(z, bytes(), 32);
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
 	CryptoPP::SHA256 ctx;
@@ -177,7 +145,7 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 
 	Secret z;
 	ecdh::agree(_k, *(Public*)(io_text.data() + 1), z);
-	auto key = eciesKDF(z, bytes(), 64);
+	auto key = ecies::kdf(z, bytes(), 64);
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
 	bytes mKey(32);
