@@ -61,8 +61,6 @@ public:
 	
 	/// Key derivation function used by encryptECIES and decryptECIES.
 	bytes eciesKDF(Secret const& _z, bytes _s1, unsigned kdBitLen = 256);
-	
-	void agree(Secret const& _s, Public const& _r, Secret& o_s);
 
 private:
 	Secp256k1PP() = default;

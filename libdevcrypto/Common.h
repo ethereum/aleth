@@ -52,9 +52,6 @@ struct SignatureStruct
 	/// @returns true if r,s,v values are valid, otherwise false
 	bool isValid() const noexcept;
 
-	/// @returns the public part of the key that signed @a _hash to give this sig.
-	Public recover(h256 const& _hash) const;
-
 	h256 r;
 	h256 s;
 	byte v = 0;
@@ -217,6 +214,11 @@ private:
 	Secret m_value;
 };
 
-}
+namespace ecdh
+{
 
+void agree(Secret const& _s, Public const& _r, Secret& o_s);
+
+}
+}
 }

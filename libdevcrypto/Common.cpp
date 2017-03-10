@@ -23,6 +23,7 @@
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
 #include <secp256k1.h>
+#include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
@@ -39,45 +40,33 @@ using namespace dev;
 using namespace dev::crypto;
 using namespace CryptoPP;
 
-class Secp256k1Context
+namespace
 {
-public:
-	static secp256k1_context const* get()
-	{
-		static Secp256k1Context s_ctx;
-		return s_ctx.m_ctx;
-	}
 
-private:
-	Secp256k1Context():
-		m_ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY)) {}
-	~Secp256k1Context() { secp256k1_context_destroy(m_ctx); }
+secp256k1_context const* getCtx()
+{
+	static std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)> s_ctx{
+		secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY),
+		&secp256k1_context_destroy
+	};
+	return s_ctx.get();
+}
 
-	secp256k1_context* const m_ctx = nullptr;
-};
-
+}
 
 bool dev::SignatureStruct::isValid() const noexcept
 {
-	if (v > 1 ||
-		r >= h256("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141") ||
-		s >= h256("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141") ||
-		s < h256(1) ||
-		r < h256(1))
-		return false;
-	return true;
-}
+	static const h256 s_max{"0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"};
+	static const h256 s_zero;
 
-Public SignatureStruct::recover(h256 const& _hash) const
-{
-	return dev::recover((Signature)*this, _hash);
+	return (v <= 1 && r > s_zero && s > s_zero && r < s_max && s < s_max);
 }
 
 Address dev::ZeroAddress = Address();
 
 Public dev::toPublic(Secret const& _secret)
 {
-	auto* ctx = Secp256k1Context::get();
+	auto* ctx = getCtx();
 	secp256k1_pubkey rawPubkey;
 	// Creation will fail if the secret key is invalid.
 	if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, _secret.data()))
@@ -155,7 +144,7 @@ bool dev::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesCons
 
 void dev::encryptSym(Secret const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
-	// TOOD: @alex @subtly do this properly.
+	// TODO: @alex @subtly do this properly.
 	encrypt(KeyPair(_k).pub(), _plain, o_cipher);
 }
 
@@ -211,15 +200,13 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
 	}
 }
 
-static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
-
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
 	int v = _sig[64];
 	if (v > 3)
 		return {};
 
-	auto* ctx = Secp256k1Context::get();
+	auto* ctx = getCtx();
 	secp256k1_ecdsa_recoverable_signature rawSig;
 	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, _sig.data(), v))
 		return {};
@@ -245,7 +232,7 @@ static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279
 
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
-	auto* ctx = Secp256k1Context::get();
+	auto* ctx = getCtx();
 	secp256k1_ecdsa_recoverable_signature rawSig;
 	if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr))
 		return {};
@@ -356,4 +343,19 @@ Secret Nonce::next()
 	}
 	m_value = sha3Secure(m_value.ref());
 	return sha3(~m_value);
+}
+
+void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
+{
+	auto* ctx = getCtx();
+	static_assert(sizeof(Secret) == 32, "Invalid Secret type size");
+	secp256k1_pubkey rawPubkey;
+	std::array<byte, 65> serializedPubKey{{0x04}};
+	std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
+	auto r = secp256k1_ec_pubkey_parse(ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size());
+	assert(r == 1);
+	std::array<byte, 33> compressedPoint;
+	r = secp256k1_ecdh_raw(ctx, compressedPoint.data(), &rawPubkey, _s.data());
+	assert(r == 1);  // TODO: This should be "invalid secret key" exception.
+	std::copy(compressedPoint.begin() + 1, compressedPoint.end(), o_s.writable().data());
 }

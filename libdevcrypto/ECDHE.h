@@ -29,10 +29,6 @@ namespace dev
 {
 namespace crypto
 {
-namespace ecdh
-{
-void agree(Secret const& _s, Public const& _r, Secret& o_s);
-}
 
 /**
  * @brief Derive DH shared secret from EC keypairs.

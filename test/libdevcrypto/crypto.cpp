@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		sig.copyTo(sigAuth.ref());
 		
 		Secret ss;
-		s_secp256k1->agree(nodeB.secret(), nodeAAuth, ss);
+		ecdh::agree(nodeB.secret(), nodeAAuth, ss);
 		eAAuth = recover(sigAuth, (ss ^ nonceAAuth).makeInsecure());
 		// todo: test when this fails; means remote is bad or packet bits were flipped
 		BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));

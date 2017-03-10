@@ -264,18 +264,3 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	io_text.resize(r.messageLength);
 	io_text = std::move(plain);
 }
-
-void Secp256k1PP::agree(Secret const& _s, Public const& _r, Secret& o_s)
-{
-	// TODO: mutex ASN1::secp256k1() singleton
-	// Creating Domain is non-const for m_oid and m_oid is not thread-safe
-	ECDH<ECP>::Domain d(ASN1::secp256k1());
-	assert(d.AgreedValueLength() == sizeof(o_s));
-	byte remote[65] = {0x04};
-	memcpy(&remote[1], _r.data(), 64);
-	d.Agree(o_s.writable().data(), _s.data(), remote);
-}
-
-#if defined(__GNUC__)
-	#pragma GCC diagnostic pop
-#endif // defined(__GNUC__)
