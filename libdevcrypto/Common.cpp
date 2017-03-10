@@ -373,6 +373,8 @@ void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
 	std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
 	auto r = secp256k1_ec_pubkey_parse(ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size());
 	assert(r == 1);
-	r = secp256k1_ecdh(ctx, o_s.writable().data(), &rawPubkey, _s.data());
+	std::array<byte, 33> compressedPoint;
+	r = secp256k1_ecdh_raw(ctx, compressedPoint.data(), &rawPubkey, _s.data());
 	assert(r == 1);  // TODO: This should be "invalid secret key" exception.
+	std::copy(compressedPoint.begin() + 1, compressedPoint.end(), o_s.writable().data());
 }
