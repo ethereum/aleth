@@ -43,23 +43,14 @@ using namespace CryptoPP;
 namespace
 {
 
-class Secp256k1Context
+secp256k1_context const* getCtx()
 {
-public:
-	static secp256k1_context const* get()
-	{
-		static Secp256k1Context s_ctx;
-		return s_ctx.m_ctx;
-	}
-
-private:
-	Secp256k1Context():
-		m_ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY))
-	{}
-	~Secp256k1Context() { secp256k1_context_destroy(m_ctx); }
-
-	secp256k1_context* const m_ctx = nullptr;
-};
+	static std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)> s_ctx{
+		secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY),
+		&secp256k1_context_destroy
+	};
+	return s_ctx.get();
+}
 
 }
 
@@ -83,7 +74,7 @@ Address dev::ZeroAddress = Address();
 
 Public dev::toPublic(Secret const& _secret)
 {
-	auto* ctx = Secp256k1Context::get();
+	auto* ctx = getCtx();
 	secp256k1_pubkey rawPubkey;
 	// Creation will fail if the secret key is invalid.
 	if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, _secret.data()))
@@ -161,7 +152,7 @@ bool dev::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesCons
 
 void dev::encryptSym(Secret const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
-	// TOOD: @alex @subtly do this properly.
+	// TODO: @alex @subtly do this properly.
 	encrypt(KeyPair(_k).pub(), _plain, o_cipher);
 }
 
@@ -217,15 +208,13 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
 	}
 }
 
-static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
-
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
 	int v = _sig[64];
 	if (v > 3)
 		return {};
 
-	auto* ctx = Secp256k1Context::get();
+	auto* ctx = getCtx();
 	secp256k1_ecdsa_recoverable_signature rawSig;
 	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, _sig.data(), v))
 		return {};
@@ -251,7 +240,7 @@ static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279
 
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
-	auto* ctx = Secp256k1Context::get();
+	auto* ctx = getCtx();
 	secp256k1_ecdsa_recoverable_signature rawSig;
 	if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, _hash.data(), _k.data(), nullptr, nullptr))
 		return {};
@@ -366,7 +355,7 @@ Secret Nonce::next()
 
 void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
 {
-	auto* ctx = Secp256k1Context::get();
+	auto* ctx = getCtx();
 	static_assert(sizeof(Secret) == 32, "Invalid Secret type size");
 	secp256k1_pubkey rawPubkey;
 	std::array<byte, 65> serializedPubKey = {0x04};
