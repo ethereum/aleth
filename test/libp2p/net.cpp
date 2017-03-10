@@ -41,6 +41,8 @@ struct NetFixture: public TestOutputHelper
 	~NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
+BOOST_AUTO_TEST_SUITE(network)
+
 BOOST_FIXTURE_TEST_SUITE(net, NetFixture)
 
 /**
@@ -321,7 +323,7 @@ BOOST_AUTO_TEST_CASE(udpOnce)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(netTypes)
+BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelper)
 
 /*
 
@@ -336,7 +338,7 @@ BOOST_AUTO_TEST_SUITE(netTypes)
  and why it has started failing.   Re-add it or remove it.
 
 
-BOOST_AUTO_TEST_CASE(deadlineTimer)
+(deadlineTimer)
 {
 	if (test::Options::get().nonetwork)
 		return;
@@ -392,4 +394,4 @@ BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
+BOOST_AUTO_TEST_SUITE_END()

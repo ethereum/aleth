@@ -47,7 +47,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 // Disabled tests as they are unstable and tend to stall the test suite.
 //
 
-//BOOST_AUTO_TEST_CASE(topic)
+//(topic)
 //{
 //	cnote << "Testing Whisper...";
 //	VerbosityHolder setTemporaryLevel(0);
@@ -125,7 +125,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 //	BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
 //}
 
-//BOOST_AUTO_TEST_CASE(forwarding)
+//(forwarding)
 //{
 //	cnote << "Testing Whisper forwarding...";
 //	VerbosityHolder setTemporaryLevel(0);
@@ -234,7 +234,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 //	BOOST_REQUIRE_EQUAL(result, 1);
 //}
 
-//BOOST_AUTO_TEST_CASE(asyncforwarding)
+//(asyncforwarding)
 //{
 //	cnote << "Testing Whisper async forwarding...";
 //	VerbosityHolder setTemporaryLevel(2);
@@ -327,7 +327,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 //	BOOST_REQUIRE_EQUAL(result, TestValue);
 //}
 
-//BOOST_AUTO_TEST_CASE(topicAdvertising)
+//(topicAdvertising)
 //{
 //	cnote << "Testing Topic Advertising...";
 //	VerbosityHolder setTemporaryLevel(2);
@@ -407,7 +407,7 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 //	whost2->uninstallWatch(w2);
 //}
 
-//BOOST_AUTO_TEST_CASE(selfAddressed)
+//(selfAddressed)
 //{
 //	VerbosityHolder setTemporaryLevel(10);
 //	cnote << "Testing self-addressed messaging with bloom filter matching...";

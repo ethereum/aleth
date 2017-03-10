@@ -31,6 +31,7 @@ class homesteadFixture { public:	homesteadFixture() { dev::test::TestBlockChain:
 class transitionFixture { public: 	transitionFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::TransitionnetTest; } };
 class eip150Fixture { public:	eip150Fixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::EIP150Test; } };
 
+BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 //BlockChainTestsTransition
 BOOST_FIXTURE_TEST_SUITE(BlockChainTestsTransition, transitionFixture)
@@ -106,7 +107,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 //BlockChainTests
-BOOST_FIXTURE_TEST_SUITE(BlockChainTests, frontierFixture)
+BOOST_FIXTURE_TEST_SUITE(BlockChainTestsFrontier, frontierFixture)
 BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 {
 	std::string fillersPath =  dev::test::getTestPath() + "/src/BlockchainTestsFiller";
@@ -160,4 +161,5 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
 	dev::test::userDefinedTest(dev::test::doBlockchainTests);
 }
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

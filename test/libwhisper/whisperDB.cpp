@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperDB, P2PFixture)
 // Disabled tests as they are unstable and tend to stall the test suite.
 //
 
-//BOOST_AUTO_TEST_CASE(basic)
+//(basic)
 //{
 //	VerbosityHolder setTemporaryLevel(10);
 //	cnote << "Testing Whisper DB...";
@@ -99,7 +99,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperDB, P2PFixture)
 //	BOOST_REQUIRE(s.empty());
 //}
 
-//BOOST_AUTO_TEST_CASE(persistence)
+//(persistence)
 //{
 //	VerbosityHolder setTemporaryLevel(10);
 //	cnote << "Testing persistence of Whisper DB...";
@@ -144,7 +144,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperDB, P2PFixture)
 //	}
 //}
 
-//BOOST_AUTO_TEST_CASE(messages)
+//(messages)
 //{
 //	cnote << "Testing load/save Whisper messages...";
 //	VerbosityHolder setTemporaryLevel(2);
@@ -200,7 +200,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperDB, P2PFixture)
 //	BOOST_REQUIRE_EQUAL(x, TestSize);
 //}
 
-//BOOST_AUTO_TEST_CASE(corruptedData)
+//(corruptedData)
 //{
 //	cnote << "Testing corrupted data...";
 //	VerbosityHolder setTemporaryLevel(2);
