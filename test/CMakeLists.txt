@@ -25,7 +25,6 @@ add_subdirectory(external-dependencies)
 
 set(SRC_LIST ${SRC_LIST} ${SRC})
 # search for test names and create ctest tests
-enable_testing()
 set(excludeSuites jsonrpc)
 foreach(file ${SRC_LIST})
 	file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/${file} test_list_raw REGEX "BOOST_.*TEST_(SUITE|CASE)")
