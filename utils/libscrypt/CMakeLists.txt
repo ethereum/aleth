@@ -1,5 +1,4 @@
-aux_source_directory(. SRC_LIST)
+file(GLOB SOURCES "*.c")
 file(GLOB HEADERS "*.h")
-
-add_library(scrypt ${SRC_LIST} ${HEADERS})
+add_library(scrypt ${SOURCES} ${HEADERS})
 

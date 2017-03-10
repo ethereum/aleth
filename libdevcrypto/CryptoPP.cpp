@@ -26,6 +26,7 @@
 #include <cryptopp/oids.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
+#include <libscrypt/sha256.h>
 #include "ECDHE.h"
 
 static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
@@ -84,22 +85,23 @@ Secp256k1PP* Secp256k1PP::get()
 
 bytes Secp256k1PP::eciesKDF(Secret const& _z, bytes _s1, unsigned kdByteLen)
 {
-	auto reps = ((kdByteLen + 7) * 8) / (CryptoPP::SHA256::BLOCKSIZE * 8);
+	static_assert(CryptoPP::SHA256::BLOCKSIZE == 64, "Block size");
+	auto reps = ((kdByteLen + 7) * 8) / 512;
 	// SEC/ISO/Shoup specify counter size SHOULD be equivalent
 	// to size of hash output, however, it also notes that
 	// the 4 bytes is okay. NIST specifies 4 bytes.
 	bytes ctr({0, 0, 0, 1});
 	bytes k;
-	CryptoPP::SHA256 ctx;
+	libscrypt_SHA256Context ctx;
 	for (unsigned i = 0; i <= reps; i++)
 	{
-		ctx.Update(ctr.data(), ctr.size());
-		ctx.Update(_z.data(), Secret::size);
-		ctx.Update(_s1.data(), _s1.size());
+		libscrypt_SHA256_Init(&ctx);
+		libscrypt_SHA256_Update(&ctx, ctr.data(), ctr.size());
+		libscrypt_SHA256_Update(&ctx, _z.data(), Secret::size);
+		libscrypt_SHA256_Update(&ctx, _s1.data(), _s1.size());
 		// append hash to k
 		bytes digest(32);
-		ctx.Final(digest.data());
-		ctx.Restart();
+		libscrypt_SHA256_Final(digest.data(), &ctx);
 		
 		k.reserve(k.size() + h256::size);
 		move(digest.begin(), digest.end(), back_inserter(k));
