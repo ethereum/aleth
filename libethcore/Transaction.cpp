@@ -72,7 +72,9 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 
 		m_vrs = SignatureStruct{ r, s, v };
 
-		if (!m_vrs.isZeroSignature())
+		if (hasZeroSignature())
+			m_chainId = m_vrs.v;
+		else
 		{
 			if (v > 36)
 				m_chainId = (v - 35) / 2;
@@ -80,14 +82,14 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 				m_chainId = -4;
 			else
 				BOOST_THROW_EXCEPTION(InvalidSignature());
-
 			m_vrs.v = v - (m_chainId * 2 + 35);
 
 			if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid())
 				BOOST_THROW_EXCEPTION(InvalidSignature());
-			if (_checkSig == CheckTransaction::Everything)
-				m_sender = sender();
 		}
+
+		if (_checkSig == CheckTransaction::Everything)
+			m_sender = sender();
 
 		if (rlp.itemCount() > 9)
 			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("to many fields in the transaction RLP"));

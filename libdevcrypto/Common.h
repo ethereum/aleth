@@ -53,9 +53,6 @@ struct SignatureStruct
 	/// @returns true if r,s,v values are valid, otherwise false
 	bool isValid() const noexcept;
 
-	/// @returns true if r = 0 && s = 0 && v =0
-	bool isZeroSignature() const noexcept;
-
 	/// @returns the public part of the key that signed @a _hash to give this sig.
 	Public recover(h256 const& _hash) const;
 
