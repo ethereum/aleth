@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(opendb)
 	BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
 }
 
-//BOOST_AUTO_TEST_CASE(rebuild)
+//(rebuild)
 //{
 //	string dbPath;
 //	TestBlock genesisCopy;
@@ -185,7 +185,7 @@ troubleshoot the root cause.
 
 See https://github.com/ethereum/cpp-ethereum/issues/3256.
 
-BOOST_AUTO_TEST_CASE(Mining_3_mineBlockWithUncles)
+(Mining_3_mineBlockWithUncles)
 {
 	try
 	{
@@ -241,7 +241,7 @@ troubleshoot the root cause.
 
 See https://github.com/ethereum/cpp-ethereum/issues/3059.
 
-BOOST_AUTO_TEST_CASE(Mining_4_BlockQueueSyncing)
+(Mining_4_BlockQueueSyncing)
 {
 	try
 	{

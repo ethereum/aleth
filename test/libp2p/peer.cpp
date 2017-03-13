@@ -59,7 +59,7 @@ public:
 	virtual ~TestHostCap() {}
 };
 
-
+BOOST_AUTO_TEST_SUITE(libp2p)
 BOOST_FIXTURE_TEST_SUITE(p2p, P2PFixture)
 
 BOOST_AUTO_TEST_CASE(host)
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(peerTypes)
+BOOST_FIXTURE_TEST_SUITE(peerTypes, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(emptySharedPeer)
 {
@@ -303,6 +303,7 @@ BOOST_AUTO_TEST_CASE(emptySharedPeer)
 	BOOST_REQUIRE(p);
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 int peerTest(int argc, char** argv)

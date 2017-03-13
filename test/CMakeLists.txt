@@ -24,20 +24,30 @@ add_subdirectory(libevm)
 add_subdirectory(external-dependencies)
 
 set(SRC_LIST ${SRC_LIST} ${SRC})
-
 # search for test names and create ctest tests
-enable_testing()
+set(excludeSuites jsonrpc)
 foreach(file ${SRC_LIST})
 	file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/${file} test_list_raw REGEX "BOOST_.*TEST_(SUITE|CASE)")
 	set(TestSuite "DEFAULT")
+	set(ThirdLevelTestSuite "")
 	foreach(test_raw ${test_list_raw})
 		string(REGEX REPLACE ".*TEST_(SUITE|CASE)\\(([^ ,\\)]*).*" "\\1 \\2" test ${test_raw})
+		if (";${excludeSuites};" MATCHES ";${TestSuite};")
+			continue()
+		endif()
 		if(test MATCHES "^SUITE .*")
+			if(NOT TestSuite MATCHES "DEFAULT")
+				if(ThirdLevelTestSuite STREQUAL "")
+					set(ThirdLevelTestSuite ${TestSuite}/)
+				endif()
+			endif()
 			string(SUBSTRING ${test} 6 -1 TestSuite)
 		elseif(test MATCHES "^CASE .*")
-			string(SUBSTRING ${test} 5 -1 TestCase)
-			add_test(NAME ${TestSuite}/${TestCase} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test COMMAND testeth -t ${TestSuite}/${TestCase})
-		endif(test MATCHES "^SUITE .*")
+			if(NOT test MATCHES "^CASE &createRandom.*")
+				string(SUBSTRING ${test} 5 -1 TestCase)
+				add_test(NAME ${ThirdLevelTestSuite}${TestSuite}/${TestCase} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test COMMAND testeth -t ${ThirdLevelTestSuite}${TestSuite}/${TestCase})
+			endif()
+		endif()
 	endforeach(test_raw)
 endforeach(file)
 
@@ -74,8 +84,8 @@ eth_add_test(ClientBase
 	ARGS --eth_testfile=BlockTests/bcValidBlockTest --eth_threads=10
 )
 
-eth_add_test(JsonRpc
-	ARGS --eth_testfile=BlockTests/bcJS_API_Test 
-	ARGS --eth_testfile=BlockTests/bcValidBlockTest
-)
-
+#Does not work
+#eth_add_test(JsonRpc
+#	ARGS --eth_testfile=BlockTests/bcJS_API_Test
+#	ARGS --eth_testfile=BlockTests/bcValidBlockTest
+#)

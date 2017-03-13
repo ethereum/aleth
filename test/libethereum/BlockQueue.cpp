@@ -32,7 +32,7 @@ using namespace dev::test;
 
 //BOOST_FIXTURE_TEST_SUITE(BlockQueueSuite, TestOutputHelper)
 
-//BOOST_AUTO_TEST_CASE(BlockQueueImport)
+//(BlockQueueImport)
 //{
 //	TestBlock genesisBlock = TestBlockChain::defaultGenesisBlock();
 //	TestBlockChain blockchain(genesisBlock);

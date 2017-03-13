@@ -132,7 +132,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 // Disabled tests as they are unstable and tend to stall the test suite.
 //
 
-//BOOST_AUTO_TEST_CASE(basic)
+//(basic)
 //{
 //	cnote << "Testing web3 basic functionality...";
 
@@ -181,7 +181,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 //	BOOST_REQUIRE(!host2.peerCount());
 //}
 
-//BOOST_AUTO_TEST_CASE(send)
+//(send)
 //{
 //	cnote << "Testing web3 send...";
 
@@ -251,7 +251,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 //	BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
 //}
 
-//BOOST_AUTO_TEST_CASE(receive)
+//(receive)
 //{
 //	cnote << "Testing web3 receive...";
 
@@ -321,7 +321,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 //	BOOST_REQUIRE_EQUAL(result, 1 + 27 + 125);
 //}
 
-//BOOST_AUTO_TEST_CASE(serverBasic)
+//(serverBasic)
 //{
 //	cnote << "Testing basic jsonrpc server...";
 
@@ -356,7 +356,7 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 //	BOOST_REQUIRE(b);
 //}
 
-//BOOST_AUTO_TEST_CASE(server)
+//(server)
 //{
 //	cnote << "Testing server functionality...";
 

@@ -86,7 +86,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperMessage, TestOutputHelper)
 // Disabled tests as they are unstable and tend to stall the test suite.
 //
 
-//BOOST_AUTO_TEST_CASE(seal)
+//(seal)
 //{
 //	VerbosityHolder setTemporaryLevel(10);
 
@@ -96,7 +96,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperMessage, TestOutputHelper)
 //		sealAndOpenSingleMessage(i);
 //}
 
-//BOOST_AUTO_TEST_CASE(work)
+//(work)
 //{
 //	VerbosityHolder setTemporaryLevel(10);
 //	cnote << "Testing proof of work...";
