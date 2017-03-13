@@ -97,10 +97,11 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 	auto key = ecies::kdf(z, bytes(), 32);
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
-	CryptoPP::SHA256 ctx;
-	ctx.Update(mKeyMaterial.data(), mKeyMaterial.size());
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, mKeyMaterial.data(), mKeyMaterial.size());
 	bytes mKey(32);
-	ctx.Final(mKey.data());
+	secp256k1_sha256_finalize(&ctx, mKey.data());
 
 	auto iv = h128::random();
 	bytes cipherText = encryptSymNoAuth(SecureFixedHash<16>(eKey), iv, bytesConstRef(&io_cipher));
@@ -113,14 +114,15 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 	iv.ref().copyTo(bytesRef(&msg).cropped(1 + Public::size, h128::size));
 	bytesRef msgCipherRef = bytesRef(&msg).cropped(1 + Public::size + h128::size, cipherText.size());
 	bytesConstRef(&cipherText).copyTo(msgCipherRef);
-	
+
 	// tag message
-	CryptoPP::HMAC<SHA256> hmacctx(mKey.data(), mKey.size());
+	secp256k1_hmac_sha256_t hmacCtx;
+	secp256k1_hmac_sha256_initialize(&hmacCtx, mKey.data(), mKey.size());
 	bytesConstRef cipherWithIV = bytesRef(&msg).cropped(1 + Public::size, h128::size + cipherText.size());
-	hmacctx.Update(cipherWithIV.data(), cipherWithIV.size());
-	hmacctx.Update(_sharedMacData.data(), _sharedMacData.size());
-	hmacctx.Final(msg.data() + 1 + Public::size + cipherWithIV.size());
-	
+	secp256k1_hmac_sha256_write(&hmacCtx, cipherWithIV.data(), cipherWithIV.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, _sharedMacData.data(), _sharedMacData.size());
+	secp256k1_hmac_sha256_finalize(&hmacCtx, msg.data() + 1 + Public::size + cipherWithIV.size());
+
 	io_cipher.resize(msg.size());
 	io_cipher.swap(msg);
 }
