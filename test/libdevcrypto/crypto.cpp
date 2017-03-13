@@ -159,12 +159,12 @@ BOOST_AUTO_TEST_CASE(SignAndRecoverLoop)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_patch)
+BOOST_AUTO_TEST_CASE(decryptEmpty)
 {
 	KeyPair k = KeyPair::create();
-	bytes io_text;
-	s_secp256k1->decrypt(k.secret(), io_text);
-	BOOST_REQUIRE_EQUAL(io_text.size(), 0);
+	bytes text;
+	decrypt(k.secret(), {}, text);
+	BOOST_CHECK_EQUAL(text.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(verify_secert)
@@ -297,11 +297,11 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	string original = message;
 	
 	bytes b = asBytes(message);
-	s_secp256k1->encrypt(k.pub(), b);
-	BOOST_REQUIRE(b != asBytes(original));
+	encrypt(k.pub(), &b, b);
+	BOOST_CHECK(b != asBytes(original));
 
-	s_secp256k1->decrypt(k.secret(), b);
-	BOOST_REQUIRE(b == asBytes(original));
+	decrypt(k.secret(), &b, b);
+	BOOST_CHECK(b == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhCryptopp)
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes authcipher;
 	encrypt(nodeB.pub(), &auth, authcipher);
-	BOOST_REQUIRE_EQUAL(authcipher.size(), 279);
+	BOOST_REQUIRE_EQUAL(authcipher.size(), 307);
 	
 	// Receipient is Bob (nodeB)
 	ECDHE eB;
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes ackcipher;
 	encrypt(nodeA.pub(), &ack, ackcipher);
-	BOOST_REQUIRE_EQUAL(ackcipher.size(), 182);
+	BOOST_REQUIRE_EQUAL(ackcipher.size(), 210);
 	
 	BOOST_REQUIRE(eA.pubkey());
 	BOOST_REQUIRE(eB.pubkey());

@@ -103,14 +103,14 @@ Address dev::toAddress(Address const& _from, u256 const& _nonce)
 void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
 	bytes io = _plain.toBytes();
-	Secp256k1PP::get()->encrypt(_k, io);
+	Secp256k1PP::get()->encryptECIES(_k, io);
 	o_cipher = std::move(io);
 }
 
 bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
 	bytes io = _cipher.toBytes();
-	Secp256k1PP::get()->decrypt(_k, io);
+	Secp256k1PP::get()->decryptECIES(_k, io);
 	if (io.empty())
 		return false;
 	o_plaintext = std::move(io);

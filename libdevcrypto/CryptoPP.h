@@ -41,21 +41,15 @@ class Secp256k1PP
 public:
 	static Secp256k1PP* get();
 
-	/// Encrypts text (replace input). (ECIES w/XOR-SHA1)
-	void encrypt(Public const& _k, bytes& io_cipher);
-	
-	/// Decrypts text (replace input). (ECIES w/XOR-SHA1)
-	void decrypt(Secret const& _k, bytes& io_text);
-	
 	/// Encrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	void encryptECIES(Public const& _k, bytes& io_cipher);
-	
+
 	/// Encrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	void encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytes& io_cipher);
-	
+
 	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	bool decryptECIES(Secret const& _k, bytes& io_text);
-	
+
 	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytes& io_text);
 
