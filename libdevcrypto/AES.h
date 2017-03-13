@@ -29,6 +29,8 @@
 namespace dev
 {
 
+void AES128_CTR_process_buffer(uint8_t* output, const uint8_t* input, uint32_t length, const uint8_t* key, const uint8_t* iv);
+
 bytes aesDecrypt(bytesConstRef _cipher, std::string const& _password, unsigned _rounds = 2000, bytesConstRef _salt = bytesConstRef());
 
 }
