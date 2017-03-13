@@ -37,6 +37,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
+#include <libdevcrypto/Hash.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <test/libtesteth/TestHelper.h>
 
@@ -45,6 +46,8 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::crypto;
 using namespace CryptoPP;
+
+namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
@@ -778,6 +781,35 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 				BOOST_REQUIRE(p != pkey);
 		}
 	}
+}
+
+BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::disabled() *utf::label("perf"))
+{
+	if (!test::Options::get().performance)
+		return;
+
+	h256 hash;
+	for (auto i = 0; i < 1000000; ++i)
+		hash = sha256(hash.ref());
+
+	BOOST_CHECK_EQUAL(hash[0], 0x2a);
+}
+
+BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::disabled() *utf::label("perf"))
+{
+	if (!test::Options::get().performance)
+		return;
+
+	static const size_t dataSize = 4097;
+	bytes data(dataSize);
+	for (auto i = 0; i < 100000; ++i)
+	{
+		auto hash = sha256(&data);
+		auto idx = ((hash[1] << 8) | hash[2]) % (dataSize - hash.size);
+		std::copy(hash.data(), hash.data() + hash.size, data.begin() + idx);
+	}
+
+	BOOST_CHECK_EQUAL(data[0], 0x4d);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
