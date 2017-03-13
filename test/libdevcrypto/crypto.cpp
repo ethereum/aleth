@@ -274,26 +274,19 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 {
 	KeyPair k = KeyPair::create();
 
-	string message("Now is the time for all good persons to come to the aid of humanity.");
-	string original = message;
-	bytes b = asBytes(message);
+	bytes const msg = asBytes("Now is the time for all good persons to come to the aid of humanity.");
+	string const shared("shared MAC data");
+	string const wrongShared("wrong shared MAC data");
 
-	string shared("shared MAC data");
-	string wrongShared("wrong shared MAC data");
-
+	bytes b = msg;
 	s_secp256k1->encryptECIES(k.pub(), shared, b);
-	BOOST_REQUIRE(b != asBytes(original));
-	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
+	BOOST_REQUIRE(!b.empty());
+	BOOST_CHECK_EQUAL(b[0], 0x04);
+	BOOST_CHECK(b != msg);
 
-	BOOST_REQUIRE(!s_secp256k1->decryptECIES(k.secret(), wrongShared, b));
-
-	s_secp256k1->decryptECIES(k.secret(), shared, b);
-
-	// Temporary disable this assertion, which is failing in TravisCI only for Ubuntu Trusty.		
-	// See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/143250866.
-	#if !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
-		BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
-	#endif // !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
+	BOOST_CHECK(!s_secp256k1->decryptECIES(k.secret(), wrongShared, b));
+	BOOST_CHECK(s_secp256k1->decryptECIES(k.secret(), shared, b));
+	BOOST_CHECK_EQUAL(toHex(bytesConstRef(&b).cropped(0, msg.size())), toHex(msg));
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
