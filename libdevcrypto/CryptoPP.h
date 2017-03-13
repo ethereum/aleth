@@ -41,12 +41,6 @@ class Secp256k1PP
 public:
 	static Secp256k1PP* get();
 
-	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
-	bool decryptECIES(Secret const& _k, bytes& io_text);
-
-	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
-	bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytes& io_text);
-
 private:
 	Secp256k1PP() = default;
 };

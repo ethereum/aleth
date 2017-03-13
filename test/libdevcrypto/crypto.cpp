@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(ecies_standard)
 	BOOST_REQUIRE(b != asBytes(original));
 	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
 	
-	s_secp256k1->decryptECIES(k.secret(), b);
+	decryptECIES(k.secret(), &b, b);
 	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
 }
 
@@ -284,8 +284,8 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 	BOOST_CHECK_EQUAL(b[0], 0x04);
 	BOOST_CHECK(b != msg);
 
-	BOOST_CHECK(!s_secp256k1->decryptECIES(k.secret(), wrongShared, b));
-	BOOST_CHECK(s_secp256k1->decryptECIES(k.secret(), shared, b));
+	BOOST_CHECK(!decryptECIES(k.secret(), wrongShared, &b, b));
+	BOOST_CHECK(decryptECIES(k.secret(), shared, &b, b));
 	BOOST_CHECK_EQUAL(toHex(bytesConstRef(&b).cropped(0, msg.size())), toHex(msg));
 }
 

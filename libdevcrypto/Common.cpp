@@ -106,12 +106,7 @@ void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 
 bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
-	bytes io = _cipher.toBytes();
-	Secp256k1PP::get()->decryptECIES(_k, io);
-	if (io.empty())
-		return false;
-	o_plaintext = std::move(io);
-	return true;
+	return decryptECIES(_k, _cipher, o_plaintext);
 }
 
 void dev::encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
@@ -164,10 +159,50 @@ bool dev::decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plainte
 
 bool dev::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesConstRef _cipher, bytes& o_plaintext)
 {
-	bytes io = _cipher.toBytes();
-	if (!Secp256k1PP::get()->decryptECIES(_k, _sharedMacData, io))
+	// interop w/go ecies implementation
+
+	// io_cipher[0] must be 2, 3, or 4, else invalidpublickey
+	if (_cipher.empty() || _cipher[0] < 2 || _cipher[0] > 4)
+		// invalid message: publickey
 		return false;
-	o_plaintext = std::move(io);
+
+	if (_cipher.size() < (1 + Public::size + h128::size + 1 + h256::size))
+		// invalid message: length
+		return false;
+
+	Secret z;
+	ecdh::agree(_k, *(Public*)(_cipher.data() + 1), z);
+	auto key = ecies::kdf(z, bytes(), 64);
+	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
+	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
+	bytes mKey(32);
+	// FIXME: Use crypto::sha256()
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, mKeyMaterial.data(), mKeyMaterial.size());
+	secp256k1_sha256_finalize(&ctx, mKey.data());
+
+	bytes plain;
+	size_t cipherLen = _cipher.size() - 1 - Public::size - h128::size - h256::size;
+	bytesConstRef cipherWithIV(_cipher.data() + 1 + Public::size, h128::size + cipherLen);
+	bytesConstRef cipherIV = cipherWithIV.cropped(0, h128::size);
+	bytesConstRef cipherNoIV = cipherWithIV.cropped(h128::size, cipherLen);
+	bytesConstRef msgMac(cipherNoIV.data() + cipherLen, h256::size);
+	h128 iv(cipherIV.toBytes());
+
+	// verify tag
+
+	secp256k1_hmac_sha256_t hmacCtx;
+	secp256k1_hmac_sha256_initialize(&hmacCtx, mKey.data(), mKey.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, cipherWithIV.data(), cipherWithIV.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, _sharedMacData.data(), _sharedMacData.size());
+	h256 mac;
+	secp256k1_hmac_sha256_finalize(&hmacCtx, mac.data());
+	for (unsigned i = 0; i < h256::size; i++)
+		if (mac[i] != msgMac[i])
+			return false;
+
+	o_plaintext = decryptSymNoAuth(SecureFixedHash<16>(eKey), iv, cipherNoIV).makeInsecure();
 	return true;
 }
 

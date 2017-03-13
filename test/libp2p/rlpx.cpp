@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	
 	bytes authPlainExpected(fromHex("0x884c36f7ae6b406637c1f61b2f57e1d2cab813d24c6559aaf843c3f48962f32f46662c066d39669b7b2e3ba14781477417600e7728399278b1b5d801a519aa570034fdb5419558137e0d44cd13d319afe5629eeccb47fd9dfe55cc6089426e46cc762dd8a0636e07a54b31169eba0c7a20a1ac1ef68596f1f283b5c676bae4064abfcce24799d09f67e392632d3ffdc12e3d6430dcb0ea19c318343ffa7aae74d4cd26fecb93657d1cd9e9eaf4f8be720b56dd1d39f190c4e1c6b7ec66f077bb1100"));
 	bytes ackPlainExpected(fromHex("0x802b052f8b066640bba94a4fc39d63815c377fced6fcb84d27f791c9921ddf3e9bf0108e298f490812847109cbd778fae393e80323fd643209841a3b7f110397f37ec61d84cea03dcc5e8385db93248584e8af4b4d1c832d8c7453c0089687a700"));
-	
-	bytes authPlain = authCipher;
-	BOOST_REQUIRE(s_secp256k1->decryptECIES(recv.secret(), authPlain));
-	bytes ackPlain = ackCipher;
-	BOOST_REQUIRE(s_secp256k1->decryptECIES(init.secret(), ackPlain));
+
+	bytes authPlain;
+	BOOST_REQUIRE(decryptECIES(recv.secret(), &authCipher, authPlain));
+	bytes ackPlain;
+	BOOST_REQUIRE(decryptECIES(init.secret(), &ackCipher, ackPlain));
 	
 	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameEnc;
 	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameDec;
@@ -436,9 +436,9 @@ BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
 	
 	KeyPair kmK(Secret(fromHex("0x57baf2c62005ddec64c357d96183ebc90bf9100583280e848aa31d683cad73cb")));
 	bytes kmCipher(fromHex("0x04ff2c874d0a47917c84eea0b2a4141ca95233720b5c70f81a8415bae1dc7b746b61df7558811c1d6054333907333ef9bb0cc2fbf8b34abb9730d14e0140f4553f4b15d705120af46cf653a1dc5b95b312cf8444714f95a4f7a0425b67fc064d18f4d0a528761565ca02d97faffdac23de10"));
-	bytes kmPlain = kmCipher;
+	bytes kmPlain;
 	bytes kmExpected(asBytes("a"));
-	BOOST_REQUIRE(s_secp256k1->decryptECIES(kmK.secret(), kmPlain));
+	BOOST_REQUIRE(decryptECIES(kmK.secret(), &kmCipher, kmPlain));
 	BOOST_REQUIRE(kmExpected == kmPlain);
 	
 	KeyPair kenc(Secret(fromHex("0x472413e97f1fd58d84e28a559479e6b6902d2e8a0cee672ef38a3a35d263886b")));
@@ -446,21 +446,21 @@ BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
 	BOOST_REQUIRE(penc == kenc.pub());
 	
 	bytes cipher1(fromHex("0x046f647e1bd8a5cd1446d31513bac233e18bdc28ec0e59d46de453137a72599533f1e97c98154343420d5f16e171e5107999a7c7f1a6e26f57bcb0d2280655d08fb148d36f1d4b28642d3bb4a136f0e33e3dd2e3cffe4b45a03fb7c5b5ea5e65617250fdc89e1a315563c20504b9d3a72555"));
-	bytes plainTest1 = cipher1;
+	bytes plainTest1;
 	bytes expectedPlain1 = asBytes("a");
-	BOOST_REQUIRE(s_secp256k1->decryptECIES(kenc.secret(), plainTest1));
+	BOOST_REQUIRE(decryptECIES(kenc.secret(), &cipher1, plainTest1));
 	BOOST_REQUIRE(plainTest1 == expectedPlain1);
 	
 	bytes cipher2(fromHex("0x0443c24d6ccef3ad095140760bb143078b3880557a06392f17c5e368502d79532bc18903d59ced4bbe858e870610ab0d5f8b7963dd5c9c4cf81128d10efd7c7aa80091563c273e996578403694673581829e25a865191bdc9954db14285b56eb0043b6288172e0d003c10f42fe413222e273d1d4340c38a2d8344d7aadcbc846ee"));
-	bytes plainTest2 = cipher2;
+	bytes plainTest2;
 	bytes expectedPlain2 = asBytes("aaaaaaaaaaaaaaaa");
-	BOOST_REQUIRE(s_secp256k1->decryptECIES(kenc.secret(), plainTest2));
+	BOOST_REQUIRE(decryptECIES(kenc.secret(), &cipher2, plainTest2));
 	BOOST_REQUIRE(plainTest2 == expectedPlain2);
 	
 	bytes cipher3(fromHex("0x04c4e40c86bb5324e017e598c6d48c19362ae527af8ab21b077284a4656c8735e62d73fb3d740acefbec30ca4c024739a1fcdff69ecaf03301eebf156eb5f17cca6f9d7a7e214a1f3f6e34d1ee0ec00ce0ef7d2b242fbfec0f276e17941f9f1bfbe26de10a15a6fac3cda039904ddd1d7e06e7b96b4878f61860e47f0b84c8ceb64f6a900ff23844f4359ae49b44154980a626d3c73226c19e"));
-	bytes plainTest3 = cipher3;
+	bytes plainTest3;
 	bytes expectedPlain3 = asBytes("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-	BOOST_REQUIRE(s_secp256k1->decryptECIES(kenc.secret(), plainTest3));
+	BOOST_REQUIRE(decryptECIES(kenc.secret(), &cipher3, plainTest3));
 	BOOST_REQUIRE(plainTest3 == expectedPlain3);
 }
 
