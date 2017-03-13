@@ -7,10 +7,10 @@ endif()
 
 ExternalProject_Add(secp256k1
     PREFIX ${CMAKE_SOURCE_DIR}/deps
-    DOWNLOAD_NAME secp256k1-9859f02f.tar.gz
+    DOWNLOAD_NAME secp256k1-ac8ccf29.tar.gz
     DOWNLOAD_NO_PROGRESS 1
-    URL https://github.com/chfast/secp256k1/archive/9859f02f9eca2787d697e7d11e5e9daf4c49732f.tar.gz
-    URL_HASH SHA256=d31e40f3bdc2982d2e21f21e1e7a50731bae258f5245d51e32481bbe549035c4
+    URL https://github.com/chfast/secp256k1/archive/ac8ccf29b8c6b2b793bc734661ce43d1f952977a.tar.gz
+    URL_HASH SHA256=02f8f05c9e9d2badc91be8e229a07ad5e4984c1e77193d6b00e549df129e7c3a
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_CURRENT_LIST_DIR}/secp256k1/CMakeLists.txt <SOURCE_DIR>
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>

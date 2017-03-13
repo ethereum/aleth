@@ -20,21 +20,21 @@
  */
 
 #include "Hash.h"
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include "picosha2.h"
-using namespace std;
+#include <secp256k1_sha256.h>
+
 using namespace dev;
 
 namespace dev
 {
 
-h256 sha256(bytesConstRef _input)
+h256 sha256(bytesConstRef _input) noexcept
 {
-	h256 ret;
-	picosha2::hash256(_input.begin(), _input.end(), ret.data(), ret.data() + 32);
-	return ret;
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, _input.data(), _input.size());
+	h256 hash;
+	secp256k1_sha256_finalize(&ctx, hash.data());
+	return hash;
 }
 
 namespace rmd160

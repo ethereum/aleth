@@ -37,7 +37,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
-#include <libdevcore/Hash.h>
+#include <libdevcrypto/Hash.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <test/libtesteth/TestHelper.h>
 
@@ -232,14 +232,14 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	// nonce
 	Secret z1;
 	ecdh::agree(local.secret(), remote.pub(), z1);
-	auto key1 = s_secp256k1->eciesKDF(z1, bytes(), 64);
+	auto key1 = ecies::kdf(z1, bytes(), 64);
 	bytesConstRef eKey1 = bytesConstRef(&key1).cropped(0, 32);
 	bytesRef mKey1 = bytesRef(&key1).cropped(32, 32);
 	sha3(mKey1, mKey1);
 	
 	Secret z2;
 	ecdh::agree(remote.secret(), local.pub(), z2);
-	auto key2 = s_secp256k1->eciesKDF(z2, bytes(), 64);
+	auto key2 = ecies::kdf(z2, bytes(), 64);
 	bytesConstRef eKey2 = bytesConstRef(&key2).cropped(0, 32);
 	bytesRef mKey2 = bytesRef(&key2).cropped(32, 32);
 	sha3(mKey2, mKey2);

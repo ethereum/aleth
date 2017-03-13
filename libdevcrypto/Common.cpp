@@ -25,6 +25,7 @@
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
+#include <secp256k1_sha256.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
@@ -345,7 +346,7 @@ Secret Nonce::next()
 	return sha3(~m_value);
 }
 
-void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
+void ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
 {
 	auto* ctx = getCtx();
 	static_assert(sizeof(Secret) == 32, "Invalid Secret type size");
@@ -358,4 +359,34 @@ void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
 	r = secp256k1_ecdh_raw(ctx, compressedPoint.data(), &rawPubkey, _s.data());
 	assert(r == 1);  // TODO: This should be "invalid secret key" exception.
 	std::copy(compressedPoint.begin() + 1, compressedPoint.end(), o_s.writable().data());
+}
+
+bytes ecies::kdf(Secret const& _z, bytes const& _s1, unsigned kdByteLen)
+{
+	auto reps = ((kdByteLen + 7) * 8) / 512;
+	// SEC/ISO/Shoup specify counter size SHOULD be equivalent
+	// to size of hash output, however, it also notes that
+	// the 4 bytes is okay. NIST specifies 4 bytes.
+	std::array<byte, 4> ctr{{0, 0, 0, 1}};
+	bytes k;
+	secp256k1_sha256_t ctx;
+	for (unsigned i = 0; i <= reps; i++)
+	{
+		secp256k1_sha256_initialize(&ctx);
+		secp256k1_sha256_write(&ctx, ctr.data(), ctr.size());
+		secp256k1_sha256_write(&ctx, _z.data(), Secret::size);
+		secp256k1_sha256_write(&ctx, _s1.data(), _s1.size());
+		// append hash to k
+		std::array<byte, 32> digest;
+		secp256k1_sha256_finalize(&ctx, digest.data());
+
+		k.reserve(k.size() + h256::size);
+		move(digest.begin(), digest.end(), back_inserter(k));
+
+		if (++ctr[3] || ++ctr[2] || ++ctr[1] || ++ctr[0])
+			continue;
+	}
+
+	k.resize(kdByteLen);
+	return k;
 }

@@ -23,15 +23,13 @@
 
 #pragma once
 
-#include <string>
-#include "FixedHash.h"
-#include "vector_ref.h"
-#include "SHA3.h"
+#include "libdevcore/FixedHash.h"
+#include "libdevcore/vector_ref.h"
 
 namespace dev
 {
 
-h256 sha256(bytesConstRef _input);
+h256 sha256(bytesConstRef _input) noexcept;
 
 h160 ripemd160(bytesConstRef _input);
 

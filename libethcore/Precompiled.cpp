@@ -22,7 +22,7 @@
 #include "Precompiled.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
-#include <libdevcore/Hash.h>
+#include <libdevcrypto/Hash.h>
 #include <libdevcrypto/Common.h>
 #include <libethcore/Common.h>
 using namespace std;

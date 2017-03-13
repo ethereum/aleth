@@ -220,5 +220,12 @@ namespace ecdh
 void agree(Secret const& _s, Public const& _r, Secret& o_s);
 
 }
+
+namespace ecies
+{
+
+bytes kdf(Secret const& _z, bytes const& _s1, unsigned kdByteLen);
+
+}
 }
 }
