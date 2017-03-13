@@ -20,7 +20,7 @@
  */
 
 #include "Hash.h"
-#include <libscrypt/sha256.h>
+#include <secp256k1_sha256.h>
 
 using namespace dev;
 
@@ -29,11 +29,11 @@ namespace dev
 
 h256 sha256(bytesConstRef _input) noexcept
 {
-	libscrypt_SHA256Context ctx;
-	libscrypt_SHA256_Init(&ctx);
-	libscrypt_SHA256_Update(&ctx, _input.data(), _input.size());
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, _input.data(), _input.size());
 	h256 hash;
-	libscrypt_SHA256_Final(hash.data(), &ctx);
+	secp256k1_sha256_finalize(&ctx, hash.data());
 	return hash;
 }
 

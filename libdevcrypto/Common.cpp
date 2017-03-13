@@ -25,12 +25,12 @@
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>
 #include <secp256k1_recovery.h>
+#include <secp256k1_sha256.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/modes.h>
 #include <libscrypt/libscrypt.h>
-#include <libscrypt/sha256.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 #include "AES.h"
@@ -369,16 +369,16 @@ bytes ecies::kdf(Secret const& _z, bytes const& _s1, unsigned kdByteLen)
 	// the 4 bytes is okay. NIST specifies 4 bytes.
 	std::array<byte, 4> ctr{{0, 0, 0, 1}};
 	bytes k;
-	libscrypt_SHA256Context ctx;
+	secp256k1_sha256_t ctx;
 	for (unsigned i = 0; i <= reps; i++)
 	{
-		libscrypt_SHA256_Init(&ctx);
-		libscrypt_SHA256_Update(&ctx, ctr.data(), ctr.size());
-		libscrypt_SHA256_Update(&ctx, _z.data(), Secret::size);
-		libscrypt_SHA256_Update(&ctx, _s1.data(), _s1.size());
+		secp256k1_sha256_initialize(&ctx);
+		secp256k1_sha256_write(&ctx, ctr.data(), ctr.size());
+		secp256k1_sha256_write(&ctx, _z.data(), Secret::size);
+		secp256k1_sha256_write(&ctx, _s1.data(), _s1.size());
 		// append hash to k
 		std::array<byte, 32> digest;
-		libscrypt_SHA256_Final(digest.data(), &ctx);
+		secp256k1_sha256_finalize(&ctx, digest.data());
 
 		k.reserve(k.size() + h256::size);
 		move(digest.begin(), digest.end(), back_inserter(k));
