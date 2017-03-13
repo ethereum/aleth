@@ -27,9 +27,7 @@
 #include <secp256k1_recovery.h>
 #include <secp256k1_sha256.h>
 #include <cryptopp/aes.h>
-#include <cryptopp/pwdbased.h>
 #include <cryptopp/modes.h>
-#include <cryptopp/sha.h>
 #include <libscrypt/libscrypt.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
@@ -264,18 +262,41 @@ bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 
 bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
+	static const size_t bufSize = 32;
+	bytesSec secBuf(bufSize);
+	byte* buf = secBuf.writable().data();
+
 	bytesSec ret(_dkLen);
-	if (PKCS5_PBKDF2_HMAC<SHA256>().DeriveKey(
-		ret.writable().data(),
-		_dkLen,
-		0,
-		reinterpret_cast<byte const*>(_pass.data()),
-		_pass.size(),
-		_salt.data(),
-		_salt.size(),
-		_iterations
-	) != _iterations)
-		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
+	byte* derived = ret.writable().data();
+	size_t derivedLen = _dkLen;
+	for (unsigned int i = 1; derivedLen > 0; ++i)
+	{
+		secp256k1_hmac_sha256_t ctx;
+		secp256k1_hmac_sha256_initialize(&ctx, reinterpret_cast<byte const*>(_pass.data()), _pass.size());
+		secp256k1_hmac_sha256_write(&ctx, _salt.data(), _salt.size());
+		for (auto j = 0; j < 4; ++j)
+		{
+			byte b = byte(i >> ((3-j)*8));
+			secp256k1_hmac_sha256_write(&ctx, &b, 1);
+		}
+		secp256k1_hmac_sha256_finalize(&ctx, buf);
+
+		size_t const segmentLen = std::min(derivedLen, bufSize);
+		std::copy(buf, buf + segmentLen, derived);
+
+		for (decltype(_iterations) j = 1; j < _iterations; ++j)
+		{
+			secp256k1_hmac_sha256_initialize(&ctx, reinterpret_cast<byte const*>(_pass.data()), _pass.size());
+			secp256k1_hmac_sha256_write(&ctx, buf, bufSize);
+			secp256k1_hmac_sha256_finalize(&ctx, buf);
+			std::transform(buf, buf + segmentLen, derived, derived,
+				[](byte a, byte b) { return a ^ b; }
+			);
+		}
+
+		derived += segmentLen;
+		derivedLen -= segmentLen;
+	}
 	return ret;
 }
 
