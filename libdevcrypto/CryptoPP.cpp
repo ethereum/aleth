@@ -21,61 +21,18 @@
 
 #include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "CryptoPP.h"
-#include <cryptopp/eccrypto.h>
-#include <cryptopp/osrng.h>
-#include <cryptopp/oids.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
 #include <secp256k1_sha256.h>
 #include "ECDHE.h"
 
-static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
-
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
-using namespace CryptoPP;
 
 static_assert(dev::Secret::size == 32, "Secret key must be 32 bytes.");
 static_assert(dev::Public::size == 64, "Public key must be 64 bytes.");
 static_assert(dev::Signature::size == 65, "Signature must be 65 bytes.");
-
-namespace
-{
-class Secp256k1PPCtx
-{
-public:
-	OID m_oid;
-
-	std::mutex x_rng;
-	AutoSeededRandomPool m_rng;
-
-	std::mutex x_params;
-	DL_GroupParameters_EC<ECP> m_params;
-
-	DL_GroupParameters_EC<ECP>::EllipticCurve m_curve;
-
-	Integer m_q;
-	Integer m_qs;
-
-	static Secp256k1PPCtx& get()
-	{
-		static Secp256k1PPCtx ctx;
-		return ctx;
-	}
-
-private:
-	Secp256k1PPCtx():
-		m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()),
-		m_q(m_params.GetGroupOrder()), m_qs(m_params.GetSubgroupOrder())
-	{}
-};
-
-inline ECP::Point publicToPoint(Public const& _p) { Integer x(_p.data(), 32); Integer y(_p.data() + 32, 32); return ECP::Point(x,y); }
-
-inline Integer secretToExponent(Secret const& _s) { return Integer(_s.data(), Secret::size); }
-
-}
 
 Secp256k1PP* Secp256k1PP::get()
 {
