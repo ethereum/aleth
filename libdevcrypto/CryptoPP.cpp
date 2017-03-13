@@ -26,6 +26,7 @@
 #include <cryptopp/oids.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
+#include <secp256k1_sha256.h>
 #include "ECDHE.h"
 
 static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
@@ -131,7 +132,6 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytes& io_text)
 
 bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytes& io_text)
 {
-
 	// interop w/go ecies implementation
 	
 	// io_cipher[0] must be 2, 3, or 4, else invalidpublickey
@@ -149,9 +149,11 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
 	bytes mKey(32);
-	CryptoPP::SHA256 ctx;
-	ctx.Update(mKeyMaterial.data(), mKeyMaterial.size());
-	ctx.Final(mKey.data());
+	// FIXME: Use crypto::sha256()
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, mKeyMaterial.data(), mKeyMaterial.size());
+	secp256k1_sha256_finalize(&ctx, mKey.data());
 	
 	bytes plain;
 	size_t cipherLen = io_text.size() - 1 - Public::size - h128::size - h256::size;
@@ -162,11 +164,13 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 	h128 iv(cipherIV.toBytes());
 	
 	// verify tag
-	CryptoPP::HMAC<SHA256> hmacctx(mKey.data(), mKey.size());
-	hmacctx.Update(cipherWithIV.data(), cipherWithIV.size());
-	hmacctx.Update(_sharedMacData.data(), _sharedMacData.size());
+
+	secp256k1_hmac_sha256_t hmacCtx;
+	secp256k1_hmac_sha256_initialize(&hmacCtx, mKey.data(), mKey.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, cipherWithIV.data(), cipherWithIV.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, _sharedMacData.data(), _sharedMacData.size());
 	h256 mac;
-	hmacctx.Final(mac.data());
+	secp256k1_hmac_sha256_finalize(&hmacCtx, mac.data());
 	for (unsigned i = 0; i < h256::size; i++)
 		if (mac[i] != msgMac[i])
 			return false;
