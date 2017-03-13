@@ -776,6 +776,14 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(pbkdf2Static)
+{
+	auto salt = asBytes("Red Hot Chili Peppers");
+	auto key = pbkdf2("Hello Ethereum!", salt, 999, 15);
+	auto expected = "4187067867ced7bca83da5cfc21a7a";
+	BOOST_CHECK_EQUAL(toHex(key.makeInsecure()), expected);
+}
+
 BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::disabled() *utf::label("perf"))
 {
 	if (!test::Options::get().performance)
