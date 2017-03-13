@@ -257,12 +257,12 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 BOOST_AUTO_TEST_CASE(ecies_standard)
 {
 	KeyPair k = KeyPair::create();
-	
+
 	string message("Now is the time for all good persons to come to the aid of humanity.");
 	string original = message;
 	bytes b = asBytes(message);
-	
-	s_secp256k1->encryptECIES(k.pub(), b);
+
+	encryptECIES(k.pub(), &b, b);
 	BOOST_REQUIRE(b != asBytes(original));
 	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
 	
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 	string const wrongShared("wrong shared MAC data");
 
 	bytes b = msg;
-	s_secp256k1->encryptECIES(k.pub(), shared, b);
+	encryptECIES(k.pub(), shared, &b, b);
 	BOOST_REQUIRE(!b.empty());
 	BOOST_CHECK_EQUAL(b[0], 0x04);
 	BOOST_CHECK(b != msg);

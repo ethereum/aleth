@@ -40,50 +40,6 @@ Secp256k1PP* Secp256k1PP::get()
 	return &s_this;
 }
 
-void Secp256k1PP::encryptECIES(Public const& _k, bytes& io_cipher)
-{
-	encryptECIES(_k, bytesConstRef(), io_cipher);
-}
-
-void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytes& io_cipher)
-{
-	// interop w/go ecies implementation
-	auto r = KeyPair::create();
-	Secret z;
-	ecdh::agree(r.secret(), _k, z);
-	auto key = ecies::kdf(z, bytes(), 32);
-	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
-	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
-	secp256k1_sha256_t ctx;
-	secp256k1_sha256_initialize(&ctx);
-	secp256k1_sha256_write(&ctx, mKeyMaterial.data(), mKeyMaterial.size());
-	bytes mKey(32);
-	secp256k1_sha256_finalize(&ctx, mKey.data());
-
-	auto iv = h128::random();
-	bytes cipherText = encryptSymNoAuth(SecureFixedHash<16>(eKey), iv, bytesConstRef(&io_cipher));
-	if (cipherText.empty())
-		return;
-
-	bytes msg(1 + Public::size + h128::size + cipherText.size() + 32);
-	msg[0] = 0x04;
-	r.pub().ref().copyTo(bytesRef(&msg).cropped(1, Public::size));
-	iv.ref().copyTo(bytesRef(&msg).cropped(1 + Public::size, h128::size));
-	bytesRef msgCipherRef = bytesRef(&msg).cropped(1 + Public::size + h128::size, cipherText.size());
-	bytesConstRef(&cipherText).copyTo(msgCipherRef);
-
-	// tag message
-	secp256k1_hmac_sha256_t hmacCtx;
-	secp256k1_hmac_sha256_initialize(&hmacCtx, mKey.data(), mKey.size());
-	bytesConstRef cipherWithIV = bytesRef(&msg).cropped(1 + Public::size, h128::size + cipherText.size());
-	secp256k1_hmac_sha256_write(&hmacCtx, cipherWithIV.data(), cipherWithIV.size());
-	secp256k1_hmac_sha256_write(&hmacCtx, _sharedMacData.data(), _sharedMacData.size());
-	secp256k1_hmac_sha256_finalize(&hmacCtx, msg.data() + 1 + Public::size + cipherWithIV.size());
-
-	io_cipher.resize(msg.size());
-	io_cipher.swap(msg);
-}
-
 bool Secp256k1PP::decryptECIES(Secret const& _k, bytes& io_text)
 {
 	return decryptECIES(_k, bytesConstRef(), io_text);

@@ -101,9 +101,7 @@ Address dev::toAddress(Address const& _from, u256 const& _nonce)
 
 void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
-	bytes io = _plain.toBytes();
-	Secp256k1PP::get()->encryptECIES(_k, io);
-	o_cipher = std::move(io);
+	encryptECIES(_k, _plain, o_cipher);
 }
 
 bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
@@ -123,9 +121,40 @@ void dev::encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 
 void dev::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytesConstRef _plain, bytes& o_cipher)
 {
-	bytes io = _plain.toBytes();
-	Secp256k1PP::get()->encryptECIES(_k, _sharedMacData, io);
-	o_cipher = std::move(io);
+	// interop w/go ecies implementation
+	auto r = KeyPair::create();
+	Secret z;
+	ecdh::agree(r.secret(), _k, z);
+	auto key = ecies::kdf(z, bytes(), 32);
+	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
+	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, mKeyMaterial.data(), mKeyMaterial.size());
+	bytes mKey(32);
+	secp256k1_sha256_finalize(&ctx, mKey.data());
+
+	auto iv = h128::random();
+	bytes cipherText = encryptSymNoAuth(SecureFixedHash<16>(eKey), iv, _plain);
+	if (cipherText.empty())
+		return;
+
+	bytes msg(1 + Public::size + h128::size + cipherText.size() + 32);
+	msg[0] = 0x04;
+	r.pub().ref().copyTo(bytesRef(&msg).cropped(1, Public::size));
+	iv.ref().copyTo(bytesRef(&msg).cropped(1 + Public::size, h128::size));
+	bytesRef msgCipherRef = bytesRef(&msg).cropped(1 + Public::size + h128::size, cipherText.size());
+	bytesConstRef(&cipherText).copyTo(msgCipherRef);
+
+	// tag message
+	secp256k1_hmac_sha256_t hmacCtx;
+	secp256k1_hmac_sha256_initialize(&hmacCtx, mKey.data(), mKey.size());
+	bytesConstRef cipherWithIV = bytesRef(&msg).cropped(1 + Public::size, h128::size + cipherText.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, cipherWithIV.data(), cipherWithIV.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, _sharedMacData.data(), _sharedMacData.size());
+	secp256k1_hmac_sha256_finalize(&hmacCtx, msg.data() + 1 + Public::size + cipherWithIV.size());
+
+	o_cipher = std::move(msg);
 }
 
 bool dev::decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
