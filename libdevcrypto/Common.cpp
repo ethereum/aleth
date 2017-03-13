@@ -32,7 +32,6 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 #include "AES.h"
-#include "CryptoPP.h"
 #include "Exceptions.h"
 
 using namespace std;

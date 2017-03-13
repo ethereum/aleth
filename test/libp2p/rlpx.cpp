@@ -33,7 +33,6 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
-#include <libdevcrypto/CryptoPP.h>
 #include <libp2p/RLPxHandshake.h>
 #include <libp2p/RLPXFrameWriter.h>
 #include <libp2p/RLPXFrameReader.h>
@@ -46,13 +45,7 @@ using namespace dev::p2p;
 using namespace dev::test;
 using namespace CryptoPP;
 
-struct RLPXTestFixture: public TestOutputHelper {
-	RLPXTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
-	~RLPXTestFixture() {}
-
-	Secp256k1PP* s_secp256k1;
-};
-BOOST_FIXTURE_TEST_SUITE(rlpx, RLPXTestFixture)
+BOOST_FIXTURE_TEST_SUITE(rlpx, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 {

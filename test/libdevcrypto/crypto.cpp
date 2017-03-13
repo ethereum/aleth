@@ -38,7 +38,6 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/Hash.h>
-#include <libdevcrypto/CryptoPP.h>
 #include <test/libtesteth/TestHelper.h>
 
 using namespace std;
@@ -51,12 +50,7 @@ namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-struct DevcryptoTestFixture: public TestOutputHelper {
-	DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
-
-	Secp256k1PP* s_secp256k1;
-};
-BOOST_FIXTURE_TEST_SUITE(devcrypto, DevcryptoTestFixture)
+BOOST_FIXTURE_TEST_SUITE(devcrypto, TestOutputHelper)
 
 static CryptoPP::AutoSeededRandomPool& rng()
 {
