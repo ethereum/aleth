@@ -16,6 +16,7 @@ macro(configure_project)
 	eth_default_option(ROCKSDB OFF)
 	eth_default_option(PARANOID OFF)
 	eth_default_option(MINIUPNPC ON)
+	eth_default_option(FASTCTEST OFF)
 
 	# components
 	eth_default_option(TESTS ON)
