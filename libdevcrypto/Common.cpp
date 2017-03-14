@@ -161,26 +161,6 @@ std::pair<bytes, h128> dev::encryptSymNoAuth(SecureFixedHash<16> const& _k, byte
 	return make_pair(encryptSymNoAuth(_k, iv, _plain), iv);
 }
 
-bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain)
-{
-	if (_k.size() != 16)
-		return {};
-
-	bytes ret(_plain.size());
-	AES128_CTR_process_buffer(ret.data(), _plain.data(), _plain.size(), _k.data(), _iv.data());
-	return ret;
-}
-
-bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher)
-{
-	if (_k.size() != 16)
-		return {};
-
-	bytesSec ret(_cipher.size());
-	AES128_CTR_process_buffer(ret.writable().data(), _cipher.data(), _cipher.size(), _k.data(), _iv.data());
-	return ret;
-}
-
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
 	int v = _sig[64];

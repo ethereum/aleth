@@ -39,6 +39,7 @@
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/CryptoPP.h>
+#include <libdevcrypto/AES.h>
 #include <test/libtesteth/TestHelper.h>
 
 using namespace std;
