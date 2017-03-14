@@ -275,11 +275,6 @@ KeyPair KeyPair::create()
 	}
 }
 
-KeyPair KeyPair::fromEncryptedSeed(bytesConstRef _seed, std::string const& _password)
-{
-	return KeyPair(Secret(sha3(aesDecrypt(_seed, _password))));
-}
-
 h256 crypto::kdf(Secret const& _priv, h256 const& _hash)
 {
 	// H(H(r||k)^h)

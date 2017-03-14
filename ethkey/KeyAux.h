@@ -104,7 +104,6 @@ public:
 		New,
 		Import,
 		ImportWithAddress,
-		ImportPresale,
 		Export,
 		Recode,
 		Kill,
@@ -244,12 +243,6 @@ public:
 		else if ((arg == "-i" || arg == "--import" || arg == "import") && i + 2 < argc)
 		{
 			m_mode = OperationMode::Import;
-			m_inputs = strings(1, argv[++i]);
-			m_name = argv[++i];
-		}
-		else if ((arg == "--import-presale" || arg == "importpresale") && i + 2 < argc)
-		{
-			m_mode = OperationMode::ImportPresale;
 			m_inputs = strings(1, argv[++i]);
 			m_name = argv[++i];
 		}
@@ -611,14 +604,6 @@ public:
 			cout << "  Name: " << m_name << endl;
 			cout << "  UUID: " << toUUID(u) << endl;
 			cout << "  Raw hex: " << m_address << endl;
-			break;
-		}
-		case OperationMode::ImportPresale:
-		{
-			keyManager();
-			std::string pw;
-			KeyPair k = keyManager().presaleSecret(contentsString(m_inputs[0]), [&](bool){ return (pw = getPassword("Enter the passphrase for the presale key: ")); });
-			keyManager().import(k.secret(), m_name, pw, "Same passphrase as used for presale key");
 			break;
 		}
 		case OperationMode::Recode:

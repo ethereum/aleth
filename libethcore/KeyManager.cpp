@@ -296,36 +296,6 @@ void KeyManager::kill(Address const& _a)
 	write(m_keysFile);
 }
 
-KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool)> const& _password)
-{
-	js::mValue val;
-	json_spirit::read_string(_json, val);
-	auto obj = val.get_obj();
-	string p = _password(true);
-	if (obj["encseed"].type() == js::str_type)
-	{
-		auto encseed = fromHex(obj["encseed"].get_str());
-		while (true)
-		{
-			KeyPair k = KeyPair::fromEncryptedSeed(&encseed, p);
-			if (obj["ethaddr"].type() == js::str_type)
-			{
-				Address a(obj["ethaddr"].get_str());
-				Address b = k.address();
-				if (a != b)
-				{
-					if ((p = _password(false)).empty())
-						BOOST_THROW_EXCEPTION(PasswordUnknown());
-					continue;
-				}
-			}
-			return k;
-		}
-	}
-	else
-		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("encseed type is not js::str_type"));
-}
-
 Addresses KeyManager::accounts() const
 {
 	set<Address> addresses;

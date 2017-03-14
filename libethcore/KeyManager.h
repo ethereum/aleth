@@ -135,9 +135,6 @@ public:
 
 	static std::string defaultPath() { return getDataDir("ethereum") + "/keys.info"; }
 
-	/// Extracts the secret key from the presale wallet.
-	static KeyPair presaleSecret(std::string const& _json, std::function<std::string(bool)> const& _password);
-
 	/// @returns the brainwallet secret for the given seed.
 	static Secret brain(std::string const& _seed);
 

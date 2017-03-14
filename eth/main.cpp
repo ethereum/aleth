@@ -46,8 +46,6 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
-#include <jsonrpccpp/client/connectors/httpclient.h>
-#include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/IpcServer.h>
 #include <libweb3jsonrpc/LevelDB.h>
 #include <libweb3jsonrpc/Whisper.h>
@@ -61,7 +59,6 @@
 #include <libweb3jsonrpc/Test.h>
 
 #include <ethminer/MinerAux.h>
-#include "BuildInfo.h"
 #include "AccountManager.h"
 
 using namespace std;
@@ -105,7 +102,6 @@ void help()
 		<< "    -R,--rebuild  Rebuild the blockchain from the existing database." << endl
 		<< "    --rescue  Attempt to rescue a corrupt database." << endl
 		<< endl
-		<< "    --import-presale <file>  Import a pre-sale key; you'll need to specify the password to this key." << endl
 		<< "    -s,--import-secret <secret>  Import a secret key into the key store." << endl
 		<< "    --master <password>  Give the master password for the key store. Use --master \"\" to show a prompt." << endl
 		<< "    --password <password>  Give a password for a private key." << endl
@@ -217,38 +213,7 @@ void setDefaultOrCLocale()
 #endif
 }
 
-void importPresale(KeyManager& _km, string const& _file, function<string()> _pass)
-{
-	KeyPair k = _km.presaleSecret(contentsString(_file), [&](bool){ return _pass(); });
-	_km.import(k.secret(), "Presale wallet" + _file + " (insecure)");
-}
-
 Address c_config = Address("ccdeac59d35627b7de09332e819d5159e7bb7250");
-string pretty(h160 _a, dev::eth::State const& _st)
-{
-	string ns;
-	h256 n;
-	if (h160 nameReg = (u160)_st.storage(c_config, 0))
-		n = _st.storage(nameReg, (u160)(_a));
-	if (n)
-	{
-		std::string s((char const*)n.data(), 32);
-		if (s.find_first_of('\0') != string::npos)
-			s.resize(s.find_first_of('\0'));
-		ns = " " + s;
-	}
-	return ns;
-}
-
-inline bool isPrime(unsigned _number)
-{
-	if (((!(_number & 1)) && _number != 2 ) || (_number < 2) || (_number % 3 == 0 && _number != 3))
-		return false;
-	for(unsigned k = 1; 36 * k * k - 12 * k < _number; ++k)
-		if ((_number % (6 * k + 1) == 0) || (_number % (6 * k - 1) == 0))
-			return false;
-	return true;
-}
 
 enum class NodeMode
 {
@@ -372,7 +337,6 @@ int main(int argc, char** argv)
 	/// Mining params
 	unsigned mining = 0;
 	Address author;
-	strings presaleImports;
 	bytes extraData;
 
 	/// Transaction params
@@ -406,7 +370,7 @@ int main(int argc, char** argv)
 		catch (...) {}
 	}
 
-	if (argc > 1 && (string(argv[1]) == "wallet" || string(argv[1]) == "account"))
+	if (argc > 1 && string(argv[1]) == "account")
 	{
 		AccountManager accountm;
 		return !accountm.execute(argc, argv);
@@ -641,30 +605,6 @@ int main(int argc, char** argv)
 				exit(0);
 			}
 		}
-/*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
-		{
-			try
-			{
-				blockFees = stof(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				return -1;
-			}
-		}
-		else if ((arg == "-e" || arg == "--ether-price") && i + 1 < argc)
-		{
-			try
-			{
-				etherPrice = stof(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				return -1;
-			}
-		}*/
 		else if (arg == "--ask" && i + 1 < argc)
 		{
 			try
@@ -689,28 +629,6 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
-/*		else if ((arg == "-P" || arg == "--priority") && i + 1 < argc)
-		{
-			string m = boost::to_lower_copy(string(argv[++i]));
-			if (m == "lowest")
-				priority = TransactionPriority::Lowest;
-			else if (m == "low")
-				priority = TransactionPriority::Low;
-			else if (m == "medium" || m == "mid" || m == "default" || m == "normal")
-				priority = TransactionPriority::Medium;
-			else if (m == "high")
-				priority = TransactionPriority::High;
-			else if (m == "highest")
-				priority = TransactionPriority::Highest;
-			else
-				try {
-					priority = (TransactionPriority)(max(0, min(100, stoi(m))) * 8 / 100);
-				}
-				catch (...) {
-					cerr << "Unknown " << arg << " option: " << m << endl;
-					return -1;
-				}
-		}*/
 		else if ((arg == "-m" || arg == "--mining") && i + 1 < argc)
 		{
 			string m = argv[++i];
@@ -744,8 +662,6 @@ int main(int argc, char** argv)
 			noPinning = enableDiscovery = true;
 		else if (arg == "--unsafe-transactions")
 			alwaysConfirm = false;
-		else if (arg == "--import-presale" && i + 1 < argc)
-			presaleImports.push_back(argv[++i]);
 		else if (arg == "--old-interactive")
 			interactive = true;
 
@@ -1147,9 +1063,6 @@ int main(int argc, char** argv)
 		cerr << "Error initializing key manager: " << boost::current_exception_diagnostic_information() << endl;
 		return -1;
 	}
-
-	for (auto const& presale: presaleImports)
-		importPresale(keyManager, presale, [&](){ return getPassword("Enter your wallet password for " + presale + ": "); });
 
 	for (auto const& s: toImport)
 	{

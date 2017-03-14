@@ -45,38 +45,7 @@ void AccountManager::streamWalletHelp(ostream& _out)
 
 bool AccountManager::execute(int argc, char** argv)
 {
-	if (string(argv[1]) == "wallet")
-	{
-		if (3 < argc && string(argv[2]) == "import")
-		{
-			if (!openWallet())
-				return false;
-			string file = argv[3];
-			string name = "presale wallet";
-			string pw;
-			try
-			{
-				KeyPair k = m_keyManager->presaleSecret(
-					contentsString(file),
-					[&](bool){ return (pw = getPassword("Enter the passphrase for the presale key: "));}
-				);
-				m_keyManager->import(k.secret(), name, pw, "Same passphrase as used for presale key");
-				cout << "  Address: {" << k.address().hex() << "}" << endl;
-			}
-			catch (Exception const& _e)
-			{
-				if (auto err = boost::get_error_info<errinfo_comment>(_e))
-					cout << "  Decryption failed: " << *err << endl;
-				else
-					cout << "  Decryption failed: Unknown reason." << endl;
-				return false;
-			}
-		}
-		else
-			streamWalletHelp(cout);
-		return true;
-	}
-	else if (string(argv[1]) == "account")
+	if (string(argv[1]) == "account")
 	{
 		if (argc < 3 || string(argv[2]) == "list")
 		{
