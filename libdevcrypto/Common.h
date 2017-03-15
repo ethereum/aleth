@@ -118,26 +118,12 @@ bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesConstRef 
 /// Encrypts payload with random IV/ctr using AES128-CTR.
 std::pair<bytes, h128> encryptSymNoAuth(SecureFixedHash<16> const& _k, bytesConstRef _plain);
 
-/// Encrypts payload with specified IV/ctr using AES128-CTR.
-bytes encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain);
-
-/// Decrypts payload with specified IV/ctr using AES128-CTR.
-bytesSec decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher);
-
-/// Encrypts payload with specified IV/ctr using AES128-CTR.
-inline bytes encryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
-inline bytes encryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
-
-/// Decrypts payload with specified IV/ctr using AES128-CTR.
-inline bytesSec decryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
-inline bytesSec decryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
-
 /// Recovers Public key from signed message hash.
 Public recover(Signature const& _sig, h256 const& _hash);
-	
+
 /// Returns siganture of message hash.
 Signature sign(Secret const& _k, h256 const& _hash);
-	
+
 /// Verify signature.
 bool verify(Public const& _k, Signature const& _s, h256 const& _hash);
 

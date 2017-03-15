@@ -24,10 +24,24 @@
 
 #pragma once
 
-#include "Common.h"
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {
+
+/// Encrypts payload with specified IV/ctr using AES128-CTR.
+bytes encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain);
+
+/// Decrypts payload with specified IV/ctr using AES128-CTR.
+bytesSec decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher);
+
+/// Encrypts payload with specified IV/ctr using AES128-CTR.
+inline bytes encryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
+inline bytes encryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
+
+/// Decrypts payload with specified IV/ctr using AES128-CTR.
+inline bytesSec decryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
+inline bytesSec decryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
 
 bytes aesDecrypt(bytesConstRef _cipher, std::string const& _password, unsigned _rounds = 2000, bytesConstRef _salt = bytesConstRef());
 

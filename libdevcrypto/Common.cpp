@@ -163,46 +163,6 @@ std::pair<bytes, h128> dev::encryptSymNoAuth(SecureFixedHash<16> const& _k, byte
 	return make_pair(encryptSymNoAuth(_k, iv, _plain), iv);
 }
 
-bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain)
-{
-	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
-		return bytes();
-	SecByteBlock key(_k.data(), _k.size());
-	try
-	{
-		CTR_Mode<AES>::Encryption e;
-		e.SetKeyWithIV(key, key.size(), _iv.data());
-		bytes ret(_plain.size());
-		e.ProcessData(ret.data(), _plain.data(), _plain.size());
-		return ret;
-	}
-	catch (CryptoPP::Exception& _e)
-	{
-		cerr << _e.what() << endl;
-		return bytes();
-	}
-}
-
-bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher)
-{
-	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
-		return bytesSec();
-	SecByteBlock key(_k.data(), _k.size());
-	try
-	{
-		CTR_Mode<AES>::Decryption d;
-		d.SetKeyWithIV(key, key.size(), _iv.data());
-		bytesSec ret(_cipher.size());
-		d.ProcessData(ret.writable().data(), _cipher.data(), _cipher.size());
-		return ret;
-	}
-	catch (CryptoPP::Exception& _e)
-	{
-		cerr << _e.what() << endl;
-		return bytesSec();
-	}
-}
-
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
 	int v = _sig[64];

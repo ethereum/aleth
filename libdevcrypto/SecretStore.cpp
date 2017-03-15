@@ -30,6 +30,8 @@
 #include <libdevcore/FileSystem.h>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcrypto/Exceptions.h>
+#include "AES.h"
+
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;

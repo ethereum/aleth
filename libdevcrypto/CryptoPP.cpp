@@ -27,6 +27,7 @@
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
 #include "ECDHE.h"
+#include "AES.h"
 
 static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
 
