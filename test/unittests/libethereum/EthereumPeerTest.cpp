@@ -17,7 +17,7 @@
 
 #include <libethereum/EthereumPeer.h>
 #include <libp2p/Host.h>
-#include <test/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

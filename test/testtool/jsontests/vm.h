@@ -26,7 +26,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <cstdint>
 
-#include <test/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
 #include <boost/test/unit_test.hpp>
 
 #include <json_spirit/json_spirit.h>

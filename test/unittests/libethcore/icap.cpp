@@ -21,7 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libethcore/ICAP.h>
-#include <test/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

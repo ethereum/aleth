@@ -32,7 +32,7 @@
 #include <libethcore/KeyManager.h>
 #include <libwebthree/WebThree.h>
 #include <libp2p/Network.h>
-#include <test/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
 
 // This is defined by some weird windows header - workaround for now.
 #undef GetMessage

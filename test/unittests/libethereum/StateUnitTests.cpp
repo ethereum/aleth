@@ -17,7 +17,7 @@
 /// @file
 /// State unit tests.
 
-#include <test/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/Block.h>
 #include <libethcore/BasicAuthority.h>

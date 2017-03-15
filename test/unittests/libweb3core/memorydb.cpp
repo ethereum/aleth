@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <libdevcore/MemoryDB.h>
-#include <test/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

@@ -23,8 +23,8 @@
 #include <iostream>
 
 #include <libdevcore/CommonData.h>
-#include <test/libtesteth/TestHelper.h>
-#include <test/fuzzTesting/fuzzHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/testtool/fuzzTesting/fuzzHelper.h>
 #include <libevm/VMFactory.h>
 #include <libdevcore/Common.h>
 

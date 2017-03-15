@@ -17,7 +17,7 @@
 /** @file StateTests.cpp
  * @author Dimitry Khokhlov <dimitry@ethereum.org>
  * @date 2016
- * State test functions.
+ * General State Tests parser.
  */
 
 #include <boost/filesystem/operations.hpp>
@@ -30,7 +30,7 @@
 #include <libethereum/ExtVM.h>
 #include <libethereum/Defaults.h>
 #include <libevm/VM.h>
-#include <test/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace json_spirit;

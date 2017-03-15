@@ -17,7 +17,8 @@
 /** @file blockchain.cpp
  * @author Christoph Jentzsch <cj@ethdev.com>, Dimitry Khokhlov <dimitry@ethdev.com>
  * @date 2015
- * BlockChain test functions.
+ * Generation of a blockchain tests. Parse blockchain test fillers.
+ * Simulating block import checking the post state.
  */
 
 #include <boost/filesystem/operations.hpp>
@@ -25,10 +26,10 @@
 #include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
 #include <libethashseal/Ethash.h>
-#include <test/libtesteth/TestHelper.h>
-#include <test/libtesteth/BlockChainHelper.h>
-#include <test/libtesteth/JsonSpiritHeaders.h>
-#include <test/fuzzTesting/fuzzHelper.h>
+#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/BlockChainHelper.h>
+#include <test/testtool/libtesteth/JsonSpiritHeaders.h>
+#include <test/testtool/fuzzTesting/fuzzHelper.h>
 using namespace std;
 using namespace json_spirit;
 using namespace dev;

@@ -21,9 +21,9 @@
  */
 
 #include <libethereum/BlockQueue.h>
-#include <test/libtesteth/TestHelper.h>
-#include <test/libtesteth/BlockChainHelper.h>
-#include <test/libtesteth/JsonSpiritHeaders.h>
+#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/testtool/libtesteth/BlockChainHelper.h>
+#include <test/testtool/libtesteth/JsonSpiritHeaders.h>
 
 using namespace std;
 using namespace dev;
