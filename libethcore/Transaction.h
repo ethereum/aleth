@@ -142,6 +142,8 @@ public:
 	/// @returns the signature of the transaction. Encodes the sender.
 	SignatureStruct const& signature() const { return m_vrs; }
 
+	bool hasZeroSignature() const { return !m_vrs.s && !m_vrs.r; }
+
 	void sign(Secret const& _priv);			///< Sign the transaction.
 
 	/// @returns amount of gas required for the basic payment.

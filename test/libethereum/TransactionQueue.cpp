@@ -31,6 +31,20 @@ using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(TransactionQueueSuite, TestOutputHelper)
 
+BOOST_AUTO_TEST_CASE(TransactionEIP86)
+{
+	dev::eth::TransactionQueue txq;
+	Address to = Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+	RLPStream streamRLP;
+	streamRLP.appendList(9);
+	streamRLP << 0 << 10 * szabo << 25000;
+	streamRLP << to << 0 << bytes() << 0 << 0 << 0;
+	Transaction tx0(streamRLP.out(), CheckTransaction::Everything);
+	ImportResult result = txq.import(tx0);
+	BOOST_CHECK(result == ImportResult::ZeroSignature);
+	BOOST_CHECK(txq.knownTransactions().size() == 0);
+}
+
 BOOST_AUTO_TEST_CASE(tqMaxNonce)
 {
 	dev::eth::TransactionQueue txq;
@@ -59,7 +73,6 @@ BOOST_AUTO_TEST_CASE(tqMaxNonce)
 	BOOST_CHECK(10 == txq.maxNonce(to));
 	txq.import(tx2);
 	BOOST_CHECK(10 == txq.maxNonce(to));
-
 }
 
 BOOST_AUTO_TEST_CASE(tqPriority)

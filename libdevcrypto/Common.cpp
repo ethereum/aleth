@@ -65,6 +65,8 @@ bool dev::SignatureStruct::isValid() const noexcept
 
 Address dev::ZeroAddress = Address();
 
+Address dev::MaxAddress = Address("0xffffffffffffffffffffffffffffffffffffffff");
+
 Public dev::toPublic(Secret const& _secret)
 {
 	auto* ctx = getCtx();

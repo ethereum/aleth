@@ -146,10 +146,10 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
 {
+	SealEngineFace::verifyTransaction(_ir, _t, _bi);
+
 	if (_ir & ImportRequirements::TransactionSignatures)
 	{
-		if (_bi.number() >= chainParams().u256Param("homsteadForkBlock"))
-			_t.checkLowS();
 		if (_bi.number() >= chainParams().u256Param("EIP158ForkBlock"))
 		{
 			int chainID(chainParams().u256Param("chainID"));
