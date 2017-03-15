@@ -7,6 +7,7 @@ add_sources(
 	BlockQueue.cpp
 	ClientBase.cpp
 	EthereumPeerTest.cpp
+	FastSyncTest.cpp
 	GasPricer.cpp
 	Genesis.cpp
 	StateTests.cpp

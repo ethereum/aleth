@@ -40,6 +40,7 @@ public:
 	EthashClient(
 		ChainParams const& _params,
 		int _networkID,
+		SyncMode _syncMode,
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		std::string const& _dbPath = std::string(),

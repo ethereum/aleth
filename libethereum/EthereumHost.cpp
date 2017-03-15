@@ -32,6 +32,7 @@
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
 #include "BlockChainSync.h"
+#include "FastSync.h"
 
 using namespace std;
 using namespace dev;
@@ -51,10 +52,11 @@ const char* EthereumHostTrace::name() { return EthPurple "⧫" EthGray " "; }
 
 namespace
 {
-class EthereumPeerObserver: public EthereumPeerObserverFace
+
+class FullSyncPeerObserver: public EthereumPeerObserverFace
 {
 public:
-	EthereumPeerObserver(BlockChainSync& _sync, RecursiveMutex& _syncMutex, TransactionQueue& _tq): m_sync(_sync), m_syncMutex(_syncMutex), m_tq(_tq) {}
+	FullSyncPeerObserver(BlockChainSync& _sync, RecursiveMutex& _syncMutex, TransactionQueue& _tq): m_sync(_sync), m_syncMutex(_syncMutex), m_tq(_tq) {}
 
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) override
 	{
@@ -163,11 +165,74 @@ public:
 		clog(EthereumHostTrace) << "Receipts (" << dec << itemCount << "entries)";
 	}
 
+	void onPeerRequestTimeout(std::shared_ptr<EthereumPeer> /* _peer */, Asking /* _asking */) override {}
+
 private:
 	BlockChainSync& m_sync;
 	RecursiveMutex& m_syncMutex;
 	TransactionQueue& m_tq;
 };
+
+
+class FastSyncPeerObserver: public EthereumPeerObserverFace
+{
+public:
+	explicit FastSyncPeerObserver(FastSync& _fastSync): m_fastSync(_fastSync) {}
+
+	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) override
+	{
+		try
+		{
+			m_fastSync.onPeerStatus(_peer);
+		}
+		catch (Exception const& e)
+		{
+			clog(EthereumHostTrace) << "Exception during fast sync: " << e.what();
+		}
+	}
+
+	void onPeerTransactions(std::shared_ptr<EthereumPeer> /*_peer*/, RLP const& /*_r*/) override {}
+
+	void onPeerAborting() override {}
+
+	void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers) override 
+	{
+		try
+		{
+			m_fastSync.onPeerBlockHeaders(_peer, _headers);
+		}
+		catch (Exception const& e)
+		{
+			clog(EthereumHostTrace) << "Exception during timeout handling in fast sync: " << e.what();
+		}
+	}
+
+	void onPeerBlockBodies(std::shared_ptr<EthereumPeer> /*_peer*/, RLP const& /*_r*/) override {}
+
+	void onPeerNewHashes(std::shared_ptr<EthereumPeer> /*_peer*/, std::vector<std::pair<h256, u256>> const& /*_hashes*/) override {}
+
+	void onPeerNewBlock(std::shared_ptr<EthereumPeer> /*_peer*/, RLP const& /*_r*/) override {}
+
+	void onPeerNodeData(std::shared_ptr<EthereumPeer> /*_peer*/, RLP const& /*_r*/) override {}
+
+	void onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& /*_r*/) override {}
+
+	void onPeerRequestTimeout(std::shared_ptr<EthereumPeer> _peer, Asking _asking) override
+	{
+		try
+		{
+			m_fastSync.onPeerRequestTimeout(_peer, _asking);
+		}
+		catch (Exception const& e)
+		{
+			clog(EthereumHostTrace) << "Exception durinf fast sync: " << e.what();
+		}
+	}
+
+private:
+	FastSync& m_fastSync;
+};
+
 
 class EthereumHostData: public EthereumHostDataFace
 {
@@ -374,7 +439,7 @@ private:
 
 }
 
-EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
+EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId, SyncMode _syncMode):
 	HostCapability<EthereumPeer>(),
 	Worker		("ethsync"),
 	m_chain		(_ch),
@@ -382,12 +447,17 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	m_tq		(_tq),
 	m_bq		(_bq),
 	m_networkId	(_networkId),
+	m_syncMode(_syncMode),
 	m_hostData(make_shared<EthereumHostData>(m_chain, m_db))
 {
 	// TODO: Composition would be better. Left like that to avoid initialization
 	//       issues as BlockChainSync accesses other EthereumHost members.
 	m_sync.reset(new BlockChainSync(*this));
-	m_peerObserver = make_shared<EthereumPeerObserver>(*m_sync, x_sync, m_tq);
+	m_fullSyncPeerObserver = make_shared<FullSyncPeerObserver>(*m_sync, x_sync, m_tq);
+
+	m_fastSync.reset(new FastSync(chain().genesisHash(), { protocolVersion(), EthereumHost::c_oldProtocolVersion }, networkId()));
+	m_fastSyncPeerObserver = make_shared<FastSyncPeerObserver>(*m_fastSync);
+
 	m_latestBlockSent = _ch.currentHash();
 	m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
 }
@@ -654,7 +724,7 @@ shared_ptr<Capability> EthereumHost::newPeerCapability(shared_ptr<SessionFace> c
 		m_chain.currentHash(),
 		m_chain.genesisHash(),
 		m_hostData,
-		m_peerObserver
+		m_syncMode == SyncMode::FastSync ? m_fastSyncPeerObserver : m_fullSyncPeerObserver
 	);
 
 	return ret;

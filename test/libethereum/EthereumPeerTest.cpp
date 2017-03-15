@@ -99,6 +99,8 @@ public:
 
 	void onPeerReceipts(std::shared_ptr<EthereumPeer>, RLP const&) override {}
 
+	void onPeerRequestTimeout(std::shared_ptr<EthereumPeer>, Asking) override {}
+
 	void onPeerAborting() override {}
 };
 

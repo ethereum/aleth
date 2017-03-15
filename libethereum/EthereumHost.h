@@ -50,6 +50,7 @@ namespace eth
 class TransactionQueue;
 class BlockQueue;
 class BlockChainSync;
+class FastSync;
 
 struct EthereumHostTrace: public LogChannel { static const char* name(); static const int verbosity = 6; };
 
@@ -62,7 +63,7 @@ class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
 public:
 	/// Start server, but don't listen.
-	EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
+	EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId, SyncMode _syncMode);
 
 	/// Will block on network process events.
 	virtual ~EthereumHost();
@@ -76,7 +77,6 @@ public:
 	void completeSync();
 
 	bool isSyncing() const;
-	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
 	void noteNewTransactions() { m_newTransactions = true; }
 	void noteNewBlocks() { m_newBlocks = true; }
@@ -124,10 +124,10 @@ private:
 
 	u256 m_networkId;
 
+	SyncMode m_syncMode = SyncMode::FullSync;
+
 	h256 m_latestBlockSent;
 	h256Hash m_transactionsSent;
-
-	std::unordered_set<p2p::NodeID> m_banned;
 
 	bool m_newTransactions = false;
 	bool m_newBlocks = false;
@@ -135,10 +135,12 @@ private:
 	mutable RecursiveMutex x_sync;
 	mutable Mutex x_transactions;
 	std::unique_ptr<BlockChainSync> m_sync;
+	std::unique_ptr<FastSync> m_fastSync;
 	std::atomic<time_t> m_lastTick = { 0 };
 
 	std::shared_ptr<EthereumHostDataFace> m_hostData;
-	std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
+	std::shared_ptr<EthereumPeerObserverFace> m_fullSyncPeerObserver;
+	std::shared_ptr<EthereumPeerObserverFace> m_fastSyncPeerObserver;
 };
 
 }
