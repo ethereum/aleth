@@ -124,7 +124,7 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 {
 	Json::Value ret(Json::objectValue);
 	ret["complete"] = true;
-	ret["storage"] = Json::Value(Json::arrayValue);
+	ret["storage"] = Json::Value(Json::objectValue);
 
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
@@ -152,11 +152,12 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 			}
 
 			Json::Value keyValue(Json::objectValue);
-			keyValue["hashedKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
+			std::string hashedKey = toCompactHex(it->first, HexPrefix::Add, 1);
+			keyValue["hashedKey"] = hashedKey;
 			keyValue["key"] = toCompactHex(it->second.first, HexPrefix::Add, 1);
 			keyValue["value"] = toCompactHex(it->second.second, HexPrefix::Add, 1);
 
-			ret["storage"].append(keyValue);
+			ret["storage"][hashedKey] = keyValue;
 		}
 	}
 	catch (Exception const& _e)
