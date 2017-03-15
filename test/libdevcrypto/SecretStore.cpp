@@ -32,6 +32,7 @@ using namespace dev::test;
 
 namespace js = json_spirit;
 namespace fs = boost::filesystem;
+namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
@@ -213,6 +214,123 @@ BOOST_AUTO_TEST_CASE(recode)
 		BOOST_CHECK(store.secret(uuid, [&](){ return password; }).empty());
 		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return changedPassword; }).makeInsecure()));
 	}
+}
+
+BOOST_AUTO_TEST_CASE(keyImport_PBKDF2SHA256, *utf::expected_failures(1))
+{
+	// Imports a key from an external file. Tests that the imported key is there
+	// and that the external file is not deleted.
+	TransientDirectory importDir;
+	string importFile = importDir.path() + "/import.json";
+	TransientDirectory storeDir;
+	string keyData = R"({
+		"version": 3,
+		"crypto": {
+			"ciphertext": "5318b4d5bcd28de64ee5559e671353e16f075ecae9f99c7a79a38af5f869aa46",
+			"cipherparams": { "iv": "6087dab2f9fdbbfaddc31a909735c1e6" },
+			"kdf": "pbkdf2",
+			"kdfparams": { "dklen": 32,  "c": 262144,  "prf": "hmac-sha256",  "salt": "ae3cd4e7013836a3df6bd7241b12db061dbe2c6785853cce422d148a624ce0bd" },
+			"mac": "517ead924a9d0dc3124507e3393d175ce3ff7c1e96529c6c555ce9e51205e9b2",
+			"cipher": "aes-128-ctr",
+			"version": 3
+		},
+		"id": "3198bc9c-6672-5ab3-d995-4942343ae5b6"
+	})";
+	string password = "testpassword";
+	string priv = "7a28b5ba57c53603b0b07b56bba752f7784bf506fa95edc395f5cf6c7514fe9d";
+	writeFile(importFile, keyData);
+
+	h128 uuid;
+	{
+		SecretStore store(storeDir.path());
+		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		uuid = store.importKey(importFile);
+		BOOST_CHECK(!!uuid);
+		BOOST_CHECK_EQUAL(uuid, h128("3198bc9c66725ab3d9954942343ae5b6"));
+		BOOST_CHECK(contentsString(importFile) == keyData);
+		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		BOOST_CHECK_EQUAL(store.keys().size(), 1);
+		BOOST_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
+	}
+	fs::remove(importFile);
+}
+
+BOOST_AUTO_TEST_CASE(keyImport_Scrypt, *utf::expected_failures(1))
+{
+	// Imports a key from an external file. Tests that the imported key is there
+	// and that the external file is not deleted.
+	TransientDirectory importDir;
+	string importFile = importDir.path() + "/import.json";
+	TransientDirectory storeDir;
+	string keyData = R"({
+		"version": 3,
+		"crypto": {
+			"ciphertext": "d172bf743a674da9cdad04534d56926ef8358534d458fffccd4e6ad2fbde479c",
+			"cipherparams": { "iv": "83dbcc02d8ccb40e466191a123791e0e" },
+			"kdf": "scrypt",
+			"kdfparams": { "dklen": 32,  "n": 262144,  "r": 1,  "p": 8,  "salt": "ab0c7876052600dd703518d6fc3fe8984592145b591fc8fb5c6d43190334ba19" },
+			"mac": "2103ac29920d71da29f15d75b4a16dbe95cfd7ff8faea1056c33131d846e3097",
+			"cipher": "aes-128-ctr",
+			"version": 3
+		},
+		"id": "3198bc9c-6672-5ab3-d995-4942343ae5b6"
+	})";
+	string password = "testpassword";
+	string priv = "7a28b5ba57c53603b0b07b56bba752f7784bf506fa95edc395f5cf6c7514fe9d";
+	writeFile(importFile, keyData);
+
+	h128 uuid;
+	{
+		SecretStore store(storeDir.path());
+		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		uuid = store.importKey(importFile);
+		BOOST_CHECK(!!uuid);
+		BOOST_CHECK_EQUAL(uuid, h128("3198bc9c66725ab3d9954942343ae5b6"));
+		BOOST_CHECK(contentsString(importFile) == keyData);
+		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		BOOST_CHECK_EQUAL(store.keys().size(), 1);
+		BOOST_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
+	}
+	fs::remove(importFile);
+}
+
+BOOST_AUTO_TEST_CASE(keyImport__ScryptV2, *utf::expected_failures(2))
+{
+	// Imports a key from an external file. Tests that the imported key is there
+	// and that the external file is not deleted.
+	TransientDirectory importDir;
+	string importFile = importDir.path() + "/import.json";
+	TransientDirectory storeDir;
+	string keyData = R"({
+		"version": 2,
+		"crypto": {
+			"ciphertext": "07533e172414bfa50e99dba4a0ce603f654ebfa1ff46277c3e0c577fdc87f6bb4e4fe16c5a94ce6ce14cfa069821ef9b",
+			"cipherparams": { "iv": "16d67ba0ce5a339ff2f07951253e6ba8" },
+			"kdf": "scrypt",
+			"kdfparams": { "dklen": 32,  "n": 262144,  "r": 1,  "p": 8,  "salt": "06870e5e6a24e183a5c807bd1c43afd86d573f7db303ff4853d135cd0fd3fe91" },
+			"mac": "8ccded24da2e99a11d48cda146f9cc8213eb423e2ea0d8427f41c3be414424dd",
+			"cipher": "aes-128-cbc",
+			"version": 1
+		},
+		"id": "0498f19a-59db-4d54-ac95-33901b4f1870"
+	})";
+	string password = "testpassword";
+	string priv = "7a28b5ba57c53603b0b07b56bba752f7784bf506fa95edc395f5cf6c7514fe9d";
+	writeFile(importFile, keyData);
+
+	h128 uuid;
+	{
+		SecretStore store(storeDir.path());
+		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		uuid = store.importKey(importFile);
+		BOOST_CHECK(!!uuid);
+		BOOST_CHECK_EQUAL(uuid, h128("0498f19a59db4d54ac9533901b4f1870"));
+		BOOST_CHECK(contentsString(importFile) == keyData);
+		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		BOOST_CHECK_EQUAL(store.keys().size(), 1);
+		BOOST_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
+	}
+	fs::remove(importFile);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
