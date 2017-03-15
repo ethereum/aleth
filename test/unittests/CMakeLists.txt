@@ -1,0 +1,11 @@
+cmake_policy(SET CMP0015 NEW)
+
+add_subdirectory(libdevcore)
+add_subdirectory(libdevcrypto)
+add_subdirectory(libethcore)
+add_subdirectory(libethereum)
+add_subdirectory(libp2p)
+add_subdirectory(libweb3core)
+add_subdirectory(libweb3jsonrpc)
+add_subdirectory(libwhisper)
+add_subdirectory(performance)
