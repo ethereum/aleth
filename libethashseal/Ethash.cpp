@@ -166,7 +166,7 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 			_t.checkNonceChainId(nonceChainId);
 		}
 
-		// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
+		// TODO: Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
 		if (_t.baseGasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
 			BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
 	}

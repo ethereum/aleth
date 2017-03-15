@@ -48,9 +48,7 @@ pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t,
 	{
 		ts.nonce = max<u256>(postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
 		if (postSeal().info().number() >= bc().chainParams().u256Param("metropolisForkBlock"))
-		{
 			ts.nonce &= (bc().chainParams().u256Param("nonceChainID") << c_chainIdInNonceShift);
-		}
 	}
 	if (ts.gasPrice == Invalid256)
 		ts.gasPrice = gasBidPrice();
