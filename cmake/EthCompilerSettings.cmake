@@ -168,16 +168,14 @@ if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_C
 endif ()
 
 if (COVERAGE)
+	include(ProjectLcov)
 	set(CMAKE_CXX_FLAGS "-g --coverage ${CMAKE_CXX_FLAGS}")
 	set(CMAKE_C_FLAGS "-g --coverage ${CMAKE_C_FLAGS}")
 	set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
 	set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
-	find_program(LCOV_TOOL lcov)
-	message(STATUS "lcov tool: ${LCOV_TOOL}")
-	if (LCOV_TOOL)
-		add_custom_target(coverage.info
-			COMMAND ${LCOV_TOOL} -o ${CMAKE_BINARY_DIR}/coverage.info -c -d ${CMAKE_BINARY_DIR}
-			COMMAND ${LCOV_TOOL} -o ${CMAKE_BINARY_DIR}/coverage.info -r ${CMAKE_BINARY_DIR}/coverage.info '/usr*' '${CMAKE_BINARY_DIR}/deps/*' '${CMAKE_SOURCE_DIR}/deps/*'
-		)
-	endif()
+	add_custom_target(coverage.data
+		COMMAND ${LCOV_TOOL} -o ${CMAKE_BINARY_DIR}/coverage.data -c -d ${CMAKE_BINARY_DIR}
+		COMMAND ${LCOV_TOOL} -o ${CMAKE_BINARY_DIR}/coverage.data -r ${CMAKE_BINARY_DIR}/coverage.data '/usr*' '${CMAKE_SOURCE_DIR}/deps/*'
+	)
+	add_dependencies(coverage.data lcov)
 endif ()
