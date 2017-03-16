@@ -474,7 +474,12 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 		cnote << "TEST " << name << ":";
 		json_spirit::mValue v;
 		string s = asString(dev::contents(testPath + "/" + name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		BOOST_WARN_MESSAGE(s.length() > 0, "Missing test file!");
+		if(s.length() == 0)
+		{
+			TestOutputHelper::printWarn("Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+			return;
+		}
 		json_spirit::read_string(s, v);
 		Listener::notifySuiteStarted(name);
 		doTests(v, false);
