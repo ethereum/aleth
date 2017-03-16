@@ -28,7 +28,7 @@
 #------------------------------------------------------------------------------
 
 include(EthUtils)
-set(LIBS ethashseal;ethereum;evm;ethcore;evmcore;ethash-cl;ethash;evmjit;testutils)
+set(LIBS ethashseal;ethereum;evm;ethcore;evmcore;ethash-cl;ethash;evmjit)
 
 set(Eth_INCLUDE_DIRS "${CPP_ETHEREUM_DIR}")
 
