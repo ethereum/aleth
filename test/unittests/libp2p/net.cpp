@@ -26,7 +26,7 @@
 #include <libdevcrypto/Common.h>
 #include <libp2p/UDP.h>
 #include <libp2p/NodeTable.h>
-#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

@@ -15,8 +15,8 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <test/testtool/libtesteth/Stats.h>
-#include <test/testtool/libtesteth/Options.h>
+#include <test/tools/libtesteth/Stats.h>
+#include <test/tools/libtesteth/Options.h>
 #include <iterator>
 #include <numeric>
 #include <fstream>

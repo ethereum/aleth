@@ -25,8 +25,8 @@
 #include <libethereum/ChainParams.h>
 #include <libethereum/GasPricer.h>
 #include <libethereum/BasicGasPricer.h>
-#include <test/testtool/libtesteth/TestHelper.h>
-#include <test/testtool/libtestutils/BlockChainLoader.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtestutils/BlockChainLoader.h>
 
 using namespace std;
 using namespace dev;

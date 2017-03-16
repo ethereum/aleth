@@ -31,12 +31,12 @@
 #include <libethereum/State.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libevm/ExtVMFace.h>
-#include <test/testtool/libtestutils/Common.h>
+#include <test/tools/libtestutils/Common.h>
 
-#include <test/testtool/libtesteth/JsonSpiritHeaders.h>
-#include <test/testtool/libtesteth/Options.h>
-#include <test/testtool/libtesteth/ImportTest.h>
-#include <test/testtool/libtesteth/TestOutputHelper.h>
+#include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtesteth/ImportTest.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 namespace dev
 {

@@ -19,9 +19,9 @@
  */
 
 #pragma once
-#include <test/testtool/libtestutils/Common.h>
+#include <test/tools/libtestutils/Common.h>
 #include <libethashseal/GenesisInfo.h>
-#include <test/testtool/libtesteth/JsonSpiritHeaders.h>
+#include <test/tools/libtesteth/JsonSpiritHeaders.h>
 #include <libethereum/State.h>
 
 namespace dev

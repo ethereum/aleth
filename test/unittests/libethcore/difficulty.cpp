@@ -21,8 +21,8 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <test/testtool/libtesteth/TestHelper.h>
-#include <test/testtool/fuzzTesting/fuzzHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>

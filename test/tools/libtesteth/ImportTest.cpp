@@ -18,12 +18,12 @@
  * Helper class for managing data when running state tests
  */
 
-#include <test/testtool/libtesteth/TestHelper.h>
-#include <test/testtool/libtesteth/ImportTest.h>
-#include <test/testtool/libtesteth/TestOutputHelper.h>
-#include <test/testtool/libtesteth/BlockChainHelper.h>
-#include <test/testtool/libtesteth/Options.h>
-#include <test/testtool/libtestutils/Common.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/ImportTest.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <test/tools/libtesteth/BlockChainHelper.h>
+#include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtestutils/Common.h>
 using namespace dev;
 using namespace dev::test;
 using namespace std;

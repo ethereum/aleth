@@ -37,7 +37,7 @@
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <json_spirit/JsonSpiritHeaders.h>
-#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
 #include <test/unittests/libweb3jsonrpc/WebThreeStubClient.h>
 #include <libethcore/KeyManager.h>
 #include <libp2p/Common.h>

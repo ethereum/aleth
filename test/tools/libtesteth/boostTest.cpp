@@ -38,7 +38,7 @@
 
 #include <clocale>
 #include <stdlib.h>
-#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
 #include <boost/version.hpp>
 
 using namespace boost::unit_test;

@@ -25,8 +25,8 @@
 #include <libethereum/TransactionQueue.h>
 #include <libethereum/GenesisInfo.h>
 #include <libethashseal/GenesisInfo.h>
-#include <test/testtool/libtesteth/BlockChainHelper.h>
-#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/BlockChainHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
 using namespace std;
 using namespace json_spirit;
 using namespace dev;

@@ -18,15 +18,15 @@
  * Helper functions to work with json::spirit and test files
  */
 
-#include <test/testtool/libtesteth/TestHelper.h>
-#include <test/testtool/libtesteth/TestOutputHelper.h>
-#include <test/testtool/libtesteth/Options.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <test/tools/libtesteth/Options.h>
 #if !defined(_WIN32)
 #include <stdio.h>
 #endif
 #include <boost/algorithm/string/trim.hpp>
 #include <libethereum/Client.h>
-#include <test/testtool/libtesteth/Stats.h>
+#include <test/tools/libtesteth/Stats.h>
 
 using namespace std;
 using namespace dev::eth;

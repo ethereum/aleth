@@ -20,7 +20,7 @@
  * Transaaction test functions.
  */
 
-#include "test/testtool/libtesteth/TestHelper.h"
+#include "test/tools/libtesteth/TestHelper.h"
 #include <libethcore/Exceptions.h>
 #include <libethcore/Common.h>
 #include <libevm/VMFace.h>

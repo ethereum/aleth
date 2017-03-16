@@ -19,8 +19,8 @@
  */
 
 #pragma once
-#include <test/testtool/libtestutils/Common.h>
-#include <test/testtool/libtesteth/JsonSpiritHeaders.h>
+#include <test/tools/libtestutils/Common.h>
+#include <test/tools/libtesteth/JsonSpiritHeaders.h>
 
 namespace dev
 {

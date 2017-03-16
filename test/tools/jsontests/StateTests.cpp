@@ -30,7 +30,7 @@
 #include <libethereum/ExtVM.h>
 #include <libethereum/Defaults.h>
 #include <libevm/VM.h>
-#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace json_spirit;

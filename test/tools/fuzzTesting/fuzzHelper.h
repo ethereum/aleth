@@ -23,7 +23,7 @@
 #include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include <test/testtool/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libevmcore/Instruction.h>

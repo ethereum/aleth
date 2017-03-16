@@ -19,7 +19,7 @@
  */
 
 #include <libevm/VMFactory.h>
-#include <test/testtool/libtesteth/Options.h>
+#include <test/tools/libtesteth/Options.h>
 
 using namespace std;
 using namespace dev::test;
