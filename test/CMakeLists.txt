@@ -1,8 +1,4 @@
 
-add_subdirectory(jsontests)
-add_subdirectory(unittests)
-add_subdirectory(tools)
-
 file(GLOB_RECURSE SRC *.cpp *.sol)
 
 set(SRC_LIST ${SRC})
