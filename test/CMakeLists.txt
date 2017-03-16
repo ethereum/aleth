@@ -1,7 +1,6 @@
 
-file(GLOB_RECURSE SRC *.cpp *.sol)
+file(GLOB_RECURSE SRC_LIST *.cpp *.sol)
 
-set(SRC_LIST ${SRC})
 # search for test names and create ctest tests
 set(excludeSuites jsonrpc \"RandomTestCreationSuite\" shhrpc whisperDB whisperMessage whisper BlockQueueSuite)
 set(allSuites jsonrpc)
