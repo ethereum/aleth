@@ -161,7 +161,8 @@ Linux)
         Fedora)
             echo "Installing cpp-ethereum dependencies on Fedora Linux."
             $SUDO dnf -qy install \
-                gcc-c++ \
+                cmake \
+		gcc-c++ \
                 leveldb-devel \
                 curl-devel \
                 libmicrohttpd-devel \
