@@ -50,6 +50,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		u256 transactionBlock = toInt(o["blocknumber"].get_str());
 		BlockHeader bh;
 		bh.setNumber(transactionBlock);
+		bool onMetropolis = (transactionBlock >= se->chainParams().u256Param("metropolisForkBlock"));
 
 		if (_fillin)
 		{
@@ -63,7 +64,10 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			try
 			{
 				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
+				bool onMetropolisAndZeroSig = onMetropolis && txFromFields.hasZeroSignature();
+
 				if (!txFromFields.signature().isValid())
+				if (!onMetropolisAndZeroSig)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh);
 
@@ -114,8 +118,10 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				bytes stream = importByteArray(o["rlp"].get_str());
 				RLP rlp(stream);
 				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
+				bool onMetropolisAndZeroSig = onMetropolis && txFromRlp.hasZeroSignature();
 				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh);
 				if (!txFromRlp.signature().isValid())
+				if (!onMetropolisAndZeroSig)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 			}
 			catch(Exception const& _e)
@@ -161,6 +167,17 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
+
+
+BOOST_AUTO_TEST_CASE(ttTransactionTestZeroSig)
+{
+	dev::test::executeTests("ttTransactionTestZeroSig", "/TransactionTests/Metropolis", "/TransactionTestsFiller/Metropolis", dev::test::doTransactionTests);
+}
+
+BOOST_AUTO_TEST_CASE(ttTransactionTestMetropolis)
+{
+	dev::test::executeTests("ttTransactionTest", "/TransactionTests/Metropolis", "/TransactionTestsFiller/Metropolis", dev::test::doTransactionTests);
+}
 
 BOOST_AUTO_TEST_CASE(ttMetropolisTests)
 {
