@@ -122,21 +122,22 @@ cmake -H. -Bbuild -G "Visual Studio 14 2015 Win64"
 ## Contributing
 
 [![Contributors](https://img.shields.io/github/contributors/ethereum/cpp-ethereum.svg)](https://github.com/ethereum/cpp-ethereum/graphs/contributors)
+[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/ethereum/cpp-ethereum)
+[![up-for-grabs](https://img.shields.io/github/issues-raw/ethereum/cpp-ethereum/up-for-grabs.svg)](https://github.com/ethereum/cpp-ethereum/labels/up-for-grabs)
 
 The current codebase is the work of many, many hands, with nearly 100
 [individual contributors](https://github.com/ethereum/cpp-ethereum/graphs/contributors) over the course of its development.
 
-Our day-to-day development chat happens on the [cpp-ethereum-development](https://gitter.im/ethereum/cpp-ethereum-development) gitter channel.
+Our day-to-day development chat happens on the
+[cpp-ethereum](https://gitter.im/ethereum/cpp-ethereum) Gitter channel.
 
-All contributions are welcome!  We try to keep a list of tasks that are suitable for
-newcomers under the tag [good first task](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
+All contributions are welcome! We try to keep a list of tasks that are suitable
+for newcomers under the tag 
+[up-for-grabs](https://github.com/ethereum/cpp-ethereum/labels/up-for-grabs).
 If you have any questions, please just ask.
 
-Please refer to the file [CONTRIBUTING.md](CONTRIBUTING.md) for some guidelines.
-
-Please read [CodingStandards.txt](CodingStandards.txt) thoroughly before making alterations to the code base.
-Please do *NOT* use an editor that automatically reformats whitespace away from astylerc or the formatting guidelines
-as described in [CodingStandards.txt](CodingStandards.txt).
+Please read [CodingStandards.txt](CodingStandards.txt) thoroughly before making
+alterations to the code base.
 
 All development goes in develop branch.
 
