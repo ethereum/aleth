@@ -89,9 +89,9 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					bool expectInValid = (o["expect"].get_str() == "invalid");
 					if (Options::get().checkstate)
-							BOOST_CHECK_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
+							BOOST_CHECK_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
 						else
-							BOOST_WARN_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
+							BOOST_WARN_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
 
 					o.erase(o.find("expect"));
 				}
@@ -102,9 +102,9 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			{
 				bool expectValid = (o["expect"].get_str() == "valid");
 				if (Options::get().checkstate)
-						BOOST_CHECK_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
+						BOOST_CHECK_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
 					else
-						BOOST_WARN_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
+						BOOST_WARN_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
 
 				o.erase(o.find("expect"));
 			}
