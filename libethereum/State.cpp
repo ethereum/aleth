@@ -518,6 +518,10 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		onOp = Executive::simpleTrace(); // override tracer
 #endif
 
+	BlockHeader bh;
+	bh.setNumber(_envInfo.number());
+	_sealEngine.verifyTransaction(ImportRequirements::Everything, _t, bh);
+
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
 	Executive e(*this, _envInfo, _sealEngine);
