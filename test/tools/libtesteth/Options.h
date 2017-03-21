@@ -48,6 +48,7 @@ public:
 	bool checkstate = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
+	std::string testpath;	///< Custom test folder path
 	Verbosity logVerbosity = Verbosity::NiceReport;
 
 	/// Test selection
