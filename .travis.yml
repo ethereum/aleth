@@ -120,8 +120,10 @@ before_script:
 script:
     - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
 after_success:
+    - cd $TRAVIS_BUILD_DIR/build
+    - make coverage.data
     # Get CodeCov script (fixed commit) and upload coverage report.
-    - cd $TRAVIS_BUILD_DIR/build && bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/f81a7b47aef0fad3900e887a7ad9c96c0d12c47f/codecov) -a '>/dev/null 2>&1'
+    - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/e7985c0ea6dd4d365403f389337f3b43b517fb35/codecov) -f coverage.data
 deploy:
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that

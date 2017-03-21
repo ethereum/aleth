@@ -43,9 +43,11 @@ void SealEngineFace::populateFromParent(BlockHeader& _bi, BlockHeader const& _pa
 	_bi.populateFromParent(_parent);
 }
 
-void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const&) const
+void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
 {
-	if (_ir & ImportRequirements::TransactionSignatures)
+	if ((_ir & ImportRequirements::TransactionSignatures) && _bi.number() < chainParams().u256Param("metropolisForkBlock") && _t.hasZeroSignature())
+		BOOST_THROW_EXCEPTION(InvalidSignature());
+	if (_bi.number() >= chainParams().u256Param("homsteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures))
 		_t.checkLowS();
 }
 

@@ -64,6 +64,9 @@ using Address = h160;
 /// The zero address.
 extern Address ZeroAddress;
 
+/// The last address.
+extern Address MaxAddress;
+
 /// A vector of Ethereum addresses.
 using Addresses = h160s;
 

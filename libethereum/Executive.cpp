@@ -198,23 +198,26 @@ void Executive::initialize(Transaction const& _transaction)
 		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError((bigint)m_baseGasRequired, (bigint)m_t.gas()));
 	}
 
-	// Avoid invalid transactions.
-	u256 nonceReq;
-	try
+	if (!m_t.hasZeroSignature())
 	{
-		nonceReq = m_s.getNonce(m_t.sender());
-	}
-	catch (...)
-	{
-		clog(ExecutiveWarnChannel) << "Invalid Signature";
-		m_excepted = TransactionException::InvalidSignature;
-		throw;
-	}
-	if (m_t.nonce() != nonceReq)
-	{
-		clog(ExecutiveWarnChannel) << "Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
-		m_excepted = TransactionException::InvalidNonce;
-		BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
+		// Avoid invalid transactions.
+		u256 nonceReq;
+		try
+		{
+			nonceReq = m_s.getNonce(m_t.sender());
+		}
+		catch (InvalidSignature const&)
+		{
+			clog(ExecutiveWarnChannel) << "Invalid Signature";
+			m_excepted = TransactionException::InvalidSignature;
+			throw;
+		}
+		if (m_t.nonce() != nonceReq)
+		{
+			clog(ExecutiveWarnChannel) << "Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
+			m_excepted = TransactionException::InvalidNonce;
+			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
+		}
 	}
 
 	// Avoid unaffordable transactions.
