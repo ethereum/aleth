@@ -24,6 +24,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/FileSystem.h>
+#include <test/tools/libtesteth/Options.h>
 #include "Common.h"
 
 using namespace std;
@@ -34,6 +35,9 @@ const char* TestChannel::name() { return "TST"; }
 
 std::string dev::test::getTestPath()
 {
+	if (!Options::get().testpath.empty())
+		return Options::get().testpath;
+
 	string testPath;
 	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
 
