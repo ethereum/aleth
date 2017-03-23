@@ -416,6 +416,11 @@ bool Executive::go(OnOpFunc const& _onOp)
 					m_res->output = m_output.toVector();
 			}
 		}
+		catch (RevertInstruction& _e)
+		{
+			revert();
+			m_output = _e.output();
+		}
 		catch (VMException const& _e)
 		{
 			clog(StateSafeExceptions) << "Safe VM Exception. " << diagnostic_information(_e);

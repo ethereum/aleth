@@ -81,6 +81,12 @@ void VM::throwBadStack(unsigned _removed, unsigned _added)
 	}
 }
 
+void VM::throwRevertInstruction(owning_bytes_ref&& _output)
+{
+	// We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and RevertInstruction has no copy constructor 
+	throw RevertInstruction(move(_output));
+}
+
 int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 {
 	// check for overflow
