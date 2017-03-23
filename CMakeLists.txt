@@ -24,6 +24,13 @@
 
 cmake_minimum_required(VERSION 3.4.3)
 
+if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    # The default toolchain file configures compilers and build environment.
+    # This configuration is also used by hunter to build dependencies.
+    # CMake will cache this value, not need to explictly specify CACHE param.
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/cmake/toolchain.cmake)
+endif()
+
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
