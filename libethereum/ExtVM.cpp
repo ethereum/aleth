@@ -92,7 +92,7 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 } // anonymous namespace
 
 
-boost::optional<owning_bytes_ref> ExtVM::call(CallParameters& _p)
+std::pair<bool, owning_bytes_ref> ExtVM::call(CallParameters& _p)
 {
 	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
 	if (!e.call(_p, gasPrice, origin))
@@ -101,11 +101,8 @@ boost::optional<owning_bytes_ref> ExtVM::call(CallParameters& _p)
 		e.accrueSubState(sub);
 	}
 	_p.gas = e.gas();
-
-	if (e.excepted())
-		return {};
-
-	return e.takeOutput();
+	
+	return {!e.excepted(), e.takeOutput()};
 }
 
 size_t ExtVM::codeSizeAt(dev::Address _a)

@@ -68,7 +68,8 @@ public:
 	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp = {}) override final;
 
 	/// Create a new message call. Leave _myAddressOverride as the default to use the present address as caller.
-	virtual boost::optional<owning_bytes_ref> call(CallParameters& _params) override final;
+	/// @returns success flag and output data, if any.
+	virtual std::pair<bool, owning_bytes_ref> call(CallParameters& _params) override final;
 
 	/// Read address's balance.
 	virtual u256 balance(Address _a) override final { return m_s.balance(_a); }

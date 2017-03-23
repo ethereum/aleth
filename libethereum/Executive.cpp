@@ -409,17 +409,13 @@ bool Executive::go(OnOpFunc const& _onOp)
 				m_s.setNewCode(m_ext->myAddress, out.toVector());
 			}
 			else
-			{
 				m_output = vm->exec(m_gas, *m_ext, _onOp);
-				if (m_res)
-					// Copy full output:
-					m_res->output = m_output.toVector();
-			}
 		}
 		catch (RevertInstruction& _e)
 		{
 			revert();
 			m_output = _e.output();
+			m_excepted = TransactionException::RevertInstruction;
 		}
 		catch (VMException const& _e)
 		{
@@ -444,6 +440,11 @@ bool Executive::go(OnOpFunc const& _onOp)
 			// Another solution would be to reject this transaction, but that also
 			// has drawbacks. Essentially, the amount of ram has to be increased here.
 		}
+
+		if (m_res && m_output)
+			// Copy full output:
+			m_res->output = m_output.toVector();
+
 #if ETH_TIMED_EXECUTIONS
 		cnote << "VM took:" << t.elapsed() << "; gas used: " << (sgas - m_endGas);
 #endif

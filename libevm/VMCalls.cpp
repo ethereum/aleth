@@ -143,13 +143,11 @@ void VM::caseCall()
 	bytesRef output;
 	if (caseCallSetup(callParams.get(), output))
 	{
-		if (boost::optional<owning_bytes_ref> r = m_ext->call(*callParams))
-		{
-			r->copyTo(output);
-			m_SPP[0] = 1;
-		}
-		else
-			m_SPP[0] = 0;
+		std::pair<bool, owning_bytes_ref> callResult = m_ext->call(*callParams);
+		if (callResult.second)
+			callResult.second.copyTo(output);
+
+		m_SPP[0] = callResult.first ? 1 : 0;
 	}
 	else
 		m_SPP[0] = 0;
