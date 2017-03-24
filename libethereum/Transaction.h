@@ -49,7 +49,8 @@ enum class TransactionException
 	OutOfGas,				///< Ran out of gas executing code of the transaction.
 	OutOfStack,				///< Ran out of stack executing code of the transaction.
 	StackUnderflow,
-	RevertInstruction
+	RevertInstruction,
+	InvalidZeroSignatureFormat
 };
 
 enum class CodeDeposit
@@ -114,6 +115,14 @@ public:
 
 	/// Constructs a transaction from the given RLP.
 	explicit Transaction(bytes const& _rlp, CheckTransaction _checkSig): Transaction(&_rlp, _checkSig) {}
+};
+
+class ZeroSignatureTransaction: public Transaction
+{
+	ZeroSignatureTransaction(Transaction const& _ts,  u256 const& _chainId): Transaction(0, 0, _ts.gas(), _ts.to(), _ts.data(), 0, Secret()) {
+		forceSender(MaxAddress);
+		m_vrs = SignatureStruct(0, 0, _chainId);
+	}
 };
 
 /// Nice name for vector of Transaction.
