@@ -230,7 +230,7 @@ void Executive::initialize(Transaction const& _transaction)
 		}
 		m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 	}
-	else if (m_t.gasPrice() != 0 || m_t.value() != 0 | m_t.nonce() != 0)
+	else if (m_t.gasPrice() != 0 || m_t.value() != 0 || m_t.nonce() != 0)
 	{
 		BOOST_THROW_EXCEPTION("Zero Signature Transaction must have gasPrive==0 && value==0 && nonce==0 => " + m_t.gasPrice() + " " + m_t.value() + " " + m_t.nonce());
 	}
