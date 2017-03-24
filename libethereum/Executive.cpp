@@ -233,7 +233,7 @@ void Executive::initialize(Transaction const& _transaction)
 	else if (m_t.gasPrice() != 0 || m_t.value() != 0 || m_t.nonce() != 0)
 	{
 		m_excepted = TransactionException::InvalidZeroSignatureFormat;
-		BOOST_THROW_EXCEPTION("Zero Signature Transaction must have gasPrive==0 && value==0 && nonce==0 => " + m_t.gasPrice() + " " + m_t.value() + " " + m_t.nonce());
+		BOOST_THROW_EXCEPTION("(Executive) Zero Signature Transaction must have gasPrice==0 && value==0 && nonce==0 => " + m_t.gasPrice() + " " + m_t.value() + " " + m_t.nonce());
 	}
 }
 
