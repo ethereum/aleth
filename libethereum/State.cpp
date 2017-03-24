@@ -271,7 +271,9 @@ u256 State::balance(Address const& _id) const
 
 void State::incNonce(Address const& _addr)
 {
-	if (Account* a = account(_addr))
+	if (_addr == MaxAddress)
+		return;
+	else if (Account* a = account(_addr))
 	{
 		a->incNonce();
 		m_changeLog.emplace_back(Change::Nonce, _addr);
