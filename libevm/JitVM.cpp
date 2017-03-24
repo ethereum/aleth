@@ -201,9 +201,10 @@ int64_t evm_call(
 	auto output = env.call(params);
 	auto gasLeft = static_cast<int64_t>(params.gas);
 
-	if (output)
-		output->copyTo({_outputData, _outputSize});
-	else
+	if (output.second)
+		output.second.copyTo({_outputData, _outputSize});
+	
+	if (!output.first)
 		// Add failure indicator.
 		gasLeft |= EVM_CALL_FAILURE;
 
