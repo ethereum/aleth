@@ -30,11 +30,6 @@ set ETHEREUM_DEPS_PATH=%4
 
 if "%TESTS%"=="On" (
 
-    REM Clone the end-to-end test repo, and point environment variable at it.
-    cd ..
-    git clone --depth 1 https://github.com/ethereum/tests.git
-    set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
-
     REM Copy the DLLs into the test directory which need to be able to run.
     cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
     copy %APPVEYOR_BUILD_FOLDER%\build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
@@ -45,12 +40,12 @@ if "%TESTS%"=="On" (
 
     REM Run the tests for the Interpreter
     echo Testing testeth
-    testeth.exe
+    testeth.exe -- --testpath %APPVEYOR_BUILD_FOLDER%\test\jsontests
     IF errorlevel 1 GOTO ON-ERROR-CONDITION
 
     REM Run the tests for the JIT
     echo Testing EVMJIT
-    testeth.exe -t VMTests,StateTests -- --vm jit
+    testeth.exe -t VMTests,StateTests -- --vm jit --testpath %APPVEYOR_BUILD_FOLDER%\test\jsontests
     IF errorlevel 1 GOTO ON-ERROR-CONDITION
     cd ..\..\..
 

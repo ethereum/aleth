@@ -44,7 +44,7 @@ std::string dev::test::getTestPath()
 	if (ptestPath == NULL)
 	{
 		ctest << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
+		testPath = "../../test/jsontests";
 	}
 	else
 		testPath = ptestPath;
