@@ -41,7 +41,7 @@ if [[ "$TESTS" == "On" ]]; then
     # enough time to build LLVM, build EVMJIT and run the tests twice within
     # the 48 minute absolute maximum run time for TravisCI.
     if [[ "$OSTYPE" != "darwin"* ]]; then
-        $BUILD_ROOT/test/testeth -t "VMTests*,StateTests*" -- --vm jit --testpath $BUILD_ROOT/../test/jsontests
+        $BUILD_ROOT/test/testeth -t "VMTests*" -- --vm jit --testpath $BUILD_ROOT/../test/jsontests
     fi
 
 fi
