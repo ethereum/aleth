@@ -51,7 +51,7 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
 	if ((_ir & ImportRequirements::TransactionBasic) && _bi.number() >= chainParams().u256Param("metropolisForkBlock") &&
 				_t.hasZeroSignature() &&
 				(_t.gas() != 0 || _t.gasPrice() != 0 || _t.nonce() != 0))
-			BOOST_THROW_EXCEPTION(Exception("(SealEngineFace) Zero Signature Transaction must have gasPrice==0 && value==0 && nonce==0 => " + _t.gasPrice() + " " + _t.value() + " " + _t.nonce()));
+			BOOST_THROW_EXCEPTION(InvalidZeroSignatureTransaction() << errinfo_got((bigint)_t.gasPrice()) << errinfo_got((bigint)_t.value()) << errinfo_got((bigint)_t.nonce()));
 
 	if (_bi.number() >= chainParams().u256Param("homsteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures))
 		_t.checkLowS();

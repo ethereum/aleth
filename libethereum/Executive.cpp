@@ -233,7 +233,7 @@ void Executive::initialize(Transaction const& _transaction)
 	else if (m_t.gasPrice() != 0 || m_t.value() != 0 || m_t.nonce() != 0)
 	{
 		m_excepted = TransactionException::InvalidZeroSignatureFormat;
-		BOOST_THROW_EXCEPTION("(Executive) Zero Signature Transaction must have gasPrice==0 && value==0 && nonce==0 => " + m_t.gasPrice() + " " + m_t.value() + " " + m_t.nonce());
+		BOOST_THROW_EXCEPTION(InvalidZeroSignatureTransaction() << errinfo_got((bigint)m_t.gasPrice()) << errinfo_got((bigint)m_t.value()) << errinfo_got((bigint)m_t.nonce()));
 	}
 }
 
@@ -265,7 +265,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		// FIXME: changelog contains unrevertable balance change that paid
 		//        for the transaction.
 		// Increment associated nonce for sender.
-		m_s.incNonce(_p.senderAddress);
+		if (_p.senderAddress != MaxAddress) // IEP86
+			m_s.incNonce(_p.senderAddress);
 	}
 
 	m_savepoint = m_s.savepoint();
@@ -321,7 +322,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	u256 nonce = m_s.getNonce(_sender);
-	m_s.incNonce(_sender);
+	if (_sender != MaxAddress) // IEP86
+		m_s.incNonce(_sender);
 
 	m_savepoint = m_s.savepoint();
 

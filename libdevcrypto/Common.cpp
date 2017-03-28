@@ -356,6 +356,7 @@ void ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
 	std::array<byte, 65> serializedPubKey{{0x04}};
 	std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
 	auto r = secp256k1_ec_pubkey_parse(ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size());
+	(void)r;
 	assert(r == 1);
 	std::array<byte, 33> compressedPoint;
 	r = secp256k1_ecdh_raw(ctx, compressedPoint.data(), &rawPubkey, _s.data());
