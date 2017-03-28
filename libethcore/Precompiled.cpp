@@ -90,4 +90,36 @@ ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)
 	return {true, _in.toBytes()};
 }
 
+template<class T>
+T parseBigEndianRightPadded(bytesConstRef _in, size_t _begin, size_t _count)
+{
+	if (_begin > _in.count())
+		return 0;
+
+	bytesConstRef cropped = _in.cropped(_begin, min(_count, _in.count() - _begin));
+
+	T ret = fromBigEndian<T>(cropped);
+	ret <<= 8 * (_count - cropped.count());
+	
+	return ret;
+}
+
+ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
+{
+	size_t const baseLength(parseBigEndianRightPadded<u256>(_in, 0, 32));
+	size_t const expLength(parseBigEndianRightPadded<u256>(_in, 32, 32));
+	size_t const modLength(parseBigEndianRightPadded<u256>(_in, 64, 32));
+
+	bigint const base(parseBigEndianRightPadded<bigint>(_in, 96, baseLength));
+	bigint const exp(parseBigEndianRightPadded<bigint>(_in, 96 + baseLength, expLength));
+	bigint const mod(parseBigEndianRightPadded<bigint>(_in, 96 + baseLength + expLength, modLength));
+
+	bigint const result = boost::multiprecision::powm(base, exp, mod);
+	
+	bytes ret(modLength); 
+	toBigEndian(result, ret);
+
+	return {true, ret};
+}
+
 }
