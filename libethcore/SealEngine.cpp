@@ -43,17 +43,17 @@ void SealEngineFace::populateFromParent(BlockHeader& _bi, BlockHeader const& _pa
 	_bi.populateFromParent(_parent);
 }
 
-void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
+void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, EnvInfo const& _env) const
 {
-	if ((_ir & ImportRequirements::TransactionSignatures) && _bi.number() < chainParams().u256Param("metropolisForkBlock") && _t.hasZeroSignature())
+	if ((_ir & ImportRequirements::TransactionSignatures) && _env.number() < chainParams().u256Param("metropolisForkBlock") && _t.hasZeroSignature())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 
-	if ((_ir & ImportRequirements::TransactionBasic) && _bi.number() >= chainParams().u256Param("metropolisForkBlock") &&
+	if ((_ir & ImportRequirements::TransactionBasic) && _env.number() >= chainParams().u256Param("metropolisForkBlock") &&
 				_t.hasZeroSignature() &&
 				(_t.value() != 0 || _t.gasPrice() != 0 || _t.nonce() != 0))
 			BOOST_THROW_EXCEPTION(InvalidZeroSignatureTransaction() << errinfo_got((bigint)_t.gasPrice()) << errinfo_got((bigint)_t.value()) << errinfo_got((bigint)_t.nonce()));
 
-	if (_bi.number() >= chainParams().u256Param("homsteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures))
+	if (_env.number() >= chainParams().u256Param("homsteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures))
 		_t.checkLowS();
 }
 
