@@ -180,6 +180,10 @@ void Executive::initialize(Transaction const& _transaction)
 {
 	m_t = _transaction;
 
+	BlockHeader bh;
+	bh.setNumber(m_envInfo.number());
+	m_sealEngine.verifyTransaction(ImportRequirements::Everything, _transaction, bh);
+
 	// Avoid transactions that would take us beyond the block gas limit.
 	u256 startGasUsed = m_envInfo.gasUsed();
 	if (startGasUsed + (bigint)m_t.gas() > m_envInfo.gasLimit())
