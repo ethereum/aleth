@@ -74,6 +74,14 @@ namespace con
 #define EthVioletUnder	""       // Purple
 #define EthTealUnder	""       // Cyan
 
+#define EthNavy ""
+#define EthGray ""
+#define EthOnRed ""
+#define EthBlackBold ""
+#define EthViolet ""
+#define EthTeal ""
+#define EthOrange ""
+
 #else
 
 #define EthReset "\x1b[0m"       // Text Reset
