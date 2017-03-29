@@ -49,10 +49,10 @@ namespace eth
 #endif
 
 #ifndef EVM_OPTIMIZE
-	#define EVM_OPTIMIZE true
+	#define EVM_OPTIMIZE false
 #endif
 #if EVM_OPTIMIZE
-	#define EVM_REPLACE_CONST_JUMP true
+	#define EVM_REPLACE_CONST_JUMP false
 	#define EVM_USE_CONSTANT_POOL false
 	#define EVM_DO_FIRST_PASS_OPTIMIZATION ( \
 				EVM_REPLACE_CONST_JUMP || \
@@ -65,7 +65,7 @@ namespace eth
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// set this to 2, 1, or 0 for more, less, or no tracing to cerr
+// set EVM_TRACE to 2, 1, or 0 for more, less, or no tracing to cerr
 //
 #ifndef EVM_TRACE
 	#define EVM_TRACE 0
@@ -75,8 +75,7 @@ namespace eth
 	#undef ON_OP
 	#if EVM_TRACE > 1
 		#define ON_OP() \
-			(onOperation(), \
-			(cerr <<"### "<< m_nSteps <<" @"<< m_PC <<" "<< instructionInfo(m_OP).name <<endl))
+			(cerr <<"### "<< ++m_nSteps <<" @"<< m_PC <<" "<< instructionInfo(m_OP).name <<endl)
 	#else
 		#define ON_OP() onOperation()
 	#endif
@@ -128,7 +127,7 @@ namespace eth
 //
 #if defined(EVM_SWITCH_DISPATCH)
 
-	#define INIT_CASES if (!m_caseInit) { m_caseInit = true; return; }
+	#define INIT_CASES if (!m_caseInit) { m_PC = 0; m_caseInit = true; return; }
 	#define DO_CASES for(;;) { fetchInstruction(); switch(m_OP) {
 	#define CASE(name) case Instruction::name:
 	#define NEXT ++m_PC; break;
@@ -406,15 +405,16 @@ namespace eth
 			&&INVALID,  \
 			&&SUICIDE,  \
 		};  \
-		if (!m_caseInit) {  \
+		if (!m_caseInit) {            \
 			c_jumpTable = jumpTable;  \
-			m_caseInit = true;  \
-			return;  \
+			m_PC = 0;                 \
+			m_caseInit = true;        \
+			return;                   \
 		}
 
 	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_OP];
 	#define CASE(name) name:
-	#define NEXT ++m_PC; fetchInstruction(); goto *jumpTable[m_code[m_PC]];
+	#define NEXT m_PC = 0; fetchInstruction(); goto *jumpTable[m_code[m_PC]];
 	#define CONTINUE fetchInstruction(); goto *jumpTable[m_code[m_PC]];
 	#define BREAK return;
 	#define DEFAULT INVALID:

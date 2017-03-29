@@ -25,12 +25,12 @@ using namespace dev::eth;
 
 
 
-void VM::copyDataToMemory(bytesConstRef _data, u256*& _sp)
+void VM::copyDataToMemory(bytesConstRef _data, u256* _SP)
 {
-	auto offset = static_cast<size_t>(*_sp--);
-	s512 bigIndex = *_sp--;
+	auto offset = static_cast<size_t>(_SP[0]);
+	s512 bigIndex = _SP[1];
 	auto index = static_cast<size_t>(bigIndex);
-	auto size = static_cast<size_t>(*_sp--);
+	auto size = static_cast<size_t>(_SP[2]);
 
 	size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
 
@@ -45,38 +45,44 @@ void VM::copyDataToMemory(bytesConstRef _data, u256*& _sp)
 
 void VM::throwOutOfGas()
 {
+	if (m_onFail)
+		(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(OutOfGas());
 }
 
 void VM::throwBadInstruction()
 {
+	if (m_onFail)
+		(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(BadInstruction());
 }
 
 void VM::throwBadJumpDestination()
 {
+	if (m_onFail)
+		(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(BadJumpDestination());
 }
 
-void VM::throwBadStack(unsigned _size, unsigned _removed, unsigned _added)
+void VM::throwBadStack(unsigned _removed, unsigned _added)
 {
-	if (_size < _removed)
+	bigint size = m_stackEnd - m_SPP;
+	if (size < _removed)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, (bigint)_size));
+		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, size));
 	}
-	if (_size - _removed + _added > 1024)
+	else
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), (bigint)_size));
+		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), size));
 	}
 }
 
 int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 {
-	
 	// check for overflow
 	if (_dest <= 0x7FFFFFFFFFFFFFFF) {
 
@@ -99,29 +105,28 @@ int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 void VM::caseCreate()
 {
 	m_bounce = &VM::interpretCases;
-	m_newMemSize = memNeed(*(m_SP - 1), *(m_SP - 2));
 	m_runGas = toInt63(m_schedule->createGas);
-	updateMem();
+	updateMem(memNeed(m_SP[1], m_SP[2]));
 	ON_OP();
 	updateIOGas();
 
-	auto const& endowment = *m_SP--;
-	uint64_t initOff = (uint64_t)*m_SP--;
-	uint64_t initSize = (uint64_t)*m_SP--;
+	auto const& endowment = m_SP[0];
+	uint64_t initOff = (uint64_t)m_SP[1];
+	uint64_t initSize = (uint64_t)m_SP[2];
 
 	if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
 	{
-		*io_gas = m_io_gas;
-		u256 createGas = *io_gas;
+		*m_io_gas_p = m_io_gas;
+		u256 createGas = *m_io_gas_p;
 		if (!m_schedule->staticCallDepthLimit())
 			createGas -= createGas / 64;
 		u256 gas = createGas;
-		*++m_SP = (u160)m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
-		*io_gas -= (createGas - gas);
-		m_io_gas = uint64_t(*io_gas);
+		m_SPP[0] = (u160)m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		*m_io_gas_p -= (createGas - gas);
+		m_io_gas = uint64_t(*m_io_gas_p);
 	}
 	else
-		*++m_SP = 0;
+		m_SPP[0] = 0;
 	++m_PC;
 }
 
@@ -135,13 +140,13 @@ void VM::caseCall()
 		if (boost::optional<owning_bytes_ref> r = m_ext->call(*callParams))
 		{
 			r->copyTo(output);
-			*++m_SP = 1;
+			m_SPP[0] = 1;
 		}
 		else
-			*++m_SP = 0;
+			m_SPP[0] = 0;
 	}
 	else
-		*++m_SP = 0;
+		m_SPP[0] = 0;
 	m_io_gas += uint64_t(callParams->gas);
 	++m_PC;
 }
@@ -150,47 +155,48 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 {
 	m_runGas = toInt63(m_schedule->callGas);
 
-	if (m_OP == Instruction::CALL && !m_ext->exists(asAddress(*(m_SP - 1))))
-		if (*(m_SP - 2) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
+	if (m_OP == Instruction::CALL && !m_ext->exists(asAddress(m_SP[1])))
+		if (m_SP[2] > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
 			m_runGas += toInt63(m_schedule->callNewAccountGas);
 
-	if (m_OP != Instruction::DELEGATECALL && *(m_SP - 2) > 0)
+	if (m_OP != Instruction::DELEGATECALL && m_SP[2] > 0)
 		m_runGas += toInt63(m_schedule->callValueTransferGas);
 
-	size_t sizesOffset = m_OP == Instruction::DELEGATECALL ? 3 : 4;
-	u256 inputOffset = m_stack[(1 + m_SP - m_stack) - sizesOffset];
-	u256 inputSize = m_stack[(1 + m_SP - m_stack) - sizesOffset - 1];
-	u256 outputOffset = m_stack[(1 + m_SP - m_stack) - sizesOffset - 2];
-	u256 outputSize = m_stack[(1 + m_SP - m_stack) - sizesOffset - 3];
+	size_t sizesOffset = m_OP == Instruction::DELEGATECALL ? 2 : 3;
+	u256 inputOffset  = m_SP[sizesOffset];
+	u256 inputSize    = m_SP[sizesOffset + 1];
+	u256 outputOffset = m_SP[sizesOffset + 2];
+	u256 outputSize   = m_SP[sizesOffset + 3];
 	uint64_t inputMemNeed = memNeed(inputOffset, inputSize);
 	uint64_t outputMemNeed = memNeed(outputOffset, outputSize);
 
 	m_newMemSize = std::max(inputMemNeed, outputMemNeed);
-	updateMem();
+	updateMem(m_newMemSize);
 	updateIOGas();
 
 	// "Static" costs already applied. Calculate call gas.
 	if (m_schedule->staticCallDepthLimit())
+	{
 		// With static call depth limit we just charge the provided gas amount.
-		callParams->gas = *m_SP;
+		callParams->gas = m_SP[0];
+	}
 	else
 	{
 		// Apply "all but one 64th" rule.
 		u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
-		callParams->gas = std::min(*m_SP, maxAllowedCallGas);
+		callParams->gas = std::min(m_SP[0], maxAllowedCallGas);
 	}
 
 	m_runGas = toInt63(callParams->gas);
 	ON_OP();
 	updateIOGas();
 
-	if (m_OP != Instruction::DELEGATECALL && *(m_SP - 2) > 0)
+	if (m_OP != Instruction::DELEGATECALL && m_SP[2] > 0)
 		callParams->gas += m_schedule->callStipend;
-	--m_SP;
 
-	callParams->codeAddress = asAddress(*m_SP);
-	--m_SP;
+	callParams->codeAddress = asAddress(m_SP[1]);
 
+	unsigned inOutOffset = 0;
 	if (m_OP == Instruction::DELEGATECALL)
 	{
 		callParams->apparentValue = m_ext->value;
@@ -198,14 +204,14 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	}
 	else
 	{
-		callParams->apparentValue = callParams->valueTransfer = *m_SP;
-		--m_SP;
+		callParams->apparentValue = callParams->valueTransfer = m_SP[2];
+		inOutOffset = 1;
 	}
 
-	uint64_t inOff = (uint64_t)*m_SP--;
-	uint64_t inSize = (uint64_t)*m_SP--;
-	uint64_t outOff = (uint64_t)*m_SP--;
-	uint64_t outSize = (uint64_t)*m_SP--;
+	uint64_t inOff = (uint64_t)m_SP[inOutOffset + 2];
+	uint64_t inSize = (uint64_t)m_SP[inOutOffset + 3];
+	uint64_t outOff = (uint64_t)m_SP[inOutOffset + 4];
+	uint64_t outSize = (uint64_t)m_SP[inOutOffset + 5];
 
 	if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
 	{

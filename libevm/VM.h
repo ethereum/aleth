@@ -60,7 +60,7 @@ struct InstructionMetric
 class VM: public VMFace
 {
 public:
-	virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
+	virtual owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 #if EVM_JUMPS_AND_SUBS
 	// invalid code will throw an exeption
@@ -69,11 +69,15 @@ public:
 #endif
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(m_stack <= m_SP + 1); return u256s(m_stack, m_SP + 1); };
+	u256s stack() const {
+		u256s stack(m_SP, m_stackEnd);
+		reverse(stack.begin(), stack.end());
+		return stack;
+	};
 
 private:
 
-	u256* io_gas = 0;
+	u256* m_io_gas_p = 0;
 	uint64_t m_io_gas = 0;
 	ExtVMFace* m_ext = 0;
 	OnOpFunc m_onOp;
@@ -97,19 +101,17 @@ private:
 	// space for memory
 	bytes m_mem;
 
-	// space for code and pointer to data
-	bytes m_codeSpace;
-	byte* m_code = nullptr;
+	// space for code
+	bytes m_code;
 
-	// space for stack and pointer to data
-	u256 m_stackSpace[1025];
-	u256* m_stack = m_stackSpace + 1;
-	ptrdiff_t stackSize() { return m_SP - m_stack; }
+	// space for data stack, grows towards smaller addresses from the end
+	u256 m_stack[1024];
+	u256 *m_stackEnd = &m_stack[1024];
+	size_t stackSize() { return m_stackEnd - m_SP; }
 	
 #if EVM_JUMPS_AND_SUBS
-	// space for return stack and pointer to data
-	uint64_t m_returnSpace[1025];
-	uint64_t* m_return = m_returnSpace + 1;
+	// space for return stack
+	uint64_t m_return[1024];
 	
 	// mark PCs with frame size to detect cycles and stack mismatch
 	std::vector<size_t> m_frameSize;
@@ -119,11 +121,12 @@ private:
 	u256 m_pool[256];
 
 	// interpreter state
-	Instruction m_OP;                   // current operator
-	uint64_t    m_PC = 0;               // program counter
-	u256*       m_SP = m_stack - 1;     // stack pointer
+	Instruction m_OP;                   // current operation
+	uint64_t    m_PC    = 0;            // program counter
+	u256*       m_SP    = m_stackEnd;   // stack pointer
+	u256*       m_SPP   = m_SP;         // stack pointer prime (next SP)
 #if EVM_JUMPS_AND_SUBS
-	uint64_t*   m_RP = m_return - 1;    // return pointer
+	uint64_t*   m_RP    = m_return - 1; // return pointer
 #endif
 
 	// metering and memory state
@@ -143,13 +146,13 @@ private:
 	bool caseCallSetup(CallParameters*, bytesRef& o_output);
 	void caseCall();
 
-	void copyDataToMemory(bytesConstRef _data, u256*& m_SP);
+	void copyDataToMemory(bytesConstRef _data, u256* m_SP);
 	uint64_t memNeed(u256 _offset, u256 _size);
 
 	void throwOutOfGas();
 	void throwBadInstruction();
 	void throwBadJumpDestination();
-	void throwBadStack(unsigned _size, unsigned _n, unsigned _d);
+	void throwBadStack(unsigned _removed, unsigned _added);
 
 	void reportStackUse();
 
@@ -160,16 +163,16 @@ private:
 	int poolConstant(const u256&);
 
 	void onOperation();
-	void checkStack(unsigned _n, unsigned _d);
+	void adjustStack(unsigned _removed, unsigned _added);
 	uint64_t gasForMem(u512 _size);
 	void updateIOGas();
 	void updateGas();
-	void updateMem();
+	void updateMem(uint64_t _newMem);
 	void logGasMem();
 	void fetchInstruction();
 	
 	uint64_t decodeJumpDest(const byte* const _code, uint64_t& _pc);
-	uint64_t decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp);
+	uint64_t decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff);
 
 	template<class T> uint64_t toInt63(T v)
 	{

@@ -57,22 +57,21 @@ uint64_t VM::decodeJumpDest(const byte* const _code, uint64_t& _pc)
 	return dest;
 }
 
-uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp)
+uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 {
 	// Layout of jump table in bytecode...
 	//     byte opcode
 	//     byte n_jumps
 	//     byte table[n_jumps][4]
 	//	
-	uint64_t i = uint64_t(*_sp--);  // byte on stack indexes into jump table
 	uint64_t pc = _pc;
 	byte n = _code[++pc];           // byte after opcode is number of jumps
-	if (i >= n) i = n - 1;          // if index overflow use default jump
-	pc += i * 4;                    // adjust pc to index destination in table
+	if (_voff >= n) _voff = n - 1;  // if offset overflows use default jump
+	pc += _voff * 4;                // adjust inout pc before index destination in table
 	
 	uint64_t dest = decodeJumpDest(_code, pc);
 	
-	_pc += 1 + n * 4;               // adust input _pc to opcode after table 
+	_pc += 1 + n * 4;               // adust inout _pc to opcode after table 
 	return dest;
 }
 
@@ -87,14 +86,30 @@ void VM::onOperation()
 			m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
 			m_runGas, m_io_gas, this, m_ext);
 }
+#if EVM_HACK_ON_OPERATION
+	#define onOperation()
+#endif
 
-void VM::checkStack(unsigned _removed, unsigned _added)
+//
+// set current SP to SP', adjust SP' per _removed and _added items
+//
+void VM::adjustStack(unsigned _removed, unsigned _added)
 {
-	int const size = 1 + m_SP - m_stack;
-	int const usedSize = size - _removed;
-	if (usedSize < 0 || usedSize + _added > 1024)
-		throwBadStack(size, _removed, _added);
+	m_SP = m_SPP;
+#if EVM_HACK_STACK
+	m_SPP += _removed;
+	m_SPP -= _added;
+#else
+	// adjust stack and check bounds
+	m_SPP += _removed;
+	if (m_stackEnd < m_SPP)
+		throwBadStack(_removed, _added);
+	m_SPP -= _added;
+	if (m_SPP < m_stack)
+		throwBadStack(_removed, _added);
+#endif
 }
+
 
 uint64_t VM::gasForMem(u512 _size)
 {
@@ -118,9 +133,9 @@ void VM::updateGas()
 		throwOutOfGas();
 }
 
-void VM::updateMem()
+void VM::updateMem(uint64_t _newMem)
 {
-	m_newMemSize = (m_newMemSize + 31) / 32 * 32;
+	m_newMemSize = (_newMem + 31) / 32 * 32;
 	updateGas();
 	if (m_newMemSize > m_mem.size())
 		m_mem.resize(m_newMemSize);
@@ -129,16 +144,15 @@ void VM::updateMem()
 void VM::logGasMem()
 {
 	unsigned n = (unsigned)m_OP - (unsigned)Instruction::LOG0;
-	m_runGas = toInt63(m_schedule->logGas + m_schedule->logTopicGas * n + u512(m_schedule->logDataGas) * *(m_SP - 1));
-	m_newMemSize = memNeed(*m_SP, *(m_SP - 1));
-	updateMem();
+	m_runGas = toInt63(m_schedule->logGas + m_schedule->logTopicGas * n + u512(m_schedule->logDataGas) * m_SP[1]);
+	updateMem(memNeed(m_SP[0], m_SP[1]));
 }
 
 void VM::fetchInstruction()
 {
 	m_OP = Instruction(m_code[m_PC]);
 	const InstructionMetric& metric = c_metrics[static_cast<size_t>(m_OP)];
-	checkStack(metric.args, metric.ret);
+	adjustStack(metric.args, metric.ret);
 
 	// FEES...
 	m_runGas = toInt63(m_schedule->tierStepGas[static_cast<unsigned>(metric.gasPriceTier)]);
@@ -152,9 +166,7 @@ void VM::fetchInstruction()
 #if EVM_HACK_UPDATE_IO_GAS
 	#define updateIOGas()
 #endif
-#if EVM_HACK_STACK
-	#define checkStack(r,a)
-#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -162,7 +174,7 @@ void VM::fetchInstruction()
 
 owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	io_gas = &_io_gas;
+	m_io_gas_p = &_io_gas;
 	m_io_gas = uint64_t(_io_gas);
 	m_ext = &_ext;
 	m_schedule = &m_ext->evmSchedule();
@@ -180,11 +192,11 @@ owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 	}
 	catch (...)
 	{
-		*io_gas = m_io_gas;
+		*m_io_gas_p = m_io_gas;
 		throw;
 	}
 
-	*io_gas = m_io_gas;
+	*m_io_gas_p = m_io_gas;
 	return std::move(m_output);
 }
 
@@ -204,7 +216,7 @@ void VM::interpretCases()
 		{
 			m_bounce = &VM::caseCreate;
 		}
-		BREAK;
+		BREAK
 
 		CASE(DELEGATECALL)
 
@@ -221,13 +233,13 @@ void VM::interpretCases()
 
 		CASE(RETURN)
 		{
-			m_newMemSize = memNeed(*m_SP, *(m_SP - 1));
-			updateMem();
+			m_copyMemSize = 0;
+			updateMem(memNeed(m_SP[0], m_SP[1]));
 			ON_OP();
 			updateIOGas();
 
-			uint64_t b = (uint64_t)*m_SP--;
-			uint64_t s = (uint64_t)*m_SP--;
+			uint64_t b = (uint64_t)m_SP[0];
+			uint64_t s = (uint64_t)m_SP[1];
 			m_output = owning_bytes_ref{std::move(m_mem), b, s};
 			m_bounce = 0;
 		}
@@ -236,7 +248,7 @@ void VM::interpretCases()
 		CASE(SUICIDE)
 		{
 			m_runGas = toInt63(m_schedule->suicideGas);
-			Address dest = asAddress(*m_SP);
+			Address dest = asAddress(m_SP[0]);
 
 			// After EIP158 zero-value suicides do not have to pay account creation gas.
 			if (m_ext->balance(m_ext->myAddress) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
@@ -258,7 +270,7 @@ void VM::interpretCases()
 			updateIOGas();
 			m_bounce = 0;
 		}
-		BREAK;
+		BREAK
 			
 			
 		//
@@ -267,50 +279,44 @@ void VM::interpretCases()
 		
 		CASE(MLOAD)
 		{
-			m_newMemSize = toInt63(*m_SP) + 32;
-			updateMem();
+			updateMem(toInt63(m_SP[0]) + 32);
 			ON_OP();
 			updateIOGas();
 
-			*m_SP = (u256)*(h256 const*)(m_mem.data() + (unsigned)*m_SP);
+			m_SPP[0] = (u256)*(h256 const*)(m_mem.data() + (unsigned)m_SP[0]);
 		}
 		NEXT
 
 		CASE(MSTORE)
 		{
-			m_newMemSize = toInt63(*m_SP) + 32;
-			updateMem();
+			updateMem(toInt63(m_SP[0]) + 32);
 			ON_OP();
 			updateIOGas();
 
-			*(h256*)&m_mem[(unsigned)*m_SP] = (h256)*(m_SP - 1);
-			m_SP -= 2;
+			*(h256*)&m_mem[(unsigned)m_SP[0]] = (h256)m_SP[1];
 		}
 		NEXT
 
 		CASE(MSTORE8)
 		{
-			m_newMemSize = toInt63(*m_SP) + 1;
-			updateMem();
+			updateMem(toInt63(m_SP[0]) + 1);
 			ON_OP();
 			updateIOGas();
 
-			m_mem[(unsigned)*m_SP] = (byte)(*(m_SP - 1) & 0xff);
-			m_SP -= 2;
+			m_mem[(unsigned)m_SP[0]] = (byte)(m_SP[1] & 0xff);
 		}
 		NEXT
 
 		CASE(SHA3)
 		{
-			m_runGas = toInt63(m_schedule->sha3Gas + (u512(*(m_SP - 1)) + 31) / 32 * m_schedule->sha3WordGas);
-			m_newMemSize = memNeed(*m_SP, *(m_SP - 1));
-			updateMem();
+			m_runGas = toInt63(m_schedule->sha3Gas + (u512(m_SP[1]) + 31) / 32 * m_schedule->sha3WordGas);
+			updateMem(memNeed(m_SP[0], m_SP[1]));
 			ON_OP();
 			updateIOGas();
 
-			uint64_t inOff = (uint64_t)*m_SP--;
-			uint64_t inSize = (uint64_t)*m_SP--;
-			*++m_SP = (u256)sha3(bytesConstRef(m_mem.data() + inOff, inSize));
+			uint64_t inOff = (uint64_t)m_SP[0];
+			uint64_t inSize = (uint64_t)m_SP[1];
+			m_SPP[0] = (u256)sha3(bytesConstRef(m_mem.data() + inOff, inSize));
 		}
 		NEXT
 
@@ -320,8 +326,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			m_ext->log({}, bytesConstRef(m_mem.data() + (uint64_t)*m_SP, (uint64_t)*(m_SP - 1)));
-			m_SP -= 2;
+			m_ext->log({}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
 		}
 		NEXT
 
@@ -331,8 +336,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			m_ext->log({*(m_SP - 2)}, bytesConstRef(m_mem.data() + (uint64_t)*m_SP, (uint64_t)*(m_SP - 1)));
-			m_SP -= 3;
+			m_ext->log({m_SP[2]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
 		}
 		NEXT
 
@@ -342,8 +346,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			m_ext->log({*(m_SP - 2), *(m_SP-3)}, bytesConstRef(m_mem.data() + (uint64_t)*m_SP, (uint64_t)*(m_SP - 1)));
-			m_SP -= 4;
+			m_ext->log({m_SP[2], m_SP[3]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
 		}
 		NEXT
 
@@ -353,8 +356,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			m_ext->log({*(m_SP - 2), *(m_SP-3), *(m_SP-4)}, bytesConstRef(m_mem.data() + (uint64_t)*m_SP, (uint64_t)*(m_SP - 1)));
-			m_SP -= 5;
+			m_ext->log({m_SP[2], m_SP[3], m_SP[4]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
 		}
 		NEXT
 
@@ -364,20 +366,19 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			m_ext->log({*(m_SP - 2), *(m_SP-3), *(m_SP-4), *(m_SP-5)}, bytesConstRef(m_mem.data() + (uint64_t)*m_SP, (uint64_t)*(m_SP - 1)));
-			m_SP -= 6;
+			m_ext->log({m_SP[2], m_SP[3], m_SP[4], m_SP[5]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
 		}
 		NEXT	
 
 		CASE(EXP)
 		{
-			u256 expon = *(m_SP - 1);
+			u256 expon = m_SP[1];
 			m_runGas = toInt63(m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8)));
 			ON_OP();
 			updateIOGas();
 
-			u256 base = *m_SP--;
-			*m_SP = exp256(base, expon);
+			u256 base = m_SP[0];
+			m_SPP[0] = exp256(base, expon);
 		}
 		NEXT
 
@@ -390,9 +391,8 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			//pops two items and pushes S[-1] + S[-2] mod 2^256.
-			*(m_SP - 1) += *m_SP;
-			--m_SP;
+			//pops two items and pushes their sum mod 2^256.
+			m_SPP[0] = m_SP[0] + m_SP[1];
 		}
 		NEXT
 
@@ -401,13 +401,12 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			//pops two items and pushes S[-1] * S[-2] mod 2^256.
 #if EVM_HACK_MUL_64
-			*(uint64_t*)(m_SP - 1) *= *(uint64_t*)m_SP;
+			*(uint64_t*)&m_SP[1] *= *(uint64_t*)&m_SP[0];
 #else
-			*(m_SP - 1) *= *m_SP;
+			//pops two items and pushes their product mod 2^256.
+			m_SPP[0] = m_SP[0] * m_SP[1];
 #endif
-			--m_SP;
 		}
 		NEXT
 
@@ -416,8 +415,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP - *(m_SP - 1);
-			--m_SP;
+			m_SPP[0] = m_SP[0] - m_SP[1];
 		}
 		NEXT
 
@@ -426,8 +424,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *(m_SP - 1) ? divWorkaround(*m_SP, *(m_SP - 1)) : 0;
-			--m_SP;
+			m_SPP[0] = m_SP[1] ? divWorkaround(m_SP[0], m_SP[1]) : 0;
 		}
 		NEXT
 
@@ -436,7 +433,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *(m_SP - 1) ? s2u(divWorkaround(u2s(*m_SP), u2s(*(m_SP - 1)))) : 0;
+			m_SPP[0] = m_SP[1] ? s2u(divWorkaround(u2s(m_SP[0]), u2s(m_SP[1]))) : 0;
 			--m_SP;
 		}
 		NEXT
@@ -446,8 +443,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *(m_SP - 1) ? modWorkaround(*m_SP, *(m_SP - 1)) : 0;
-			--m_SP;
+			m_SPP[0] = m_SP[1] ? modWorkaround(m_SP[0], m_SP[1]) : 0;
 		}
 		NEXT
 
@@ -456,8 +452,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *(m_SP - 1) ? s2u(modWorkaround(u2s(*m_SP), u2s(*(m_SP - 1)))) : 0;
-			--m_SP;
+			m_SPP[0] = m_SP[1] ? s2u(modWorkaround(u2s(m_SP[0]), u2s(m_SP[1]))) : 0;
 		}
 		NEXT
 
@@ -466,7 +461,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*m_SP = ~*m_SP;
+			m_SPP[0] = ~m_SP[0];
 		}
 		NEXT
 
@@ -475,8 +470,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP < *(m_SP - 1) ? 1 : 0;
-			--m_SP;
+			m_SPP[0] = m_SP[0] < m_SP[1] ? 1 : 0;
 		}
 		NEXT
 
@@ -485,8 +479,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP > *(m_SP - 1) ? 1 : 0;
-			--m_SP;
+			m_SPP[0] = m_SP[0] > m_SP[1] ? 1 : 0;
 		}
 		NEXT
 
@@ -495,8 +488,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = u2s(*m_SP) < u2s(*(m_SP - 1)) ? 1 : 0;
-			--m_SP;
+			m_SPP[0] = u2s(m_SP[0]) < u2s(m_SP[1]) ? 1 : 0;
 		}
 		NEXT
 
@@ -505,8 +497,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = u2s(*m_SP) > u2s(*(m_SP - 1)) ? 1 : 0;
-			--m_SP;
+			m_SPP[0] = u2s(m_SP[0]) > u2s(m_SP[1]) ? 1 : 0;
 		}
 		NEXT
 
@@ -515,8 +506,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP == *(m_SP - 1) ? 1 : 0;
-			--m_SP;
+			m_SPP[0] = m_SP[0] == m_SP[1] ? 1 : 0;
 		}
 		NEXT
 
@@ -525,7 +515,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*m_SP = *m_SP ? 0 : 1;
+			m_SPP[0] = m_SP[0] ? 0 : 1;
 		}
 		NEXT
 
@@ -534,8 +524,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP & *(m_SP - 1);
-			--m_SP;
+			m_SPP[0] = m_SP[0] & m_SP[1];
 		}
 		NEXT
 
@@ -544,8 +533,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP | *(m_SP - 1);
-			--m_SP;
+			m_SPP[0] = m_SP[0] | m_SP[1];
 		}
 		NEXT
 
@@ -554,8 +542,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP ^ *(m_SP - 1);
-			--m_SP;
+			m_SPP[0] = m_SP[0] ^ m_SP[1];
 		}
 		NEXT
 
@@ -564,8 +551,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 1) = *m_SP < 32 ? (*(m_SP - 1) >> (unsigned)(8 * (31 - *m_SP))) & 0xff : 0;
-			--m_SP;
+			m_SPP[0] = m_SP[0] < 32 ? (m_SP[1] >> (unsigned)(8 * (31 - m_SP[0]))) & 0xff : 0;
 		}
 		NEXT
 
@@ -574,8 +560,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 2) = *(m_SP - 2) ? u256((u512(*m_SP) + u512(*(m_SP - 1))) % *(m_SP - 2)) : 0;
-			m_SP -= 2;
+			m_SPP[0] = m_SP[2] ? u256((u512(m_SP[0]) + u512(m_SP[1])) % m_SP[2]) : 0;
 		}
 		NEXT
 
@@ -584,8 +569,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*(m_SP - 2) = *(m_SP - 2) ? u256((u512(*m_SP) * u512(*(m_SP - 1))) % *(m_SP - 2)) : 0;
-			m_SP -= 2;
+			m_SPP[0] = m_SP[2] ? u256((u512(m_SP[0]) * u512(m_SP[1])) % m_SP[2]) : 0;
 		}
 		NEXT
 
@@ -594,17 +578,16 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			if (*m_SP < 31)
+			if (m_SP[0] < 31)
 			{
-				unsigned testBit = static_cast<unsigned>(*m_SP) * 8 + 7;
-				u256& number = *(m_SP - 1);
+				unsigned testBit = static_cast<unsigned>(m_SP[0]) * 8 + 7;
+				u256& number = m_SP[1];
 				u256 mask = ((u256(1) << testBit) - 1);
 				if (boost::multiprecision::bit_test(number, testBit))
 					number |= ~mask;
 				else
 					number &= mask;
 			}
-			--m_SP;
 		}
 		NEXT
 
@@ -613,7 +596,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = fromAddress(m_ext->myAddress);
+			m_SPP[0] = fromAddress(m_ext->myAddress);
 		}
 		NEXT
 
@@ -622,7 +605,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = fromAddress(m_ext->origin);
+			m_SPP[0] = fromAddress(m_ext->origin);
 		}
 		NEXT
 
@@ -632,7 +615,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*m_SP = m_ext->balance(asAddress(*m_SP));
+			m_SPP[0] = m_ext->balance(asAddress(m_SP[0]));
 		}
 		NEXT
 
@@ -642,7 +625,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = fromAddress(m_ext->caller);
+			m_SPP[0] = fromAddress(m_ext->caller);
 		}
 		NEXT
 
@@ -651,7 +634,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->value;
+			m_SPP[0] = m_ext->value;
 		}
 		NEXT
 
@@ -661,17 +644,16 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			if (u512(*m_SP) + 31 < m_ext->data.size())
-				*m_SP = (u256)*(h256 const*)(m_ext->data.data() + (size_t)*m_SP);
-			else if (*m_SP >= m_ext->data.size())
-				*m_SP = u256(0);
+			if (u512(m_SP[0]) + 31 < m_ext->data.size())
+				m_SP[0] = (u256)*(h256 const*)(m_ext->data.data() + (size_t)m_SP[0]);
+			else if (m_SP[0] >= m_ext->data.size())
+				m_SP[0] = u256(0);
 			else
-			{
-				h256 r;
-				for (uint64_t i = (uint64_t)*m_SP, e = (uint64_t)*m_SP + (uint64_t)32, j = 0; i < e; ++i, ++j)
+			{ 	h256 r;
+				for (uint64_t i = (uint64_t)m_SP[0], e = (uint64_t)m_SP[0] + (uint64_t)32, j = 0; i < e; ++i, ++j)
 					r[j] = i < m_ext->data.size() ? m_ext->data[i] : 0;
-				*m_SP = (u256)r;
-			}
+				m_SP[0] = (u256)r;
+			};
 		}
 		NEXT
 
@@ -681,7 +663,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->data.size();
+			m_SPP[0] = m_ext->data.size();
 		}
 		NEXT
 
@@ -690,7 +672,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->code.size();
+			m_SPP[0] = m_ext->code.size();
 		}
 		NEXT
 
@@ -700,15 +682,14 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*m_SP = m_ext->codeSizeAt(asAddress(*m_SP));
+			m_SPP[0] = m_ext->codeSizeAt(asAddress(m_SP[0]));
 		}
 		NEXT
 
 		CASE(CALLDATACOPY)
 		{
-			m_copyMemSize = toInt63(*(m_SP - 2));
-			m_newMemSize = memNeed(*m_SP, *(m_SP - 2));
-			updateMem();
+			m_copyMemSize = toInt63(m_SP[2]);
+			updateMem(memNeed(m_SP[0], m_SP[2]));
 			ON_OP();
 			updateIOGas();
 
@@ -718,9 +699,8 @@ void VM::interpretCases()
 
 		CASE(CODECOPY)
 		{
-			m_copyMemSize = toInt63(*(m_SP - 2));
-			m_newMemSize = memNeed(*m_SP, *(m_SP - 2));
-			updateMem();
+			m_copyMemSize = toInt63(m_SP[2]);
+			updateMem(memNeed(m_SP[0], m_SP[2]));
 			ON_OP();
 			updateIOGas();
 
@@ -731,15 +711,13 @@ void VM::interpretCases()
 		CASE(EXTCODECOPY)
 		{
 			m_runGas = toInt63(m_schedule->extcodecopyGas);
-			m_copyMemSize = toInt63(*(m_SP - 3));
-			m_newMemSize = memNeed(*(m_SP - 1), *(m_SP - 3));
-			updateMem();
+			m_copyMemSize = toInt63(m_SP[3]);
+			updateMem(memNeed(m_SP[1], m_SP[3]));
 			ON_OP();
 			updateIOGas();
 
-			Address a = asAddress(*m_SP);
-			--m_SP;
-			copyDataToMemory(&m_ext->codeAt(a), m_SP);
+			Address a = asAddress(m_SP[0]);
+			copyDataToMemory(&m_ext->codeAt(a), m_SP + 1);
 		}
 		NEXT
 
@@ -749,7 +727,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->gasPrice;
+			m_SPP[0] = m_ext->gasPrice;
 		}
 		NEXT
 
@@ -758,7 +736,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*m_SP = (u256)m_ext->blockHash(*m_SP);
+			m_SPP[0] = (u256)m_ext->blockHash(m_SP[0]);
 		}
 		NEXT
 
@@ -767,7 +745,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = (u160)m_ext->envInfo().author();
+			m_SPP[0] = (u160)m_ext->envInfo().author();
 		}
 		NEXT
 
@@ -776,7 +754,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->envInfo().timestamp();
+			m_SPP[0] = m_ext->envInfo().timestamp();
 		}
 		NEXT
 
@@ -785,7 +763,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->envInfo().number();
+			m_SPP[0] = m_ext->envInfo().number();
 		}
 		NEXT
 
@@ -794,7 +772,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->envInfo().difficulty();
+			m_SPP[0] = m_ext->envInfo().difficulty();
 		}
 		NEXT
 
@@ -803,7 +781,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_ext->envInfo().gasLimit();
+			m_SPP[0] = m_ext->envInfo().gasLimit();
 		}
 		NEXT
 
@@ -822,9 +800,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			++m_PC;
-			*++m_SP = m_pool[m_code[m_PC]];
-			++m_PC;
+			m_SPP[0] = m_pool[m_code[++m_PC]];
 			m_PC += m_code[m_PC];
 #else
 			throwBadInstruction();
@@ -836,7 +812,8 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			*++m_SP = m_code[++m_PC];
+			++m_PC;
+			m_SPP[0] = m_code[m_PC];
 			++m_PC;
 		}
 		CONTINUE
@@ -877,12 +854,12 @@ void VM::interpretCases()
 			updateIOGas();
 
 			int numBytes = (int)m_OP - (int)Instruction::PUSH1 + 1;
-			*++m_SP = 0;
+			m_SPP[0] = 0;
 			// Construct a number out of PUSH bytes.
 			// This requires the code has been copied and extended by 32 zero
 			// bytes to handle "out of code" push data here.
 			for (++m_PC; numBytes--; ++m_PC)
-				*m_SP = (*m_SP << 8) | m_code[m_PC];
+				m_SPP[0] = (m_SPP[0] << 8) | m_code[m_PC];
 		}
 		CONTINUE
 
@@ -890,9 +867,7 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-
-			m_PC = verifyJumpDest(*m_SP);
-			--m_SP;
+			m_PC = verifyJumpDest(m_SP[0]);
 		}
 		CONTINUE
 
@@ -900,11 +875,10 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			if (*(m_SP - 1))
-				m_PC = verifyJumpDest(*m_SP);
+			if (m_SP[1])
+				m_PC = verifyJumpDest(m_SP[0]);
 			else
 				++m_PC;
-			m_SP -= 2;
 		}
 		CONTINUE
 
@@ -913,7 +887,8 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			m_PC = decodeJumpDest(m_code, m_PC);
+			
+			m_PC = decodeJumpDest(m_code.data(), m_PC);
 		}
 		CONTINUE
 
@@ -921,19 +896,19 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			if (*m_SP)
-				m_PC = decodeJumpDest(m_code, m_PC);
+			
+			if (m_SP[0])
+				m_PC = decodeJumpDest(m_code.data(), m_PC);
 			else
 				++m_PC;
-			--m_SP;
 		}
 		CONTINUE
 
 		CASE(JUMPV)
 		{
 			ON_OP();
-			updateIOGas();			
-			m_PC = decodeJumpvDest(m_code, m_PC, m_SP);
+			updateIOGas();
+			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
 		}
 		CONTINUE
 
@@ -941,9 +916,8 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			{
-				*++m_RP = m_PC;
-				m_PC = decodeJumpDest(m_code, m_PC);
+			*m_RP++ = m_PC++;
+			m_PC = decodeJumpDest(m_code.data(), m_PC);
 			}
 		}
 		CONTINUE
@@ -952,10 +926,8 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			{
-				*++m_RP = m_PC;
-				m_PC = decodeJumpDest(m_code, m_PC);
-			}
+			*m_RP++ = m_PC;
+			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
 		}
 		CONTINUE
 
@@ -986,8 +958,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			m_PC = uint64_t(*m_SP);
-			--m_SP;
+			m_PC = uint64_t(m_SP[0]);
 #else
 			throwBadInstruction();
 #endif
@@ -1000,11 +971,10 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			if (*(m_SP - 1))
-				m_PC = uint64_t(*m_SP);
+			if (m_SP[1])
+				m_PC = uint64_t(m_SP[0]);
 			else
 				++m_PC;
-			m_SP -= 2;
 #else
 			throwBadInstruction();
 #endif
@@ -1031,13 +1001,12 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			unsigned n = 1 + (unsigned)m_OP - (unsigned)Instruction::DUP1;
+			unsigned n = (unsigned)m_OP - (unsigned)Instruction::DUP1;
 #if EVM_HACK_DUP_64
-			*(uint64_t*)(m_SP+1) = *(uint64_t*)&m_stack[(1 + m_SP - m_stack) - n];
+			*(uint64_t*)m_SPP = *(uint64_t*)(m_SP + n);
 #else
-			*(m_SP+1) = m_stack[(1 + m_SP - m_stack) - n];
+			m_SPP[0] = m_SP[n];
 #endif
-			++m_SP;
 		}
 		NEXT
 
@@ -1062,10 +1031,8 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			unsigned n = (unsigned)m_OP - (unsigned)Instruction::SWAP1 + 2;
-			u256 d = *m_SP;
-			*m_SP = m_stack[(1 + m_SP - m_stack) - n];
-			m_stack[(1 + m_SP - m_stack) - n] = d;
+			unsigned n = (unsigned)m_OP - (unsigned)Instruction::SWAP1 + 1;
+			std::swap(m_SP[0], m_SP[n]);
 		}
 		NEXT
 
@@ -1076,15 +1043,15 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*m_SP = m_ext->store(*m_SP);
+			m_SPP[0] = m_ext->store(m_SP[0]);
 		}
 		NEXT
 
 		CASE(SSTORE)
 		{
-			if (!m_ext->store(*m_SP) && *(m_SP - 1))
+			if (!m_ext->store(m_SP[0]) && m_SP[1])
 				m_runGas = toInt63(m_schedule->sstoreSetGas);
-			else if (m_ext->store(*m_SP) && !*(m_SP - 1))
+			else if (m_ext->store(m_SP[0]) && !m_SP[1])
 			{
 				m_runGas = toInt63(m_schedule->sstoreResetGas);
 				m_ext->sub.refunds += m_schedule->sstoreRefundGas;
@@ -1094,8 +1061,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 	
-			m_ext->setStore(*m_SP, *(m_SP - 1));
-			m_SP -= 2;
+			m_ext->setStore(m_SP[0], m_SP[1]);
 		}
 		NEXT
 
@@ -1104,7 +1070,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_PC;
+			m_SPP[0] = m_PC;
 		}
 		NEXT
 
@@ -1113,7 +1079,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_mem.size();
+			m_SPP[0] = m_mem.size();
 		}
 		NEXT
 
@@ -1122,7 +1088,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_SP = m_io_gas;
+			m_SPP[0] = m_io_gas;
 		}
 		NEXT
 
@@ -1148,7 +1114,9 @@ void VM::interpretCases()
 		CASE(BEGINDATA)
 		CASE(BAD)
 		DEFAULT
+		{
 			throwBadInstruction();
+		}
 	}	
 	WHILE_CASES
 }
