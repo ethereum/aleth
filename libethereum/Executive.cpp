@@ -232,11 +232,6 @@ void Executive::initialize(Transaction const& _transaction)
 		}
 		m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 	}
-	else if (m_t.gasPrice() != 0 || m_t.value() != 0 || m_t.nonce() != 0)
-	{
-		m_excepted = TransactionException::InvalidZeroSignatureFormat;
-		BOOST_THROW_EXCEPTION(InvalidZeroSignatureTransaction() << errinfo_got((bigint)m_t.gasPrice()) << errinfo_got((bigint)m_t.value()) << errinfo_got((bigint)m_t.nonce()));
-	}
 }
 
 bool Executive::execute()
