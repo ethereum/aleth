@@ -46,6 +46,7 @@ public:
 	Transaction const& transaction() const { return m_transaction; }
 	json_spirit::mObject& jsonObject() { return m_jsonTransaction; }
 	static TestTransaction defaultTransaction(u256 const& _nonce = 1, u256 const& _gasPrice = 1, u256 const& _gasLimit = 50000, bytes const& _data = bytes());
+	static TestTransaction defaultZeroTransaction(u256 const& _gasLimit = 50000, bytes const& _data = bytes());
 
 private:
 	json_spirit::mObject m_jsonTransaction;

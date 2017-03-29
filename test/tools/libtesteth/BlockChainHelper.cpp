@@ -545,6 +545,22 @@ TestTransaction TestTransaction::defaultTransaction(u256 const& _nonce, u256 con
 	return TestTransaction(txObj);
 }
 
+TestTransaction TestTransaction::defaultZeroTransaction(u256 const& _gasLimit, bytes const& _data)
+{
+	json_spirit::mObject txObj;
+	txObj["data"] = toHex(_data);
+	txObj["gasLimit"] = toString(_gasLimit);
+	txObj["gasPrice"] = toString(0);
+	txObj["nonce"] = toString(0);
+	txObj["v"] = toString(1);
+	txObj["r"] = toString(0);
+	txObj["s"] = toString(0);
+	txObj["to"] = "095e7baea6a6c7c4c2dfeb977efac326af552d87";
+	txObj["value"] = "0";
+
+	return TestTransaction(txObj);
+}
+
 AccountMap TestBlockChain::defaultAccountMap()
 {
 	AccountMap ret;
