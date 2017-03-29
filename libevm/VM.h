@@ -65,7 +65,7 @@ public:
 #if EVM_JUMPS_AND_SUBS
 	// invalid code will throw an exeption
 	void validate(ExtVMFace& _ext);
-	void validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP);
+	void validateSubroutine(uint64_t _PC, uint64_t* _rp, u256* _sp);
 #endif
 
 	bytes const& memory() const { return m_mem; }
@@ -146,7 +146,7 @@ private:
 	bool caseCallSetup(CallParameters*, bytesRef& o_output);
 	void caseCall();
 
-	void copyDataToMemory(bytesConstRef _data, u256* _SP);
+	void copyDataToMemory(bytesConstRef _data, u256*_sp);
 	uint64_t memNeed(u256 _offset, u256 _size);
 
 	void throwOutOfGas();
