@@ -146,7 +146,7 @@ private:
 	bool caseCallSetup(CallParameters*, bytesRef& o_output);
 	void caseCall();
 
-	void copyDataToMemory(bytesConstRef _data, u256* m_SP);
+	void copyDataToMemory(bytesConstRef _data, u256* _SP);
 	uint64_t memNeed(u256 _offset, u256 _size);
 
 	void throwOutOfGas();
