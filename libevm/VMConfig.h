@@ -35,7 +35,7 @@ namespace eth
 
 #ifndef EVM_JUMP_DISPATCH
 	#ifdef __GNUC__
-		#define EVM_JUMP_DISPATCH true
+		#define EVM_JUMP_DISPATCH false
 	#else
 		#define EVM_JUMP_DISPATCH false
 	#endif
@@ -49,10 +49,10 @@ namespace eth
 #endif
 
 #ifndef EVM_OPTIMIZE
-	#define EVM_OPTIMIZE true
+	#define EVM_OPTIMIZE false
 #endif
 #if EVM_OPTIMIZE
-	#define EVM_REPLACE_CONST_JUMP true
+	#define EVM_REPLACE_CONST_JUMP false
 	#define EVM_USE_CONSTANT_POOL false
 	#define EVM_DO_FIRST_PASS_OPTIMIZATION ( \
 				EVM_REPLACE_CONST_JUMP || \
