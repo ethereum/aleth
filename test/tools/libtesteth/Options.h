@@ -57,9 +57,9 @@ public:
 	std::string singleTestFile;
 	std::string singleTestName;
 	std::string singleTestNet;
-	int trDataIndex; ///< GeneralState data
-	int trGasIndex; ///< GeneralState gas
-	int trValueIndex; ///< GeneralState value
+	int trDataIndex;	///< GeneralState data
+	int trGasIndex;		///< GeneralState gas
+	int trValueIndex;	///< GeneralState value
 	bool performance = false;
 	bool nonetwork = false;///< For libp2p
 	bool quadratic = false;///< Time consuming tests
