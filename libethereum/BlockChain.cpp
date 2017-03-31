@@ -1064,6 +1064,8 @@ void BlockChain::rescue(OverlayDB const& _db)
 				break;
 		}
 		catch (...) {}
+		if (l == 0)
+			break;
 	}
 	cout << "OK." << endl;
 	rewind(l);
