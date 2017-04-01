@@ -60,10 +60,10 @@ void VM::validate(ExtVMFace& _ext)
 // - PC is the offset in the code to start validating at
 // - RP is the top PC on return stack that RETURNSUB returns to
 // - SP = FP at the top level, so the stack size is also the frame size
-void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
+void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 {
 	// set current interpreter state
-	m_PC = _PC, m_RP = _RP, m_SP = _SP;
+	m_PC = _pc, m_RP = _rp, m_SP = _sp;
 	
 	INIT_CASES
 	DO_CASES
@@ -98,9 +98,9 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 		{
 			// recurse to validate code to jump to, saving and restoring
 			// interpreter state around call
-			_PC = m_PC, _RP = m_RP, _SP = m_SP;
-			validateSubroutine(decodeJumpvDest(m_code, m_PC, m_SP), _RP, _SP);
-			m_PC = _PC, m_RP = _RP, m_SP = _SP;
+			_pc = m_PC, _rp = m_RP, _sp = m_SP;
+			validateSubroutine(decodeJumpvDest(m_code, m_PC, m_SP), _rp, _sp);
+			m_PC = _pc, m_RP = _rp, m_SP = _sp;
 			++m_PC;
 		}
 		NEXT
@@ -112,9 +112,9 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 			{
 				// recurse to validate code to jump to, saving and 
 				// restoring interpreter state around call
-				_PC = m_PC, _RP = m_RP, _SP = m_SP;
-				validateSubroutine(decodeJumpDest(m_code, m_PC), _RP, _SP);
-				m_PC = _PC, m_RP = _RP, m_SP = _SP;
+				_pc = m_PC, _rp = m_RP, _sp = m_SP;
+				validateSubroutine(decodeJumpDest(m_code, m_PC), _rp, _sp);
+				m_PC = _pc, m_RP = _rp, m_SP = _sp;
 			}
 		}
 		RETURN
@@ -132,18 +132,18 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 		CASE(JUMPSUBV)
 		{
 			// for every subroutine in jump vector
-			_PC = m_PC;
+			_pc = m_PC;
 			for (size_t sub = 0, nSubs = m_code[m_PC+1]; sub < nSubs; ++sub)
 			{
 				// check for enough arguments on stack
 				u256 slot = sub;
-				_SP = &slot;
-				size_t destPC = decodeJumpvDest(m_code, _PC, _SP);
+				_sp = &slot;
+				size_t destPC = decodeJumpvDest(m_code, _pc, _sp);
 				byte nArgs = m_code[destPC+1];
 				if (stackSize() < nArgs) 
 					throwBadStack(stackSize(), nArgs, 0);
 			}
-			m_PC = _PC;
+			m_PC = _pc;
 		}
 		NEXT
 
