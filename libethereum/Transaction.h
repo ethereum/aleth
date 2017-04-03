@@ -41,6 +41,7 @@ enum class TransactionException
 	OutOfGasIntrinsic,		///< Too little gas to pay for the base transaction cost.
 	InvalidSignature,
 	InvalidNonce,
+	InvalidChainIdInNonce,
 	NotEnoughCash,
 	OutOfGasBase,			///< Too little gas to pay for the base transaction cost.
 	BlockGasLimitReached,

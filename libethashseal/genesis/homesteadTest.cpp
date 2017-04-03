@@ -32,6 +32,7 @@ R"E(
 		"metropolisForkBlock": "0xfffffffffffffff",
 		"networkID" : "0x01",
 		"chainID": "0x01",
+		"nonceChainID": "0x12",
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,
