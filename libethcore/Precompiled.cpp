@@ -38,6 +38,13 @@ PrecompiledExecutor const& PrecompiledRegistrar::executor(std::string const& _na
 	return get()->m_execs[_name];
 }
 
+PrecompiledPricer const& PrecompiledRegistrar::pricer(std::string const& _name)
+{
+	if (!get()->m_pricers.count(_name))
+		BOOST_THROW_EXCEPTION(PricerNotFound());
+	return get()->m_pricers[_name];
+}
+
 namespace
 {
 
@@ -120,6 +127,17 @@ ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
 	toBigEndian(result, ret);
 
 	return {true, ret};
+}
+
+ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
+{
+	u256 const baseLength(parseBigEndianRightPadded<u256>(_in, 0, 32));
+	u256 const expLength(parseBigEndianRightPadded<u256>(_in, 32, 32));
+	u256 const modLength(parseBigEndianRightPadded<u256>(_in, 64, 32));
+
+	bigint const maxLength = max(modLength, baseLength);
+
+	return maxLength * maxLength * max<bigint>(expLength, 1) / 20;
 }
 
 }
