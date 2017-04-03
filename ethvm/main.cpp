@@ -38,7 +38,11 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-static const int64_t MaxBlockGasLimit = ChainParams(genesisInfo(Network::MainNetwork)).u256Param("maxGasLimit").convert_to<int64_t>();
+int64_t maxBlockGasLimit()
+{
+	static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).u256Param("maxGasLimit").convert_to<int64_t>();
+	return limit;
+}
 
 void help()
 {
@@ -47,7 +51,7 @@ void help()
 		<< "Transaction options:" << endl
 		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
 		<< "    --gas <n>    Transaction should be given <n> gas (default: block gas limit)." << endl
-		<< "    --gas-limit <n>  Block gas limit (default: " << MaxBlockGasLimit << ")." << endl
+		<< "    --gas-limit <n>  Block gas limit (default: " << maxBlockGasLimit() << ")." << endl
 		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
 		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
 		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
@@ -59,7 +63,7 @@ void help()
 		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)" << endl
 #endif // ETH_EVMJIT
 		<< "Network options:" << endl
-		<< "    --network Main|Ropsten|Homestead|Frontier" << endl
+		<< "    --network Main|Ropsten|Homestead|Frontier|Metropolis" << endl
 		<< endl
 		<< "Options for trace:" << endl
 		<< "    --flat  Minimal whitespace in the JSON." << endl
@@ -124,13 +128,13 @@ int main(int argc, char** argv)
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
-	u256 gas = MaxBlockGasLimit;
+	u256 gas = maxBlockGasLimit();
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
 	EnvInfo envInfo;
 	Network networkName = Network::MainNetwork;
-	envInfo.setGasLimit(MaxBlockGasLimit);
+	envInfo.setGasLimit(maxBlockGasLimit());
 	bytes data;
 	bytes code;
 
@@ -188,7 +192,9 @@ int main(int argc, char** argv)
 		else if (arg == "--network" && i + 1 < argc)
 		{
 			string network = argv[++i];
-			if (network == "Frontier")
+			if (network == "Metropolis")
+				networkName = Network::MetropolisTest;
+			else if (network == "Frontier")
 				networkName = Network::FrontierTest;
 			else if (network == "Ropsten")
 				networkName = Network::Ropsten;
