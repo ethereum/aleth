@@ -194,8 +194,14 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 		// Frontier-era difficulty adjustment
 		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
 	else
-		// Homestead-era difficulty adjustment
-		target = _parent.difficulty() + _parent.difficulty() / 2048 * max<bigint>(1 - (bigint(_bi.timestamp()) - _parent.timestamp()) / 10, -99);
+	{
+		bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
+		bigint const adjFactor = _bi.number() < chainParams().u256Param("metropolisForkBlock") ?
+			max<bigint>(1 - timestampDiff / 10, -99) : // Homestead-era difficulty adjustment
+			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Metropolis-era difficulty adjustment
+
+		target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
+	}
 
 	bigint o = target;
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
