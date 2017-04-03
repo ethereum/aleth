@@ -402,29 +402,29 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 			if (addressOptions.hasBalance())
 				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
-				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
+				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
 
 			if (addressOptions.hasNonce())
 				CHECK((_stateExpect.getNonce(a.first) == _statePost.getNonce(a.first)),
-				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect nonce " << _statePost.getNonce(a.first) << ", expected " << _stateExpect.getNonce(a.first));
+				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect nonce " << _statePost.getNonce(a.first) << ", expected " << _stateExpect.getNonce(a.first));
 
 			if (addressOptions.hasStorage())
 			{
 				map<h256, pair<u256, u256>> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first << ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(stateStorage[s.first].second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add));
+					TestOutputHelper::testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(stateStorage[s.first].second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add));
 
 				//Check for unexpected storage values
 				map<h256, pair<u256, u256>> expectedStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
 					CHECK((expectedStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(expectedStorage[s.first].second, HexPrefix::Add));
+					TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(expectedStorage[s.first].second, HexPrefix::Add));
 			}
 
 			if (addressOptions.hasCode())
 				CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),
-				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
 

@@ -386,7 +386,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 				// compare expected output with post output
 				if (o.count("expectOut") > 0)
 				{
-					std::string warning = "Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
+					std::string warning = " Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
 					if (Options::get().checkstate)
 						BOOST_CHECK_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
 					else
