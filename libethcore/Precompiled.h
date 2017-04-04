@@ -53,7 +53,7 @@ public:
 
 	/// Register a pricer. In general just use ETH_REGISTER_PRECOMPILED_PRICER.
 	static PrecompiledPricer registerPricer(std::string const& _name, PrecompiledPricer const& _exec) { return (get()->m_pricers[_name] = _exec); }
-	/// Unregister an executor. Shouldn't generally be necessary.
+	/// Unregister a pricer. Shouldn't generally be necessary.
 	static void unregisterPricer(std::string const& _name) { get()->m_pricers.erase(_name); }
 
 private:

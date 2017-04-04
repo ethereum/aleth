@@ -46,22 +46,23 @@ BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
 }
-/*
-BOOST_AUTO_TEST_CASE(modexpTooLarge)
+
+BOOST_AUTO_TEST_CASE(modexpZeroBase)
 {
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
 
 	bytes in = fromHex(
 		"0000000000000000000000000000000000000000000000000000000000000000"
 		"0000000000000000000000000000000000000000000000000000000000000020"
-		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"
-		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
+		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
 	auto res = exec(bytesConstRef(in.data(), in.size()));
 
-	BOOST_REQUIRE_EQUAL(res.first, false);
+	BOOST_REQUIRE(res.first);
+	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
 }
-*/
 
 BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 {
@@ -98,6 +99,122 @@ BOOST_AUTO_TEST_CASE(modexpRightPadding)
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("3b01b01ac41f2d6e917c6d6a221ce793802469026d9ab7578fa2e79e4da6aaab");
 	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(modexpMissingValues)
+{
+	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000002"
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"03");
+	auto res = exec(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res.first);
+	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(modexpEmptyValue)
+{
+	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000000"
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"03"
+		"8000000000000000000000000000000000000000000000000000000000000000");
+	auto res = exec(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res.first);
+	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
+{
+	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"00"
+		"00"
+		"80");
+	auto res = exec(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res.first);
+	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
+{
+	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"00"
+		"00"
+		"00");
+	auto res = exec(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res.first);
+	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(modexpModLengthZero)
+{
+	PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000000"
+		"01"
+		"01");
+	auto res = exec(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res.first);
+	BOOST_REQUIRE(res.second.empty());
+}
+
+BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
+{
+	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000001"
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"03"
+		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
+		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
+	auto res = cost(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE_EQUAL(static_cast<int>(res), 1638);
+}
+
+BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
+{
+	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000000"
+		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+		"0000000000000000000000000000000000000000000000000000000000000020"
+		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"
+		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
+	auto res = cost(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res == bigint{"5928554968950589205686834432444820882087423214880796878820228301205152237564672"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
