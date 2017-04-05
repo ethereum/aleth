@@ -180,7 +180,25 @@ void Executive::initialize(Transaction const& _transaction)
 {
 	m_t = _transaction;
 
-	m_sealEngine.verifyTransaction(ImportRequirements::Everything, _transaction, m_envInfo);
+	try
+	{
+		m_sealEngine.verifyTransaction(ImportRequirements::Everything, _transaction, m_envInfo);
+	}
+	catch (InvalidSignature ex)
+	{
+		m_excepted = TransactionException::InvalidSignature;
+		BOOST_THROW_EXCEPTION(ex);
+	}
+	catch (OutOfGasIntrinsic ex)
+	{
+		m_excepted = TransactionException::OutOfGasIntrinsic;
+		BOOST_THROW_EXCEPTION(ex);
+	}
+	catch (InvalidZeroSignatureTransaction ex)
+	{
+		m_excepted = TransactionException::InvalidZeroSignatureFormat;
+		BOOST_THROW_EXCEPTION(ex);
+	}
 
 	// Avoid transactions that would take us beyond the block gas limit.
 	u256 startGasUsed = m_envInfo.gasUsed();
