@@ -589,7 +589,6 @@ int ImportTest::exportTest(bytes const& _output)
 			m_testObject.erase(m_testObject.find("expect"));
 		}
 
-		size_t k = 0;
 		std::map<string, json_spirit::mArray> postState;
 		for(size_t i = 0; i < m_transactions.size(); i++)
 		{
@@ -600,11 +599,13 @@ int ImportTest::exportTest(bytes const& _output)
 			obj["value"] = m_transactions[i].valInd;
 			obj2["indexes"] = obj;
 			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes());
-			if (stateIndexesToPrint.size())
-			if (i == stateIndexesToPrint[k] && Options::get().checkstate)
+
+			//Print the post state if transaction has failed on expect section
+			if (Options::get().checkstate)
 			{
-				obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
-				k++;
+				auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
+				if (it != std::end(stateIndexesToPrint))
+					obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
 			}
 			postState[netIdToString(m_transactions[i].netId)].push_back(obj2);
 		}
