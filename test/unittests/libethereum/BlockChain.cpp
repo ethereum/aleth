@@ -25,13 +25,12 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <libethereum/GenesisInfo.h>
-#include <libethashseal/GenesisInfo.h>
-
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
+namespace utf = boost::unit_test;
 
 BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelper)
 
@@ -79,39 +78,6 @@ BOOST_AUTO_TEST_CASE(opendb)
 	auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("DatabaseAlreadyOpen") != string::npos; };
 	BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
 }
-
-//(rebuild)
-//{
-//	string dbPath;
-//	TestBlock genesisCopy;
-//	{
-//		TestBlock genesis = TestBlockChain::getDefaultGenesisBlock();
-//		genesisCopy = genesis;
-//		TransientDirectory tempDirBlockchain;
-//		dbPath = tempDirBlockchain.path();
-//		FullBlockChain<Ethash> bc(genesis.getBytes(), AccountMap(), tempDirBlockchain.path(), WithExisting::Kill);
-
-//		TestTransaction testTr = TestTransaction::getDefaultTransaction();
-//		TransactionQueue trQueue;
-//		trQueue.import(testTr.getTransaction().rlp());
-
-//		ZeroGasPricer gp;
-//		Block block = bc.genesisBlock(genesis.getState().db());
-//		block.sync(bc);
-//		block.sync(bc, trQueue, gp);
-//		dev::eth::mine(block, bc);
-//		bc.import(block.blockData(), block.state().db());
-//		BOOST_REQUIRE(bc.number() == 1);
-
-//		bc.rebuild(tempDirBlockchain.path());
-//		BOOST_REQUIRE(bc.number() == 1);
-//	}
-
-//	FullBlockChain<Ethash> bc(genesisCopy.getBytes(), AccountMap(), dbPath, WithExisting::Verify);
-//	BOOST_REQUIRE(bc.number() == 0);
-//	bc.rebuild(dbPath);
-//	BOOST_REQUIRE(bc.number() == 1);
-//}
 
 BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
 {
@@ -476,7 +442,7 @@ BOOST_AUTO_TEST_CASE(insertException)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(rescue)
+BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 {
 	try
 	{
@@ -506,22 +472,9 @@ BOOST_AUTO_TEST_CASE(rescue)
 			bc.addBlock(block);
 		}
 
-		// Temporary disable this assertion, which is failing in TravisCI for OS X Mavericks
-		// See https://travis-ci.org/ethereum/cpp-ethereum/jobs/156083698.
-		#if !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
-			try
-			{
-				BlockChain& bcRef = bc.interfaceUnsafe();
-				std::this_thread::sleep_for(std::chrono::seconds(10)); //try wait for block verification before rescue
-				bcRef.rescue(bc.testGenesis().state().db());
-				BOOST_CHECK_MESSAGE(bcRef.number() == 3, "Rescued Blockchain missing some blocks!");
-			}
-			catch(...)
-			{
-				BOOST_ERROR("Unexpected Exception!");
-			}
-		#endif // !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
-
+		BlockChain& bcRef = bc.interfaceUnsafe();
+		bcRef.rescue(bc.testGenesis().state().db());
+		BOOST_CHECK_EQUAL(bcRef.number(), 3);
 	}
 	catch (Exception const& _e)
 	{
