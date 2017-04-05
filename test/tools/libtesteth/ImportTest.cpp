@@ -82,6 +82,14 @@ bytes ImportTest::executeTest()
 		{
 			for (size_t i = 0; i < m_transactions.size(); i++)
 			{
+				Options const& opt = Options::get();
+				if(opt.trDataIndex != -1 && opt.trDataIndex != m_transactions[i].dataInd)
+					continue;
+				if(opt.trGasIndex != -1 && opt.trGasIndex != m_transactions[i].gasInd)
+					continue;
+				if(opt.trValueIndex != -1 && opt.trValueIndex != m_transactions[i].valInd)
+					continue;
+
 				eth::Network network = networks[j];
 				std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
 				m_transactions[i].postState = out.first;
@@ -484,6 +492,14 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	for(size_t i=0; i<network.size(); i++)
 		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + "Specified Network not found: " + network.at(i));
 
+	if (!Options::get().singleTestNet.empty())
+	{
+		//skip this check if we execute transactions only on another specified network
+		if (!inArray(network, Options::get().singleTestNet) && !inArray(network, string{"ALL"}))
+			return;
+	}
+
+
 	if (_expects.count("indexes"))
 	{
 		json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
@@ -491,6 +507,15 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		parseJsonIntValueIntoVector(indexes.at("gas"), g);
 		parseJsonIntValueIntoVector(indexes.at("value"), v);
 		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + "Indexes arrays not set!");
+
+		//Skip this check if does not fit to options request
+		Options const& opt = Options::get();
+		if (!inArray(d, opt.trDataIndex) && !inArray(d, -1) && opt.trDataIndex != -1)
+			return;
+		if (!inArray(g, opt.trGasIndex) && !inArray(g, -1) && opt.trGasIndex != -1)
+			return;
+		if (!inArray(v, opt.trValueIndex) && !inArray(v, -1) && opt.trValueIndex != -1)
+			return;
 	}
 	else
 		BOOST_ERROR(TestOutputHelper::testName() + "indexes section not set!");
@@ -547,8 +572,8 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 				break;
 		}
 	}
-	if (!_search) //search for a single transaction in one of the expect sections then don't need this output.
-		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + "Expect results was not found in test execution!");
+	if (!_search) //if search for a single transaction in one of the expect sections then don't need this output.
+		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + " Expect results was not found in test execution!");
 }
 
 int ImportTest::exportTest(bytes const& _output)
@@ -564,7 +589,6 @@ int ImportTest::exportTest(bytes const& _output)
 			m_testObject.erase(m_testObject.find("expect"));
 		}
 
-		size_t k = 0;
 		std::map<string, json_spirit::mArray> postState;
 		for(size_t i = 0; i < m_transactions.size(); i++)
 		{
@@ -575,11 +599,13 @@ int ImportTest::exportTest(bytes const& _output)
 			obj["value"] = m_transactions[i].valInd;
 			obj2["indexes"] = obj;
 			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes());
-			if (stateIndexesToPrint.size())
-			if (i == stateIndexesToPrint[k] && Options::get().checkstate)
+
+			//Print the post state if transaction has failed on expect section
+			if (Options::get().checkstate)
 			{
-				obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
-				k++;
+				auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
+				if (it != std::end(stateIndexesToPrint))
+					obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
 			}
 			postState[netIdToString(m_transactions[i].netId)].push_back(obj2);
 		}

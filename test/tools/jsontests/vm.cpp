@@ -46,11 +46,11 @@ h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpF
 	return na;
 }
 
-boost::optional<eth::owning_bytes_ref> FakeExtVM::call(CallParameters& _p)
+std::pair<bool, eth::owning_bytes_ref> FakeExtVM::call(CallParameters& _p)
 {
 	Transaction t(_p.valueTransfer, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
 	callcreates.push_back(t);
-	return eth::owning_bytes_ref{};  // Return empty output.
+	return {true, eth::owning_bytes_ref{}};  // Return empty output.
 }
 
 void FakeExtVM::set(Address _a, u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage, bytes const& _code)

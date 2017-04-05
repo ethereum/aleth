@@ -301,7 +301,8 @@ public:
 	virtual h160 create(u256, u256&, bytesConstRef, OnOpFunc const&) { return h160(); }
 
 	/// Make a new message call.
-	virtual boost::optional<owning_bytes_ref> call(CallParameters&) = 0;
+	/// @returns success flag and output data, if any.
+	virtual std::pair<bool, owning_bytes_ref> call(CallParameters&) = 0;
 
 	/// Revert any changes made (by any of the other calls).
 	virtual void log(h256s&& _topics, bytesConstRef _data) { sub.logs.push_back(LogEntry(myAddress, std::move(_topics), _data.toBytes())); }

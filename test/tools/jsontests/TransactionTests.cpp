@@ -85,6 +85,8 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				//Transaction is InValid
 				cnote << "Transaction Exception: " << diagnostic_information(_e);
 				o.erase(o.find("transaction"));
+				if (o.count("sender") > 0)
+					o.erase(o.find("sender"));
 				if (o.count("expect") > 0)
 				{
 					bool expectInValid = (o["expect"].get_str() == "invalid");
