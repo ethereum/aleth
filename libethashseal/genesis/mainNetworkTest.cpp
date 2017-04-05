@@ -27,6 +27,7 @@ R"E(
 		"daoHardforkBlock": "0x1d4c00",
 		"EIP150ForkBlock": "0x259518",
 		"EIP158ForkBlock": "0x28d138",
+		"metropolisForkBlock": "0x2dc6c0",
 		"networkID" : "0x01",
 		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",
@@ -54,7 +55,8 @@ R"E(
 		"0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
 		"0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
 		"0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-		"0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } }
+		"0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
+		"0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" } }
 	}
 }
 )E";

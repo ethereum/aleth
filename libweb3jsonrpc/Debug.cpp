@@ -61,13 +61,19 @@ Json::Value Debug::traceTransaction(Executive& _e, Transaction const& _t, Json::
 
 Json::Value Debug::traceBlock(Block const& _block, Json::Value const& _json)
 {
+	State s(_block.state());
+	s.setRoot(_block.stateRootBeforeTx(0));
+
 	Json::Value traces(Json::arrayValue);
 	for (unsigned k = 0; k < _block.pending().size(); k++)
 	{
 		Transaction t = _block.pending()[k];
-		State s(State::Null);
+
+		u256 const gasUsed = k ? _block.receipt(k - 1).gasUsed() : 0;
+		EnvInfo envInfo(_block.info(), m_eth.blockChain().lastHashes(_block.info().parentHash()), gasUsed);
+		Executive e(s, envInfo, *m_eth.blockChain().sealEngine());
+
 		eth::ExecutionResult er;
-		Executive e(s, _block, k, m_eth.blockChain());
 		e.setResultRecipient(er);
 		traces.append(traceTransaction(e, t, _json));
 	}
@@ -124,7 +130,7 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 {
 	Json::Value ret(Json::objectValue);
 	ret["complete"] = true;
-	ret["storage"] = Json::Value(Json::arrayValue);
+	ret["storage"] = Json::Value(Json::objectValue);
 
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
@@ -136,27 +142,27 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		Block block = m_eth.block(blockHash(_blockHashOrNumber));
 
 		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
-		State state = block.fromPending(i);
+		State state(State::Null);
+		createIntermediateState(state, block, i, m_eth.blockChain());
 
 		map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 
 		// begin is inclusive
 		auto itBegin = storage.lower_bound(h256fromHex(_begin));
-
 		for (auto it = itBegin; it != storage.end(); ++it)
 		{
 			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
 			{
-				ret["complete"] = false;
+				ret["nextKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
 				break;
 			}
 
 			Json::Value keyValue(Json::objectValue);
-			keyValue["hashedKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
+			std::string hashedKey = toCompactHex(it->first, HexPrefix::Add, 1);
 			keyValue["key"] = toCompactHex(it->second.first, HexPrefix::Add, 1);
 			keyValue["value"] = toCompactHex(it->second.second, HexPrefix::Add, 1);
 
-			ret["storage"].append(keyValue);
+			ret["storage"][hashedKey] = keyValue;
 		}
 	}
 	catch (Exception const& _e)

@@ -743,7 +743,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 		k << i;
 
 		RLPStream receiptrlp;
-		m_receipts[i].streamRLP(receiptrlp);
+		receipt(i).streamRLP(receiptrlp);
 		receiptsMap.insert(std::make_pair(k.out(), receiptrlp.out()));
 
 		RLPStream txrlp;
@@ -829,15 +829,10 @@ bool Block::sealBlock(bytesConstRef _header)
 	return true;
 }
 
-State Block::fromPending(unsigned _i) const
+h256 Block::stateRootBeforeTx(unsigned _i) const
 {
-	State ret = m_state;
 	_i = min<unsigned>(_i, m_transactions.size());
-	if (!_i)
-		ret.setRoot(m_previousBlock.stateRoot());
-	else
-		ret.setRoot(m_receipts[_i - 1].stateRoot());
-	return ret;
+	return (_i > 0 ? receipt(_i - 1).stateRoot() : m_previousBlock.stateRoot());
 }
 
 LogBloom Block::logBloom() const

@@ -33,6 +33,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 typedef struct libscrypt_SHA256Context {
 	uint32_t state[8];
 	uint32_t count[2];
@@ -66,5 +70,9 @@ void	libscrypt_HMAC_SHA256_Final(unsigned char [], HMAC_SHA256_CTX *);
  */
 void	libscrypt_PBKDF2_SHA256(const uint8_t *, size_t, const uint8_t *, size_t,
     uint64_t, uint8_t *, size_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_SHA256_H_ */

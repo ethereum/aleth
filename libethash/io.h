@@ -114,6 +114,16 @@ enum ethash_io_rc ethash_io_prepare(
 FILE* ethash_fopen(char const* file_name, char const* mode);
 
 /**
+ * An fseek wrapper for crossplatform 64-bit seek.
+ *
+ * @param f            The file stream whose fd to get
+ * @param offset       Number of bytes from @a origin
+ * @param origin       Initial position
+ * @return             Current offset or -1 to indicate an error
+ */
+int ethash_fseek(FILE* f, size_t offset, int origin);
+
+/**
  * An strncat wrapper for no-warnings crossplatform strncat.
  *
  * Msvc compiler considers strncat to be insecure and suggests to use their

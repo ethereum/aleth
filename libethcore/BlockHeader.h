@@ -153,6 +153,7 @@ public:
 
 	h256 const& parentHash() const { return m_parentHash; }
 	h256 const& sha3Uncles() const { return m_sha3Uncles; }
+	bool hasUncles() const { return m_sha3Uncles != EmptyListSHA3; }
 	u256 const& timestamp() const { return m_timestamp; }
 	Address const& author() const { return m_author; }
 	h256 const& stateRoot() const { return m_stateRoot; }

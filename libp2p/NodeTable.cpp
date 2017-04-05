@@ -42,7 +42,7 @@ NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint con
 
 NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled):
 	m_node(Node(_alias.pub(), _endpoint)),
-	m_secret(_alias.sec()),
+	m_secret(_alias.secret()),
 	m_socket(make_shared<NodeSocket>(_io, *reinterpret_cast<UDPSocketEvents*>(this), (bi::udp::endpoint)m_node.endpoint)),
 	m_socketPointer(m_socket.get()),
 	m_timers(_io)

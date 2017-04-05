@@ -7,7 +7,7 @@ macro(configure_project)
 			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 	endif()
 
-	eth_default_option(STATIC_BUILD OFF)
+	eth_default_option(BUILD_SHARED_LIBS OFF)
 
 	# features
 	eth_default_option(VMTRACE OFF)
@@ -16,6 +16,7 @@ macro(configure_project)
 	eth_default_option(ROCKSDB OFF)
 	eth_default_option(PARANOID OFF)
 	eth_default_option(MINIUPNPC ON)
+	eth_default_option(FASTCTEST OFF)
 
 	# components
 	eth_default_option(TESTS ON)
@@ -34,24 +35,10 @@ macro(configure_project)
 		endif ()
 	endif ()
 
-	if (STATIC_BUILD)
-		set(STATIC_LINKING 1)
-		set(BUILD_SHARED_LIBS 0)
-	endif ()
-
 	# Define a matching property name of each of the "features".
 	foreach(FEATURE ${ARGN})
 		set(SUPPORT_${FEATURE} TRUE)
 	endforeach()
-
-	# Temporary pre-processor symbol used for hiding broken unit-tests.
-	# Hiding them behind this pre-processor symbol lets us turn them off
-	# and on again easily enough, and also to grep for them.
-	add_definitions(-DDISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
-
-	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
-	# Common code has no business knowing which application it is part of.
-	add_definitions(-DETH_TRUE)
 
 	# Are we including the JIT EVM module?
 	# That pulls in a quite heavyweight LLVM dependency, which is
@@ -64,6 +51,12 @@ macro(configure_project)
 	# i.e. it allows you to iterate over the contents of the state.
 	if (FATDB)
 		add_definitions(-DETH_FATDB)
+	endif ()
+
+	# ROCKSDB is an option to build Ethereum against Facebook's RocksDB instead
+	# of LevelDB
+	if (ROCKSDB)
+		add_definitions(-DETH_ROCKSDB)
 	endif ()
 
 	# TODO:  What does "paranoia" even mean?
@@ -92,7 +85,7 @@ macro(configure_project)
 	endif()
 
 	include(EthBuildInfo)
-	create_build_info(${NAME})
+	create_build_info()
 	print_config(${NAME})
 endmacro()
 

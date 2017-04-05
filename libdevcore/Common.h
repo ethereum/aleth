@@ -23,7 +23,7 @@
 
 #pragma once
 
-// way to many unsigned to size_t warnings in 32 bit build
+// way too many unsigned to size_t warnings in 32 bit build
 #ifdef _M_IX86
 #pragma warning(disable:4244)
 #endif
@@ -48,10 +48,6 @@
 #pragma warning(push)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <boost/version.hpp>
-#if (BOOST_VERSION == 105800)
-	#include "boost_multiprecision_number_compare_bug_workaround.hpp"
-#endif
 #include <boost/multiprecision/cpp_int.hpp>
 #pragma warning(pop)
 #pragma GCC diagnostic pop
@@ -66,7 +62,6 @@ using byte = uint8_t;
 
 #define DEV_IGNORE_EXCEPTIONS(X) try { X; } catch (...) {}
 
-#define DEV_IF_NO_ELSE(X) if(!(X)){}else
 #define DEV_IF_THROWS(X) try{X;}catch(...)
 
 namespace dev
@@ -87,8 +82,8 @@ class secure_vector
 public:
 	secure_vector() {}
 	secure_vector(secure_vector<T> const& /*_c*/) = default;  // See https://github.com/ethereum/libweb3core/pull/44
-	explicit secure_vector(unsigned _size): m_data(_size) {}
-	explicit secure_vector(unsigned _size, T _item): m_data(_size, _item) {}
+	explicit secure_vector(size_t _size): m_data(_size) {}
+	explicit secure_vector(size_t _size, T _item): m_data(_size, _item) {}
 	explicit secure_vector(std::vector<T> const& _c): m_data(_c) {}
 	explicit secure_vector(vector_ref<T> _c): m_data(_c.data(), _c.data() + _c.size()) {}
 	explicit secure_vector(vector_ref<const T> _c): m_data(_c.data(), _c.data() + _c.size()) {}

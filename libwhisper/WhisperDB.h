@@ -50,9 +50,9 @@ public:
 	void kill(dev::h256 const& _key);
 
 protected:
-	leveldb::ReadOptions m_readOptions;
-	leveldb::WriteOptions m_writeOptions;
-	std::unique_ptr<leveldb::DB> m_db;
+	ldb::ReadOptions m_readOptions;
+	ldb::WriteOptions m_writeOptions;
+	std::unique_ptr<ldb::DB> m_db;
 };
 
 class WhisperMessagesDB: public WhisperDB

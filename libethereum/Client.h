@@ -112,12 +112,6 @@ public:
 	// [PRIVATE API - only relevant for base clients, not available in general]
 	/// Get the block.
 	dev::eth::Block block(h256 const& _blockHash, PopulationStatistics* o_stats) const;
-	/// Get the state of the given block part way through execution, immediately before transaction
-	/// index @a _txi.
-	dev::eth::State state(unsigned _txi, h256 const& _block) const;
-	/// Get the state of the currently pending block part way through execution, immediately before
-	/// transaction index @a _txi.
-	dev::eth::State state(unsigned _txi) const;
 
 	/// Get the object representing the current state of Ethereum.
 	dev::eth::Block postState() const { ReadGuard l(x_postSeal); return m_postSeal; }

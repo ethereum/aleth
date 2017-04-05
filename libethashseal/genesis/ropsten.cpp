@@ -26,6 +26,7 @@ R"E(
 		"homsteadForkBlock": "0x00",
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x0a",
+		"metropolisForkBlock": "0xfffffffffffffff",
 		"chainID": "0x03",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,

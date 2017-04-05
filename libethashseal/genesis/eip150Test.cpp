@@ -28,6 +28,7 @@ R"E(
 		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0xfffffffffffffff",
+		"metropolisForkBlock": "0xfffffffffffffff",
 		"networkID" : "0x01",
 		"chainID": "0x01",
 		"minGasLimit": "0x1388",
@@ -38,7 +39,8 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b"
+		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
+		"allowFutureBlocks" : true
 	},
 	"genesis": {
 		"nonce": "0x0000000000000042",

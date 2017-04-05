@@ -66,8 +66,17 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	cp.tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
 	cp.blockReward = u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str())));
 	for (auto i: params)
-		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas")
+	{
+		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" &&
+			i.first != "blockReward" && i.first != "tieBreakingGas" && i.first != "allowFutureBlocks")
 			cp.otherParams[i.first] = i.second.get_str();
+		else
+		{
+			if (i.first == "allowFutureBlocks")
+				cp.otherParams[i.first] = i.second.get_bool();
+		}
+	}
+
 	// genesis
 	string genesisStr = json_spirit::write_string(obj["genesis"], false);
 	cp = cp.loadGenesis(genesisStr, _stateRoot);

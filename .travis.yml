@@ -91,7 +91,7 @@ matrix:
         # See https://github.com/ethereum/cpp-ethereum/issues/3268
 
         - os: osx
-          osx_image: xcode8
+          osx_image: xcode8.2
           env:
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
@@ -102,16 +102,24 @@ cache:
     directories:
         - ~/.ethash
         - ~/.local
+        - ~/Library/Caches/Homebrew
+        # Cache whole deps dir hoping you will not need to download and
+        # build external dependencies next build.
+        - $TRAVIS_BUILD_DIR/deps
 install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh; fi
     - ./scripts/install_deps.sh
 before_script:
-    - if type ccache; then ccache -M 2G; ccache -s; fi
+    - ./scripts/prepare_ccache.sh
     - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
-    - if type ccache; then ccache -s; fi
+    - ./scripts/cleanup_ccache.sh
 script:
     - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
-
+after_success:
+    - cd $TRAVIS_BUILD_DIR/build
+    - make coverage.data
+    # Get CodeCov script (fixed commit) and upload coverage report.
+    - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/e7985c0ea6dd4d365403f389337f3b43b517fb35/codecov) -X fix -f coverage.data
 deploy:
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that

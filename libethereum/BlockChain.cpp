@@ -38,7 +38,6 @@
 #include "GenesisInfo.h"
 #include "State.h"
 #include "Block.h"
-#include "Utility.h"
 #include "Defaults.h"
 using namespace std;
 using namespace dev;
@@ -147,7 +146,7 @@ static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 BlockChain::BlockChain(ChainParams const& _p, std::string const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
 	m_dbPath(_dbPath)
 {
-	init(_p, _dbPath);
+	init(_p);
 	open(_dbPath, _we, _pc);
 }
 
@@ -170,7 +169,7 @@ BlockHeader const& BlockChain::genesis() const
 	return m_genesis;
 }
 
-void BlockChain::init(ChainParams const& _p, std::string const& _path)
+void BlockChain::init(ChainParams const& _p)
 {
 	// initialise deathrow.
 	m_cacheUsage.resize(c_collectionQueueSize);
@@ -181,9 +180,6 @@ void BlockChain::init(ChainParams const& _p, std::string const& _path)
 	m_sealEngine.reset(m_params.createSealEngine());
 	m_genesis.clear();
 	genesis();
-
-	// remove the next line real soon. we don't need to be supporting this forever.
-	upgradeDatabase(_path, genesisHash());
 }
 
 unsigned BlockChain::open(std::string const& _path, WithExisting _we)
@@ -274,7 +270,7 @@ void BlockChain::open(std::string const& _path, WithExisting _we, ProgressCallba
 void BlockChain::reopen(ChainParams const& _p, WithExisting _we, ProgressCallback const& _pc)
 {
 	close();
-	init(_p, m_dbPath);
+	init(_p);
 	open(m_dbPath, _we, _pc);
 }
 
@@ -435,6 +431,11 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
 				goodTransactions.reserve(goodTransactions.size() + r.goodTranactions.size());
 				std::move(std::begin(r.goodTranactions), std::end(r.goodTranactions), std::back_inserter(goodTransactions));
 				++count;
+			}
+			catch (dev::eth::AlreadyHaveBlock const&)
+			{
+				cwarn << "ODD: Import queue contains already imported block";
+				continue;
 			}
 			catch (dev::eth::UnknownParent)
 			{
@@ -664,7 +665,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	if (isKnown(_block.info.hash()) && _mustBeNew)
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Not new.";
-		BOOST_THROW_EXCEPTION(AlreadyHaveBlock());
+		BOOST_THROW_EXCEPTION(AlreadyHaveBlock() << errinfo_block(_block.block.toBytes()));
 	}
 
 	// Work out its number as the parent's number + 1
@@ -798,6 +799,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	h256s route;
 	h256 common;
+	bool isImportedAndBest = false;
 	// This might be the new best block...
 	h256 last = currentHash();
 	if (td > details(last).totalDifficulty || (m_sealEngine->chainParams().tieBreakingGas && td == details(last).totalDifficulty && _block.info.gasUsed() > info(last).gasUsed()))
@@ -863,6 +865,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		{
 			newLastBlockHash = _block.info.hash();
 			newLastBlockNumber = (unsigned)_block.info.number();
+			isImportedAndBest = true;
 		}
 
 		clog(BlockChainNote) << "   Imported and best" << td << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
@@ -957,6 +960,9 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	if (!route.empty())
 		noteCanonChanged();
+
+	if (isImportedAndBest && m_onBlockImport)
+		m_onBlockImport(_block.info);
 
 	h256s fresh;
 	h256s dead;
@@ -1489,7 +1495,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 
 	RLP r(_block);
 	unsigned i = 0;
-	if (_ir && !!(ImportRequirements::UncleBasic | ImportRequirements::UncleParent | ImportRequirements::UncleSeals))
+	if (_ir & (ImportRequirements::UncleBasic | ImportRequirements::UncleParent | ImportRequirements::UncleSeals))
 		for (auto const& uncle: r[2])
 		{
 			BlockHeader uh(uncle.data(), HeaderData);
@@ -1522,14 +1528,14 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			++i;
 		}
 	i = 0;
-	if (_ir && !!(ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))
+	if (_ir & (ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))
 		for (RLP const& tr: r[1])
 		{
 			bytesConstRef d = tr.data();
 			try
 			{
 				Transaction t(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);
-				m_sealEngine->verifyTransaction(_ir, t, h);
+				m_sealEngine->verifyTransaction(_ir, t, EnvInfo(h));
 				res.transactions.push_back(t);
 			}
 			catch (Exception& ex)

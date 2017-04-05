@@ -304,11 +304,9 @@ KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool
 	if (obj["encseed"].type() == js::str_type)
 	{
 		auto encseed = fromHex(obj["encseed"].get_str());
-		KeyPair k;
-		for (bool gotit = false; !gotit;)
+		while (true)
 		{
-			gotit = true;
-			k = KeyPair::fromEncryptedSeed(&encseed, p);
+			KeyPair k = KeyPair::fromEncryptedSeed(&encseed, p);
 			if (obj["ethaddr"].type() == js::str_type)
 			{
 				Address a(obj["ethaddr"].get_str());
@@ -317,12 +315,11 @@ KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool
 				{
 					if ((p = _password(false)).empty())
 						BOOST_THROW_EXCEPTION(PasswordUnknown());
-					else
-						gotit = false;
+					continue;
 				}
 			}
+			return k;
 		}
-		return k;
 	}
 	else
 		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("encseed type is not js::str_type"));
@@ -443,11 +440,11 @@ void KeyManager::write(SecureFixedHash<16> const& _key, string const& _keysFile)
 
 KeyPair KeyManager::newKeyPair(KeyManager::NewKeyType _type)
 {
-	KeyPair p;
+	KeyPair p = KeyPair::create();
 	bool keepGoing = true;
 	unsigned done = 0;
-	function<void()> f = [&]() {
-		KeyPair lp;
+	auto f = [&]() {
+		KeyPair lp = KeyPair::create();
 		while (keepGoing)
 		{
 			done++;

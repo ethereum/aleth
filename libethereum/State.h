@@ -95,7 +95,7 @@ DEV_SIMPLE_EXCEPTION(InvalidAccountStartNonceInState);
 DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
 
 class SealEngineFace;
-
+class Executive;
 
 namespace detail
 {
@@ -206,6 +206,10 @@ public:
 	/// Execute a given transaction.
 	/// This will change the state accordingly.
 	std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
+
+	/// Execute @a _txCount transactions of a given block.
+	/// This will change the state accordingly.
+	void executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine);
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
@@ -336,6 +340,8 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& _out, State const& _s);
+
+State& createIntermediateState(State& o_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc);
 
 template <class DB>
 AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)

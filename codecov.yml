@@ -1,0 +1,24 @@
+codecov:
+  branch: develop
+coverage:
+  range: 50...100
+  notify:
+    gitter:
+      default:
+        threshold: 0
+        url: https://gitter.im/ethereum/cpp-ethereum-development
+  status:
+    patch:
+      default:
+        target: 80
+    project:
+      default:
+        target: auto
+    changes:
+      default:
+        enabled: no
+comment:
+  layout: header, diff, changes, sunburst, suggestions, tree
+flags:
+  alltests:
+    joined: false

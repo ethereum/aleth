@@ -26,6 +26,7 @@
 
 #include <libdevcore/Guards.h>
 #include <libethcore/Common.h>
+#include <libethcore/BlockHeader.h>
 #include <libp2p/Common.h>
 #include "CommonNet.h"
 
@@ -58,6 +59,10 @@ public:
 	/// Restart sync
 	void restartSync();
 
+	/// Called after all blocks have been downloaded
+	/// Public only for test mode
+	void completeSync();
+
 	/// Called by peer to report status
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
 
@@ -75,6 +80,9 @@ public:
 	/// Called by peer when it is disconnecting
 	void onPeerAborting();
 
+	/// Called when a blockchain has imported a new block onto the DB
+	void onBlockImported(BlockHeader const& _info);
+
 	/// @returns Synchonization status
 	SyncStatus status() const;
 
@@ -83,9 +91,6 @@ public:
 private:
 	/// Resume downloading after witing state
 	void continueSync();
-
-	/// Called after all blocks have been donloaded
-	void completeSync();
 
 	/// Enter waiting state
 	void pauseSync();
@@ -148,7 +153,7 @@ private:
 	std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
 	bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
 	unsigned m_lastImportedBlock = 0; 			///< Last imported block number
-	h256 m_lastImportedBlockHash; 			///< Last imported block hash
+	h256 m_lastImportedBlockHash;				///< Last imported block hash
 	u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
 private:

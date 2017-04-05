@@ -185,12 +185,13 @@ public:
 		if (_blockId.size() == 32) // block id is a hash
 		{
 			blockHash = _blockId.toHash<h256>();
-			//blockNumber = host()->chain().number(blockHash);
 			clog(NetMessageSummary) << "GetBlockHeaders (block (hash): " << blockHash
-			<< ", maxHeaders: " << _maxHeaders
-			<< ", skip: " << _skip << ", reverse: " << _reverse << ")";
+				<< ", maxHeaders: " << _maxHeaders
+				<< ", skip: " << _skip << ", reverse: " << _reverse << ")";
 
-			if (!_reverse)
+			if (!m_chain.isKnown(blockHash))
+				blockHash = {};
+			else if (!_reverse)
 			{
 				auto n = m_chain.number(blockHash);
 				if (numHeadersToSend == 0)
@@ -210,8 +211,6 @@ public:
 				else
 					blockHash = {};
 			}
-			else if (!m_chain.isKnown(blockHash))
-				blockHash = {};
 		}
 		else // block id is a number
 		{
@@ -420,6 +419,12 @@ void EthereumHost::reset()
 	m_latestBlockSent = h256();
 	Guard tl(x_transactions);
 	m_transactionsSent.clear();
+}
+
+void EthereumHost::completeSync()
+{
+	RecursiveGuard l(x_sync);
+	m_sync->completeSync();
 }
 
 void EthereumHost::doWork()

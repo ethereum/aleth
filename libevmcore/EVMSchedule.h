@@ -38,7 +38,7 @@ struct EVMSchedule
 	bool haveDelegateCall = true;
 	bool eip150Mode = false;
 	bool eip158Mode = false;
-	unsigned stackLimit = 1024;
+	bool haveRevert = false;
 	std::array<unsigned, 8> tierStepGas;
 	unsigned expGas = 10;
 	unsigned expByteGas = 10;
@@ -102,6 +102,13 @@ static const EVMSchedule EIP158Schedule = []
 	EVMSchedule schedule = EIP150Schedule;
 	schedule.expByteGas = 50;
 	schedule.eip158Mode = true;
+	return schedule;
+}();
+
+static const EVMSchedule MetropolisSchedule = []
+{
+	EVMSchedule schedule = EIP158Schedule;
+	schedule.haveRevert = true;
 	return schedule;
 }();
 

@@ -48,7 +48,8 @@ TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
 
 TransactionQueue::~TransactionQueue()
 {
-	m_aborting = true;
+	DEV_GUARDED(x_queue)
+		m_aborting = true;
 	m_queueReady.notify_all();
 	for (auto& i: m_verifiers)
 		i.join();
@@ -56,34 +57,15 @@ TransactionQueue::~TransactionQueue()
 
 ImportResult TransactionQueue::import(bytesConstRef _transactionRLP, IfDropped _ik)
 {
-	// Check if we already know this transaction.
-	h256 h = sha3(_transactionRLP);
-
-	Transaction t;
-	ImportResult ir;
+	try
 	{
-		UpgradableGuard l(m_lock);
-
-		ir = check_WITH_LOCK(h, _ik);
-		if (ir != ImportResult::Success)
-			return ir;
-
-		try
-		{
-			// Check validity of _transactionRLP as a transaction. To do this we just deserialise and attempt to determine the sender.
-			// If it doesn't work, the signature is bad.
-			// The transaction's nonce may yet be invalid (or, it could be "valid" but we may be missing a marginally older transaction).
-			t = Transaction(_transactionRLP, CheckTransaction::Everything);
-			UpgradeGuard ul(l);
-//			cdebug << "Importing" << t;
-			ir = manageImport_WITH_LOCK(h, t);
-		}
-		catch (...)
-		{
-			return ImportResult::Malformed;
-		}
+		Transaction t = Transaction(_transactionRLP, CheckTransaction::Everything);
+		return import(t, _ik);
 	}
-	return ir;
+	catch (Exception const&)
+	{
+		return ImportResult::Malformed;
+	}
 }
 
 ImportResult TransactionQueue::check_WITH_LOCK(h256 const& _h, IfDropped _ik)
@@ -99,6 +81,8 @@ ImportResult TransactionQueue::check_WITH_LOCK(h256 const& _h, IfDropped _ik)
 
 ImportResult TransactionQueue::import(Transaction const& _transaction, IfDropped _ik)
 {
+	if (_transaction.hasZeroSignature())
+		return ImportResult::ZeroSignature;
 	// Check if we already know this transaction.
 	h256 h = _transaction.sha3(WithSignature);
 

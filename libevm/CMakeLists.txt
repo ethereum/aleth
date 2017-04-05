@@ -4,6 +4,7 @@ set(SOURCES
 	VM.cpp
 	VMOpt.cpp
 	VMCalls.cpp
+	VMValidate.cpp
 	VMFactory.cpp
 )
 
@@ -28,5 +29,3 @@ if (EVMJIT)
 	target_include_directories(evm PRIVATE ../evmjit/include)
 	target_link_libraries(evm ${Eth_EVMJIT_LIBRARIES})
 endif()
-
-install(TARGETS evm RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

@@ -67,6 +67,156 @@ enum class QueueStatus
 
 std::ostream& operator<< (std::ostream& os, QueueStatus const& obj);
 
+template<class T>
+class SizedBlockQueue
+{
+public:
+	std::size_t count() const { return m_queue.size(); }
+
+	std::size_t size() const { return m_size; }
+	
+	bool isEmpty() const { return m_queue.empty(); }
+
+	h256 nextHash() const { return m_queue.front().verified.info.sha3Uncles(); }
+
+	T const& next() const { return m_queue.front(); }
+
+	void clear()
+	{
+		m_queue.clear();
+		m_size = 0;
+	}
+
+	void enqueue(T&& _t)
+	{
+		m_queue.emplace_back(std::move(_t));
+		m_size += m_queue.back().blockData.size();
+	}
+
+	T dequeue()
+	{
+		T t;
+		std::swap(t, m_queue.front());
+		m_queue.pop_front();
+		m_size -= t.blockData.size();
+
+		return t;
+	}
+
+	std::vector<T> dequeueMultiple(std::size_t _n)
+	{
+		return removeRange(m_queue.begin(), m_queue.begin() + _n);
+	}
+
+	bool remove(h256 const& _hash)
+	{
+		std::vector<T> removed = removeIf(sha3UnclesEquals(_hash));
+		return !removed.empty();
+	}
+
+	template<class Pred>
+	std::vector<T> removeIf(Pred _pred)
+	{
+		auto const removedBegin = std::remove_if(m_queue.begin(), m_queue.end(), _pred);
+
+		return removeRange(removedBegin, m_queue.end());
+	}
+
+	bool replace(h256 const& _hash, T&& _t)
+	{
+		auto const it = std::find_if(m_queue.begin(), m_queue.end(), sha3UnclesEquals(_hash));
+
+		if (it == m_queue.end())
+			return false;
+
+		m_size -= it->blockData.size();
+		m_size += _t.blockData.size();
+		*it = std::move(_t);
+
+		return true;
+	}
+
+private:
+	static std::function<bool(T const&)> sha3UnclesEquals(h256 const& _hash)
+	{
+		return [&_hash](T const& _t) { return _t.verified.info.sha3Uncles() == _hash; };
+	}
+
+	std::vector<T> removeRange(typename std::deque<T>::iterator _begin, typename std::deque<T>::iterator _end)
+	{
+		std::vector<T> ret(std::make_move_iterator(_begin), std::make_move_iterator(_end));
+
+		for (auto it = ret.begin(); it != ret.end(); ++it)
+			m_size -= it->blockData.size();
+
+		m_queue.erase(_begin, _end);
+		return ret;
+	}
+
+	std::deque<T> m_queue;
+	std::atomic<size_t> m_size = {0};	///< Tracks total size in bytes
+};
+
+template<class KeyType>
+class SizedBlockMap
+{
+public:
+	std::size_t count() const { return m_map.size(); }
+
+	std::size_t size() const { return m_size; }
+
+	bool isEmpty() const { return m_map.empty(); }
+
+	KeyType firstKey() const { return m_map.begin()->first; }
+
+	void clear()
+	{
+		m_map.clear();
+		m_size = 0;
+	}
+
+	void insert(KeyType const& _key, h256 const& _hash, bytes&& _blockData)
+	{
+		auto hashAndBlock = std::make_pair(_hash, std::move(_blockData));
+		auto keyAndValue = std::make_pair(_key, std::move(hashAndBlock));
+		m_map.insert(std::move(keyAndValue));
+		m_size += _blockData.size();
+	}
+
+	std::vector<std::pair<h256, bytes>> removeByKeyEqual(KeyType const& _key)
+	{
+		auto const equalRange = m_map.equal_range(_key);
+		return removeRange(equalRange.first, equalRange.second);
+	}
+
+	std::vector<std::pair<h256, bytes>> removeByKeyNotGreater(KeyType const& _key)
+	{
+		return removeRange(m_map.begin(), m_map.upper_bound(_key));
+	}
+
+private:
+	using BlockMultimap = std::multimap<KeyType, std::pair<h256, bytes>>;
+
+	std::vector<std::pair<h256, bytes>> removeRange(typename BlockMultimap::iterator _begin, typename BlockMultimap::iterator _end)
+	{
+		std::vector<std::pair<h256, bytes>> removed;
+		std::size_t removedSize = 0;
+		for (auto it = _begin; it != _end; ++it)
+		{
+			removed.push_back(std::move(it->second));
+			removedSize += removed.back().second.size();
+		}
+
+		m_size -= removedSize;
+		m_map.erase(_begin, _end);
+
+		return removed;
+	}
+		
+	BlockMultimap m_map;
+	std::atomic<size_t> m_size = {0};	///< Tracks total size in bytes
+};
+
 /**
  * @brief A queue of blocks. Sits between network or other I/O and the BlockChain.
  * Sorts them ready for blockchain insertion (with the BlockChain::sync() method).
@@ -113,7 +263,7 @@ public:
 	h256 firstUnknown() const { ReadGuard l(m_lock); return m_unknownSet.size() ? *m_unknownSet.begin() : h256(); }
 
 	/// Get some infomration on the current status.
-	BlockQueueStatus status() const { ReadGuard l(m_lock); Guard l2(m_verification); return BlockQueueStatus{m_drainingSet.size(), m_verified.size(), m_verifying.size(), m_unverified.size(), m_future.size(), m_unknown.size(), m_knownBad.size()}; }
+	BlockQueueStatus status() const;
 
 	/// Get some infomration on the given block's status regarding us.
 	QueueStatus blockStatus(h256 const& _h) const;
@@ -133,7 +283,7 @@ private:
 	{
 		h256 hash;
 		h256 parentHash;
-		bytes block;
+		bytes blockData;
 	};
 
 	void noteReady_WITH_LOCK(h256 const& _b);
@@ -145,32 +295,33 @@ private:
 	void updateBad_WITH_LOCK(h256 const& _bad);
 	void drainVerified_WITH_BOTH_LOCKS();
 
+	std::size_t knownSize() const;
+	std::size_t knownCount() const;
+	std::size_t unknownSize() const;
+	std::size_t unknownCount() const;
+
 	BlockChain const* m_bc;												///< The blockchain into which our imports go.
 
 	mutable boost::shared_mutex m_lock;									///< General lock for the sets, m_future and m_unknown.
 	h256Hash m_drainingSet;												///< All blocks being imported.
 	h256Hash m_readySet;												///< All blocks ready for chain import.
 	h256Hash m_unknownSet;												///< Set of all blocks whose parents are not ready/in-chain.
-	std::unordered_multimap<h256, std::pair<h256, bytes>> m_unknown;	///< For blocks that have an unknown parent; we map their parent hash to the block stuff, and insert once the block appears.
+	SizedBlockMap<h256> m_unknown;										///< For blocks that have an unknown parent; we map their parent hash to the block stuff, and insert once the block appears.
 	h256Hash m_knownBad;												///< Set of blocks that we know will never be valid.
-	std::multimap<unsigned, std::pair<h256, bytes>> m_future;			///< Set of blocks that are not yet valid. Ordered by timestamp
+	SizedBlockMap<time_t> m_future;										///< Set of blocks that are not yet valid. Ordered by timestamp
 	Signal<> m_onReady;													///< Called when a subsequent call to import blocks will return a non-empty container. Be nice and exit fast.
 	Signal<> m_onRoomAvailable;											///< Called when space for new blocks becomes availabe after a drain. Be nice and exit fast.
 
 	mutable Mutex m_verification;										///< Mutex that allows writing to m_verified, m_verifying and m_unverified.
 	std::condition_variable m_moreToVerify;								///< Signaled when m_unverified has a new entry.
-	std::deque<VerifiedBlock> m_verified;								///< List of blocks, in correct order, verified and ready for chain-import.
-	std::deque<VerifiedBlock> m_verifying;								///< List of blocks being verified; as long as the block component (bytes) is empty, it's not finished.
-	std::deque<UnverifiedBlock> m_unverified;							///< List of <block hash, parent hash, block data> in correct order, ready for verification.
+	SizedBlockQueue<VerifiedBlock> m_verified;								///< List of blocks, in correct order, verified and ready for chain-import.
+	SizedBlockQueue<VerifiedBlock> m_verifying;								///< List of blocks being verified; as long as the block component (bytes) is empty, it's not finished.
+	SizedBlockQueue<UnverifiedBlock> m_unverified;							///< List of <block hash, parent hash, block data> in correct order, ready for verification.
 
 	std::vector<std::thread> m_verifiers;								///< Threads who only verify.
 	std::atomic<bool> m_deleting = {false};								///< Exit condition for verifiers.
 
 	std::function<void(Exception&)> m_onBad;							///< Called if we have a block that doesn't verify.
-	std::atomic<size_t> m_unknownSize;									///< Tracks total size in bytes of all unknown blocks
-	std::atomic<size_t> m_knownSize;									///< Tracks total size in bytes of all known blocks;
-	std::atomic<size_t> m_unknownCount;									///< Tracks total count of unknown blocks. Used to avoid additional syncing
-	std::atomic<size_t> m_knownCount;									///< Tracks total count of known blocks. Used to avoid additional syncing
 	u256 m_difficulty;													///< Total difficulty of blocks in the queue
 	u256 m_drainingDifficulty;											///< Total difficulty of blocks in draining
 };

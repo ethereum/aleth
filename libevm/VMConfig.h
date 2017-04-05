@@ -33,32 +33,39 @@ namespace eth
 //
 // EVM_TRACE              - provides various levels of tracing
 
-#if true && defined(__GNUG__)
-	#define EVM_JUMP_DISPATCH
+#ifndef EVM_JUMP_DISPATCH
+	#ifdef __GNUC__
+		#define EVM_JUMP_DISPATCH false
+	#else
+		#define EVM_JUMP_DISPATCH false
+	#endif
+#endif
+#if EVM_JUMP_DISPATCH
+	#ifndef __GNUC__
+		#error "address of label extension avaiable only on Gnu"
+	#endif
 #else
 	#define EVM_SWITCH_DISPATCH
 #endif
 
-#if false
-	#define EVM_REPLACE_CONST_JUMP
+#ifndef EVM_OPTIMIZE
+	#define EVM_OPTIMIZE false
 #endif
-
-#if false
-	#define EVM_USE_CONSTANT_POOL
-#endif
-
-#if	defined(EVM_USE_CONSTANT_POOL) || \
-	defined(EVM_REPLACE_CONST_JUMP)
-		#define EVM_DO_FIRST_PASS_OPTIMIZATION
+#if EVM_OPTIMIZE
+	#define EVM_REPLACE_CONST_JUMP false
+	#define EVM_USE_CONSTANT_POOL false
+	#define EVM_DO_FIRST_PASS_OPTIMIZATION ( \
+				EVM_REPLACE_CONST_JUMP || \
+				EVM_USE_CONSTANT_POOL \
+			)
 #endif
 
 #define EVM_JUMPS_AND_SUBS false
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //
-// set this to 2, 1, or 0 for more, less, or no tracing to cerr
+// set EVM_TRACE to 2, 1, or 0 for more, less, or no tracing to cerr
 //
 #ifndef EVM_TRACE
 	#define EVM_TRACE 0
@@ -68,8 +75,7 @@ namespace eth
 	#undef ON_OP
 	#if EVM_TRACE > 1
 		#define ON_OP() \
-			(onOperation(), \
-			(cerr <<"### "<< m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl))
+			(cerr <<"### "<< ++m_nSteps <<" @"<< m_PC <<" "<< instructionInfo(m_OP).name <<endl)
 	#else
 		#define ON_OP() onOperation()
 	#endif
@@ -121,13 +127,14 @@ namespace eth
 //
 #if defined(EVM_SWITCH_DISPATCH)
 
-	#define INIT_CASES if (!m_caseInit) { m_caseInit = true; return; }
-	#define DO_CASES for(;;) { fetchInstruction(); switch(m_op) {
-	#define CASE_BEGIN(name) case Instruction::name:
-	#define CASE_END break;
-	#define CASE_RETURN return;
-	#define CASE_DEFAULT default:
-	#define END_CASES } }
+	#define INIT_CASES if (!m_caseInit) { m_PC = 0; m_caseInit = true; return; }
+	#define DO_CASES for(;;) { fetchInstruction(); switch(m_OP) {
+	#define CASE(name) case Instruction::name:
+	#define NEXT ++m_PC; break;
+	#define CONTINUE continue;
+	#define BREAK return;
+	#define DEFAULT default:
+	#define WHILE_CASES } }
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -316,7 +323,7 @@ namespace eth
 			&&PUSHC,  \
 			&&JUMPC,  \
 			&&JUMPCI,  \
-			&&BAD,  \
+			&&INVALID,  \
 			&&INVALID,       /* B0, */  \
 			&&INVALID,  \
 			&&INVALID,  \
@@ -398,19 +405,21 @@ namespace eth
 			&&INVALID,  \
 			&&SUICIDE,  \
 		};  \
-		if (!m_caseInit) {  \
+		if (!m_caseInit) {            \
 			c_jumpTable = jumpTable;  \
-			m_caseInit = true;  \
-			return;  \
+			m_PC = 0;                 \
+			m_caseInit = true;        \
+			return;                   \
 		}
 
-	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_op];
-	#define CASE_BEGIN(name) name:
-	#define CASE_END fetchInstruction(); goto *jumpTable[m_code[m_pc]];
-	#define CASE_RETURN return;
-	#define CASE_DEFAULT INVALID:
-	#define END_CASES
-	
+	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_OP];
+	#define CASE(name) name:
+	#define NEXT m_PC = 0; fetchInstruction(); goto *jumpTable[m_code[m_PC]];
+	#define CONTINUE fetchInstruction(); goto *jumpTable[m_code[m_PC]];
+	#define BREAK return;
+	#define DEFAULT INVALID:
+	#define WHILE_CASES
+
 #else
 	#error No opcode dispatch configured
 #endif

@@ -122,7 +122,7 @@ public:
 	 * populating environment info from the given Block and the LastHashes portion from the BlockChain.
 	 * State is assigned the resultant value, but otherwise unused.
 	 */
-	Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level = 0);
+	Executive(State& io_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level = 0);
 
 	Executive(Executive const&) = delete;
 	void operator=(Executive) = delete;
@@ -145,9 +145,8 @@ public:
 	/// @returns total gas used in the transaction/operation.
 	/// @warning Only valid after finalise().
 	u256 gasUsed() const;
-	/// @returns total gas used in the transaction/operation, excluding anything refunded.
-	/// @warning Only valid after finalise().
-	u256 gasUsedNoRefunds() const;
+
+	owning_bytes_ref takeOutput() { return std::move(m_output); }
 
 	/// Set up the executive for evaluating a bare CREATE (contract-creation) operation.
 	/// @returns false iff go() must be called (and thus a VM execution in required).
@@ -188,12 +187,12 @@ private:
 	// TODO: consider changign to EnvInfo const& to avoid LastHashes copy at every CALL/CREATE
 	EnvInfo m_envInfo;					///< Information on the runtime environment.
 	std::shared_ptr<ExtVM> m_ext;		///< The VM externality object for the VM execution or null if no VM is required. shared_ptr used only to allow ExtVM forward reference. This field does *NOT* survive this object.
-	bytesRef m_outRef;					///< Reference to "expected output" buffer.
+	owning_bytes_ref m_output;			///< Execution output.
 	ExecutionResult* m_res = nullptr;	///< Optional storage for execution results.
 
 	unsigned m_depth = 0;				///< The context's call-depth.
 	TransactionException m_excepted = TransactionException::None;	///< Details if the VM's execution resulted in an exception.
-	bigint m_baseGasRequired;				///< The base amount of gas requried for executing this transactions.
+	int64_t m_baseGasRequired;			///< The base amount of gas requried for executing this transaction.
 	u256 m_gas = 0;						///< The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
 	u256 m_refunded = 0;				///< The amount of gas refunded.
 

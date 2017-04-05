@@ -191,21 +191,22 @@ public:
 	h256Hash const& pendingHashes() const { return m_transactionSet; }
 
 	/// Get the transaction receipt for the transaction of the given index.
-	TransactionReceipt const& receipt(unsigned _i) const { return m_receipts[_i]; }
+	TransactionReceipt const& receipt(unsigned _i) const { return m_receipts.at(_i); }
 
 	/// Get the list of pending transactions.
-	LogEntries const& log(unsigned _i) const { return m_receipts[_i].log(); }
+	LogEntries const& log(unsigned _i) const { return receipt(_i).log(); }
 
 	/// Get the bloom filter of all logs that happened in the block.
 	LogBloom logBloom() const;
 
 	/// Get the bloom filter of a particular transaction that happened in the block.
-	LogBloom const& logBloom(unsigned _i) const { return m_receipts[_i].bloom(); }
+	LogBloom const& logBloom(unsigned _i) const { return receipt(_i).bloom(); }
 
-	/// Get the State immediately after the given number of pending transactions have been applied.
+	/// Get the State root hash immediately after all previous transactions before transaction @a _i have been applied.
 	/// If (_i == 0) returns the initial state of the block.
 	/// If (_i == pending().size()) returns the final state of the block, prior to rewards.
-	State fromPending(unsigned _i) const;
+	/// Returns zero hash if intermediate state root is not available in the receipt (the case after EIP98)
+	h256 stateRootBeforeTx(unsigned _i) const;
 
 	// State-change operations
 

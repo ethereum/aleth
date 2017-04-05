@@ -23,11 +23,7 @@
 
 #pragma once
 #include "DBFace.h"
-
-namespace leveldb
-{
-	class DB;
-}
+#include <libdevcore/dbfwd.h>
 
 namespace dev
 {
@@ -46,7 +42,7 @@ public:
 	virtual std::string db_get(std::string const& _name, std::string const& _key) override;
 	
 private:
-	leveldb::DB* m_db;
+	ldb::DB* m_db;
 };
 
 }

@@ -24,7 +24,6 @@
 
 #include <memory>
 #include <libdevcore/Guards.h>
-#include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>
 #include "Common.h"
 
@@ -72,19 +71,18 @@ class RLPXHandshake;
  */
 class RLPXFrameCoder
 {
-	friend class RLPXFrameIOMux;
 	friend class Session;
 public:
 	/// Construct; requires instance of RLPXHandshake which has encrypted ECDH key exchange (first two phases of handshake).
 	RLPXFrameCoder(RLPXHandshake const& _init);
 	
 	/// Construct with external key material.
-	RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ephemeral, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher);
+	RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher);
 	
-	~RLPXFrameCoder() {}
+	~RLPXFrameCoder();
 	
 	/// Establish shared secrets and setup AES and MAC states.
-	void setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ephemeral, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher);
+	void setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher);
 	
 	/// Write single-frame payload of packet(s).
 	void writeFrame(uint16_t _protocolType, bytesConstRef _payload, bytes& o_bytes);
@@ -126,21 +124,7 @@ protected:
 	void updateIngressMACWithFrame(bytesConstRef _cipher);
 
 private:
-	/// Update state of _mac.
-	void updateMAC(CryptoPP::Keccak_256& _mac, bytesConstRef _seed = bytesConstRef());
-
-	CryptoPP::SecByteBlock m_frameEncKey;						///< Key for m_frameEnc
-	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameEnc;	///< Encoder for egress plaintext.
-	
-	CryptoPP::SecByteBlock m_frameDecKey;						///< Key for m_frameDec
-	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameDec;	///< Decoder for egress plaintext.
-	
-	CryptoPP::SecByteBlock m_macEncKey;						/// Key for m_macEnd
-	CryptoPP::ECB_Mode<CryptoPP::AES>::Encryption m_macEnc;	/// One-way coder used by updateMAC for ingress and egress MAC updates.
-	Mutex x_macEnc;											/// Mutex
-	
-	CryptoPP::Keccak_256 m_egressMac;		///< State of MAC for egress ciphertext.
-	CryptoPP::Keccak_256 m_ingressMac;		///< State of MAC for ingress ciphertext.
+	std::unique_ptr<class RLPXFrameCoderImpl> m_impl;
 };
 
 }

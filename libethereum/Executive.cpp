@@ -157,8 +157,8 @@ Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 {
 }
 
-Executive::Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
-	m_s(_s = _block.fromPending(_txIndex)),
+Executive::Executive(State& io_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
+	m_s(createIntermediateState(io_s, _block, _txIndex, _bc)),
 	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
 	m_depth(_level),
 	m_sealEngine(*_bc.sealEngine())
@@ -170,11 +170,6 @@ u256 Executive::gasUsed() const
 	return m_t.gas() - m_gas;
 }
 
-u256 Executive::gasUsedNoRefunds() const
-{
-	return m_t.gas() - m_gas + m_refunded;
-}
-
 void Executive::accrueSubState(SubState& _parentContext)
 {
 	if (m_ext)
@@ -184,54 +179,49 @@ void Executive::accrueSubState(SubState& _parentContext)
 void Executive::initialize(Transaction const& _transaction)
 {
 	m_t = _transaction;
-
-	// Avoid transactions that would take us beyond the block gas limit.
-	u256 startGasUsed = m_envInfo.gasUsed();
-	if (startGasUsed + (bigint)m_t.gas() > m_envInfo.gasLimit())
-	{
-		clog(ExecutiveWarnChannel) << "Too much gas used in this block: Require <" << (m_envInfo.gasLimit() - startGasUsed) << " Got" << m_t.gas();
-		m_excepted = TransactionException::BlockGasLimitReached;
-		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(m_envInfo.gasLimit() - startGasUsed), (bigint)m_t.gas()));
-	}
-
-	// Check gas cost is enough.
-	m_baseGasRequired = m_t.gasRequired(m_sealEngine.evmSchedule(m_envInfo));
-	if (m_baseGasRequired > m_t.gas())
-	{
-		clog(ExecutiveWarnChannel) << "Not enough gas to pay for the transaction: Require >" << m_baseGasRequired << " Got" << m_t.gas();
-		m_excepted = TransactionException::OutOfGasBase;
-		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(m_baseGasRequired, (bigint)m_t.gas()));
-	}
-
-	// Avoid invalid transactions.
-	u256 nonceReq;
+	m_baseGasRequired = m_t.baseGasRequired(m_sealEngine.evmSchedule(m_envInfo));
 	try
 	{
-		nonceReq = m_s.getNonce(m_t.sender());
+		m_sealEngine.verifyTransaction(ImportRequirements::Everything, m_t, m_envInfo);
 	}
-	catch (...)
+	catch (Exception const& ex)
 	{
-		clog(ExecutiveWarnChannel) << "Invalid Signature";
-		m_excepted = TransactionException::InvalidSignature;
+		m_excepted = toTransactionException(ex);
 		throw;
 	}
-	if (m_t.nonce() != nonceReq)
-	{
-		clog(ExecutiveWarnChannel) << "Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
-		m_excepted = TransactionException::InvalidNonce;
-		BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
-	}
 
-	// Avoid unaffordable transactions.
-	bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
-	bigint totalCost = m_t.value() + gasCost;
-	if (m_s.balance(m_t.sender()) < totalCost)
+	if (!m_t.hasZeroSignature())
 	{
-		clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
-		m_excepted = TransactionException::NotEnoughCash;
-		BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().abridged()));
+		// Avoid invalid transactions.
+		u256 nonceReq;
+		try
+		{
+			nonceReq = m_s.getNonce(m_t.sender());
+		}
+		catch (InvalidSignature const&)
+		{
+			clog(ExecutiveWarnChannel) << "Invalid Signature";
+			m_excepted = TransactionException::InvalidSignature;
+			throw;
+		}
+		if (m_t.nonce() != nonceReq)
+		{
+			clog(ExecutiveWarnChannel) << "Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
+			m_excepted = TransactionException::InvalidNonce;
+			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
+		}
+
+		// Avoid unaffordable transactions.
+		bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
+		bigint totalCost = m_t.value() + gasCost;
+		if (m_s.balance(m_t.sender()) < totalCost)
+		{
+			clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
+			m_excepted = TransactionException::NotEnoughCash;
+			BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().abridged()));
+		}
+		m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 	}
-	m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 }
 
 bool Executive::execute()
@@ -250,7 +240,7 @@ bool Executive::execute()
 
 bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
 {
-	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}, {}};
+	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}};
 	return call(params, _gasPrice, _senderAddress);
 }
 
@@ -262,24 +252,42 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		// FIXME: changelog contains unrevertable balance change that paid
 		//        for the transaction.
 		// Increment associated nonce for sender.
-		m_s.incNonce(_p.senderAddress);
+		if (_p.senderAddress != MaxAddress) // EIP86
+			m_s.incNonce(_p.senderAddress);
 	}
 
 	m_savepoint = m_s.savepoint();
 
-	if (m_sealEngine.isPrecompiled(_p.codeAddress))
+	if (m_sealEngine.isPrecompiled(_p.codeAddress, m_envInfo.number()))
 	{
-		bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data);
+		bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
 		if (_p.gas < g)
 		{
 			m_excepted = TransactionException::OutOfGasBase;
 			// Bail from exception.
+			
+			// Empty precompiled contracts need to be deleted even in case of OOG
+			// because the bug in both Geth and Parity led to deleting RIPEMD precompiled in this case
+			// see https://github.com/ethereum/go-ethereum/pull/3341/files#diff-2433aa143ee4772026454b8abd76b9dd
+			// We mark the account as touched here, so that is can be removed among other touched empty accounts (after tx finalization)
+			if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock"))
+				m_s.addBalance(_p.codeAddress, 0);
+			
 			return true;	// true actually means "all finished - nothing more to be done regarding go().
 		}
 		else
 		{
 			m_gas = (u256)(_p.gas - g);
-			m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, _p.out);
+			bytes output;
+			bool success;
+			tie(success, output) = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
+			if (!success)
+			{
+				m_gas = 0;
+				m_excepted = TransactionException::OutOfGas;
+			}
+			size_t outputSize = output.size();
+			m_output = owning_bytes_ref{std::move(output), 0, outputSize};
 		}
 	}
 	else
@@ -287,7 +295,6 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		m_gas = _p.gas;
 		if (m_s.addressHasCode(_p.codeAddress))
 		{
-			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
 			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
@@ -302,7 +309,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	u256 nonce = m_s.getNonce(_sender);
-	m_s.incNonce(_sender);
+	if (_sender != MaxAddress) // EIP86
+		m_s.incNonce(_sender);
 
 	m_savepoint = m_s.savepoint();
 
@@ -387,23 +395,21 @@ bool Executive::go(OnOpFunc const& _onOp)
 					{
 						if (m_res)
 							m_res->codeDeposit = CodeDeposit::Failed;
-						out.clear();
+						out = {};
 					}
 				}
 				if (m_res)
-					m_res->output = out; // copy output to execution result
-				m_s.setNewCode(m_ext->myAddress, std::move(out));
+					m_res->output = out.toVector(); // copy output to execution result
+				m_s.setNewCode(m_ext->myAddress, out.toVector());
 			}
 			else
-			{
-				if (m_res)
-				{
-					m_res->output = vm->exec(m_gas, *m_ext, _onOp); // take full output
-					bytesConstRef{&m_res->output}.copyTo(m_outRef);
-				}
-				else
-					vm->exec(m_gas, *m_ext, m_outRef, _onOp); // take only expected output
-			}
+				m_output = vm->exec(m_gas, *m_ext, _onOp);
+		}
+		catch (RevertInstruction& _e)
+		{
+			revert();
+			m_output = _e.output();
+			m_excepted = TransactionException::RevertInstruction;
 		}
 		catch (VMException const& _e)
 		{
@@ -428,6 +434,11 @@ bool Executive::go(OnOpFunc const& _onOp)
 			// Another solution would be to reject this transaction, but that also
 			// has drawbacks. Essentially, the amount of ram has to be increased here.
 		}
+
+		if (m_res && m_output)
+			// Copy full output:
+			m_res->output = m_output.toVector();
+
 #if ETH_TIMED_EXECUTIONS
 		cnote << "VM took:" << t.elapsed() << "; gas used: " << (sgas - m_endGas);
 #endif

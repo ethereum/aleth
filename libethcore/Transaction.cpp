@@ -70,23 +70,29 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 		h256 r = rlp[field = 7].toInt<u256>();
 		h256 s = rlp[field = 8].toInt<u256>();
 
-		if (v > 36)
-			m_chainId = (v - 35) / 2;
-		else if (v == 27 || v == 28)
-			m_chainId = -4;
-		else
-			BOOST_THROW_EXCEPTION(InvalidSignature());
-
-		v = v - (m_chainId * 2 + 35);
-
-		if (rlp.itemCount() > 9)
-			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("to many fields in the transaction RLP"));
-
 		m_vrs = SignatureStruct{ r, s, v };
-		if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid())
-			BOOST_THROW_EXCEPTION(InvalidSignature());
+
+		if (hasZeroSignature())
+			m_chainId = m_vrs->v;
+		else
+		{
+			if (v > 36)
+				m_chainId = (v - 35) / 2;
+			else if (v == 27 || v == 28)
+				m_chainId = -4;
+			else
+				BOOST_THROW_EXCEPTION(InvalidSignature());
+			m_vrs->v = v - (m_chainId * 2 + 35);
+
+			if (_checkSig >= CheckTransaction::Cheap && !m_vrs->isValid())
+				BOOST_THROW_EXCEPTION(InvalidSignature());
+		}
+
 		if (_checkSig == CheckTransaction::Everything)
 			m_sender = sender();
+
+		if (rlp.itemCount() > 9)
+			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("too many fields in the transaction RLP"));
 	}
 	catch (Exception& _e)
 	{
@@ -111,12 +117,28 @@ Address const& TransactionBase::sender() const
 {
 	if (!m_sender)
 	{
-		auto p = recover(m_vrs, sha3(WithoutSignature));
-		if (!p)
-			BOOST_THROW_EXCEPTION(InvalidSignature());
-		m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
+		if (hasZeroSignature())
+			m_sender = MaxAddress;
+		else
+		{
+			if (!m_vrs)
+				BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+			auto p = recover(*m_vrs, sha3(WithoutSignature));
+			if (!p)
+				BOOST_THROW_EXCEPTION(InvalidSignature());
+			m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
+		}
 	}
 	return m_sender;
+}
+
+SignatureStruct const& TransactionBase::signature() const
+{ 
+	if (!m_vrs)
+		BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+	return *m_vrs;
 }
 
 void TransactionBase::sign(Secret const& _priv)
@@ -142,8 +164,11 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 
 	if (_sig)
 	{
+		if (!m_vrs)
+			BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
 		int vOffset = m_chainId*2 + 35;
-		_s << (m_vrs.v + vOffset) << (u256)m_vrs.r << (u256)m_vrs.s;
+		_s << (m_vrs->v + vOffset) << (u256)m_vrs->r << (u256)m_vrs->s;
 	}
 	else if (_forEip155hash)
 		_s << m_chainId << 0 << 0;
@@ -153,7 +178,10 @@ static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279
 
 void TransactionBase::checkLowS() const
 {
-	if (m_vrs.s > c_secp256k1n / 2)
+	if (!m_vrs)
+		BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+	if (m_vrs->s > c_secp256k1n / 2)
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 }
 
@@ -163,12 +191,16 @@ void TransactionBase::checkChainId(int chainId) const
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 }
 
-bigint TransactionBase::gasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es, u256 const& _gas)
+int64_t TransactionBase::baseGasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es)
 {
-	bigint ret = (_contractCreation ? _es.txCreateGas : _es.txGas) + _gas;
+	int64_t g = _contractCreation ? _es.txCreateGas : _es.txGas;
+
+	// Calculate the cost of input data.
+	// No risk of overflow by using int64 until txDataNonZeroGas is quite small
+	// (the value not in billions).
 	for (auto i: _data)
-		ret += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
-	return ret;
+		g += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
+	return g;
 }
 
 h256 TransactionBase::sha3(IncludeSignature _sig) const

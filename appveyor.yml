@@ -31,16 +31,31 @@ configuration:
     - RelWithDebInfo
 environment:
     TESTS: On
-cache: build/evmjit/llvm
+clone_script:
+# We have to overwrite the clone script to update submodules before
+# the cache invalidation check.
+  - ps: |
+      if(-not $env:appveyor_pull_request_number) {
+          git clone -q --depth 1 --branch=$env:appveyor_repo_branch https://github.com/$env:appveyor_repo_name.git $env:appveyor_build_folder
+          git checkout -qf $env:appveyor_repo_commit
+          git submodule -q update --init --recursive
+      } else {
+          git clone -q --depth 1 https://github.com/$env:appveyor_repo_name.git $env:appveyor_build_folder
+          git fetch -q origin +refs/pull/$env:appveyor_pull_request_number/merge:
+          git checkout -qf FETCH_HEAD
+          git submodule -q update --init --recursive
+      }
+cache:
+    - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
+    - deps
 #RDP LOGIN details for trouble shooting
 #init:
 #    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 #on_finish:
 #    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 install:
-    - git submodule update --init --recursive
     - scripts/install_deps.bat
-    - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
+    - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps
 before_build:
     - if not exist build mkdir build
     - cd build

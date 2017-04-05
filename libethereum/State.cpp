@@ -31,11 +31,11 @@
 #include <libethcore/Exceptions.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
+#include "Block.h"
 #include "CodeSizeCache.h"
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
-#include "BlockChain.h"
 #include "TransactionQueue.h"
 
 using namespace std;
@@ -48,6 +48,20 @@ const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ";
 const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
 const char* StateTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
 const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
+
+namespace
+{
+
+void executeTransaction(Executive& _e, Transaction const& _t, OnOpFunc const& _onOp)
+{
+	_e.initialize(_t);
+
+	if (!_e.execute())
+		_e.go(_onOp);
+	_e.finalize();
+}
+
+}
 
 State::State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs):
 	m_db(_db),
@@ -523,13 +537,9 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	Executive e(*this, _envInfo, _sealEngine);
 	ExecutionResult res;
 	e.setResultRecipient(res);
-	e.initialize(_t);
 
-	// OK - transaction looks valid - execute.
-	u256 startGasUsed = _envInfo.gasUsed();
-	if (!e.execute())
-		e.go(onOp);
-	e.finalize();
+	u256 const startGasUsed = _envInfo.gasUsed();
+	executeTransaction(e, _t, onOp);
 
 	if (_p == Permanence::Reverted)
 		m_cache.clear();
@@ -539,7 +549,24 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 	}
 
-	return make_pair(res, TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs()));
+	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("metropolisForkBlock") ?
+		TransactionReceipt(startGasUsed + e.gasUsed(), e.logs()) :
+		TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs());
+	return make_pair(res, receipt);
+}
+
+void State::executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine)
+{
+	u256 gasUsed = 0;
+	for (unsigned i = 0; i < _txCount; ++i)
+	{
+		EnvInfo envInfo(_block.info(), _lastHashes, gasUsed);
+
+		Executive e(*this, envInfo, _sealEngine);
+		executeTransaction(e, _block.pending()[i], OnOpFunc());
+
+		gasUsed += e.gasUsed();
+	}
 }
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
@@ -616,4 +643,18 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 		}
 	}
 	return _out;
+}
+
+State& dev::eth::createIntermediateState(State& o_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc)
+{
+	o_s = _block.state();
+	u256 const rootHash = _block.stateRootBeforeTx(_txIndex);
+	if (rootHash)
+		o_s.setRoot(rootHash);
+	else
+	{
+		o_s.setRoot(_block.stateRootBeforeTx(0));
+		o_s.executeBlockTransactions(_block, _txIndex, _bc.lastHashes(_block.info().parentHash()), *_bc.sealEngine());
+	}
+	return o_s;
 }

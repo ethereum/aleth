@@ -29,13 +29,14 @@
 #include "Defaults.h"
 #include "Executive.h"
 #include "EthereumHost.h"
-#include "Utility.h"
 #include "Block.h"
 #include "TransactionQueue.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
+
+static_assert(BOOST_VERSION == 106300, "Wrong boost headers version");
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 {
@@ -101,6 +102,10 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
 	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
+	bc().setOnBlockImport([=](BlockHeader const& _info){
+		if (auto h = m_host.lock())
+			h->onBlockImported(_info);
+	});
 
 	if (_forceAction == WithExisting::Rescue)
 		bc().rescue(m_stateDB);
@@ -109,7 +114,9 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 
 	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
 	m_host = host;
+
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
+
 
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
@@ -137,7 +144,7 @@ void Client::onBadBlock(Exception& _ex) const
 	if (!block)
 	{
 		cwarn << "ODD: onBadBlock called but exception (" << _ex.what() << ") has no block in it.";
-		cwarn << boost::diagnostic_information(_ex, true);
+		cwarn << boost::diagnostic_information(_ex);
 		return;
 	}
 
@@ -766,28 +773,6 @@ Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 		onBadBlock(ex);
 		return Block(bc());
 	}
-}
-
-State Client::state(unsigned _txi, h256 const& _blockHash) const
-{
-	try
-	{
-		return block(_blockHash).fromPending(_txi);
-	}
-	catch (Exception& ex)
-	{
-		ex << errinfo_block(bc().block(_blockHash));
-		onBadBlock(ex);
-		return State(chainParams().accountStartNonce);
-	}
-}
-
-eth::State Client::state(unsigned _txi) const
-{
-	DEV_READ_GUARDED(x_postSeal)
-		return m_postSeal.fromPending(_txi);
-	assert(false);
-	return State(chainParams().accountStartNonce);
 }
 
 void Client::flushTransactions()

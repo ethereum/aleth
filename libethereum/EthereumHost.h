@@ -34,6 +34,8 @@
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
 #include <libdevcore/OverlayDB.h>
+#include <libethcore/BlockHeader.h>
+#include <libethereum/BlockChainSync.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
 
@@ -70,12 +72,15 @@ public:
 	void setNetworkId(u256 _n) { m_networkId = _n; }
 
 	void reset();
+	/// Don't sync further - used only in test mode
+	void completeSync();
 
 	bool isSyncing() const;
 	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
 	void noteNewTransactions() { m_newTransactions = true; }
 	void noteNewBlocks() { m_newBlocks = true; }
+	void onBlockImported(BlockHeader const& _info) { m_sync->onBlockImported(_info); }
 
 	BlockChain const& chain() const { return m_chain; }
 	OverlayDB const& db() const { return m_db; }

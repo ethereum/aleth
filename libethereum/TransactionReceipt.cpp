@@ -28,11 +28,21 @@ using namespace dev::eth;
 TransactionReceipt::TransactionReceipt(bytesConstRef _rlp)
 {
 	RLP r(_rlp);
-	m_stateRoot = (h256)r[0];
-	m_gasUsed = (u256)r[1];
-	m_bloom = (LogBloom)r[2];
-	for (auto const& i: r[3])
+	if (!r.isList() || r.itemCount() < 3 || r.itemCount() > 4)
+		DEV_SIMPLE_EXCEPTION(InvalidTransactionReceiptFormat);
+		
+	size_t gasUsedIndex = 0;
+	if (r.itemCount() == 4)
+	{
+		m_stateRoot = (h256)r[0];
+		gasUsedIndex = 1;
+	}
+
+	m_gasUsed = (u256)r[gasUsedIndex];
+	m_bloom = (LogBloom)r[gasUsedIndex + 1];
+	for (auto const& i : r[gasUsedIndex + 2])
 		m_log.emplace_back(i);
+
 }
 
 TransactionReceipt::TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries const& _log):
@@ -44,7 +54,13 @@ TransactionReceipt::TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries con
 
 void TransactionReceipt::streamRLP(RLPStream& _s) const
 {
-	_s.appendList(4) << m_stateRoot << m_gasUsed << m_bloom;
+	if (m_stateRoot)
+		_s.appendList(4) << m_stateRoot;
+	else
+		_s.appendList(3);
+		
+	_s << m_gasUsed << m_bloom;
+
 	_s.appendList(m_log.size());
 	for (LogEntry const& l: m_log)
 		l.streamRLP(_s);
