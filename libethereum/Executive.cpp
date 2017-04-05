@@ -184,19 +184,9 @@ void Executive::initialize(Transaction const& _transaction)
 	{
 		m_sealEngine.verifyTransaction(ImportRequirements::Everything, _transaction, m_envInfo);
 	}
-	catch (InvalidSignature const& ex)
+	catch (Exception const& ex)
 	{
-		m_excepted = TransactionException::InvalidSignature;
-		throw;
-	}
-	catch (OutOfGasIntrinsic const& ex)
-	{
-		m_excepted = TransactionException::OutOfGasIntrinsic;
-		throw;
-	}
-	catch (InvalidZeroSignatureTransaction const& ex)
-	{
-		m_excepted = TransactionException::InvalidZeroSignatureFormat;
+		m_excepted = toTransactionException(ex);
 		throw;
 	}
 
@@ -207,15 +197,6 @@ void Executive::initialize(Transaction const& _transaction)
 		clog(ExecutiveWarnChannel) << "Cannot fit tx in block" << m_envInfo.number() << ": Require <" << (m_envInfo.gasLimit() - startGasUsed) << " Got" << m_t.gas();
 		m_excepted = TransactionException::BlockGasLimitReached;
 		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(m_envInfo.gasLimit() - startGasUsed), (bigint)m_t.gas()));
-	}
-
-	// Check gas cost is enough.
-	m_baseGasRequired = m_t.baseGasRequired(m_sealEngine.evmSchedule(m_envInfo));
-	if (m_baseGasRequired > m_t.gas())
-	{
-		clog(ExecutiveWarnChannel) << "Not enough gas to pay for the transaction: Require >" << m_baseGasRequired << " Got" << m_t.gas();
-		m_excepted = TransactionException::OutOfGasBase;
-		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError((bigint)m_baseGasRequired, (bigint)m_t.gas()));
 	}
 
 	if (!m_t.hasZeroSignature())
