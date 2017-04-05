@@ -184,20 +184,20 @@ void Executive::initialize(Transaction const& _transaction)
 	{
 		m_sealEngine.verifyTransaction(ImportRequirements::Everything, _transaction, m_envInfo);
 	}
-	catch (InvalidSignature ex)
+	catch (InvalidSignature const& ex)
 	{
 		m_excepted = TransactionException::InvalidSignature;
-		BOOST_THROW_EXCEPTION(ex);
+		throw;
 	}
-	catch (OutOfGasIntrinsic ex)
+	catch (OutOfGasIntrinsic const& ex)
 	{
 		m_excepted = TransactionException::OutOfGasIntrinsic;
-		BOOST_THROW_EXCEPTION(ex);
+		throw;
 	}
-	catch (InvalidZeroSignatureTransaction ex)
+	catch (InvalidZeroSignatureTransaction const& ex)
 	{
 		m_excepted = TransactionException::InvalidZeroSignatureFormat;
-		BOOST_THROW_EXCEPTION(ex);
+		throw;
 	}
 
 	// Avoid transactions that would take us beyond the block gas limit.
@@ -280,7 +280,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		// FIXME: changelog contains unrevertable balance change that paid
 		//        for the transaction.
 		// Increment associated nonce for sender.
-		if (_p.senderAddress != MaxAddress) // IEP86
+		if (_p.senderAddress != MaxAddress) // EIP86
 			m_s.incNonce(_p.senderAddress);
 	}
 
@@ -337,7 +337,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	u256 nonce = m_s.getNonce(_sender);
-	if (_sender != MaxAddress) // IEP86
+	if (_sender != MaxAddress) // EIP86
 		m_s.incNonce(_sender);
 
 	m_savepoint = m_s.savepoint();
