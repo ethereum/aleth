@@ -297,7 +297,8 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 		// Increase the account balance. This also is done for value 0 to mark
 		// the account as dirty. Dirty account are not removed from the cache
 		// and are cleared if empty at the end of the transaction.
-		a->addBalance(_amount);
+		if (_id != MaxAddress) // EIP86
+			a->addBalance(_amount);
 	}
 	else
 		createAccount(_id, {requireAccountStartNonce(), _amount});
