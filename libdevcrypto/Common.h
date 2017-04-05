@@ -220,7 +220,7 @@ private:
 namespace ecdh
 {
 
-bool agree(Secret const& _s, Public const& _r, Secret& o_s);
+void agree(Secret const& _s, Public const& _r, Secret& o_s);
 
 }
 
