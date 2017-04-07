@@ -49,7 +49,8 @@ enum class TransactionException
 	OutOfGas,				///< Ran out of gas executing code of the transaction.
 	OutOfStack,				///< Ran out of stack executing code of the transaction.
 	StackUnderflow,
-	RevertInstruction
+	RevertInstruction,
+	InvalidZeroSignatureFormat
 };
 
 enum class CodeDeposit

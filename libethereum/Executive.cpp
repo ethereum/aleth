@@ -180,6 +180,16 @@ void Executive::initialize(Transaction const& _transaction)
 {
 	m_t = _transaction;
 
+	try
+	{
+		m_sealEngine.verifyTransaction(ImportRequirements::Everything, _transaction, m_envInfo);
+	}
+	catch (Exception const& ex)
+	{
+		m_excepted = toTransactionException(ex);
+		throw;
+	}
+
 	// Avoid transactions that would take us beyond the block gas limit.
 	u256 startGasUsed = m_envInfo.gasUsed();
 	if (startGasUsed + (bigint)m_t.gas() > m_envInfo.gasLimit())
@@ -218,18 +228,18 @@ void Executive::initialize(Transaction const& _transaction)
 			m_excepted = TransactionException::InvalidNonce;
 			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
 		}
-	}
 
-	// Avoid unaffordable transactions.
-	bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
-	bigint totalCost = m_t.value() + gasCost;
-	if (m_s.balance(m_t.sender()) < totalCost)
-	{
-		clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
-		m_excepted = TransactionException::NotEnoughCash;
-		BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().abridged()));
+		// Avoid unaffordable transactions.
+		bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
+		bigint totalCost = m_t.value() + gasCost;
+		if (m_s.balance(m_t.sender()) < totalCost)
+		{
+			clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
+			m_excepted = TransactionException::NotEnoughCash;
+			BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().abridged()));
+		}
+		m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 	}
-	m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 }
 
 bool Executive::execute()
@@ -260,7 +270,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		// FIXME: changelog contains unrevertable balance change that paid
 		//        for the transaction.
 		// Increment associated nonce for sender.
-		m_s.incNonce(_p.senderAddress);
+		if (_p.senderAddress != MaxAddress) // EIP86
+			m_s.incNonce(_p.senderAddress);
 	}
 
 	m_savepoint = m_s.savepoint();
@@ -316,7 +327,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	u256 nonce = m_s.getNonce(_sender);
-	m_s.incNonce(_sender);
+	if (_sender != MaxAddress) // EIP86
+		m_s.incNonce(_sender);
 
 	m_savepoint = m_s.savepoint();
 
