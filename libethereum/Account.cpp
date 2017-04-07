@@ -37,6 +37,9 @@ void Account::setNewCode(bytes&& _code)
 
 namespace js = json_spirit;
 
+namespace
+{
+
 uint64_t toUnsigned(js::mValue const& _v)
 {
 	switch (_v.type())
@@ -47,6 +50,37 @@ uint64_t toUnsigned(js::mValue const& _v)
 	}
 }
 
+PrecompiledContract createPrecompiledContract(js::mObject& _precompiled)
+{
+	auto n = _precompiled["name"].get_str();
+	try
+	{
+		u256 startingBlock = 0;
+		if (_precompiled.count("startingBlock"))
+			startingBlock = u256(_precompiled["startingBlock"].get_str());
+
+		if (!_precompiled.count("linear"))
+			return PrecompiledContract(PrecompiledRegistrar::pricer(n), PrecompiledRegistrar::executor(n), startingBlock);
+
+		auto l = _precompiled["linear"].get_obj();
+		unsigned base = toUnsigned(l["base"]);
+		unsigned word = toUnsigned(l["word"]);
+		return PrecompiledContract(base, word, PrecompiledRegistrar::executor(n), startingBlock);
+	}
+	catch (PricerNotFound const&)
+	{
+		cwarn << "Couldn't create a precompiled contract account. Missing a pricer called:" << n;
+		throw;
+	}
+	catch (ExecutorNotFound const&)
+	{
+		// Oh dear - missing a plugin?
+		cwarn << "Couldn't create a precompiled contract account. Missing an executor called:" << n;
+		throw;
+	}
+}
+
+}
 AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
 {
 	auto u256Safe = [](std::string const& s) -> u256 {
@@ -115,28 +149,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 		if (o_precompiled && o.count("precompiled"))
 		{
 			js::mObject p = o["precompiled"].get_obj();
-			auto n = p["name"].get_str();
-			if (!p.count("linear"))
-			{
-				cwarn << "No gas cost given for precompiled contract " << n;
-				throw;
-			}
-			try
-			{
-				auto l = p["linear"].get_obj();
-				u256 startingBlock = 0;
-				if (p.count("startingBlock"))
-					startingBlock = u256(p["startingBlock"].get_str());
-				unsigned base = toUnsigned(l["base"]);
-				unsigned word = toUnsigned(l["word"]);
-				o_precompiled->insert(make_pair(a, PrecompiledContract(base, word, PrecompiledRegistrar::executor(n), startingBlock)));
-			}
-			catch (ExecutorNotFound)
-			{
-				// Oh dear - missing a plugin?
-				cwarn << "Couldn't create a precompiled contract account. Missing an executor called:" << n;
-				throw;
-			}
+			o_precompiled->insert(make_pair(a, createPrecompiledContract(p)));
 		}
 	}
 
