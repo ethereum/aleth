@@ -539,7 +539,8 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 	}
 
-	return make_pair(res, TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs()));
+	h256 const rootState = _envInfo.number() >= _sealEngine.chainParams().u256Param("metropolisForkBlock") ? h256() : rootHash();
+	return make_pair(res, TransactionReceipt(rootState, startGasUsed + e.gasUsed(), e.logs()));
 }
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
