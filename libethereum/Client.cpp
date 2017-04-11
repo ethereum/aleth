@@ -775,28 +775,6 @@ Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 	}
 }
 
-State Client::state(unsigned _txi, h256 const& _blockHash) const
-{
-	try
-	{
-		return block(_blockHash).fromPending(_txi);
-	}
-	catch (Exception& ex)
-	{
-		ex << errinfo_block(bc().block(_blockHash));
-		onBadBlock(ex);
-		return State(chainParams().accountStartNonce);
-	}
-}
-
-eth::State Client::state(unsigned _txi) const
-{
-	DEV_READ_GUARDED(x_postSeal)
-		return m_postSeal.fromPending(_txi);
-	assert(false);
-	return State(chainParams().accountStartNonce);
-}
-
 void Client::flushTransactions()
 {
 	doWork();
