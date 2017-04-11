@@ -31,6 +31,7 @@ void ECDHE::agree(Public const& _remote, Secret& o_sharedSecret) const
 		BOOST_THROW_EXCEPTION(InvalidState());
 	
 	m_remoteEphemeral = _remote;
-	ecdh::agree(m_ephemeral.secret(), m_remoteEphemeral, o_sharedSecret);
+	if (!ecdh::agree(m_ephemeral.secret(), m_remoteEphemeral, o_sharedSecret))
+		BOOST_THROW_EXCEPTION(InvalidState());
 }
 

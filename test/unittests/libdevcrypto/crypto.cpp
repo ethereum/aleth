@@ -231,14 +231,14 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	KeyPair remote = KeyPair::create();
 	// nonce
 	Secret z1;
-	ecdh::agree(local.secret(), remote.pub(), z1);
+	BOOST_CHECK(ecdh::agree(local.secret(), remote.pub(), z1));
 	auto key1 = ecies::kdf(z1, bytes(), 64);
 	bytesConstRef eKey1 = bytesConstRef(&key1).cropped(0, 32);
 	bytesRef mKey1 = bytesRef(&key1).cropped(32, 32);
 	sha3(mKey1, mKey1);
 	
 	Secret z2;
-	ecdh::agree(remote.secret(), local.pub(), z2);
+	BOOST_CHECK(ecdh::agree(remote.secret(), local.pub(), z2));
 	auto key2 = ecies::kdf(z2, bytes(), 64);
 	bytesConstRef eKey2 = bytesConstRef(&key2).cropped(0, 32);
 	bytesRef mKey2 = bytesRef(&key2).cropped(32, 32);
@@ -252,6 +252,22 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	
 	BOOST_REQUIRE(key1.size() > 0 && ((u512)h512(key1)) > 0);
 	BOOST_REQUIRE(key1 == key2);
+}
+
+BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_pubkey)
+{
+	KeyPair ok = KeyPair::create();
+	Public pubkey;
+	~pubkey;  // Create a pubkey of all 1s.
+	Secret z;
+	BOOST_CHECK(!ecdh::agree(ok.secret(), pubkey, z));
+}
+
+BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_seckey)
+{
+	KeyPair ok = KeyPair::create();
+	Secret seckey;  // "Null" seckey is invalid.
+	BOOST_CHECK(!ecdh::agree(seckey, ok.pub(), seckey));
 }
 
 BOOST_AUTO_TEST_CASE(ecies_standard)
@@ -380,7 +396,7 @@ BOOST_AUTO_TEST_CASE(ecdhAgree)
 	auto sec = Secret{sha3("ecdhAgree")};
 	auto pub = toPublic(sec);
 	Secret sharedSec;
-	ecdh::agree(sec, pub, sharedSec);
+	BOOST_CHECK(ecdh::agree(sec, pub, sharedSec));
 	BOOST_CHECK(sharedSec);
 	auto expectedSharedSec = "8ac7e464348b85d9fdfc0a81f2fdc0bbbb8ee5fb3840de6ed60ad9372e718977";
 	BOOST_CHECK_EQUAL(sharedSec.makeInsecure().hex(), expectedSharedSec);
@@ -416,7 +432,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		bytesRef pubk(&auth[Signature::size + h256::size], Public::size);
 		bytesRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
 		
-		crypto::ecdh::agree(nodeA.secret(), nodeB.pub(), ssA);
+		BOOST_CHECK(crypto::ecdh::agree(nodeA.secret(), nodeB.pub(), ssA));
 		sign(eA.seckey(), (ssA ^ nonceA).makeInsecure()).ref().copyTo(sig);
 		sha3(eA.pubkey().ref(), hepubk);
 		nodeA.pub().ref().copyTo(pubk);
@@ -504,7 +520,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	
 	/// Bob (after sending ack)
 	Secret ssB;
-	crypto::ecdh::agree(nodeB.secret(), nodeA.pub(), ssB);
+	BOOST_CHECK(crypto::ecdh::agree(nodeB.secret(), nodeA.pub(), ssB));
 	BOOST_REQUIRE_EQUAL(ssA, ssB);
 	
 	Secret bEncryptK;
@@ -536,7 +552,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		sig.copyTo(sigAuth.ref());
 		
 		Secret ss;
-		ecdh::agree(nodeB.secret(), nodeAAuth, ss);
+		BOOST_CHECK(ecdh::agree(nodeB.secret(), nodeAAuth, ss));
 		eAAuth = recover(sigAuth, (ss ^ nonceAAuth).makeInsecure());
 		// todo: test when this fails; means remote is bad or packet bits were flipped
 		BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));

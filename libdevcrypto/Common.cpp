@@ -348,19 +348,22 @@ Secret Nonce::next()
 	return sha3(~m_value);
 }
 
-void ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
+bool ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s) noexcept
 {
 	auto* ctx = getCtx();
 	static_assert(sizeof(Secret) == 32, "Invalid Secret type size");
 	secp256k1_pubkey rawPubkey;
 	std::array<byte, 65> serializedPubKey{{0x04}};
 	std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
-	auto r = secp256k1_ec_pubkey_parse(ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size());
-	assert(r == 1);
+	if (!secp256k1_ec_pubkey_parse(ctx, &rawPubkey, serializedPubKey.data(), serializedPubKey.size()))
+		return false;  // Invalid public key.
+	// FIXME: We should verify the public key when constructed, maybe even keep
+	//        secp256k1_pubkey as the internal data of Public.
 	std::array<byte, 33> compressedPoint;
-	r = secp256k1_ecdh_raw(ctx, compressedPoint.data(), &rawPubkey, _s.data());
-	assert(r == 1);  // TODO: This should be "invalid secret key" exception.
+	if (!secp256k1_ecdh_raw(ctx, compressedPoint.data(), &rawPubkey, _s.data()))
+		return false;  // Invalid secret key.
 	std::copy(compressedPoint.begin() + 1, compressedPoint.end(), o_s.writable().data());
+	return true;
 }
 
 bytes ecies::kdf(Secret const& _z, bytes const& _s1, unsigned kdByteLen)
