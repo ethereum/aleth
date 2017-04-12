@@ -167,7 +167,12 @@ json_spirit::mObject fillJsonWithState(State const& _state, eth::AccountMaskMap 
 		}
 
 		if (mapEmpty || _map.at(a.first).hasCode())
-			o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
+		{
+			if (_state.code(a.first).size() > 0)
+				o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
+			else
+				o["code"] = "";
+		}
 		oState[toString(a.first)] = o;
 	}
 	return oState;
@@ -462,11 +467,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR(TestOutputHelper::testName() + " Failed filling test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << _e.what());
+			BOOST_ERROR(TestOutputHelper::testName() + " Failed filling test with Exception: " << _e.what());
 		}
 	}
 	try
