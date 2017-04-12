@@ -160,12 +160,12 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 	}
 	catch (dev::Exception const& _e)
 	{
-		std::cout << "Failed test with Exception: " << diagnostic_information(_e) << std::endl;
+		std::cout << " Failed test with Exception: " << diagnostic_information(_e) << std::endl;
 		ret = 1;
 	}
 	catch (std::exception const& _e)
 	{
-		std::cout << "Failed test with Exception: " << _e.what() << std::endl;
+		std::cout << " Failed test with Exception: " << _e.what() << std::endl;
 		ret = 1;
 	}
 	return ret;

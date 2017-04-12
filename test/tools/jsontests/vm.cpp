@@ -544,11 +544,11 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR(" Failed test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR("Failed test with Exception: " << _e.what());
+			BOOST_ERROR(" Failed test with Exception: " << _e.what());
 		}
 	}
 }
