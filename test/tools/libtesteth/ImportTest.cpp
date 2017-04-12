@@ -229,6 +229,17 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = toString(value.get_int());
 		else if (value.type() == json_spirit::str_type)
 			str = value.get_str();
+		else if (value.type() == json_spirit::array_type)
+		{
+			json_spirit::mArray arr;
+			for (auto& j: value.get_array())
+			{
+				str = j.get_str();
+				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1));
+			}
+			_o[key] = arr;
+			continue;
+		}
 		else continue;
 
 		_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
