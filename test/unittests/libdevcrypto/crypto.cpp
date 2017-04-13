@@ -380,14 +380,14 @@ BOOST_AUTO_TEST_CASE(ecdhe)
 
 	// local tx pubkey -> remote
 	Secret sremote;
-	remote.agree(local.pub(), sremote);
+	BOOST_CHECK(ecdh::agree(remote.secret(), local.pub(), sremote));
 	
 	// remote tx pbukey -> local
 	Secret slocal;
-	local.agree(remote.pub(), slocal);
+	BOOST_CHECK(ecdh::agree(local.secret(), remote.pub(), slocal));
 
-	BOOST_REQUIRE(sremote);
-	BOOST_REQUIRE(slocal);
+	BOOST_CHECK(sremote);
+	BOOST_CHECK(slocal);
 	BOOST_CHECK_EQUAL(sremote, slocal);
 }
 
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		Secret ess;
 		// todo: ecdh-agree should be able to output bytes
-		eA.agree(eBAck, ess);
+		BOOST_CHECK(ecdh::agree(eA.secret(), eBAck, ess));
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssA.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 //		auto token = sha3(ssA);
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		Secret ess;
 		// todo: ecdh-agree should be able to output bytes
-		eB.agree(eAAuth, ess);
+		BOOST_CHECK(ecdh::agree(eB.secret(), eAAuth, ess));
 //		s_secp256k1->agree(eB.seckey(), eAAuth, ess);
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssB.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));

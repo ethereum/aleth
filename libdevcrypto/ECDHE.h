@@ -42,15 +42,11 @@ public:
 
 	/// Public key sent to remote.
 	Public pub() const { return m_ephemeral.pub(); }
-	
+
 	Secret secret() const { return m_ephemeral.secret(); }
-	
-	/// Input public key for dh agreement, output generated shared secret.
-	void agree(Public const& _remoteEphemeral, Secret& o_sharedSecret) const;
-	
-protected:
+
+private:
 	KeyPair m_ephemeral;  ///< Ephemeral keypair; generated.
-	mutable bool m_agreed = false;
 };
 
 }

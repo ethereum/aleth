@@ -188,6 +188,7 @@ namespace crypto
 {
 
 DEV_SIMPLE_EXCEPTION(InvalidState);
+DEV_SIMPLE_EXCEPTION(InvalidPublic);
 
 /// Key derivation
 h256 kdf(Secret const& _priv, h256 const& _hash);
