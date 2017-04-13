@@ -440,11 +440,11 @@ void KeyManager::write(SecureFixedHash<16> const& _key, string const& _keysFile)
 
 KeyPair KeyManager::newKeyPair(KeyManager::NewKeyType _type)
 {
-	KeyPair p;
+	KeyPair p = KeyPair::create();
 	bool keepGoing = true;
 	unsigned done = 0;
-	function<void()> f = [&]() {
-		KeyPair lp;
+	auto f = [&]() {
+		KeyPair lp = KeyPair::create();
 		while (keepGoing)
 		{
 			done++;
