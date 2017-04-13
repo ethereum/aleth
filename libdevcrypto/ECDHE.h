@@ -49,8 +49,8 @@ public:
 	void agree(Public const& _remoteEphemeral, Secret& o_sharedSecret) const;
 	
 protected:
-	KeyPair m_ephemeral;					///< Ephemeral keypair; generated.
-	mutable Public m_remoteEphemeral;		///< Public key of remote; parameter. Set once when agree is called, otherwise immutable.
+	KeyPair m_ephemeral;  ///< Ephemeral keypair; generated.
+	mutable bool m_agreed = false;
 };
 
 }
