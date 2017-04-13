@@ -40,8 +40,8 @@ void RLPXHandshake::writeAuth()
 	// E(remote-pubk, S(ecdhe-random, ecdh-shared-secret^nonce) || H(ecdhe-random-pubk) || pubk || nonce || 0x0)
 	Secret staticShared;
 	crypto::ecdh::agree(m_host->m_alias.secret(), m_remote, staticShared);
-	sign(m_ecdhe.seckey(), staticShared.makeInsecure() ^ m_nonce).ref().copyTo(sig);
-	sha3(m_ecdhe.pubkey().ref(), hepubk);
+	sign(m_ecdhe.secret(), staticShared.makeInsecure() ^ m_nonce).ref().copyTo(sig);
+	sha3(m_ecdhe.pub().ref(), hepubk);
 	m_host->m_alias.pub().ref().copyTo(pubk);
 	m_nonce.ref().copyTo(nonce);
 	m_auth[m_auth.size() - 1] = 0x0;
@@ -60,7 +60,7 @@ void RLPXHandshake::writeAck()
 	m_ack.resize(Public::size + h256::size + 1);
 	bytesRef epubk(&m_ack[0], Public::size);
 	bytesRef nonce(&m_ack[Public::size], h256::size);
-	m_ecdhe.pubkey().ref().copyTo(epubk);
+	m_ecdhe.pub().ref().copyTo(epubk);
 	m_nonce.ref().copyTo(nonce);
 	m_ack[m_ack.size() - 1] = 0x0;
 	encryptECIES(m_remote, &m_ack, m_ackCipher);
@@ -78,7 +78,7 @@ void RLPXHandshake::writeAckEIP8()
 
 	RLPStream rlp;
 	rlp.appendList(3)
-		<< m_ecdhe.pubkey()
+		<< m_ecdhe.pub()
 		<< m_nonce
 		<< c_rlpxVersion;
 	m_ack = rlp.out();

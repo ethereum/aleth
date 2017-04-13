@@ -376,15 +376,15 @@ BOOST_AUTO_TEST_CASE(ecdhe)
 {
 	ECDHE local;
 	ECDHE remote;
-	BOOST_CHECK_NE(local.pubkey(), remote.pubkey());
+	BOOST_CHECK_NE(local.pub(), remote.pub());
 
 	// local tx pubkey -> remote
 	Secret sremote;
-	remote.agree(local.pubkey(), sremote);
+	remote.agree(local.pub(), sremote);
 	
 	// remote tx pbukey -> local
 	Secret slocal;
-	local.agree(remote.pubkey(), slocal);
+	local.agree(remote.pub(), slocal);
 
 	BOOST_REQUIRE(sremote);
 	BOOST_REQUIRE(slocal);
@@ -433,8 +433,8 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		bytesRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
 		
 		BOOST_CHECK(crypto::ecdh::agree(nodeA.secret(), nodeB.pub(), ssA));
-		sign(eA.seckey(), (ssA ^ nonceA).makeInsecure()).ref().copyTo(sig);
-		sha3(eA.pubkey().ref(), hepubk);
+		sign(eA.secret(), (ssA ^ nonceA).makeInsecure()).ref().copyTo(sig);
+		sha3(eA.pub().ref(), hepubk);
 		nodeA.pub().ref().copyTo(pubk);
 		nonceA.ref().copyTo(nonce);
 		auth[auth.size() - 1] = 0x0;
@@ -459,8 +459,8 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		bytesRef epubk(&ack[0], Public::size);
 		bytesRef nonce(&ack[Public::size], h256::size);
-		
-		eB.pubkey().ref().copyTo(epubk);
+
+		eB.pub().ref().copyTo(epubk);
 		nonceB.ref().copyTo(nonce);
 		auth[auth.size() - 1] = 0x0;
 	}
@@ -468,9 +468,9 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	encrypt(nodeA.pub(), &ack, ackcipher);
 	BOOST_REQUIRE_EQUAL(ackcipher.size(), 182);
 	
-	BOOST_REQUIRE(eA.pubkey());
-	BOOST_REQUIRE(eB.pubkey());
-	BOOST_REQUIRE_NE(eA.seckey(), eB.seckey());
+	BOOST_REQUIRE(eA.pub());
+	BOOST_REQUIRE(eB.pub());
+	BOOST_REQUIRE_NE(eA.secret(), eB.secret());
 	
 	/// Alice (after receiving ack)
 	Secret aEncryptK;
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		h256 nonceBAck;
 		ackRef.cropped(0, Public::size).copyTo(bytesRef(eBAck.data(), Public::size));
 		ackRef.cropped(Public::size, h256::size).copyTo(nonceBAck.ref());
-		BOOST_REQUIRE_EQUAL(eBAck, eB.pubkey());
+		BOOST_REQUIRE_EQUAL(eBAck, eB.pub());
 		BOOST_REQUIRE_EQUAL(nonceBAck, nonceB);
 		
 		// TODO: export ess and require equal to b
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		eAAuth = recover(sigAuth, (ss ^ nonceAAuth).makeInsecure());
 		// todo: test when this fails; means remote is bad or packet bits were flipped
 		BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));
-		BOOST_REQUIRE_EQUAL(eAAuth, eA.pubkey());
+		BOOST_REQUIRE_EQUAL(eAAuth, eA.pub());
 		
 		bytes keyMaterialBytes(512);
 		bytesRef keyMaterial(&keyMaterialBytes);

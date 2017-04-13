@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(segmentedPacketFlush)
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
-	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder encoder(true, remoteEph.pub(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	
 	/// Test writing a 64byte RLPStream and drain with frame size that
 	/// forces packet to be pieced into 4 frames.
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(segmentedPacketFlush)
 	}
 	
 	// read and assemble dequed encframes
-	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder decoder(false, localEph.pub(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 	vector<RLPXPacket> packets;
 	RLPXFrameReader r(0);
 	for (size_t i = 0; i < encframes.size(); i++)
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
-	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder encoder(true, remoteEph.pub(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	
 	/// Test writing four 32 byte RLPStream packets such that
 	/// a single 1KB frame will incldue all four packets.
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)
 	BOOST_REQUIRE_EQUAL(expectedFrameSize, encframes[0].size());
 	
 	// read and assemble dequed encframes
-	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder decoder(false, localEph.pub(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 	vector<RLPXPacket> packets;
 	RLPXFrameReader r(0);
 	bytesRef frameWithHeader(encframes[0].data(), encframes[0].size());
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(singleFramePacketFlush)
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
-	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder encoder(true, remoteEph.pub(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	
 	bytes stuff = sha3("A").asBytes();
 	RLPXFrameWriter w(0);
@@ -621,7 +621,7 @@ BOOST_AUTO_TEST_CASE(singleFramePacketFlush)
 	BOOST_REQUIRE_EQUAL(dequeLen, encframes[0].size());
 	
 	// read and assemble dequed encframes
-	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder decoder(false, localEph.pub(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 	vector<RLPXPacket> packets;
 	RLPXFrameReader r(0);
 	bytesRef frameWithHeader(encframes[0].data(), encframes[0].size());
@@ -652,7 +652,7 @@ BOOST_AUTO_TEST_CASE(multiProtocol)
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
-	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder encoder(true, remoteEph.pub(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	
 	auto dequeLen = 1024; // sufficient enough for all packets
 	bytes stuff0 = sha3("A").asBytes();
@@ -696,7 +696,7 @@ BOOST_AUTO_TEST_CASE(multiProtocol)
 	BOOST_REQUIRE_EQUAL(expectedFrameSize, encframes[0].size());
 
 	// read and assemble dequed encframes
-	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder decoder(false, localEph.pub(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 	vector<RLPXPacket> packets;
 	std::map<uint16_t, RLPXFrameReader*> mr;
 	RLPXFrameReader r0(0);
@@ -746,7 +746,7 @@ BOOST_AUTO_TEST_CASE(oddSizedMessages)
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
-	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder encoder(true, remoteEph.pub(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 
 	auto dequeLen = 1024;
 	h256 h = sha3("pseudo-random");
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(oddSizedMessages)
 	BOOST_REQUIRE_EQUAL(encframes.size(), 3);
 
 	// read and assemble dequed encframes
-	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder decoder(false, localEph.pub(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 	vector<RLPXPacket> packets;
 	RLPXFrameReader r(0);
 	for (size_t i = 0; i < encframes.size(); i++)
@@ -822,8 +822,8 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
-	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
-	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder encoder(true, remoteEph.pub(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder decoder(false, localEph.pub(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 
 	int const dequeLen = 1024;
 	size_t const numMessages = 1024;
@@ -887,8 +887,8 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
-	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
-	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder encoder(true, remoteEph.pub(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
+	RLPXFrameCoder decoder(false, localEph.pub(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 
 	int const dequeLen = 1024;
 	size_t const numMessages = 1024;
