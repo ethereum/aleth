@@ -333,14 +333,14 @@ void TestHandshake::checkAuthValuesEIP8(uint64_t _expectedRemoteVersion)
 {
 	BOOST_CHECK_EQUAL(m_remote, Public("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"));
 	BOOST_CHECK_EQUAL(m_remoteNonce, h256("7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"));
-	BOOST_CHECK_EQUAL(m_remoteEphemeral, Public("654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"));
+	BOOST_CHECK_EQUAL(m_ecdheRemote, Public("654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"));
 	BOOST_CHECK_EQUAL(m_remoteVersion, _expectedRemoteVersion);
 }
 
 void TestHandshake::checkAckValuesEIP8(uint64_t _expectedRemoteVersion)
 {
 	BOOST_CHECK_EQUAL(m_remoteNonce, h256("559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"));
-	BOOST_CHECK_EQUAL(m_remoteEphemeral, Public("b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"));
+	BOOST_CHECK_EQUAL(m_ecdheRemote, Public("b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"));
 	BOOST_CHECK_EQUAL(m_remoteVersion, _expectedRemoteVersion);
 }
 
