@@ -374,8 +374,8 @@ BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 
 BOOST_AUTO_TEST_CASE(ecdhe)
 {
-	ECDHE local;
-	ECDHE remote;
+	auto local = KeyPair::create();
+	auto remote = KeyPair::create();
 	BOOST_CHECK_NE(local.pub(), remote.pub());
 
 	// local tx pubkey -> remote
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	BOOST_REQUIRE_NE(nodeA.secret(), nodeB.secret());
 	
 	// Initiator is Alice (nodeA)
-	ECDHE eA;
+	auto eA = KeyPair::create();
 	bytes nAbytes(fromHex("0xAAAA"));
 	h256 nonceA(sha3(nAbytes));
 	bytes auth(Signature::size + h256::size + Public::size + h256::size + 1);
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	BOOST_REQUIRE_EQUAL(authcipher.size(), 279);
 	
 	// Receipient is Bob (nodeB)
-	ECDHE eB;
+	auto eB = KeyPair::create();
 	bytes nBbytes(fromHex("0xBBBB"));
 	h256 nonceB(sha3(nAbytes));
 	bytes ack(Public::size + h256::size + 1);

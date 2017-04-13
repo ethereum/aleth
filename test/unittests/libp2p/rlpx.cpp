@@ -466,9 +466,9 @@ BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
 
 BOOST_AUTO_TEST_CASE(segmentedPacketFlush)
 {
-	ECDHE localEph;
+	auto localEph = KeyPair::create();
 	Secret localNonce = Nonce::get();
-	ECDHE remoteEph;
+	auto remoteEph = KeyPair::create();
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
@@ -540,9 +540,9 @@ BOOST_AUTO_TEST_CASE(segmentedPacketFlush)
 
 BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)
 {
-	ECDHE localEph;
+	auto localEph = KeyPair::create();
 	Secret localNonce = Nonce::get();
-	ECDHE remoteEph;
+	auto remoteEph = KeyPair::create();
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
@@ -598,9 +598,9 @@ BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)
 
 BOOST_AUTO_TEST_CASE(singleFramePacketFlush)
 {
-	ECDHE localEph;
+	auto localEph = KeyPair::create();
 	Secret localNonce = Nonce::get();
-	ECDHE remoteEph;
+	auto remoteEph = KeyPair::create();
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
@@ -646,8 +646,8 @@ BOOST_AUTO_TEST_CASE(multiProtocol)
 {
 	/// Test writing four 32 byte RLPStream packets with different protocol ID.
 
-	ECDHE localEph;
-	ECDHE remoteEph;
+	auto localEph = KeyPair::create();
+	auto remoteEph = KeyPair::create();
 	Secret localNonce = Nonce::get();
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
@@ -740,9 +740,9 @@ BOOST_AUTO_TEST_CASE(multiProtocol)
 
 BOOST_AUTO_TEST_CASE(oddSizedMessages)
 {
-	ECDHE localEph;
+	auto localEph = KeyPair::create();
 	Secret localNonce = Nonce::get();
-	ECDHE remoteEph;
+	auto remoteEph = KeyPair::create();
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
 	bytes authCipher{1};
@@ -816,8 +816,8 @@ bytes generatePseudorandomPacket(h256 const& _h)
 
 BOOST_AUTO_TEST_CASE(pseudorandom)
 {
-	ECDHE localEph;
-	ECDHE remoteEph;
+	auto localEph = KeyPair::create();
+	auto remoteEph = KeyPair::create();
 	Secret localNonce = Nonce::get();
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};
@@ -881,8 +881,8 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 
 BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 {
-	ECDHE localEph;
-	ECDHE remoteEph;
+	auto localEph = KeyPair::create();
+	auto remoteEph = KeyPair::create();
 	Secret localNonce = Nonce::get();
 	Secret remoteNonce = Nonce::get();
 	bytes ackCipher{0};

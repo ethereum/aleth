@@ -83,13 +83,13 @@ RLPXFrameCoder::RLPXFrameCoder(RLPXHandshake const& _init):
 	setup(_init.m_originated, _init.m_ecdheRemote, _init.m_remoteNonce, _init.m_ecdheLocal, _init.m_nonce, &_init.m_ackCipher, &_init.m_authCipher);
 }
 
-RLPXFrameCoder::RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher):
+RLPXFrameCoder::RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher):
 	m_impl(new RLPXFrameCoderImpl)
 {
 	setup(_originated, _remoteEphemeral, _remoteNonce, _ecdheLocal, _nonce, _ackCipher, _authCipher);
 }
 
-void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher)
+void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher)
 {
 	bytes keyMaterialBytes(64);
 	bytesRef keyMaterial(&keyMaterialBytes);
