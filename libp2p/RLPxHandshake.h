@@ -24,7 +24,6 @@
 
 #include <memory>
 #include <libdevcrypto/Common.h>
-#include <libdevcrypto/ECDHE.h>
 #include "RLPXSocket.h"
 #include "RLPXFrameCoder.h"
 #include "Common.h"

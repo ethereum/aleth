@@ -32,7 +32,6 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
-#include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <libp2p/RLPxHandshake.h>
 #include <libp2p/RLPXFrameWriter.h>

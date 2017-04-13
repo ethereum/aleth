@@ -26,7 +26,6 @@
 #include <cryptopp/oids.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
-#include "ECDHE.h"
 
 static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
 

@@ -36,7 +36,6 @@
 #include <libdevcore/Log.h>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
-#include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <test/tools/libtesteth/TestHelper.h>
