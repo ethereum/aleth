@@ -88,6 +88,10 @@ Darwin)
             ;;
     esac
 
+    if [ "$TRAVIS" ]; then
+        TRAVIS_PACKAGES="ccache"
+    fi
+
     # Check for Homebrew install and abort if it is not installed.
     brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
@@ -95,7 +99,8 @@ Darwin)
     brew install \
         leveldb \
         libmicrohttpd \
-        miniupnpc
+        miniupnpc \
+        $TRAVIS_PACKAGES
 
     ;;
 
