@@ -22,7 +22,7 @@
  */
 
 #include "LevelDB.h"
-#include <leveldb/db.h>
+#include <libdevcore/db.h>
 #include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/SHA3.h>
@@ -31,7 +31,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::rpc;
 namespace fs = boost::filesystem;
-namespace ldb = leveldb;
 
 LevelDB::LevelDB()
 {

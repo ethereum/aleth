@@ -53,6 +53,12 @@ macro(configure_project)
 		add_definitions(-DETH_FATDB)
 	endif ()
 
+	# ROCKSDB is an option to build Ethereum against Facebook's RocksDB instead
+	# of LevelDB
+	if (ROCKSDB)
+		add_definitions(-DETH_ROCKSDB)
+	endif ()
+
 	# TODO:  What does "paranoia" even mean?
 	if (PARANOID)
 		add_definitions(-DETH_PARANOIA)
