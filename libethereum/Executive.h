@@ -78,7 +78,6 @@ private:
 	DebugOptions m_options;
 };
 
-
 /**
  * @brief Message-call/contract-creation executor; useful for executing transactions.
  *
@@ -151,6 +150,8 @@ public:
 	/// Set up the executive for evaluating a bare CREATE (contract-creation) operation.
 	/// @returns false iff go() must be called (and thus a VM execution in required).
 	bool create(Address _txSender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _code, Address _originAddress);
+	bool createOpcode(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _code, Address _originAddress);
+	bool create2Opcode(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _code, Address _originAddress, u256 _salt);
 	/// Set up the executive for evaluating a bare CALL (message call) operation.
 	/// @returns false iff go() must be called (and thus a VM execution in required).
 	bool call(Address _receiveAddress, Address _txSender, u256 _txValue, u256 _gasPrice, bytesConstRef _txData, u256 _gas);
@@ -183,6 +184,8 @@ public:
 	void revert();
 
 private:
+	bool executeCreate(Address _txSender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _code, Address _originAddress);
+
 	State& m_s;							///< The state to which this operation/transaction is applied.
 	// TODO: consider changign to EnvInfo const& to avoid LastHashes copy at every CALL/CREATE
 	EnvInfo m_envInfo;					///< Information on the runtime environment.

@@ -131,8 +131,20 @@ void VM::caseCreate()
 	updateIOGas();
 
 	auto const& endowment = m_SP[0];
-	uint64_t initOff = (uint64_t)m_SP[1];
-	uint64_t initSize = (uint64_t)m_SP[2];
+	uint64_t initOff;
+	uint64_t initSize;
+	u256 salt;
+	if (m_OP == Instruction::CREATE)
+	{
+		initOff = (uint64_t)m_SP[1];
+		initSize = (uint64_t)m_SP[2];
+	}
+	else
+	{
+		salt = m_SP[1];
+		initOff = (uint64_t)m_SP[2];
+		initSize = (uint64_t)m_SP[3];
+	}
 
 	// Clear the return data buffer. This will not free the memory.
 	m_returnData.clear();
@@ -146,9 +158,10 @@ void VM::caseCreate()
 		u256 gas = createGas;
 		h160 addr;
 		owning_bytes_ref output;
-		std::tie(addr, output) = m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		std::tie(addr, output) = m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_OP, salt, m_onOp);
 		m_SPP[0] = (u160)addr;
 		m_returnData = output.toBytes();
+
 		*m_io_gas_p -= (createGas - gas);
 		m_io_gas = uint64_t(*m_io_gas_p);
 	}

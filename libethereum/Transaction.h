@@ -50,7 +50,8 @@ enum class TransactionException
 	OutOfStack,				///< Ran out of stack executing code of the transaction.
 	StackUnderflow,
 	RevertInstruction,
-	InvalidZeroSignatureFormat
+	InvalidZeroSignatureFormat,
+	AddressAlreadyUsed
 };
 
 enum class CodeDeposit
