@@ -318,7 +318,11 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
-	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+	if (m_envInfo.number() < m_sealEngine.chainParams().u256Param("Metropolis"))
+		m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+	else
+		m_newAddress = right160(sha3(MaxAddress.asBytes() + sha3(_init).asBytes()));
+
 	m_gas = _gas;
 
 	// Transfer ether before deploying the code. This will also create new
