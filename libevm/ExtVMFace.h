@@ -209,52 +209,28 @@ class EnvInfo
 public:
 	EnvInfo() {}
 	EnvInfo(BlockHeader const& _current, LastHashes const& _lh = LastHashes(), u256 const& _gasUsed = u256()):
-		m_number(_current.number()),
-		m_author(_current.author()),
-		m_timestamp(_current.timestamp()),
-		m_difficulty(_current.difficulty()),
-		// Trim gas limit to int64. convert_to used explicitly instead of
-		// static_cast to be noticed when BlockHeader::gasLimit() will be
-		// changed to int64 too.
-		m_gasLimit(_current.gasLimit().convert_to<int64_t>()),
+		m_headerInfo(_current),
 		m_lastHashes(_lh),
 		m_gasUsed(_gasUsed)
 	{}
 
-	EnvInfo(BlockHeader const& _current, LastHashes&& _lh, u256 const& _gasUsed = u256()):
-		m_number(_current.number()),
-		m_author(_current.author()),
-		m_timestamp(_current.timestamp()),
-		m_difficulty(_current.difficulty()),
-		// Trim gas limit to int64. convert_to used explicitly instead of
-		// static_cast to be noticed when BlockHeader::gasLimit() will be
-		// changed to int64 too.
-		m_gasLimit(_current.gasLimit().convert_to<int64_t>()),
-		m_lastHashes(_lh),
-		m_gasUsed(_gasUsed)
-	{}
-
-	u256 const& number() const { return m_number; }
-	Address const& author() const { return m_author; }
-	u256 const& timestamp() const { return m_timestamp; }
-	u256 const& difficulty() const { return m_difficulty; }
-	int64_t gasLimit() const { return m_gasLimit; }
+	u256 const& number() const { return m_headerInfo.number(); }
+	Address const& author() const { return m_headerInfo.author(); }
+	u256 const& timestamp() const { return m_headerInfo.timestamp(); }
+	u256 const& difficulty() const { return m_headerInfo.difficulty(); }
+	u256 gasLimit() const { return m_headerInfo.gasLimit(); }
 	LastHashes const& lastHashes() const { return m_lastHashes; }
 	u256 const& gasUsed() const { return m_gasUsed; }
 
-	void setNumber(u256 const& _v) { m_number = _v; }
-	void setAuthor(Address const& _v) { m_author = _v; }
-	void setTimestamp(u256 const& _v) { m_timestamp = _v; }
-	void setDifficulty(u256 const& _v) { m_difficulty = _v; }
-	void setGasLimit(int64_t _v) { m_gasLimit = _v; }
+	void setNumber(u256 const& _v) { m_headerInfo.setNumber(_v); }
+	void setAuthor(Address const& _v) { m_headerInfo.setAuthor(_v); }
+	void setTimestamp(u256 const& _v) { m_headerInfo.setTimestamp(_v); }
+	void setDifficulty(u256 const& _v) { m_headerInfo.setDifficulty(_v); }
+	void setGasLimit(u256 _v) { m_headerInfo.setGasLimit(_v); }
 	void setLastHashes(LastHashes&& _lh) { m_lastHashes = _lh; }
 
 private:
-	u256 m_number;
-	Address m_author;
-	u256 m_timestamp;
-	u256 m_difficulty;
-	int64_t m_gasLimit;
+	BlockHeader m_headerInfo;
 	LastHashes m_lastHashes;
 	u256 m_gasUsed;
 };

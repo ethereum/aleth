@@ -50,6 +50,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		u256 transactionBlock = toInt(o["blocknumber"].get_str());
 		BlockHeader bh;
 		bh.setNumber(transactionBlock);
+		bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 		bool onMetropolis = (transactionBlock >= se->chainParams().u256Param("metropolisForkBlock"));
 
 		if (_fillin)

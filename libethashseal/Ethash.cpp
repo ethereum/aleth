@@ -168,14 +168,6 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 		//clog(ExecutiveWarnChannel) << "Cannot fit tx in block" << _env.number() << ": Require <" << (_env.gasLimit() - startGasUsed) << " Got" << _t.gas();
 		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.gas()));
 	}
-
-	// Check gas cost is enough.
-	int64_t baseGasRequired = _t.baseGasRequired(evmSchedule(_env));
-	if (baseGasRequired > _t.gas())
-	{
-		//clog(ExecutiveWarnChannel) << "Not enough gas to pay for the transaction: Require >" << m_baseGasRequired << " Got" << _t.gas();
-		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError((bigint)baseGasRequired, (bigint)_t.gas()));
-	}
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const

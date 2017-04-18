@@ -187,7 +187,7 @@ void Executive::initialize(Transaction const& _transaction)
 	catch (Exception const& ex)
 	{
 		m_excepted = toTransactionException(ex);
-		BOOST_THROW_EXCEPTION(ex);
+		throw;
 	}
 
 	if (!m_t.hasZeroSignature())
