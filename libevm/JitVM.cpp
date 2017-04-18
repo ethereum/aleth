@@ -1,6 +1,7 @@
 #include "JitVM.h"
 
 #include <libdevcore/Log.h>
+#include <libevmcore/Instruction.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 
@@ -8,9 +9,9 @@ namespace dev
 {
 namespace eth
 {
+	
 namespace
-{
-
+{	
 static_assert(sizeof(Address) == sizeof(evm_uint160be),
               "Address types size mismatch");
 static_assert(alignof(Address) == alignof(evm_uint160be),
@@ -149,7 +150,7 @@ int64_t call(
 		u256 gas = _msg->gas;
 		// ExtVM::create takes the sender address from .myAddress.
 		assert(fromEvmC(_msg->sender) == env.myAddress);
-		auto addr = env.create(value, gas, input, {});
+		auto addr = env.create(value, gas, input, Instruction::CREATE, u256(0), {});
 		auto gasLeft = static_cast<int64_t>(gas);
 		if (addr)
 			std::copy(addr.begin(), addr.end(), _outputData);

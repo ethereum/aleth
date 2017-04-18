@@ -117,8 +117,20 @@ void VM::caseCreate()
 	updateIOGas();
 
 	auto const& endowment = m_SP[0];
-	uint64_t initOff = (uint64_t)m_SP[1];
-	uint64_t initSize = (uint64_t)m_SP[2];
+	uint64_t initOff;
+	uint64_t initSize;
+	u256 salt;
+	if (m_OP == Instruction::CREATE)
+	{
+		initOff = (uint64_t)m_SP[1];
+		initSize = (uint64_t)m_SP[2];
+	}
+	else
+	{
+		salt = m_SP[1];
+		initOff = (uint64_t)m_SP[2];
+		initSize = (uint64_t)m_SP[3];
+	}
 
 	if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
 	{
@@ -127,7 +139,8 @@ void VM::caseCreate()
 		if (!m_schedule->staticCallDepthLimit())
 			createGas -= createGas / 64;
 		u256 gas = createGas;
-		m_SPP[0] = (u160)m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		m_SPP[0] = (u160)m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_OP, salt, m_onOp);
+
 		*m_io_gas_p -= (createGas - gas);
 		m_io_gas = uint64_t(*m_io_gas_p);
 	}
