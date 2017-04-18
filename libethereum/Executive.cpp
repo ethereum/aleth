@@ -306,9 +306,30 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 	return !m_ext;
 }
 
-bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
+bool Executive::create(Address _txSender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
+{
+	if (m_envInfo.number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
+		return createOpcode(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
+
+	m_newAddress = right160(sha3(MaxAddress.asBytes() + sha3(_init).asBytes()));
+	return executeCreate(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
+}
+
+bool Executive::createOpcode(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	u256 nonce = m_s.getNonce(_sender);
+	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+}
+
+bool Executive::create2Opcode(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin, u256 _salt)
+{
+	m_newAddress = right160(sha3(_sender.asBytes() + toBigEndian(_salt) + sha3(_init).asBytes()));
+	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+}
+
+bool Executive::executeCreate(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
+{
 	if (_sender != MaxAddress) // EIP86
 		m_s.incNonce(_sender);
 
@@ -318,7 +339,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
-	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+
 	m_gas = _gas;
 
 	// Transfer ether before deploying the code. This will also create new
@@ -331,7 +352,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	// Schedule _init execution if not empty.
 	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
-	else if (m_s.addressHasCode(m_newAddress))
+	else if (m_s.addressHasCode(m_newAddress) && m_envInfo.number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
 		// Overwrite with empty code in case the account already has a code
 		// (address collision -- not real life case but we can check it with
 		// synthetic tests).
@@ -373,6 +394,10 @@ bool Executive::go(OnOpFunc const& _onOp)
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
 			if (m_isCreation)
 			{
+				if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("metropolisForkBlock") &&
+					(m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) != 0))
+					BOOST_THROW_EXCEPTION(AddressAlreadyUsed()); // EIP86
+
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
 				{
@@ -414,6 +439,14 @@ bool Executive::go(OnOpFunc const& _onOp)
 		catch (VMException const& _e)
 		{
 			clog(StateSafeExceptions) << "Safe VM Exception. " << diagnostic_information(_e);
+			m_gas = 0;
+			m_excepted = toTransactionException(_e);
+			revert();
+		}
+		catch (AddressAlreadyUsed const& _e)
+		{
+			// EIP86
+			clog(StateSafeExceptions) << "Address already used. " << diagnostic_information(_e);
 			m_gas = 0;
 			m_excepted = toTransactionException(_e);
 			revert();

@@ -54,7 +54,6 @@ struct InstructionMetric
 	int ret;
 };
 
-
 /**
  */
 class VM: public VMFace
@@ -88,7 +87,6 @@ private:
 	void copyCode(int);
 	const void* const* c_jumpTable = 0;
 	bool m_caseInit = false;
-	
 	typedef void (VM::*MemFnPtr)();
 	MemFnPtr m_bounce = 0;
 	MemFnPtr m_onFail = 0;
