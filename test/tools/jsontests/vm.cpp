@@ -22,6 +22,7 @@
 
 #include <boost/filesystem.hpp>
 
+#include <libethereum/ChainParams.h>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include <libevm/ExtVMFace.h>
@@ -37,10 +38,19 @@ FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX:
 	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _depth)
 {}
 
-h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&, Instruction _creationType)
+h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, Instruction _creationType, OnOpFunc const&)
 {
-	(void)_creationType;
-	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
+	Address na;
+	if (envInfo().number() >= se->chainParams().u256Param("metropolisForkBlock"))
+	{
+		Address pushedAddress = MaxAddress;
+		if (_creationType == Instruction::CREATE_PSH)
+			pushedAddress = myAddress;
+		na = right160(sha3(pushedAddress.asBytes() + sha3(_init).asBytes()));
+	}
+	else
+		na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
 
 	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
 	callcreates.push_back(t);
@@ -280,22 +290,6 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 			os.close();
 		}
 	};
-}
-
-MetropolisFakeExtVM::MetropolisFakeExtVM(EnvInfo const& _envInfo, unsigned _depth):
-	FakeExtVM(_envInfo, _depth)
-{}
-
-h160 MetropolisFakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&, Instruction _creationType)
-{
-	Address pushedAddress = MaxAddress;
-	if (_creationType == Instruction::CREATE_PSH)
-		pushedAddress = myAddress;
-	Address na = right160(sha3(pushedAddress.asBytes() + sha3(_init).asBytes()));
-
-	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
-	callcreates.push_back(t);
-	return na;
 }
 
 namespace dev { namespace test {
