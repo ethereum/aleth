@@ -154,9 +154,8 @@ int main( int argc, char* argv[] )
 		parameters.push_back(argv[i]);
 
 	stopTravisOut = false;
-	std::future<int> ret = std::async(unit_test_main, fake_init_func, argc, argv);
 	std::thread outputThread(travisOut);
-	int result = ret.get();
+	int result = unit_test_main(fake_init_func, argc, argv);
 	stopTravisOut = true;
 	outputThread.join();
 	dev::test::TestOutputHelper::printTestExecStats();
