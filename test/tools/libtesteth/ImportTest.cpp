@@ -221,7 +221,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 		bool isHash = false;
 		std::string key = i.first;
 
-		if (key == "data" || key == "to")
+		if (key == "data")
 			continue;
 
 		if (hashes.count(key))
@@ -248,7 +248,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 		else continue;
 
 		if (isHash)
-			_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + str;
+			_o[key] = (str.substr(0, 2) == "0x" || str.empty()) ? str : "0x" + str;
 		else
 			_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
 	}
