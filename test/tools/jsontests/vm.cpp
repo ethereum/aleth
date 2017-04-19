@@ -288,7 +288,6 @@ MetropolisFakeExtVM::MetropolisFakeExtVM(EnvInfo const& _envInfo, unsigned _dept
 
 h160 MetropolisFakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&, Instruction _creationType)
 {
-	(void)_creationType;
 	Address pushedAddress = MaxAddress;
 	if (_creationType == Instruction::CREATE_PSH)
 		pushedAddress = myAddress;
