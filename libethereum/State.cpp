@@ -31,6 +31,7 @@
 #include <libethcore/Exceptions.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
+#include "Block.h"
 #include "CodeSizeCache.h"
 #include "Defaults.h"
 #include "ExtVM.h"
@@ -541,6 +542,23 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 
 	h256 const rootState = _envInfo.number() >= _sealEngine.chainParams().u256Param("metropolisForkBlock") ? h256() : rootHash();
 	return make_pair(res, TransactionReceipt(rootState, startGasUsed + e.gasUsed(), e.logs()));
+}
+
+void State::executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine)
+{
+	u256 gasUsed = 0;
+	for (unsigned i = 0; i < _txCount; ++i)
+	{
+		EnvInfo envInfo(_block.info(), _lastHashes, gasUsed);
+
+		Executive e(*this, envInfo, _sealEngine);
+		e.initialize(_block.pending()[i]);
+		if (!e.execute())
+			e.go();
+		e.finalize();
+
+		gasUsed += e.gasUsed();
+	}
 }
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)

@@ -207,6 +207,8 @@ public:
 	/// This will change the state accordingly.
 	std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
 
+	void executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine);
+
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
 

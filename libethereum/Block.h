@@ -202,10 +202,10 @@ public:
 	/// Get the bloom filter of a particular transaction that happened in the block.
 	LogBloom const& logBloom(unsigned _i) const { return receipt(_i).bloom(); }
 
-	/// Get the State immediately after the given number of pending transactions have been applied.
+	/// Get the State root hash immediately after the given number of pending transactions have been applied.
 	/// If (_i == 0) returns the initial state of the block.
 	/// If (_i == pending().size()) returns the final state of the block, prior to rewards.
-	State fromPending(unsigned _i) const;
+	h256 stateRootBeforeTx(unsigned _i) const;
 
 	// State-change operations
 

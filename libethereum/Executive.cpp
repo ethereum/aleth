@@ -158,11 +158,19 @@ Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 }
 
 Executive::Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
-	m_s(_s = _block.fromPending(_txIndex)),
+	m_s(_s = _block.state()),
 	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
 	m_depth(_level),
 	m_sealEngine(*_bc.sealEngine())
 {
+	u256 const rootHash = _block.stateRootBeforeTx(_txIndex);
+	if (rootHash)
+		m_s.setRoot(rootHash);
+	else
+	{
+		m_s.setRoot(_block.stateRootBeforeTx(0));
+		m_s.executeBlockTransactions(_block, _txIndex, _bc.lastHashes(_block.info().parentHash()), *_bc.sealEngine());
+	}
 }
 
 u256 Executive::gasUsed() const

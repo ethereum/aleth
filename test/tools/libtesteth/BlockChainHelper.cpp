@@ -502,7 +502,7 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
 		block.sync(*m_blockChain.get());
 
 		//BOOST_REQUIRE(m_lastBlock.blockHeader().hash() == BlockHeader(block.blockData()).hash());
-		m_lastBlock.setState(block.fromPending(10000));
+		m_lastBlock.setState(/*block.fromPending(10000)*/block.state());
 		return true;
 	}
 
