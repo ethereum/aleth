@@ -400,6 +400,8 @@ bool Executive::go(OnOpFunc const& _onOp)
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
 			if (m_isCreation)
 			{
+				if (m_s.addressHasCode(m_newAddress))
+					BOOST_THROW_EXCEPTION(AddressAlreadyUsed());
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
 				{
