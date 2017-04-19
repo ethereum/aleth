@@ -211,6 +211,12 @@ void VM::interpretCases()
 		//
 		// Call-related instructions
 		//
+
+		CASE(CREATE_PSH)
+		{
+			m_bounce = &VM::caseCreate;
+		}
+		BREAK
 		
 		CASE(CREATE)
 		{

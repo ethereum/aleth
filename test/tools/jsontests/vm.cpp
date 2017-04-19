@@ -37,8 +37,9 @@ FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX:
 	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _depth)
 {}
 
-h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
+h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&, Instruction _creationType)
 {
+	(void)_creationType;
 	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
 
 	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());

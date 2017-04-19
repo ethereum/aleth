@@ -233,7 +233,7 @@ bool Executive::execute()
 	m_s.subBalance(m_t.sender(), m_gasCost);
 
 	if (m_t.isCreation())
-		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_baseGasRequired, &m_t.data(), m_t.sender());
+		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_baseGasRequired, &m_t.data(), m_t.sender(), Instruction::CREATE);
 	else
 		return call(m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_baseGasRequired);
 }
@@ -306,7 +306,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 	return !m_ext;
 }
 
-bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
+bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin, Instruction _creationType)
 {
 	u256 nonce = m_s.getNonce(_sender);
 	if (_sender != MaxAddress) // EIP86
@@ -318,10 +318,15 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
-	if (m_envInfo.number() < m_sealEngine.chainParams().u256Param("Metropolis"))
-		m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("Metropolis"))
+	{
+		Address pushedAddress = MaxAddress;
+		if (_creationType == Instruction::CREATE_PSH)
+			pushedAddress = _sender;
+		m_newAddress = right160(sha3(pushedAddress.asBytes() + sha3(_init).asBytes()));
+	}
 	else
-		m_newAddress = right160(sha3(MaxAddress.asBytes() + sha3(_init).asBytes()));
+		m_newAddress = right160(sha3(rlpList(_sender, nonce)));
 
 	m_gas = _gas;
 

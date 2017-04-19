@@ -183,11 +183,12 @@ enum class Instruction: uint8_t
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
 	BAD,                ///< placed to force invalid instruction exception
 
-	CREATE = 0xf0,      ///< create a new account with associated code
+	CREATE = 0xf0,      ///< create a new account with associated code. (since EIP86: sha3((MaxAddress + sha3(code))
 	CALL,               ///< message-call into an account
 	CALLCODE,           ///< message-call with another account's code only
 	RETURN,             ///< halt execution returning output data
 	DELEGATECALL,       ///< like CALLCODE but keeps caller's value and sender
+	CREATE_PSH = 0xfb,       ///< create a new account with associated code. sha3((sender + sha3(code))
 	REVERT = 0xfd,      ///< stop execution and revert state changes, without consuming all provided gas
 	SUICIDE = 0xff      ///< halt execution and register account for later deletion
 };

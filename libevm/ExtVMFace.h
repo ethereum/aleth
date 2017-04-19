@@ -274,7 +274,7 @@ public:
 	virtual void suicide(Address) { sub.suicides.insert(myAddress); }
 
 	/// Create a new (contract) account.
-	virtual h160 create(u256, u256&, bytesConstRef, OnOpFunc const&) { return h160(); }
+	virtual h160 create(u256, u256&, bytesConstRef, OnOpFunc const&, Instruction) { return h160(); }
 
 	/// Make a new message call.
 	/// @returns success flag and output data, if any.
