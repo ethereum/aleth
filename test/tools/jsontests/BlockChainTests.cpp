@@ -235,7 +235,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				compareBlocks(block, alterBlock);
 				try
 				{
-					blockchain.addBlock(alterBlock);					
+					blockchain.addBlock(alterBlock);
 					if (testChain.addBlock(alterBlock))
 						cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testname;
 
