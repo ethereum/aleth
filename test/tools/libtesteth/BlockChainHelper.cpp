@@ -538,8 +538,8 @@ TestTransaction TestTransaction::defaultTransaction(u256 const& _nonce, u256 con
 	txObj["gasLimit"] = toString(_gasLimit);
 	txObj["gasPrice"] = toString(_gasPrice);
 	txObj["nonce"] = toString(_nonce);
-	txObj["secretKey"] = "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
-	txObj["to"] = "095e7baea6a6c7c4c2dfeb977efac326af552d87";
+	txObj["secretKey"] = "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
+	txObj["to"] = "0x095e7baea6a6c7c4c2dfeb977efac326af552d87";
 	txObj["value"] = "100";
 
 	return TestTransaction(txObj);
@@ -555,7 +555,7 @@ TestTransaction TestTransaction::defaultZeroTransaction(u256 const& _gasLimit, b
 	txObj["v"] = toString(1);
 	txObj["r"] = toString(0);
 	txObj["s"] = toString(0);
-	txObj["to"] = "095e7baea6a6c7c4c2dfeb977efac326af552d87";
+	txObj["to"] = "0x095e7baea6a6c7c4c2dfeb977efac326af552d87";
 	txObj["value"] = "0";
 
 	return TestTransaction(txObj);

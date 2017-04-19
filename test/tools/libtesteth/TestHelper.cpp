@@ -131,7 +131,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add, 1);
 	txObject["s"] = toCompactHex(_txn.signature().s, HexPrefix::Add, 1);
 	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add, 1);
-	txObject["to"] = _txn.isCreation() ? "" : toString(_txn.receiveAddress());
+	txObject["to"] = _txn.isCreation() ? "" : "0x" + toString(_txn.receiveAddress());
 	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add, 1);
 	return txObject;
 }
@@ -173,7 +173,7 @@ json_spirit::mObject fillJsonWithState(State const& _state, eth::AccountMaskMap 
 			else
 				o["code"] = "";
 		}
-		oState[toString(a.first)] = o;
+		oState["0x" + toString(a.first)] = o;
 	}
 	return oState;
 }
