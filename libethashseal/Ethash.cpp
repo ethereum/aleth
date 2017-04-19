@@ -164,10 +164,7 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 	// Avoid transactions that would take us beyond the block gas limit.
 	u256 startGasUsed = _env.gasUsed();
 	if (startGasUsed + (bigint)_t.gas() > _env.gasLimit())
-	{
-		//clog(ExecutiveWarnChannel) << "Cannot fit tx in block" << _env.number() << ": Require <" << (_env.gasLimit() - startGasUsed) << " Got" << _t.gas();
 		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.gas()));
-	}
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const

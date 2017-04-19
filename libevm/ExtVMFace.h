@@ -218,7 +218,7 @@ public:
 	Address const& author() const { return m_headerInfo.author(); }
 	u256 const& timestamp() const { return m_headerInfo.timestamp(); }
 	u256 const& difficulty() const { return m_headerInfo.difficulty(); }
-	u256 gasLimit() const { return m_headerInfo.gasLimit(); }
+	u256 const& gasLimit() const { return m_headerInfo.gasLimit(); }
 	LastHashes const& lastHashes() const { return m_lastHashes; }
 	u256 const& gasUsed() const { return m_gasUsed; }
 
@@ -226,7 +226,7 @@ public:
 	void setAuthor(Address const& _v) { m_headerInfo.setAuthor(_v); }
 	void setTimestamp(u256 const& _v) { m_headerInfo.setTimestamp(_v); }
 	void setDifficulty(u256 const& _v) { m_headerInfo.setDifficulty(_v); }
-	void setGasLimit(u256 _v) { m_headerInfo.setGasLimit(_v); }
+	void setGasLimit(u256 const& _v) { m_headerInfo.setGasLimit(_v); }
 	void setLastHashes(LastHashes&& _lh) { m_lastHashes = _lh; }
 
 private:
