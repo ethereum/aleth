@@ -115,10 +115,10 @@ void ExtVM::setStore(u256 _n, u256 _v)
 	m_s.setStorage(myAddress, _n, _v);
 }
 
-h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
+h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp, Instruction _creationType)
 {
 	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
-	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
+	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin, _creationType))
 	{
 		go(depth, e, _onOp);
 		e.accrueSubState(sub);
