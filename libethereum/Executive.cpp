@@ -320,6 +320,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	// we delete it explicitly if we decide we need to revert.
 	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("Metropolis"))
 	{
+		// EIP86
 		Address pushedAddress = MaxAddress;
 		if (_creationType == Instruction::CREATE_PSH)
 			pushedAddress = _sender;
@@ -382,8 +383,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
 			if (m_isCreation)
 			{
-				if (m_s.addressHasCode(m_newAddress))
-					BOOST_THROW_EXCEPTION(AddressAlreadyUsed());
+				if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("Metropolis") && m_s.addressHasCode(m_newAddress))
+					BOOST_THROW_EXCEPTION(AddressAlreadyUsed()); // EIP86
+
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
 				{
