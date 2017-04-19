@@ -282,6 +282,23 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 	};
 }
 
+MetropolisFakeExtVM::MetropolisFakeExtVM(EnvInfo const& _envInfo, unsigned _depth):
+	FakeExtVM(_envInfo, _depth)
+{}
+
+h160 MetropolisFakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&, Instruction _creationType)
+{
+	(void)_creationType;
+	Address pushedAddress = MaxAddress;
+	if (_creationType == Instruction::CREATE_PSH)
+		pushedAddress = myAddress;
+	Address na = right160(sha3(pushedAddress.asBytes() + sha3(_init).asBytes()));
+
+	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
+	callcreates.push_back(t);
+	return na;
+}
+
 namespace dev { namespace test {
 
 void doVMTests(json_spirit::mValue& _v, bool _fillin)
