@@ -80,5 +80,12 @@ public:
 	u256 execGas;
 };
 
+class MetropolisFakeExtVM: public FakeExtVM
+{
+public:
+	MetropolisFakeExtVM(eth::EnvInfo const& _envInfo, unsigned _depth = 0);
+	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::OnOpFunc const&, eth::Instruction) override;
+};
+
 
 } } // Namespace Close
