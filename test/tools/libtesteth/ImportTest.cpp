@@ -218,9 +218,14 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 
 	for (auto& i: _o)
 	{
+		bool isHash = false;
 		std::string key = i.first;
-		if (hashes.count(key))
+
+		if (key == "data")
 			continue;
+
+		if (hashes.count(key))
+			isHash = true;
 
 		std::string str;
 		json_spirit::mValue value = i.second;
@@ -229,9 +234,23 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = toString(value.get_int());
 		else if (value.type() == json_spirit::str_type)
 			str = value.get_str();
+		else if (value.type() == json_spirit::array_type)
+		{
+			json_spirit::mArray arr;
+			for (auto& j: value.get_array())
+			{
+				str = j.get_str();
+				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1));
+			}
+			_o[key] = arr;
+			continue;
+		}
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
+		if (isHash)
+			_o[key] = (str.substr(0, 2) == "0x" || str.empty()) ? str : "0x" + str;
+		else
+			_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
 	}
 	return _o;
 }
@@ -391,18 +410,18 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 			}
 			catch(std::out_of_range const&)
 			{
-				BOOST_ERROR(TestOutputHelper::testName() + "expectedStateOptions map does not match expectedState in checkExpectedState!");
+				BOOST_ERROR(TestOutputHelper::testName() + " expectedStateOptions map does not match expectedState in checkExpectedState!");
 				break;
 			}
 		}
 
 		if (addressOptions.shouldExist())
 		{
-			CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " missing expected address!");
+			CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  " Compare States: " << a.first << " missing expected address!");
 		}
 		else
 		{
-			CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " address not expected to exist!");
+			CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::testName() +  " Compare States: " << a.first << " address not expected to exist!");
 		}
 
 		if (_statePost.addressInUse(a.first))
@@ -486,11 +505,11 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	else
 		network.push_back(_network);
 
-	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + "Network array not set!");
+	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
 	vector<string> allowednetworks = {netIdToString(eth::Network::FrontierTest), netIdToString(eth::Network::HomesteadTest),
 				   netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test), netIdToString(eth::Network::MetropolisTest), "ALL"};
 	for(size_t i=0; i<network.size(); i++)
-		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + "Specified Network not found: " + network.at(i));
+		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + " Specified Network not found: " + network.at(i));
 
 	if (!Options::get().singleTestNet.empty())
 	{
@@ -506,7 +525,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		parseJsonIntValueIntoVector(indexes.at("data"), d);
 		parseJsonIntValueIntoVector(indexes.at("gas"), g);
 		parseJsonIntValueIntoVector(indexes.at("value"), v);
-		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + "Indexes arrays not set!");
+		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + " Indexes arrays not set!");
 
 		//Skip this check if does not fit to options request
 		Options const& opt = Options::get();
@@ -518,7 +537,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			return;
 	}
 	else
-		BOOST_ERROR(TestOutputHelper::testName() + "indexes section not set!");
+		BOOST_ERROR(TestOutputHelper::testName() + " indexes section not set!");
 
 	bool foundResults = false;
 	std::vector<transactionToExecute> lookTransactions;
@@ -558,11 +577,11 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 					cerr << trInfo << std::endl;
 					_errorTransactions.push_back(i);
 				}
-			}
+			}			
 			else if (_expects.count("hash"))
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes()), TestOutputHelper::testName() + "Expected another postState hash! " + trInfo);
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! " + trInfo);
 			else
-				BOOST_ERROR(TestOutputHelper::testName() + "Expect section or postState missing some fields!");
+				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
 
 			foundResults = true;
 
@@ -598,7 +617,7 @@ int ImportTest::exportTest(bytes const& _output)
 			obj["gas"] = m_transactions[i].gasInd;
 			obj["value"] = m_transactions[i].valInd;
 			obj2["indexes"] = obj;
-			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes());
+			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes(), 2, HexPrefix::Add);
 
 			//Print the post state if transaction has failed on expect section
 			if (Options::get().checkstate)
@@ -618,7 +637,6 @@ int ImportTest::exportTest(bytes const& _output)
 	}
 	else
 	{
-
 		// export output
 		m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
