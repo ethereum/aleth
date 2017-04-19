@@ -62,10 +62,10 @@ struct SignatureStruct
 using Address = h160;
 
 /// The zero address.
-extern Address ZeroAddress;
+extern const Address ZeroAddress;
 
 /// The last address.
-extern Address MaxAddress;
+extern const Address MaxAddress;
 
 /// A vector of Ethereum addresses.
 using Addresses = h160s;
