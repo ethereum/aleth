@@ -214,6 +214,8 @@ void VM::interpretCases()
 
 		CASE(CREATE_PSH)
 		{
+			if (!m_schedule->haveCreatePsh)
+				throwBadInstruction();
 			m_bounce = &VM::caseCreate;
 		}
 		BREAK
