@@ -318,7 +318,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
-	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("Metropolis"))
+	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
 	{
 		// EIP86
 		Address pushedAddress = MaxAddress;
@@ -383,7 +383,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
 			if (m_isCreation)
 			{
-				if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("Metropolis") && m_s.addressHasCode(m_newAddress))
+				if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("metropolisForkBlock") && m_s.addressHasCode(m_newAddress))
 					BOOST_THROW_EXCEPTION(AddressAlreadyUsed()); // EIP86
 
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
