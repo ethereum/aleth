@@ -142,12 +142,11 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 
 		// begin is inclusive
 		auto itBegin = storage.lower_bound(h256fromHex(_begin));
-
 		for (auto it = itBegin; it != storage.end(); ++it)
 		{
 			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
 			{
-				ret["complete"] = false;
+				ret["nextKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
 				break;
 			}
 
