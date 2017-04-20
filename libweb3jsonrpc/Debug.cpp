@@ -153,7 +153,6 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 
 			Json::Value keyValue(Json::objectValue);
 			std::string hashedKey = toCompactHex(it->first, HexPrefix::Add, 1);
-			keyValue["hashedKey"] = hashedKey;
 			keyValue["key"] = toCompactHex(it->second.first, HexPrefix::Add, 1);
 			keyValue["value"] = toCompactHex(it->second.second, HexPrefix::Add, 1);
 
