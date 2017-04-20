@@ -125,7 +125,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 {
 	json_spirit::mObject txObject;
 	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add, 1);
-	txObject["data"] = toHex(_txn.data(), 2, HexPrefix::Add);
+	txObject["data"] = _txn.data().size() ? toHex(_txn.data(), 2, HexPrefix::Add) : "";
 	txObject["gasLimit"] = toCompactHex(_txn.gas(), HexPrefix::Add, 1);
 	txObject["gasPrice"] = toCompactHex(_txn.gasPrice(), HexPrefix::Add, 1);
 	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add, 1);
@@ -133,6 +133,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add, 1);
 	txObject["to"] = _txn.isCreation() ? "" : "0x" + toString(_txn.receiveAddress());
 	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add, 1);
+	ImportTest::makeAllFieldsHex(txObject);
 	return txObject;
 }
 

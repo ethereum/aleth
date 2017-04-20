@@ -162,10 +162,9 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
 
 	// Avoid transactions that would take us beyond the block gas limit.
-	// Should check only actual gas used by transaction
 	u256 startGasUsed = _env.gasUsed();
-	if (startGasUsed + _t.baseGasRequired(evmSchedule(_env)) > _env.gasLimit())
-		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.baseGasRequired(evmSchedule(_env))));
+	if (startGasUsed + _t.gas() > _env.gasLimit())
+		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.gas()));
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const

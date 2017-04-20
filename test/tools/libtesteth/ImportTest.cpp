@@ -210,21 +210,24 @@ std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth
 	return std::pair<eth::State, ImportTest::execOutput>(initialState, execOut);
 }
 
-json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
+json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
 {
 	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
 									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
-									 "previousHash", "to", "address", "caller", "origin", "secretKey", "data"};
+									 "previousHash", "to", "address", "caller", "origin", "secretKey", "data", "extraData"};
 
 	for (auto& i: _o)
 	{
 		bool isHash = false;
 		std::string key = i.first;
 
-		if (key == "data")
+		if (key == "data" || key == "extraData")
 			continue;
 
 		if (hashes.count(key))
+			isHash = true;
+
+		if (_isHeader && key == "nonce")
 			isHash = true;
 
 		std::string str;
