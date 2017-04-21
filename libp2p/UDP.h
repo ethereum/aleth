@@ -70,6 +70,7 @@ struct RLPXDatagramFace: public UDPDatagram
 	static Public authenticate(bytesConstRef _sig, bytesConstRef _rlp);
 
 	RLPXDatagramFace(bi::udp::endpoint const& _ep): UDPDatagram(_ep) {}
+	virtual ~RLPXDatagramFace() = default;
 
 	virtual h256 sign(Secret const& _from);
 	virtual uint8_t packetType() const = 0;
