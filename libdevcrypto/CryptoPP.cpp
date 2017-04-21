@@ -26,7 +26,6 @@
 #include <cryptopp/oids.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
-#include "ECDHE.h"
 
 static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
 
@@ -144,7 +143,8 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 		return false;
 
 	Secret z;
-	ecdh::agree(_k, *(Public*)(io_text.data() + 1), z);
+	if (!ecdh::agree(_k, *(Public*)(io_text.data() + 1), z))
+		return false;  // Invalid pubkey or seckey.
 	auto key = ecies::kdf(z, bytes(), 64);
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);

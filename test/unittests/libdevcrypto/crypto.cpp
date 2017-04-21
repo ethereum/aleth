@@ -36,7 +36,6 @@
 #include <libdevcore/Log.h>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
-#include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <test/tools/libtesteth/TestHelper.h>
@@ -231,14 +230,14 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	KeyPair remote = KeyPair::create();
 	// nonce
 	Secret z1;
-	ecdh::agree(local.secret(), remote.pub(), z1);
+	BOOST_CHECK(ecdh::agree(local.secret(), remote.pub(), z1));
 	auto key1 = ecies::kdf(z1, bytes(), 64);
 	bytesConstRef eKey1 = bytesConstRef(&key1).cropped(0, 32);
 	bytesRef mKey1 = bytesRef(&key1).cropped(32, 32);
 	sha3(mKey1, mKey1);
 	
 	Secret z2;
-	ecdh::agree(remote.secret(), local.pub(), z2);
+	BOOST_CHECK(ecdh::agree(remote.secret(), local.pub(), z2));
 	auto key2 = ecies::kdf(z2, bytes(), 64);
 	bytesConstRef eKey2 = bytesConstRef(&key2).cropped(0, 32);
 	bytesRef mKey2 = bytesRef(&key2).cropped(32, 32);
@@ -252,6 +251,22 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	
 	BOOST_REQUIRE(key1.size() > 0 && ((u512)h512(key1)) > 0);
 	BOOST_REQUIRE(key1 == key2);
+}
+
+BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_pubkey)
+{
+	KeyPair ok = KeyPair::create();
+	Public pubkey;
+	~pubkey;  // Create a pubkey of all 1s.
+	Secret z;
+	BOOST_CHECK(!ecdh::agree(ok.secret(), pubkey, z));
+}
+
+BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_seckey)
+{
+	KeyPair ok = KeyPair::create();
+	Secret seckey;  // "Null" seckey is invalid.
+	BOOST_CHECK(!ecdh::agree(seckey, ok.pub(), seckey));
 }
 
 BOOST_AUTO_TEST_CASE(ecies_standard)
@@ -358,20 +373,20 @@ BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 
 BOOST_AUTO_TEST_CASE(ecdhe)
 {
-	ECDHE local;
-	ECDHE remote;
-	BOOST_CHECK_NE(local.pubkey(), remote.pubkey());
+	auto local = KeyPair::create();
+	auto remote = KeyPair::create();
+	BOOST_CHECK_NE(local.pub(), remote.pub());
 
 	// local tx pubkey -> remote
 	Secret sremote;
-	remote.agree(local.pubkey(), sremote);
+	BOOST_CHECK(ecdh::agree(remote.secret(), local.pub(), sremote));
 	
 	// remote tx pbukey -> local
 	Secret slocal;
-	local.agree(remote.pubkey(), slocal);
+	BOOST_CHECK(ecdh::agree(local.secret(), remote.pub(), slocal));
 
-	BOOST_REQUIRE(sremote);
-	BOOST_REQUIRE(slocal);
+	BOOST_CHECK(sremote);
+	BOOST_CHECK(slocal);
 	BOOST_CHECK_EQUAL(sremote, slocal);
 }
 
@@ -380,7 +395,7 @@ BOOST_AUTO_TEST_CASE(ecdhAgree)
 	auto sec = Secret{sha3("ecdhAgree")};
 	auto pub = toPublic(sec);
 	Secret sharedSec;
-	ecdh::agree(sec, pub, sharedSec);
+	BOOST_CHECK(ecdh::agree(sec, pub, sharedSec));
 	BOOST_CHECK(sharedSec);
 	auto expectedSharedSec = "8ac7e464348b85d9fdfc0a81f2fdc0bbbb8ee5fb3840de6ed60ad9372e718977";
 	BOOST_CHECK_EQUAL(sharedSec.makeInsecure().hex(), expectedSharedSec);
@@ -405,7 +420,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	BOOST_REQUIRE_NE(nodeA.secret(), nodeB.secret());
 	
 	// Initiator is Alice (nodeA)
-	ECDHE eA;
+	auto eA = KeyPair::create();
 	bytes nAbytes(fromHex("0xAAAA"));
 	h256 nonceA(sha3(nAbytes));
 	bytes auth(Signature::size + h256::size + Public::size + h256::size + 1);
@@ -416,9 +431,9 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		bytesRef pubk(&auth[Signature::size + h256::size], Public::size);
 		bytesRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
 		
-		crypto::ecdh::agree(nodeA.secret(), nodeB.pub(), ssA);
-		sign(eA.seckey(), (ssA ^ nonceA).makeInsecure()).ref().copyTo(sig);
-		sha3(eA.pubkey().ref(), hepubk);
+		BOOST_CHECK(crypto::ecdh::agree(nodeA.secret(), nodeB.pub(), ssA));
+		sign(eA.secret(), (ssA ^ nonceA).makeInsecure()).ref().copyTo(sig);
+		sha3(eA.pub().ref(), hepubk);
 		nodeA.pub().ref().copyTo(pubk);
 		nonceA.ref().copyTo(nonce);
 		auth[auth.size() - 1] = 0x0;
@@ -428,7 +443,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	BOOST_REQUIRE_EQUAL(authcipher.size(), 279);
 	
 	// Receipient is Bob (nodeB)
-	ECDHE eB;
+	auto eB = KeyPair::create();
 	bytes nBbytes(fromHex("0xBBBB"));
 	h256 nonceB(sha3(nAbytes));
 	bytes ack(Public::size + h256::size + 1);
@@ -443,8 +458,8 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		bytesRef epubk(&ack[0], Public::size);
 		bytesRef nonce(&ack[Public::size], h256::size);
-		
-		eB.pubkey().ref().copyTo(epubk);
+
+		eB.pub().ref().copyTo(epubk);
 		nonceB.ref().copyTo(nonce);
 		auth[auth.size() - 1] = 0x0;
 	}
@@ -452,9 +467,9 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	encrypt(nodeA.pub(), &ack, ackcipher);
 	BOOST_REQUIRE_EQUAL(ackcipher.size(), 182);
 	
-	BOOST_REQUIRE(eA.pubkey());
-	BOOST_REQUIRE(eB.pubkey());
-	BOOST_REQUIRE_NE(eA.seckey(), eB.seckey());
+	BOOST_REQUIRE(eA.pub());
+	BOOST_REQUIRE(eB.pub());
+	BOOST_REQUIRE_NE(eA.secret(), eB.secret());
 	
 	/// Alice (after receiving ack)
 	Secret aEncryptK;
@@ -470,7 +485,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		h256 nonceBAck;
 		ackRef.cropped(0, Public::size).copyTo(bytesRef(eBAck.data(), Public::size));
 		ackRef.cropped(Public::size, h256::size).copyTo(nonceBAck.ref());
-		BOOST_REQUIRE_EQUAL(eBAck, eB.pubkey());
+		BOOST_REQUIRE_EQUAL(eBAck, eB.pub());
 		BOOST_REQUIRE_EQUAL(nonceBAck, nonceB);
 		
 		// TODO: export ess and require equal to b
@@ -480,7 +495,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		Secret ess;
 		// todo: ecdh-agree should be able to output bytes
-		eA.agree(eBAck, ess);
+		BOOST_CHECK(ecdh::agree(eA.secret(), eBAck, ess));
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssA.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 //		auto token = sha3(ssA);
@@ -504,7 +519,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	
 	/// Bob (after sending ack)
 	Secret ssB;
-	crypto::ecdh::agree(nodeB.secret(), nodeA.pub(), ssB);
+	BOOST_CHECK(crypto::ecdh::agree(nodeB.secret(), nodeA.pub(), ssB));
 	BOOST_REQUIRE_EQUAL(ssA, ssB);
 	
 	Secret bEncryptK;
@@ -536,18 +551,18 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		sig.copyTo(sigAuth.ref());
 		
 		Secret ss;
-		ecdh::agree(nodeB.secret(), nodeAAuth, ss);
+		BOOST_CHECK(ecdh::agree(nodeB.secret(), nodeAAuth, ss));
 		eAAuth = recover(sigAuth, (ss ^ nonceAAuth).makeInsecure());
 		// todo: test when this fails; means remote is bad or packet bits were flipped
 		BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));
-		BOOST_REQUIRE_EQUAL(eAAuth, eA.pubkey());
+		BOOST_REQUIRE_EQUAL(eAAuth, eA.pub());
 		
 		bytes keyMaterialBytes(512);
 		bytesRef keyMaterial(&keyMaterialBytes);
 		
 		Secret ess;
 		// todo: ecdh-agree should be able to output bytes
-		eB.agree(eAAuth, ess);
+		BOOST_CHECK(ecdh::agree(eB.secret(), eAAuth, ess));
 //		s_secp256k1->agree(eB.seckey(), eAAuth, ess);
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssB.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));

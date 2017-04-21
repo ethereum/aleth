@@ -80,23 +80,28 @@ RLPXFrameCoder::~RLPXFrameCoder()
 RLPXFrameCoder::RLPXFrameCoder(RLPXHandshake const& _init):
 	m_impl(new RLPXFrameCoderImpl)
 {
-	setup(_init.m_originated, _init.m_remoteEphemeral, _init.m_remoteNonce, _init.m_ecdhe, _init.m_nonce, &_init.m_ackCipher, &_init.m_authCipher);
+	setup(_init.m_originated, _init.m_ecdheRemote, _init.m_remoteNonce, _init.m_ecdheLocal, _init.m_nonce, &_init.m_ackCipher, &_init.m_authCipher);
 }
 
-RLPXFrameCoder::RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ecdhe, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher):
+RLPXFrameCoder::RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher):
 	m_impl(new RLPXFrameCoderImpl)
 {
-	setup(_originated, _remoteEphemeral, _remoteNonce, _ecdhe, _nonce, _ackCipher, _authCipher);
+	setup(_originated, _remoteEphemeral, _remoteNonce, _ecdheLocal, _nonce, _ackCipher, _authCipher);
 }
 
-void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ecdhe, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher)
+void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher)
 {
 	bytes keyMaterialBytes(64);
 	bytesRef keyMaterial(&keyMaterialBytes);
 
 	// shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
 	Secret ephemeralShared;
-	_ecdhe.agree(_remoteEphemeral, ephemeralShared);
+
+	// Try agree ECDHE. This can fail due to invalid remote public key. In this
+	// case throw an exception to be caught RLPXHandshake::transition().
+	if (!crypto::ecdh::agree(_ecdheLocal.secret(), _remoteEphemeral, ephemeralShared))
+		BOOST_THROW_EXCEPTION(ECDHEError{});
+
 	ephemeralShared.ref().copyTo(keyMaterial.cropped(0, h256::size));
 	h512 nonceMaterial;
 	h256 const& leftNonce = _originated ? _remoteNonce : _nonce;
@@ -111,6 +116,7 @@ void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 
 	
 	// aes-secret = sha3(ecdhe-shared-secret || shared-secret)
 	sha3(keyMaterial, outRef); // output aes-secret
+	assert(m_impl->frameEncKey.empty() && "ECDHE aggreed before!");
 	m_impl->frameEncKey.resize(h256::size);
 	memcpy(m_impl->frameEncKey.data(), outRef.data(), h256::size);
 	m_impl->frameDecKey.resize(h256::size);

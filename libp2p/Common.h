@@ -75,7 +75,9 @@ class Session;
 
 struct NetworkStartRequired: virtual dev::Exception {};
 struct InvalidPublicIPAddress: virtual dev::Exception {};
-struct InvalidHostIPAddress: virtual dev::Exception {};
+
+/// The ECDHE agreement failed during RLPx handshake.
+struct ECDHEError: virtual Exception {};
 
 struct NetWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
 struct NetNote: public LogChannel { static const char* name(); static const int verbosity = 2; };
