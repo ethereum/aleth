@@ -160,12 +160,12 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 	}
 	catch (dev::Exception const& _e)
 	{
-		std::cout << "Failed test with Exception: " << diagnostic_information(_e) << std::endl;
+		std::cout << " Failed test with Exception: " << diagnostic_information(_e) << std::endl;
 		ret = 1;
 	}
 	catch (std::exception const& _e)
 	{
-		std::cout << "Failed test with Exception: " << _e.what() << std::endl;
+		std::cout << " Failed test with Exception: " << _e.what() << std::endl;
 		ret = 1;
 	}
 	return ret;
@@ -346,8 +346,8 @@ std::string const c_testExampleStateTest = R"(
 		"gasLimit" : "[HEX]",
 		"gasPrice" : "[HEX32]",
 		"nonce" : "0",
-		"secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-		"to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+		"secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+		"to" : "0x095e7baea6a6c7c4c2dfeb977efac326af552d87",
 		"value" : "[HEX]"
 		}
 	}
@@ -366,7 +366,7 @@ std::string const c_testExampleVMTest = R"(
 				"currentCoinbase" : "[HASH20]"
 		},
 		"pre" : {
-		   "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+		   "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
 				"balance" : "[HEX]",
 				"nonce" : "[HEX]",
 				"code" : "[CODE]",
@@ -374,7 +374,7 @@ std::string const c_testExampleVMTest = R"(
 		   }
 		},
 		"exec" : {
-				"address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+				"address" : "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
 				"origin" : "[HASH20]",
 				"caller" : "[HASH20]",
 				"value" : "[HEX]",
@@ -398,7 +398,7 @@ std::string const c_testExampleBlockchainTest = R"(
 {
  "randomBlockTest" : {
 		 "genesisBlockHeader" : {
-			 "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			 "bloom" : "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
 			 "coinbase" : "[HASH20]",
 			 "difficulty" : "131072",
 			 "extraData" : "[CODE]",
@@ -436,8 +436,8 @@ std::string const c_testExampleBlockchainTest = R"(
 						 "gasLimit" : "[HEX]",
 						 "gasPrice" : "[V]",
 						 "nonce" : "0",
-						 "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-						 "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+						 "secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+						 "to" : "0x095e7baea6a6c7c4c2dfeb977efac326af552d87",
 						 "value" : "[V]"
 					 }
 				 ],

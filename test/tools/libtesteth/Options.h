@@ -48,6 +48,7 @@ public:
 	bool checkstate = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
+	std::string testpath;	///< Custom test folder path
 	Verbosity logVerbosity = Verbosity::NiceReport;
 
 	/// Test selection
@@ -56,9 +57,9 @@ public:
 	std::string singleTestFile;
 	std::string singleTestName;
 	std::string singleTestNet;
-	int trDataIndex; ///< GeneralState data
-	int trGasIndex; ///< GeneralState gas
-	int trValueIndex; ///< GeneralState value
+	int trDataIndex;	///< GeneralState data
+	int trGasIndex;		///< GeneralState gas
+	int trValueIndex;	///< GeneralState value
 	bool performance = false;
 	bool nonetwork = false;///< For libp2p
 	bool quadratic = false;///< Time consuming tests

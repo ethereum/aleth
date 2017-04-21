@@ -62,10 +62,10 @@ struct SignatureStruct
 using Address = h160;
 
 /// The zero address.
-extern Address ZeroAddress;
+extern const Address ZeroAddress;
 
 /// The last address.
-extern Address MaxAddress;
+extern const Address MaxAddress;
 
 /// A vector of Ethereum addresses.
 using Addresses = h160s;
@@ -153,9 +153,6 @@ bytesSec scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uint3
 class KeyPair
 {
 public:
-	/// Null constructor.
-	KeyPair() = default;
-
 	/// Normal constructor - populates object from the given secret key.
 	/// If the secret key is invalid the constructor succeeds, but public key
 	/// and address stay "null".
@@ -220,7 +217,7 @@ private:
 namespace ecdh
 {
 
-void agree(Secret const& _s, Public const& _r, Secret& o_s);
+bool agree(Secret const& _s, Public const& _r, Secret& o_s) noexcept;
 
 }
 

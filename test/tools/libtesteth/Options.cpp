@@ -32,6 +32,7 @@ void printHelp()
 	cout << std::endl << "Setting test suite" << std::endl;
 	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations" << std::endl;
 	cout << setw(30) << "-t <TestSuite>/<TestCase>" << std::endl;
+	cout << setw(30) << "--testpath <PathToTheTestRepo>" << std::endl;
 
 	cout << std::endl << "Debugging" << std::endl;
 	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests" << std::endl;
@@ -193,6 +194,8 @@ Options::Options(int argc, char** argv)
 			trGasIndex = atoi(argv[i + 1]);
 		else if (arg == "-v" && i + 1 < argc)
 			trValueIndex = atoi(argv[i + 1]);
+		else if (arg == "--testpath" && i + 1 < argc)
+			testpath = std::string{argv[i + 1]};
 	}
 
 	//Default option

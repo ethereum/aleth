@@ -131,7 +131,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add, 1);
 	txObject["s"] = toCompactHex(_txn.signature().s, HexPrefix::Add, 1);
 	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add, 1);
-	txObject["to"] = _txn.isCreation() ? "" : toString(_txn.receiveAddress());
+	txObject["to"] = _txn.isCreation() ? "" : "0x" + toString(_txn.receiveAddress());
 	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add, 1);
 	return txObject;
 }
@@ -167,8 +167,13 @@ json_spirit::mObject fillJsonWithState(State const& _state, eth::AccountMaskMap 
 		}
 
 		if (mapEmpty || _map.at(a.first).hasCode())
-			o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
-		oState[toString(a.first)] = o;
+		{
+			if (_state.code(a.first).size() > 0)
+				o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
+			else
+				o["code"] = "";
+		}
+		oState["0x" + toString(a.first)] = o;
 	}
 	return oState;
 }
@@ -462,11 +467,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR(TestOutputHelper::testName() + " Failed filling test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << _e.what());
+			BOOST_ERROR(TestOutputHelper::testName() + " Failed filling test with Exception: " << _e.what());
 		}
 	}
 	try
@@ -481,11 +486,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	}
 	catch (Exception const& _e)
 	{
-		BOOST_ERROR(TestOutputHelper::testName() + "Failed test with Exception: " << diagnostic_information(_e));
+		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << diagnostic_information(_e));
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR(TestOutputHelper::testName() + "Failed test with Exception: " << _e.what());
+		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << _e.what());
 	}
 }
 

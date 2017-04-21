@@ -46,11 +46,11 @@ h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpF
 	return na;
 }
 
-boost::optional<eth::owning_bytes_ref> FakeExtVM::call(CallParameters& _p)
+std::pair<bool, eth::owning_bytes_ref> FakeExtVM::call(CallParameters& _p)
 {
 	Transaction t(_p.valueTransfer, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
 	callcreates.push_back(t);
-	return eth::owning_bytes_ref{};  // Return empty output.
+	return {true, eth::owning_bytes_ref{}};  // Return empty output.
 }
 
 void FakeExtVM::set(Address _a, u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage, bytes const& _code)
@@ -73,7 +73,7 @@ mObject FakeExtVM::exportEnv()
 	mObject ret;
 	ret["currentDifficulty"] = toCompactHex(envInfo().difficulty(), HexPrefix::Add, 1);
 	ret["currentTimestamp"] =  toCompactHex(envInfo().timestamp(), HexPrefix::Add, 1);
-	ret["currentCoinbase"] = toString(envInfo().author());
+	ret["currentCoinbase"] = "0x" + toString(envInfo().author());
 	ret["currentNumber"] = toCompactHex(envInfo().number(), HexPrefix::Add, 1);
 	ret["currentGasLimit"] = toCompactHex(envInfo().gasLimit(), HexPrefix::Add, 1);
 	return ret;
@@ -115,7 +115,7 @@ mObject FakeExtVM::exportState()
 			o["storage"] = store;
 		}
 		o["code"] = toHex(get<3>(a.second), 2, HexPrefix::Add);
-		ret[toString(a.first)] = o;
+		ret["0x" + toString(a.first)] = o;
 	}
 	return ret;
 }
@@ -144,9 +144,9 @@ void FakeExtVM::importState(mObject& _object)
 mObject FakeExtVM::exportExec()
 {
 	mObject ret;
-	ret["address"] = toString(myAddress);
-	ret["caller"] = toString(caller);
-	ret["origin"] = toString(origin);
+	ret["address"] = "0x" + toString(myAddress);
+	ret["caller"] = "0x" + toString(caller);
+	ret["origin"] = "0x" + toString(origin);
 	ret["value"] = toCompactHex(value, HexPrefix::Add, 1);
 	ret["gasPrice"] = toCompactHex(gasPrice, HexPrefix::Add, 1);
 	ret["gas"] = toCompactHex(execGas, HexPrefix::Add, 1);
@@ -193,7 +193,7 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = tx.isCreation() ? "" : toString(tx.receiveAddress());
+		o["destination"] = tx.isCreation() ? "" : "0x" + toString(tx.receiveAddress());
 		o["gasLimit"] = toCompactHex(tx.gas(), HexPrefix::Add, 1);
 		o["value"] = toCompactHex(tx.value(), HexPrefix::Add, 1);
 		o["data"] = toHex(tx.data(), 2, HexPrefix::Add);
@@ -386,7 +386,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 				// compare expected output with post output
 				if (o.count("expectOut") > 0)
 				{
-					std::string warning = "Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
+					std::string warning = " Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
 					if (Options::get().checkstate)
 						BOOST_CHECK_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
 					else
@@ -544,11 +544,11 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR(" Failed test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR("Failed test with Exception: " << _e.what());
+			BOOST_ERROR(" Failed test with Exception: " << _e.what());
 		}
 	}
 }

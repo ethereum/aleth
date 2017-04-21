@@ -73,7 +73,8 @@ void evm_query(
 		o_result->uint256be = toEvmC(env.envInfo().difficulty());
 		break;
 	case EVM_GAS_LIMIT:
-		o_result->int64 = env.envInfo().gasLimit();
+		// TODO: Handle overflow / exception
+		o_result->int64 = static_cast<int64_t>(env.envInfo().gasLimit());
 		break;
 	case EVM_NUMBER:
 		// TODO: Handle overflow / exception
@@ -201,9 +202,10 @@ int64_t evm_call(
 	auto output = env.call(params);
 	auto gasLeft = static_cast<int64_t>(params.gas);
 
-	if (output)
-		output->copyTo({_outputData, _outputSize});
-	else
+	if (output.second)
+		output.second.copyTo({_outputData, _outputSize});
+	
+	if (!output.first)
 		// Add failure indicator.
 		gasLeft |= EVM_CALL_FAILURE;
 
@@ -327,17 +329,23 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	auto r = getJit().execute(_ext, gas);
 
 	// TODO: Add EVM-C result codes mapping with exception types.
-	if (r.code() != EVM_SUCCESS)
+	if (r.code() == EVM_FAILURE)
 		BOOST_THROW_EXCEPTION(OutOfGas());
 
 	io_gas = r.gasLeft();
-	auto output = r.output();
 	// FIXME: Copy the output for now, but copyless version possible.
-	return {output.toVector(), 0, output.size()};
+	owning_bytes_ref output{r.output().toVector(), 0, r.output().size()};
+
+	if (r.code() == EVM_REVERT)
+		throw RevertInstruction(std::move(output));
+
+	return output;
 }
 
 evm_mode JitVM::scheduleToMode(EVMSchedule const& _schedule)
 {
+	if (_schedule.haveRevert)
+		return EVM_METROPOLIS;
 	if (_schedule.eip158Mode)
 		return EVM_CLEARING;
 	if (_schedule.eip150Mode)

@@ -144,13 +144,13 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	}
 }
 
-void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
+void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, EnvInfo const& _env) const
 {
-	SealEngineFace::verifyTransaction(_ir, _t, _bi);
+	SealEngineFace::verifyTransaction(_ir, _t, _env);
 
 	if (_ir & ImportRequirements::TransactionSignatures)
 	{
-		if (_bi.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		if (_env.number() >= chainParams().u256Param("EIP158ForkBlock"))
 		{
 			int chainID(chainParams().u256Param("chainID"));
 			_t.checkChainId(chainID);
@@ -158,9 +158,13 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 		else
 			_t.checkChainId(-4);
 	}
-	// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
-	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
+	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_env)) > _t.gas())
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
+
+	// Avoid transactions that would take us beyond the block gas limit.
+	u256 startGasUsed = _env.gasUsed();
+	if (startGasUsed + (bigint)_t.gas() > _env.gasLimit())
+		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.gas()));
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
@@ -194,8 +198,14 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 		// Frontier-era difficulty adjustment
 		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
 	else
-		// Homestead-era difficulty adjustment
-		target = _parent.difficulty() + _parent.difficulty() / 2048 * max<bigint>(1 - (bigint(_bi.timestamp()) - _parent.timestamp()) / 10, -99);
+	{
+		bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
+		bigint const adjFactor = _bi.number() < chainParams().u256Param("metropolisForkBlock") ?
+			max<bigint>(1 - timestampDiff / 10, -99) : // Homestead-era difficulty adjustment
+			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Metropolis-era difficulty adjustment
+
+		target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
+	}
 
 	bigint o = target;
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;

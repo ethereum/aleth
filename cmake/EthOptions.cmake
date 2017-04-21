@@ -40,11 +40,6 @@ macro(configure_project)
 		set(SUPPORT_${FEATURE} TRUE)
 	endforeach()
 
-	# Temporary pre-processor symbol used for hiding broken unit-tests.
-	# Hiding them behind this pre-processor symbol lets us turn them off
-	# and on again easily enough, and also to grep for them.
-	add_definitions(-DDISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
-
 	# Are we including the JIT EVM module?
 	# That pulls in a quite heavyweight LLVM dependency, which is
 	# not suitable for all platforms.

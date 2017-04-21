@@ -82,6 +82,14 @@ bytes ImportTest::executeTest()
 		{
 			for (size_t i = 0; i < m_transactions.size(); i++)
 			{
+				Options const& opt = Options::get();
+				if(opt.trDataIndex != -1 && opt.trDataIndex != m_transactions[i].dataInd)
+					continue;
+				if(opt.trGasIndex != -1 && opt.trGasIndex != m_transactions[i].gasInd)
+					continue;
+				if(opt.trValueIndex != -1 && opt.trValueIndex != m_transactions[i].valInd)
+					continue;
+
 				eth::Network network = networks[j];
 				std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
 				m_transactions[i].postState = out.first;
@@ -210,9 +218,14 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 
 	for (auto& i: _o)
 	{
+		bool isHash = false;
 		std::string key = i.first;
-		if (hashes.count(key))
+
+		if (key == "data")
 			continue;
+
+		if (hashes.count(key))
+			isHash = true;
 
 		std::string str;
 		json_spirit::mValue value = i.second;
@@ -221,9 +234,23 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = toString(value.get_int());
 		else if (value.type() == json_spirit::str_type)
 			str = value.get_str();
+		else if (value.type() == json_spirit::array_type)
+		{
+			json_spirit::mArray arr;
+			for (auto& j: value.get_array())
+			{
+				str = j.get_str();
+				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1));
+			}
+			_o[key] = arr;
+			continue;
+		}
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
+		if (isHash)
+			_o[key] = (str.substr(0, 2) == "0x" || str.empty()) ? str : "0x" + str;
+		else
+			_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
 	}
 	return _o;
 }
@@ -383,18 +410,18 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 			}
 			catch(std::out_of_range const&)
 			{
-				BOOST_ERROR(TestOutputHelper::testName() + "expectedStateOptions map does not match expectedState in checkExpectedState!");
+				BOOST_ERROR(TestOutputHelper::testName() + " expectedStateOptions map does not match expectedState in checkExpectedState!");
 				break;
 			}
 		}
 
 		if (addressOptions.shouldExist())
 		{
-			CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " missing expected address!");
+			CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  " Compare States: " << a.first << " missing expected address!");
 		}
 		else
 		{
-			CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " address not expected to exist!");
+			CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::testName() +  " Compare States: " << a.first << " address not expected to exist!");
 		}
 
 		if (_statePost.addressInUse(a.first))
@@ -402,29 +429,29 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 			if (addressOptions.hasBalance())
 				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
-				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
+				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
 
 			if (addressOptions.hasNonce())
 				CHECK((_stateExpect.getNonce(a.first) == _statePost.getNonce(a.first)),
-				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect nonce " << _statePost.getNonce(a.first) << ", expected " << _stateExpect.getNonce(a.first));
+				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect nonce " << _statePost.getNonce(a.first) << ", expected " << _stateExpect.getNonce(a.first));
 
 			if (addressOptions.hasStorage())
 			{
 				map<h256, pair<u256, u256>> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first << ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(stateStorage[s.first].second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add));
+					TestOutputHelper::testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(stateStorage[s.first].second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add));
 
 				//Check for unexpected storage values
 				map<h256, pair<u256, u256>> expectedStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
 					CHECK((expectedStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(expectedStorage[s.first].second, HexPrefix::Add));
+					TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(expectedStorage[s.first].second, HexPrefix::Add));
 			}
 
 			if (addressOptions.hasCode())
 				CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),
-				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
 
@@ -478,11 +505,19 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	else
 		network.push_back(_network);
 
-	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + "Network array not set!");
+	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
 	vector<string> allowednetworks = {netIdToString(eth::Network::FrontierTest), netIdToString(eth::Network::HomesteadTest),
 				   netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test), netIdToString(eth::Network::MetropolisTest), "ALL"};
 	for(size_t i=0; i<network.size(); i++)
-		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + "Specified Network not found: " + network.at(i));
+		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + " Specified Network not found: " + network.at(i));
+
+	if (!Options::get().singleTestNet.empty())
+	{
+		//skip this check if we execute transactions only on another specified network
+		if (!inArray(network, Options::get().singleTestNet) && !inArray(network, string{"ALL"}))
+			return;
+	}
+
 
 	if (_expects.count("indexes"))
 	{
@@ -490,10 +525,19 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		parseJsonIntValueIntoVector(indexes.at("data"), d);
 		parseJsonIntValueIntoVector(indexes.at("gas"), g);
 		parseJsonIntValueIntoVector(indexes.at("value"), v);
-		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + "Indexes arrays not set!");
+		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + " Indexes arrays not set!");
+
+		//Skip this check if does not fit to options request
+		Options const& opt = Options::get();
+		if (!inArray(d, opt.trDataIndex) && !inArray(d, -1) && opt.trDataIndex != -1)
+			return;
+		if (!inArray(g, opt.trGasIndex) && !inArray(g, -1) && opt.trGasIndex != -1)
+			return;
+		if (!inArray(v, opt.trValueIndex) && !inArray(v, -1) && opt.trValueIndex != -1)
+			return;
 	}
 	else
-		BOOST_ERROR(TestOutputHelper::testName() + "indexes section not set!");
+		BOOST_ERROR(TestOutputHelper::testName() + " indexes section not set!");
 
 	bool foundResults = false;
 	std::vector<transactionToExecute> lookTransactions;
@@ -533,11 +577,11 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 					cerr << trInfo << std::endl;
 					_errorTransactions.push_back(i);
 				}
-			}
+			}			
 			else if (_expects.count("hash"))
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes()), TestOutputHelper::testName() + "Expected another postState hash! " + trInfo);
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! " + trInfo);
 			else
-				BOOST_ERROR(TestOutputHelper::testName() + "Expect section or postState missing some fields!");
+				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
 
 			foundResults = true;
 
@@ -547,8 +591,8 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 				break;
 		}
 	}
-	if (!_search) //search for a single transaction in one of the expect sections then don't need this output.
-		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + "Expect results was not found in test execution!");
+	if (!_search) //if search for a single transaction in one of the expect sections then don't need this output.
+		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + " Expect results was not found in test execution!");
 }
 
 int ImportTest::exportTest(bytes const& _output)
@@ -564,7 +608,6 @@ int ImportTest::exportTest(bytes const& _output)
 			m_testObject.erase(m_testObject.find("expect"));
 		}
 
-		size_t k = 0;
 		std::map<string, json_spirit::mArray> postState;
 		for(size_t i = 0; i < m_transactions.size(); i++)
 		{
@@ -574,12 +617,14 @@ int ImportTest::exportTest(bytes const& _output)
 			obj["gas"] = m_transactions[i].gasInd;
 			obj["value"] = m_transactions[i].valInd;
 			obj2["indexes"] = obj;
-			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes());
-			if (stateIndexesToPrint.size())
-			if (i == stateIndexesToPrint[k] && Options::get().checkstate)
+			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes(), 2, HexPrefix::Add);
+
+			//Print the post state if transaction has failed on expect section
+			if (Options::get().checkstate)
 			{
-				obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
-				k++;
+				auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
+				if (it != std::end(stateIndexesToPrint))
+					obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
 			}
 			postState[netIdToString(m_transactions[i].netId)].push_back(obj2);
 		}
@@ -592,7 +637,6 @@ int ImportTest::exportTest(bytes const& _output)
 	}
 	else
 	{
-
 		// export output
 		m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 

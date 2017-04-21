@@ -50,6 +50,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		u256 transactionBlock = toInt(o["blocknumber"].get_str());
 		BlockHeader bh;
 		bh.setNumber(transactionBlock);
+		bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 		bool onMetropolis = (transactionBlock >= se->chainParams().u256Param("metropolisForkBlock"));
 
 		if (_fillin)
@@ -69,7 +70,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (!txFromFields.signature().isValid())
 				if (!onMetropolisAndZeroSig)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
-				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh);
+				se->verifyTransaction(ImportRequirements::Everything, txFromFields, EnvInfo(bh));
 
 				if (o.count("sender") > 0)
 				{
@@ -85,13 +86,15 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				//Transaction is InValid
 				cnote << "Transaction Exception: " << diagnostic_information(_e);
 				o.erase(o.find("transaction"));
+				if (o.count("sender") > 0)
+					o.erase(o.find("sender"));
 				if (o.count("expect") > 0)
 				{
 					bool expectInValid = (o["expect"].get_str() == "invalid");
 					if (Options::get().checkstate)
-							BOOST_CHECK_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
+							BOOST_CHECK_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
 						else
-							BOOST_WARN_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
+							BOOST_WARN_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
 
 					o.erase(o.find("expect"));
 				}
@@ -102,9 +105,9 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			{
 				bool expectValid = (o["expect"].get_str() == "valid");
 				if (Options::get().checkstate)
-						BOOST_CHECK_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
+						BOOST_CHECK_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
 					else
-						BOOST_WARN_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
+						BOOST_WARN_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
 
 				o.erase(o.find("expect"));
 			}
@@ -119,7 +122,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				RLP rlp(stream);
 				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
 				bool onMetropolisAndZeroSig = onMetropolis && txFromRlp.hasZeroSignature();
-				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh);
+				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, EnvInfo(bh));
 				if (!txFromRlp.signature().isValid())
 				if (!onMetropolisAndZeroSig)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
