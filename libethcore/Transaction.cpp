@@ -92,7 +92,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 			m_sender = sender();
 
 		if (rlp.itemCount() > 9)
-			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("to many fields in the transaction RLP"));
+			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("too many fields in the transaction RLP"));
 	}
 	catch (Exception& _e)
 	{
