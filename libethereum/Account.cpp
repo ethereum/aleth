@@ -123,10 +123,10 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 				ret[a] = Account(nonce, balance);
 				if (o["code"].type() == json_spirit::str_type)
 				{
-					if (o["code"].get_str().find("0x") != 0)
+					if (o["code"].get_str().find("0x") != 0 && !o["code"].get_str().empty())
 						cerr << "Error importing code of account " << a << "! Code needs to be hex bytecode prefixed by \"0x\".";
 					else
-						ret[a].setNewCode(fromHex(o["code"].get_str().substr(2)));
+						ret[a].setNewCode(fromHex(o["code"].get_str()));
 				}
 				else
 					cerr << "Error importing code of account " << a << "! Code field needs to be a string";
