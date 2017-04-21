@@ -322,7 +322,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	{
 		// EIP86
 		Address pushedAddress = MaxAddress;
-		if (_creationType == Instruction::CREATE_PSH)
+		if (_creationType == Instruction::CREATE_P2SH)
 			pushedAddress = _sender;
 		m_newAddress = right160(sha3(pushedAddress.asBytes() + sha3(_init).asBytes()));
 	}

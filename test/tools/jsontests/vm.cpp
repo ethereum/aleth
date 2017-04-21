@@ -45,7 +45,7 @@ h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, Instr
 	if (envInfo().number() >= se->chainParams().u256Param("metropolisForkBlock"))
 	{
 		Address pushedAddress = MaxAddress;
-		if (_creationType == Instruction::CREATE_PSH)
+		if (_creationType == Instruction::CREATE_P2SH)
 			pushedAddress = myAddress;
 		na = right160(sha3(pushedAddress.asBytes() + sha3(_init).asBytes()));
 	}
