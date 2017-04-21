@@ -163,7 +163,7 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 
 	// Avoid transactions that would take us beyond the block gas limit.
 	u256 startGasUsed = _env.gasUsed();
-	if (startGasUsed + _t.gas() > _env.gasLimit())
+	if (startGasUsed + (bigint)_t.gas() > _env.gasLimit())
 		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.gas()));
 }
 

@@ -253,4 +253,14 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
+{
+	TestBlockChain bc;
+	TestBlock const& genesisBlock = bc.testGenesis();
+	OverlayDB const& genesisDB = genesisBlock.state().db();
+	BlockChain const& blockchain = bc.interface();
+	Block block = blockchain.genesisBlock(genesisDB);
+	BOOST_CHECK_THROW(block.receipt(123), std::out_of_range);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
