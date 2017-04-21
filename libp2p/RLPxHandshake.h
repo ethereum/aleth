@@ -58,7 +58,7 @@ public:
 	/// Setup outbound connection.
 	RLPXHandshake(Host* _host, std::shared_ptr<RLPXSocket> const& _socket, NodeID _remote): m_host(_host), m_remote(_remote), m_originated(true), m_socket(_socket), m_idleTimer(m_socket->ref().get_io_service()) { crypto::Nonce::get().ref().copyTo(m_nonce.ref()); }
 
-	~RLPXHandshake() {}
+	virtual ~RLPXHandshake() = default;
 
 	/// Start handshake.
 	void start() { transition(); }
