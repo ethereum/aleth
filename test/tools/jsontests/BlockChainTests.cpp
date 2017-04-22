@@ -235,7 +235,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				compareBlocks(block, alterBlock);
 				try
 				{
-					blockchain.addBlock(alterBlock);					
+					blockchain.addBlock(alterBlock);
 					if (testChain.addBlock(alterBlock))
 						cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testname;
 
@@ -282,7 +282,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 			o["blocks"] = blArray;
 			o["postState"] = fillJsonWithState(testChain.topBlock().state());
-			o["lastblockhash"] = toString(testChain.topBlock().blockHeader().hash(WithSeal));
+			o["lastblockhash"] = "0x" + toString(testChain.topBlock().blockHeader().hash(WithSeal));
 
 			//make all values hex in pre section
 			State prestate(State::Null);
@@ -391,7 +391,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 			//Check lastblock hash
 			BOOST_REQUIRE((o.count("lastblockhash") > 0));
-			string lastTrueBlockHash = toString(testChain.topBlock().blockHeader().hash(WithSeal));
+			string lastTrueBlockHash = "0x" + toString(testChain.topBlock().blockHeader().hash(WithSeal));
 			BOOST_CHECK_MESSAGE(lastTrueBlockHash == o["lastblockhash"].get_str(),
 					testname + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + o["lastblockhash"].get_str());
 
@@ -670,10 +670,11 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 	o["gasLimit"] = toCompactHex(_bi.gasLimit(), HexPrefix::Add, 1);
 	o["gasUsed"] = toCompactHex(_bi.gasUsed(), HexPrefix::Add, 1);
 	o["timestamp"] = toCompactHex(_bi.timestamp(), HexPrefix::Add, 1);
-	o["extraData"] = toHex(_bi.extraData(), 2, HexPrefix::Add);
+	o["extraData"] = (_bi.extraData().size()) ? toHex(_bi.extraData(), 2, HexPrefix::Add) : "";
 	o["mixHash"] = toString(Ethash::mixHash(_bi));
 	o["nonce"] = toString(Ethash::nonce(_bi));
 	o["hash"] = toString(_bi.hash());
+	ImportTest::makeAllFieldsHex(o, true);
 	return o;
 }
 

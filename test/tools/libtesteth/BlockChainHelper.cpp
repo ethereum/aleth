@@ -196,12 +196,18 @@ void TestBlock::mine(TestBlockChain const& _bc)
 		premineUpdate(blockInfo);
 
 		size_t transactionsOnImport = m_transactionQueue.topTransactions(100).size();
-		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
-		if (transactionsOnImport >  m_transactionQueue.topTransactions(100).size())
-			cnote << "Dropped invalid Transactions when mining!";
-
+		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions could be dropped from queue here!!!
+		//if (transactionsOnImport >  m_transactionQueue.topTransactions(1000).size())
+			//BOOST_ERROR(TestOutputHelper::testName() + " Dropped invalid Transactions before mining!");
 		dev::eth::mine(block, blockchain, blockchain.sealEngine());
 		blockchain.sealEngine()->verify(JustSeal, block.info());
+		if (transactionsOnImport >  block.pending().size())
+			cnote << TestOutputHelper::testName() + " Dropped invalid Transactions when mining!";
+
+		//renew the TestBlock transactions
+		m_transactionQueue.clear();
+		for (size_t i = 0; i < block.pending().size(); i++)
+			m_transactionQueue.import(block.pending()[i]);
 	}
 	catch (Exception const& _e)
 	{
@@ -214,7 +220,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
 		return;
 	}
 
-	size_t validTransactions = m_transactionQueue.topTransactions(100).size();
+	size_t validTransactions = block.pending().size();
 	m_receipts = RLPStream(validTransactions);
 	for (size_t i = 0; i < validTransactions; i++)
 	{
