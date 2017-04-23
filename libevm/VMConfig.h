@@ -185,9 +185,9 @@ namespace eth
 			&&XOR,  \
 			&&NOT,  \
 			&&BYTE,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
+			&&SHL,  \
+			&&SHR,  \
+			&&SAR,  \
 			&&INVALID,  \
 			&&INVALID,  \
 			&&SHA3,        /* 20, */  \
