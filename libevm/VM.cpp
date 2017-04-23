@@ -626,6 +626,53 @@ void VM::interpretCases()
 		}
 		NEXT
 
+#if EVM_USE_BITSHIFT
+		CASE(SHL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			if (m_SP[0] >= 256)
+				m_SPP[0] = 0;
+			else
+				/// TODO: confirm shift >= 256 results in 0 on Boost
+				m_SPP[0] = m_SP[1] << m_SP[0];
+		}
+		NEXT
+
+		CASE(SHR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			if (m_SP[0] >= 256)
+				m_SPP[0] = 0;
+			else
+				/// TODO: confirm shift >= 256 results in 0 on Boost
+				m_SPP[0] = m_SP[1] >> m_SP[0];
+		}
+		NEXT
+
+		CASE(SAR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			s256 value = u2s(m_SP[1]);
+			u256 shift = m_SP[0];
+			if (shift >= 256)
+			{
+				if (value >= 0)
+					m_SPP[0] = 0;
+				else
+					m_SPP[0] = s2u(-1);
+			}
+			else
+				m_SPP[0] = s2u(divWorkaround(value, exp256(2, shift)));
+		}
+		NEXT
+#endif
+
 		CASE(ADDMOD)
 		{
 			ON_OP();
