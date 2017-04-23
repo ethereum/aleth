@@ -181,7 +181,6 @@ enum class Instruction: uint8_t
 	PUSHC = 0xac,       ///< push value from constant pool
 	JUMPC,              ///< alter the program counter - pre-verified
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
-	BAD,                ///< placed to force invalid instruction exception
 
 	CREATE = 0xf0,      ///< create a new account with associated code
 	CALL,               ///< message-call into an account

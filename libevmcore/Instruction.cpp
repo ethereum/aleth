@@ -326,7 +326,6 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::PUSHC,        { "PUSHC",          2,     0 ,    1,   false,     Tier::VeryLow } },
 	{ Instruction::JUMPC,        { "JUMPC",          0,     1,     0,   true,      Tier::Mid } },
 	{ Instruction::JUMPCI,       { "JUMPCI",         0,     1,     0,   true,      Tier::High } },
-	{ Instruction::STOP,         { "BAD",            0,     0,     0,   true,      Tier::Zero } },
 }; 
  
 void dev::eth::eachInstruction( 

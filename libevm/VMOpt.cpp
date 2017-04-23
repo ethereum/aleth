@@ -82,7 +82,7 @@ void VM::optimize()
 		)
 		{
 			TRACE_OP(1, pc, op);
-			m_code[pc] = (byte)Instruction::BAD;
+			m_code[pc] = (byte)Instruction::INVALID;
 		}
 
 		if (op == Instruction::JUMPDEST)

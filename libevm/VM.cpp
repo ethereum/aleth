@@ -1130,7 +1130,6 @@ void VM::interpretCases()
 		CASE(BEGINSUB)
 #endif
 		CASE(BEGINDATA)
-		CASE(BAD)
 		CASE(INVALID)
 		DEFAULT
 		{
