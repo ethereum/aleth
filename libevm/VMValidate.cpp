@@ -159,6 +159,7 @@ void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 		CASE(BEGINSUB)
 		CASE(BEGINDATA)
 		CASE(BAD)
+		CASE(INVALID)
 		DEFAULT
 		{
 			throwBadInstruction();

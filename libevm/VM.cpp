@@ -1131,6 +1131,7 @@ void VM::interpretCases()
 #endif
 		CASE(BEGINDATA)
 		CASE(BAD)
+		CASE(INVALID)
 		DEFAULT
 		{
 			throwBadInstruction();
