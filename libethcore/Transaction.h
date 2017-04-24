@@ -25,6 +25,8 @@
 #include <libdevcore/SHA3.h>
 #include <libethcore/Common.h>
 
+#include <boost/optional.hpp>
+
 namespace dev
 {
 namespace eth
@@ -136,13 +138,14 @@ public:
 	/// Sets the nonce to the given value. Clears any signature.
 	void setNonce(u256 const& _n) { clearSignature(); m_nonce = _n; }
 
-	/// Clears the signature.
-	void clearSignature() { m_vrs = SignatureStruct(); }
+	/// @returns true if the transaction was signed
+	bool hasSignature() const { return m_vrs.is_initialized(); }
+
+	/// @returns true if the transaction was signed with zero signature
+	bool hasZeroSignature() const { return m_vrs && !m_vrs->s && !m_vrs->r; }
 
 	/// @returns the signature of the transaction. Encodes the sender.
-	SignatureStruct const& signature() const { return m_vrs; }
-
-	bool hasZeroSignature() const { return !m_vrs.s && !m_vrs.r; }
+	SignatureStruct const& signature() const;
 
 	void sign(Secret const& _priv);			///< Sign the transaction.
 
@@ -161,6 +164,9 @@ protected:
 		MessageCall						///< Transaction to invoke a message call - receiveAddress() is used.
 	};
 
+	/// Clears the signature.
+	void clearSignature() { m_vrs = SignatureStruct(); }
+
 	Type m_type = NullTransaction;		///< Is this a contract-creation transaction or a message-call transaction?
 	u256 m_nonce;						///< The transaction-count of the sender.
 	u256 m_value;						///< The amount of ETH to be transferred by this transaction. Called 'endowment' for contract-creation transactions.
@@ -168,7 +174,7 @@ protected:
 	u256 m_gasPrice;					///< The base fee and thus the implied exchange rate of ETH to GAS.
 	u256 m_gas;							///< The total gas to convert, paid for from sender's account. Any unused gas gets refunded once the contract is ended.
 	bytes m_data;						///< The data associated with the transaction, or the initialiser if it's a creation transaction.
-	SignatureStruct m_vrs;				///< The signature of the transaction. Encodes the sender.
+	boost::optional<SignatureStruct> m_vrs;	///< The signature of the transaction. Encodes the sender.
 	int m_chainId = -4;					///< EIP155 value for calculating transaction hash https://github.com/ethereum/EIPs/issues/155
 
 	mutable h256 m_hashWith;			///< Cached hash of transaction with signature.
