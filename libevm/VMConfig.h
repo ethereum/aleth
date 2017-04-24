@@ -323,7 +323,7 @@ namespace eth
 			&&PUSHC,  \
 			&&JUMPC,  \
 			&&JUMPCI,  \
-			&&BAD,  \
+			&&INVALID,  \
 			&&INVALID,       /* B0, */  \
 			&&INVALID,  \
 			&&INVALID,  \

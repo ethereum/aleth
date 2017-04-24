@@ -181,7 +181,6 @@ enum class Instruction: uint8_t
 	PUSHC = 0xac,       ///< push value from constant pool
 	JUMPC,              ///< alter the program counter - pre-verified
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
-	BAD,                ///< placed to force invalid instruction exception
 
 	CREATE = 0xf0,      ///< create a new account with associated code
 	CALL,               ///< message-call into an account
@@ -189,6 +188,7 @@ enum class Instruction: uint8_t
 	RETURN,             ///< halt execution returning output data
 	DELEGATECALL,       ///< like CALLCODE but keeps caller's value and sender
 	REVERT = 0xfd,      ///< stop execution and revert state changes, without consuming all provided gas
+	INVALID = 0xfe,     ///< dedicated invalid instruction
 	SUICIDE = 0xff      ///< halt execution and register account for later deletion
 };
 
