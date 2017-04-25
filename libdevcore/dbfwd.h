@@ -14,10 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file dbfwd.h
- * @author Jeff Snyder <jeff-github@caffeinated.me.uk>
- * @date 2017
- */
 
 #pragma once
 
