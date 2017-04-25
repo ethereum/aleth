@@ -54,8 +54,11 @@ enum NodeTableEventType
 class NodeTable;
 class NodeTableEventHandler
 {
-	friend class NodeTable;
 public:
+	friend class NodeTable;
+
+	virtual ~NodeTableEventHandler() = default;
+
 	virtual void processEvent(NodeID const& _n, NodeTableEventType const& _e) = 0;
 
 protected:
