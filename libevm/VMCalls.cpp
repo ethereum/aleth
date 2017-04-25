@@ -144,8 +144,7 @@ void VM::caseCall()
 	if (caseCallSetup(callParams.get(), output))
 	{
 		std::pair<bool, owning_bytes_ref> callResult = m_ext->call(*callParams);
-		if (callResult.second)
-			callResult.second.copyTo(output);
+		callResult.second.copyTo(output);
 
 		m_SPP[0] = callResult.first ? 1 : 0;
 	}
