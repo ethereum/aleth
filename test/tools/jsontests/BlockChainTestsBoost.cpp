@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 //BlockChainTestsTransition
 BOOST_FIXTURE_TEST_SUITE(BlockChainTestsTransition, transitionFixture)
+BOOST_AUTO_TEST_CASE(bcMetropolis) { dev::test::executeTests("bcMetropolis", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }
 BOOST_AUTO_TEST_CASE(bcSimpleTransition) { dev::test::executeTests("bcSimpleTransitionTest", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }
 BOOST_AUTO_TEST_CASE(bcTheDaoTest) { dev::test::executeTests("bcTheDaoTest", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }
 BOOST_AUTO_TEST_CASE(bcEIP150Test) { dev::test::executeTests("bcEIP150Test", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }

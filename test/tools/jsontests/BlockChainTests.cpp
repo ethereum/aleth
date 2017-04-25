@@ -461,7 +461,6 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 			BlockHeader parentHeader = importedBlocks.at(importedBlocks.size() - 1).blockHeader();
 			tmp.setTimestamp(toInt(ho["RelTimestamp"]) + parentHeader.timestamp());
 			tmp.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(tmp, parentHeader));
-			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
 		}
 
 		Ethash::setMixHash(tmp, ho.count("mixHash") ? h256(ho["mixHash"].get_str()) : Ethash::mixHash(header));
@@ -580,7 +579,6 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 				BlockHeader parentHeader = importedBlocks.at(number).blockHeader();
 				uncleHeader.setTimestamp(toInt(uncleHeaderObj["RelTimestamp"]) + parentHeader.timestamp());
 				uncleHeader.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(uncleHeader, parentHeader));
-				//this_thread::sleep_for(chrono::seconds((int)toInt(uncleHeaderObj["RelTimestamp"])));
 				uncleHeaderObj.erase("RelTimestamp");
 			}
 		}
