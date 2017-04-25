@@ -82,12 +82,14 @@ public:
 	bool operator!=(TransactionBase const& _c) const { return !operator==(_c); }
 
 	/// @returns sender of the transaction from the signature (and hash).
+	/// @throws TransactionIsUnsigned if signature was not initialized
 	Address const& sender() const;
 	/// Like sender() but will never throw. @returns a null Address if the signature is invalid.
 	Address const& safeSender() const noexcept;
 	/// Force the sender to a particular value. This will result in an invalid transaction RLP.
 	void forceSender(Address const& _a) { m_sender = _a; }
 
+	/// @throws TransactionIsUnsigned if signature was not initialized
 	/// @throws InvalidSValue if the signature has an invalid S value.
 	void checkLowS() const;
 
@@ -103,6 +105,7 @@ public:
 	bool isCreation() const { return m_type == ContractCreation; }
 
 	/// Serialises this transaction to an RLPStream.
+	/// @throws TransactionIsUnsigned if including signature was requested but it was not initialized
 	void streamRLP(RLPStream& _s, IncludeSignature _sig = WithSignature, bool _forEip155hash = false) const;
 
 	/// @returns the RLP serialisation of this transaction.
@@ -144,7 +147,8 @@ public:
 	/// @returns true if the transaction was signed with zero signature
 	bool hasZeroSignature() const { return m_vrs && !m_vrs->s && !m_vrs->r; }
 
-	/// @returns the signature of the transaction. Encodes the sender.
+	/// @returns the signature of the transaction (the signature has the sender encoded in it)
+	/// @throws TransactionIsUnsigned if signature was not initialized
 	SignatureStruct const& signature() const;
 
 	void sign(Secret const& _priv);			///< Sign the transaction.
