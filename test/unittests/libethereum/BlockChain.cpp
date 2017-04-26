@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 {
 	try
 	{
-		dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
+		dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::MainNetworkTest;
 		TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 		TestBlock uncleBlock;
