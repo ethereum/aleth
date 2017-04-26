@@ -36,11 +36,11 @@ WhisperDB::WhisperDB(string const& _type)
 	fs::create_directories(path);
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
 	path += "/" + _type;
-	leveldb::Options op;
+	ldb::Options op;
 	op.create_if_missing = true;
 	op.max_open_files = 256;
-	leveldb::DB* p = nullptr;
-	leveldb::Status status = leveldb::DB::Open(op, path, &p);
+	ldb::DB* p = nullptr;
+	ldb::Status status = ldb::DB::Open(op, path, &p);
 	m_db.reset(p);
 	if (!status.ok())
 		BOOST_THROW_EXCEPTION(FailedToOpenLevelDB(status.ToString()));
@@ -49,8 +49,8 @@ WhisperDB::WhisperDB(string const& _type)
 string WhisperDB::lookup(dev::h256 const& _key) const
 {
 	string ret;
-	leveldb::Slice slice((char const*)_key.data(), _key.size);
-	leveldb::Status status = m_db->Get(m_readOptions, slice, &ret);
+	ldb::Slice slice((char const*)_key.data(), _key.size);
+	ldb::Status status = m_db->Get(m_readOptions, slice, &ret);
 	if (!status.ok() && !status.IsNotFound())
 		BOOST_THROW_EXCEPTION(FailedLookupInLevelDB(status.ToString()));
 
@@ -59,42 +59,42 @@ string WhisperDB::lookup(dev::h256 const& _key) const
 
 void WhisperDB::insert(dev::h256 const& _key, string const& _value)
 {
-	leveldb::Slice slice((char const*)_key.data(), _key.size);
-	leveldb::Status status = m_db->Put(m_writeOptions, slice, _value);	
+	ldb::Slice slice((char const*)_key.data(), _key.size);
+	ldb::Status status = m_db->Put(m_writeOptions, slice, _value);	
 	if (!status.ok())
 		BOOST_THROW_EXCEPTION(FailedInsertInLevelDB(status.ToString()));
 }
 
 void WhisperDB::insert(dev::h256 const& _key, bytes const& _value)
 {
-	leveldb::Slice k((char const*)_key.data(), _key.size);
-	leveldb::Slice v((char const*)_value.data(), _value.size());
-	leveldb::Status status = m_db->Put(m_writeOptions, k, v);
+	ldb::Slice k((char const*)_key.data(), _key.size);
+	ldb::Slice v((char const*)_value.data(), _value.size());
+	ldb::Status status = m_db->Put(m_writeOptions, k, v);
 	if (!status.ok())
 		BOOST_THROW_EXCEPTION(FailedInsertInLevelDB(status.ToString()));
 }
 
 void WhisperDB::kill(dev::h256 const& _key)
 {
-	leveldb::Slice slice((char const*)_key.data(), _key.size);
-	leveldb::Status status = m_db->Delete(m_writeOptions, slice);
+	ldb::Slice slice((char const*)_key.data(), _key.size);
+	ldb::Status status = m_db->Delete(m_writeOptions, slice);
 	if (!status.ok())
 		BOOST_THROW_EXCEPTION(FailedDeleteInLevelDB(status.ToString()));
 }
 
 void WhisperMessagesDB::loadAllMessages(std::map<h256, Envelope>& o_dst)
 {
-	leveldb::ReadOptions op;
+	ldb::ReadOptions op;
 	op.fill_cache = false;
 	op.verify_checksums = true;
 	vector<string> wasted;
-	unique_ptr<leveldb::Iterator> it(m_db->NewIterator(op));
+	unique_ptr<ldb::Iterator> it(m_db->NewIterator(op));
 	unsigned const now = utcTime();
 
 	for (it->SeekToFirst(); it->Valid(); it->Next())
 	{
-		leveldb::Slice const k = it->key();
-		leveldb::Slice const v = it->value();
+		ldb::Slice const k = it->key();
+		ldb::Slice const v = it->value();
 		bool useless = true;
 
 		try
@@ -132,7 +132,7 @@ void WhisperMessagesDB::loadAllMessages(std::map<h256, Envelope>& o_dst)
 
 	for (auto const& k: wasted)
 	{
-		leveldb::Status status = m_db->Delete(m_writeOptions, k);
+		ldb::Status status = m_db->Delete(m_writeOptions, k);
 		if (!status.ok())
 			cwarn << "Failed to delete an entry from Level DB:" << k;
 	}

@@ -14,36 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file LevelDB.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
- *   Marek Kotewicz <marek@ethdev.com>
- * @date 2015
- */
 
 #pragma once
-#include "DBFace.h"
-#include <libdevcore/dbfwd.h>
 
-namespace dev
-{
-namespace rpc
-{
-
-class LevelDB: public dev::rpc::DBFace
-{
-public:
-	LevelDB();
-	virtual RPCModules implementedModules() const override
-	{
-		return RPCModules{RPCModule{"db", "1.0"}};
-	}
-	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value) override;
-	virtual std::string db_get(std::string const& _name, std::string const& _key) override;
-	
-private:
-	ldb::DB* m_db;
-};
-
+#if ETH_ROCKSDB
+namespace rocksdb {
+    class DB;
 }
+namespace ldb = rocksdb;
+#else
+namespace leveldb {
+    class DB;
 }
+namespace ldb = leveldb;
+#endif
