@@ -67,7 +67,8 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	cp.blockReward = u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str())));
 	for (auto i: params)
 	{
-		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas" && i.first != "allowFutureBlocks")
+		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" &&
+			i.first != "blockReward" && i.first != "tieBreakingGas" && i.first != "allowFutureBlocks")
 			cp.otherParams[i.first] = i.second.get_str();
 		else
 		{
