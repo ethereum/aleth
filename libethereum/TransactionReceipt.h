@@ -37,6 +37,7 @@ class TransactionReceipt
 public:
 	TransactionReceipt(bytesConstRef _rlp);
 	TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries const& _log);
+	TransactionReceipt(u256 _gasUsed, LogEntries const& _log) : TransactionReceipt(h256(), _gasUsed, _log) {}
 
 	h256 const& stateRoot() const { return m_stateRoot; }
 	u256 const& gasUsed() const { return m_gasUsed; }
