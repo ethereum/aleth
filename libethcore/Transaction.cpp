@@ -73,7 +73,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 		m_vrs = SignatureStruct{ r, s, v };
 
 		if (hasZeroSignature())
-			m_chainId = m_vrs.v;
+			m_chainId = m_vrs->v;
 		else
 		{
 			if (v > 36)
@@ -82,9 +82,9 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 				m_chainId = -4;
 			else
 				BOOST_THROW_EXCEPTION(InvalidSignature());
-			m_vrs.v = v - (m_chainId * 2 + 35);
+			m_vrs->v = v - (m_chainId * 2 + 35);
 
-			if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid())
+			if (_checkSig >= CheckTransaction::Cheap && !m_vrs->isValid())
 				BOOST_THROW_EXCEPTION(InvalidSignature());
 		}
 
@@ -121,13 +121,24 @@ Address const& TransactionBase::sender() const
 			m_sender = MaxAddress;
 		else
 		{
-			auto p = recover(m_vrs, sha3(WithoutSignature));
+			if (!m_vrs)
+				BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+			auto p = recover(*m_vrs, sha3(WithoutSignature));
 			if (!p)
 				BOOST_THROW_EXCEPTION(InvalidSignature());
 			m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
 		}
 	}
 	return m_sender;
+}
+
+SignatureStruct const& TransactionBase::signature() const
+{ 
+	if (!m_vrs)
+		BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+	return *m_vrs;
 }
 
 void TransactionBase::sign(Secret const& _priv)
@@ -153,8 +164,11 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 
 	if (_sig)
 	{
+		if (!m_vrs)
+			BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
 		int vOffset = m_chainId*2 + 35;
-		_s << (m_vrs.v + vOffset) << (u256)m_vrs.r << (u256)m_vrs.s;
+		_s << (m_vrs->v + vOffset) << (u256)m_vrs->r << (u256)m_vrs->s;
 	}
 	else if (_forEip155hash)
 		_s << m_chainId << 0 << 0;
@@ -164,7 +178,10 @@ static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279
 
 void TransactionBase::checkLowS() const
 {
-	if (m_vrs.s > c_secp256k1n / 2)
+	if (!m_vrs)
+		BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+	if (m_vrs->s > c_secp256k1n / 2)
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 }
 

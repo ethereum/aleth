@@ -166,4 +166,31 @@ BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
 	//BOOST_CHECK_MESSAGE(bc.interface().transactions().size() == 1, "Failed importing zero transaction to block!");
 }
 
+BOOST_AUTO_TEST_CASE(GettingSenderForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	BOOST_CHECK(!tx.hasSignature());
+
+	BOOST_REQUIRE_THROW(tx.sender(), TransactionIsUnsigned);
+}
+
+BOOST_AUTO_TEST_CASE(GettingSignatureForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	BOOST_REQUIRE_THROW(tx.signature(), TransactionIsUnsigned);
+}
+
+BOOST_AUTO_TEST_CASE(StreamRLPWithSignatureForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	RLPStream s;
+	BOOST_REQUIRE_THROW(tx.streamRLP(s, IncludeSignature::WithSignature, false), TransactionIsUnsigned);
+}
+
+BOOST_AUTO_TEST_CASE(CheckLowSForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	BOOST_REQUIRE_THROW(tx.checkLowS(), TransactionIsUnsigned);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
