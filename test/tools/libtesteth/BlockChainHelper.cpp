@@ -501,8 +501,9 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
 		Block block = (m_blockChain.get()->genesisBlock(genesisDB));
 		block.sync(*m_blockChain.get());
 
-		//BOOST_REQUIRE(m_lastBlock.blockHeader().hash() == BlockHeader(block.blockData()).hash());
-		m_lastBlock.setState(/*block.fromPending(10000)*/block.state());
+		State st(block.state());
+		st.setRoot(block.info().stateRoot());
+		m_lastBlock.setState(st);
 		return true;
 	}
 

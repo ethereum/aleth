@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(bStates)
 		OverlayDB const& genesisDB = genesisBlock.state().db();
 		BlockChain const& blockchain = testBlockchain.interface();
 
-		State stateBofore = testBlockchain.topBlock().state();
+		h256 stateBefore = testBlockchain.topBlock().state().rootHash();
 
 		TestBlock testBlock;
 		TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
@@ -76,17 +76,16 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 		Block block2 = blockchain.genesisBlock(genesisDB);
 		block2.populateFromChain(blockchain, testBlock.blockHeader().hash());
-/*		State stateAfterInsert = block2.fromPending(0); //get the state of blockchain on previous block
-		BOOST_REQUIRE(ImportTest::compareStates(stateBofore, stateAfterInsert) == 0);
+		h256 stateAfterInsert = block2.stateRootBeforeTx(0); //get the state of blockchain on previous block
+		BOOST_REQUIRE_EQUAL(stateBefore, stateAfterInsert);
 
-		// TODO remove this
-		State stateAfterInsert1 = block2.fromPending(1); //get the state of blockchain on current block executed
-		BOOST_REQUIRE(ImportTest::compareStates(stateAfterInsert, stateAfterInsert1, eth::AccountMaskMap(), WhenError::DontThrow) == 1);
+		h256 stateAfterInsert1 = block2.stateRootBeforeTx(1); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateAfterInsert != stateAfterInsert1);
 
-		State stateAfterInsert2 = block2.fromPending(2); //get the state of blockchain on current block executed
-		BOOST_REQUIRE(ImportTest::compareStates(stateBofore, stateAfterInsert2, eth::AccountMaskMap(), WhenError::DontThrow) == 1);
-		BOOST_REQUIRE(ImportTest::compareStates(stateAfterInsert1, stateAfterInsert2, eth::AccountMaskMap(), WhenError::DontThrow) == 1);
-*/
+		h256 stateAfterInsert2 = block2.stateRootBeforeTx(2); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateBefore != stateAfterInsert2);
+		BOOST_REQUIRE(stateAfterInsert1 != stateAfterInsert2);
+
 		//Block2 will start a new block on top of blockchain
 		BOOST_REQUIRE(block1.info() == block2.info());
 		block2.sync(blockchain);
