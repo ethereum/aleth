@@ -198,7 +198,7 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	if ((m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE) && m_SP[2] > 0)
 		m_runGas += toInt63(m_schedule->callValueTransferGas);
 
-	size_t sizesOffset = m_OP == Instruction::DELEGATECALL ? 2 : 3;
+	size_t sizesOffset = (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL) ? 2 : 3;
 	u256 inputOffset  = m_SP[sizesOffset];
 	u256 inputSize    = m_SP[sizesOffset + 1];
 	u256 outputOffset = m_SP[sizesOffset + 2];
