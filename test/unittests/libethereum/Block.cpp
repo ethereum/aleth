@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(bStates)
 		OverlayDB const& genesisDB = genesisBlock.state().db();
 		BlockChain const& blockchain = testBlockchain.interface();
 
-		h256 stateBefore = testBlockchain.topBlock().state().rootHash();
+		h256 stateRootBefore = testBlockchain.topBlock().state().rootHash();
 
 		TestBlock testBlock;
 		TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
@@ -76,15 +76,15 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 		Block block2 = blockchain.genesisBlock(genesisDB);
 		block2.populateFromChain(blockchain, testBlock.blockHeader().hash());
-		h256 stateAfterInsert = block2.stateRootBeforeTx(0); //get the state of blockchain on previous block
-		BOOST_REQUIRE_EQUAL(stateBefore, stateAfterInsert);
+		h256 stateRootAfterInsert = block2.stateRootBeforeTx(0); //get the state of blockchain on previous block
+		BOOST_REQUIRE_EQUAL(stateRootBefore, stateRootAfterInsert);
 
-		h256 stateAfterInsert1 = block2.stateRootBeforeTx(1); //get the state of blockchain on current block executed
-		BOOST_REQUIRE(stateAfterInsert != stateAfterInsert1);
+		h256 stateRootAfterInsert1 = block2.stateRootBeforeTx(1); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateRootAfterInsert != stateRootAfterInsert1);
 
-		h256 stateAfterInsert2 = block2.stateRootBeforeTx(2); //get the state of blockchain on current block executed
-		BOOST_REQUIRE(stateBefore != stateAfterInsert2);
-		BOOST_REQUIRE(stateAfterInsert1 != stateAfterInsert2);
+		h256 stateRootAfterInsert2 = block2.stateRootBeforeTx(2); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateRootBefore != stateRootAfterInsert2);
+		BOOST_REQUIRE(stateRootAfterInsert1 != stateRootAfterInsert2);
 
 		//Block2 will start a new block on top of blockchain
 		BOOST_REQUIRE(block1.info() == block2.info());

@@ -142,15 +142,8 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		Block block = m_eth.block(blockHash(_blockHashOrNumber));
 
 		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
-		State state(block.state());
-		u256 const rootHash = block.stateRootBeforeTx(_txIndex);
-		if (rootHash)
-			state.setRoot(rootHash);
-		else
-		{
-			state.setRoot(block.stateRootBeforeTx(0));
-			state.executeBlockTransactions(block, i, m_eth.blockChain().lastHashes(block.info().parentHash()), *m_eth.blockChain().sealEngine());
-		}
+		State state(State::Null);
+		createIntermediateState(state, block, i, m_eth.blockChain());
 
 		map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 

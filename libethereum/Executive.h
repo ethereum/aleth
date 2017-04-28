@@ -122,7 +122,7 @@ public:
 	 * populating environment info from the given Block and the LastHashes portion from the BlockChain.
 	 * State is assigned the resultant value, but otherwise unused.
 	 */
-	Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level = 0);
+	Executive(State& io_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level = 0);
 
 	Executive(Executive const&) = delete;
 	void operator=(Executive) = delete;

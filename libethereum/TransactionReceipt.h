@@ -32,6 +32,9 @@ namespace dev
 namespace eth
 {
 
+/// Transaction receipt, constructed either from RLP representation or from individual values.
+/// State Root is optional, m_stateRoot is h256() when it is empty (for transactions after Metropolis)
+/// Empty state root is not included into RLP-encoding.
 class TransactionReceipt
 {
 public:
