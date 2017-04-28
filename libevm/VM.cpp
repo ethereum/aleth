@@ -214,19 +214,24 @@ void VM::interpretCases()
 		
 		CASE(CREATE)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			m_bounce = &VM::caseCreate;
 		}
 		BREAK
 
 		CASE(DELEGATECALL)
-
-			// Pre-homestead
-			if (!m_schedule->haveDelegateCall)
-				throwBadInstruction();
-
+		CASE(STATICCALL)
 		CASE(CALL)
 		CASE(CALLCODE)
 		{
+			if (m_OP == Instruction::DELEGATECALL && !m_schedule->haveDelegateCall)
+				throwBadInstruction();
+			if (m_OP == Instruction::STATICCALL && !m_schedule->haveStaticCall)
+				throwBadInstruction();
+			if (m_OP == Instruction::CALL && m_ext->staticCall && m_SP[2] != 0)
+				throwDisallowedStateChange();
 			m_bounce = &VM::caseCall;
 		}
 		BREAK
@@ -265,6 +270,9 @@ void VM::interpretCases()
 
 		CASE(SUICIDE)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			m_runGas = toInt63(m_schedule->suicideGas);
 			Address dest = asAddress(m_SP[0]);
 
@@ -340,6 +348,9 @@ void VM::interpretCases()
 
 		CASE(LOG0)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -350,6 +361,9 @@ void VM::interpretCases()
 
 		CASE(LOG1)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -360,6 +374,9 @@ void VM::interpretCases()
 
 		CASE(LOG2)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -370,6 +387,9 @@ void VM::interpretCases()
 
 		CASE(LOG3)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -380,6 +400,9 @@ void VM::interpretCases()
 
 		CASE(LOG4)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -1093,6 +1116,9 @@ void VM::interpretCases()
 
 		CASE(SSTORE)
 		{
+			if (m_schedule->haveStaticCall && m_ext->staticCall)
+				throwDisallowedStateChange();
+
 			if (!m_ext->store(m_SP[0]) && m_SP[1])
 				m_runGas = toInt63(m_schedule->sstoreSetGas);
 			else if (m_ext->store(m_SP[0]) && !m_SP[1])
