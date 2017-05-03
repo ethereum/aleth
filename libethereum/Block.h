@@ -307,6 +307,9 @@ private:
 	/// Performs irregular modifications right after initialization, e.g. to implement a hard fork.
 	void performIrregularModifications();
 
+	/// Creates and updates the special contract for storing block hashes according to EIP96
+	void updateBlockhashContract();
+
 	/// Provide a standard VM trace for debugging purposes.
 	std::string vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequirements::value _ir);
 
