@@ -635,8 +635,11 @@ void VM::interpretCases()
 			if (m_SP[0] >= 256)
 				m_SPP[0] = 0;
 			else
-				/// TODO: confirm shift >= 256 results in 0 on Boost
-				m_SPP[0] = m_SP[1] << m_SP[0];
+			{
+				/// This workarounds a bug in Boost...
+				u256 mask = (u256(1) << (256 - m_SP[0])) - 1;
+				m_SPP[0] = (m_SP[1] & mask) << m_SP[0];
+			}
 		}
 		NEXT
 
