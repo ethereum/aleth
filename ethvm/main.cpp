@@ -299,7 +299,7 @@ int main(int argc, char** argv)
 	if (!code.empty())
 		executive.call(contractDestination, sender, value, gasPrice, &data, gas);
 	else
-		executive.create(sender, value, gasPrice, gas, &data, origin);
+		executive.create(sender, value, gasPrice, gas, &data, origin, Instruction::CREATE);
 
 	Timer timer;
 	if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Interpreter)

@@ -211,6 +211,14 @@ void VM::interpretCases()
 		//
 		// Call-related instructions
 		//
+
+		CASE(CREATE_P2SH)
+		{
+			if (!m_schedule->haveCreatePsh)
+				throwBadInstruction();
+			m_bounce = &VM::caseCreate;
+		}
+		BREAK
 		
 		CASE(CREATE)
 		{
