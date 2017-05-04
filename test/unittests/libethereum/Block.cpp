@@ -50,8 +50,6 @@ BOOST_AUTO_TEST_CASE(bStructures)
 
 BOOST_AUTO_TEST_CASE(bStates)
 {
-	if (!dev::test::Options::get().quadratic)
-		return;
 	try
 	{
 		TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
@@ -59,7 +57,7 @@ BOOST_AUTO_TEST_CASE(bStates)
 		OverlayDB const& genesisDB = genesisBlock.state().db();
 		BlockChain const& blockchain = testBlockchain.interface();
 
-		State stateBofore = testBlockchain.topBlock().state();
+		h256 stateRootBefore = testBlockchain.topBlock().state().rootHash();
 
 		TestBlock testBlock;
 		TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
@@ -76,15 +74,15 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 		Block block2 = blockchain.genesisBlock(genesisDB);
 		block2.populateFromChain(blockchain, testBlock.blockHeader().hash());
-		State stateAfterInsert = block2.fromPending(0); //get the state of blockchain on previous block
-		BOOST_REQUIRE(ImportTest::compareStates(stateBofore, stateAfterInsert) == 0);
+		h256 stateRootAfterInsert = block2.stateRootBeforeTx(0); //get the state of blockchain on previous block
+		BOOST_REQUIRE_EQUAL(stateRootBefore, stateRootAfterInsert);
 
-		State stateAfterInsert1 = block2.fromPending(1); //get the state of blockchain on current block executed
-		BOOST_REQUIRE(ImportTest::compareStates(stateAfterInsert, stateAfterInsert1, eth::AccountMaskMap(), WhenError::DontThrow) == 1);
+		h256 stateRootAfterInsert1 = block2.stateRootBeforeTx(1); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateRootAfterInsert != stateRootAfterInsert1);
 
-		State stateAfterInsert2 = block2.fromPending(2); //get the state of blockchain on current block executed
-		BOOST_REQUIRE(ImportTest::compareStates(stateBofore, stateAfterInsert2, eth::AccountMaskMap(), WhenError::DontThrow) == 1);
-		BOOST_REQUIRE(ImportTest::compareStates(stateAfterInsert1, stateAfterInsert2, eth::AccountMaskMap(), WhenError::DontThrow) == 1);
+		h256 stateRootAfterInsert2 = block2.stateRootBeforeTx(2); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateRootBefore != stateRootAfterInsert2);
+		BOOST_REQUIRE(stateRootAfterInsert1 != stateRootAfterInsert2);
 
 		//Block2 will start a new block on top of blockchain
 		BOOST_REQUIRE(block1.info() == block2.info());

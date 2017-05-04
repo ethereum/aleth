@@ -76,6 +76,7 @@ DEV_SIMPLE_EXCEPTION(InvalidParentHash);
 DEV_SIMPLE_EXCEPTION(InvalidUncleParentHash);
 DEV_SIMPLE_EXCEPTION(InvalidNumber);
 DEV_SIMPLE_EXCEPTION(InvalidZeroSignatureTransaction);
+DEV_SIMPLE_EXCEPTION(InvalidTransactionReceiptFormat);
 DEV_SIMPLE_EXCEPTION(BlockNotFound);
 DEV_SIMPLE_EXCEPTION(UnknownParent);
 

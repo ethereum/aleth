@@ -61,13 +61,19 @@ Json::Value Debug::traceTransaction(Executive& _e, Transaction const& _t, Json::
 
 Json::Value Debug::traceBlock(Block const& _block, Json::Value const& _json)
 {
+	State s(_block.state());
+	s.setRoot(_block.stateRootBeforeTx(0));
+
 	Json::Value traces(Json::arrayValue);
 	for (unsigned k = 0; k < _block.pending().size(); k++)
 	{
 		Transaction t = _block.pending()[k];
-		State s(State::Null);
+
+		u256 const gasUsed = k ? _block.receipt(k - 1).gasUsed() : 0;
+		EnvInfo envInfo(_block.info(), m_eth.blockChain().lastHashes(_block.info().parentHash()), gasUsed);
+		Executive e(s, envInfo, *m_eth.blockChain().sealEngine());
+
 		eth::ExecutionResult er;
-		Executive e(s, _block, k, m_eth.blockChain());
 		e.setResultRecipient(er);
 		traces.append(traceTransaction(e, t, _json));
 	}
@@ -136,7 +142,8 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		Block block = m_eth.block(blockHash(_blockHashOrNumber));
 
 		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
-		State state = block.fromPending(i);
+		State state(State::Null);
+		createIntermediateState(state, block, i, m_eth.blockChain());
 
 		map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 
