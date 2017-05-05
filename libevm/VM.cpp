@@ -687,7 +687,13 @@ void VM::interpretCases()
 
 		CASE(RETURNDATASIZE)
 		{
-			throwBadInstruction();
+			if (!m_schedule->haveReturnData)
+				throwBadInstruction();
+
+			ON_OP();
+			updateIOGas();
+
+			m_SPP[0] = m_returnData.size();
 		}
 		NEXT
 

@@ -35,6 +35,7 @@ void VM::reportStackUse()
 std::array<InstructionMetric, 256> VM::c_metrics;
 void VM::initMetrics()
 {
+	// FIXME: This is not thread safe.
 	static bool done=false;
 	if (!done)
 	{
