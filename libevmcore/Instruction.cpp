@@ -54,6 +54,8 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::ADDMOD,       { "ADDMOD",         0,     3,    1,  false,       Tier::Mid } },
 	{ Instruction::MULMOD,       { "MULMOD",         0,     3,    1,  false,       Tier::Mid } },
 	{ Instruction::SIGNEXTEND,   { "SIGNEXTEND",     0,     2,    1,  false,       Tier::Low } },
+	{ Instruction::RETURNDATASIZE,{"RETURNDATASIZE", 0,     0,    1,  false,       Tier::Low } },
+	{ Instruction::RETURNDATACOPY,{"RETURNDATACOPY", 0,     3,    0,  false,       Tier::Low } },
 	{ Instruction::SHA3,         { "SHA3",           0,     2,    1,  false,       Tier::Special } },
 	{ Instruction::ADDRESS,      { "ADDRESS",        0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::BALANCE,      { "BALANCE",        0,     1,    1,  false,       Tier::Special } },
