@@ -729,7 +729,15 @@ void VM::interpretCases()
 
 		CASE(RETURNDATACOPY)
 		{
-			throwBadInstruction();
+			if (!m_schedule->haveReturnData)
+				throwBadInstruction();
+
+			m_copyMemSize = toInt63(m_SP[2]);
+			updateMem(memNeed(m_SP[0], m_SP[2]));
+			ON_OP();
+			updateIOGas();
+
+			copyDataToMemory(&m_returnData, m_SP);
 		}
 		NEXT
 
