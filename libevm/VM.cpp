@@ -685,6 +685,12 @@ void VM::interpretCases()
 		}
 		NEXT
 
+		CASE(RETURNDATASIZE)
+		{
+			throwBadInstruction();
+		}
+		NEXT
+
 		CASE(CODESIZE)
 		{
 			ON_OP();
@@ -712,6 +718,12 @@ void VM::interpretCases()
 			updateIOGas();
 
 			copyDataToMemory(m_ext->data, m_SP);
+		}
+		NEXT
+
+		CASE(RETURNDATACOPY)
+		{
+			throwBadInstruction();
 		}
 		NEXT
 

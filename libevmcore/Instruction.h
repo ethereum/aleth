@@ -47,6 +47,9 @@ enum class Instruction: uint8_t
 	EXP,                ///< exponential operation
 	SIGNEXTEND,         ///< extend length of signed integer
 
+	RETURNDATASIZE = 0x0d,  ///< size of data returned from previous call
+	RETURNDATACOPY = 0x0e,  ///< copy data returned from previous call to memory
+
 	LT = 0x10,          ///< less-than comparision
 	GT,                 ///< greater-than comparision
 	SLT,                ///< signed less-than comparision
