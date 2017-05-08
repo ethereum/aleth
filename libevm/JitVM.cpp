@@ -16,27 +16,27 @@ static_assert(sizeof(Address) == sizeof(evm_uint160be),
 static_assert(alignof(Address) == alignof(evm_uint160be),
               "Address types alignment mismatch");
 
-inline evm_uint160be toEvmC(Address _addr)
+inline evm_uint160be toEvmC(Address const& _addr)
 {
-	return *reinterpret_cast<evm_uint160be*>(&_addr);
+	return *reinterpret_cast<evm_uint160be const*>(&_addr);
 }
 
-inline Address fromEvmC(evm_uint160be const* _addr)
+inline Address fromEvmC(evm_uint160be const& _addr)
 {
-	return *reinterpret_cast<Address const*>(_addr);
+	return *reinterpret_cast<Address const*>(&_addr);
 }
 
 static_assert(sizeof(h256) == sizeof(evm_uint256be), "Hash types size mismatch");
 static_assert(alignof(h256) == alignof(evm_uint256be), "Hash types alignment mismatch");
 
-inline evm_uint256be toEvmC(h256 _h)
+inline evm_uint256be toEvmC(h256 const& _h)
 {
-	return *reinterpret_cast<evm_uint256be*>(&_h);
+	return *reinterpret_cast<evm_uint256be const*>(&_h);
 }
 
-inline u256 asUint(evm_uint256be const* _n)
+inline u256 fromEvmC(evm_uint256be const& _n)
 {
-	return fromBigEndian<u256>(_n->bytes);
+	return fromBigEndian<u256>(_n.bytes);
 }
 
 void queryState(
@@ -48,7 +48,7 @@ void queryState(
 ) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	auto addr = fromEvmC(_addr);
+	Address addr = fromEvmC(*_addr);
 	switch (_key)
 	{
 	case EVM_CODE_BY_ADDRESS:
@@ -66,7 +66,7 @@ void queryState(
 		break;
 	case EVM_SLOAD:
 	{
-		auto storageKey = asUint(_storageKey);
+		auto storageKey = fromEvmC(*_storageKey);
 		o_result->uint256be = toEvmC(env.store(storageKey));
 		break;
 	}
@@ -86,13 +86,13 @@ void updateState(
 {
 	(void) _addr;
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	assert(fromEvmC(_addr) == env.myAddress);
+	assert(fromEvmC(*_addr) == env.myAddress);
 	switch (_key)
 	{
 	case EVM_SSTORE:
 	{
-		auto index = asUint(&_arg1->uint256be);
-		auto value = asUint(&_arg2->uint256be);
+		auto index = fromEvmC(_arg1->uint256be);
+		auto value = fromEvmC(_arg2->uint256be);
 		if (value == 0 && env.store(index) != 0)                   // If delete
 			env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
 
@@ -108,7 +108,7 @@ void updateState(
 	}
 	case EVM_SELFDESTRUCT:
 		// Register selfdestruction beneficiary.
-		env.suicide(fromEvmC(&_arg1->address));
+		env.suicide(fromEvmC(_arg1->address));
 		break;
 	}
 }
@@ -140,7 +140,7 @@ int64_t call(
 {
 	assert(_msg->gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	auto value = asUint(&_msg->value);
+	auto value = fromEvmC(_msg->value);
 	bytesConstRef input{_msg->input, _msg->input_size};
 
 	if (_msg->kind == EVM_CREATE)
@@ -161,8 +161,8 @@ int64_t call(
 	params.gas = _msg->gas;
 	params.apparentValue = value;
 	params.valueTransfer = _msg->kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
-	params.senderAddress = fromEvmC(&_msg->sender);
-	params.codeAddress = fromEvmC(&_msg->address);
+	params.senderAddress = fromEvmC(_msg->sender);
+	params.codeAddress = fromEvmC(_msg->address);
 	params.receiveAddress = _msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = input;
 	params.onOp = {};
