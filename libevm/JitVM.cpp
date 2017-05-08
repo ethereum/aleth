@@ -39,7 +39,7 @@ inline u256 asUint(evm_uint256be const* _n)
 	return fromBigEndian<u256>(_n->bytes);
 }
 
-void evm_query(
+void queryState(
 	evm_variant* o_result,
 	evm_env* _opaqueEnv,
 	evm_query_key _key,
@@ -113,7 +113,7 @@ void updateState(
 	}
 }
 
-void evm_get_tx_context(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
+void getTxContext(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
 	result->tx_gas_price = toEvmC(env.gasPrice);
@@ -121,7 +121,7 @@ void evm_get_tx_context(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
 	result->block_coinbase = toEvmC(env.envInfo().author());
 	result->block_number = static_cast<int64_t>(env.envInfo().number());
 	result->block_timestamp = static_cast<int64_t>(env.envInfo().timestamp());
-	result->block_gas_limit = env.envInfo().gasLimit();
+	result->block_gas_limit = static_cast<int64_t>(env.envInfo().gasLimit());
 	result->block_difficulty = toEvmC(env.envInfo().difficulty());
 }
 
@@ -131,7 +131,7 @@ void getBlockHash(evm_uint256be* o_hash, evm_env* _envPtr, int64_t _number)
 	*o_hash = toEvmC(env.blockHash(_number));
 }
 
-int64_t evm_call(
+int64_t call(
 	evm_env* _opaqueEnv,
 	evm_message const* _msg,
 	uint8_t* _outputData,
@@ -278,7 +278,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(evm_query, updateState, evm_call, evm_get_tx_context, getBlockHash);
+	static EVM jit(queryState, updateState, call, getTxContext, getBlockHash);
 	return jit;
 }
 
