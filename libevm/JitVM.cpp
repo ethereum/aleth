@@ -18,12 +18,12 @@ static_assert(alignof(Address) == alignof(evm_uint160be),
 
 inline evm_uint160be toEvmC(Address const& _addr)
 {
-	return *reinterpret_cast<evm_uint160be const*>(&_addr);
+	return reinterpret_cast<evm_uint160be const&>(_addr);
 }
 
 inline Address fromEvmC(evm_uint160be const& _addr)
 {
-	return *reinterpret_cast<Address const*>(&_addr);
+	return reinterpret_cast<Address const&>(_addr);
 }
 
 static_assert(sizeof(h256) == sizeof(evm_uint256be), "Hash types size mismatch");
@@ -31,7 +31,7 @@ static_assert(alignof(h256) == alignof(evm_uint256be), "Hash types alignment mis
 
 inline evm_uint256be toEvmC(h256 const& _h)
 {
-	return *reinterpret_cast<evm_uint256be const*>(&_h);
+	return reinterpret_cast<evm_uint256be const&>(_h);
 }
 
 inline u256 fromEvmC(evm_uint256be const& _n)
@@ -91,8 +91,8 @@ void updateState(
 	{
 	case EVM_SSTORE:
 	{
-		auto index = fromEvmC(_arg1->uint256be);
-		auto value = fromEvmC(_arg2->uint256be);
+		u256 index = fromEvmC(_arg1->uint256be);
+		u256 value = fromEvmC(_arg2->uint256be);
 		if (value == 0 && env.store(index) != 0)                   // If delete
 			env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
 
@@ -140,18 +140,19 @@ int64_t call(
 {
 	assert(_msg->gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	auto value = fromEvmC(_msg->value);
+	u256 value = fromEvmC(_msg->value);
 	bytesConstRef input{_msg->input, _msg->input_size};
 
 	if (_msg->kind == EVM_CREATE)
 	{
 		assert(_outputSize == 20);
 		u256 gas = _msg->gas;
-		// TODO: How it knows who the sender is?
+		// ExtVM::create takes the sender address from .myAddress.
+		assert(fromEvmC(_msg->sender) == env.myAddress);
 		auto addr = env.create(value, gas, input, {});
 		auto gasLeft = static_cast<int64_t>(gas);
 		if (addr)
-			std::memcpy(_outputData, addr.data(), 20);
+			std::copy(addr.begin(), addr.end(), _outputData);
 		else
 			gasLeft |= EVM_CALL_FAILURE;
 		return gasLeft;
@@ -286,7 +287,7 @@ EVM& getJit()
 
 owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	auto rejected = false;
+	bool rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
 	rejected |= io_gas > std::numeric_limits<int64_t>::max(); // Do not accept requests with gas > 2^63 (int64 max)
 	rejected |= _ext.envInfo().number() > std::numeric_limits<int64_t>::max();

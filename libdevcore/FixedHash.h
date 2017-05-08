@@ -141,6 +141,12 @@ public:
 	/// @returns a constant byte pointer to the object's data.
 	byte const* data() const { return m_data.data(); }
 
+	/// @returns begin iterator.
+	auto begin() const -> typename std::array<byte, N>::const_iterator { return m_data.begin(); }
+
+	/// @returns end iterator.
+	auto end() const -> typename std::array<byte, N>::const_iterator { return m_data.end(); }
+
 	/// @returns a copy of the object's data as a byte vector.
 	bytes asBytes() const { return bytes(data(), data() + N); }
 
