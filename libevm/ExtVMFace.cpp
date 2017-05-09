@@ -36,3 +36,10 @@ ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _calle
 	codeHash(_codeHash),
 	depth(_depth)
 {}
+
+h256 ExtVMFace::blockHash(u256 _number)
+{ 
+	return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ? 
+		envInfo().lastHashes()[(unsigned)(envInfo().number() - 1 - _number)] : 
+		h256(); 
+}

@@ -134,3 +134,21 @@ void ExtVM::suicide(Address _a)
 	m_s.subBalance(myAddress, m_s.balance(myAddress));
 	ExtVMFace::suicide(_a);
 }
+
+h256 ExtVM::blockHash(u256 _number)
+{
+	if (envInfo().number() >= m_sealEngine.chainParams().u256Param("metropolisForkBlock") + 256)
+	{
+		u256 const nonce = m_s.getNonce(caller);
+		u256 const gas = 1000000;
+		Transaction tx(0, 0, gas, c_blockhashContractAddress, toBigEndian(_number), nonce);
+		tx.forceSender(caller);
+
+		ExecutionResult res;
+		std::tie(res, std::ignore) = m_s.execute(envInfo(), m_sealEngine, tx, Permanence::Reverted);
+		return h256(res.output);
+	}
+
+	// TODO try to move the code here from  parent interface?
+	return ExtVMFace::blockHash(_number);
+}
