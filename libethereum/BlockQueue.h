@@ -29,7 +29,6 @@
 #include <libdevcore/Log.h>
 #include <libethcore/Common.h>
 #include <libdevcore/Guards.h>
-#include <libethcore/Common.h>
 #include <libethcore/BlockHeader.h>
 #include "VerifiedBlock.h"
 

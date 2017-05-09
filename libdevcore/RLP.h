@@ -209,10 +209,10 @@ public:
 			ret.reserve(itemCount());
 			for (auto const& i: *this)
 				ret.push_back(i.convert<T>(_flags));
-		 }
+		}
 		else if (_flags & ThrowOnFail)
 			BOOST_THROW_EXCEPTION(BadCast());
-		 return ret;
+		return ret;
 	}
 
 	template <class T>
