@@ -60,8 +60,8 @@ struct VerifiedBlock
 	{
 		assert(&_other != this);
 
-		verified = (std::move(_other.verified));
-		blockData = (std::move(_other.blockData));
+		verified = std::move(_other.verified);
+		blockData = std::move(_other.blockData);
 		return *this;
 	}
 
