@@ -547,14 +547,6 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 }
 
 
-LastHashes lastHashes(u256 _currentBlockNumber)
-{
-	LastHashes ret;
-	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
-		ret.push_back(sha3(toString(_currentBlockNumber - i)));
-	return ret;
-}
-
 dev::eth::BlockHeader constructHeader(
 	h256 const& _parentHash,
 	h256 const& _sha3Uncles,
