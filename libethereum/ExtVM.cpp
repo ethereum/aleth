@@ -137,11 +137,15 @@ void ExtVM::suicide(Address _a)
 
 h256 ExtVM::blockHash(u256 _number)
 {
-	if (envInfo().number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock") + 256)
+	u256 const currentNumber = envInfo().number();
+
+	if (_number >= currentNumber || _number < (std::max<u256>(256, currentNumber) - 256))
+		return h256();
+
+	if (currentNumber < m_sealEngine.chainParams().u256Param("metropolisForkBlock") + 256)
 	{
-		return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ?
-			envInfo().lastHashes()[(unsigned)(envInfo().number() - 1 - _number)] :
-			h256();
+		assert(envInfo().lastHashes().size() > (unsigned)(currentNumber - 1 - _number));
+		return envInfo().lastHashes()[(unsigned)(currentNumber - 1 - _number)];
 	}
 
 	u256 const nonce = m_s.getNonce(caller);
