@@ -72,6 +72,7 @@ struct EVMSchedule
 	unsigned extcodecopyGas = 20;
 	unsigned balanceGas = 20;
 	unsigned suicideGas = 0;
+	unsigned blockhashGas = 20;
 	unsigned maxCodeSize = unsigned(-1);
 
 	bool staticCallDepthLimit() const { return !eip150Mode; }
@@ -109,6 +110,7 @@ static const EVMSchedule EIP158Schedule = []
 static const EVMSchedule MetropolisSchedule = []
 {
 	EVMSchedule schedule = EIP158Schedule;
+	schedule.blockhashGas = 800;
 	schedule.haveRevert = true;
 	schedule.haveReturnData = true;
 	return schedule;
