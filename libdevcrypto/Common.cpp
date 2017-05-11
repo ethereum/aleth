@@ -67,7 +67,7 @@ const Address dev::ZeroAddress = Address();
 
 const Address dev::MaxAddress = Address("0xffffffffffffffffffffffffffffffffffffffff");
 
-const Address dev::SuperuserAddress = Address("0xfffffffffffffffffffffffffffffffffffffffe");
+const Address dev::SystemAddress = Address("0xfffffffffffffffffffffffffffffffffffffffe");
 
 Public dev::toPublic(Secret const& _secret)
 {
