@@ -30,6 +30,7 @@ using namespace dev;
 #include "genesis/eip150Test.cpp"
 #include "genesis/eip158Test.cpp"
 #include "genesis/metropolisTest.cpp"
+#include "genesis/metropolisTransitionTest.cpp"
 #include "genesis/transitionnetTest.cpp"
 
 std::string const& dev::eth::genesisInfo(Network _n)
@@ -45,6 +46,7 @@ std::string const& dev::eth::genesisInfo(Network _n)
 	case Network::EIP150Test: return c_genesisInfoEIP150Test;
 	case Network::EIP158Test: return c_genesisInfoEIP158Test;
 	case Network::MetropolisTest: return c_genesisInfoMetropolisTest;
+	case Network::MetropolisTransitionTest: return c_genesisInfoMetropolisTransitionTest;
 	default:
 		throw std::invalid_argument("Invalid network value");
 	}
