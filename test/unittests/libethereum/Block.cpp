@@ -50,14 +50,20 @@ BOOST_AUTO_TEST_CASE(bStructures)
 
 BOOST_AUTO_TEST_CASE(bStates)
 {
+	// this test does full Ethash mining
+	if (!dev::test::Options::get().quadratic)
+		return;
 	try
 	{
+		TestBlockChain::s_sealEngineNetwork = Network::FrontierTest;
+
 		TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
 		TestBlock const& genesisBlock = testBlockchain.testGenesis();
 		OverlayDB const& genesisDB = genesisBlock.state().db();
 		BlockChain const& blockchain = testBlockchain.interface();
 
 		h256 stateRootBefore = testBlockchain.topBlock().state().rootHash();
+		BOOST_REQUIRE(stateRootBefore != h256());
 
 		TestBlock testBlock;
 		TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
@@ -75,12 +81,15 @@ BOOST_AUTO_TEST_CASE(bStates)
 		Block block2 = blockchain.genesisBlock(genesisDB);
 		block2.populateFromChain(blockchain, testBlock.blockHeader().hash());
 		h256 stateRootAfterInsert = block2.stateRootBeforeTx(0); //get the state of blockchain on previous block
+		BOOST_REQUIRE(stateRootAfterInsert != h256());
 		BOOST_REQUIRE_EQUAL(stateRootBefore, stateRootAfterInsert);
 
 		h256 stateRootAfterInsert1 = block2.stateRootBeforeTx(1); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateRootAfterInsert1 != h256());
 		BOOST_REQUIRE(stateRootAfterInsert != stateRootAfterInsert1);
 
 		h256 stateRootAfterInsert2 = block2.stateRootBeforeTx(2); //get the state of blockchain on current block executed
+		BOOST_REQUIRE(stateRootAfterInsert2 != h256());
 		BOOST_REQUIRE(stateRootBefore != stateRootAfterInsert2);
 		BOOST_REQUIRE(stateRootAfterInsert1 != stateRootAfterInsert2);
 
@@ -107,10 +116,6 @@ BOOST_AUTO_TEST_CASE(bStates)
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << _e.what());
-	}
-	catch(...)
-	{
-		BOOST_ERROR("Exception thrown when trying to mine or import a block!");
 	}
 }
 
@@ -244,10 +249,6 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << _e.what());
-	}
-	catch(...)
-	{
-		BOOST_ERROR("Exception thrown when trying to mine or import a block!");
 	}
 }
 
