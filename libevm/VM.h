@@ -104,7 +104,7 @@ private:
 	// space for code
 	bytes m_code;
 
-	/// Space for return data.
+	/// RETURNDATA buffer for memory returned from direct subcalls.
 	bytes m_returnData;
 
 	// space for data stack, grows towards smaller addresses from the end

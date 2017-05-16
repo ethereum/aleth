@@ -274,7 +274,7 @@ public:
 	virtual void suicide(Address) { sub.suicides.insert(myAddress); }
 
 	/// Create a new (contract) account.
-	virtual h160 create(u256, u256&, bytesConstRef, OnOpFunc const&) { return h160(); }
+	virtual std::pair<h160, owning_bytes_ref> create(u256, u256&, bytesConstRef, OnOpFunc const&) = 0;
 
 	/// Make a new message call.
 	/// @returns success flag and output data, if any.
