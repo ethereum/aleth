@@ -8,10 +8,10 @@ a. Use tabs for leading indentation
 - If you have run-on lines, indent as you would for a block.
 b. Line widths:
 - Don't worry about having lines of code > 80-char wide.
-- Lines of comments should be formatted according to ease of viewing, but simplicity is to be prefered over beauty.
+- Lines of comments should be formatted according to ease of viewing, but simplicity is to be preferred over beauty.
 c. Don't use braces for condition-body one-liners.
 d. Never place condition bodies on same line as condition.
-e. Space between first paren and keyword, but *not* following first paren or preceeding final paren.
+e. Space between first paren and keyword, but *not* following first paren or preceding final paren.
 f. No spaces when fewer than intra-expression three parens together; when three or more, space according to clarity.
 g. No spaces for subscripting or unary operators.
 h. No space before ':' but one after it, except in the ternary operator: one on both sides.
@@ -78,7 +78,7 @@ b. The following entities' first alpha is upper case:
 - Template parameters.
 - Enum members.
 - static const variables that form an external API.
-c. All preprocessor symbols (macros, macro argments) in full uppercase with underscore word separation.
+c. All preprocessor symbols (macros, macro arguments) in full uppercase with underscore word separation.
 
 
 All other entities' first alpha is lower case.
@@ -230,7 +230,7 @@ See http://stackoverflow.com/questions/614302/c-header-order/614333#614333 for t
 13. Logging
 
 Logging should be performed at appropriate verbosities depending on the logging message.
-The more likely a message is to repeat (and thus cuase noise) the higher in verbosity it should be.
+The more likely a message is to repeat (and thus cause noise) the higher in verbosity it should be.
 Some rules to keep in mind:
 
  - Verbosity == 0 -> Reserved for important stuff that users must see and can understand.
