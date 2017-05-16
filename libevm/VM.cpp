@@ -685,6 +685,18 @@ void VM::interpretCases()
 		}
 		NEXT
 
+		CASE(RETURNDATASIZE)
+		{
+			if (!m_schedule->haveReturnData)
+				throwBadInstruction();
+
+			ON_OP();
+			updateIOGas();
+
+			m_SPP[0] = m_returnData.size();
+		}
+		NEXT
+
 		CASE(CODESIZE)
 		{
 			ON_OP();
@@ -712,6 +724,20 @@ void VM::interpretCases()
 			updateIOGas();
 
 			copyDataToMemory(m_ext->data, m_SP);
+		}
+		NEXT
+
+		CASE(RETURNDATACOPY)
+		{
+			if (!m_schedule->haveReturnData)
+				throwBadInstruction();
+
+			m_copyMemSize = toInt63(m_SP[2]);
+			updateMem(memNeed(m_SP[0], m_SP[2]));
+			ON_OP();
+			updateIOGas();
+
+			copyDataToMemory(&m_returnData, m_SP);
 		}
 		NEXT
 

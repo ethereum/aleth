@@ -178,6 +178,7 @@ BOOST_AUTO_TEST_CASE(stRevertTest){}
 
 //Metropolis Tests
 BOOST_AUTO_TEST_CASE(stStackTests){}
+BOOST_AUTO_TEST_CASE(stReturnDataTest){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}

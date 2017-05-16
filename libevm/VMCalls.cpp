@@ -120,6 +120,9 @@ void VM::caseCreate()
 	uint64_t initOff = (uint64_t)m_SP[1];
 	uint64_t initSize = (uint64_t)m_SP[2];
 
+	// Clear the return data buffer. This will not free the memory.
+	m_returnData.clear();
+
 	if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
 	{
 		*m_io_gas_p = m_io_gas;
@@ -139,14 +142,31 @@ void VM::caseCreate()
 void VM::caseCall()
 {
 	m_bounce = &VM::interpretCases;
+
+	// TODO: Please check if that does not actually increases the stack size.
+	//       That was the case before.
 	unique_ptr<CallParameters> callParams(new CallParameters());
+
+	// Clear the return data buffer. This will not free the memory.
+	m_returnData.clear();
+
 	bytesRef output;
 	if (caseCallSetup(callParams.get(), output))
 	{
-		std::pair<bool, owning_bytes_ref> callResult = m_ext->call(*callParams);
-		callResult.second.copyTo(output);
+		bool success = false;
+		owning_bytes_ref outputRef;
+		std::tie(success, outputRef) = m_ext->call(*callParams);
+		outputRef.copyTo(output);
 
-		m_SPP[0] = callResult.first ? 1 : 0;
+		// Here we have 2 options:
+		// 1. Keep the whole returned memory buffer (owning_bytes_ref):
+		//    higher memory footprint, no memory copy.
+		// 2. Copy only the return data from the returned memory buffer:
+		//    minimal memory footprint, additional memory copy.
+		// Option 2 used:
+		m_returnData = outputRef.toBytes();
+
+		m_SPP[0] = success ? 1 : 0;
 	}
 	else
 		m_SPP[0] = 0;
