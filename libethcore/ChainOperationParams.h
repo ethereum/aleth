@@ -15,8 +15,6 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file ChainOperationsParams.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2015
  */
 
 #pragma once
