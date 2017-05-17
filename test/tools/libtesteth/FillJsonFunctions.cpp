@@ -81,36 +81,6 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 	for (size_t i = 0; i < changeLog.size(); i++)
 	{
 		changeStruct change = changeLog.at(i);
-		if (change.address != popChange.address || i+1 == changeLog.size())
-		{
-			//summaraize changes
-			if (agregatedBalance.size())
-			{
-				json_spirit::mArray record;
-				string before = toCompactHex(_stateOrig.balance(popChange.address), HexPrefix::Add, 1);
-				string after = toCompactHex(_statePost.balance(popChange.address), HexPrefix::Add, 1);
-				record.push_back(before);
-				record.push_back("->");
-				record.push_back(after);
-				agregatedBalance.push_back(record);
-				o["balance"] = agregatedBalance;
-				logInfo["balance"] << "'balance' : ['" + before + "', '->', '" + after + "']" << std::endl;
-			}
-
-			//commit changes
-			oState["0x" + toString(popChange.address)] = o;
-			log << endl << popChange.address << endl;
-			for (std::map<string, ostringstream>::iterator it = logInfo.begin(); it != logInfo.end(); it++)
-				log << (*it).second.str();
-
-			//reset temp variables
-			popChange = change;
-			o.clear();
-			logInfo.clear();
-			agregatedBalance.clear();
-			agregatedStorage.clear();
-			tmpBalance = _stateOrig.balance(change.address);
-		}
 
 		//Agregate changes for the same addresses
 		string after;
@@ -171,6 +141,40 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 				o["unknownChange"] = "true";
 				logInfo["unknownChange"] << "'unknownChange' : ['true']" << std::endl;
 			break;
+		}
+
+		if (i+1 < changeLog.size())
+			change = changeLog.at(i+1);
+
+		if (change.address != popChange.address || i+1 == changeLog.size())
+		{
+			//summaraize changes
+			if (agregatedBalance.size())
+			{
+				json_spirit::mArray record;
+				string before = toCompactHex(_stateOrig.balance(popChange.address), HexPrefix::Add, 1);
+				string after = toCompactHex(_statePost.balance(popChange.address), HexPrefix::Add, 1);
+				record.push_back(before);
+				record.push_back("->");
+				record.push_back(after);
+				agregatedBalance.push_back(record);
+				o["balance"] = agregatedBalance;
+				logInfo["balance"] << "'balance' : ['" + before + "', '->', '" + after + "']" << std::endl;
+			}
+
+			//commit changes
+			oState["0x" + toString(popChange.address)] = o;
+			log << endl << popChange.address << endl;
+			for (std::map<string, ostringstream>::iterator it = logInfo.begin(); it != logInfo.end(); it++)
+				log << (*it).second.str();
+
+			//reset temp variables
+			popChange = change;
+			o.clear();
+			logInfo.clear();
+			agregatedBalance.clear();
+			agregatedStorage.clear();
+			tmpBalance = _stateOrig.balance(change.address);
 		}
 	}
 
