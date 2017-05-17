@@ -93,6 +93,7 @@ bytes ImportTest::executeTest()
 				eth::Network network = networks[j];
 				std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
 				m_transactions[i].postState = out.first;
+				m_transactions[i].changeLog = out.first.changeLog();
 				m_transactions[i].netId = network;
 				transactionResults.push_back(m_transactions[i]);
 
@@ -521,7 +522,6 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			return;
 	}
 
-
 	if (_expects.count("indexes"))
 	{
 		json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
@@ -598,6 +598,32 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + " Expect results was not found in test execution!");
 }
 
+void ImportTest::traceStateDiff()
+{
+	string network = "ALL";
+	Options const& opt = Options::get();
+	if (!opt.singleTestNet.empty())
+		network = opt.singleTestNet;
+
+	int d = opt.trDataIndex;
+	int g = opt.trGasIndex;
+	int v = opt.trValueIndex;
+
+	for(size_t i = 0; i < m_transactions.size(); i++)
+	{
+		transactionToExecute t = m_transactions[i];
+		if (network == netIdToString(t.netId) || network == "ALL")
+		if ((d == t.dataInd || d == -1) && (g == t.gasInd || g == -1) && (v == t.valInd || v == -1))
+		{
+			std::ostringstream log;
+			log << "trNetID: " << netIdToString(t.netId) << endl;
+			log << "trDataInd: " << t.dataInd << " tdGasInd: " << t.gasInd << " trValInd: " << t.valInd << std::endl;
+			dev::LogOutputStream<eth::StateTrace, false>() << log.str();
+			fillJsonWithStateChange(m_statePre, t.postState, t.changeLog); //output std log
+		}
+	}
+}
+
 int ImportTest::exportTest(bytes const& _output)
 {
 	int err = 0;
@@ -629,6 +655,10 @@ int ImportTest::exportTest(bytes const& _output)
 				if (it != std::end(stateIndexesToPrint))
 					obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
 			}
+
+			if (Options::get().statediff)
+				obj2["stateDiff"] = fillJsonWithStateChange(m_statePre, m_transactions[i].postState, m_transactions[i].changeLog);
+
 			postState[netIdToString(m_transactions[i].netId)].push_back(obj2);
 		}
 
@@ -637,6 +667,8 @@ int ImportTest::exportTest(bytes const& _output)
 			obj[it->first] = it->second;
 
 		m_testObject["post"] = obj;
+
+
 	}
 	else
 	{

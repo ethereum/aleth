@@ -54,6 +54,7 @@ public:
 	int exportTest(bytes const& _output);
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
+	void traceStateDiff();
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -77,6 +78,7 @@ private:
 		int valInd;
 		eth::Transaction transaction;
 		eth::State postState;
+		std::vector<dev::eth::detail::Change> changeLog;
 		eth::Network netId;
 	};
 	std::vector<transactionToExecute> m_transactions;

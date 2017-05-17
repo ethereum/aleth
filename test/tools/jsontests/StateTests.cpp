@@ -90,6 +90,9 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 					importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first);
 				}
 			}
+
+			if (Options::get().statediff)
+				importer.traceStateDiff();
 		}
 	}
 }

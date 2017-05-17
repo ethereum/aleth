@@ -46,6 +46,7 @@ public:
 	std::string rCheckTest;   ///< Test Input (for random tests)
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
 	bool checkstate = false;///< Throw error when checking test states
+	bool statediff = false;///< Fill full post state in General tests
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
 	std::string testpath;	///< Custom test folder path
