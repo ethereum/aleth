@@ -15,8 +15,6 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file State.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
  */
 
 #pragma once
@@ -36,6 +34,7 @@
 #include "Transaction.h"
 #include "TransactionReceipt.h"
 #include "GasPricer.h"
+#include "StateDetail.h"
 
 namespace dev
 {
@@ -97,52 +96,7 @@ DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
 class SealEngineFace;
 class Executive;
 
-namespace detail
-{
 
-/// An atomic state changelog entry.
-struct Change
-{
-	enum Kind: int
-	{
-		/// Account balance changed. Change::value contains the amount the
-		/// balance was increased by.
-		Balance,
-
-		/// Account storage was modified. Change::key contains the storage key,
-		/// Change::value the storage value.
-		Storage,
-
-		/// Account nonce was increased by 1.
-		Nonce,
-
-		/// Account was created (it was not existing before).
-		Create,
-
-		/// New code was added to an account (by "create" message execution).
-		NewCode,
-
-		/// Account was touched for the first time.
-		Touch
-	};
-
-	Kind kind;        ///< The kind of the change.
-	Address address;  ///< Changed account address.
-	u256 value;       ///< Change value, e.g. balance, storage.
-	u256 key;         ///< Storage key. Last because used only in one case.
-
-	/// Helper constructor to make change log update more readable.
-	Change(Kind _kind, Address const& _addr, u256 const& _value = 0):
-			kind(_kind), address(_addr), value(_value)
-	{}
-
-	/// Helper constructor especially for storage change log.
-	Change(Address const& _addr, u256 const& _key, u256 const& _value):
-			kind(Storage), address(_addr), value(_value), key(_key)
-	{}
-};
-
-}
 
 
 /**
@@ -308,6 +262,8 @@ public:
 
 	/// Revert all recent changes up to the given @p _savepoint savepoint.
 	void rollback(size_t _savepoint);
+
+	std::vector<detail::Change> const& changeLog() const { return m_changeLog; }
 
 private:
 	/// Turns all "touched" empty accounts into non-alive accounts.

@@ -80,7 +80,8 @@ State::State(State const& _s):
 	m_unchangedCacheEntries(_s.m_unchangedCacheEntries),
 	m_nonExistingAccountsCache(_s.m_nonExistingAccountsCache),
 	m_touched(_s.m_touched),
-	m_accountStartNonce(_s.m_accountStartNonce)
+	m_accountStartNonce(_s.m_accountStartNonce),
+	m_changeLog(_s.changeLog())
 {}
 
 OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, WithExisting _we)
@@ -224,7 +225,6 @@ void State::commit(CommitBehaviour _commitBehaviour)
 	if (_commitBehaviour == CommitBehaviour::RemoveEmptyAccounts)
 		removeEmptyAccounts();
 	m_touched += dev::eth::commit(m_cache, m_state);
-	m_changeLog.clear();
 	m_cache.clear();
 	m_unchangedCacheEntries.clear();
 }
@@ -532,6 +532,9 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		onOp = Executive::simpleTrace(); // override tracer
 #endif
 
+	//Clear Previous execution log
+	m_changeLog.clear();
+
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
 	Executive e(*this, _envInfo, _sealEngine);
@@ -558,6 +561,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 void State::executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine)
 {
 	u256 gasUsed = 0;
+	m_changeLog.clear();
 	for (unsigned i = 0; i < _txCount; ++i)
 	{
 		EnvInfo envInfo(_block.info(), _lastHashes, gasUsed);
