@@ -47,9 +47,6 @@ enum class Instruction: uint8_t
 	EXP,                ///< exponential operation
 	SIGNEXTEND,         ///< extend length of signed integer
 
-	RETURNDATASIZE = 0x0d,  ///< size of data returned from previous call
-	RETURNDATACOPY = 0x0e,  ///< copy data returned from previous call to memory
-
 	LT = 0x10,          ///< less-than comparision
 	GT,                 ///< greater-than comparision
 	SLT,                ///< signed less-than comparision
@@ -77,6 +74,8 @@ enum class Instruction: uint8_t
 	GASPRICE,           ///< get price of gas in current environment
 	EXTCODESIZE,        ///< get external code size (from another contract)
 	EXTCODECOPY,        ///< copy external code (from another contract)
+	RETURNDATASIZE = 0x3d,  ///< size of data returned from previous call
+	RETURNDATACOPY = 0x3e,  ///< copy data returned from previous call to memory
 
 	BLOCKHASH = 0x40,   ///< get hash of most recent complete block
 	COINBASE,           ///< get the block's coinbase address
