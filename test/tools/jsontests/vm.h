@@ -54,7 +54,7 @@ public:
 	virtual void suicide(Address _a) override { std::get<0>(addresses[_a]) += std::get<0>(addresses[myAddress]); addresses.erase(myAddress); }
 	virtual bytes const& codeAt(Address _a) override { return std::get<3>(addresses[_a]); }
 	virtual size_t codeSizeAt(Address _a) override { return std::get<3>(addresses[_a]).size(); }
-	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::OnOpFunc const&) override;
+	virtual std::pair<h160, eth::owning_bytes_ref> create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::OnOpFunc const&) override;
 	virtual std::pair<bool, eth::owning_bytes_ref> call(eth::CallParameters&) override;
 	void setTransaction(Address _caller, u256 _value, u256 _gasPrice, bytes const& _data);
 	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage, bytes const& _code);

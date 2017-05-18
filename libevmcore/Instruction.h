@@ -74,6 +74,8 @@ enum class Instruction: uint8_t
 	GASPRICE,           ///< get price of gas in current environment
 	EXTCODESIZE,        ///< get external code size (from another contract)
 	EXTCODECOPY,        ///< copy external code (from another contract)
+	RETURNDATASIZE = 0x3d,  ///< size of data returned from previous call
+	RETURNDATACOPY = 0x3e,  ///< copy data returned from previous call to memory
 
 	BLOCKHASH = 0x40,   ///< get hash of most recent complete block
 	COINBASE,           ///< get the block's coinbase address
@@ -273,9 +275,6 @@ extern const std::map<std::string, Instruction> c_instructions;
 
 /// Iterate through EVM code and call a function on each instruction.
 void eachInstruction(bytes const& _mem, std::function<void(Instruction,u256 const&)> const& _onInstruction);
-
-/// Convert from EVM code to simple EVM assembly language.
-std::string disassemble(bytes const& _mem);
 
 }
 }

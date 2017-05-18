@@ -115,7 +115,7 @@ void ExtVM::setStore(u256 _n, u256 _v)
 	m_s.setStorage(myAddress, _n, _v);
 }
 
-h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
+std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
 {
 	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
 	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
@@ -124,7 +124,7 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 		e.accrueSubState(sub);
 	}
 	io_gas = e.gas();
-	return e.newAddress();
+	return {e.newAddress(), e.takeOutput()};
 }
 
 void ExtVM::suicide(Address _a)

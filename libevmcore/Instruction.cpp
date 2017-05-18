@@ -29,156 +29,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-const std::map<std::string,  Instruction> dev::eth::c_instructions =
-{
-	{ "STOP", Instruction::STOP },
-	{ "ADD", Instruction::ADD },
-	{ "SUB", Instruction::SUB },
-	{ "MUL", Instruction::MUL },
-	{ "DIV", Instruction::DIV },
-	{ "SDIV", Instruction::SDIV },
-	{ "MOD", Instruction::MOD },
-	{ "SMOD", Instruction::SMOD },
-	{ "EXP", Instruction::EXP },
-	{ "BNOT", Instruction::NOT },
-	{ "LT", Instruction::LT },
-	{ "GT", Instruction::GT },
-	{ "SLT", Instruction::SLT },
-	{ "SGT", Instruction::SGT },
-	{ "EQ", Instruction::EQ },
-	{ "NOT", Instruction::ISZERO },
-	{ "AND", Instruction::AND },
-	{ "OR", Instruction::OR },
-	{ "XOR", Instruction::XOR },
-	{ "BYTE", Instruction::BYTE },
-	{ "ADDMOD", Instruction::ADDMOD },
-	{ "MULMOD", Instruction::MULMOD },
-	{ "SIGNEXTEND", Instruction::SIGNEXTEND },
-	{ "SHA3", Instruction::SHA3 },
-	{ "ADDRESS", Instruction::ADDRESS },
-	{ "BALANCE", Instruction::BALANCE },
-	{ "ORIGIN", Instruction::ORIGIN },
-	{ "CALLER", Instruction::CALLER },
-	{ "CALLVALUE", Instruction::CALLVALUE },
-	{ "CALLDATALOAD", Instruction::CALLDATALOAD },
-	{ "CALLDATASIZE", Instruction::CALLDATASIZE },
-	{ "CALLDATACOPY", Instruction::CALLDATACOPY },
-	{ "CODESIZE", Instruction::CODESIZE },
-	{ "CODECOPY", Instruction::CODECOPY },
-	{ "GASPRICE", Instruction::GASPRICE },
-	{ "EXTCODESIZE", Instruction::EXTCODESIZE },
-	{ "EXTCODECOPY", Instruction::EXTCODECOPY },
-	{ "BLOCKHASH", Instruction::BLOCKHASH },
-	{ "COINBASE", Instruction::COINBASE },
-	{ "TIMESTAMP", Instruction::TIMESTAMP },
-	{ "NUMBER", Instruction::NUMBER },
-	{ "DIFFICULTY", Instruction::DIFFICULTY },
-	{ "GASLIMIT", Instruction::GASLIMIT },
-	{ "JUMPTO", Instruction::JUMPTO },
-	{ "JUMPIF", Instruction::JUMPTO },
-	{ "JUMPSUB", Instruction::JUMPSUB },
-	{ "JUMPV", Instruction::JUMPV },
-	{ "JUMPSUBV", Instruction::JUMPSUBV },
-	{ "RETURNSUB", Instruction::RETURNSUB },
-	{ "POP", Instruction::POP },
-	{ "MLOAD", Instruction::MLOAD },
-	{ "MSTORE", Instruction::MSTORE },
-	{ "MSTORE8", Instruction::MSTORE8 },
-	{ "SLOAD", Instruction::SLOAD },
-	{ "SSTORE", Instruction::SSTORE },
-	{ "JUMP", Instruction::JUMP },
-	{ "JUMPI", Instruction::JUMPI },
-	{ "PC", Instruction::PC },
-	{ "MSIZE", Instruction::MSIZE },
-	{ "GAS", Instruction::GAS },
-	{ "BEGIN", Instruction::JUMPDEST },
-	{ "JUMPDEST", Instruction::JUMPDEST },
-	{ "BEGINDATA", Instruction::BEGINDATA },
-	{ "BEGINSUB", Instruction::BEGINSUB },
-	{ "PUSH1", Instruction::PUSH1 },
-	{ "PUSH2", Instruction::PUSH2 },
-	{ "PUSH3", Instruction::PUSH3 },
-	{ "PUSH4", Instruction::PUSH4 },
-	{ "PUSH5", Instruction::PUSH5 },
-	{ "PUSH6", Instruction::PUSH6 },
-	{ "PUSH7", Instruction::PUSH7 },
-	{ "PUSH8", Instruction::PUSH8 },
-	{ "PUSH9", Instruction::PUSH9 },
-	{ "PUSH10", Instruction::PUSH10 },
-	{ "PUSH11", Instruction::PUSH11 },
-	{ "PUSH12", Instruction::PUSH12 },
-	{ "PUSH13", Instruction::PUSH13 },
-	{ "PUSH14", Instruction::PUSH14 },
-	{ "PUSH15", Instruction::PUSH15 },
-	{ "PUSH16", Instruction::PUSH16 },
-	{ "PUSH17", Instruction::PUSH17 },
-	{ "PUSH18", Instruction::PUSH18 },
-	{ "PUSH19", Instruction::PUSH19 },
-	{ "PUSH20", Instruction::PUSH20 },
-	{ "PUSH21", Instruction::PUSH21 },
-	{ "PUSH22", Instruction::PUSH22 },
-	{ "PUSH23", Instruction::PUSH23 },
-	{ "PUSH24", Instruction::PUSH24 },
-	{ "PUSH25", Instruction::PUSH25 },
-	{ "PUSH26", Instruction::PUSH26 },
-	{ "PUSH27", Instruction::PUSH27 },
-	{ "PUSH28", Instruction::PUSH28 },
-	{ "PUSH29", Instruction::PUSH29 },
-	{ "PUSH30", Instruction::PUSH30 },
-	{ "PUSH31", Instruction::PUSH31 },
-	{ "PUSH32", Instruction::PUSH32 },
-	{ "DUP1", Instruction::DUP1 },
-	{ "DUP2", Instruction::DUP2 },
-	{ "DUP3", Instruction::DUP3 },
-	{ "DUP4", Instruction::DUP4 },
-	{ "DUP5", Instruction::DUP5 },
-	{ "DUP6", Instruction::DUP6 },
-	{ "DUP7", Instruction::DUP7 },
-	{ "DUP8", Instruction::DUP8 },
-	{ "DUP9", Instruction::DUP9 },
-	{ "DUP10", Instruction::DUP10 },
-	{ "DUP11", Instruction::DUP11 },
-	{ "DUP12", Instruction::DUP12 },
-	{ "DUP13", Instruction::DUP13 },
-	{ "DUP14", Instruction::DUP14 },
-	{ "DUP15", Instruction::DUP15 },
-	{ "DUP16", Instruction::DUP16 },
-	{ "SWAP1", Instruction::SWAP1 },
-	{ "SWAP2", Instruction::SWAP2 },
-	{ "SWAP3", Instruction::SWAP3 },
-	{ "SWAP4", Instruction::SWAP4 },
-	{ "SWAP5", Instruction::SWAP5 },
-	{ "SWAP6", Instruction::SWAP6 },
-	{ "SWAP7", Instruction::SWAP7 },
-	{ "SWAP8", Instruction::SWAP8 },
-	{ "SWAP9", Instruction::SWAP9 },
-	{ "SWAP10", Instruction::SWAP10 },
-	{ "SWAP11", Instruction::SWAP11 },
-	{ "SWAP12", Instruction::SWAP12 },
-	{ "SWAP13", Instruction::SWAP13 },
-	{ "SWAP14", Instruction::SWAP14 },
-	{ "SWAP15", Instruction::SWAP15 },
-	{ "SWAP16", Instruction::SWAP16 },
-	{ "LOG0", Instruction::LOG0 },
-	{ "LOG1", Instruction::LOG1 },
-	{ "LOG2", Instruction::LOG2 },
-	{ "LOG3", Instruction::LOG3 },
-	{ "LOG4", Instruction::LOG4 },
-	{ "CREATE", Instruction::CREATE },
-	{ "CALL", Instruction::CALL },
-	{ "CALLCODE", Instruction::CALLCODE },
-	{ "RETURN", Instruction::RETURN },
-	{ "DELEGATECALL", Instruction::DELEGATECALL },
-	{ "REVERT", Instruction::REVERT },
-	{ "INVALID", Instruction::INVALID },
-	{ "SUICIDE", Instruction::SUICIDE },
-
-	// these are generated by the interpreter - should never be in user code
-	{ "PUSHC", Instruction::PUSHC },
-	{ "JUMPC", Instruction::JUMPC },
-	{ "JUMPCI", Instruction::JUMPCI }
-};
-
 static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 { //                                               Add,  Args,  Ret,  SideEffects, GasPriceTier
 	{ Instruction::STOP,         { "STOP",           0,     0,    0,  true,        Tier::Zero } },
@@ -218,6 +68,8 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::GASPRICE,     { "GASPRICE",       0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::EXTCODESIZE,  { "EXTCODESIZE",    0,     1,    1,  false,       Tier::Special } },
 	{ Instruction::EXTCODECOPY,  { "EXTCODECOPY",    0,     4,    0,  true,        Tier::Special } },
+	{ Instruction::RETURNDATASIZE,{"RETURNDATASIZE", 0,     0,    1,  false,       Tier::Base } },
+	{ Instruction::RETURNDATACOPY,{"RETURNDATACOPY", 0,     3,    0,  true,        Tier::VeryLow } },
 	{ Instruction::BLOCKHASH,    { "BLOCKHASH",      0,     1,    1,  false,       Tier::Ext } },
 	{ Instruction::COINBASE,     { "COINBASE",       0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::TIMESTAMP,    { "TIMESTAMP",      0,     0,    1,  false,       Tier::Base } },
@@ -348,23 +200,6 @@ void dev::eth::eachInstruction(
 		}
 		_onInstruction(instr, data);
 	}
-}
-
-string dev::eth::disassemble(bytes const& _mem)
-{
-	stringstream ret;
-	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
-		if (!isValidInstruction(_instr))
-			ret << "0x" << hex << int(_instr) << " ";
-		else
-		{
-			InstructionInfo info = instructionInfo(_instr);
-			ret << info.name << " ";
-			if (info.additional)
-				ret << "0x" << hex << _data << " ";
-		}
-	});
-	return ret.str();
 }
 
 InstructionInfo dev::eth::instructionInfo(Instruction _inst)

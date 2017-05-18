@@ -104,6 +104,9 @@ private:
 	// space for code
 	bytes m_code;
 
+	/// RETURNDATA buffer for memory returned from direct subcalls.
+	bytes m_returnData;
+
 	// space for data stack, grows towards smaller addresses from the end
 	u256 m_stack[1024];
 	u256 *m_stackEnd = &m_stack[1024];
