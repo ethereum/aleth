@@ -46,7 +46,7 @@ clone_script:
           git submodule -q update --init --recursive
       }
 cache:
-    - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
+#    - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
     - deps
 #RDP LOGIN details for trouble shooting
 #init:
@@ -59,7 +59,7 @@ install:
 before_build:
     - if not exist build mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=%TESTS% -DEVMJIT=On
+    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=%TESTS% -DEVMJIT=OFF
 build_script:
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
