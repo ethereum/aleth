@@ -707,12 +707,12 @@ void Block::updateBlockhashContract()
 
 	if (blockNumber >= metropolisForkBlock)
 	{
-		u256 const nonce = transactionsFrom(SystemAddress);
-		u256 const gas = 1000000;
-		Transaction tx(0, 0, gas, c_blockhashContractAddress, m_previousBlock.hash().asBytes(), nonce);
-		tx.forceSender(SystemAddress);
-		// passing empty lastHashes - assuming the contract doesn't use BLOCKHASH
-		m_state.execute(EnvInfo(info(), {}, 0), *m_sealEngine, tx, Permanence::Committed);
+		Executive e(*this);
+		if (!e.call(c_blockhashContractAddress, SystemAddress, 0, 0, m_previousBlock.hash().ref(), 1000000))
+			e.go();
+		e.finalize();
+
+		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 	}
 }
 
