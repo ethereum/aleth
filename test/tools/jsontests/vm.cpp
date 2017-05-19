@@ -55,9 +55,10 @@ std::pair<bool, eth::owning_bytes_ref> FakeExtVM::call(CallParameters& _p)
 
 h256 FakeExtVM::blockHash(u256 _number)
 {
-	return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ?
-		sha3(toString(_number)) :
-		h256();
+	if (_number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256))
+		return sha3(toString(_number));
+	else
+		return h256();
 }
 
 void FakeExtVM::set(Address _a, u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage, bytes const& _code)
