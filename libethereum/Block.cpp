@@ -312,8 +312,6 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 	auto ts = _tq.topTransactions(c_maxSyncTransactions, m_transactionSet);
 	ret.second = (ts.size() == c_maxSyncTransactions);	// say there's more to the caller if we hit the limit
 
-	LastHashes lh;
-
 	auto deadline =  chrono::steady_clock::now() + chrono::milliseconds(msTimeout);
 
 	for (int goodTxs = max(0, (int)ts.size() - 1); goodTxs < (int)ts.size(); )
@@ -327,9 +325,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 					if (t.gasPrice() >= _gp.ask(*this))
 					{
 //						Timer t;
-						if (lh.empty())
-							lh = _bc.lastHashes();
-						execute(lh, t);
+						execute(_bc.lastBlockHashes(), t);
 						ret.first.push_back(m_receipts.back());
 						++goodTxs;
 //						cnote << "TX took:" << t.elapsed() * 1000;
@@ -471,10 +467,6 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 //	cnote << "playback begins:" << m_currentBlock.hash() << "(without: " << m_currentBlock.hash(WithoutSeal) << ")";
 //	cnote << m_state;
 
-	LastHashes lh;
-	DEV_TIMED_ABOVE("lastHashes", 500)
-		lh = _bc.lastHashes(m_currentBlock.parentHash());
-
 	RLP rlp(_block.block);
 
 	vector<bytes> receipts;
@@ -488,7 +480,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 			{
 				LogOverride<ExecutiveWarnChannel> o(false);
 //				cnote << "Enacting transaction: " << tr.nonce() << tr.from() << state().transactionsFrom(tr.from()) << tr.value();
-				execute(lh, tr);
+				execute(_bc.lastBlockHashes(), tr);
 //				cnote << "Now: " << tr.from() << state().transactionsFrom(tr.from());
 //				cnote << m_state;
 			}
@@ -647,7 +639,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	return tdIncrease;
 }
 
-ExecutionResult Block::execute(LastHashes const& _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
+ExecutionResult Block::execute(shared_ptr<LastBlockHashesFace const> _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
 	if (isSealed())
 		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
@@ -712,7 +704,7 @@ void Block::updateBlockhashContract()
 		Transaction tx(0, 0, gas, c_blockhashContractAddress, m_previousBlock.hash().asBytes(), nonce);
 		tx.forceSender(SystemAddress);
 		// passing empty lastHashes - assuming the contract doesn't use BLOCKHASH
-		m_state.execute(EnvInfo(info(), {}, 0), *m_sealEngine, tx, Permanence::Committed);
+		m_state.execute(EnvInfo(info(), shared_ptr<LastBlockHashesFace>(), 0), *m_sealEngine, tx, Permanence::Committed);
 	}
 }
 
@@ -914,15 +906,14 @@ string Block::vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequire
 	m_currentBlock.verify((_ir & ImportRequirements::ValidSeal) ? CheckEverything : IgnoreSeal, _block);
 	m_currentBlock.noteDirty();
 
-	LastHashes lh = _bc.lastHashes(m_currentBlock.parentHash());
-
 	string ret;
 	unsigned i = 0;
 	for (auto const& tr: rlp[1])
 	{
 		StandardTrace st;
 		st.setShowMnemonics();
-		execute(lh, Transaction(tr.data(), CheckTransaction::Everything), Permanence::Committed, st.onOp());
+		// TODO check that hashes inside execute are requested for current block
+		execute(_bc.lastBlockHashes(), Transaction(tr.data(), CheckTransaction::Everything), Permanence::Committed, st.onOp());
 		ret += (ret.empty() ? "[" : ",") + st.json();
 		++i;
 	}

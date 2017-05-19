@@ -45,7 +45,7 @@ public:
 
 	StringHashMap jsInfo(BlockHeader const& _bi) const override;
 	void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const override;
-	void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, EnvInfo const& _env) const override;
+	void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _header, u256 const& _startGasUsed) const override;
 	void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const override;
 
 	strings sealers() const override;

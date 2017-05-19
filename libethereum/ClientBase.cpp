@@ -70,7 +70,7 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
 			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
-		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
+		ret = temp.execute(bc().lastBlockHashes(), t, Permanence::Reverted);
 	}
 	catch (...)
 	{
@@ -91,7 +91,7 @@ ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes cons
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
 			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
-		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
+		ret = temp.execute(bc().lastBlockHashes(), t, Permanence::Reverted);
 	}
 	catch (...)
 	{
@@ -123,7 +123,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 			else
 				t = Transaction(_value, gasPrice, mid, _data, n);
 			t.forceSender(_from);
-			EnvInfo env(bk.info(), bc().lastHashes(), 0);
+			EnvInfo env(bk.info(), bc().lastBlockHashes(), 0);
 			env.setGasLimit(mid);
 			State tempState(bk.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));

@@ -209,7 +209,7 @@ public:
 
 	/// Execute @a _txCount transactions of a given block.
 	/// This will change the state accordingly.
-	void executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine);
+	void executeBlockTransactions(Block const& _block, unsigned _txCount, std::shared_ptr<LastBlockHashesFace const> _lastHashes, SealEngineFace const& _sealEngine);
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;

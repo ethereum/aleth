@@ -20,8 +20,10 @@
  */
 
 #include "ExtVM.h"
-#include <exception>
+// TODO move lasthashes to separate header?
+#include "BlockChain.h"
 #include <boost/thread.hpp>
+#include <exception>
 
 using namespace dev;
 using namespace dev::eth;
@@ -144,8 +146,8 @@ h256 ExtVM::blockHash(u256 _number)
 
 	if (currentNumber < m_sealEngine.chainParams().u256Param("metropolisForkBlock") + 256)
 	{
-		assert(envInfo().lastHashes().size() > (unsigned)(currentNumber - 1 - _number));
-		return envInfo().lastHashes()[(unsigned)(currentNumber - 1 - _number)];
+		assert(envInfo().lastHashes() && envInfo().lastHashes()->latestHashes().size() > (unsigned)(currentNumber - 1 - _number));
+		return envInfo().lastHashes()->latestHashes()[(unsigned)(currentNumber - 1 - _number)];
 	}
 
 	u256 const nonce = m_s.getNonce(caller);

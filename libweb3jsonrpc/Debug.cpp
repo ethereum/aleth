@@ -70,7 +70,8 @@ Json::Value Debug::traceBlock(Block const& _block, Json::Value const& _json)
 		Transaction t = _block.pending()[k];
 
 		u256 const gasUsed = k ? _block.receipt(k - 1).gasUsed() : 0;
-		EnvInfo envInfo(_block.info(), m_eth.blockChain().lastHashes(_block.info().parentHash()), gasUsed);
+		// TODO check that parent hashes are for this block
+		EnvInfo envInfo(_block.info(), m_eth.blockChain().lastBlockHashes(), gasUsed);
 		Executive e(s, envInfo, *m_eth.blockChain().sealEngine());
 
 		eth::ExecutionResult er;

@@ -98,6 +98,18 @@ public:
 	VersionChecker(std::string const& _dbPath, h256 const& _genesisHash);
 };
 
+/// TODO comment
+class LastBlockHashesFace
+{
+public:
+	virtual ~LastBlockHashesFace() {}
+
+	/// Get the last N hashes for a given block. (N is determined by the LastHashes type.)
+	virtual LastHashes latestHashes() const = 0;
+	virtual LastHashes hashesBefore(h256 const& _mostRecentHash) const = 0;
+	virtual void clear() = 0;
+};
+
 /**
  * @brief Implements the blockchain database. All data this gives is disk-backed.
  * @threadsafe
@@ -182,9 +194,7 @@ public:
 	/// Get the hash for a given block's number.
 	h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras<BlockHash, uint64_t, ExtraBlockHash>(_i, m_blockHashes, x_blockHashes, NullBlockHash).value; }
 
-	/// Get the last N hashes for a given block. (N is determined by the LastHashes type.)
-	LastHashes lastHashes() const { return lastHashes(m_lastBlockHash); }
-	LastHashes lastHashes(h256 const& _mostRecentHash) const;
+	std::shared_ptr<LastBlockHashesFace const> lastBlockHashes() const { return m_lastBlockHashes;  }
 
 	/** Get the block blooms for a number of blocks. Thread-safe.
 	 * @returns the object pertaining to the blocks:
@@ -379,9 +389,8 @@ private:
 	void noteUsed(uint64_t const& _h, unsigned _extra = (unsigned)-1) const { (void)_h; (void)_extra; } // don't note non-hash types
 	std::chrono::system_clock::time_point m_lastCollection;
 
-	void noteCanonChanged() const { Guard l(x_lastLastHashes); m_lastLastHashes.clear(); }
-	mutable Mutex x_lastLastHashes;
-	mutable LastHashes m_lastLastHashes;
+	void noteCanonChanged() const { m_lastBlockHashes->clear(); }
+	std::shared_ptr<LastBlockHashesFace> m_lastBlockHashes;
 
 	void updateStats() const;
 	mutable Statistics m_lastStats;

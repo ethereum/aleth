@@ -284,7 +284,8 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
 	m_envInfo.setAuthor(Address(_o["currentCoinbase"].get_str()));
 
-	m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
+	// TODO create fake impl
+	//m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json

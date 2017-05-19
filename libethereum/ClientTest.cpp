@@ -91,7 +91,7 @@ void ClientTest::modifyTimestamp(u256 const& _timestamp)
 	DEV_WRITE_GUARDED(x_preSeal)
 		m_preSeal = block;
 
-	auto lastHashes = bc().lastHashes();
+	auto lastHashes = bc().lastBlockHashes();
 	for (auto const& t: transactions)
 		block.execute(lastHashes, t);
 

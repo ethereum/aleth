@@ -376,6 +376,8 @@ ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 
 		DEV_READ_GUARDED(x_postSeal)
 			temp = m_postSeal;
 		temp.mutableState().addBalance(_from, _value + _gasPrice * _gas);
+		// TODO does this work for contracts using BLOCKHASH?
+		// TODO try to avoid creating Executive with empty LastBlockHashes ptr
 		Executive e(temp);
 		e.setResultRecipient(ret);
 		if (!e.call(_dest, _from, _value, _gasPrice, &_data, _gas))

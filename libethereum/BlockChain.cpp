@@ -122,6 +122,48 @@ class WriteBatchNoter: public ldb::WriteBatch::Handler
 };
 }
 
+namespace
+{
+
+class LastBlockHashes: public LastBlockHashesFace
+{
+public:
+	explicit LastBlockHashes(BlockChain const& _bc): m_bc(_bc) {}
+
+	LastHashes latestHashes() const override
+	{
+		return hashesBefore(m_bc.currentHash());
+	}
+
+	LastHashes hashesBefore(h256 const& _mostRecentHash) const override
+	{
+		Guard l(x_lastLastHashes);
+		if (m_lastLastHashes.empty() || m_lastLastHashes.back() != _mostRecentHash)
+		{
+			m_lastLastHashes.resize(256);
+			m_lastLastHashes[0] = _mostRecentHash;
+			for (unsigned i = 0; i < 255; ++i)
+				m_lastLastHashes[i + 1] = m_lastLastHashes[i] ? m_bc.info(m_lastLastHashes[i]).parentHash() : h256();
+		}
+		return m_lastLastHashes;
+	}
+
+	void clear() override
+	{
+		Guard l(x_lastLastHashes); 
+		m_lastLastHashes.clear();
+	}
+
+private:
+	BlockChain const& m_bc;
+
+	// TODO rename
+	mutable Mutex x_lastLastHashes;
+	mutable LastHashes m_lastLastHashes;
+};
+
+}
+
 #if ETH_DEBUG&&0
 static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(15);
 static const unsigned c_collectionQueueSize = 2;
@@ -144,7 +186,8 @@ static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 #endif
 
 BlockChain::BlockChain(ChainParams const& _p, std::string const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
-	m_dbPath(_dbPath)
+	m_dbPath(_dbPath),
+	m_lastBlockHashes(make_shared<LastBlockHashes>(*this))
 {
 	init(_p);
 	open(_dbPath, _we, _pc);
@@ -291,7 +334,7 @@ void BlockChain::close()
 	m_blocksBlooms.clear();
 	m_cacheUsage.clear();
 	m_inUse.clear();
-	m_lastLastHashes.clear();
+	m_lastBlockHashes->clear();
 }
 
 void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, unsigned)> const& _progress)
@@ -332,7 +375,7 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 	m_transactionAddresses.clear();
 	m_blockHashes.clear();
 	m_blocksBlooms.clear();
-	m_lastLastHashes.clear();
+	m_lastBlockHashes->clear();
 	m_lastBlockHash = genesisHash();
 	m_lastBlockNumber = 0;
 
@@ -390,19 +433,6 @@ string BlockChain::dumpDatabase() const
 	for (i->SeekToFirst(); i->Valid(); i->Next())
 		ss << toHex(bytesConstRef(i->key())) << "/" << toHex(bytesConstRef(i->value())) << endl;
 	return ss.str();
-}
-
-LastHashes BlockChain::lastHashes(h256 const& _parent) const
-{
-	Guard l(x_lastLastHashes);
-	if (m_lastLastHashes.empty() || m_lastLastHashes.back() != _parent)
-	{
-		m_lastLastHashes.resize(256);
-		m_lastLastHashes[0] = _parent;
-		for (unsigned i = 0; i < 255; ++i)
-			m_lastLastHashes[i + 1] = m_lastLastHashes[i] ? info(m_lastLastHashes[i]).parentHash() : h256();
-	}
-	return m_lastLastHashes;
 }
 
 tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
@@ -1535,7 +1565,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			try
 			{
 				Transaction t(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);
-				m_sealEngine->verifyTransaction(_ir, t, EnvInfo(h));
+				m_sealEngine->verifyTransaction(_ir, t, h, 0);
 				res.transactions.push_back(t);
 			}
 			catch (Exception& ex)
