@@ -233,7 +233,7 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	callParams->codeAddress = asAddress(m_SP[1]);
 
 	unsigned inOutOffset = 0;
-	if (m_OP == Instruction::DELEGATECALL)
+	if (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL)
 	{
 		callParams->apparentValue = m_ext->value;
 		callParams->valueTransfer = 0;
