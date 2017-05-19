@@ -70,112 +70,103 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 		}
 	);
 
-	std::ostringstream log;
 	json_spirit::mObject o;
+	std::ostringstream log;
 
-	json_spirit::mArray agregatedBalance;
-	json_spirit::mArray agregatedStorage;
-	changeStruct popChange = changeLog.at(0);
-	std::map<string, ostringstream> logInfo;
-	u256 tmpBalance = _stateOrig.balance(popChange.address);
-	for (size_t i = 0; i < changeLog.size(); i++)
+	size_t i = 0;
+	while (i < changeLog.size())
 	{
-		changeStruct change = changeLog.at(i);
+		json_spirit::mArray agregatedBalance;
+		json_spirit::mArray agregatedStorage;
+		std::map<string, ostringstream> logInfo;
+		Address currentAddress = changeLog[i].address;
+		u256 tmpBalance = _stateOrig.balance(currentAddress);
 
 		//Agregate changes for the same addresses
-		string after;
-		string before;
-		json_spirit::mArray record;
-		switch (change.kind)
+		while (i < changeLog.size() && changeLog[i].address == currentAddress)
 		{
-			case changeKind::NewCode:
-				//take the original and final code only
-				before = toHex(_stateOrig.code(change.address), 2, HexPrefix::Add);
-				after = toHex(_statePost.code(change.address), 2, HexPrefix::Add);
-				record.push_back(before);
-				record.push_back("->");
-				record.push_back(after);
-				o["code"] = record;
-				logInfo["code"] << "'code' : ['" + before + "', '->', '" + after + "']" << std::endl;
-			break;
-			case changeKind::Nonce:
-				//take the original and final nonce only
-				before = toCompactHex(_stateOrig.getNonce(change.address), HexPrefix::Add, 1);
-				after = toCompactHex(_statePost.getNonce(change.address), HexPrefix::Add, 1);
-				record.push_back(before);
-				record.push_back("->");
-				record.push_back(after);
-				o["nonce"] = record;
-				logInfo["nonce"] << "'nonce' : ['" + before + "', '->', '" + after + "']" << std::endl;
-			break;
-			case changeKind::Balance:
-				before = toCompactHex(tmpBalance, HexPrefix::Add, 1);
-				after = toCompactHex(change.value, HexPrefix::Add, 1);
-				record.push_back(before);
-				record.push_back("+=");
-				record.push_back(after);
-				tmpBalance += change.value;
-				agregatedBalance.push_back(record);
-				logInfo["balance"] << "'balance' : ['" + before + "', '+=', '" + after + "']" << std::endl;
-			break;
-			case changeKind::Touch:
-				o["hasBeenTouched"] = "true";
-				logInfo["hasBeenTouched"] << "'hasBeenTouched' : ['true']" << std::endl;
-			break;
-			case changeKind::Storage:
-				//take the original and final storage only
-				before = toCompactHex(change.key, HexPrefix::Add, 1) + " : " + toCompactHex(_stateOrig.storage(change.address, change.key), HexPrefix::Add, 1);
-				after = toCompactHex(change.key, HexPrefix::Add, 1) + " : " + toCompactHex(_statePost.storage(change.address, change.key), HexPrefix::Add, 1);
-				record.push_back(before);
-				record.push_back("->");
-				record.push_back(after);
-				agregatedStorage.push_back(record);
-				o["storage"] = agregatedStorage;
-				logInfo["storage"] << "'storage' : ['" + before + "', '->', '" + after + "']" << std::endl;
-			break;
-			case changeKind::Create:
-				o["newlyCreated"] = "true";
-				logInfo["newlyCreated"] << "'newlyCreated' : ['true']" << std::endl;
-			break;
-			default:
-				o["unknownChange"] = "true";
-				logInfo["unknownChange"] << "'unknownChange' : ['true']" << std::endl;
-			break;
-		}
-
-		if (i+1 < changeLog.size())
-			change = changeLog.at(i+1);
-
-		if (change.address != popChange.address || i+1 == changeLog.size())
-		{
-			//summaraize changes
-			if (agregatedBalance.size())
+			string after;
+			string before;
+			json_spirit::mArray record;
+			changeStruct change = changeLog[i];
+			switch (change.kind)
 			{
-				json_spirit::mArray record;
-				string before = toCompactHex(_stateOrig.balance(popChange.address), HexPrefix::Add, 1);
-				string after = toCompactHex(_statePost.balance(popChange.address), HexPrefix::Add, 1);
-				record.push_back(before);
-				record.push_back("->");
-				record.push_back(after);
-				agregatedBalance.push_back(record);
-				o["balance"] = agregatedBalance;
-				logInfo["balance"] << "'balance' : ['" + before + "', '->', '" + after + "']" << std::endl;
+				case changeKind::NewCode:
+					//take the original and final code only
+					before = toHex(_stateOrig.code(change.address), 2, HexPrefix::Add);
+					after = toHex(_statePost.code(change.address), 2, HexPrefix::Add);
+					record.push_back(before);
+					record.push_back("->");
+					record.push_back(after);
+					o["code"] = record;
+					logInfo["code"] << "'code' : ['" + before + "', '->', '" + after + "']" << std::endl;
+				break;
+				case changeKind::Nonce:
+					//take the original and final nonce only
+					before = toCompactHex(_stateOrig.getNonce(change.address), HexPrefix::Add, 1);
+					after = toCompactHex(_statePost.getNonce(change.address), HexPrefix::Add, 1);
+					record.push_back(before);
+					record.push_back("->");
+					record.push_back(after);
+					o["nonce"] = record;
+					logInfo["nonce"] << "'nonce' : ['" + before + "', '->', '" + after + "']" << std::endl;
+				break;
+				case changeKind::Balance:
+					before = toCompactHex(tmpBalance, HexPrefix::Add, 1);
+					after = toCompactHex(change.value, HexPrefix::Add, 1);
+					record.push_back(before);
+					record.push_back("+=");
+					record.push_back(after);
+					tmpBalance += change.value;
+					agregatedBalance.push_back(record);
+					logInfo["balance"] << "'balance' : ['" + before + "', '+=', '" + after + "']" << std::endl;
+				break;
+				case changeKind::Touch:
+					o["hasBeenTouched"] = "true";
+					logInfo["hasBeenTouched"] << "'hasBeenTouched' : ['true']" << std::endl;
+				break;
+				case changeKind::Storage:
+					//take the original and final storage only
+					before = toCompactHex(change.key, HexPrefix::Add, 1) + " : " + toCompactHex(_stateOrig.storage(change.address, change.key), HexPrefix::Add, 1);
+					after = toCompactHex(change.key, HexPrefix::Add, 1) + " : " + toCompactHex(_statePost.storage(change.address, change.key), HexPrefix::Add, 1);
+					record.push_back(before);
+					record.push_back("->");
+					record.push_back(after);
+					agregatedStorage.push_back(record);
+					o["storage"] = agregatedStorage;
+					logInfo["storage"] << "'storage' : ['" + before + "', '->', '" + after + "']" << std::endl;
+				break;
+				case changeKind::Create:
+					o["newlyCreated"] = "true";
+					logInfo["newlyCreated"] << "'newlyCreated' : ['true']" << std::endl;
+				break;
+				default:
+					o["unknownChange"] = "true";
+					logInfo["unknownChange"] << "'unknownChange' : ['true']" << std::endl;
+				break;
 			}
-
-			//commit changes
-			oState["0x" + toString(popChange.address)] = o;
-			log << endl << popChange.address << endl;
-			for (std::map<string, ostringstream>::iterator it = logInfo.begin(); it != logInfo.end(); it++)
-				log << (*it).second.str();
-
-			//reset temp variables
-			popChange = change;
-			o.clear();
-			logInfo.clear();
-			agregatedBalance.clear();
-			agregatedStorage.clear();
-			tmpBalance = _stateOrig.balance(change.address);
+			++i;
 		}
+
+		//summaraize changes
+		if (agregatedBalance.size())
+		{
+			json_spirit::mArray record;
+			string before = toCompactHex(_stateOrig.balance(currentAddress), HexPrefix::Add, 1);
+			string after = toCompactHex(_statePost.balance(currentAddress), HexPrefix::Add, 1);
+			record.push_back(before);
+			record.push_back("->");
+			record.push_back(after);
+			agregatedBalance.push_back(record);
+			o["balance"] = agregatedBalance;
+			logInfo["balance"] << "'balance' : ['" + before + "', '->', '" + after + "']" << std::endl;
+		}
+
+		//commit changes
+		oState["0x" + toString(currentAddress)] = o;
+		log << endl << currentAddress << endl;
+		for (std::map<string, ostringstream>::iterator it = logInfo.begin(); it != logInfo.end(); it++)
+			log << (*it).second.str();
 	}
 
 	dev::LogOutputStream<eth::StateTrace, false>() << log.str();
