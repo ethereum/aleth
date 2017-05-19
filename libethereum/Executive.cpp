@@ -240,7 +240,7 @@ bool Executive::execute()
 
 bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
 {
-	CallParameters params(_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {});
+	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}};
 	return call(params, _gasPrice, _senderAddress);
 }
 

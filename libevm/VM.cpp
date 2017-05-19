@@ -214,7 +214,7 @@ void VM::interpretCases()
 		
 		CASE(CREATE)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			m_bounce = &VM::caseCreate;
@@ -270,7 +270,7 @@ void VM::interpretCases()
 
 		CASE(SUICIDE)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			m_runGas = toInt63(m_schedule->suicideGas);
@@ -348,7 +348,7 @@ void VM::interpretCases()
 
 		CASE(LOG0)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
@@ -361,7 +361,7 @@ void VM::interpretCases()
 
 		CASE(LOG1)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
@@ -374,7 +374,7 @@ void VM::interpretCases()
 
 		CASE(LOG2)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
@@ -387,7 +387,7 @@ void VM::interpretCases()
 
 		CASE(LOG3)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
@@ -400,7 +400,7 @@ void VM::interpretCases()
 
 		CASE(LOG4)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
@@ -1116,7 +1116,7 @@ void VM::interpretCases()
 
 		CASE(SSTORE)
 		{
-			if (m_schedule->haveStaticCall && m_ext->staticCall)
+			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			if (!m_ext->store(m_SP[0]) && m_SP[1])

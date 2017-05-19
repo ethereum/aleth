@@ -191,7 +191,8 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 
 	callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
 
-	if ((m_OP == Instruction::CALL || m_OP == Instruction::STATICCALL) && !m_ext->exists(asAddress(m_SP[1])))
+	Address destinationAddr = asAddress(m_SP[1]);
+	if (m_OP == Instruction::CALL && !m_ext->exists(destinationAddr))
 		if (m_SP[2] > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
 			m_runGas += toInt63(m_schedule->callNewAccountGas);
 
@@ -230,7 +231,7 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	if (m_OP != Instruction::DELEGATECALL && m_SP[2] > 0)
 		callParams->gas += m_schedule->callStipend;
 
-	callParams->codeAddress = asAddress(m_SP[1]);
+	callParams->codeAddress = destinationAddr;
 
 	unsigned inOutOffset = 0;
 	if (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL)
