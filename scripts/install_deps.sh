@@ -99,7 +99,6 @@ Darwin)
     brew install \
         leveldb \
         libmicrohttpd \
-        miniupnpc \
         $TRAVIS_PACKAGES
 
     ;;
@@ -142,8 +141,7 @@ Linux)
             gcc \
             libtool \
             leveldb \
-            libmicrohttpd \
-            miniupnpc
+            libmicrohttpd
 
     elif [ -f "/etc/os-release" ]; then
 
@@ -159,8 +157,7 @@ Linux)
                 libcurl4-openssl-dev \
                 libgmp-dev \
                 libleveldb-dev \
-                libmicrohttpd-dev \
-                libminiupnpc-dev
+                libmicrohttpd-dev
             ;;
 
         Fedora)
@@ -202,7 +199,6 @@ Linux)
                 libgmp-dev \
                 libleveldb-dev \
                 libmicrohttpd-dev \
-                libminiupnpc-dev \
                 $TRAVIS_PACKAGES
             ;;
 
