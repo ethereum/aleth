@@ -105,8 +105,9 @@ Configure the project build with the following command. It will create the
 `build` directory with the configuration.
 
 ```shell
-cmake -H. -Bbuild
-cmake --build build
+mkdir build; cd build  # Create a build directory.
+cmake ..               # Configure the project.
+cmake --build .        # Build all default targets.
 ```
 
 On **Windows** Visual Studio 2015 is required. You should generate Visual Studio 
@@ -116,7 +117,7 @@ After configuration is completed the `cpp-ethereum.sln` can be found in the
 `build` directory.
 
 ```shell
-cmake -H. -Bbuild -G "Visual Studio 14 2015 Win64"
+cmake .. -G "Visual Studio 14 2015 Win64"
 ```
 
 ## Contributing
