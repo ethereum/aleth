@@ -44,9 +44,10 @@ if "%TESTS%"=="On" (
     IF errorlevel 1 GOTO ON-ERROR-CONDITION
 
     REM Run the tests for the JIT
-    echo Testing EVMJIT
-    testeth.exe -t VMTests,StateTests -- --vm jit --testpath %APPVEYOR_BUILD_FOLDER%\test\jsontests
-    IF errorlevel 1 GOTO ON-ERROR-CONDITION
+    REM echo Testing EVMJIT
+    REM testeth.exe -t VMTests,StateTests -- --vm jit --testpath %APPVEYOR_BUILD_FOLDER%\test\jsontests
+    REM IF errorlevel 1 GOTO ON-ERROR-CONDITION
+
     cd ..\..\..
 
 )
