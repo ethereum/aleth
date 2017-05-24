@@ -15,8 +15,14 @@ macro(configure_project)
 	eth_default_option(FATDB ON)
 	eth_default_option(ROCKSDB OFF)
 	eth_default_option(PARANOID OFF)
-	eth_default_option(MINIUPNPC ON)
+	eth_default_option(MINIUPNPC OFF)
 	eth_default_option(FASTCTEST OFF)
+
+	if(MINIUPNPC)
+		message(WARNING
+			"Security vulnerabilities have been discovered in miniupnpc library."
+			"This build option is for testing only. Do not use it in public networks")
+	endif()
 
 	# components
 	eth_default_option(TESTS ON)

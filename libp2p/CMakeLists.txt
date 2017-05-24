@@ -1,10 +1,7 @@
-aux_source_directory(. SRC_LIST)
-
 file(GLOB HEADERS "*.h")
+file(GLOB SOURCES "*.cpp")
 
-add_library(p2p ${SRC_LIST} ${HEADERS})
-
-find_package(Dev)
+add_library(p2p ${SOURCES} ${HEADERS})
 
 target_link_libraries(p2p devcrypto devcore)
 target_include_directories(p2p PRIVATE ..)
