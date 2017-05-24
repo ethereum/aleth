@@ -194,6 +194,18 @@ using OnOpFunc = std::function<void(uint64_t /*steps*/, uint64_t /* PC */, Instr
 
 struct CallParameters
 {
+	CallParameters() = default;
+	CallParameters(
+		Address _senderAddress,
+		Address _codeAddress,
+		Address _receiveAddress,
+		u256 _valueTransfer,
+		u256 _apparentValue,
+		u256 _gas,
+		bytesConstRef _data,
+		OnOpFunc _onOpFunc
+	):	senderAddress(_senderAddress), codeAddress(_codeAddress), receiveAddress(_receiveAddress),
+		valueTransfer(_valueTransfer), apparentValue(_apparentValue), gas(_gas), data(_data), onOp(_onOpFunc)  {}
 	Address senderAddress;
 	Address codeAddress;
 	Address receiveAddress;
@@ -201,6 +213,7 @@ struct CallParameters
 	u256 apparentValue;
 	u256 gas;
 	bytesConstRef data;
+	bool staticCall = false;
 	OnOpFunc onOp;
 };
 
@@ -245,7 +258,7 @@ public:
 	ExtVMFace() = default;
 
 	/// Full constructor.
-	ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash, unsigned _depth);
+	ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash, unsigned _depth, bool _staticCall);
 
 	virtual ~ExtVMFace() = default;
 
@@ -307,6 +320,7 @@ public:
 	h256 codeHash;				///< SHA3 hash of the executing code
 	SubState sub;				///< Sub-band VM state (suicides, refund counter, logs).
 	unsigned depth = 0;			///< Depth of the present call.
+	bool staticCall = false;	///< Throw on state changing.
 };
 
 }
