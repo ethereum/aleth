@@ -1,6 +1,6 @@
 # cpp-ethereum - Ethereum C++ client
 
-This repository contains [cpp-ethereum](http://cpp-ethereum.org), the [Ethereum](http://ethereum.org) C++ client.
+This repository contains [cpp-ethereum](http://cpp-ethereum.org), the [Ethereum](https://ethereum.org) C++ client.
 
 It is the third most popular of the Ethereum clients, behind [geth](https://github.com/ethereum/go-ethereum) (the [go](https://golang.org)
 client) and [Parity](https://github.com/ethcore/parity) (the [rust](https://www.rust-lang.org/) client).  The code is exceptionally
@@ -159,4 +159,4 @@ To run the tests, make sure you clone https://github.com/ethereum/tests and poin
 
 [![License](https://img.shields.io/github/license/ethereum/cpp-ethereum.svg)](LICENSE)
 
-All contributions are made under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).
+All contributions are made under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).
