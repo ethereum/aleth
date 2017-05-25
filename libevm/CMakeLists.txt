@@ -19,13 +19,11 @@ file(GLOB HEADERS "*.h")
 
 add_library(evm ${SOURCES} ${HEADERS})
 
-find_package(Eth)
-
-target_link_libraries(evm ${Eth_ETHCORE_LIBRARIES})
-target_link_libraries(evm ${Eth_EVMCORE_LIBRARIES})
-target_include_directories(evm PRIVATE .. ${JSONCPP_INCLUDE_DIR})
+# TODO: We have horrible cilcular dependency: evm depends also on ethereum
+#       library. Here we only explicitly add jsoncpp to fix includes.
+target_link_libraries(evm PRIVATE evmcore ethcore JsonCpp)
+target_include_directories(evm PRIVATE ..)
 
 if (EVMJIT)
-	target_include_directories(evm PRIVATE ../evmjit/include)
-	target_link_libraries(evm ${Eth_EVMJIT_LIBRARIES})
+	target_link_libraries(evm PRIVATE evmjit)
 endif()
