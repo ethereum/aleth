@@ -1,7 +1,7 @@
 # Summary
 
 * [Introduction](README.md)
-* [Installation](chapter1.md)
+* [Installation](installation.md)
 * [CLI Tools](cli_tools.md)
    * [Getting started](getting_started.md)
    * [Interactive Console](interactive_console.md)
