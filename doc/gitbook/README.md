@@ -1,11 +1,11 @@
-TurboEthereum Guide
+cpp-ethereum guide
 ======= 
 
-This book is intended as a practical user guide for the "Turbo" Ethereum software distribution, originally named after the language in which it is written, C++.
+This book is intended as a practical user guide for the cpp-ethereum software distribution.
 
-TurboEthereum is a large distribution of software including a number of diverse tools. This book begins with the installation instructions, before proceeding to introductions, walk-throughs and references for the various tools that make up TurboEthereum. 
+cpp-ethereum is a distribution of software including a number of diverse tools. This book begins with the installation instructions, before proceeding to introductions, walk-throughs and references for the various tools that make up cpp-ethereum.
 
-The full software suite of TurboEthereum includes:
+The full software suite of cpp-ethereum includes:
 
 - **eth** (`eth`) The mainline CLI Ethereum client. Run it in the background and it will connect to the Ethereum network; you can mine, make transactions and inspect the blockchain.
 - `ethkey` A key/wallet management tool for Ethereum keys. This lets you add, remove and change your keys as well as *cold wallet device*-friendly transaction inspection and signing.
