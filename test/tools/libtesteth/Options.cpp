@@ -47,6 +47,7 @@ void printHelp()
 	cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite" << std::endl;
 	cout << setw(30) << "--filltest <FileData>" << setw(25) << "Try fill tests from the given json stream" << std::endl;
 	cout << setw(30) << "--checktest <FileData>" << setw(25) << "Try run tests from the given json stream" << std::endl;
+	cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests" << std::endl;
 
 	cout << std::endl << "Additional Tests" << std::endl;
 	cout << setw(30) << "--performance" << setw(25) << "Enable perfomance tests" << std::endl;
@@ -196,6 +197,8 @@ Options::Options(int argc, char** argv)
 			trValueIndex = atoi(argv[i + 1]);
 		else if (arg == "--testpath" && i + 1 < argc)
 			testpath = std::string{argv[i + 1]};
+		else if (arg == "--statediff")
+			statediff = true;
 	}
 
 	//Default option
