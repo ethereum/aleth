@@ -63,7 +63,7 @@ include(ProjectSecp256k1)
 
 
 
-configure_project(CPUID CURL EVMJIT FATDB MINIUPNPC ROCKSDB PARANOID TESTS VMTRACE)
+configure_project(CPUID EVMJIT FATDB MINIUPNPC ROCKSDB PARANOID TESTS VMTRACE)
 
 add_subdirectory(eth)
 add_subdirectory(libdevcore)

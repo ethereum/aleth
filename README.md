@@ -70,7 +70,6 @@ The following *libraries* are required to be installed in the system in their
 development variant:
 
 - leveldb
-- curl
 - microhttpd
 
 They usually can be installed using system-specific package manager.
@@ -78,8 +77,8 @@ Examples for some systems:
 
 Operating system | Installation command
 ---------------- | --------------------
-Debian-based     | `sudo apt-get install libleveldb-dev libcurl4-openssl-dev libmicrohttpd-dev`
-RedHat-based     | `dnf install leveldb-devel curl-devel libmicrohttpd-devel`
+Debian-based     | `sudo apt-get install libleveldb-dev libmicrohttpd-dev`
+RedHat-based     | `dnf install leveldb-devel libmicrohttpd-devel`
 macOS            | `brew install leveldb libmicrohttpd`
 
 
