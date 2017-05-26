@@ -19,6 +19,7 @@
  * @date 2014
  */
 
+//FIXME:
 // @debris disabled as tests fail with:
 // unknown location(0): fatal error in "jsonrpc_setMining": std::exception: Exception -32003 : Client connector error: : libcurl error: 28
 // /home/gav/Eth/cpp-ethereum/test/jsonrpc.cpp(169): last checkpoint

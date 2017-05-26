@@ -36,5 +36,4 @@ set TESTS=%3
     .\build\rlp\%CONFIGURATION%\rlp.exe ^
     .\build\test\%CONFIGURATION%\testeth.exe ^
     "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" ^
-    %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll
