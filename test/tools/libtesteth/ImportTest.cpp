@@ -187,14 +187,14 @@ bytes ImportTest::executeTest()
 	return bytes();
 }
 
-std::tuple<eth::State, ImportTest::ExecOutput, eth::detail::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
+std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
 {
 	State initialState = _preState;
 	try
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
-		ImportTest::ExecOutput out = initialState.execute(_env, *se.get(), _tr, Permanence::Unfinished);
-		eth::detail::ChangeLog changeLog = initialState.changeLog();
+		ImportTest::ExecOutput out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+		eth::ChangeLog changeLog = initialState.changeLog();
 
 		//Finalize the state manually (clear logs)
 		bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");

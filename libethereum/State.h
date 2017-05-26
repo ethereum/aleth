@@ -83,7 +83,7 @@ enum class Permanence
 {
 	Reverted,
 	Committed,
-	Uncommited	///< Uncommited state for change log readings in tests.
+	Uncommitted	///< Uncommitted state for change log readings in tests.
 };
 
 #if ETH_FATDB

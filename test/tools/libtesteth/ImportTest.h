@@ -63,7 +63,7 @@ public:
 
 private:
 	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
-	std::tuple<eth::State, ExecOutput, eth::detail::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
+	std::tuple<eth::State, ExecOutput, eth::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
 
 	eth::EnvInfo m_envInfo;
 	eth::Transaction m_transaction;
@@ -78,7 +78,7 @@ private:
 		int valInd;
 		eth::Transaction transaction;
 		eth::State postState;
-		eth::detail::ChangeLog changeLog;
+		eth::ChangeLog changeLog;
 		eth::Network netId;
 	};
 	std::vector<transactionToExecute> m_transactions;

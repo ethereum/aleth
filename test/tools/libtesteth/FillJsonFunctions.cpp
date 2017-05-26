@@ -52,19 +52,16 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 	return txObject;
 }
 
-json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State const& _statePost, std::vector<dev::eth::detail::Change> const& _changeLog)
+json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State const& _statePost, eth::ChangeLog const& _changeLog)
 {
 	json_spirit::mObject oState;
 	if (!_changeLog.size())
 		return oState;
 
-	using changeKind = eth::detail::Change::Kind;
-	using changeStruct = eth::detail::Change;
-	eth::detail::ChangeLog changeLog = _changeLog;
-
 	//Sort the vector by address field
+	eth::ChangeLog changeLog = _changeLog;
 	std::sort(changeLog.begin(), changeLog.end(),
-		[ ]( const changeStruct& lhs, const changeStruct& rhs )
+		[](const eth::Change& lhs, const eth::Change& rhs )
 		{
 			return lhs.address < rhs.address;
 		}
@@ -88,10 +85,10 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 			string after;
 			string before;
 			json_spirit::mArray record;
-			changeStruct change = changeLog.at(i);
+			eth::Change change = changeLog.at(i);
 			switch (change.kind)
 			{
-				case changeKind::NewCode:
+				case Change::Kind::NewCode:
 					//take the original and final code only
 					before = toHex(_stateOrig.code(change.address), 2, HexPrefix::Add);
 					after = toHex(_statePost.code(change.address), 2, HexPrefix::Add);
@@ -101,7 +98,7 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					o["code"] = record;
 					logInfo["code"] << "'code' : ['" + before + "', '->', '" + after + "']" << std::endl;
 				break;
-				case changeKind::Nonce:
+				case Change::Kind::Nonce:
 					//take the original and final nonce only
 					before = toCompactHex(_stateOrig.getNonce(change.address), HexPrefix::Add, 1);
 					after = toCompactHex(_statePost.getNonce(change.address), HexPrefix::Add, 1);
@@ -111,7 +108,7 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					o["nonce"] = record;
 					logInfo["nonce"] << "'nonce' : ['" + before + "', '->', '" + after + "']" << std::endl;
 				break;
-				case changeKind::Balance:
+				case Change::Kind::Balance:
 					before = toCompactHex(tmpBalance, HexPrefix::Add, 1);
 					after = toCompactHex(change.value, HexPrefix::Add, 1);
 					record.push_back(before);
@@ -121,11 +118,11 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					agregatedBalance.push_back(record);
 					logInfo["balance"] << "'balance' : ['" + before + "', '+=', '" + after + "']" << std::endl;
 				break;
-				case changeKind::Touch:
+				case Change::Kind::Touch:
 					o["hasBeenTouched"] = "true";
 					logInfo["hasBeenTouched"] << "'hasBeenTouched' : ['true']" << std::endl;
 				break;
-				case changeKind::Storage:
+				case Change::Kind::Storage:
 					//take the original and final storage only
 					before = toCompactHex(change.key, HexPrefix::Add, 1) + " : " + toCompactHex(_stateOrig.storage(change.address, change.key), HexPrefix::Add, 1);
 					after = toCompactHex(change.key, HexPrefix::Add, 1) + " : " + toCompactHex(_statePost.storage(change.address, change.key), HexPrefix::Add, 1);
@@ -136,7 +133,7 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					o["storage"] = agregatedStorage;
 					logInfo["storage"] << "'storage' : ['" + before + "', '->', '" + after + "']" << std::endl;
 				break;
-				case changeKind::Create:
+				case Change::Kind::Create:
 					o["newlyCreated"] = "true";
 					logInfo["newlyCreated"] << "'newlyCreated' : ['true']" << std::endl;
 				break;
