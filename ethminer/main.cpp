@@ -33,7 +33,7 @@
 
 #include <clocale>
 
-#include "MinerAux.h"
+#include "eth/MinerAux.h"
 
 using namespace std;
 using namespace dev;
