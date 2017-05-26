@@ -62,7 +62,7 @@ public:
 
 private:
 	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
-	std::pair<eth::State, ExecOutput> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State _state, eth::Transaction const& _tr);
+	std::tuple<eth::State, eth::ChangeLog, ExecOutput> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State _state, eth::Transaction const& _tr);
 
 	eth::EnvInfo m_envInfo;
 	eth::Transaction m_transaction;
