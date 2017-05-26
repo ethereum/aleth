@@ -87,7 +87,6 @@ endif()
 
 if (TOOLS)
     add_subdirectory(ethkey)
-    add_subdirectory(ethminer)
     add_subdirectory(ethvm)
     if (NOT EMSCRIPTEN)
         add_subdirectory(rlp)
