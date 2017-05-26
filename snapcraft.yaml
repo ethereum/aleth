@@ -11,8 +11,6 @@ apps:
     command: eth
   ethkey:
     command: ethkey
-  ethminer:
-    command: ethminer
   ethvm:
     command: ethvm
   rlp:

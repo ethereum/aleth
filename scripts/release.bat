@@ -31,7 +31,6 @@ set TESTS=%3
     .\build\bench\%CONFIGURATION%\bench.exe ^
     .\build\eth\%CONFIGURATION%\eth.exe ^
     .\build\ethkey\%CONFIGURATION%\ethkey.exe ^
-    .\build\ethminer\%CONFIGURATION%\ethminer.exe ^
     .\build\ethvm\%CONFIGURATION%\ethvm.exe ^
     .\build\rlp\%CONFIGURATION%\rlp.exe ^
     .\build\test\%CONFIGURATION%\testeth.exe ^
