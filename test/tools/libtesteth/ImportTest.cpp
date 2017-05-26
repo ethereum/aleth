@@ -55,7 +55,7 @@ bytes ImportTest::executeTest()
 	if (m_testType == testType::StateTests)
 	{
 		eth::Network network = eth::Network::MainNetwork;
-		std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);
+		std::pair<eth::State, ImportTest::ExecOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);
 		m_statePost = out.first;
 		m_logs = out.second.second.log();
 		return out.second.first.output;
@@ -182,13 +182,13 @@ bytes ImportTest::executeTest()
 	return bytes();
 }
 
-std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State _state, eth::Transaction const& _tr)
+std::pair<eth::State, ImportTest::ExecOutput> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State _state, eth::Transaction const& _tr)
 {
 	try
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
 		bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
-		ImportTest::execOutput execOut = _state.execute(_env, *se.get(), _tr);
+		ImportTest::ExecOutput execOut = _state.execute(_env, *se.get(), _tr);
 		_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 		return {_state, execOut};
 	}
@@ -204,7 +204,7 @@ std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth
 	_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 	ExecutionResult emptyRes;
 	LogEntries emptyLogs;
-	ImportTest::execOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
+	ImportTest::ExecOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
 	return {_state, execOut};
 }
 
