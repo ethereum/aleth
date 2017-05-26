@@ -21,6 +21,7 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
+
 #if !defined(_WIN32)
 #include <stdio.h>
 #endif
@@ -121,63 +122,6 @@ eth::Network stringToNetId(string const& _netname)
 }
 
 
-json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
-{
-	json_spirit::mObject txObject;
-	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add, 1);
-	txObject["data"] = _txn.data().size() ? toHex(_txn.data(), 2, HexPrefix::Add) : "";
-	txObject["gasLimit"] = toCompactHex(_txn.gas(), HexPrefix::Add, 1);
-	txObject["gasPrice"] = toCompactHex(_txn.gasPrice(), HexPrefix::Add, 1);
-	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add, 1);
-	txObject["s"] = toCompactHex(_txn.signature().s, HexPrefix::Add, 1);
-	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add, 1);
-	txObject["to"] = _txn.isCreation() ? "" : "0x" + toString(_txn.receiveAddress());
-	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add, 1);
-	ImportTest::makeAllFieldsHex(txObject);
-	return txObject;
-}
-
-json_spirit::mObject fillJsonWithState(State const& _state)
-{
-	AccountMaskMap emptyMap;
-	return fillJsonWithState(_state, emptyMap);
-}
-
-json_spirit::mObject fillJsonWithState(State const& _state, eth::AccountMaskMap const& _map)
-{
-	bool mapEmpty = (_map.size() == 0);
-	json_spirit::mObject oState;
-	for (auto const& a: _state.addresses())
-	{
-		if (_map.size() && _map.find(a.first) == _map.end())
-			continue;
-
-		json_spirit::mObject o;
-		if (mapEmpty || _map.at(a.first).hasBalance())
-			o["balance"] = toCompactHex(_state.balance(a.first), HexPrefix::Add, 1);
-		if (mapEmpty || _map.at(a.first).hasNonce())
-			o["nonce"] = toCompactHex(_state.getNonce(a.first), HexPrefix::Add, 1);
-		{
-			if (mapEmpty || _map.at(a.first).hasStorage())
-			{
-				json_spirit::mObject store;
-				for (auto const& s: _state.storage(a.first))
-					store[toCompactHex(s.second.first, HexPrefix::Add, 1)] = toCompactHex(s.second.second, HexPrefix::Add, 1);
-				o["storage"] = store;
-			}
-		}
-
-		if (mapEmpty || _map.at(a.first).hasCode())
-		{
-			if (_state.code(a.first).size() > 0)
-				o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
-			else
-				o["code"] = "";
-		}
-		oState["0x" + toString(a.first)] = o;
-	}
-	return oState;
-}
 
 json_spirit::mArray exportLog(eth::LogEntries _logs)
 {
@@ -453,7 +397,8 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	{
 		try
 		{
-			cnote << "Populating tests...";
+			if (!Options::get().singleTest)
+				cnote << "Populating tests...";
 			json_spirit::mValue v;
 			boost::filesystem::path p(__FILE__);
 
@@ -477,7 +422,9 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	}
 	try
 	{
-		cnote << "TEST " << name << ":";
+		if ((Options::get().singleTest && Options::get().singleTestName == name) || !Options::get().singleTest)
+			cnote << "TEST " << name << ":";
+
 		json_spirit::mValue v;
 		string s = asString(dev::contents(testPath + "/" + name + ".json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");

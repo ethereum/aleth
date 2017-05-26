@@ -82,7 +82,8 @@ enum class BaseState
 enum class Permanence
 {
 	Reverted,
-	Committed
+	Committed,
+	Uncommitted	///< Uncommitted state for change log readings in tests.
 };
 
 #if ETH_FATDB
@@ -96,9 +97,6 @@ DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
 
 class SealEngineFace;
 class Executive;
-
-namespace detail
-{
 
 /// An atomic state changelog entry.
 struct Change
@@ -142,8 +140,7 @@ struct Change
 	{}
 };
 
-}
-
+using ChangeLog = std::vector<Change>;
 
 /**
  * Model of an Ethereum state, essentially a facade for the trie.
@@ -309,6 +306,8 @@ public:
 	/// Revert all recent changes up to the given @p _savepoint savepoint.
 	void rollback(size_t _savepoint);
 
+	ChangeLog const& changeLog() const { return m_changeLog; }
+
 private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
 	void removeEmptyAccounts();
@@ -336,7 +335,7 @@ private:
 	u256 m_accountStartNonce;
 
 	friend std::ostream& operator<<(std::ostream& _out, State const& _s);
-	std::vector<detail::Change> m_changeLog;
+	ChangeLog m_changeLog;
 };
 
 std::ostream& operator<<(std::ostream& _out, State const& _s);

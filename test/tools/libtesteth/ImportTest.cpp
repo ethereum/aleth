@@ -24,6 +24,7 @@
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/libtestutils/Common.h>
+
 using namespace dev;
 using namespace dev::test;
 using namespace std;
@@ -55,10 +56,13 @@ bytes ImportTest::executeTest()
 	if (m_testType == testType::StateTests)
 	{
 		eth::Network network = eth::Network::MainNetwork;
-		std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);
-		m_statePost = out.first;
-		m_logs = out.second.second.log();
-		return out.second.first.output;
+		LogEntries emptyLogs;
+		ExecutionResult emptyRes;
+		ImportTest::ExecOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
+		std::tie(m_statePost, execOut, std::ignore) =
+			executeTransaction(network, m_envInfo, m_statePre, m_transaction);
+		m_logs = execOut.second.log();
+		return execOut.first.output;
 	}
 	else if (m_testType == testType::GeneralStateTest)
 	{
@@ -91,8 +95,8 @@ bytes ImportTest::executeTest()
 					continue;
 
 				eth::Network network = networks[j];
-				std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
-				m_transactions[i].postState = out.first;
+				std::tie(m_transactions[i].postState, std::ignore, m_transactions[i].changeLog) =
+					executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
 				m_transactions[i].netId = network;
 				transactionResults.push_back(m_transactions[i]);
 
@@ -183,16 +187,19 @@ bytes ImportTest::executeTest()
 	return bytes();
 }
 
-std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
+std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
 {
-	eth::State initialState = _preState;
+	State initialState = _preState;
 	try
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
+		ImportTest::ExecOutput out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+		eth::ChangeLog changeLog = initialState.changeLog();
+
+		//Finalize the state manually (clear logs)
 		bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
-		ImportTest::execOutput execOut = initialState.execute(_env, *se.get(), _tr);
 		initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
-		return std::pair<eth::State, ImportTest::execOutput>(initialState, execOut);
+		return std::make_tuple(initialState, out, changeLog);
 	}
 	catch (Exception const& _e)
 	{
@@ -204,10 +211,10 @@ std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth
 	}
 
 	initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
-	ExecutionResult emptyRes;
 	LogEntries emptyLogs;
-	ImportTest::execOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
-	return std::pair<eth::State, ImportTest::execOutput>(initialState, execOut);
+	ExecutionResult emptyRes;
+	ImportTest::ExecOutput out = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
+	return std::make_tuple(initialState, out, initialState.changeLog());
 }
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
@@ -521,7 +528,6 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			return;
 	}
 
-
 	if (_expects.count("indexes"))
 	{
 		json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
@@ -598,6 +604,32 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + " Expect results was not found in test execution!");
 }
 
+void ImportTest::traceStateDiff()
+{
+	string network = "ALL";
+	Options const& opt = Options::get();
+	if (!opt.singleTestNet.empty())
+		network = opt.singleTestNet;
+
+	int d = opt.trDataIndex;
+	int g = opt.trGasIndex;
+	int v = opt.trValueIndex;
+
+	for(size_t i = 0; i < m_transactions.size(); i++)
+	{
+		transactionToExecute t = m_transactions[i];
+		if (network == netIdToString(t.netId) || network == "ALL")
+		if ((d == t.dataInd || d == -1) && (g == t.gasInd || g == -1) && (v == t.valInd || v == -1))
+		{
+			std::ostringstream log;
+			log << "trNetID: " << netIdToString(t.netId) << endl;
+			log << "trDataInd: " << t.dataInd << " tdGasInd: " << t.gasInd << " trValInd: " << t.valInd << std::endl;
+			dev::LogOutputStream<eth::StateTrace, false>() << log.str();
+			fillJsonWithStateChange(m_statePre, t.postState, t.changeLog); //output std log
+		}
+	}
+}
+
 int ImportTest::exportTest(bytes const& _output)
 {
 	int err = 0;
@@ -629,6 +661,10 @@ int ImportTest::exportTest(bytes const& _output)
 				if (it != std::end(stateIndexesToPrint))
 					obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
 			}
+
+			if (Options::get().statediff)
+				obj2["stateDiff"] = fillJsonWithStateChange(m_statePre, m_transactions[i].postState, m_transactions[i].changeLog);
+
 			postState[netIdToString(m_transactions[i].netId)].push_back(obj2);
 		}
 

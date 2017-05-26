@@ -121,7 +121,7 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
-			storage["0x" + toHex(toCompactBigEndian(i.second.first, 1))] = "0x" + toHex(toCompactBigEndian(i.second.second, 1));
+			storage[toCompactHex(i.second.first, HexPrefix::Add, 1)] = toCompactHex(i.second.second, HexPrefix::Add, 1);
 		r["storage"] = storage;
 	}
 
