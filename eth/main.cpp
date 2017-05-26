@@ -60,7 +60,7 @@
 #include <libweb3jsonrpc/Debug.h>
 #include <libweb3jsonrpc/Test.h>
 
-#include <ethminer/MinerAux.h>
+#include "MinerAux.h"
 #include "BuildInfo.h"
 #include "AccountManager.h"
 
