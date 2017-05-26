@@ -145,6 +145,9 @@ struct Change
 }
 
 
+using ChangeLog = std::vector<detail::Change>;
+
+
 /**
  * Model of an Ethereum state, essentially a facade for the trie.
  *
@@ -309,6 +312,8 @@ public:
 	/// Revert all recent changes up to the given @p _savepoint savepoint.
 	void rollback(size_t _savepoint);
 
+	ChangeLog const& changeLog() const { return m_changeLog; }
+
 private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
 	void removeEmptyAccounts();
@@ -336,7 +341,7 @@ private:
 	u256 m_accountStartNonce;
 
 	friend std::ostream& operator<<(std::ostream& _out, State const& _s);
-	std::vector<detail::Change> m_changeLog;
+	ChangeLog m_changeLog;
 };
 
 std::ostream& operator<<(std::ostream& _out, State const& _s);

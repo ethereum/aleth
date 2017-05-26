@@ -55,10 +55,10 @@ bytes ImportTest::executeTest()
 	if (m_testType == testType::StateTests)
 	{
 		eth::Network network = eth::Network::MainNetwork;
-		std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);
-		m_statePost = out.first;
-		m_logs = out.second.second.log();
-		return out.second.first.output;
+		auto out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);
+		m_statePost = std::get<0>(out);
+		m_logs = std::get<2>(out).second.log();
+		return std::get<2>(out).first.output;
 	}
 	else if (m_testType == testType::GeneralStateTest)
 	{
@@ -91,8 +91,8 @@ bytes ImportTest::executeTest()
 					continue;
 
 				eth::Network network = networks[j];
-				std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
-				m_transactions[i].postState = out.first;
+				std::tie(m_transactions[i].postState, std::ignore, std::ignore) =
+					executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
 				m_transactions[i].netId = network;
 				transactionResults.push_back(m_transactions[i]);
 
@@ -183,16 +183,16 @@ bytes ImportTest::executeTest()
 	return bytes();
 }
 
-std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
+std::tuple<eth::State, eth::ChangeLog, ImportTest::ExecOutput> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State _state, eth::Transaction const& _tr)
 {
-	eth::State initialState = _preState;
 	try
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
 		bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
-		ImportTest::execOutput execOut = initialState.execute(_env, *se.get(), _tr);
-		initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
-		return std::pair<eth::State, ImportTest::execOutput>(initialState, execOut);
+		ImportTest::ExecOutput execOut = _state.execute(_env, *se.get(), _tr);
+		ChangeLog changeLog = _state.changeLog();
+		_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
+		return {_state, changeLog, execOut};
 	}
 	catch (Exception const& _e)
 	{
@@ -203,11 +203,13 @@ std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth
 		cnote << "state execution exception: " << _e.what();
 	}
 
-	initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
+	// FIXME: Avoid code duplication by combining with code in try{}.
+	ChangeLog changeLog = _state.changeLog();
+	_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 	ExecutionResult emptyRes;
 	LogEntries emptyLogs;
-	ImportTest::execOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
-	return std::pair<eth::State, ImportTest::execOutput>(initialState, execOut);
+	ImportTest::ExecOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
+	return {_state, changeLog, execOut};
 }
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
