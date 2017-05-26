@@ -62,7 +62,7 @@ public:
 
 private:
 	typedef std::pair<eth::ExecutionResult, eth::TransactionReceipt> execOutput;
-	std::pair<eth::State, execOutput> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
+	std::pair<eth::State, execOutput> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State _state, eth::Transaction const& _tr);
 
 	eth::EnvInfo m_envInfo;
 	eth::Transaction m_transaction;
