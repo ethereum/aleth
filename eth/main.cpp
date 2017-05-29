@@ -46,7 +46,6 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
-#include <jsonrpccpp/client/connectors/httpclient.h>
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/IpcServer.h>
 #include <libweb3jsonrpc/LevelDB.h>

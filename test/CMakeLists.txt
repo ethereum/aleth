@@ -46,14 +46,12 @@ endforeach(file)
 file(GLOB_RECURSE HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 
-find_package(Eth)
 find_package(Web3)
 
 target_include_directories(testeth PRIVATE ..)
 target_include_directories(testeth PRIVATE ../utils)
 
 target_link_libraries(testeth Boost::UnitTestFramework)
-target_link_libraries(testeth ${Eth_TESTUTILS_LIBRARIES})
 
 if (UNIX AND NOT APPLE)
 	target_link_libraries(testeth pthread)

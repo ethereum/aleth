@@ -111,7 +111,7 @@ install:
     - ./scripts/install_deps.sh
 before_script:
     - ./scripts/prepare_ccache.sh
-    - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
+    - ./scripts/build.sh $TRAVIS_BUILD_TYPE
     - ./scripts/cleanup_ccache.sh
 script:
     - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS

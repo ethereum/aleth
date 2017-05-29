@@ -33,7 +33,6 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
-#include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>
 #include "../JsonSpiritHeaders.h"
 #include <test/tools/libtesteth/TestHelper.h>

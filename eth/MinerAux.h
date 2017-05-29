@@ -27,7 +27,6 @@
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/Exceptions.h>
 #include <libethashseal/EthashCPUMiner.h>
-#include <jsonrpccpp/client/connectors/httpclient.h>
 #include "FarmClient.h"
 
 // TODO - having using derivatives in header files is very poor style, and we need to fix these up.
