@@ -90,6 +90,9 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 					importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first);
 				}
 			}
+
+			if (Options::get().statediff)
+				importer.traceStateDiff();
 		}
 	}
 }
@@ -178,6 +181,7 @@ BOOST_AUTO_TEST_CASE(stRevertTest){}
 
 //Metropolis Tests
 BOOST_AUTO_TEST_CASE(stStackTests){}
+BOOST_AUTO_TEST_CASE(stStaticCall){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}

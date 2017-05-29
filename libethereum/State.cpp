@@ -41,7 +41,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::eth::detail;
 namespace fs = boost::filesystem;
 
 const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
@@ -541,12 +540,18 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	u256 const startGasUsed = _envInfo.gasUsed();
 	executeTransaction(e, _t, onOp);
 
-	if (_p == Permanence::Reverted)
-		m_cache.clear();
-	else
+	bool removeEmptyAccounts = false;
+	switch (_p)
 	{
-		bool removeEmptyAccounts = _envInfo.number() >= _sealEngine.chainParams().u256Param("EIP158ForkBlock");
-		commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
+		case Permanence::Reverted:
+			m_cache.clear();
+			break;
+		case Permanence::Committed:
+			removeEmptyAccounts = _envInfo.number() >= _sealEngine.chainParams().u256Param("EIP158ForkBlock");
+			commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
+			break;
+		case Permanence::Uncommitted:
+			break;
 	}
 
 	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("metropolisForkBlock") ?

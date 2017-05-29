@@ -11,8 +11,6 @@ apps:
     command: eth
   ethkey:
     command: ethkey
-  ethminer:
-    command: ethminer
   ethvm:
     command: ethvm
   rlp:
@@ -25,7 +23,6 @@ parts:
     build-packages:
       - build-essential
       - libboost-all-dev
-      - libcurl4-openssl-dev
       - libgmp-dev
       - libleveldb-dev
       - libmicrohttpd-dev

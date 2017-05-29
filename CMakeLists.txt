@@ -63,7 +63,7 @@ include(ProjectSecp256k1)
 
 
 
-configure_project(CPUID CURL EVMJIT FATDB MINIUPNPC ROCKSDB PARANOID TESTS VMTRACE)
+configure_project()
 
 add_subdirectory(eth)
 add_subdirectory(libdevcore)
@@ -74,9 +74,7 @@ add_subdirectory(libethcore)
 add_subdirectory(libethereum)
 add_subdirectory(libevm)
 add_subdirectory(libevmcore)
-if (NOT EMSCRIPTEN)
-    add_subdirectory(libp2p)
-endif()
+add_subdirectory(libp2p)
 add_subdirectory(libweb3jsonrpc)
 add_subdirectory(libwebthree)
 add_subdirectory(libwhisper)
@@ -87,18 +85,15 @@ endif()
 
 if (TOOLS)
     add_subdirectory(ethkey)
-    add_subdirectory(ethminer)
     add_subdirectory(ethvm)
-    if (NOT EMSCRIPTEN)
-        add_subdirectory(rlp)
-        add_subdirectory(bench)
-    endif()
+    add_subdirectory(rlp)
+    add_subdirectory(bench)
 endif()
 
 if (TESTS)
 	enable_testing()
-	add_subdirectory(test)	
+	add_subdirectory(test)
 endif()
 
-# TODO - split out json_spirit, libscrypt and sec256k1
+# TODO: Split out json_spirit, libscrypt and sec256k1.
 add_subdirectory(utils)

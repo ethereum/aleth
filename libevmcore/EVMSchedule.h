@@ -40,6 +40,7 @@ struct EVMSchedule
 	bool eip158Mode = false;
 	bool haveRevert = false;
 	bool haveReturnData = false;
+	bool haveStaticCall = false;
 	std::array<unsigned, 8> tierStepGas;
 	unsigned expGas = 10;
 	unsigned expByteGas = 10;
@@ -113,6 +114,7 @@ static const EVMSchedule MetropolisSchedule = []
 	schedule.blockhashGas = 800;
 	schedule.haveRevert = true;
 	schedule.haveReturnData = true;
+	schedule.haveStaticCall = true;
 	return schedule;
 }();
 

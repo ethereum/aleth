@@ -24,7 +24,7 @@
 using namespace dev;
 using namespace dev::eth;
 
-ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash, unsigned _depth):
+ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash, unsigned _depth, bool _staticCall):
 	m_envInfo(_envInfo),
 	myAddress(_myAddress),
 	caller(_caller),
@@ -34,5 +34,6 @@ ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _calle
 	data(_data),
 	code(std::move(_code)),
 	codeHash(_codeHash),
-	depth(_depth)
+	depth(_depth),
+	staticCall(_staticCall)
 {}

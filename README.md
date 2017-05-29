@@ -1,6 +1,6 @@
 # cpp-ethereum - Ethereum C++ client
 
-This repository contains [cpp-ethereum](http://cpp-ethereum.org), the [Ethereum](http://ethereum.org) C++ client.
+This repository contains [cpp-ethereum](http://cpp-ethereum.org), the [Ethereum](https://ethereum.org) C++ client.
 
 It is the third most popular of the Ethereum clients, behind [geth](https://github.com/ethereum/go-ethereum) (the [go](https://golang.org)
 client) and [Parity](https://github.com/ethcore/parity) (the [rust](https://www.rust-lang.org/) client).  The code is exceptionally
@@ -70,7 +70,6 @@ The following *libraries* are required to be installed in the system in their
 development variant:
 
 - leveldb
-- curl
 - microhttpd
 
 They usually can be installed using system-specific package manager.
@@ -78,8 +77,8 @@ Examples for some systems:
 
 Operating system | Installation command
 ---------------- | --------------------
-Debian-based     | `sudo apt-get install libleveldb-dev libcurl4-openssl-dev libmicrohttpd-dev`
-RedHat-based     | `dnf install leveldb-devel curl-devel libmicrohttpd-devel`
+Debian-based     | `sudo apt-get install libleveldb-dev libmicrohttpd-dev`
+RedHat-based     | `dnf install leveldb-devel libmicrohttpd-devel`
 macOS            | `brew install leveldb libmicrohttpd`
 
 
@@ -105,8 +104,9 @@ Configure the project build with the following command. It will create the
 `build` directory with the configuration.
 
 ```shell
-cmake -H. -Bbuild
-cmake --build build
+mkdir build; cd build  # Create a build directory.
+cmake ..               # Configure the project.
+cmake --build .        # Build all default targets.
 ```
 
 On **Windows** Visual Studio 2015 is required. You should generate Visual Studio 
@@ -116,7 +116,7 @@ After configuration is completed the `cpp-ethereum.sln` can be found in the
 `build` directory.
 
 ```shell
-cmake -H. -Bbuild -G "Visual Studio 14 2015 Win64"
+cmake .. -G "Visual Studio 14 2015 Win64"
 ```
 
 ## Contributing
@@ -158,4 +158,4 @@ To run the tests, make sure you clone https://github.com/ethereum/tests and poin
 
 [![License](https://img.shields.io/github/license/ethereum/cpp-ethereum.svg)](LICENSE)
 
-All contributions are made under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).
+All contributions are made under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).

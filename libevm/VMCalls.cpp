@@ -64,6 +64,13 @@ void VM::throwBadJumpDestination()
 	BOOST_THROW_EXCEPTION(BadJumpDestination());
 }
 
+void VM::throwDisallowedStateChange()
+{
+	if (m_onFail)
+		(this->*m_onFail)();
+	BOOST_THROW_EXCEPTION(DisallowedStateChange());
+}
+
 void VM::throwBadStack(unsigned _removed, unsigned _added)
 {
 	bigint size = m_stackEnd - m_SPP;
@@ -182,14 +189,17 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 {
 	m_runGas = toInt63(m_schedule->callGas);
 
-	if (m_OP == Instruction::CALL && !m_ext->exists(asAddress(m_SP[1])))
+	callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
+
+	Address destinationAddr = asAddress(m_SP[1]);
+	if (m_OP == Instruction::CALL && !m_ext->exists(destinationAddr))
 		if (m_SP[2] > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
 			m_runGas += toInt63(m_schedule->callNewAccountGas);
 
-	if (m_OP != Instruction::DELEGATECALL && m_SP[2] > 0)
+	if ((m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE) && m_SP[2] > 0)
 		m_runGas += toInt63(m_schedule->callValueTransferGas);
 
-	size_t sizesOffset = m_OP == Instruction::DELEGATECALL ? 2 : 3;
+	size_t sizesOffset = (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL) ? 2 : 3;
 	u256 inputOffset  = m_SP[sizesOffset];
 	u256 inputSize    = m_SP[sizesOffset + 1];
 	u256 outputOffset = m_SP[sizesOffset + 2];
@@ -221,10 +231,10 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	if (m_OP != Instruction::DELEGATECALL && m_SP[2] > 0)
 		callParams->gas += m_schedule->callStipend;
 
-	callParams->codeAddress = asAddress(m_SP[1]);
+	callParams->codeAddress = destinationAddr;
 
 	unsigned inOutOffset = 0;
-	if (m_OP == Instruction::DELEGATECALL)
+	if (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL)
 	{
 		callParams->apparentValue = m_ext->value;
 		callParams->valueTransfer = 0;
@@ -244,7 +254,7 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	{
 		callParams->onOp = m_onOp;
 		callParams->senderAddress = m_OP == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
-		callParams->receiveAddress = m_OP == Instruction::CALL ? callParams->codeAddress : m_ext->myAddress;
+		callParams->receiveAddress = (m_OP == Instruction::CALL || m_OP == Instruction::STATICCALL) ? callParams->codeAddress : m_ext->myAddress;
 		callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);
 		o_output = bytesRef(m_mem.data() + outOff, outSize);
 		return true;

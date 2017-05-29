@@ -54,6 +54,7 @@ public:
 	int exportTest(bytes const& _output);
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
+	void traceStateDiff();
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -61,8 +62,8 @@ public:
 	eth::LogEntries m_logsExpected;
 
 private:
-	typedef std::pair<eth::ExecutionResult, eth::TransactionReceipt> execOutput;
-	std::pair<eth::State, execOutput> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
+	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
+	std::tuple<eth::State, ExecOutput, eth::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
 
 	eth::EnvInfo m_envInfo;
 	eth::Transaction m_transaction;
@@ -77,6 +78,7 @@ private:
 		int valInd;
 		eth::Transaction transaction;
 		eth::State postState;
+		eth::ChangeLog changeLog;
 		eth::Network netId;
 	};
 	std::vector<transactionToExecute> m_transactions;

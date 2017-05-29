@@ -99,7 +99,6 @@ Darwin)
     brew install \
         leveldb \
         libmicrohttpd \
-        miniupnpc \
         $TRAVIS_PACKAGES
 
     ;;
@@ -142,8 +141,7 @@ Linux)
             gcc \
             libtool \
             leveldb \
-            libmicrohttpd \
-            miniupnpc
+            libmicrohttpd
 
     elif [ -f "/etc/os-release" ]; then
 
@@ -156,11 +154,9 @@ Linux)
             $SUDO apt-get -q update
             $SUDO apt-get -qy install \
                 build-essential \
-                libcurl4-openssl-dev \
                 libgmp-dev \
                 libleveldb-dev \
-                libmicrohttpd-dev \
-                libminiupnpc-dev
+                libmicrohttpd-dev
             ;;
 
         Fedora)
@@ -168,7 +164,6 @@ Linux)
             $SUDO dnf -qy install \
                 gcc-c++ \
                 leveldb-devel \
-                curl-devel \
                 libmicrohttpd-devel \
                 gmp-devel
             ;;
@@ -198,11 +193,9 @@ Linux)
             $SUDO apt-get -q update
             $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
                 build-essential \
-                libcurl4-openssl-dev \
                 libgmp-dev \
                 libleveldb-dev \
                 libmicrohttpd-dev \
-                libminiupnpc-dev \
                 $TRAVIS_PACKAGES
             ;;
 
@@ -214,7 +207,6 @@ Linux)
                 make \
                 gcc-c++ \
                 leveldb-devel \
-                curl-devel \
                 libmicrohttpd-devel \
                 gmp-devel
             ;;
@@ -233,7 +225,6 @@ Linux)
         $SUDO apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
             g++ \
             make \
-            curl-dev \
             libmicrohttpd-dev \
             leveldb-dev
 

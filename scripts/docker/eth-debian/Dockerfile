@@ -6,7 +6,6 @@ RUN apt-get -q update && \
         curl \
         build-essential \
         libboost-all-dev \
-        libcurl4-openssl-dev \
         libgmp-dev \
         libleveldb-dev \
         libmicrohttpd-dev \
@@ -16,7 +15,7 @@ RUN apt-get -q update && \
     cd /tmp && PATH=$PATH:/tmp/bin cmake /cpp-ethereum && \
     PATH=$PATH:/tmp/bin cmake --build /tmp -- -j8 && \
     cd /tmp && make install && \
-    apt-get purge git curl build-essential -qy && \
+    apt-get purge git build-essential -qy && \
     apt-get autoremove -qy && \
     apt-get clean && \
     rm /cpp-ethereum -rf && \

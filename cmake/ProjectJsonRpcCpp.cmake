@@ -1,7 +1,3 @@
-# HTTP client from JSON RPC CPP requires curl library. It can find it itself,
-# but we need to know the libcurl location for static linking.
-find_package(CURL REQUIRED)
-
 # HTTP server from JSON RPC CPP requires microhttpd library. It can find it itself,
 # but we need to know the MHD location for static linking.
 find_package(MHD REQUIRED)
@@ -15,7 +11,7 @@ set(CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DUNIX_DOMAIN_SOCKET_SERVER=Off
                -DUNIX_DOMAIN_SOCKET_CLIENT=Off
                -DHTTP_SERVER=On
-               -DHTTP_CLIENT=On
+               -DHTTP_CLIENT=OFF
                -DCOMPILE_TESTS=Off
                -DCOMPILE_STUBGEN=Off
                -DCOMPILE_EXAMPLES=Off
@@ -24,8 +20,6 @@ set(CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                # Select jsoncpp include prefix: <json/...> or <jsoncpp/json/...>
                -DJSONCPP_INCLUDE_PREFIX=json
                -DJSONCPP_LIBRARY=${JSONCPP_LIBRARY}
-               -DCURL_INCLUDE_DIR=${CURL_INCLUDE_DIR}
-               -DCURL_LIBRARY=${CURL_LIBRARY}
                -DMHD_INCLUDE_DIR=${MHD_INCLUDE_DIR}
                -DMHD_LIBRARY=${MHD_LIBRARY})
 
@@ -33,7 +27,6 @@ if (WIN32)
     # For Windows we have to provide also locations for debug libraries.
     set(CMAKE_ARGS ${CMAKE_ARGS}
         -DJSONCPP_LIBRARY_DEBUG=${JSONCPP_LIBRARY}
-        -DCURL_LIBRARY_DEBUG=${CURL_LIBRARY}
         -DMHD_LIBRARY_DEBUG=${MHD_LIBRARY})
 endif()
 
@@ -71,12 +64,6 @@ set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}
 set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_LINK_LIBRARIES JsonCpp)
 set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONRPCCPP_INCLUDE_DIR} ${JSONCPP_INCLUDE_DIR})
 add_dependencies(JsonRpcCpp::Common jsonrpccpp)
-
-add_library(JsonRpcCpp::Client STATIC IMPORTED)
-set_property(TARGET JsonRpcCpp::Client PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-client${CMAKE_STATIC_LIBRARY_SUFFIX})
-set_property(TARGET JsonRpcCpp::Client PROPERTY INTERFACE_LINK_LIBRARIES JsonRpcCpp::Common ${CURL_LIBRARY})
-set_property(TARGET JsonRpcCpp::Client PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIR})
-add_dependencies(JsonRpcCpp::Client jsonrpccpp)
 
 add_library(JsonRpcCpp::Server STATIC IMPORTED)
 set_property(TARGET JsonRpcCpp::Server PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-server${CMAKE_STATIC_LIBRARY_SUFFIX})

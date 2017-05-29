@@ -27,7 +27,6 @@
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/Exceptions.h>
 #include <libethashseal/EthashCPUMiner.h>
-#include <jsonrpccpp/client/connectors/httpclient.h>
 #include "FarmClient.h"
 
 // TODO - having using derivatives in header files is very poor style, and we need to fix these up.
@@ -93,8 +92,7 @@ public:
 	{
 		None,
 		DAGInit,
-		Benchmark,
-		Farm
+		Benchmark
 	};
 
 
@@ -107,21 +105,7 @@ public:
 	bool interpretOption(int& i, int argc, char** argv)
 	{
 		string arg = argv[i];
-		if ((arg == "-F" || arg == "--farm") && i + 1 < argc)
-		{
-			mode = OperationMode::Farm;
-			m_farmURL = argv[++i];
-		}
-		else if (arg == "--farm-recheck" && i + 1 < argc)
-			try {
-				m_farmRecheckPeriod = stol(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-		else if (arg == "--benchmark-warmup" && i + 1 < argc)
+		if (arg == "--benchmark-warmup" && i + 1 < argc)
 			try {
 				m_benchmarkWarmup = stol(argv[++i]);
 			}
@@ -220,8 +204,6 @@ public:
 				BOOST_THROW_EXCEPTION(BadArgument());
 			}
 		}
-                else if (arg == "--disable-submit-hashrate")
-                        m_submitHashrate = false;
 		else
 			return false;
 		return true;
@@ -235,8 +217,6 @@ public:
 			doInitDAG(m_initDAG);
 		else if (mode == OperationMode::Benchmark)
 			doBenchmark(m_minerType, m_benchmarkWarmup, m_benchmarkTrial, m_benchmarkTrials);
-		else if (mode == OperationMode::Farm)
-			doFarm(m_minerType, m_farmURL, m_farmRecheckPeriod);
 	}
 
 	static void streamHelp(ostream& _out)
@@ -329,116 +309,6 @@ private:
 		exit(0);
 	}
 
-	// dummy struct for special exception.
-	struct NoWork {};
-	void doFarm(std::string _m, string const& _remote, unsigned _recheckPeriod)
-	{
-		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
-		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
-		(void)_m;
-		(void)_remote;
-		(void)_recheckPeriod;
-		jsonrpc::HttpClient client(_remote);
-
-		h256 id = h256::random();
-		::FarmClient rpc(client);
-		GenericFarm<EthashProofOfWork> f;
-		f.setSealers(sealers);
-		f.start(_m);
-
-		EthashProofOfWork::WorkPackage current;
-		EthashAux::FullType dag;
-		while (true)
-			try
-			{
-				bool completed = false;
-				EthashProofOfWork::Solution solution;
-				f.onSolutionFound([&](EthashProofOfWork::Solution sol)
-				{
-					solution = sol;
-					completed = true;
-					return true;
-				});
-				
-				while (!completed)
-				{
-					auto mp = f.miningProgress();
-					f.resetMiningProgress();
-					if (current)
-						minelog << "Mining on PoWhash" << current.headerHash << ": " << mp;
-					else
-						minelog << "Getting work package...";
-
-					if (m_submitHashrate)
-					{
-						auto rate = mp.rate();
-						try
-						{
-							rpc.eth_submitHashrate(toJS((u256)rate), "0x" + id.hex());
-						}
-						catch (jsonrpc::JsonRpcException const& _e)
-						{
-							cwarn << "Failed to submit hashrate.";
-							cwarn << boost::diagnostic_information(_e);
-						}
-					}
-
-					Json::Value v = rpc.eth_getWork();
-					if (v[0].asString().empty())
-						throw NoWork();
-					h256 hh(v[0].asString());
-					h256 newSeedHash(v[1].asString());
-					if (current.seedHash != newSeedHash)
-						minelog << "Grabbing DAG for" << newSeedHash;
-					if (!(dag = EthashAux::full(newSeedHash, true, [&](unsigned _pc){ cout << "\rCreating DAG. " << _pc << "% done..." << flush; return 0; })))
-						BOOST_THROW_EXCEPTION(DAGCreationFailure());
-					if (m_precompute)
-						EthashAux::computeFull(sha3(newSeedHash), true);
-					if (hh != current.headerHash)
-					{
-						current.headerHash = hh;
-						current.seedHash = newSeedHash;
-						current.boundary = h256(fromHex(v[2].asString()), h256::AlignRight);
-						minelog << "Got work package:";
-						minelog << "  Header-hash:" << current.headerHash.hex();
-						minelog << "  Seedhash:" << current.seedHash.hex();
-						minelog << "  Target: " << h256(current.boundary).hex();
-						f.setWork(current);
-					}
-					this_thread::sleep_for(chrono::milliseconds(_recheckPeriod));
-				}
-				cnote << "Solution found; Submitting to" << _remote << "...";
-				cnote << "  Nonce:" << solution.nonce.hex();
-				cnote << "  Mixhash:" << solution.mixHash.hex();
-				cnote << "  Header-hash:" << current.headerHash.hex();
-				cnote << "  Seedhash:" << current.seedHash.hex();
-				cnote << "  Target: " << h256(current.boundary).hex();
-				cnote << "  Ethash: " << h256(EthashAux::eval(current.seedHash, current.headerHash, solution.nonce).value).hex();
-				if (EthashAux::eval(current.seedHash, current.headerHash, solution.nonce).value < current.boundary)
-				{
-					bool ok = rpc.eth_submitWork("0x" + toString(solution.nonce), "0x" + toString(current.headerHash), "0x" + toString(solution.mixHash));
-					if (ok)
-						cnote << "B-) Submitted and accepted.";
-					else
-						cwarn << ":-( Not accepted.";
-				}
-				else
-					cwarn << "FAILURE: GPU gave incorrect result!";
-				current.reset();
-			}
-			catch (jsonrpc::JsonRpcException&)
-			{
-				for (auto i = 3; --i; this_thread::sleep_for(chrono::seconds(1)))
-					cerr << "JSON-RPC problem. Probably couldn't connect. Retrying in " << i << "... \r";
-				cerr << endl;
-			}
-			catch (NoWork&)
-			{
-				this_thread::sleep_for(chrono::milliseconds(100));
-			}
-		exit(0);
-	}
-
 	/// Operating mode.
 	OperationMode mode;
 
@@ -455,9 +325,5 @@ private:
 	unsigned m_benchmarkTrial = 3;
 	unsigned m_benchmarkTrials = 5;
 
-	/// Farm params
-	string m_farmURL = "http://127.0.0.1:8545";
-	unsigned m_farmRecheckPeriod = 500;
 	bool m_precompute = true;
-	bool m_submitHashrate = true;
 };

@@ -19,6 +19,7 @@
  * @date 2014
  */
 
+//FIXME:
 // @debris disabled as tests fail with:
 // unknown location(0): fatal error in "jsonrpc_setMining": std::exception: Exception -32003 : Client connector error: : libcurl error: 28
 // /home/gav/Eth/cpp-ethereum/test/jsonrpc.cpp(169): last checkpoint
@@ -32,7 +33,6 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
-#include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>
 #include "../JsonSpiritHeaders.h"
 #include <test/tools/libtesteth/TestHelper.h>

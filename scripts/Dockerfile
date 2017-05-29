@@ -14,7 +14,6 @@ FROM alpine
 RUN apk add --no-cache \
         libstdc++ \
         gmp \
-        libcurl \
         libmicrohttpd \
         leveldb --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
     && apk add --no-cache --virtual .build-deps \
@@ -22,7 +21,7 @@ RUN apk add --no-cache \
         cmake \
         g++ \
         make \
-        linux-headers curl-dev libmicrohttpd-dev \
+        linux-headers libmicrohttpd-dev \
         leveldb-dev --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
     && sed -i -E -e 's|#warning|//#warning|' /usr/include/sys/poll.h \
     && git clone --recursive https://github.com/ethereum/cpp-ethereum --branch develop --single-branch --depth 1 \

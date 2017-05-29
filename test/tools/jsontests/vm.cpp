@@ -34,7 +34,7 @@ using namespace dev::eth;
 using namespace dev::test;
 
 FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _depth)
+	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, _depth)
 {}
 
 std::pair<h160, eth::owning_bytes_ref> FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
