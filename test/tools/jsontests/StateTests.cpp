@@ -177,6 +177,7 @@ BOOST_AUTO_TEST_CASE(stRevertTest){}
 BOOST_AUTO_TEST_CASE(stStackTests){}
 BOOST_AUTO_TEST_CASE(stStaticCall){}
 BOOST_AUTO_TEST_CASE(stReturnDataTest){}
+BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}

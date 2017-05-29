@@ -18,6 +18,7 @@ ExternalProject_Add(snark
     INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
 )
 add_dependencies(snark boost)
+add_dependencies(snark mpir)
 
 # Create snark imported library
 ExternalProject_Get_Property(snark INSTALL_DIR)

@@ -24,11 +24,14 @@
 #include <algebra/curves/alt_bn128/alt_bn128_g2.hpp>
 #include <algebra/curves/alt_bn128/alt_bn128_pairing.hpp>
 #include <algebra/curves/alt_bn128/alt_bn128_pp.hpp>
+#include <common/profiling.hpp>
 
 #include <libdevcrypto/Exceptions.h>
 
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
+
+#include <mutex>
 
 using namespace std;
 using namespace dev;
@@ -37,33 +40,40 @@ using namespace dev::crypto;
 namespace
 {
 
+std::once_flag initLibSnarkFlag;
+
 void initLibSnark()
 {
-	// This is hackish, but we really want to use `static` variable for lock
-	// free thread-safe initialization.
-	static bool initialized = (libff::alt_bn128_pp::init_public_params(), true);
-	(void)initialized;
+	call_once(initLibSnarkFlag,
+		[](){
+			cnote << "initializing libsnark.";
+			libff::inhibit_profiling_info = true;
+			libff::inhibit_profiling_counters = true;
+			libff::alt_bn128_pp::init_public_params();
+		});
 }
 
 libff::bigint<libff::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
 {
 	libff::bigint<libff::alt_bn128_q_limbs> x;
-	constexpr auto N = x.N;
-	constexpr auto L = sizeof(x.data[0]);
+	auto const N = x.N;
+	constexpr size_t L = sizeof(x.data[0]);
+	static_assert(sizeof(mp_limb_t) == L, "Unexpected limb size in libff:bigint.");
 	for (unsigned i = 0; i < N; i++)
 		for (unsigned j = 0; j < L; j++)
-			x.data[N - 1 - i] |= uint64_t(_x[i * L + j]) << (8 * (L - 1 - j));
+			x.data[N - 1 - i] |= (mp_limb_t)(_x[i * L + j]) << (8 * (L - 1 - j));
 	return x;
 }
 
-h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> _x)
+h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> const& _x)
 {
-	constexpr auto N = _x.N;
-	constexpr auto L = sizeof(_x.data[0]);
+	auto const N = _x.N;
+	constexpr size_t L = sizeof(_x.data[0]);
+	static_assert(sizeof(mp_limb_t) == L, "Unexpected limb size in libff:bigint.");
 	h256 x;
 	for (unsigned i = 0; i < N; i++)
 		for (unsigned j = 0; j < L; j++)
-			x[i * L + j] = uint8_t(uint64_t(_x.data[N - 1 - i]) >> (8 * (L - 1 - j)));
+			x[i * L + j] = uint8_t((mp_limb_t)(_x.data[N - 1 - i]) >> (8 * (L - 1 - j)));
 	return x;
 }
 
@@ -130,7 +140,7 @@ pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 	// Output: 1 if pairing evaluates to 1, 0 otherwise (left-padded to 32 bytes)
 
 	bool result = true;
-	size_t const pairSize = 2 * 32 + 2 * 64;
+	size_t constexpr pairSize = 2 * 32 + 2 * 64;
 	size_t const pairs = _in.size() / pairSize;
 	if (pairs * pairSize != _in.size())
 	{
@@ -148,6 +158,10 @@ pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 			if (-libff::alt_bn128_G2::scalar_field::one() * p + p != libff::alt_bn128_G2::zero())
 				// p is not an element of the group (has wrong order)
 				return {false, bytes()};
+			if (p.is_zero())
+				continue; // the pairing is one
+			if (decodePointG1(pair).is_zero())
+				continue; // the pairing is one
 			x = x * libff::alt_bn128_miller_loop(
 				libff::alt_bn128_precompute_G1(decodePointG1(pair)),
 				libff::alt_bn128_precompute_G2(p)
@@ -175,8 +189,8 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
 	try
 	{
 		initLibSnark();
-		libff::alt_bn128_G1 p1 = decodePointG1(_in);
-		libff::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 2));
+		libff::alt_bn128_G1 const p1 = decodePointG1(_in);
+		libff::alt_bn128_G1 const p2 = decodePointG1(_in.cropped(32 * 2));
 
 		return {true, encodePointG1(p1 + p2)};
 	}
@@ -195,9 +209,9 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_mul(dev::bytesConstRef _in)
 	try
 	{
 		initLibSnark();
-		libff::alt_bn128_G1 p = decodePointG1(_in.cropped(0));
+		libff::alt_bn128_G1 const p = decodePointG1(_in.cropped(0));
 
-		libff::alt_bn128_G1 result = toLibsnarkBigint(h256(_in.cropped(64), h256::AlignLeft)) * p;
+		libff::alt_bn128_G1 const result = toLibsnarkBigint(h256(_in.cropped(64), h256::AlignLeft)) * p;
 
 		return {true, encodePointG1(result)};
 	}
