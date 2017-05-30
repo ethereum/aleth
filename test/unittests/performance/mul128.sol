@@ -1,14 +1,14 @@
 // Do not optimize
 pragma solidity ^0.4.0;
 
-contract mul64 {
-	function mul64() {
+contract mul128 {
+	function mul128() {
 		uint r;
-		for (uint i = 0; i < 2000000; ++i) { // 16 MULS to 63-bit result
+		for (uint i = 0; i < 2000000; ++i) { // 16 MULS to 128-bit result
 			assembly {
-				0xd
-				0xd
-				0xd
+				0xb5
+				0xb5
+				0xb5
 				dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul
 				dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul dup2 mul
 				pop
@@ -52,10 +52,8 @@ contract mul64 {
 				pop
 			}
 		}
-		if (r != 0x780c7372621bd74d)
+		if (r != 0xb4b0df2687b7c1a6fb5d5b1943a57675)
 			throw;
 	}
 }
-
-
 
