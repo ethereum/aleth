@@ -15,8 +15,6 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file VM.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
  */
 
 #include <libethereum/ExtVM.h>
@@ -25,6 +23,15 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+
+//
+// turn these on to emulate minimal interpreter overhead and native 64-bit int
+//
+#define EVM_HACK_ON_OPERATION 0
+#define EVM_HACK_STACK 0
+#define EVM_HACK_UPDATE_IO_GAS 0
+#define EVM_HACK_MUL_64 0
+#define EVM_HACK_DUP_64 0
 
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)
@@ -214,24 +221,19 @@ void VM::interpretCases()
 		
 		CASE(CREATE)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			m_bounce = &VM::caseCreate;
 		}
 		BREAK
 
 		CASE(DELEGATECALL)
-		CASE(STATICCALL)
+
+			// Pre-homestead
+			if (!m_schedule->haveDelegateCall)
+				throwBadInstruction();
+
 		CASE(CALL)
 		CASE(CALLCODE)
 		{
-			if (m_OP == Instruction::DELEGATECALL && !m_schedule->haveDelegateCall)
-				throwBadInstruction();
-			if (m_OP == Instruction::STATICCALL && !m_schedule->haveStaticCall)
-				throwBadInstruction();
-			if (m_OP == Instruction::CALL && m_ext->staticCall && m_SP[2] != 0)
-				throwDisallowedStateChange();
 			m_bounce = &VM::caseCall;
 		}
 		BREAK
@@ -270,9 +272,6 @@ void VM::interpretCases()
 
 		CASE(SUICIDE)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			m_runGas = toInt63(m_schedule->suicideGas);
 			Address dest = asAddress(m_SP[0]);
 
@@ -348,9 +347,6 @@ void VM::interpretCases()
 
 		CASE(LOG0)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -361,9 +357,6 @@ void VM::interpretCases()
 
 		CASE(LOG1)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -374,9 +367,6 @@ void VM::interpretCases()
 
 		CASE(LOG2)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -387,9 +377,6 @@ void VM::interpretCases()
 
 		CASE(LOG3)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -400,9 +387,6 @@ void VM::interpretCases()
 
 		CASE(LOG4)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			logGasMem();
 			ON_OP();
 			updateIOGas();
@@ -1116,9 +1100,6 @@ void VM::interpretCases()
 
 		CASE(SSTORE)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
 			if (!m_ext->store(m_SP[0]) && m_SP[1])
 				m_runGas = toInt63(m_schedule->sstoreSetGas);
 			else if (m_ext->store(m_SP[0]) && !m_SP[1])
