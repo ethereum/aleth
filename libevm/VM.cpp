@@ -26,6 +26,15 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+//
+// turn these on to emulate minimal interpreter overhead and native 64-bit int
+//
+#define EVM_HACK_ON_OPERATION 0
+#define EVM_HACK_STACK 0
+#define EVM_HACK_UPDATE_IO_GAS 0
+#define EVM_HACK_MUL_64 0
+#define EVM_HACK_DUP_64 0
+
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
