@@ -7,11 +7,11 @@ contract rc5 {
 	// don't I wish we had opcodes and operators for these
 	
 	function shift_left(uint32 v, uint32 n) internal returns (uint32) {
-		return v *= 2**n;
+		return v *= uint32(2)**n;
 	}
 
 	function shift_right(uint32 v, uint32 n) internal returns (uint32) {
-		return v *= 2**n;
+		return v *= uint32(2)**n;
 	}
 	
 	function rotate_left(uint32 v, uint32 n) internal returns (uint32) {
@@ -92,7 +92,7 @@ contract rc5 {
 
 		uint32[4] memory msg = [0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef];
 
-		for (int i = 0; i < 10000; ++i)
+		for (int i = 0; i < 70000; ++i)
 			test(box, msg);
 	}
 }

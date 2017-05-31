@@ -9,14 +9,25 @@ contract rng {
 		 uint rand2 = 5;
 		 uint rand3 = 7;
 		 uint rand4 = 11;
-		 for (int i = 0; i < 1000000; ++i) {
-			 rand1 = 0x243F6A8885A308D3 * rand1 + 0x13198A2E03707344;
-			 rand2 = 0xA4093822299F31D0 * rand2 + 0x082EFA98EC4E6C89;
-			 rand3 = 0x452821E638D01377 * rand3 + 0xBE5466CF34E90C6C;
-			 rand4 = 0xC0AC29B7C97C50DD * rand3 + 0x3F84D5B5B5470917;
+		 for (int i = 0; i < 5000000; ++i) {
+			 rand1 = 0x9924b2a26908c1b1 * rand1 + 0xf5511c50ab888555;
+			 rand2 = 0xeeba8a600791d63f * rand2 + 0x973ee10a1ef0ae9f;
+			 rand3 = 0xd22a58b2dc9afccd * rand3 + 0xd489101af4629b47;
+			 rand4 = 0xf9491f202b4ccca3 * rand4 + 0xb39041b8e35cac13;
+			 rand1 = 0x9924b2a26908c1b1 * rand1 + 0xf5511c50ab888555;
+			 rand2 = 0xeeba8a600791d63f * rand2 + 0x973ee10a1ef0ae9f;
+			 rand3 = 0xd22a58b2dc9afccd * rand3 + 0xd489101af4629b47;
+			 rand4 = 0xf9491f202b4ccca3 * rand4 + 0xb39041b8e35cac13;
+			 rand1 = 0x9924b2a26908c1b1 * rand1 + 0xf5511c50ab888555;
+			 rand2 = 0xeeba8a600791d63f * rand2 + 0x973ee10a1ef0ae9f;
+			 rand3 = 0xd22a58b2dc9afccd * rand3 + 0xd489101af4629b47;
+			 rand4 = 0xf9491f202b4ccca3 * rand4 + 0xb39041b8e35cac13;
+			 rand1 = 0x9924b2a26908c1b1 * rand1 + 0xf5511c50ab888555;
+			 rand2 = 0xeeba8a600791d63f * rand2 + 0x973ee10a1ef0ae9f;
+			 rand3 = 0xd22a58b2dc9afccd * rand3 + 0xd489101af4629b47;
+			 rand4 = 0xf9491f202b4ccca3 * rand4 + 0xb39041b8e35cac13;
 		 }
 		 return rand1 ^ rand2 ^ rand3 ^ rand4;
-		 return rand;
 	}
 	function rng() {
 		rand = test();
