@@ -708,7 +708,8 @@ void Block::updateBlockhashContract()
 	if (blockNumber >= metropolisForkBlock)
 	{
 		Executive e(*this);
-		if (!e.call(c_blockhashContractAddress, SystemAddress, 0, 0, m_previousBlock.hash().ref(), 1000000))
+		h256 const parentHash = m_previousBlock.hash();
+		if (!e.call(c_blockhashContractAddress, SystemAddress, 0, 0, parentHash.ref(), 1000000))
 			e.go();
 		e.finalize();
 
