@@ -73,7 +73,11 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 		else
 		{
 			if (i.first == "allowFutureBlocks")
-				cp.otherParams[i.first] = i.second.get_bool();
+			{
+				// The value in otherParams is irrelevant, we only check for the presence of the key.
+				if (i.second.type() != json_spirit::bool_type || i.second.get_bool())
+					cp.otherParams[i.first] = "true";
+			}
 		}
 	}
 
