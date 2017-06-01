@@ -131,50 +131,55 @@ void getBlockHash(evm_uint256be* o_hash, evm_env* _envPtr, int64_t _number)
 	*o_hash = toEvmC(env.blockHash(_number));
 }
 
+void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noexcept
+{
+	u256 gas = _msg->gas;
+	u256 value = fromEvmC(_msg->value);
+	bytesConstRef init = {_msg->input, _msg->input_size};
+	// ExtVM::create takes the sender address from .myAddress.
+	assert(fromEvmC(_msg->sender) == _env.myAddress);
+
+	// TODO: EVMJIT does not support RETURNDATA at the moment, so
+	//       the output is ignored here.
+	h160 addr;
+	std::tie(addr, std::ignore) = _env.create(value, gas, init, {});
+	o_result->gas_left = static_cast<int64_t>(gas);
+	o_result->release = nullptr;
+	if (addr)
+	{
+		o_result->code = EVM_SUCCESS;
+		// Use reserved data to store the address.
+		static_assert(sizeof(o_result->reserved.data) >= addr.size,
+			"Not enough space to store an address");
+		std::copy(addr.begin(), addr.end(), o_result->reserved.data);
+		o_result->output_data = o_result->reserved.data;
+		o_result->output_size = addr.size;
+	}
+	else
+	{
+		o_result->code = EVM_FAILURE;
+		o_result->output_data = nullptr;
+		o_result->output_size = 0;
+	}
+}
+
 void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) noexcept
 {
 	assert(_msg->gas >= 0 && "Invalid gas value");
 	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
-	u256 value = fromEvmC(_msg->value);
-	bytesConstRef input{_msg->input, _msg->input_size};
 
+	// Handle CREATE separately.
 	if (_msg->kind == EVM_CREATE)
-	{
-		u256 gas = _msg->gas;
-		// ExtVM::create takes the sender address from .myAddress.
-		assert(fromEvmC(_msg->sender) == env.myAddress);
-
-		// TODO: EVMJIT does not support RETURNDATA at the moment, so
-		//       the output is ignored here.
-		h160 addr;
-		std::tie(addr, std::ignore) = env.create(value, gas, input, {});
-		o_result->gas_left = static_cast<int64_t>(gas);
-		o_result->release = nullptr;
-		if (addr)
-		{
-			o_result->code = EVM_SUCCESS;
-			// Use reserved data to store the address.
-			std::copy(addr.begin(), addr.end(), o_result->reserved.data);
-			o_result->output_data = o_result->reserved.data;
-			o_result->output_size = addr.size;
-		}
-		else
-		{
-			o_result->code = EVM_FAILURE;
-			o_result->output_data = nullptr;
-			o_result->output_size = 0;
-		}
-		return;
-	}
+		return create(o_result, env, _msg);
 
 	CallParameters params;
 	params.gas = _msg->gas;
-	params.apparentValue = value;
+	params.apparentValue = fromEvmC(_msg->value);
 	params.valueTransfer = _msg->kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = fromEvmC(_msg->sender);
 	params.codeAddress = fromEvmC(_msg->address);
 	params.receiveAddress = _msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
-	params.data = input;
+	params.data = {_msg->input, _msg->input_size};
 	params.onOp = {};
 
 	bool success = false;
@@ -312,7 +317,7 @@ EVM& getJit()
 	return jit;
 }
 
-}
+}  // End of anonymous namespace.
 
 owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
