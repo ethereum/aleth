@@ -47,7 +47,7 @@ void queryState(
 	evm_uint256be const* _storageKey
 ) noexcept
 {
-	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
 	Address addr = fromEvmC(*_addr);
 	switch (_key)
 	{
@@ -85,7 +85,7 @@ void updateState(
 ) noexcept
 {
 	(void) _addr;
-	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
 	assert(fromEvmC(*_addr) == env.myAddress);
 	switch (_key)
 	{
@@ -115,7 +115,7 @@ void updateState(
 
 void getTxContext(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
 {
-	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
 	result->tx_gas_price = toEvmC(env.gasPrice);
 	result->tx_origin = toEvmC(env.origin);
 	result->block_coinbase = toEvmC(env.envInfo().author());
@@ -127,61 +127,90 @@ void getTxContext(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
 
 void getBlockHash(evm_uint256be* o_hash, evm_env* _envPtr, int64_t _number)
 {
-	auto &env = *reinterpret_cast<ExtVMFace*>(_envPtr);
+	auto &env = reinterpret_cast<ExtVMFace&>(*_envPtr);
 	*o_hash = toEvmC(env.blockHash(_number));
 }
 
-int64_t call(
-	evm_env* _opaqueEnv,
-	evm_message const* _msg,
-	uint8_t* _outputData,
-	size_t _outputSize
-) noexcept
+void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noexcept
+{
+	u256 gas = _msg->gas;
+	u256 value = fromEvmC(_msg->value);
+	bytesConstRef init = {_msg->input, _msg->input_size};
+	// ExtVM::create takes the sender address from .myAddress.
+	assert(fromEvmC(_msg->sender) == _env.myAddress);
+
+	// TODO: EVMJIT does not support RETURNDATA at the moment, so
+	//       the output is ignored here.
+	h160 addr;
+	std::tie(addr, std::ignore) = _env.create(value, gas, init, {});
+	o_result->gas_left = static_cast<int64_t>(gas);
+	o_result->release = nullptr;
+	if (addr)
+	{
+		o_result->code = EVM_SUCCESS;
+		// Use reserved data to store the address.
+		static_assert(sizeof(o_result->reserved.data) >= addr.size,
+			"Not enough space to store an address");
+		std::copy(addr.begin(), addr.end(), o_result->reserved.data);
+		o_result->output_data = o_result->reserved.data;
+		o_result->output_size = addr.size;
+	}
+	else
+	{
+		o_result->code = EVM_FAILURE;
+		o_result->output_data = nullptr;
+		o_result->output_size = 0;
+	}
+}
+
+void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) noexcept
 {
 	assert(_msg->gas >= 0 && "Invalid gas value");
-	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	u256 value = fromEvmC(_msg->value);
-	bytesConstRef input{_msg->input, _msg->input_size};
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
 
+	// Handle CREATE separately.
 	if (_msg->kind == EVM_CREATE)
-	{
-		assert(_outputSize == 20);
-		u256 gas = _msg->gas;
-		// ExtVM::create takes the sender address from .myAddress.
-		assert(fromEvmC(_msg->sender) == env.myAddress);
-
-		// TODO: EVMJIT does not support RETURNDATA at the moment, so
-		//       the output is ignored here.
-		h160 addr;
-		std::tie(addr, std::ignore) = env.create(value, gas, input, {});
-		auto gasLeft = static_cast<int64_t>(gas);
-		if (addr)
-			std::copy(addr.begin(), addr.end(), _outputData);
-		else
-			gasLeft |= EVM_CALL_FAILURE;
-
-		return gasLeft;
-	}
+		return create(o_result, env, _msg);
 
 	CallParameters params;
 	params.gas = _msg->gas;
-	params.apparentValue = value;
+	params.apparentValue = fromEvmC(_msg->value);
 	params.valueTransfer = _msg->kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = fromEvmC(_msg->sender);
 	params.codeAddress = fromEvmC(_msg->address);
 	params.receiveAddress = _msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
-	params.data = input;
+	params.data = {_msg->input, _msg->input_size};
 	params.onOp = {};
 
-	auto output = env.call(params);
-	auto gasLeft = static_cast<int64_t>(params.gas);
+	bool success = false;
+	owning_bytes_ref output;
+	std::tie(success, output) = env.call(params);
+	// FIXME: We have a mess here. It is hard to distinguish reverts from failures.
+	// In first case we want to keep the output, in the second one the output
+	// is optional and should not be passed to the contract, but can be useful
+	// for EVM in general.
+	o_result->code = success ? EVM_SUCCESS : EVM_REVERT;
+	o_result->gas_left = static_cast<int64_t>(params.gas);
 
-	output.second.copyTo({_outputData, _outputSize});
-	if (!output.first)
-		// Add failure indicator.
-		gasLeft |= EVM_CALL_FAILURE;
+	// Pass the output to the EVM without a copy. The EVM will delete it
+	// when finished with it.
 
-	return gasLeft;
+	// First assign reference. References are not invalidated when vector
+	// of bytes is moved. See `.takeBytes()` below.
+	o_result->output_data = output.data();
+	o_result->output_size = output.size();
+
+	// Place a new vector of bytes containing output in result's reserved memory.
+	static_assert(sizeof(bytes) <= sizeof(o_result->reserved), "Vector is too big");
+	new(&o_result->reserved) bytes(output.takeBytes());
+	// Set the destructor to delete the vector.
+	o_result->release = [](evm_result const* _result)
+	{
+		auto& output = reinterpret_cast<bytes const&>(_result->reserved);
+		// Explicitly call vector's destructor to release its data.
+		// This is normal pattern when placement new operator is used.
+		output.~bytes();
+	};
 }
 
 
@@ -288,7 +317,7 @@ EVM& getJit()
 	return jit;
 }
 
-}
+}  // End of anonymous namespace.
 
 owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {

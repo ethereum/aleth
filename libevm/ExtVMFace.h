@@ -74,6 +74,13 @@ public:
 	owning_bytes_ref& operator=(owning_bytes_ref const&) = delete;
 	owning_bytes_ref& operator=(owning_bytes_ref&&) = default;
 
+	/// Moves the bytes vector out of here. The object cannot be used any more.
+	bytes&& takeBytes()
+	{
+		reset();  // Reset reference just in case.
+		return std::move(m_bytes);
+	}
+
 private:
 	bytes m_bytes;
 };
