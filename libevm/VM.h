@@ -15,8 +15,6 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file VM.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
  */
 
 #pragma once
@@ -121,7 +119,7 @@ private:
 #endif
 
 	// constant pool
-	u256 m_pool[256];
+	std::vector<u256> m_pool;
 
 	// interpreter state
 	Instruction m_OP;                   // current operation

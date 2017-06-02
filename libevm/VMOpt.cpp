@@ -124,59 +124,6 @@ void VM::optimize()
 	
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 	
-	#ifdef EVM_USE_CONSTANT_POOL
-	
-		// maintain constant pool as a hash table of up to 256 u256 constants
-		struct hash256
-		{
-			// FNV chosen as good, fast, and byte-at-a-time
-			const uint32_t FNV_PRIME1 = 2166136261;
-			const uint32_t FNV_PRIME2 = 16777619;
-			uint32_t hash = FNV_PRIME1;
-			
-			u256 (&table)[256];
-			bool empty[256];
-			
-			hash256(u256 (&table)[256]) : table(table)
-			{
-				for (int i = 0; i < 256; ++i)
-				{
-					table[i] = 0;
-					empty[i] = true;
-				}
-			}
-			
-			void hashInit() { hash = FNV_PRIME1; }
-
-			// hash in successive bytes
-			void hashByte(byte b) { hash ^= (b), hash *= FNV_PRIME2; }
-		
-			// fold hash into 1 byte
-			byte getHash() { return ((hash >> 8) ^ hash) & 0xff; }
-		
-			// insert value at byte index in table, false if collision
-			bool insertVal(byte hash, u256& val)
-			{
-				if (empty[hash])
-				{
-					empty[hash] = false;
-					table[hash] = val;
-					return true;
-				}
-				return table[hash] == val;
-			}
-		} constantPool(m_pool);
-		#define CONST_POOL_HASH_INIT() constantPool.hashInit()
-		#define CONST_POOL_HASH_BYTE(b) constantPool.hashByte(b)
-		#define CONST_POOL_GET_HASH() constantPool.getHash()
-		#define CONST_POOL_INSERT_VAL(hash, val) constantPool.insertVal((hash), (val))
-	#else
-		#define CONST_POOL_HASH_INIT()
-		#define CONST_POOL_HASH_BYTE(b)
-		#define CONST_POOL_GET_HASH() 0
-		#define CONST_POOL_INSERT_VAL(hash, val) false
-	#endif
-
 	TRACE_STR(1, "Do first pass optimizations")
 	for (size_t pc = 0; pc < nBytes; ++pc)
 	{
@@ -187,34 +134,35 @@ void VM::optimize()
 		{
 			byte nPush = (byte)op - (byte)Instruction::PUSH1 + 1;
 
-
 			// decode pushed bytes to integral value
-			CONST_POOL_HASH_INIT();
 			val = m_code[pc+1];
 			for (uint64_t i = pc+2, n = nPush; --n; ++i) {
 				val = (val << 8) | m_code[i];
-				CONST_POOL_HASH_BYTE(m_code[i]);
 			}
 
-		#ifdef EVM_USE_CONSTANT_POOL
-			if (1 < nPush)
+		#if EVM_USE_CONSTANT_POOL
+
+			// add value to constant pool and replace PUSHn with PUSHC
+			// place offset in code as 2 bytes MSB-first
+			// followed by one byte count of remaining pushed bytes
+			if (5 < nPush)
 			{
-				// try to put value in constant pool at hash index
-				// if there is no collision replace PUSHn with PUSHC
+				uint16_t pool_off = m_pool.size();
+				TRACE_VAL(1, "stash", val);
+				TRACE_VAL(1, "... in pool at offset" , pool_off);
+				m_pool.push_back(val);
+
 				TRACE_PRE_OPT(1, pc, op);
-				byte hash = CONST_POOL_GET_HASH();
-				if (CONST_POOL_INSERT_VAL(hash, val))
-				{
-					m_code[pc] = (byte)Instruction::PUSHC;
-					m_code[pc+1] = hash;
-					m_code[pc+2] = nPush - 1;
-					TRACE_VAL(1, "constant pooled", val);
-				}
+				m_code[pc] = byte(op = Instruction::PUSHC);
+				m_code[pc+3] = nPush - 2;
+				m_code[pc+2] = pool_off & 0xff;
+				m_code[pc+1] = pool_off >> 8;
 				TRACE_POST_OPT(1, pc, op);
 			}
+
 		#endif
 
-		#ifdef EVM_REPLACE_CONST_JUMP	
+		#if EVM_REPLACE_CONST_JUMP	
 			// replace JUMP or JUMPI to constant location with JUMPC or JUMPCI
 			// verifyJumpDest is M = log(number of jump destinations)
 			// outer loop is N = number of bytes in code array
@@ -223,7 +171,7 @@ void VM::optimize()
 			op = Instruction(m_code[i]);
 			if (op == Instruction::JUMP)
 			{
-				TRACE_STR(1, "Replace const JUMPC")
+				TRACE_VAL(1, "Replace const JUMP with JUMPC to", val)
 				TRACE_PRE_OPT(1, i, op);
 				
 				if (0 <= verifyJumpDest(val, false))
@@ -233,7 +181,7 @@ void VM::optimize()
 			}
 			else if (op == Instruction::JUMPI)
 			{
-				TRACE_STR(1, "Replace const JUMPCI")
+				TRACE_VAL(1, "Replace const JUMPI with JUMPCI to", val)
 				TRACE_PRE_OPT(1, i, op);
 				
 				if (0 <= verifyJumpDest(val, false))
@@ -245,7 +193,6 @@ void VM::optimize()
 
 			pc += nPush;
 		}
-		
 	}
 	TRACE_STR(1, "Finished optimizations")
 #endif	

@@ -26,9 +26,9 @@ endif
 	$(TEST_ETHVM) $@
 	$(TEST_EVM) $@ run
 
-% : %.c
-	$(CCC) $* $^
-	$(STATS) ./$*
+mul64c: mul64c.c
+	$(CCC) mul64c mul64c.c
+	$(STATS) ./mul64c
 
 ops : \
 	pop.bin \
@@ -51,10 +51,8 @@ programs : \
 	fun.bin \
 	rc5.bin \
 	mix.bin
-
-cops: mul64c
 	
-all: ops cops programs
+all: ops mul64c programs
 
 
 .PHONY : clean

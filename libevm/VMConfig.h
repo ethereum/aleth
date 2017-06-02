@@ -35,7 +35,7 @@ namespace eth
 
 #ifndef EVM_JUMP_DISPATCH
 	#ifdef __GNUC__
-		#define EVM_JUMP_DISPATCH false
+		#define EVM_JUMP_DISPATCH true
 	#else
 		#define EVM_JUMP_DISPATCH false
 	#endif
@@ -49,11 +49,11 @@ namespace eth
 #endif
 
 #ifndef EVM_OPTIMIZE
-	#define EVM_OPTIMIZE false
+	#define EVM_OPTIMIZE true
 #endif
 #if EVM_OPTIMIZE
-	#define EVM_REPLACE_CONST_JUMP false
-	#define EVM_USE_CONSTANT_POOL false
+	#define EVM_REPLACE_CONST_JUMP true
+	#define EVM_USE_CONSTANT_POOL true
 	#define EVM_DO_FIRST_PASS_OPTIMIZATION ( \
 				EVM_REPLACE_CONST_JUMP || \
 				EVM_USE_CONSTANT_POOL \
@@ -65,7 +65,7 @@ namespace eth
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// set EVM_TRACE to 2, 1, or 0 for more, less, or no tracing to cerr
+// set EVM_TRACE to 3, 2, 1, or 0 for lots to no tracing to cerr
 //
 #ifndef EVM_TRACE
 	#define EVM_TRACE 0
@@ -73,9 +73,9 @@ namespace eth
 #if EVM_TRACE > 0
 
 	#undef ON_OP
-	#if EVM_TRACE > 1
+	#if EVM_TRACE > 2
 		#define ON_OP() \
-			(cerr <<"### "<< ++m_nSteps <<" @"<< m_PC <<" "<< instructionInfo(m_OP).name <<endl)
+			(cerr <<"### "<< ++m_nSteps <<": "<< m_PC <<" "<< instructionInfo(m_OP).name <<endl)
 	#else
 		#define ON_OP() onOperation()
 	#endif
@@ -93,11 +93,11 @@ namespace eth
 			
 	#define TRACE_PRE_OPT(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
-			cerr <<"@@@ "<< (pc) <<" "<< instructionInfo(op).name <<endl;
+			cerr <<"<<< "<< (pc) <<" "<< instructionInfo(op).name <<endl;
 			
 	#define TRACE_POST_OPT(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
-			cerr <<"... "<< (pc) <<" "<< instructionInfo(op).name <<endl;
+			cerr <<">>> "<< (pc) <<" "<< instructionInfo(op).name <<endl;
 #else
 	#define TRACE_STR(level, str)
 	#define TRACE_VAL(level, name, val)
@@ -142,7 +142,7 @@ namespace eth
 // build an indirect-threaded interpreter using a jump table of
 // label addresses (a gcc extension)
 //
-#elif defined(EVM_JUMP_DISPATCH)
+#elif EVM_JUMP_DISPATCH
 
 	#define INIT_CASES  \
 	\
@@ -209,8 +209,8 @@ namespace eth
 			&&GASPRICE,  \
 			&&EXTCODESIZE,  \
 			&&EXTCODECOPY,  \
-			&&INVALID,  \
-			&&INVALID,  \
+			&&RETURNDATASIZE,  \
+			&&RETURNDATACOPY,  \
 			&&INVALID,  \
 			&&BLOCKHASH,     /* 40, */  \
 			&&COINBASE,  \
@@ -398,10 +398,10 @@ namespace eth
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
+			&&STATICCALL,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
+			&&REVERT,  \
 			&&INVALID,  \
 			&&SUICIDE,  \
 		};  \
@@ -414,10 +414,10 @@ namespace eth
 
 	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_OP];
 	#define CASE(name) name:
-	#define NEXT m_PC = 0; fetchInstruction(); goto *jumpTable[m_code[m_PC]];
-	#define CONTINUE fetchInstruction(); goto *jumpTable[m_code[m_PC]];
+	#define NEXT ++m_PC; fetchInstruction(); goto *jumpTable[(int)m_OP];
+	#define CONTINUE fetchInstruction(); goto *jumpTable[(int)m_OP];
 	#define BREAK return;
-	#define DEFAULT INVALID:
+	#define DEFAULT
 	#define WHILE_CASES
 
 #else
