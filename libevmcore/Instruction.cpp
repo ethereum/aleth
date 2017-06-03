@@ -76,12 +76,6 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::NUMBER,       { "NUMBER",         0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::DIFFICULTY,   { "DIFFICULTY",     0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::GASLIMIT,     { "GASLIMIT",       0,     0,    1,  false,       Tier::Base } },
-	{ Instruction::JUMPTO,       { "JUMPTO",         4,     1,    0,  true,        Tier::VeryLow } },
-	{ Instruction::JUMPIF,       { "JUMPIF",         4,     2,    0,  true,        Tier::Low } },
-	{ Instruction::JUMPV,        { "JUMPV",          4,     1,    0,  true,        Tier::Mid } },
-	{ Instruction::JUMPSUB,      { "JUMPSUB",        4,     1,    0,  true,        Tier::Low } },
-	{ Instruction::JUMPSUBV,     { "JUMPSUBV",       4,     1,    0,  true,        Tier::Mid } },
-	{ Instruction::RETURNSUB,    { "RETURNSUB",      0,     1,    0,  true,        Tier::Mid } },
 	{ Instruction::POP,          { "POP",            0,     1,    0,  false,       Tier::Base } },
 	{ Instruction::MLOAD,        { "MLOAD",          0,     1,    1,  false,       Tier::VeryLow } },
 	{ Instruction::MSTORE,       { "MSTORE",         0,     2,    0,  true,        Tier::VeryLow } },
@@ -165,6 +159,17 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::LOG2,         { "LOG2",           0,     4,     0,  true,       Tier::Special } },
 	{ Instruction::LOG3,         { "LOG3",           0,     5,     0,  true,       Tier::Special } },
 	{ Instruction::LOG4,         { "LOG4",           0,     6,     0,  true,       Tier::Special } },
+	{ Instruction::JUMPTO,       { "JUMPTO",         4,     1,    0,  true,        Tier::VeryLow } },
+	{ Instruction::JUMPIF,       { "JUMPIF",         4,     2,    0,  true,        Tier::Low } },
+	{ Instruction::JUMPV,        { "JUMPV",          4,     1,    0,  true,        Tier::Mid } },
+	{ Instruction::JUMPSUB,      { "JUMPSUB",        4,     1,    0,  true,        Tier::Low } },
+	{ Instruction::JUMPSUBV,     { "JUMPSUBV",       4,     1,    0,  true,        Tier::Mid } },
+	{ Instruction::RETURNSUB,    { "RETURNSUB",      0,     1,    0,  true,        Tier::Mid } },
+
+	{ Instruction::PUTLOCAL,    { "PUTLOCAL",      0,     1,    0,  true,        Tier::Mid } },
+	PUTLOCAL,           ///< pop top of stack to local variable
+	GETLOCAL,           ///< push local variable to top of stack
+
 	{ Instruction::CREATE,       { "CREATE",         0,     3,     1,  true,       Tier::Special } },
 	{ Instruction::CALL,         { "CALL",           0,     7,     1,  true,       Tier::Special } },
 	{ Instruction::CALLCODE,     { "CALLCODE",       0,     7,     1,  true,       Tier::Special } },
