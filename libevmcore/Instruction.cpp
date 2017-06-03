@@ -166,9 +166,8 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::JUMPSUBV,     { "JUMPSUBV",       4,     1,    0,  true,        Tier::Mid } },
 	{ Instruction::RETURNSUB,    { "RETURNSUB",      0,     1,    0,  true,        Tier::Mid } },
 
-	{ Instruction::PUTLOCAL,    { "PUTLOCAL",      0,     1,    0,  true,        Tier::Mid } },
-	PUTLOCAL,           ///< pop top of stack to local variable
-	GETLOCAL,           ///< push local variable to top of stack
+	{ Instruction::PUTLOCAL,    { "PUTLOCAL",        1,     1,    0,  true,        Tier::VeryLow } },
+	{ Instruction::GETLOCAL,    { "GETLOCAL  ",      1,     0,    1,  true,        Tier::VeryLow } },
 
 	{ Instruction::CREATE,       { "CREATE",         0,     3,     1,  true,       Tier::Special } },
 	{ Instruction::CALL,         { "CALL",           0,     7,     1,  true,       Tier::Special } },
