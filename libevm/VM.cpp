@@ -809,6 +809,7 @@ void VM::interpretCases()
 
 		CASE(BLOCKHASH)
 		{
+			m_runGas = toInt63(m_schedule->blockhashGas);
 			ON_OP();
 			updateIOGas();
 

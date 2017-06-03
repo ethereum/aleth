@@ -136,4 +136,11 @@ private:
 	std::unique_ptr<TransientDirectory> m_tempDirBlockchain;
 };
 
+class NetworkSelector
+{
+public:
+	explicit NetworkSelector(Network _network) { TestBlockChain::s_sealEngineNetwork = _network; }
+	~NetworkSelector() { TestBlockChain::s_sealEngineNetwork = Network::FrontierTest; } // reset to default
+};
+
 }}

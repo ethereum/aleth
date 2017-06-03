@@ -29,6 +29,17 @@ using namespace dev;
 using namespace dev::test;
 using namespace std;
 
+namespace
+{
+LastHashes lastHashes(u256 _currentBlockNumber)
+{
+	LastHashes ret;
+	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
+		ret.push_back(sha3(toString(_currentBlockNumber - i)));
+	return ret;
+}
+}
+
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate):
 	m_statePre(0, OverlayDB(), eth::BaseState::Empty),
 	m_statePost(0, OverlayDB(), eth::BaseState::Empty),
@@ -135,7 +146,7 @@ bytes ImportTest::executeTest()
 							json_spirit::mObject obj = fillJsonWithState(search2->second.first, search2->second.second);
 							for (auto& adr: obj)
 							{
-								if (adr.first == toString(m_envInfo.author()))
+								if (adr.first == "0x" + toString(m_envInfo.author()))
 								{
 									if (adr.second.get_obj().count("balance"))
 									{
@@ -279,6 +290,7 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
 	m_envInfo.setAuthor(Address(_o["currentCoinbase"].get_str()));
+
 	m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
 }
 

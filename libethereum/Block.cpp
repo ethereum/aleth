@@ -128,6 +128,7 @@ void Block::resetCurrent(u256 const& _timestamp)
 	m_committedToSeal = false;
 
 	performIrregularModifications();
+	updateBlockhashContract();
 }
 
 SealEngineFace* Block::sealEngine() const
@@ -688,6 +689,30 @@ void Block::performIrregularModifications()
 		Addresses allDAOs = childDaos();
 		for (Address const& dao: allDAOs)
 			m_state.transferBalance(dao, recipient, m_state.balance(dao));
+		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
+	}
+}
+
+void Block::updateBlockhashContract()
+{
+	u256 const blockNumber = info().number();
+
+	u256 const metropolisForkBlock = m_sealEngine->chainParams().u256Param("metropolisForkBlock");
+	if (blockNumber == metropolisForkBlock)
+	{
+		m_state.createContract(c_blockhashContractAddress);
+		m_state.setNewCode(c_blockhashContractAddress, bytes(c_blockhashContractCode));
+		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
+	}
+
+	if (blockNumber >= metropolisForkBlock)
+	{
+		Executive e(*this);
+		h256 const parentHash = m_previousBlock.hash();
+		if (!e.call(c_blockhashContractAddress, SystemAddress, 0, 0, parentHash.ref(), 1000000))
+			e.go();
+		e.finalize();
+
 		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 	}
 }

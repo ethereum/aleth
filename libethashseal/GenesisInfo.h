@@ -44,6 +44,7 @@ enum class Network
 	EIP150Test = 73,		///< Homestead + EIP150 Rules active from block 0 For BlockchainTests
 	EIP158Test = 74,		///< Homestead + EIP150 + EIP158 Rules active from block 0
 	MetropolisTest = 75,   ///< All fork rules + Metropolis active from block 0
+	MetropolisTransitionTest = 76, ///< All fork rules + Metropolis active from block 2
 	Special = 0xff			///< Something else.
 };
 

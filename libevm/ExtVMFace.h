@@ -304,7 +304,7 @@ public:
 	virtual void log(h256s&& _topics, bytesConstRef _data) { sub.logs.push_back(LogEntry(myAddress, std::move(_topics), _data.toBytes())); }
 
 	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
-	h256 blockHash(u256 _number) { return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ? envInfo().lastHashes()[(unsigned)(envInfo().number() - 1 - _number)] : h256(); }
+	virtual h256 blockHash(u256 _number) = 0;
 
 	/// Get the execution environment information.
 	EnvInfo const& envInfo() const { return m_envInfo; }

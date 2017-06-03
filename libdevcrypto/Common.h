@@ -67,6 +67,9 @@ extern const Address ZeroAddress;
 /// The last address.
 extern const Address MaxAddress;
 
+/// The SYSTEM address.
+extern const Address SystemAddress;
+
 /// A vector of Ethereum addresses.
 using Addresses = h160s;
 
