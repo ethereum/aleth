@@ -181,7 +181,7 @@ private:
 	/** If c_contractConceptionCodeHash then we're in the limbo where we're running the initialisation code.
 	 * We expect a setCode() at some point later.
 	 * If EmptySHA3, then m_code, which should be empty, is valid.
-	 * If anything else, then m_code is valid iff it's not empty, otherwise, State::ensureCached() needs to
+	 * If anything else, then m_code is valid if it's not empty, otherwise, State::ensureCached() needs to
 	 * be called with the correct args.
 	 */
 	h256 m_codeHash = EmptySHA3;
