@@ -88,6 +88,7 @@ void help()
 		<< "    --private <name>  Use a private chain." << endl
 		<< "    --test  Testing mode: Disable PoW and provide test rpc interface." << endl
 		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
+		<< "    --genesis <file>  Configure specialised genesis using given JSON information." << endl
 		<< "    --oppose-dao-fork  Ignore DAO hard fork (default is to participate)." << endl
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
