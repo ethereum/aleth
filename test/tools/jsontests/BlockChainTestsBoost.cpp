@@ -173,4 +173,33 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 	dev::test::userDefinedTest(dev::test::doBlockchainTests);
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+//BlockChainTests
+BOOST_AUTO_TEST_SUITE(BlockChainTestsRandom)
+
+BOOST_AUTO_TEST_CASE(bcRandom)
+{
+	using Bdit = boost::filesystem::directory_iterator;
+	std::string fillersPath = dev::test::getTestPath() + "/src/BlockchainTestsFiller/RandomTests";
+
+	Bdit iterator_tmp(fillersPath);
+	int fileCount = 0;
+	for(; iterator_tmp != Bdit(); ++iterator_tmp)
+		if (boost::filesystem::is_regular_file(iterator_tmp->path()) && iterator_tmp->path().extension() == ".json")
+			fileCount++;
+
+	dev::test::TestOutputHelper::initTest(fileCount);
+
+	Bdit iterator(fillersPath);
+	for(; iterator != Bdit(); ++iterator)
+		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+		{
+			json_spirit::mObject o;
+			string fileboost = iterator->path().filename().string();
+			dev::test::TestOutputHelper::passTest(o, fileboost);
+			dev::test::executeTests(fileboost, "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTests);
+		}
+}
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()

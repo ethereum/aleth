@@ -102,14 +102,20 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
-	if (!Options::get().fillchain) //fill blockchain through state tests
+	bool skipTestOutput = false;
+	string casename = boost::unit_test::framework::current_test_case().p_name;
+	if (casename == "bcRandom" || Options::get().fillchain)
+		skipTestOutput = true;
+
+	if (!skipTestOutput)
 		TestOutputHelper::initTest(_v);
+
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		if (!Options::get().fillchain)
+		if (!skipTestOutput)
 		if (!TestOutputHelper::passTest(o, testname))
 			continue;
 
