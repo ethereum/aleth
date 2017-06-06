@@ -84,13 +84,6 @@ enum class Instruction: uint8_t
 	DIFFICULTY,         ///< get the block's difficulty
 	GASLIMIT,           ///< get the block's gas limit
 	
-	JUMPTO = 0x4a,      ///< alter the program counter to a jumpdest
-	JUMPIF,             ///< conditionally alter the program counter
-	JUMPV,              ///< alter the program counter to a jumpdest
-	JUMPSUB,            ///< alter the program counter to a beginsub
-	JUMPSUBV,           ///< alter the program counter to a beginsub
-	RETURNSUB,          ///< return to subroutine jumped from
-
 	POP = 0x50,         ///< remove item from stack
 	MLOAD,              ///< load word from memory
 	MSTORE,             ///< save word to memory
@@ -103,8 +96,6 @@ enum class Instruction: uint8_t
 	MSIZE,              ///< get the size of active memory
 	GAS,                ///< get the amount of available gas
 	JUMPDEST,           ///< set a potential jump destination
-	BEGINSUB,           ///< set a potential jumpsub destination
-	BEGINDATA,          ///< begine the data section
 	
 	PUSH1 = 0x60,       ///< place 1 byte item on stack
 	PUSH2,              ///< place 2 byte item on stack
@@ -183,6 +174,17 @@ enum class Instruction: uint8_t
 	PUSHC = 0xac,       ///< push value from constant pool
 	JUMPC,              ///< alter the program counter - pre-verified
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
+
+	JUMPTO = 0xb0,      ///< alter the program counter to a jumpdest
+	JUMPIF,             ///< conditionally alter the program counter
+	JUMPSUB,            ///< alter the program counter to a beginsub
+	JUMPV,              ///< alter the program counter to a jumpdest
+	JUMPSUBV,           ///< alter the program counter to a beginsub
+	BEGINSUB,           ///< set a potential jumpsub destination
+	BEGINDATA,          ///< begine the data section
+	RETURNSUB,          ///< return to subroutine jumped from
+	PUTLOCAL,           ///< pop top of stack to local variable
+	GETLOCAL,           ///< push local variable to top of stack
 
 	CREATE = 0xf0,      ///< create a new account with associated code
 	CALL,               ///< message-call into an account
