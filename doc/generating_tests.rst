@@ -208,7 +208,9 @@ Moreover, for trying the filled test in ``Travis CI`` for ``ethereum/cpp-ethereu
 
 After that, enter ``cpp-ethereum/test/jsontests`` directory, and checkout the branch in ``ethereum/tests``.  Then go back to ``cpp-ethereum`` directory and perform ``git add test/jsontests`` followed by ``git commit``.
 
-When you file this commit as a pull-request to ``ethereum/cpp-ethereum``, Travis CI should try the newly filled tests.
+When you file this commit as a pull-request_ to ``ethereum/cpp-ethereum``, Travis CI should try the newly filled tests.
+
+.. pull-request_: https://help.github.com/articles/creating-a-pull-request-from-a-fork/
 
 git commit
 ----------
