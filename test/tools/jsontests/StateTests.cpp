@@ -46,10 +46,10 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		if (!TestOutputHelper::passTest(o, testname))
+		if (!TestOutputHelper::passTest(testname))
 			continue;
 
-		//For 100% at the log output
+		//For 100% at the log output when making blockchain tests out of state tests
 		if (_fillin == false && Options::get().fillchain)
 			continue;
 

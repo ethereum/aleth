@@ -301,8 +301,11 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		if (!TestOutputHelper::passTest(o, testname))
+		if (!TestOutputHelper::passTest(testname))
+		{
+			o.clear(); //don't add irrelevant tests to the final file when filling
 			continue;
+		}
 
 		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
