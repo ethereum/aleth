@@ -5,16 +5,14 @@ Generating Consensus Tests
 Consensus Tests
 ===============
 
-`Consensus tests`_ are test cases for all Ethereum implementations.
+Consensus tests are test cases for all Ethereum implementations.
 The test cases are distributed in the "filled" form, which contains, for example, the expected state root hash after transactions.
 The filled test cases are usually not written by hand, but generated from "test filler" files.
 ``testeth`` executable in cpp-ethereum can convert test fillers into test cases.
 
-When you add a test case in the consensus test suite, you are supposed to push both the filler and the filled test cases into the `tests repository`__.
+When you add a test case in the consensus test suite, you are supposed to push both the filler and the filled test cases into the `tests repository`_.
 
-.. _`Consensus tests`: https://github.com/ethereum/tests
-
-__ `Consensus tests`_
+.. _`tests repository`: https://github.com/ethereum/tests
 
 Generating a GeneralStateTest Case
 ==================================
@@ -37,17 +35,25 @@ Usually, when a test is about an instruction, the pre-state contains a contract 
 a code containing the instruction.  Typically, the contract stores a value in the storage,
 so that the instruction's behavior is visible in the storage in the expectation.
 
-The code can be written in EVM bytecode or in LLL.
+The code can be written in EVM bytecode or in LLL [#]_.
+
+.. [#] ``testeth`` cannot understand LLL if the system does not have the LLL compiler installed.  The LLL compiler is currently distributed as part of `the Solidity compiler`_.
+
+.. _`the Solidity compiler`: https://github.com/ethereum/solidity
 
 Writing a Test Filler
 ---------------------
 
-A new test filler needs to be alone in a new test filler file.  A single filler file is not supposed to contain multiple tests.  ``testeth`` tool still accepts multiple test fillers in a single test filler file, but this might change.
+A new test filler needs to be alone in a new test filler file.  A single GeneralStateTest filler file is not supposed to contain multiple tests.  ``testeth`` tool still accepts multiple GeneralStateTest fillers in a single test filler file, but this might change.
 
 In the ``tests`` repository, the test filler files for GeneralStateTests live under ``src/GeneralStateTestsFiller`` directory.
-The directory has many subdirectories.  You need to choose one of the subdirectories or create one.  The name of the filler file needs to end with ``Filler.json``.  For example, we might want to create a new directory ``src/GeneralStateTestsFiller/stReturnDataTest`` with a new filler file ``returndatacopy_initialFiller.json``.
+The directory has many subdirectories.  You need to choose one of the subdirectories or create one.  The name of the filler file needs to end with ``Filler.json``.  For example, we might want to create a new directory ``src/GeneralStateTestsFiller/stReturnDataTest`` [#]_ with a new filler file ``returndatacopy_initialFiller.json``.
 
-The easiest way to start is to copy an existing filler file.  The first thing to change is the name of the test in the beginning of the file. The name of the test should coincide with the file name except ``Filler.json``. For example, in the file we created above, the filler file contains the name of the test ``returndatacopy_initial``.  The overall structure of ``returndatacopy_initialFiller.json`` should be:
+.. [#] If you create a new directory here, you need to add `one line`__ in ``cpp-ethereum`` and file that change in a pull-request to ``cpp-ethereum``.
+
+__ editcpp_
+
+The easiest way to start is to copy an existing filler file.  The first thing to change is the name of the test in the beginning of the file. The name of the test should coincide with the file name except ``Filler.json`` [#]_. For example, in the file we created above, the filler file contains the name of the test ``returndatacopy_initial``.  The overall structure of ``returndatacopy_initialFiller.json`` should be:
 
 .. code::
 
@@ -61,6 +67,8 @@ The easiest way to start is to copy an existing filler file.  The first thing to
    }
 
 where ``...`` indicates omissions.
+
+.. [#] The file name and the name written in JSON should match because ``testeth`` prints the name written in JSON, but the user needs to find a file.
 
 ``env`` field contains some parameters in a straightforward way.
 
@@ -84,7 +92,9 @@ where ``...`` indicates omissions.
 As specified in the Yellow Paper, an account contains a balance, a code, a nonce and a storage.
 
 Notice the ``code`` field is duplicated.  If many fields exist under the same name, the last one is used.
-In this particular case, the LLL compiler was not ready to parse the new instruction ``RETURNDATACOPY`` so a compiled runtime bytecode is added as the second ``code`` field.
+In this particular case, the LLL compiler was not ready to parse the new instruction ``RETURNDATACOPY`` so a compiled runtime bytecode is added as the second ``code`` field [#]_.
+
+.. [#] Unless you are testing malformed bytecode, always try to keep the LLL code in the test filler.  LLL code is easier to understand and to modify.
 
 This particular test expected to see ``0`` in the first slot in the storage.  In order to make this change visible, the pre-state has ``1`` there.
 
@@ -118,7 +128,8 @@ Moreover, these transactions are tested under different versions of the protocol
 ``expect`` field of the filler specifies the expected fields of the state after the transaction.  The ``expect`` field does not need to specify a state completely, but it should specify some features of some accounts.  ``expect`` field is a list.  Each element talks about some elements of the multi-dimensional array defined in ``transaction`` field.
 
 .. code::
-	"expect" : [
+
+   "expect" : [
 		{
 			"indexes" : {
 				"data" : 0,
@@ -155,21 +166,28 @@ Moreover, these transactions are tested under different versions of the protocol
 
 ``indexes`` field specifies a subset of the transactions.  ``-1`` means "whichever".  ``"data" : 0`` points to the first element in the ``data`` field in ``transaction``.
 
-``network`` field is somehow similar.  It specifies the versions of the protocol for which the expectation applies.
+``network`` field is somehow similar.  It specifies the versions of the protocol for which the expectation applies.  For expectations common to all versions, say ``"network" : ALL``.
 
 Filling the Test
 ----------------
 
 The test filler file is not for consumption.  The filler file needs to be filled into a test.  ``testeth`` has the ability to compute the post-state from the test filler, and produce the test.  The advantage of the filled test is that it can catch any post-state difference between clients.
 
+.. _editcpp:
+
 First, if you created a new subdirectory for the filler, you need to edit the source of ``cpp-ethereum`` so that ``testeth`` recognizes the new subdirectory.  The file to edit is ``cpp-ethereum/blob/develop/test/tools/jsontests/StateTests.cpp``, which lists the names of the subdirectories scanned for GeneralStateTest filters.
 
 After building ``testeth``, you are ready to fill the test.
 
-.. code::
+.. code:: bash
+
    ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --checkstate
 
 where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stReturnDataTest`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to look at ``expect`` fields.
+
+Depending on your shell, there are various way to set up ``ETHEREUM_TEST_PATH`` environment variable.  For example, adding ``export ETHEREUM_TEST_PATH=/path/to/tests`` to ``~/.bashrc`` might work for ``bash`` users.
+
+``testeth`` with ``--filltests`` fills every test filler it finds. The command might modify existing test cases. After running ``testeth`` with ``--filltests``, try running ``git status`` in the ``tests`` directory. If ``git status`` indicates changes in unexpected files, that is an indication that the behavior of ``cpp-ethereum`` changed unexpectedly.
 
 git commit
 ----------
@@ -183,12 +201,14 @@ Converting a GeneralStateTest Case into a BlockchainTest Case
 =============================================================
 
 .. code::
-   ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --fillchain --checkstate
+
+  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --fillchain --checkstate
 
 followed by
 
 .. code::
-   ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --checkstate
+
+  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --checkstate
 
 The second command is necessary because the first command modifies the GeneralStateTests in an undesired way.
 
