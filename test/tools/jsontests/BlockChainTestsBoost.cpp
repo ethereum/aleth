@@ -188,17 +188,19 @@ BOOST_AUTO_TEST_CASE(bcRandom)
 		if (boost::filesystem::is_regular_file(iterator_tmp->path()) && iterator_tmp->path().extension() == ".json")
 			fileCount++;
 
-	dev::test::TestOutputHelper::initTest(fileCount);
+	//bcRandom tests are generated from random state tests and have 1 test case * 5 forks in each file
+	dev::test::TestOutputHelper::initTest(fileCount * 5);
 
 	Bdit iterator(fillersPath);
 	for(; iterator != Bdit(); ++iterator)
 		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
 		{
-			json_spirit::mObject o;
 			string fileboost = iterator->path().filename().string();
-			dev::test::TestOutputHelper::passTest(o, fileboost);
-			dev::test::executeTests(fileboost, "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTests);
+			dev::test::executeTests(fileboost, "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTestsInternal);
 		}
+
+	//calculate the total time on bcRandom test cases
+	dev::test::TestOutputHelper::finishTest();
 }
 BOOST_AUTO_TEST_SUITE_END()
 
