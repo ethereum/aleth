@@ -189,6 +189,27 @@ Depending on your shell, there are various way to set up ``ETHEREUM_TEST_PATH`` 
 
 ``testeth`` with ``--filltests`` fills every test filler it finds. The command might modify existing test cases. After running ``testeth`` with ``--filltests``, try running ``git status`` in the ``tests`` directory. If ``git status`` indicates changes in unexpected files, that is an indication that the behavior of ``cpp-ethereum`` changed unexpectedly.
 
+Trying the Filled Test
+----------------------
+
+Trying the Filled Test Locally
+++++++++++++++++++++++++++++++
+
+For trying the filled test, in ``cpp-ethereum/build`` directory, run
+
+.. code:: bash
+
+   ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest
+
+Trying the Filled Test in Travis CI
++++++++++++++++++++++++++++++++++++
+
+Moreover, for trying the filled test in ``Travis CI`` for ``ethereum/cpp-ethereum``, the new test cases need to exist in a branch in ``ethereum/tests``.   For this, ask somebody with a push permission to ``ethereum/tests``.
+
+After that, enter ``cpp-ethereum/test/jsontests`` directory, and checkout the branch in ``ethereum/tests``.  Then go back to ``cpp-ethereum`` directory and perform ``git add test/jsontests`` followed by ``git commit``.
+
+When you file this commit as a pull-request to ``ethereum/cpp-ethereum``, Travis CI should try the newly filled tests.
+
 git commit
 ----------
 
