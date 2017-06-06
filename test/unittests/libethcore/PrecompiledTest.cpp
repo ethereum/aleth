@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
 		"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
 	auto res = cost(bytesConstRef(in.data(), in.size()));
 
-	BOOST_REQUIRE_EQUAL(static_cast<int>(res), 1638);
+	BOOST_REQUIRE_EQUAL(static_cast<int>(res), 2611);
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
@@ -215,6 +215,92 @@ BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
 	auto res = cost(bytesConstRef(in.data(), in.size()));
 
 	BOOST_REQUIRE(res == bigint{"9485687950320942729098935091911713411339877143809275006112365281928243580103464"});
+}
+
+BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
+{
+	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000008" // length of B
+		"0000000000000000000000000000000000000000000000000000000000000000" // length of E
+		"0000000000000000000000000000000000000000000000000000000000000010" // length of M
+		"998877665544332211" // B
+		"" // E
+		"998877665544332211998877665544332211" // M
+		"9978" // Garbage that should be ignored
+	);
+	auto res = cost(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res == bigint{"2"});
+}
+
+BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
+{
+	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000000" // length of B
+		"0000000000000000000000000000000000000000000000000000000000000003" // length of E
+		"000000000000000000000000000000000000000000000000000000000000000a" // length of M
+		"" // B
+		"000000" // E
+		"112233445566778899aa" // M
+	);
+	auto res = cost(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res == bigint{"1"});
+}
+
+BOOST_AUTO_TEST_CASE(modexpCostApproximated)
+{
+	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000003" // length of B
+		"0000000000000000000000000000000000000000000000000000000000000021" // length of E
+		"000000000000000000000000000000000000000000000000000000000000000a" // length of M
+		"111111" // B
+		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" // E
+		"112233445566778899aa" // M
+	);
+	auto res = cost(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res == bigint{"263"});
+}
+
+BOOST_AUTO_TEST_CASE(modexpCostApproximatedPartialByte)
+{
+	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000003" // length of B
+		"0000000000000000000000000000000000000000000000000000000000000021" // length of E
+		"000000000000000000000000000000000000000000000000000000000000000a" // length of M
+		"111111" // B
+		"02ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" // E
+		"112233445566778899aa" // M
+	);
+	auto res = cost(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res == bigint{"257"});
+}
+
+BOOST_AUTO_TEST_CASE(modexpCostApproximatedGhost)
+{
+	PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
+
+	bytes in = fromHex(
+		"0000000000000000000000000000000000000000000000000000000000000003" // length of B
+		"0000000000000000000000000000000000000000000000000000000000000021" // length of E
+		"000000000000000000000000000000000000000000000000000000000000000a" // length of M
+		"111111" // B
+		"000000000000000000000000000000000000000000000000000000000000000000" // E
+		"112233445566778899aa" // M
+	);
+	auto res = cost(bytesConstRef(in.data(), in.size()));
+
+	BOOST_REQUIRE(res == bigint{"8"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
