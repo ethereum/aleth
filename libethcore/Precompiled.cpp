@@ -100,17 +100,25 @@ ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)
 
 // Parse _count bytes of _in starting with _begin offset as big endian int.
 // If there's not enough bytes in _in, consider it infinitely right-padded with zeroes.
-bigint parseBigEndianRightPadded(bytesConstRef _in, size_t _begin, size_t _count)
+bigint parseBigEndianRightPadded(bytesConstRef _in, bigint const& _begin, bigint const& _count)
 {
-	if (_begin > _in.count())
+	if (_begin > numeric_limits<size_t>::max())
+		return 0; // _begin overflows the range of size_t
+	if (_count > numeric_limits<size_t>::max())
+		return 0; // _begin overflows the range of size_t
+
+	size_t const begin{_begin};
+	size_t const count{_count};
+
+	if (begin > _in.count())
 		return 0;
 
 	// crop _in, not going beyond its size
-	bytesConstRef cropped = _in.cropped(_begin, min(_count, _in.count() - _begin));
+	bytesConstRef cropped = _in.cropped(begin, min(count, _in.count() - begin));
 
 	bigint ret = fromBigEndian<bigint>(cropped);
 	// shift as if we had right-padding zeroes
-	ret <<= 8 * (_count - cropped.count());
+	ret <<= 8 * (count - cropped.count());
 
 	return ret;
 }
@@ -135,20 +143,17 @@ ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
 
 namespace
 {
-	bigint expLengthAdjust(bigint _baseLength, bigint _expLength, bytesConstRef _in)
+	bigint expLengthAdjust(bigint const& _expOffset, bigint const& _expLength, bytesConstRef _in)
 	{
 		if (_expLength <= 32)
 		{
-			size_t const eL{_expLength};
-			size_t const ePos{96 + _baseLength};
-			bigint const exp{(96 + _baseLength == bigint(ePos)) ? parseBigEndianRightPadded(_in, ePos, eL) : 0};
+			bigint const exp(parseBigEndianRightPadded(_in, _expOffset, _expLength));
 			return exp ? msb(exp) : 0;
 		}
 		else
 		{
-			size_t const ePos{96 + _baseLength};
-			bigint const expFirstWord{(96 + _baseLength == bigint(ePos)) ? parseBigEndianRightPadded(_in, ePos, 32) : 0};
-			size_t const highestBit{expFirstWord ? msb(expFirstWord) : 0};
+			bigint const expFirstWord(parseBigEndianRightPadded(_in, _expOffset, 32));
+			size_t const highestBit(expFirstWord ? msb(expFirstWord) : 0);
 			return 8 * (_expLength - 32) + highestBit;
 		}
 	}
@@ -161,7 +166,7 @@ ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
 	bigint const modLength(parseBigEndianRightPadded(_in, 64, 32));
 
 	bigint const maxLength(max(modLength, bigint(baseLength)));
-	bigint const adjustedExpLength(expLengthAdjust(baseLength, expLength, _in));
+	bigint const adjustedExpLength(expLengthAdjust(baseLength + 96, expLength, _in));
 
 	return maxLength * maxLength * max<bigint>(adjustedExpLength, 1) / 100;
 }
