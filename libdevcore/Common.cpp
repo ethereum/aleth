@@ -57,12 +57,17 @@ TimerHelper::~TimerHelper()
 		clog(TimerChannel) << m_id << chrono::duration_cast<chrono::milliseconds>(e).count() << "ms";
 }
 
+#ifdef _WIN32 // the windows version of timegm
+#define timegm _mkgmtime
+#endif
+
 uint64_t utcTime()
 {
-	// TODO: Fix if possible to not use time(0) and merge only after testing in all platforms
-	// time_t t = time(0);
-	// return mktime(gmtime(&t));
-	return time(0);
+	time_t t = time(0);
+	// as per http://stackoverflow.com/questions/283166/easy-way-to-convert-a-struct-tm-expressed-in-utc-to-time-t-type
+	// to convert a struct tm to time_t again you need to use timegm and not mktime. The latter would convert it
+	// into local time
+	return timegm(gmtime(&t));
 }
 
 string inUnits(bigint const& _b, strings const& _units)
