@@ -763,6 +763,9 @@ void VM::interpretCases()
 		{
 			if (!m_schedule->haveReturnData)
 				throwBadInstruction();
+			bigint const endOfAccess{bigint(m_SP[1]) + bigint(m_SP[2])};
+			if (m_returnData.size() < endOfAccess)
+				throwBufferOverrun(endOfAccess);
 
 			m_copyMemSize = toInt63(m_SP[2]);
 			updateMem(memNeed(m_SP[0], m_SP[2]));

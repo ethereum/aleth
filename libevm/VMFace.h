@@ -33,6 +33,7 @@ ETH_SIMPLE_EXCEPTION_VM(OutOfGas);
 ETH_SIMPLE_EXCEPTION_VM(OutOfStack);
 ETH_SIMPLE_EXCEPTION_VM(StackUnderflow);
 ETH_SIMPLE_EXCEPTION_VM(DisallowedStateChange);
+ETH_SIMPLE_EXCEPTION_VM(BufferOverrun);
 
 struct RevertInstruction: VMException
 {
