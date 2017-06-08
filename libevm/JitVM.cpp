@@ -99,12 +99,21 @@ void updateState(
 		env.setStore(index, value);    // Interface uses native endianness
 		break;
 	}
-	case EVM_SELFDESTRUCT:
-		// Register selfdestruction beneficiary.
-		env.suicide(fromEvmC(_arg1->address));
-		break;
 	}
 }
+
+void selfdestruct(
+	evm_env* _opaqueEnv,
+	evm_uint160be const* _addr,
+	evm_uint160be const* _beneficiary
+) noexcept
+{
+	(void) _addr;
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	assert(fromEvmC(*_addr) == env.myAddress);
+	env.suicide(fromEvmC(*_beneficiary));
+}
+
 
 void log(
 	evm_env* _opaqueEnv,
@@ -227,7 +236,11 @@ void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) no
 class EVM
 {
 public:
-	EVM(evm_query_state_fn _queryFn, evm_update_state_fn _updateFn, evm_call_fn _callFn,
+	EVM(
+		evm_query_state_fn _queryFn,
+		evm_update_state_fn _updateFn,
+		evm_selfdestruct_fn _selfdestructFn,
+		evm_call_fn _callFn,
 		evm_get_tx_context_fn _getTxContextFn,
 		evm_get_block_hash_fn _getBlockHashFn,
 		evm_log_fn _logFn
@@ -235,7 +248,9 @@ public:
 	{
 		auto factory = evmjit_get_factory();
 		m_instance = factory.create(
-				_queryFn, _updateFn, _callFn, _getTxContextFn, _getBlockHashFn,
+				_queryFn, _updateFn,
+				_selfdestructFn,
+				_callFn, _getTxContextFn, _getBlockHashFn,
 				_logFn
 		);
 	}
@@ -324,7 +339,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(queryState, updateState, call, getTxContext, getBlockHash, log);
+	static EVM jit(queryState, updateState, selfdestruct, call, getTxContext, getBlockHash, log);
 	return jit;
 }
 
