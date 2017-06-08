@@ -76,30 +76,22 @@ void queryState(
 	}
 }
 
-void updateState(
+void setStorage(
 	evm_env* _opaqueEnv,
-	evm_update_key _key,
 	evm_uint160be const* _addr,
-	evm_variant const* _arg1,
-	evm_variant const* _arg2
+	evm_uint256be const* _key,
+	evm_uint256be const* _value
 ) noexcept
 {
 	(void) _addr;
 	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
 	assert(fromEvmC(*_addr) == env.myAddress);
-	switch (_key)
-	{
-	case EVM_SSTORE:
-	{
-		u256 index = fromEvmC(_arg1->uint256be);
-		u256 value = fromEvmC(_arg2->uint256be);
-		if (value == 0 && env.store(index) != 0)                   // If delete
-			env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
+	u256 index = fromEvmC(*_key);
+	u256 value = fromEvmC(*_value);
+	if (value == 0 && env.store(index) != 0)                   // If delete
+		env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
 
-		env.setStore(index, value);    // Interface uses native endianness
-		break;
-	}
-	}
+	env.setStore(index, value);    // Interface uses native endianness
 }
 
 void selfdestruct(
@@ -120,7 +112,7 @@ void log(
 	evm_uint160be const* _addr,
 	uint8_t const* _data,
 	size_t _dataSize,
-	evm_uint256be _topics[],
+	evm_uint256be const _topics[],
 	size_t _numTopics
 ) noexcept
 {
@@ -128,7 +120,7 @@ void log(
 	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
 	assert(fromEvmC(*_addr) == env.myAddress);
 	h256 const* pTopics = reinterpret_cast<h256 const*>(_topics);
-	env.log({pTopics, pTopics + _numTopics}, {_data, _dataSize});
+	env.log(h256s{pTopics, pTopics + _numTopics}, bytesConstRef{_data, _dataSize});
 }
 
 void getTxContext(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
@@ -238,7 +230,7 @@ class EVM
 public:
 	EVM(
 		evm_query_state_fn _queryFn,
-		evm_update_state_fn _updateFn,
+		evm_set_storage_fn _updateFn,
 		evm_selfdestruct_fn _selfdestructFn,
 		evm_call_fn _callFn,
 		evm_get_tx_context_fn _getTxContextFn,
@@ -339,7 +331,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(queryState, updateState, selfdestruct, call, getTxContext, getBlockHash, log);
+	static EVM jit(queryState, setStorage, selfdestruct, call, getTxContext, getBlockHash, log);
 	return jit;
 }
 
