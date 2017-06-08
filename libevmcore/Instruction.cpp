@@ -130,7 +130,7 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::DUP6,         { "DUP6",           0,     6,    7,  false,       Tier::VeryLow } },
 	{ Instruction::DUP7,         { "DUP7",           0,     7,    8,  false,       Tier::VeryLow } },
 	{ Instruction::DUP8,         { "DUP8",           0,     8,    9,  false,       Tier::VeryLow } },
-<<	{ Instruction::DUP9,         { "DUP9",           0,     9,    10,  false,      Tier::VeryLow } },
+	{ Instruction::DUP9,         { "DUP9",           0,     9,    10,  false,      Tier::VeryLow } },
 	{ Instruction::DUP10,        { "DUP10",          0,    10,    11,  false,      Tier::VeryLow } },
 	{ Instruction::DUP11,        { "DUP11",          0,    11,    12,  false,      Tier::VeryLow } },
 	{ Instruction::DUP12,        { "DUP12",          0,    12,    13,  false,      Tier::VeryLow } },
