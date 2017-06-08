@@ -111,7 +111,8 @@ private:
 	// stack items may be 256-bit wide integers or SIMD vectors
 	union StackItem {
 		StackItem() { memset(this, 0, sizeof *this); }
-		u256& w256() { return *(u256*)wdata; }
+		u256* cheat256() { return (u256*)wdata; }
+		u256& w256() { return *cheat256(); }
 		uint8_t wdata alignas(u256) [sizeof(u256)];
 		uint64_t v64x4 [4];		
 		uint32_t v32x8 [8];
