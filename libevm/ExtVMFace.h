@@ -193,9 +193,8 @@ struct SubState
 };
 
 class ExtVMFace;
+class LastBlockHashesFace;
 class VM;
-
-using LastHashes = std::vector<h256>;
 
 using OnOpFunc = std::function<void(uint64_t /*steps*/, uint64_t /* PC */, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, bigint /*gas*/, VM*, ExtVMFace const*)>;
 
@@ -227,31 +226,31 @@ struct CallParameters
 class EnvInfo
 {
 public:
-	EnvInfo() {}
-	EnvInfo(BlockHeader const& _current, LastHashes const& _lh = LastHashes(), u256 const& _gasUsed = u256()):
+	EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed):
 		m_headerInfo(_current),
 		m_lastHashes(_lh),
 		m_gasUsed(_gasUsed)
 	{}
+	// Constructor with custom gasLimit - used in some synthetic scenarios like eth_estimateGas	RPC method
+	EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed, u256 const& _gasLimit):
+		EnvInfo(_current, _lh, _gasUsed)
+	{
+		m_headerInfo.setGasLimit(_gasLimit);
+	}
+
+	BlockHeader const& header() const { return m_headerInfo;  }
 
 	u256 const& number() const { return m_headerInfo.number(); }
 	Address const& author() const { return m_headerInfo.author(); }
 	u256 const& timestamp() const { return m_headerInfo.timestamp(); }
 	u256 const& difficulty() const { return m_headerInfo.difficulty(); }
 	u256 const& gasLimit() const { return m_headerInfo.gasLimit(); }
-	LastHashes const& lastHashes() const { return m_lastHashes; }
+	LastBlockHashesFace const& lastHashes() const { return m_lastHashes; }
 	u256 const& gasUsed() const { return m_gasUsed; }
-
-	void setNumber(u256 const& _v) { m_headerInfo.setNumber(_v); }
-	void setAuthor(Address const& _v) { m_headerInfo.setAuthor(_v); }
-	void setTimestamp(u256 const& _v) { m_headerInfo.setTimestamp(_v); }
-	void setDifficulty(u256 const& _v) { m_headerInfo.setDifficulty(_v); }
-	void setGasLimit(u256 const& _v) { m_headerInfo.setGasLimit(_v); }
-	void setLastHashes(LastHashes&& _lh) { m_lastHashes = _lh; }
 
 private:
 	BlockHeader m_headerInfo;
-	LastHashes m_lastHashes;
+	LastBlockHashesFace const& m_lastHashes;
 	u256 m_gasUsed;
 };
 

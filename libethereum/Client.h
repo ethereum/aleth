@@ -100,10 +100,6 @@ public:
 	/// Queues a block for import.
 	ImportResult queueBlock(bytes const& _block, bool _isSafe = false);
 
-	using Interface::call; // to remove warning about hiding virtual function
-	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
-	ExecutionResult call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether, Address const& _from = Address());
-
 	/// Get the remaining gas limit in this block.
 	virtual u256 gasLimitRemaining() const override { return m_postSeal.gasLimitRemaining(); }
 	/// Get the gas bid price

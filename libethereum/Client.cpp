@@ -366,29 +366,6 @@ void Client::appendFromBlock(h256 const& _block, BlockPolarity _polarity, h256Ha
 	}
 }
 
-ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice, Address const& _from)
-{
-	ExecutionResult ret;
-	try
-	{
-		Block temp(chainParams().accountStartNonce);
-		clog(ClientDetail) << "Nonce at " << _dest << " pre:" << m_preSeal.transactionsFrom(_dest) << " post:" << m_postSeal.transactionsFrom(_dest);
-		DEV_READ_GUARDED(x_postSeal)
-			temp = m_postSeal;
-		temp.mutableState().addBalance(_from, _value + _gasPrice * _gas);
-		Executive e(temp);
-		e.setResultRecipient(ret);
-		if (!e.call(_dest, _from, _value, _gasPrice, &_data, _gas))
-			e.go();
-		e.finalize();
-	}
-	catch (...)
-	{
-		cwarn << "Client::call failed: " << boost::current_exception_diagnostic_information();
-	}
-	return ret;
-}
-
 unsigned static const c_syncMin = 1;
 unsigned static const c_syncMax = 1000;
 double static const c_targetDuration = 1;

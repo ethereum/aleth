@@ -115,7 +115,7 @@ public:
 	 * Creates executive to operate on the state of end of the given block, populating environment
 	 * info accordingly, with last hashes given explicitly.
 	 */
-	Executive(Block& _s, LastHashes const& _lh = LastHashes(), unsigned _level = 0);
+	Executive(Block& _s, LastBlockHashesFace const& _lh, unsigned _level = 0);
 
 	/** Previous-state constructor.
 	 * Creates executive to operate on the state of a particular transaction in the given block,

@@ -70,7 +70,7 @@ Json::Value Debug::traceBlock(Block const& _block, Json::Value const& _json)
 		Transaction t = _block.pending()[k];
 
 		u256 const gasUsed = k ? _block.receipt(k - 1).gasUsed() : 0;
-		EnvInfo envInfo(_block.info(), m_eth.blockChain().lastHashes(_block.info().parentHash()), gasUsed);
+		EnvInfo envInfo(_block.info(), m_eth.blockChain().lastBlockHashes(), gasUsed);
 		Executive e(s, envInfo, *m_eth.blockChain().sealEngine());
 
 		eth::ExecutionResult er;
@@ -199,7 +199,7 @@ Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& 
 		Transaction transaction(ts.value, gasPrice, gas, ts.to, ts.data, nonce);
 		transaction.forceSender(ts.from);
 		eth::ExecutionResult er;
-		Executive e(temp);
+		Executive e(temp, m_eth.blockChain().lastBlockHashes());
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, transaction, _options);
 		ret["gas"] = toHex(transaction.gas(), HexPrefix::Add);
