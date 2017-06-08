@@ -32,8 +32,8 @@ namespace eth
 
 struct EVMSchedule
 {
-	EVMSchedule(): tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
-	EVMSchedule(bool _efcd, bool _hdc, unsigned const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
+	EVMSchedule(): tierStepGas(std::array<unsigned, 9>{{0, 1, 2, 3, 5, 8, 10, 20, 0}}) {}
+	EVMSchedule(bool _efcd, bool _hdc, unsigned const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<unsigned, 9>{{0, 1, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
 	bool exceptionalFailedCodeDeposit = true;
 	bool haveDelegateCall = true;
 	bool eip150Mode = false;
@@ -41,7 +41,7 @@ struct EVMSchedule
 	bool haveRevert = false;
 	bool haveReturnData = false;
 	bool haveStaticCall = false;
-	std::array<unsigned, 8> tierStepGas;
+	std::array<unsigned, 9> tierStepGas;
 	unsigned expGas = 10;
 	unsigned expByteGas = 10;
 	unsigned sha3Gas = 30;
@@ -51,6 +51,7 @@ struct EVMSchedule
 	unsigned sstoreResetGas = 5000;
 	unsigned sstoreRefundGas = 15000;
 	unsigned jumpdestGas = 1;
+	unsigned simdGas = 1;
 	unsigned logGas = 375;
 	unsigned logDataGas = 8;
 	unsigned logTopicGas = 375;
