@@ -5,6 +5,7 @@ set(SOURCES
 	VMOpt.cpp
 	VMCalls.cpp
 	VMValidate.cpp
+	VMSIMD.cpp
 	VMFactory.cpp
 )
 
