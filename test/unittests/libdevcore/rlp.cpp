@@ -300,12 +300,7 @@ BOOST_AUTO_TEST_CASE(rlpRandom)
 	string testPath = dev::test::getTestPath();
 	testPath += "/RLPTests/RandomRLPTests";
 
-	vector<boost::filesystem::path> testFiles;
-	boost::filesystem::directory_iterator iterator(testPath);
-	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
-		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
-			testFiles.push_back(iterator->path());
-
+	vector<boost::filesystem::path> testFiles = getJsonFiles(testPath);
 	for (auto& path: testFiles)
 	{
 		try

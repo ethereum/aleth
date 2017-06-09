@@ -20,7 +20,6 @@
  * BlockChain boost test cases.
  */
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <test/tools/libtesteth/TestHelper.h>
@@ -179,21 +178,16 @@ BOOST_AUTO_TEST_SUITE(BlockChainTestsRandom)
 
 BOOST_AUTO_TEST_CASE(bcRandom)
 {
-	using Bdit = boost::filesystem::directory_iterator;
 	std::string fillersPath = dev::test::getTestPath() + "/src/BlockchainTestsFiller/RandomTests";
 
-	auto fileCount = count_if(Bdit(fillersPath), Bdit(), [](boost::filesystem::directory_entry const& dirent) {
-		return boost::filesystem::is_regular_file(dirent.path()) && dirent.path().extension() == ".json";  });
+	std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+	int fileCount = files.size();
 
 	//bcRandom tests are generated from random state tests and have 1 test case * 5 forks in each file
 	dev::test::TestOutputHelper::initTest(fileCount * 5);
 
-	for(Bdit it(fillersPath); it != Bdit(); ++it)
-		if (boost::filesystem::is_regular_file(it->path()) && it->path().extension() == ".json")
-		{
-			string fileboost = it->path().filename().string();
-			dev::test::executeTests(fileboost, "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTestNoLog);
-		}
+	for (size_t i = 0; i < files.size(); i++)
+		dev::test::executeTests(files[i].filename().string(), "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTestNoLog);
 
 	//calculate the total time on bcRandom test cases
 	dev::test::TestOutputHelper::finishTest();

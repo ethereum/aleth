@@ -115,23 +115,19 @@ public:
 
 	void fillAllFilesInFolder(string _folder)
 	{
-		std::string fillersPath = dev::test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
+		std::string fillersPath = test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
 
-		using Bdit = boost::filesystem::directory_iterator;
-		auto fileCount = count_if(Bdit(fillersPath), Bdit(), [](boost::filesystem::directory_entry const& dirent) {
-			return boost::filesystem::is_regular_file(dirent.path()) && dirent.path().extension() == ".json";  });
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+		int fileCount = files.size();
 
-		if (dev::test::Options::get().filltests)
+		if (test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
-		dev::test::TestOutputHelper::initTest(fileCount);
+		test::TestOutputHelper::initTest(fileCount);
 
-		for(Bdit it(fillersPath); it != Bdit(); ++it)
-			if (boost::filesystem::is_regular_file(it->path()) && it->path().extension() == ".json")
-			{
-				string fileboost = it->path().filename().string();
-				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
-			}
-		dev::test::TestOutputHelper::finishTest();
+		for (size_t i = 0; i < files.size(); i++)
+			test::executeTests(files[i].filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
+
+		test::TestOutputHelper::finishTest();
 	}
 };
 

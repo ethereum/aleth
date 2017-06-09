@@ -532,11 +532,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 	string testPath = getTestPath();
 	testPath += "/VMTests/RandomTests";
 
-	vector<boost::filesystem::path> testFiles;
-	boost::filesystem::directory_iterator iterator(testPath);
-	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
-		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
-			testFiles.push_back(iterator->path());
+	std::vector<boost::filesystem::path> testFiles = test::getJsonFiles(testPath);
 
 	test::TestOutputHelper::initTest();
 	test::TestOutputHelper::setMaxTests(testFiles.size());
