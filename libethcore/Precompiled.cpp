@@ -102,16 +102,12 @@ ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)
 // If there's not enough bytes in _in, consider it infinitely right-padded with zeroes.
 bigint parseBigEndianRightPadded(bytesConstRef _in, bigint const& _begin, bigint const& _count)
 {
-	if (_begin > numeric_limits<size_t>::max())
-		return 0; // _begin overflows the range of size_t
-	if (_count > numeric_limits<size_t>::max())
-		return 0; // _begin overflows the range of size_t
+	if (_begin > _in.count())
+		return 0;
+	assert(_count <= numeric_limits<size_t>::max()); // Otherwise, the return value would not fit in the memory.
 
 	size_t const begin{_begin};
 	size_t const count{_count};
-
-	if (begin > _in.count())
-		return 0;
 
 	// crop _in, not going beyond its size
 	bytesConstRef cropped = _in.cropped(begin, min(count, _in.count() - begin));
