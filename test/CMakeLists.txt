@@ -1,4 +1,3 @@
-
 file(GLOB_RECURSE SRC_LIST *.cpp *.sol)
 
 # search for test names and create ctest tests

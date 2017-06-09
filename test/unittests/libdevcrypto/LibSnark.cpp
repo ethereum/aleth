@@ -89,6 +89,27 @@ BOOST_AUTO_TEST_CASE(ecadd)
 	BOOST_CHECK(result.second == expectation);
 }
 
+BOOST_AUTO_TEST_CASE(fieldPointInvalid)
+{
+	u256 const pMod{"21888242871839275222246405745257275088696311157297823662689037894645226208583"};
+
+	bytes input = toBigEndian(pMod);
+	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+
+	input = toBigEndian(pMod + 1);
+	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+
+	input = bytes(32, 0) + toBigEndian(pMod);
+	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+
+	input = bytes(32, 0) + toBigEndian(pMod + 1);
+	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+}
+
 BOOST_AUTO_TEST_CASE(invalid)
 {
 	bytes x =
@@ -301,6 +322,20 @@ BOOST_AUTO_TEST_CASE(pairing)
 	ret = pairingprod_helper(proof.A + vk.A + proof.Ap + P2);
 	BOOST_REQUIRE(ret.first);
 	BOOST_REQUIRE(ret.second == toBigEndian(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(pairingNullInput)
+{
+	// TODO: Maybe the empty input should also be considered invalid?
+	auto r = pairingprod_helper({});
+	BOOST_CHECK(r.first);
+
+	r = pairingprod_helper(bytes(2 * 32 + 2 * 64, 0));
+	BOOST_CHECK(r.first);
+
+	// Invalid length of input.
+	r = pairingprod_helper(bytes(2 * 32 + 2 * 64 + 1, 0));
+	BOOST_CHECK(!r.first);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
