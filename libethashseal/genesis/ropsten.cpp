@@ -37,7 +37,6 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar": "",
 		"networkID" : "0x03"
 	},
 	"genesis": {
