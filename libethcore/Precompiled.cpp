@@ -104,7 +104,7 @@ bigint parseBigEndianRightPadded(bytesConstRef _in, bigint const& _begin, bigint
 {
 	if (_begin > _in.count())
 		return 0;
-	assert(_count <= numeric_limits<size_t>::max()); // Otherwise, the return value would not fit in the memory.
+	assert(_count <= numeric_limits<size_t>::max() / 8); // Otherwise, the return value would not fit in the memory.
 
 	size_t const begin{_begin};
 	size_t const count{_count};
@@ -114,6 +114,7 @@ bigint parseBigEndianRightPadded(bytesConstRef _in, bigint const& _begin, bigint
 
 	bigint ret = fromBigEndian<bigint>(cropped);
 	// shift as if we had right-padding zeroes
+	assert(count - cropped.count() <= numeric_limits<size_t>::max() / 8);
 	ret <<= 8 * (count - cropped.count());
 
 	return ret;
@@ -124,11 +125,11 @@ ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
 	bigint const baseLength(parseBigEndianRightPadded(_in, 0, 32));
 	bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
 	bigint const modLength(parseBigEndianRightPadded(_in, 64, 32));
-	assert(modLength <= numeric_limits<size_t>::max()); // Otherwise gas should be too expensive.
-	assert(baseLength <= numeric_limits<size_t>::max()); // Otherwise, gas should be too expensive.
+	assert(modLength <= numeric_limits<size_t>::max() / 8); // Otherwise gas should be too expensive.
+	assert(baseLength <= numeric_limits<size_t>::max() / 8); // Otherwise, gas should be too expensive.
 	if (modLength == 0 && baseLength == 0)
 		return {true, bytes{}}; // This is a special case where expLength can be very big.
-	assert(expLength << numeric_limits<size_t>::max());
+	assert(expLength << numeric_limits<size_t>::max() / 8);
 
 	bigint const base(parseBigEndianRightPadded(_in, 96, baseLength));
 	bigint const exp(parseBigEndianRightPadded(_in, 96 + baseLength, expLength));
