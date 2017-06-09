@@ -61,7 +61,7 @@ void TestOutputHelper::initTest(json_spirit::mValue& _v)
 	m_currTest = 0;
 }
 
-bool TestOutputHelper::passTest(std::string& _testName)
+bool TestOutputHelper::passTest(std::string const& _testName)
 {
 	m_currTest++;
 	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));

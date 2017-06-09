@@ -103,11 +103,11 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
 	TestOutputHelper::initTest(_v);	//Count how many tests in the json object (read from .json file)
-	doBlockchainTestsInternal(_v, _fillin); //Do the test / test generation
+	doBlockchainTestNoLog(_v, _fillin); //Do the test / test generation
 	TestOutputHelper::finishTest(); //Calculate the time of test execution and add it to the log
 }
 
-void doBlockchainTestsInternal(json_spirit::mValue& _v, bool _fillin)
+void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())
 	{
