@@ -129,6 +129,10 @@ ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
 	bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
 	bigint const modLength(parseBigEndianRightPadded(_in, 64, 32));
 	assert(modLength <= numeric_limits<size_t>::max()); // Otherwise gas should be too expensive.
+	assert(baseLength <= numeric_limits<size_t>::max()); // Otherwise, gas should be too expensive.
+	if (modLength == 0 && baseLength == 0)
+		return {true, bytes{}}; // This is a special case where expLength can be very big.
+	assert(expLength << numeric_limits<size_t>::max());
 
 	bigint const base(parseBigEndianRightPadded(_in, 96, baseLength));
 	bigint const exp(parseBigEndianRightPadded(_in, 96 + baseLength, expLength));
