@@ -158,6 +158,7 @@ private:
 	void throwBadStack(unsigned _removed, unsigned _added);
 	void throwRevertInstruction(owning_bytes_ref&& _output);
 	void throwDisallowedStateChange();
+	void throwBufferOverrun(bigint const& _enfOfAccess);
 
 	void reportStackUse();
 

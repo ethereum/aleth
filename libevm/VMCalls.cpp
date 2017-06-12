@@ -94,6 +94,13 @@ void VM::throwRevertInstruction(owning_bytes_ref&& _output)
 	throw RevertInstruction(move(_output));
 }
 
+void VM::throwBufferOverrun(bigint const& _endOfAccess)
+{
+	if (m_onFail)
+		(this->*m_onFail)();
+	BOOST_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
+}
+
 int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 {
 	// check for overflow
