@@ -124,8 +124,8 @@ public:
 			fileCount *= 2; //tests are checked when filled and after they been filled
 		test::TestOutputHelper::initTest(fileCount);
 
-		for (size_t i = 0; i < files.size(); i++)
-			test::executeTests(files[i].filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
+		for (auto const& file: files)
+			test::executeTests(file.filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
 
 		test::TestOutputHelper::finishTest();
 	}

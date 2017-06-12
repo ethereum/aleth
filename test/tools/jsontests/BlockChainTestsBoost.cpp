@@ -186,8 +186,8 @@ BOOST_AUTO_TEST_CASE(bcRandom)
 	//bcRandom tests are generated from random state tests and have 1 test case * 5 forks in each file
 	dev::test::TestOutputHelper::initTest(fileCount * 5);
 
-	for (size_t i = 0; i < files.size(); i++)
-		dev::test::executeTests(files[i].filename().string(), "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTestNoLog);
+	for (auto const& file: files)
+		dev::test::executeTests(file.filename().string(), "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTestNoLog);
 
 	//calculate the total time on bcRandom test cases
 	dev::test::TestOutputHelper::finishTest();
