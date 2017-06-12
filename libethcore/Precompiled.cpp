@@ -168,7 +168,7 @@ ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
 	bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
 	bigint const modLength(parseBigEndianRightPadded(_in, 64, 32));
 
-	bigint const maxLength(max(modLength, bigint(baseLength)));
+	bigint const maxLength(max(modLength, baseLength));
 	bigint const adjustedExpLength(expLengthAdjust(baseLength + 96, expLength, _in));
 
 	return maxLength * maxLength * max<bigint>(adjustedExpLength, 1) / 100;
