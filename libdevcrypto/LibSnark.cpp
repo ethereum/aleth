@@ -164,11 +164,7 @@ pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 	}
 	catch (InvalidEncoding const&)
 	{
-		return {false, bytes{}};
-	}
-	catch (...)
-	{
-		cwarn << "Internal exception from libsnark. Forwarding as precompiled contract failure.";
+		// Signal the call failure for invalid input.
 		return {false, bytes{}};
 	}
 }
@@ -184,12 +180,9 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
 	}
 	catch (InvalidEncoding const&)
 	{
+		// Signal the call failure for invalid input.
+		return {false, bytes{}};
 	}
-	catch (...)
-	{
-		cwarn << "Internal exception from libsnark. Forwarding as precompiled contract failure.";
-	}
-	return {false, bytes{}};
 }
 
 pair<bool, bytes> dev::crypto::alt_bn128_G1_mul(dev::bytesConstRef _in)
@@ -203,10 +196,7 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_mul(dev::bytesConstRef _in)
 	}
 	catch (InvalidEncoding const&)
 	{
+		// Signal the call failure for invalid input.
+		return {false, bytes{}};
 	}
-	catch (...)
-	{
-		cwarn << "Internal exception from libsnark. Forwarding as precompiled contract failure.";
-	}
-	return {false, bytes{}};
 }
