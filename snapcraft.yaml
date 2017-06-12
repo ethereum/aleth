@@ -18,7 +18,7 @@ apps:
 
 parts:
   cpp-ethereum:
-    source: ../..
+    source: .
     plugin: cmake
     build-packages:
       - build-essential
