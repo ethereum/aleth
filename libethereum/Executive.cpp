@@ -352,12 +352,25 @@ bool Executive::executeCreate(Address _sender, u256 _endowment, u256 _gasPrice, 
 	// Schedule _init execution if not empty.
 	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
-	else if (m_s.addressHasCode(m_newAddress) && m_envInfo.number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
-		// Overwrite with empty code in case the account already has a code
-		// (address collision -- not real life case but we can check it with
-		// synthetic tests).
-		m_s.setCode(m_newAddress, {});
-
+	
+	if (m_envInfo.number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
+	{
+		if (m_s.addressHasCode(m_newAddress))
+			// Overwrite with empty code in case the account already has a code
+			// (address collision -- not real life case but we can check it with
+			// synthetic tests).
+			m_s.setCode(m_newAddress, {});
+	}
+	else
+	{
+		if ((m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) != 0))
+		{
+			clog(StateSafeExceptions) << "Address already used. ";
+			m_gas = 0;
+			m_excepted = TransactionException::AddressAlreadyUsed;
+			revert();
+		}
+	}
 	return !m_ext;
 }
 
@@ -394,10 +407,6 @@ bool Executive::go(OnOpFunc const& _onOp)
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
 			if (m_isCreation)
 			{
-				if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("metropolisForkBlock") &&
-					(m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) != 0))
-					BOOST_THROW_EXCEPTION(AddressAlreadyUsed()); // EIP86
-
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
 				{
@@ -439,14 +448,6 @@ bool Executive::go(OnOpFunc const& _onOp)
 		catch (VMException const& _e)
 		{
 			clog(StateSafeExceptions) << "Safe VM Exception. " << diagnostic_information(_e);
-			m_gas = 0;
-			m_excepted = toTransactionException(_e);
-			revert();
-		}
-		catch (AddressAlreadyUsed const& _e)
-		{
-			// EIP86
-			clog(StateSafeExceptions) << "Address already used. " << diagnostic_information(_e);
 			m_gas = 0;
 			m_excepted = toTransactionException(_e);
 			revert();
