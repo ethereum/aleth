@@ -70,8 +70,9 @@ public:
 
 	bytes const& memory() const { return m_mem; }
 	u256s stack() const {
-		u256s stack(m_SP, m_stackEnd);
-		reverse(stack.begin(), stack.end());
+		u256 s[2];
+		u256s stack (s,s+1)/* (m_SP, m_stackEnd);
+		reverse(stack.begin(), stack.end()); */;
 		return stack;
 	};
 
@@ -106,10 +107,22 @@ private:
 
 	/// RETURNDATA buffer for memory returned from direct subcalls.
 	bytes m_returnData;
+	
+	// stack items may be 256-bit wide integers or SIMD vectors
+	union StackItem {
+		StackItem() { memset(this, 0, sizeof *this); }
+		u256* cheat256() { return (u256*)wdata; }
+		u256& w256() { return *cheat256(); }
+		uint8_t wdata alignas(u256) [sizeof(u256)];
+		uint64_t v64x4 [4];		
+		uint32_t v32x8 [8];
+		uint16_t v16x16[16];
+		uint8_t  v8x32 [32];
+	};
 
 	// space for data stack, grows towards smaller addresses from the end
-	u256 m_stack[1024];
-	u256 *m_stackEnd = &m_stack[1024];
+	StackItem m_stack[1024];
+	StackItem *m_stackEnd = &m_stack[1024];
 	size_t stackSize() { return m_stackEnd - m_SP; }
 	
 #if EVM_JUMPS_AND_SUBS
@@ -126,8 +139,8 @@ private:
 	// interpreter state
 	Instruction m_OP;                   // current operation
 	uint64_t    m_PC    = 0;            // program counter
-	u256*       m_SP    = m_stackEnd;   // stack pointer
-	u256*       m_SPP   = m_SP;         // stack pointer prime (next SP)
+	StackItem*  m_SP    = m_stackEnd;   // stack pointer
+	StackItem*  m_SPP   = m_SP;         // stack pointer prime (next SP)
 #if EVM_JUMPS_AND_SUBS
 	uint64_t*   m_RP    = m_return - 1; // return pointer
 #endif
@@ -149,7 +162,7 @@ private:
 	bool caseCallSetup(CallParameters*, bytesRef& o_output);
 	void caseCall();
 
-	void copyDataToMemory(bytesConstRef _data, u256*_sp);
+	void copyDataToMemory(bytesConstRef _data, StackItem* _sp);
 	uint64_t memNeed(u256 _offset, u256 _size);
 
 	void throwOutOfGas();
@@ -188,7 +201,30 @@ private:
 		uint64_t w = uint64_t(v);
 		return w;
 	}
-	};
+	
+	void xadd (uint8_t);
+	void xmul (uint8_t);
+	void xsub (uint8_t);
+	void xdiv (uint8_t);
+	void xsdiv(uint8_t);
+	void xmod (uint8_t);
+	void xsmod(uint8_t);
+	void xlt  (uint8_t);
+	void xslt (uint8_t);
+	void xgt  (uint8_t);
+	void xsgt (uint8_t);
+	void xeq  (uint8_t);
+	void xzero(uint8_t);
+	void xand (uint8_t);
+	void xoor (uint8_t);
+	void xxor (uint8_t);
+	void xnot (uint8_t);
+	void xshr (uint8_t);
+	void xsar (uint8_t);
+	void xshl (uint8_t);
+	void xrol (uint8_t);
+	void xror (uint8_t);
+};
 
 }
 }
