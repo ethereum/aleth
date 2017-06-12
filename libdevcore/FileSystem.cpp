@@ -55,15 +55,8 @@ void dev::setIpcPath(string const& _ipcDir)
 
 string dev::getIpcPath()
 {
-	if (s_ethereumIpcPath.empty())
-		return string(getDataDir());
-	else
-	{
-		size_t socketPos = s_ethereumIpcPath.rfind("geth.ipc");
-		if (socketPos != string::npos)
-			return s_ethereumIpcPath.substr(0, socketPos);
-		return s_ethereumIpcPath;
-	}
+	// Strip "geth.ipc" suffix if provided.
+	return s_ethereumIpcPath.substr(0, s_ethereumIpcPath.rfind("geth.ipc"));
 }
 
 string dev::getDataDir(string _prefix)
