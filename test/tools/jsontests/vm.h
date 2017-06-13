@@ -54,7 +54,7 @@ public:
 	virtual void suicide(Address _a) override { std::get<0>(addresses[_a]) += std::get<0>(addresses[myAddress]); addresses.erase(myAddress); }
 	virtual bytes const& codeAt(Address _a) override { return std::get<3>(addresses[_a]); }
 	virtual size_t codeSizeAt(Address _a) override { return std::get<3>(addresses[_a]).size(); }
-	virtual std::pair<h160, eth::owning_bytes_ref> create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::OnOpFunc const&) override;
+	virtual std::pair<h160, eth::owning_bytes_ref> create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::Instruction _op, u256 _salt, eth::OnOpFunc const&) override;
 	virtual std::pair<bool, eth::owning_bytes_ref> call(eth::CallParameters&) override;
 	virtual h256 blockHash(u256 _number) override;
 	void setTransaction(Address _caller, u256 _value, u256 _gasPrice, bytes const& _data);
@@ -80,6 +80,5 @@ public:
 	u256 gas;
 	u256 execGas;
 };
-
 
 } } // Namespace Close

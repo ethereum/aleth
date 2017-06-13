@@ -22,6 +22,7 @@
 
 #include <boost/filesystem.hpp>
 
+#include <libethereum/ChainParams.h>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include <libevm/ExtVMFace.h>
@@ -37,9 +38,28 @@ FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX:
 	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, _depth)
 {}
 
-std::pair<h160, eth::owning_bytes_ref> FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
+std::pair<h160, eth::owning_bytes_ref> FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, Instruction _op, u256 salt, OnOpFunc const&)
 {
-	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
+	/*
+	 * EIP86:
+	 *  creation from:
+	 *   - CREATE: always create using nonce
+	 *   - CREATE2: declared after metropolis fork, create using code
+	 */
+	Address na;
+	if (envInfo().number() >= se->chainParams().u256Param("metropolisForkBlock"))
+	{
+		if (_op == Instruction::CREATE)
+			na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
+		else if (_op == Instruction::CREATE2)
+			na = right160(sha3(myAddress.asBytes() + toBigEndian(salt) + sha3(_init).asBytes()));
+		else
+			assert(false);
+	}
+	else
+		na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
+
 
 	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
 	callcreates.push_back(t);

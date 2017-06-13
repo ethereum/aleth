@@ -115,10 +115,16 @@ void ExtVM::setStore(u256 _n, u256 _v)
 	m_s.setStorage(myAddress, _n, _v);
 }
 
-std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
+std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp)
 {
 	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
-	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
+	bool result = false;
+	if (_op == Instruction::CREATE)
+		result = e.createOpcode(myAddress, _endowment, gasPrice, io_gas, _code, origin);
+	else
+		result = e.create2Opcode(myAddress, _endowment, gasPrice, io_gas, _code, origin, _salt);
+
+	if (!result)
 	{
 		go(depth, e, _onOp);
 		e.accrueSubState(sub);
