@@ -43,8 +43,7 @@ void queryState(
 	evm_variant* o_result,
 	evm_env* _opaqueEnv,
 	evm_query_key _key,
-	evm_uint160be const* _addr,
-	evm_uint256be const* _storageKey
+	evm_uint160be const* _addr
 ) noexcept
 {
 	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
@@ -64,16 +63,24 @@ void queryState(
 	case EVM_BALANCE:
 		o_result->uint256be = toEvmC(env.balance(addr));
 		break;
-	case EVM_SLOAD:
-	{
-		auto storageKey = fromEvmC(*_storageKey);
-		o_result->uint256be = toEvmC(env.store(storageKey));
-		break;
-	}
 	case EVM_ACCOUNT_EXISTS:
 		o_result->int64 = env.exists(addr);
 		break;
 	}
+}
+
+void getStorage(
+	evm_uint256be* o_result,
+	evm_env* _opaqueEnv,
+	evm_uint160be const* _addr,
+	evm_uint256be const* _key
+) noexcept
+{
+	(void) _addr;
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	assert(fromEvmC(*_addr) == env.myAddress);
+	u256 key = fromEvmC(*_key);
+	*o_result = toEvmC(env.store(key));
 }
 
 void setStorage(
@@ -230,7 +237,8 @@ class EVM
 public:
 	EVM(
 		evm_query_state_fn _queryFn,
-		evm_set_storage_fn _updateFn,
+		evm_get_storage_fn _getStorageFn,
+		evm_set_storage_fn _setStorageFn,
 		evm_selfdestruct_fn _selfdestructFn,
 		evm_call_fn _callFn,
 		evm_get_tx_context_fn _getTxContextFn,
@@ -240,10 +248,14 @@ public:
 	{
 		auto factory = evmjit_get_factory();
 		m_instance = factory.create(
-				_queryFn, _updateFn,
-				_selfdestructFn,
-				_callFn, _getTxContextFn, _getBlockHashFn,
-				_logFn
+			_queryFn,
+			_getStorageFn,
+			_setStorageFn,
+			_selfdestructFn,
+			_callFn,
+			_getTxContextFn,
+			_getBlockHashFn,
+			_logFn
 		);
 	}
 
@@ -331,7 +343,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(queryState, setStorage, selfdestruct, call, getTxContext, getBlockHash, log);
+	static EVM jit(queryState, getStorage, setStorage, selfdestruct, call, getTxContext, getBlockHash, log);
 	return jit;
 }
 
