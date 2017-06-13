@@ -20,7 +20,7 @@ contract rng {
 			rand4 *= 0x85b97faf7f8511f3173347ea124749fb69335f577897cc4550e16888749aa7;
 			rand4 += 0xb19bb307991f810548aac2ebe127f0d19e8b2fc09b0bc88c4773b2dce8bbbc91;
 		}
-		return rand1;
+		return rand1 ^ rand2 ^ rand3 ^ rand4;
 	}
 	function rng() {
 		rand = test();
