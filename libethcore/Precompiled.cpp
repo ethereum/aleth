@@ -24,6 +24,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/Common.h>
+#include <libdevcrypto/LibSnark.h>
 #include <libethcore/Common.h>
 using namespace std;
 using namespace dev;
@@ -110,7 +111,7 @@ bigint parseBigEndianRightPadded(bytesConstRef _in, size_t _begin, size_t _count
 	bigint ret = fromBigEndian<bigint>(cropped);
 	// shift as if we had right-padding zeroes
 	ret <<= 8 * (_count - cropped.count());
-	
+
 	return ret;
 }
 
@@ -125,8 +126,8 @@ ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
 	bigint const mod(parseBigEndianRightPadded(_in, 96 + baseLength + expLength, modLength));
 
 	bigint const result = mod != 0 ? boost::multiprecision::powm(base, exp, mod) : bigint{0};
-	
-	bytes ret(modLength); 
+
+	bytes ret(modLength);
 	toBigEndian(result, ret);
 
 	return {true, ret};
@@ -141,6 +142,26 @@ ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
 	bigint const maxLength = max(modLength, baseLength);
 
 	return maxLength * maxLength * max<bigint>(expLength, 1) / 20;
+}
+
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in)
+{
+	return dev::crypto::alt_bn128_G1_add(_in);
+}
+
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in)
+{
+	return dev::crypto::alt_bn128_G1_mul(_in);
+}
+
+ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
+{
+	return dev::crypto::alt_bn128_pairing_product(_in);
+}
+
+ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
+{
+	return 100000 + (_in.size() / 192) * 80000;
 }
 
 }

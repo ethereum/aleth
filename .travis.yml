@@ -107,6 +107,7 @@ cache:
         # build external dependencies next build.
         - $TRAVIS_BUILD_DIR/deps
 install:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then clang --version; brew install llvm; $(brew --prefix llvm)/bin/clang --version; export PATH=$(brew --prefix llvm)/bin:$PATH; export CC=$(brew --prefix llvm)/bin/clang; export CXX=$(brew --prefix llvm)/bin/clang++; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh; fi
     - ./scripts/install_deps.sh
 before_script:

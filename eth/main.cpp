@@ -43,6 +43,8 @@
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
 
+#include <libdevcrypto/LibSnark.h>
+
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>

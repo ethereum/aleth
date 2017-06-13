@@ -60,8 +60,7 @@ include(ProjectCryptopp)
 include(ProjectJsonCpp)
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
-
-
+include(ProjectSnark)
 
 configure_project()
 

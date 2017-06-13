@@ -600,7 +600,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 				}
 			}			
 			else if (_expects.count("hash"))
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! " + trInfo);
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(t.postState.rootHash().asBytes()) + " in " + trInfo);
 			else
 				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
 
