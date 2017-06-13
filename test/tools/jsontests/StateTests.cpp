@@ -117,7 +117,7 @@ public:
 	{
 		std::string fillersPath = test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
 
-		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, test::Options::get().singleTestName + "Filler");
 		int fileCount = files.size();
 
 		if (test::Options::get().filltests)
