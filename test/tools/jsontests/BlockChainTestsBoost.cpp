@@ -20,7 +20,6 @@
  * BlockChain boost test cases.
  */
 
-#include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <test/tools/libtesteth/TestHelper.h>
@@ -173,4 +172,26 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 	dev::test::userDefinedTest(dev::test::doBlockchainTests);
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+//BlockChainTests
+BOOST_AUTO_TEST_SUITE(BlockChainTestsRandom)
+
+BOOST_AUTO_TEST_CASE(bcRandom)
+{
+	std::string fillersPath = dev::test::getTestPath() + "/src/BlockchainTestsFiller/RandomTests";
+
+	std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+	int fileCount = files.size();
+
+	//bcRandom tests are generated from random state tests and have 1 test case * 5 forks in each file
+	dev::test::TestOutputHelper::initTest(fileCount * 5);
+
+	for (auto const& file: files)
+		dev::test::executeTests(file.filename().string(), "/BlockchainTests/RandomTests", "/BlockchainTestsFiller/RandomTests", dev::test::doBlockchainTestNoLog);
+
+	//calculate the total time on bcRandom test cases
+	dev::test::TestOutputHelper::finishTest();
+}
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()

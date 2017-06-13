@@ -102,16 +102,24 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
-	if (!Options::get().fillchain) //fill blockchain through state tests
-		TestOutputHelper::initTest(_v);
+	TestOutputHelper::initTest(_v);	//Count how many tests in the json object (read from .json file)
+	doBlockchainTestNoLog(_v, _fillin); //Do the test / test generation
+	TestOutputHelper::finishTest(); //Calculate the time of test execution and add it to the log
+}
+
+void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
+{
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		if (!Options::get().fillchain)
-		if (!TestOutputHelper::passTest(o, testname))
+		//Select test by name if --singletest is set and not filling state tests as blockchain
+		if (!TestOutputHelper::passTest(testname) && !Options::get().fillchain)
+		{
+			o.clear(); //don't add irrelevant tests to the final file when filling
 			continue;
+		}
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
 		BOOST_REQUIRE(o.count("pre"));
@@ -407,7 +415,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			ImportTest::compareStates(postState, blockchain.topBlock().state());
 		}
 	}//for tests
-	TestOutputHelper::finishTest();
 }
 
 //TestFunction

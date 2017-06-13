@@ -121,6 +121,7 @@ protected:
 };
 
 // helping functions
+std::vector<boost::filesystem::path> getJsonFiles(std::string const& _dirPath);
 std::string netIdToString(eth::Network _netId);
 eth::Network stringToNetId(std::string const& _netname);
 u256 toInt(json_spirit::mValue const& _v);
@@ -166,6 +167,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
 void doStateTests(json_spirit::mValue& v, bool _fillin);
 void doVMTests(json_spirit::mValue& v, bool _fillin);
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin);
+void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin);
 void doRlpTests(json_spirit::mValue& v, bool _fillin);
 
 

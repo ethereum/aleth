@@ -198,6 +198,16 @@ void replaceLLLinState(json_spirit::mObject& _o)
 	}
 }
 
+std::vector<boost::filesystem::path> getJsonFiles(std::string const& _dirPath)
+{
+	vector<boost::filesystem::path> jsonFiles;
+	using Bdit = boost::filesystem::directory_iterator;
+	for (Bdit it(_dirPath); it != Bdit(); ++it)
+		if (boost::filesystem::is_regular_file(it->path()) && it->path().extension() == ".json")
+			jsonFiles.push_back(it->path());
+	return jsonFiles;
+}
+
 string compileLLL(string const& _code)
 {
 	if (_code == "")

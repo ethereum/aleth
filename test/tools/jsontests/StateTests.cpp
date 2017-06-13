@@ -46,10 +46,10 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		if (!TestOutputHelper::passTest(o, testname))
+		if (!TestOutputHelper::passTest(testname))
 			continue;
 
-		//For 100% at the log output
+		//For 100% at the log output when making blockchain tests out of state tests
 		if (_fillin == false && Options::get().fillchain)
 			continue;
 
@@ -115,25 +115,19 @@ public:
 
 	void fillAllFilesInFolder(string _folder)
 	{
-		std::string fillersPath = dev::test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
+		std::string fillersPath = test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
 
-		boost::filesystem::directory_iterator iterator_tmp(fillersPath);
-		int fileCount = 0;
-		for(; iterator_tmp != boost::filesystem::directory_iterator(); ++iterator_tmp)
-			if (boost::filesystem::is_regular_file(iterator_tmp->path()) && iterator_tmp->path().extension() == ".json")
-				fileCount++;
-		if (dev::test::Options::get().filltests)
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+		int fileCount = files.size();
+
+		if (test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
-		dev::test::TestOutputHelper::initTest(fileCount);
+		test::TestOutputHelper::initTest(fileCount);
 
-		boost::filesystem::directory_iterator iterator(fillersPath);
-		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
-			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
-			{
-				string fileboost = iterator->path().filename().string();
-				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
-			}
-		dev::test::TestOutputHelper::finishTest();
+		for (auto const& file: files)
+			test::executeTests(file.filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
+
+		test::TestOutputHelper::finishTest();
 	}
 };
 
