@@ -14,6 +14,62 @@ When you add a test case in the consensus test suite, you are supposed to push b
 
 .. _`tests repository`: https://github.com/ethereum/tests
 
+Checking Out the tests Repository
+=================================
+
+The consensus tests are stored in the tests repository.  The command
+
+.. code:: bash
+   git clone https://github.com/ethereum/tests.git
+
+should create a local copy of the ``develop`` branch of the tests repository.  From here on, ``<LOCAL_PATH_TO_ETH_TESTS>`` points to this local copy.
+
+Preparing testeth and LLL
+=========================
+
+For generating consensus tests, an executable ``testeth`` is necessary.  Moreover, ``testeth`` uses the LLL compiler at run-time.
+The easier way is to use the docker image provided by winsvega_.
+
+.. _winsvega: https://github.com/winsvega
+
+option 1: docker image
+----------------------
+
+* `install Docker`_
+* ``docker run -v <LOCAL_PATH_TO_ETH_TESTS>:/foobar winsvega/testeth -t StateTestsGeneral/stCallCodes -- --singletest callcall_00 --singlenet EIP150 -d 0 -g 0 -v 0 --statediff --verbosity 5 --testpath /foobar`` should show something like
+
+.. code::
+
+   Running 1 test case...
+   Test Case "stCallCodes":
+     ℹ  15:26:10.517|testeth  TEST callcall_00 :
+     ℹ  15:26:10.521|testeth  callcall_00
+   ⚙ ◎  15:26:10.545|testeth  trNetID: EIP150
+   trDataInd: 0 tdGasInd: 0 trValInd: 0
+
+   24%...
+   48%...
+   72%...
+   96%...
+   100%
+
+   *** No errors detected
+
+
+.. _`install Docker`: https://www.docker.com/community-edition
+
+
+option 2: building them locally
+-------------------------------
+
+Sometimes, you need a tweaked version of ``testeth`` or ``lllc`` when your tests are about very new features.
+
+``testeth`` is distributed in cpp-ethereum_ and ``lllc`` is distributed in solidity_.  These executable needs to be installed.
+
+.. _cpp-ethereum: https://github.com/ethereum/cpp-ethereum
+
+.. _solidity: https://github.com/ethereum/solidity
+
 Generating a GeneralStateTest Case
 ==================================
 
@@ -181,7 +237,7 @@ After building ``testeth``, you are ready to fill the test.
 
 .. code:: bash
 
-   ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --checkstate
+   ETHEREUM_TEST_PATH="<LOCAL_PATH_TO_ETH_TESTS>" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --checkstate
 
 where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stReturnDataTest`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to look at ``expect`` fields.
 
