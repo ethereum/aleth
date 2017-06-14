@@ -218,10 +218,10 @@ static bool ethash_hash(
 
 		for (unsigned n = 0; n != MIX_NODES; ++n) {
 			node const* dag_node;
+			node tmp_node;
 			if (full_nodes) {
 				dag_node = &full_nodes[MIX_NODES * index + n];
 			} else {
-				node tmp_node;
 				ethash_calculate_dag_item(&tmp_node, index * MIX_NODES + n, light);
 				dag_node = &tmp_node;
 			}
@@ -446,41 +446,43 @@ ethash_full_t ethash_full_new_internal(
 		return NULL;
 	}
 	ret->file_size = (size_t)full_size;
-	switch (ethash_io_prepare(dirname, seed_hash, &f, (size_t)full_size, false)) {
-	case ETHASH_IO_FAIL:
-		// ethash_io_prepare will do all ETHASH_CRITICAL() logging in fail case
+
+	enum ethash_io_rc err = ethash_io_prepare(dirname, seed_hash, &f, (size_t)full_size, false);
+	if (err == ETHASH_IO_FAIL)
 		goto fail_free_full;
-	case ETHASH_IO_MEMO_MATCH:
-		if (!ethash_mmap(ret, f)) {
-			ETHASH_CRITICAL("mmap failure()");
-			goto fail_close_file;
-		}
-#if defined(__MIC__)
-		node* tmp_nodes = _mm_malloc((size_t)full_size, 64);
-		//copy all nodes from ret->data
-		//mmapped_nodes are not aligned properly
-		uint32_t const countnodes = (uint32_t) ((size_t)ret->file_size / sizeof(node));
-		//fprintf(stderr,"ethash_full_new_internal:countnodes:%d",countnodes);
-		for (uint32_t i = 1; i != countnodes; ++i) {
-			tmp_nodes[i] = ret->data[i];
-		}
-		ret->data = tmp_nodes;
-#endif
-		return ret;
-	case ETHASH_IO_MEMO_SIZE_MISMATCH:
+
+	if (err == ETHASH_IO_MEMO_SIZE_MISMATCH) {
 		// if a DAG of same filename but unexpected size is found, silently force new file creation
 		if (ethash_io_prepare(dirname, seed_hash, &f, (size_t)full_size, true) != ETHASH_IO_MEMO_MISMATCH) {
 			ETHASH_CRITICAL("Could not recreate DAG file after finding existing DAG with unexpected size.");
 			goto fail_free_full;
 		}
-		// fallthrough to the mismatch case here, DO NOT go through match
-	case ETHASH_IO_MEMO_MISMATCH:
+		// we now need to go through the mismatch case, NOT the match case
+		err = ETHASH_IO_MEMO_MISMATCH;
+	}
+
+	if (err == ETHASH_IO_MEMO_MISMATCH || err == ETHASH_IO_MEMO_MATCH) {
 		if (!ethash_mmap(ret, f)) {
 			ETHASH_CRITICAL("mmap failure()");
 			goto fail_close_file;
 		}
-		break;
+
+		if (err == ETHASH_IO_MEMO_MATCH) {
+#if defined(__MIC__)
+			node* tmp_nodes = _mm_malloc((size_t)full_size, 64);
+			//copy all nodes from ret->data
+			//mmapped_nodes are not aligned properly
+			uint32_t const countnodes = (uint32_t) ((size_t)ret->file_size / sizeof(node));
+			//fprintf(stderr,"ethash_full_new_internal:countnodes:%d",countnodes);
+			for (uint32_t i = 1; i != countnodes; ++i) {
+				tmp_nodes[i] = ret->data[i];
+			}
+			ret->data = tmp_nodes;
+#endif
+			return ret;
+		}
 	}
+
 
 #if defined(__MIC__)
 	ret->data = _mm_malloc((size_t)full_size, 64);

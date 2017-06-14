@@ -12,7 +12,7 @@ class FarmClient : public jsonrpc::Client
     public:
         FarmClient(jsonrpc::IClientConnector &conn, jsonrpc::clientVersion_t type = jsonrpc::JSONRPC_CLIENT_V2) : jsonrpc::Client(conn, type) {}
 
-        Json::Value eth_getWork() throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getWork()
         {
             Json::Value p;
             p = Json::nullValue;
@@ -22,7 +22,7 @@ class FarmClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_submitWork(const std::string& param1, const std::string& param2, const std::string& param3) throw (jsonrpc::JsonRpcException)
+        bool eth_submitWork(const std::string& param1, const std::string& param2, const std::string& param3)
         {
             Json::Value p;
             p.append(param1);
@@ -34,7 +34,7 @@ class FarmClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_submitHashrate(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        bool eth_submitHashrate(const std::string& param1, const std::string& param2)
         {
             Json::Value p;
             p.append(param1);
@@ -45,7 +45,7 @@ class FarmClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_awaitNewWork() throw (jsonrpc::JsonRpcException)
+        Json::Value eth_awaitNewWork()
         {
             Json::Value p;
             p = Json::nullValue;
@@ -55,7 +55,7 @@ class FarmClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_progress() throw (jsonrpc::JsonRpcException)
+        bool eth_progress()
         {
             Json::Value p;
             p = Json::nullValue;
