@@ -99,7 +99,7 @@ Writing a Test Filler
 A new test filler needs to be alone in a new test filler file.  A single GeneralStateTest filler file is not supposed to contain multiple tests.  ``testeth`` tool still accepts multiple GeneralStateTest fillers in a single test filler file, but this might change.
 
 In the ``tests`` repository, the test filler files for GeneralStateTests live under ``src/GeneralStateTestsFiller`` directory.
-The directory has many subdirectories.  You need to choose one of the subdirectories or create one.  The name of the filler file needs to end with ``Filler.json``.  For example, we might want to create a new directory ``src/GeneralStateTestsFiller/stReturnDataTest`` [#]_ with a new filler file ``returndatacopy_initialFiller.json``.
+The directory has many subdirectories.  You need to choose one of the subdirectories or create one.  The name of the filler file needs to end with ``Filler.json``.  For example, we might want to create a new directory ``src/GeneralStateTestsFiller/stExample2`` [#]_ with a new filler file ``returndatacopy_initialFiller.json``.
 
 .. [#] If you create a new directory here, you need to add `one line`__ in ``cpp-ethereum`` and file that change in a pull-request to ``cpp-ethereum``.
 
@@ -233,9 +233,9 @@ After building ``testeth``, you are ready to fill the test.
 
 .. code:: bash
 
-   ETHEREUM_TEST_PATH="<LOCAL_PATH_TO_ETH_TESTS>" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --checkstate
+   ETHEREUM_TEST_PATH="<LOCAL_PATH_TO_ETH_TESTS>" test/testeth -t StateTestsGeneral/stExample2 -- --filltests --checkstate
 
-where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stReturnDataTest`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to look at ``expect`` fields.
+where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stExample2`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to look at ``expect`` fields.
 
 Depending on your shell, there are various way to set up ``ETHEREUM_TEST_PATH`` environment variable.  For example, adding ``export ETHEREUM_TEST_PATH=/path/to/tests`` to ``~/.bashrc`` might work for ``bash`` users.
 
@@ -251,7 +251,7 @@ For trying the filled test, in ``cpp-ethereum/build`` directory, run
 
 .. code:: bash
 
-   ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest
+   ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stExample2
 
 Trying the Filled Test in Travis CI
 +++++++++++++++++++++++++++++++++++
@@ -279,13 +279,13 @@ In the tests repository, each GeneralStateTest is eventually translated into a B
 
 .. code::
 
-  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --fillchain --checkstate
+  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stExample2 -- --filltests --fillchain --checkstate
 
 followed by
 
 .. code::
 
-  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stReturnDataTest -- --filltests --checkstate
+  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stExample2 -- --filltests --checkstate
 
 The second command is necessary because the first command modifies the GeneralStateTests in an undesired way.
 
