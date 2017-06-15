@@ -201,28 +201,37 @@ private:
 		return w;
 	}
 	
-	void xadd (uint8_t);
-	void xmul (uint8_t);
-	void xsub (uint8_t);
-	void xdiv (uint8_t);
-	void xsdiv(uint8_t);
-	void xmod (uint8_t);
-	void xsmod(uint8_t);
-	void xlt  (uint8_t);
-	void xslt (uint8_t);
-	void xgt  (uint8_t);
-	void xsgt (uint8_t);
-	void xeq  (uint8_t);
-	void xzero(uint8_t);
-	void xand (uint8_t);
-	void xoor (uint8_t);
-	void xxor (uint8_t);
-	void xnot (uint8_t);
-	void xshr (uint8_t);
-	void xsar (uint8_t);
-	void xshl (uint8_t);
-	void xrol (uint8_t);
-	void xror (uint8_t);
+	void xadd  (uint8_t);
+	void xmul  (uint8_t);
+	void xsub  (uint8_t);
+	void xdiv  (uint8_t);
+	void xsdiv (uint8_t);
+	void xmod  (uint8_t);
+	void xsmod (uint8_t);
+	void xlt   (uint8_t);
+	void xslt  (uint8_t);
+	void xgt   (uint8_t);
+	void xsgt  (uint8_t);
+	void xeq   (uint8_t);
+	void xzero (uint8_t);
+	void xand  (uint8_t);
+	void xoor  (uint8_t);
+	void xxor  (uint8_t);
+	void xnot  (uint8_t);
+	void xshr  (uint8_t);
+	void xsar  (uint8_t);
+	void xshl  (uint8_t);
+	void xrol  (uint8_t);
+	void xror  (uint8_t);
+
+	void xpush (uint8_t);
+	void xmload(uint8_t);
+	void xmstor(uint8_t);
+	void xsload(uint8_t);
+	void xsstor(uint8_t);
+	void xstuff(uint8_t);
+	void xswizz(uint8_t, uint8_t);
+	void xshuff(uint8_t, uint8_t, uint8_t);
 };
 
 }

@@ -23,7 +23,7 @@ namespace dev
 namespace eth
 {
 
-// tried using template template template functions, gave up fighting compiler after a day
+// tried using template template functions, gave up fighting the compiler after a day
 #define EVALXOPS(OP, b) EVALXOP(OP, int8_t, int16_t, int32_t, int64_t, b)
 #define EVALXOPU(OP, b) EVALXOP(OP, uint8_t, uint16_t, uint32_t, uint64_t, b)
 #define EVALXOP(OP, T8, T16, T32, T64, b) \
@@ -77,5 +77,75 @@ void VM::xsar (uint8_t b) { EVALXOPS(SHR, b); }
 void VM::xshl (uint8_t b) { EVALXOPU(SHL, b); }
 void VM::xrol (uint8_t b) { EVALXOPU(ROL, b); }
 void VM::xror (uint8_t b) { EVALXOPU(ROR, b); }
+
+void xswizzle(uint8_t b, uint8_t c)
+{
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
+	const uint8_t m = (c) & 0xf, u = (c) >> 4;
+
+	// given the type of the source vector t and permutation mask u
+	// for every index in the mask copy out the indexed value in the source
+	switch (t)
+	{
+	case 0:
+		switch (u)
+		{
+		case (0): for (int i = 0; i < m; ++i) m_SPP[0].v8x32[ i] = m_SP[1].v8x32 [m_SP[0].v8x32 [i] % 32]; break;
+		case (1): for (int i = 0; i < m; ++i) m_SPP[0].v8x32[ i] = m_SP[1].v16x16[m_SP[0].v16x16[i] % 16]; break;
+		case (2): for (int i = 0; i < m; ++i) m_SPP[0].v8x32[ i] = m_SP[1].v32x8 [m_SP[0].v32x8 [i] %  8]; break;
+		case (3): for (int i = 0; i < m; ++i) m_SPP[0].v8x32[ i] = m_SP[1].v64x4 [m_SP[0].v64x4 [i] %  4]; break;
+		}
+	case 1:
+		switch (u)
+		{
+		case (0): for (int i = 0; i < m; ++i) m_SPP[0].v16x16[i] = m_SP[1].v8x32 [m_SP[0].v8x32 [i] % 32]; break;
+		case (1): for (int i = 0; i < m; ++i) m_SPP[0].v16x16[i] = m_SP[1].v16x16[m_SP[0].v16x16[i] % 16]; break;
+		case (2): for (int i = 0; i < m; ++i) m_SPP[0].v16x16[i] = m_SP[1].v32x8 [m_SP[0].v32x8 [i] %  8]; break;
+		case (3): for (int i = 0; i < m; ++i) m_SPP[0].v16x16[i] = m_SP[1].v64x4 [m_SP[0].v64x4 [i] %  4]; break;
+		}
+	case 2:
+		switch (u)
+		{
+		case (0): for (int i = 0; i < m; ++i) m_SPP[0].v32x8[ i] = m_SP[1].v8x32 [m_SP[0].v8x32 [i] % 32]; break;
+		case (1): for (int i = 0; i < m; ++i) m_SPP[0].v32x8[ i] = m_SP[1].v16x16[m_SP[0].v16x16[i] % 16]; break;
+		case (2): for (int i = 0; i < m; ++i) m_SPP[0].v32x8[ i] = m_SP[1].v32x8 [m_SP[0].v32x8 [i] %  8]; break;
+		case (3): for (int i = 0; i < m; ++i) m_SPP[0].v32x8[ i] = m_SP[1].v64x4 [m_SP[0].v64x4 [i] %  4]; break;
+		}
+	case 3:
+		switch (u)
+		{
+		case (0): for (int i = 0; i < m; ++i) m_SPP[0].v64x4[ i] = m_SP[1].v8x32 [m_SP[0].v8x32 [i] % 32]; break;
+		case (1): for (int i = 0; i < m; ++i) m_SPP[0].v64x4[ i] = m_SP[1].v16x16[m_SP[0].v16x16[i] % 16]; break;
+		case (2): for (int i = 0; i < m; ++i) m_SPP[0].v64x4[ i] = m_SP[1].v32x8 [m_SP[0].v32x8 [i] %  8]; break;
+		case (3): for (int i = 0; i < m; ++i) m_SPP[0].v64x4[ i] = m_SP[1].v64x4 [m_SP[0].v64x4 [i] %  4]; break;
+		}
+	default: throwBadInstruction();
+	}
+}
+
+void xvtou(uint8_t b)
+{
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
+	m_SPP[0].w256() = 0;
+	switch (t) {
+	case (0): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 8;  m_SPP[0].w256() |= m_SP[0].v8x32v[i]; break; }
+	case (1): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 16; m_SPP[0].w256() |= m_SP[0].v16x16[i]; break; }
+	case (2): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 32; m_SPP[0].w256() |= m_SP[0].v32x8 [i]; break; }
+	case (3): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 64; m_SPP[0].w256() |= m_SP[0].v64x4 [i]; break; }
+	default: throwBadInstruction();
+}
+
+void xutov(uint8_t b)
+{
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
+	switch (t) {
+	case (0): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v8x32v[i] |= m_SP[0].w256() & &xff;       m_SP[0].w256() << 8;  break; }
+	case (1): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v16x16[i] |= m_SP[0].w256() & &xffff;     m_SP[0].w256() << 16; break; }
+	case (2): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v32x8v[i] |= m_SP[0].w256() & &xffffff;   m_SPP0].w256() << 32; break; }
+	case (3): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v64x4v[i] |= m_SP[0].w256() & &xffffffff; m_SP[0].w256() << 64; break; }
+	default: throwBadInstruction();
+}
+
+void xpush(uint8_t) {uint8_t b}
 
 }}
