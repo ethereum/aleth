@@ -397,7 +397,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix)
 {
 	string testPath = getTestPath() + _testPathAppendix;
-	string testFillerPath = getTestPath() + "/src/" + _fillerPathAppendix;
+	string testFillerPath = getTestPath() + "/src" + _fillerPathAppendix;
 
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
@@ -422,7 +422,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 
 			json_spirit::read_string(s, v);
 			doTests(v, true);
-			addClientInfo(v);
+			addClientInfo(v, testfilename);
 			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
 		}
 		catch (Exception const& _e)
@@ -456,7 +456,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	}
 }
 
-void addClientInfo(json_spirit::mValue& _v)
+void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
 {
 	for (auto& i: _v.get_obj())
 	{
@@ -471,7 +471,11 @@ void addClientInfo(json_spirit::mValue& _v)
 			comment = existingInfo["comment"].get_str();
 		}
 
+		//prepare the relative src path
+		string source = _testSource.substr(_testSource.find("/src/"), _testSource.length());
+
 		clientinfo["filledwith"] = "cpp-ethereum rev-head: " + head;
+		clientinfo["source"] = source;
 		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
 	}
