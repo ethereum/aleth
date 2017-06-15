@@ -208,6 +208,18 @@ std::vector<boost::filesystem::path> getJsonFiles(std::string const& _dirPath)
 	return jsonFiles;
 }
 
+std::string executeCmd(std::string const& _command)
+{
+	char output[1024];
+	FILE *fp = popen(_command.c_str(), "r");
+	if (fp == NULL)
+		BOOST_ERROR("Failed to run " + _command);
+	if (fgets(output, sizeof(output) - 1, fp) == NULL)
+		BOOST_ERROR("Reading empty result for " + _command);
+	pclose(fp);
+	return boost::trim_copy(string(output));
+}
+
 string compileLLL(string const& _code)
 {
 	if (_code == "")
@@ -219,21 +231,12 @@ string compileLLL(string const& _code)
 	BOOST_ERROR("LLL compilation only supported on posix systems.");
 	return "";
 #else
-	char input[1024];
 	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
 	string cmd = string("lllc ") + path.string();
 	writeFile(path.string(), _code);
-
-	FILE *fp = popen(cmd.c_str(), "r");
-	if (fp == NULL)
-		BOOST_ERROR("Failed to run lllc");
-	if (fgets(input, sizeof(input) - 1, fp) == NULL)
-		BOOST_ERROR("Reading empty file for lllc");
-	pclose(fp);
-
+	string result = executeCmd(cmd);
 	boost::filesystem::remove(path);
-	string result(input);
-	result = "0x" + boost::trim_copy(result);
+	result = "0x" + result;
 	return result;
 #endif
 }
@@ -419,6 +422,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 
 			json_spirit::read_string(s, v);
 			doTests(v, true);
+			addClientInfo(v);
 			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
 		}
 		catch (Exception const& _e)
@@ -449,6 +453,27 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << _e.what());
+	}
+}
+
+void addClientInfo(json_spirit::mValue& _v)
+{
+	for (auto& i: _v.get_obj())
+	{
+		json_spirit::mObject& o = i.second.get_obj();
+		json_spirit::mObject clientinfo;
+
+		string head = executeCmd("git rev-parse HEAD");
+		string comment;
+		if (o.count("_info"))
+		{
+			json_spirit::mObject& existingInfo = o["_info"].get_obj();
+			comment = existingInfo["comment"].get_str();
+		}
+
+		clientinfo["filledwith"] = "cpp-ethereum rev-head: " + head;
+		clientinfo["comment"] = comment;
+		o["_info"] = clientinfo;
 	}
 }
 
