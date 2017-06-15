@@ -216,7 +216,9 @@ std::string executeCmd(std::string const& _command)
 		BOOST_ERROR("Failed to run " + _command);
 	if (fgets(output, sizeof(output) - 1, fp) == NULL)
 		BOOST_ERROR("Reading empty result for " + _command);
-	pclose(fp);
+	int exitCode = pclose(fp);
+	if (exitCode != 0)
+		BOOST_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
 	return boost::trim_copy(string(output));
 }
 
@@ -468,11 +470,12 @@ void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
 		if (o.count("_info"))
 		{
 			json_spirit::mObject& existingInfo = o["_info"].get_obj();
-			comment = existingInfo["comment"].get_str();
+			if (existingInfo.count("comment"))
+				comment = existingInfo["comment"].get_str();
 		}
 
 		//prepare the relative src path
-		string source = _testSource.substr(_testSource.find("/src/"), _testSource.length());
+		string source = _testSource.substr(_testSource.rfind("/src/"), _testSource.length());
 
 		clientinfo["filledwith"] = "cpp-ethereum rev-head: " + head;
 		clientinfo["source"] = source;
