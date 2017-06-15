@@ -235,7 +235,7 @@ After building ``testeth``, you are ready to fill the test.
 
    ETHEREUM_TEST_PATH="<LOCAL_PATH_TO_ETH_TESTS>" test/testeth -t StateTestsGeneral/stExample2 -- --filltests --checkstate
 
-where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stExample2`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to look at ``expect`` fields.
+where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stExample2`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to check the final states against the ``expect`` fields.
 
 Depending on your shell, there are various way to set up ``ETHEREUM_TEST_PATH`` environment variable.  For example, adding ``export ETHEREUM_TEST_PATH=/path/to/tests`` to ``~/.bashrc`` might work for ``bash`` users.
 
