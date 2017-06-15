@@ -450,8 +450,8 @@ bytes const& State::code(Address const& _addr) const
 
 void State::setNewCode(Address const& _address, bytes&& _code)
 {
+	m_changeLog.emplace_back(_address, code(_address));
 	m_cache[_address].setNewCode(std::move(_code));
-	m_changeLog.emplace_back(Change::NewCode, _address);
 }
 
 h256 State::codeHash(Address const& _a) const
@@ -512,7 +512,10 @@ void State::rollback(size_t _savepoint)
 			m_cache.erase(change.address);
 			break;
 		case Change::NewCode:
-			account.resetCode();
+			if (change.oldCode.empty())
+				account.resetCode();
+			else
+				account.setNewCode(std::move(change.oldCode));
 			break;
 		case Change::Touch:
 			account.untouch();
