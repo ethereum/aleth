@@ -27,7 +27,7 @@ should create a local copy of the ``develop`` branch of the tests repository.  F
 Preparing testeth and LLL
 =========================
 
-For generating consensus tests, an executable ``testeth`` is necessary.  Moreover, ``testeth`` uses the LLL compiler at run-time.
+For generating consensus tests, an executable ``testeth`` is necessary.  Moreover, ``testeth`` uses the LLL compiler when it generates consensus tests.
 The easier way is to use the docker image provided by winsvega_.
 
 .. _winsvega: https://github.com/winsvega
@@ -41,11 +41,7 @@ option 1: docker image
 .. code::
 
    Running 1 test case...
-   Test Case "stCallCodes":
-     ℹ  15:26:10.517|testeth  TEST callcall_00 :
-     ℹ  15:26:10.521|testeth  callcall_00
-   ⚙ ◎  15:26:10.545|testeth  trNetID: EIP150
-   trDataInd: 0 tdGasInd: 0 trValInd: 0
+   <snip>
 
    24%...
    48%...
@@ -62,7 +58,7 @@ option 1: docker image
 option 2: building them locally
 -------------------------------
 
-Sometimes, you need a tweaked version of ``testeth`` or ``lllc`` when your tests are about very new features.
+Sometimes, you need a tweaked version of ``testeth`` or ``lllc`` when your tests are about very new features not available in the docker image.
 
 ``testeth`` is distributed in cpp-ethereum_ and ``lllc`` is distributed in solidity_.  These executable needs to be installed.
 
@@ -276,8 +272,10 @@ After these succeed, the filler file and the filled test should be added to the 
 If changes in the cpp-client was necessary, also file a pull-request there.
 
 
-Converting a GeneralStateTest Case into a BlockchainTest Case
+Advanced: Converting a GeneralStateTest Case into a BlockchainTest Case
 =============================================================
+
+In the tests repository, each GeneralStateTest is eventually translated into a BlockchainTest.  This can be done by the following sequence of commands.
 
 .. code::
 
@@ -291,7 +289,23 @@ followed by
 
 The second command is necessary because the first command modifies the GeneralStateTests in an undesired way.
 
-Generating a BlockchainTest Case
+After these two commands,
+* ``git status`` to check if any GeneralStateTest has changed.  If yes, revert the changes, and follow section _`Trying the Filled Test Locally`.  That will probably reveail an error that you need to debug.
+* ``git add`` to add only the desired BlockchainTests.  Not all modified BlockchainTests are valuable because, when you run ``--fillchain`` twice, the two invocations always produce different BlockchainTests even there are no changes in the source.
+
+Advanced: when testeth Takes Too Much Time
+===============================
+
+Sometimes ,especially when you are running BlockchainTests, ``testeth`` takes a lot of time.
+``testeth`` has options to run tests selectively:
+
+* ``--singletest callcall_00`` runs only one test of the name ``callcall_00``.
+* ``--singlenet EIP150`` runs tests only using one version of the protocol.
+* ``-d 0`` runs tests only on the first element in the ``data`` array of GeneralStateTest.
+* ``-g 0`` runs tests only on the first element in the ``gas`` array of GeneralStateTest.
+* ``-v 0`` runs tests only on the first element in the ``value`` array of GeneralStateTest.
+
+Advanced: Generating a BlockchainTest Case
 ================================
 
 (To be described.)
