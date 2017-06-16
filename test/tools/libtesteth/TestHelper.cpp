@@ -18,6 +18,7 @@
  * Helper functions to work with json::spirit and test files
  */
 
+#include <include/BuildInfo.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
@@ -458,6 +459,16 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	}
 }
 
+string prepareVersionString()
+{
+	//cpp-1.3.0+commit.6be76b64.Linux.g++
+	string commit(DEV_QUOTED(ETH_COMMIT_HASH));
+	string version = "cpp-" + string(ETH_PROJECT_VERSION);
+	version += "+commit." + commit.substr(0, 8);
+	version += "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
+	return version;
+}
+
 void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
 {
 	for (auto& i: _v.get_obj())
@@ -465,7 +476,6 @@ void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
 		json_spirit::mObject& o = i.second.get_obj();
 		json_spirit::mObject clientinfo;
 
-		string head = executeCmd("git rev-parse HEAD");
 		string comment;
 		if (o.count("_info"))
 		{
@@ -477,7 +487,7 @@ void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
 		//prepare the relative src path
 		string source = _testSource.substr(_testSource.rfind("/src/"), _testSource.length());
 
-		clientinfo["filledwith"] = "cpp-ethereum rev-head: " + head;
+		clientinfo["filledwith"] = prepareVersionString();
 		clientinfo["source"] = source;
 		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
