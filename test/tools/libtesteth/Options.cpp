@@ -108,7 +108,7 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--stats" && i + 1 < argc)
 		{
 			stats = true;
-			statsOutFile = argv[i + 1];
+			statsOutFile = argv[++i];
 		}
 		else if (arg == "--exectimelog")
 			exectimelog = true;
@@ -138,10 +138,10 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--singletest" && i + 1 < argc)
 		{
 			singleTest = true;
-			auto name1 = std::string{argv[i + 1]};
-			if (i + 2 < argc) // two params
+			auto name1 = std::string{argv[++i]};
+			if (i + 1 < argc) // two params
 			{
-				auto name2 = std::string{argv[i + 2]};
+				auto name2 = std::string{argv[++i]};
 				if (name2[0] == '-') // not param, another option
 					singleTestName = std::move(name1);
 				else
@@ -154,13 +154,13 @@ Options::Options(int argc, char** argv)
 				singleTestName = std::move(name1);
 		}
 		else if (arg == "--singlenet" && i + 1 < argc)
-			singleTestNet = std::string{argv[i + 1]};
+			singleTestNet = std::string{argv[++i]};
 		else if (arg == "--fulloutput")
 			fulloutput = true;
 		else if (arg == "--verbosity" && i + 1 < argc)
 		{
 			static std::ostringstream strCout; //static string to redirect logs to
-			std::string indentLevel = std::string{argv[i + 1]};
+			std::string indentLevel = std::string{argv[++i]};
 			if (indentLevel == "0")
 			{
 				logVerbosity = Verbosity::None;
@@ -172,14 +172,14 @@ Options::Options(int argc, char** argv)
 			else
 				logVerbosity = Verbosity::Full;
 
-			int indentLevelInt = atoi(argv[i + 1]);
+			int indentLevelInt = atoi(argv[i]);
 			if (indentLevelInt > g_logVerbosity)
 				g_logVerbosity = indentLevelInt;
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
 		else if (arg == "-t" && i + 1 < argc)
-			rCurrentTestSuite = std::string{argv[i + 1]};
+			rCurrentTestSuite = std::string{argv[++i]};
 		else if (arg == "--checktest" || arg == "--filltest")
 		{
 			//read all line to the end
@@ -190,13 +190,13 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--nonetwork")
 			nonetwork = true;
 		else if (arg == "-d" && i + 1 < argc)
-			trDataIndex = atoi(argv[i + 1]);
+			trDataIndex = atoi(argv[++i]);
 		else if (arg == "-g" && i + 1 < argc)
 			trGasIndex = atoi(argv[i + 1]);
 		else if (arg == "-v" && i + 1 < argc)
-			trValueIndex = atoi(argv[i + 1]);
+			trValueIndex = atoi(argv[++i]);
 		else if (arg == "--testpath" && i + 1 < argc)
-			testpath = std::string{argv[i + 1]};
+			testpath = std::string{argv[++i]};
 		else if (arg == "--statediff")
 			statediff = true;
 	}
