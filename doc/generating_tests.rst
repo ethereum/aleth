@@ -297,6 +297,17 @@ Advanced: when testeth Takes Too Much Time
 ===============================
 
 Sometimes ,especially when you are running BlockchainTests, ``testeth`` takes a lot of time.
+
+This happens when the GeneralTest fillers contain wrong parameters.  The ``"env"`` field should contain:
+
+.. code::
+
+     "currentCoinbase" : <an address>,
+     "currentDifficulty" : "0x020000",
+     "currentGasLimit" : <anything < 2**63-1 but make sure the transaction does not hit>,
+     "currentNumber" : "1",
+     "currentTimestamp" : "1000",
+
 ``testeth`` has options to run tests selectively:
 
 * ``--singletest callcall_00`` runs only one test of the name ``callcall_00``.
@@ -304,6 +315,8 @@ Sometimes ,especially when you are running BlockchainTests, ``testeth`` takes a 
 * ``-d 0`` runs tests only on the first element in the ``data`` array of GeneralStateTest.
 * ``-g 0`` runs tests only on the first element in the ``gas`` array of GeneralStateTest.
 * ``-v 0`` runs tests only on the first element in the ``value`` array of GeneralStateTest.
+
+``--singletest`` option removes skipped tests from the final test file, when ``testeth`` is filling a BlockchainTest.
 
 Advanced: Generating a BlockchainTest Case
 ================================
