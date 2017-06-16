@@ -73,9 +73,17 @@ Options::Options(int argc, char** argv)
 	trDataIndex = -1;
 	trGasIndex = -1;
 	trValueIndex = -1;
+	bool seenSeparator = false; // true if "--" has been seen.
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
+		if (arg == "--")
+		{
+			if (seenSeparator)
+				BOOST_THROW_EXCEPTION(InvalidOption("The separator -- appears more than once in the command line."));
+			seenSeparator = true;
+			continue;
+		}
 		if (arg == "--help")
 		{
 			printHelp();
@@ -199,6 +207,8 @@ Options::Options(int argc, char** argv)
 			testpath = std::string{argv[++i]};
 		else if (arg == "--statediff")
 			statediff = true;
+		else if (seenSeparator)
+			BOOST_THROW_EXCEPTION(InvalidOption("Unknown option: " + arg));
 	}
 
 	//Default option
