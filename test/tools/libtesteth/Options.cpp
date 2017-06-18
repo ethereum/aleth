@@ -159,7 +159,10 @@ Options::Options(int argc, char** argv)
 			{
 				auto name2 = std::string{argv[++i]};
 				if (name2[0] == '-') // not param, another option
+				{
 					singleTestName = std::move(name1);
+					i--;
+				}
 				else
 				{
 					singleTestFile = std::move(name1);
