@@ -5,8 +5,7 @@ Generating Consensus Tests
 Consensus Tests
 ===============
 
-Consensus tests are test cases for all Ethereum implementations.
-The test cases are distributed in the "filled" form, which contains, for example, the expected state root hash after transactions.
+Consensus tests are test cases for all Ethereum implementations. The test cases are distributed in the "filled" form, which contains, for example, the expected state root hash after transactions.
 The filled test cases are usually not written by hand, but generated from "test filler" files.
 ``testeth`` executable in cpp-ethereum can convert test fillers into test cases.
 
@@ -14,7 +13,7 @@ When you add a test case in the consensus test suite, you are supposed to push b
 
 .. _`tests repository`: https://github.com/ethereum/tests
 
-Checking Out the tests Repository
+Checking Out the `tests` Repository
 =================================
 
 The consensus tests are stored in the tests repository.  The command
@@ -24,7 +23,7 @@ The consensus tests are stored in the tests repository.  The command
 
 should create a local copy of the ``develop`` branch of the tests repository.  From here on, ``<LOCAL_PATH_TO_ETH_TESTS>`` points to this local copy.
 
-Preparing testeth and LLL
+Preparing `testeth` and LLL
 =========================
 
 For generating consensus tests, an executable ``testeth`` is necessary.  Moreover, ``testeth`` uses the LLL compiler when it generates consensus tests.
@@ -32,7 +31,7 @@ The easier way is to use the docker image provided by winsvega_.
 
 .. _winsvega: https://github.com/winsvega
 
-option 1: docker image
+Option 1:  Using a docker image
 ----------------------
 
 * `install Docker`_
@@ -55,7 +54,7 @@ option 1: docker image
 .. _`install Docker`: https://www.docker.com/community-edition
 
 
-option 2: building them locally
+Option 2: Building locally
 -------------------------------
 
 Sometimes, you need a tweaked version of ``testeth`` or ``lllc`` when your tests are about very new features not available in the docker image.
@@ -112,9 +111,9 @@ The easiest way to start is to copy an existing filler file.  The first thing to
    {
        "returndatacopy_initial" : {
           "env" : { ... }
-		  "expect" : [ ... ]
-		  "pre" " { ... }
-		  "transaction" : { ... }
+          "expect" : [ ... ]
+          "pre" " { ... }
+          "transaction" : { ... }
        }
    }
 
@@ -157,23 +156,23 @@ Usually, there is another account that acts as the initial caller of the transac
 .. code::
 
    "transaction" : {
-		"data" : [
-			"", "0xaaaa", "0xbbbb"
-		],
-		"gasLimit" : [
-			"0x0a00000000",
-			"0x0"
-		],
-		"gasPrice" : "0x01",
-		"nonce" : "0x00",
-		"secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-		"to" : "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
-		"value" : [
-			"0x00"
-		]
-	}
+        "data" : [
+            "", "0xaaaa", "0xbbbb"
+        ],
+        "gasLimit" : [
+            "0x0a00000000",
+            "0x0"
+        ],
+        "gasPrice" : "0x01",
+        "nonce" : "0x00",
+        "secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+        "to" : "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+        "value" : [
+            "0x00"
+        ]
+    }
 
-Since ``data`` has three elemenets and ``gasLimit`` has two elements, the above ``transaction`` field specifies six different transactions.  Later, in the ``expect`` section, ``data : 1`` would mean the ``0xaaaa`` as data, and ``gasLimit : 0`` would mean ``0x0a00000000`` as gas limit.
+Since ``data`` has three elements and ``gasLimit`` has two elements, the above ``transaction`` field specifies six different transactions.  Later, in the ``expect`` section, ``data : 1`` would mean the ``0xaaaa`` as data, and ``gasLimit : 0`` would mean ``0x0a00000000`` as gas limit.
 
 Moreover, these transactions are tested under different versions of the protocol.
 
@@ -182,39 +181,39 @@ Moreover, these transactions are tested under different versions of the protocol
 .. code::
 
    "expect" : [
-		{
-			"indexes" : {
-				"data" : 0,
-				"gas" : -1,
-				"value" : -1
-			},
-			"network" : ["Frontier", "Homestead"],
-			"result" : {
-				"095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-					"balance" : "2000000000000000010",
-					"storage" : {
-						"0x" : "0x01",
-						"0x01" : "0x01"
-					}
-				},
-				"2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-					"balance" : "20663"
-				},
-				"a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-					"balance" : "99979327",
-					"nonce" : "1"
-				}
-			}
-		},
-		{
-		    "indexes" : {
-			    "data" : 1,
-			    "gas" : -1,
-			    "value" : -1
-		    },
-		...
-		}
-	]
+        {
+            "indexes" : {
+                "data" : 0,
+                "gas" : -1,
+                "value" : -1
+            },
+            "network" : ["Frontier", "Homestead"],
+            "result" : {
+                "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                    "balance" : "2000000000000000010",
+                    "storage" : {
+                        "0x" : "0x01",
+                        "0x01" : "0x01"
+                    }
+                },
+                "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
+                    "balance" : "20663"
+                },
+                "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                    "balance" : "99979327",
+                    "nonce" : "1"
+                }
+            }
+        },
+        {
+            "indexes" : {
+                "data" : 1,
+                "gas" : -1,
+                "value" : -1
+            },
+        ...
+        }
+    ]
 
 ``indexes`` field specifies a subset of the transactions.  ``-1`` means "whichever".  ``"data" : 0`` points to the first element in the ``data`` field in ``transaction``.
 
@@ -227,7 +226,9 @@ The test filler file is not for consumption.  The filler file needs to be filled
 
 .. _editcpp:
 
-First, if you created a new subdirectory for the filler, you need to edit the source of ``cpp-ethereum`` so that ``testeth`` recognizes the new subdirectory.  The file to edit is ``cpp-ethereum/blob/develop/test/tools/jsontests/StateTests.cpp``, which lists the names of the subdirectories scanned for GeneralStateTest filters.
+First, if you created a new subdirectory for the filler, you need to edit the source of ``cpp-ethereum`` so that ``testeth`` recognizes the new subdirectory.  The file to edit is `cpp-ethereum/blob/develop/test/tools/jsontests/StateTests.cpp`_, which lists the names of the subdirectories scanned for GeneralStateTest filters.
+
+.. _`cpp-ethereum/blob/develop/test/tools/jsontests/StateTests.cpp`: https://github.com/ethereum/cpp-ethereum/blob/develop/test/tools/jsontests/StateTests.cpp
 
 After building ``testeth``, you are ready to fill the test.
 
@@ -237,7 +238,7 @@ After building ``testeth``, you are ready to fill the test.
 
 where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stExample2`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to check the final states against the ``expect`` fields.
 
-Depending on your shell, there are various way to set up ``ETHEREUM_TEST_PATH`` environment variable.  For example, adding ``export ETHEREUM_TEST_PATH=/path/to/tests`` to ``~/.bashrc`` might work for ``bash`` users.
+Depending on your shell, there are various ways to set up ``ETHEREUM_TEST_PATH`` environment variable.  For example, adding ``export ETHEREUM_TEST_PATH=/path/to/tests`` to ``~/.bashrc`` might work for ``bash`` users.
 
 ``testeth`` with ``--filltests`` fills every test filler it finds. The command might modify existing test cases. After running ``testeth`` with ``--filltests``, try running ``git status`` in the ``tests`` directory. If ``git status`` indicates changes in unexpected files, that is an indication that the behavior of ``cpp-ethereum`` changed unexpectedly.
 
@@ -267,9 +268,9 @@ When you file this commit as a pull-request_ to ``ethereum/cpp-ethereum``, Travi
 git commit
 ----------
 
-After these succeed, the filler file and the filled test should be added to the ``tests`` repository, and filed as a pull-request.
+After these are successful, the filler file and the filled test should be added to the ``tests`` repository. File these as a pullrequest.
 
-If changes in the cpp-client was necessary, also file a pull-request there.
+If changes in the cpp-client were necessary, also file a pull-request there.
 
 
 Advanced: Converting a GeneralStateTest Case into a BlockchainTest Case
@@ -293,10 +294,10 @@ After these two commands,
 * ``git status`` to check if any GeneralStateTest has changed.  If yes, revert the changes, and follow section _`Trying the Filled Test Locally`.  That will probably reveail an error that you need to debug.
 * ``git add`` to add only the desired BlockchainTests.  Not all modified BlockchainTests are valuable because, when you run ``--fillchain`` twice, the two invocations always produce different BlockchainTests even there are no changes in the source.
 
-Advanced: when testeth Takes Too Much Time
+Advanced: When `testeth` Takes Too Much Time
 ===============================
 
-Sometimes ,especially when you are running BlockchainTests, ``testeth`` takes a lot of time.
+Sometimes, especially when you are running BlockchainTests, ``testeth`` takes a lot of time.
 
 This happens when the GeneralTest fillers contain wrong parameters.  The ``"env"`` field should contain:
 
