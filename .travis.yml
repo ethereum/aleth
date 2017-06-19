@@ -29,6 +29,7 @@ branches:
     only:
         - develop
         - release
+group: edge
 env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
