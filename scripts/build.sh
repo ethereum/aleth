@@ -31,9 +31,9 @@ set -e -x
 mkdir -p build
 cd build
 if [ $(uname -s) == "Linux" ]; then
-    cmake .. -DCMAKE_BUILD_TYPE=$1 -DCOVERAGE=ON -DEVMJIT=ON -DLLVM_DIR=/usr/lib/llvm-3.9/lib/cmake/llvm
+    cmake .. -DUSE_LD_GOLD=OFF -DCMAKE_BUILD_TYPE=$1 -DCOVERAGE=ON -DEVMJIT=ON -DLLVM_DIR=/usr/lib/llvm-3.9/lib/cmake/llvm
 else
-    cmake .. -DCMAKE_BUILD_TYPE=$1 -DCOVERAGE=ON
+    cmake .. -DUSE_LD_GOLD=OFF -DCMAKE_BUILD_TYPE=$1 -DCOVERAGE=ON
 fi
 
 make -j2
