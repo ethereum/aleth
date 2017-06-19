@@ -2,6 +2,8 @@
 Generating Consensus Tests
 ==========================
 
+.. warninig:: This guide targets Linux users.  It might work on Mac OS X.  It will probably not work on Windows.
+
 Consensus Tests
 ===============
 
