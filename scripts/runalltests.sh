@@ -57,5 +57,5 @@ cat buildlog.txt
 ) > report.txt
 
 # Send mail
-RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org"
+RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org yoichi@ethereum.org"
 mail < report.txt -s "cpp-ethereum alltests $date" $RECIPIENTS
