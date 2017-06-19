@@ -13,7 +13,7 @@ When you add a test case in the consensus test suite, you are supposed to push b
 
 .. _`tests repository`: https://github.com/ethereum/tests
 
-Checking Out the `tests` Repository
+Checking Out the ``tests`` Repository
 =================================
 
 The consensus tests are stored in the tests repository.  The command
@@ -23,7 +23,7 @@ The consensus tests are stored in the tests repository.  The command
 
 should create a local copy of the ``develop`` branch of the tests repository.  From here on, ``<LOCAL_PATH_TO_ETH_TESTS>`` points to this local copy.
 
-Preparing `testeth` and LLL
+Preparing ``testeth`` and LLL
 =========================
 
 For generating consensus tests, an executable ``testeth`` is necessary.  Moreover, ``testeth`` uses the LLL compiler when it generates consensus tests.
@@ -294,7 +294,7 @@ After these two commands,
 * ``git status`` to check if any GeneralStateTest has changed.  If yes, revert the changes, and follow section _`Trying the Filled Test Locally`.  That will probably reveail an error that you need to debug.
 * ``git add`` to add only the desired BlockchainTests.  Not all modified BlockchainTests are valuable because, when you run ``--fillchain`` twice, the two invocations always produce different BlockchainTests even there are no changes in the source.
 
-Advanced: When `testeth` Takes Too Much Time
+Advanced: When ``testeth`` Takes Too Much Time
 ===============================
 
 Sometimes, especially when you are running BlockchainTests, ``testeth`` takes a lot of time.
