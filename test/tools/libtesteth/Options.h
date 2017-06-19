@@ -49,7 +49,6 @@ public:
 	bool stats = false;		///< Execution time and stats for state tests
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool exectimelog = false; ///< Print execution time for each test suite
-	std::string rCheckTest;   ///< Test Input (for random tests)
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
 	bool checkstate = false;///< Throw error when checking test states
 	bool statediff = false;///< Fill full post state in General tests

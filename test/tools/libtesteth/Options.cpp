@@ -45,8 +45,6 @@ void printHelp()
 	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test. (Require build with VMTRACE=1)" << std::endl;
 	cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file" << std::endl;
 	cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite" << std::endl;
-	cout << setw(30) << "--filltest <FileData>" << setw(25) << "Try fill tests from the given json stream" << std::endl;
-	cout << setw(30) << "--checktest <FileData>" << setw(25) << "Try run tests from the given json stream" << std::endl;
 	cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests" << std::endl;
 
 	cout << std::endl << "Additional Tests" << std::endl;
@@ -205,13 +203,6 @@ Options::Options(int argc, char** argv)
 		{
 			throwIfNoArgumentFollows();
 			rCurrentTestSuite = std::string{argv[++i]};
-		}
-		else if (arg == "--checktest" || arg == "--filltest")
-		{
-			//read all line to the end
-			for (int j = i+1; j < argc; ++j)
-				rCheckTest += argv[j];
-			break;
 		}
 		else if (arg == "--nonetwork")
 			nonetwork = true;
