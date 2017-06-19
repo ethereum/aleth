@@ -512,10 +512,7 @@ void State::rollback(size_t _savepoint)
 			m_cache.erase(change.address);
 			break;
 		case Change::NewCode:
-			if (change.oldCode.empty())
-				account.resetCode();
-			else
-				account.setNewCode(std::move(change.oldCode));
+			account.setNewCode(std::move(change.oldCode));
 			break;
 		case Change::Touch:
 			account.untouch();
