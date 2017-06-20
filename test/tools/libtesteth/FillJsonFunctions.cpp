@@ -88,7 +88,7 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 			eth::Change change = changeLog.at(i);
 			switch (change.kind)
 			{
-				case Change::Kind::NewCode:
+				case Change::Kind::Code:
 					//take the original and final code only
 					before = toHex(_stateOrig.code(change.address), 2, HexPrefix::Add);
 					after = toHex(_statePost.code(change.address), 2, HexPrefix::Add);

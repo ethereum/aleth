@@ -335,7 +335,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 		// Overwrite with empty code in case the account already has a code
 		// (address collision -- not real life case but we can check it with
 		// synthetic tests).
-		m_s.setNewCode(m_newAddress, {});
+		m_s.setCode(m_newAddress, {});
 
 	return !m_ext;
 }
@@ -400,7 +400,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				if (m_res)
 					m_res->output = out.toVector(); // copy output to execution result
-				m_s.setNewCode(m_ext->myAddress, out.toVector());
+				m_s.setCode(m_ext->myAddress, out.toVector());
 			}
 			else
 				m_output = vm->exec(m_gas, *m_ext, _onOp);

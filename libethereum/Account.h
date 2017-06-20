@@ -143,7 +143,7 @@ public:
 	bool hasNewCode() const { return m_hasNewCode; }
 
 	/// Sets the code of the account. Used by "create" messages.
-	void setNewCode(bytes&& _code);
+	void setCode(bytes&& _code);
 
 	/// Reset the code set by previous CREATE message.
 	void resetCode() { m_codeCache.clear(); m_hasNewCode = false; m_codeHash = EmptySHA3; }
