@@ -82,6 +82,11 @@ Options::Options(int argc, char** argv)
 			if (i + 1 >= argc)
 				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
 		};
+		auto throwIfAfterSeparator = [&seenSeparator, &arg]()
+		{
+			if (seenSeparator)
+				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option appears after the separator --."));
+		};
 		if (arg == "--")
 		{
 			if (seenSeparator)
@@ -203,6 +208,7 @@ Options::Options(int argc, char** argv)
 			createRandomTest = true;
 		else if (arg == "-t")
 		{
+			throwIfAfterSeparator();
 			throwIfNoArgumentFollows();
 			rCurrentTestSuite = std::string{argv[++i]};
 		}
