@@ -1,3 +1,19 @@
+#
+# this makefile can be use to build and run the entire suite 
+#
+#     make -f tests.mk SOLC=solc ETHVM=ethvm EVM=evm all
+#
+# or build and run only a single test
+#
+#     make -f tests.mk SOLC=solc ETHVM=ethvm EVM=evm pop.bin
+#
+# or build but not run the entire suite 
+#
+#     make -f tests.mk SOLC=solc all
+#
+# or many other such possibilities
+#
+
 # overide these if desired
 ifndef STATS
 	STATS = time --format "stats: %U user %S system %E elapsed %P CPU %Mk res mem\n"
@@ -7,6 +23,7 @@ ifndef CCC
 endif
 
 # define path to these programs to pick one or more of them to run
+# the default is to do nothing
 ifndef SOLC
 	SOLC=:
 endif
