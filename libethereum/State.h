@@ -118,7 +118,7 @@ struct Change
 		Create,
 
 		/// New code was added to an account (by "create" message execution).
-		NewCode,
+		Code,
 
 		/// Account was touched for the first time.
 		Touch
@@ -134,7 +134,7 @@ struct Change
 	Change(Kind _kind, Address const& _addr, u256 const& _value = 0):
 			kind(_kind), address(_addr), value(_value)
 	{
-		assert(_kind != NewCode); // For this the special constructor needs to be used.
+		assert(_kind != Code); // For this the special constructor needs to be used.
 	}
 
 	/// Helper constructor especially for storage change log.
@@ -144,7 +144,7 @@ struct Change
 
 	/// Helper constructor especially for new code change log.
 	Change(Address const& _addr, bytes const& _oldCode):
-			kind(NewCode), address(_addr), oldCode(_oldCode)
+			kind(Code), address(_addr), oldCode(_oldCode)
 	{}
 };
 
@@ -261,7 +261,7 @@ public:
 	void createContract(Address const& _address);
 
 	/// Sets the code of the account. Must only be called during / after contract creation.
-	void setNewCode(Address const& _address, bytes&& _code);
+	void setCode(Address const& _address, bytes&& _code);
 
 	/// Delete an account (used for processing suicides).
 	void kill(Address _a);
