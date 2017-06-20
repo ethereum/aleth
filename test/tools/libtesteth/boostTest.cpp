@@ -38,6 +38,7 @@
 
 #include <clocale>
 #include <stdlib.h>
+#include <iostream>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <boost/version.hpp>
 
@@ -117,37 +118,44 @@ void setDefaultOrCLocale()
 int main( int argc, char* argv[] )
 {
 	setDefaultOrCLocale();
-	//Initialize options
-	dev::test::Options const& opt = dev::test::Options::get(argc, argv);
-
-	if (opt.createRandomTest)
+	try
 	{
-		//disable initial output
-		oldCoutStreamBuf = std::cout.rdbuf();
-		oldCerrStreamBuf = std::cerr.rdbuf();
-		std::cout.rdbuf(strCout.rdbuf());
-		std::cerr.rdbuf(strCout.rdbuf());
-
-		for (int i = 0; i < argc; i++)
+		//Initialize options
+		dev::test::Options const& opt = dev::test::Options::get(argc, argv);
+		if (opt.createRandomTest)
 		{
-			std::string arg = std::string{argv[i]};
+			//disable initial output
+			oldCoutStreamBuf = std::cout.rdbuf();
+			oldCerrStreamBuf = std::cerr.rdbuf();
+			std::cout.rdbuf(strCout.rdbuf());
+			std::cerr.rdbuf(strCout.rdbuf());
 
-			//replace test suite to random tests
-			if (arg == "-t" && i+1 < argc)
-				argv[i+1] = (char*)std::string("RandomTestCreationSuite").c_str();
-
-			//don't pass long raw test input to boost
-			if (arg == "--checktest")
+			for (int i = 0; i < argc; i++)
 			{
-				argc = i + 1;
-				break;
-			}
-		}
+				std::string arg = std::string{argv[i]};
 
-		//add random tests suite
-		test_suite* ts1 = BOOST_TEST_SUITE("RandomTestCreationSuite");
-		ts1->add(BOOST_TEST_CASE(&createRandomTest));
-		framework::master_test_suite().add(ts1);
+				//replace test suite to random tests
+				if (arg == "-t" && i+1 < argc)
+					argv[i+1] = (char*)std::string("RandomTestCreationSuite").c_str();
+
+				//don't pass long raw test input to boost
+				if (arg == "--checktest")
+				{
+					argc = i + 1;
+					break;
+				}
+			}
+
+			//add random tests suite
+			test_suite* ts1 = BOOST_TEST_SUITE("RandomTestCreationSuite");
+			ts1->add(BOOST_TEST_CASE(&createRandomTest));
+			framework::master_test_suite().add(ts1);
+		}
+	}
+	catch (dev::test::Options::InvalidOption const& e)
+	{
+		std::cerr << e.what() << std::endl;
+		exit(1);
 	}
 
 	for (int i = 0; i < argc; i++)
