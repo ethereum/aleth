@@ -63,30 +63,7 @@ int createRandomTest(std::vector<char*> const& _parameters)
 
 		if (arg == "--fulloutput")
 			options.fulloutput = true;
-		else
-		if (arg == "--checktest" || arg == "--filltest")
-		{
-			std::string s = options.rCheckTest;
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Error! Content of argument is empty! (Usage -checktest textstream)");
-
-			if (arg == "--filltest")
-			{
-				testFillString = s;
-				filltest = true;
-			}
-			else
-			{
-				if (s.find(".json") != std::string::npos)
-				{
-					boost::filesystem::path p(__FILE__);
-					s = asString(dev::contents(s));
-				}
-				read_string(s, testmValue);
-				checktest = true;
-			}
-		}
-		else
-		if (arg == "--debug")
+		else if (arg == "--debug")
 			debug = true;
 		else
 		if (arg == "--filldebug")

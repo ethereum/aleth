@@ -70,12 +70,7 @@ void createRandomTest()
 	if (dev::test::createRandomTest(parameters))
 		throw framework::internal_error("Create Random Test Error!");
 	else
-	{
-		//disable post output so the test json would be clean
-		if (dev::test::Options::get().rCheckTest.size() > 0)
-			std::cout << "correct" << std::endl;
 		exit(0);
-	}
 }
 
 static std::atomic_bool stopTravisOut;
