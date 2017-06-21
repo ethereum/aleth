@@ -220,7 +220,7 @@ Options::Options(int argc, char** argv)
 		else if (arg == "-g")
 		{
 			throwIfNoArgumentFollows();
-			trGasIndex = atoi(argv[i + 1]);
+			trGasIndex = atoi(argv[++i]);
 		}
 		else if (arg == "-v")
 		{
