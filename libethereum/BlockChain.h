@@ -21,25 +21,26 @@
 
 #pragma once
 
-#include <deque>
-#include <chrono>
-#include <unordered_map>
-#include <unordered_set>
+#include "Account.h"
+#include "BlockDetails.h"
+#include "BlockQueue.h"
+#include "ChainParams.h"
+#include "LastBlockHashesFace.h"
+#include "State.h"
+#include "Transaction.h"
+#include "VerifiedBlock.h"
 #include <libdevcore/db.h>
-#include <libdevcore/Log.h>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/Log.h>
 #include <libdevcore/Guards.h>
-#include <libethcore/Common.h>
 #include <libethcore/BlockHeader.h>
+#include <libethcore/Common.h>
 #include <libethcore/SealEngine.h>
 #include <libevm/ExtVMFace.h>
-#include "BlockDetails.h"
-#include "Account.h"
-#include "Transaction.h"
-#include "BlockQueue.h"
-#include "VerifiedBlock.h"
-#include "ChainParams.h"
-#include "State.h"
+#include <chrono>
+#include <deque>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace std
 {
@@ -182,9 +183,7 @@ public:
 	/// Get the hash for a given block's number.
 	h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras<BlockHash, uint64_t, ExtraBlockHash>(_i, m_blockHashes, x_blockHashes, NullBlockHash).value; }
 
-	/// Get the last N hashes for a given block. (N is determined by the LastHashes type.)
-	LastHashes lastHashes() const { return lastHashes(m_lastBlockHash); }
-	LastHashes lastHashes(h256 const& _mostRecentHash) const;
+	LastBlockHashesFace const& lastBlockHashes() const { return *m_lastBlockHashes;  }
 
 	/** Get the block blooms for a number of blocks. Thread-safe.
 	 * @returns the object pertaining to the blocks:
@@ -379,9 +378,8 @@ private:
 	void noteUsed(uint64_t const& _h, unsigned _extra = (unsigned)-1) const { (void)_h; (void)_extra; } // don't note non-hash types
 	std::chrono::system_clock::time_point m_lastCollection;
 
-	void noteCanonChanged() const { Guard l(x_lastLastHashes); m_lastLastHashes.clear(); }
-	mutable Mutex x_lastLastHashes;
-	mutable LastHashes m_lastLastHashes;
+	void noteCanonChanged() const { m_lastBlockHashes->clear(); }
+	std::unique_ptr<LastBlockHashesFace> m_lastBlockHashes;
 
 	void updateStats() const;
 	mutable Statistics m_lastStats;

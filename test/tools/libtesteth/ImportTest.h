@@ -65,7 +65,8 @@ private:
 	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
 	std::tuple<eth::State, ExecOutput, eth::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
 
-	eth::EnvInfo m_envInfo;
+	std::unique_ptr<eth::LastBlockHashesFace const> m_lastBlockHashes;
+	std::unique_ptr<eth::EnvInfo> m_envInfo;
 	eth::Transaction m_transaction;
 
 	//General State Tests

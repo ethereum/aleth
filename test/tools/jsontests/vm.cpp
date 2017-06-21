@@ -20,12 +20,13 @@
  * vm test functions.
  */
 
-#include <boost/filesystem.hpp>
-
+#include "vm.h"
+#include <test/tools/libtestutils/TestLastBlockHashes.h>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include <libevm/ExtVMFace.h>
-#include "vm.h"
+#include <boost/filesystem.hpp>
+
 
 using namespace std;
 using namespace json_spirit;
@@ -88,7 +89,7 @@ mObject FakeExtVM::exportEnv()
 	return ret;
 }
 
-EnvInfo FakeExtVM::importEnv(mObject& _o)
+EnvInfo FakeExtVM::importEnv(mObject& _o, LastBlockHashesFace const& _lastBlockHashes)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
 	assert(_o.count("currentGasLimit") > 0);
@@ -99,13 +100,13 @@ EnvInfo FakeExtVM::importEnv(mObject& _o)
 	auto gasLimit = toInt(_o["currentGasLimit"]);
 	assert(gasLimit <= std::numeric_limits<int64_t>::max());
 
-	EnvInfo info;
-	info.setGasLimit(gasLimit.convert_to<int64_t>());
-	info.setDifficulty(toInt(_o["currentDifficulty"]));
-	info.setTimestamp(toInt(_o["currentTimestamp"]));
-	info.setAuthor(Address(_o["currentCoinbase"].get_str()));
-	info.setNumber(toInt(_o["currentNumber"]));
-	return info;
+	BlockHeader blockHeader;
+	blockHeader.setGasLimit(gasLimit.convert_to<int64_t>());
+	blockHeader.setDifficulty(toInt(_o["currentDifficulty"]));
+	blockHeader.setTimestamp(toInt(_o["currentTimestamp"]));
+	blockHeader.setAuthor(Address(_o["currentCoinbase"].get_str()));
+	blockHeader.setNumber(toInt(_o["currentNumber"]));
+	return EnvInfo(blockHeader, _lastBlockHashes, 0);
 }
 
 mObject FakeExtVM::exportState()
@@ -311,7 +312,8 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("exec") > 0, testname + "exec not set!");
 
-		eth::EnvInfo env = FakeExtVM::importEnv(o["env"].get_obj());
+		TestLastBlockHashes lastBlockHashes(h256s(256, h256()));
+		eth::EnvInfo env = FakeExtVM::importEnv(o["env"].get_obj(), lastBlockHashes);
 		FakeExtVM fev(env);
 		fev.importState(o["pre"].get_obj());
 
@@ -422,7 +424,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_REQUIRE(o.count("gas") > 0);
 				BOOST_REQUIRE(o.count("logs") > 0);
 
-				dev::test::FakeExtVM test(eth::EnvInfo{});
+				dev::test::FakeExtVM test(eth::EnvInfo{BlockHeader{}, lastBlockHashes, 0});
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
 				test.sub.logs = importLog(o["logs"].get_array());

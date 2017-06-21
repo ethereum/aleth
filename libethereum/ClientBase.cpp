@@ -70,28 +70,7 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
 			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
-		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return ret;
-}
-
-ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff)
-{
-	ExecutionResult ret;
-	try
-	{
-		Block temp = block(_blockNumber);
-		u256 n = temp.transactionsFrom(_from);
-		//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preSeal.transactionsFrom(toAddress(_secret)) << " post:" << m_postSeal.transactionsFrom(toAddress(_secret));
-		Transaction t(_value, _gasPrice, _gas, _data, n);
-		t.forceSender(_from);
-		if (_ff == FudgeFactor::Lenient)
-			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
-		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
+		ret = temp.execute(bc().lastBlockHashes(), t, Permanence::Reverted);
 	}
 	catch (...)
 	{
@@ -123,8 +102,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 			else
 				t = Transaction(_value, gasPrice, mid, _data, n);
 			t.forceSender(_from);
-			EnvInfo env(bk.info(), bc().lastHashes(), 0);
-			env.setGasLimit(mid);
+			EnvInfo const env(bk.info(), bc().lastBlockHashes(), 0, mid);
 			State tempState(bk.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 			er = tempState.execute(env, *bc().sealEngine(), t, Permanence::Reverted).first;

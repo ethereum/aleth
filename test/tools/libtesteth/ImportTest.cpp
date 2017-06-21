@@ -24,6 +24,7 @@
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/libtestutils/Common.h>
+#include <test/tools/libtestutils/TestLastBlockHashes.h>
 
 using namespace dev;
 using namespace dev::test;
@@ -31,9 +32,9 @@ using namespace std;
 
 namespace
 {
-LastHashes lastHashes(u256 _currentBlockNumber)
+vector<h256> lastHashes(u256 _currentBlockNumber)
 {
-	LastHashes ret;
+	vector<h256> ret;
 	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
 		ret.push_back(sha3(toString(_currentBlockNumber - i)));
 	return ret;
@@ -64,6 +65,8 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTem
 
 bytes ImportTest::executeTest()
 {
+	assert(m_envInfo);
+
 	if (m_testType == testType::StateTests)
 	{
 		eth::Network network = eth::Network::MainNetwork;
@@ -71,7 +74,7 @@ bytes ImportTest::executeTest()
 		ExecutionResult emptyRes;
 		ImportTest::ExecOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
 		std::tie(m_statePost, execOut, std::ignore) =
-			executeTransaction(network, m_envInfo, m_statePre, m_transaction);
+			executeTransaction(network, *m_envInfo, m_statePre, m_transaction);
 		m_logs = execOut.second.log();
 		return execOut.first.output;
 	}
@@ -107,7 +110,7 @@ bytes ImportTest::executeTest()
 
 				eth::Network network = networks[j];
 				std::tie(m_transactions[i].postState, std::ignore, m_transactions[i].changeLog) =
-					executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
+					executeTransaction(network, *m_envInfo, m_statePre, m_transactions[i].transaction);
 				m_transactions[i].netId = network;
 				transactionResults.push_back(m_transactions[i]);
 
@@ -122,9 +125,9 @@ bytes ImportTest::executeTest()
 					string testname = TestOutputHelper::testName() + postfix;
 
 					json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
-					genesisObj["coinbase"] = toString(m_envInfo.author());
-					genesisObj["gasLimit"] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);
-					genesisObj["timestamp"] = toCompactHex(m_envInfo.timestamp() - 50, HexPrefix::Add);
+					genesisObj["coinbase"] = toString(m_envInfo->author());
+					genesisObj["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
+					genesisObj["timestamp"] = toCompactHex(m_envInfo->timestamp() - 50, HexPrefix::Add);
 					testObj["genesisBlockHeader"] = genesisObj;
 					testObj["pre"] = fillJsonWithState(m_statePre);
 
@@ -146,7 +149,7 @@ bytes ImportTest::executeTest()
 							json_spirit::mObject obj = fillJsonWithState(search2->second.first, search2->second.second);
 							for (auto& adr: obj)
 							{
-								if (adr.first == "0x" + toString(m_envInfo.author()))
+								if (adr.first == "0x" + toString(m_envInfo->author()))
 								{
 									if (adr.second.get_obj().count("balance"))
 									{
@@ -162,9 +165,9 @@ bytes ImportTest::executeTest()
 					}
 
 					json_spirit::mObject rewriteHeader;
-					rewriteHeader["gasLimit"] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);
-					rewriteHeader["difficulty"] = toCompactHex(m_envInfo.difficulty(), HexPrefix::Add);
-					rewriteHeader["timestamp"] = toCompactHex(m_envInfo.timestamp(), HexPrefix::Add);
+					rewriteHeader["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
+					rewriteHeader["difficulty"] = toCompactHex(m_envInfo->difficulty(), HexPrefix::Add);
+					rewriteHeader["timestamp"] = toCompactHex(m_envInfo->timestamp(), HexPrefix::Add);
 					rewriteHeader["updatePoW"] = "1";
 
 					json_spirit::mArray blocksArr;
@@ -200,6 +203,8 @@ bytes ImportTest::executeTest()
 
 std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
 {
+	assert(m_envInfo);
+
 	State initialState = _preState;
 	try
 	{
@@ -208,7 +213,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 		eth::ChangeLog changeLog = initialState.changeLog();
 
 		//Finalize the state manually (clear logs)
-		bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
+		bool removeEmptyAccounts = m_envInfo->number() >= se->chainParams().u256Param("EIP158ForkBlock");
 		initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 		return std::make_tuple(initialState, out, changeLog);
 	}
@@ -285,13 +290,15 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
 	auto gasLimit = toInt(_o["currentGasLimit"]);
 	BOOST_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
-	m_envInfo.setGasLimit(gasLimit.convert_to<int64_t>());
-	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
-	m_envInfo.setNumber(toInt(_o["currentNumber"]));
-	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
-	m_envInfo.setAuthor(Address(_o["currentCoinbase"].get_str()));
+	BlockHeader header;
+	header.setGasLimit(gasLimit.convert_to<int64_t>());
+	header.setDifficulty(toInt(_o["currentDifficulty"]));
+	header.setNumber(toInt(_o["currentNumber"]));
+	header.setTimestamp(toInt(_o["currentTimestamp"]));
+	header.setAuthor(Address(_o["currentCoinbase"].get_str()));
 
-	m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
+	m_lastBlockHashes.reset(new TestLastBlockHashes(lastHashes(header.number())));
+	m_envInfo.reset(new EnvInfo(header, *m_lastBlockHashes, 0));
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json

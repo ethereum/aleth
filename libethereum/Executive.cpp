@@ -143,15 +143,15 @@ string StandardTrace::json(bool _styled) const
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
 	m_s(_s.mutableState()),
-	m_envInfo(_s.info(), _bc.lastHashes(_s.info().parentHash())),
+	m_envInfo(_s.info(), _bc.lastBlockHashes(), 0),
 	m_depth(_level),
 	m_sealEngine(*_bc.sealEngine())
 {
 }
 
-Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
+Executive::Executive(Block& _s, LastBlockHashesFace const& _lh, unsigned _level):
 	m_s(_s.mutableState()),
-	m_envInfo(_s.info(), _lh),
+	m_envInfo(_s.info(), _lh, 0),
 	m_depth(_level),
 	m_sealEngine(*_s.sealEngine())
 {
@@ -159,7 +159,7 @@ Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 
 Executive::Executive(State& io_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
 	m_s(createIntermediateState(io_s, _block, _txIndex, _bc)),
-	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
+	m_envInfo(_block.info(), _bc.lastBlockHashes(), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
 	m_depth(_level),
 	m_sealEngine(*_bc.sealEngine())
 {
@@ -179,10 +179,10 @@ void Executive::accrueSubState(SubState& _parentContext)
 void Executive::initialize(Transaction const& _transaction)
 {
 	m_t = _transaction;
-	m_baseGasRequired = m_t.baseGasRequired(m_sealEngine.evmSchedule(m_envInfo));
+	m_baseGasRequired = m_t.baseGasRequired(m_sealEngine.evmSchedule(m_envInfo.number()));
 	try
 	{
-		m_sealEngine.verifyTransaction(ImportRequirements::Everything, m_t, m_envInfo);
+		m_sealEngine.verifyTransaction(ImportRequirements::Everything, m_t, m_envInfo.header(), m_envInfo.gasUsed());
 	}
 	catch (Exception const& ex)
 	{

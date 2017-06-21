@@ -87,7 +87,7 @@ public:
 	virtual void suicide(Address _a) override final;
 
 	/// Return the EVM gas-price schedule for this execution context.
-	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo()); }
+	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo().number()); }
 
 	State const& state() const { return m_s; }
 

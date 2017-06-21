@@ -144,13 +144,13 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	}
 }
 
-void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, EnvInfo const& _env) const
+void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _header, u256 const& _startGasUsed) const
 {
-	SealEngineFace::verifyTransaction(_ir, _t, _env);
+	SealEngineFace::verifyTransaction(_ir, _t, _header, _startGasUsed);
 
 	if (_ir & ImportRequirements::TransactionSignatures)
 	{
-		if (_env.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		if (_header.number() >= chainParams().u256Param("EIP158ForkBlock"))
 		{
 			int chainID(chainParams().u256Param("chainID"));
 			_t.checkChainId(chainID);
@@ -158,13 +158,12 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 		else
 			_t.checkChainId(-4);
 	}
-	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_env)) > _t.gas())
+	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_header.number())) > _t.gas())
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
 
 	// Avoid transactions that would take us beyond the block gas limit.
-	u256 startGasUsed = _env.gasUsed();
-	if (startGasUsed + (bigint)_t.gas() > _env.gasLimit())
-		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.gas()));
+	if (_startGasUsed + (bigint)_t.gas() > _header.gasLimit())
+		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_header.gasLimit() - _startGasUsed), (bigint)_t.gas()));
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const

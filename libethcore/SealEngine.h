@@ -56,7 +56,7 @@ public:
 	/// Don't forget to call Super::verify when subclassing & overriding.
 	virtual void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent = BlockHeader(), bytesConstRef _block = bytesConstRef()) const;
 	/// Additional verification for transactions in blocks.
-	virtual void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, EnvInfo const& _env) const;
+	virtual void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _header, u256 const& _startGasUsed) const;
 	/// Don't forget to call Super::populateFromParent when subclassing & overriding.
 	virtual void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const;
 
@@ -75,7 +75,7 @@ public:
 	ChainOperationParams const& chainParams() const { return m_params; }
 	void setChainParams(ChainOperationParams const& _params) { m_params = _params; }
 	SealEngineFace* withChainParams(ChainOperationParams const& _params) { setChainParams(_params); return this; }
-	virtual EVMSchedule const& evmSchedule(EnvInfo const&) const = 0;
+	virtual EVMSchedule const& evmSchedule(u256 const& _blockNumber) const = 0;
 
 	virtual bool isPrecompiled(Address const& _a, u256 const& _blockNumber) const
 	{
@@ -105,7 +105,7 @@ public:
 			m_onSealGenerated(ret.out());
 	}
 	void onSealGenerated(std::function<void(bytes const&)> const& _f) override { m_onSealGenerated = _f; }
-	EVMSchedule const& evmSchedule(EnvInfo const&) const override;
+	EVMSchedule const& evmSchedule(u256 const& _blockNumber) const override;
 
 protected:
 	std::function<void(bytes const& s)> m_onSealGenerated;

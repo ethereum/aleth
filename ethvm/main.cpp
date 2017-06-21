@@ -19,10 +19,7 @@
  * @date 2014
  * EVM Execution tool.
  */
-#include <fstream>
-#include <iostream>
-#include <ctime>
-#include <boost/algorithm/string.hpp>
+
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
@@ -30,10 +27,15 @@
 #include <libethereum/Block.h>
 #include <libethereum/Executive.h>
 #include <libethereum/ChainParams.h>
+#include <libethereum/LastBlockHashesFace.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethashseal/Ethash.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
+#include <boost/algorithm/string.hpp>
+#include <fstream>
+#include <iostream>
+#include <ctime>
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -118,6 +120,13 @@ enum class Mode
 	Test
 };
 
+class LastBlockHashes: public eth::LastBlockHashesFace
+{
+public:
+	h256s precedingHashes(h256 const& /* _mostRecentHash */) const override { return h256s(256, h256()); }
+	void clear() override {}
+};
+
 int main(int argc, char** argv)
 {
 	setDefaultOrCLocale();
@@ -132,9 +141,9 @@ int main(int argc, char** argv)
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
-	EnvInfo envInfo;
 	Network networkName = Network::MainNetwork;
-	envInfo.setGasLimit(maxBlockGasLimit());
+	BlockHeader blockHeader; // fake block to be executed in
+	blockHeader.setGasLimit(maxBlockGasLimit());
 	bytes data;
 	bytes code;
 
@@ -178,15 +187,15 @@ int main(int argc, char** argv)
 		else if (arg == "--gas-price" && i + 1 < argc)
 			gasPrice = u256(argv[++i]);
 		else if (arg == "--author" && i + 1 < argc)
-			envInfo.setAuthor(Address(argv[++i]));
+			blockHeader.setAuthor(Address(argv[++i]));
 		else if (arg == "--number" && i + 1 < argc)
-			envInfo.setNumber(u256(argv[++i]));
+			blockHeader.setNumber(u256(argv[++i]));
 		else if (arg == "--difficulty" && i + 1 < argc)
-			envInfo.setDifficulty(u256(argv[++i]));
+			blockHeader.setDifficulty(u256(argv[++i]));
 		else if (arg == "--timestamp" && i + 1 < argc)
-			envInfo.setTimestamp(u256(argv[++i]));
+			blockHeader.setTimestamp(u256(argv[++i]));
 		else if (arg == "--gas-limit" && i + 1 < argc)
-			envInfo.setGasLimit(u256(argv[++i]).convert_to<int64_t>());
+			blockHeader.setGasLimit(u256(argv[++i]).convert_to<int64_t>());
 		else if (arg == "--value" && i + 1 < argc)
 			value = u256(argv[++i]);
 		else if (arg == "--network" && i + 1 < argc)
@@ -274,6 +283,8 @@ int main(int argc, char** argv)
 	state.addBalance(sender, value);
 
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
+	LastBlockHashes lastBlockHashes;
+	EnvInfo const envInfo(blockHeader, lastBlockHashes, 0);
 	Executive executive(state, envInfo, *se);
 	ExecutionResult res;
 	executive.setResultRecipient(res);
@@ -313,7 +324,7 @@ int main(int argc, char** argv)
 
 	if (mode == Mode::Statistics)
 	{
-		cout << "Gas used: " << res.gasUsed << " (+" << t.baseGasRequired(se->evmSchedule(envInfo)) << " for transaction, -" << res.gasRefunded << " refunded)" << endl;
+		cout << "Gas used: " << res.gasUsed << " (+" << t.baseGasRequired(se->evmSchedule(envInfo.number())) << " for transaction, -" << res.gasRefunded << " refunded)" << endl;
 		cout << "Output: " << toHex(output) << endl;
 		LogEntries logs = executive.logs();
 		cout << logs.size() << " logs" << (logs.empty() ? "." : ":") << endl;
