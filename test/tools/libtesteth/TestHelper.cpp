@@ -261,7 +261,7 @@ string compileLLL(string const& _code)
 void checkHexHasEvenLength(string const& _str)
 {
 	if (_str.size() % 2)
-		BOOST_ERROR("An odd-length hex string represents a byte sequence: " + _str);
+		BOOST_ERROR(TestOutputHelper::testName() + " An odd-length hex string represents a byte sequence: " + _str);
 }
 
 bytes importCode(json_spirit::mObject& _o)
