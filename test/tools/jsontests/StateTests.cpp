@@ -104,8 +104,6 @@ public:
 	generaltestfixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
-		if (casename == "stMemoryStressTest" && !test::Options::get().memory)
-			return;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
 			return;
 		fillAllFilesInFolder(casename);
