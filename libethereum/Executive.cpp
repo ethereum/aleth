@@ -363,9 +363,9 @@ bool Executive::executeCreate(Address _sender, u256 _endowment, u256 _gasPrice, 
 	}
 	else
 	{
-		if ((m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) != 0))
+		if ((m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) > 1))
 		{
-			clog(StateSafeExceptions) << "Address already used. ";
+			clog(StateSafeExceptions) << "Address already used: " << m_newAddress;
 			m_gas = 0;
 			m_excepted = TransactionException::AddressAlreadyUsed;
 			revert();
