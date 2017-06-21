@@ -45,6 +45,7 @@ enum class Network
 	EIP158Test = 74,		///< Homestead + EIP150 + EIP158 Rules active from block 0
 	MetropolisTest = 75,   ///< All fork rules + Metropolis active from block 0
 	MetropolisTransitionTest = 76, ///< All fork rules + Metropolis active from block 2
+	FrontierNoProofTest = 77, ///< Frontier rules + NoProof seal engine 
 	Special = 0xff			///< Something else.
 };
 

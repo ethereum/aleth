@@ -25,6 +25,7 @@ using namespace dev;
 
 //Test configurations
 #include "genesis/mainNetworkTest.cpp"
+#include "genesis/frontierNoProofTest.cpp"
 #include "genesis/frontierTest.cpp"
 #include "genesis/homesteadTest.cpp"
 #include "genesis/eip150Test.cpp"
@@ -41,6 +42,7 @@ std::string const& dev::eth::genesisInfo(Network _n)
 	case Network::MainNetworkTest: return c_genesisInfoMainNetworkTest;
 	case Network::Ropsten: return c_genesisInfoRopsten;
 	case Network::TransitionnetTest: return c_genesisInfoTest;
+	case Network::FrontierNoProofTest: return c_genesisInfoFrontierNoProofTest;
 	case Network::FrontierTest: return c_genesisInfoFrontierTest;
 	case Network::HomesteadTest: return c_genesisInfoHomesteadTest;
 	case Network::EIP150Test: return c_genesisInfoEIP150Test;
