@@ -22,7 +22,6 @@
 #include <chrono>
 #include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/assign/list_of.hpp>
 #include <libevmcore/Instruction.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
@@ -36,18 +35,18 @@ boost::random::mt19937 RandomCode::gen;
 boostIntDistrib RandomCode::opCodeDist = boostIntDistrib (0, 255);
 boostIntDistrib RandomCode::opLengDist = boostIntDistrib (1, 32);
 boostIntDistrib RandomCode::uniIntDist = boostIntDistrib (0, 0x7fffffff);
-boostUint64Distrib RandomCode::uInt64Dist = boostUint64Distrib (0, std::numeric_limits<uint64_t>::max());
+boostUint64 RandomCode::uInt64Dist = boostUint64 (0, std::numeric_limits<uint64_t>::max());
 
 boostIntGenerator RandomCode::randOpCodeGen = boostIntGenerator(gen, opCodeDist);
 boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist);
 boostIntGenerator RandomCode::randUniIntGen = boostIntGenerator(gen, uniIntDist);
 boostUInt64Generator RandomCode::randUInt64Gen = boostUInt64Generator(gen, uInt64Dist);
 
-const std::vector<eth::Instruction> RandomCode::invalidOpcodes = boost::assign::list_of(eth::Instruction::INVALID) \
-		(eth::Instruction::PUSHC) (eth::Instruction::JUMPC) (eth::Instruction::JUMPCI) (eth::Instruction::JUMPTO) \
-		(eth::Instruction::JUMPIF) (eth::Instruction::JUMPSUB) (eth::Instruction::JUMPV) (eth::Instruction::JUMPSUBV) \
-		(eth::Instruction::BEGINSUB) (eth::Instruction::BEGINDATA) (eth::Instruction::RETURNSUB) (eth::Instruction::PUTLOCAL) \
-		(eth::Instruction::GETLOCAL);
+const std::vector<eth::Instruction> RandomCode::invalidOpcodes{ eth::Instruction::INVALID, \
+		eth::Instruction::PUSHC,eth::Instruction::JUMPC,eth::Instruction::JUMPCI,eth::Instruction::JUMPTO, \
+		eth::Instruction::JUMPIF,eth::Instruction::JUMPSUB,eth::Instruction::JUMPV,eth::Instruction::JUMPSUBV, \
+		eth::Instruction::BEGINSUB,eth::Instruction::BEGINDATA,eth::Instruction::RETURNSUB,eth::Instruction::PUTLOCAL, \
+		eth::Instruction::GETLOCAL};
 
 int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _debug)
 {
@@ -231,12 +230,8 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 		if (info.name.find("INVALID_INSTRUCTION") != std::string::npos || info.name.empty()
 			|| std::find(invalidOpcodes.begin(), invalidOpcodes.end(), inst) != invalidOpcodes.end())
 		{
-			if (_options.useUndefinedOpCodes == true)
-			{
-				std::string byte = toCompactHex(opcode);
-				code += (byte == "") ? "00" : byte;
-				std::cerr << info.name << std::endl;
-			}
+			if (_options.useUndefinedOpCodes)
+				code += toCompactHex(opcode, HexPrefix::DontAdd, 1);
 			else
 			{
 				//Byte code is yet not implemented. do not count it.
@@ -248,13 +243,10 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 		{
 			if (info.name.find("PUSH") != std::string::npos)
 				code += toCompactHex(opcode);
-			code += fillArguments((eth::Instruction) opcode, _options);
+			code += fillArguments(inst, _options);
 
 			if (info.name.find("PUSH") == std::string::npos)
-			{
-				std::string byte = toCompactHex(opcode);
-				code += (byte == "") ? "00" : byte;
-			}
+				code += toCompactHex(opcode, HexPrefix::DontAdd, 1);
 		}
 	}
 	return code;
@@ -298,7 +290,7 @@ std::string RandomCode::getPushCode(std::string const& _hex)
 
 std::string RandomCode::getPushCode(int _value)
 {
-	std::string hexString = toCompactHex(_value);
+	std::string hexString = toCompactHex(_value, HexPrefix::DontAdd, 1);
 	return getPushCode(hexString);
 }
 
@@ -318,8 +310,8 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		//PUSH1 ... PUSH32
 		if (eth::Instruction::PUSH1 <= _opcode && _opcode <= eth::Instruction::PUSH32)
 		{
-		  code += rndByteSequence(int(_opcode) - int(eth::Instruction::PUSH1) + 1);
-		  return code;
+			code += rndByteSequence(int(_opcode) - int(eth::Instruction::PUSH1) + 1);
+			return code;
 		}
 
 		//SWAP1 ... SWAP16 || DUP1 ... DUP16
@@ -336,7 +328,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 				times = int(_opcode) - int(eth::Instruction::DUP1) + 1;
 
 			for (int i = 0; i < times; i ++)
-				code += getPushCode(randUniIntGen() % 32);
+				code += getPushCode(rndByteSequence(randOpLengGen()));
 
 			return code;
 		}
@@ -344,9 +336,9 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		switch (_opcode)
 		{
 		case eth::Instruction::EXTCODECOPY:
-			code += getPushCode(randUniIntGen() % 32);  //memstart2
-			code += getPushCode(randUniIntGen() % 128);  //memlen1
-			code += getPushCode(randUniIntGen() % 32);  //memstart1
+			code += getPushCode(randUniIntGen());	//memstart2
+			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randUniIntGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 		break;
 		case eth::Instruction::EXTCODESIZE:
@@ -354,40 +346,40 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		break;
 		case eth::Instruction::CREATE:
 			//(CREATE value mem1 mem2)
-			code += getPushCode(randUniIntGen() % 128);  //memlen1
-			code += getPushCode(randUniIntGen() % 32);   //memlen1
-			code += getPushCode(randUniIntGen());		 //value
+			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randUniIntGen());	//value
 		break;
 		case eth::Instruction::CALL:
 		case eth::Instruction::CALLCODE:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
 			//(CALLCODE gaslimit address value memstart1 memlen1 memstart2 memlen2)
-			code += getPushCode(randUniIntGen() % 128);  //memlen2
-			code += getPushCode(randUniIntGen() % 32);  //memstart2
-			code += getPushCode(randUniIntGen() % 128);  //memlen1
-			code += getPushCode(randUniIntGen() % 32);  //memstart1
-			code += getPushCode(randUniIntGen());		//value
+			code += getPushCode(randUniIntGen());	//memlen2
+			code += getPushCode(randUniIntGen());	//memstart2
+			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randUniIntGen());	//memstart1
+			code += getPushCode(randUniIntGen());	//value
 			code += getPushCode(toString(_options.getRandomAddress()));//address
-			code += getPushCode(randUniIntGen());		//gaslimit
+			code += getPushCode(randUniIntGen());	//gaslimit
 		break;
 		case eth::Instruction::STATICCALL:
 		case eth::Instruction::DELEGATECALL:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
 			//(CALLCODE gaslimit address value memstart1 memlen1 memstart2 memlen2)
-			code += getPushCode(randUniIntGen() % 128);  //memlen2
-			code += getPushCode(randUniIntGen() % 32);  //memstart2
-			code += getPushCode(randUniIntGen() % 128);  //memlen1
-			code += getPushCode(randUniIntGen() % 32);  //memstart1
+			code += getPushCode(randUniIntGen());	//memlen2
+			code += getPushCode(randUniIntGen());	//memstart2
+			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randUniIntGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
-			code += getPushCode(randUniIntGen());		//gaslimit
+			code += getPushCode(randUniIntGen());	//gaslimit
 		break;
 		case eth::Instruction::SUICIDE: //(SUICIDE address)
 			code += getPushCode(toString(_options.getRandomAddress()));
 		break;
 		case eth::Instruction::RETURN:  //(RETURN memlen1 memlen2)
 		case eth::Instruction::REVERT:  //(REVERT memlen1 memlen2)
-			code += getPushCode(randUniIntGen() % 128);  //memlen1
-			code += getPushCode(randUniIntGen() % 32);  //memlen1
+			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randUniIntGen());	//memlen1
 		break;
 		default:
 			smart = false;
@@ -405,7 +397,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 }
 
 
-//Default Ramdom Code Options
+//Default Random Code Options
 RandomCodeOptions::RandomCodeOptions() : useUndefinedOpCodes(false), smartCodeProbability(100)
 {
 	//each op code with same weight-probability
@@ -423,13 +415,20 @@ RandomCodeOptions::RandomCodeOptions() : useUndefinedOpCodes(false), smartCodePr
 	for (int i = (int)(eth::Instruction::DUP1); i < 16; i++)
 		setWeight((eth::Instruction) i, 10);
 
-	setWeight(eth::Instruction::SSTORE, 70);
-	setWeight(eth::Instruction::CALL, 70);
-	setWeight(eth::Instruction::CALLCODE, 70);
-	setWeight(eth::Instruction::DELEGATECALL, 70);
-	setWeight(eth::Instruction::STATICCALL, 70);
-	setWeight(eth::Instruction::EXTCODECOPY, 70);
-	setWeight(eth::Instruction::EXTCODESIZE, 70);
+	setWeight(eth::Instruction::SIGNEXTEND, 100);
+	setWeight(eth::Instruction::ORIGIN, 200);
+	setWeight(eth::Instruction::ADDRESS, 200);
+	setWeight(eth::Instruction::SLOAD, 200);
+	setWeight(eth::Instruction::MLOAD, 200);
+	setWeight(eth::Instruction::MSTORE, 400);
+	setWeight(eth::Instruction::MSTORE8, 400);
+	setWeight(eth::Instruction::SSTORE, 170);
+	setWeight(eth::Instruction::CALL, 170);
+	setWeight(eth::Instruction::CALLCODE, 170);
+	setWeight(eth::Instruction::DELEGATECALL, 170);
+	setWeight(eth::Instruction::STATICCALL, 170);
+	setWeight(eth::Instruction::EXTCODECOPY, 170);
+	setWeight(eth::Instruction::EXTCODESIZE, 170);
 
 	//some smart addresses for calls
 	addAddress(Address("0xffffffffffffffffffffffffffffffffffffffff"));

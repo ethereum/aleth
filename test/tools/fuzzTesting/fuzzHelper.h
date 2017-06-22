@@ -37,11 +37,11 @@ namespace test
 
 typedef boost::random::uniform_int_distribution<> boostIntDistrib;
 typedef boost::random::discrete_distribution<> boostDescreteDistrib;
-typedef boost::uniform_int<uint64_t> boostUint64Distrib;
+typedef boost::uniform_int<uint64_t> boostUint64;
 
 typedef boost::random::variate_generator<boost::mt19937&, boostIntDistrib > boostIntGenerator;
 typedef boost::random::variate_generator<boost::mt19937&, boostDescreteDistrib > boostWeightGenerator;
-typedef boost::random::variate_generator<boost::mt19937&, boostUint64Distrib > boostUInt64Generator;
+typedef boost::random::variate_generator<boost::mt19937&, boostUint64 > boostUInt64Generator;
 
 struct RandomCodeOptions
 {
@@ -110,8 +110,8 @@ private:
 	static boost::random::mt19937 gen;			///< Random generator
 	static boostIntDistrib opCodeDist;			///< 0..255 opcodes
 	static boostIntDistrib opLengDist;			///< 1..32  byte string
-	static boostIntDistrib uniIntDist;          ///< 0..0x7fffffff
-	static boostUint64Distrib uInt64Dist;		///< 0..2**64
+	static boostIntDistrib uniIntDist;			///< 0..0x7fffffff
+	static boostUint64 uInt64Dist;				///< 0..2**64
 
 	static boostIntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
 	static boostIntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
