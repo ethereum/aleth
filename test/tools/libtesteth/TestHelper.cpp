@@ -223,6 +223,7 @@ std::string executeCmd(std::string const& _command)
 {
 #if defined(_WIN32)
 	BOOST_ERROR("executeCmd() has not been implemented for Windows.");
+	return "";
 #else
 	char output[1024];
 	FILE *fp = popen(_command.c_str(), "r");
