@@ -220,6 +220,9 @@ std::vector<boost::filesystem::path> getJsonFiles(std::string const& _dirPath, s
 
 std::string executeCmd(std::string const& _command)
 {
+#if defined(_WIN32)
+	BOOST_ERROR("executeCmd() has not been implemented for Windows.");
+#else
 	char output[1024];
 	FILE *fp = popen(_command.c_str(), "r");
 	if (fp == NULL)
@@ -230,6 +233,7 @@ std::string executeCmd(std::string const& _command)
 	if (exitCode != 0)
 		BOOST_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
 	return boost::trim_copy(string(output));
+#endif
 }
 
 string compileLLL(string const& _code)
