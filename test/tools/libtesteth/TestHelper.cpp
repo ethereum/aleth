@@ -171,6 +171,7 @@ byte toByte(json_spirit::mValue const& _v)
 
 bytes importByteArray(std::string const& _str)
 {
+	checkHexHasEvenLength(_str);
 	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
@@ -237,7 +238,10 @@ string compileLLL(string const& _code)
 	if (_code == "")
 		return "0x";
 	if (_code.substr(0,2) == "0x" && _code.size() >= 2)
+	{
+		checkHexHasEvenLength(_code);
 		return _code;
+	}
 
 #if defined(_WIN32)
 	BOOST_ERROR("LLL compilation only supported on posix systems.");
@@ -249,8 +253,15 @@ string compileLLL(string const& _code)
 	string result = executeCmd(cmd);
 	boost::filesystem::remove(path);
 	result = "0x" + result;
+	checkHexHasEvenLength(result);
 	return result;
 #endif
+}
+
+void checkHexHasEvenLength(string const& _str)
+{
+	if (_str.size() % 2)
+		BOOST_ERROR(TestOutputHelper::testName() + " An odd-length hex string represents a byte sequence: " + _str);
 }
 
 bytes importCode(json_spirit::mObject& _o)
@@ -260,7 +271,7 @@ bytes importCode(json_spirit::mObject& _o)
 		if (_o["code"].get_str().find("0x") != 0)
 			code = fromHex(compileLLL(_o["code"].get_str()));
 		else
-			code = fromHex(_o["code"].get_str().substr(2));
+			code = importByteArray(_o["code"].get_str());
 	else if (_o["code"].type() == json_spirit::array_type)
 	{
 		code.clear();

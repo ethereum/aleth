@@ -132,6 +132,7 @@ std::string executeCmd(std::string const& _command);
 bytes importCode(json_spirit::mObject& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
+void checkHexHasEvenLength(std::string const&);
 void copyFile(std::string const& _source, std::string const& _destination);
 eth::LogEntries importLog(json_spirit::mArray& _o);
 json_spirit::mArray exportLog(eth::LogEntries _logs);
