@@ -97,6 +97,7 @@ public:
 	/// Generate random int64
 	static std::string randomUniIntHex(u256 _maxVal = 0);
 	static u256 randomUniInt(u256 _maxVal = 0);
+	static std::vector<eth::Instruction> const invalidOpcodes;
 
 private:
 	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
