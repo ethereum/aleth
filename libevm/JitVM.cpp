@@ -1,6 +1,7 @@
 #include "JitVM.h"
 
 #include <libdevcore/Log.h>
+#include <libevmcore/Instruction.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 
@@ -8,9 +9,9 @@ namespace dev
 {
 namespace eth
 {
+	
 namespace
-{
-
+{	
 static_assert(sizeof(Address) == sizeof(evm_uint160be),
               "Address types size mismatch");
 static_assert(alignof(Address) == alignof(evm_uint160be),
@@ -159,7 +160,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 	// TODO: EVMJIT does not support RETURNDATA at the moment, so
 	//       the output is ignored here.
 	h160 addr;
-	std::tie(addr, std::ignore) = _env.create(value, gas, init, {});
+	std::tie(addr, std::ignore) = _env.create(value, gas, init, Instruction::CREATE, u256(0), {});
 	o_result->gas_left = static_cast<int64_t>(gas);
 	o_result->release = nullptr;
 	if (addr)

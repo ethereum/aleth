@@ -216,6 +216,14 @@ void VM::interpretCases()
 		//
 		// Call-related instructions
 		//
+
+		CASE(CREATE2)
+		{
+			if (!m_schedule->haveCreate2)
+				throwBadInstruction();
+			m_bounce = &VM::caseCreate;
+		}
+		BREAK
 		
 		CASE(CREATE)
 		{

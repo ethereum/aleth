@@ -238,7 +238,7 @@ bool Executive::execute()
 		return call(m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_baseGasRequired);
 }
 
-bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
+bool Executive::call(Address const& _receiveAddress, Address const& _senderAddress, u256 const& _value, u256 const& _gasPrice, bytesConstRef _data, u256 const& _gas)
 {
 	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}};
 	return call(params, _gasPrice, _senderAddress);
@@ -306,9 +306,30 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 	return !m_ext;
 }
 
-bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
+bool Executive::create(Address const& _txSender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
+{
+	if (m_envInfo.number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
+		return createOpcode(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
+
+	m_newAddress = right160(sha3(MaxAddress.asBytes() + sha3(_init).asBytes()));
+	return executeCreate(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
+}
+
+bool Executive::createOpcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
 {
 	u256 nonce = m_s.getNonce(_sender);
+	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+}
+
+bool Executive::create2Opcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin, u256 const& _salt)
+{
+	m_newAddress = right160(sha3(_sender.asBytes() + toBigEndian(_salt) + sha3(_init).asBytes()));
+	return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+}
+
+bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
+{
 	if (_sender != MaxAddress) // EIP86
 		m_s.incNonce(_sender);
 
@@ -318,8 +339,9 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
-	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+
 	m_gas = _gas;
+	bool accountAlreadyExist = (m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) > 0);
 
 	// Transfer ether before deploying the code. This will also create new
 	// account if it does not exist yet.
@@ -331,12 +353,26 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	// Schedule _init execution if not empty.
 	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
-	else if (m_s.addressHasCode(m_newAddress))
-		// Overwrite with empty code in case the account already has a code
-		// (address collision -- not real life case but we can check it with
-		// synthetic tests).
-		m_s.setCode(m_newAddress, {});
-
+	
+	if (m_envInfo.number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
+	{
+		if (m_s.addressHasCode(m_newAddress))
+			// Overwrite with empty code in case the account already has a code
+			// (address collision -- not real life case but we can check it with
+			// synthetic tests).
+			m_s.setCode(m_newAddress, {});
+	}
+	else
+	{
+		if (accountAlreadyExist)
+		{
+			clog(StateSafeExceptions) << "Address already used: " << m_newAddress;
+			m_gas = 0;
+			m_excepted = TransactionException::AddressAlreadyUsed;
+			revert();
+			m_ext = {}; // cancel the _init execution if there are any scheduled.
+		}
+	}
 	return !m_ext;
 }
 

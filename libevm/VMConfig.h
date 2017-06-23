@@ -399,7 +399,7 @@ namespace eth
 			&&INVALID,  \
 			&&INVALID,  \
 			&&STATICCALL,  \
-			&&INVALID,  \
+			&&CREATE2,  \
 			&&INVALID,  \
 			&&REVERT,  \
 			&&INVALID,  \
