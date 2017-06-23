@@ -189,7 +189,7 @@ bytes ImportTest::executeTest()
 			string tmpFillerName = getTestPath() + "/src/GenStateTestAsBcTemp/" + TestOutputHelper::caseName() + "/" + TestOutputHelper::testName() + "Filler.json";
 			writeFile(tmpFillerName, asBytes(json_spirit::write_string((json_spirit::mValue)json, true)));
 			dev::test::executeTests(TestOutputHelper::testName(), "/BlockchainTests/GeneralStateTests/" + TestOutputHelper::caseName(),
-																"/GenStateTestAsBcTemp/" + TestOutputHelper::caseName(), dev::test::doBlockchainTests);
+																"/GenStateTestAsBcTemp/" + TestOutputHelper::caseName(), dev::test::doBlockchainTestNoLog);
 		}
 
 		m_transactions.clear();

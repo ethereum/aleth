@@ -115,7 +115,7 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 		json_spirit::mObject& o = i.second.get_obj();
 
 		//Select test by name if --singletest is set and not filling state tests as blockchain
-		if (!TestOutputHelper::passTest(testname) && !Options::get().fillchain)
+		if (!Options::get().fillchain && !TestOutputHelper::passTest(testname))
 		{
 			o.clear(); //don't add irrelevant tests to the final file when filling
 			continue;

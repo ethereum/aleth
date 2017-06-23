@@ -104,10 +104,6 @@ public:
 	generaltestfixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
-		if (casename == "stBoundsTest" && !test::Options::get().memory)
-			return;
-		if (casename == "stMemoryStressTest" && !test::Options::get().memory)
-			return;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
 			return;
 		fillAllFilesInFolder(casename);
@@ -135,7 +131,6 @@ public:
 BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
 
 //Frontier Tests
-BOOST_AUTO_TEST_CASE(stBoundsTest){}
 BOOST_AUTO_TEST_CASE(stCallCodes){}
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest){}
 BOOST_AUTO_TEST_CASE(stExample){}
