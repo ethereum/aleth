@@ -26,6 +26,24 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 
+using namespace dev;
+const static std::array<eth::Instruction, 14> invalidOpcodes{
+	eth::Instruction::INVALID,
+	eth::Instruction::PUSHC,
+	eth::Instruction::JUMPC,
+	eth::Instruction::JUMPCI,
+	eth::Instruction::JUMPTO,
+	eth::Instruction::JUMPIF,
+	eth::Instruction::JUMPSUB,
+	eth::Instruction::JUMPV,
+	eth::Instruction::JUMPSUBV,
+	eth::Instruction::BEGINSUB,
+	eth::Instruction::BEGINDATA,
+	eth::Instruction::RETURNSUB,
+	eth::Instruction::PUTLOCAL,
+	eth::Instruction::GETLOCAL
+};
+
 namespace dev
 {
 namespace test
@@ -43,12 +61,6 @@ boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist)
 boostIntGenerator RandomCode::randOpMemrGen = boostIntGenerator(gen, opMemrDist);
 boostIntGenerator RandomCode::randUniIntGen = boostIntGenerator(gen, uniIntDist);
 boostUInt64Generator RandomCode::randUInt64Gen = boostUInt64Generator(gen, uInt64Dist);
-
-const std::array<eth::Instruction, 14> invalidOpcodes{ eth::Instruction::INVALID,
-		eth::Instruction::PUSHC,eth::Instruction::JUMPC,eth::Instruction::JUMPCI,eth::Instruction::JUMPTO,
-		eth::Instruction::JUMPIF,eth::Instruction::JUMPSUB,eth::Instruction::JUMPV,eth::Instruction::JUMPSUBV,
-		eth::Instruction::BEGINSUB,eth::Instruction::BEGINDATA,eth::Instruction::RETURNSUB,eth::Instruction::PUTLOCAL,
-		eth::Instruction::GETLOCAL};
 
 int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _debug)
 {
