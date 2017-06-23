@@ -370,6 +370,7 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 			m_gas = 0;
 			m_excepted = TransactionException::AddressAlreadyUsed;
 			revert();
+			m_ext = {}; // cancel the _init execution if there are any scheduled.
 		}
 	}
 	return !m_ext;
