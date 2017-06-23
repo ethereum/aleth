@@ -20,6 +20,7 @@
 
 #include <libevm/VMFactory.h>
 #include <test/tools/libtesteth/Options.h>
+#include <test/tools/fuzzTesting/fuzzHelper.h>
 
 using namespace std;
 using namespace dev::test;
@@ -60,6 +61,7 @@ void printHelp()
 	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers" << std::endl;
 	cout << setw(30) << "--checkstate" << setw(25) << "Enable expect section state checks" << std::endl;
 	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead" << std::endl;
+	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code" << std::endl;
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console" << std::endl;
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field" << std::endl;
 
@@ -234,8 +236,23 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--statediff")
 			statediff = true;
+		else if (arg == "--randomcode")
+		{
+			throwIfNoArgumentFollows();
+			int maxCodes = atoi(argv[++i]);
+			if (maxCodes > 1000 || maxCodes <= 0)
+			{
+				cerr << "Argument for the option is invalid! (use range: 1...1000)" << endl;
+				exit(1);
+			}
+			cout << "0x" + dev::test::RandomCode::generate(maxCodes) << endl;
+			exit(0);
+		}
 		else if (seenSeparator)
-			BOOST_THROW_EXCEPTION(InvalidOption("Unknown option: " + arg));
+		{
+			cerr << "Unknown option: " + arg << endl;
+			exit(1);
+		}
 	}
 
 	//Default option
