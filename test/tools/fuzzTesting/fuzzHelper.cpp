@@ -34,15 +34,17 @@ namespace test
 boost::random::mt19937 RandomCode::gen;
 boostIntDistrib RandomCode::opCodeDist = boostIntDistrib (0, 255);
 boostIntDistrib RandomCode::opLengDist = boostIntDistrib (1, 32);
+boostIntDistrib RandomCode::opMemrDist = boostIntDistrib (0, 10485760);
 boostIntDistrib RandomCode::uniIntDist = boostIntDistrib (0, 0x7fffffff);
 boostUint64 RandomCode::uInt64Dist = boostUint64 (0, std::numeric_limits<uint64_t>::max());
 
 boostIntGenerator RandomCode::randOpCodeGen = boostIntGenerator(gen, opCodeDist);
 boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist);
+boostIntGenerator RandomCode::randOpMemrGen = boostIntGenerator(gen, opMemrDist);
 boostIntGenerator RandomCode::randUniIntGen = boostIntGenerator(gen, uniIntDist);
 boostUInt64Generator RandomCode::randUInt64Gen = boostUInt64Generator(gen, uInt64Dist);
 
-const std::vector<eth::Instruction> RandomCode::invalidOpcodes{ eth::Instruction::INVALID,
+const std::array<eth::Instruction, 14> invalidOpcodes{ eth::Instruction::INVALID,
 		eth::Instruction::PUSHC,eth::Instruction::JUMPC,eth::Instruction::JUMPCI,eth::Instruction::JUMPTO,
 		eth::Instruction::JUMPIF,eth::Instruction::JUMPSUB,eth::Instruction::JUMPV,eth::Instruction::JUMPSUBV,
 		eth::Instruction::BEGINSUB,eth::Instruction::BEGINDATA,eth::Instruction::RETURNSUB,eth::Instruction::PUTLOCAL,
@@ -341,9 +343,9 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		switch (_opcode)
 		{
 		case eth::Instruction::EXTCODECOPY:
-			code += getPushCode(randUniIntGen());	//memstart2
-			code += getPushCode(randUniIntGen());	//memlen1
-			code += getPushCode(randUniIntGen());	//memstart1
+			code += getPushCode(randOpMemrGen());	//memstart2
+			code += getPushCode(randOpMemrGen());	//memlen1
+			code += getPushCode(randOpMemrGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 		break;
 		case eth::Instruction::EXTCODESIZE:
@@ -351,18 +353,18 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		break;
 		case eth::Instruction::CREATE:
 			//(CREATE value mem1 mem2)
-			code += getPushCode(randUniIntGen());	//memlen1
-			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randOpMemrGen());	//memlen1
+			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randUniIntGen());	//value
 		break;
 		case eth::Instruction::CALL:
 		case eth::Instruction::CALLCODE:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
 			//(CALLCODE gaslimit address value memstart1 memlen1 memstart2 memlen2)
-			code += getPushCode(randUniIntGen());	//memlen2
-			code += getPushCode(randUniIntGen());	//memstart2
-			code += getPushCode(randUniIntGen());	//memlen1
-			code += getPushCode(randUniIntGen());	//memstart1
+			code += getPushCode(randOpMemrGen());	//memlen2
+			code += getPushCode(randOpMemrGen());	//memstart2
+			code += getPushCode(randOpMemrGen());	//memlen1
+			code += getPushCode(randOpMemrGen());	//memstart1
 			code += getPushCode(randUniIntGen());	//value
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
@@ -371,10 +373,10 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		case eth::Instruction::DELEGATECALL:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
 			//(CALLCODE gaslimit address value memstart1 memlen1 memstart2 memlen2)
-			code += getPushCode(randUniIntGen());	//memlen2
-			code += getPushCode(randUniIntGen());	//memstart2
-			code += getPushCode(randUniIntGen());	//memlen1
-			code += getPushCode(randUniIntGen());	//memstart1
+			code += getPushCode(randOpMemrGen());	//memlen2
+			code += getPushCode(randOpMemrGen());	//memstart2
+			code += getPushCode(randOpMemrGen());	//memlen1
+			code += getPushCode(randOpMemrGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
 		break;
@@ -383,8 +385,8 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		break;
 		case eth::Instruction::RETURN:  //(RETURN memlen1 memlen2)
 		case eth::Instruction::REVERT:  //(REVERT memlen1 memlen2)
-			code += getPushCode(randUniIntGen());	//memlen1
-			code += getPushCode(randUniIntGen());	//memlen1
+			code += getPushCode(randOpMemrGen());	//memlen1
+			code += getPushCode(randOpMemrGen());	//memlen1
 		break;
 		default:
 			smart = false;

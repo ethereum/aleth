@@ -97,7 +97,6 @@ public:
 	/// Generate random int64
 	static std::string randomUniIntHex(u256 _maxVal = 0);
 	static u256 randomUniInt(u256 _maxVal = 0);
-	static std::vector<eth::Instruction> const invalidOpcodes;
 
 private:
 	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
@@ -110,12 +109,14 @@ private:
 	static boost::random::mt19937 gen;			///< Random generator
 	static boostIntDistrib opCodeDist;			///< 0..255 opcodes
 	static boostIntDistrib opLengDist;			///< 1..32  byte string
+	static boostIntDistrib opMemrDist;			///< 1..10MB  byte string
 	static boostIntDistrib uniIntDist;			///< 0..0x7fffffff
 	static boostUint64 uInt64Dist;				///< 0..2**64
 
 	static boostIntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
 	static boostIntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
 	static boostIntGenerator randOpLengGen;		///< Generate random length from opLengDist
+	static boostIntGenerator randOpMemrGen;		///< Generate random length from opMemrDist
 	static boostUInt64Generator randUInt64Gen;	///< Generate random uInt64
 };
 
