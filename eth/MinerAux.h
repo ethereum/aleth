@@ -27,7 +27,6 @@
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/Exceptions.h>
 #include <libethashseal/EthashCPUMiner.h>
-#include "FarmClient.h"
 
 // TODO - having using derivatives in header files is very poor style, and we need to fix these up.
 //
@@ -223,8 +222,6 @@ public:
 	{
 		_out
 			<< "Work farming mode:" << endl
-			<< "    -F,--farm <url>  Put into mining farm mode with the work server at URL (default: http://127.0.0.1:8545)" << endl
-			<< "    --farm-recheck <n>  Leave n ms between checks for changed work (default: 500)." << endl
 			<< "    --no-precompute  Don't precompute the next epoch's DAG." << endl
 			<< "Ethash verify mode:" << endl
 			<< "    -w,--check-pow <headerHash> <seedHash> <difficulty> <nonce>  Check PoW credentials for validity." << endl
