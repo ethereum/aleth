@@ -240,9 +240,9 @@ Options::Options(int argc, char** argv)
 		{
 			throwIfNoArgumentFollows();
 			int maxCodes = atoi(argv[++i]);
-			if (maxCodes > 1000)
+			if (maxCodes > 1000 || maxCodes <= 0)
 			{
-				cerr << "Argument for the option is too high!" << endl;
+				cerr << "Argument for the option is invalid! (use range: 1...1000)" << endl;
 				exit(1);
 			}
 			cout << "0x" + dev::test::RandomCode::generate(maxCodes) << endl;

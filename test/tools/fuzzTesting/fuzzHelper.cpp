@@ -342,6 +342,10 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 
 		switch (_opcode)
 		{
+		case eth::Instruction::MSTORE:
+			code += getPushCode(rndByteSequence(randOpLengGen()));	//code
+			code += getPushCode(randOpMemrGen());					//index
+		break;
 		case eth::Instruction::EXTCODECOPY:
 			code += getPushCode(randOpMemrGen());	//memstart2
 			code += getPushCode(randOpMemrGen());	//memlen1
@@ -393,13 +397,11 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		}
 	}
 
+	//generate random parameters
 	if (smart == false)
-	for (unsigned i = 0; i < argsNum; i++)
-	{
-		//generate random parameters
-		int length = randOpLengGen();
-		code += getPushCode(rndByteSequence(length));
-	}
+		for (unsigned i = 0; i < argsNum; i++)
+			code += getPushCode(rndByteSequence(randOpLengGen()));
+
 	return code;
 }
 
