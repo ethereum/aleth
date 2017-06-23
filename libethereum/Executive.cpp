@@ -341,6 +341,7 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 	// we delete it explicitly if we decide we need to revert.
 
 	m_gas = _gas;
+	bool accountAlreadyExist = (m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) > 0);
 
 	// Transfer ether before deploying the code. This will also create new
 	// account if it does not exist yet.
@@ -363,7 +364,7 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 	}
 	else
 	{
-		if ((m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) > 1))
+		if (accountAlreadyExist)
 		{
 			clog(StateSafeExceptions) << "Address already used: " << m_newAddress;
 			m_gas = 0;
