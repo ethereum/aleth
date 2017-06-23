@@ -211,15 +211,17 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 
 	callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
 
+	bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
+
 	Address destinationAddr = asAddress(m_SP[1]);
 	if (m_OP == Instruction::CALL && !m_ext->exists(destinationAddr))
 		if (m_SP[2] > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
 			m_runGas += toInt63(m_schedule->callNewAccountGas);
 
-	if ((m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE) && m_SP[2] > 0)
+	if (haveValueArg && m_SP[2] > 0)
 		m_runGas += toInt63(m_schedule->callValueTransferGas);
 
-	size_t sizesOffset = (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL) ? 2 : 3;
+	size_t const sizesOffset = haveValueArg ? 3 : 2;
 	u256 inputOffset  = m_SP[sizesOffset];
 	u256 inputSize    = m_SP[sizesOffset + 1];
 	u256 outputOffset = m_SP[sizesOffset + 2];
@@ -248,27 +250,26 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	ON_OP();
 	updateIOGas();
 
-	if (m_OP != Instruction::DELEGATECALL && m_SP[2] > 0)
+	if (haveValueArg && m_SP[2] > 0)
 		callParams->gas += m_schedule->callStipend;
 
 	callParams->codeAddress = destinationAddr;
 
-	unsigned inOutOffset = 0;
-	if (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL)
+	if (haveValueArg)
+	{
+		callParams->valueTransfer = m_SP[2];
+		callParams->apparentValue = m_SP[2];
+	}
+	else
 	{
 		callParams->apparentValue = m_ext->value;
 		callParams->valueTransfer = 0;
 	}
-	else
-	{
-		callParams->apparentValue = callParams->valueTransfer = m_SP[2];
-		inOutOffset = 1;
-	}
 
-	uint64_t inOff = (uint64_t)m_SP[inOutOffset + 2];
-	uint64_t inSize = (uint64_t)m_SP[inOutOffset + 3];
-	uint64_t outOff = (uint64_t)m_SP[inOutOffset + 4];
-	uint64_t outSize = (uint64_t)m_SP[inOutOffset + 5];
+	uint64_t inOff = (uint64_t)inputOffset;
+	uint64_t inSize = (uint64_t)inputSize;
+	uint64_t outOff = (uint64_t)outputOffset;
+	uint64_t outSize = (uint64_t)outputSize;
 
 	if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
 	{
@@ -279,7 +280,6 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 		o_output = bytesRef(m_mem.data() + outOff, outSize);
 		return true;
 	}
-	else
-		return false;
+	return false;
 }
 
