@@ -16,7 +16,6 @@
 */
 
 #include "SmartVM.h"
-#include <unordered_map>
 #include <thread>
 #include <libdevcore/concurrent_queue.h>
 #include <libdevcore/Log.h>
@@ -45,6 +44,7 @@ namespace
 		bytes code;
 		h256 codeHash;
 		evm_mode mode;
+		uint32_t flags;
 
 		static JitTask createStopSentinel() { return JitTask(); }
 
@@ -67,7 +67,7 @@ namespace
 			while (!(task = m_queue.pop()).isStopSentinel())
 			{
 				clog(JitInfo) << "Compilation... " << task.codeHash;
-				JitVM::compile(task.mode, {task.code.data(), task.code.size()}, task.codeHash);
+				JitVM::compile(task.mode, task.flags, {task.code.data(), task.code.size()}, task.codeHash);
 				clog(JitInfo) << "   ...finished " << task.codeHash;
 			}
 			clog(JitInfo) << "JIT worker finished.";
@@ -91,8 +91,9 @@ owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 {
 	auto vmKind = VMKind::Interpreter; // default VM
 	auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
+	uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 	// Jitted EVM code already in memory?
-	if (JitVM::isCodeReady(mode, _ext.codeHash))
+	if (JitVM::isCodeReady(mode, flags, _ext.codeHash))
 	{
 		clog(JitInfo) << "JIT:           " << _ext.codeHash;
 		vmKind = VMKind::JIT;
@@ -108,7 +109,7 @@ owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		if (hits == c_hitTreshold)
 		{
 			clog(JitInfo) << "Schedule:      " << _ext.codeHash;
-			s_worker.push({_ext.code, _ext.codeHash, mode});
+			s_worker.push({_ext.code, _ext.codeHash, mode, flags});
 		}
 		clog(JitInfo) << "Interpreter:   " << _ext.codeHash;
 	}
