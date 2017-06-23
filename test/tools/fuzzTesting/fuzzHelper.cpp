@@ -42,10 +42,10 @@ boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist)
 boostIntGenerator RandomCode::randUniIntGen = boostIntGenerator(gen, uniIntDist);
 boostUInt64Generator RandomCode::randUInt64Gen = boostUInt64Generator(gen, uInt64Dist);
 
-const std::vector<eth::Instruction> RandomCode::invalidOpcodes{ eth::Instruction::INVALID, \
-		eth::Instruction::PUSHC,eth::Instruction::JUMPC,eth::Instruction::JUMPCI,eth::Instruction::JUMPTO, \
-		eth::Instruction::JUMPIF,eth::Instruction::JUMPSUB,eth::Instruction::JUMPV,eth::Instruction::JUMPSUBV, \
-		eth::Instruction::BEGINSUB,eth::Instruction::BEGINDATA,eth::Instruction::RETURNSUB,eth::Instruction::PUTLOCAL, \
+const std::vector<eth::Instruction> RandomCode::invalidOpcodes{ eth::Instruction::INVALID,
+		eth::Instruction::PUSHC,eth::Instruction::JUMPC,eth::Instruction::JUMPCI,eth::Instruction::JUMPTO,
+		eth::Instruction::JUMPIF,eth::Instruction::JUMPSUB,eth::Instruction::JUMPV,eth::Instruction::JUMPSUBV,
+		eth::Instruction::BEGINSUB,eth::Instruction::BEGINDATA,eth::Instruction::RETURNSUB,eth::Instruction::PUTLOCAL,
 		eth::Instruction::GETLOCAL};
 
 int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _debug)
@@ -242,11 +242,15 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 		else
 		{
 			if (info.name.find("PUSH") != std::string::npos)
+			{
 				code += toCompactHex(opcode);
-			code += fillArguments(inst, _options);
-
-			if (info.name.find("PUSH") == std::string::npos)
+				code += fillArguments(inst, _options);
+			}
+			else
+			{
+				code += fillArguments(inst, _options);
 				code += toCompactHex(opcode, HexPrefix::DontAdd, 1);
+			}
 		}
 	}
 	return code;
@@ -280,6 +284,7 @@ void RandomCode::refreshSeed()
 
 std::string RandomCode::getPushCode(std::string const& _hex)
 {
+	assert(_hex.length() % 2 == 0);
 	std::string hexVal = _hex;
 	if (hexVal.empty())
 		hexVal = "00";
