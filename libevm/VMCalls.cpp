@@ -27,10 +27,10 @@ using namespace dev::eth;
 
 void VM::copyDataToMemory(bytesConstRef _data, StackItem* _sp)
 {
-	auto offset = static_cast<size_t>(_sp[0].w256());
-	s512 bigIndex = _sp[1].w256();
+	auto offset = static_cast<size_t>(_sp[0].wide());
+	s512 bigIndex = _sp[1].wide();
 	auto index = static_cast<size_t>(bigIndex);
-	auto size = static_cast<size_t>(_sp[2].w256());
+	auto size = static_cast<size_t>(_sp[2].wide());
 
 	size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
 
@@ -119,13 +119,13 @@ void VM::caseCreate()
 {
 	m_bounce = &VM::interpretCases;
 	m_runGas = toInt63(m_schedule->createGas);
-	updateMem(memNeed(m_SP[1].w256(), m_SP[2].w256()));
+	updateMem(memNeed(m_SP[1].wide(), m_SP[2].wide()));
 	ON_OP();
 	updateIOGas();
 
-	auto const& endowment = m_SP[0].w256();
-	uint64_t initOff = (uint64_t)m_SP[1].w256();
-	uint64_t initSize = (uint64_t)m_SP[2].w256();
+	auto const& endowment = m_SP[0].wide();
+	uint64_t initOff = (uint64_t)m_SP[1].wide();
+	uint64_t initSize = (uint64_t)m_SP[2].wide();
 
 	// Clear the return data buffer. This will not free the memory.
 	m_returnData.clear();
@@ -140,13 +140,13 @@ void VM::caseCreate()
 		h160 addr;
 		owning_bytes_ref output;
 		std::tie(addr, output) = m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
-		m_SPP[0].w256() = (u160)addr;
+		m_SPP[0].wide() = (u160)addr;
 		m_returnData = output.toBytes();
 		*m_io_gas_p -= (createGas - gas);
 		m_io_gas = uint64_t(*m_io_gas_p);
 	}
 	else
-		m_SPP[0].w256() = 0;
+		m_SPP[0].wide() = 0;
 	++m_PC;
 }
 
@@ -177,10 +177,10 @@ void VM::caseCall()
 		// Option 2 used:
 		m_returnData = outputRef.toBytes();
 
-		m_SPP[0].w256() = success ? 1 : 0;
+		m_SPP[0].wide() = success ? 1 : 0;
 	}
 	else
-		m_SPP[0].w256() = 0;
+		m_SPP[0].wide() = 0;
 	m_io_gas += uint64_t(callParams->gas);
 	++m_PC;
 }
@@ -191,19 +191,19 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 
 	callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
 
-	Address destinationAddr = asAddress(m_SP[1].w256());
+	Address destinationAddr = asAddress(m_SP[1].wide());
 	if (m_OP == Instruction::CALL && !m_ext->exists(destinationAddr))
-		if (m_SP[2].w256() > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
+		if (m_SP[2].wide() > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
 			m_runGas += toInt63(m_schedule->callNewAccountGas);
 
-	if ((m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE) && m_SP[2].w256() > 0)
+	if ((m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE) && m_SP[2].wide() > 0)
 		m_runGas += toInt63(m_schedule->callValueTransferGas);
 
 	size_t sizesOffset = (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL) ? 2 : 3;
-	u256 inputOffset  = m_SP[sizesOffset].w256();
-	u256 inputSize    = m_SP[sizesOffset + 1].w256();
-	u256 outputOffset = m_SP[sizesOffset + 2].w256();
-	u256 outputSize   = m_SP[sizesOffset + 3].w256();
+	u256 inputOffset  = m_SP[sizesOffset].wide();
+	u256 inputSize    = m_SP[sizesOffset + 1].wide();
+	u256 outputOffset = m_SP[sizesOffset + 2].wide();
+	u256 outputSize   = m_SP[sizesOffset + 3].wide();
 	uint64_t inputMemNeed = memNeed(inputOffset, inputSize);
 	uint64_t outputMemNeed = memNeed(outputOffset, outputSize);
 
@@ -215,20 +215,20 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	if (m_schedule->staticCallDepthLimit())
 	{
 		// With static call depth limit we just charge the provided gas amount.
-		callParams->gas = m_SP[0].w256();
+		callParams->gas = m_SP[0].wide();
 	}
 	else
 	{
 		// Apply "all but one 64th" rule.
 		u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
-		callParams->gas = std::min(m_SP[0].w256(), maxAllowedCallGas);
+		callParams->gas = std::min(m_SP[0].wide(), maxAllowedCallGas);
 	}
 
 	m_runGas = toInt63(callParams->gas);
 	ON_OP();
 	updateIOGas();
 
-	if (m_OP != Instruction::DELEGATECALL && m_SP[2].w256() > 0)
+	if (m_OP != Instruction::DELEGATECALL && m_SP[2].wide() > 0)
 		callParams->gas += m_schedule->callStipend;
 
 	callParams->codeAddress = destinationAddr;
@@ -241,14 +241,14 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	}
 	else
 	{
-		callParams->apparentValue = callParams->valueTransfer = m_SP[2].w256();
+		callParams->apparentValue = callParams->valueTransfer = m_SP[2].wide();
 		inOutOffset = 1;
 	}
 
-	uint64_t inOff = (uint64_t)m_SP[inOutOffset + 2].w256();
-	uint64_t inSize = (uint64_t)m_SP[inOutOffset + 3].w256();
-	uint64_t outOff = (uint64_t)m_SP[inOutOffset + 4].w256();
-	uint64_t outSize = (uint64_t)m_SP[inOutOffset + 5].w256();
+	uint64_t inOff = (uint64_t)m_SP[inOutOffset + 2].wide();
+	uint64_t inSize = (uint64_t)m_SP[inOutOffset + 3].wide();
+	uint64_t outOff = (uint64_t)m_SP[inOutOffset + 4].wide();
+	uint64_t outSize = (uint64_t)m_SP[inOutOffset + 5].wide();
 
 	if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
 	{

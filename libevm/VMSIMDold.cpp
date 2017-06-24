@@ -23,30 +23,28 @@ namespace dev
 namespace eth
 {
 
-
 // tried using template template functions, gave up fighting the compiler after a day
 #define EVALXOPS(OP, b) EVALXOP(OP, int8_t, int16_t, int32_t, int64_t, b)
 #define EVALXOPU(OP, b) EVALXOP(OP, uint8_t, uint16_t, uint32_t, uint64_t, b)
 #define EVALXOP(OP, T8, T16, T32, T64, b) \
 { \
-	const uint8_t t = (b) & 0xf; \
+	const uint8_t n = (b) & 0xf, t = (b) >> 4; \
 	m_SPP[0].clear();
-	switch (t) \
-	{ \
-	case 0: \
-		for (int i = 0; i < 32; ++i) \
+	switch (t) { \
+	case (0): \
+		for (int i = 0; i < n; ++i) \
 			m_SPP[0].v8x32[i]  = (uint8_t) OP((T8) m_SP[0].v8x32[i],  (T8) m_SP[1].v8x32[i]); \
 		break; \
-	case 1:
-		for (int i = 0; i < 16; ++i) \
+	case (1):
+		for (int i = 0; i < n; ++i) \
 			m_SPP[0].v16x16[i] = (uint16_t)OP((T16)m_SP[0].v16x16[i], (T16)m_SP[1].v16x16[i]); \
 		break; \
-	case 2:
-		for (int i = 0; i < 8; ++i) \
+	case (2):
+		for (int i = 0; i < n; ++i) \
 			m_SPP[0].v32x8[i]  = (uint32_t)OP((T32)m_SP[0].v32x8[i],  (T32)m_SP[1].v32x8[i]); \
 		break; \
-	case 3: \
-		for (int i = 0; i < 4; ++i) \
+	case (3): \
+		for (int i = 0; i < n; ++i) \
 			m_SPP[0].v64x4[i]  = (uint64_t)OP((T64)m_SP[0].v64x4[i],  (T64)m_SP[1].v64x4[i]); \
 		break; \
 	default: throwBadInstruction(); \
@@ -93,199 +91,37 @@ void VM::xshl (uint8_t b) { EVALXOPU(SHL, b); }
 void VM::xrol (uint8_t b) { EVALXOPU(ROL, b); }
 void VM::xror (uint8_t b) { EVALXOPU(ROR, b); }
 
-uint8_t 2expN(uint8_t n)
+void xvtow(uint8_t b)
 {
-	static uint8_t exp[6] = { 1, 2, 4, 8, 16, 32 };
-	return exp[n];
-}
-
-StackItem vtowide(uint8_t b, const StackItem& in)
-{
-	const uint8_t n = 2expN((b) & 0xf), t = (b) >> 4;
-	StackItem out;
-	switch (t)
-	{
-	case 0: for (int i = n-1; 0 <= i; --i) { out << 8;  out |= in.v8x32 [i]; } break;
-	case 1: for (int i = n-1; 0 <= i; --i) { out << 16; out |= in.v16x16[i]; } break;
-	case 2: for (int i = n-1; 0 <= i; --i) { out << 32; out |= in.v32x8 [i]; } break;
-	case 3: for (int i = n-1; 0 <= i; --i) { out << 64; out |= in.v64x4 [i]; } break;
-	default: throwBadInstruction();
-	}
-	return out;
-}
-
-StackItem widetov(uint8_t b, const StackItem& in)
-{
-	const uint8_t n = 2expN((b) & 0xf), t = (b) >> 4;
-	StackItem out;
-	switch (t)
-	{
-	case 0: for (int i = n-1; 0 <= i; --i) { out.v8x32 [i] |= in.wide() & &xff;       in.wide() << 8;  } break;
-	case 1: for (int i = n-1; 0 <= i; --i) { out.v16x16[i] |= in.wide() & &xffff;     in.wide() << 16; } break;
-	case 2: for (int i = n-1; 0 <= i; --i) { out.v32x8 [i] |= in.wide() & &xffffff;   in.wide() << 32; } break;
-	case 3: for (int i = n-1; 0 <= i; --i) { out.v64x4 [i] |= in.wide() & &xffffffff; in.wide() << 64; } break;
-	default: throwBadInstruction();
-	}
-	return out;
-}
-
-void VM::xmload (uint8_t b)
-{
-	// n bytes of type t elements in memory vector
-	// goes onto stack element by element, LSB first
-	uint8_t *p = m_mem.data() + toInt15(m_SP[0].wide());
-	const uint8_t n = 2expN((b) & 0xf), t = (b) >> 4;
-	switch (t)
-	{
-	case 0:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
-		{
-			v |= p[--j];
-			m_SPP[0].v8x32[i] = v;
-		}
-		break;
-	case 1:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
-		{
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			m_SPP[0].v16x16[i] = v;
-		}
-		break;
-	case 2:
-		for (int v = 0, i = n - 1; 0 <= i; --i)
-		{
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			m_SPP[0].v32x8[i] = v;
-		}
-		break;
-	case 3:
-		for (int v = 0, i = n - 1; 0 <= i; --i)
-		{
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			v >>= 8;
-			v |= p[--j];
-			m_SPP[0].v64x4[i] = v;
-		}
-		break;
-	}
-	default: throwBadInstruction();
-}
-   
-void VM::xmstore(uint8_t b)
-{
-	// n bytes of type t elements in stack vector
-	// goes onto memory by element, LSB first
-	uint8_t *p = m_mem.data() + toInt15(m_SP[0].wide());
-	const uint8_t n = 2expN((b) & 0xf), t = (b) >> 4;
-	switch (t)
-	{
-	case 0:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
-		{
-			v = m_SPP[0].v8x32[i];
-			p[--j] = (uint8_t)v;
-		}
-		break;
-	case 1:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
-		{
-			v = m_SPP[0].v8x32[i];
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-		}
-		break;
-	case 2:
-		for (int v = 0, i = n - 1; 0 <= i; --i)
-		{
-			v = m_SPP[0].v8x32[i];
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-		}
-		break;
-	case 3:
-		for (int v = 0, i = n - 1; 0 <= i; --i)
-		{
-			v = m_SPP[0].v8x32[i];
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-			v >>= 8;
-			p[--j] = (uint8_t)v;
-		}
-		break;
-	}
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
+	m_SPP[0].w256() = 0;
+	switch (t) {
+	case (0): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 8;  m_SPP[0].w256() |= m_SP[0].v8x32v[i]; } break;
+	case (1): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 16; m_SPP[0].w256() |= m_SP[0].v16x16[i]; } break;
+	case (2): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 32; m_SPP[0].w256() |= m_SP[0].v32x8 [i]; } break;
+	case (3): for (int i = n-1; 0 <= i; --i) { m_SPP[0].w256() << 64; m_SPP[0].w256() |= m_SP[0].v64x4 [i]; } break;
 	default: throwBadInstruction();
 }
 
-void VM::xsload(uint8_t b)
+void xwtov(uint8_t b)
 {
-	m_SPP[0].wide() = m_ext->store(m_SP[0].wide());
-	m_SPP[0] = widetov(b, m_SPP[0]);
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
+	switch (t) {
+	case (0): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v8x32v[i] |= m_SP[0].w256() & &xff;       m_SP[0].w256() << 8;  | break;
+	case (1): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v16x16[i] |= m_SP[0].w256() & &xffff;     m_SP[0].w256() << 16; | break;
+	case (2): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v32x8v[i] |= m_SP[0].w256() & &xffffff;   m_SPP0].w256() << 32; } break;
+	case (3): for (int i = n-1; 0 <= i; --i) { m_SPP[0].v64x4v[i] |= m_SP[0].w256() & &xffffffff; m_SP[0].w256() << 64; } break;
+	default: throwBadInstruction();
 }
 
-void VM::xsstore(uint8_t b)
-{
-	m_SP[1] = vtowide(m_SP[1]);
-	m_ext->setStore(m_SP[0].wide(), m_SP[1].wide());
-}
-
-void VM::xvtowide(uint8_t b)
-{
-	m_SPP[0] = vtowide(b, m_SP[0]);
-}
-
-void VM::xwidetov(uint8_t b)
-{
-	m_SPP[0] = vtowide(b, m_SP[0]);
-}
-
-void VM::xpush(uint8_t b)
+void xpush(uint8_t b)
 {
 	// n type t elements in source and mask vectors
-	const uint8_t n = 2expN((b) & 0xf), t = (b) >> 4;
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
 	
 	// Construct a vector out of XPUSH bytes.
 	// This requires the code has been copied and extended by 32 zero
 	// bytes to handle "out of code" push data here.
-
-	// given the type of the vector
-	// mask and shift in the inline bytes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
 	m_SPP[0].clear();
 	switch (t)
 	{
@@ -327,27 +163,35 @@ void VM::xpush(uint8_t b)
 	}
 }
 
-void VM::xswizzle(uint8_t b)
+void xswizzle(uint8_t b)
 {
 	// n type t elements in source and mask vectors
-	const uint8_t n = 2expN((b) & 0xf), t = (b) >> 4;
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
 
 	// given the type of the source and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
 	// for every index in the mask copy out the indexed value in the source
 	switch (t)
 	{
-	case 0: for (int i = 0; i < m; ++i) m_SPP[0].v8x32[ i] = m_SP[1].v8x32 [m_SP[0].v8x32 [i] % 32]; break;
-	case 1: for (int i = 0; i < m; ++i) m_SPP[0].v16x16[i] = m_SP[1].v16x16[m_SP[0].v16x16[i] % 16]; break;
-	case 2: for (int i = 0; i < m; ++i) m_SPP[0].v32x8[ i] = m_SP[1].v32x8 [m_SP[0].v32x8 [i] %  8]; break;
-	case 3: for (int i = 0; i < m; ++i) m_SPP[0].v64x4[ i] = m_SP[1].v64x4 [m_SP[0].v64x4 [i] %  4]; break;
+	case 0:
+		for (int i = 0; i < m; ++i) m_SPP[0].v8x32[ i] = m_SP[1].v8x32 [m_SP[0].v8x32 [i] % 32];
+		break;
+	case 1:
+		for (int i = 0; i < m; ++i) m_SPP[0].v16x16[i] = m_SP[1].v16x16[m_SP[0].v16x16[i] % 16];
+		break;
+	case 2:
+		for (int i = 0; i < m; ++i) m_SPP[0].v32x8[ i] = m_SP[1].v32x8 [m_SP[0].v32x8 [i] %  8];
+		break;
+	case 3:
+		for (int i = 0; i < m; ++i) m_SPP[0].v64x4[ i] = m_SP[1].v64x4 [m_SP[0].v64x4 [i] %  4];
+		break;
 	default: throwBadInstruction();
 	}
 }
 
-void VM::xshuffle(uint8_t b)
+void xshuffle(uint8_t b)
 {
 	// n type t elements in source and mask vectors
-	const uint8_t n = 2expN((b) & 0xf), t = (b) >> 4;
+	const uint8_t n = (b) & 0xf, t = (b) >> 4;
 
 	// given the type of the source and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
 	// for every index in the mask copy out the indexed value in the source
