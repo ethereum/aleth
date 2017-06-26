@@ -207,6 +207,10 @@ void VM::caseCall()
 
 bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 {
+	// Make sure the params were properly initialized.
+	assert(callParams->valueTransfer == 0);
+	assert(callParams->apparentValue == 0);
+
 	m_runGas = toInt63(m_schedule->callGas);
 
 	callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
@@ -260,11 +264,9 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 		callParams->valueTransfer = m_SP[2];
 		callParams->apparentValue = m_SP[2];
 	}
-	else
-	{
+	else if (m_OP == Instruction::DELEGATECALL)
+		// Forward VALUE.
 		callParams->apparentValue = m_ext->value;
-		callParams->valueTransfer = 0;
-	}
 
 	uint64_t inOff = (uint64_t)inputOffset;
 	uint64_t inSize = (uint64_t)inputSize;
