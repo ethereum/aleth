@@ -26,10 +26,8 @@
 #include <libdevcore/Assertions.h>
 #include "Exceptions.h"
 
-// Proposed instruction sets to support, turned off in production
-// EIP_615 - subroutines and static jumps
+// Proposed SIMD instruction set to support, turned off in production
 // EIP_616 - SIMD
-#define EIP_615 false
 #define EIP_616 false
 
 namespace dev
@@ -181,7 +179,6 @@ enum class Instruction: uint8_t
 	JUMPC,              ///< alter the program counter - pre-verified
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
 	
-#if EIP-615
 	JUMPTO = 0xb0,      ///< alter the program counter to a jumpdest
 	JUMPIF,             ///< conditionally alter the program counter
 	JUMPSUB,            ///< alter the program counter to a beginsub
@@ -192,7 +189,6 @@ enum class Instruction: uint8_t
 	RETURNSUB,          ///< return to subroutine jumped from
 	PUTLOCAL,           ///< pop top of stack to local variable
 	GETLOCAL,           ///< push local variable to top of stack
-#endif
 
 #if EIP-616
 	XADD = 0xc1,        ///< addition operation
