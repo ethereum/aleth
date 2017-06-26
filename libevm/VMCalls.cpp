@@ -15,7 +15,6 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <libethereum/ExtVM.h>
 #include "VMConfig.h"
 #include "VM.h"
@@ -24,8 +23,7 @@ using namespace dev;
 using namespace dev::eth;
 
 
-
-void VM::copyDataToMemory(bytesConstRef _data, u256*_sp)
+void VM::copyDataToMemory(bytesConstRef _data, u256* _sp)
 {
 	auto offset = static_cast<size_t>(_sp[0]);
 	s512 bigIndex = _sp[1];
