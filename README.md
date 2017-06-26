@@ -1,3 +1,9 @@
+# Warning: This repository is no longer actively maintained!
+
+For an actively maintained fork by @chfast, one of the most active contributors of the overall cpp-ethereum project, please go here: https://github.com/ethereum-mining/ethminer. It has all the bells and whistles I added over the years, has a much cleaner codebase and should have less build issues on different Linux versions and distro's. Closing down the issues section as well, as I have no time to take action upon these any longer. Thanks for all your support and donations over the years and maybe until we meet again!
+
+Old readme left under here for archiving purposes.
+
 ## ethminer-genoil
 
 What is ethminer-0.9.41-genoil-1.x.x? 
