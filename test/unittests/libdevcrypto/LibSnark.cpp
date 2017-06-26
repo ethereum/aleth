@@ -14,15 +14,11 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file LibSnark.cpp
- * @date 2017
- * Tests for libsnark integration.
- */
+/// @file
+/// Tests for libsnark integration.
 
 #include <libdevcrypto/LibSnark.h>
-
 #include <libdevcore/CommonIO.h>
-
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
@@ -336,6 +332,155 @@ BOOST_AUTO_TEST_CASE(pairingNullInput)
 	// Invalid length of input.
 	r = pairingprod_helper(bytes(2 * 32 + 2 * 64 + 1, 0));
 	BOOST_CHECK(!r.first);
+}
+
+BOOST_AUTO_TEST_CASE(generateRandomPoints)
+{
+	bytes trivialPt = toBigEndian(u256(1)) + toBigEndian(u256(2));
+
+	bool success = false;
+	bytes output;
+	bytes input = trivialPt + toBigEndian(u256(1));
+	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), toHex(trivialPt));
+
+	input = trivialPt + toBigEndian(u256(123454352435654643));
+	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), "18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
+	bytes a = std::move(output);
+
+	input = trivialPt + toBigEndian(u256(653179013456575642));
+	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), "07c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
+	bytes b = std::move(output);
+
+	input = a + b;
+	BOOST_CHECK_EQUAL(toHex(input), "18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f3726607c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
+	std::tie(success, output) = alt_bn128_G1_add(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), "2243525c5efd4b9c3d3c45ac0ca3fe4dd85e830a4ce6b65fa1eeaee202839703301d1d33be6da8e509df21cc35964723180eed7532537db9ae5e7d48f195c915");
+	bytes c = std::move(output);
+
+	input = c + a;
+	BOOST_CHECK_EQUAL(toHex(input), "2243525c5efd4b9c3d3c45ac0ca3fe4dd85e830a4ce6b65fa1eeaee202839703301d1d33be6da8e509df21cc35964723180eed7532537db9ae5e7d48f195c91518b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
+	std::tie(success, output) = alt_bn128_G1_add(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), "2bd3e6d0f3b142924f5ca7b49ce5b9d54c4703d7ae5648e61d02268b1a0a9fb721611ce0a6af85915e2f1d70300909ce2e49dfad4a4619c8390cae66cefdb204");
+	bytes d = std::move(output);
+
+	input = d + toBigEndian(u256(1230482048326178242));
+	BOOST_CHECK_EQUAL(toHex(input), "2bd3e6d0f3b142924f5ca7b49ce5b9d54c4703d7ae5648e61d02268b1a0a9fb721611ce0a6af85915e2f1d70300909ce2e49dfad4a4619c8390cae66cefdb20400000000000000000000000000000000000000000000000011138ce750fa15c2");
+	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), "070a8d6a982153cae4be29d434e8faef8a47b274a053f5a4ee2a6c9c13c31e5c031b8ce914eba3a9ffb989f9cdd5b0f01943074bf4f0f315690ec3cec6981afc");
+	bytes e = std::move(output);
+
+	// Multiply by (p - 1).
+	input = e + toBigEndian(u256("21888242871839275222246405745257275088696311157297823662689037894645226208582"));
+	BOOST_CHECK_EQUAL(toHex(input), "070a8d6a982153cae4be29d434e8faef8a47b274a053f5a4ee2a6c9c13c31e5c031b8ce914eba3a9ffb989f9cdd5b0f01943074bf4f0f315690ec3cec6981afc30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46");
+	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), "025a6f4181d2b4ea8b724290ffb40156eb0adb514c688556eb79cdea0752c2bb2eff3f31dea215f1eb86023a133a996eb6300b44da664d64251d05381bb8a02e");
+	bytes f = std::move(output);
+
+	// Multiply by (p - 1) / 2.
+	input = f + toBigEndian(u256("10944121435919637611123202872628637544348155578648911831344518947322613104291"));
+	BOOST_CHECK_EQUAL(toHex(input), "025a6f4181d2b4ea8b724290ffb40156eb0adb514c688556eb79cdea0752c2bb2eff3f31dea215f1eb86023a133a996eb6300b44da664d64251d05381bb8a02e183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3");
+	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
+	BOOST_REQUIRE(success);
+	BOOST_CHECK_EQUAL(toHex(output), "14789d0d4a730b354403b5fac948113739e276c23e0258d8596ee72f9cd9d3230af18a63153e0ec25ff9f2951dd3fa90ed0197bfef6e2a1a62b5095b9d2b4a27");
+}
+
+BOOST_AUTO_TEST_CASE(benchECADD)
+{
+	bytes v = fromHex("18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
+	bytes w = fromHex("07c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
+
+	for (int i = 0; i < 10000; ++i)
+	{
+		bool success = false;
+		bytes output;
+		std::tie(success, output) = ecadd_helper(v, w);
+		BOOST_REQUIRE(success);
+		w = std::move(v);
+		v = std::move(output);
+	}
+
+	BOOST_CHECK_EQUAL(toHex(v), "07ac1ef4e12f6bc2a1c780aa31e3cbea913a3e24d92f0a936817fe825319ae2a2541c130d13107fd99e2aca8bb647f0a098449c9a45ef44be0c9dc5ad298f355");
+	BOOST_CHECK_EQUAL(toHex(w), "002d85fbe013fa580e85705ec058f4868db26e740e5262ac4bb7e2a579d61f381d56f11fb11cc3f6df6fe8f7dcd8a6483424ec9496fcfecf2fbb2c0c32955572");
+}
+
+BOOST_AUTO_TEST_CASE(benchECMULRand)
+{
+	bytes v = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
+	u256 k = 1;
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		k = k * 6364136223846793005 + 1442695040888963407;
+		bool success = false;
+		bytes output;
+		std::tie(success, output) = ecmul_helper(v, k);
+		BOOST_REQUIRE(success);
+		v = std::move(output);
+	}
+
+	BOOST_CHECK_EQUAL(toHex(v), "0e9138e9515b63654de63453e2473362f9e1ef3b457f1b671dcb0513fc43c3b51dd4b43630c4b2835266c0c5c315d546efb53da04dc89fc6f125ff9958b0c7d2");
+}
+
+BOOST_AUTO_TEST_CASE(benchECMULWorstCase1)
+{
+	bytes v = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
+	u256 const k{"21888242871839275222246405745257275088696311157297823662689037894645226208582"};
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		bool success = false;
+		bytes output;
+		std::tie(success, output) = ecmul_helper(v, k);
+		BOOST_REQUIRE(success);
+		v = std::move(output);
+	}
+
+	BOOST_CHECK_EQUAL(toHex(v), "1701eb8c738f0f3a531d9b5468cbb7a9bb298c93d7c462bc5b06c69e78ee054927e136cbd59c7c29f6333105cee10066e0e1f83ecf376d97059cc311f82bdbd1");
+}
+
+BOOST_AUTO_TEST_CASE(benchECMULWorstCase2)
+{
+	bytes v = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
+	u256 const k{"10944121435919637611123202872628637544348155578648911831344518947322613104291"};
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		bool success = false;
+		bytes output;
+		std::tie(success, output) = ecmul_helper(v, k);
+		BOOST_REQUIRE(success);
+		v = std::move(output);
+	}
+
+	BOOST_CHECK_EQUAL(toHex(v), "002dd4014cc80a8b493f703a8cb6940b54795923e146ef15d264a7627c790d56303c653f248c7612e90683508da0f4a24dcc26825d1a124c0b912a9a217e0b0e");
+}
+
+BOOST_AUTO_TEST_CASE(benchECMULIdentity)
+{
+	bytes const w = fromHex("1fa111cf23c269b75957c715b762ef37074d341c280d113707ff342211b794571db10707e7cb4ba3c851f6bbb43399701da0c7675ca0f9cfc595774fd055b2fb");
+	u256 const k = 1;
+	bytes v = w;
+
+	for (int i = 0; i < 1000; ++i)
+	{
+		bool success = false;
+		bytes output;
+		std::tie(success, output) = ecmul_helper(v, k);
+		BOOST_REQUIRE(success);
+		v = std::move(output);
+	}
+
+	BOOST_CHECK_EQUAL(toHex(v), toHex(w));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

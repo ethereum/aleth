@@ -27,7 +27,7 @@
 #include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace dev;
-const static std::array<eth::Instruction, 14> invalidOpcodes{
+const static std::array<eth::Instruction, 14> invalidOpcodes{{
 	eth::Instruction::INVALID,
 	eth::Instruction::PUSHC,
 	eth::Instruction::JUMPC,
@@ -42,7 +42,7 @@ const static std::array<eth::Instruction, 14> invalidOpcodes{
 	eth::Instruction::RETURNSUB,
 	eth::Instruction::PUTLOCAL,
 	eth::Instruction::GETLOCAL
-};
+}};
 
 namespace dev
 {
