@@ -14,8 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file VM.cpp
- */
 
 #include <libethereum/ExtVM.h>
 #include "VMConfig.h"
@@ -113,6 +111,22 @@ void VM::adjustStack(unsigned _removed, unsigned _added)
 	if (m_SPP < m_stack)
 		throwBadStack(_removed, _added);
 #endif
+}
+
+void VM::sstoreGas()
+{
+	if (m_ext->staticCall)
+		throwDisallowedStateChange();
+
+	if (!m_ext->store(m_SP[0]) && m_SP[1])
+		m_runGas = toInt63(m_schedule->sstoreSetGas);
+	else if (m_ext->store(m_SP[0]) && !m_SP[1])
+	{
+		m_runGas = toInt63(m_schedule->sstoreResetGas);
+		m_ext->sub.refunds += m_schedule->sstoreRefundGas;
+	}
+	else
+		m_runGas = toInt63(m_schedule->sstoreResetGas);
 }
 
 
@@ -643,7 +657,296 @@ void VM::interpretCases()
 					number &= mask;
 			}
 		}
-		NEXT
+		NEXT		
+
+#if EIP_616
+		
+		CASE(XADD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			uint8_t nt = m_code[++m_PC]; 
+			xadd(nt);
+			++m_PC;
+		}
+		CONTINUE
+	         
+		CASE(XMUL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xmul(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XSUB)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsub(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XDIV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xdiv(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XSDIV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsdiv(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+        
+		CASE(XMOD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xmod(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XSMOD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsmod(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+        
+		CASE(XLT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xlt(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+          
+		CASE(XGT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xgt(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+          
+		CASE(XSLT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xslt(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XSGT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsgt(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XEQ)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xeq(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+          
+		CASE(XISZERO)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xzero(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+      
+		CASE(XAND)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xand(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XXOR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xoor(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XNOT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xnot(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XSHL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshl(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XSHR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshr(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XSAR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsar(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XROL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xrol(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+         
+		CASE(XROR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xror(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XMLOAD)
+		{
+			updateMem(toInt63(m_SP[0]) + 32);
+			ON_OP();
+			updateIOGas();
+
+			xmload(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XMSTORE)
+		{
+			updateMem(toInt63(m_SP[0]) + 32);
+			ON_OP();
+			updateIOGas();
+
+			xmstore(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XSLOAD)
+		{
+			m_runGas = toInt63(m_schedule->sloadGas);
+			ON_OP();
+			updateIOGas();
+
+			xsload(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XSSTORE)
+		{
+			sstoreGas();
+			ON_OP();
+			updateIOGas();
+	
+			xsstore(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XVTOWIDE)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xvtowide(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XWIDETOV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xwidetov(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XPUSH)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xpush(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XPUT)
+		{
+			uint8_t b = ++m_PC;
+			uint8_t c = ++m_PC;
+			xput(m_code[b], m_code[c]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XGET)
+		{
+			uint8_t b = ++m_PC;
+			uint8_t c = ++m_PC;
+			xget(m_code[b], m_code[c]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XSWIZZLE)
+		{
+			xswizzle(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XSHUFFLE)
+		{
+			xshuffle(m_code[++m_PC]); ++m_PC;
+		}
+		CONTINUE
+#endif
 
 		CASE(ADDRESS)
 		{
@@ -1140,18 +1443,7 @@ void VM::interpretCases()
 
 		CASE(SSTORE)
 		{
-			if (m_ext->staticCall)
-				throwDisallowedStateChange();
-
-			if (!m_ext->store(m_SP[0]) && m_SP[1])
-				m_runGas = toInt63(m_schedule->sstoreSetGas);
-			else if (m_ext->store(m_SP[0]) && !m_SP[1])
-			{
-				m_runGas = toInt63(m_schedule->sstoreResetGas);
-				m_ext->sub.refunds += m_schedule->sstoreRefundGas;
-			}
-			else
-				m_runGas = toInt63(m_schedule->sstoreResetGas);
+			sstoreGas();
 			ON_OP();
 			updateIOGas();
 	

@@ -22,14 +22,14 @@ namespace eth
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// interpreter configuration macros for optimizations and tracing
+// interpreter configuration macros for development, optimizations and tracing
 //
 // EVM_SWITCH_DISPATCH    - dispatch via loop and switch
 // EVM_JUMP_DISPATCH      - dispatch via a jump table - available only on GCC
 //
-// EVM_USE_CONSTANT_POOL  - 256 constants unpacked and ready to assign to stack
+// EVM_USE_CONSTANT_POOL  - constants unpacked and ready to assign to stack
 //
-// EVM_REPLACE_CONST_JUMP - with pre-verified jumps to save runtime lookup
+// EVM_REPLACE_CONST_JUMP - pre-verified jumps to save runtime lookup
 //
 // EVM_TRACE              - provides various levels of tracing
 
@@ -59,8 +59,6 @@ namespace eth
 				EVM_USE_CONSTANT_POOL \
 			)
 #endif
-
-#define EVM_JUMPS_AND_SUBS false
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -142,7 +140,7 @@ namespace eth
 // build an indirect-threaded interpreter using a jump table of
 // label addresses (a gcc extension)
 //
-#elif EVM_JUMP_DISPATCH
+#elif defined(EVM_JUMP_DISPATCH)
 
 	#define INIT_CASES  \
 	\
