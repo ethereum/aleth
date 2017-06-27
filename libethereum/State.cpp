@@ -88,7 +88,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 
 	if (_we == WithExisting::Kill)
 	{
-		cnote << "Killing state database (WithExisting::Kill).";
+		clog(StateDetail) << "Killing state database (WithExisting::Kill).";
 		boost::filesystem::remove_all(path + "/state");
 	}
 
@@ -119,7 +119,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 		}
 	}
 
-	ctrace << "Opened state DB.";
+	clog(StateDetail) << "Opened state DB.";
 	return OverlayDB(db);
 }
 
