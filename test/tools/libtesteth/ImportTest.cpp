@@ -479,7 +479,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 	return wasError;
 }
 
-void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, vector<string>& _out)
+void ImportTest::parseJsonStrValueIntoVector(json_spirit::mValue const& _json, vector<string>& _out)
 {
 	if (_json.type() == json_spirit::array_type)
 	{

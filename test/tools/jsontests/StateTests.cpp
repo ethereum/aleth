@@ -116,7 +116,7 @@ public:
 		fillAllFilesInFolder(casename);
 	}
 
-	void fillAllFilesInFolder(string _folder)
+	void fillAllFilesInFolder(string const& _folder)
 	{
 		std::string fillersPath = test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
 

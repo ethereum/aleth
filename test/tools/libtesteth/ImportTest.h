@@ -49,6 +49,7 @@ public:
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader = false);
+	static void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, std::vector<std::string>& _out);
 
 	bytes executeTest();
 	int exportTest(bytes const& _output);
