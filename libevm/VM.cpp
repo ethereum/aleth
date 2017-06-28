@@ -113,11 +113,8 @@ void VM::adjustStack(unsigned _removed, unsigned _added)
 #endif
 }
 
-void VM::sstoreGas()
+void VM::updateSSGas()
 {
-	if (m_ext->staticCall)
-		throwDisallowedStateChange();
-
 	if (!m_ext->store(m_SP[0]) && m_SP[1])
 		m_runGas = toInt63(m_schedule->sstoreSetGas);
 	else if (m_ext->store(m_SP[0]) && !m_SP[1])
@@ -660,15 +657,19 @@ void VM::interpretCases()
 		NEXT		
 
 #if EIP_616
+
+		inline uint8_t simdType()
+		{
+			uint8_t nt = m_code[++m_PC];  // advance PC and get simd type from code
+			++mPC;                        // advance PC to next opcode, ready to continue
+		}
 		
 		CASE(XADD)
 		{
 			ON_OP();
 			updateIOGas();
 
-			uint8_t nt = m_code[++m_PC]; 
-			xadd(nt);
-			++m_PC;
+			xadd(simdType());
 		}
 		CONTINUE
 	         
@@ -677,7 +678,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmul(m_code[++m_PC]); ++m_PC;
+			xmul(simdType())
 		}
 		CONTINUE
          
@@ -686,7 +687,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsub(m_code[++m_PC]); ++m_PC;
+			xsub(simdType())
 		}
 		CONTINUE
          
@@ -695,7 +696,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xdiv(m_code[++m_PC]); ++m_PC;
+			xdiv(simdType())
 		}
 		CONTINUE
          
@@ -704,7 +705,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsdiv(m_code[++m_PC]); ++m_PC;
+			xsdiv(simdType())
 		}
 		CONTINUE
         
@@ -713,7 +714,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmod(m_code[++m_PC]); ++m_PC;
+			xmod(simdType())
 		}
 		CONTINUE
          
@@ -722,7 +723,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsmod(m_code[++m_PC]); ++m_PC;
+			xsmod(simdType())
 		}
 		CONTINUE
         
@@ -731,7 +732,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xlt(m_code[++m_PC]); ++m_PC;
+			xlt(simdType())
 		}
 		CONTINUE
           
@@ -740,7 +741,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xgt(m_code[++m_PC]); ++m_PC;
+			xgt(simdType())
 		}
 		CONTINUE
           
@@ -749,7 +750,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xslt(m_code[++m_PC]); ++m_PC;
+			xslt(simdType())
 		}
 		CONTINUE
          
@@ -758,7 +759,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsgt(m_code[++m_PC]); ++m_PC;
+			xsgt(simdType())
 		}
 		CONTINUE
          
@@ -767,7 +768,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xeq(m_code[++m_PC]); ++m_PC;
+			xeq(simdType())
 		}
 		CONTINUE
           
@@ -776,7 +777,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xzero(m_code[++m_PC]); ++m_PC;
+			xzero(simdType())
 		}
 		CONTINUE
       
@@ -785,7 +786,16 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xand(m_code[++m_PC]); ++m_PC;
+			xand(simdType())
+		}
+		CONTINUE
+         
+		CASE(XOR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xoor(simdType())
 		}
 		CONTINUE
          
@@ -794,7 +804,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xoor(m_code[++m_PC]); ++m_PC;
+			xxor(simdType())
 		}
 		CONTINUE
          
@@ -803,7 +813,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xnot(m_code[++m_PC]); ++m_PC;
+			xnot(simdType())
 		}
 		CONTINUE
          
@@ -812,7 +822,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xshl(m_code[++m_PC]); ++m_PC;
+			xshl(simdType())
 		}
 		CONTINUE
          
@@ -821,7 +831,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xshr(m_code[++m_PC]); ++m_PC;
+			xshr(simdType())
 		}
 		CONTINUE
          
@@ -830,7 +840,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsar(m_code[++m_PC]); ++m_PC;
+			xsar(simdType())
 		}
 		CONTINUE
          
@@ -839,7 +849,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xrol(m_code[++m_PC]); ++m_PC;
+			xrol(simdType())
 		}
 		CONTINUE
          
@@ -848,7 +858,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xror(m_code[++m_PC]); ++m_PC;
+			xror(simdType())
 		}
 		CONTINUE
 
@@ -858,7 +868,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmload(m_code[++m_PC]); ++m_PC;
+			xmload(simdType())
 		}
 		CONTINUE
 
@@ -868,7 +878,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmstore(m_code[++m_PC]); ++m_PC;
+			xmstore(simdType())
 		}
 		CONTINUE
 
@@ -878,17 +888,20 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsload(m_code[++m_PC]); ++m_PC;
+			xsload(simdType())
 		}
 		CONTINUE
 
 		CASE(XSSTORE)
 		{
-			sstoreGas();
+			if (m_ext->staticCall)
+				throwDisallowedStateChange();
+
+			updateSSGas();
 			ON_OP();
 			updateIOGas();
 	
-			xsstore(m_code[++m_PC]); ++m_PC;
+			xsstore(simdType())
 		}
 		CONTINUE
 
@@ -897,7 +910,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xvtowide(m_code[++m_PC]); ++m_PC;
+			xvtowide(simdType())
 		}
 		CONTINUE
 
@@ -906,7 +919,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xwidetov(m_code[++m_PC]); ++m_PC;
+			xwidetov(simdType())
 		}
 		CONTINUE
 
@@ -915,12 +928,15 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xpush(m_code[++m_PC]); ++m_PC;
+			xpush(simdType())
 		}
 		CONTINUE
 
 		CASE(XPUT)
 		{
+			ON_OP();
+			updateIOGas();
+
 			uint8_t b = ++m_PC;
 			uint8_t c = ++m_PC;
 			xput(m_code[b], m_code[c]); ++m_PC;
@@ -929,6 +945,9 @@ void VM::interpretCases()
 
 		CASE(XGET)
 		{
+			ON_OP();
+			updateIOGas();
+
 			uint8_t b = ++m_PC;
 			uint8_t c = ++m_PC;
 			xget(m_code[b], m_code[c]); ++m_PC;
@@ -937,13 +956,19 @@ void VM::interpretCases()
 
 		CASE(XSWIZZLE)
 		{
-			xswizzle(m_code[++m_PC]); ++m_PC;
+			ON_OP();
+			updateIOGas();
+
+			xswizzle(simdType())
 		}
 		CONTINUE
 
 		CASE(XSHUFFLE)
 		{
-			xshuffle(m_code[++m_PC]); ++m_PC;
+			ON_OP();
+			updateIOGas();
+
+			xshuffle(simdType())
 		}
 		CONTINUE
 #endif
@@ -1443,7 +1468,10 @@ void VM::interpretCases()
 
 		CASE(SSTORE)
 		{
-			sstoreGas();
+			if (m_ext->staticCall)
+				throwDisallowedStateChange();
+				
+			updateSSGas();
 			ON_OP();
 			updateIOGas();
 	

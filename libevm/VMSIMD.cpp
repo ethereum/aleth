@@ -26,20 +26,20 @@ namespace eth
 
 // conversion functions to overlay vectors on storage for u256 stack slots
 // a dirty trick but it keeps the SIMD types from polluting the rest of the VM
-// so at least assert there's room for the trick, and use typedefs for some safety
+// so at least assert there's room for the trick, and use wrappers for some safety
 static_assert(sizeof(uint64_t[4]) <= sizeof(u256), "stack slot too narrow for SIMD");
 typedef uint64_t a64x4 [4];		
 typedef uint32_t a32x8 [8];
 typedef uint16_t a16x16[16];
 typedef uint8_t  a8x32 [32];
-      a64x4&  v64x4 (      u256& _stack_item) { return (a64x4&) *(a64x4*) &_stack_item; }
-      a32x8&  v32x8 (      u256& _stack_item) { return (a32x8&) *(a32x8*) &_stack_item; }
-      a16x16& v16x16(      u256& _stack_item) { return (a16x16&)*(a16x16*)&_stack_item; }
-      a8x32&  v8x32 (      u256& _stack_item) { return (a8x32&) *(a8x32*) &_stack_item; }
-const a64x4&  v64x4 (const u256& _stack_item) { return (a64x4&) *(a64x4*) &_stack_item; }
-const a32x8&  v32x8 (const u256& _stack_item) { return (a32x8&) *(a32x8*) &_stack_item; }
-const a16x16& v16x16(const u256& _stack_item) { return (a16x16&)*(a16x16*)&_stack_item; }
-const a8x32&  v8x32 (const u256& _stack_item) { return (a8x32&) *(a8x32*) &_stack_item; }
+inline a64x4        &v64x4 (u256       &_stack_item) { return (a64x4&) *(a64x4*) &_stack_item; }
+inline a32x8        &v32x8 (u256       &_stack_item) { return (a32x8&) *(a32x8*) &_stack_item; }
+inline a16x16       &v16x16(u256       &_stack_item) { return (a16x16&)*(a16x16*)&_stack_item; }
+inline a8x32        &v8x32 (u256       &_stack_item) { return (a8x32&) *(a8x32*) &_stack_item; }
+inline a64x4  const &v64x4 (u256 const &_stack_item) { return (a64x4&) *(a64x4*) &_stack_item; }
+inline a32x8  const &v32x8 (u256 const &_stack_item) { return (a32x8&) *(a32x8*) &_stack_item; }
+inline a16x16 const &v16x16(u256 const &_stack_item) { return (a16x16&)*(a16x16*)&_stack_item; }
+inline a8x32  const &v8x32 (u256 const &_stack_item) { return (a8x32&) *(a8x32*) &_stack_item; }
 
 // tried using template template functions, gave up fighting the compiler after a day
 #define EVALXOPS(OP, _b) EVALXOP(OP, int8_t, int16_t, int32_t, int64_t, _b)
@@ -110,15 +110,25 @@ void VM::xshl (uint8_t _b) { EVALXOPU(SHL, _b); }
 void VM::xrol (uint8_t _b) { EVALXOPU(ROL, _b); }
 void VM::xror (uint8_t _b) { EVALXOPU(ROR, _b); }
 
-uint8_t pow2N(uint8_t n)
+inline uint8_t pow2N(uint8_t n)
 {
 	static uint8_t exp[6] = { 1, 2, 4, 8, 16, 32 };
 	return exp[n];
 }
 
+inline uint8_t nElem(uint8_t _b)
+{
+	return pow2N((_b) & 0xf);
+}
+
+inline uint8_t elemType(uint8_t _b)
+{
+	return (_b) >> 4;
+
+
 void VM::vtow(uint8_t _b, const u256& _in, u256& _out)
 {
-	const uint8_t n = pow2N((_b) & 0xf), t = (_b) >> 4;
+	const uint8_t n = nElem(_b), t = elemType(_b);
 	switch (t)
 	{
 	case 0:
@@ -156,7 +166,7 @@ void VM::vtow(uint8_t _b, const u256& _in, u256& _out)
 void VM::wtov(uint8_t _b, const u256& _in, u256& _out)
 
 {
-	const uint8_t n = pow2N((_b) & 0xf), t = (_b) >> 4;
+	const uint8_t n = nElem(_b), t = elemType(_b);
 	switch (t)
 	{
 	case 0:
@@ -196,7 +206,7 @@ void VM::xmload (uint8_t _b)
 	// n bytes of type t elements in memory vector
 	// goes onto stack element by element, LSB first
 	uint8_t *p = m_mem.data() + toInt15(m_SP[0]);
-	const uint8_t n = pow2N((_b) & 0xf), t = (_b) >> 4;
+	const uint8_t n = nElem(_b), t = elemType(_b);
 	switch (t)
 	{
 	case 0:
@@ -210,7 +220,7 @@ void VM::xmload (uint8_t _b)
 		for (int j = n, v = 0, i = 0; 0 < n; ++i)
 		{
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
 			v16x16(m_SPP[0])[i] = v;
 		}
@@ -219,11 +229,11 @@ void VM::xmload (uint8_t _b)
 		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
 		{
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
 			v32x8(m_SPP[0])[i] = v;
 		}
@@ -232,19 +242,19 @@ void VM::xmload (uint8_t _b)
 		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
 		{
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
-			v >>= 8;
+			v << 8;
 			v |= p[--j];
 			v64x4(m_SPP[0])[i] = v;
 		}
@@ -258,7 +268,7 @@ void VM::xmstore(uint8_t _b)
 	// n bytes of type t elements in stack vector
 	// goes onto memory by element, LSB first
 	uint8_t *p = m_mem.data() + toInt15(m_SP[0]);
-	const uint8_t n = pow2N((_b) & 0xf), t = (_b) >> 4;
+	const uint8_t n = nElem(_b), t = elemType(_b);
 	switch (t)
 	{
 	case 0:
@@ -341,7 +351,7 @@ void VM::xwidetov(uint8_t _b)
 void VM::xpush(uint8_t _b)
 {
 	// n type t elements in source and mask vectors
-	const uint8_t n = pow2N((_b) & 0xf), t = (_b) >> 4;
+	const uint8_t n = nElem(_b), t = elemType(_b);
 	
 	// Construct a vector out of XPUSH bytes.
 	// This requires the code has been copied and extended by 32 zero
@@ -353,19 +363,22 @@ void VM::xpush(uint8_t _b)
 	switch (t)
 	{
 	case 0:
-		for (int i = 0; i < n; ++i) {
+		for (int i = 0; i < n; ++i)
+		{
 			v8x32(m_SPP[0])[i] = m_code[++m_PC];
 		}
 		break;
 	case 1:
-		for (int i = 0; i < n; ++i) {
+		for (int i = 0; i < n; ++i)
+		{
 			uint16_t& v = v16x16(m_SPP[0])[i];
 			v = (v << 8) | m_code[++m_PC];
 			v = (v << 8) | m_code[++m_PC];
 		}
 		break;
 	case 2:
-		for (int i = 0; i < n; ++i) {
+		for (int i = 0; i < n; ++i)
+		{
 			uint32_t& v = v32x8(m_SPP[0])[i];
 			v = (v << 8) | m_code[m_PC];
 			v = (v << 8) | m_code[++m_PC];
@@ -374,7 +387,8 @@ void VM::xpush(uint8_t _b)
 		}
 		break;
 	case 3:
-		for (int i = 0; i < n; ++i) {
+		for (int i = 0; i < n; ++i)
+		{
 			uint64_t& v = v64x4(m_SPP[0])[i];
 			v = (v << 8) | m_code[++m_PC];
 			v = (v << 8) | m_code[++m_PC];
@@ -393,9 +407,12 @@ void VM::xpush(uint8_t _b)
 void VM::xget(uint8_t _b, uint8_t _c)
 {
 	// n type t elements in source vector, m type u in get indexes
-	const uint8_t t = (_b) >> 4;
-	const uint8_t m = pow2N((_b) & 0xf), u = (_c) >> 4;
+	const uint8_t t = elemType(_b);
+	const uint8_t n = nElem(_b), t = elemType(_c);
+	const uint8_t m = nElem(_b), u = elemType(_c);
 	
+	// given the type of the source and index
+	// for every element of the index get the indexed element from the source
 	switch (t)
 	{
 	case 0:
@@ -496,10 +513,12 @@ void VM::xget(uint8_t _b, uint8_t _c)
 
 void VM::xput(uint8_t _b, uint8_t _c)
 {
-	// n type t elements in source vector, m type u in get indexes
-	const uint8_t t = (_b) >> 4;
-	const uint8_t m = pow2N((_b) & 0xf), u = (_c) >> 4;
-	
+	// n type t elements in source vector, m type u in put index
+	const uint8_t n = nElem(_b), t = elemType(_b);
+	const uint8_t m = nElem(_b), u = elemType(_c);
+
+	// given the type of the destination and index
+	// for every element of the index put the indexed replacement in the destination                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 	switch (t)
 	{
 	case 0:
@@ -601,7 +620,7 @@ void VM::xput(uint8_t _b, uint8_t _c)
 void VM::xswizzle(uint8_t _b)
 {
 	// n type t elements in source and mask vectors
-	const uint8_t n = pow2N((_b) & 0xf), t = (_b) >> 4;
+	const uint8_t n = nElem(_b), t = elemType(_b);
 
 	// given the type of the source and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
 	// for every index in the mask copy out the indexed value in the source
@@ -630,34 +649,34 @@ void VM::xswizzle(uint8_t _b)
 void VM::xshuffle(uint8_t _b)
 {
 	// n type t elements in source and mask vectors
-	const uint8_t n = pow2N((_b) & 0xf), t = (_b) >> 4;
+	const uint8_t n = nElem(_b), t = elemType(_b);
 
 	// given the type of the sources and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-	// for every index in the mask copy out the indexed value in the source
+	// for every index in the mask copy out the indexed value in one of the sources
 	switch (t)
 	{
 	case 0:
 		for (int i = 0; i < n; ++i) {
 			int j = v8x32(m_SP[0]) [i];
-			v8x32(m_SPP[0])[i] = j < n ? v8x32(m_SP[2]) [j] : v8x32(m_SP[2])[j % n];
+			v8x32 (m_SPP[0])[i] = j < n ? v8x32(m_SP[2]) [j] : v8x32 (m_SP[2])[j % 32];
 		}
 		break;
 	case 1:
 		for (int i = 0; i < n; ++i) {
-			int j = v16x16(m_SP[0]) [i];
-			v16x16(m_SPP[0])[i] = j < n ? v16x16(m_SP[2]) [j] : v16x16(m_SP[2])[j % n];
+			int j = v16x16(m_SP[0])[i];
+			v16x16(m_SPP[0])[i] = j < n ? v16x16(m_SP[2])[j] : v16x16(m_SP[2])[j % 16];
 		}
 		break;
 	case 2:
 		for (int i = 0; i < n; ++i) {
 			int j = v32x8(m_SP[0]) [i];
-			v32x8(m_SPP[0])[i] = j < n ? v32x8(m_SP[2]) [j] : v32x8(m_SP[2])[j % n];
+			v32x8 (m_SPP[0])[i] = j < n ? v32x8(m_SP[2]) [j] : v32x8 (m_SP[2])[j %  8];
 		}
 		break;
 	case 3:
 		for (int i = 0; i < n; ++i) {
 			int j = v64x4(m_SP[0]) [i];
-			v64x4(m_SPP[0])[i] = j < n ? v64x4(m_SP[2]) [j] : v64x4(m_SP[2])[j % n];
+			v64x4 (m_SPP[0])[i] = j < n ? v64x4(m_SP[2]) [j] : v64x4 (m_SP[2])[j %  4];
 		}
 		break;
 	default: throwBadInstruction();

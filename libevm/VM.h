@@ -164,8 +164,8 @@ private:
 
 	void onOperation();
 	void adjustStack(unsigned _removed, unsigned _added);
-	void sstoreGas();
 	uint64_t gasForMem(u512 _size);
+	void updateSSGas();
 	void updateIOGas();
 	void updateGas();
 	void updateMem(uint64_t _newMem);

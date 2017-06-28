@@ -286,7 +286,6 @@ inline Instruction logInstruction(unsigned _number)
 enum class Tier : unsigned
 {
 	Zero = 0,   // 0, Zero
-	Native,     // 1, Negliglble
 	Base,       // 2, Quick
 	VeryLow,    // 3, Fastest
 	Low,        // 5, Fast
