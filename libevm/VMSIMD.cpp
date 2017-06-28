@@ -407,9 +407,8 @@ void VM::xpush(uint8_t _b)
 void VM::xget(uint8_t _b, uint8_t _c)
 {
 	// n type t elements in source vector, m type u in get indexes
-	const uint8_t t = elemType(_b);
-	const uint8_t n = nElem(_b), t = elemType(_c);
-	const uint8_t m = nElem(_b), u = elemType(_c);
+	const uint8_t n = nElem(_b), t = elemType(_b);
+	const uint8_t m = nElem(_c), u = elemType(_c);
 	
 	// given the type of the source and index
 	// for every element of the index get the indexed element from the source
@@ -515,7 +514,7 @@ void VM::xput(uint8_t _b, uint8_t _c)
 {
 	// n type t elements in source vector, m type u in put index
 	const uint8_t n = nElem(_b), t = elemType(_b);
-	const uint8_t m = nElem(_b), u = elemType(_c);
+	const uint8_t m = nElem(_c), u = elemType(_c);
 
 	// given the type of the destination and index
 	// for every element of the index put the indexed replacement in the destination                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
