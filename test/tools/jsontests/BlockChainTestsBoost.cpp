@@ -25,7 +25,45 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 
-class frontierFixture { public:	frontierFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest; } };
+class bcTestFixture {
+	public:
+	bcTestFixture()
+	{
+		string casename = boost::unit_test::framework::current_test_case().p_name;
+		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
+			return;
+		fillAllFilesInFolder(casename);
+	}
+
+	void fillAllFilesInFolder(string const& _folder)
+	{
+		std::string fillersPath = test::getTestPath() + "/src/BlockchainTestsFiller/" + _folder;
+
+		string filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
+		int testcount = files.size() * test::getNetworks().size(); //1 test case translated to each fork.
+
+		//include fillers into test count
+		if (test::Options::get().filltests)
+			testcount += testcount / test::getNetworks().size();
+
+		test::TestOutputHelper::initTest(testcount);
+		for (auto const& file: files)
+		{
+			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
+			test::executeTests(file.filename().string(), "/BlockchainTests/"+_folder, "/BlockchainTestsFiller/"+_folder, dev::test::doBlockchainTestNoLog);
+		}
+		test::TestOutputHelper::finishTest();
+	}
+};
+
+BOOST_FIXTURE_TEST_SUITE(BlockchainTests, bcTestFixture)
+
+BOOST_AUTO_TEST_CASE(bcStateTests){}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+/*class frontierFixture { public:	frontierFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest; } };
 class homesteadFixture { public:	homesteadFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest; } };
 class transitionFixture { public: 	transitionFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::TransitionnetTest; } };
 class eip150Fixture { public:	eip150Fixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::EIP150Test; } };
@@ -195,3 +233,4 @@ BOOST_AUTO_TEST_CASE(bcRandom)
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
+*/

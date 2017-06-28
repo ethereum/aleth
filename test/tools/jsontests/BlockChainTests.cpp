@@ -120,8 +120,18 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 		//Select test by name if --singletest is set and not filling state tests as blockchain
 		if (!Options::get().fillchain && !TestOutputHelper::passTest(testname))
 		{
-			o.clear(); //don't add irrelevant tests to the final file when filling
-			continue;
+			if (_fillin)
+			{
+				o.clear(); //don't add irrelevant tests to the final file when filling
+				continue;
+			}
+			else
+			{
+				//Select test case from file by combining singleTestName and SingleTestNet
+				//singleTestName selects the fillerfile and SingleTestNet select particular test case in result test file
+				if (Options::get().singleTestName + "_" + Options::get().singleTestNet != testname)
+					continue;
+			}
 		}
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
@@ -130,12 +140,33 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 			//create a blockchain test for each network
-			for (auto network : test::getNetworks())
+			for (auto& network : test::getNetworks())
 			{
 				dev::test::TestBlockChain::s_sealEngineNetwork = network;
 				string newtestname = testname + "_" + test::netIdToString(network);
 
 				json_spirit::mObject jObj = o;
+				if (o.count("expect"))
+				{
+					//pass the corresponding expect section for the test
+					json_spirit::mArray& expects = o["expect"].get_array();
+					bool found = false;
+					for (auto& expect : expects)
+					{
+						vector<string> netlist;
+						json_spirit::mObject& expectObj = expect.get_obj();
+						ImportTest::parseJsonStrValueIntoVector(expectObj["network"], netlist);
+						if (std::find(netlist.begin(), netlist.end(), test::netIdToString(network)) != netlist.end() ||
+							std::find(netlist.begin(), netlist.end(), "ALL") != netlist.end())
+						{
+							jObj["expect"] = expectObj["result"];
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						jObj.erase(jObj.find("expect"));
+				}
 				fillBCTest(jObj, newtestname);
 				jObj["network"] = test::netIdToString(network);
 				tests[newtestname] = jObj;
