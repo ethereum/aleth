@@ -183,7 +183,6 @@ void VM::fetchInstruction()
 	#define updateIOGas()
 #endif
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // interpreter entry point
@@ -657,12 +656,6 @@ void VM::interpretCases()
 		NEXT		
 
 #if EIP_616
-
-		inline uint8_t simdType()
-		{
-			uint8_t nt = m_code[++m_PC];  // advance PC and get simd type from code
-			++mPC;                        // advance PC to next opcode, ready to continue
-		}
 		
 		CASE(XADD)
 		{
@@ -678,7 +671,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmul(simdType())
+			xmul(simdType());
 		}
 		CONTINUE
          
@@ -687,7 +680,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsub(simdType())
+			xsub(simdType());
 		}
 		CONTINUE
          
@@ -696,7 +689,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xdiv(simdType())
+			xdiv(simdType());
 		}
 		CONTINUE
          
@@ -705,7 +698,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsdiv(simdType())
+			xsdiv(simdType());
 		}
 		CONTINUE
         
@@ -714,7 +707,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmod(simdType())
+			xmod(simdType());
 		}
 		CONTINUE
          
@@ -723,7 +716,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsmod(simdType())
+			xsmod(simdType());
 		}
 		CONTINUE
         
@@ -732,7 +725,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xlt(simdType())
+			xlt(simdType());
 		}
 		CONTINUE
           
@@ -741,7 +734,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xgt(simdType())
+			xgt(simdType());
 		}
 		CONTINUE
           
@@ -750,7 +743,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xslt(simdType())
+			xslt(simdType());
 		}
 		CONTINUE
          
@@ -759,7 +752,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsgt(simdType())
+			xsgt(simdType());
 		}
 		CONTINUE
          
@@ -768,7 +761,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xeq(simdType())
+			xeq(simdType());
 		}
 		CONTINUE
           
@@ -777,7 +770,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xzero(simdType())
+			xzero(simdType());
 		}
 		CONTINUE
       
@@ -786,16 +779,16 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xand(simdType())
+			xand(simdType());
 		}
 		CONTINUE
          
-		CASE(XOR)
+		CASE(XOOR)
 		{
 			ON_OP();
 			updateIOGas();
 
-			xoor(simdType())
+			xoor(simdType());
 		}
 		CONTINUE
          
@@ -804,7 +797,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xxor(simdType())
+			xxor(simdType());
 		}
 		CONTINUE
          
@@ -813,7 +806,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xnot(simdType())
+			xnot(simdType());
 		}
 		CONTINUE
          
@@ -822,7 +815,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xshl(simdType())
+			xshl(simdType());
 		}
 		CONTINUE
          
@@ -831,7 +824,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xshr(simdType())
+			xshr(simdType());
 		}
 		CONTINUE
          
@@ -840,7 +833,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsar(simdType())
+			xsar(simdType());
 		}
 		CONTINUE
          
@@ -849,7 +842,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xrol(simdType())
+			xrol(simdType());
 		}
 		CONTINUE
          
@@ -858,7 +851,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xror(simdType())
+			xror(simdType());
 		}
 		CONTINUE
 
@@ -868,7 +861,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmload(simdType())
+			xmload(simdType());
 		}
 		CONTINUE
 
@@ -878,7 +871,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xmstore(simdType())
+			xmstore(simdType());
 		}
 		CONTINUE
 
@@ -888,7 +881,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xsload(simdType())
+			xsload(simdType());
 		}
 		CONTINUE
 
@@ -901,7 +894,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 	
-			xsstore(simdType())
+			xsstore(simdType());
 		}
 		CONTINUE
 
@@ -910,7 +903,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xvtowide(simdType())
+			xvtowide(simdType());
 		}
 		CONTINUE
 
@@ -919,7 +912,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xwidetov(simdType())
+			xwidetov(simdType());
 		}
 		CONTINUE
 
@@ -928,7 +921,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xpush(simdType())
+			xpush(simdType());
 		}
 		CONTINUE
 
@@ -959,7 +952,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xswizzle(simdType())
+			xswizzle(simdType());
 		}
 		CONTINUE
 
@@ -968,7 +961,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			xshuffle(simdType())
+			xshuffle(simdType());
 		}
 		CONTINUE
 #endif

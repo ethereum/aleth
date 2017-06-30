@@ -45,7 +45,7 @@ namespace eth
 		#error "address of label extension avaiable only on Gnu"
 	#endif
 #else
-	#define EVM_SWITCH_DISPATCH
+	#define EVM_SWITCH_DISPATCH true
 #endif
 
 #ifndef EVM_OPTIMIZE
@@ -123,7 +123,7 @@ namespace eth
 //
 // build a simple loop-and-switch interpreter
 //
-#if defined(EVM_SWITCH_DISPATCH)
+#if EVM_SWITCH_DISPATCH
 
 	#define INIT_CASES if (!m_caseInit) { m_PC = 0; m_caseInit = true; return; }
 	#define DO_CASES for(;;) { fetchInstruction(); switch(m_OP) {
@@ -140,7 +140,7 @@ namespace eth
 // build an indirect-threaded interpreter using a jump table of
 // label addresses (a gcc extension)
 //
-#elif defined(EVM_JUMP_DISPATCH)
+#elif EVM_JUMP_DISPATCH
 
 	#define INIT_CASES  \
 	\

@@ -29,6 +29,7 @@
 using namespace dev;
 const static std::array<eth::Instruction, 14> invalidOpcodes{{
 	eth::Instruction::INVALID,
+#ifndef EIP_615
 	eth::Instruction::PUSHC,
 	eth::Instruction::JUMPC,
 	eth::Instruction::JUMPCI,
@@ -42,6 +43,7 @@ const static std::array<eth::Instruction, 14> invalidOpcodes{{
 	eth::Instruction::RETURNSUB,
 	eth::Instruction::PUTLOCAL,
 	eth::Instruction::GETLOCAL
+#endif
 }};
 
 namespace dev

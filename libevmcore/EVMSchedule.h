@@ -52,7 +52,6 @@ struct EVMSchedule
 	unsigned sstoreResetGas = 5000;
 	unsigned sstoreRefundGas = 15000;
 	unsigned jumpdestGas = 1;
-	unsigned simdGas = 1;
 	unsigned logGas = 375;
 	unsigned logDataGas = 8;
 	unsigned logTopicGas = 375;

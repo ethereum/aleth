@@ -84,8 +84,6 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::MSIZE,        { "MSIZE",          0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::GAS,          { "GAS",            0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::JUMPDEST,     { "JUMPDEST",       0,     0,    0,  true,        Tier::Special } },
-	{ Instruction::BEGINDATA,    { "BEGINDATA",      0,     0,    0,  true,        Tier::Special } },
-	{ Instruction::BEGINSUB,     { "BEGINSUB",       0,     0,    0,  true,        Tier::Special } },
 	{ Instruction::PUSH1,        { "PUSH1",          1,     0,    1,  false,       Tier::VeryLow } },
 	{ Instruction::PUSH2,        { "PUSH2",          2,     0,    1,  false,       Tier::VeryLow } },
 	{ Instruction::PUSH3,        { "PUSH3",          3,     0,    1,  false,       Tier::VeryLow } },
@@ -155,17 +153,19 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::LOG2,         { "LOG2",           0,     4,     0,  true,       Tier::Special } },
 	{ Instruction::LOG3,         { "LOG3",           0,     5,     0,  true,       Tier::Special } },
 	{ Instruction::LOG4,         { "LOG4",           0,     6,     0,  true,       Tier::Special } },
-#if EIP-615
+#if EIP_615
 	{ Instruction::JUMPTO,       { "JUMPTO",         2,     1,    0,  true,        Tier::VeryLow } },
 	{ Instruction::JUMPIF,       { "JUMPIF",         2,     2,    0,  true,        Tier::Low } },
 	{ Instruction::JUMPV,        { "JUMPV",          2,     1,    0,  true,        Tier::Mid } },
 	{ Instruction::JUMPSUB,      { "JUMPSUB",        2,     1,    0,  true,        Tier::Low } },
 	{ Instruction::JUMPSUBV,     { "JUMPSUBV",       2,     1,    0,  true,        Tier::Mid } },
+	{ Instruction::BEGINSUB,     { "BEGINSUB",       0,     0,    0,  true,        Tier::Special } },
+	{ Instruction::BEGINDATA,    { "BEGINDATA",      0,     0,    0,  true,        Tier::Special } },
 	{ Instruction::RETURNSUB,    { "RETURNSUB",      0,     1,    0,  true,        Tier::Mid } },
 	{ Instruction::PUTLOCAL,     { "PUTLOCAL",       2,     1,    0,  true,        Tier::VeryLow } },
 	{ Instruction::GETLOCAL,     { "GETLOCAL",       2,     0,    1,  true,        Tier::VeryLow } },
 #endif
-#if EIP-616
+#if EIP_616
 	{ Instruction::XADD,         { "XADD",           1,     0,    0,  true,        Tier::Special } },
 	{ Instruction::XMUL,         { "XMUL",           1,     2,    1,  false,       Tier::Special } },
 	{ Instruction::XSUB,         { "XSUB",           1,     2,    1,  false,       Tier::Special } },

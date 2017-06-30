@@ -199,6 +199,7 @@ private:
 	// input bytes are the inline simd type descriptors for the operand vectors on the stack
 	//
 #if EIP_616
+
 	void xadd    (uint8_t);
 	void xmul    (uint8_t);
 	void xsub    (uint8_t);
@@ -232,8 +233,17 @@ private:
 	void xget    (uint8_t, uint8_t);
 	void xswizzle(uint8_t);
 	void xshuffle(uint8_t);
-	void vtow(uint8_t _b, const u256& _in, u256& _out);
-	void wtov(uint8_t _b, const u256& _in, u256& _out);
+	
+	u256 vtow(uint8_t _b, const u256&);
+	u256 wtov(uint8_t _b, const u256&);
+	
+	uint8_t simdType()
+	{
+		uint8_t nt = m_code[++m_PC];  // advance PC and get simd type from code
+		++m_PC;                       // advance PC to next opcode, ready to continue
+		return nt;
+	}
+
 #endif
 };
 
