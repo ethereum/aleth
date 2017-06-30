@@ -35,7 +35,8 @@ public:
 	static void initTest(json_spirit::mValue& _v);
 	static bool passTest(std::string const& _testName);
 	static void setMaxTests(int _count) { m_maxTests = _count; }
-	static void setCurrentTestFileName(std::string _name) { m_currentTestFileName = _name; }
+	static void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
+	static void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	static std::string const& testName() { return m_currentTestName; }
 	static std::string const& caseName() { return m_currentTestCaseName; }
 	static std::string const& testFileName() { return m_currentTestFileName; }
