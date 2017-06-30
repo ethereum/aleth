@@ -26,7 +26,6 @@
 #include <libdevcore/Assertions.h>
 #include "Exceptions.h"
 
-<<<<<<< HEAD
 // Proposed subroutine and static jump instruction set, currently turned off by default
 #ifndef EIP_615
 	#define EIP_615 false
@@ -36,11 +35,10 @@
 #ifndef EIP_616
 	#define EIP_616 false
 #endif
-=======
+
 // Proposed SIMD instruction set to support, turned off in production
 // EIP_616 - SIMD
 #define EIP_616 false
->>>>>>> fuzzHelper wants 615 opcodes
 
 namespace dev
 {
@@ -191,10 +189,14 @@ enum class Instruction: uint8_t
 	JUMPC,              ///< alter the program counter - pre-verified
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
 <<<<<<< HEAD
+<<<<<<< HEAD
 #if EIP_615
 =======
 	
 >>>>>>> fuzzHelper wants 615 opcodes
+=======
+#if EIP_615
+>>>>>>> more of Andrei's suggestions, more cleanup, get it all compiling again
 	JUMPTO = 0xb0,      ///< alter the program counter to a jumpdest
 	JUMPIF,             ///< conditionally alter the program counter
 	JUMPSUB,            ///< alter the program counter to a beginsub
@@ -206,12 +208,17 @@ enum class Instruction: uint8_t
 	PUTLOCAL,           ///< pop top of stack to local variable
 	GETLOCAL,           ///< push local variable to top of stack
 <<<<<<< HEAD
+<<<<<<< HEAD
 #endif
 #if EIP_616
 =======
 
 #if EIP-616
 >>>>>>> fuzzHelper wants 615 opcodes
+=======
+#endif
+#if EIP_616
+>>>>>>> more of Andrei's suggestions, more cleanup, get it all compiling again
 	XADD = 0xc1,        ///< addition operation
 	XMUL,               ///< mulitplication operation
 	XSUB,               ///< subtraction operation
