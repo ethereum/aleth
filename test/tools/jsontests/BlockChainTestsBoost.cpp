@@ -30,8 +30,32 @@ class bcTestFixture {
 	bcTestFixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
-		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
+		if (casename == "bcForgedTest")
+		{
+			std::string fillersPath =  dev::test::getTestPath() + "/src/BlockchainTestsFiller/bcForgedTest";
+			std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+
+			for (auto const& file : files)
+			{
+				if (!dev::test::Options::get().filltests)
+				{
+					clog << "\\/ " << file.filename().string() << std::endl;
+					dev::test::executeTests(file.filename().string(), "/BlockchainTests/bcForgedTest", "/BlockchainTestsFiller/bcForgedTest", dev::test::doBlockchainTests);
+				}
+				else
+				{
+					dev::test::TestOutputHelper::initTest();
+					string copyto = dev::test::getTestPath() + "/BlockchainTests/bcForgedTest/" + file.filename().string();
+					clog << "Copying " + fillersPath + "/" + file.filename().string();
+					clog << " TO " << copyto;
+					dev::test::copyFile(fillersPath + "/" + file.filename().string(), dev::test::getTestPath() + "/BlockchainTests/bcForgedTest/" + file.filename().string());
+					BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copyto), "Error when copying the test file!");
+					dev::test::TestOutputHelper::finishTest();
+				}
+			}
+
 			return;
+		}
 		fillAllFilesInFolder(casename);
 	}
 
@@ -66,6 +90,12 @@ BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest){}
 BOOST_AUTO_TEST_CASE(bcUncleHeaderValiditiy){}
 BOOST_AUTO_TEST_CASE(bcUncleTest){}
 BOOST_AUTO_TEST_CASE(bcValidBlockTest){}
+BOOST_AUTO_TEST_CASE(bcWalletTest){}
+BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest){}
+BOOST_AUTO_TEST_CASE(bcMultiChainTest){}
+BOOST_AUTO_TEST_CASE(bcForkStressTest){}
+BOOST_AUTO_TEST_CASE(bcForgedTest){}
+BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest){}
 
 BOOST_AUTO_TEST_SUITE_END()
 

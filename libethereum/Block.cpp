@@ -375,6 +375,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 					if (got > m_currentBlock.gasLimit())
 					{
 						clog(StateTrace) << t.sha3() << "Dropping over-gassy transaction (gas > block's gas limit)";
+						clog(StateTrace) << "got: " << got << " required: " << m_currentBlock.gasLimit();
 						_tq.drop(t.sha3());
 					}
 					else
