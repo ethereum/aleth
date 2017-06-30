@@ -442,9 +442,12 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
 
+	//Get the test name
 	string name = _name;
 	if (_name.rfind("Filler.json") != std::string::npos)
 		name = _name.substr(0, _name.rfind("Filler.json"));
+	else if (_name.rfind(".json") != std::string::npos)
+		name = _name.substr(0, _name.rfind(".json"));
 
 	if (Options::get().filltests)
 	{
