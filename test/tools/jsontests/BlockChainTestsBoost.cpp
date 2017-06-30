@@ -60,6 +60,12 @@ class bcTestFixture {
 BOOST_FIXTURE_TEST_SUITE(BlockchainTests, bcTestFixture)
 
 BOOST_AUTO_TEST_CASE(bcStateTests){}
+BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest){}
+BOOST_AUTO_TEST_CASE(bcGasPricerTest){}
+BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest){}
+BOOST_AUTO_TEST_CASE(bcUncleHeaderValiditiy){}
+BOOST_AUTO_TEST_CASE(bcUncleTest){}
+BOOST_AUTO_TEST_CASE(bcValidBlockTest){}
 
 BOOST_AUTO_TEST_SUITE_END()
 
