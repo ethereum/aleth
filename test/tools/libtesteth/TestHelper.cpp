@@ -124,15 +124,13 @@ eth::Network stringToNetId(string const& _netname)
 
 std::vector<eth::Network> getNetworks()
 {
-	static std::vector<eth::Network> networks;
-	if (networks.size() == 0)
-	{
-		networks.push_back(eth::Network::FrontierTest);
-		networks.push_back(eth::Network::HomesteadTest);
-		networks.push_back(eth::Network::EIP150Test);
-		networks.push_back(eth::Network::EIP158Test);
-		networks.push_back(eth::Network::MetropolisTest);
-	}
+	static std::vector<eth::Network> const networks {{
+		eth::Network::FrontierTest,
+		eth::Network::HomesteadTest,
+		eth::Network::EIP150Test,
+		eth::Network::EIP158Test,
+		eth::Network::MetropolisTest
+	}};
 	return networks;
 }
 
