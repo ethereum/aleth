@@ -529,8 +529,8 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
 	vector<string> allowednetworks;
 	vector<eth::Network> networks = test::getNetworks();
-	for (size_t i = 0; i < networks.size(); i++)
-		allowednetworks.push_back(netIdToString(networks[i]));
+	for (auto const& net : networks)
+		allowednetworks.push_back(netIdToString(net));
 	allowednetworks.push_back("ALL");
 
 	for(size_t i=0; i<network.size(); i++)
