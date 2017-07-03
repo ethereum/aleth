@@ -23,7 +23,10 @@ ExternalProject_Add(boost
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ${BOOST_BOOTSTRAP_COMMAND}
     LOG_CONFIGURE 1
-    BUILD_COMMAND ${BOOST_BUILD_TOOL} stage
+    BUILD_COMMAND 
+        ${BOOST_BUILD_TOOL}
+        --ignore-site-config
+        stage
         ${BOOST_CXXFLAGS}
         threading=multi
         link=static
