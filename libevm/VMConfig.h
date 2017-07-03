@@ -24,6 +24,9 @@ namespace eth
 //
 // interpreter configuration macros for development, optimizations and tracing
 //
+// EIP_615                - subroutines and static jumps
+// EIP_616                - SIMD
+//
 // EVM_SWITCH_DISPATCH    - dispatch via loop and switch
 // EVM_JUMP_DISPATCH      - dispatch via a jump table - available only on GCC
 //
@@ -32,6 +35,14 @@ namespace eth
 // EVM_REPLACE_CONST_JUMP - pre-verified jumps to save runtime lookup
 //
 // EVM_TRACE              - provides various levels of tracing
+
+#ifndef EIP_615
+	#define EIP_615 false
+#endif
+
+#ifndef EIP_616
+	#define EIP_616 true
+#endif
 
 #ifndef EVM_JUMP_DISPATCH
 	#ifdef __GNUC__
@@ -42,7 +53,7 @@ namespace eth
 #endif
 #if EVM_JUMP_DISPATCH
 	#ifndef __GNUC__
-		#error "address of label extension avaiable only on Gnu"
+		#error "address of label extension available only on Gnu"
 	#endif
 #else
 	#define EVM_SWITCH_DISPATCH true
@@ -146,7 +157,7 @@ namespace eth
 	\
 		static const void * const jumpTable[256] =  \
 		{  \
-			&&STOP,          /* 00 */  \
+			&&STOP,        /* 00 */  \
 			&&ADD,  \
 			&&MUL,  \
 			&&SUB,  \
@@ -162,7 +173,7 @@ namespace eth
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&LT,            /* 10, */  \
+			&&LT,          /* 10, */  \
 			&&GT,  \
 			&&SLT,  \
 			&&SGT,  \
@@ -178,7 +189,7 @@ namespace eth
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&SHA3,          /* 20, */  \
+			&&SHA3,        /* 20, */  \
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
@@ -194,7 +205,7 @@ namespace eth
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&ADDRESS,       /* 30, */  \
+			&&ADDRESS,     /* 30, */  \
 			&&BALANCE,  \
 			&&ORIGIN,  \
 			&&CALLER,  \
@@ -210,23 +221,23 @@ namespace eth
 			&&RETURNDATASIZE,  \
 			&&RETURNDATACOPY,  \
 			&&INVALID,  \
-			&&BLOCKHASH,     /* 40, */  \
+			&&BLOCKHASH,   /* 40, */  \
 			&&COINBASE,  \
 			&&TIMESTAMP,  \
 			&&NUMBER,  \
 			&&DIFFICULTY,  \
 			&&GASLIMIT,  \
-			&&JUMPTO,  \
-			&&JUMPIF,  \
-			&&JUMPV,  \
-			&&JUMPSUB,  \
-			&&JUMPSUBV,  \
-			&&RETURNSUB,  \
-			&&BEGINSUB,  \
-			&&BEGINDATA,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&POP,           /* 50, */  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&POP,         /* 50, */  \
 			&&MLOAD,  \
 			&&MSTORE,  \
 			&&MSTORE8,  \
@@ -242,7 +253,7 @@ namespace eth
 			&&BEGINSUB,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&PUSH1,         /* 60, */  \
+			&&PUSH1,       /* 60, */  \
 			&&PUSH2,  \
 			&&PUSH3,  \
 			&&PUSH4,  \
@@ -258,7 +269,7 @@ namespace eth
 			&&PUSH14,  \
 			&&PUSH15,  \
 			&&PUSH16,  \
-			&&PUSH17,         /* 70, */  \
+			&&PUSH17,      /* 70, */  \
 			&&PUSH18,  \
 			&&PUSH19,  \
 			&&PUSH20,  \
@@ -274,7 +285,7 @@ namespace eth
 			&&PUSH30,  \
 			&&PUSH31,  \
 			&&PUSH32,  \
-			&&DUP1,          /* 80, */  \
+			&&DUP1,        /* 80, */  \
 			&&DUP2,  \
 			&&DUP3,  \
 			&&DUP4,  \
@@ -290,7 +301,7 @@ namespace eth
 			&&DUP14,  \
 			&&DUP15,  \
 			&&DUP16,  \
-			&&SWAP1,         /* 90, */  \
+			&&SWAP1,       /* 90, */  \
 			&&SWAP2,  \
 			&&SWAP3,  \
 			&&SWAP4,  \
@@ -306,7 +317,7 @@ namespace eth
 			&&SWAP14,  \
 			&&SWAP15,  \
 			&&SWAP16,  \
-			&&LOG0,          /* A0, */  \
+			&&LOG0,        /* A0, */  \
 			&&LOG1,  \
 			&&LOG2,  \
 			&&LOG3,  \
@@ -322,7 +333,30 @@ namespace eth
 			&&JUMPC,  \
 			&&JUMPCI,  \
 			&&INVALID,  \
-			&&INVALID,       /* B0, */  \
+			&&JUMPTO,      /* B0, */ \
+			&&JUMPIF,  \
+			&&JUMPSUB,  \
+			&&JUMPV,  \
+			&&JUMPSUBV,  \
+			&&BEGINSUB,  \
+			&&BEGINDATA, \
+			&&RETURNSUB, \
+			&&PUTLOCAL,  \
+			&&GETLOCAL,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,  \
+			&&INVALID,     /* C0, */  \
+			&&XADD,  \
+			&&XMUL,  \
+			&&XSUB,  \
+			&&XDIV,  \
+			&&XSDIV,  \
+			&&XMOD,  \
+			&&XSMOD,  \
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
@@ -331,62 +365,39 @@ namespace eth
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
+			&&XLT,         /* D0 */ \
+			&&XGT,  \
+			&&XSLT,  \
+			&&XSGT,  \
+			&&XEQ,  \
+			&&XISZERO,  \
+			&&XAND,  \
+			&&XOOR,  \
+			&&XXOR,  \
+			&&XNOT,  \
+			&&INVALID,  \
+			&&XSHL,  \
+			&&XSHR,  \
+			&&XSAR,  \
+			&&XROL,  \
+			&&XROR,  \
+			&&XPUSH,       /* E0, */   \
+			&&XMLOAD,  \
+			&&XMSTORE,  \
+			&&INVALID,  \
+			&&XSLOAD,  \
+			&&XSSTORE,  \
+			&&XVTOWIDE,  \
+			&&XWIDETOV,  \
+			&&XGET,  \
+			&&XPUT,  \
+			&&XSWIZZLE,  \
+			&&XSHUFFLE,  \
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,       /* C0, */  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,       /* D0, */  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,       /* E0, */  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&CREATE,        /* F0, */  \
+			&&CREATE,      /* F0, */  \
 			&&CALL,  \
 			&&CALLCODE,  \
 			&&RETURN,  \

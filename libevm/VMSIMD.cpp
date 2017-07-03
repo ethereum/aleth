@@ -126,7 +126,7 @@ inline uint8_t elemType(uint8_t _b)
 	return (_b) >> 4;
 }
 
-u256 VM::vtow(uint8_t _b, const u256& _in)
+u256 VM::vtow(uint8_t _b, u256 _in)
 {
 	u256 out;
 	uint8_t const n = nElem(_b);
@@ -167,7 +167,7 @@ u256 VM::vtow(uint8_t _b, const u256& _in)
 	return out;
 }
 
-u256 VM::wtov(uint8_t _b, const u256& _in)
+u256 VM::wtov(uint8_t _b, u256 _in)
 {
 	u256 out;
 	uint8_t const n = nElem(_b);
@@ -219,14 +219,14 @@ void VM::xmload (uint8_t _b)
 	switch (t)
 	{
 	case 0:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
+		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
 		{
 			v |= p[--j];
 			v8x32(m_SPP[0])[i] = v;
 		}
 		break;
 	case 1:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
+		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
 		{
 			v |= p[--j];
 			v <<= 8;
@@ -284,14 +284,14 @@ void VM::xmstore(uint8_t _b)
 	switch (t)
 	{
 	case 0:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
+		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
 		{
 			v = v8x32(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 		}
 		break;
 	case 1:
-		for (int j = n, v = 0, i = 0; 0 < n; ++i)
+		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
 		{
 			v = v8x32(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
@@ -346,8 +346,7 @@ void VM::xsload(uint8_t _b)
 
 void VM::xsstore(uint8_t _b)
 {
-	u256 w;
-	w = vtow(_b, m_SP[1]);
+	u256 w = vtow(_b, m_SP[1]);
 	m_ext->setStore(m_SP[0], w);
 }
 

@@ -234,8 +234,8 @@ private:
 	void xswizzle(uint8_t);
 	void xshuffle(uint8_t);
 	
-	u256 vtow(uint8_t _b, const u256&);
-	u256 wtov(uint8_t _b, const u256&);
+	u256 vtow(uint8_t _b, u256);
+	u256 wtov(uint8_t _b, u256);
 	
 	uint8_t simdType()
 	{

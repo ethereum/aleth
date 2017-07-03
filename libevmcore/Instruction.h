@@ -190,6 +190,7 @@ enum class Instruction: uint8_t
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #if EIP_615
 =======
 	
@@ -197,6 +198,9 @@ enum class Instruction: uint8_t
 =======
 #if EIP_615
 >>>>>>> more of Andrei's suggestions, more cleanup, get it all compiling again
+=======
+	
+>>>>>>> get instruction configuration cleaned up and working on windows, other smaller stuff
 	JUMPTO = 0xb0,      ///< alter the program counter to a jumpdest
 	JUMPIF,             ///< conditionally alter the program counter
 	JUMPSUB,            ///< alter the program counter to a beginsub
@@ -209,6 +213,7 @@ enum class Instruction: uint8_t
 	GETLOCAL,           ///< push local variable to top of stack
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #endif
 #if EIP_616
 =======
@@ -219,6 +224,9 @@ enum class Instruction: uint8_t
 #endif
 #if EIP_616
 >>>>>>> more of Andrei's suggestions, more cleanup, get it all compiling again
+=======
+
+>>>>>>> get instruction configuration cleaned up and working on windows, other smaller stuff
 	XADD = 0xc1,        ///< addition operation
 	XMUL,               ///< mulitplication operation
 	XSUB,               ///< subtraction operation
@@ -252,7 +260,6 @@ enum class Instruction: uint8_t
 	XPUT,               ///< put data in vector
 	XSWIZZLE,           ///< permute data in vector
 	XSHUFFLE,           ///< permute data in two vectors
-#endif
 
 	CREATE = 0xf0,      ///< create a new account with associated code
 	CALL,               ///< message-call into an account

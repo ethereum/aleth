@@ -97,7 +97,7 @@ void VM::optimize()
 		{
 			pc += (byte)op - (byte)Instruction::PUSH1 + 1;
 		}
-#if EVM_JUMPS_AND_SUBS
+#if EIP_615
 		else if (
 			op == Instruction::JUMPTO ||
 			op == Instruction::JUMPIF ||

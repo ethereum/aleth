@@ -219,7 +219,7 @@ owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 // main interpreter loop and switch
 //
 void VM::interpretCases()
-{
+{	
 	INIT_CASES
 	DO_CASES
 	{	
@@ -655,6 +655,110 @@ void VM::interpretCases()
 		}
 		NEXT		
 
+#if EIP_615
+		CASE(JUMPTO)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			m_PC = decodeJumpDest(m_code.data(), m_PC);
+		}
+		CONTINUE
+
+		CASE(JUMPIF)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			if (m_SP[0])
+				m_PC = decodeJumpDest(m_code.data(), m_PC);
+			else
+				++m_PC;
+		}
+		CONTINUE
+
+		CASE(JUMPV)
+		{
+			ON_OP();
+			updateIOGas();
+			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
+		}
+		CONTINUE
+
+		CASE(JUMPSUB)
+		{
+			ON_OP();
+			updateIOGas();
+			*m_RP++ = m_PC++;
+			m_PC = decodeJumpDest(m_code.data(), m_PC);
+			}
+		}
+		CONTINUE
+
+		CASE(JUMPSUBV)
+		{
+			ON_OP();
+			updateIOGas();
+			*m_RP++ = m_PC;
+			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
+		}
+		CONTINUE
+
+		CASE(RETURNSUB)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			m_PC = *m_RP--;
+		}
+		NEXT
+
+		CASE(BEGINSUB)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+		
+
+		CASE(BEGINDATA)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+
+		CASE(GETLOCAL)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+
+		CASE(PUTLOCAL)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+
+#else
+		CASE(JUMPTO)
+		CASE(JUMPIF)
+		CASE(JUMPV)
+		CASE(JUMPSUB)
+		CASE(JUMPSUBV)
+		CASE(RETURNSUB)
+		CASE(BEGINSUB)
+		CASE(BEGINDATA)
+		CASE(GETLOCAL)
+		CASE(PUTLOCAL)
+		{
+			throwBadInstruction();
+		}
+		CONTINUE
+#endif
+
 #if EIP_616
 		
 		CASE(XADD)
@@ -962,6 +1066,44 @@ void VM::interpretCases()
 			updateIOGas();
 
 			xshuffle(simdType());
+		}
+		CONTINUE
+#else
+		CASE(XADD)
+		CASE(XMUL)
+		CASE(XSUB)
+		CASE(XDIV)
+		CASE(XSDIV)
+		CASE(XMOD)
+		CASE(XSMOD)
+		CASE(XLT)
+		CASE(XGT)
+		CASE(XSLT)
+		CASE(XSGT)
+		CASE(XEQ)
+		CASE(XISZERO)
+		CASE(XAND)
+		CASE(XOOR)
+		CASE(XXOR)
+		CASE(XNOT)
+		CASE(XSHL)
+		CASE(XSHR)
+		CASE(XSAR)
+		CASE(XROL)
+		CASE(XROR)
+		CASE(XMLOAD)
+		CASE(XMSTORE)
+		CASE(XSLOAD)
+		CASE(XSSTORE)
+		CASE(XVTOWIDE)
+		CASE(XWIDETOV)
+		CASE(XPUSH)
+		CASE(XPUT)
+		CASE(XGET)
+		CASE(XSWIZZLE)
+		CASE(XSHUFFLE)
+		{
+			throwBadInstruction();
 		}
 		CONTINUE
 #endif
@@ -1294,76 +1436,6 @@ void VM::interpretCases()
 		}
 		CONTINUE
 
-#if EVM_JUMPS_AND_SUBS
-		CASE(JUMPTO)
-		{
-			ON_OP();
-			updateIOGas();
-			
-			m_PC = decodeJumpDest(m_code.data(), m_PC);
-		}
-		CONTINUE
-
-		CASE(JUMPIF)
-		{
-			ON_OP();
-			updateIOGas();
-			
-			if (m_SP[0])
-				m_PC = decodeJumpDest(m_code.data(), m_PC);
-			else
-				++m_PC;
-		}
-		CONTINUE
-
-		CASE(JUMPV)
-		{
-			ON_OP();
-			updateIOGas();
-			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
-		}
-		CONTINUE
-
-		CASE(JUMPSUB)
-		{
-			ON_OP();
-			updateIOGas();
-			*m_RP++ = m_PC++;
-			m_PC = decodeJumpDest(m_code.data(), m_PC);
-			}
-		}
-		CONTINUE
-
-		CASE(JUMPSUBV)
-		{
-			ON_OP();
-			updateIOGas();
-			*m_RP++ = m_PC;
-			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
-		}
-		CONTINUE
-
-		CASE(RETURNSUB)
-		{
-			ON_OP();
-			updateIOGas();
-			
-			m_PC = *m_RP--;
-		}
-		NEXT
-#else
-		CASE(JUMPTO)
-		CASE(JUMPIF)
-		CASE(JUMPV)
-		CASE(JUMPSUB)
-		CASE(JUMPSUBV)
-		CASE(RETURNSUB)
-		{
-			throwBadInstruction();
-		}
-		CONTINUE
-#endif
-
 		CASE(JUMPC)
 		{
 #if EVM_REPLACE_CONST_JUMP
@@ -1507,18 +1579,6 @@ void VM::interpretCases()
 		}
 		NEXT
 
-#if EVM_JUMPS_AND_SUBS
-		CASE(BEGINSUB)
-		{
-			m_runGas = 1;
-			ON_OP();
-			updateIOGas();
-		}
-		NEXT
-#else
-		CASE(BEGINSUB)
-#endif
-		CASE(BEGINDATA)
 		CASE(INVALID)
 		DEFAULT
 		{
