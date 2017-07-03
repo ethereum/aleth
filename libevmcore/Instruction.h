@@ -40,7 +40,7 @@
 // EIP_616 - SIMD
 #define EIP_616 false
 
-namespace dev
+qnamespace dev
 {
 namespace eth
 {
@@ -188,19 +188,7 @@ enum class Instruction: uint8_t
 	PUSHC = 0xac,       ///< push value from constant pool
 	JUMPC,              ///< alter the program counter - pre-verified
 	JUMPCI,             ///< conditionally alter the program counter - pre-verified
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 #if EIP_615
-=======
-	
->>>>>>> fuzzHelper wants 615 opcodes
-=======
-#if EIP_615
->>>>>>> more of Andrei's suggestions, more cleanup, get it all compiling again
-=======
-	
->>>>>>> get instruction configuration cleaned up and working on windows, other smaller stuff
 	JUMPTO = 0xb0,      ///< alter the program counter to a jumpdest
 	JUMPIF,             ///< conditionally alter the program counter
 	JUMPSUB,            ///< alter the program counter to a beginsub
@@ -211,22 +199,8 @@ enum class Instruction: uint8_t
 	RETURNSUB,          ///< return to subroutine jumped from
 	PUTLOCAL,           ///< pop top of stack to local variable
 	GETLOCAL,           ///< push local variable to top of stack
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 #endif
 #if EIP_616
-=======
-
-#if EIP-616
->>>>>>> fuzzHelper wants 615 opcodes
-=======
-#endif
-#if EIP_616
->>>>>>> more of Andrei's suggestions, more cleanup, get it all compiling again
-=======
-
->>>>>>> get instruction configuration cleaned up and working on windows, other smaller stuff
 	XADD = 0xc1,        ///< addition operation
 	XMUL,               ///< mulitplication operation
 	XSUB,               ///< subtraction operation
