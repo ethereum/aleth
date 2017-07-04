@@ -198,7 +198,7 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 
 void fillBCTest(json_spirit::mObject& _o)
 {
-	string testname = TestOutputHelper::testName();
+	string const& testname = TestOutputHelper::testName();
 	TestBlock genesisBlock(_o["genesisBlockHeader"].get_obj(), _o["pre"].get_obj());
 	genesisBlock.setBlockHeader(genesisBlock.blockHeader());
 
@@ -301,9 +301,9 @@ void fillBCTest(json_spirit::mObject& _o)
 		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
 
 		mArray aUncleList;
-		for (size_t i = 0; i < alterBlock.uncles().size(); i++)
+		for (auto const& uncle : alterBlock.uncles())
 		{
-			mObject uncleHeaderObj = writeBlockHeaderToJson(alterBlock.uncles().at(i).blockHeader());
+			mObject uncleHeaderObj = writeBlockHeaderToJson(uncle.blockHeader());
 			aUncleList.push_back(uncleHeaderObj);
 		}
 		blObj["uncleHeaders"] = aUncleList;
@@ -319,7 +319,7 @@ void fillBCTest(json_spirit::mObject& _o)
 			if (testChain.addBlock(alterBlock))
 				cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testname;
 
-			if (test::Options::get().checkstate == true)
+			if (test::Options::get().checkstate)
 			{
 				bool isException = (blObj.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
 									|| blObj.count("expectExceptionALL"));
@@ -328,7 +328,7 @@ void fillBCTest(json_spirit::mObject& _o)
 			if (_o.count("noBlockChainHistory") == 0)
 			{
 				importedBlocks.push_back(alterBlock);
-				importedBlocks.at(importedBlocks.size()-1).clearState(); //close the state as it wont be needed. too many open states would lead to exception.
+				importedBlocks.back().clearState(); //close the state as it wont be needed. too many open states would lead to exception.
 			}
 		}
 		catch (Exception const& _e)
