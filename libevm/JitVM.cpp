@@ -198,6 +198,7 @@ void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) no
 	params.codeAddress = fromEvmC(_msg->address);
 	params.receiveAddress = _msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = {_msg->input, _msg->input_size};
+	params.staticCall = (_msg->flags & EVM_STATIC) != 0;
 	params.onOp = {};
 
 	bool success = false;
@@ -315,24 +316,25 @@ public:
 	{
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
+		uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 		evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
 						   toEvmC(_ext.value), _ext.data.data(),
 						   _ext.data.size(), toEvmC(_ext.codeHash), gas,
-						   static_cast<int32_t>(_ext.depth), EVM_CALL};
+						   static_cast<int32_t>(_ext.depth), EVM_CALL, flags};
 		return Result{m_instance->execute(
 			m_instance, env, mode, &msg, _ext.code.data(), _ext.code.size()
 		)};
 	}
 
-	bool isCodeReady(evm_mode _mode, h256 _codeHash)
+	bool isCodeReady(evm_mode _mode, uint32_t _flags, h256 _codeHash)
 	{
-		return m_instance->get_code_status(m_instance, _mode, toEvmC(_codeHash)) == EVM_READY;
+		return m_instance->get_code_status(m_instance, _mode, _flags, toEvmC(_codeHash)) == EVM_READY;
 	}
 
-	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
+	void compile(evm_mode _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
 	{
 		m_instance->prepare_code(
-			m_instance, _mode, toEvmC(_codeHash), _code.data(), _code.size()
+			m_instance, _mode, _flags, toEvmC(_codeHash), _code.data(), _code.size()
 		);
 	}
 
@@ -392,14 +394,14 @@ evm_mode JitVM::scheduleToMode(EVMSchedule const& _schedule)
 	return _schedule.haveDelegateCall ? EVM_HOMESTEAD : EVM_FRONTIER;
 }
 
-bool JitVM::isCodeReady(evm_mode _mode, h256 _codeHash)
+bool JitVM::isCodeReady(evm_mode _mode, uint32_t _flags, h256 _codeHash)
 {
-	return getJit().isCodeReady(_mode, _codeHash);
+	return getJit().isCodeReady(_mode, _flags, _codeHash);
 }
 
-void JitVM::compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
+void JitVM::compile(evm_mode _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
 {
-	getJit().compile(_mode, _code, _codeHash);
+	getJit().compile(_mode, _flags, _code, _codeHash);
 }
 
 }
