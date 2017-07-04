@@ -40,7 +40,7 @@
 // EIP_616 - SIMD
 #define EIP_616 false
 
-qnamespace dev
+namespace dev
 {
 namespace eth
 {
@@ -234,6 +234,7 @@ enum class Instruction: uint8_t
 	XPUT,               ///< put data in vector
 	XSWIZZLE,           ///< permute data in vector
 	XSHUFFLE,           ///< permute data in two vectors
+#endif
 
 	CREATE = 0xf0,      ///< create a new account with associated code
 	CALL,               ///< message-call into an account
