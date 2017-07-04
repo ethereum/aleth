@@ -45,13 +45,10 @@ public:
 };
 
 /// A simple log-output function that prints log messages to stdout.
-void simpleDebugOut(std::string const&, char const*);
+void debugOut(std::string const& _s);
 
 /// The logging system's current verbosity.
 extern int g_logVerbosity;
-
-/// The current method that the logging system uses to output the log messages. Defaults to simpleDebugOut().
-extern std::function<void(std::string const&, char const*)> g_logPost;
 
 class LogOverrideAux
 {
@@ -264,8 +261,8 @@ public:
 	/// If _term is true the the prefix info is terminated with a ']' character; if not it ends only with a '|' character.
 	LogOutputStream(): LogOutputStreamBase(Id::name(), &typeid(Id), Id::verbosity, _AutoSpacing) {}
 
-	/// Destructor. Posts the accrued log entry to the g_logPost function.
-	~LogOutputStream() { if (Id::verbosity <= g_logVerbosity) g_logPost(m_sstr.str(), Id::name()); }
+	/// Destructor. Posts the accrued log entry to the output stream.
+	~LogOutputStream() { if (Id::verbosity <= g_logVerbosity) debugOut(m_sstr.str()); }
 
 	LogOutputStream& operator<<(std::string const& _t) { if (Id::verbosity <= g_logVerbosity) { if (_AutoSpacing && m_sstr.str().size() && m_sstr.str().back() != ' ') m_sstr << " "; comment(_t); } return *this; }
 
