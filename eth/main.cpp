@@ -336,7 +336,6 @@ int main(int argc, char** argv)
 
 	/// General params for Node operation
 	NodeMode nodeMode = NodeMode::Full;
-	bool interactive = false;
 
 	int jsonRPCURL = -1;
 	bool adminViaHttp = false;
@@ -747,8 +746,6 @@ int main(int argc, char** argv)
 			alwaysConfirm = false;
 		else if (arg == "--import-presale" && i + 1 < argc)
 			presaleImports.push_back(argv[++i]);
-		else if (arg == "--old-interactive")
-			interactive = true;
 
 		else if ((arg == "-j" || arg == "--json-rpc"))
 			jsonRPCURL = jsonRPCURL == -1 ? SensibleHttpPort : jsonRPCURL;
@@ -954,24 +951,6 @@ int main(int argc, char** argv)
 
 	string logbuf;
 	std::string additional;
-	if (interactive)
-		g_logPost = [&](std::string const& a, char const*){
-			static SpinLock s_lock;
-			SpinGuard l(s_lock);
-
-			if (g_silence)
-				logbuf += a + "\n";
-			else
-				cout << "\r           \r" << a << endl << additional << flush;
-
-			// helpful to use OutputDebugString on windows
-	#if defined(_WIN32)
-			{
-				OutputDebugStringA(a.data());
-				OutputDebugStringA("\n");
-			}
-	#endif
-		};
 
 	auto getPassword = [&](string const& prompt) {
 		bool s = g_silence;
