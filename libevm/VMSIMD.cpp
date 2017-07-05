@@ -14,11 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include <libethereum/ExtVM.h>
 #include "VMConfig.h"
 #include "VM.h"
-
 #if EIP_616
 
 namespace dev
@@ -34,7 +32,6 @@ using a64x4  = uint64_t[4];
 using a32x8  = uint32_t[8];
 using a16x16 = uint16_t[16];
 using a8x32  = uint8_t [32];
-
 inline a64x4       & v64x4 (u256      & _stack_item) { return (a64x4&) *(a64x4*) &_stack_item; }
 inline a32x8       & v32x8 (u256      & _stack_item) { return (a32x8&) *(a32x8*) &_stack_item; }
 inline a16x16      & v16x16(u256      & _stack_item) { return (a16x16&)*(a16x16*)&_stack_item; }
@@ -50,7 +47,7 @@ inline a8x32  const& v8x32 (u256 const& _stack_item) { return (a8x32&) *(a8x32*)
 #define EVALXOP(OP, T8, T16, T32, T64, _b) \
 { \
 	uint8_t const t = (_b) & 0xf; \
-	new (m_SPP) u256(0); \
+	m_SPP[0] = 0; \
 	switch (t) \
 	{ \
 	case 0: \
@@ -72,7 +69,6 @@ inline a8x32  const& v8x32 (u256 const& _stack_item) { return (a8x32&) *(a8x32*)
 	default: throwBadInstruction(); \
 	} \
 }
-
 #define ADD( x1, x2) ((x1) + (x2))
 #define MUL( x1, x2) ((x1) * (x2))
 #define SUB( x1, x2) ((x1) - (x2))
@@ -171,8 +167,9 @@ u256 VM::vtow(uint8_t _b, u256 _in)
 	return out;
 }
 
-void VM::wtov(uint8_t _b, u256 _in, u256& _o_out)
+u256 VM::wtov(uint8_t _b, u256 _in)
 {
+	u256 out;
 	uint8_t const n = nElem(_b);
 	uint8_t const t = elemType(_b);
 	switch (t)
@@ -180,34 +177,35 @@ void VM::wtov(uint8_t _b, u256 _in, u256& _o_out)
 	case 0:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v8x32(_o_out) [i] |= (uint8_t )(_in & 0xff);
+			v8x32(out) [i] |= (uint8_t )(_in & 0xff);
 			_in >>= 8;
 		}
 		break;
 	case 1:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v16x16(_o_out)[i] |= (uint16_t)(_in & 0xffff);
+			v16x16(out)[i] |= (uint16_t)(_in & 0xffff);
 			_in >>= 16;
 		}
 		break;
 	case 2:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v32x8(_o_out) [i] |= (uint32_t)(_in & 0xffffff);
+			v32x8(out) [i] |= (uint32_t)(_in & 0xffffff);
 			_in >>= 32;
 		}
 		break;
 	case 3:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v64x4(_o_out) [i] |= (uint64_t)(_in & 0xffffffff);
+			v64x4(out) [i] |= (uint64_t)(_in & 0xffffffff);
 			_in >>= 64;
 		}
 		break;
 	default:
 		throwBadInstruction();
 	}
+	return out;
 }
 
 void VM::xmload (uint8_t _b)
@@ -343,9 +341,7 @@ void VM::xmstore(uint8_t _b)
 void VM::xsload(uint8_t _b)
 {
 	u256 w = m_ext->store(m_SP[0]);
-	u256 v;
-	wtov(_b, w, v);
-	memcpy(m_SPP, &v, 32);
+	m_SPP[0] = wtov(_b, w);
 }
 
 void VM::xsstore(uint8_t _b)
@@ -356,14 +352,12 @@ void VM::xsstore(uint8_t _b)
 
 void VM::xvtowide(uint8_t _b)
 {
-	new(m_SPP) u256(vtow(_b, m_SP[0]));
+	m_SPP[0] = vtow(_b, m_SP[0]);
 }
 
 void VM::xwidetov(uint8_t _b)
 {
-	u256 v;
-	wtov(_b, m_SP[0], v);
-	memcpy(m_SPP, &v, 32);
+	m_SPP[0] = wtov(_b, m_SP[0]);
 }
 
 void VM::xpush(uint8_t _b)
@@ -378,7 +372,7 @@ void VM::xpush(uint8_t _b)
 
 	// given the type of the vector
 	// mask and shift in the inline bytes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-	new (m_SPP) u256(0);
+	m_SPP[0] = 0;
 	switch (t)
 	{
 	case 0:
