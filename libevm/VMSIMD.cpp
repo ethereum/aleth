@@ -14,9 +14,11 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include <libethereum/ExtVM.h>
 #include "VMConfig.h"
 #include "VM.h"
+
 #if EIP_616
 
 namespace dev
@@ -32,6 +34,7 @@ using a64x4  = uint64_t[4];
 using a32x8  = uint32_t[8];
 using a16x16 = uint16_t[16];
 using a8x32  = uint8_t [32];
+
 inline a64x4       & v64x4 (u256      & _stack_item) { return (a64x4&) *(a64x4*) &_stack_item; }
 inline a32x8       & v32x8 (u256      & _stack_item) { return (a32x8&) *(a32x8*) &_stack_item; }
 inline a16x16      & v16x16(u256      & _stack_item) { return (a16x16&)*(a16x16*)&_stack_item; }
@@ -69,6 +72,7 @@ inline a8x32  const& v8x32 (u256 const& _stack_item) { return (a8x32&) *(a8x32*)
 	default: throwBadInstruction(); \
 	} \
 }
+
 #define ADD( x1, x2) ((x1) + (x2))
 #define MUL( x1, x2) ((x1) * (x2))
 #define SUB( x1, x2) ((x1) - (x2))
