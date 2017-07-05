@@ -47,7 +47,7 @@ inline a8x32  const& v8x32 (u256 const& _stack_item) { return (a8x32&) *(a8x32*)
 #define EVALXOP(OP, T8, T16, T32, T64, _b) \
 { \
 	uint8_t const t = (_b) & 0xf; \
-	m_SPP[0] = 0; \
+	new (m_SPP) u256(0); \
 	switch (t) \
 	{ \
 	case 0: \
@@ -167,9 +167,8 @@ u256 VM::vtow(uint8_t _b, u256 _in)
 	return out;
 }
 
-u256 VM::wtov(uint8_t _b, u256 _in)
+void VM::wtov(uint8_t _b, u256 _in, u256& _o_out)
 {
-	u256 out;
 	uint8_t const n = nElem(_b);
 	uint8_t const t = elemType(_b);
 	switch (t)
@@ -177,35 +176,34 @@ u256 VM::wtov(uint8_t _b, u256 _in)
 	case 0:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v8x32(out) [i] |= (uint8_t )(_in & 0xff);
+			v8x32(_o_out) [i] |= (uint8_t )(_in & 0xff);
 			_in >>= 8;
 		}
 		break;
 	case 1:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v16x16(out)[i] |= (uint16_t)(_in & 0xffff);
+			v16x16(_o_out)[i] |= (uint16_t)(_in & 0xffff);
 			_in >>= 16;
 		}
 		break;
 	case 2:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v32x8(out) [i] |= (uint32_t)(_in & 0xffffff);
+			v32x8(_o_out) [i] |= (uint32_t)(_in & 0xffffff);
 			_in >>= 32;
 		}
 		break;
 	case 3:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v64x4(out) [i] |= (uint64_t)(_in & 0xffffffff);
+			v64x4(_o_out) [i] |= (uint64_t)(_in & 0xffffffff);
 			_in >>= 64;
 		}
 		break;
 	default:
 		throwBadInstruction();
 	}
-	return out;
 }
 
 void VM::xmload (uint8_t _b)
@@ -341,7 +339,9 @@ void VM::xmstore(uint8_t _b)
 void VM::xsload(uint8_t _b)
 {
 	u256 w = m_ext->store(m_SP[0]);
-	m_SPP[0] = wtov(_b, w);
+	u256 v;
+	wtov(_b, w, v);
+	memcpy(m_SPP, &v, 32);
 }
 
 void VM::xsstore(uint8_t _b)
@@ -352,12 +352,14 @@ void VM::xsstore(uint8_t _b)
 
 void VM::xvtowide(uint8_t _b)
 {
-	m_SPP[0] = vtow(_b, m_SP[0]);
+	new(m_SPP) u256(vtow(_b, m_SP[0]));
 }
 
 void VM::xwidetov(uint8_t _b)
 {
-	m_SPP[0] = wtov(_b, m_SP[0]);
+	u256 v;
+	wtov(_b, m_SP[0], v);
+	memcpy(m_SPP, &v, 32);
 }
 
 void VM::xpush(uint8_t _b)
@@ -372,7 +374,7 @@ void VM::xpush(uint8_t _b)
 
 	// given the type of the vector
 	// mask and shift in the inline bytes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-	m_SPP[0] = 0;
+	new (m_SPP) u256(0);
 	switch (t)
 	{
 	case 0:

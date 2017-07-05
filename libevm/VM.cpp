@@ -1489,7 +1489,7 @@ void VM::interpretCases()
 #if EVM_HACK_DUP_64
 			*(uint64_t*)m_SPP = *(uint64_t*)(m_SP + n);
 #else
-			m_SPP[0] = m_SP[n];
+			new(m_SPP) u256(m_SP[n]);
 #endif
 		}
 		NEXT

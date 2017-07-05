@@ -36,10 +36,6 @@
 	#define EIP_616 false
 #endif
 
-// Proposed SIMD instruction set to support, turned off in production
-// EIP_616 - SIMD
-#define EIP_616 false
-
 namespace dev
 {
 namespace eth

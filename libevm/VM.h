@@ -235,8 +235,8 @@ private:
 	void xshuffle(uint8_t);
 	
 	u256 vtow(uint8_t _b, u256);
-	u256 wtov(uint8_t _b, u256);
-	
+	void wtov(uint8_t _b, u256 _in, u256& _o_out);
+
 	uint8_t simdType()
 	{
 		uint8_t nt = m_code[++m_PC];  // advance PC and get simd type from code
