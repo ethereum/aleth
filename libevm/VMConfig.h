@@ -22,14 +22,14 @@ namespace eth
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// interpreter configuration macros for optimizations and tracing
+// interpreter configuration macros for development, optimizations and tracing
 //
 // EVM_SWITCH_DISPATCH    - dispatch via loop and switch
 // EVM_JUMP_DISPATCH      - dispatch via a jump table - available only on GCC
 //
-// EVM_USE_CONSTANT_POOL  - 256 constants unpacked and ready to assign to stack
+// EVM_USE_CONSTANT_POOL  - constants unpacked and ready to assign to stack
 //
-// EVM_REPLACE_CONST_JUMP - with pre-verified jumps to save runtime lookup
+// EVM_REPLACE_CONST_JUMP - pre-verified jumps to save runtime lookup
 //
 // EVM_TRACE              - provides various levels of tracing
 
@@ -45,7 +45,7 @@ namespace eth
 		#error "address of label extension avaiable only on Gnu"
 	#endif
 #else
-	#define EVM_SWITCH_DISPATCH
+	#define EVM_SWITCH_DISPATCH true
 #endif
 
 #ifndef EVM_OPTIMIZE
@@ -59,8 +59,6 @@ namespace eth
 				EVM_USE_CONSTANT_POOL \
 			)
 #endif
-
-#define EVM_JUMPS_AND_SUBS false
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -125,7 +123,7 @@ namespace eth
 //
 // build a simple loop-and-switch interpreter
 //
-#if defined(EVM_SWITCH_DISPATCH)
+#if EVM_SWITCH_DISPATCH
 
 	#define INIT_CASES if (!m_caseInit) { m_PC = 0; m_caseInit = true; return; }
 	#define DO_CASES for(;;) { fetchInstruction(); switch(m_OP) {

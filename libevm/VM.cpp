@@ -14,8 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file VM.cpp
- */
 
 #include <libethereum/ExtVM.h>
 #include "VMConfig.h"
@@ -115,6 +113,19 @@ void VM::adjustStack(unsigned _removed, unsigned _added)
 #endif
 }
 
+void VM::updateSSGas()
+{
+	if (!m_ext->store(m_SP[0]) && m_SP[1])
+		m_runGas = toInt63(m_schedule->sstoreSetGas);
+	else if (m_ext->store(m_SP[0]) && !m_SP[1])
+	{
+		m_runGas = toInt63(m_schedule->sstoreResetGas);
+		m_ext->sub.refunds += m_schedule->sstoreRefundGas;
+	}
+	else
+		m_runGas = toInt63(m_schedule->sstoreResetGas);
+}
+
 
 uint64_t VM::gasForMem(u512 _size)
 {
@@ -171,7 +182,6 @@ void VM::fetchInstruction()
 #if EVM_HACK_UPDATE_IO_GAS
 	#define updateIOGas()
 #endif
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -643,7 +653,318 @@ void VM::interpretCases()
 					number &= mask;
 			}
 		}
-		NEXT
+		NEXT		
+
+#if EIP_616
+		
+		CASE(XADD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xadd(simdType());
+		}
+		CONTINUE
+	         
+		CASE(XMUL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xmul(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSUB)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsub(simdType());
+		}
+		CONTINUE
+         
+		CASE(XDIV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xdiv(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSDIV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsdiv(simdType());
+		}
+		CONTINUE
+        
+		CASE(XMOD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xmod(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSMOD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsmod(simdType());
+		}
+		CONTINUE
+        
+		CASE(XLT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xlt(simdType());
+		}
+		CONTINUE
+          
+		CASE(XGT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xgt(simdType());
+		}
+		CONTINUE
+          
+		CASE(XSLT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xslt(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSGT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsgt(simdType());
+		}
+		CONTINUE
+         
+		CASE(XEQ)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xeq(simdType());
+		}
+		CONTINUE
+          
+		CASE(XISZERO)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xzero(simdType());
+		}
+		CONTINUE
+      
+		CASE(XAND)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xand(simdType());
+		}
+		CONTINUE
+         
+		CASE(XOOR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xoor(simdType());
+		}
+		CONTINUE
+         
+		CASE(XXOR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xxor(simdType());
+		}
+		CONTINUE
+         
+		CASE(XNOT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xnot(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSHL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshl(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSHR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshr(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSAR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsar(simdType());
+		}
+		CONTINUE
+         
+		CASE(XROL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xrol(simdType());
+		}
+		CONTINUE
+         
+		CASE(XROR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xror(simdType());
+		}
+		CONTINUE
+
+		CASE(XMLOAD)
+		{
+			updateMem(toInt63(m_SP[0]) + 32);
+			ON_OP();
+			updateIOGas();
+
+			xmload(simdType());
+		}
+		CONTINUE
+
+		CASE(XMSTORE)
+		{
+			updateMem(toInt63(m_SP[0]) + 32);
+			ON_OP();
+			updateIOGas();
+
+			xmstore(simdType());
+		}
+		CONTINUE
+
+		CASE(XSLOAD)
+		{
+			m_runGas = toInt63(m_schedule->sloadGas);
+			ON_OP();
+			updateIOGas();
+
+			xsload(simdType());
+		}
+		CONTINUE
+
+		CASE(XSSTORE)
+		{
+			if (m_ext->staticCall)
+				throwDisallowedStateChange();
+
+			updateSSGas();
+			ON_OP();
+			updateIOGas();
+	
+			xsstore(simdType());
+		}
+		CONTINUE
+
+		CASE(XVTOWIDE)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xvtowide(simdType());
+		}
+		CONTINUE
+
+		CASE(XWIDETOV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xwidetov(simdType());
+		}
+		CONTINUE
+
+		CASE(XPUSH)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xpush(simdType());
+		}
+		CONTINUE
+
+		CASE(XPUT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			uint8_t b = ++m_PC;
+			uint8_t c = ++m_PC;
+			xput(m_code[b], m_code[c]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XGET)
+		{
+			ON_OP();
+			updateIOGas();
+
+			uint8_t b = ++m_PC;
+			uint8_t c = ++m_PC;
+			xget(m_code[b], m_code[c]); ++m_PC;
+		}
+		CONTINUE
+
+		CASE(XSWIZZLE)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xswizzle(simdType());
+		}
+		CONTINUE
+
+		CASE(XSHUFFLE)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshuffle(simdType());
+		}
+		CONTINUE
+#endif
 
 		CASE(ADDRESS)
 		{
@@ -1142,16 +1463,8 @@ void VM::interpretCases()
 		{
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
-
-			if (!m_ext->store(m_SP[0]) && m_SP[1])
-				m_runGas = toInt63(m_schedule->sstoreSetGas);
-			else if (m_ext->store(m_SP[0]) && !m_SP[1])
-			{
-				m_runGas = toInt63(m_schedule->sstoreResetGas);
-				m_ext->sub.refunds += m_schedule->sstoreRefundGas;
-			}
-			else
-				m_runGas = toInt63(m_schedule->sstoreResetGas);
+				
+			updateSSGas();
 			ON_OP();
 			updateIOGas();
 	

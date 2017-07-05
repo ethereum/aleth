@@ -14,10 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Instruction.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "Instruction.h"
 
@@ -88,8 +84,6 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::MSIZE,        { "MSIZE",          0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::GAS,          { "GAS",            0,     0,    1,  false,       Tier::Base } },
 	{ Instruction::JUMPDEST,     { "JUMPDEST",       0,     0,    0,  true,        Tier::Special } },
-	{ Instruction::BEGINDATA,    { "BEGINDATA",      0,     0,    0,  true,        Tier::Special } },
-	{ Instruction::BEGINSUB,     { "BEGINSUB",       0,     0,    0,  true,        Tier::Special } },
 	{ Instruction::PUSH1,        { "PUSH1",          1,     0,    1,  false,       Tier::VeryLow } },
 	{ Instruction::PUSH2,        { "PUSH2",          2,     0,    1,  false,       Tier::VeryLow } },
 	{ Instruction::PUSH3,        { "PUSH3",          3,     0,    1,  false,       Tier::VeryLow } },
@@ -159,16 +153,53 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::LOG2,         { "LOG2",           0,     4,     0,  true,       Tier::Special } },
 	{ Instruction::LOG3,         { "LOG3",           0,     5,     0,  true,       Tier::Special } },
 	{ Instruction::LOG4,         { "LOG4",           0,     6,     0,  true,       Tier::Special } },
-
+#if EIP_615
 	{ Instruction::JUMPTO,       { "JUMPTO",         2,     1,    0,  true,        Tier::VeryLow } },
 	{ Instruction::JUMPIF,       { "JUMPIF",         2,     2,    0,  true,        Tier::Low } },
 	{ Instruction::JUMPV,        { "JUMPV",          2,     1,    0,  true,        Tier::Mid } },
 	{ Instruction::JUMPSUB,      { "JUMPSUB",        2,     1,    0,  true,        Tier::Low } },
 	{ Instruction::JUMPSUBV,     { "JUMPSUBV",       2,     1,    0,  true,        Tier::Mid } },
+	{ Instruction::BEGINSUB,     { "BEGINSUB",       0,     0,    0,  true,        Tier::Special } },
+	{ Instruction::BEGINDATA,    { "BEGINDATA",      0,     0,    0,  true,        Tier::Special } },
 	{ Instruction::RETURNSUB,    { "RETURNSUB",      0,     1,    0,  true,        Tier::Mid } },
 	{ Instruction::PUTLOCAL,     { "PUTLOCAL",       2,     1,    0,  true,        Tier::VeryLow } },
 	{ Instruction::GETLOCAL,     { "GETLOCAL",       2,     0,    1,  true,        Tier::VeryLow } },
-
+#endif
+#if EIP_616
+	{ Instruction::XADD,         { "XADD",           1,     0,    0,  true,        Tier::Special } },
+	{ Instruction::XMUL,         { "XMUL",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSUB,         { "XSUB",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XDIV,         { "XDIV",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSDIV,        { "XSDIV",          1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XMOD,         { "XMOD",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSMOD,        { "XSMOD",          1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XLT,          { "XLT",            1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XGT,          { "XGT",            1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSLT,         { "XSLT",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSGT,         { "XSGT",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XEQ,          { "XEQ",            1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XISZERO,      { "XISZERO",        1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XAND,         { "XAND",           1,     1,    1,  false,       Tier::Special } },
+	{ Instruction::XOR,          { "XOR",            1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XXOR,         { "XXOR",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XNOT,         { "XNOT",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSHL,         { "XSHL",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSHR,         { "XSHR",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSAR,         { "XSAR",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XROL,         { "XROL",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XROR,         { "XROR",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XPUSH,        { "XPUSH",          1,     1,    1,  false,       Tier::VeryLow } },
+	{ Instruction::XMLOAD,       { "XMLOAD",         1,     1,    1,  false,       Tier::VeryLow } },
+	{ Instruction::XMSTORE,      { "XMSTORE",        1,     2,    0,  false,       Tier::VeryLow } },
+	{ Instruction::XSLOAD,       { "XSLOAD",         1,     1,    1,  false,       Tier::Special } },
+	{ Instruction::XSSTORE,      { "XSSTORE",        1,     2,    0,  false,       Tier::Special } },
+	{ Instruction::XVTOWIDE,     { "XVTOWIDE",       1,     1,    1,  false,       Tier::VeryLow } },
+	{ Instruction::XWIDETOV,     { "XWIDETOV",       1,     1,    1,  false,       Tier::VeryLow } },
+	{ Instruction::XPUT,         { "XPUT",           1,     3,    1,  false,       Tier::Special } },
+	{ Instruction::XGET,         { "XGET",           1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSWIZZLE,     { "XSWIZZLE",       1,     2,    1,  false,       Tier::Special } },
+	{ Instruction::XSHUFFLE,     { "XSHUFFLE",       1,     3,    1,  false,       Tier::Special } },
+#endif
 	{ Instruction::CREATE,       { "CREATE",         0,     3,     1,  true,       Tier::Special } },
 	{ Instruction::CREATE2,      { "CREATE2",        0,     4,     1,  true,       Tier::Special } },
 	{ Instruction::CALL,         { "CALL",           0,     7,     1,  true,       Tier::Special } },
@@ -181,7 +212,7 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::SUICIDE,      { "SUICIDE",        0,     1,     0,  true,       Tier::Special } },
  
 	// these are generated by the interpreter - should never be in user code
-	{ Instruction::PUSHC,        { "PUSHC",          3,     0 ,    1,   false,     Tier::VeryLow } },
+	{ Instruction::PUSHC,        { "PUSHC",          2,     0 ,    1,   false,     Tier::VeryLow } },
 	{ Instruction::JUMPC,        { "JUMPC",          0,     1,     0,   true,      Tier::Mid } },
 	{ Instruction::JUMPCI,       { "JUMPCI",         0,     2,     0,   true,      Tier::High } },
 }; 
