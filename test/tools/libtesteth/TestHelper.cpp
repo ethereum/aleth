@@ -124,7 +124,7 @@ eth::Network stringToNetId(string const& _netname)
 	return eth::Network::FrontierTest;
 }
 
-std::vector<eth::Network> getNetworks()
+std::vector<eth::Network> const& getNetworks()
 {
 	static std::vector<eth::Network> const networks {{
 		eth::Network::FrontierTest,
