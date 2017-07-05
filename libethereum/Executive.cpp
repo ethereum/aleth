@@ -347,8 +347,10 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 	// account if it does not exist yet.
 	m_s.transferBalance(_sender, m_newAddress, _endowment);
 
+	u256 newNonce = m_s.requireAccountStartNonce();
 	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock"))
-		m_s.incNonce(m_newAddress);
+		newNonce += 1;
+	m_s.setNonce(m_newAddress, newNonce);
 
 	// Schedule _init execution if not empty.
 	if (!_init.empty())
