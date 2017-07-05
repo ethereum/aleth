@@ -420,8 +420,8 @@ void testBCTest(json_spirit::mObject& _o)
 		BOOST_REQUIRE(blObj.count("blockHeader"));
 
 		//Check Provided Header against block in RLP
-		const mObject emptyState;
-		TestBlock blockFromFields(blObj["blockHeader"].get_obj(), emptyState);
+		TestBlock blockFromFields(blObj["blockHeader"].get_obj());
+
 		//ImportTransactions
 		BOOST_REQUIRE(blObj.count("transactions"));
 		for (auto const& txObj: blObj["transactions"].get_array())
@@ -437,7 +437,7 @@ void testBCTest(json_spirit::mObject& _o)
 				mObject uBlH = uBlHeaderObj.get_obj();
 				BOOST_REQUIRE((uBlH.size() == 16));
 
-				TestBlock uncle(uBlH, emptyState);
+				TestBlock uncle(uBlH);
 				blockFromFields.addUncle(uncle);
 			}
 
@@ -545,11 +545,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		tmp.noteDirty();
 	}
 	else
-	{
-		// take the blockheader as is
-		const mObject emptyState;
-		tmp = TestBlock(ho, emptyState).blockHeader();
-	}
+		tmp = TestBlock(ho).blockHeader();	// take the blockheader as is
 
 	if (ho.count("populateFromBlock"))
 	{
@@ -664,8 +660,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 	}
 	else
 	{
-		mObject emptyState;
-		uncle = TestBlock(uncleHeaderObj, emptyState);
+		uncle = TestBlock(uncleHeaderObj);
 		uncleHeader = uncle.blockHeader();
 	}
 

@@ -58,6 +58,7 @@ class TestBlock
 public:
 	TestBlock();
 	TestBlock(std::string const& _blockRlp);
+	TestBlock(mObject const& _blockObj);
 	TestBlock(mObject const& _blockObj, mObject const& _stateObj);
 	TestBlock(TestBlock const& _original);
 	TestBlock& operator=(TestBlock const& _original);
@@ -94,6 +95,7 @@ private:
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
 	void premineUpdate(BlockHeader& info);
+	void initBlockFromJsonHeader(mObject const& _blockHeader, mObject const& _stateObj); //init block with the given preState
 
 	bool m_dirty;
 	BlockHeader m_blockHeader;
