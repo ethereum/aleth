@@ -552,7 +552,7 @@ bool ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
 		{
 			//Can't use boost at this point
 			std::cerr << TestOutputHelper::testName() + " Specified Network not found: " + net << endl;
-			throw 1;
+			exit(1);
 		}
 	}
 
