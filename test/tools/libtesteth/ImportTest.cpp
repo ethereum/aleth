@@ -41,25 +41,17 @@ vector<h256> lastHashes(u256 _currentBlockNumber)
 }
 }
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate):
+ImportTest::ImportTest(json_spirit::mObject& _o, testType testTemplate):
 	m_statePre(0, OverlayDB(), eth::BaseState::Empty),
 	m_statePost(0, OverlayDB(), eth::BaseState::Empty),
 	m_testObject(_o),
 	m_testType(testTemplate)
 {
-	if (testTemplate == testType::StateTests || m_testType == testType::GeneralStateTest)
+	if (m_testType == testType::GeneralStateTest)
 	{
 		importEnv(_o["env"].get_obj());
 		importTransaction(_o["transaction"].get_obj());
 		importState(_o["pre"].get_obj(), m_statePre);
-		if (!isFiller && m_testType == testType::StateTests)
-		{
-			if (_o.count("post"))
-				importState(_o["post"].get_obj(), m_statePost);
-			else
-				importState(_o["postState"].get_obj(), m_statePost);
-			m_logsExpected = importLog(_o["logs"].get_array());
-		}
 	}
 }
 
@@ -67,18 +59,7 @@ bytes ImportTest::executeTest()
 {
 	assert(m_envInfo);
 
-	if (m_testType == testType::StateTests)
-	{
-		eth::Network network = eth::Network::MainNetwork;
-		LogEntries emptyLogs;
-		ExecutionResult emptyRes;
-		ImportTest::ExecOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
-		std::tie(m_statePost, execOut, std::ignore) =
-			executeTransaction(network, *m_envInfo, m_statePre, m_transaction);
-		m_logs = execOut.second.log();
-		return execOut.first.output;
-	}
-	else if (m_testType == testType::GeneralStateTest)
+	if (m_testType == testType::GeneralStateTest)
 	{
 		vector<eth::Network> networks;
 		if (!Options::get().singleTestNet.empty())
@@ -215,7 +196,7 @@ bytes ImportTest::executeTest()
 		m_transactions.clear();
 		m_transactions = transactionResults;
 		return bytes();
-	}
+	} //GeneralStateTest
 
 	BOOST_ERROR("Error when executing test ImportTest::executeTest()");
 	return bytes();
@@ -399,9 +380,8 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 
 void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 {
-	if (m_testType == testType::StateTests)				//Import a single transaction
-		importTransaction(o_tr, m_transaction);
-	else if (m_testType == testType::GeneralStateTest)	//Parse extended transaction
+	//Parse extended transaction
+	if (m_testType == testType::GeneralStateTest)
 	{
 		BOOST_REQUIRE(o_tr.count("gasLimit") > 0);
 		size_t dataVectorSize = o_tr.at("data").get_array().size();
