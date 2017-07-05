@@ -308,8 +308,15 @@ void fillBCTest(json_spirit::mObject& _o)
 				BOOST_ERROR("Deprecated expectException field! " + testName);
 
 			blockchain.addBlock(alterBlock);
+			State preState = testChain.topBlock().state();
 			if (testChain.addBlock(alterBlock))
+			{
+				State postState = testChain.topBlock().state();
+				unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(test::TestBlockChain::s_sealEngineNetwork)).createSealEngine());
+				bigint reward = se->chainParams().u256Param("blockReward");
+				ImportTest::checkBalance(preState + reward, postState);
 				cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testName;
+			}
 
 			if (test::Options::get().checkstate)
 			{
@@ -388,6 +395,7 @@ void testBCTest(json_spirit::mObject& _o)
 	{
 		mObject blObj = bl.get_obj();
 		TestBlock blockFromRlp;
+		State preState = testChain.topBlock().state();
 		try
 		{
 			TestBlock blRlp(blObj["rlp"].get_str());
@@ -431,7 +439,10 @@ void testBCTest(json_spirit::mObject& _o)
 		}
 
 		// ImportUncles
+		size_t uncleSize = 0;
 		if (blObj["uncleHeaders"].type() != json_spirit::null_type)
+		{
+			uncleSize = blObj["uncleHeaders"].get_array().size();
 			for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
 			{
 				mObject uBlH = uBlHeaderObj.get_obj();
@@ -440,6 +451,7 @@ void testBCTest(json_spirit::mObject& _o)
 				TestBlock uncle(uBlH);
 				blockFromFields.addUncle(uncle);
 			}
+		}
 
 		checkBlocks(blockFromFields, blockFromRlp, testName);
 
@@ -464,6 +476,14 @@ void testBCTest(json_spirit::mObject& _o)
 			blockChainName = blObj["chainname"].get_str();
 		if (blObj.count("blocknumber") > 0)
 			blockNumber = blObj["blocknumber"].get_str();
+
+
+		//check the balance before and after the block according to mining rules
+		State postState = testChain.topBlock().state();
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(test::TestBlockChain::s_sealEngineNetwork)).createSealEngine());
+		bigint reward = se->chainParams().u256Param("blockReward");
+		reward += uncleSize * bigint("");
+		ImportTest::checkBalance(preState, postState, reward);
 
 		cnote << "Tested topblock number" << blockNumber << "for chain " << blockChainName << testName;
 
