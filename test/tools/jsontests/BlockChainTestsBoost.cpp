@@ -63,7 +63,10 @@ class bcTestFixture {
 	{
 		std::string fillersPath = test::getTestPath() + "/src/BlockchainTestsFiller/" + _folder;
 
-		string filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
+		string filter;
+		if (test::Options::get().filltests)
+			filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
+
 		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
 		int testcount = files.size() * test::getNetworks().size(); //1 test case translated to each fork.
 
