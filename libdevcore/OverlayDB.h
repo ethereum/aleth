@@ -30,6 +30,8 @@
 namespace dev
 {
 
+struct DBDetail: public LogChannel { static const char* name() { return "DBDetail"; } static const int verbosity = 14; };
+
 class OverlayDB: public MemoryDB
 {
 public:

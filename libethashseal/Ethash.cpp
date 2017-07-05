@@ -159,7 +159,7 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 			_t.checkChainId(-4);
 	}
 	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_header.number())) > _t.gas())
-		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
+		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError((bigint)(_t.baseGasRequired(evmSchedule(_header.number()))), (bigint)_t.gas()));
 
 	// Avoid transactions that would take us beyond the block gas limit.
 	if (_startGasUsed + (bigint)_t.gas() > _header.gasLimit())

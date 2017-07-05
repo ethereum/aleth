@@ -181,6 +181,7 @@ Options::Options(int argc, char** argv)
 		{
 			throwIfNoArgumentFollows();
 			singleTestNet = std::string{argv[++i]};
+			ImportTest::checkAllowedNetwork({singleTestNet});
 		}
 		else if (arg == "--fulloutput")
 			fulloutput = true;

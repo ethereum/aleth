@@ -19,6 +19,7 @@
  */
 
 #include <include/BuildInfo.h>
+#include <libethashseal/EthashCPUMiner.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
@@ -64,6 +65,7 @@ void connectClients(Client& c1, Client& c2)
 
 void mine(Block& s, BlockChain const& _bc, SealEngineFace* _sealer)
 {
+	EthashCPUMiner::setNumInstances(1);
 	s.commitToSeal(_bc, s.info().extraData());
 	Notified<bytes> sealed;
 	_sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
@@ -122,7 +124,17 @@ eth::Network stringToNetId(string const& _netname)
 	return eth::Network::FrontierTest;
 }
 
-
+std::vector<eth::Network> const& getNetworks()
+{
+	static std::vector<eth::Network> const networks {{
+		eth::Network::FrontierTest,
+		eth::Network::HomesteadTest,
+		eth::Network::EIP150Test,
+		eth::Network::EIP158Test,
+		eth::Network::MetropolisTest
+	}};
+	return networks;
+}
 
 json_spirit::mArray exportLog(eth::LogEntries _logs)
 {
@@ -430,9 +442,12 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
 
+	//Get the test name
 	string name = _name;
 	if (_name.rfind("Filler.json") != std::string::npos)
 		name = _name.substr(0, _name.rfind("Filler.json"));
+	else if (_name.rfind(".json") != std::string::npos)
+		name = _name.substr(0, _name.rfind(".json"));
 
 	if (Options::get().filltests)
 	{

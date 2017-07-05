@@ -82,19 +82,10 @@ bytes ImportTest::executeTest()
 	{
 		vector<eth::Network> networks;
 		if (!Options::get().singleTestNet.empty())
-		{
 			networks.push_back(stringToNetId(Options::get().singleTestNet));
-		}
 		else
-		{
-			networks.push_back(eth::Network::FrontierTest);
-			networks.push_back(eth::Network::HomesteadTest);
-			networks.push_back(eth::Network::EIP150Test);
-			networks.push_back(eth::Network::EIP158Test);
-			networks.push_back(eth::Network::MetropolisTest);
-		}
+			networks = test::getNetworks();
 
-		json_spirit::mObject json;
 		vector<transactionToExecute> transactionResults;
 		for (size_t j = 0; j < networks.size(); j++)
 		{
@@ -113,84 +104,113 @@ bytes ImportTest::executeTest()
 					executeTransaction(network, *m_envInfo, m_statePre, m_transactions[i].transaction);
 				m_transactions[i].netId = network;
 				transactionResults.push_back(m_transactions[i]);
-
-				if (Options::get().fillchain)
-				{
-					json_spirit::mObject testObj;
-					testObj["network"] = netIdToString(networks[j]);
-					string postfix = "_d" + toString(m_transactions[i].dataInd);
-					postfix += "g" + toString(m_transactions[i].gasInd);
-					postfix += "v" + toString(m_transactions[i].valInd);
-					postfix += "_" + netIdToString(networks[j]);
-					string testname = TestOutputHelper::testName() + postfix;
-
-					json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
-					genesisObj["coinbase"] = toString(m_envInfo->author());
-					genesisObj["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
-					genesisObj["timestamp"] = toCompactHex(m_envInfo->timestamp() - 50, HexPrefix::Add);
-					testObj["genesisBlockHeader"] = genesisObj;
-					testObj["pre"] = fillJsonWithState(m_statePre);
-
-					State s = State (0, OverlayDB(), eth::BaseState::Empty);
-					AccountMaskMap m = std::unordered_map<Address, AccountMask>();
-					StateAndMap smap {s, m};
-					TrExpectSection search {m_transactions[i], smap};
-					vector<size_t> stateIndexesToPrint; //not used
-					// look if there is an expect section that match this transaction
-
-					if (m_testObject.count("expect"))
-					for (auto const& exp: m_testObject["expect"].get_array())
-					{
-						TrExpectSection* search2 = &search;
-						checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
-						if (search.second.first.addresses().size() != 0) //if match in the expect sections for this tr found
-						{
-							//replace expected mining reward (in state tests it is 0)
-							json_spirit::mObject obj = fillJsonWithState(search2->second.first, search2->second.second);
-							for (auto& adr: obj)
-							{
-								if (adr.first == "0x" + toString(m_envInfo->author()))
-								{
-									if (adr.second.get_obj().count("balance"))
-									{
-										u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
-										expectCoinbaseBalance += u256("5000000000000000000");
-										adr.second.get_obj()["balance"] = toCompactHex(expectCoinbaseBalance, HexPrefix::Add);
-									}
-								}
-							}
-							testObj["expect"] = obj;
-							break;
-						}
-					}
-
-					json_spirit::mObject rewriteHeader;
-					rewriteHeader["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
-					rewriteHeader["difficulty"] = toCompactHex(m_envInfo->difficulty(), HexPrefix::Add);
-					rewriteHeader["timestamp"] = toCompactHex(m_envInfo->timestamp(), HexPrefix::Add);
-					rewriteHeader["updatePoW"] = "1";
-
-					json_spirit::mArray blocksArr;
-					json_spirit::mArray transcArr;
-					transcArr.push_back(fillJsonWithTransaction(m_transactions[i].transaction));
-					json_spirit::mObject blocksObj;
-					blocksObj["blockHeaderPremine"] = rewriteHeader;
-					blocksObj["transactions"] = transcArr;
-					blocksObj["uncleHeaders"] = json_spirit::mArray();
-					blocksArr.push_back(blocksObj);
-					testObj["blocks"] = blocksArr;
-					json[testname] = testObj;
-				}
 			}
 		}
 
+		//Generate blockchain test filler
 		if (Options::get().fillchain)
 		{
-			string tmpFillerName = getTestPath() + "/src/GenStateTestAsBcTemp/" + TestOutputHelper::caseName() + "/" + TestOutputHelper::testName() + "Filler.json";
-			writeFile(tmpFillerName, asBytes(json_spirit::write_string((json_spirit::mValue)json, true)));
-			dev::test::executeTests(TestOutputHelper::testName(), "/BlockchainTests/GeneralStateTests/" + TestOutputHelper::caseName(),
-																"/GenStateTestAsBcTemp/" + TestOutputHelper::caseName(), dev::test::doBlockchainTestNoLog);
-		}
+			string testnameOrig = TestOutputHelper::testName();
+			for (size_t i = 0; i < m_transactions.size(); i++)
+			{
+				json_spirit::mObject json;
+				json_spirit::mObject testObj;
+
+				//generate the test name with transaction detail
+				string postfix = "_d" + toString(m_transactions[i].dataInd);
+				postfix += "g" + toString(m_transactions[i].gasInd);
+				postfix += "v" + toString(m_transactions[i].valInd);
+				string testname = testnameOrig + postfix;
+
+				//basic genesis
+				json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
+				genesisObj["coinbase"] = toString(m_envInfo->author());
+				genesisObj["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
+				genesisObj["timestamp"] = toCompactHex(m_envInfo->timestamp() - 50, HexPrefix::Add);
+				testObj["genesisBlockHeader"] = genesisObj;
+				testObj["pre"] = fillJsonWithState(m_statePre);
+
+				//generate expect sections for this transaction
+				if (m_testObject.count("expect"))
+				{
+					State s = State (0, OverlayDB(), eth::BaseState::Empty);
+					AccountMaskMap m = std::unordered_map<Address, AccountMask>();
+					StateAndMap smap {s, m};
+					vector<size_t> stateIndexesToPrint; //not used
+					json_spirit::mArray expetSectionArray;
+
+					//gather the expect sections for such a transaction on all networks (if defined)
+					std::vector<string> checkedNetworks;
+					for (auto const& net : networks)
+					{
+						m_transactions[i].netId = net;
+						if (std::find(checkedNetworks.begin(), checkedNetworks.end(), test::netIdToString(net)) != checkedNetworks.end())
+							continue;
+
+						TrExpectSection search {m_transactions[i], smap};
+						for (auto const& exp: m_testObject["expect"].get_array())
+						{
+							TrExpectSection* search2 = &search;
+							checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
+							if (search.second.first.addresses().size() != 0) //if match in the expect sections for this tr found
+							{
+								//replace expected mining reward (in state tests it is 0)
+								json_spirit::mObject obj = fillJsonWithState(search2->second.first, search2->second.second);
+								for (auto& adr: obj)
+								{
+									if (adr.first == "0x" + toString(m_envInfo->author()))
+									{
+										if (adr.second.get_obj().count("balance"))
+										{
+											u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
+											expectCoinbaseBalance += u256("5000000000000000000");
+											adr.second.get_obj()["balance"] = toCompactHex(expectCoinbaseBalance, HexPrefix::Add);
+										}
+									}
+								}
+
+								json_spirit::mObject expetSectionObj;
+								expetSectionObj["network"] = exp.get_obj().at("network");
+								std::vector<string> networks;
+								ImportTest::parseJsonStrValueIntoVector(exp.get_obj().at("network"), networks);
+								for(auto const& netname : networks)
+									checkedNetworks.push_back(netname);
+								expetSectionObj["result"] = obj;
+								expetSectionArray.push_back(expetSectionObj);
+								break;
+							}
+						}//for exp
+					}// for net
+
+					testObj["expect"] = expetSectionArray;
+				}//expect
+
+				//rewrite header section for a block by the statetest parameters
+				json_spirit::mObject rewriteHeader;
+				rewriteHeader["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
+				rewriteHeader["difficulty"] = toCompactHex(m_envInfo->difficulty(), HexPrefix::Add);
+				rewriteHeader["timestamp"] = toCompactHex(m_envInfo->timestamp(), HexPrefix::Add);
+				rewriteHeader["updatePoW"] = "1";
+
+				json_spirit::mArray blocksArr;
+				json_spirit::mArray transcArr;
+				transcArr.push_back(fillJsonWithTransaction(m_transactions[i].transaction));
+				json_spirit::mObject blocksObj;
+				blocksObj["blockHeaderPremine"] = rewriteHeader;
+				blocksObj["transactions"] = transcArr;
+				blocksObj["uncleHeaders"] = json_spirit::mArray();
+				blocksArr.push_back(blocksObj);
+				testObj["blocks"] = blocksArr;
+				json[testname] = testObj;
+
+				//testName() is changed during the execution of bctest!!!
+				string tmpFillerName = getTestPath() + "/src/GenStateTestAsBcTemp/" + TestOutputHelper::caseName() + "/" + testname + "Filler.json";
+				writeFile(tmpFillerName, asBytes(json_spirit::write_string((json_spirit::mValue)json, true)));
+				dev::test::executeTests(testname, "/BlockchainTests/GeneralStateTests/" + TestOutputHelper::caseName(),
+												 "/GenStateTestAsBcTemp/" + TestOutputHelper::caseName(), dev::test::doBlockchainTestNoLog);
+
+			} //transactions
+		}//fillchain
 
 		m_transactions.clear();
 		m_transactions = transactionResults;
@@ -487,7 +507,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 	return wasError;
 }
 
-void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, vector<string>& _out)
+void ImportTest::parseJsonStrValueIntoVector(json_spirit::mValue const& _json, vector<string>& _out)
 {
 	if (_json.type() == json_spirit::array_type)
 	{
@@ -518,6 +538,27 @@ bool inArray(vector<T> const& _array, const T _val)
 	return false;
 }
 
+bool ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
+{
+	vector<eth::Network> const& allnetworks = test::getNetworks();
+	vector<string> allowedNetowks;
+	allowedNetowks.push_back("ALL");
+	for (auto const& net : allnetworks)
+		allowedNetowks.push_back(test::netIdToString(net));
+
+	for (auto const& net: _networks)
+	{
+		if (!inArray(allowedNetowks, net))
+		{
+			//Can't use boost at this point
+			std::cerr << TestOutputHelper::testName() + " Specified Network not found: " + net << endl;
+			exit(1);
+		}
+	}
+
+	return true;
+}
+
 void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
 {
 	checkGeneralTestSectionSearch(_expects, _errorTransactions, _network, NULL);
@@ -535,10 +576,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		network.push_back(_network);
 
 	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
-	vector<string> allowednetworks = {netIdToString(eth::Network::FrontierTest), netIdToString(eth::Network::HomesteadTest),
-				   netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test), netIdToString(eth::Network::MetropolisTest), "ALL"};
-	for(size_t i=0; i<network.size(); i++)
-		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + " Specified Network not found: " + network.at(i));
+	checkAllowedNetwork(network);
 
 	if (!Options::get().singleTestNet.empty())
 	{
