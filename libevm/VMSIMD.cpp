@@ -177,28 +177,28 @@ u256 VM::wtov(uint8_t _b, u256 _in)
 	case 0:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v8x32(out) [i] |= (uint8_t )(_in & 0xff);
+			v8x32(out) [i] = (uint8_t )(_in & 0xff);
 			_in >>= 8;
 		}
 		break;
 	case 1:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v16x16(out)[i] |= (uint16_t)(_in & 0xffff);
+			v16x16(out)[i] = (uint16_t)(_in & 0xffff);
 			_in >>= 16;
 		}
 		break;
 	case 2:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v32x8(out) [i] |= (uint32_t)(_in & 0xffffff);
+			v32x8(out) [i] = (uint32_t)(_in & 0xffffff);
 			_in >>= 32;
 		}
 		break;
 	case 3:
 		for (int i = n-1; 0 <= i; --i)
 		{ 
-			v64x4(out) [i] |= (uint64_t)(_in & 0xffffffff);
+			v64x4(out) [i] = (uint64_t)(_in & 0xffffffff);
 			_in >>= 64;
 		}
 		break;
@@ -219,15 +219,17 @@ void VM::xmload (uint8_t _b)
 	switch (t)
 	{
 	case 0:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v |= p[--j];
 			v8x32(m_SPP[0])[i] = v;
 		}
 		break;
 	case 1:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v |= p[--j];
 			v <<= 8;
 			v |= p[--j];
@@ -235,8 +237,9 @@ void VM::xmload (uint8_t _b)
 		}
 		break;
 	case 2:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v |= p[--j];
 			v <<= 8;
 			v |= p[--j];
@@ -248,8 +251,9 @@ void VM::xmload (uint8_t _b)
 		}
 		break;
 	case 3:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v |= p[--j];
 			v <<= 8;
 			v |= p[--j];
@@ -284,15 +288,17 @@ void VM::xmstore(uint8_t _b)
 	switch (t)
 	{
 	case 0:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v = v8x32(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 		}
 		break;
 	case 1:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v = v8x32(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 			v >>= 8;
@@ -300,8 +306,9 @@ void VM::xmstore(uint8_t _b)
 		}
 		break;
 	case 2:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v = v8x32(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 			v >>= 8;
@@ -313,8 +320,9 @@ void VM::xmstore(uint8_t _b)
 		}
 		break;
 	case 3:
-		for (int j = n,  v = 0, i = n - 1; 0 <= i; --i)
+		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
+			int v = 0;
 			v = v8x32(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 			v >>= 8;
