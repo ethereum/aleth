@@ -45,6 +45,8 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
 		{
 		case WarpStatusPacket:
 		{
+			// TODO check that packet has enough elements
+
 			// Packet layout:
 			// [ version:P, state_hashes : [hash_1:B_32, hash_2 : B_32, ...],  block_hashes : [hash_1:B_32, hash_2 : B_32, ...], 
 			//		state_root : B_32, block_number : P, block_hash : B_32 ]
