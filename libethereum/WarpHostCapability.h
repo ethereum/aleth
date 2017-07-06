@@ -20,14 +20,13 @@
 #pragma once
 
 #include "WarpPeerCapability.h"
+#include "SnapshotDownloader.h"
 
 namespace dev
 {
 
 namespace eth
 {
-
-class SnapshotDownloader;
 
 class WarpHostCapability: public p2p::HostCapability<WarpPeerCapability>
 {
