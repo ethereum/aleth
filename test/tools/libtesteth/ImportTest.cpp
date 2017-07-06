@@ -41,25 +41,17 @@ vector<h256> lastHashes(u256 _currentBlockNumber)
 }
 }
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate):
+ImportTest::ImportTest(json_spirit::mObject& _o, testType testTemplate):
 	m_statePre(0, OverlayDB(), eth::BaseState::Empty),
 	m_statePost(0, OverlayDB(), eth::BaseState::Empty),
 	m_testObject(_o),
 	m_testType(testTemplate)
 {
-	if (testTemplate == testType::StateTests || m_testType == testType::GeneralStateTest)
+	if (m_testType == testType::GeneralStateTest)
 	{
 		importEnv(_o["env"].get_obj());
 		importTransaction(_o["transaction"].get_obj());
 		importState(_o["pre"].get_obj(), m_statePre);
-		if (!isFiller && m_testType == testType::StateTests)
-		{
-			if (_o.count("post"))
-				importState(_o["post"].get_obj(), m_statePost);
-			else
-				importState(_o["postState"].get_obj(), m_statePost);
-			m_logsExpected = importLog(_o["logs"].get_array());
-		}
 	}
 }
 
@@ -67,18 +59,7 @@ bytes ImportTest::executeTest()
 {
 	assert(m_envInfo);
 
-	if (m_testType == testType::StateTests)
-	{
-		eth::Network network = eth::Network::MainNetwork;
-		LogEntries emptyLogs;
-		ExecutionResult emptyRes;
-		ImportTest::ExecOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
-		std::tie(m_statePost, execOut, std::ignore) =
-			executeTransaction(network, *m_envInfo, m_statePre, m_transaction);
-		m_logs = execOut.second.log();
-		return execOut.first.output;
-	}
-	else if (m_testType == testType::GeneralStateTest)
+	if (m_testType == testType::GeneralStateTest)
 	{
 		vector<eth::Network> networks;
 		if (!Options::get().singleTestNet.empty())
@@ -87,23 +68,22 @@ bytes ImportTest::executeTest()
 			networks = test::getNetworks();
 
 		vector<transactionToExecute> transactionResults;
-		for (size_t j = 0; j < networks.size(); j++)
+		for (auto const& net : networks)
 		{
-			for (size_t i = 0; i < m_transactions.size(); i++)
+			for (auto& tr : m_transactions)
 			{
 				Options const& opt = Options::get();
-				if(opt.trDataIndex != -1 && opt.trDataIndex != m_transactions[i].dataInd)
+				if(opt.trDataIndex != -1 && opt.trDataIndex != tr.dataInd)
 					continue;
-				if(opt.trGasIndex != -1 && opt.trGasIndex != m_transactions[i].gasInd)
+				if(opt.trGasIndex != -1 && opt.trGasIndex != tr.gasInd)
 					continue;
-				if(opt.trValueIndex != -1 && opt.trValueIndex != m_transactions[i].valInd)
+				if(opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd)
 					continue;
 
-				eth::Network network = networks[j];
-				std::tie(m_transactions[i].postState, std::ignore, m_transactions[i].changeLog) =
-					executeTransaction(network, *m_envInfo, m_statePre, m_transactions[i].transaction);
-				m_transactions[i].netId = network;
-				transactionResults.push_back(m_transactions[i]);
+				std::tie(tr.postState, std::ignore, tr.changeLog) =
+					executeTransaction(net, *m_envInfo, m_statePre, tr.transaction);
+				tr.netId = net;
+				transactionResults.push_back(tr);
 			}
 		}
 
@@ -111,15 +91,15 @@ bytes ImportTest::executeTest()
 		if (Options::get().fillchain)
 		{
 			string testnameOrig = TestOutputHelper::testName();
-			for (size_t i = 0; i < m_transactions.size(); i++)
+			for (auto& tr : m_transactions)
 			{
 				json_spirit::mObject json;
 				json_spirit::mObject testObj;
 
 				//generate the test name with transaction detail
-				string postfix = "_d" + toString(m_transactions[i].dataInd);
-				postfix += "g" + toString(m_transactions[i].gasInd);
-				postfix += "v" + toString(m_transactions[i].valInd);
+				string postfix = "_d" + toString(tr.dataInd);
+				postfix += "g" + toString(tr.gasInd);
+				postfix += "v" + toString(tr.valInd);
 				string testname = testnameOrig + postfix;
 
 				//basic genesis
@@ -143,11 +123,11 @@ bytes ImportTest::executeTest()
 					std::vector<string> checkedNetworks;
 					for (auto const& net : networks)
 					{
-						m_transactions[i].netId = net;
+						tr.netId = net;
 						if (std::find(checkedNetworks.begin(), checkedNetworks.end(), test::netIdToString(net)) != checkedNetworks.end())
 							continue;
 
-						TrExpectSection search {m_transactions[i], smap};
+						TrExpectSection search {tr, smap};
 						for (auto const& exp: m_testObject["expect"].get_array())
 						{
 							TrExpectSection* search2 = &search;
@@ -194,7 +174,7 @@ bytes ImportTest::executeTest()
 
 				json_spirit::mArray blocksArr;
 				json_spirit::mArray transcArr;
-				transcArr.push_back(fillJsonWithTransaction(m_transactions[i].transaction));
+				transcArr.push_back(fillJsonWithTransaction(tr.transaction));
 				json_spirit::mObject blocksObj;
 				blocksObj["blockHeaderPremine"] = rewriteHeader;
 				blocksObj["transactions"] = transcArr;
@@ -215,7 +195,7 @@ bytes ImportTest::executeTest()
 		m_transactions.clear();
 		m_transactions = transactionResults;
 		return bytes();
-	}
+	} //GeneralStateTest
 
 	BOOST_ERROR("Error when executing test ImportTest::executeTest()");
 	return bytes();
@@ -259,7 +239,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
 									 "previousHash", "to", "address", "caller", "origin", "secretKey", "data", "extraData"};
 
-	for (auto& i: _o)
+	for (auto const& i: _o)
 	{
 		bool isHash = false;
 		std::string key = i.first;
@@ -283,7 +263,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 		else if (value.type() == json_spirit::array_type)
 		{
 			json_spirit::mArray arr;
-			for (auto& j: value.get_array())
+			for (auto const& j: value.get_array())
 			{
 				str = j.get_str();
 				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1));
@@ -335,8 +315,8 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
 {
 	AccountMaskMap mask;
 	importState(_o, _state, mask);
+	//check that every parameter was declared in state object
 	for (auto const& i: mask)
-		//check that every parameter was declared in state object
 		if (!i.second.allSet())
 			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
 }
@@ -399,9 +379,8 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 
 void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 {
-	if (m_testType == testType::StateTests)				//Import a single transaction
-		importTransaction(o_tr, m_transaction);
-	else if (m_testType == testType::GeneralStateTest)	//Parse extended transaction
+	//Parse extended transaction
+	if (m_testType == testType::GeneralStateTest)
 	{
 		BOOST_REQUIRE(o_tr.count("gasLimit") > 0);
 		size_t dataVectorSize = o_tr.at("data").get_array().size();
@@ -532,8 +511,8 @@ void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& 
 template<class T>
 bool inArray(vector<T> const& _array, const T _val)
 {
-	for (size_t i = 0; i  < _array.size(); i++)
-		if (_array[i] == _val)
+	for (auto const& obj  : _array)
+		if (obj == _val)
 			return true;
 	return false;
 }
@@ -613,21 +592,21 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		lookTransactions = m_transactions;
 	for(size_t i = 0; i < lookTransactions.size(); i++)
 	{
-		transactionToExecute t = lookTransactions[i];
-		if (inArray(network, netIdToString(t.netId)) || network[0] == "ALL")
-		if ((inArray(d, t.dataInd) || d[0] == -1) && (inArray(g, t.gasInd) || g[0] == -1) && (inArray(v, t.valInd) || v[0] == -1))
+		transactionToExecute const& tr = lookTransactions[i];
+		if (inArray(network, netIdToString(tr.netId)) || network[0] == "ALL")
+		if ((inArray(d, tr.dataInd) || d[0] == -1) && (inArray(g, tr.gasInd) || g[0] == -1) && (inArray(v, tr.valInd) || v[0] == -1))
 		{
-			string trInfo = netIdToString(t.netId) + " data: " + toString(t.dataInd) + " gas: " + toString(t.gasInd) + " val: " + toString(t.valInd);
+			string trInfo = netIdToString(tr.netId) + " data: " + toString(tr.dataInd) + " gas: " + toString(tr.gasInd) + " val: " + toString(tr.valInd);
 			if (_expects.count("result"))
 			{
 				Options const& opt = Options::get();
 				//filter transactions if a specific index set in options
-				if ((opt.trDataIndex != -1 && opt.trDataIndex != t.dataInd) ||
-					(opt.trGasIndex != -1 && opt.trGasIndex != t.gasInd) ||
-					(opt.trValueIndex != -1 && opt.trValueIndex != t.valInd))
+				if ((opt.trDataIndex != -1 && opt.trDataIndex != tr.dataInd) ||
+					(opt.trGasIndex != -1 && opt.trGasIndex != tr.gasInd) ||
+					(opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd))
 					continue;
 
-				State postState = t.postState;
+				State postState = tr.postState;
 				eth::AccountMaskMap stateMap;
 				State expectState(0, OverlayDB(), eth::BaseState::Empty);
 				importState(_expects.at("result").get_obj(), expectState, stateMap);
@@ -645,7 +624,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 				}
 			}			
 			else if (_expects.count("hash"))
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(t.postState.rootHash().asBytes()) + " in " + trInfo);
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(tr.postState.rootHash().asBytes()) + " in " + trInfo);
 			else
 				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
 
@@ -672,17 +651,16 @@ void ImportTest::traceStateDiff()
 	int g = opt.trGasIndex;
 	int v = opt.trValueIndex;
 
-	for(size_t i = 0; i < m_transactions.size(); i++)
+	for(auto const& tr : m_transactions)
 	{
-		transactionToExecute t = m_transactions[i];
-		if (network == netIdToString(t.netId) || network == "ALL")
-		if ((d == t.dataInd || d == -1) && (g == t.gasInd || g == -1) && (v == t.valInd || v == -1))
+		if (network == netIdToString(tr.netId) || network == "ALL")
+		if ((d == tr.dataInd || d == -1) && (g == tr.gasInd || g == -1) && (v == tr.valInd || v == -1))
 		{
 			std::ostringstream log;
-			log << "trNetID: " << netIdToString(t.netId) << endl;
-			log << "trDataInd: " << t.dataInd << " tdGasInd: " << t.gasInd << " trValInd: " << t.valInd << std::endl;
+			log << "trNetID: " << netIdToString(tr.netId) << endl;
+			log << "trDataInd: " << tr.dataInd << " tdGasInd: " << tr.gasInd << " trValInd: " << tr.valInd << std::endl;
 			dev::LogOutputStream<eth::StateTrace, false>() << log.str();
-			fillJsonWithStateChange(m_statePre, t.postState, t.changeLog); //output std log
+			fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog); //output std log
 		}
 	}
 }
@@ -703,26 +681,27 @@ int ImportTest::exportTest(bytes const& _output)
 		std::map<string, json_spirit::mArray> postState;
 		for(size_t i = 0; i < m_transactions.size(); i++)
 		{
+			transactionToExecute const& tr = m_transactions[i];
 			json_spirit::mObject obj;
 			json_spirit::mObject obj2;
-			obj["data"] = m_transactions[i].dataInd;
-			obj["gas"] = m_transactions[i].gasInd;
-			obj["value"] = m_transactions[i].valInd;
+			obj["data"] = tr.dataInd;
+			obj["gas"] = tr.gasInd;
+			obj["value"] = tr.valInd;
 			obj2["indexes"] = obj;
-			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes(), 2, HexPrefix::Add);
+			obj2["hash"] = toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add);
 
 			//Print the post state if transaction has failed on expect section
 			if (Options::get().checkstate)
 			{
 				auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
 				if (it != std::end(stateIndexesToPrint))
-					obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
+					obj2["postState"] = fillJsonWithState(tr.postState);
 			}
 
 			if (Options::get().statediff)
-				obj2["stateDiff"] = fillJsonWithStateChange(m_statePre, m_transactions[i].postState, m_transactions[i].changeLog);
+				obj2["stateDiff"] = fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog);
 
-			postState[netIdToString(m_transactions[i].netId)].push_back(obj2);
+			postState[netIdToString(tr.netId)].push_back(obj2);
 		}
 
 		json_spirit::mObject obj;

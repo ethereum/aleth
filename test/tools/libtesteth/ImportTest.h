@@ -31,7 +31,6 @@ namespace test
 
 enum class testType
 {
-	StateTests,
 	BlockChainTests,
 	GeneralStateTest,
 	Other
@@ -40,7 +39,7 @@ enum class testType
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate = testType::StateTests);
+	ImportTest(json_spirit::mObject& _o, testType _testTemplate);
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
