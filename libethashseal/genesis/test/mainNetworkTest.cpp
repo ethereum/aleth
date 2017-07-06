@@ -14,9 +14,8 @@
 		You should have received a copy of the GNU General Public License
 		along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "../GenesisInfo.h"
+#include "../../GenesisInfo.h"
 
-static dev::h256 const c_genesisStateRootMainNetworkTest;
 static std::string const c_genesisInfoMainNetworkTest = std::string() +
 R"E(
 {

@@ -15,9 +15,8 @@
 		along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../GenesisInfo.h"
+#include "../../GenesisInfo.h"
 
-static dev::h256 const c_genesisStateRootFrontierTest;
 static std::string const c_genesisInfoFrontierTest =
 R"E(
 {
