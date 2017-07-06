@@ -147,7 +147,8 @@ void help()
 		<< "    --from <n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'.\n"
 		<< "    --to <n>  Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'.\n"
 		<< "    --only <n>  Equivalent to --export-from n --export-to n.\n"
-		<< "    --dont-check  Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.\n\n"
+		<< "    --dont-check  Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.\n"
+		<< "    --download-snapshot <path> Download snapshot data to specified path.\n\n"
 		<< "General Options:\n"
 		<< "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ").\n"
 #if ETH_EVMJIT
@@ -402,6 +403,7 @@ int main(int argc, char** argv)
 	bool listenSet = false;
 	string configJSON;
 	string genesisJSON;
+	string snapshotPath;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
@@ -781,6 +783,8 @@ int main(int argc, char** argv)
 			noPinning = true;
 			bootstrap = false;
 		}
+		else if (arg == "--download-snapshot" && i + 1 < argc)
+			snapshotPath = argv[++i];
 		else
 		{
 			cerr << "Invalid argument: " << arg << "\n";
@@ -908,6 +912,7 @@ int main(int argc, char** argv)
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
 		getDataDir(),
+		snapshotPath,
 		chainParams,
 		withExisting,
 		nodeMode == NodeMode::Full ? caps : set<string>(),
@@ -1071,7 +1076,7 @@ int main(int argc, char** argv)
 	if (author)
 		cout << "Mining Beneficiary: " << renderFullAddress(author) << "\n";
 
-	if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet)
+	if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet || !preferredNodes.empty())
 	{
 		web3.startNetwork();
 		cout << "Node ID: " << web3.enode() << "\n";

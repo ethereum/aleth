@@ -64,6 +64,7 @@ Client::Client(
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
 	fs::path const& _dbPath,
+	fs::path const& _snapshotPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _l
 ):
@@ -75,7 +76,7 @@ Client::Client(
 	m_postSeal(chainParams().accountStartNonce),
 	m_working(chainParams().accountStartNonce)
 {
-	init(_host, _dbPath, _forceAction, _networkID);
+	init(_host, _dbPath, _snapshotPath, _forceAction, _networkID);
 }
 
 Client::~Client()
@@ -84,7 +85,7 @@ Client::~Client()
 	terminate();
 }
 
-void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _forceAction, u256 _networkId)
+void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _snapshotPath, WithExisting _forceAction, u256 _networkId)
 {
 	DEV_TIMED_FUNCTION_ABOVE(500);
 
@@ -99,12 +100,12 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	m_bq.setChain(bc());
 
 	m_lastGetWork = std::chrono::system_clock::now() - chrono::seconds(30);
-	m_tqReady = m_tq.onReady([=](){ this->onTransactionQueueReady(); });	// TODO: should read m_tq->onReady(thisThread, syncTransactionQueue);
-	m_tqReplaced = m_tq.onReplaced([=](h256 const&){ m_needStateReset = true; });
-	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
-	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
-	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
-	bc().setOnBlockImport([=](BlockHeader const& _info){
+	m_tqReady = m_tq.onReady([=]() { this->onTransactionQueueReady(); });	// TODO: should read m_tq->onReady(thisThread, syncTransactionQueue);
+	m_tqReplaced = m_tq.onReplaced([=](h256 const&) { m_needStateReset = true; });
+	m_bqReady = m_bq.onReady([=]() { this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
+	m_bq.setOnBad([=](Exception& ex) { this->onBadBlock(ex); });
+	bc().setOnBad([=](Exception& ex) { this->onBadBlock(ex); });
+	bc().setOnBlockImport([=](BlockHeader const& _info) {
 		if (auto h = m_host.lock())
 			h->onBlockImported(_info);
 	});
@@ -113,6 +114,12 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 		bc().rescue(m_stateDB);
 
 	m_gp->update(bc());
+
+	if (!_snapshotPath.empty())
+	{
+		m_warpHost = _extNet->registerCapability(make_shared<WarpHostCapability>(bc(), _networkId, _snapshotPath));
+		return;
+	}
 
 	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
 	m_host = host;
