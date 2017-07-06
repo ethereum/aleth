@@ -99,6 +99,7 @@ void eraseJsonSectionForInvalidBlock(mObject& _blObj);
 void checkJsonSectionForInvalidBlock(mObject& _blObj);
 void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
+bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1 = 0, u256 const& _unNumber2 = 0);
 void fillBCTest(json_spirit::mObject& _o);
 void testBCTest(json_spirit::mObject& _o);
 
@@ -308,15 +309,8 @@ void fillBCTest(json_spirit::mObject& _o)
 				BOOST_ERROR("Deprecated expectException field! " + testName);
 
 			blockchain.addBlock(alterBlock);
-			State preState = testChain.topBlock().state();
 			if (testChain.addBlock(alterBlock))
-			{
-				State postState = testChain.topBlock().state();
-				unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(test::TestBlockChain::s_sealEngineNetwork)).createSealEngine());
-				bigint reward = se->chainParams().u256Param("blockReward");
-				ImportTest::checkBalance(preState + reward, postState);
 				cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testName;
-			}
 
 			if (test::Options::get().checkstate)
 			{
@@ -396,6 +390,7 @@ void testBCTest(json_spirit::mObject& _o)
 		mObject blObj = bl.get_obj();
 		TestBlock blockFromRlp;
 		State preState = testChain.topBlock().state();
+		h256 preHash = testChain.topBlock().blockHeader().hash();
 		try
 		{
 			TestBlock blRlp(blObj["rlp"].get_str());
@@ -439,10 +434,10 @@ void testBCTest(json_spirit::mObject& _o)
 		}
 
 		// ImportUncles
-		size_t uncleSize = 0;
+		vector<u256> uncleNumbers;
 		if (blObj["uncleHeaders"].type() != json_spirit::null_type)
 		{
-			uncleSize = blObj["uncleHeaders"].get_array().size();
+			BOOST_REQUIRE_MESSAGE(blObj["uncleHeaders"].get_array().size() <= 2, "Too many uncle headers in block! " + TestOutputHelper::testName());
 			for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
 			{
 				mObject uBlH = uBlHeaderObj.get_obj();
@@ -450,6 +445,7 @@ void testBCTest(json_spirit::mObject& _o)
 
 				TestBlock uncle(uBlH);
 				blockFromFields.addUncle(uncle);
+				uncleNumbers.push_back(uncle.blockHeader().number());
 			}
 		}
 
@@ -477,13 +473,18 @@ void testBCTest(json_spirit::mObject& _o)
 		if (blObj.count("blocknumber") > 0)
 			blockNumber = blObj["blocknumber"].get_str();
 
-
 		//check the balance before and after the block according to mining rules
-		State postState = testChain.topBlock().state();
-		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(test::TestBlockChain::s_sealEngineNetwork)).createSealEngine());
-		bigint reward = se->chainParams().u256Param("blockReward");
-		reward += uncleSize * bigint("");
-		ImportTest::checkBalance(preState, postState, reward);
+		if (blockFromFields.blockHeader().parentHash() == preHash)
+		{
+			State postState = testChain.topBlock().state();
+			bigint reward = calculateMiningReward(testChain.topBlock().blockHeader().number(), uncleNumbers.size() >= 1 ? uncleNumbers[0] : 0, uncleNumbers.size() >= 2 ? uncleNumbers[1] : 0);
+			ImportTest::checkBalance(preState, postState, reward);
+		}
+		else
+		{
+			cnote << "Block Number " << testChain.topBlock().blockHeader().number();
+			cnote << "Skipping the balance validation of potential correct block: " << TestOutputHelper::testName();
+		}
 
 		cnote << "Tested topblock number" << blockNumber << "for chain " << blockChainName << testName;
 
@@ -505,6 +506,26 @@ void testBCTest(json_spirit::mObject& _o)
 	ImportTest::importState(_o["postState"].get_obj(), postState);
 	ImportTest::compareStates(postState, testChain.topBlock().state());
 	ImportTest::compareStates(postState, blockchain.topBlock().state());
+}
+
+bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2)
+{
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(test::TestBlockChain::s_sealEngineNetwork)).createSealEngine());
+	bigint baseReward = se->chainParams().blockReward;
+	bigint reward = baseReward;
+	//INCLUDE_UNCLE = BASE_REWARD / 32
+	//UNCLE_REWARD  = BASE_REWARD * (8 - Bn + Un) / 8
+	if (_unNumber1 != 0)
+	{
+		reward += baseReward * (8 - _blNumber + _unNumber1) / 8;
+		reward += baseReward / 32;
+	}
+	if (_unNumber2 != 0)
+	{
+		reward += baseReward * (8 - _blNumber + _unNumber2) / 8;
+		reward += baseReward / 32;
+	}
+	return reward;
 }
 
 //TestFunction
