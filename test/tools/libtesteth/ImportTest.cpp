@@ -211,7 +211,7 @@ void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, b
 		postBalance += addr.second;
 
 	//account could destroy ether if it suicides to itself
-	BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance != postBalance (" + toString(preBalance) + " != " + toString(postBalance) + ") " + TestOutputHelper::testName());
+	BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::testName());
 }
 
 std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)

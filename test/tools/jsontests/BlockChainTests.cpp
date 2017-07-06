@@ -389,8 +389,8 @@ void testBCTest(json_spirit::mObject& _o)
 	{
 		mObject blObj = bl.get_obj();
 		TestBlock blockFromRlp;
-		State preState = testChain.topBlock().state();
-		h256 preHash = testChain.topBlock().blockHeader().hash();
+		State const preState = testChain.topBlock().state();
+		h256 const preHash = testChain.topBlock().blockHeader().hash();
 		try
 		{
 			TestBlock blRlp(blObj["rlp"].get_str());
@@ -476,7 +476,7 @@ void testBCTest(json_spirit::mObject& _o)
 		//check the balance before and after the block according to mining rules
 		if (blockFromFields.blockHeader().parentHash() == preHash)
 		{
-			State postState = testChain.topBlock().state();
+			State const postState = testChain.topBlock().state();
 			bigint reward = calculateMiningReward(testChain.topBlock().blockHeader().number(), uncleNumbers.size() >= 1 ? uncleNumbers[0] : 0, uncleNumbers.size() >= 2 ? uncleNumbers[1] : 0);
 			ImportTest::checkBalance(preState, postState, reward);
 		}
