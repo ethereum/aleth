@@ -24,7 +24,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-WarpPeerCapability::WarpPeerCapability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID):
+WarpPeerCapability::WarpPeerCapability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& /* _cap */, uint16_t _capID):
 	Capability(_s, _h, _i, _capID)
 {
 }
