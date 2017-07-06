@@ -123,6 +123,7 @@ public:
 	WebThreeDirect(
 		std::string const& _clientVersion,
 		boost::filesystem::path const& _dbPath,
+		boost::filesystem::path const& _snapshotPath,
 		eth::ChainParams const& _params,
 		WithExisting _we = WithExisting::Trust,
 		std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},

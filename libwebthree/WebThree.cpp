@@ -39,6 +39,7 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 WebThreeDirect::WebThreeDirect(
 	std::string const& _clientVersion,
 	boost::filesystem::path const& _dbPath,
+	boost::filesystem::path const& _snapshotPath,
 	eth::ChainParams const& _params,
 	WithExisting _we,
 	std::set<std::string> const& _interfaces,
@@ -56,12 +57,13 @@ WebThreeDirect::WebThreeDirect(
 		Ethash::init();
 		NoProof::init();
 		if (_params.sealEngineName == "Ethash")
-			m_ethereum.reset(new eth::EthashClient(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+			m_ethereum.reset(new eth::EthashClient(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
 		else if (_params.sealEngineName == "NoProof" && _testing)
 			m_ethereum.reset(new eth::ClientTest(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
 		else
-			m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+			m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
 		m_ethereum->startWorking();
+
 		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
 		vector<string> bps;
 		boost::split(bps, bp, boost::is_any_of("/"));

@@ -46,6 +46,8 @@ static string toString(Asking _a)
 	case Asking::Receipts: return "Receipts";
 	case Asking::Nothing: return "Nothing";
 	case Asking::State: return "State";
+	case Asking::WarpManifest: return "WarpManifest";
+	case Asking::WarpData: return "WarpData";
 	}
 	return "?";
 }

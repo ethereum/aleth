@@ -60,6 +60,7 @@ BOOST_AUTO_TEST_CASE(Personal)
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
 		getDataDir(),
+		string(),
 		ChainParams(),
 		WithExisting::Kill,
 		set<string>{"eth"},

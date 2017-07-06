@@ -27,6 +27,7 @@ namespace dev
 namespace eth
 {
 class SnapshotStorageFace;
+class WarpPeerCapability;
 
 const unsigned c_WarpProtocolVersion = 1;
 
@@ -39,6 +40,20 @@ enum WarpSubprotocolPacketType : byte
     SnapshotData = 0x14,
 
     WarpSubprotocolPacketCount
+};
+
+class WarpPeerObserverFace
+{
+public:
+    virtual ~WarpPeerObserverFace() {}
+
+    virtual void onPeerStatus(std::shared_ptr<WarpPeerCapability> _peer) = 0;
+
+    virtual void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
+
+    virtual void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
+
+    virtual void onPeerRequestTimeout(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
 };
 
 class WarpPeerCapability : public p2p::Capability
@@ -55,19 +70,54 @@ public:
 
     void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty,
         h256 _chainCurrentHash, h256 _chainGenesisHash,
-        std::shared_ptr<SnapshotStorageFace const> _snapshot);
+        std::shared_ptr<SnapshotStorageFace const> _snapshot,
+        std::weak_ptr<WarpPeerObserverFace> _observer);
+
+    /// Validates whether peer is able to communicate with the host, disables peer if not
+    bool validateStatus(h256 const& _genesisHash, std::vector<unsigned> const& _protocolVersions, u256 const& _networkId);
+
+    void requestStatus(unsigned _hostProtocolVersion, u256 const& _hostNetworkId,
+        u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,
+        h256 const& _chainGenesisHash, h256 const& _snapshotBlockHash,
+        u256 const& _snapshotBlockNumber);
+    void requestManifest();
+    void requestData(h256 const& _chunkHash);
+
+    u256 snapshotNumber() const { return m_snapshotNumber; }
+
+    using p2p::Capability::disable;
 
 private:
     using p2p::Capability::sealAndSend;
 
     bool interpret(unsigned _id, RLP const& _r) override;
 
-    void requestStatus(unsigned _hostProtocolVersion, u256 const& _hostNetworkId,
-        u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,
-        h256 const& _chainGenesisHash, h256 const& _snapshotBlockHash,
-        u256 const& _snapshotBlockNumber);
+    void setAsking(Asking _a);
+
+    void setIdle() { setAsking(Asking::Nothing); }
+
+    unsigned m_hostProtocolVersion = 0;
+
+    /// Peer's protocol version.
+    unsigned m_protocolVersion = 0;
+
+    /// Peer's network id.
+    u256 m_networkId;
+
+    /// What, if anything, we last asked the other peer for.
+    Asking m_asking = Asking::Nothing;
+    /// When we asked for it. Allows a time out.
+    std::atomic<time_t> m_lastAsk;
+
+    /// These are determined through either a Status message.
+    h256 m_latestHash;                      ///< Peer's latest block's hash.
+    u256 m_totalDifficulty;                 ///< Peer's latest block's total difficulty.
+    h256 m_genesisHash;                     ///< Peer's genesis hash
+    h256 m_snapshotHash;
+    u256 m_snapshotNumber;
 
     std::shared_ptr<SnapshotStorageFace const> m_snapshot;
+    std::weak_ptr<WarpPeerObserverFace> m_observer;
 };
 
 }  // namespace eth

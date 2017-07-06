@@ -342,6 +342,7 @@ int main(int argc, char** argv)
         ("only", po::value<string>()->value_name("<n>"), "Equivalent to --export-from n --export-to n.")
         ("format", po::value<string>()->value_name("<binary/hex/human>"), "Set export format.")
         ("dont-check", "Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.")
+        ("download-snapshot", po::value<string>()->value_name("<path>"), "Download Parity Warp Sync snapshot data to the specified path.")
         ("import-snapshot", po::value<string>()->value_name("<path>"), "Import blockchain and state data from the Parity Warp Sync snapshot.\n");
 
     po::options_description generalOptions("General Options", c_lineWidth);
@@ -382,6 +383,9 @@ int main(int argc, char** argv)
             return -1;
         }
 
+    std::string snapshotPath;
+    if (vm.count("download-snapshot"))
+        snapshotPath = vm["download-snapshot"].as<string>();
     if (vm.count("import-snapshot"))
     {
         mode = OperationMode::ImportSnapshot;
@@ -855,6 +859,7 @@ int main(int argc, char** argv)
     dev::WebThreeDirect web3(
         WebThreeDirect::composeClientVersion("eth"),
         getDataDir(),
+        snapshotPath,
         chainParams,
         withExisting,
         nodeMode == NodeMode::Full ? caps : set<string>(),

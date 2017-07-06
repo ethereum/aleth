@@ -19,14 +19,202 @@
 #include "BlockChain.h"
 #include "SnapshotStorage.h"
 
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/future/future.hpp>
+#include <boost/fiber/future/promise.hpp>
+#include <boost/fiber/operations.hpp>
+#include <boost/fiber/unbuffered_channel.hpp>
+
 namespace dev
 {
 namespace eth
 {
-WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
-    std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
-  : m_blockChain(_blockChain), m_networkId(_networkId), m_snapshot(_snapshotStorage)
+namespace
 {
+
+struct SnapshotLog: public LogChannel
+{
+    static char const* name() { return "SNAP"; }
+    static int const verbosity = 9;
+    static const bool debug = false;
+};
+
+bool validateManifest(RLP const& _manifestRlp)
+{
+    if (!_manifestRlp.isList() || _manifestRlp.itemCount() != 1)
+        return false;
+
+    RLP const manifest = _manifestRlp[0];
+
+    u256 const version = manifest[0].toInt<u256>();
+    return version == 2;
+}
+
+h256 snapshotBlockHash(RLP const& _manifestRlp)
+{
+    RLP const manifest = _manifestRlp[0];
+    return manifest[5].toHash<h256>();
+}
+
+class WarpPeerObserver: public WarpPeerObserverFace
+{
+public:
+    WarpPeerObserver(WarpHostCapability& _host,
+        BlockChain const& _blockChain,
+        boost::filesystem::path const&  _snapshotPath):
+        m_hostProtocolVersion(_host.protocolVersion()), 
+        m_hostNetworkId(_host.networkId()), 
+        m_hostGenesisHash(_blockChain.genesisHash()), 
+        m_snapshotDir(_snapshotPath) 
+    {}
+    ~WarpPeerObserver()
+    {
+        if (m_downloadFiber)
+            m_downloadFiber->join();
+    }
+
+    void onPeerStatus(std::shared_ptr<WarpPeerCapability> _peer) override
+    {
+        if (_peer->validateStatus(m_hostGenesisHash, {m_hostProtocolVersion}, m_hostNetworkId))
+            _peer->requestManifest();
+
+        // start the downloading fiber in the thread handling network messages
+        if (!m_downloadFiber)
+            m_downloadFiber.reset(new boost::fibers::fiber([this]() { downloadChunks(); }));
+        
+        boost::this_fiber::yield();
+    }
+
+    void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
+    {
+        if (validateManifest(_r))
+        {
+            u256 const snapshotHash = snapshotBlockHash(_r);
+            if (!m_syncingSnapshotHash)
+            {
+                m_syncingSnapshotHash = snapshotHash;
+                m_manifest.set_value(_r.data().toBytes());
+            }
+
+            if (snapshotHash == m_syncingSnapshotHash)
+                m_freePeers.push(_peer);
+            else
+                _peer->disable("Another snapshot.");
+        }
+        else
+            _peer->disable("Invalid snapshot manifest.");
+
+        boost::this_fiber::yield();
+    }
+
+    void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
+    {
+        if (!_r.isList() || _r.itemCount() != 1)
+            return;
+
+        // TODO handle timeouts
+
+        RLP const data = _r[0];
+
+        h256 const hash = sha3(data.toBytesConstRef());
+
+        auto it = m_requestedChunks.find(_peer);
+        if (it == m_requestedChunks.end())
+            return;
+
+        h256 const askedHash = it->second;
+        m_requestedChunks.erase(it);
+            
+        if (hash == askedHash)
+        {
+            // TODO handle writeFile failure
+            writeFile((boost::filesystem::path(m_snapshotDir) / toHex(hash)).string(), data.toBytesConstRef());
+
+            clog(SnapshotLog) << "Saved chunk" << hash << " Chunks left: " << m_neededChunks.size();
+        }
+        else
+            m_neededChunks.push_back(askedHash);
+
+        m_freePeers.push(_peer);
+        boost::this_fiber::yield();
+    }
+
+    void onPeerRequestTimeout(std::shared_ptr<WarpPeerCapability> /*_peer*/, Asking /*_asking*/) override
+    {
+        // TODO
+    }
+
+private:
+    void downloadChunks()
+    {
+        bytes const manifestBytes = m_manifest.get_future().get();
+
+        RLP manifestRlp(manifestBytes);
+        RLP manifest(manifestRlp[0]);
+
+        u256 const version = manifest[0].toInt<u256>();
+        h256s const stateHashes = manifest[1].toVector<h256>();
+        h256s const blockHashes = manifest[2].toVector<h256>();
+        h256 const stateRoot = manifest[3].toHash<h256>();
+        u256 const blockNumber = manifest[4].toInt<u256>();
+        h256 const blockHash = manifest[5].toHash<h256>();
+
+        clog(SnapshotLog) << "MANIFEST: "
+            << "version " << version
+            << "state root " << stateRoot
+            << "block number " << blockNumber
+            << "block hash " << blockHash;
+
+        // TODO handle writeFile failure
+        writeFile((boost::filesystem::path(m_snapshotDir) / "MANIFEST").string(), manifest.data());
+
+        m_neededChunks.assign(stateHashes.begin(), stateHashes.end());
+        m_neededChunks.insert(m_neededChunks.end(), blockHashes.begin(), blockHashes.end());
+
+        while (!m_neededChunks.empty())
+        {
+            h256 const chunkHash(m_neededChunks.front());
+
+            std::shared_ptr<WarpPeerCapability> peer;
+            while (!peer)
+                peer = m_freePeers.value_pop().lock();
+
+            clog(SnapshotLog) << "Requesting chunk " << chunkHash;
+            peer->requestData(chunkHash);
+
+            m_requestedChunks[peer] = chunkHash;
+            m_neededChunks.pop_front();
+        }
+        clog(SnapshotLog) << "Snapshot download complete!";
+    }
+
+
+    unsigned const m_hostProtocolVersion;
+    u256 const m_hostNetworkId;
+    h256 const m_hostGenesisHash;
+    boost::fibers::promise<bytes> m_manifest;
+    h256 m_syncingSnapshotHash;
+    std::deque<h256> m_neededChunks;
+    boost::fibers::unbuffered_channel<std::weak_ptr<WarpPeerCapability>> m_freePeers;
+    boost::filesystem::path const m_snapshotDir;
+    std::map<std::weak_ptr<WarpPeerCapability>, h256, std::owner_less<std::weak_ptr<WarpPeerCapability>>> m_requestedChunks;
+
+    std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
+};
+
+}
+
+
+WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
+    boost::filesystem::path const& _snapshotDownloadPath, std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
+  : m_blockChain(_blockChain), m_networkId(_networkId), m_snapshot(_snapshotStorage), 
+  m_peerObserver(std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath))
+{
+}
+
+WarpHostCapability::~WarpHostCapability()
+{
+    terminate();
 }
 
 std::shared_ptr<p2p::Capability> WarpHostCapability::newPeerCapability(
@@ -36,10 +224,22 @@ std::shared_ptr<p2p::Capability> WarpHostCapability::newPeerCapability(
 
     auto cap = p2p::capabilityFromSession<WarpPeerCapability>(*_s, _cap.second);
     assert(cap);
-    cap->init(c_WarpProtocolVersion, m_networkId, m_blockChain.details().totalDifficulty,
-        m_blockChain.currentHash(), m_blockChain.genesisHash(), m_snapshot);
+    cap->init(
+        c_WarpProtocolVersion,
+        m_networkId,
+        m_blockChain.details().totalDifficulty,
+        m_blockChain.currentHash(),
+        m_blockChain.genesisHash(),
+        m_snapshot,
+        m_peerObserver
+    );
 
     return ret;
+}
+
+void WarpHostCapability::doWork()
+{
+    // TODO call tick() on peers similar to EthereumHost
 }
 
 }  // namespace eth

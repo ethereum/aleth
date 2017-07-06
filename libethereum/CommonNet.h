@@ -75,6 +75,8 @@ enum class Asking
 	BlockBodies,
 	NodeData,
 	Receipts,
+	WarpManifest,
+	WarpData,
 	Nothing
 };
 
