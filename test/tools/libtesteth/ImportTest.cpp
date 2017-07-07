@@ -201,6 +201,19 @@ bytes ImportTest::executeTest()
 	return bytes();
 }
 
+void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward)
+{
+	bigint preBalance = 0;
+	bigint postBalance = 0;
+	for (auto const& addr : _pre.addresses())
+		preBalance += addr.second;
+	for (auto const& addr : _post.addresses())
+		postBalance += addr.second;
+
+	//account could destroy ether if it suicides to itself
+	BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::testName());
+}
+
 std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
 {
 	assert(m_envInfo);
@@ -211,6 +224,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
 		ImportTest::ExecOutput out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
 		eth::ChangeLog changeLog = initialState.changeLog();
+		ImportTest::checkBalance(_preState, initialState);
 
 		//Finalize the state manually (clear logs)
 		bool removeEmptyAccounts = m_envInfo->number() >= se->chainParams().u256Param("EIP158ForkBlock");
@@ -517,7 +531,7 @@ bool inArray(vector<T> const& _array, const T _val)
 	return false;
 }
 
-bool ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
+void ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
 {
 	vector<eth::Network> const& allnetworks = test::getNetworks();
 	vector<string> allowedNetowks;
@@ -534,8 +548,6 @@ bool ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
 			exit(1);
 		}
 	}
-
-	return true;
 }
 
 void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
