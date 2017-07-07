@@ -76,7 +76,7 @@ bytes ImportTest::executeTest()
 
 			std::tie(tr.postState, tr.output, tr.changeLog) =
 				executeTransaction(net, *m_envInfo, m_statePre, tr.transaction);
-			tr.netId = net;
+			tr.netId = netIdToString(net);
 			transactionResults.push_back(tr);
 		}
 	}
@@ -117,8 +117,8 @@ bytes ImportTest::executeTest()
 				std::vector<string> checkedNetworks;
 				for (auto const& net : networks)
 				{
-					tr.netId = net;
-					if (std::find(checkedNetworks.begin(), checkedNetworks.end(), test::netIdToString(net)) != checkedNetworks.end())
+					tr.netId = netIdToString(net);
+					if (std::find(checkedNetworks.begin(), checkedNetworks.end(), tr.netId) != checkedNetworks.end())
 						continue;
 
 					TrExpectSection search {tr, smap};
@@ -589,10 +589,10 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	for(size_t i = 0; i < lookTransactions.size(); i++)
 	{
 		transactionToExecute const& tr = lookTransactions[i];
-		if (inArray(network, netIdToString(tr.netId)) || network[0] == "ALL")
+		if (inArray(network, tr.netId) || network[0] == "ALL")
 		if ((inArray(d, tr.dataInd) || d[0] == -1) && (inArray(g, tr.gasInd) || g[0] == -1) && (inArray(v, tr.valInd) || v[0] == -1))
 		{
-			string trInfo = netIdToString(tr.netId) + " data: " + toString(tr.dataInd) + " gas: " + toString(tr.gasInd) + " val: " + toString(tr.valInd);
+			string trInfo = tr.netId + " data: " + toString(tr.dataInd) + " gas: " + toString(tr.gasInd) + " val: " + toString(tr.valInd);
 			if (_expects.count("result"))
 			{
 				Options const& opt = Options::get();
@@ -649,11 +649,11 @@ void ImportTest::traceStateDiff()
 
 	for(auto const& tr : m_transactions)
 	{
-		if (network == netIdToString(tr.netId) || network == "ALL")
+		if (network == tr.netId || network == "ALL")
 		if ((d == tr.dataInd || d == -1) && (g == tr.gasInd || g == -1) && (v == tr.valInd || v == -1))
 		{
 			std::ostringstream log;
-			log << "trNetID: " << netIdToString(tr.netId) << endl;
+			log << "trNetID: " << tr.netId << endl;
 			log << "trDataInd: " << tr.dataInd << " tdGasInd: " << tr.gasInd << " trValInd: " << tr.valInd << std::endl;
 			dev::LogOutputStream<eth::StateTrace, false>() << log.str();
 			fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog); //output std log
@@ -695,7 +695,7 @@ void ImportTest::exportTest()
 		if (Options::get().statediff)
 			obj2["stateDiff"] = fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog);
 
-		postState[netIdToString(tr.netId)].push_back(obj2);
+		postState[tr.netId].push_back(obj2);
 	}
 
 	json_spirit::mObject obj;

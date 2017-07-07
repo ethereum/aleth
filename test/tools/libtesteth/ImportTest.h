@@ -69,7 +69,7 @@ private:
 	struct transactionToExecute
 	{
 		transactionToExecute(int d, int g, int v, eth::Transaction const& t):
-			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork),
+			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(""),
 			output(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries()))) {}
 		int dataInd;
 		int gasInd;
@@ -77,7 +77,7 @@ private:
 		eth::Transaction transaction;
 		eth::State postState;
 		eth::ChangeLog changeLog;
-		eth::Network netId;
+		std::string netId;
 		ExecOutput output;
 	};
 	std::vector<transactionToExecute> m_transactions;
