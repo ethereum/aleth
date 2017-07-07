@@ -693,7 +693,6 @@ void VM::interpretCases()
 			updateIOGas();
 			*m_RP++ = m_PC++;
 			m_PC = decodeJumpDest(m_code.data(), m_PC);
-			}
 		}
 		CONTINUE
 
@@ -1038,7 +1037,8 @@ void VM::interpretCases()
 
 			uint8_t b = ++m_PC;
 			uint8_t c = ++m_PC;
-			xput(m_code[b], m_code[c]); ++m_PC;
+			xput(m_code[b], m_code[c]);
+			++m_PC;
 		}
 		CONTINUE
 
@@ -1049,7 +1049,8 @@ void VM::interpretCases()
 
 			uint8_t b = ++m_PC;
 			uint8_t c = ++m_PC;
-			xget(m_code[b], m_code[c]); ++m_PC;
+			xget(m_code[b], m_code[c]);
+			++m_PC;
 		}
 		CONTINUE
 
@@ -1491,6 +1492,8 @@ void VM::interpretCases()
 #if EVM_HACK_DUP_64
 			*(uint64_t*)m_SPP = *(uint64_t*)(m_SP + n);
 #else
+			// the stack slot being copied into may no longer hold a u256
+			// so we construct a new one in the memory, rather than assign
 			new(m_SPP) u256(m_SP[n]);
 #endif
 		}

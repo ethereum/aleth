@@ -81,11 +81,11 @@ inline a8x32  const& v8x32 (u256 const& _stack_item) { return (a8x32&) *(a8x32*)
 #define AND( x1, x2) ((x1) & (x2))
 #define OR(  x1, x2) ((x1) | (x2))
 #define XOR( x1, x2) ((x1) ^ (x2))
-#define NOT( x1, x2) (~x1)
+#define NOT( x1, x2) (~(x1))
 #define SHR( x1, x2) ((x1) >> (x2))
 #define SHL( x1, x2) ((x1) << (x2))
-#define ROL( x1, x2) (((x1) << x2)|((x1) >> (sizeof(x1) * 8 - (x2))))
-#define ROR( x1, x2) (((x1) >> x2)|((x1) << (sizeof(x1) * 8 - (x2))))
+#define ROL( x1, x2) (((x1) << (x2))|((x1) >> (sizeof(x1) * 8 - (x2))))
+#define ROR( x1, x2) (((x1) >> (x2))|((x1) << (sizeof(x1) * 8 - (x2))))
 
 void VM::xadd (uint8_t _b) { EVALXOPU(ADD, _b); }
 void VM::xmul (uint8_t _b) { EVALXOPU(MUL, _b); }
@@ -110,10 +110,10 @@ void VM::xshl (uint8_t _b) { EVALXOPU(SHL, _b); }
 void VM::xrol (uint8_t _b) { EVALXOPU(ROL, _b); }
 void VM::xror (uint8_t _b) { EVALXOPU(ROR, _b); }
 
-inline uint8_t pow2N(uint8_t n)
+inline uint8_t pow2N(uint8_t _n)
 {
 	static uint8_t exp[6] = { 1, 2, 4, 8, 16, 32 };
-	return exp[n];
+	return exp[_n];
 }
 
 inline uint8_t nElem(uint8_t _b)
@@ -299,7 +299,7 @@ void VM::xmstore(uint8_t _b)
 		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
 			int v = 0;
-			v = v8x32(m_SPP[0])[i];
+			v = v16x16(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 			v >>= 8;
 			p[--j] = (uint8_t)v;
@@ -309,7 +309,7 @@ void VM::xmstore(uint8_t _b)
 		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
 			int v = 0;
-			v = v8x32(m_SPP[0])[i];
+			v = v32x8(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 			v >>= 8;
 			p[--j] = (uint8_t)v;
@@ -323,7 +323,7 @@ void VM::xmstore(uint8_t _b)
 		for (int j = n,  i = n - 1; 0 <= i; --i)
 		{
 			int v = 0;
-			v = v8x32(m_SPP[0])[i];
+			v = v64x4(m_SPP[0])[i];
 			p[--j] = (uint8_t)v;
 			v >>= 8;
 			p[--j] = (uint8_t)v;
