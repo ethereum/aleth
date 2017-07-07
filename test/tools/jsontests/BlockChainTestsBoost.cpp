@@ -60,7 +60,7 @@ class bcTestFixture {
 
 	void fillAllFilesInFolder(string const& _folder)
 	{
-		std::string fillersPath = test::getTestPath() + "/src/BlockchainTestsFiller/"  + _folder;
+		std::string fillersPath = test::getTestPath() + "/src/BlockchainTestsFiller/" + _folder;
 
 		string filter;
 		if (test::Options::get().filltests)
@@ -77,7 +77,7 @@ class bcTestFixture {
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-			test::executeTests(file.filename().string(), "/BlockchainTests/"  + _folder, "/BlockchainTestsFiller/"  +_folder, dev::test::doBlockchainTestNoLog);
+			test::executeTests(file.filename().string(), "/BlockchainTests/" + _folder, "/BlockchainTestsFiller/" + _folder, dev::test::doBlockchainTestNoLog);
 		}
 		test::TestOutputHelper::finishTest();
 	}
