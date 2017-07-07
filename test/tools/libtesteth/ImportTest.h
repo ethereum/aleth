@@ -61,8 +61,6 @@ public:
 
 	eth::State m_statePre;
 	eth::State m_statePost;
-	eth::LogEntries m_logs;
-	eth::LogEntries m_logsExpected;
 
 private:
 	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;

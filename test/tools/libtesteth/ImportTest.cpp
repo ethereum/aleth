@@ -732,9 +732,6 @@ int ImportTest::exportTest(bytes const& _output)
 			m_testObject.erase(m_testObject.find("expectOut"));
 		}
 
-		// export logs
-		m_testObject["logs"] = exportLog(m_logs);
-
 		// compare expected state with post state
 		if (m_testObject.count("expect") > 0)
 		{
