@@ -111,7 +111,7 @@ struct Change
 		/// Change::value the storage value.
 		Storage,
 
-		/// Account nonce was increased by 1.
+		/// Account nonce was changed.
 		Nonce,
 
 		/// Account was created (it was not existing before).
@@ -126,7 +126,7 @@ struct Change
 
 	Kind kind;        ///< The kind of the change.
 	Address address;  ///< Changed account address.
-	u256 value;       ///< Change value, e.g. balance, storage.
+	u256 value;       ///< Change value, e.g. balance, storage and nonce.
 	u256 key;         ///< Storage key. Last because used only in one case.
 	bytes oldCode;    ///< Code overwritten by CREATE, empty except in case of address collision.
 
@@ -140,6 +140,11 @@ struct Change
 	/// Helper constructor especially for storage change log.
 	Change(Address const& _addr, u256 const& _key, u256 const& _value):
 			kind(Storage), address(_addr), value(_value), key(_key)
+	{}
+
+	/// Helper constructor for nonce change log.
+	Change(Address const& _addr, u256 const& _value):
+			kind(Nonce), address(_addr), value(_value)
 	{}
 
 	/// Helper constructor especially for new code change log.
@@ -287,6 +292,9 @@ public:
 
 	/// Increament the account nonce.
 	void incNonce(Address const& _id);
+
+	/// Set the account nonce.
+	void setNonce(Address const& _addr, u256 const& _newNonce);
 
 	/// Get the account nonce -- the number of transactions it has sent.
 	/// @returns 0 if the address has never been used.
