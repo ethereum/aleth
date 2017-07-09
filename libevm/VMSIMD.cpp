@@ -212,7 +212,7 @@ void VM::xmload (uint8_t _b)
 {
 	// n bytes of type t elements in memory vector
 	// goes onto stack element by element, LSB first
-	uint8_t* p = m_mem.data() + toInt15(m_SP[0]);
+	uint8_t const* p = m_mem.data() + toInt15(m_SP[0]);
 	uint8_t const n = nElem(_b);
 	uint8_t const t = elemType(_b);
 

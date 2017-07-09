@@ -18,7 +18,11 @@
  */
 
 #include <libethereum/ExtVM.h>
+
+// validator is not a full interpreter, canot support optimized dispatch
+#define EVM_JUMP_DISPATCH false
 #include "VMConfig.h"
+
 #include "VM.h"
 using namespace std;
 using namespace dev;
@@ -36,22 +40,23 @@ void VM::validate(ExtVMFace& _ext)
 	m_ext = &_ext;
 	initEntry();
 	size_t PC;
-	byte OP;
-	for (PC = 0; (OP = m_code[PC]); ++PC)
-		if  (OP == byte(Instruction::BEGINSUB))
+	Instruction OP;
+	for (PC = 0; bool(OP = Instruction(m_code[PC])); ++PC)
+	{
+		if  (OP == Instruction::BEGINSUB)
 			validateSubroutine(PC, m_return, m_stack);
-		else if (OP == byte(Instruction::BEGINDATA))
+		else if (OP == Instruction::BEGINDATA)
 			break;
 		else if (
-				(byte)Instruction::PUSH1 <= (byte)OP &&
-				(byte)PC <= (byte)Instruction::PUSH32)
-			PC += (byte)OP - (byte)Instruction::PUSH1;
+				Instruction::PUSH1 <= OP &&
+				PC <= (size_t)Instruction::PUSH32)
+			PC += (size_t)OP - (size_t)Instruction::PUSH1;
 		else if (
 				OP == Instruction::JUMPTO ||
 				OP == Instruction::JUMPIF ||
 				OP == Instruction::JUMPSUB)
 			PC += 4;
-		else if (OP == Instruction::JUMPV || op == Instruction::JUMPSUBV)
+		else if (OP == Instruction::JUMPV || OP == Instruction::JUMPSUBV)
 			PC += 4 * m_code[PC];  // number of 4-byte dests followed by table
 	}
 }
@@ -71,12 +76,12 @@ void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 		CASE(JUMPDEST)
 		{
 			// if frame size is set then we have been here before
-			ptrdiff_t frameSize = m_frameSize[m_PC];
-			if (0 <= frameSize)
+			size_t frameSize = m_frameSize[m_PC];
+			if (0 != frameSize)
 			{
 				// check for constant frame size
 				if (stackSize() != frameSize)
-					throwBadStack(stackSize(), frameSize, 0);
+					throwBadStack(stackSize(), frameSize);
 
 				// return to break cycle in control flow graph
 				return;
@@ -90,7 +95,7 @@ void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 		CASE(JUMPTO)
 		{
 			// extract jump destination from bytecode
-			m_PC = decodeJumpDest(m_code, m_PC);
+			m_PC = decodeJumpDest(m_code.data(), m_PC);
 		}
 		NEXT
 
@@ -99,7 +104,7 @@ void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 			// recurse to validate code to jump to, saving and restoring
 			// interpreter state around call
 			_pc = m_PC, _rp = m_RP, _sp = m_SP;
-			validateSubroutine(decodeJumpvDest(m_code, m_PC, m_SP), _rp, _sp);
+			validateSubroutine(decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0])), _rp, _sp);
 			m_PC = _pc, m_RP = _rp, m_SP = _sp;
 			++m_PC;
 		}
@@ -113,19 +118,19 @@ void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 				// recurse to validate code to jump to, saving and 
 				// restoring interpreter state around call
 				_pc = m_PC, _rp = m_RP, _sp = m_SP;
-				validateSubroutine(decodeJumpDest(m_code, m_PC), _rp, _sp);
+				validateSubroutine(decodeJumpDest(m_code.data(), m_PC), _rp, _sp);
 				m_PC = _pc, m_RP = _rp, m_SP = _sp;
 			}
 		}
-		RETURN
+		BREAK
 
 		CASE(JUMPSUB)
 		{
 			// check for enough arguments on stack
-			size_t destPC = decodeJumpDest(m_code, m_PC);
+			size_t destPC = decodeJumpDest(m_code.data(), m_PC);
 			byte nArgs = m_code[destPC+1];
 			if (stackSize() < nArgs) 
-				throwBadStack(stackSize(), nArgs, 0);
+				throwBadStack(stackSize(), nArgs);
 		}
 		NEXT
 
@@ -138,10 +143,10 @@ void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 				// check for enough arguments on stack
 				u256 slot = sub;
 				_sp = &slot;
-				size_t destPC = decodeJumpvDest(m_code, _pc, _sp);
+				size_t destPC = decodeJumpvDest(m_code.data(), _pc, byte(m_SP[0]));
 				byte nArgs = m_code[destPC+1];
 				if (stackSize() < nArgs) 
-					throwBadStack(stackSize(), nArgs, 0);
+					throwBadStack(stackSize(), nArgs);
 			}
 			m_PC = _pc;
 		}
@@ -164,7 +169,7 @@ void VM::validateSubroutine(uint64_t _pc, uint64_t* _rp, u256* _sp)
 			throwBadInstruction();
 		}
 	}
-	END_CASES
+	WHILE_CASES
 }
 
 #endif
