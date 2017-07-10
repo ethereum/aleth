@@ -154,7 +154,10 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
 		BOOST_REQUIRE(o.count("pre"));
-		BOOST_REQUIRE(o.count("network"));
+		BOOST_REQUIRE_MESSAGE(o.count("network"),
+			"\"network\" field is not found. filename: " + TestOutputHelper::testFileName() +
+			" testname: " + TestOutputHelper::testName()
+		);
 
 		if (_fillin)
 		{
