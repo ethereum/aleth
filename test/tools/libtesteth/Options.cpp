@@ -68,6 +68,23 @@ void printHelp()
 	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments" << std::endl;
 }
 
+void Options::checkAllowedNetwork(std::vector<std::string> const& _networks)
+{
+	std::set<string> allowed;
+	allowed.insert("ALL");
+	for (auto const& net : test::getNetworks())
+		allowed.insert(test::netIdToString(net));
+
+	for (auto const& net: _networks)
+	{
+		if (!allowed.count(net))
+		{
+			std::cerr << TestOutputHelper::testName() + " Specified Network not found: " + net << endl;
+			exit(1);
+		}
+	}
+}
+
 Options::Options(int argc, char** argv)
 {
 	trDataIndex = -1;
@@ -181,7 +198,7 @@ Options::Options(int argc, char** argv)
 		{
 			throwIfNoArgumentFollows();
 			singleTestNet = std::string{argv[++i]};
-			ImportTest::checkAllowedNetwork({singleTestNet});
+			checkAllowedNetwork({singleTestNet});
 		}
 		else if (arg == "--fulloutput")
 			fulloutput = true;

@@ -43,9 +43,7 @@ public:
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader = false);
 	static void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, std::vector<std::string>& _out);
 
-	//check functions
-	//check that networks in the vector are allowed
-	static void checkAllowedNetwork(std::vector<std::string> const& _networks);
+	// check functions
 	static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
 
 	bytes executeTest();

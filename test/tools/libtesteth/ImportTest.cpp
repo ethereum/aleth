@@ -515,25 +515,6 @@ bool inArray(vector<T> const& _array, const T _val)
 	return false;
 }
 
-void ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
-{
-	vector<eth::Network> const& allnetworks = test::getNetworks();
-	vector<string> allowedNetowks;
-	allowedNetowks.push_back("ALL");
-	for (auto const& net : allnetworks)
-		allowedNetowks.push_back(test::netIdToString(net));
-
-	for (auto const& net: _networks)
-	{
-		if (!inArray(allowedNetowks, net))
-		{
-			//Can't use boost at this point
-			std::cerr << TestOutputHelper::testName() + " Specified Network not found: " + net << endl;
-			exit(1);
-		}
-	}
-}
-
 void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
 {
 	checkGeneralTestSectionSearch(_expects, _errorTransactions, _network, NULL);
@@ -551,7 +532,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		network.push_back(_network);
 
 	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
-	checkAllowedNetwork(network);
+	Options::checkAllowedNetwork(network);
 
 	if (!Options::get().singleTestNet.empty())
 	{
