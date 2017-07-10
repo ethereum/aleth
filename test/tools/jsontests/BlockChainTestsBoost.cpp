@@ -53,7 +53,6 @@ class bcTestFixture {
 					dev::test::TestOutputHelper::finishTest();
 				}
 			}
-
 			return;
 		}
 		fillAllFilesInFolder(casename);
@@ -78,7 +77,40 @@ class bcTestFixture {
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-			test::executeTests(file.filename().string(), "/BlockchainTests/"+_folder, "/BlockchainTestsFiller/"+_folder, dev::test::doBlockchainTestNoLog);
+			test::executeTests(file.filename().string(), "/BlockchainTests/" + _folder, "/BlockchainTestsFiller/" + _folder, dev::test::doBlockchainTestNoLog);
+		}
+		test::TestOutputHelper::finishTest();
+	}
+};
+
+class bcTransitionFixture {
+	public:
+	bcTransitionFixture()
+	{
+		string casename = boost::unit_test::framework::current_test_case().p_name;
+		fillAllFilesInFolder("TransitionTests/", casename);
+	}
+
+	void fillAllFilesInFolder(string const& _subfolder, string const& _folder)
+	{
+		std::string fillersPath = test::getTestPath() + "/src/BlockchainTestsFiller/" + _subfolder + _folder;
+
+		string filter;
+		if (test::Options::get().filltests)
+			filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
+
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
+		int testcount = files.size();
+
+		//include fillers into test count
+		if (test::Options::get().filltests)
+			testcount *= 2;
+
+		test::TestOutputHelper::initTest(testcount);
+		for (auto const& file: files)
+		{
+			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
+			test::executeTests(file.filename().string(), "/BlockchainTests/" + _subfolder + _folder, "/BlockchainTestsFiller/" + _subfolder +_folder, dev::test::doTransitionTest);
 		}
 		test::TestOutputHelper::finishTest();
 	}
@@ -100,5 +132,14 @@ BOOST_AUTO_TEST_CASE(bcForkStressTest){}
 BOOST_AUTO_TEST_CASE(bcForgedTest){}
 BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest){}
 BOOST_AUTO_TEST_CASE(bcExploitTest){}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(TransitionTests, bcTransitionFixture)
+
+BOOST_AUTO_TEST_CASE(bcFrontierToHomestead){}
+BOOST_AUTO_TEST_CASE(bcHomesteadToDao){}
+BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150){}
+BOOST_AUTO_TEST_CASE(bcEIP158ToMetropolis){}
 
 BOOST_AUTO_TEST_SUITE_END()

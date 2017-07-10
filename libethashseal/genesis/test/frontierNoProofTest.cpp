@@ -14,20 +14,20 @@
 		You should have received a copy of the GNU General Public License
 		along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "../GenesisInfo.h"
 
-static dev::h256 const c_genesisStateRootTest;
-static std::string const c_genesisInfoTest = std::string() +
+#include "../../GenesisInfo.h"
+
+static std::string const c_genesisInfoFrontierNoProofTest =
 R"E(
 {
-	"sealEngine": "Ethash",
-	"params": {
+	"sealEngine": "NoProof",
+	"params":{
 		"accountStartNonce": "0x00",
-		"homsteadForkBlock": "0x05",
-		"daoHardforkBlock": "0x08",
-		"EIP150ForkBlock": "0x0a",
-		"EIP158ForkBlock": "0x0e",
-		"metropolisForkBlock": "0x10",
+		"homsteadForkBlock": "0xffffffffffffffff",
+		"daoHardforkBlock": "0xfffffffffffffff",
+		"EIP150ForkBlock": "0xfffffffffffffff",
+		"EIP158ForkBlock": "0xfffffffffffffff",
+		"metropolisForkBlock": "0xfffffffffffffff",
 		"networkID" : "0x01",
 		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",
@@ -52,14 +52,11 @@ R"E(
 		"gasLimit": "0x1388"
 	},
 	"accounts": {
-		"0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
-		"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
-		"0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-		"0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } }
-		"0000000000000000000000000000000000000005": { "wei": "1", "precompiled": { "name": "modexp", "startBlock": "0x10" } },
-		"0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "startBlock": "0x10", "linear": { "base": 500, "word": 0 } } },
-		"0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "startBlock": "0x10", "linear": { "base": 2000, "word": 0 } } },
-		"0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product", "startBlock": "0x10" } }
+		"0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
+		"0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
+		"0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
+		"0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } }
 	}
 }
 )E";
+

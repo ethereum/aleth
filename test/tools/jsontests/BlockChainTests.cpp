@@ -103,11 +103,38 @@ bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1 = 0, 
 void fillBCTest(json_spirit::mObject& _o);
 void testBCTest(json_spirit::mObject& _o);
 
+//percent output for many tests in one file
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
 	TestOutputHelper::initTest(_v);	//Count how many tests in the json object (read from .json file)
 	doBlockchainTestNoLog(_v, _fillin); //Do the test / test generation
 	TestOutputHelper::finishTest(); //Calculate the time of test execution and add it to the log
+}
+
+void doTransitionTest(json_spirit::mValue& _v, bool _fillin)
+{
+	for (auto& i: _v.get_obj())
+	{
+		string testname = i.first;
+		json_spirit::mObject& o = i.second.get_obj();
+
+		BOOST_REQUIRE(o.count("genesisBlockHeader"));
+		BOOST_REQUIRE(o.count("pre"));
+		BOOST_REQUIRE(o.count("network"));
+
+		dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
+
+		if (!TestOutputHelper::passTest(testname))
+		{
+			o.clear(); //don't add irrelevant tests to the final file when filling
+			continue;
+		}
+
+		if (_fillin)
+			fillBCTest(o);
+		else
+			testBCTest(o);
+	}
 }
 
 void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
@@ -127,6 +154,7 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
 		BOOST_REQUIRE(o.count("pre"));
+		BOOST_REQUIRE(o.count("network"));
 
 		if (_fillin)
 		{
@@ -173,8 +201,7 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 		}
 		else
 		{
-			if (o.count("network"))
-				dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
+			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
 			testBCTest(o);
 		}
 	}
