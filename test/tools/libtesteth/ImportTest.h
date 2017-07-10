@@ -29,17 +29,10 @@ namespace dev
 namespace test
 {
 
-enum class testType
-{
-	BlockChainTests,
-	GeneralStateTest,
-	Other
-};
-
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o, testType _testTemplate);
+	ImportTest(json_spirit::mObject& _o);
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
@@ -56,7 +49,7 @@ public:
 	static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
 
 	bytes executeTest();
-	int exportTest(bytes const& _output);
+	void exportTest();
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
 	void traceStateDiff();
@@ -93,7 +86,6 @@ private:
 	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
 
 	json_spirit::mObject& m_testObject;
-	testType m_testType;
 };
 
 } //namespace test
