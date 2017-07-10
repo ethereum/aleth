@@ -618,7 +618,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 					cerr << trInfo << std::endl;
 					_errorTransactions.push_back(i);
 				}
-			}			
+			}
 			else if (_expects.count("hash"))
 				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(tr.postState.rootHash().asBytes()) + " in " + trInfo);
 			else
@@ -671,40 +671,34 @@ void ImportTest::exportTest()
 		m_testObject.erase(m_testObject.find("expect"));
 	}
 
-	std::map<string, json_spirit::mArray> postState;
+	json_spirit::mObject postStates;
 	for(size_t i = 0; i < m_transactions.size(); i++)
 	{
 		transactionToExecute const& tr = m_transactions[i];
-		json_spirit::mObject obj;
-		json_spirit::mObject obj2;
-		obj["data"] = tr.dataInd;
-		obj["gas"] = tr.gasInd;
-		obj["value"] = tr.valInd;
-		obj2["indexes"] = obj;
-		obj2["hash"] = toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add);
-		obj2["logs"] = exportLog(tr.output.second.log());
+		json_spirit::mObject indexes;
+		indexes["data"] = tr.dataInd;
+		indexes["gas"] = tr.gasInd;
+		indexes["value"] = tr.valInd;
 
-		//Print the post state if transaction has failed on expect section
+		json_spirit::mObject obj;
+		obj["indexes"] = indexes;
+		obj["hash"] = toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add);
+		obj["logs"] = exportLog(tr.output.second.log());
 		if (Options::get().checkstate)
 		{
 			auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
 			if (it != std::end(stateIndexesToPrint))
-				obj2["postState"] = fillJsonWithState(tr.postState);
+				obj["postState"] = fillJsonWithState(tr.postState);
 		}
-
 		if (Options::get().statediff)
-			obj2["stateDiff"] = fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog);
+			obj["stateDiff"] = fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog);
 
-		postState[tr.netId].push_back(obj2);
+		if (!postStates.count(tr.netId))
+			postStates[tr.netId] = json_spirit::mArray();
+		postStates[tr.netId].get_array().push_back(obj);
 	}
 
-	json_spirit::mObject obj;
-	for(std::map<string, json_spirit::mArray>::iterator it = postState.begin(); it != postState.end(); ++it)
-		obj[it->first] = it->second;
-
-	m_testObject["post"] = obj;
-
-	// export pre state
+	m_testObject["post"] = postStates;
 	m_testObject["pre"] = fillJsonWithState(m_statePre);
 	m_testObject["env"] = makeAllFieldsHex(m_testObject["env"].get_obj());
 	m_testObject["transaction"] = makeAllFieldsHex(m_testObject["transaction"].get_obj());
