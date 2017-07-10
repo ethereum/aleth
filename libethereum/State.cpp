@@ -403,6 +403,8 @@ void State::setStorage(Address const& _contract, u256 const& _key, u256 const& _
 void State::clearStorage(Address const& _contract)
 {
 	h256 const& oldHash{m_cache[_contract].baseRoot()};
+	if (oldHash == EmptyTrie)
+		return;
 	m_changeLog.emplace_back(Change::StorageRoot, _contract, oldHash);
 	m_cache[_contract].clearStorage();
 }
