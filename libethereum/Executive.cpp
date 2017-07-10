@@ -435,6 +435,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				if (m_res)
 					m_res->output = out.toVector(); // copy output to execution result
+				m_s.clearStorage(m_ext->myAddress);
 				m_s.setCode(m_ext->myAddress, out.toVector());
 			}
 			else

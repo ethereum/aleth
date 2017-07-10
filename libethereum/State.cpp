@@ -400,6 +400,13 @@ void State::setStorage(Address const& _contract, u256 const& _key, u256 const& _
 	m_cache[_contract].setStorage(_key, _value);
 }
 
+void State::clearStorage(Address const& _contract)
+{
+	h256 const& oldHash{m_cache[_contract].baseRoot()};
+	m_changeLog.emplace_back(Change::StorageRoot, _contract, oldHash);
+	m_cache[_contract].clearStorage();
+}
+
 map<h256, pair<u256, u256>> State::storage(Address const& _id) const
 {
 	map<h256, pair<u256, u256>> ret;
@@ -515,6 +522,9 @@ void State::rollback(size_t _savepoint)
 		{
 		case Change::Storage:
 			account.setStorage(change.key, change.value);
+			break;
+		case Change::StorageRoot:
+			account.setStorageRoot(change.value);
 			break;
 		case Change::Balance:
 			account.addBalance(0 - change.value);

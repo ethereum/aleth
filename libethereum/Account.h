@@ -133,6 +133,12 @@ public:
 	/// to the trie later.
 	void setStorage(u256 _p, u256 _v) { m_storageOverlay[_p] = _v; changed(); }
 
+	/// Empty the storage.  Used when a contract is overwritten.
+	void clearStorage() { m_storageOverlay.clear(); m_storageRoot = EmptyTrie; changed(); }
+
+	/// Set the storage root.  Used when clearStorage() is reverted.
+	void setStorageRoot(h256 const& _root) { m_storageOverlay.clear(); m_storageRoot = _root; changed(); }
+
 	/// Set a key/value pair in the account's storage to a value that is already present inside the
 	/// database.
 	void setStorageCache(u256 _p, u256 _v) const { const_cast<decltype(m_storageOverlay)&>(m_storageOverlay)[_p] = _v; }
