@@ -179,7 +179,7 @@ std::string Debug::debug_preimage(std::string const& _hashedKey)
 	h256 const hashedKey(h256fromHex(_hashedKey));
 	bytes const key = m_eth.stateDB().lookupAux(hashedKey);
 
-	return key.empty() ? std::string() : toCompactHex(u256(h256(key)), HexPrefix::Add, 1);
+	return key.empty() ? std::string() : toHex(key, 2, HexPrefix::Add);
 }
 
 Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options)
