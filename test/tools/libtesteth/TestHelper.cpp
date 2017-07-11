@@ -150,7 +150,7 @@ std::vector<eth::Network> const& getNetworks()
 	return networks;
 }
 
-json_spirit::mArray exportLog(eth::LogEntries _logs)
+json_spirit::mArray exportLog(eth::LogEntries const& _logs)
 {
 	json_spirit::mArray ret;
 	if (_logs.size() == 0) return ret;
