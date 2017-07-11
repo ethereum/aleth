@@ -456,13 +456,21 @@ void testBCTest(json_spirit::mObject& _o)
 		}
 
 		//block from RLP successfully imported. now compare this rlp to test sections
-		BOOST_REQUIRE(blObj.count("blockHeader"));
+		BOOST_REQUIRE_MESSAGE(blObj.count("blockHeader"),
+			"blockHeader field is not found. "
+			"filename: " + TestOutputHelper::testFileName() +
+			" testname: " + TestOutputHelper::testName()
+		);
 
 		//Check Provided Header against block in RLP
 		TestBlock blockFromFields(blObj["blockHeader"].get_obj());
 
 		//ImportTransactions
-		BOOST_REQUIRE(blObj.count("transactions"));
+		BOOST_REQUIRE_MESSAGE(blObj.count("transactions"),
+			"transactions field is not found. "
+			"filename: " + TestOutputHelper::testFileName() +
+			" testname: " + TestOutputHelper::testName()
+		);
 		for (auto const& txObj: blObj["transactions"].get_array())
 		{
 			TestTransaction transaction(txObj.get_obj());
@@ -847,9 +855,21 @@ void checkExpectedException(mObject& _blObj, Exception const& _e)
 
 void checkJsonSectionForInvalidBlock(mObject& _blObj)
 {
-	BOOST_CHECK(_blObj.count("blockHeader") == 0);
-	BOOST_CHECK(_blObj.count("transactions") == 0);
-	BOOST_CHECK(_blObj.count("uncleHeaders") == 0);
+	BOOST_CHECK_MESSAGE(_blObj.count("blockHeader") == 0,
+			"blockHeader field is found in the should-be invalid block. "
+			"filename: " + TestOutputHelper::testFileName() +
+			" testname: " + TestOutputHelper::testName()
+	);
+	BOOST_CHECK_MESSAGE(_blObj.count("transactions") == 0,
+			"transactions field is found in the should-be invalid block. "
+			"filename: " + TestOutputHelper::testFileName() +
+			" testname: " + TestOutputHelper::testName()
+	);
+	BOOST_CHECK_MESSAGE(_blObj.count("uncleHeaders") == 0,
+			"uncleHeaders field is found in the should-be invalid block. "
+			"filename: " + TestOutputHelper::testFileName() +
+			" testname: " + TestOutputHelper::testName()
+	);
 }
 
 void eraseJsonSectionForInvalidBlock(mObject& _blObj)
