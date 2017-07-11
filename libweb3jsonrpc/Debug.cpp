@@ -93,7 +93,7 @@ Json::Value Debug::debug_traceTransaction(string const& _txHash, Json::Value con
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, t, _json);
 		ret["gas"] = toJS(t.gas());
-		ret["return"] = toHex(er.output, 2, HexPrefix::Add);
+		ret["return"] = "0x" + toHex(er.output);
 		ret["structLogs"] = trace;
 	}
 	catch(Exception const& _e)
@@ -153,14 +153,14 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		{
 			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
 			{
-				ret["nextKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
+				ret["nextKey"] = "0x" + toCompactHex(it->first, 1);
 				break;
 			}
 
 			Json::Value keyValue(Json::objectValue);
-			std::string hashedKey = toCompactHex(it->first, HexPrefix::Add, 1);
-			keyValue["key"] = toCompactHex(it->second.first, HexPrefix::Add, 1);
-			keyValue["value"] = toCompactHex(it->second.second, HexPrefix::Add, 1);
+			std::string hashedKey = "0x" + toCompactHex(it->first, 1);
+			keyValue["key"] = "0x" + toCompactHex(it->second.first, 1);
+			keyValue["value"] = "0x" + toCompactHex(it->second.second, 1);
 
 			ret["storage"][hashedKey] = keyValue;
 		}
@@ -179,7 +179,7 @@ std::string Debug::debug_preimage(std::string const& _hashedKey)
 	h256 const hashedKey(h256fromHex(_hashedKey));
 	bytes const key = m_eth.stateDB().lookupAux(hashedKey);
 
-	return key.empty() ? std::string() : toHex(key, 2, HexPrefix::Add);
+	return key.empty() ? std::string() : "0x" + toHex(key);
 }
 
 Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options)
@@ -203,7 +203,7 @@ Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& 
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, transaction, _options);
 		ret["gas"] = toJS(transaction.gas());
-		ret["return"] = toHex(er.output, 2, HexPrefix::Add);
+		ret["return"] = "0x" + toHex(er.output);
 		ret["structLogs"] = trace;
 	}
 	catch(Exception const& _e)

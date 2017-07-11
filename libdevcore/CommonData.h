@@ -42,22 +42,25 @@ enum class WhenError
 	Throw = 1,
 };
 
-enum class HexPrefix
+namespace
 {
-	DontAdd = 0,
-	Add = 1,
-};
+	const char* hexdigits = "0123456789abcdef";
+}
+
 /// Convert a series of bytes to the corresponding string of hex duplets.
-/// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
 /// @example toHex("A\x69") == "4169"
 template <class T>
-std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd)
+std::string toHex(T const& _data)
 {
-	std::ostringstream ret;
-	unsigned ii = 0;
+	static_assert(sizeof(typename T::value_type) == 1, "toHex needs byte-sized element type");
+	std::string hex(_data.size()*2, '0');
+	size_t off = 0;
 	for (auto i: _data)
-		ret << std::hex << std::setfill('0') << std::setw(ii++ ? 2 : _w) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
-	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
+	{
+		hex[off++] = hexdigits[(byte)(i)>>4];
+		hex[off++] = hexdigits[(byte)(i)&0x0f];
+	}
+	return hex;
 }
 
 /// Converts a (printable) ASCII hex string into the corresponding byte stream.
@@ -166,16 +169,14 @@ inline std::string toCompactBigEndianString(T _val, unsigned _min = 0)
 }
 
 /// Convenience function for conversion of a u256 to hex
-inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
+inline std::string toHex(u256 val)
 {
-	std::string str = toHex(toBigEndian(val));
-	return (prefix == HexPrefix::Add) ? "0x" + str : str;
+	return toHex(toBigEndian(val));
 }
 
-inline std::string toCompactHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd, unsigned _min = 0)
+inline std::string toCompactHex(u256 val, unsigned _min = 0)
 {
-	std::string str = toHex(toCompactBigEndian(val, _min));
-	return (prefix == HexPrefix::Add) ? "0x" + str : str;
+	return toHex(toCompactBigEndian(val, _min));
 }
 
 // Algorithms for string and string-like collections.

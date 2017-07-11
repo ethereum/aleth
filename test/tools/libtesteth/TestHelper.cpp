@@ -162,7 +162,7 @@ json_spirit::mArray exportLog(eth::LogEntries const& _logs)
 		for (auto const& t: l.topics)
 			topics.push_back(toString(t));
 		o["topics"] = topics;
-		o["data"] = toHex(l.data, 2, HexPrefix::Add);
+		o["data"] = "0x" + toHex(l.data);
 		o["bloom"] = toString(l.bloom());
 		ret.push_back(o);
 	}
