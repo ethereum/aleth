@@ -63,8 +63,6 @@ public:
 
 	eth::State m_statePre;
 	eth::State m_statePost;
-	eth::LogEntries m_logs;
-	eth::LogEntries m_logsExpected;
 
 private:
 	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
@@ -78,7 +76,8 @@ private:
 	struct transactionToExecute
 	{
 		transactionToExecute(int d, int g, int v, eth::Transaction const& t):
-			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork) {}
+			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork),
+			output(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries()))) {}
 		int dataInd;
 		int gasInd;
 		int valInd;
@@ -86,6 +85,7 @@ private:
 		eth::State postState;
 		eth::ChangeLog changeLog;
 		eth::Network netId;
+		ExecOutput output;
 	};
 	std::vector<transactionToExecute> m_transactions;
 	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;

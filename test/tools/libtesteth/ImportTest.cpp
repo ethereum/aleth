@@ -80,7 +80,7 @@ bytes ImportTest::executeTest()
 				if(opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd)
 					continue;
 
-				std::tie(tr.postState, std::ignore, tr.changeLog) =
+				std::tie(tr.postState, tr.output, tr.changeLog) =
 					executeTransaction(net, *m_envInfo, m_statePre, tr.transaction);
 				tr.netId = net;
 				transactionResults.push_back(tr);
@@ -222,7 +222,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 	try
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
-		ImportTest::ExecOutput out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+		ExecOutput out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
 		eth::ChangeLog changeLog = initialState.changeLog();
 		ImportTest::checkBalance(_preState, initialState);
 
@@ -241,10 +241,8 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 	}
 
 	initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
-	LogEntries emptyLogs;
-	ExecutionResult emptyRes;
-	ImportTest::ExecOutput out = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
-	return std::make_tuple(initialState, out, initialState.changeLog());
+	ExecOutput emptyOutput(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries())));
+	return std::make_tuple(initialState, emptyOutput, initialState.changeLog());
 }
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
@@ -701,6 +699,7 @@ int ImportTest::exportTest(bytes const& _output)
 			obj["value"] = tr.valInd;
 			obj2["indexes"] = obj;
 			obj2["hash"] = toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add);
+			obj2["logs"] = exportLog(tr.output.second.log());
 
 			//Print the post state if transaction has failed on expect section
 			if (Options::get().checkstate)
@@ -743,9 +742,6 @@ int ImportTest::exportTest(bytes const& _output)
 
 			m_testObject.erase(m_testObject.find("expectOut"));
 		}
-
-		// export logs
-		m_testObject["logs"] = exportLog(m_logs);
 
 		// compare expected state with post state
 		if (m_testObject.count("expect") > 0)
