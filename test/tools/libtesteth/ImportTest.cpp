@@ -138,7 +138,7 @@ bytes ImportTest::executeTest()
 								json_spirit::mObject obj = fillJsonWithState(search2->second.first, search2->second.second);
 								for (auto& adr: obj)
 								{
-									if (adr.first == "0x" + toString(m_envInfo->author()))
+									if (adr.first == toHexPrefixed(m_envInfo->author()))
 									{
 										if (adr.second.get_obj().count("balance"))
 										{

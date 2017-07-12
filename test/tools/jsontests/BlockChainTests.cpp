@@ -395,7 +395,7 @@ void fillBCTest(json_spirit::mObject& _o)
 
 	_o["blocks"] = blArray;
 	_o["postState"] = fillJsonWithState(testChain.topBlock().state());
-	_o["lastblockhash"] = "0x" + toString(testChain.topBlock().blockHeader().hash(WithSeal));
+	_o["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 
 	//make all values hex in pre section
 	State prestate(State::Null);
@@ -528,7 +528,7 @@ void testBCTest(json_spirit::mObject& _o)
 
 	//Check lastblock hash
 	BOOST_REQUIRE((_o.count("lastblockhash") > 0));
-	string lastTrueBlockHash = "0x" + toString(testChain.topBlock().blockHeader().hash(WithSeal));
+	string lastTrueBlockHash = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o["lastblockhash"].get_str(),
 			testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o["lastblockhash"].get_str());
 

@@ -46,7 +46,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 	txObject["r"] = toCompactHexPrefixed(_txn.signature().r, 1);
 	txObject["s"] = toCompactHexPrefixed(_txn.signature().s, 1);
 	txObject["v"] = toCompactHexPrefixed(_txn.signature().v + 27, 1);
-	txObject["to"] = _txn.isCreation() ? "" : "0x" + toString(_txn.receiveAddress());
+	txObject["to"] = _txn.isCreation() ? "" : toHexPrefixed(_txn.receiveAddress());
 	txObject["value"] = toCompactHexPrefixed(_txn.value(), 1);
 	ImportTest::makeAllFieldsHex(txObject);
 	return txObject;
@@ -160,7 +160,7 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 		}
 
 		//commit changes
-		oState["0x" + toString(currentAddress)] = o;
+		oState[toHexPrefixed(currentAddress)] = o;
 		log << endl << currentAddress << endl;
 		for (std::map<string, ostringstream>::iterator it = logInfo.begin(); it != logInfo.end(); it++)
 			log << (*it).second.str();
@@ -206,7 +206,7 @@ json_spirit::mObject fillJsonWithState(State const& _state, eth::AccountMaskMap 
 			else
 				o["code"] = "";
 		}
-		oState["0x" + toString(a.first)] = o;
+		oState[toHexPrefixed(a.first)] = o;
 	}
 	return oState;
 }

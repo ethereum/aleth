@@ -323,7 +323,7 @@ template<> inline size_t FixedHash<32>::hash::operator()(FixedHash<32> const& va
 template <unsigned N>
 inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 {
-	_out << toHex(_h.ref());
+	_out << toHex(_h);
 	return _out;
 }
 

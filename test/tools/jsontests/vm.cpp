@@ -83,7 +83,7 @@ mObject FakeExtVM::exportEnv()
 	mObject ret;
 	ret["currentDifficulty"] = toCompactHexPrefixed(envInfo().difficulty(), 1);
 	ret["currentTimestamp"] =  toCompactHexPrefixed(envInfo().timestamp(), 1);
-	ret["currentCoinbase"] = "0x" + toString(envInfo().author());
+	ret["currentCoinbase"] = toHexPrefixed(envInfo().author());
 	ret["currentNumber"] = toCompactHexPrefixed(envInfo().number(), 1);
 	ret["currentGasLimit"] = toCompactHexPrefixed(envInfo().gasLimit(), 1);
 	return ret;
@@ -124,7 +124,7 @@ mObject FakeExtVM::exportState()
 			o["storage"] = store;
 		}
 		o["code"] = toHexPrefixed(get<3>(a.second));
-		ret["0x" + toString(a.first)] = o;
+		ret[toHexPrefixed(a.first)] = o;
 	}
 	return ret;
 }
@@ -153,9 +153,9 @@ void FakeExtVM::importState(mObject& _object)
 mObject FakeExtVM::exportExec()
 {
 	mObject ret;
-	ret["address"] = "0x" + toString(myAddress);
-	ret["caller"] = "0x" + toString(caller);
-	ret["origin"] = "0x" + toString(origin);
+	ret["address"] = toHexPrefixed(myAddress);
+	ret["caller"] = toHexPrefixed(caller);
+	ret["origin"] = toHexPrefixed(origin);
 	ret["value"] = toCompactHexPrefixed(value, 1);
 	ret["gasPrice"] = toCompactHexPrefixed(gasPrice, 1);
 	ret["gas"] = toCompactHexPrefixed(execGas, 1);
@@ -202,7 +202,7 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = tx.isCreation() ? "" : "0x" + toString(tx.receiveAddress());
+		o["destination"] = tx.isCreation() ? "" : toHexPrefixed(tx.receiveAddress());
 		o["gasLimit"] = toCompactHexPrefixed(tx.gas(), 1);
 		o["value"] = toCompactHexPrefixed(tx.value(), 1);
 		o["data"] = toHexPrefixed(tx.data());
