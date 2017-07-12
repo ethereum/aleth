@@ -44,7 +44,19 @@ enum class WhenError
 
 namespace
 {
-	const char* hexdigits = "0123456789abcdef";
+
+const char* hexdigits = "0123456789abcdef";
+
+template <class T>
+inline void writeHex(T const& _data, std::string& o_hex, size_t _off)
+{
+	for (byte i: _data)
+	{
+		o_hex[_off++] = hexdigits[i>>4];
+		o_hex[_off++] = hexdigits[i&0x0f];
+	}
+}
+
 }
 
 /// Convert a series of bytes to the corresponding string of hex duplets.
@@ -54,12 +66,19 @@ std::string toHex(T const& _data)
 {
 	static_assert(sizeof(typename T::value_type) == 1, "toHex needs byte-sized element type");
 	std::string hex(_data.size()*2, '0');
-	size_t off = 0;
-	for (auto i: _data)
-	{
-		hex[off++] = hexdigits[(byte)(i)>>4];
-		hex[off++] = hexdigits[(byte)(i)&0x0f];
-	}
+	writeHex(_data, hex, 0);
+	return hex;
+}
+
+/// Convert a series of bytes to the corresponding string of hex duplets.
+/// @example toHex("A\x69") == "4169"
+template <class T>
+std::string toHexPrefix(T const& _data)
+{
+	static_assert(sizeof(typename T::value_type) == 1, "toHexPrefix needs byte-sized element type");
+	std::string hex(_data.size()*2 + 2, '0');
+	hex.replace(0, 2, "0x");
+	writeHex(_data, hex, 2);
 	return hex;
 }
 
@@ -168,15 +187,14 @@ inline std::string toCompactBigEndianString(T _val, unsigned _min = 0)
 	return ret;
 }
 
-/// Convenience function for conversion of a u256 to hex
-inline std::string toHex(u256 val)
-{
-	return toHex(toBigEndian(val));
-}
-
 inline std::string toCompactHex(u256 val, unsigned _min = 0)
 {
 	return toHex(toCompactBigEndian(val, _min));
+}
+
+inline std::string toCompactHexPrefix(u256 val, unsigned _min = 0)
+{
+	return toHexPrefix(toCompactBigEndian(val, _min));
 }
 
 // Algorithms for string and string-like collections.

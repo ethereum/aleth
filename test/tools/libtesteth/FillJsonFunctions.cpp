@@ -39,15 +39,15 @@ namespace test
 json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 {
 	json_spirit::mObject txObject;
-	txObject["nonce"] = "0x" + toCompactHex(_txn.nonce(), 1);
-	txObject["data"] = _txn.data().size() ? "0x" + toHex(_txn.data()) : "";
-	txObject["gasLimit"] = "0x" + toCompactHex(_txn.gas(), 1);
-	txObject["gasPrice"] = "0x" + toCompactHex(_txn.gasPrice(), 1);
-	txObject["r"] = "0x" + toCompactHex(_txn.signature().r, 1);
-	txObject["s"] = "0x" + toCompactHex(_txn.signature().s, 1);
-	txObject["v"] = "0x" + toCompactHex(_txn.signature().v + 27, 1);
+	txObject["nonce"] = toCompactHexPrefix(_txn.nonce(), 1);
+	txObject["data"] = _txn.data().size() ? toHexPrefix(_txn.data()) : "";
+	txObject["gasLimit"] = toCompactHexPrefix(_txn.gas(), 1);
+	txObject["gasPrice"] = toCompactHexPrefix(_txn.gasPrice(), 1);
+	txObject["r"] = toCompactHexPrefix(_txn.signature().r, 1);
+	txObject["s"] = toCompactHexPrefix(_txn.signature().s, 1);
+	txObject["v"] = toCompactHexPrefix(_txn.signature().v + 27, 1);
 	txObject["to"] = _txn.isCreation() ? "" : "0x" + toString(_txn.receiveAddress());
-	txObject["value"] = "0x" + toCompactHex(_txn.value(), 1);
+	txObject["value"] = toCompactHexPrefix(_txn.value(), 1);
 	ImportTest::makeAllFieldsHex(txObject);
 	return txObject;
 }
@@ -90,8 +90,8 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 			{
 				case Change::Kind::Code:
 					//take the original and final code only
-					before = "0x" + toHex(_stateOrig.code(change.address));
-					after = "0x" + toHex(_statePost.code(change.address));
+					before = toHexPrefix(_stateOrig.code(change.address));
+					after = toHexPrefix(_statePost.code(change.address));
 					record.push_back(before);
 					record.push_back("->");
 					record.push_back(after);
@@ -100,8 +100,8 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 				break;
 				case Change::Kind::Nonce:
 					//take the original and final nonce only
-					before = "0x" + toCompactHex(_stateOrig.getNonce(change.address), 1);
-					after = "0x" + toCompactHex(_statePost.getNonce(change.address), 1);
+					before = toCompactHexPrefix(_stateOrig.getNonce(change.address), 1);
+					after = toCompactHexPrefix(_statePost.getNonce(change.address), 1);
 					record.push_back(before);
 					record.push_back("->");
 					record.push_back(after);
@@ -109,8 +109,8 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					logInfo["nonce"] << "'nonce' : ['" + before + "', '->', '" + after + "']" << std::endl;
 				break;
 				case Change::Kind::Balance:
-					before = "0x" + toCompactHex(tmpBalance, 1);
-					after = "0x" + toCompactHex(change.value, 1);
+					before = toCompactHexPrefix(tmpBalance, 1);
+					after = toCompactHexPrefix(change.value, 1);
 					record.push_back(before);
 					record.push_back("+=");
 					record.push_back(after);
@@ -124,8 +124,8 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 				break;
 				case Change::Kind::Storage:
 					//take the original and final storage only
-					before = "0x" + toCompactHex(change.key, 1) + " : " + toCompactHex(_stateOrig.storage(change.address, change.key), 1);
-					after = "0x" + toCompactHex(change.key, 1) + " : " + toCompactHex(_statePost.storage(change.address, change.key), 1);
+					before = toCompactHexPrefix(change.key, 1) + " : " + toCompactHexPrefix(_stateOrig.storage(change.address, change.key), 1);
+					after = toCompactHexPrefix(change.key, 1) + " : " + toCompactHexPrefix(_statePost.storage(change.address, change.key), 1);
 					record.push_back(before);
 					record.push_back("->");
 					record.push_back(after);
@@ -149,8 +149,8 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 		if (agregatedBalance.size())
 		{
 			json_spirit::mArray record;
-			string before = "0x" + toCompactHex(_stateOrig.balance(currentAddress), 1);
-			string after = "0x" + toCompactHex(_statePost.balance(currentAddress), 1);
+			string before = toCompactHexPrefix(_stateOrig.balance(currentAddress), 1);
+			string after = toCompactHexPrefix(_statePost.balance(currentAddress), 1);
 			record.push_back(before);
 			record.push_back("->");
 			record.push_back(after);
@@ -187,22 +187,22 @@ json_spirit::mObject fillJsonWithState(State const& _state, eth::AccountMaskMap 
 
 		json_spirit::mObject o;
 		if (mapEmpty || _map.at(a.first).hasBalance())
-			o["balance"] = "0x" + toCompactHex(_state.balance(a.first), 1);
+			o["balance"] = toCompactHexPrefix(_state.balance(a.first), 1);
 		if (mapEmpty || _map.at(a.first).hasNonce())
-			o["nonce"] = "0x" + toCompactHex(_state.getNonce(a.first), 1);
+			o["nonce"] = toCompactHexPrefix(_state.getNonce(a.first), 1);
 
 		if (mapEmpty || _map.at(a.first).hasStorage())
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
-				store["0x" + toCompactHex(s.second.first, 1)] = toCompactHex(s.second.second, 1);
+				store[toCompactHexPrefix(s.second.first, 1)] = toCompactHexPrefix(s.second.second, 1);
 			o["storage"] = store;
 		}
 
 		if (mapEmpty || _map.at(a.first).hasCode())
 		{
 			if (_state.code(a.first).size() > 0)
-				o["code"] = "0x" + toHex(_state.code(a.first));
+				o["code"] = toHexPrefix(_state.code(a.first));
 			else
 				o["code"] = "";
 		}

@@ -235,7 +235,7 @@ void fillBCTest(json_spirit::mObject& _o)
 	assert(testChain.interface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
 
 	_o["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
-	_o["genesisRLP"] = "0x" + toHex(genesisBlock.bytes());
+	_o["genesisRLP"] = toHexPrefix(genesisBlock.bytes());
 	BOOST_REQUIRE(_o.count("blocks"));
 
 	mArray blArray;
@@ -326,7 +326,7 @@ void fillBCTest(json_spirit::mObject& _o)
 		if (blObj.count("blockHeader"))
 			overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
 
-		blObj["rlp"] = "0x" + toHex(alterBlock.bytes());
+		blObj["rlp"] = toHexPrefix(alterBlock.bytes());
 		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
 
 		mArray aUncleList;
@@ -812,12 +812,12 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 	o["transactionsTrie"] = toString(_bi.transactionsRoot());
 	o["receiptTrie"] = toString(_bi.receiptsRoot());
 	o["bloom"] = toString(_bi.logBloom());
-	o["difficulty"] = "0x" + toCompactHex(_bi.difficulty(), 1);
-	o["number"] = "0x" + toCompactHex(_bi.number(), 1);
-	o["gasLimit"] = "0x" + toCompactHex(_bi.gasLimit(), 1);
-	o["gasUsed"] = "0x" + toCompactHex(_bi.gasUsed(), 1);
-	o["timestamp"] = "0x" + toCompactHex(_bi.timestamp(), 1);
-	o["extraData"] = (_bi.extraData().size()) ? "0x" + toHex(_bi.extraData()) : "";
+	o["difficulty"] = toCompactHexPrefix(_bi.difficulty(), 1);
+	o["number"] = toCompactHexPrefix(_bi.number(), 1);
+	o["gasLimit"] = toCompactHexPrefix(_bi.gasLimit(), 1);
+	o["gasUsed"] = toCompactHexPrefix(_bi.gasUsed(), 1);
+	o["timestamp"] = toCompactHexPrefix(_bi.timestamp(), 1);
+	o["extraData"] = (_bi.extraData().size()) ? toHexPrefix(_bi.extraData()) : "";
 	o["mixHash"] = toString(Ethash::mixHash(_bi));
 	o["nonce"] = toString(Ethash::nonce(_bi));
 	o["hash"] = toString(_bi.hash());

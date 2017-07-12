@@ -74,7 +74,7 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 	if (!m_options.disableStack)
 	{
 		for (auto const& i: vm.stack())
-			stack.append("0x" + toHex(toCompactBigEndian(i, 1)));
+			stack.append(toCompactHexPrefix(i, 1));
 		r["stack"] = stack;
 	}
 
@@ -121,7 +121,7 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
-			storage["0x" + toCompactHex(i.second.first, 1)] = toCompactHex(i.second.second, 1);
+			storage[toCompactHexPrefix(i.second.first, 1)] = toCompactHexPrefix(i.second.second, 1);
 		r["storage"] = storage;
 	}
 
