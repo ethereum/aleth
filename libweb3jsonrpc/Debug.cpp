@@ -92,7 +92,7 @@ Json::Value Debug::debug_traceTransaction(string const& _txHash, Json::Value con
 		Executive e(s, block, t.transactionIndex(), m_eth.blockChain());
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, t, _json);
-		ret["gas"] = toHex(t.gas(), HexPrefix::Add);
+		ret["gas"] = toJS(t.gas());
 		ret["return"] = toHex(er.output, 2, HexPrefix::Add);
 		ret["structLogs"] = trace;
 	}
@@ -202,7 +202,7 @@ Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& 
 		Executive e(temp, m_eth.blockChain().lastBlockHashes());
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, transaction, _options);
-		ret["gas"] = toHex(transaction.gas(), HexPrefix::Add);
+		ret["gas"] = toJS(transaction.gas());
 		ret["return"] = toHex(er.output, 2, HexPrefix::Add);
 		ret["structLogs"] = trace;
 	}
