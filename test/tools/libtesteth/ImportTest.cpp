@@ -43,12 +43,19 @@ vector<h256> lastHashes(u256 _currentBlockNumber)
 
 ImportTest::ImportTest(json_spirit::mObject& _o):
 	m_statePre(0, OverlayDB(), eth::BaseState::Empty),
-	m_statePost(0, OverlayDB(), eth::BaseState::Empty),
 	m_testObject(_o)
 {
+	BOOST_REQUIRE_MESSAGE(_o.count("env"), TestOutputHelper::testName() + " env not set!");
+	BOOST_REQUIRE_MESSAGE(_o.count("pre"), TestOutputHelper::testName() + " pre not set!");
 	importEnv(_o["env"].get_obj());
-	importTransaction(_o["transaction"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
+
+	if (_o.count("post"))
+		importPostStates(_o["post"].get_obj());
+	else if (_o.count("transaction"))
+		importFillerTransaction(_o["transaction"].get_obj());
+	else
+		BOOST_ERROR(TestOutputHelper::testName() + " has no transaction or post state section");
 }
 
 bytes ImportTest::executeTest()
@@ -74,7 +81,7 @@ bytes ImportTest::executeTest()
 			if(opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd)
 				continue;
 
-			std::tie(tr.postState, tr.output, tr.changeLog) =
+			std::tie(tr.postState, tr.logs, tr.changeLog) =
 				executeTransaction(net, *m_envInfo, m_statePre, tr.transaction);
 			tr.netId = netIdToString(net);
 			transactionResults.push_back(tr);
@@ -204,7 +211,7 @@ void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, b
 	BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::testName());
 }
 
-std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
+std::tuple<eth::State, eth::LogEntries, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
 {
 	assert(m_envInfo);
 
@@ -219,7 +226,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 		//Finalize the state manually (clear logs)
 		bool removeEmptyAccounts = m_envInfo->number() >= se->chainParams().u256Param("EIP158ForkBlock");
 		initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
-		return std::make_tuple(initialState, out, changeLog);
+		return std::make_tuple(initialState, out.second.log(), changeLog);
 	}
 	catch (Exception const& _e)
 	{
@@ -231,8 +238,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 	}
 
 	initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
-	ExecOutput emptyOutput(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries())));
-	return std::make_tuple(initialState, emptyOutput, initialState.changeLog());
+	return std::make_tuple(initialState, eth::LogEntries(), initialState.changeLog());
 }
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
@@ -323,7 +329,7 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
 			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
 }
 
-void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr)
+void ImportTest::importTransaction(json_spirit::mObject const& _o, eth::Transaction& o_tr)
 {
 	if (_o.count("secretKey") > 0)
 	{
@@ -379,7 +385,7 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 	}
 }
 
-void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
+void ImportTest::importFillerTransaction(json_spirit::mObject const& o_tr)
 {
 	BOOST_REQUIRE(o_tr.count("gasLimit") > 0);
 	size_t dataVectorSize = o_tr.at("data").get_array().size();
@@ -399,11 +405,27 @@ void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 				o_tr_tmp["gasLimit"] = gas;
 				o_tr_tmp["value"] = value;
 
-				importTransaction(o_tr_tmp, m_transaction);
-
-				transactionToExecute execData(d, g, v, m_transaction);
-				m_transactions.push_back(execData);
+				eth::Transaction tx;
+				importTransaction(o_tr_tmp, tx);
+				m_transactions.emplace_back(d, g, v, tx);
 			}
+}
+
+void ImportTest::importPostStates(json_spirit::mObject const& _postStates)
+{
+	for (auto const& ns: _postStates)
+	{
+		for (auto const& postv: ns.second.get_array())
+		{
+			auto post = postv.get_obj();
+			auto ix = post["indexes"].get_obj();
+			eth::Transaction rawtx(fromHex(post["tx"].get_str()), CheckTransaction::None);
+			transactionToExecute tx(ix["data"].get_int(), ix["gas"].get_int(), ix["value"].get_int(), rawtx);
+			tx.netId = ns.first;
+			tx.logs = importLog(post["logs"].get_array());
+			m_transactions.push_back(tx);
+		}
+	}
 }
 
 int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
@@ -644,14 +666,18 @@ void ImportTest::traceStateDiff()
 
 void ImportTest::exportTest()
 {
-	vector<size_t> stateIndexesToPrint;
-	if (m_testObject.count("expect") > 0)
-	{
-		for (auto const& exp: m_testObject["expect"].get_array())
-			checkGeneralTestSection(exp.get_obj(), stateIndexesToPrint);
-		m_testObject.erase(m_testObject.find("expect"));
-	}
+	BOOST_REQUIRE(m_testObject.count("expect"));
 
+	// Compute post state indexes that should be included.
+	vector<size_t> stateIndexesToPrint;
+	for (auto const& exp: m_testObject["expect"].get_array())
+		checkGeneralTestSection(exp.get_obj(), stateIndexesToPrint);
+
+	// Remove filler-only fields.
+	m_testObject.erase("expect");
+	m_testObject.erase("transaction");
+
+	// Get the post states.
 	json_spirit::mObject postStates;
 	for(size_t i = 0; i < m_transactions.size(); i++)
 	{
@@ -663,8 +689,9 @@ void ImportTest::exportTest()
 
 		json_spirit::mObject obj;
 		obj["indexes"] = indexes;
-		obj["hash"] = toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add);
-		obj["logs"] = exportLog(tr.output.second.log());
+		obj["hash"] = toHex(tr.postState.rootHash().ref(), 2, HexPrefix::Add);
+		obj["tx"] = toHex(tr.transaction.rlp(), 2, HexPrefix::Add);
+		obj["logs"] = exportLog(tr.logs);
 		if (Options::get().checkstate)
 		{
 			auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
@@ -672,7 +699,9 @@ void ImportTest::exportTest()
 				obj["postState"] = fillJsonWithState(tr.postState);
 		}
 		if (Options::get().statediff)
+		{
 			obj["stateDiff"] = fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog);
+		}
 
 		if (!postStates.count(tr.netId))
 			postStates[tr.netId] = json_spirit::mArray();
@@ -682,5 +711,4 @@ void ImportTest::exportTest()
 	m_testObject["post"] = postStates;
 	m_testObject["pre"] = fillJsonWithState(m_statePre);
 	m_testObject["env"] = makeAllFieldsHex(m_testObject["env"].get_obj());
-	m_testObject["transaction"] = makeAllFieldsHex(m_testObject["transaction"].get_obj());
 }

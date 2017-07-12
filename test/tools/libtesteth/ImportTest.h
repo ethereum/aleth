@@ -35,11 +35,9 @@ public:
 	ImportTest(json_spirit::mObject& _o);
 
 	// imports
-	void importEnv(json_spirit::mObject& _o);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
-	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
-	void importTransaction(json_spirit::mObject const& _o);
+	static void importTransaction(json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader = false);
 	static void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, std::vector<std::string>& _out);
 
@@ -52,32 +50,36 @@ public:
 	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
 	void traceStateDiff();
 
-	eth::State m_statePre;
-	eth::State m_statePost;
-
 private:
 	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
-	std::tuple<eth::State, ExecOutput, eth::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
+	std::tuple<eth::State, eth::LogEntries, eth::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
+
+	void importEnv(json_spirit::mObject&);
+	void importFillerTransaction(json_spirit::mObject const&);
+	void importPostStates(json_spirit::mObject const&);
 
 	std::unique_ptr<eth::LastBlockHashesFace const> m_lastBlockHashes;
 	std::unique_ptr<eth::EnvInfo> m_envInfo;
-	eth::Transaction m_transaction;
+	eth::State m_statePre;
 
 	//General State Tests
 	struct transactionToExecute
 	{
 		transactionToExecute(int d, int g, int v, eth::Transaction const& t):
-			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(""),
-			output(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries()))) {}
+			netId(""), dataInd(d), gasInd(g), valInd(v), transaction(t), logs(eth::LogEntries()),
+			postState(0), changeLog(eth::ChangeLog()) {}
+		// fields used in filler and actual test:
+		std::string netId;
 		int dataInd;
 		int gasInd;
 		int valInd;
 		eth::Transaction transaction;
+		eth::LogEntries logs;
+		// filler-only fields:
 		eth::State postState;
 		eth::ChangeLog changeLog;
-		std::string netId;
-		ExecOutput output;
 	};
+
 	std::vector<transactionToExecute> m_transactions;
 	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;
 	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
