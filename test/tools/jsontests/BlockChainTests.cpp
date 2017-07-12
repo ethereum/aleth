@@ -160,10 +160,6 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 			"\"pre\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
-		BOOST_REQUIRE_MESSAGE(o.count("network"),
-			"\"network\" field is not found. filename: " + TestOutputHelper::testFileName() +
-			" testname: " + TestOutputHelper::testName()
-		);
 
 		if (_fillin)
 		{
@@ -210,6 +206,10 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 		}
 		else
 		{
+			BOOST_REQUIRE_MESSAGE(o.count("network"),
+				"\"network\" field is not found. filename: " + TestOutputHelper::testFileName() +
+				" testname: " + TestOutputHelper::testName()
+			);
 			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
 			testBCTest(o);
 		}
