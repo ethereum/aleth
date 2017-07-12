@@ -59,7 +59,7 @@ inline void writeHex(T const& _data, std::string& o_hex, size_t _off)
 
 }
 
-/// Convert a series of bytes to the corresponding string of hex duplets.
+/// Convert a series of bytes to the corresponding hex string.
 /// @example toHex("A\x69") == "4169"
 template <class T>
 std::string toHex(T const& _data)
@@ -70,8 +70,8 @@ std::string toHex(T const& _data)
 	return hex;
 }
 
-/// Convert a series of bytes to the corresponding string of hex duplets.
-/// @example toHex("A\x69") == "4169"
+/// Convert a series of bytes to the corresponding hex string with 0x prefix.
+/// @example toHexPrefix("A\x69") == "0x4169"
 template <class T>
 std::string toHexPrefix(T const& _data)
 {
