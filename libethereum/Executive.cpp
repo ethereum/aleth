@@ -308,11 +308,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 
 bool Executive::create(Address const& _txSender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
 {
-	if (m_envInfo.number() < m_sealEngine.chainParams().u256Param("metropolisForkBlock"))
-		return createOpcode(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
-
-	m_newAddress = right160(sha3(MaxAddress.asBytes() + sha3(_init).asBytes()));
-	return executeCreate(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
+	// Contract creation by an external account is the same as CREATE opcode
+	return createOpcode(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
 }
 
 bool Executive::createOpcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
