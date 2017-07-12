@@ -277,8 +277,8 @@ std::string RandomCode::randomUniIntHex(u256 _maxVal)
 	refreshSeed();
 	int rand = randUniIntGen() % 100;
 	if (rand < 50)
-		return toCompactHexPrefix((u256)randUniIntGen() % _maxVal);
-	return toCompactHexPrefix((u256)randUInt64Gen() % _maxVal);
+		return toCompactHexPrefixed((u256)randUniIntGen() % _maxVal);
+	return toCompactHexPrefixed((u256)randUInt64Gen() % _maxVal);
 }
 
 u256 RandomCode::randomUniInt(u256 _maxVal)

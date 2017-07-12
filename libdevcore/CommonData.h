@@ -68,8 +68,8 @@ template <class T> std::string toHex(T const& _data)
 }
 
 /// Convert a series of bytes to the corresponding hex string with 0x prefix.
-/// @example toHexPrefix("A\x69") == "0x4169"
-template <class T> std::string toHexPrefix(T const& _data)
+/// @example toHexPrefixed("A\x69") == "0x4169"
+template <class T> std::string toHexPrefixed(T const& _data)
 {
 	return toHex(_data.begin(), _data.end(), "0x");
 }
@@ -184,9 +184,9 @@ inline std::string toCompactHex(u256 val, unsigned _min = 0)
 	return toHex(toCompactBigEndian(val, _min));
 }
 
-inline std::string toCompactHexPrefix(u256 val, unsigned _min = 0)
+inline std::string toCompactHexPrefixed(u256 val, unsigned _min = 0)
 {
-	return toHexPrefix(toCompactBigEndian(val, _min));
+	return toHexPrefixed(toCompactBigEndian(val, _min));
 }
 
 // Algorithms for string and string-like collections.

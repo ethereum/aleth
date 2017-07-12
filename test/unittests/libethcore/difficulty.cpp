@@ -134,11 +134,11 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 			string tmptest = c_testDifficulty;
 			std::map<string, string> replaceMap;
 			replaceMap["[N]"] = toString(testN);
-			replaceMap["[PDIFF]"] = toCompactHexPrefix(pDiff);
-			replaceMap["[PSTAMP]"] = toCompactHexPrefix(pStamp);
-			replaceMap["[СSTAMP]"] = toCompactHexPrefix(cStamp);
-			replaceMap["[CNUM]"] = toCompactHexPrefix(cNum);
-			replaceMap["[CDIFF]"] = toCompactHexPrefix(_sealEngine.calculateDifficulty(current, parent));
+			replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
+			replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
+			replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
+			replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
+			replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
 
 			dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
 			finalTest << tmptest;
@@ -291,11 +291,11 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 					string tmptest = c_testDifficulty;
 					std::map<string, string> replaceMap;
 					replaceMap["[N]"] = toString(testN);
-					replaceMap["[PDIFF]"] = toCompactHexPrefix(pDiff);
-					replaceMap["[PSTAMP]"] = toCompactHexPrefix(pStamp);
-					replaceMap["[СSTAMP]"] = toCompactHexPrefix(cStamp);
-					replaceMap["[CNUM]"] = toCompactHexPrefix(cNum);
-					replaceMap["[CDIFF]"] = toCompactHexPrefix(sealEngine.calculateDifficulty(current, parent));
+					replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
+					replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
+					replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
+					replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
+					replaceMap["[CDIFF]"] = toCompactHexPrefixed(sealEngine.calculateDifficulty(current, parent));
 
 					dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
 					finalTest << tmptest;

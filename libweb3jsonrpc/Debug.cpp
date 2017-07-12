@@ -93,7 +93,7 @@ Json::Value Debug::debug_traceTransaction(string const& _txHash, Json::Value con
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, t, _json);
 		ret["gas"] = toJS(t.gas());
-		ret["return"] = toHexPrefix(er.output);
+		ret["return"] = toHexPrefixed(er.output);
 		ret["structLogs"] = trace;
 	}
 	catch(Exception const& _e)
@@ -153,14 +153,14 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		{
 			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
 			{
-				ret["nextKey"] = toCompactHexPrefix(it->first, 1);
+				ret["nextKey"] = toCompactHexPrefixed(it->first, 1);
 				break;
 			}
 
 			Json::Value keyValue(Json::objectValue);
-			std::string hashedKey = toCompactHexPrefix(it->first, 1);
-			keyValue["key"] = toCompactHexPrefix(it->second.first, 1);
-			keyValue["value"] = toCompactHexPrefix(it->second.second, 1);
+			std::string hashedKey = toCompactHexPrefixed(it->first, 1);
+			keyValue["key"] = toCompactHexPrefixed(it->second.first, 1);
+			keyValue["value"] = toCompactHexPrefixed(it->second.second, 1);
 
 			ret["storage"][hashedKey] = keyValue;
 		}
@@ -179,7 +179,7 @@ std::string Debug::debug_preimage(std::string const& _hashedKey)
 	h256 const hashedKey(h256fromHex(_hashedKey));
 	bytes const key = m_eth.stateDB().lookupAux(hashedKey);
 
-	return key.empty() ? std::string() : toHexPrefix(key);
+	return key.empty() ? std::string() : toHexPrefixed(key);
 }
 
 Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options)
@@ -203,7 +203,7 @@ Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& 
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, transaction, _options);
 		ret["gas"] = toJS(transaction.gas());
-		ret["return"] = toHexPrefix(er.output);
+		ret["return"] = toHexPrefixed(er.output);
 		ret["structLogs"] = trace;
 	}
 	catch(Exception const& _e)
