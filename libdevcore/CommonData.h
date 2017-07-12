@@ -52,8 +52,8 @@ inline void writeHex(T const& _data, std::string& o_hex, size_t _off)
 {
 	for (byte i: _data)
 	{
-		o_hex[_off++] = hexdigits[i>>4];
-		o_hex[_off++] = hexdigits[i&0x0f];
+		o_hex[_off++] = hexdigits[i >> 4];
+		o_hex[_off++] = hexdigits[i & 0x0f];
 	}
 }
 
