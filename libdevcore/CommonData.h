@@ -42,44 +42,36 @@ enum class WhenError
 	Throw = 1,
 };
 
-namespace
+template <class Iterator>
+inline std::string toHex(Iterator _it, Iterator _end, std::string _prefix)
 {
+	typedef std::iterator_traits<Iterator> traits;
+	static_assert(sizeof(typename traits::value_type) == 1, "toHex needs byte-sized element type");
 
-const char* hexdigits = "0123456789abcdef";
-
-template <class T>
-inline void writeHex(T const& _data, std::string& o_hex, size_t _off)
-{
-	for (byte i: _data)
+	static char const* hexdigits = "0123456789abcdef";
+	size_t off = _prefix.size();
+	std::string hex(std::distance(_it, _end)*2 + off, '0');
+	hex.replace(0, off, _prefix);
+	for (; _it != _end; _it++)
 	{
-		o_hex[_off++] = hexdigits[i >> 4];
-		o_hex[_off++] = hexdigits[i & 0x0f];
+		hex[off++] = hexdigits[*_it >> 4];
+		hex[off++] = hexdigits[*_it & 0x0f];
 	}
-}
-
+	return hex;
 }
 
 /// Convert a series of bytes to the corresponding hex string.
 /// @example toHex("A\x69") == "4169"
-template <class T>
-std::string toHex(T const& _data)
+template <class T> std::string toHex(T const& _data)
 {
-	static_assert(sizeof(typename T::value_type) == 1, "toHex needs byte-sized element type");
-	std::string hex(_data.size()*2, '0');
-	writeHex(_data, hex, 0);
-	return hex;
+	return toHex(_data.begin(), _data.end(), "");
 }
 
 /// Convert a series of bytes to the corresponding hex string with 0x prefix.
 /// @example toHexPrefix("A\x69") == "0x4169"
-template <class T>
-std::string toHexPrefix(T const& _data)
+template <class T> std::string toHexPrefix(T const& _data)
 {
-	static_assert(sizeof(typename T::value_type) == 1, "toHexPrefix needs byte-sized element type");
-	std::string hex(_data.size()*2 + 2, '0');
-	hex.replace(0, 2, "0x");
-	writeHex(_data, hex, 2);
-	return hex;
+	return toHex(_data.begin(), _data.end(), "0x");
 }
 
 /// Converts a (printable) ASCII hex string into the corresponding byte stream.

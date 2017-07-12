@@ -34,6 +34,10 @@ BOOST_AUTO_TEST_CASE(toHex)
 	dev::bytes b = dev::fromHex("f0e1d2c3b4a59687");
 	BOOST_CHECK_EQUAL(dev::toHex(b), "f0e1d2c3b4a59687");
 	BOOST_CHECK_EQUAL(dev::toHexPrefix(b), "0xf0e1d2c3b4a59687");
+
+	dev::h256 h("705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
+	BOOST_CHECK_EQUAL(dev::toHex(h), "705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
+	BOOST_CHECK_EQUAL(dev::toHexPrefix(h), "0x705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
 }
 
 BOOST_AUTO_TEST_CASE(toCompactHex)
