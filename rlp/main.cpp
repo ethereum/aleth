@@ -153,7 +153,7 @@ public:
 			if (m_prefs.forceString || (!m_prefs.forceHex && isAscii(_d.toString())))
 				m_out << escaped(_d.toString(), m_prefs.escapeAll);
 			else
-				m_out << "\"0x" << toHex(_d.toBytes()) << "\"";
+				m_out << "\"" << toHexPrefixed(_d.toBytes()) << "\"";
 		else if (_d.isList())
 		{
 			m_out << "[";
