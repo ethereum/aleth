@@ -43,7 +43,7 @@ enum class WhenError
 };
 
 template <class Iterator>
-inline std::string toHex(Iterator _it, Iterator _end, std::string _prefix)
+std::string toHex(Iterator _it, Iterator _end, std::string _prefix)
 {
 	typedef std::iterator_traits<Iterator> traits;
 	static_assert(sizeof(typename traits::value_type) == 1, "toHex needs byte-sized element type");
@@ -179,14 +179,14 @@ inline std::string toCompactBigEndianString(T _val, unsigned _min = 0)
 	return ret;
 }
 
-inline std::string toCompactHex(u256 val, unsigned _min = 0)
+inline std::string toCompactHex(u256 _val, unsigned _min = 0)
 {
-	return toHex(toCompactBigEndian(val, _min));
+	return toHex(toCompactBigEndian(_val, _min));
 }
 
-inline std::string toCompactHexPrefixed(u256 val, unsigned _min = 0)
+inline std::string toCompactHexPrefixed(u256 _val, unsigned _min = 0)
 {
-	return toHexPrefixed(toCompactBigEndian(val, _min));
+	return toHexPrefixed(toCompactBigEndian(_val, _min));
 }
 
 // Algorithms for string and string-like collections.
