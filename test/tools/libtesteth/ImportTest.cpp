@@ -700,6 +700,7 @@ int ImportTest::exportTest(bytes const& _output)
 			obj2["indexes"] = obj;
 			obj2["hash"] = toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add);
 			obj2["logs"] = exportLog(tr.output.second.log());
+			obj2["tr"] = toHex(tr.transaction.rlp(), 2, HexPrefix::Add);
 
 			//Print the post state if transaction has failed on expect section
 			if (Options::get().checkstate)
