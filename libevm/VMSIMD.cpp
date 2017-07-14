@@ -32,6 +32,7 @@ using a64x4  = uint64_t[4];
 using a32x8  = uint32_t[8];
 using a16x16 = uint16_t[16];
 using a8x32  = uint8_t [32];
+
 inline a64x4       & v64x4 (u256      & _stackItem) { return (a64x4&) *(a64x4*) &_stackItem; }
 inline a32x8       & v32x8 (u256      & _stackItem) { return (a32x8&) *(a32x8*) &_stackItem; }
 inline a16x16      & v16x16(u256      & _stackItem) { return (a16x16&)*(a16x16*)&_stackItem; }
@@ -112,6 +113,8 @@ void VM::xshl (uint8_t _type) { EVALXOPU(SHL, _type); }
 void VM::xrol (uint8_t _type) { EVALXOPU(ROL, _type); }
 void VM::xror (uint8_t _type) { EVALXOPU(ROR, _type); }
 
+// SIMD type encodes log base 2 of lane width and count - one in each nibble
+//
 inline uint8_t pow2N(uint8_t _n)
 {
 	static uint8_t exp[6] = { 1, 2, 4, 8, 16, 32 };
@@ -120,12 +123,12 @@ inline uint8_t pow2N(uint8_t _n)
 
 inline uint8_t laneCount(uint8_t _type)
 {
-	return pow2N((_type) & 0xf);
+	return pow2N(_type & 0xf);
 }
 
 inline uint8_t laneWidth(uint8_t _type)
 {
-	return (_type) >> 4;
+	return pow2N(_type >> 4);
 }
 
 // in must be by reference because it is really just memory for a vector
@@ -213,63 +216,63 @@ void VM::wtov(uint8_t _type, u256 _in, u256& o_out)
 void VM::xmload (uint8_t _type)
 {
 	// goes onto stack element by element, LSB first
-	uint8_t const* p = m_mem.data() + toInt15(m_SP[0]);
+	uint8_t const* vecData = m_mem.data() + toInt15(m_SP[0]);
 	uint8_t const count = laneCount(_type);
 	uint8_t const width = laneWidth(_type);
 
 	switch (width)
 	{
 	case Bits8:
-		for (int j = 1,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 0;
-			v |= p[--j];
+			v |= vecData[--j];
 			v8x32(m_SPP[0])[i] = v;
 		}
 		break;
 	case Bits16:
-		for (int j = 2,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 0;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v16x16(m_SPP[0])[i] = v;
 		}
 		break;
 	case Bits32:
-		for (int j = 4,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 0;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v32x8(m_SPP[0])[i] = v;
 		}
 		break;
 	case Bits64:
-		for (int j = 8,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 0;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v <<= 8;
-			v |= p[--j];
+			v |= vecData[--j];
 			v64x4(m_SPP[0])[i] = v;
 		}
 		break;
@@ -282,64 +285,64 @@ void VM::xmstore(uint8_t _type)
 {
 	// n bytes of type t elements in stack vector
 	// goes onto memory by element, LSB first
-	uint8_t *p = m_mem.data() + toInt15(m_SP[0]);
+	uint8_t* vecData = m_mem.data() + toInt15(m_SP[0]);
 	uint8_t const count = laneCount(_type);
 	uint8_t const width = laneWidth(_type);
 
 	switch (width)
 	{
 	case Bits8:
-		for (int j = 1,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 0;
 			v = v8x32(m_SPP[0])[i];
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 		}
 		break;
 	case Bits16:
-		for (int j = 2,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 2;
 			v = v16x16(m_SPP[0])[i];
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 		}
 		break;
 	case Bits32:
-		for (int j = 4,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 4;
 			v = v32x8(m_SPP[0])[i];
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 		}
 		break;
 	case Bits64:
-		for (int j = 8,  i = count - 1; 0 <= i; --i)
+		for (int j = count,  i = count - 1; 0 <= i; --i)
 		{
 			int v = 0;
 			v = v64x4(m_SPP[0])[i];
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 			v >>= 8;
-			p[--j] = (uint8_t)v;
+			vecData[--j] = (uint8_t)v;
 		}
 		break;
 	default:
