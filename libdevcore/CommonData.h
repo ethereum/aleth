@@ -54,7 +54,7 @@ std::string toHex(Iterator _it, Iterator _end, std::string _prefix)
 	hex.replace(0, off, _prefix);
 	for (; _it != _end; _it++)
 	{
-		hex[off++] = hexdigits[*_it >> 4];
+		hex[off++] = hexdigits[(*_it >> 4) & 0x0f];
 		hex[off++] = hexdigits[*_it & 0x0f];
 	}
 	return hex;
