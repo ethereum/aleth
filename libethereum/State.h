@@ -111,6 +111,10 @@ struct Change
 		/// Change::value the storage value.
 		Storage,
 
+		/// Account storage root was modified.  Change::value contains the old
+		/// account storage root.
+		StorageRoot,
+
 		/// Account nonce was changed.
 		Nonce,
 
@@ -261,6 +265,9 @@ public:
 
 	/// Set the value of a storage position of an account.
 	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value);
+
+	/// Clear the storage root hash of an account to the hash of the empty trie.
+	void clearStorage(Address const& _contract);
 
 	/// Create a contract at the given address (with unset code and unchanged balance).
 	void createContract(Address const& _address);
