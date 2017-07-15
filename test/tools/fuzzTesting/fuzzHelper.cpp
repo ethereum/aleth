@@ -27,7 +27,7 @@
 #include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace dev;
-const static std::array<eth::Instruction, 14> invalidOpcodes{{
+const static std::array<eth::Instruction, 47> invalidOpcodes {{
 	eth::Instruction::INVALID,
 	eth::Instruction::PUSHC,
 	eth::Instruction::JUMPC,
@@ -41,7 +41,40 @@ const static std::array<eth::Instruction, 14> invalidOpcodes{{
 	eth::Instruction::BEGINDATA,
 	eth::Instruction::RETURNSUB,
 	eth::Instruction::PUTLOCAL,
-	eth::Instruction::GETLOCAL
+	eth::Instruction::GETLOCAL,
+	eth::Instruction::XADD,        
+	eth::Instruction::XMUL,        
+	eth::Instruction::XSUB,        
+	eth::Instruction::XDIV,        
+	eth::Instruction::XSDIV,       
+	eth::Instruction::XMOD,        
+	eth::Instruction::XSMOD,       
+	eth::Instruction::XLT,         
+	eth::Instruction::XGT,         
+	eth::Instruction::XSLT,        
+	eth::Instruction::XSGT,        
+	eth::Instruction::XEQ,         
+	eth::Instruction::XISZERO,     
+	eth::Instruction::XAND,        
+	eth::Instruction::XOR,         
+	eth::Instruction::XXOR,        
+	eth::Instruction::XNOT,        
+	eth::Instruction::XSHL,        
+	eth::Instruction::XSHR,        
+	eth::Instruction::XSAR,        
+	eth::Instruction::XROL,        
+	eth::Instruction::XROR,        
+	eth::Instruction::XPUSH,       
+	eth::Instruction::XMLOAD,      
+	eth::Instruction::XMSTORE,     
+	eth::Instruction::XSLOAD,      
+	eth::Instruction::XSSTORE,     
+	eth::Instruction::XVTOWIDE,
+	eth::Instruction::XWIDETOV,
+	eth::Instruction::XPUT,        
+	eth::Instruction::XGET,        
+	eth::Instruction::XSWIZZLE,
+	eth::Instruction::XSHUFFLE,
 }};
 
 namespace dev
