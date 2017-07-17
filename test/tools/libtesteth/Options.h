@@ -75,6 +75,9 @@ public:
 	bool wallet = false;
 	/// @}
 
+	// Checks that all networks in the vector are valid. Exits otherwise.
+	static void checkAllowedNetwork(std::vector<std::string> const& _networks);
+
 	/// Get reference to options
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, char** argv = 0);
