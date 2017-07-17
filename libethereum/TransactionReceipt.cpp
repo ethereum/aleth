@@ -20,6 +20,7 @@
  */
 
 #include "TransactionReceipt.h"
+#include <libethcore/Exceptions.h>
 
 using namespace std;
 using namespace dev;
@@ -29,7 +30,7 @@ TransactionReceipt::TransactionReceipt(bytesConstRef _rlp)
 {
 	RLP r(_rlp);
 	if (!r.isList() || r.itemCount() < 3 || r.itemCount() > 4)
-		DEV_SIMPLE_EXCEPTION(InvalidTransactionReceiptFormat);
+		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
 		
 	size_t gasUsedIndex = 0;
 	if (r.itemCount() == 4)
