@@ -36,6 +36,7 @@ struct SnapshotLog: public LogChannel
 {
 	static char const* name() { return "SNAP"; }
 	static int const verbosity = 9;
+	static const bool debug = false;
 };
 
 SnapshotDownloader::SnapshotDownloader(WarpHostCapability& _host, BlockChain const& _blockChain, boost::filesystem::path const& _snapshotPath):

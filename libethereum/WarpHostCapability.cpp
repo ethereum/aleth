@@ -49,6 +49,11 @@ public:
 		m_downloader.onPeerData(_peer, _r);
 	}
 
+	void onPeerRequestTimeout(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) override
+	{
+		m_downloader.onPeerRequestTimeout(_peer, _asking);
+	}
+
 private:
 	SnapshotDownloader& m_downloader;
 };
@@ -80,3 +85,9 @@ shared_ptr<Capability> WarpHostCapability::newPeerCapability(shared_ptr<SessionF
 
 	return ret;
 }
+
+void WarpHostCapability::doWork()
+{
+	// TODO call tick() on peers similar to EthereumHost
+}
+

@@ -22,13 +22,15 @@
 #include "WarpPeerCapability.h"
 #include "SnapshotDownloader.h"
 
+#include <libdevcore/Worker.h>
+
 namespace dev
 {
 
 namespace eth
 {
 
-class WarpHostCapability: public p2p::HostCapability<WarpPeerCapability>
+class WarpHostCapability: public p2p::HostCapability<WarpPeerCapability>, Worker
 {
 public:
 	WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId, boost::filesystem::path const& _snapshotPath);
@@ -40,6 +42,8 @@ protected:
 	std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap, uint16_t _capID) override;
 
 private:
+	void doWork() override;
+
 	BlockChain const& m_blockChain;
 	u256 const m_networkId;
 

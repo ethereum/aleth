@@ -54,6 +54,8 @@ public:
 	virtual void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
 
 	virtual void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
+
+	virtual void onPeerRequestTimeout(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
 };
 
 

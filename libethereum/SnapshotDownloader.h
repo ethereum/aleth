@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "CommonNet.h"
+
 #include <memory>
 #include <deque>
 
@@ -42,6 +44,8 @@ public:
 	void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r);
 
 	void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r);
+
+	void onPeerRequestTimeout(std::shared_ptr<WarpPeerCapability> /*_peer*/, Asking /*_asking*/) {}
 
 private:
 	void startDownload(std::shared_ptr<WarpPeerCapability> _peer);
