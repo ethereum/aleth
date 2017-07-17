@@ -29,25 +29,37 @@ using namespace dev::eth;
 TransactionReceipt::TransactionReceipt(bytesConstRef _rlp)
 {
 	RLP r(_rlp);
-	if (!r.isList() || r.itemCount() < 3 || r.itemCount() > 4)
+	if (!r.isList() || r.itemCount() != 4)
 		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
-		
-	size_t gasUsedIndex = 0;
-	if (r.itemCount() == 4)
-	{
+
+	if (!r[0].isData())
+		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+	if (r[0].size() == 32)
 		m_stateRoot = (h256)r[0];
-		gasUsedIndex = 1;
+	else if (r[0].size() == 1)
+	{
+		m_statusCode = (uint8_t)r[0];
+		m_hasStatusCode = true;
 	}
 
-	m_gasUsed = (u256)r[gasUsedIndex];
-	m_bloom = (LogBloom)r[gasUsedIndex + 1];
-	for (auto const& i : r[gasUsedIndex + 2])
+	m_gasUsed = (u256)r[1];
+	m_bloom = (LogBloom)r[2];
+	for (auto const& i : r[3])
 		m_log.emplace_back(i);
 
 }
 
-TransactionReceipt::TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries const& _log):
+TransactionReceipt::TransactionReceipt(h256 const& _root, u256 const& _gasUsed, LogEntries const& _log):
+	m_hasStatusCode(false),
 	m_stateRoot(_root),
+	m_gasUsed(_gasUsed),
+	m_bloom(eth::bloom(_log)),
+	m_log(_log)
+{}
+
+TransactionReceipt::TransactionReceipt(uint8_t _status, u256 const& _gasUsed, LogEntries const& _log):
+	m_hasStatusCode(true),
+	m_statusCode(_status),
 	m_gasUsed(_gasUsed),
 	m_bloom(eth::bloom(_log)),
 	m_log(_log)
@@ -55,11 +67,12 @@ TransactionReceipt::TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries con
 
 void TransactionReceipt::streamRLP(RLPStream& _s) const
 {
-	if (m_stateRoot)
-		_s.appendList(4) << m_stateRoot;
+	_s.appendList(4);
+	if (m_hasStatusCode)
+		_s << m_statusCode;
 	else
-		_s.appendList(3);
-		
+		_s << m_stateRoot;
+
 	_s << m_gasUsed << m_bloom;
 
 	_s.appendList(m_log.size());
@@ -67,9 +80,26 @@ void TransactionReceipt::streamRLP(RLPStream& _s) const
 		l.streamRLP(_s);
 }
 
+uint8_t TransactionReceipt::statusCode() const
+{
+	if (!m_hasStatusCode)
+		BOOST_THROW_EXCEPTION(TransactionReceiptVersionError());
+	return m_statusCode;
+}
+
+h256 const& TransactionReceipt::stateRoot() const
+{
+	if (m_hasStatusCode)
+		BOOST_THROW_EXCEPTION(TransactionReceiptVersionError());
+	return m_stateRoot;
+}
+
 std::ostream& dev::eth::operator<<(std::ostream& _out, TransactionReceipt const& _r)
 {
-	_out << "Root: " << _r.stateRoot() << std::endl;
+	if (_r.hasStatusCode())
+		_out << "Status: " << _r.statusCode() << std::endl;
+	else
+		_out << "Root: " << _r.stateRoot() << std::endl;
 	_out << "Gas used: " << _r.gasUsed() << std::endl;
 	_out << "Logs: " << _r.log().size() << " entries:" << std::endl;
 	for (LogEntry const& i: _r.log())

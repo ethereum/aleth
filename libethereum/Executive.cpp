@@ -482,7 +482,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 	return true;
 }
 
-void Executive::finalize()
+bool Executive::finalize()
 {
 	// Accumulate refunds for suicides.
 	if (m_ext)
@@ -517,6 +517,7 @@ void Executive::finalize()
 		m_res->newAddress = m_newAddress;
 		m_res->gasRefunded = m_ext ? m_ext->sub.refunds : 0;
 	}
+	return (m_excepted == TransactionException::None);
 }
 
 void Executive::revert()

@@ -131,7 +131,8 @@ public:
 	void initialize(Transaction const& _transaction);
 	/// Finalise a transaction previously set up with initialize().
 	/// @warning Only valid after initialize() and execute(), and possibly go().
-	void finalize();
+	/// @returns true if the outermost execution halted normally, false if exceptionally halted.
+	bool finalize();
 	/// Begins execution of a transaction. You must call finalize() following this.
 	/// @returns true if the transaction is done, false if go() must be called.
 	bool execute();
