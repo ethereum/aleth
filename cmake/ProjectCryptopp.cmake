@@ -155,6 +155,8 @@ ExternalProject_Add(cryptopp
         -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
         -DBUILD_SHARED=Off
         -DBUILD_TESTING=Off
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     LOG_CONFIGURE 1
     # Overwrite build and install commands to force Release build on MSVC.
     BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
