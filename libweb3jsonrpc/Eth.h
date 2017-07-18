@@ -24,7 +24,7 @@
 #pragma once
 
 #include <memory>
-#include <iostream>
+#include <iosfwd>
 #include <jsonrpccpp/server.h>
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcrypto/Common.h>

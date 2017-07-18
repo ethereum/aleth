@@ -34,7 +34,7 @@
 #include <array>
 #include <sstream>
 #include <string>
-#include <iostream>
+#include <iosfwd>
 #include <chrono>
 #include "Common.h"
 #include "CommonData.h"
