@@ -235,7 +235,7 @@ void fillBCTest(json_spirit::mObject& _o)
 	assert(testChain.interface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
 
 	_o["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
-	_o["genesisRLP"] = toHex(genesisBlock.bytes(), 2, HexPrefix::Add);
+	_o["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
 	BOOST_REQUIRE(_o.count("blocks"));
 
 	mArray blArray;
@@ -326,7 +326,7 @@ void fillBCTest(json_spirit::mObject& _o)
 		if (blObj.count("blockHeader"))
 			overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
 
-		blObj["rlp"] = toHex(alterBlock.bytes(), 2, HexPrefix::Add);
+		blObj["rlp"] = toHexPrefixed(alterBlock.bytes());
 		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
 
 		mArray aUncleList;
@@ -395,7 +395,7 @@ void fillBCTest(json_spirit::mObject& _o)
 
 	_o["blocks"] = blArray;
 	_o["postState"] = fillJsonWithState(testChain.topBlock().state());
-	_o["lastblockhash"] = "0x" + toString(testChain.topBlock().blockHeader().hash(WithSeal));
+	_o["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 
 	//make all values hex in pre section
 	State prestate(State::Null);
@@ -536,7 +536,7 @@ void testBCTest(json_spirit::mObject& _o)
 
 	//Check lastblock hash
 	BOOST_REQUIRE((_o.count("lastblockhash") > 0));
-	string lastTrueBlockHash = "0x" + toString(testChain.topBlock().blockHeader().hash(WithSeal));
+	string lastTrueBlockHash = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o["lastblockhash"].get_str(),
 			testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o["lastblockhash"].get_str());
 
@@ -820,12 +820,12 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 	o["transactionsTrie"] = toString(_bi.transactionsRoot());
 	o["receiptTrie"] = toString(_bi.receiptsRoot());
 	o["bloom"] = toString(_bi.logBloom());
-	o["difficulty"] = toCompactHex(_bi.difficulty(), HexPrefix::Add, 1);
-	o["number"] = toCompactHex(_bi.number(), HexPrefix::Add, 1);
-	o["gasLimit"] = toCompactHex(_bi.gasLimit(), HexPrefix::Add, 1);
-	o["gasUsed"] = toCompactHex(_bi.gasUsed(), HexPrefix::Add, 1);
-	o["timestamp"] = toCompactHex(_bi.timestamp(), HexPrefix::Add, 1);
-	o["extraData"] = (_bi.extraData().size()) ? toHex(_bi.extraData(), 2, HexPrefix::Add) : "";
+	o["difficulty"] = toCompactHexPrefixed(_bi.difficulty(), 1);
+	o["number"] = toCompactHexPrefixed(_bi.number(), 1);
+	o["gasLimit"] = toCompactHexPrefixed(_bi.gasLimit(), 1);
+	o["gasUsed"] = toCompactHexPrefixed(_bi.gasUsed(), 1);
+	o["timestamp"] = toCompactHexPrefixed(_bi.timestamp(), 1);
+	o["extraData"] = (_bi.extraData().size()) ? toHexPrefixed(_bi.extraData()) : "";
 	o["mixHash"] = toString(Ethash::mixHash(_bi));
 	o["nonce"] = toString(Ethash::nonce(_bi));
 	o["hash"] = toString(_bi.hash());

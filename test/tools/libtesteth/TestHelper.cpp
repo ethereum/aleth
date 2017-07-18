@@ -157,13 +157,13 @@ json_spirit::mArray exportLog(eth::LogEntries const& _logs)
 	for (LogEntry const& l: _logs)
 	{
 		json_spirit::mObject o;
-		o["address"] = toString(l.address);
+		o["address"] = toHex(l.address);
 		json_spirit::mArray topics;
 		for (auto const& t: l.topics)
-			topics.push_back(toString(t));
+			topics.push_back(toHex(t));
 		o["topics"] = topics;
-		o["data"] = toHex(l.data, 2, HexPrefix::Add);
-		o["bloom"] = toString(l.bloom());
+		o["data"] = toHexPrefixed(l.data);
+		o["bloom"] = toHex(l.bloom());
 		ret.push_back(o);
 	}
 	return ret;

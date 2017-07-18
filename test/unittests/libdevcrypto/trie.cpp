@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 				BOOST_CHECK_EQUAL(ht.root(), ft.root());
 			}
 			BOOST_REQUIRE(!o["root"].is_null());
-			BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(ht.root().asArray()));
-			BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(ft.root().asArray()));
+			BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(ht.root().asArray()));
+			BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(ft.root().asArray()));
 		}
 	}
 }
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 				BOOST_CHECK_EQUAL(ht.root(), ft.root());
 			}
 			BOOST_REQUIRE(!o["root"].is_null());
-			BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(t.root().asArray()));
+			BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(t.root().asArray()));
 			BOOST_CHECK_EQUAL(ht.root(), ft.root());
 		}
 	}
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 		}
 
 		BOOST_REQUIRE(!o["root"].is_null());
-		BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(t.root().asArray()));
+		BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(t.root().asArray()));
 	}
 }
 

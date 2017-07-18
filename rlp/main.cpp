@@ -132,28 +132,28 @@ public:
 		string indent;
 		bool hexInts = false;
 		bool stringInts = true;
-		bool hexPrefix = true;
 		bool forceString = false;
 		bool escapeAll = false;
 		bool forceHex = true;
 	};
 
-	RLPStreamer(ostream& _out, Prefs _p): m_out(_out), m_prefs(_p) {}
+	RLPStreamer(ostream& _out, Prefs _p): m_out(_out), m_prefs(_p)
+	{
+		if (_p.hexInts)
+			_out << std::hex << std::showbase << std::nouppercase;
+	}
 
 	void output(RLP const& _d, unsigned _level = 0)
 	{
 		if (_d.isNull())
 			m_out << "null";
 		else if (_d.isInt() && !m_prefs.stringInts)
-			if (m_prefs.hexInts)
-				m_out << (m_prefs.hexPrefix ? "0x" : "") << toHex(toCompactBigEndian(_d.toInt<bigint>(RLP::LaissezFaire), 1), 1);
-			else
-				m_out << _d.toInt<bigint>(RLP::LaissezFaire);
+			m_out << _d.toInt<bigint>(RLP::LaissezFaire);
 		else if (_d.isData() || (_d.isInt() && m_prefs.stringInts))
 			if (m_prefs.forceString || (!m_prefs.forceHex && isAscii(_d.toString())))
 				m_out << escaped(_d.toString(), m_prefs.escapeAll);
 			else
-				m_out << "\"" << (m_prefs.hexPrefix ? "0x" : "") << toHex(_d.toBytes()) << "\"";
+				m_out << "\"" << toHexPrefixed(_d.toBytes()) << "\"";
 		else if (_d.isList())
 		{
 			m_out << "[";

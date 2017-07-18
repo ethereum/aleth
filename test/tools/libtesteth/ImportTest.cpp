@@ -105,8 +105,8 @@ bytes ImportTest::executeTest()
 				//basic genesis
 				json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
 				genesisObj["coinbase"] = toString(m_envInfo->author());
-				genesisObj["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
-				genesisObj["timestamp"] = toCompactHex(m_envInfo->timestamp() - 50, HexPrefix::Add);
+				genesisObj["gasLimit"] = toCompactHexPrefixed(m_envInfo->gasLimit());
+				genesisObj["timestamp"] = toCompactHexPrefixed(m_envInfo->timestamp() - 50);
 				testObj["genesisBlockHeader"] = genesisObj;
 				testObj["pre"] = fillJsonWithState(m_statePre);
 
@@ -138,13 +138,13 @@ bytes ImportTest::executeTest()
 								json_spirit::mObject obj = fillJsonWithState(search2->second.first, search2->second.second);
 								for (auto& adr: obj)
 								{
-									if (adr.first == "0x" + toString(m_envInfo->author()))
+									if (adr.first == toHexPrefixed(m_envInfo->author()))
 									{
 										if (adr.second.get_obj().count("balance"))
 										{
 											u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
 											expectCoinbaseBalance += u256("5000000000000000000");
-											adr.second.get_obj()["balance"] = toCompactHex(expectCoinbaseBalance, HexPrefix::Add);
+											adr.second.get_obj()["balance"] = toCompactHexPrefixed(expectCoinbaseBalance);
 										}
 									}
 								}
@@ -167,9 +167,9 @@ bytes ImportTest::executeTest()
 
 				//rewrite header section for a block by the statetest parameters
 				json_spirit::mObject rewriteHeader;
-				rewriteHeader["gasLimit"] = toCompactHex(m_envInfo->gasLimit(), HexPrefix::Add);
-				rewriteHeader["difficulty"] = toCompactHex(m_envInfo->difficulty(), HexPrefix::Add);
-				rewriteHeader["timestamp"] = toCompactHex(m_envInfo->timestamp(), HexPrefix::Add);
+				rewriteHeader["gasLimit"] = toCompactHexPrefixed(m_envInfo->gasLimit());
+				rewriteHeader["difficulty"] = toCompactHexPrefixed(m_envInfo->difficulty());
+				rewriteHeader["timestamp"] = toCompactHexPrefixed(m_envInfo->timestamp());
 				rewriteHeader["updatePoW"] = "1";
 
 				json_spirit::mArray blocksArr;
@@ -278,7 +278,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 			for (auto const& j: value.get_array())
 			{
 				str = j.get_str();
-				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1));
+				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
 			}
 			_o[key] = arr;
 			continue;
@@ -288,7 +288,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 		if (isHash)
 			_o[key] = (str.substr(0, 2) == "0x" || str.empty()) ? str : "0x" + str;
 		else
-			_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
+			_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1);
 	}
 	return _o;
 }
@@ -480,13 +480,13 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 				map<h256, pair<u256, u256>> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-					TestOutputHelper::testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(stateStorage[s.first].second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add));
+					TestOutputHelper::testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(stateStorage[s.first].second) << ", expected [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(s.second.second));
 
 				//Check for unexpected storage values
 				map<h256, pair<u256, u256>> expectedStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
 					CHECK((expectedStorage[s.first] == s.second),
-					TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(expectedStorage[s.first].second, HexPrefix::Add));
+					TestOutputHelper::testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(s.second.second) << ", expected [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(expectedStorage[s.first].second));
 			}
 
 			if (addressOptions.hasCode())
@@ -634,7 +634,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 				}
 			}			
 			else if (_expects.count("hash"))
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add), TestOutputHelper::testName() + " Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(tr.postState.rootHash().asBytes()) + " in " + trInfo);
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()), TestOutputHelper::testName() + " Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(tr.postState.rootHash().asBytes()) + " in " + trInfo);
 			else
 				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
 
@@ -698,7 +698,7 @@ int ImportTest::exportTest(bytes const& _output)
 			obj["gas"] = tr.gasInd;
 			obj["value"] = tr.valInd;
 			obj2["indexes"] = obj;
-			obj2["hash"] = toHex(tr.postState.rootHash().asBytes(), 2, HexPrefix::Add);
+			obj2["hash"] = toHexPrefixed(tr.postState.rootHash().asBytes());
 			obj2["logs"] = exportLog(tr.output.second.log());
 
 			//Print the post state if transaction has failed on expect section
@@ -724,7 +724,7 @@ int ImportTest::exportTest(bytes const& _output)
 	else
 	{
 		// export output
-		m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
+		m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHexPrefixed(_output);
 
 		// compare expected output with post output
 		if (m_testObject.count("expectOut") > 0)
