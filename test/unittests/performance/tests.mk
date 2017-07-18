@@ -38,17 +38,25 @@ else
 	TEST_EVM = $(STATS) $(EVM) --codefile 
 endif
 
-%.bin : %.sol
-	$(SOLC) -o . --overwrite --asm --bin $^ 
-	$(TEST_ETHVM) $@
-	$(TEST_EVM) $@ run
+%.run : %.bin
+	$(TEST_ETHVM) $*.bin
+	$(TEST_EVM) $*.bin run
+	touch $*.run
 
+%.bin : %.evm
+	$(SOLC) --assemble $*.evm | grep '^[0-9a-f]\+$\' > $*.bin
+
+%.bin : %.sol
+	$(SOLC) -o . --overwrite --asm --bin $*.sol 
+	
 mul64c: mul64c.c
 	$(CCC) mul64c mul64c.c
 	$(STATS) ./mul64c
 
 ops : \
+	nop.bin \
 	pop.bin \
+	popa.bin \
 	add64.bin \
 	add128.bin \
 	add256.bin \
@@ -74,4 +82,4 @@ all: ops mul64c programs
 
 .PHONY : clean
 clean :
-	rm *.bin *.evm mul64c
+	rm *.bin *.evm  mul64c
