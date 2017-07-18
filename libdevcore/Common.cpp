@@ -31,6 +31,7 @@ namespace dev
 
 char const* Version = ETH_PROJECT_VERSION;
 
+const bytes NullBytes;
 const u256 Invalid256 = ~(u256)0;
 
 void InvariantChecker::checkInvariants(HasInvariants const* _this, char const* _fn, char const* _file, int _line, bool _pre)

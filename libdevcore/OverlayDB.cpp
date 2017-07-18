@@ -23,6 +23,7 @@
 #include <thread>
 #include <libdevcore/db.h>
 #include <libdevcore/Common.h>
+#include "SHA3.h"
 #include "OverlayDB.h"
 using namespace std;
 using namespace dev;

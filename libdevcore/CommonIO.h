@@ -38,7 +38,6 @@
 #include <chrono>
 #include "Common.h"
 #include "CommonData.h"
-#include "Base64.h"
 
 namespace dev
 {
