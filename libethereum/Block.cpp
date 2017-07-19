@@ -864,7 +864,14 @@ bool Block::sealBlock(bytesConstRef _header)
 h256 Block::stateRootBeforeTx(unsigned _i) const
 {
 	_i = min<unsigned>(_i, m_transactions.size());
-	return (_i > 0 ? receipt(_i - 1).stateRoot() : m_previousBlock.stateRoot());
+	try
+	{
+		return (_i > 0 ? receipt(_i - 1).stateRoot() : m_previousBlock.stateRoot());
+	}
+	catch(TransactionReceiptVersionError const&)
+	{
+		return {};
+	}
 }
 
 LogBloom Block::logBloom() const

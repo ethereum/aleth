@@ -26,6 +26,8 @@
 #include <libdevcore/RLP.h>
 #include <libevm/ExtVMFace.h>
 
+#include <boost/variant/variant.hpp>
+
 namespace dev
 {
 
@@ -43,7 +45,7 @@ public:
 	TransactionReceipt(uint8_t _status, u256 const& _gasUsed, LogEntries const& _log);
 
 	/// @returns true if the receipt has a status code.  Otherwise the receipt has a state root (pre-EIP658).
-	bool hasStatusCode() const { return m_hasStatusCode; }
+	bool hasStatusCode() const;
 	/// @returns the state root.
 	/// @throw TransactionReceiptVersionError when m_hasStatusCode is true.
 	h256 const& stateRoot() const;
@@ -59,12 +61,7 @@ public:
 	bytes rlp() const { RLPStream s; streamRLP(s); return s.out(); }
 
 private:
-	bool m_hasStatusCode = false;
-	union
-	{
-		uint8_t m_statusCode = 0;
-		h256 m_stateRoot;
-	};
+	boost::variant<uint8_t,h256> m_statusCodeOrStateRoot;
 	u256 m_gasUsed;
 	LogBloom m_bloom;
 	LogEntries m_log;
