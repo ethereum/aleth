@@ -376,7 +376,7 @@ inline std::string toString(h256s const& _bs)
 {
 	std::ostringstream out;
 	out << "[ ";
-	for (auto i: _bs)
+	for (h256 const& i: _bs)
 		out << i.abridged() << ", ";
 	out << "]";
 	return out.str();

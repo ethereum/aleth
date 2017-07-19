@@ -69,7 +69,7 @@ namespace dev
 
 extern char const* Version;
 
-static const std::string EmptyString;
+extern std::string const EmptyString;
 
 // Binary data types.
 using bytes = std::vector<byte>;
@@ -149,8 +149,8 @@ using strings = std::vector<std::string>;
 using string32 = std::array<char, 32>;
 
 // Null/Invalid values for convenience.
-extern const bytes NullBytes;
-extern const u256 Invalid256;
+extern bytes const NullBytes;
+extern u256 const Invalid256;
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)

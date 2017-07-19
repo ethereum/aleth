@@ -23,7 +23,6 @@
 
 #include <unordered_map>
 #include "Common.h"
-#include "FixedHash.h"
 #include "Log.h"
 #include "RLP.h"
 

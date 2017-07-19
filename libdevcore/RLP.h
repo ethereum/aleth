@@ -29,7 +29,6 @@
 #include <iosfwd>
 #include <iomanip>
 #include "vector_ref.h"
-#include "Common.h"
 #include "Exceptions.h"
 #include "FixedHash.h"
 

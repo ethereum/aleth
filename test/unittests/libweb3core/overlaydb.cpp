@@ -65,9 +65,6 @@ BOOST_AUTO_TEST_CASE(basicUsage)
 	BOOST_CHECK(!odb.get().size());
 	BOOST_CHECK(odb.exists(h256(41)));
 	BOOST_CHECK_EQUAL(odb.lookup(h256(41)), toString(value[0]));
-	BOOST_CHECK(odb.deepkill(h256(41)));
-	BOOST_CHECK(!odb.exists(h256(41)));
-	BOOST_CHECK_EQUAL(odb.lookup(h256(41)), string());
 }
 
 BOOST_AUTO_TEST_CASE(auxMem)

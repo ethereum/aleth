@@ -40,6 +40,8 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
+namespace
+{
 int64_t maxBlockGasLimit()
 {
 	static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).u256Param("maxGasLimit").convert_to<int64_t>();
@@ -119,6 +121,8 @@ enum class Mode
 	/// performance.
 	Test
 };
+
+}
 
 class LastBlockHashes: public eth::LastBlockHashesFace
 {
