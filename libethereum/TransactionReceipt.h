@@ -47,10 +47,10 @@ public:
 	/// @returns true if the receipt has a status code.  Otherwise the receipt has a state root (pre-EIP658).
 	bool hasStatusCode() const;
 	/// @returns the state root.
-	/// @throw TransactionReceiptVersionError when m_hasStatusCode is true.
+	/// @throw TransactionReceiptVersionError when the receipt has a status code instead of a state root.
 	h256 const& stateRoot() const;
 	/// @returns the status code.
-	/// @throw TransactionReceiptVersionError when m_hasStatusCode is false.
+	/// @throw TransactionReceiptVersionError when the receipt has a state root instead of a status code.
 	uint8_t statusCode() const;
 	u256 const& gasUsed() const { return m_gasUsed; }
 	LogBloom const& bloom() const { return m_bloom; }

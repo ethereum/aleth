@@ -22,9 +22,7 @@
 #include "TransactionReceipt.h"
 #include <libethcore/Exceptions.h>
 
-#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/get.hpp>
-
 
 using namespace std;
 using namespace dev;
@@ -38,10 +36,13 @@ TransactionReceipt::TransactionReceipt(bytesConstRef _rlp)
 
 	if (!r[0].isData())
 		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+
 	if (r[0].size() == 32)
 		m_statusCodeOrStateRoot = (h256)r[0];
 	else if (r[0].size() == 1)
 		m_statusCodeOrStateRoot = (uint8_t)r[0];
+	else
+		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
 
 	m_gasUsed = (u256)r[1];
 	m_bloom = (LogBloom)r[2];
@@ -66,22 +67,11 @@ TransactionReceipt::TransactionReceipt(uint8_t _status, u256 const& _gasUsed, Lo
 
 void TransactionReceipt::streamRLP(RLPStream& _s) const
 {
-	struct appenderVisitor : boost::static_visitor<void>
-	{
-		appenderVisitor(RLPStream& _s) : m_stream(_s) {}
-		RLPStream& m_stream;
-		void operator()(uint8_t _statusCode) const
-		{
-			m_stream << _statusCode;
-		}
-		void operator()(h256 _stateRoot) const
-		{
-			m_stream << _stateRoot;
-		}
-	};
-
 	_s.appendList(4);
-	boost::apply_visitor(appenderVisitor(_s), m_statusCodeOrStateRoot);
+	if (hasStatusCode())
+		_s << statusCode();
+	else
+		_s << stateRoot();
 	_s << m_gasUsed << m_bloom;
 	_s.appendList(m_log.size());
 	for (LogEntry const& l: m_log)
@@ -90,46 +80,23 @@ void TransactionReceipt::streamRLP(RLPStream& _s) const
 
 bool TransactionReceipt::hasStatusCode() const
 {
-	struct hasStatusCodeVisitor : boost::static_visitor<bool>
-	{
-		bool operator()(uint8_t) const
-		{
-			return true;
-		}
-		bool operator()(h256) const
-		{
-			return false;
-		}
-	};
-	return boost::apply_visitor(hasStatusCodeVisitor(), m_statusCodeOrStateRoot);
+	return m_statusCodeOrStateRoot.which() == 0;
 }
 
 uint8_t TransactionReceipt::statusCode() const
 {
-	struct statusCodeVisitor : boost::static_visitor<uint8_t>
-	{
-		uint8_t operator()(uint8_t _statusCode) const
-		{
-			return _statusCode;
-		}
-		uint8_t operator()(h256) const
-		{
-			BOOST_THROW_EXCEPTION(TransactionReceiptVersionError());
-		}
-	};
-	return boost::apply_visitor(statusCodeVisitor(), m_statusCodeOrStateRoot);
+	if (hasStatusCode())
+		return boost::get<uint8_t>(m_statusCodeOrStateRoot);
+	else
+		BOOST_THROW_EXCEPTION(TransactionReceiptVersionError());
 }
 
 h256 const& TransactionReceipt::stateRoot() const
 {
-	try
-	{
-		return boost::get<h256>(m_statusCodeOrStateRoot);
-	}
-	catch(const boost::bad_get&)
-	{
+	if (hasStatusCode())
 		BOOST_THROW_EXCEPTION(TransactionReceiptVersionError());
-	}
+	else
+		return boost::get<h256>(m_statusCodeOrStateRoot);
 }
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, TransactionReceipt const& _r)

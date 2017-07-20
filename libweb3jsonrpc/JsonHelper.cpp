@@ -185,14 +185,10 @@ Json::Value toJson(dev::eth::TransactionSkeleton const& _t)
 Json::Value toJson(dev::eth::TransactionReceipt const& _t)
 {
 	Json::Value res;
-	try
-	{
-		res["stateRoot"] = toJS(_t.stateRoot());
-	}
-	catch (TransactionReceiptVersionError const&)
-	{
+	if (_t.hasStatusCode())
 		res["statusCode"] = toJS(_t.statusCode());
-	}
+	else
+		res["stateRoot"] = toJS(_t.stateRoot());
 	res["gasUsed"] = toJS(_t.gasUsed());
 	res["bloom"] = toJS(_t.bloom());
 	res["log"] = dev::toJson(_t.log());
