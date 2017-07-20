@@ -103,6 +103,8 @@ cache:
         - ~/.ethash
         - ~/.local
         - ~/Library/Caches/Homebrew
+        # Homebrew uses this
+        - /usr/local/Cellar
         # Cache whole deps dir hoping you will not need to download and
         # build external dependencies next build.
         - $TRAVIS_BUILD_DIR/deps
