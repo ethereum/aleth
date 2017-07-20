@@ -51,13 +51,14 @@ const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 namespace
 {
 
-void executeTransaction(Executive& _e, Transaction const& _t, OnOpFunc const& _onOp)
+/// @returns true when normally halted; false when exceptionally halted.
+bool executeTransaction(Executive& _e, Transaction const& _t, OnOpFunc const& _onOp)
 {
 	_e.initialize(_t);
 
 	if (!_e.execute())
 		_e.go(_onOp);
-	_e.finalize();
+	return _e.finalize();
 }
 
 }
@@ -564,7 +565,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	e.setResultRecipient(res);
 
 	u256 const startGasUsed = _envInfo.gasUsed();
-	executeTransaction(e, _t, onOp);
+	bool const statusCode = executeTransaction(e, _t, onOp);
 
 	bool removeEmptyAccounts = false;
 	switch (_p)
@@ -581,7 +582,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	}
 
 	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("metropolisForkBlock") ?
-		TransactionReceipt(startGasUsed + e.gasUsed(), e.logs()) :
+		TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs()) :
 		TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs());
 	return make_pair(res, receipt);
 }
