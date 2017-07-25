@@ -260,11 +260,17 @@ template <class _S, class _T> _S& operator<<(_S& _out, std::shared_ptr<_T> const
 
 /// Converts arbitrary value to string representation using std::stringstream.
 template <class _T>
-std::string toString(_T const& _t)
+inline std::string toString(_T const& _t)
 {
 	std::ostringstream o;
 	o << _t;
 	return o.str();
+}
+
+template <>
+inline std::string toString<std::string>(std::string const& _s)
+{
+	return _s;
 }
 
 }

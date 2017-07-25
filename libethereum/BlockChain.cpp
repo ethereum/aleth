@@ -21,13 +21,10 @@
 
 #include "BlockChain.h"
 
-#if ETH_PROFILING_GPERF
-#include <gperftools/profiler.h>
-#endif
-
-#include <boost/timer.hpp>
-#include <boost/filesystem.hpp>
-#include <json_spirit/JsonSpiritHeaders.h>
+#include "GenesisInfo.h"
+#include "State.h"
+#include "Block.h"
+#include "Defaults.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/RLP.h>
@@ -35,14 +32,19 @@
 #include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
-#include "GenesisInfo.h"
-#include "State.h"
-#include "Block.h"
-#include "Defaults.h"
+
+#if ETH_PROFILING_GPERF
+#include <gperftools/profiler.h>
+#endif
+
+#include <boost/algorithm/string.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/timer.hpp>
+#include <boost/filesystem.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-namespace js = json_spirit;
 namespace fs = boost::filesystem;
 
 #define ETH_CATCH 1
@@ -154,6 +156,64 @@ private:
 
 	mutable Mutex m_lastHashesMutex;
 	mutable h256s m_lastHashes;
+};
+
+
+class ImportPerformanceLogger
+{
+public:
+	void onStageFinished(std::string const& _name)
+	{
+		m_stages[_name] = m_stageTimer.elapsed();
+		m_stageTimer.restart();
+	}
+
+	double stageDuration(std::string const& _name) const
+	{
+		auto const it = m_stages.find(_name);
+		return it != m_stages.end() ? it->second : 0;
+	}
+
+	void onFinished(std::unordered_map<std::string, std::string> const& _additionalValues)
+	{
+		double const totalElapsed = m_totalTimer.elapsed();
+		if (totalElapsed > 0.5)
+		{
+			cnote << "SLOW IMPORT: { " << constructReport(totalElapsed, _additionalValues) << " }";
+		}
+	}
+
+private:
+
+	template <class ValueType>
+	static std::string pairToString(std::pair<std::string const, ValueType> const& _pair)
+	{
+		return "\"" + _pair.first + "\": " + toString(_pair.second);
+	}
+
+	std::string constructReport(double _totalElapsed, std::unordered_map<std::string, std::string> const& _additionalValues)
+	{
+		static std::string const Separator = ", ";
+
+		std::string result;
+		if (!_additionalValues.empty())
+		{
+			auto const keyValuesAdditional = _additionalValues | boost::adaptors::transformed(pairToString<std::string>);
+			result += boost::algorithm::join(keyValuesAdditional, Separator);
+			result += Separator;
+		}
+
+		m_stages.emplace("total", _totalElapsed);
+		auto const keyValuesStages = m_stages | boost::adaptors::transformed(pairToString<double>);
+		result += boost::algorithm::join(keyValuesStages, Separator);
+
+		return result;
+	}
+
+
+	Timer m_totalTimer;
+	std::unordered_map<std::string, double> m_stages;
+	Timer m_stageTimer;
 };
 
 }
@@ -676,13 +736,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	//@tidy This is a behemoth of a method - could do to be split into a few smaller ones.
 
 #if ETH_TIMED_IMPORTS
-	Timer total;
-	double preliminaryChecks;
-	double enactment;
-	double collation;
-	double writing;
-	double checkBest;
-	Timer t;
+	ImportPerformanceLogger performanceLogger;
 #endif
 
 	// Check block doesn't already exist first!
@@ -728,8 +782,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	clog(BlockChainChat) << "Attempting import of " << _block.info.hash() << "...";
 
 #if ETH_TIMED_IMPORTS
-	preliminaryChecks = t.elapsed();
-	t.restart();
+	performanceLogger.onStageFinished("preliminaryChecks");
 #endif
 
 	ldb::WriteBatch blocksBatch;
@@ -763,8 +816,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		td = pd.totalDifficulty + tdIncrease;
 
 #if ETH_TIMED_IMPORTS
-		enactment = t.elapsed();
-		t.restart();
+		performanceLogger.onStageFinished("enactment");
 #endif // ETH_TIMED_IMPORTS
 
 #if ETH_PARANOIA
@@ -783,8 +835,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 			m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
 
 #if ETH_TIMED_IMPORTS
-		collation = t.elapsed();
-		t.restart();
+		performanceLogger.onStageFinished("collation");
 #endif // ETH_TIMED_IMPORTS
 
 		blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
@@ -796,8 +847,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)dev::ref(br.rlp()));
 
 #if ETH_TIMED_IMPORTS
-		writing = t.elapsed();
-		t.restart();
+		performanceLogger.onStageFinished("writing");
 #endif // ETH_TIMED_IMPORTS
 	}
 
@@ -963,23 +1013,16 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #endif // ETH_PARANOIA
 
 #if ETH_TIMED_IMPORTS
-	checkBest = t.elapsed();
-	if (total.elapsed() > 0.5)
-	{
-		unsigned const gasPerSecond = static_cast<double>(_block.info.gasUsed()) / enactment;
-		cnote << "SLOW IMPORT: " 
-			<< "{ \"blockHash\": \"" << _block.info.hash() << "\", "
-			<< "\"blockNumber\": " << _block.info.number() << ", " 
-			<< "\"importTime\": " << total.elapsed() << ", "
-			<< "\"gasPerSecond\": " << gasPerSecond << ", "
-			<< "\"preliminaryChecks\":" << preliminaryChecks << ", "
-			<< "\"enactment\":" << enactment << ", "
-			<< "\"collation\":" << collation << ", "
-			<< "\"writing\":" << writing << ", "
-			<< "\"checkBest\":" << checkBest << ", "
-			<< "\"transactions\":" << _block.transactions.size() << ", "
-			<< "\"gasUsed\":" << _block.info.gasUsed() << " }";
-	}
+	performanceLogger.onStageFinished("checkBest");
+
+	unsigned const gasPerSecond = static_cast<double>(_block.info.gasUsed()) / performanceLogger.stageDuration("enactment");
+	performanceLogger.onFinished({
+		{"blockHash", "\""+ _block.info.hash().abridged() + "\""},
+		{"blockNumber", toString(_block.info.number())},
+		{"gasPerSecond", toString(gasPerSecond)},
+		{"transactions", toString(_block.transactions.size())},
+		{"gasUsed", toString(_block.info.gasUsed())}
+	});
 #endif // ETH_TIMED_IMPORTS
 
 	if (!route.empty())
