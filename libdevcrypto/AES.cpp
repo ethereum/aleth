@@ -25,6 +25,7 @@
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/modes.h>
 #include <cryptopp/sha.h>
+#include <libdevcore/Common.h>
 
 using namespace std;
 using namespace dev;

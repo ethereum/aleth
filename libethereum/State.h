@@ -30,7 +30,6 @@
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
 #include <libethereum/CodeSizeCache.h>
-#include <libethereum/GenericMiner.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
 #include "Transaction.h"
@@ -366,53 +365,7 @@ std::ostream& operator<<(std::ostream& _out, State const& _s);
 State& createIntermediateState(State& o_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc);
 
 template <class DB>
-AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
-{
-	AddressHash ret;
-	for (auto const& i: _cache)
-		if (i.second.isDirty())
-		{
-			if (!i.second.isAlive())
-				_state.remove(i.first);
-			else
-			{
-				RLPStream s(4);
-				s << i.second.nonce() << i.second.balance();
-
-				if (i.second.storageOverlay().empty())
-				{
-					assert(i.second.baseRoot());
-					s.append(i.second.baseRoot());
-				}
-				else
-				{
-					SecureTrieDB<h256, DB> storageDB(_state.db(), i.second.baseRoot());
-					for (auto const& j: i.second.storageOverlay())
-						if (j.second)
-							storageDB.insert(j.first, rlp(j.second));
-						else
-							storageDB.remove(j.first);
-					assert(storageDB.root());
-					s.append(storageDB.root());
-				}
-
-				if (i.second.hasNewCode())
-				{
-					h256 ch = i.second.codeHash();
-					// Store the size of the code
-					CodeSizeCache::instance().store(ch, i.second.code().size());
-					_state.db()->insert(ch, &i.second.code());
-					s << ch;
-				}
-				else
-					s << i.second.codeHash();
-
-				_state.insert(i.first, &s.out());
-			}
-			ret.insert(i.first);
-		}
-	return ret;
-}
+AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);
 
 }
 }

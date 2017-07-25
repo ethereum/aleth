@@ -21,6 +21,7 @@
 
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
+#include <libdevcore/CommonIO.h>
 #include <libethcore/ICAP.h>
 #include <libethcore/KeyManager.h>
 #include "AccountManager.h"

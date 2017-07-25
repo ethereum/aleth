@@ -30,6 +30,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <libdevcrypto/CryptoPP.h>
+#include <libdevcore/Base64.h>
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;

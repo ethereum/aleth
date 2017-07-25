@@ -25,24 +25,13 @@
 
 #include <ctime>
 #include <chrono>
-#include "vector_ref.h"
-#include "Common.h"
+#include <string>
 #include "CommonIO.h"
-#include "CommonData.h"
 #include "FixedHash.h"
 #include "Terminal.h"
 
-namespace boost { namespace asio { namespace ip { template<class T>class basic_endpoint; class tcp; } } }
-
 namespace dev
 {
-
-/// The null output stream. Used when logging is disabled.
-class NullOutputStream
-{
-public:
-	template <class T> NullOutputStream& operator<<(T const&) { return *this; }
-};
 
 /// A simple log-output function that prints log messages to stdout.
 void debugOut(std::string const& _s);
@@ -177,7 +166,7 @@ public:
 	{
 		m_sstr << EthWhite "[" EthReset;
 		int n = 0;
-		for (auto const& i: _t)
+		for (T const& i: _t)
 		{
 			m_sstr << (n++ ? EthWhite ", " EthReset : "");
 			append(i);
@@ -188,7 +177,7 @@ public:
 	{
 		m_sstr << EthYellow "{" EthReset;
 		int n = 0;
-		for (auto const& i: _t)
+		for (T const& i: _t)
 		{
 			m_sstr << (n++ ? EthYellow ", " EthReset : "");
 			append(i);
@@ -212,7 +201,7 @@ public:
 	{
 		m_sstr << EthYellow "{" EthReset;
 		int n = 0;
-		for (auto const& i: _t)
+		for (T const& i: _t)
 		{
 			m_sstr << (n++ ? EthYellow ", " EthReset : "");
 			append(i);
@@ -300,10 +289,5 @@ public:
 #define cnote clog(dev::NoteChannel)
 #define cwarn clog(dev::WarnChannel)
 #define ctrace clog(dev::TraceChannel)
-
-// Null stream-like objects.
-#define ndebug DEV_STATEMENT_SKIP() dev::NullOutputStream()
-#define nlog(X) DEV_STATEMENT_SKIP() dev::NullOutputStream()
-#define nslog(X) DEV_STATEMENT_SKIP() dev::NullOutputStream()
 
 }

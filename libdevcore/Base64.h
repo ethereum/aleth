@@ -29,7 +29,6 @@
 #pragma once
 
 #include <string>
-#include "Common.h"
 #include "FixedHash.h"
 
 namespace dev

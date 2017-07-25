@@ -34,11 +34,10 @@
 #include <array>
 #include <sstream>
 #include <string>
-#include <iostream>
+#include <iosfwd>
 #include <chrono>
 #include "Common.h"
 #include "CommonData.h"
-#include "Base64.h"
 
 namespace dev
 {
@@ -82,7 +81,6 @@ template <class T> inline std::ostream& operator<<(std::ostream& _out, std::vect
 template <class T, std::size_t Z> inline std::ostream& operator<<(std::ostream& _out, std::array<T, Z> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::pair<T, U> const& _e);
 template <class T> inline std::ostream& operator<<(std::ostream& _out, std::list<T> const& _e);
-template <class T1, class T2, class T3> inline std::ostream& operator<<(std::ostream& _out, std::tuple<T1, T2, T3> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::map<T, U> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::unordered_map<T, U> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::set<T, U> const& _e);

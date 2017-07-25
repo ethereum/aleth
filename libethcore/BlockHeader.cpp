@@ -23,6 +23,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieDB.h>
+#include <libdevcore/MemoryDB.h>
 #include <libdevcore/TrieHash.h>
 #include <libethcore/Common.h>
 #include "Exceptions.h"

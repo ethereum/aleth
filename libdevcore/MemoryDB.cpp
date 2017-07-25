@@ -19,8 +19,9 @@
  * @date 2014
  */
 
-#include "Common.h"
 #include "MemoryDB.h"
+#include "Common.h"
+#include "CommonData.h"
 using namespace std;
 using namespace dev;
 

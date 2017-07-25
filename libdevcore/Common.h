@@ -69,7 +69,7 @@ namespace dev
 
 extern char const* Version;
 
-static const std::string EmptyString;
+extern std::string const EmptyString;
 
 // Binary data types.
 using bytes = std::vector<byte>;
@@ -147,12 +147,10 @@ using strings = std::vector<std::string>;
 
 // Fixed-length string types.
 using string32 = std::array<char, 32>;
-static const string32 ZeroString32 = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }};
 
 // Null/Invalid values for convenience.
-static const bytes NullBytes;
-static const std::map<u256, u256> EmptyMapU256U256;
-extern const u256 Invalid256;
+extern bytes const NullBytes;
+extern u256 const Invalid256;
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
