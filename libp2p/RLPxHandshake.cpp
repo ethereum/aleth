@@ -86,6 +86,8 @@ void RLPXHandshake::writeAckEIP8()
 	m_ack.resize(m_ack.size() + padAmount, 0);
 
 	bytes prefix(2);
+	/// Amount of bytes added when encrypting with encryptECIES.
+	static const unsigned c_eciesOverhead = 113;
 	toBigEndian<uint16_t>(m_ack.size() + c_eciesOverhead, prefix);
 	encryptECIES(m_remote, bytesConstRef(&prefix), &m_ack, m_ackCipher);
 	m_ackCipher.insert(m_ackCipher.begin(), prefix.begin(), prefix.end());

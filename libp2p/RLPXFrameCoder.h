@@ -24,7 +24,6 @@
 
 #include <memory>
 #include <libdevcore/Guards.h>
-#include <libdevcrypto/CryptoPP.h>
 #include "Common.h"
 
 namespace dev

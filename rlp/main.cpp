@@ -29,7 +29,6 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
-#include <libdevcrypto/CryptoPP.h>
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;
@@ -182,7 +181,7 @@ void putOut(bytes _out, Encoding _encoding, bool _encrypt, bool _quiet)
 {
 	dev::h256 h = dev::sha3(_out);
 	if (_encrypt)
-		crypto::Secp256k1PP::get()->encrypt(toPublic(Secret(h)), _out);
+		dev::encrypt(toPublic(Secret(h)), &_out, _out);
 	if (!_quiet)
 		cerr << "Keccak of RLP: " << h.hex() << endl;
 

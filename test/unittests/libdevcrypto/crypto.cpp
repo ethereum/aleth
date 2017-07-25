@@ -37,7 +37,6 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Hash.h>
-#include <libdevcrypto/CryptoPP.h>
 #include <test/tools/libtesteth/TestHelper.h>
 
 using namespace std;
@@ -50,12 +49,7 @@ namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-struct DevcryptoTestFixture: public TestOutputHelper {
-	DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
-
-	Secp256k1PP* s_secp256k1;
-};
-BOOST_FIXTURE_TEST_SUITE(devcrypto, DevcryptoTestFixture)
+BOOST_FIXTURE_TEST_SUITE(devcrypto, TestOutputHelper)
 
 static CryptoPP::AutoSeededRandomPool& rng()
 {
@@ -158,12 +152,12 @@ BOOST_AUTO_TEST_CASE(SignAndRecoverLoop)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_patch)
+BOOST_AUTO_TEST_CASE(decryptEmpty)
 {
 	KeyPair k = KeyPair::create();
-	bytes io_text;
-	s_secp256k1->decrypt(k.secret(), io_text);
-	BOOST_REQUIRE_EQUAL(io_text.size(), 0);
+	bytes text;
+	decrypt(k.secret(), {}, text);
+	BOOST_CHECK_EQUAL(text.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(verify_secert)
@@ -272,16 +266,16 @@ BOOST_AUTO_TEST_CASE(ecdh_agree_invalid_seckey)
 BOOST_AUTO_TEST_CASE(ecies_standard)
 {
 	KeyPair k = KeyPair::create();
-	
+
 	string message("Now is the time for all good persons to come to the aid of humanity.");
 	string original = message;
 	bytes b = asBytes(message);
-	
-	s_secp256k1->encryptECIES(k.pub(), b);
+
+	encryptECIES(k.pub(), &b, b);
 	BOOST_REQUIRE(b != asBytes(original));
 	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
 	
-	s_secp256k1->decryptECIES(k.secret(), b);
+	decryptECIES(k.secret(), &b, b);
 	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
 }
 
@@ -289,23 +283,19 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 {
 	KeyPair k = KeyPair::create();
 
-	string message("Now is the time for all good persons to come to the aid of humanity.");
-	bytes original = asBytes(message);
-	bytes b = original;
+	bytes const msg = asBytes("Now is the time for all good persons to come to the aid of humanity.");
+	string const shared("shared MAC data");
+	string const wrongShared("wrong shared MAC data");
 
-	string shared("shared MAC data");
-	string wrongShared("wrong shared MAC data");
+	bytes b = msg;
+	encryptECIES(k.pub(), shared, &b, b);
+	BOOST_REQUIRE(!b.empty());
+	BOOST_CHECK_EQUAL(b[0], 0x04);
+	BOOST_CHECK(b != msg);
 
-	s_secp256k1->encryptECIES(k.pub(), shared, b);
-	BOOST_REQUIRE(b != original);
-	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
-
-	BOOST_REQUIRE(!s_secp256k1->decryptECIES(k.secret(), wrongShared, b));
-
-	s_secp256k1->decryptECIES(k.secret(), shared, b);
-
-	auto decrypted = bytesConstRef(&b).cropped(0, original.size()).toBytes();
-	BOOST_CHECK_EQUAL(toHex(decrypted), toHex(original));
+	BOOST_CHECK(!decryptECIES(k.secret(), wrongShared, &b, b));
+	BOOST_CHECK(decryptECIES(k.secret(), shared, &b, b));
+	BOOST_CHECK_EQUAL(toHex(bytesConstRef(&b).cropped(0, msg.size())), toHex(msg));
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
@@ -316,11 +306,11 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	string original = message;
 	
 	bytes b = asBytes(message);
-	s_secp256k1->encrypt(k.pub(), b);
-	BOOST_REQUIRE(b != asBytes(original));
+	encrypt(k.pub(), &b, b);
+	BOOST_CHECK(b != asBytes(original));
 
-	s_secp256k1->decrypt(k.secret(), b);
-	BOOST_REQUIRE(b == asBytes(original));
+	decrypt(k.secret(), &b, b);
+	BOOST_CHECK(b == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhCryptopp)
@@ -440,7 +430,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes authcipher;
 	encrypt(nodeB.pub(), &auth, authcipher);
-	BOOST_REQUIRE_EQUAL(authcipher.size(), 279);
+	BOOST_REQUIRE_EQUAL(authcipher.size(), 307);
 	
 	// Receipient is Bob (nodeB)
 	auto eB = KeyPair::create();
@@ -465,7 +455,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes ackcipher;
 	encrypt(nodeA.pub(), &ack, ackcipher);
-	BOOST_REQUIRE_EQUAL(ackcipher.size(), 182);
+	BOOST_REQUIRE_EQUAL(ackcipher.size(), 210);
 	
 	BOOST_REQUIRE(eA.pub());
 	BOOST_REQUIRE(eB.pub());
@@ -793,6 +783,14 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 				BOOST_REQUIRE(p != pkey);
 		}
 	}
+}
+
+BOOST_AUTO_TEST_CASE(pbkdf2Static)
+{
+	auto salt = asBytes("Red Hot Chili Peppers");
+	auto key = pbkdf2("Hello Ethereum!", salt, 999, 15);
+	auto expected = "4187067867ced7bca83da5cfc21a7a";
+	BOOST_CHECK_EQUAL(toHex(key.makeInsecure()), expected);
 }
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::disabled() *utf::label("perf"))

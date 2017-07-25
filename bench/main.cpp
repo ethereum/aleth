@@ -31,7 +31,6 @@
 #include <libdevcore/MemoryDB.h>
 #include <libdevcore/TrieDB.h>
 #include <libdevcrypto/Common.h>
-#include <libdevcrypto/CryptoPP.h>
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;

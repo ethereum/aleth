@@ -27,15 +27,13 @@
 #include <secp256k1_recovery.h>
 #include <secp256k1_sha256.h>
 #include <cryptopp/aes.h>
-#include <cryptopp/pwdbased.h>
-#include <cryptopp/sha.h>
 #include <cryptopp/modes.h>
 #include <libscrypt/libscrypt.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 #include "AES.h"
-#include "CryptoPP.h"
 #include "Exceptions.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
@@ -106,19 +104,12 @@ Address dev::toAddress(Address const& _from, u256 const& _nonce)
 
 void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
-	bytes io = _plain.toBytes();
-	Secp256k1PP::get()->encrypt(_k, io);
-	o_cipher = std::move(io);
+	encryptECIES(_k, _plain, o_cipher);
 }
 
 bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
-	bytes io = _cipher.toBytes();
-	Secp256k1PP::get()->decrypt(_k, io);
-	if (io.empty())
-		return false;
-	o_plaintext = std::move(io);
-	return true;
+	return decryptECIES(_k, _cipher, o_plaintext);
 }
 
 void dev::encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
@@ -128,9 +119,40 @@ void dev::encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 
 void dev::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytesConstRef _plain, bytes& o_cipher)
 {
-	bytes io = _plain.toBytes();
-	Secp256k1PP::get()->encryptECIES(_k, _sharedMacData, io);
-	o_cipher = std::move(io);
+	// interop w/go ecies implementation
+	auto r = KeyPair::create();
+	Secret z;
+	ecdh::agree(r.secret(), _k, z);
+	auto key = ecies::kdf(z, bytes(), 32);
+	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
+	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, mKeyMaterial.data(), mKeyMaterial.size());
+	bytes mKey(32);
+	secp256k1_sha256_finalize(&ctx, mKey.data());
+
+	auto iv = h128::random();
+	bytes cipherText = encryptSymNoAuth(SecureFixedHash<16>(eKey), iv, _plain);
+	if (cipherText.empty())
+		return;
+
+	bytes msg(1 + Public::size + h128::size + cipherText.size() + 32);
+	msg[0] = 0x04;
+	r.pub().ref().copyTo(bytesRef(&msg).cropped(1, Public::size));
+	iv.ref().copyTo(bytesRef(&msg).cropped(1 + Public::size, h128::size));
+	bytesRef msgCipherRef = bytesRef(&msg).cropped(1 + Public::size + h128::size, cipherText.size());
+	bytesConstRef(&cipherText).copyTo(msgCipherRef);
+
+	// tag message
+	secp256k1_hmac_sha256_t hmacCtx;
+	secp256k1_hmac_sha256_initialize(&hmacCtx, mKey.data(), mKey.size());
+	bytesConstRef cipherWithIV = bytesRef(&msg).cropped(1 + Public::size, h128::size + cipherText.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, cipherWithIV.data(), cipherWithIV.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, _sharedMacData.data(), _sharedMacData.size());
+	secp256k1_hmac_sha256_finalize(&hmacCtx, msg.data() + 1 + Public::size + cipherWithIV.size());
+
+	o_cipher = std::move(msg);
 }
 
 bool dev::decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
@@ -140,10 +162,50 @@ bool dev::decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plainte
 
 bool dev::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesConstRef _cipher, bytes& o_plaintext)
 {
-	bytes io = _cipher.toBytes();
-	if (!Secp256k1PP::get()->decryptECIES(_k, _sharedMacData, io))
+	// interop w/go ecies implementation
+
+	// io_cipher[0] must be 2, 3, or 4, else invalidpublickey
+	if (_cipher.empty() || _cipher[0] < 2 || _cipher[0] > 4)
+		// invalid message: publickey
 		return false;
-	o_plaintext = std::move(io);
+
+	if (_cipher.size() < (1 + Public::size + h128::size + 1 + h256::size))
+		// invalid message: length
+		return false;
+
+	Secret z;
+	ecdh::agree(_k, *(Public*)(_cipher.data() + 1), z);
+	auto key = ecies::kdf(z, bytes(), 64);
+	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
+	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
+	bytes mKey(32);
+	// FIXME: Use crypto::sha256()
+	secp256k1_sha256_t ctx;
+	secp256k1_sha256_initialize(&ctx);
+	secp256k1_sha256_write(&ctx, mKeyMaterial.data(), mKeyMaterial.size());
+	secp256k1_sha256_finalize(&ctx, mKey.data());
+
+	bytes plain;
+	size_t cipherLen = _cipher.size() - 1 - Public::size - h128::size - h256::size;
+	bytesConstRef cipherWithIV(_cipher.data() + 1 + Public::size, h128::size + cipherLen);
+	bytesConstRef cipherIV = cipherWithIV.cropped(0, h128::size);
+	bytesConstRef cipherNoIV = cipherWithIV.cropped(h128::size, cipherLen);
+	bytesConstRef msgMac(cipherNoIV.data() + cipherLen, h256::size);
+	h128 iv(cipherIV.toBytes());
+
+	// verify tag
+
+	secp256k1_hmac_sha256_t hmacCtx;
+	secp256k1_hmac_sha256_initialize(&hmacCtx, mKey.data(), mKey.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, cipherWithIV.data(), cipherWithIV.size());
+	secp256k1_hmac_sha256_write(&hmacCtx, _sharedMacData.data(), _sharedMacData.size());
+	h256 mac;
+	secp256k1_hmac_sha256_finalize(&hmacCtx, mac.data());
+	for (unsigned i = 0; i < h256::size; i++)
+		if (mac[i] != msgMac[i])
+			return false;
+
+	o_plaintext = decryptSymNoAuth(SecureFixedHash<16>(eKey), iv, cipherNoIV).makeInsecure();
 	return true;
 }
 
@@ -267,18 +329,41 @@ bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 
 bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
+	static const size_t bufSize = 32;
+	bytesSec secBuf(bufSize);
+	byte* buf = secBuf.writable().data();
+
 	bytesSec ret(_dkLen);
-	if (PKCS5_PBKDF2_HMAC<SHA256>().DeriveKey(
-		ret.writable().data(),
-		_dkLen,
-		0,
-		reinterpret_cast<byte const*>(_pass.data()),
-		_pass.size(),
-		_salt.data(),
-		_salt.size(),
-		_iterations
-	) != _iterations)
-		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
+	byte* derived = ret.writable().data();
+	size_t derivedLen = _dkLen;
+	for (unsigned int i = 1; derivedLen > 0; ++i)
+	{
+		secp256k1_hmac_sha256_t ctx;
+		secp256k1_hmac_sha256_initialize(&ctx, reinterpret_cast<byte const*>(_pass.data()), _pass.size());
+		secp256k1_hmac_sha256_write(&ctx, _salt.data(), _salt.size());
+		for (auto j = 0; j < 4; ++j)
+		{
+			byte b = byte(i >> ((3-j)*8));
+			secp256k1_hmac_sha256_write(&ctx, &b, 1);
+		}
+		secp256k1_hmac_sha256_finalize(&ctx, buf);
+
+		size_t const segmentLen = std::min(derivedLen, bufSize);
+		std::copy(buf, buf + segmentLen, derived);
+
+		for (decltype(_iterations) j = 1; j < _iterations; ++j)
+		{
+			secp256k1_hmac_sha256_initialize(&ctx, reinterpret_cast<byte const*>(_pass.data()), _pass.size());
+			secp256k1_hmac_sha256_write(&ctx, buf, bufSize);
+			secp256k1_hmac_sha256_finalize(&ctx, buf);
+			std::transform(buf, buf + segmentLen, derived, derived,
+				[](byte a, byte b) { return a ^ b; }
+			);
+		}
+
+		derived += segmentLen;
+		derivedLen -= segmentLen;
+	}
 	return ret;
 }
 
