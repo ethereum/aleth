@@ -308,9 +308,9 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 			continue;
 		}
 
-		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("exec") > 0, testname + "exec not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("exec") > 0, testname + " exec not set!");
 
 		TestLastBlockHashes lastBlockHashes(h256s(256, h256()));
 		eth::EnvInfo env = FakeExtVM::importEnv(o["env"].get_obj(), lastBlockHashes);

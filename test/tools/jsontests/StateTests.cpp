@@ -60,9 +60,9 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin == false && Options::get().fillchain)
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "transaction not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + " transaction not set!");
 
 		ImportTest importer(o, testType::GeneralStateTest);
 
@@ -77,7 +77,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 			if (importer.exportTest(bytes()))
 				cerr << testname << endl;
 #else
-			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "You can not fill tests when FATDB is switched off"));
+			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + " You can not fill tests when FATDB is switched off"));
 #endif
 		}
 		else
