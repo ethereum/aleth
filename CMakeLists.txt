@@ -40,6 +40,12 @@ set(CPP_ETHEREUM_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "Path to the root di
 include(EthPolicy)
 eth_policy()
 
+set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo)
+
+# Map current configuration to congigurations of imported targets.
+set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG RelWithDebInfo Release)
+set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo Release)
+
 # project name and version should be set after cmake_policy CMP0048
 project(cpp-ethereum VERSION "1.3.0")
 
