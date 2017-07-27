@@ -270,7 +270,7 @@ public:
 		return ret;
 	}
 
-	/// Converts to int of type given; if isString(), decodes as big-endian bytestream. @returns 0 if not an int or string.
+	/// Converts to int of type given; if isData(), decodes as big-endian bytestream. @returns 0 if not an int or data.
 	template <class _T = unsigned> _T toInt(int _flags = Strict) const
 	{
 		requireGood();
