@@ -158,7 +158,18 @@ private:
 	mutable h256s m_lastHashes;
 };
 
+void addBlockInfo(Exception& io_ex, BlockHeader const& _header, bytes&& _blockData)
+{
+	io_ex << errinfo_now(time(0));
+	io_ex << errinfo_block(std::move(_blockData));
+	// only populate extraData if we actually managed to extract it. otherwise,
+	// we might be clobbering the existing one.
+	if (!_header.extraData().empty())
+		io_ex << errinfo_extraData(_header.extraData());
 }
+
+}
+
 
 class dev::eth::ImportPerformanceLogger
 {
@@ -763,12 +774,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 	catch (Exception& ex)
 	{
-		ex << errinfo_now(time(0));
-		ex << errinfo_block(_block.block.toBytes());
-		// only populate extraData if we actually managed to extract it. otherwise,
-		// we might be clobbering the existing one.
-		if (!_block.info.extraData().empty())
-			ex << errinfo_extraData(_block.info.extraData());
+		addBlockInfo(ex, _block.info, _block.block.toBytes());
 		throw;
 	}
 #endif // ETH_CATCH
@@ -848,12 +854,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 	}
 	catch (Exception& ex)
 	{
-		ex << errinfo_now(time(0));
-		ex << errinfo_block(_block.block.toBytes());
-		// only populate extraData if we actually managed to extract it. otherwise,
-		// we might be clobbering the existing one.
-		if (!_block.info.extraData().empty())
-			ex << errinfo_extraData(_block.info.extraData());
+		addBlockInfo(ex, _block.info, _block.block.toBytes());
 		throw;
 	}
 
@@ -1534,12 +1535,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 	catch (Exception& ex)
 	{
 		ex << errinfo_phase(1);
-		ex << errinfo_now(time(0));
-		ex << errinfo_block(_block.toBytes());
-		// only populate extraData if we actually managed to extract it. otherwise,
-		// we might be clobbering the existing one.
-		if (!h.extraData().empty())
-			ex << errinfo_extraData(h.extraData());
+		addBlockInfo(ex, h, _block.toBytes());
 		if (_onBad)
 			_onBad(ex);
 		throw;
@@ -1567,12 +1563,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			{
 				ex << errinfo_phase(1);
 				ex << errinfo_uncleIndex(i);
-				ex << errinfo_now(time(0));
-				ex << errinfo_block(_block.toBytes());
-				// only populate extraData if we actually managed to extract it. otherwise,
-				// we might be clobbering the existing one.
-				if (!uh.extraData().empty())
-					ex << errinfo_extraData(uh.extraData());
+				addBlockInfo(ex, uh, _block.toBytes());
 				if (_onBad)
 					_onBad(ex);
 				throw;
@@ -1595,11 +1586,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 				ex << errinfo_phase(1);
 				ex << errinfo_transactionIndex(i);
 				ex << errinfo_transaction(d.toBytes());
-				ex << errinfo_block(_block.toBytes());
-				// only populate extraData if we actually managed to extract it. otherwise,
-				// we might be clobbering the existing one.
-				if (!h.extraData().empty())
-					ex << errinfo_extraData(h.extraData());
+				addBlockInfo(ex, h, _block.toBytes());
 				if (_onBad)
 					_onBad(ex);
 				throw;
