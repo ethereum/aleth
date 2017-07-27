@@ -39,7 +39,7 @@ TransactionReceipt::TransactionReceipt(bytesConstRef _rlp)
 
 	if (r[0].size() == 32)
 		m_statusCodeOrStateRoot = (h256)r[0];
-	else if (r[0].size() == 1)
+	else if (r[0].isInt())
 		m_statusCodeOrStateRoot = (uint8_t)r[0];
 	else
 		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
