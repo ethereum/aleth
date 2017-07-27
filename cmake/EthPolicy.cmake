@@ -24,11 +24,9 @@ macro (eth_policy)
 
 	endif()
 
-	if (${CMAKE_VERSION} VERSION_GREATER 3.1)
-		
+	if (POLICY CMP0054)
 		# do not interpret if() arguments as variables!
 		cmake_policy(SET CMP0054 NEW)
-
 	endif()
 
 endmacro()
