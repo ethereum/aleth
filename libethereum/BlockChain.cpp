@@ -25,6 +25,7 @@
 #include "State.h"
 #include "Block.h"
 #include "Defaults.h"
+#include "ImportPerformanceLogger.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/RLP.h>
@@ -37,9 +38,6 @@
 #include <gperftools/profiler.h>
 #endif
 
-#include <boost/algorithm/string.hpp>
-#include <boost/range/adaptors.hpp>
-#include <boost/timer.hpp>
 #include <boost/filesystem.hpp>
 
 using namespace std;
@@ -169,64 +167,6 @@ void addBlockInfo(Exception& io_ex, BlockHeader const& _header, bytes&& _blockDa
 }
 
 }
-
-
-class dev::eth::ImportPerformanceLogger
-{
-public:
-	void onStageFinished(std::string const& _name)
-	{
-		m_stages[_name] = m_stageTimer.elapsed();
-		m_stageTimer.restart();
-	}
-
-	double stageDuration(std::string const& _name) const
-	{
-		auto const it = m_stages.find(_name);
-		return it != m_stages.end() ? it->second : 0;
-	}
-
-	void onFinished(std::unordered_map<std::string, std::string> const& _additionalValues)
-	{
-		double const totalElapsed = m_totalTimer.elapsed();
-		if (totalElapsed > 0.5)
-		{
-			cnote << "SLOW IMPORT: { " << constructReport(totalElapsed, _additionalValues) << " }";
-		}
-	}
-
-private:
-
-	template <class ValueType>
-	static std::string pairToString(std::pair<std::string const, ValueType> const& _pair)
-	{
-		return "\"" + _pair.first + "\": " + toString(_pair.second);
-	}
-
-	std::string constructReport(double _totalElapsed, std::unordered_map<std::string, std::string> const& _additionalValues)
-	{
-		static std::string const Separator = ", ";
-
-		std::string result;
-		if (!_additionalValues.empty())
-		{
-			auto const keyValuesAdditional = _additionalValues | boost::adaptors::transformed(pairToString<std::string>);
-			result += boost::algorithm::join(keyValuesAdditional, Separator);
-			result += Separator;
-		}
-
-		m_stages.emplace("total", _totalElapsed);
-		auto const keyValuesStages = m_stages | boost::adaptors::transformed(pairToString<double>);
-		result += boost::algorithm::join(keyValuesStages, Separator);
-
-		return result;
-	}
-
-
-	Timer m_totalTimer;
-	std::unordered_map<std::string, double> m_stages;
-	Timer m_stageTimer;
-};
 
 #if ETH_DEBUG&&0
 static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(15);
