@@ -13,6 +13,29 @@
 #
 # or many other such possibilities
 #
+# define path to these programs to pick one or more of them to run
+# the default is to do nothing but print the command line
+#
+ifndef SOLC
+	SOLC_=:
+else
+	SOLC_=$(SOLC)
+endif
+ifndef ETHVM
+	ETHVM_=:
+else
+	ETHVM_ = $(STATS) $(ETHVM) --network Homestead test
+endif
+ifndef EVM
+	EVM_=:
+else
+	EVM_ = $(STATS) $(EVM) --codefile 
+endif
+ifndef PARITY
+	PARITY_=:
+else
+	PARITY_ = $(STATS) $(PARITY) stats --gas 10000000000 --code 
+endif
 
 # overide these if desired
 ifndef STATS
@@ -22,37 +45,16 @@ ifndef CCC
 	CCC = gcc -O0 -o
 endif
 
-# define path to these programs to pick one or more of them to run
-# the default is to do nothing but print the command line
-ifndef SOLC
-	SOLC=:
-endif
-ifndef ETHVM
-	ETHVM=:
-else
-	ETHVM = $(STATS) $(ETHVM) test
-endif
-ifndef EVM
-	EVM=:
-else
-	EVM = $(STATS) $(EVM) --codefile 
-endif
-ifndef PARITY
-	PARITY=:
-else
-	PARITY = $(STATS) $(PARITY) --codefile 
-endif
-
 %.ran : %.bin
-	$(ETHVM) test $*.bin
-	$(EVM) $*.bin run; touch $*.ran
-	$(PARITY) stats --gas 10000000000 --code `cat $*.bin`; touch $*.ran
+	$(ETHVM_) $*.bin; touch $*.ran
+	$(EVM_) $*.bin run; touch $*.ran
+	$(PARITY_) `cat $*.bin`; touch $*.ran
 
 %.bin : %.asm
-	$(SOLC) --assemble $*.asm | grep '^[0-9a-f]\+$\' > $*.bin
+	$(SOLC_) --assemble $*.asm | grep '^[0-9a-f]\+$\' > $*.bin
 
 %.bin : %.sol
-	$(SOLC) -o . --overwrite --asm --bin $*.sol 
+	$(SOLC_) -o . --overwrite --asm --bin $*.sol 
 	
 mul64c: mul64c.c
 	$(CCC) mul64c mul64c.c
