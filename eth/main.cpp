@@ -37,7 +37,7 @@
 #include <libevm/VMFactory.h>
 #include <libethcore/KeyManager.h>
 #include <libethereum/Defaults.h>
-#include <libethereum/BlockChainSync.h>
+#include <libethereum/SnapshotImporter.h>
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
@@ -245,6 +245,7 @@ enum class OperationMode
 {
 	Node,
 	Import,
+	ImportSnapshot,
 	Export
 };
 
@@ -781,6 +782,11 @@ int main(int argc, char** argv)
 			noPinning = true;
 			bootstrap = false;
 		}
+		else if ((arg == std::string("--import-snapshot")) && i + 1 < argc)
+		{
+			mode = OperationMode::ImportSnapshot;
+			filename = argv[++i];
+		}
 		else
 		{
 			cerr << "Invalid argument: " << arg << "\n";
@@ -1008,6 +1014,21 @@ int main(int argc, char** argv)
 		double e = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - t).count() / 1000.0;
 		cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")\n";
 		return 0;
+	}
+
+	if (mode == OperationMode::ImportSnapshot)
+	{
+		try
+		{
+			SnapshotImporter importer(*web3.ethereum());
+			importer.import(filename);
+			return 0;
+		}
+		catch (...)
+		{
+			cerr << "Error during importing the snapshot: " << boost::current_exception_diagnostic_information() << endl;
+			return -1;
+		}
 	}
 
 	try

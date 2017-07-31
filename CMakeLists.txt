@@ -106,6 +106,7 @@ include(ProjectCryptopp)
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
 include(ProjectSnark)
+include(ProjectSnappy)
 
 find_package(Threads)
 

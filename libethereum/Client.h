@@ -39,6 +39,8 @@
 #include "Block.h"
 #include "CommonNet.h"
 #include "ClientBase.h"
+#include "StateImporter.h"
+#include "BlockChainImporter.h"
 
 #include <boost/filesystem/path.hpp>
 
@@ -186,6 +188,9 @@ public:
 	void rewind(unsigned _n);
 	/// Rescue the chain.
 	void rescue() { bc().rescue(m_stateDB); }
+
+	StateImporter createStateImporter() { return StateImporter(m_stateDB); }
+	BlockChainImporter createBlockChainImporter() { return BlockChainImporter(m_bc); }
 
 	/// Queues a function to be executed in the main thread (that owns the blockchain, etc).
 	void executeInMainThread(std::function<void()> const& _function);

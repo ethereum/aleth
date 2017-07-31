@@ -1,0 +1,17 @@
+ExternalProject_Add(snappy
+    PREFIX ${CMAKE_SOURCE_DIR}/deps
+    DOWNLOAD_NAME snappy.tar.gz
+    DOWNLOAD_NO_PROGRESS TRUE
+    URL https://github.com/google/snappy/archive/1.1.5.tar.gz
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+        -DCMAKE_BUILD_TYPE=Release
+)
+
+ExternalProject_Get_Property(snappy INSTALL_DIR)
+add_library(Snappy STATIC IMPORTED)
+set(SNAPPY_LIBRARY ${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}snappy${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(SNAPPY_INCLUDE_DIR ${INSTALL_DIR}/include)
+set_property(TARGET Snappy PROPERTY IMPORTED_LOCATION ${SNAPPY_LIBRARY})
+set_property(TARGET Snappy PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SNAPPY_INCLUDE_DIR})
+add_dependencies(Snappy snappy)
+unset(INSTALL_DIR)
