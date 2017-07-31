@@ -156,10 +156,9 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 	// ExtVM::create takes the sender address from .myAddress.
 	assert(fromEvmC(_msg->sender) == _env.myAddress);
 
-	// TODO: EVMJIT does not support RETURNDATA at the moment, so
-	//       the output is ignored here.
 	h160 addr;
-	std::tie(addr, std::ignore) = _env.create(value, gas, init, Instruction::CREATE, u256(0), {});
+	owning_bytes_ref output;
+	std::tie(addr, output) = _env.create(value, gas, init, Instruction::CREATE, u256(0), {});
 	o_result->gas_left = static_cast<int64_t>(gas);
 	o_result->release = nullptr;
 	if (addr)
@@ -174,9 +173,27 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 	}
 	else
 	{
-		o_result->code = EVM_FAILURE;
-		o_result->output_data = nullptr;
-		o_result->output_size = 0;
+		o_result->code = EVM_REVERT;
+
+		// Pass the output to the EVM without a copy. The EVM will delete it
+		// when finished with it.
+
+		// First assign reference. References are not invalidated when vector
+		// of bytes is moved. See `.takeBytes()` below.
+		o_result->output_data = output.data();
+		o_result->output_size = output.size();
+
+		// Place a new vector of bytes containing output in result's reserved memory.
+		static_assert(sizeof(bytes) <= sizeof(o_result->reserved), "Vector is too big");
+		new(&o_result->reserved) bytes(output.takeBytes());
+		// Set the destructor to delete the vector.
+		o_result->release = [](evm_result const* _result)
+		{
+			auto& output = reinterpret_cast<bytes const&>(_result->reserved);
+			// Explicitly call vector's destructor to release its data.
+			// This is normal pattern when placement new operator is used.
+			output.~bytes();
+		};
 	}
 }
 
