@@ -46,12 +46,19 @@ namespace dev {
                 {
                     response = this->debug_traceCall(request[0u], request[1u].asString(), request[2u]);
                 }
+                inline virtual void debug_accountIsInTrie(const Json::Value& request, Json::Value& response)
+                {
+                    response = this->debug_accountIsInTrie(request[0u].asString(), request[1u].asInt(), request[2u].asString());
+                }
+
                 virtual Json::Value debug_traceTransaction(const std::string& param1, const Json::Value& param2) = 0;
                 virtual Json::Value debug_storageRangeAt(const std::string& param1, int param2, const std::string& param3, const std::string& param4, int param5) = 0;
                 virtual std::string debug_preimage(const std::string& param1) = 0;
                 virtual Json::Value debug_traceBlockByNumber(int param1, const Json::Value& param2) = 0;
                 virtual Json::Value debug_traceBlockByHash(const std::string& param1, const Json::Value& param2) = 0;
                 virtual Json::Value debug_traceCall(const Json::Value& param1, const std::string& param2, const Json::Value& param3) = 0;
+
+                virtual bool debug_accountIsInTrie(const std::string& param1, int param2, const std::string& param3);
         };
 
     }
