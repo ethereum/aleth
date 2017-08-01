@@ -232,33 +232,27 @@ void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) no
 	};
 }
 
+const evm_host hostInterface =
+{
+	queryState,
+	getStorage,
+	setStorage,
+	selfdestruct,
+	call,
+	getTxContext,
+	getBlockHash,
+	log
+};
+
 
 /// RAII wrapper for an evm instance.
 class EVM
 {
 public:
-	EVM(
-		evm_query_state_fn _queryFn,
-		evm_get_storage_fn _getStorageFn,
-		evm_set_storage_fn _setStorageFn,
-		evm_selfdestruct_fn _selfdestructFn,
-		evm_call_fn _callFn,
-		evm_get_tx_context_fn _getTxContextFn,
-		evm_get_block_hash_fn _getBlockHashFn,
-		evm_log_fn _logFn
-	)
+	EVM(evm_host const& _host)
 	{
 		auto factory = evmjit_get_factory();
-		m_instance = factory.create(
-			_queryFn,
-			_getStorageFn,
-			_setStorageFn,
-			_selfdestructFn,
-			_callFn,
-			_getTxContextFn,
-			_getBlockHashFn,
-			_logFn
-		);
+		m_instance = factory.create(&_host);
 	}
 
 	~EVM()
@@ -346,7 +340,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(queryState, getStorage, setStorage, selfdestruct, call, getTxContext, getBlockHash, log);
+	static EVM jit(hostInterface);
 	return jit;
 }
 
