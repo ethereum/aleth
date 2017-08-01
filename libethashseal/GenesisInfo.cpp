@@ -30,14 +30,15 @@ using namespace dev;
 #include "genesis/test/homesteadTest.cpp"
 #include "genesis/test/eip150Test.cpp"
 #include "genesis/test/eip158Test.cpp"
-#include "genesis/test/metropolisTest.cpp"
-#include "genesis/test/metropolisTransitionTest.cpp"
+#include "genesis/test/byzantiumTest.cpp"
+#include "genesis/test/byzantiumTransitionTest.cpp"
+#include "genesis/test/constantinopleTest.cpp"
 
 //Transition configurations
 #include "genesis/test/frontierToHomesteadAt5Test.cpp"
 #include "genesis/test/homesteadToDaoAt5Test.cpp"
 #include "genesis/test/homesteadToEIP150At5Test.cpp"
-#include "genesis/test/EIP158ToMetropolisAt5Test.cpp"
+#include "genesis/test/EIP158ToByzantiumAt5Test.cpp"
 #include "genesis/test/transitionnetTest.cpp"
 
 static dev::h256 const c_genesisDefaultStateRoot;
@@ -57,14 +58,15 @@ std::string const& dev::eth::genesisInfo(Network _n)
 	case Network::HomesteadTest: return c_genesisInfoHomesteadTest;
 	case Network::EIP150Test: return c_genesisInfoEIP150Test;
 	case Network::EIP158Test: return c_genesisInfoEIP158Test;
-	case Network::MetropolisTest: return c_genesisInfoMetropolisTest;
-	case Network::MetropolisTransitionTest: return c_genesisInfoMetropolisTransitionTest;
+	case Network::ByzantiumTest: return c_genesisInfoByzantiumTest;
+	case Network::ByzantiumTransitionTest: return c_genesisInfoByzantiumTransitionTest;
+	case Network::ConstantinopleTest: return c_genesisInfoConstantinopleTest;
 
 	//Transition test genesis
-	case Network::FrontierToHomesteadAt5: return c_genesisInfoFrontierToMetropolisAt5Test;
+	case Network::FrontierToHomesteadAt5: return c_genesisInfoFrontierToHomesteadAt5Test;
 	case Network::HomesteadToDaoAt5: return c_genesisInfoHomesteadToDaoAt5Test;
 	case Network::HomesteadToEIP150At5: return c_genesisInfoHomesteadToEIP150At5Test;
-	case Network::EIP158ToMetropolisAt5: return c_genesisInfoEIP158ToMetropolisAt5Test;
+	case Network::EIP158ToByzantiumAt5: return c_genesisInfoEIP158ToByzantiumAt5Test;
 	case Network::TransitionnetTest: return c_genesisInfoTest;
 
 	default:
@@ -84,7 +86,8 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
 	case Network::HomesteadTest: \
 	case Network::EIP150Test:
 	case Network::EIP158Test:
-	case Network::MetropolisTest:
+	case Network::ByzantiumTest:
+	case Network::ConstantinopleTest:
 		return c_genesisDefaultStateRoot;
 	default:
 		throw std::invalid_argument("Invalid network value");

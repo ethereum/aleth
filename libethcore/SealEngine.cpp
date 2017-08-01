@@ -48,11 +48,11 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
 	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().u256Param("EIP158ForkBlock") && _t.isReplayProtected())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 
-	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().u256Param("metropolisForkBlock") && _t.hasZeroSignature())
+	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().u256Param("constantinopleForkBlock") && _t.hasZeroSignature())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 
 	if ((_ir & ImportRequirements::TransactionBasic) &&
-		_header.number() >= chainParams().u256Param("metropolisForkBlock") &&
+		_header.number() >= chainParams().u256Param("constantinopleForkBlock") &&
 		_t.hasZeroSignature() &&
 		(_t.value() != 0 || _t.gasPrice() != 0 || _t.nonce() != 0))
 			BOOST_THROW_EXCEPTION(InvalidZeroSignatureTransaction() << errinfo_got((bigint)_t.gasPrice()) << errinfo_got((bigint)_t.value()) << errinfo_got((bigint)_t.nonce()));
@@ -72,8 +72,10 @@ SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
 
 EVMSchedule const& SealEngineBase::evmSchedule(u256 const& _blockNumber) const
 {
-	if (_blockNumber >= chainParams().u256Param("metropolisForkBlock"))
-		return MetropolisSchedule;
+	if (_blockNumber >= chainParams().u256Param("constantinopleForkBlock"))
+		return ConstantinopleSchedule;
+	else if (_blockNumber >= chainParams().u256Param("byzantiumForkBlock"))
+		return ByzantiumSchedule;
 	else if (_blockNumber >= chainParams().u256Param("EIP158ForkBlock"))
 		return EIP158Schedule;
 	else if (_blockNumber >= chainParams().u256Param("EIP150ForkBlock"))

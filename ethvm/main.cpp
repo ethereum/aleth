@@ -67,7 +67,7 @@ void help()
 		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)" << endl
 #endif // ETH_EVMJIT
 		<< "Network options:" << endl
-		<< "    --network Main|Ropsten|Homestead|Frontier|Metropolis" << endl
+		<< "    --network Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople" << endl
 		<< endl
 		<< "Options for trace:" << endl
 		<< "    --flat  Minimal whitespace in the JSON." << endl
@@ -205,8 +205,10 @@ int main(int argc, char** argv)
 		else if (arg == "--network" && i + 1 < argc)
 		{
 			string network = argv[++i];
-			if (network == "Metropolis")
-				networkName = Network::MetropolisTest;
+			if (network == "Constantinople")
+				networkName = Network::ConstantinopleTest;
+			else if (network == "Byzantium")
+				networkName = Network::ByzantiumTest;
 			else if (network == "Frontier")
 				networkName = Network::FrontierTest;
 			else if (network == "Ropsten")

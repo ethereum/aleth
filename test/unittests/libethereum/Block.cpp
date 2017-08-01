@@ -269,23 +269,23 @@ BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
 	BOOST_CHECK_THROW(block.receipt(123), std::out_of_range);
 }
 
-class MetropolisTransitionTestFixture: public TestOutputHelper
+class ByzantiumTransitionTestFixture: public TestOutputHelper
 {
 public:
-	MetropolisTransitionTestFixture():
-		networkSelector(Network::MetropolisTransitionTest),
+	ByzantiumTransitionTestFixture():
+		networkSelector(Network::ByzantiumTransitionTest),
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),
 		blockchain(testBlockchain.interface())
 	{
 		TestBlock testBlock;
-		// block 1 - before Metropolis
+		// block 1 - before Byzantium
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 		block1hash = blockchain.currentHash();
 
-		// block 2 - first Metropolis block
+		// block 2 - first Byzantium block
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 		block2hash = blockchain.currentHash();
@@ -301,7 +301,7 @@ public:
 	h256 block2hash;
 };
 
-BOOST_FIXTURE_TEST_SUITE(MetropolisBlockSuite, MetropolisTransitionTestFixture)
+BOOST_FIXTURE_TEST_SUITE(ByzantiumBlockSuite, ByzantiumTransitionTestFixture)
 
 BOOST_AUTO_TEST_CASE(bBlockhashContractIsCreated)
 {

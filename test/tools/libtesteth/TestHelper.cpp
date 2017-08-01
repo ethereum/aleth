@@ -102,11 +102,12 @@ string netIdToString(eth::Network _netId)
 		case eth::Network::HomesteadTest: return "Homestead";
 		case eth::Network::EIP150Test: return "EIP150";
 		case eth::Network::EIP158Test: return "EIP158";
-		case eth::Network::MetropolisTest: return "Metropolis";
+		case eth::Network::ByzantiumTest: return "Byzantium";
+		case eth::Network::ConstantinopleTest: return "Constantinople";
 		case eth::Network::FrontierToHomesteadAt5: return "FrontierToHomesteadAt5";
 		case eth::Network::HomesteadToDaoAt5: return "HomesteadToDaoAt5";
 		case eth::Network::HomesteadToEIP150At5: return "HomesteadToEIP150At5";
-		case eth::Network::EIP158ToMetropolisAt5: return "EIP158ToMetropolisAt5";
+		case eth::Network::EIP158ToByzantiumAt5: return "EIP158ToByzantiumAt5";
 		case eth::Network::TransitionnetTest: return "TransitionNet";
 		default: return "other";
 	}
@@ -121,11 +122,12 @@ eth::Network stringToNetId(string const& _netname)
 		eth::Network::HomesteadTest,
 		eth::Network::EIP150Test,
 		eth::Network::EIP158Test,
-		eth::Network::MetropolisTest,
+		eth::Network::ByzantiumTest,
+		eth::Network::ConstantinopleTest,
 		eth::Network::FrontierToHomesteadAt5,
 		eth::Network::HomesteadToDaoAt5,
 		eth::Network::HomesteadToEIP150At5,
-		eth::Network::EIP158ToMetropolisAt5,
+		eth::Network::EIP158ToByzantiumAt5,
 		eth::Network::TransitionnetTest
 	}};
 
@@ -145,7 +147,8 @@ std::vector<eth::Network> const& getNetworks()
 		eth::Network::HomesteadTest,
 		eth::Network::EIP150Test,
 		eth::Network::EIP158Test,
-		eth::Network::MetropolisTest
+		eth::Network::ByzantiumTest,
+		eth::Network::ConstantinopleTest
 	}};
 	return networks;
 }

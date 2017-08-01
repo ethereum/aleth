@@ -16,7 +16,7 @@
 */
 #include "../../GenesisInfo.h"
 
-static std::string const c_genesisInfoMetropolisTest = std::string() +
+static std::string const c_genesisInfoByzantiumTest = std::string() +
 R"E(
 {
 	"sealEngine": "Ethash",
@@ -27,7 +27,8 @@ R"E(
 		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x00",
-		"metropolisForkBlock": "0x00",
+		"byzantiumForkBlock": "0x00",
+		"constantinopleForkBlock": "0xfffffffffffffff",
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,

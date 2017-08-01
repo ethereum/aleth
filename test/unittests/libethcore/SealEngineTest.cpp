@@ -29,10 +29,10 @@ using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(SealEngineTests, TestOutputHelper)
 
-BOOST_AUTO_TEST_CASE(UnsignedTransactionIsValidBeforeMetropolis)
+BOOST_AUTO_TEST_CASE(UnsignedTransactionIsValidBeforeConstantinople)
 {
 	ChainOperationParams params;
-	params.otherParams["metropolisForkBlock"] = "0x1000";
+	params.otherParams["constantinopleForkBlock"] = "0x1000";
 
 	Ethash ethash;
 	ethash.setChainParams(params);

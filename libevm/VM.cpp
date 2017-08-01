@@ -277,7 +277,7 @@ void VM::interpretCases()
 
 		CASE(REVERT)
 		{
-			// Pre-metropolis 
+			// Pre-byzantium
 			if (!m_schedule->haveRevert)
 				throwBadInstruction();
 
