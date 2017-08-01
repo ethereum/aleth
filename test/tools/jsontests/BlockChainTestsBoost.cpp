@@ -116,6 +116,36 @@ class bcTransitionFixture {
 	}
 };
 
+class bcGeneralTestsFixture
+{
+	public:
+	bcGeneralTestsFixture()
+	{
+		//general tests are filled from state tests
+		if (test::Options::get().filltests)
+			return;
+
+		string casename = boost::unit_test::framework::current_test_case().p_name;
+		runAllFilesInFolder("GeneralStateTests/" + casename);
+	}
+
+	void runAllFilesInFolder(string const& _folder)
+	{
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(test::getTestPath() + "/BlockchainTests/" +_folder);
+		int testcount = files.size() * test::getNetworks().size();  //each file contains a test per network fork
+
+		test::TestOutputHelper::initTest(testcount);
+		for (auto const& file: files)
+		{
+			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
+			test::executeTests(file.filename().string(), "/BlockchainTests/" + _folder, "/BlockchainTests/" +_folder, dev::test::doBlockchainTestNoLog);
+		}
+		test::TestOutputHelper::finishTest();
+
+	}
+
+};
+
 BOOST_FIXTURE_TEST_SUITE(BlockchainTests, bcTestFixture)
 
 BOOST_AUTO_TEST_CASE(bcStateTests){}
@@ -135,11 +165,67 @@ BOOST_AUTO_TEST_CASE(bcExploitTest){}
 
 BOOST_AUTO_TEST_SUITE_END()
 
+//Transition from fork to fork tests
 BOOST_FIXTURE_TEST_SUITE(TransitionTests, bcTransitionFixture)
 
 BOOST_AUTO_TEST_CASE(bcFrontierToHomestead){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToDao){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150){}
 BOOST_AUTO_TEST_CASE(bcEIP158ToMetropolis){}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+//General tests in form of blockchain tests
+BOOST_FIXTURE_TEST_SUITE(BCGeneralStateTests, bcGeneralTestsFixture)
+
+//Frontier Tests
+BOOST_AUTO_TEST_CASE(stCallCodes){}
+BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest){}
+BOOST_AUTO_TEST_CASE(stExample){}
+BOOST_AUTO_TEST_CASE(stInitCodeTest){}
+BOOST_AUTO_TEST_CASE(stLogTests){}
+BOOST_AUTO_TEST_CASE(stMemoryTest){}
+BOOST_AUTO_TEST_CASE(stPreCompiledContracts){}
+BOOST_AUTO_TEST_CASE(stRandom){}
+BOOST_AUTO_TEST_CASE(stRecursiveCreate){}
+BOOST_AUTO_TEST_CASE(stRefundTest){}
+BOOST_AUTO_TEST_CASE(stSolidityTest){}
+BOOST_AUTO_TEST_CASE(stSpecialTest){}
+BOOST_AUTO_TEST_CASE(stSystemOperationsTest){}
+BOOST_AUTO_TEST_CASE(stTransactionTest){}
+BOOST_AUTO_TEST_CASE(stTransitionTest){}
+BOOST_AUTO_TEST_CASE(stWalletTest){}
+
+//Homestead Tests
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead){}
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead){}
+BOOST_AUTO_TEST_CASE(stHomesteadSpecific){}
+BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead){}
+
+//EIP150 Tests
+BOOST_AUTO_TEST_CASE(stChangedEIP150){}
+BOOST_AUTO_TEST_CASE(stEIP150singleCodeGasPrices){}
+BOOST_AUTO_TEST_CASE(stMemExpandingEIP150Calls){}
+BOOST_AUTO_TEST_CASE(stEIP150Specific){}
+
+//EIP158 Tests
+BOOST_AUTO_TEST_CASE(stEIP158Specific){}
+BOOST_AUTO_TEST_CASE(stNonZeroCallsTest){}
+BOOST_AUTO_TEST_CASE(stZeroCallsTest){}
+BOOST_AUTO_TEST_CASE(stZeroCallsRevert){}
+BOOST_AUTO_TEST_CASE(stCodeSizeLimit){}
+BOOST_AUTO_TEST_CASE(stCreateTest){}
+BOOST_AUTO_TEST_CASE(stRevertTest){}
+
+//Metropolis Tests
+BOOST_AUTO_TEST_CASE(stStackTests){}
+BOOST_AUTO_TEST_CASE(stStaticCall){}
+BOOST_AUTO_TEST_CASE(stReturnDataTest){}
+BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
+
+//Stress Tests
+BOOST_AUTO_TEST_CASE(stAttackTest){}
+BOOST_AUTO_TEST_CASE(stMemoryStressTest){}
+BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest){}
 
 BOOST_AUTO_TEST_SUITE_END()
