@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file 
+/** @file
  */
 
 #include "SnapshotImporter.h"
@@ -66,9 +66,10 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 	h256 codeHash;
 	std::string chunkUncompressed;
 	size_t accountsImported = 0;
-	for (auto const& stateHash : _stateChunkHashes)
+	for (auto const& stateHash: _stateChunkHashes)
 	{
 		std::string const chunkCompressed = dev::contentsString((_snapshotDir / toHex(stateHash)).string());
+		assert(!chunkCompressed.empty());
 
 		h256 const chunkHash = sha3(chunkCompressed);
 		assert(chunkHash == stateHash);
@@ -78,7 +79,7 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 
 		RLP accounts(chunkUncompressed);
 
-		//size_t accs = accounts.itemCount();
+		size_t accs = accounts.itemCount();
 		for (auto addressAndAccount : accounts)
 		{
 			assert(addressAndAccount.itemCount() == 2);
@@ -103,7 +104,7 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 
 			assert(storageMap.empty() || codeHash == account[3].toHash<h256>());
 
-			for (auto hashAndValue : storage)
+			for (auto hashAndValue: storage)
 			{
 				assert(hashAndValue.itemCount() == 2);
 				h256 const keyHash = hashAndValue[0].toHash<h256>();
@@ -134,25 +135,39 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
 			}
 
+			if (accs == 1)
+			{
+				clog(SnapshotImportLog) << "Chunk with single account " << addressHash << " storage entires in chunk: " << storage.itemCount();
+			}
 			if (storage.itemCount() < 80000)
 			{
-				//					assert(nonce != 0 || balance != 0 || codeHash != EmptySHA3);
+				if (storageMap.size() >= 80000)
+				{
+					clog(SnapshotImportLog) << "Importing splitted account " << addressHash << " storage entires in last chunk: " << storage.itemCount() <<
+						" total storage entries: " << storageMap.size();
+				}
+
+				assert(nonce != 0 || balance != 0 || codeHash != EmptySHA3 || !storageMap.empty());
 				stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
 				++accountsImported;
 				storageMap.clear();
 			}
+			else
+			{
+				clog(SnapshotImportLog) << "Splitted account " << addressHash << " storage entires in chunk: " << storage.itemCount();
+			}
 		}
 
 		stateImporter.commitStateDatabase();
-		clog(SnapshotImportLog) << "Imported chunk " << stateHash << " (" << accounts.itemCount() << " accounts)\n";
-		clog(SnapshotImportLog) << stateChunkCount - (++imported) << " chunks left to import\n";
+		clog(SnapshotImportLog) << "Imported chunk " << stateHash << " (" << accounts.itemCount() << " accounts)";
+		clog(SnapshotImportLog) << stateChunkCount - (++imported) << " chunks left to import";
 	}
 
 	// check root
-	clog(SnapshotImportLog) << "Chunks imported: " << imported << "\n";
-	clog(SnapshotImportLog) << "Accounts imported: " << accountsImported << "\n";
-	clog(SnapshotImportLog) << "Reconstructed state root: " << stateImporter.stateRoot() << "\n";
-	clog(SnapshotImportLog) << "Manifest state root:      " << _stateRoot << "\n";
+	clog(SnapshotImportLog) << "Chunks imported: " << imported;
+	clog(SnapshotImportLog) << "Accounts imported: " << accountsImported;
+	clog(SnapshotImportLog) << "Reconstructed state root: " << stateImporter.stateRoot();
+	clog(SnapshotImportLog) << "Manifest state root:      " << _stateRoot;
 	if (stateImporter.stateRoot() != _stateRoot)
 		BOOST_THROW_EXCEPTION(StateTrieReconstructionFailed());
 }
@@ -163,7 +178,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 
 	size_t const blockChunkCount = _blockChunkHashes.size();
 	size_t blockChunksImported = 0;
-	for (auto blockChunkHash : _blockChunkHashes)
+	for (auto blockChunkHash: _blockChunkHashes)
 	{
 		std::string const chunkCompressed = dev::contentsString((_snapshotDir / toHex(blockChunkHash)).string());
 
@@ -182,7 +197,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 		u256 const firstBlockDifficulty = blockChunk[2].toInt<u256>();
 		assert(firstBlockDifficulty);
 
-		clog(SnapshotImportLog) << "chunk first block " << firstBlockNumber << " first block hash " << firstBlockHash << " difficulty " << firstBlockDifficulty << "\n";
+		clog(SnapshotImportLog) << "chunk first block " << firstBlockNumber << " first block hash " << firstBlockHash << " difficulty " << firstBlockDifficulty;
 
 		size_t const itemCount = blockChunk.itemCount();
 		h256 parentHash = firstBlockHash;
@@ -205,7 +220,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 			RLP uncles = abridgedBlock[9];
 			RLP receipts = blockAndReceipts[1];
 			std::vector<bytesConstRef> receiptsVector;
-			for (auto receipt : receipts)
+			for (auto receipt: receipts)
 				receiptsVector.push_back(receipt.data());
 			h256 const receiptsRoot = orderedTrieRoot(receiptsVector);
 			h256 const unclesHash = sha3(uncles.data());
@@ -231,7 +246,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 
 		}
 
-		clog(SnapshotImportLog) << "Imported chunk " << blockChunkHash << " (" << itemCount - 3 << " blocks)\n";
-		clog(SnapshotImportLog) << blockChunkCount - (++blockChunksImported) << " chunks left to import\n";
+		clog(SnapshotImportLog) << "Imported chunk " << blockChunkHash << " (" << itemCount - 3 << " blocks)";
+		clog(SnapshotImportLog) << blockChunkCount - (++blockChunksImported) << " chunks left to import";
 	}
 }
