@@ -29,6 +29,22 @@
 using namespace dev;
 using namespace eth;
 
+namespace
+{
+	std::string snappyUncompress(std::string const& _compressed)
+	{
+		size_t uncompressedSize = 0;
+		if (!snappy::GetUncompressedLength(_compressed.data(), _compressed.size(), &uncompressedSize))
+			BOOST_THROW_EXCEPTION(FailedToGetUncompressedLength());
+
+		std::vector<char> uncompressed(uncompressedSize);
+		if (!snappy::RawUncompress(_compressed.data(), _compressed.size(), uncompressed.data()))
+			BOOST_THROW_EXCEPTION(FailedToUncompressedSnapshotChunk());
+
+		return std::string(uncompressed.begin(), uncompressed.end());
+	}
+}
+
 void SnapshotImporter::import(std::string const& _snapshotDirPath)
 {
 	boost::filesystem::path const snapshotDir(_snapshotDirPath);
@@ -74,8 +90,7 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 		h256 const chunkHash = sha3(chunkCompressed);
 		assert(chunkHash == stateHash);
 
-		bool success = snappy::Uncompress(chunkCompressed.data(), chunkCompressed.size(), &chunkUncompressed);
-		assert(success);
+		chunkUncompressed = snappyUncompress(chunkCompressed);
 
 		RLP accounts(chunkUncompressed);
 
@@ -185,9 +200,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 		h256 const chunkHash = sha3(chunkCompressed);
 		assert(chunkHash == blockChunkHash);
 
-		std::string chunkUncompressed;
-		bool success = snappy::Uncompress(chunkCompressed.data(), chunkCompressed.size(), &chunkUncompressed);
-		assert(success);
+		std::string chunkUncompressed = snappyUncompress(chunkCompressed);
 
 		RLP blockChunk(chunkUncompressed);
 		u256 const firstBlockNumber = blockChunk[0].toInt<u256>();

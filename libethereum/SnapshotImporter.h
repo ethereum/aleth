@@ -38,6 +38,8 @@ class Client;
 DEV_SIMPLE_EXCEPTION(UnsupportedSnapshotManifestVersion);
 DEV_SIMPLE_EXCEPTION(StateTrieReconstructionFailed);
 DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
+DEV_SIMPLE_EXCEPTION(FailedToGetUncompressedLength);
+DEV_SIMPLE_EXCEPTION(FailedToUncompressedSnapshotChunk);
 
 struct SnapshotImportLog: public LogChannel
 {
