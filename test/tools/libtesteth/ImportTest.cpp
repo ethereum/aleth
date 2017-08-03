@@ -219,10 +219,23 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 	assert(m_envInfo);
 
 	State initialState = _preState;
+	ExecOutput out(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries())));
 	try
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
-		ExecOutput out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+		if (Options::get().jsontrace)
+		{
+			Json::Value trace;
+			StandardTrace st;
+			st.setShowMnemonics();
+			st.setOptions(Options::get().jsontraceOptions);
+			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted, st.onOp());
+			Json::Reader().parse(st.json(), trace);
+			cout << trace;
+		}
+		else
+			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+
 		eth::ChangeLog changeLog = initialState.changeLog();
 		ImportTest::checkBalance(_preState, initialState);
 
@@ -241,8 +254,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 	}
 
 	initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
-	ExecOutput emptyOutput(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries())));
-	return std::make_tuple(initialState, emptyOutput, initialState.changeLog());
+	return std::make_tuple(initialState, out, initialState.changeLog());
 }
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
