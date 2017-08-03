@@ -70,6 +70,9 @@ bytes ImportTest::executeTest()
 		vector<transactionToExecute> transactionResults;
 		for (auto const& net : networks)
 		{
+			if (isDisabledNetwork(net))
+				continue;
+
 			for (auto& tr : m_transactions)
 			{
 				Options const& opt = Options::get();
