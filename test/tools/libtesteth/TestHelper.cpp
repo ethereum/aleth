@@ -139,7 +139,7 @@ eth::Network stringToNetId(string const& _netname)
 
 bool isDisabledNetwork(eth::Network _net)
 {
-	if (Options::get().performance)
+	if (Options::get().performance || Options::get().filltests)
 		return false;
 	switch (_net)
 	{
