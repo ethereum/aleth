@@ -177,7 +177,7 @@ BOOST_FIXTURE_TEST_SUITE(TransitionTests, bcTransitionFixture)
 BOOST_AUTO_TEST_CASE(bcFrontierToHomestead){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToDao){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150){}
-BOOST_AUTO_TEST_CASE(bcEIP158ToMetropolis){}
+BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium){}
 
 BOOST_AUTO_TEST_SUITE_END()
 
