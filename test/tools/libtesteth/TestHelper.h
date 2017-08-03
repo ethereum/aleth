@@ -124,6 +124,7 @@ protected:
 std::vector<boost::filesystem::path> getJsonFiles(std::string const& _dirPath, std::string const& _particularFile = {});
 std::string netIdToString(eth::Network _netId);
 eth::Network stringToNetId(std::string const& _netname);
+bool isDisabledNetwork(eth::Network _net);
 std::vector<eth::Network> const& getNetworks();
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);

@@ -93,6 +93,8 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					if (!Options::get().singleTestNet.empty() && i->first != Options::get().singleTestNet)
 						continue;
+					if (test::isDisabledNetwork(test::stringToNetId(i->first)))
+						continue;
 					importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first);
 				}
 			}

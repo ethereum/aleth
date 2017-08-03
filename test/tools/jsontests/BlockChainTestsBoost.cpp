@@ -147,9 +147,7 @@ class bcGeneralTestsFixture
 			test::executeTests(file.filename().string(), "/BlockchainTests/" + _folder, "/BlockchainTests/" +_folder, dev::test::doBlockchainTestNoLog);
 		}
 		test::TestOutputHelper::finishTest();
-
 	}
-
 };
 
 BOOST_FIXTURE_TEST_SUITE(BlockchainTests, bcTestFixture)

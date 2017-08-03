@@ -137,6 +137,24 @@ eth::Network stringToNetId(string const& _netname)
 	return eth::Network::FrontierTest;
 }
 
+bool isDisabledNetwork(eth::Network _net)
+{
+	if (Options::get().performance)
+		return false;
+	switch (_net)
+	{
+		case eth::Network::FrontierTest:
+		case eth::Network::HomesteadTest:
+		case eth::Network::FrontierToHomesteadAt5:
+		case eth::Network::HomesteadToDaoAt5:
+		case eth::Network::HomesteadToEIP150At5:
+			return true;
+		default:
+		break;
+	}
+	return false;
+}
+
 std::vector<eth::Network> const& getNetworks()
 {
 	//Networks for the test case execution when filling the tests
