@@ -408,6 +408,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
 			if (m_isCreation)
 			{
+				m_s.clearStorage(m_ext->myAddress);
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
 				{
@@ -435,7 +436,6 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				if (m_res)
 					m_res->output = out.toVector(); // copy output to execution result
-				m_s.clearStorage(m_ext->myAddress);
 				m_s.setCode(m_ext->myAddress, out.toVector());
 			}
 			else
