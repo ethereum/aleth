@@ -46,6 +46,7 @@ clone_script:
           git submodule -q update --init --recursive
       }
 cache:
+    - C:/.hunter/_Base/Cache
 #    - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
     - deps
 #RDP LOGIN details for trouble shooting

@@ -36,7 +36,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-static_assert(BOOST_VERSION == 106300, "Wrong boost headers version");
+static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 {
