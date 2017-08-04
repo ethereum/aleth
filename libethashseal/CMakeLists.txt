@@ -9,7 +9,6 @@ aux_source_directory(./genesis/test SRCS)
 set(SRC_LIST ${SRC_LIST} ${SRCS})
 
 add_library(ethashseal ${SRC_LIST} ${HEADERS})
-eth_use(ethashseal OPTIONAL Eth::ethash-cl Cpuid)
 
 find_package(Eth)
 
