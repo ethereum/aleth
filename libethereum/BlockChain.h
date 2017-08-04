@@ -62,6 +62,7 @@ static const h256s NullH256s;
 
 class State;
 class Block;
+class ImportPerformanceLogger;
 
 DEV_SIMPLE_EXCEPTION(AlreadyHaveBlock);
 DEV_SIMPLE_EXCEPTION(FutureTime);
@@ -137,6 +138,8 @@ public:
 	/// block/header and receipts directly into the databases.
 	void insert(bytes const& _block, bytesConstRef _receipts, bool _mustBeNew = true);
 	void insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew = true);
+	/// Insert that doesn't require parent to be imported, useful when we don't have the full blockchain (like restoring from partial snapshot).
+	ImportRoute insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _number, u256 const& _totalDifficulty);
 
 	/// Returns true if the given block is known (though not necessarily a part of the canon chain).
 	bool isKnown(h256 const& _hash, bool _isCurrent = true) const;
@@ -320,6 +323,10 @@ private:
 	void open(std::string const& _path, WithExisting _we, ProgressCallback const& _pc);
 	/// Finalise everything and close the database.
 	void close();
+
+	ImportRoute insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _number, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger);
+	void checkBlockIsNew(VerifiedBlockRef const& _block) const;
+	void checkBlockTimestamp(BlockHeader const& _header) const;
 
 	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
 	{
