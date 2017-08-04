@@ -1,7 +1,9 @@
 macro(configure_project)
 	# Default to RelWithDebInfo configuration if no configuration is explicitly specified.
-	set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type on single-configuration generators")
-
+	if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+	   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type on single-configuration generators" FORCE)
+	endif()
+	
 	option(BUILD_SHARED_LIBS "Build project libraries shared" OFF)
 
 	# Features:
