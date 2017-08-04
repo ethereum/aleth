@@ -703,15 +703,15 @@ void Block::updateBlockhashContract()
 {
 	u256 const blockNumber = info().number();
 
-	u256 const metropolisForkBlock = m_sealEngine->chainParams().u256Param("metropolisForkBlock");
-	if (blockNumber == metropolisForkBlock)
+	u256 const byzantiumForkBlock = m_sealEngine->chainParams().u256Param("byzantiumForkBlock");
+	if (blockNumber == byzantiumForkBlock)
 	{
 		m_state.createContract(c_blockhashContractAddress);
 		m_state.setCode(c_blockhashContractAddress, bytes(c_blockhashContractCode));
 		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 	}
 
-	if (blockNumber >= metropolisForkBlock)
+	if (blockNumber >= byzantiumForkBlock)
 	{
 		DummyLastBlockHashes lastBlockHashes; // assuming blockhash contract won't need BLOCKHASH itself
 		Executive e(*this, lastBlockHashes);

@@ -34,7 +34,7 @@ namespace eth
 enum class Network
 {
 	//Olympic = 0,			///< Normal Olympic chain.
-	MainNetwork = 1,		///< Normal Frontier/Homestead/DAO/EIP150/EIP158/Metropolis chain.
+	MainNetwork = 1,		///< Normal Frontier/Homestead/DAO/EIP150/EIP158/Byzantium/Constantinople chain.
 	//Morden = 2,			///< Normal Morden chain.
 	Ropsten = 3,			///< New Ropsten Test Network
 	MainNetworkTest = 69,	///< MainNetwork rules but without genesis accounts (for transaction tests).
@@ -43,15 +43,17 @@ enum class Network
 	HomesteadTest = 72,		///< Just test the Homestead-era characteristics "forever" (no Frontier portion).
 	EIP150Test = 73,		///< Homestead + EIP150 Rules active from block 0 For BlockchainTests
 	EIP158Test = 74,		///< Homestead + EIP150 + EIP158 Rules active from block 0
-	MetropolisTest = 75,   ///< All fork rules + Metropolis active from block 0
-	MetropolisTransitionTest = 76, ///< All fork rules + Metropolis active from block 2
-	FrontierNoProofTest = 77, ///< Frontier rules + NoProof seal engine 
+	ByzantiumTest = 75,   ///< EIP158Test + Byzantium active from block 0
+	ByzantiumTransitionTest = 76, ///< EIP158Test + Byzantium active from block 2
+	FrontierNoProofTest = 77, ///< Frontier rules + NoProof seal engine
+	ConstantinopleTest = 78, ///< ByzantiumTest + Constantinople active from block 0
+	
 
 	//TransitionTest networks
 	FrontierToHomesteadAt5 = 100,
 	HomesteadToDaoAt5 = 101,
 	HomesteadToEIP150At5 = 102,
-	EIP158ToMetropolisAt5 = 103,
+	EIP158ToByzantiumAt5 = 103,
 
 	Special = 0xff			///< Something else.
 };

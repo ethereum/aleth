@@ -379,8 +379,10 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 
 evm_mode JitVM::scheduleToMode(EVMSchedule const& _schedule)
 {
+	if (_schedule.haveCreate2)
+		return EVM_CONSTANTINOPLE;
 	if (_schedule.haveRevert)
-		return EVM_METROPOLIS;
+		return EVM_BYZANTIUM;
 	if (_schedule.eip158Mode)
 		return EVM_CLEARING;
 	if (_schedule.eip150Mode)

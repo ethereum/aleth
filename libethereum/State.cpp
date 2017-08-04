@@ -581,7 +581,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			break;
 	}
 
-	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("metropolisForkBlock") ?
+	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("byzantiumForkBlock") ?
 		TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs()) :
 		TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs());
 	return make_pair(res, receipt);

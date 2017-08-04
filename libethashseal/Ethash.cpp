@@ -199,9 +199,9 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	else
 	{
 		bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
-		bigint const adjFactor = _bi.number() < chainParams().u256Param("metropolisForkBlock") ?
+		bigint const adjFactor = _bi.number() < chainParams().u256Param("byzantiumForkBlock") ?
 			max<bigint>(1 - timestampDiff / 10, -99) : // Homestead-era difficulty adjustment
-			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Metropolis-era difficulty adjustment
+			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Byzantium-era difficulty adjustment
 
 		target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
 	}

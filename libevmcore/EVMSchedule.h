@@ -109,13 +109,19 @@ static const EVMSchedule EIP158Schedule = []
 	return schedule;
 }();
 
-static const EVMSchedule MetropolisSchedule = []
+static const EVMSchedule ByzantiumSchedule = []
 {
 	EVMSchedule schedule = EIP158Schedule;
 	schedule.blockhashGas = 800;
 	schedule.haveRevert = true;
 	schedule.haveReturnData = true;
 	schedule.haveStaticCall = true;
+	return schedule;
+}();
+
+static const EVMSchedule ConstantinopleSchedule = []
+{
+	EVMSchedule schedule = ByzantiumSchedule;
 	schedule.haveCreate2 = true;
 	return schedule;
 }();

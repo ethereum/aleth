@@ -33,18 +33,18 @@ class ExtVMTestFixture: public TestOutputHelper
 {
 public:
 	ExtVMTestFixture():
-		networkSelector(Network::MetropolisTransitionTest),
+		networkSelector(Network::ByzantiumTransitionTest),
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),
 		blockchain(testBlockchain.interface())
 	{
 		TestBlock testBlock;
-		// block 1 - before Metropolis
+		// block 1 - before Byzantium
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 
-		// block 2 - first Metropolis block
+		// block 2 - first Byzantium block
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 	}
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 	BOOST_CHECK_EQUAL(extVM.blockHash(100), h256());
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashBeforeMetropolisReliesOnLastHashes)
+BOOST_AUTO_TEST_CASE(BlockhashBeforeByzantiumReliesOnLastHashes)
 {
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain);
@@ -85,9 +85,9 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeMetropolisReliesOnLastHashes)
 	BOOST_REQUIRE_EQUAL(hash, lastHashes[0]);
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInMetropolis)
+BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInByzantium)
 {
-	// BLOCKHASH starts to work through the call to a contract 256 block after Metro fork block
+	// BLOCKHASH starts to work through the call to a contract 256 block after Byzantium fork block
 	TestBlock testBlock;
 	for (int i = 0; i < 256; ++i)
 	{
