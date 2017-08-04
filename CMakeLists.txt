@@ -54,6 +54,30 @@ HunterGate(
     SHA1 "f83ea762f0609c48a583d0e877a6358f6fbfe0d7"
 )
 
+if(HUNTER_ENABLED)
+    find_package(PythonInterp QUIET)
+    if(PYTHONINTERP_FOUND)
+        hunter_gate_self(
+            "${HUNTER_CACHED_ROOT}"
+            "${HUNTER_VERSION}"
+            "${HUNTER_SHA1}"
+            hunter_dir
+        )
+        set(hunter_upload_script "${hunter_dir}/maintenance/upload-cache-to-github.py")
+        set(hunter_cache_dir "${HUNTER_GATE_ROOT}/_Base/Cache")
+        set(hunter_tmp_dir "${HUNTER_GATE_ROOT}/tmp")
+        add_custom_target(
+            hunter_upload_cache
+            ${PYTHON_EXECUTABLE} ${hunter_upload_script}
+            --username hunter-cache-bot
+            --repo-owner ethereum
+            --repo hunter-cache
+            --cache-dir ${hunter_cache_dir}
+            --temp-dir ${hunter_tmp_dir}
+        )
+    endif()
+endif()
+
 # project name and version should be set after cmake_policy CMP0048
 project(cpp-ethereum VERSION "1.3.0")
 
