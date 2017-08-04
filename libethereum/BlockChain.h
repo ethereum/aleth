@@ -138,7 +138,7 @@ public:
 	/// block/header and receipts directly into the databases.
 	void insert(bytes const& _block, bytesConstRef _receipts, bool _mustBeNew = true);
 	void insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew = true);
-	/// insert that doesn't require parent to be imported, useful when we don't have the full blockchain (like restoring from partial snapshot)
+	/// Insert that doesn't require parent to be imported, useful when we don't have the full blockchain (like restoring from partial snapshot).
 	ImportRoute insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _number, u256 const& _totalDifficulty);
 
 	/// Returns true if the given block is known (though not necessarily a part of the canon chain).

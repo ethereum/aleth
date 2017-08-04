@@ -15,7 +15,8 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file 
- */
+*  Class for logging of importing a Block into BlockChain.
+*/
 
 #include "ImportPerformanceLogger.h"
 
@@ -24,6 +25,17 @@
 
 using namespace dev;
 using namespace eth;
+
+namespace
+{
+
+template <class ValueType>
+static std::string pairToString(std::pair<std::string const, ValueType> const& _pair)
+{
+	return "\"" + _pair.first + "\": " + toString(_pair.second);
+}
+
+}
 
 std::string ImportPerformanceLogger::constructReport(double _totalElapsed, std::unordered_map<std::string, std::string> const& _additionalValues)
 {

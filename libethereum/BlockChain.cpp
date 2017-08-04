@@ -45,7 +45,6 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-#define ETH_CATCH 1
 #define ETH_TIMED_IMPORTS 1
 
 #if defined(_WIN32)
@@ -682,9 +681,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	BlockReceipts br;
 	u256 td;
-#if ETH_CATCH
 	try
-#endif
 	{
 		// Check transactions are valid and that they result in a state equivalent to our state_root.
 		// Get total difficulty increase and update state, checking it.
@@ -704,7 +701,6 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		checkConsistency();
 #endif // ETH_PARANOIA
 	}
-#if ETH_CATCH
 	catch (BadRoot& ex)
 	{
 		cwarn << "*** BadRoot error! Trying to import" << _block.info.hash() << "needed root" << ex.root;
@@ -717,7 +713,6 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		addBlockInfo(ex, _block.info, _block.block.toBytes());
 		throw;
 	}
-#endif // ETH_CATCH
 
 	// All ok - insert into DB
 	bytes const receipts = br.rlp();
@@ -1089,6 +1084,7 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
 
 	BlockDetails const fromDetails = details(_from);
 	BlockDetails const toDetails = details(_to);
+	// Needed to handle a special case when the parent of inserted block is not present in DB.
 	if (fromDetails.isNull() || toDetails.isNull())
 		return make_tuple(h256s(), h256(), 0);
 

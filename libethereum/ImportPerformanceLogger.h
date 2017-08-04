@@ -15,7 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file 
- *  Class for logging of importing a Block into BlockChain
+ *  Class for logging of importing a Block into BlockChain.
  */
 
 #pragma once
@@ -57,17 +57,11 @@ public:
 	}
 
 private:
-	template <class ValueType>
-	static std::string pairToString(std::pair<std::string const, ValueType> const& _pair)
-	{
-		return "\"" + _pair.first + "\": " + toString(_pair.second);
-	}
-
 	std::string constructReport(double _totalElapsed, std::unordered_map<std::string, std::string> const& _additionalValues);
 
 	Timer m_totalTimer;
-	std::unordered_map<std::string, double> m_stages;
 	Timer m_stageTimer;
+	std::unordered_map<std::string, double> m_stages;
 };
 
 }
