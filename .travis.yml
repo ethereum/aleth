@@ -29,6 +29,7 @@ branches:
     only:
         - develop
         - release
+        - /travis/
 env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
