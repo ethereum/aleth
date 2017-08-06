@@ -102,7 +102,6 @@ git:
 cache:
     ccache: true
     directories:
-        - ~/.hunter/_Base/Cache
         - ~/.ethash
         - ~/.local
         - ~/Library/Caches/Homebrew
