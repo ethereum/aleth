@@ -46,6 +46,38 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo)
 set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG RelWithDebInfo Release)
 set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo Release)
 
+set(HUNTER_CONFIGURATION_TYPES Release)
+set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache")
+include(HunterGate)
+HunterGate(
+    URL "https://github.com/ruslo/hunter/archive/v0.19.57.tar.gz"
+    SHA1 "f83ea762f0609c48a583d0e877a6358f6fbfe0d7"
+)
+
+if(HUNTER_ENABLED)
+    find_package(PythonInterp QUIET)
+    if(PYTHONINTERP_FOUND)
+        hunter_gate_self(
+            "${HUNTER_CACHED_ROOT}"
+            "${HUNTER_VERSION}"
+            "${HUNTER_SHA1}"
+            hunter_dir
+        )
+        set(hunter_upload_script "${hunter_dir}/maintenance/upload-cache-to-github.py")
+        set(hunter_cache_dir "${HUNTER_GATE_ROOT}/_Base/Cache")
+        set(hunter_tmp_dir "${HUNTER_GATE_ROOT}/tmp")
+        add_custom_target(
+            hunter_upload_cache
+            ${PYTHON_EXECUTABLE} ${hunter_upload_script}
+            --username hunter-cache-bot
+            --repo-owner ethereum
+            --repo hunter-cache
+            --cache-dir ${hunter_cache_dir}
+            --temp-dir ${hunter_tmp_dir}
+        )
+    endif()
+endif()
+
 # project name and version should be set after cmake_policy CMP0048
 project(cpp-ethereum VERSION "1.3.0")
 
@@ -61,7 +93,9 @@ include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
 
-include(ProjectBoost)
+hunter_add_package(Boost COMPONENTS filesystem random system thread test)
+find_package(Boost CONFIG REQUIRED filesystem random system thread unit_test_framework)
+
 include(ProjectCryptopp)
 include(ProjectJsonCpp)
 include(ProjectJsonRpcCpp)
@@ -96,8 +130,8 @@ if (TOOLS)
 endif()
 
 if (TESTS)
-	enable_testing()
-	add_subdirectory(test)
+    enable_testing()
+    add_subdirectory(test)
 endif()
 
 # TODO: Split out json_spirit, libscrypt and sec256k1.

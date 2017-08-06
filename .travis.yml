@@ -33,6 +33,7 @@ env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
         - TRAVIS_TESTS=On
+        - secure: "Nm9HEvhW8wtbF9v44g2Vo2CfX8cFlw3UWutHMmVl5nrcri34BVPXulsPF3CrIdoGgdBQvGxzNmbmAgi0KokaWhLZ2WvuDUXRAU8wuU3SB/AV7hNIGFZDqgk1LBBzwaFngqDCqqIQ29v2Z59s3y8qakmPQbR8eNJ1YAc2F9O8iVI="
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
@@ -100,6 +101,7 @@ git:
 cache:
     ccache: true
     directories:
+        - ~/.hunter/_Base/Cache
         - ~/.ethash
         - ~/.local
         - ~/Library/Caches/Homebrew
@@ -121,6 +123,9 @@ after_success:
     - make coverage.data
     # Get CodeCov script (fixed commit) and upload coverage report.
     - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/e7985c0ea6dd4d365403f389337f3b43b517fb35/codecov) -X fix -f coverage.data
+after_script:
+    # Hunter: upload cache to the cache server.
+    - pip install requests && make -C $TRAVIS_BUILD_DIR/build hunter_upload_cache
 deploy:
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that
