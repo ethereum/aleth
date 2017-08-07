@@ -2,6 +2,9 @@
 # but we need to know the MHD location for static linking.
 find_package(MHD REQUIRED)
 
+get_property(jsoncpp_include_dir TARGET jsoncpp_lib_static PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+get_property(jsoncpp_library TARGET jsoncpp_lib_static PROPERTY IMPORTED_LOCATION_RELEASE)
+
 set(CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_BUILD_TYPE=Release
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -18,17 +21,17 @@ set(CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCOMPILE_STUBGEN=Off
                -DCOMPILE_EXAMPLES=Off
                # Point to jsoncpp library.
-               -DJSONCPP_INCLUDE_DIR=${JSONCPP_INCLUDE_DIR}
+               -DJSONCPP_INCLUDE_DIR=${jsoncpp_include_dir}
                # Select jsoncpp include prefix: <json/...> or <jsoncpp/json/...>
                -DJSONCPP_INCLUDE_PREFIX=json
-               -DJSONCPP_LIBRARY=${JSONCPP_LIBRARY}
+               -DJSONCPP_LIBRARY=${jsoncpp_library}
                -DMHD_INCLUDE_DIR=${MHD_INCLUDE_DIR}
                -DMHD_LIBRARY=${MHD_LIBRARY})
 
 if (WIN32)
     # For Windows we have to provide also locations for debug libraries.
     set(CMAKE_ARGS ${CMAKE_ARGS}
-        -DJSONCPP_LIBRARY_DEBUG=${JSONCPP_LIBRARY}
+        -DJSONCPP_LIBRARY_DEBUG=${jsoncpp_library}
         -DMHD_LIBRARY_DEBUG=${MHD_LIBRARY})
 endif()
 
@@ -48,8 +51,6 @@ ExternalProject_Add(jsonrpccpp
     LOG_INSTALL 1
 )
 
-add_dependencies(jsonrpccpp jsoncpp)
-
 # Create imported libraries
 if (WIN32)
     # On Windows CMAKE_INSTALL_PREFIX is ignored and installs to dist dir.
@@ -64,8 +65,8 @@ file(MAKE_DIRECTORY ${JSONRPCCPP_INCLUDE_DIR})  # Must exist.
 add_library(JsonRpcCpp::Common STATIC IMPORTED)
 set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_CONFIGURATIONS Release)
 set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_LOCATION_RELEASE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-common${CMAKE_STATIC_LIBRARY_SUFFIX})
-set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_LINK_LIBRARIES JsonCpp)
-set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONRPCCPP_INCLUDE_DIR} ${JSONCPP_INCLUDE_DIR})
+set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_LINK_LIBRARIES jsoncpp_lib_static)
+set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONRPCCPP_INCLUDE_DIR} ${jsoncpp_include_dir})
 add_dependencies(JsonRpcCpp::Common jsonrpccpp)
 
 add_library(JsonRpcCpp::Server STATIC IMPORTED)

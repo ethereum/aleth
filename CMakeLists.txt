@@ -96,8 +96,10 @@ include(EthUtils)
 hunter_add_package(Boost COMPONENTS filesystem random system thread test)
 find_package(Boost CONFIG REQUIRED filesystem random system thread unit_test_framework)
 
+hunter_add_package(jsoncpp)
+find_package(jsoncpp CONFIG REQUIRED)
+
 include(ProjectCryptopp)
-include(ProjectJsonCpp)
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
 include(ProjectSnark)
