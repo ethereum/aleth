@@ -105,8 +105,8 @@ public:
 	void insert(bytesConstRef _key, bytesConstRef _value);
 	void remove(bytes const& _key) { remove(&_key); }
 	void remove(bytesConstRef _key);
-	bool contains(bytes const& _key) { return contains(&_key); }
-	bool contains(bytesConstRef _key) { return !at(_key).empty(); }
+	bool contains(bytes const& _key) const { return contains(&_key); }
+	bool contains(bytesConstRef _key) const { return !at(_key).empty(); }
 
 	class iterator
 	{
@@ -390,7 +390,7 @@ public:
 	using Super::debugStructure;
 
 	std::string at(bytesConstRef _key) const { return Super::at(sha3(_key)); }
-	bool contains(bytesConstRef _key) { return Super::contains(sha3(_key)); }
+	bool contains(bytesConstRef _key) const { return Super::contains(sha3(_key)); }
 	void insert(bytesConstRef _key, bytesConstRef _value) { Super::insert(sha3(_key), _value); }
 	void remove(bytesConstRef _key) { Super::remove(sha3(_key)); }
 
@@ -441,7 +441,7 @@ public:
 	using Super::debugStructure;
 
 	std::string at(bytesConstRef _key) const { return Super::at(sha3(_key)); }
-	bool contains(bytesConstRef _key) { return Super::contains(sha3(_key)); }
+	bool contains(bytesConstRef _key) const { return Super::contains(sha3(_key)); }
 	void insert(bytesConstRef _key, bytesConstRef _value)
 	{
 		h256 hash = sha3(_key);
