@@ -29,6 +29,7 @@ branches:
     only:
         - develop
         - release
+        - /travis/
 env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
@@ -101,7 +102,6 @@ git:
 cache:
     ccache: true
     directories:
-        - ~/.hunter/_Base/Cache
         - ~/.ethash
         - ~/.local
         - ~/Library/Caches/Homebrew
