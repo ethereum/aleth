@@ -82,7 +82,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		}
 		else
 		{
-			BOOST_REQUIRE(o.count("post") > 0);
+			BOOST_REQUIRE_MESSAGE(o.count("post") > 0, testname + " post not set!");
 
 			//check post hashes against cpp client on all networks
 			mObject post = o["post"].get_obj();
