@@ -21,7 +21,6 @@ If environment variable ``ETHEREUM_TEST_PATH`` is set in /etc/environment file, 
 |    ``nano /etc/environment``
 |    ``ETHEREUM_TEST_PATH="/home/user/ethereum/tests"``
 
-
 You could always override the test path for testeth using an option:
 
    ``./testeth -- --testpath "/path/to/the/tests"``
@@ -65,7 +64,7 @@ This transaction has arguments <data>, <value>, <gasLimit>. So a single test exe
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --singletest <TEST_NAME> --singlenet <NET_NAME> -d <DATA_INDEX> -g <GASLIMIT_INDEX> -v <VALUE_INDEX>``
    
- This will run a transaction with given data, gasLimit, and value as described in the test on a given network rules. Note that parameters here are indexes. The actual values described in the test file itself. This is also only valid for StateTestsGeneral. 
+This will run a transaction with given data, gasLimit, and value as described in the test on a given network rules. Note that parameters here are indexes. The actual values described in the test file itself. This is also only valid for StateTestsGeneral. 
  
 Debugging and tracing a state test
 --------------------------------------------------------------------------------
@@ -83,13 +82,13 @@ An rpc method like, providing step by step debug in json format. The <CONFIG> is
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --jsontrace '{ "disableStorage" : false, "disableMemory" : false, "disableStack" : false, "fullStorage" : true }' ``
    
-   You could specify some of the options in this json line or use an empty argument to load default options. Sometimes you might want to disable just the memory logs or the storage logs or both cause it could provide a lot lines to the final log.
+You could specify some of the options in this json line or use an empty argument to load default options. Sometimes you might want to disable just the memory logs or the storage logs or both cause it could provide a lot lines to the final log.
    
-   The option --exectimelog will print the stats on how much time was spend on a specific test suite/case. It will also sort the most time consuming test at the end of the execution. 
+The option --exectimelog will print the stats on how much time was spend on a specific test suite/case. It will also sort the most time consuming test at the end of the execution. 
    
    ``./testeth -- --exectimelog``
    
-   Note that some tests are disabled by default. Such as Frontier, Homestead rules tests, some time consuming tests. If you want to run a full test suite with all tests available use option --all:
+Note that some tests are disabled by default. Such as Frontier, Homestead rules tests, some time consuming tests. If you want to run a full test suite with all tests available use option --all:
    
    ``./testeth -- --all``
 
