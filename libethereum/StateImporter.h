@@ -79,6 +79,8 @@ public:
 
 	std::string lookupCode(h256 const& _hash) const { return m_trie.db()->lookup(_hash);  }
 
+	bool containsAccount(h256 const& _addressHash) const { return m_trie.contains(_addressHash); }
+
 private:
 	SpecificTrieDB<GenericTrieDB<OverlayDB>, h256> m_trie;
 };

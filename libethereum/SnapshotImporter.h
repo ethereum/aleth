@@ -41,13 +41,6 @@ DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
 DEV_SIMPLE_EXCEPTION(FailedToGetUncompressedLength);
 DEV_SIMPLE_EXCEPTION(FailedToUncompressedSnapshotChunk);
 
-struct SnapshotImportLog: public LogChannel
-{
-	static char const* name() { return "SNAP"; }
-	static int const verbosity = 9;
-	static const bool debug = false;
-};
-
 class SnapshotImporter
 {
 public:

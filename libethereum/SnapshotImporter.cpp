@@ -31,18 +31,27 @@ using namespace eth;
 
 namespace
 {
-	std::string snappyUncompress(std::string const& _compressed)
-	{
-		size_t uncompressedSize = 0;
-		if (!snappy::GetUncompressedLength(_compressed.data(), _compressed.size(), &uncompressedSize))
-			BOOST_THROW_EXCEPTION(FailedToGetUncompressedLength());
 
-		std::vector<char> uncompressed(uncompressedSize);
-		if (!snappy::RawUncompress(_compressed.data(), _compressed.size(), uncompressed.data()))
-			BOOST_THROW_EXCEPTION(FailedToUncompressedSnapshotChunk());
+struct SnapshotImportLog: public LogChannel
+{
+	static char const* name() { return "SNAP"; }
+	static int const verbosity = 9;
+	static const bool debug = false;
+};
 
-		return std::string(uncompressed.begin(), uncompressed.end());
-	}
+
+std::string snappyUncompress(std::string const& _compressed)
+{
+	size_t uncompressedSize = 0;
+	if (!snappy::GetUncompressedLength(_compressed.data(), _compressed.size(), &uncompressedSize))
+		BOOST_THROW_EXCEPTION(FailedToGetUncompressedLength());
+
+	std::vector<char> uncompressed(uncompressedSize);
+	if (!snappy::RawUncompress(_compressed.data(), _compressed.size(), uncompressed.data()))
+		BOOST_THROW_EXCEPTION(FailedToUncompressedSnapshotChunk());
+
+	return std::string(uncompressed.begin(), uncompressed.end());
+}
 }
 
 void SnapshotImporter::import(std::string const& _snapshotDirPath)
@@ -80,7 +89,6 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 	u256 nonce;
 	u256 balance;
 	h256 codeHash;
-	std::string chunkUncompressed;
 	size_t accountsImported = 0;
 	for (auto const& stateHash: _stateChunkHashes)
 	{
@@ -90,16 +98,32 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 		h256 const chunkHash = sha3(chunkCompressed);
 		assert(chunkHash == stateHash);
 
-		chunkUncompressed = snappyUncompress(chunkCompressed);
+		std::string const chunkUncompressed = snappyUncompress(chunkCompressed);
+		assert(!chunkUncompressed.empty());
 
-		RLP accounts(chunkUncompressed);
+		RLP const accounts(chunkUncompressed);
 
 		size_t accs = accounts.itemCount();
-		for (auto addressAndAccount : accounts)
+		for (size_t accountIndex = 0; accountIndex < accs; ++accountIndex)
 		{
+			RLP const addressAndAccount = accounts[accountIndex];
 			assert(addressAndAccount.itemCount() == 2);
-			h256 addressHashNew = addressAndAccount[0].toHash<h256>();
-			assert(storageMap.empty() || addressHash == addressHashNew);
+			h256 const addressHashNew = addressAndAccount[0].toHash<h256>();
+			//assert(storageMap.empty() || addressHash == addressHashNew);
+			if (addressHash && addressHashNew != addressHash)
+			{
+				assert(!stateImporter.containsAccount(addressHash));
+				assert(nonce != 0 || balance != 0 || codeHash != EmptySHA3 || !storageMap.empty());
+				stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
+				++accountsImported;
+				storageMap.clear();
+			}
+			else if (addressHash)
+			{
+				clog(SnapshotImportLog) << "Splitted account " << addressHash << " storage entires in prev chunks: " << storageMap.size() <<  " storage entires in chunk: " << addressAndAccount[1][4].itemCount();
+				assert(accountIndex == 0);
+			}
+
 			addressHash = addressHashNew;
 			assert(addressHash);
 
@@ -113,9 +137,6 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 
 			RLP const storage = account[4];
 			//int const storageCount = storage.itemCount();
-
-			RLPStream s(4);
-			s << nonce << balance;
 
 			assert(storageMap.empty() || codeHash == account[3].toHash<h256>());
 
@@ -154,28 +175,23 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 			{
 				clog(SnapshotImportLog) << "Chunk with single account " << addressHash << " storage entires in chunk: " << storage.itemCount();
 			}
-			if (storage.itemCount() < 80000)
-			{
-				if (storageMap.size() >= 80000)
-				{
-					clog(SnapshotImportLog) << "Importing splitted account " << addressHash << " storage entires in last chunk: " << storage.itemCount() <<
-						" total storage entries: " << storageMap.size();
-				}
-
-				assert(nonce != 0 || balance != 0 || codeHash != EmptySHA3 || !storageMap.empty());
-				stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
-				++accountsImported;
-				storageMap.clear();
-			}
-			else
-			{
-				clog(SnapshotImportLog) << "Splitted account " << addressHash << " storage entires in chunk: " << storage.itemCount();
-			}
 		}
 
+
+
 		stateImporter.commitStateDatabase();
-		clog(SnapshotImportLog) << "Imported chunk " << stateHash << " (" << accounts.itemCount() << " accounts)";
+		clog(SnapshotImportLog) << "Imported chunk " << stateHash << " (" << accounts.itemCount() << " accounts) total accounts imported: " << accountsImported;
 		clog(SnapshotImportLog) << stateChunkCount - (++imported) << " chunks left to import";
+	}
+
+	// last account
+	{
+		assert(!stateImporter.containsAccount(addressHash));
+		assert(nonce != 0 || balance != 0 || codeHash != EmptySHA3 || !storageMap.empty());
+		stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
+		stateImporter.commitStateDatabase();
+		++accountsImported;
+		storageMap.clear();
 	}
 
 	// check root
