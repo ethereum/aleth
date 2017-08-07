@@ -84,6 +84,10 @@ An rpc method like, providing step by step debug in json format. The <CONFIG> is
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --jsontrace '{ "disableStorage" : false, "disableMemory" : false, "disableStack" : false, "fullStorage" : true }' ``
    
 You could specify some of the options in this json line or use an empty argument to load default options. Sometimes you might want to disable just the memory logs or the storage logs or both cause it could provide a lot lines to the final log.
+
+    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --statediff``
+    
+Get a statediff of a pre -> post state in general state test. Use this to see what accounts has changed after executing a transaction. This options should better be used in combination with ``--singletest <>`` ``--singlenet <>`` and ``-d -v -g`` (if any)
    
 The option --exectimelog will print the stats on how much time was spend on a specific test suite/case. It will also sort the most time consuming test at the end of the execution. 
    
