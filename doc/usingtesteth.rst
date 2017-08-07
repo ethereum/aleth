@@ -25,6 +25,7 @@ You could always override the test path for testeth using an option:
 
    ``./testeth -- --testpath "/path/to/the/tests"``
    
+Note that --testpath option argument should be an absolute path.
 For a brief help on testeth command options make sure to run 
 
    ``./testeth --help``
