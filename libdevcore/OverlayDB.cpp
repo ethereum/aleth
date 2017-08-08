@@ -14,24 +14,16 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file OverlayDB.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
-#if !defined(ETH_EMSCRIPTEN)
 
 #include <thread>
 #include <libdevcore/db.h>
 #include <libdevcore/Common.h>
 #include "SHA3.h"
 #include "OverlayDB.h"
-using namespace std;
-using namespace dev;
+#include "TrieDB.h"
 
 namespace dev
 {
-
-h256 const EmptyTrie = sha3(rlp(""));
 
 OverlayDB::~OverlayDB()
 {
@@ -84,7 +76,7 @@ void OverlayDB::commit()
 			WriteBatchNoter n;
 			batch.Iterate(&n);
 			cwarn << "Sleeping for" << (i + 1) << "seconds, then retrying.";
-			this_thread::sleep_for(chrono::seconds(i + 1));
+			std::this_thread::sleep_for(std::chrono::seconds(i + 1));
 		}
 #if DEV_GUARDED_DB
 		DEV_WRITE_GUARDED(x_this)
@@ -158,4 +150,3 @@ void OverlayDB::kill(h256 const& _h)
 
 }
 
-#endif // ETH_EMSCRIPTEN

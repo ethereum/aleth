@@ -14,12 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Whisper.cpp
- * @authors:
- *   Gav Wood <i@gavwood.com>
- *   Marek Kotewicz <marek@ethdev.com>
- * @date 2015
- */
 
 #include <jsonrpccpp/common/errors.h>
 #include <jsonrpccpp/common/exception.h>
@@ -32,9 +26,11 @@
 
 using namespace std;
 using namespace jsonrpc;
-using namespace dev;
-using namespace dev::rpc;
 
+namespace dev
+{
+namespace rpc
+{
 
 Whisper::Whisper(WebThreeDirect& _web3, std::vector<dev::KeyPair> const& _accounts): m_web3(_web3)
 {
@@ -199,4 +195,7 @@ Json::Value Whisper::shh_getMessages(std::string const& _filterId)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
+}
+
+}
 }

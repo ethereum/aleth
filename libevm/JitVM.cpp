@@ -1,7 +1,6 @@
 #include "JitVM.h"
 
 #include <libdevcore/Log.h>
-#include <libevmcore/Instruction.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 

@@ -24,7 +24,6 @@
 #include <csignal>
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonData.h>
-#include <libevmcore/Instruction.h>
 #include <libethereum/Client.h>
 #include <libethashseal/EthashClient.h>
 #include <libwebthree/WebThree.h>
@@ -32,7 +31,6 @@
 #include <libweb3jsonrpc/JsonHelper.h>
 #include "Eth.h"
 #include "AccountHolder.h"
-#include "JsonHelper.h"
 
 using namespace std;
 using namespace jsonrpc;

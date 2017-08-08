@@ -1,8 +1,6 @@
-aux_source_directory(. SRC_LIST)
+set(sources
+    EVMSchedule.h
+    Instruction.h Instruction.cpp
+)
 
-file(GLOB HEADERS "*.h")
-
-add_library(evmcore ${SRC_LIST} ${HEADERS})
-
-target_include_directories(evmcore PRIVATE ..)
-target_link_libraries(evmcore devcore)
+add_library(evmcore ${sources})

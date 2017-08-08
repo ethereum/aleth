@@ -14,16 +14,10 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file EVMSchedule.h
- * @author Gav <i@gavwood.com>
- * @author Christian <c@ethdev.com>
- * @date 2015
- */
 
 #pragma once
 
-#include <libevmcore/Instruction.h>
-#include <libdevcore/Common.h>
+#include <array>
 
 namespace dev
 {

@@ -14,17 +14,11 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Instruction.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
-#include <functional>
-#include <libdevcore/Common.h>
-#include <libdevcore/Assertions.h>
-#include "Exceptions.h"
+#include <cstdint>
+#include <string>
 
 namespace dev
 {
@@ -232,52 +226,6 @@ enum class Instruction: uint8_t
 	SUICIDE = 0xff      ///< halt execution and register account for later deletion
 };
 
-/// @returns the number of PUSH Instruction _inst
-inline unsigned getPushNumber(Instruction _inst)
-{
-	return (byte)_inst - unsigned(Instruction::PUSH1) + 1;
-}
-
-/// @returns the number of DUP Instruction _inst
-inline unsigned getDupNumber(Instruction _inst)
-{
-	return (byte)_inst - unsigned(Instruction::DUP1) + 1;
-}
-
-/// @returns the number of SWAP Instruction _inst
-inline unsigned getSwapNumber(Instruction _inst)
-{
-	return (byte)_inst - unsigned(Instruction::SWAP1) + 1;
-}
-
-/// @returns the PUSH<_number> instruction
-inline Instruction pushInstruction(unsigned _number)
-{
-	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, "Invalid PUSH instruction requested.");
-	return Instruction(unsigned(Instruction::PUSH1) + _number - 1);
-}
-
-/// @returns the DUP<_number> instruction
-inline Instruction dupInstruction(unsigned _number)
-{
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid DUP instruction requested.");
-	return Instruction(unsigned(Instruction::DUP1) + _number - 1);
-}
-
-/// @returns the SWAP<_number> instruction
-inline Instruction swapInstruction(unsigned _number)
-{
-	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid SWAP instruction requested.");
-	return Instruction(unsigned(Instruction::SWAP1) + _number - 1);
-}
-
-/// @returns the LOG<_number> instruction
-inline Instruction logInstruction(unsigned _number)
-{
-	assertThrow(_number <= 4, InvalidOpcode, "Invalid LOG instruction requested.");
-	return Instruction(unsigned(Instruction::LOG0) + _number);
-}
-
 enum class Tier : unsigned
 {
 	Zero = 0,   // 0, Zero
@@ -298,22 +246,11 @@ struct InstructionInfo
 	int additional;     ///< Additional items required in memory for this instructions (only for PUSH).
 	int args;           ///< Number of items required on the stack for this instruction (and, for the purposes of ret, the number taken from the stack).
 	int ret;            ///< Number of items placed (back) on the stack by this instruction, assuming args items were removed.
-	bool sideEffects;   ///< false if the only effect on the execution environment (apart from gas usage) is a change to a topmost segment of the stack
 	Tier gasPriceTier;   ///< Tier for gas pricing.
 };
 
 /// Information on all the instructions.
 InstructionInfo instructionInfo(Instruction _inst);
 
-/// check whether instructions exists
-bool isValidInstruction(Instruction _inst);
-
-/// Convert from string mnemonic to Instruction type.
-extern const std::map<std::string, Instruction> c_instructions;
-
-/// Iterate through EVM code and call a function on each instruction.
-void eachInstruction(bytes const& _mem, std::function<void(Instruction,u256 const&)> const& _onInstruction);
-
 }
 }
-	
