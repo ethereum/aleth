@@ -17,6 +17,8 @@
 /** @file
  */
 
+#if EIP_615
+
 #include <libethereum/ExtVM.h>
 
 // validator is not a full interpreter, canot support optimized dispatch
@@ -27,8 +29,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
-#if EIP_615
 
 ///////////////////////////////////////////////////////////////////////////////
 //
