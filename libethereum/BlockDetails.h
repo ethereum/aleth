@@ -36,19 +36,19 @@ namespace eth
 static const unsigned c_bloomIndexSize = 16;
 static const unsigned c_bloomIndexLevels = 2;
 
-static const unsigned InvalidNumber = (unsigned)-1;
+static const unsigned c_invalidNumber = (unsigned)-1;
 
 struct BlockDetails
 {
-	BlockDetails(): number(InvalidNumber), totalDifficulty(Invalid256) {}
+	BlockDetails(): number(c_invalidNumber), totalDifficulty(Invalid256) {}
 	BlockDetails(unsigned _n, u256 _tD, h256 _p, h256s _c): number(_n), totalDifficulty(_tD), parent(_p), children(_c) {}
 	BlockDetails(RLP const& _r);
 	bytes rlp() const;
 
-	bool isNull() const { return number == InvalidNumber; }
+	bool isNull() const { return number == c_invalidNumber; }
 	explicit operator bool() const { return !isNull(); }
 
-	unsigned number = InvalidNumber;
+	unsigned number = c_invalidNumber;
 	u256 totalDifficulty = Invalid256;
 	h256 parent;
 	h256s children;
