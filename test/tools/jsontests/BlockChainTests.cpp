@@ -354,12 +354,10 @@ void fillBCTest(json_spirit::mObject& _o)
 			if (testChain.addBlock(alterBlock))
 				cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testName;
 
-			if (test::Options::get().checkstate)
-			{
-				bool isException = (blObj.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
-									|| blObj.count("expectExceptionALL"));
-				BOOST_REQUIRE_MESSAGE(!isException, "block import expected exception, but no exception was thrown!");
-			}
+			bool isException = (blObj.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
+								|| blObj.count("expectExceptionALL"));
+			BOOST_REQUIRE_MESSAGE(!isException, "block import expected exception, but no exception was thrown!");
+
 			if (_o.count("noBlockChainHistory") == 0)
 			{
 				importedBlocks.push_back(alterBlock);
@@ -393,8 +391,7 @@ void fillBCTest(json_spirit::mObject& _o)
 		AccountMaskMap expectStateMap;
 		State stateExpect(State::Null);
 		ImportTest::importState(_o["expect"].get_obj(), stateExpect, expectStateMap);
-		if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow))
-			if (Options::get().checkstate)
+		if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, WhenError::Throw))
 				cerr << testName << endl;
 		_o.erase(_o.find("expect"));
 	}
@@ -841,9 +838,6 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 
 void checkExpectedException(mObject& _blObj, Exception const& _e)
 {
-	if (!test::Options::get().checkstate)
-		return;
-
 	string exWhat {	_e.what() };
 	bool isNetException = (_blObj.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork)) > 0);
 	bool isAllNetException = (_blObj.count("expectExceptionALL") > 0);

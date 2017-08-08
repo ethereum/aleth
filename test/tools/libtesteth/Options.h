@@ -51,7 +51,6 @@ public:
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool exectimelog = false; ///< Print execution time for each test suite
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
-	bool checkstate = false;///< Throw error when checking test states
 	bool statediff = false;///< Fill full post state in General tests
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
