@@ -16,7 +16,6 @@
 */
 #include "../GenesisInfo.h"
 
-static dev::h256 const c_genesisStateRootRopsten;
 static std::string const c_genesisInfoRopsten = std::string() +
 R"E(
 {
