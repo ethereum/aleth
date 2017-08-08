@@ -53,6 +53,7 @@ public:
 
 	bool useUndefinedOpCodes;
 	int smartCodeProbability;
+	int randomAddressProbability;
 	boostDescreteDistrib opCodeProbability;
 private:
 	void setWeights();

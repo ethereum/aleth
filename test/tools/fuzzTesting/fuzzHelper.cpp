@@ -452,7 +452,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 
 
 //Default Random Code Options
-RandomCodeOptions::RandomCodeOptions() : useUndefinedOpCodes(false), smartCodeProbability(100)
+RandomCodeOptions::RandomCodeOptions() : useUndefinedOpCodes(false), smartCodeProbability(100), randomAddressProbability(10)
 {
 	//each op code with same weight-probability
 	for (auto i = 0; i < 255; i++)
@@ -490,6 +490,11 @@ RandomCodeOptions::RandomCodeOptions() : useUndefinedOpCodes(false), smartCodePr
 	addAddress(Address("0x095e7baea6a6c7c4c2dfeb977efac326af552d87"));
 	addAddress(Address("0x945304eb96065b2a98b57a48a06ae28d285a71b5"));
 	addAddress(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
+	addAddress(Address("0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
+	addAddress(Address("0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
+	addAddress(Address("0xd94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
+	addAddress(Address("0xe94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
+	addAddress(Address("0xf94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
 	addAddress(Address("0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6"));
 	addAddress(Address("0x0000000000000000000000000000000000000001"));
 	addAddress(Address("0x0000000000000000000000000000000000000002"));
@@ -516,8 +521,12 @@ Address RandomCodeOptions::getRandomAddress() const
 {
 	if (addressList.size() > 0)
 	{
-		int index = (int)RandomCode::randomUniInt() % addressList.size();
-		return addressList[index];
+		int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+		if (random < 100 - randomAddressProbability)
+		{
+			int index = (int)RandomCode::randomUniInt() % addressList.size();
+			return addressList[index];
+		}
 	}
 	return Address(RandomCode::rndByteSequence(20));
 }
