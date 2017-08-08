@@ -228,13 +228,11 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
 		if (Options::get().jsontrace)
 		{
-			Json::Value trace;
 			StandardTrace st;
 			st.setShowMnemonics();
 			st.setOptions(Options::get().jsontraceOptions);
 			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted, st.onOp());
-			Json::Reader().parse(st.json(), trace);
-			cout << trace;
+			cout << st.json();
 		}
 		else
 			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
