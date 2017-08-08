@@ -144,6 +144,8 @@ void doTransitionTest(json_spirit::mValue& _v, bool _fillin)
 void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 {
 	map<string, json_spirit::mObject> tests;
+	vector<string> erase_list;
+
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
@@ -205,8 +207,9 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 				tests[newtestname] = jObj;
 			}
 
-			//delete source test from the json
-			_v.get_obj().erase(_v.get_obj().find(testname));
+			// will be deleted once after the loop.
+			// removing an element while in this loop causes memory corruption.
+			erase_list.push_back(testname);
 		}
 		else
 		{
@@ -220,6 +223,10 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin)
 			testBCTest(o);
 		}
 	}
+
+	//Delete source test from the json
+	for (auto const& testname: erase_list)
+		_v.get_obj().erase(_v.get_obj().find(testname));
 
 	//Add generated tests to the result file
 	if (_fillin)
