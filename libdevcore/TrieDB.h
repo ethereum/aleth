@@ -30,12 +30,14 @@
 namespace dev
 {
 
-struct TrieDBChannel: public LogChannel  { static const char* name(); static const int verbosity = 17; };
+struct TrieDBChannel: public LogChannel
+{
+	static const char* name() { return "-T-"; }
+	static const int verbosity = 17;
+};
 #define tdebug clog(TrieDBChannel)
 
 struct InvalidTrie: virtual dev::Exception {};
-extern const h256 c_shaNull;
-extern const h256 EmptyTrie;
 
 enum class Verification {
 	Skip,
@@ -77,7 +79,7 @@ public:
 		m_root = _root;
 		if (_v == Verification::Normal)
 		{
-			if (m_root == c_shaNull && !m_db->exists(m_root))
+			if (m_root == EmptyTrie && !m_db->exists(m_root))
 				init();
 		}
 		/*std::cout << "Setting root to " << _root << " (patched to " << m_root << ")" << std::endl;*/
@@ -91,7 +93,7 @@ public:
 	/// True if the trie is uninitialised (i.e. that the DB doesn't contain the root node).
 	bool isNull() const { return !node(m_root).size(); }
 	/// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
-	bool isEmpty() const { return m_root == c_shaNull && node(m_root).size(); }
+	bool isEmpty() const { return m_root == EmptyTrie && node(m_root).size(); }
 
 	h256 const& root() const { if (node(m_root).empty()) BOOST_THROW_EXCEPTION(BadRoot(m_root)); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return m_root; }	// patch the root in the case of the empty trie. TODO: handle this properly.
 
@@ -159,7 +161,7 @@ public:
 	void descendKey(h256 const& _k, h256Hash& _keyMask, bool _wasExt, std::ostream* _out, int _indent = 0) const
 	{
 		_keyMask.erase(_k);
-		if (_k == m_root && _k == c_shaNull)	// root allowed to be empty
+		if (_k == m_root && _k == EmptyTrie)	// root allowed to be empty
 			return;
 		descendList(RLP(node(_k)), _keyMask, _wasExt, _out, _indent);	// if not, it must be a list
 	}
