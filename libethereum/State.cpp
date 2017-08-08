@@ -21,21 +21,15 @@
 
 #include "State.h"
 
-#include <ctime>
 #include <boost/filesystem.hpp>
 #include <boost/timer.hpp>
-#include <libdevcore/CommonIO.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/TrieHash.h>
-#include <libevmcore/Instruction.h>
-#include <libethcore/Exceptions.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
 #include "Block.h"
-#include "CodeSizeCache.h"
 #include "Defaults.h"
 #include "ExtVM.h"
-#include "Executive.h"
 #include "TransactionQueue.h"
 
 using namespace std;

@@ -26,7 +26,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <test/tools/libtesteth/TestHelper.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
-#include <libevmcore/Instruction.h>
 #include <libevm/ExtVMFace.h>
 #include <libevm/VM.h>
 #include <libethereum/Transaction.h>

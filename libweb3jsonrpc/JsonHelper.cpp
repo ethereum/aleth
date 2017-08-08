@@ -22,7 +22,6 @@
 
 #include "JsonHelper.h"
 
-#include <libevmcore/Instruction.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
