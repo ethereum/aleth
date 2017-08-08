@@ -169,6 +169,8 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
 		_doTests(v, true);
+		if (!v.get_obj().count("post"))
+			BOOST_ERROR("And error occured when executing random state test!");
 	}
 	catch(...)
 	{
