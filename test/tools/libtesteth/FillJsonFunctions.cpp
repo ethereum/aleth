@@ -48,7 +48,6 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 	txObject["v"] = toCompactHexPrefixed(_txn.signature().v + 27, 1);
 	txObject["to"] = _txn.isCreation() ? "" : toHexPrefixed(_txn.receiveAddress());
 	txObject["value"] = toCompactHexPrefixed(_txn.value(), 1);
-	ImportTest::makeAllFieldsHex(txObject);
 	return txObject;
 }
 

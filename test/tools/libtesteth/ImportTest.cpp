@@ -264,14 +264,16 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 {
 	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
 									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
-									 "previousHash", "to", "address", "caller", "origin", "secretKey", "data", "extraData"};
-
+									 "previousHash", "to", "address", "caller", "origin", "secretKey", "extraData"};
 	for (auto const& i: _o)
 	{
 		bool isHash = false;
 		std::string key = i.first;
 
-		if (key == "data" || key == "extraData")
+		if (key == "extraData" || key == "code")
+			continue;
+
+		if (key == "data" && i.second.type() != json_spirit::int_type)
 			continue;
 
 		if (hashes.count(key))
@@ -289,13 +291,22 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 			str = value.get_str();
 		else if (value.type() == json_spirit::array_type)
 		{
+			bool isArrayOfString = true;
 			json_spirit::mArray arr;
 			for (auto const& j: value.get_array())
 			{
+				if (j.type() != json_spirit::str_type)
+				{
+					isArrayOfString = false;
+					break;
+				}
+
 				str = j.get_str();
 				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
 			}
-			_o[key] = arr;
+
+			if (isArrayOfString)
+				_o[key] = arr;
 			continue;
 		}
 		else continue;
@@ -532,7 +543,12 @@ void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& 
 			_out.push_back(val.get_int());
 	}
 	else
-		_out.push_back(_json.get_int());
+	{
+		if (_json.type() == json_spirit::int_type)
+			_out.push_back(_json.get_int());
+		else if (_json.type() == json_spirit::str_type)
+			_out.push_back((int)toInt(_json));
+	}
 }
 
 template<class T>
@@ -768,7 +784,7 @@ int ImportTest::exportTest(bytes const& _output)
 
 	// export pre state
 	m_testObject["pre"] = fillJsonWithState(m_statePre);
-	m_testObject["env"] = makeAllFieldsHex(m_testObject["env"].get_obj());
-	m_testObject["transaction"] = makeAllFieldsHex(m_testObject["transaction"].get_obj());
+	m_testObject["env"] = m_testObject["env"].get_obj();
+	m_testObject["transaction"] = m_testObject["transaction"].get_obj();
 	return err;
 }

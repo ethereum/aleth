@@ -832,7 +832,6 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 	o["mixHash"] = toString(Ethash::mixHash(_bi));
 	o["nonce"] = toString(Ethash::nonce(_bi));
 	o["hash"] = toString(_bi.hash());
-	ImportTest::makeAllFieldsHex(o, true);
 	return o;
 }
 

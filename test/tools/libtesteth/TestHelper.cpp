@@ -501,6 +501,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 			json_spirit::read_string(s, v);
 			doTests(v, true);
 			addClientInfo(v, testfilename);
+			postParseJson(v);
 			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
 		}
 		catch (Exception const& _e)
@@ -531,6 +532,33 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << _e.what());
+	}
+}
+
+void postParseJson(json_spirit::mValue& _obj)
+{
+	if(_obj.type() == json_spirit::obj_type)
+	{
+		for (auto& i: _obj.get_obj())
+		{
+			if (i.first.substr(0, 2) == "//")
+			{
+				_obj.get_obj().erase(_obj.get_obj().find(i.first));
+				continue;
+			}
+
+			if (i.second.type() != json_spirit::str_type)
+			{
+				if (i.first != "_info" && i.second.type() == json_spirit::obj_type)
+					i.second = ImportTest::makeAllFieldsHex(i.second.get_obj(), i.first == "env" ? true : false);
+				postParseJson(i.second);
+			}
+		}
+	}
+	else if (_obj.type() == json_spirit::array_type)
+	{
+		for (auto& i: _obj.get_array())
+			postParseJson(i);
 	}
 }
 
