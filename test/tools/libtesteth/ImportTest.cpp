@@ -641,7 +641,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 					_search->second.second = stateMap;
 					return;
 				}
-				int errcode = compareStates(expectState, postState, stateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);
+				int errcode = compareStates(expectState, postState, stateMap, WhenError::Throw);
 				if (errcode > 0)
 				{
 					cerr << trInfo << std::endl;
@@ -717,12 +717,9 @@ int ImportTest::exportTest(bytes const& _output)
 			obj2["logs"] = exportLog(tr.output.second.log());
 
 			//Print the post state if transaction has failed on expect section
-			if (Options::get().checkstate)
-			{
-				auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
-				if (it != std::end(stateIndexesToPrint))
-					obj2["postState"] = fillJsonWithState(tr.postState);
-			}
+			auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
+			if (it != std::end(stateIndexesToPrint))
+				obj2["postState"] = fillJsonWithState(tr.postState);
 
 			if (Options::get().statediff)
 				obj2["stateDiff"] = fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog);
@@ -745,15 +742,11 @@ int ImportTest::exportTest(bytes const& _output)
 		if (m_testObject.count("expectOut") > 0)
 		{
 			std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
-			if (Options::get().checkstate)
-			{
-				bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
-				BOOST_CHECK_MESSAGE(statement, warning);
-				if (!statement)
-					err = 1;
-			}
-			else
-				BOOST_WARN_MESSAGE(m_testObject["out"].get_str() == m_testObject["expectOut"].get_str(), warning);
+
+			bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
+			BOOST_CHECK_MESSAGE(statement, warning);
+			if (!statement)
+				err = 1;
 
 			m_testObject.erase(m_testObject.find("expectOut"));
 		}
@@ -764,7 +757,7 @@ int ImportTest::exportTest(bytes const& _output)
 			eth::AccountMaskMap stateMap;
 			State expectState(0, OverlayDB(), eth::BaseState::Empty);
 			importState(m_testObject["expect"].get_obj(), expectState, stateMap);
-			compareStates(expectState, m_statePost, stateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);
+			compareStates(expectState, m_statePost, stateMap, WhenError::Throw);
 			m_testObject.erase(m_testObject.find("expect"));
 		}
 

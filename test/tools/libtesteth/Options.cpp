@@ -60,7 +60,6 @@ void printHelp()
 
 	cout << std::endl << "Test Generation" << std::endl;
 	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers" << std::endl;
-	cout << setw(30) << "--checkstate" << setw(25) << "Enable expect section state checks" << std::endl;
 	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead" << std::endl;
 	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code" << std::endl;
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console" << std::endl;
@@ -168,8 +167,6 @@ Options::Options(int argc, char** argv)
 			inputLimits = true;
 		else if (arg == "--bigdata")
 			bigData = true;
-		else if (arg == "--checkstate")
-			checkstate = true;
 		else if (arg == "--wallet")
 			wallet = true;
 		else if (arg == "--all")
