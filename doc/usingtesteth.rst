@@ -61,11 +61,11 @@ The main test suites are <TEST_SUITE>: StateTestsGeneral, BlockchainTests, Trans
 <TEST_CASE> correspond to a folder name in the tests repo. And <TEST_NAME> correspond to the filename in that folder describing a specific test. 
 
 StateTestsGeneral has a single transaction being executed on a given pre state to produce a post state. 
-This transaction has arguments <data>, <value>, <gasLimit>. So a single test execute transaction with different arguments to test different conditions on the same pre state. To run a transaction from the StateTestsGeneral with the specified arguments use 
+This transaction has arrays <data>, <value>, <gasLimit>. So a single test execute transaction with different arguments taken from those arrays to test different conditions on the same pre state. To run a transaction from the StateTestsGeneral with the specified arguments use: 
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --singletest <TEST_NAME> --singlenet <NET_NAME> -d <DATA_INDEX> -g <GASLIMIT_INDEX> -v <VALUE_INDEX>``
    
-This will run a transaction with given data, gasLimit, and value as described in the test on a given network rules. Note that parameters here are indexes. The actual values described in the test file itself. This is also only valid for StateTestsGeneral. 
+This will run a transaction with given data, gasLimit, and value as described in the test on a given network rules. Note that parameters here are indexes. The actual values described in the test file itself. This is only valid when <TEST_SUITE> is StateTestsGeneral. 
  
 Debugging and tracing a state test
 --------------------------------------------------------------------------------
@@ -75,13 +75,17 @@ Use following options:
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --vmtrace --verbosity 5``
    
-``--vmtrace`` prints a step by step execution log from the EVM. Make sure that you build testeth with -DVMTrace=1 flag enabled. 
+``--vmtrace`` prints a step by step execution log from the EVM. Make sure that you've run cmake with -DVMTRACE=1 flag.
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --jsontrace <CONFIG>``
    
 An rpc method like, providing step by step debug in json format. The <CONFIG> is in json format like following: 
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --jsontrace '{ "disableStorage" : false, "disableMemory" : false, "disableStack" : false, "fullStorage" : true }' ``
+   
+Or just empty string to load default options.
+
+    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --jsontrace '' ``
    
 You could specify some of the options in this json line or use an empty argument to load default options. Sometimes you might want to disable just the memory logs or the storage logs or both cause it could provide a lot lines to the final log.
 
