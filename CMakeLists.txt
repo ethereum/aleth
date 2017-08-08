@@ -94,6 +94,7 @@ include(EthCompilerSettings)
 include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
+include(cotire)
 
 hunter_add_package(Boost COMPONENTS filesystem random system thread)
 find_package(Boost CONFIG REQUIRED filesystem random system thread)

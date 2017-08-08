@@ -9,3 +9,5 @@ if(MINIUPNPC)
     target_include_directories(p2p SYSTEM PRIVATE "${MINIUPNPC_INCLUDE_DIR}")
     target_compile_definitions(p2p PRIVATE ETH_MINIUPNPC)
 endif()
+
+cotire(p2p)

@@ -22,3 +22,5 @@ else()
     target_include_directories(devcore SYSTEM PUBLIC ${LEVELDB_INCLUDE_DIRS})
     target_link_libraries(devcore ${LEVELDB_LIBRARIES})
 endif()
+
+cotire(devcore)
