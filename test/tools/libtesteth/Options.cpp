@@ -239,8 +239,6 @@ Options::Options(int argc, char** argv)
 			createRandomTest = true;
 			seenCreateRandomTest = true;
 		}
-		else if (arg == "--filldebug")
-			throwIfNotRandomTest();
 		else if (arg == "--debug")
 			throwIfNotRandomTest();
 		else if (arg == "-t")

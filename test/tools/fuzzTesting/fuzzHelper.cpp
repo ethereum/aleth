@@ -303,15 +303,15 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 	return code;
 }
 
-std::string RandomCode::randomUniIntHex(u256 _maxVal)
+std::string RandomCode::randomUniIntHex(u256 _maxVal, u256 _minVal)
 {
 	if (_maxVal == 0)
 		_maxVal = std::numeric_limits<uint64_t>::max();
 	refreshSeed();
 	int rand = randUniIntGen() % 100;
 	if (rand < 50)
-		return toCompactHexPrefixed((u256)randUniIntGen() % _maxVal);
-	return toCompactHexPrefixed((u256)randUInt64Gen() % _maxVal);
+		return toCompactHexPrefixed(_minVal + (u256)randUniIntGen() % _maxVal, 1);
+	return toCompactHexPrefixed(_minVal + (u256)randUInt64Gen() % _maxVal, 1);
 }
 
 u256 RandomCode::randomUniInt(u256 _maxVal)

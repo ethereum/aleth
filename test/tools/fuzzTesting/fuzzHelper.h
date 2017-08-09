@@ -96,7 +96,7 @@ public:
 	static std::string rndRLPSequence(int _depth, std::string& _debug);
 
 	/// Generate random int64
-	static std::string randomUniIntHex(u256 _maxVal = 0);
+	static std::string randomUniIntHex(u256 _maxVal = 0, u256 _mixVal = 0);
 	static u256 randomUniInt(u256 _maxVal = 0);
 
 private:

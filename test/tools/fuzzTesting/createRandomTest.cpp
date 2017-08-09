@@ -42,73 +42,29 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 namespace dev { namespace test {
 int createRandomTest(std::vector<char*> const& _parameters)
 {
-	std::string testSuite;
-	std::string testFillString;
-	json_spirit::mValue testmValue;
-	bool checktest = false;
-	bool filldebug = false;
 	bool debug = false;
-	bool filltest = false;
-
 	TestOutputHelper::initTest(1);
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
 
-	testSuite = options.rCurrentTestSuite;
+	std::string const& testSuite = options.rCurrentTestSuite;
 	if (testSuite != "BlockchainTests" && testSuite != "TransactionTests" && testSuite != "StateTestsGeneral"
-				&& testSuite != "VMTests")
+		&& testSuite != "VMTests")
 	{
 		std::cerr << "Error! Test suite '" + testSuite +"' not supported! (Usage -t TestSuite)" << std::endl;
 		return 1;
 	}
 
+	//parse options for createRandomTest special test suite
 	for (size_t i = 0; i < _parameters.size(); ++i)
 	{
 		auto arg = std::string{_parameters.at(i)};
 
 		if (arg == "--debug")
 			debug = true;
-		else
-		if (arg == "--filldebug")
-			filldebug = true;
 	}
-
-	if (checktest)
-		std::cout << "Testing: " << testSuite.substr(0, testSuite.length() - 1) << "... ";
 
 	if (testSuite == "StateTestsGeneral")
-	{
-		if (checktest)
-			return checkRandomTest(dev::test::doStateTests, testmValue, debug);
-		else
-			fillRandomTest(dev::test::doStateTests, (filltest) ? testFillString : c_testExampleStateTest, filldebug);
-	}
-	else
-	if (testSuite == "BlockchainTests")
-	{
-		if (checktest)
-			return checkRandomTest(dev::test::doBlockchainTests, testmValue, debug);
-		else
-			fillRandomTest(dev::test::doBlockchainTests, (filltest) ? testFillString : c_testExampleBlockchainTest, filldebug);
-	}
-	else
-	if (testSuite == "TransactionTests")
-	{
-		if (checktest)
-			return checkRandomTest(dev::test::doTransactionTests, testmValue, debug);
-		else
-			fillRandomTest(dev::test::doTransactionTests, (filltest) ? testFillString : c_testExampleTransactionTest, filldebug);
-	}
-	else
-	if (testSuite == "VMTests")
-	{
-		if (checktest)
-		{
-			dev::eth::VMFactory::setKind(dev::eth::VMKind::JIT);
-			return checkRandomTest(dev::test::doVMTests, testmValue, debug);
-		}
-		else
-			fillRandomTest(dev::test::doVMTests, (filltest) ? testFillString : c_testExampleVMTest, filldebug);
-	}
+		fillRandomTest(dev::test::doStateTests, c_testExampleStateTest, debug);
 
 	return 0;
 }
@@ -169,12 +125,13 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
 		_doTests(v, true);
-		if (!v.get_obj().count("post"))
-			BOOST_ERROR("And error occured when executing random state test!");
+		for (auto& obj: v.get_obj())
+			if (!obj.second.get_obj().count("post"))
+				BOOST_ERROR("An error occured when executing random state test!");
 	}
 	catch(...)
 	{
-		std::cerr << "Test fill exception!";
+		BOOST_ERROR("Error generating random test!");
 	}
 
 	//restroe output
@@ -195,82 +152,78 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
 		types.push_back(it->first);
 
-	for (unsigned i = 0; i < types.size(); i++)
+	for (auto const& type: types)
 	{
-		std::size_t pos = _test.find(types.at(i));
+		std::size_t pos = _test.find(type);
 		while (pos != std::string::npos)
 		{
-			if (types.at(i) == "[RLP]")
+			if (type == "[RLP]")
 			{
 				std::string debug;
 				int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;
 				_test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));
 				cnote << debug;
-				std::string a;
 			}
-			else
-			if (types.at(i) == "[CODE]")
+			else if (type == "[CODE]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 90)
-					_test.replace(pos, types.at(i).length(), "0x"+dev::test::RandomCode::generate(10, options));
+					_test.replace(pos, type.length(), "0x"+dev::test::RandomCode::generate(5, options));
 				else
-					_test.replace(pos, types.at(i).length(), "");
+					_test.replace(pos, type.length(), "");
 			}
-			else
-			if (types.at(i) == "[HEX]")
-				_test.replace(pos, types.at(i).length(), dev::test::RandomCode::randomUniIntHex());
-			else
-			if (types.at(i) == "[HEX32]")
-				_test.replace(pos, types.at(i).length(), dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max()));
-			else
-			if (types.at(i) == "[GASLIMIT]")
-				_test.replace(pos, types.at(i).length(), dev::test::RandomCode::randomUniIntHex(dev::u256("3000000000")));
-			else
-			if (types.at(i) == "[HASH20]")
-				_test.replace(pos, types.at(i).length(), dev::test::RandomCode::rndByteSequence(20));
-			else
-			if (types.at(i) == "[ADDRESS]")
-				_test.replace(pos, types.at(i).length(), toString(options.getRandomAddress()));
-			else
-			if (types.at(i) == "[0xADDRESS]")
-				_test.replace(pos, types.at(i).length(), "0x" + toString(options.getRandomAddress()));
-			else
-			if (types.at(i) == "[0xDESTADDRESS]")
+			else if (type == "[HEX]")
+				_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex());
+			else if (type == "[HEX32]")
+			{
+				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				if (random < 90)
+					_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max()));
+				else
+					_test.replace(pos, type.length(), "0x00");
+			}
+			else if (type == "[GASLIMIT]")
+				_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex(dev::u256("36028797018963967"), dev::u256("18014398509481983")));
+			else if (type == "[GASPRICE]")
+				_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex(dev::u256("5")));
+			else if (type == "[HASH20]")
+				_test.replace(pos, type.length(), dev::test::RandomCode::rndByteSequence(20));
+			else if (type == "[ADDRESS]")
+				_test.replace(pos, type.length(), toString(options.getRandomAddress()));
+			else if (type == "[0xADDRESS]")
+				_test.replace(pos, type.length(), "0x" + toString(options.getRandomAddress()));
+			else if (type == "[0xDESTADDRESS]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 50)
-					_test.replace(pos, types.at(i).length(), "0x" + toString(options.getRandomAddress()));
+					_test.replace(pos, type.length(), "0x" + toString(options.getRandomAddress()));
 				else
-					_test.replace(pos, types.at(i).length(), "");
+					_test.replace(pos, type.length(), "");
 			}
-			else
-			if (types.at(i) == "[0xHASH32]")
-				_test.replace(pos, types.at(i).length(), "0x" + dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[HASH32]")
-				_test.replace(pos, types.at(i).length(), dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[V]")
+			else if (type == "[0xHASH32]")
+				_test.replace(pos, type.length(), "0x" + dev::test::RandomCode::rndByteSequence(32));
+			else if (type == "[HASH32]")
+				_test.replace(pos, type.length(), dev::test::RandomCode::rndByteSequence(32));
+			else if (type == "[V]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 30)
-					_test.replace(pos, types.at(i).length(), "0x1c");
+					_test.replace(pos, type.length(), "0x1c");
 				else
 				if (random < 60)
-					_test.replace(pos, types.at(i).length(), "0x1d");
+					_test.replace(pos, type.length(), "0x1d");
 				else
-					_test.replace(pos, types.at(i).length(), "0x" + dev::test::RandomCode::rndByteSequence(1));
+					_test.replace(pos, type.length(), "0x" + dev::test::RandomCode::rndByteSequence(1));
 			}
 			else
 			{
 				//Replace type from varMap if varMap is set
-				if (_varMap.count(types.at(i)))
-					_test.replace(pos, types.at(i).length(), _varMap.at(types.at(i)));
-				BOOST_ERROR("Skipping undeclared type: " + types.at(i));
+				if (_varMap.count(type))
+					_test.replace(pos, type.length(), _varMap.at(type));
+				BOOST_ERROR("Skipping undeclared type: " + type);
 			}
 
-			pos = _test.find(types.at(i));
+			pos = _test.find(type);
 		}
 	}
 }
@@ -278,7 +231,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 std::vector<std::string> dev::test::RandomCode::getTypes()
 {
 	//declare possible types
-	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]", "[ADDRESS]", "[0xADDRESS]", "[0xDESTADDRESS]"};
+	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]", "[GASPRICE]", "[ADDRESS]", "[0xADDRESS]", "[0xDESTADDRESS]"};
 }
 
 std::string const c_testExampleTransactionTest = R"(
@@ -355,7 +308,7 @@ std::string const c_testExampleStateTest = R"(
 		"gasLimit" : [
 			"[HEX32]"
 		],
-		"gasPrice" : "[V]",
+		"gasPrice" : "[GASPRICE]",
 		"nonce" : "0",
 		"secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
 		"to" : "[0xDESTADDRESS]",
