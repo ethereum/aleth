@@ -539,21 +539,24 @@ void postParseJson(json_spirit::mValue& _obj)
 {
 	if(_obj.type() == json_spirit::obj_type)
 	{
+		std::list<string> removeList;
 		for (auto& i: _obj.get_obj())
 		{
 			if (i.first.substr(0, 2) == "//")
 			{
-				_obj.get_obj().erase(_obj.get_obj().find(i.first));
+				removeList.push_back(i.first);
 				continue;
 			}
 
 			if (i.second.type() != json_spirit::str_type)
 			{
+				postParseJson(i.second);
 				if (i.first != "_info" && i.second.type() == json_spirit::obj_type)
 					i.second = ImportTest::makeAllFieldsHex(i.second.get_obj(), i.first == "env" ? true : false);
-				postParseJson(i.second);
 			}
 		}
+		for(auto& i: removeList)
+			_obj.get_obj().erase(_obj.get_obj().find(i));
 	}
 	else if (_obj.type() == json_spirit::array_type)
 	{

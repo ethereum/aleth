@@ -260,6 +260,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 	return std::make_tuple(initialState, out, initialState.changeLog());
 }
 
+//convert json object of "key" : "stringdeciamal"  into "key" : "stringhex"
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
 {
 	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
@@ -268,17 +269,21 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 	for (auto const& i: _o)
 	{
 		bool isHash = false;
-		std::string key = i.first;
+		std::string const& key = i.first;
 
+		//do not touch the bytecode
 		if (key == "extraData" || key == "code")
 			continue;
 
+		//convert data only if it is an integer field
 		if (key == "data" && i.second.type() != json_spirit::int_type)
 			continue;
 
+		//do not apply 0x prefix to the hashes
 		if (hashes.count(key))
 			isHash = true;
 
+		//nonce is an string decimal field if it is not in the header
 		if (_isHeader && key == "nonce")
 			isHash = true;
 
@@ -291,22 +296,20 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 			str = value.get_str();
 		else if (value.type() == json_spirit::array_type)
 		{
-			bool isArrayOfString = true;
+			//convert transaction value, gaslimit arrays
 			json_spirit::mArray arr;
-			for (auto const& j: value.get_array())
+			for (auto& j: value.get_array())
 			{
-				if (j.type() != json_spirit::str_type)
+				if (j.type() == json_spirit::str_type)
 				{
-					isArrayOfString = false;
-					break;
+					str = j.get_str();
+					str = (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1);
+					arr.push_back(str);
 				}
-
-				str = j.get_str();
-				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
+				else
+					arr.push_back(j);
 			}
-
-			if (isArrayOfString)
-				_o[key] = arr;
+			_o[key] = arr;
 			continue;
 		}
 		else continue;
