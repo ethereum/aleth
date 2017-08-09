@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(output)
 		BOOST_REQUIRE(buffer.str().size() == 139);
 		buffer.str(std::string());
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
 		bc.addBlock(block);
 		BOOST_REQUIRE(bc.interface().transactions().size() > 0);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)
 		block2.mine(bc);
 		bc.addBlock(block2);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -184,7 +184,7 @@ See https://github.com/ethereum/cpp-ethereum/issues/3256.
 		BOOST_REQUIRE(bc.interface().info().number() == 3);
 		BOOST_REQUIRE(bc.interface().info(uncleBlock.blockHeader().hash()) == uncleBlock.blockHeader());
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -244,7 +244,7 @@ See https://github.com/ethereum/cpp-ethereum/issues/3059.
 		QueueStatus status = uncleBlockQueue.blockStatus(block2.blockHeader().hash());
 		BOOST_REQUIRE_MESSAGE(status == QueueStatus::Bad, "Received Queue Status: " + toString(status) + " Expected Queue Status: " + toString(QueueStatus::Bad));
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 		auto is_critical = []( std::exception const& _e) { cnote << _e.what(); return true; };
 		BOOST_CHECK_EXCEPTION(bcRef.insert(uncleBlock.bytes(), uncleBlock.receipts()), FutureTime, is_critical);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 }
 
 bool onBadwasCalled = false;
-void onBad(Exception& _ex)
+void onBad(dev::Exception& _ex)
 {
 	cout << _ex.what();
 	onBadwasCalled = true;
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 		BOOST_REQUIRE(onBadwasCalled == true);
 		cout << endl;
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(insert)
 			BOOST_ERROR("Unexpected Exception!");
 		}
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(insertException)
 		auto is_critical = []( std::exception const& _e) { cnote << _e.what(); return true; };
 		BOOST_CHECK_EXCEPTION(bcRef.insert(block.bytes(), block.receipts()), AlreadyHaveBlock, is_critical);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 		bcRef.rescue(bc.testGenesis().state().db());
 		BOOST_CHECK_EQUAL(bcRef.number(), 3);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(updateStats)
 		//memchache size 33554432 - 3500 blocks before cache to be cleared
 		bcRef.garbageCollect(true);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}

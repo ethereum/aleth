@@ -437,7 +437,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 			addClientInfo(output, testfilename);
 			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(output, true)));
 		}
-		catch (Exception const& _e)
+		catch (dev::Exception const& _e)
 		{
 			BOOST_ERROR(TestOutputHelper::testName() + " Failed filling test with Exception: " << diagnostic_information(_e));
 		}
@@ -458,7 +458,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 		Listener::notifySuiteStarted(name);
 		doTests(v, false);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << diagnostic_information(_e));
 	}
