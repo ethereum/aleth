@@ -25,6 +25,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
+#include <libdevcore/Guards.h>
 #include "Common.h"
 #include "ChainOperationParams.h"
 #include "Exceptions.h"
@@ -101,6 +102,8 @@ public:
 	BlockHeader();
 	explicit BlockHeader(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256());
 	explicit BlockHeader(bytes const& _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256()): BlockHeader(&_data, _bdt, _hashWith) {}
+	BlockHeader(BlockHeader const& _other);
+	BlockHeader& operator=(BlockHeader const& _other);
 
 	static h256 headerHashFromBlock(bytes const& _block) { return headerHashFromBlock(&_block); }
 	static h256 headerHashFromBlock(bytesConstRef _block);
@@ -148,7 +151,7 @@ public:
 	void setExtraData(bytes const& _v) { m_extraData = _v; noteDirty(); }
 	void setLogBloom(LogBloom const& _v) { m_logBloom = _v; noteDirty(); }
 	void setDifficulty(u256 const& _v) { m_difficulty = _v; noteDirty(); }
-	template <class T> void setSeal(unsigned _offset, T const& _value) { if (m_seal.size() <= _offset) m_seal.resize(_offset + 1); m_seal[_offset] = rlp(_value); noteDirty(); }
+	template <class T> void setSeal(unsigned _offset, T const& _value) { Guard l(m_sealLock); if (m_seal.size() <= _offset) m_seal.resize(_offset + 1); m_seal[_offset] = rlp(_value); noteDirty(); }
 	template <class T> void setSeal(T const& _value) { setSeal(0, _value); }
 
 	h256 const& parentHash() const { return m_parentHash; }
@@ -165,11 +168,16 @@ public:
 	bytes const& extraData() const { return m_extraData; }
 	LogBloom const& logBloom() const { return m_logBloom; }
 	u256 const& difficulty() const { return m_difficulty; }
-	template <class T> T seal(unsigned _offset = 0) const { T ret; if (_offset < m_seal.size()) ret = RLP(m_seal[_offset]).convert<T>(RLP::VeryStrict); return ret; }
+	template <class T> T seal(unsigned _offset = 0) const { T ret; Guard l(m_sealLock); if (_offset < m_seal.size()) ret = RLP(m_seal[_offset]).convert<T>(RLP::VeryStrict); return ret; }
 
 private:
 	void populate(RLP const& _header);
 	void streamRLPFields(RLPStream& _s) const;
+	std::vector<bytes> seal() const
+	{
+		Guard l(m_sealLock);
+		return m_seal;
+	}
 
 	h256 m_parentHash;
 	h256 m_sha3Uncles;
@@ -187,6 +195,7 @@ private:
 	u256 m_difficulty;
 
 	std::vector<bytes> m_seal;		///< Additional (RLP-encoded) header fields.
+	mutable Mutex m_sealLock;
 
 	mutable h256 m_hash;			///< (Memoised) SHA3 hash of the block header with seal.
 	mutable h256 m_hashWithout;		///< (Memoised) SHA3 hash of the block header without seal.

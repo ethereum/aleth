@@ -43,6 +43,55 @@ BlockHeader::BlockHeader(bytesConstRef _block, BlockDataType _bdt, h256 const& _
 	populate(header);
 }
 
+BlockHeader::BlockHeader(BlockHeader const& _other) :
+	m_parentHash(_other.parentHash()),
+	m_sha3Uncles(_other.sha3Uncles()),
+	m_stateRoot(_other.stateRoot()),
+	m_transactionsRoot(_other.transactionsRoot()),
+	m_receiptsRoot(_other.receiptsRoot()),
+	m_logBloom(_other.logBloom()),
+	m_number(_other.number()),
+	m_gasLimit(_other.gasLimit()),
+	m_gasUsed(_other.gasUsed()),
+	m_extraData(_other.extraData()),
+	m_timestamp(_other.timestamp()),
+	m_author(_other.author()),
+	m_difficulty(_other.difficulty()),
+	m_seal(_other.seal()),
+	m_hash(_other.m_hash),
+	m_hashWithout(_other.m_hashWithout)
+{
+	assert(*this == _other);
+}
+
+BlockHeader& BlockHeader::operator=(BlockHeader const& _other)
+{
+	if (this == &_other)
+		return *this;
+	m_parentHash = _other.parentHash();
+	m_sha3Uncles = _other.sha3Uncles();
+	m_stateRoot = _other.stateRoot();
+	m_transactionsRoot = _other.transactionsRoot();
+	m_receiptsRoot = _other.receiptsRoot();
+	m_logBloom = _other.logBloom();
+	m_number = _other.number();
+	m_gasLimit = _other.gasLimit();
+	m_gasUsed = _other.gasUsed();
+	m_extraData = _other.extraData();
+	m_timestamp = _other.timestamp();
+	m_author = _other.author();
+	m_difficulty = _other.difficulty();
+	std::vector<bytes> seal = _other.seal();
+	{
+		Guard l(m_sealLock);
+		m_seal = std::move(seal);
+	}
+	m_hash = _other.m_hash;
+	m_hashWithout = _other.m_hashWithout;
+	assert(*this == _other);
+	return *this;
+}
+
 void BlockHeader::clear()
 {
 	m_parentHash = h256();
