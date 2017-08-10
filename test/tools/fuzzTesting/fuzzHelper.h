@@ -26,7 +26,7 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
-#include <libevmcore/Instruction.h>
+#include <libevm/Instruction.h>
 
 #pragma once
 
