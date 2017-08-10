@@ -1,6 +1,7 @@
 
 set(SOURCES
 	ExtVMFace.cpp
+	Instruction.cpp
 	VM.cpp
 	VMOpt.cpp
 	VMCalls.cpp
@@ -20,7 +21,7 @@ file(GLOB HEADERS "*.h")
 
 add_library(evm ${SOURCES} ${HEADERS})
 
-target_link_libraries(evm PRIVATE evmcore ethcore)
+target_link_libraries(evm PRIVATE ethcore)
 target_include_directories(evm PRIVATE ..)
 
 if (EVMJIT)

@@ -22,10 +22,10 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#include "Common.h"
 #include <libethcore/Precompiled.h>
 
-#include <libevmcore/EVMSchedule.h>
+#include "Common.h"
+#include "EVMSchedule.h"
 
 namespace dev
 {
