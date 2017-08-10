@@ -130,7 +130,7 @@ public:
 	bool operator!=(BlockHeader const& _cmp) const { return !operator==(_cmp); }
 
 	void clear();
-	void noteDirty() const { m_hashWithout = m_hash = h256(); }
+	void noteDirty() const { Guard l(m_hashLock); m_hashWithout = m_hash = h256(); }
 	void populateFromParent(BlockHeader const& parent);
 
 	// TODO: pull out into abstract class Verifier.
@@ -178,6 +178,16 @@ private:
 		Guard l(m_sealLock);
 		return m_seal;
 	}
+	h256 hashRawRead() const
+	{
+		Guard l(m_hashLock);
+		return m_hash;
+	}
+	h256 hashWithoutRawRead() const
+	{
+		Guard l(m_hashLock);
+		return m_hashWithout;
+	}
 
 	h256 m_parentHash;
 	h256 m_sha3Uncles;
@@ -199,6 +209,7 @@ private:
 
 	mutable h256 m_hash;			///< (Memoised) SHA3 hash of the block header with seal.
 	mutable h256 m_hashWithout;		///< (Memoised) SHA3 hash of the block header without seal.
+	mutable Mutex m_hashLock;		///< A lock for both m_hash and m_hashWithout.
 };
 
 inline std::ostream& operator<<(std::ostream& _out, BlockHeader const& _bi)

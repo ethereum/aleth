@@ -58,8 +58,8 @@ BlockHeader::BlockHeader(BlockHeader const& _other) :
 	m_author(_other.author()),
 	m_difficulty(_other.difficulty()),
 	m_seal(_other.seal()),
-	m_hash(_other.m_hash),
-	m_hashWithout(_other.m_hashWithout)
+	m_hash(_other.hashRawRead()),
+	m_hashWithout(_other.hashWithoutRawRead())
 {
 	assert(*this == _other);
 }
@@ -86,8 +86,13 @@ BlockHeader& BlockHeader::operator=(BlockHeader const& _other)
 		Guard l(m_sealLock);
 		m_seal = std::move(seal);
 	}
-	m_hash = _other.m_hash;
-	m_hashWithout = _other.m_hashWithout;
+	h256 hash = _other.hashRawRead();
+	h256 hashWithout = _other.hashWithoutRawRead();
+	{
+		Guard l(m_hashLock);
+		m_hash = std::move(hash);
+		m_hashWithout = std::move(hashWithout);
+	}
 	assert(*this == _other);
 	return *this;
 }
@@ -114,6 +119,7 @@ void BlockHeader::clear()
 h256 BlockHeader::hash(IncludeSeal _i) const
 {
 	h256 dummy;
+	Guard l(m_hashLock);
 	h256& memo = _i == WithSeal ? m_hash : _i == WithoutSeal ? m_hashWithout : dummy;
 	if (!memo)
 	{
