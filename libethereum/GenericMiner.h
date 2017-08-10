@@ -102,12 +102,13 @@ public:
 		}
 		else if (!_work && !!old)
 			pause();
+		Guard l(x_hashCount);
 		m_hashCount = 0;
 	}
 
-	uint64_t hashCount() const { return m_hashCount; }
+	uint64_t hashCount() const { Guard l(x_hashCount); return m_hashCount; }
 
-	void resetHashCount() { m_hashCount = 0; }
+	void resetHashCount() { Guard l(x_hashCount); m_hashCount = 0; }
 
 	unsigned index() const { return m_index; }
 
@@ -148,13 +149,14 @@ protected:
 
 	WorkPackage const& work() const { Guard l(x_work); return m_work; }
 
-	void accumulateHashes(unsigned _n) { m_hashCount += _n; }
+	void accumulateHashes(unsigned _n) { Guard l(x_hashCount); m_hashCount += _n; }
 
 private:
 	FarmFace* m_farm = nullptr;
 	unsigned m_index;
 
 	uint64_t m_hashCount = 0;
+	mutable Mutex x_hashCount;
 
 	WorkPackage m_work;
 	mutable Mutex x_work;
