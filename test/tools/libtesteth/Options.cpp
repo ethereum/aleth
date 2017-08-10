@@ -230,8 +230,6 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
-		else if (arg == "--debug")
-			randomDebug = true;
 		else if (arg == "-t")
 		{
 			throwIfAfterSeparator();
@@ -280,9 +278,6 @@ Options::Options(int argc, char** argv)
 			exit(1);
 		}
 	}
-
-	if (randomDebug && !createRandomTest)
-		BOOST_THROW_EXCEPTION(InvalidOption(" --debug option should follow with --createRandomTest"));
 
 	//Default option
 	if (logVerbosity == Verbosity::NiceReport)

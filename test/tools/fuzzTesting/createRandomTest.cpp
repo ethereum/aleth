@@ -27,6 +27,7 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <libevm/VMFactory.h>
 #include <libdevcore/Common.h>
+#include <libdevcore/Log.h>
 
 //String Variables
 extern std::string const c_testExampleStateTest;
@@ -36,13 +37,12 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug = false);
-int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug = false);
+void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
+int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value);
 
 namespace dev { namespace test {
-int createRandomTest(std::vector<char*> const& _parameters)
+int createRandomTest()
 {
-	bool debug = false;
 	TestOutputHelper::initTest(1);
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
 
@@ -53,23 +53,14 @@ int createRandomTest(std::vector<char*> const& _parameters)
 		return 1;
 	}
 
-	//parse options for createRandomTest special test suite
-	for (size_t i = 0; i < _parameters.size(); ++i)
-	{
-		auto arg = std::string{_parameters.at(i)};
-
-		if (arg == "--debug")
-			debug = true;
-	}
-
 	if (testSuite == "StateTestsGeneral")
-		fillRandomTest(dev::test::doStateTests, c_testExampleStateTest, debug);
+		fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
 
 	return 0;
 }
 }} //namespaces
 
-int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug)
+int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value)
 {
 	bool ret = 0;
 	try
@@ -77,7 +68,7 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 		//redirect all output to the stream
 		std::ostringstream strCout;
 		std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-		if (!_debug)
+		if (dev::g_logVerbosity == -1)
 		{
 			std::cout.rdbuf( strCout.rdbuf() );
 			std::cerr.rdbuf( strCout.rdbuf() );
@@ -86,7 +77,7 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 		_doTests(_value, false);
 
 		//restroe output
-		if (!_debug)
+		if (dev::g_logVerbosity == -1)
 		{
 			std::cout.rdbuf(oldCoutStreamBuf);
 			std::cerr.rdbuf(oldCoutStreamBuf);
@@ -105,12 +96,12 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 	return ret;
 }
 
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug)
+void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
 {
 	//redirect all output to the stream
 	std::ostringstream strCout;
 	std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-	if (!_debug)
+	if (dev::g_logVerbosity == -1)
 	{
 		std::cout.rdbuf( strCout.rdbuf() );
 		std::cerr.rdbuf( strCout.rdbuf() );
@@ -135,7 +126,7 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 	}
 
 	//restroe output
-	if (!_debug)
+	if (dev::g_logVerbosity == -1)
 	{
 		std::cout.rdbuf(oldCoutStreamBuf);
 		std::cerr.rdbuf(oldCoutStreamBuf);
@@ -173,29 +164,39 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 			}
 			else if (type == "[HEX]")
 				replace = dev::test::RandomCode::randomUniIntHex();
+			else if (type == "[BALANCE]")
+			{
+				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				if (random < 50)
+					replace = dev::test::RandomCode::randomUniIntHex();
+				else
+					replace = dev::test::RandomCode::randomUniIntHex(dev::u256("2000000"), dev::u256("18014398509481983"));
+			}
 			else if (type == "[HEX32]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 90)
-					replace = dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max());
+					replace = dev::test::RandomCode::randomUniIntHex(0, std::numeric_limits<uint32_t>::max());
 				else
 					replace = "0x00";
 			}
-			else if (type == "[GASLIMIT]")
-				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("36028797018963967"), dev::u256("18014398509481983"));
+			else if (type == "[BLOCKGASLIMIT]")
+				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("9223372036854775806"));
+			else if (type == "[TRANSACTIONGASLIMIT]")
+				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("5000"), dev::u256("10000000"));
 			else if (type == "[GASPRICE]")
-				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("5"));
+				replace = dev::test::RandomCode::randomUniIntHex(0, dev::u256("10"));
 			else if (type == "[HASH20]")
 				replace = dev::test::RandomCode::rndByteSequence(20);
 			else if (type == "[ADDRESS]")
-				replace = toString(options.getRandomAddress());
-			else if (type == "[0xADDRESS]")
-				replace = "0x" + toString(options.getRandomAddress());
+				replace = toString(options.getRandomAddress(RandomCodeOptions::ACCOUNT));
 			else if (type == "[0xDESTADDRESS]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
-				if (random < 50)
-					replace = "0x" + toString(options.getRandomAddress());
+				if (random < 90)
+					replace = "0x" + toString(options.getRandomAddress(RandomCodeOptions::CALLONLY));
+				else
+					replace = "";
 			}
 			else if (type == "[0xHASH32]")
 				replace = "0x" + dev::test::RandomCode::rndByteSequence(32);
@@ -230,7 +231,8 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 std::vector<std::string> dev::test::RandomCode::getTypes()
 {
 	//declare possible types
-	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]", "[GASPRICE]", "[ADDRESS]", "[0xADDRESS]", "[0xDESTADDRESS]"};
+	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[TRANSACTIONGASLIMIT]",
+			"[BLOCKGASLIMIT]", "[GASPRICE]", "[ADDRESS]", "[0xDESTADDRESS]", "[BALANCE]"};
 }
 
 std::string const c_testExampleTransactionTest = R"(
@@ -258,7 +260,7 @@ std::string const c_testExampleStateTest = R"(
 		"env" : {
 		"currentCoinbase" : "[ADDRESS]",
 		"currentDifficulty" : "0x20000",
-		"currentGasLimit" : "[GASLIMIT]",
+		"currentGasLimit" : "[BLOCKGASLIMIT]",
 		"currentNumber" : "1",
 		"currentTimestamp" : "1000",
 		"previousHash" : "[HASH32]"
@@ -292,8 +294,15 @@ std::string const c_testExampleStateTest = R"(
 			"storage" : {
 			}
 		},
-		"a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+		"[ADDRESS]" : {
 			"balance" : "[HEX]",
+			"code" : "[CODE]",
+			"nonce" : "[V]",
+			"storage" : {
+			}
+		},
+		"a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+			"balance" : "[BALANCE]",
 			"code" : "0x",
 			"nonce" : "0",
 			"storage" : {
@@ -305,7 +314,7 @@ std::string const c_testExampleStateTest = R"(
 			"[CODE]"
 		],
 		"gasLimit" : [
-			"[HEX32]"
+			"[TRANSACTIONGASLIMIT]"
 		],
 		"gasPrice" : "[GASPRICE]",
 		"nonce" : "0",

@@ -67,7 +67,7 @@ void createRandomTest()
 	//For no reason BOOST tend to remove valuable arg -t "TestSuiteName"
 	//And can't hadle large input stream of data
 	//so the actual test suite and raw test input is read into Options
-	if (dev::test::createRandomTest(parameters))
+	if (dev::test::createRandomTest())
 		throw framework::internal_error("Create Random Test Error!");
 	else
 		exit(0);

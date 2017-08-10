@@ -79,7 +79,6 @@ public:
 	/// CreateRandomTest
 	/// @{
 	bool createRandomTest = false; ///< Generate random test
-	bool randomDebug = false; ///< Debug random test generation
 	/// @}
 
 	/// Get reference to options
