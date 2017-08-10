@@ -52,15 +52,7 @@ void TestOutputHelper::initTest(int _maxTests)
 
 void TestOutputHelper::initTest(json_spirit::mValue& _v)
 {
-	Ethash::init();
-	BasicAuthority::init();
-	NoProof::init();
-	m_timer.restart();
-	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
-	if (!Options::get().createRandomTest)
-		std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
-	m_maxTests = _v.get_obj().size();
-	m_currTest = 0;
+	initTest(_v.get_obj().size());
 }
 
 bool TestOutputHelper::passTest(std::string const& _testName)

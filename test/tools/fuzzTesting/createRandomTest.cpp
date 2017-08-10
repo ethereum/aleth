@@ -43,17 +43,17 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 namespace dev { namespace test {
 int createRandomTest()
 {
-	TestOutputHelper::initTest(1);
+	TestOutputHelper::initTest();
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
 
 	std::string const& testSuite = options.rCurrentTestSuite;
-	if (testSuite != "StateTestsGeneral")
+	if (testSuite != test::c_StateTestsGeneral)
 	{
 		std::cerr << "Error! Test suite '" + testSuite +"' not supported! (Usage -t TestSuite)" << std::endl;
 		return 1;
 	}
 
-	if (testSuite == "StateTestsGeneral")
+	if (testSuite == test::c_StateTestsGeneral)
 		fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
 
 	return 0;
@@ -120,6 +120,14 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 				BOOST_ERROR("An error occured when executing random state test!");
 		dev::test::addClientInfo(v, "random generated test");
 	}
+	catch (dev::Exception const& _e)
+	{
+		BOOST_ERROR("Failed generating test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed generating test with Exception: " << _e.what());
+	}
 	catch(...)
 	{
 		BOOST_ERROR("Error generating random test!");
@@ -158,15 +166,15 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 			}
 			else if (type == "[CODE]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = dev::test::RandomCode::randomPercent();
 				if (random < 90)
-					replace = "0x"+dev::test::RandomCode::generate(5, options);
+					replace = "0x" + dev::test::RandomCode::generate(5, options);
 			}
 			else if (type == "[HEX]")
 				replace = dev::test::RandomCode::randomUniIntHex();
 			else if (type == "[BALANCE]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = dev::test::RandomCode::randomPercent();
 				if (random < 50)
 					replace = dev::test::RandomCode::randomUniIntHex();
 				else
@@ -174,7 +182,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 			}
 			else if (type == "[HEX32]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = dev::test::RandomCode::randomPercent();
 				if (random < 90)
 					replace = dev::test::RandomCode::randomUniIntHex(0, std::numeric_limits<uint32_t>::max());
 				else
@@ -192,7 +200,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = toString(options.getRandomAddress(RandomCodeOptions::ACCOUNT));
 			else if (type == "[0xDESTADDRESS]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = dev::test::RandomCode::randomPercent();
 				if (random < 90)
 					replace = "0x" + toString(options.getRandomAddress(RandomCodeOptions::CALLONLY));
 				else
@@ -204,7 +212,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = dev::test::RandomCode::rndByteSequence(32);
 			else if (type == "[V]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = dev::test::RandomCode::randomPercent();
 				if (random < 30)
 					replace = "0x1c";
 				else

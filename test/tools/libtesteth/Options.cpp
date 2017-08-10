@@ -279,6 +279,19 @@ Options::Options(int argc, char** argv)
 		}
 	}
 
+	//check restrickted options
+	if (createRandomTest)
+	{
+		string optionlist = "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, performance, quadratic, memory, inputLimits, bigData, wallet, stats, filltests, fillchain";
+		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
+			|| 	performance || quadratic || memory || inputLimits || bigData || wallet
+			|| 	stats || filltests || fillchain)
+		{
+			cerr << "--createRandomTest could not be used with one of the options: " + optionlist << endl;
+			exit(1);
+		}
+	}
+
 	//Default option
 	if (logVerbosity == Verbosity::NiceReport)
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout

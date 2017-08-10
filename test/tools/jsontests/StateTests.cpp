@@ -139,6 +139,7 @@ public:
 	}
 };
 
+std::string const test::c_StateTestsGeneral = "StateTestsGeneral";
 BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
 
 //Frontier Tests

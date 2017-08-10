@@ -107,7 +107,7 @@ public:
 	/// Generate random
 	static std::string randomUniIntHex(u256 const& _minVal = 0, u256 _maxVal = 0);
 	static u256 randomUniInt(u256 _maxVal = 0);
-	static int randomPercent() {return randPrcentGen();}
+	static int randomPercent() { refreshSeed(); return randPrcentGen();}
 
 private:
 	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
