@@ -60,6 +60,12 @@ Ethash::Ethash()
 	});
 }
 
+Ethash::~Ethash()
+{
+	// onSolutionFound closure sometimes has references to destroyed members.
+	m_farm.onSolutionFound({});
+}
+
 strings Ethash::sealers() const
 {
 	return {"cpu"};
