@@ -88,7 +88,7 @@ public:
 
 	void setWork(WorkPackage const& _work = WorkPackage())
 	{
-		auto old = m_work;
+		bool const old_exists = !!m_work;
 		{
 			Guard l(x_work);
 			m_work = _work;
@@ -100,7 +100,7 @@ public:
 			DEV_TIMED_ABOVE("kickOff", 250)
 				kickOff();
 		}
-		else if (!_work && !!old)
+		else if (!_work && old_exists)
 			pause();
 		Guard l(x_hashCount);
 		m_hashCount = 0;
