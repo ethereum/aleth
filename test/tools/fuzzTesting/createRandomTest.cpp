@@ -47,8 +47,7 @@ int createRandomTest(std::vector<char*> const& _parameters)
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
 
 	std::string const& testSuite = options.rCurrentTestSuite;
-	if (testSuite != "BlockchainTests" && testSuite != "TransactionTests" && testSuite != "StateTestsGeneral"
-		&& testSuite != "VMTests")
+	if (testSuite != "StateTestsGeneral")
 	{
 		std::cerr << "Error! Test suite '" + testSuite +"' not supported! (Usage -t TestSuite)" << std::endl;
 		return 1;
@@ -128,6 +127,7 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 		for (auto& obj: v.get_obj())
 			if (!obj.second.get_obj().count("post"))
 				BOOST_ERROR("An error occured when executing random state test!");
+		dev::test::addClientInfo(v, "random generated test");
 	}
 	catch(...)
 	{
@@ -157,72 +157,71 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 		std::size_t pos = _test.find(type);
 		while (pos != std::string::npos)
 		{
+			std::string replace;
 			if (type == "[RLP]")
 			{
 				std::string debug;
 				int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;
-				_test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));
+				replace = dev::test::RandomCode::rndRLPSequence(randomDepth, debug);
 				cnote << debug;
 			}
 			else if (type == "[CODE]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 90)
-					_test.replace(pos, type.length(), "0x"+dev::test::RandomCode::generate(5, options));
-				else
-					_test.replace(pos, type.length(), "");
+					replace = "0x"+dev::test::RandomCode::generate(5, options);
 			}
 			else if (type == "[HEX]")
-				_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex());
+				replace = dev::test::RandomCode::randomUniIntHex();
 			else if (type == "[HEX32]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 90)
-					_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max()));
+					replace = dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max());
 				else
-					_test.replace(pos, type.length(), "0x00");
+					replace = "0x00";
 			}
 			else if (type == "[GASLIMIT]")
-				_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex(dev::u256("36028797018963967"), dev::u256("18014398509481983")));
+				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("36028797018963967"), dev::u256("18014398509481983"));
 			else if (type == "[GASPRICE]")
-				_test.replace(pos, type.length(), dev::test::RandomCode::randomUniIntHex(dev::u256("5")));
+				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("5"));
 			else if (type == "[HASH20]")
-				_test.replace(pos, type.length(), dev::test::RandomCode::rndByteSequence(20));
+				replace = dev::test::RandomCode::rndByteSequence(20);
 			else if (type == "[ADDRESS]")
-				_test.replace(pos, type.length(), toString(options.getRandomAddress()));
+				replace = toString(options.getRandomAddress());
 			else if (type == "[0xADDRESS]")
-				_test.replace(pos, type.length(), "0x" + toString(options.getRandomAddress()));
+				replace = "0x" + toString(options.getRandomAddress());
 			else if (type == "[0xDESTADDRESS]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 50)
-					_test.replace(pos, type.length(), "0x" + toString(options.getRandomAddress()));
-				else
-					_test.replace(pos, type.length(), "");
+					replace = "0x" + toString(options.getRandomAddress());
 			}
 			else if (type == "[0xHASH32]")
-				_test.replace(pos, type.length(), "0x" + dev::test::RandomCode::rndByteSequence(32));
+				replace = "0x" + dev::test::RandomCode::rndByteSequence(32);
 			else if (type == "[HASH32]")
-				_test.replace(pos, type.length(), dev::test::RandomCode::rndByteSequence(32));
+				replace = dev::test::RandomCode::rndByteSequence(32);
 			else if (type == "[V]")
 			{
 				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 30)
-					_test.replace(pos, type.length(), "0x1c");
+					replace = "0x1c";
 				else
 				if (random < 60)
-					_test.replace(pos, type.length(), "0x1d");
+					replace = "0x1d";
 				else
-					_test.replace(pos, type.length(), "0x" + dev::test::RandomCode::rndByteSequence(1));
+					replace = "0x" + dev::test::RandomCode::rndByteSequence(1);
 			}
 			else
 			{
 				//Replace type from varMap if varMap is set
 				if (_varMap.count(type))
-					_test.replace(pos, type.length(), _varMap.at(type));
-				BOOST_ERROR("Skipping undeclared type: " + type);
+					replace = _varMap.at(type);
+				else
+					BOOST_ERROR("Skipping undeclared type: " + type);
 			}
 
+			_test.replace(pos, type.length(), replace);
 			pos = _test.find(type);
 		}
 	}

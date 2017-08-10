@@ -303,7 +303,7 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 	return code;
 }
 
-std::string RandomCode::randomUniIntHex(u256 _maxVal, u256 _minVal)
+std::string RandomCode::randomUniIntHex(u256 _maxVal, u256 const _minVal)
 {
 	if (_maxVal == 0)
 		_maxVal = std::numeric_limits<uint64_t>::max();
