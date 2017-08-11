@@ -83,12 +83,14 @@ namespace test
 {
 
 boost::random::mt19937 RandomCode::gen;
+boostIntDistrib RandomCode::prcentDist = boostIntDistrib (0, 100);
 boostIntDistrib RandomCode::opCodeDist = boostIntDistrib (0, 255);
 boostIntDistrib RandomCode::opLengDist = boostIntDistrib (1, 32);
 boostIntDistrib RandomCode::opMemrDist = boostIntDistrib (0, 10485760);
 boostIntDistrib RandomCode::uniIntDist = boostIntDistrib (0, 0x7fffffff);
 boostUint64 RandomCode::uInt64Dist = boostUint64 (0, std::numeric_limits<uint64_t>::max());
 
+boostIntGenerator RandomCode::randPrcentGen = boostIntGenerator(gen, prcentDist);
 boostIntGenerator RandomCode::randOpCodeGen = boostIntGenerator(gen, opCodeDist);
 boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist);
 boostIntGenerator RandomCode::randOpMemrGen = boostIntGenerator(gen, opMemrDist);
@@ -98,7 +100,7 @@ boostUInt64Generator RandomCode::randUInt64Gen = boostUInt64Generator(gen, uInt6
 int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _debug)
 {
 	bool genValidRlp = true;
-	int bugProbability = randUniIntGen() % 100;
+	int bugProbability = randomPercent();
 	if (bugProbability < 80)
 		genValidRlp = false;
 
@@ -119,7 +121,7 @@ int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _deb
 		int length = _result.size() / 2;
 		std::string header;
 		int rtype = 0;
-		int rnd = randUniIntGen() % 100;
+		int rnd = randomPercent();
 		if (rnd < 10)
 		{
 			//make header as array
@@ -158,10 +160,10 @@ int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _deb
 	{
 		bool genbug = false;
 		bool genbug2 = false;
-		int bugProbability = randUniIntGen() % 100;
+		int bugProbability = randomPercent();
 		if (bugProbability < 50 && !genValidRlp)
 			genbug = true;
-		bugProbability = randUniIntGen() % 100;   //more randomness
+		bugProbability = randomPercent();		//more randomness
 		if (bugProbability < 50 && !genValidRlp)
 			genbug2 = true;
 
@@ -195,7 +197,7 @@ int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _deb
 		case 2:
 		{
 			//string more 55 [0xb8, 0xbf] + length + string
-			int len = randUniIntGen() % 100;
+			int len = randomPercent();
 			if (len < 56 && genValidRlp)
 				len = 56;
 
@@ -218,7 +220,7 @@ int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _deb
 		case 4:
 		{
 			//list more 55 [0xf8, 0xff] + length + data
-			int len = randUniIntGen() % 100;
+			int len = randomPercent();
 			if (len < 56 && genValidRlp)
 				len = 56;
 			std::string hexlen = emptyZeros2 + toCompactHex(len, 1);
@@ -308,7 +310,7 @@ std::string RandomCode::randomUniIntHex(u256 _maxVal)
 	if (_maxVal == 0)
 		_maxVal = std::numeric_limits<uint64_t>::max();
 	refreshSeed();
-	int rand = randUniIntGen() % 100;
+	int rand = randomPercent();
 	if (rand < 50)
 		return toCompactHexPrefixed((u256)randUniIntGen() % _maxVal);
 	return toCompactHexPrefixed((u256)randUInt64Gen() % _maxVal);
@@ -353,7 +355,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 	std::string code;
 	bool smart = false;
 	unsigned argsNum = info.args;
-	int rand = randUniIntGen() % 100;
+	int rand = randomPercent();
 	if (rand < _options.smartCodeProbability)
 		smart = true;
 

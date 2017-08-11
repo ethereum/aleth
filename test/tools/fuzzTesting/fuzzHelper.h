@@ -94,9 +94,10 @@ public:
 	/// {4} - List more than 55
 	static std::string rndRLPSequence(int _depth, std::string& _debug);
 
-	/// Generate random int64
+	/// Generate random
 	static std::string randomUniIntHex(u256 _maxVal = 0);
 	static u256 randomUniInt(u256 _maxVal = 0);
+	static int randomPercent() { refreshSeed(); return randPrcentGen();}
 
 private:
 	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
@@ -108,12 +109,14 @@ private:
 
 	static boost::random::mt19937 gen;			///< Random generator
 	static boostIntDistrib opCodeDist;			///< 0..255 opcodes
+	static boostIntDistrib prcentDist;			///< 0..100 percent
 	static boostIntDistrib opLengDist;			///< 1..32  byte string
 	static boostIntDistrib opMemrDist;			///< 1..10MB  byte string
 	static boostIntDistrib uniIntDist;			///< 0..0x7fffffff
 	static boostUint64 uInt64Dist;				///< 0..2**64
 
 	static boostIntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
+	static boostIntGenerator randPrcentGen;		///< Generate random value from prcentDist
 	static boostIntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
 	static boostIntGenerator randOpLengGen;		///< Generate random length from opLengDist
 	static boostIntGenerator randOpMemrGen;		///< Generate random length from opMemrDist

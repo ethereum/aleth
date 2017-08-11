@@ -243,7 +243,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 			else
 			if (types.at(i) == "[V]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = test::RandomCode::randomPercent();
 				if (random < 30)
 					_test.replace(pos, 3, "0x1c");
 				else
