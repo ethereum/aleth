@@ -81,7 +81,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 					BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
 				}
 				o["sender"] = toString(txFromFields.sender());
-				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
+				o["transaction"] = tObj;
 				o["hash"] = toString(txFromFields.sha3());
 			}
 			catch(Exception const& _e)

@@ -500,7 +500,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 
 			json_spirit::read_string(s, v);
 			doTests(v, true);
-			addClientInfo(v, testfilename);
+			postParseJson(v, testfilename);
 			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
 		}
 		catch (Exception const& _e)
@@ -532,6 +532,37 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << _e.what());
 	}
+}
+
+//A general post parse function which converts filler file into final json test.
+void postParseJson(json_spirit::mValue& _obj, string const& _testfilename)
+{
+	if (_obj.type() == json_spirit::obj_type)
+	{
+		std::list<string> removeList;
+		for (auto& i: _obj.get_obj())
+		{
+			if (i.first.substr(0, 2) == "//")
+			{
+				removeList.push_back(i.first);
+				continue;
+			}
+
+			postParseJson(i.second);
+			if (i.second.type() == json_spirit::obj_type)
+				i.second = ImportTest::makeAllFieldsHex(i.second.get_obj(), i.first == "env" ? true : false);
+		}
+		for (auto& i: removeList)
+			_obj.get_obj().erase(_obj.get_obj().find(i));
+	}
+	else if (_obj.type() == json_spirit::array_type)
+	{
+		for (auto& i: _obj.get_array())
+			postParseJson(i);
+	}
+
+	if (!_testfilename.empty())
+		addClientInfo(_obj, _testfilename);
 }
 
 string prepareVersionString()
