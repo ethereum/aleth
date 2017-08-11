@@ -499,6 +499,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testfilename + " is empty.");
 
 			json_spirit::read_string(s, v);
+			removeComments(v);
 			doTests(v, true);
 			addClientInfo(v, testfilename);
 			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
@@ -531,6 +532,31 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << _e.what());
+	}
+}
+
+void removeComments(json_spirit::mValue& _obj)
+{
+	if (_obj.type() == json_spirit::obj_type)
+	{
+		std::list<string> removeList;
+		for (auto& i: _obj.get_obj())
+		{
+			if (i.first.substr(0, 2) == "//")
+			{
+				removeList.push_back(i.first);
+				continue;
+			}
+
+			removeComments(i.second);
+		}
+		for (auto& i: removeList)
+			_obj.get_obj().erase(_obj.get_obj().find(i));
+	}
+	else if (_obj.type() == json_spirit::array_type)
+	{
+		for (auto& i: _obj.get_array())
+			removeComments(i);
 	}
 }
 
