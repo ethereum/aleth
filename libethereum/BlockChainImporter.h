@@ -49,6 +49,11 @@ public:
 		m_blockChain.insertWithoutParent(block.out(), _receipts.data(), _number, _totalDifficulty);
 	}
 
+	void setChainStartBlockNumber(u256 const& _number)
+	{
+		m_blockChain.setChainStartBlockNumber(static_cast<unsigned>(_number));
+	}
+
 private:
 	BlockChain& m_blockChain;
 };

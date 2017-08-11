@@ -209,12 +209,12 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 
 	size_t const blockChunkCount = _blockChunkHashes.size();
 	size_t blockChunksImported = 0;
-	for (auto blockChunkHash: _blockChunkHashes)
+	for (auto chunk = _blockChunkHashes.rbegin(); chunk != _blockChunkHashes.rend(); ++chunk)
 	{
-		std::string const chunkCompressed = dev::contentsString((_snapshotDir / toHex(blockChunkHash)).string());
+		std::string const chunkCompressed = dev::contentsString((_snapshotDir / toHex(*chunk)).string());
 
 		h256 const chunkHash = sha3(chunkCompressed);
-		assert(chunkHash == blockChunkHash);
+		assert(chunkHash == *chunk);
 
 		std::string chunkUncompressed = snappyUncompress(chunkCompressed);
 
@@ -275,7 +275,13 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 
 		}
 
-		clog(SnapshotImportLog) << "Imported chunk " << blockChunkHash << " (" << itemCount - 3 << " blocks)";
+		clog(SnapshotImportLog) << "Imported chunk " << *chunk << " (" << itemCount - 3 << " blocks)";
 		clog(SnapshotImportLog) << blockChunkCount - (++blockChunksImported) << " chunks left to import";
+
+		if (chunk == _blockChunkHashes.rbegin())
+		{
+			clog(SnapshotImportLog) << "Setting chain start block: " << firstBlockNumber + 1;
+			bcImporter.setChainStartBlockNumber(firstBlockNumber + 1);
+		}
 	}
 }

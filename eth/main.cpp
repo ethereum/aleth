@@ -1016,21 +1016,6 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	if (mode == OperationMode::ImportSnapshot)
-	{
-		try
-		{
-			SnapshotImporter importer(*web3.ethereum());
-			importer.import(filename);
-			return 0;
-		}
-		catch (...)
-		{
-			cerr << "Error during importing the snapshot: " << boost::current_exception_diagnostic_information() << endl;
-			return -1;
-		}
-	}
-
 	try
 	{
 		if (keyManager.exists())
@@ -1069,6 +1054,23 @@ int main(int argc, char** argv)
 	}
 
 	cout << ethCredits();
+
+	if (mode == OperationMode::ImportSnapshot)
+	{
+		try
+		{
+			SnapshotImporter importer(*web3.ethereum());
+			importer.import(filename);
+			// continue with regular sync from the snapshot block
+		}
+		catch (...)
+		{
+			cerr << "Error during importing the snapshot: " << boost::current_exception_diagnostic_information() << endl;
+			return -1;
+		}
+	}
+
+
 	web3.setIdealPeerCount(peers);
 	web3.setPeerStretch(peerStretch);
 //	std::shared_ptr<eth::BasicGasPricer> gasPricer = make_shared<eth::BasicGasPricer>(u256(double(ether / 1000) / etherPrice), u256(blockFees * 1000));
