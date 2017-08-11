@@ -175,6 +175,7 @@ void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin);
 void doTransitionTest(json_spirit::mValue& _v, bool _fillin);
 void doRlpTests(json_spirit::mValue& v, bool _fillin);
 void addClientInfo(json_spirit::mValue& v, std::string const& _testSource);
+void removeComments(json_spirit::mValue& _obj);
 
 /// Allows observing test execution process.
 /// This class also provides methods for registering and notifying the listener
