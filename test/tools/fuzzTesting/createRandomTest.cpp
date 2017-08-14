@@ -207,55 +207,54 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
 		types.push_back(it->first);
 
-	for (unsigned i = 0; i < types.size(); i++)
+	for (auto const& type: types)
 	{
-		std::size_t pos = _test.find(types.at(i));
+		std::size_t pos = _test.find(type);
 		while (pos != std::string::npos)
 		{
-			if (types.at(i) == "[RLP]")
+			std::string replace;
+			if (type == "[RLP]")
 			{
 				std::string debug;
 				int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;
-				_test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));
+				replace = dev::test::RandomCode::rndRLPSequence(randomDepth, debug);
 				cnote << debug;
 			}
-			else
-			if (types.at(i) == "[CODE]")
-				_test.replace(pos, 6, "0x"+dev::test::RandomCode::generate(10, options));
-			else
-			if (types.at(i) == "[HEX]")
-				_test.replace(pos, 5, dev::test::RandomCode::randomUniIntHex());
-			else
-			if (types.at(i) == "[HEX32]")
-				_test.replace(pos, 7, dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max()));
-			else
-			if (types.at(i) == "[GASLIMIT]")
-				_test.replace(pos, 10, dev::test::RandomCode::randomUniIntHex(dev::u256("3000000000")));
-			else
-			if (types.at(i) == "[HASH20]")
-				_test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(20));
-			else
-			if (types.at(i) == "[0xHASH32]")
-				_test.replace(pos, 10, "0x" + dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[HASH32]")
-				_test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[V]")
+			else if (type == "[CODE]")
+				replace = "0x"+dev::test::RandomCode::generate(10, options);
+			else if (type == "[HEX]")
+				replace = dev::test::RandomCode::randomUniIntHex();
+			else if (type == "[HEX32]")
+				replace = dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max());
+			else if (type == "[GASLIMIT]")
+				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("3000000000"));
+			else if (type == "[HASH20]")
+				replace = dev::test::RandomCode::rndByteSequence(20);
+			else if (type == "[0xHASH32]")
+				replace = "0x" + dev::test::RandomCode::rndByteSequence(32);
+			else if (type == "[HASH32]")
+				replace = dev::test::RandomCode::rndByteSequence(32);
+			else if (type == "[V]")
 			{
 				int random = test::RandomCode::randomPercent();
 				if (random < 30)
-					_test.replace(pos, 3, "0x1c");
+					replace = "0x1c";
+				else if (random < 60)
+					replace = "0x1d";
 				else
-				if (random < 60)
-					_test.replace(pos, 3, "0x1d");
-				else
-					_test.replace(pos, 3, "0x" + dev::test::RandomCode::rndByteSequence(1));
+					replace = "0x" + dev::test::RandomCode::rndByteSequence(1);
 			}
 			else
-				_test.replace(pos, types.at(i).size(), _varMap.at(types.at(i)));
+			{
+				//Replace type from varMap if varMap is set
+				if (_varMap.count(type))
+					replace = _varMap.at(type);
+				else
+					BOOST_ERROR("Skipping undeclared type: " + type);
+			}
 
-			pos = _test.find(types.at(i));
+			_test.replace(pos, type.length(), replace);
+			pos = _test.find(type);
 		}
 	}
 }
