@@ -46,18 +46,27 @@ typedef boost::random::variate_generator<boost::mt19937&, boostUint64 > boostUIn
 struct RandomCodeOptions
 {
 public:
+	enum AddressType{
+		CALLONLY,
+		ACCOUNT,
+		ALL
+	};
 	RandomCodeOptions();
 	void setWeight(dev::eth::Instruction _opCode, int _weight);
-	void addAddress(dev::Address const& _address);
-	dev::Address getRandomAddress() const;
+	void addAddress(dev::Address const& _address, AddressType _type);
+	dev::Address getRandomAddress(AddressType _type = AddressType::ALL) const;
 
 	bool useUndefinedOpCodes;
 	int smartCodeProbability;
+	int randomAddressProbability;
+	int emptyCodeProbability;
+	int emptyAddressProbability;
 	boostDescreteDistrib opCodeProbability;
 private:
 	void setWeights();
 	std::map<int, int> mapWeights;
-	std::vector<dev::Address> addressList;
+	std::vector<dev::Address> callAddressList;
+	std::vector<dev::Address> accountAddressList;
 };
 
 enum class SizeStrictness
@@ -95,8 +104,8 @@ public:
 	static std::string rndRLPSequence(int _depth, std::string& _debug);
 
 	/// Generate random
-	static std::string randomUniIntHex(u256 _maxVal = 0);
-	static u256 randomUniInt(u256 _maxVal = 0);
+	static std::string randomUniIntHex(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
+	static u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
 	static int randomPercent() { refreshSeed(); return randPercentGen();}
 
 private:
