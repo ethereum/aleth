@@ -141,7 +141,8 @@ eth::Network stringToNetId(string const& _netname)
 
 bool isDisabledNetwork(eth::Network _net)
 {
-	if (Options::get().performance || Options::get().filltests)
+	Options const& opt = Options::get();
+	if (opt.performance || opt.filltests || opt.createRandomTest)
 		return false;
 	switch (_net)
 	{
@@ -586,7 +587,10 @@ void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
 		}
 
 		//prepare the relative src path
-		string source = _testSource.substr(_testSource.rfind("/src/"), _testSource.length());
+		string source = _testSource;
+		string::size_type pos = _testSource.rfind("/src/");
+		if (pos != std::string::npos)
+			source = _testSource.substr(pos, _testSource.length());
 
 		clientinfo["filledwith"] = prepareVersionString();
 		clientinfo["source"] = source;

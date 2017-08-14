@@ -27,6 +27,7 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <libevm/VMFactory.h>
 #include <libdevcore/Common.h>
+#include <libdevcore/Log.h>
 
 //String Variables
 extern std::string const c_testExampleStateTest;
@@ -36,83 +37,30 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug = false);
-int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug = false);
+void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
+int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value);
 
 namespace dev { namespace test {
-int createRandomTest(std::vector<char*> const& _parameters)
+int createRandomTest()
 {
-	std::string testSuite;
-	std::string testFillString;
-	json_spirit::mValue testmValue;
-	bool checktest = false;
-	bool filldebug = false;
-	bool debug = false;
-	bool filltest = false;
-
+	TestOutputHelper::initTest();
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
 
-	testSuite = options.rCurrentTestSuite;
-	if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests"
-				&& testSuite != "VMTests")
-		testSuite = "";
-
-	for (size_t i = 0; i < _parameters.size(); ++i)
+	std::string const& testSuite = options.rCurrentTestSuite;
+	if (testSuite != test::c_StateTestsGeneral)
 	{
-		auto arg = std::string{_parameters.at(i)};
-
-		if (arg == "--fulloutput")
-			options.fulloutput = true;
-		else if (arg == "--debug")
-			debug = true;
-		else
-		if (arg == "--filldebug")
-			filldebug = true;
-	}
-
-	if (testSuite == "")
-	{
-		std::cerr << "Error! Test suite not supported! (Usage -t TestSuite)" << std::endl;
+		std::cerr << "Error! Test suite '" + testSuite +"' not supported! (Usage -t TestSuite)" << std::endl;
 		return 1;
 	}
-	else
-	{
-		if (checktest)
-			std::cout << "Testing: " << testSuite.substr(0, testSuite.length() - 1) << "... ";
 
-		if (testSuite == "BlockChainTests")
-		{
-			if (checktest)
-				return checkRandomTest(dev::test::doBlockchainTests, testmValue, debug);
-			else
-				fillRandomTest(dev::test::doBlockchainTests, (filltest) ? testFillString : c_testExampleBlockchainTest, filldebug);
-		}
-		else
-		if (testSuite == "TransactionTests")
-		{
-			if (checktest)
-				return checkRandomTest(dev::test::doTransactionTests, testmValue, debug);
-			else
-				fillRandomTest(dev::test::doTransactionTests, (filltest) ? testFillString : c_testExampleTransactionTest, filldebug);
-		}
-		else
-		if (testSuite == "VMTests")
-		{
-			if (checktest)
-			{
-				dev::eth::VMFactory::setKind(dev::eth::VMKind::JIT);
-				return checkRandomTest(dev::test::doVMTests, testmValue, debug);
-			}
-			else
-				fillRandomTest(dev::test::doVMTests, (filltest) ? testFillString : c_testExampleVMTest, filldebug);
-		}
-	}
+	if (testSuite == test::c_StateTestsGeneral)
+		fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
 
 	return 0;
 }
 }} //namespaces
 
-int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug)
+int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value)
 {
 	bool ret = 0;
 	try
@@ -120,7 +68,7 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 		//redirect all output to the stream
 		std::ostringstream strCout;
 		std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-		if (!_debug)
+		if (dev::g_logVerbosity == -1)
 		{
 			std::cout.rdbuf( strCout.rdbuf() );
 			std::cerr.rdbuf( strCout.rdbuf() );
@@ -129,7 +77,7 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 		_doTests(_value, false);
 
 		//restroe output
-		if (!_debug)
+		if (dev::g_logVerbosity == -1)
 		{
 			std::cout.rdbuf(oldCoutStreamBuf);
 			std::cerr.rdbuf(oldCoutStreamBuf);
@@ -148,12 +96,12 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 	return ret;
 }
 
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug)
+void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
 {
 	//redirect all output to the stream
 	std::ostringstream strCout;
 	std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-	if (!_debug)
+	if (dev::g_logVerbosity == -1)
 	{
 		std::cout.rdbuf( strCout.rdbuf() );
 		std::cerr.rdbuf( strCout.rdbuf() );
@@ -167,14 +115,26 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
 		_doTests(v, true);
+		for (auto& obj: v.get_obj())
+			if (!obj.second.get_obj().count("post"))
+				BOOST_ERROR("An error occured when executing random state test!");
+		dev::test::addClientInfo(v, "random generated test");
+	}
+	catch (dev::Exception const& _e)
+	{
+		BOOST_ERROR("Failed generating test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed generating test with Exception: " << _e.what());
 	}
 	catch(...)
 	{
-		std::cerr << "Test fill exception!";
+		BOOST_ERROR("Error generating random test!");
 	}
 
 	//restroe output
-	if (!_debug)
+	if (dev::g_logVerbosity == -1)
 	{
 		std::cout.rdbuf(oldCoutStreamBuf);
 		std::cerr.rdbuf(oldCoutStreamBuf);
@@ -185,84 +145,102 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 /// Parse Test string replacing keywords to fuzzed values
 void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap)
 {
-	dev::test::RandomCodeOptions options;
-	options.setWeight(dev::eth::Instruction::STOP, 10);		//default 50
-	options.setWeight(dev::eth::Instruction::SSTORE, 70);
-	options.setWeight(dev::eth::Instruction::CALL, 75);
-	options.setWeight(dev::eth::Instruction::CALLCODE, 55);
-	options.addAddress(dev::Address("0xffffffffffffffffffffffffffffffffffffffff"));
-	options.addAddress(dev::Address("0x1000000000000000000000000000000000000000"));
-	options.addAddress(dev::Address("0x095e7baea6a6c7c4c2dfeb977efac326af552d87"));
-	options.addAddress(dev::Address("0x945304eb96065b2a98b57a48a06ae28d285a71b5"));
-	options.addAddress(dev::Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
-	options.addAddress(dev::Address("0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000001"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000002"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000003"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000004"));
-	options.smartCodeProbability = 60;
-
+	dev::test::RandomCodeOptions options; //use default options
 	std::vector<std::string> types = getTypes();
 
 	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
 		types.push_back(it->first);
 
-	for (unsigned i = 0; i < types.size(); i++)
+	for (auto const& type: types)
 	{
-		std::size_t pos = _test.find(types.at(i));
+		std::size_t pos = _test.find(type);
 		while (pos != std::string::npos)
 		{
-			if (types.at(i) == "[RLP]")
+			std::string replace;
+			if (type == "[RLP]")
 			{
 				std::string debug;
 				int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;
-				_test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));
+				replace = dev::test::RandomCode::rndRLPSequence(randomDepth, debug);
 				cnote << debug;
 			}
-			else
-			if (types.at(i) == "[CODE]")
-				_test.replace(pos, 6, "0x"+dev::test::RandomCode::generate(10, options));
-			else
-			if (types.at(i) == "[HEX]")
-				_test.replace(pos, 5, dev::test::RandomCode::randomUniIntHex());
-			else
-			if (types.at(i) == "[HEX32]")
-				_test.replace(pos, 7, dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max()));
-			else
-			if (types.at(i) == "[GASLIMIT]")
-				_test.replace(pos, 10, dev::test::RandomCode::randomUniIntHex(dev::u256("3000000000")));
-			else
-			if (types.at(i) == "[HASH20]")
-				_test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(20));
-			else
-			if (types.at(i) == "[0xHASH32]")
-				_test.replace(pos, 10, "0x" + dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[HASH32]")
-				_test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[V]")
+			else if (type == "[CODE]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = dev::test::RandomCode::randomPercent();
+				if (random < 90)
+					replace = "0x" + dev::test::RandomCode::generate(5, options);
+			}
+			else if (type == "[HEX]")
+				replace = dev::test::RandomCode::randomUniIntHex();
+			else if (type == "[BALANCE]")
+			{
+				int random = dev::test::RandomCode::randomPercent();
+				if (random < 50)
+					replace = dev::test::RandomCode::randomUniIntHex();
+				else
+					replace = dev::test::RandomCode::randomUniIntHex(dev::u256("2000000"), dev::u256("18014398509481983"));
+			}
+			else if (type == "[HEX32]")
+			{
+				int random = dev::test::RandomCode::randomPercent();
+				if (random < 90)
+					replace = dev::test::RandomCode::randomUniIntHex(0, std::numeric_limits<uint32_t>::max());
+				else
+					replace = "0x00";
+			}
+			else if (type == "[BLOCKGASLIMIT]")
+				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("9223372036854775806"));
+			else if (type == "[TRANSACTIONGASLIMIT]")
+				replace = dev::test::RandomCode::randomUniIntHex(dev::u256("5000"), dev::u256("10000000"));
+			else if (type == "[GASPRICE]")
+				replace = dev::test::RandomCode::randomUniIntHex(0, dev::u256("10"));
+			else if (type == "[HASH20]")
+				replace = dev::test::RandomCode::rndByteSequence(20);
+			else if (type == "[ADDRESS]")
+				replace = toString(options.getRandomAddress(RandomCodeOptions::ACCOUNT));
+			else if (type == "[0xDESTADDRESS]")
+			{
+				int random = dev::test::RandomCode::randomPercent();
+				if (random < 90)
+					replace = "0x" + toString(options.getRandomAddress(RandomCodeOptions::CALLONLY));
+				else
+					replace = "";
+			}
+			else if (type == "[0xHASH32]")
+				replace = "0x" + dev::test::RandomCode::rndByteSequence(32);
+			else if (type == "[HASH32]")
+				replace = dev::test::RandomCode::rndByteSequence(32);
+			else if (type == "[V]")
+			{
+				int random = dev::test::RandomCode::randomPercent();
 				if (random < 30)
-					_test.replace(pos, 3, "0x1c");
+					replace = "0x1c";
 				else
 				if (random < 60)
-					_test.replace(pos, 3, "0x1d");
+					replace = "0x1d";
 				else
-					_test.replace(pos, 3, "0x" + dev::test::RandomCode::rndByteSequence(1));
+					replace = "0x" + dev::test::RandomCode::rndByteSequence(1);
 			}
 			else
-				_test.replace(pos, types.at(i).size(), _varMap.at(types.at(i)));
+			{
+				//Replace type from varMap if varMap is set
+				if (_varMap.count(type))
+					replace = _varMap.at(type);
+				else
+					BOOST_ERROR("Skipping undeclared type: " + type);
+			}
 
-			pos = _test.find(types.at(i));
+			_test.replace(pos, type.length(), replace);
+			pos = _test.find(type);
 		}
 	}
 }
 
 std::vector<std::string> dev::test::RandomCode::getTypes()
 {
-	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]"};
+	//declare possible types
+	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[TRANSACTIONGASLIMIT]",
+			"[BLOCKGASLIMIT]", "[GASPRICE]", "[ADDRESS]", "[0xDESTADDRESS]", "[BALANCE]"};
 }
 
 std::string const c_testExampleTransactionTest = R"(
@@ -288,22 +266,43 @@ std::string const c_testExampleStateTest = R"(
 {
 	"randomStatetest" : {
 		"env" : {
-		"currentCoinbase" : "[HASH20]",
-		"currentDifficulty" : "[HEX]",
-		"currentGasLimit" : "[GASLIMIT]",
-		"currentNumber" : "[HEX32]",
-		"currentTimestamp" : "[HEX]",
+		"currentCoinbase" : "[ADDRESS]",
+		"currentDifficulty" : "0x20000",
+		"currentGasLimit" : "[BLOCKGASLIMIT]",
+		"currentNumber" : "1",
+		"currentTimestamp" : "1000",
 		"previousHash" : "[HASH32]"
 		},
 	"pre" : {
-		"095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+		"[ADDRESS]" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",
 			"storage" : {
 			}
 		},
-		"945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+		"[ADDRESS]" : {
+			"balance" : "[HEX]",
+			"code" : "[CODE]",
+			"nonce" : "[V]",
+			"storage" : {
+			}
+		},
+		"[ADDRESS]" : {
+			"balance" : "[HEX]",
+			"code" : "[CODE]",
+			"nonce" : "[V]",
+			"storage" : {
+			}
+		},
+		"[ADDRESS]" : {
+			"balance" : "[HEX]",
+			"code" : "[CODE]",
+			"nonce" : "[V]",
+			"storage" : {
+			}
+		},
+		"[ADDRESS]" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",
@@ -311,7 +310,7 @@ std::string const c_testExampleStateTest = R"(
 			}
 		},
 		"a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-			"balance" : "[HEX]",
+			"balance" : "[BALANCE]",
 			"code" : "0x",
 			"nonce" : "0",
 			"storage" : {
@@ -319,13 +318,19 @@ std::string const c_testExampleStateTest = R"(
 		}
 	},
 	"transaction" : {
-		"data" : "[CODE]",
-		"gasLimit" : "[HEX]",
-		"gasPrice" : "[HEX32]",
+		"data" : [
+			"[CODE]"
+		],
+		"gasLimit" : [
+			"[TRANSACTIONGASLIMIT]"
+		],
+		"gasPrice" : "[GASPRICE]",
 		"nonce" : "0",
 		"secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-		"to" : "0x095e7baea6a6c7c4c2dfeb977efac326af552d87",
-		"value" : "[HEX]"
+		"to" : "[0xDESTADDRESS]",
+		"value" : [
+			"[HEX32]"
+		]
 		}
 	}
 }
@@ -343,12 +348,12 @@ std::string const c_testExampleVMTest = R"(
 				"currentCoinbase" : "[HASH20]"
 		},
 		"pre" : {
-		   "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+			"0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
 				"balance" : "[HEX]",
 				"nonce" : "[HEX]",
 				"code" : "[CODE]",
 				"storage": {}
-		   }
+		}
 		},
 		"exec" : {
 				"address" : "0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
