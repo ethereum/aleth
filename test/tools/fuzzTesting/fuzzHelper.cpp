@@ -83,14 +83,14 @@ namespace test
 {
 
 boost::random::mt19937 RandomCode::gen;
-boostIntDistrib RandomCode::prcentDist = boostIntDistrib (0, 100);
+boostIntDistrib RandomCode::percentDist = boostIntDistrib (0, 100);
 boostIntDistrib RandomCode::opCodeDist = boostIntDistrib (0, 255);
 boostIntDistrib RandomCode::opLengDist = boostIntDistrib (1, 32);
 boostIntDistrib RandomCode::opMemrDist = boostIntDistrib (0, 10485760);
 boostIntDistrib RandomCode::uniIntDist = boostIntDistrib (0, 0x7fffffff);
 boostUint64 RandomCode::uInt64Dist = boostUint64 (0, std::numeric_limits<uint64_t>::max());
 
-boostIntGenerator RandomCode::randPrcentGen = boostIntGenerator(gen, prcentDist);
+boostIntGenerator RandomCode::randPercentGen = boostIntGenerator(gen, percentDist);
 boostIntGenerator RandomCode::randOpCodeGen = boostIntGenerator(gen, opCodeDist);
 boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist);
 boostIntGenerator RandomCode::randOpMemrGen = boostIntGenerator(gen, opMemrDist);
