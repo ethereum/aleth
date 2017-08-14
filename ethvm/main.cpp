@@ -145,7 +145,7 @@ int main(int argc, char** argv)
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
-	Network networkName = Network::MainNetwork;
+	Network networkName = Network::MainNetworkTest;
 	BlockHeader blockHeader; // fake block to be executed in
 	blockHeader.setGasLimit(maxBlockGasLimit());
 	bytes data;
