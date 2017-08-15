@@ -247,7 +247,7 @@ std::string RandomCode::rndByteSequence(int _length, SizeStrictness _sizeType)
 {
 	refreshSeed();
 	std::string hash = "";
-	_length = (_sizeType == SizeStrictness::Strict) ? std::max(0, _length) : (int)randomUniInt() % _length;
+	_length = (_sizeType == SizeStrictness::Strict) ? std::max(0, _length) : (int)randomUniInt(0, _length);
 	for (auto i = 0; i < _length; i++)
 	{
 		uint8_t byte = randOpCodeGen();
@@ -261,6 +261,9 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 {
 	refreshSeed();
 	std::string code;
+
+	if (test::RandomCode::randomPercent() < _options.emptyCodeProbability)
+		return code;
 
 	//random opCode amount
 	boostIntDistrib sizeDist (1, _maxOpNumber);
@@ -302,26 +305,20 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 			}
 		}
 	}
-	return code;
+	return "0x" + code;
 }
 
-std::string RandomCode::randomUniIntHex(u256 _maxVal)
+std::string RandomCode::randomUniIntHex(u256 const& _minVal, u256 const& _maxVal)
 {
-	if (_maxVal == 0)
-		_maxVal = std::numeric_limits<uint64_t>::max();
-	refreshSeed();
-	int rand = randomPercent();
-	if (rand < 50)
-		return toCompactHexPrefixed((u256)randUniIntGen() % _maxVal);
-	return toCompactHexPrefixed((u256)randUInt64Gen() % _maxVal);
+	return toCompactHexPrefixed(RandomCode::randomUniInt(_minVal, _maxVal), 1);
 }
 
-u256 RandomCode::randomUniInt(u256 _maxVal)
+u256 RandomCode::randomUniInt(u256 const& _minVal, u256 const& _maxVal)
 {
-	if (_maxVal == 0)
-		_maxVal = std::numeric_limits<uint64_t>::max();
+	assert(_minVal <= _maxVal);
 	refreshSeed();
-	return (u256)randUInt64Gen() % _maxVal;
+	u256 value = _minVal + (u256)randUInt64Gen() % (_maxVal - _minVal);
+	return value;
 }
 
 void RandomCode::refreshSeed()
@@ -392,22 +389,22 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		case eth::Instruction::MSTORE:
 			code += getPushCode(rndByteSequence(randOpLengGen()));	//code
 			code += getPushCode(randOpMemrGen());					//index
-		break;
+			break;
 		case eth::Instruction::EXTCODECOPY:
 			code += getPushCode(randOpMemrGen());	//memstart2
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randOpMemrGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
-		break;
+			break;
 		case eth::Instruction::EXTCODESIZE:
 			code += getPushCode(toString(_options.getRandomAddress()));//address
-		break;
+			break;
 		case eth::Instruction::CREATE:
 			//(CREATE value mem1 mem2)
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randUniIntGen());	//value
-		break;
+			break;
 		case eth::Instruction::CALL:
 		case eth::Instruction::CALLCODE:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
@@ -419,7 +416,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			code += getPushCode(randUniIntGen());	//value
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
-		break;
+			break;
 		case eth::Instruction::STATICCALL:
 		case eth::Instruction::DELEGATECALL:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
@@ -430,15 +427,15 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			code += getPushCode(randOpMemrGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
-		break;
+			break;
 		case eth::Instruction::SUICIDE: //(SUICIDE address)
 			code += getPushCode(toString(_options.getRandomAddress()));
-		break;
+			break;
 		case eth::Instruction::RETURN:  //(RETURN memlen1 memlen2)
 		case eth::Instruction::REVERT:  //(REVERT memlen1 memlen2)
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randOpMemrGen());	//memlen1
-		break;
+			break;
 		default:
 			smart = false;
 		}
@@ -454,7 +451,12 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 
 
 //Default Random Code Options
-RandomCodeOptions::RandomCodeOptions() : useUndefinedOpCodes(false), smartCodeProbability(100)
+RandomCodeOptions::RandomCodeOptions() :
+	useUndefinedOpCodes(false),		//spawn undefined bytecodes in code
+	smartCodeProbability(100),		//spawn correct opcodes (with correct argument stack and reasonable arguments)
+	randomAddressProbability(10),	//probability of generating a random address instead of defined from list
+	emptyCodeProbability(20),		//probability of code being empty (empty code mean empty account)
+	emptyAddressProbability(30)		//probability of generating an empty address for transaction creation (CALLONLY addresses)
 {
 	//each op code with same weight-probability
 	for (auto i = 0; i < 255; i++)
@@ -487,20 +489,20 @@ RandomCodeOptions::RandomCodeOptions() : useUndefinedOpCodes(false), smartCodePr
 	setWeight(eth::Instruction::EXTCODESIZE, 170);
 
 	//some smart addresses for calls
-	addAddress(Address("0xffffffffffffffffffffffffffffffffffffffff"));
-	addAddress(Address("0x1000000000000000000000000000000000000000"));
-	addAddress(Address("0x095e7baea6a6c7c4c2dfeb977efac326af552d87"));
-	addAddress(Address("0x945304eb96065b2a98b57a48a06ae28d285a71b5"));
-	addAddress(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
-	addAddress(Address("0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6"));
-	addAddress(Address("0x0000000000000000000000000000000000000001"));
-	addAddress(Address("0x0000000000000000000000000000000000000002"));
-	addAddress(Address("0x0000000000000000000000000000000000000003"));
-	addAddress(Address("0x0000000000000000000000000000000000000004"));
-	addAddress(Address("0x0000000000000000000000000000000000000005"));
-	addAddress(Address("0x0000000000000000000000000000000000000006"));
-	addAddress(Address("0x0000000000000000000000000000000000000007"));
-	addAddress(Address("0x0000000000000000000000000000000000000008"));
+	addAddress(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0xffffffffffffffffffffffffffffffffffffffff"), AddressType::StateAccount);
+	addAddress(Address("0x1000000000000000000000000000000000000000"), AddressType::StateAccount);
+	addAddress(Address("0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0xd94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0x0000000000000000000000000000000000000001"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000002"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000003"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000004"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000005"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000006"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000007"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::CallOnly);
 }
 
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
@@ -509,19 +511,52 @@ void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
 	setWeights();
 }
 
-void RandomCodeOptions::addAddress(Address const& _address)
+void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
 {
-	addressList.push_back(_address);
+	switch(_type)
+	{
+		case AddressType::CallOnly:
+			callAddressList.push_back(_address);
+			break;
+		case AddressType::StateAccount:
+			stateAddressList.push_back(_address);
+			break;
+		default:
+			BOOST_ERROR("RandomCodeOptions::addAddress: Unexpected AddressType!");
+		break;
+	}
 }
 
-Address RandomCodeOptions::getRandomAddress() const
+Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 {
-	if (addressList.size() > 0)
+	switch(_type)
 	{
-		int index = (int)RandomCode::randomUniInt() % addressList.size();
-		return addressList[index];
+		case AddressType::CallOnly:
+			return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
+		case AddressType::CallOnlyOrStateOrCreate:
+			if (RandomCode::randomPercent() < emptyAddressProbability)
+				return ZeroAddress;
+			if (test::RandomCode::randomPercent() < 50)
+				return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
+			else
+				return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
+		case AddressType::StateAccount:
+			return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
+		case AddressType::All:
+			//if not random address then chose from both lists
+			if (test::RandomCode::randomPercent() > randomAddressProbability)
+			{
+				if (test::RandomCode::randomPercent() < 50)
+					return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
+				else
+					return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
+			}
+			else
+				return Address(RandomCode::rndByteSequence(20));
+		default:
+			BOOST_ERROR("RandomCodeOptions::getRandomAddress: Unexpected AddressType!");
+			return ZeroAddress;
 	}
-	return Address(RandomCode::rndByteSequence(20));
 }
 
 void RandomCodeOptions::setWeights()

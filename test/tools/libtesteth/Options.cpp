@@ -269,7 +269,7 @@ Options::Options(int argc, char** argv)
 				cerr << "Argument for the option is invalid! (use range: 1...1000)" << endl;
 				exit(1);
 			}
-			cout << "0x" + dev::test::RandomCode::generate(maxCodes) << endl;
+			cout << dev::test::RandomCode::generate(maxCodes) << endl;
 			exit(0);
 		}
 		else if (seenSeparator)
