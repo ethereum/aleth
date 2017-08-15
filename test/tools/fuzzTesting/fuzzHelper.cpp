@@ -315,7 +315,7 @@ std::string RandomCode::randomUniIntHex(u256 const& _minVal, u256 const& _maxVal
 
 u256 RandomCode::randomUniInt(u256 const& _minVal, u256 const& _maxVal)
 {
-	assert(_minVal >= _maxVal);
+	assert(_minVal <= _maxVal);
 	refreshSeed();
 	u256 value = _minVal + (u256)randUInt64Gen() % (_maxVal - _minVal);
 	return value;
@@ -389,22 +389,22 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 		case eth::Instruction::MSTORE:
 			code += getPushCode(rndByteSequence(randOpLengGen()));	//code
 			code += getPushCode(randOpMemrGen());					//index
-		break;
+			break;
 		case eth::Instruction::EXTCODECOPY:
 			code += getPushCode(randOpMemrGen());	//memstart2
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randOpMemrGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
-		break;
+			break;
 		case eth::Instruction::EXTCODESIZE:
 			code += getPushCode(toString(_options.getRandomAddress()));//address
-		break;
+			break;
 		case eth::Instruction::CREATE:
 			//(CREATE value mem1 mem2)
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randUniIntGen());	//value
-		break;
+			break;
 		case eth::Instruction::CALL:
 		case eth::Instruction::CALLCODE:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
@@ -416,7 +416,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			code += getPushCode(randUniIntGen());	//value
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
-		break;
+			break;
 		case eth::Instruction::STATICCALL:
 		case eth::Instruction::DELEGATECALL:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
@@ -427,15 +427,15 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			code += getPushCode(randOpMemrGen());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
-		break;
+			break;
 		case eth::Instruction::SUICIDE: //(SUICIDE address)
 			code += getPushCode(toString(_options.getRandomAddress()));
-		break;
+			break;
 		case eth::Instruction::RETURN:  //(RETURN memlen1 memlen2)
 		case eth::Instruction::REVERT:  //(REVERT memlen1 memlen2)
 			code += getPushCode(randOpMemrGen());	//memlen1
 			code += getPushCode(randOpMemrGen());	//memlen1
-		break;
+			break;
 		default:
 			smart = false;
 		}
@@ -515,14 +515,14 @@ void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
 {
 	switch(_type)
 	{
-		case AddressType::ACCOUNT:
-			accountAddressList.push_back(_address);
-			callAddressList.push_back(_address);
-		break;
 		case AddressType::CALLONLY:
 			callAddressList.push_back(_address);
 		break;
+		case AddressType::ALL:
+		case AddressType::ACCOUNT:
 		default:
+			accountAddressList.push_back(_address);
+			callAddressList.push_back(_address);
 		break;
 	}
 }
@@ -535,10 +535,8 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 			if (RandomCode::randomPercent() < emptyAddressProbability)
 				return ZeroAddress;
 			return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
-		break;
 		case AddressType::ACCOUNT:
 			return accountAddressList[(int)RandomCode::randomUniInt(0, accountAddressList.size())];
-		break;
 		case AddressType::ALL:
 		default:
 			//if not random address then chose from both lists
@@ -551,7 +549,6 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 			}
 			else
 				return Address(RandomCode::rndByteSequence(20));
-		break;
 	}
 }
 
