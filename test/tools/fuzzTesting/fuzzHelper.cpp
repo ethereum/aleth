@@ -489,20 +489,20 @@ RandomCodeOptions::RandomCodeOptions() :
 	setWeight(eth::Instruction::EXTCODESIZE, 170);
 
 	//some smart addresses for calls
-	addAddress(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::ACCOUNT);
-	addAddress(Address("0xffffffffffffffffffffffffffffffffffffffff"), AddressType::ACCOUNT);
-	addAddress(Address("0x1000000000000000000000000000000000000000"), AddressType::ACCOUNT);
-	addAddress(Address("0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::ACCOUNT);
-	addAddress(Address("0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::ACCOUNT);
-	addAddress(Address("0xd94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::ACCOUNT);
-	addAddress(Address("0x0000000000000000000000000000000000000001"), AddressType::CALLONLY);
-	addAddress(Address("0x0000000000000000000000000000000000000002"), AddressType::CALLONLY);
-	addAddress(Address("0x0000000000000000000000000000000000000003"), AddressType::CALLONLY);
-	addAddress(Address("0x0000000000000000000000000000000000000004"), AddressType::CALLONLY);
-	addAddress(Address("0x0000000000000000000000000000000000000005"), AddressType::CALLONLY);
-	addAddress(Address("0x0000000000000000000000000000000000000006"), AddressType::CALLONLY);
-	addAddress(Address("0x0000000000000000000000000000000000000007"), AddressType::CALLONLY);
-	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::CALLONLY);
+	addAddress(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0xffffffffffffffffffffffffffffffffffffffff"), AddressType::StateAccount);
+	addAddress(Address("0x1000000000000000000000000000000000000000"), AddressType::StateAccount);
+	addAddress(Address("0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0xd94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
+	addAddress(Address("0x0000000000000000000000000000000000000001"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000002"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000003"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000004"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000005"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000006"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000007"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::CallOnly);
 }
 
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
@@ -515,14 +515,14 @@ void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
 {
 	switch(_type)
 	{
-		case AddressType::CALLONLY:
+		case AddressType::CallOnly:
 			callAddressList.push_back(_address);
-		break;
-		case AddressType::ALL:
-		case AddressType::ACCOUNT:
+			break;
+		case AddressType::StateAccount:
+			stateAddressList.push_back(_address);
+			break;
 		default:
-			accountAddressList.push_back(_address);
-			callAddressList.push_back(_address);
+			BOOST_ERROR("RandomCodeOptions::addAddress: Unexpected AddressType!");
 		break;
 	}
 }
@@ -531,24 +531,31 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 {
 	switch(_type)
 	{
-		case AddressType::CALLONLY:
+		case AddressType::CallOnly:
+			return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
+		case AddressType::CallOnlyOrStateOrCreate:
 			if (RandomCode::randomPercent() < emptyAddressProbability)
 				return ZeroAddress;
-			return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
-		case AddressType::ACCOUNT:
-			return accountAddressList[(int)RandomCode::randomUniInt(0, accountAddressList.size())];
-		case AddressType::ALL:
-		default:
+			if (test::RandomCode::randomPercent() < 50)
+				return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
+			else
+				return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
+		case AddressType::StateAccount:
+			return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
+		case AddressType::All:
 			//if not random address then chose from both lists
 			if (test::RandomCode::randomPercent() > randomAddressProbability)
 			{
 				if (test::RandomCode::randomPercent() < 50)
 					return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
 				else
-					return accountAddressList[(int)RandomCode::randomUniInt(0, accountAddressList.size())];
+					return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
 			}
 			else
 				return Address(RandomCode::rndByteSequence(20));
+		default:
+			BOOST_ERROR("RandomCodeOptions::getRandomAddress: Unexpected AddressType!");
+			return ZeroAddress;
 	}
 }
 

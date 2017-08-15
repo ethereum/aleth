@@ -47,14 +47,15 @@ struct RandomCodeOptions
 {
 public:
 	enum AddressType{
-		CALLONLY,
-		ACCOUNT,
-		ALL
+		CallOnly,
+		StateAccount,
+		CallOnlyOrStateOrCreate,
+		All
 	};
 	RandomCodeOptions();
 	void setWeight(dev::eth::Instruction _opCode, int _weight);
 	void addAddress(dev::Address const& _address, AddressType _type);
-	dev::Address getRandomAddress(AddressType _type = AddressType::ALL) const;
+	dev::Address getRandomAddress(AddressType _type = AddressType::All) const;
 
 	bool useUndefinedOpCodes;
 	int smartCodeProbability;
@@ -66,7 +67,7 @@ private:
 	void setWeights();
 	std::map<int, int> mapWeights;
 	std::vector<dev::Address> callAddressList;
-	std::vector<dev::Address> accountAddressList;
+	std::vector<dev::Address> stateAddressList;
 };
 
 enum class SizeStrictness

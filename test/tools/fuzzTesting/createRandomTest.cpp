@@ -230,14 +230,14 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
 			else if (type == "[DESTADDRESS]")
 			{
-				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::CALLONLY);
+				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::CallOnlyOrStateOrCreate);
 				if (address != ZeroAddress) //else transaction creation
 					replace = "0x" + toString(address);
 			}
 			else if (type == "[ADDRESS]")
-				replace = toString(options.getRandomAddress(RandomCodeOptions::AddressType::ACCOUNT));
+				replace = toString(options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
 			else if (type == "[0xADDRESS]")
-				replace = "0x" + toString(options.getRandomAddress(RandomCodeOptions::AddressType::ACCOUNT));
+				replace = "0x" + toString(options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
 			else if (type == "[TRANSACTIONGASLIMIT]")
 				replace = test::RandomCode::randomUniIntHex(dev::u256("5000"), dev::u256("10000000"));
 			else if (type == "[GASPRICE]")
@@ -250,6 +250,9 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				else
 					BOOST_ERROR("Skipping undeclared type: " + type);
 			}
+
+			if (replace.empty() && type != "[DESTADDRESS]" && type != "[CODE]")
+				BOOST_ERROR("Empty replace of type occured: " + type);
 
 			_test.replace(pos, type.length(), replace);
 			pos = _test.find(type);
