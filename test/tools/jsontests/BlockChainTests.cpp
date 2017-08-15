@@ -101,7 +101,7 @@ void eraseJsonSectionForInvalidBlock(mObject& _blObj);
 void checkJsonSectionForInvalidBlock(mObject& _blObj);
 void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
-bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1 = 0, u256 const& _unNumber2 = 0);
+bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, bool isByzantiumOrLater);
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
 void testBCTest(json_spirit::mObject& _o);
 
@@ -553,8 +553,9 @@ void testBCTest(json_spirit::mObject& _o)
 		//check the balance before and after the block according to mining rules
 		if (blockFromFields.blockHeader().parentHash() == preHash)
 		{
+			bool const isByzantiumOrLater = testChain.interface().number() >= testChain.interface().chainParams().u256Param("ByzantiumBlockNumber");
 			State const postState = testChain.topBlock().state();
-			bigint reward = calculateMiningReward(testChain.topBlock().blockHeader().number(), uncleNumbers.size() >= 1 ? uncleNumbers[0] : 0, uncleNumbers.size() >= 2 ? uncleNumbers[1] : 0);
+			bigint reward = calculateMiningReward(testChain.topBlock().blockHeader().number(), uncleNumbers.size() >= 1 ? uncleNumbers[0] : 0, uncleNumbers.size() >= 2 ? uncleNumbers[1] : 0, isByzantiumOrLater);
 			ImportTest::checkBalance(preState, postState, reward);
 		}
 		else
@@ -585,10 +586,10 @@ void testBCTest(json_spirit::mObject& _o)
 	ImportTest::compareStates(postState, blockchain.topBlock().state());
 }
 
-bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2)
+bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, bool isByzantium)
 {
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(test::TestBlockChain::s_sealEngineNetwork)).createSealEngine());
-	bigint baseReward = se->chainParams().blockReward;
+	bigint baseReward = se->chainParams().blockReward(isByzantium);
 	bigint reward = baseReward;
 	//INCLUDE_UNCLE = BASE_REWARD / 32
 	//UNCLE_REWARD  = BASE_REWARD * (8 - Bn + Un) / 8

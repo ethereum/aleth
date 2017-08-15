@@ -626,8 +626,9 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 			}
 		}
 
+	bool byzantiumReward = m_currentBlock.number() >= _bc.chainParams().u256Param("ByzantiumForkBlock");
 	DEV_TIMED_ABOVE("applyRewards", 500)
-		applyRewards(rewarded, _bc.chainParams().blockReward);
+		applyRewards(rewarded, _bc.chainParams().blockReward(byzantiumReward));
 
 	// Commit all cached state changes to the state trie.
 	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock");
@@ -796,7 +797,8 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	RLPStream(unclesCount).appendRaw(unclesData.out(), unclesCount).swapOut(m_currentUncles);
 
 	// Apply rewards last of all.
-	applyRewards(uncleBlockHeaders, _bc.chainParams().blockReward);
+	bool byzantiumReward = m_currentBlock.number() >= _bc.chainParams().u256Param("ByzantiumForkBlock");
+	applyRewards(uncleBlockHeaders, _bc.chainParams().blockReward(byzantiumReward));
 
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
 	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock");

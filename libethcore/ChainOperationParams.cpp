@@ -53,7 +53,7 @@ ChainOperationParams::ChainOperationParams()
 		{"registrar", "5e70c0bbcd5636e0f9f9316e9f8633feb64d4050"},
 		{"networkID", "0x0"}
 	};
-	blockReward = u256("0x4563918244F40000");
+	m_blockReward = u256("0x4563918244F40000");
 }
 
 u256 ChainOperationParams::u256Param(string const& _name) const
@@ -65,4 +65,17 @@ u256 ChainOperationParams::u256Param(string const& _name) const
 		at = it->second;
 
 	return u256(fromBigEndian<u256>(fromHex(at)));
+}
+
+u256 ChainOperationParams::blockReward(bool isByzantiumOrLater) const
+{
+	if (isByzantiumOrLater)
+		return 3 * ether;
+	else
+		return m_blockReward;
+}
+
+void ChainOperationParams::setBlockReward(u256 const& newBlockReward)
+{
+	m_blockReward = newBlockReward;
 }
