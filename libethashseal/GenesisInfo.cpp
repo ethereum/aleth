@@ -33,6 +33,7 @@ using namespace dev;
 #include "genesis/test/byzantiumTest.cpp"
 #include "genesis/test/byzantiumTransitionTest.cpp"
 #include "genesis/test/constantinopleTest.cpp"
+#include "genesis/test/constantinopleTransitionTest.cpp"
 
 //Transition configurations
 #include "genesis/test/frontierToHomesteadAt5Test.cpp"
@@ -61,6 +62,7 @@ std::string const& dev::eth::genesisInfo(Network _n)
 	case Network::ByzantiumTest: return c_genesisInfoByzantiumTest;
 	case Network::ByzantiumTransitionTest: return c_genesisInfoByzantiumTransitionTest;
 	case Network::ConstantinopleTest: return c_genesisInfoConstantinopleTest;
+	case Network::ConstantinopleTransitionTest: return c_genesisInfoConstantinopleTransitionTest;
 
 	//Transition test genesis
 	case Network::FrontierToHomesteadAt5: return c_genesisInfoFrontierToHomesteadAt5Test;
@@ -88,6 +90,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
 	case Network::EIP158Test:
 	case Network::ByzantiumTest:
 	case Network::ConstantinopleTest:
+	case Network::ConstantinopleTransitionTest:
 		return c_genesisDefaultStateRoot;
 	default:
 		throw std::invalid_argument("Invalid network value");
