@@ -81,6 +81,9 @@ private:
 	eth::GenericFarm<EthashProofOfWork> m_farm;
 	std::string m_sealer = "cpu";
 	BlockHeader m_sealing;
+
+	/// A mutex covering m_sealing
+	Mutex m_submitLock;
 };
 
 }

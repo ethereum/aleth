@@ -24,6 +24,7 @@
 #pragma once
 
 #include <libethcore/BlockHeader.h>
+#include <libdevcore/Guards.h>
 
 namespace dev
 {
@@ -47,14 +48,21 @@ struct EthashProofOfWork
 
 	struct WorkPackage
 	{
-		WorkPackage() = default;
+		WorkPackage() {}
 		WorkPackage(BlockHeader const& _bh);
-		void reset() { headerHash = h256(); }
-		operator bool() const { return headerHash != h256(); }
+		WorkPackage(WorkPackage const& _other);
+		WorkPackage& operator=(WorkPackage const& _other);
+
+		void reset() { Guard l(m_headerHashLock); m_headerHash = h256(); }
+		operator bool() const { Guard l(m_headerHashLock); return m_headerHash != h256(); }
+		h256 headerHash() const { Guard l(m_headerHashLock); return m_headerHash; }
 
 		h256 boundary;
-		h256 headerHash;	///< When h256() means "pause until notified a new work package is available".
 		h256 seedHash;
+
+	private:
+		h256 m_headerHash;	///< When h256() means "pause until notified a new work package is available".
+		mutable Mutex m_headerHashLock;
 	};
 
 	static const WorkPackage NullWorkPackage;

@@ -42,6 +42,7 @@ Ethash::Ethash()
 	m_farm.setSealers(sealers);
 	m_farm.onSolutionFound([=](EthashProofOfWork::Solution const& sol)
 	{
+		std::unique_lock<Mutex> l(m_submitLock);
 //		cdebug << m_farm.work().seedHash << m_farm.work().headerHash << sol.nonce << EthashAux::eval(m_farm.work().seedHash, m_farm.work().headerHash, sol.nonce).value;
 		setMixHash(m_sealing, sol.mixHash);
 		setNonce(m_sealing, sol.nonce);
@@ -52,6 +53,7 @@ Ethash::Ethash()
 		{
 			RLPStream ret;
 			m_sealing.streamRLP(ret);
+			l.unlock();
 			m_onSealGenerated(ret.out());
 		}
 		return true;
@@ -272,10 +274,13 @@ bool Ethash::verifySeal(BlockHeader const& _bi) const
 
 void Ethash::generateSeal(BlockHeader const& _bi)
 {
-	m_sealing = _bi;
-	m_farm.setWork(m_sealing);
-	m_farm.start(m_sealer);
-	m_farm.setWork(m_sealing);		// TODO: take out one before or one after...
+	{
+		Guard l(m_submitLock);
+		m_sealing = _bi;
+		m_farm.setWork(m_sealing);
+		m_farm.start(m_sealer);
+		m_farm.setWork(m_sealing);		// TODO: take out one before or one after...
+	}
 	bytes shouldPrecompute = option("precomputeDAG");
 	if (!shouldPrecompute.empty() && shouldPrecompute[0] == 1)
 		ensurePrecomputed((unsigned)_bi.number());

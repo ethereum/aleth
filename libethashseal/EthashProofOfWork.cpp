@@ -35,6 +35,26 @@ const EthashProofOfWork::WorkPackage EthashProofOfWork::NullWorkPackage = Ethash
 
 EthashProofOfWork::WorkPackage::WorkPackage(BlockHeader const& _bh):
 	boundary(Ethash::boundary(_bh)),
-	headerHash(_bh.hash(WithoutSeal)),
-	seedHash(Ethash::seedHash(_bh))
+	seedHash(Ethash::seedHash(_bh)),
+	m_headerHash(_bh.hash(WithoutSeal))
 {}
+
+EthashProofOfWork::WorkPackage::WorkPackage(WorkPackage const& _other):
+	boundary(_other.boundary),
+	seedHash(_other.seedHash),
+	m_headerHash(_other.headerHash())
+{}
+
+EthashProofOfWork::WorkPackage& EthashProofOfWork::WorkPackage::operator=(EthashProofOfWork::WorkPackage const& _other)
+{
+	if (this == &_other)
+		return *this;
+	boundary = _other.boundary;
+	seedHash = _other.seedHash;
+	h256 headerHash = _other.headerHash();
+	{
+		Guard l(m_headerHashLock);
+		m_headerHash = std::move(headerHash);
+	}
+	return *this;
+}
