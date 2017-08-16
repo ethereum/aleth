@@ -30,15 +30,17 @@ using namespace dev;
 void Worker::startWorking()
 {
 //	cnote << "startWorking for thread" << m_name;
-	Guard l(x_work);
+	std::unique_lock<std::mutex> l(x_work);
 	if (m_work)
 	{
 		WorkerState ex = WorkerState::Stopped;
 		m_state.compare_exchange_strong(ex, WorkerState::Starting);
+		m_state_notifier.notify_all();
 	}
 	else
 	{
 		m_state = WorkerState::Starting;
+		m_state_notifier.notify_all();
 		m_work.reset(new thread([&]()
 		{
 			setThreadName(m_name.c_str());
@@ -49,6 +51,7 @@ void Worker::startWorking()
 				bool ok = m_state.compare_exchange_strong(ex, WorkerState::Started);
 //				cnote << "Trying to set Started: Thread was" << (unsigned)ex << "; " << ok;
 				(void)ok;
+				m_state_notifier.notify_all();
 
 				try
 				{
@@ -68,47 +71,55 @@ void Worker::startWorking()
 //				cnote << "State: Stopped: Thread was" << (unsigned)ex;
 				if (ex == WorkerState::Killing || ex == WorkerState::Starting)
 					m_state.exchange(ex);
-
+				m_state_notifier.notify_all();
 //				cnote << "Waiting until not Stopped...";
-				DEV_TIMED_ABOVE("Worker stopping", 100)
-					while (m_state == WorkerState::Stopped)
-						this_thread::sleep_for(chrono::milliseconds(20));
+
+				{
+					std::unique_lock<std::mutex> l(x_work);
+					DEV_TIMED_ABOVE("Worker stopping", 100)
+						while (m_state == WorkerState::Stopped)
+							m_state_notifier.wait(l);
+				}
 			}
 		}));
 //		cnote << "Spawning" << m_name;
 	}
+
 	DEV_TIMED_ABOVE("Start worker", 100)
 		while (m_state == WorkerState::Starting)
-			this_thread::sleep_for(chrono::microseconds(20));
+			m_state_notifier.wait(l);
 }
 
 void Worker::stopWorking()
 {
-	DEV_GUARDED(x_work)
-		if (m_work)
-		{
-			WorkerState ex = WorkerState::Started;
-			m_state.compare_exchange_strong(ex, WorkerState::Stopping);
+	std::unique_lock<Mutex> l(x_work);
+	if (m_work)
+	{
+		WorkerState ex = WorkerState::Started;
+		m_state.compare_exchange_strong(ex, WorkerState::Stopping);
+		m_state_notifier.notify_all();
 
-			DEV_TIMED_ABOVE("Stop worker", 100)
-				while (m_state != WorkerState::Stopped)
-					this_thread::sleep_for(chrono::microseconds(20));
-		}
+		DEV_TIMED_ABOVE("Stop worker", 100)
+			while (m_state != WorkerState::Stopped)
+				m_state_notifier.wait(l); // but yes who can wake this up, when the mutex is taken.
+	}
 }
 
 void Worker::terminate()
 {
 //	cnote << "stopWorking for thread" << m_name;
-	DEV_GUARDED(x_work)
-		if (m_work)
-		{
-			m_state.exchange(WorkerState::Killing);
+	std::unique_lock<Mutex> l(x_work);
+	if (m_work)
+	{
+		m_state.exchange(WorkerState::Killing);
+		l.unlock();
+		m_state_notifier.notify_all();
+		DEV_TIMED_ABOVE("Terminate worker", 100)
+			m_work->join();
 
-			DEV_TIMED_ABOVE("Terminate worker", 100)
-				m_work->join();
-
-			m_work.reset();
-		}
+		l.lock();
+		m_work.reset();
+	}
 }
 
 void Worker::workLoop()

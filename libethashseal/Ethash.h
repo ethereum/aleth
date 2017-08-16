@@ -37,6 +37,7 @@ class Ethash: public SealEngineBase
 {
 public:
 	Ethash();
+	~Ethash();
 
 	std::string name() const override { return "Ethash"; }
 	unsigned revision() const override { return 1; }
