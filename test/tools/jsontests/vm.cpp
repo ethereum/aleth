@@ -292,12 +292,13 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 
 namespace dev { namespace test {
 
-void doVMTests(json_spirit::mValue& _v, bool _fillin)
+json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 {
+	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
 	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom")
-		TestOutputHelper::initTest(_v);
+		TestOutputHelper::initTest(v);
 
-	for (auto& i: _v.get_obj())
+	for (auto& i: v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
@@ -470,6 +471,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 	}
 
 	TestOutputHelper::finishTest();
+	return v;
 }
 
 } } // namespace close

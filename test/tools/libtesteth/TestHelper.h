@@ -157,8 +157,8 @@ dev::eth::BlockHeader constructHeader(
 	u256 const& _timestamp,
 	bytes const& _extraData);
 void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
-void executeTests(const std::string& _name, const std::string& _testPathAppendix, const std::string& _fillerPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix = true);
-void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
+void executeTests(const std::string& _name, const std::string& _testPathAppendix, const std::string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix = true);
+void userDefinedTest(std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::State const& _statePost, eth::ChangeLog const& _changeLog);
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
@@ -167,12 +167,14 @@ json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
 int createRandomTest(std::vector<char*> const& _parameters);
-void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
-void doStateTests(json_spirit::mValue& v, bool _fillin);
-void doVMTests(json_spirit::mValue& v, bool _fillin);
-void doBlockchainTests(json_spirit::mValue& _v, bool _fillin);
-void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin);
-void doTransitionTest(json_spirit::mValue& _v, bool _fillin);
+//do*Tests(_input, _fillin) always return a filled test.
+//When _fillin is true, _input is supposed to contain a filler.  Otherwise, _input is also a filled test.
+json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin);
 void doRlpTests(json_spirit::mValue& v, bool _fillin);
 void addClientInfo(json_spirit::mValue& v, std::string const& _testSource);
 void removeComments(json_spirit::mValue& _obj);

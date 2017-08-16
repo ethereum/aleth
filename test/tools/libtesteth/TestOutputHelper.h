@@ -32,7 +32,7 @@ class TestOutputHelper
 public:
 	TestOutputHelper() { TestOutputHelper::initTest(); }
 	static void initTest(int _maxTests = 1);
-	static void initTest(json_spirit::mValue& _v);
+	static void initTest(json_spirit::mValue const& _v);
 	static bool passTest(std::string const& _testName);
 	static void setMaxTests(int _count) { m_maxTests = _count; }
 	static void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
