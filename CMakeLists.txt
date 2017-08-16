@@ -40,7 +40,9 @@ set(CPP_ETHEREUM_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "Path to the root di
 include(EthPolicy)
 eth_policy()
 
-set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo)
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
+endif()
 
 # Map current configuration to congigurations of imported targets.
 set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG RelWithDebInfo Release)
