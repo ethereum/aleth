@@ -49,6 +49,7 @@ set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG RelWithDebInfo Release)
 set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo Release)
 
 set(HUNTER_CONFIGURATION_TYPES Release)
+set(HUNTER_JOBS_NUMBER 4)
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache")
 include(HunterGate)
 HunterGate(
