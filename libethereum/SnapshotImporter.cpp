@@ -20,11 +20,11 @@
 #include "SnapshotImporter.h"
 #include "Client.h"
 
+#include <snappy.h>
+
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieHash.h>
 #include <libethashseal/Ethash.h>
-
-#include <deps/include/snappy.h>
 
 using namespace dev;
 using namespace eth;
