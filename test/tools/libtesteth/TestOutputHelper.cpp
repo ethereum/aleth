@@ -31,7 +31,7 @@ using namespace dev::eth;
 using namespace boost;
 
 Timer TestOutputHelper::m_timer;
-size_t TestOutputHelper::m_currTest = 0;
+size_t TestOutputHelper::m_currTest = 1;
 size_t TestOutputHelper::m_maxTests = 0;
 string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
@@ -51,14 +51,7 @@ void TestOutputHelper::initTest(int _maxTests)
 
 void TestOutputHelper::initTest(json_spirit::mValue const& _v)
 {
-	Ethash::init();
-	BasicAuthority::init();
-	NoProof::init();
-	m_timer.restart();
-	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
-	m_maxTests = _v.get_obj().size();
-	m_currTest = 0;
+	initTest(_v.get_obj().size());
 }
 
 bool TestOutputHelper::passTest(std::string const& _testName)

@@ -36,76 +36,22 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug = false);
+void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
 int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug = false);
 
 namespace dev { namespace test {
-int createRandomTest(std::vector<char*> const& _parameters)
+int createRandomTest()
 {
-	std::string testSuite;
-	std::string testFillString;
-	json_spirit::mValue testmValue;
-	bool checktest = false;
-	bool filldebug = false;
-	bool debug = false;
-	bool filltest = false;
-
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
-
-	testSuite = options.rCurrentTestSuite;
-	if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests"
-				&& testSuite != "VMTests")
-		testSuite = "";
-
-	for (size_t i = 0; i < _parameters.size(); ++i)
+	if (options.rCurrentTestSuite != test::c_StateTestsGeneral)
 	{
-		auto arg = std::string{_parameters.at(i)};
-
-		if (arg == "--fulloutput")
-			options.fulloutput = true;
-		else if (arg == "--debug")
-			debug = true;
-		else
-		if (arg == "--filldebug")
-			filldebug = true;
-	}
-
-	if (testSuite == "")
-	{
-		std::cerr << "Error! Test suite not supported! (Usage -t TestSuite)" << std::endl;
+		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)" << std::endl;
 		return 1;
 	}
 	else
 	{
-		if (checktest)
-			std::cout << "Testing: " << testSuite.substr(0, testSuite.length() - 1) << "... ";
-
-		if (testSuite == "BlockChainTests")
-		{
-			if (checktest)
-				return checkRandomTest(dev::test::doBlockchainTests, testmValue, debug);
-			else
-				fillRandomTest(dev::test::doBlockchainTests, (filltest) ? testFillString : c_testExampleBlockchainTest, filldebug);
-		}
-		else
-		if (testSuite == "TransactionTests")
-		{
-			if (checktest)
-				return checkRandomTest(dev::test::doTransactionTests, testmValue, debug);
-			else
-				fillRandomTest(dev::test::doTransactionTests, (filltest) ? testFillString : c_testExampleTransactionTest, filldebug);
-		}
-		else
-		if (testSuite == "VMTests")
-		{
-			if (checktest)
-			{
-				dev::eth::VMFactory::setKind(dev::eth::VMKind::JIT);
-				return checkRandomTest(dev::test::doVMTests, testmValue, debug);
-			}
-			else
-				fillRandomTest(dev::test::doVMTests, (filltest) ? testFillString : c_testExampleVMTest, filldebug);
-		}
+		TestOutputHelper::initTest();
+		fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
 	}
 
 	return 0;
@@ -148,12 +94,13 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 	return ret;
 }
 
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug)
+void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
 {
+	bool debug = (dev::test::Options::get().logVerbosity != dev::test::Verbosity::NiceReport);
 	//redirect all output to the stream
 	std::ostringstream strCout;
 	std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-	if (!_debug)
+	if (!debug)
 	{
 		std::cout.rdbuf( strCout.rdbuf() );
 		std::cerr.rdbuf( strCout.rdbuf() );
@@ -168,13 +115,21 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 		json_spirit::read_string(newTest, v);
 		_doTests(v, true);
 	}
+	catch (dev::Exception const& _e)
+	{
+		std::cerr << "Test fill exception: " << diagnostic_information(_e) << std::endl;
+	}
+	catch (std::exception const& _e)
+	{
+		std::cerr << "Test fill exception: " << _e.what() << std::endl;
+	}
 	catch(...)
 	{
-		std::cerr << "Test fill exception!";
+		std::cerr << "Test fill exception!" << std::endl;
 	}
 
 	//restroe output
-	if (!_debug)
+	if (!debug)
 	{
 		std::cout.rdbuf(oldCoutStreamBuf);
 		std::cerr.rdbuf(oldCoutStreamBuf);
@@ -340,7 +295,7 @@ std::string const c_testExampleStateTest = R"(
 			}
 		},
 		"a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-			"balance" : "[BALANCE]",
+			"balance" : "[HEX]",
 			"code" : "0x",
 			"nonce" : "0",
 			"storage" : {

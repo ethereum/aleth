@@ -59,6 +59,8 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 struct MissingFields : virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
+extern std::string const c_StateTestsGeneral;
+
 
 /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
 /// Our version of BOOST_REQUIRE_NO_THROW()
