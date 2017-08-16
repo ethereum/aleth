@@ -27,6 +27,7 @@ branches:
     - master
     - develop
     - appveyor
+    - hunter
 os: Visual Studio 2015
 configuration:
     - RelWithDebInfo
