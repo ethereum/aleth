@@ -50,8 +50,8 @@ set(HUNTER_CONFIGURATION_TYPES Release)
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache")
 include(HunterGate)
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.19.62.tar.gz"
-    SHA1 "e15b764e94641968fe88db08dfb8e7f0f084c01c"
+    URL "https://github.com/ruslo/hunter/archive/v0.19.71.tar.gz"
+    SHA1 "8fe144d9490501d398777532e0c0f56bc7bb0ec7"
 )
 
 if(HUNTER_ENABLED)
