@@ -33,18 +33,18 @@ class ExtVMTestFixture: public TestOutputHelper
 {
 public:
 	ExtVMTestFixture():
-		networkSelector(Network::ByzantiumTransitionTest),
+		networkSelector(Network::ConstantinopleTransitionTest),
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),
 		blockchain(testBlockchain.interface())
 	{
 		TestBlock testBlock;
-		// block 1 - before Byzantium
+		// block 1 - before Constantinople
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 
-		// block 2 - first Byzantium block
+		// block 2 - first Constantinople block
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 	}
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 	BOOST_CHECK_EQUAL(extVM.blockHash(100), h256());
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashBeforeByzantiumReliesOnLastHashes)
+BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
 {
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain);
@@ -85,9 +85,9 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeByzantiumReliesOnLastHashes)
 	BOOST_REQUIRE_EQUAL(hash, lastHashes[0]);
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInByzantium)
+BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInConstantinople)
 {
-	// BLOCKHASH starts to work through the call to a contract 256 block after Byzantium fork block
+	// BLOCKHASH starts to work through the call to a contract 256 block after Constantinople fork block
 	TestBlock testBlock;
 	for (int i = 0; i < 256; ++i)
 	{
