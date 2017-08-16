@@ -691,7 +691,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		for (unsigned i = 0; i < s.pending().size(); ++i)
 			br.receipts.push_back(s.receipt(i));
 
-		s.cleanup(true);
+		s.cleanup();
 
 		td = pd.totalDifficulty + tdIncrease;
 
