@@ -196,7 +196,7 @@ owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 	m_ext = &_ext;
 	m_schedule = &m_ext->evmSchedule();
 	m_onOp = _onOp;
-	m_onFail = &VM::onOperation;
+	m_onFail = &VM::onOperation; // this results in operations that fail being logged twice in the trace
 	
 	try
 	{
@@ -263,9 +263,9 @@ void VM::interpretCases()
 
 		CASE(RETURN)
 		{
+			ON_OP();
 			m_copyMemSize = 0;
 			updateMem(memNeed(m_SP[0], m_SP[1]));
-			ON_OP();
 			updateIOGas();
 
 			uint64_t b = (uint64_t)m_SP[0];
@@ -330,8 +330,8 @@ void VM::interpretCases()
 		
 		CASE(MLOAD)
 		{
-			updateMem(toInt63(m_SP[0]) + 32);
 			ON_OP();
+			updateMem(toInt63(m_SP[0]) + 32);
 			updateIOGas();
 
 			m_SPP[0] = (u256)*(h256 const*)(m_mem.data() + (unsigned)m_SP[0]);
@@ -340,8 +340,8 @@ void VM::interpretCases()
 
 		CASE(MSTORE)
 		{
-			updateMem(toInt63(m_SP[0]) + 32);
 			ON_OP();
+			updateMem(toInt63(m_SP[0]) + 32);
 			updateIOGas();
 
 			*(h256*)&m_mem[(unsigned)m_SP[0]] = (h256)m_SP[1];
@@ -350,8 +350,8 @@ void VM::interpretCases()
 
 		CASE(MSTORE8)
 		{
-			updateMem(toInt63(m_SP[0]) + 1);
 			ON_OP();
+			updateMem(toInt63(m_SP[0]) + 1);
 			updateIOGas();
 
 			m_mem[(unsigned)m_SP[0]] = (byte)(m_SP[1] & 0xff);
@@ -360,9 +360,9 @@ void VM::interpretCases()
 
 		CASE(SHA3)
 		{
+			ON_OP();
 			m_runGas = toInt63(m_schedule->sha3Gas + (u512(m_SP[1]) + 31) / 32 * m_schedule->sha3WordGas);
 			updateMem(memNeed(m_SP[0], m_SP[1]));
-			ON_OP();
 			updateIOGas();
 
 			uint64_t inOff = (uint64_t)m_SP[0];
@@ -373,11 +373,11 @@ void VM::interpretCases()
 
 		CASE(LOG0)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -386,11 +386,11 @@ void VM::interpretCases()
 
 		CASE(LOG1)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -399,11 +399,11 @@ void VM::interpretCases()
 
 		CASE(LOG2)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2], m_SP[3]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -412,11 +412,11 @@ void VM::interpretCases()
 
 		CASE(LOG3)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2], m_SP[3], m_SP[4]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -425,11 +425,11 @@ void VM::interpretCases()
 
 		CASE(LOG4)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2], m_SP[3], m_SP[4], m_SP[5]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -1220,9 +1220,9 @@ void VM::interpretCases()
 
 		CASE(CALLDATACOPY)
 		{
+			ON_OP();
 			m_copyMemSize = toInt63(m_SP[2]);
 			updateMem(memNeed(m_SP[0], m_SP[2]));
-			ON_OP();
 			updateIOGas();
 
 			copyDataToMemory(m_ext->data, m_SP);
@@ -1248,9 +1248,9 @@ void VM::interpretCases()
 
 		CASE(CODECOPY)
 		{
+			ON_OP();
 			m_copyMemSize = toInt63(m_SP[2]);
 			updateMem(memNeed(m_SP[0], m_SP[2]));
-			ON_OP();
 			updateIOGas();
 
 			copyDataToMemory(&m_ext->code, m_SP);
@@ -1259,10 +1259,10 @@ void VM::interpretCases()
 
 		CASE(EXTCODECOPY)
 		{
+			ON_OP();
 			m_runGas = toInt63(m_schedule->extcodecopyGas);
 			m_copyMemSize = toInt63(m_SP[3]);
 			updateMem(memNeed(m_SP[1], m_SP[3]));
-			ON_OP();
 			updateIOGas();
 
 			Address a = asAddress(m_SP[0]);
@@ -1282,8 +1282,8 @@ void VM::interpretCases()
 
 		CASE(BLOCKHASH)
 		{
-			m_runGas = toInt63(m_schedule->blockhashGas);
 			ON_OP();
+			m_runGas = toInt63(m_schedule->blockhashGas);
 			updateIOGas();
 
 			m_SPP[0] = (u256)m_ext->blockHash(m_SP[0]);
