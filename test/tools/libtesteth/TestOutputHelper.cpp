@@ -50,11 +50,6 @@ void TestOutputHelper::initTest(size_t _maxTests)
 	m_currTest = 0;
 }
 
-void TestOutputHelper::initTest(json_spirit::mValue const& _v)
-{
-	initTest(_v.get_obj().size());
-}
-
 bool TestOutputHelper::passTest(std::string const& _testName)
 {
 	m_currTest++;

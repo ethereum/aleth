@@ -108,7 +108,7 @@ void testBCTest(json_spirit::mObject& _o);
 //percent output for many tests in one file
 json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _v, bool _fillin)
 {
-	TestOutputHelper::initTest(_v);	//Count how many tests in the json object (read from .json file)
+	TestOutputHelper::initTest(_v.get_obj().size());	//Count how many tests in the json object (read from .json file)
 	json_spirit::mValue ret = doBlockchainTestNoLog(_v, _fillin); //Do the test / test generation
 	TestOutputHelper::finishTest(); //Calculate the time of test execution and add it to the log
 	return ret;
