@@ -589,7 +589,7 @@ void testBCTest(json_spirit::mObject& _o)
 bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, bool isByzantium)
 {
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(test::TestBlockChain::s_sealEngineNetwork)).createSealEngine());
-	bigint baseReward = se->chainParams().blockReward(isByzantium);
+	bigint const baseReward = se->chainParams().blockReward(_schedule);
 	bigint reward = baseReward;
 	//INCLUDE_UNCLE = BASE_REWARD / 32
 	//UNCLE_REWARD  = BASE_REWARD * (8 - Bn + Un) / 8
