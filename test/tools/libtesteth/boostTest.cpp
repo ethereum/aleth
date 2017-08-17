@@ -69,8 +69,8 @@ void createRandomTest()
 	//so the actual test suite and raw test input is read into Options
 	if (dev::test::createRandomTest())
 		throw framework::internal_error("Create Random Test Error!");
-	else
-		exit(0);
+
+	exit(0);
 }
 
 static std::atomic_bool stopTravisOut;

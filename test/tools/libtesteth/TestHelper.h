@@ -168,7 +168,7 @@ json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMas
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
-int createRandomTest(std::vector<char*> const& _parameters);
+int createRandomTest();	//returns 0 if succeed, 1 if there was an error;
 //do*Tests(_input, _fillin) always return a filled test.
 //When _fillin is true, _input is supposed to contain a filler.  Otherwise, _input is also a filled test.
 json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin);

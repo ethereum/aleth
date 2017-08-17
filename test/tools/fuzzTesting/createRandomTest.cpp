@@ -36,7 +36,7 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
+int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
 int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug = false);
 
 namespace dev { namespace test {
@@ -51,10 +51,8 @@ int createRandomTest()
 	else
 	{
 		TestOutputHelper::initTest();
-		fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
+		return fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
 	}
-
-	return 0;
 }
 }} //namespaces
 
@@ -94,8 +92,10 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 	return ret;
 }
 
-void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
+//Prints a generated test Json into std::out
+int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
 {
+	bool wasError = false;
 	bool debug = (dev::test::Options::get().logVerbosity > dev::test::Verbosity::NiceReport);
 	//redirect all output to the stream
 	std::ostringstream strCout;
@@ -118,14 +118,12 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 	catch (dev::Exception const& _e)
 	{
 		std::cerr << "Test fill exception: " << diagnostic_information(_e) << std::endl;
+		wasError = true;
 	}
 	catch (std::exception const& _e)
 	{
 		std::cerr << "Test fill exception: " << _e.what() << std::endl;
-	}
-	catch(...)
-	{
-		std::cerr << "Test fill exception!" << std::endl;
+		wasError = true;
 	}
 
 	//restroe output
@@ -134,7 +132,12 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 		std::cout.rdbuf(oldCoutStreamBuf);
 		std::cerr.rdbuf(oldCoutStreamBuf);
 	}
+
+	if (wasError)
+		return 1;
+
 	std::cout << json_spirit::write_string(v, true);
+	return 0;
 }
 
 /// Parse Test string replacing keywords to fuzzed values

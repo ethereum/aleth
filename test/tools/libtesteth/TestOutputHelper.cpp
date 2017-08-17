@@ -37,7 +37,7 @@ string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
 string TestOutputHelper::m_currentTestFileName;
 std::vector<TestOutputHelper::execTimeName> TestOutputHelper::m_execTimeResults;
-void TestOutputHelper::initTest(int _maxTests)
+void TestOutputHelper::initTest(size_t _maxTests)
 {
 	Ethash::init();
 	BasicAuthority::init();
