@@ -31,11 +31,11 @@ using namespace dev::eth;
 using namespace boost;
 
 Timer TestOutputHelper::m_timer;
-size_t TestOutputHelper::m_currTest = 1;
-size_t TestOutputHelper::m_maxTests = 0;
+size_t TestOutputHelper::m_currTest = 0;
+size_t TestOutputHelper::m_maxTests = 1;
 string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
-string TestOutputHelper::m_currentTestFileName = "n/a";
+string TestOutputHelper::m_currentTestFileName;
 std::vector<TestOutputHelper::execTimeName> TestOutputHelper::m_execTimeResults;
 void TestOutputHelper::initTest(int _maxTests)
 {
@@ -44,7 +44,8 @@ void TestOutputHelper::initTest(int _maxTests)
 	NoProof::init();
 	m_timer.restart();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
+	if (!Options::get().createRandomTest)
+		std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _maxTests;
 	m_currTest = 0;
 }

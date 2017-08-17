@@ -284,12 +284,13 @@ Options::Options(int argc, char** argv)
 	//check restrickted options
 	if (createRandomTest)
 	{
-		string optionlist = "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, performance, quadratic, memory, inputLimits, bigData, wallet, stats, filltests, fillchain";
 		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-			|| 	performance || quadratic || memory || inputLimits || bigData || wallet
-			|| 	stats || filltests || fillchain)
+			|| performance || quadratic || memory || inputLimits || bigData || wallet
+			|| stats || filltests || fillchain)
 		{
-			cerr << "--createRandomTest could not be used with one of the options: " + optionlist << endl;
+			cerr << "--createRandomTest cannot be used with any of the options: " <<
+					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, performance, " <<
+					"quadratic, memory, inputLimits, bigData, wallet, stats, filltests, fillchain" << endl;
 			exit(1);
 		}
 	}

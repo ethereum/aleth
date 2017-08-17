@@ -96,7 +96,7 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 
 void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
 {
-	bool debug = (dev::test::Options::get().logVerbosity != dev::test::Verbosity::NiceReport);
+	bool debug = (dev::test::Options::get().logVerbosity > dev::test::Verbosity::NiceReport);
 	//redirect all output to the stream
 	std::ostringstream strCout;
 	std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();

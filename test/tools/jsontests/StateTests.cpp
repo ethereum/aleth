@@ -50,7 +50,7 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		if (_fillin && !Options::get().createRandomTest)
+		if (_fillin && !TestOutputHelper::testFileName().empty())
 			BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::testFileName(),
 				TestOutputHelper::testFileName() + " contains a test with a different name '" + testname + "'" );
 
