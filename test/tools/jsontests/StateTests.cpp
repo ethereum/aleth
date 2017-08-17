@@ -39,12 +39,13 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-void doStateTests(json_spirit::mValue& _v, bool _fillin)
+json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin)
 {
-	BOOST_REQUIRE_MESSAGE(!_fillin || _v.get_obj().size() == 1,
+	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
 		TestOutputHelper::testFileName() + " A GeneralStateTest filler should contain only one test.");
+	json_spirit::mValue v = _input;  // TODO: avoid copying and only add valid fields into the new object.
 
-	for (auto& i: _v.get_obj())
+	for (auto& i: v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
@@ -103,6 +104,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 				importer.traceStateDiff();
 		}
 	}
+	return v;
 }
 } }// Namespace Close
 

@@ -49,7 +49,7 @@ void TestOutputHelper::initTest(int _maxTests)
 	m_currTest = 0;
 }
 
-void TestOutputHelper::initTest(json_spirit::mValue& _v)
+void TestOutputHelper::initTest(json_spirit::mValue const& _v)
 {
 	Ethash::init();
 	BasicAuthority::init();

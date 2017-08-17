@@ -421,7 +421,7 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 	}
 }
 
-void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
+void userDefinedTest(std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests)
 {
 	if (!Options::get().singleTest)
 		return;
@@ -469,7 +469,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix)
+void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
 {
 	string testPath = getTestPath() + _testPathAppendix;
 	string testFillerPath = getTestPath() + "/src" + _fillerPathAppendix;
@@ -500,9 +500,9 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 
 			json_spirit::read_string(s, v);
 			removeComments(v);
-			doTests(v, true);
-			addClientInfo(v, testfilename);
-			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
+			json_spirit::mValue output = doTests(v, true);
+			addClientInfo(output, testfilename);
+			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(output, true)));
 		}
 		catch (Exception const& _e)
 		{
