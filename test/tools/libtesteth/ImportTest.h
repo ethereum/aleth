@@ -31,7 +31,6 @@ namespace test
 
 enum class testType
 {
-	StateTests,
 	BlockChainTests,
 	GeneralStateTest,
 	Other
@@ -40,7 +39,7 @@ enum class testType
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate = testType::StateTests);
+	ImportTest(json_spirit::mObject& _o, testType _testTemplate);
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
@@ -49,6 +48,12 @@ public:
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader = false);
+	static void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, std::vector<std::string>& _out);
+
+	//check functions
+	//check that networks in the vector are allowed
+	static void checkAllowedNetwork(std::vector<std::string> const& _networks);
+	static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
 
 	bytes executeTest();
 	int exportTest(bytes const& _output);
@@ -58,21 +63,21 @@ public:
 
 	eth::State m_statePre;
 	eth::State m_statePost;
-	eth::LogEntries m_logs;
-	eth::LogEntries m_logsExpected;
 
 private:
 	using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
 	std::tuple<eth::State, ExecOutput, eth::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
 
-	eth::EnvInfo m_envInfo;
+	std::unique_ptr<eth::LastBlockHashesFace const> m_lastBlockHashes;
+	std::unique_ptr<eth::EnvInfo> m_envInfo;
 	eth::Transaction m_transaction;
 
 	//General State Tests
 	struct transactionToExecute
 	{
 		transactionToExecute(int d, int g, int v, eth::Transaction const& t):
-			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork) {}
+			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork),
+			output(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries()))) {}
 		int dataInd;
 		int gasInd;
 		int valInd;
@@ -80,6 +85,7 @@ private:
 		eth::State postState;
 		eth::ChangeLog changeLog;
 		eth::Network netId;
+		ExecOutput output;
 	};
 	std::vector<transactionToExecute> m_transactions;
 	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;

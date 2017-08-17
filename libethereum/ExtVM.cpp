@@ -20,8 +20,9 @@
  */
 
 #include "ExtVM.h"
-#include <exception>
+#include "LastBlockHashesFace.h"
 #include <boost/thread.hpp>
+#include <exception>
 
 using namespace dev;
 using namespace dev::eth;
@@ -115,10 +116,16 @@ void ExtVM::setStore(u256 _n, u256 _v)
 	m_s.setStorage(myAddress, _n, _v);
 }
 
-std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
+std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp)
 {
 	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
-	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
+	bool result = false;
+	if (_op == Instruction::CREATE)
+		result = e.createOpcode(myAddress, _endowment, gasPrice, io_gas, _code, origin);
+	else
+		result = e.create2Opcode(myAddress, _endowment, gasPrice, io_gas, _code, origin, _salt);
+
+	if (!result)
 	{
 		go(depth, e, _onOp);
 		e.accrueSubState(sub);
@@ -142,10 +149,13 @@ h256 ExtVM::blockHash(u256 _number)
 	if (_number >= currentNumber || _number < (std::max<u256>(256, currentNumber) - 256))
 		return h256();
 
-	if (currentNumber < m_sealEngine.chainParams().u256Param("metropolisForkBlock") + 256)
+	if (currentNumber < m_sealEngine.chainParams().u256Param("byzantiumForkBlock") + 256)
 	{
-		assert(envInfo().lastHashes().size() > (unsigned)(currentNumber - 1 - _number));
-		return envInfo().lastHashes()[(unsigned)(currentNumber - 1 - _number)];
+		h256 const parentHash = envInfo().header().parentHash();
+		h256s const lastHashes = envInfo().lastHashes().precedingHashes(parentHash);
+
+		assert(lastHashes.size() > (unsigned)(currentNumber - 1 - _number));
+		return lastHashes[(unsigned)(currentNumber - 1 - _number)];
 	}
 
 	u256 const nonce = m_s.getNonce(caller);

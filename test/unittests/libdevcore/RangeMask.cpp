@@ -35,7 +35,7 @@ BOOST_FIXTURE_TEST_SUITE(RangeMaskTest, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
-	using RM = RangeMask<unsigned>;
+	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	for (RM r: {RM(), RM(1, 10), RM(Range(2, 10))})
 	{
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(simple_unions)
 {
-	using RM = RangeMask<unsigned>;
+	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
 	m.unionWith(Range(1, 2));
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(simple_unions)
 
 BOOST_AUTO_TEST_CASE(empty_union)
 {
-	using RM = RangeMask<unsigned>;
+	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
 	m.unionWith(Range(3, 6));
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(empty_union)
 
 BOOST_AUTO_TEST_CASE(overlapping_unions)
 {
-	using RM = RangeMask<unsigned>;
+	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
 	m.unionWith(Range(10, 20));
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(overlapping_unions)
 
 BOOST_AUTO_TEST_CASE(complement)
 {
-	using RM = RangeMask<unsigned>;
+	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
 	m.unionWith(7).unionWith(9);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(complement)
 
 BOOST_AUTO_TEST_CASE(iterator)
 {
-	using RM = RangeMask<unsigned>;
+	using RM = RangeMask;
 	using Range = pair<unsigned, unsigned>;
 	RM m(Range(0, 2000));
 	m.unionWith(Range(7, 9));

@@ -336,7 +336,6 @@ int main(int argc, char** argv)
 
 	/// General params for Node operation
 	NodeMode nodeMode = NodeMode::Full;
-	bool interactive = false;
 
 	int jsonRPCURL = -1;
 	bool adminViaHttp = false;
@@ -616,56 +615,6 @@ int main(int argc, char** argv)
 			chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 		else if (arg == "--ropsten" || arg == "--testnet")
 			chainParams = ChainParams(genesisInfo(eth::Network::Ropsten), genesisStateRoot(eth::Network::Ropsten));
-		else if (arg == "--oppose-dao-fork")
-		{
-			chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
-			chainParams.otherParams["daoHardforkBlock"] = toHex(u256(-1) - 10, HexPrefix::Add);
-		}
-		else if (arg == "--support-dao-fork")
-		{
-			// default
-		}
-		else if (arg == "--bob")
-		{
-			cout << "Asking Bob for blocks (this should work in theoreum)..." << endl;
-			while (true)
-			{
-				u256 x(h256::random());
-				u256 c;
-				for (; x != 1; ++c)
-				{
-					x = (x & 1) == 0 ? x / 2 : 3 * x + 1;
-					cout << toHex(x) << endl;
-					this_thread::sleep_for(chrono::seconds(1));
-				}
-				cout << "Block number: " << hex << c << endl;
-				exit(0);
-			}
-		}
-/*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
-		{
-			try
-			{
-				blockFees = stof(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				return -1;
-			}
-		}
-		else if ((arg == "-e" || arg == "--ether-price") && i + 1 < argc)
-		{
-			try
-			{
-				etherPrice = stof(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				return -1;
-			}
-		}*/
 		else if (arg == "--ask" && i + 1 < argc)
 		{
 			try
@@ -690,28 +639,6 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
-/*		else if ((arg == "-P" || arg == "--priority") && i + 1 < argc)
-		{
-			string m = boost::to_lower_copy(string(argv[++i]));
-			if (m == "lowest")
-				priority = TransactionPriority::Lowest;
-			else if (m == "low")
-				priority = TransactionPriority::Low;
-			else if (m == "medium" || m == "mid" || m == "default" || m == "normal")
-				priority = TransactionPriority::Medium;
-			else if (m == "high")
-				priority = TransactionPriority::High;
-			else if (m == "highest")
-				priority = TransactionPriority::Highest;
-			else
-				try {
-					priority = (TransactionPriority)(max(0, min(100, stoi(m))) * 8 / 100);
-				}
-				catch (...) {
-					cerr << "Unknown " << arg << " option: " << m << endl;
-					return -1;
-				}
-		}*/
 		else if ((arg == "-m" || arg == "--mining") && i + 1 < argc)
 		{
 			string m = argv[++i];
@@ -747,8 +674,6 @@ int main(int argc, char** argv)
 			alwaysConfirm = false;
 		else if (arg == "--import-presale" && i + 1 < argc)
 			presaleImports.push_back(argv[++i]);
-		else if (arg == "--old-interactive")
-			interactive = true;
 
 		else if ((arg == "-j" || arg == "--json-rpc"))
 			jsonRPCURL = jsonRPCURL == -1 ? SensibleHttpPort : jsonRPCURL;
@@ -954,24 +879,6 @@ int main(int argc, char** argv)
 
 	string logbuf;
 	std::string additional;
-	if (interactive)
-		g_logPost = [&](std::string const& a, char const*){
-			static SpinLock s_lock;
-			SpinGuard l(s_lock);
-
-			if (g_silence)
-				logbuf += a + "\n";
-			else
-				cout << "\r           \r" << a << endl << additional << flush;
-
-			// helpful to use OutputDebugString on windows
-	#if defined(_WIN32)
-			{
-				OutputDebugStringA(a.data());
-				OutputDebugStringA("\n");
-			}
-	#endif
-		};
 
 	auto getPassword = [&](string const& prompt) {
 		bool s = g_silence;

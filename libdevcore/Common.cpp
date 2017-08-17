@@ -30,8 +30,9 @@ namespace dev
 {
 
 char const* Version = ETH_PROJECT_VERSION;
-
-const u256 Invalid256 = ~(u256)0;
+bytes const NullBytes;
+u256 const Invalid256 = ~(u256)0;
+std::string const EmptyString;
 
 void InvariantChecker::checkInvariants(HasInvariants const* _this, char const* _fn, char const* _file, int _line, bool _pre)
 {

@@ -4,6 +4,8 @@ find_package(MHD REQUIRED)
 
 set(CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_BUILD_TYPE=Release
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                # Build static lib but suitable to be included in a shared lib.
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
                -DBUILD_STATIC_LIBS=On
@@ -60,13 +62,15 @@ set(JSONRPCCPP_INCLUDE_DIR ${INSTALL_DIR}/include)
 file(MAKE_DIRECTORY ${JSONRPCCPP_INCLUDE_DIR})  # Must exist.
 
 add_library(JsonRpcCpp::Common STATIC IMPORTED)
-set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-common${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_CONFIGURATIONS Release)
+set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_LOCATION_RELEASE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-common${CMAKE_STATIC_LIBRARY_SUFFIX})
 set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_LINK_LIBRARIES JsonCpp)
 set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONRPCCPP_INCLUDE_DIR} ${JSONCPP_INCLUDE_DIR})
 add_dependencies(JsonRpcCpp::Common jsonrpccpp)
 
 add_library(JsonRpcCpp::Server STATIC IMPORTED)
-set_property(TARGET JsonRpcCpp::Server PROPERTY IMPORTED_LOCATION ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-server${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET JsonRpcCpp::Server PROPERTY IMPORTED_CONFIGURATIONS Release)
+set_property(TARGET JsonRpcCpp::Server PROPERTY IMPORTED_LOCATION_RELEASE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-server${CMAKE_STATIC_LIBRARY_SUFFIX})
 set_property(TARGET JsonRpcCpp::Server PROPERTY INTERFACE_LINK_LIBRARIES JsonRpcCpp::Common ${MHD_LIBRARY})
 set_property(TARGET JsonRpcCpp::Server PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${MHD_INCLUDE_DIR})
 add_dependencies(JsonRpcCpp::Server jsonrpccpp)

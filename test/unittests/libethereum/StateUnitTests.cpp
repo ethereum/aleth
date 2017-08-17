@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(LoadAccountCode)
 	State s{0};
 	s.createContract(addr);
 	uint8_t codeData[] = {'c', 'o', 'd', 'e'};
-	s.setNewCode(addr, {std::begin(codeData), std::end(codeData)});
+	s.setCode(addr, {std::begin(codeData), std::end(codeData)});
 	s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
 	auto& loadedCode = s.code(addr);

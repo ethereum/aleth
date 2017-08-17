@@ -1,7 +1,9 @@
 macro(configure_project)
 	# Default to RelWithDebInfo configuration if no configuration is explicitly specified.
-	set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type on single-configuration generators")
-
+	if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+	   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type on single-configuration generators" FORCE)
+	endif()
+	
 	option(BUILD_SHARED_LIBS "Build project libraries shared" OFF)
 
 	# Features:
@@ -93,7 +95,6 @@ macro(print_config)
 	message("-- TARGET_PLATFORM  Target platform                          ${CMAKE_SYSTEM_NAME}")
 	message("-- BUILD_SHARED_LIBS                                         ${BUILD_SHARED_LIBS}")
 	message("--------------------------------------------------------------- features")
-	message("--                  Hardware identification support          ${CPUID_FOUND}")
 	message("-- VMTRACE          VM execution tracing                     ${VMTRACE}")
 	message("-- PROFILING        Profiling support                        ${PROFILING}")
 	message("-- FATDB            Full database exploring                  ${FATDB}")

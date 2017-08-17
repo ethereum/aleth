@@ -57,6 +57,8 @@ TransactionException dev::eth::toTransactionException(Exception const& _e)
 		return TransactionException::NotEnoughCash;
 	if (!!dynamic_cast<BlockGasLimitReached const*>(&_e))
 		return TransactionException::BlockGasLimitReached;
+	if (!!dynamic_cast<AddressAlreadyUsed const*>(&_e))
+		return TransactionException::AddressAlreadyUsed;
 	// VM execution exceptions
 	if (!!dynamic_cast<BadInstruction const*>(&_e))
 		return TransactionException::BadInstruction;

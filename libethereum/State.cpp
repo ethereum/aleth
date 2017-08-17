@@ -21,21 +21,15 @@
 
 #include "State.h"
 
-#include <ctime>
 #include <boost/filesystem.hpp>
 #include <boost/timer.hpp>
-#include <libdevcore/CommonIO.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/TrieHash.h>
-#include <libevmcore/Instruction.h>
-#include <libethcore/Exceptions.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
 #include "Block.h"
-#include "CodeSizeCache.h"
 #include "Defaults.h"
 #include "ExtVM.h"
-#include "Executive.h"
 #include "TransactionQueue.h"
 
 using namespace std;
@@ -51,13 +45,14 @@ const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 namespace
 {
 
-void executeTransaction(Executive& _e, Transaction const& _t, OnOpFunc const& _onOp)
+/// @returns true when normally halted; false when exceptionally halted.
+bool executeTransaction(Executive& _e, Transaction const& _t, OnOpFunc const& _onOp)
 {
 	_e.initialize(_t);
 
 	if (!_e.execute())
 		_e.go(_onOp);
-	_e.finalize();
+	return _e.finalize();
 }
 
 }
@@ -88,7 +83,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 
 	if (_we == WithExisting::Kill)
 	{
-		cnote << "Killing state database (WithExisting::Kill).";
+		clog(StateDetail) << "Killing state database (WithExisting::Kill).";
 		boost::filesystem::remove_all(path + "/state");
 	}
 
@@ -119,7 +114,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 		}
 	}
 
-	ctrace << "Opened state DB.";
+	clog(StateDetail) << "Opened state DB.";
 	return OverlayDB(db);
 }
 
@@ -286,12 +281,26 @@ void State::incNonce(Address const& _addr)
 {
 	if (Account* a = account(_addr))
 	{
+		auto oldNonce = a->nonce();
 		a->incNonce();
-		m_changeLog.emplace_back(Change::Nonce, _addr);
+		m_changeLog.emplace_back(_addr, oldNonce);
 	}
 	else
 		// This is possible if a transaction has gas price 0.
 		createAccount(_addr, Account(requireAccountStartNonce() + 1, 0));
+}
+
+void State::setNonce(Address const& _addr, u256 const& _newNonce)
+{
+	if (Account* a = account(_addr))
+	{
+		auto oldNonce = a->nonce();
+		a->setNonce(_newNonce);
+		m_changeLog.emplace_back(_addr, oldNonce);
+	}
+	else
+		// This is possible when a contract is being created.
+		createAccount(_addr, Account(_newNonce, 0));
 }
 
 void State::addBalance(Address const& _id, u256 const& _amount)
@@ -386,6 +395,15 @@ void State::setStorage(Address const& _contract, u256 const& _key, u256 const& _
 	m_cache[_contract].setStorage(_key, _value);
 }
 
+void State::clearStorage(Address const& _contract)
+{
+	h256 const& oldHash{m_cache[_contract].baseRoot()};
+	if (oldHash == EmptyTrie)
+		return;
+	m_changeLog.emplace_back(Change::StorageRoot, _contract, oldHash);
+	m_cache[_contract].clearStorage();
+}
+
 map<h256, pair<u256, u256>> State::storage(Address const& _id) const
 {
 	map<h256, pair<u256, u256>> ret;
@@ -448,10 +466,10 @@ bytes const& State::code(Address const& _addr) const
 	return a->code();
 }
 
-void State::setNewCode(Address const& _address, bytes&& _code)
+void State::setCode(Address const& _address, bytes&& _code)
 {
-	m_cache[_address].setNewCode(std::move(_code));
-	m_changeLog.emplace_back(Change::NewCode, _address);
+	m_changeLog.emplace_back(_address, code(_address));
+	m_cache[_address].setCode(std::move(_code));
 }
 
 h256 State::codeHash(Address const& _a) const
@@ -502,17 +520,20 @@ void State::rollback(size_t _savepoint)
 		case Change::Storage:
 			account.setStorage(change.key, change.value);
 			break;
+		case Change::StorageRoot:
+			account.setStorageRoot(change.value);
+			break;
 		case Change::Balance:
 			account.addBalance(0 - change.value);
 			break;
 		case Change::Nonce:
-			account.setNonce(account.nonce() - 1);
+			account.setNonce(change.value);
 			break;
 		case Change::Create:
 			m_cache.erase(change.address);
 			break;
-		case Change::NewCode:
-			account.resetCode();
+		case Change::Code:
+			account.setCode(std::move(change.oldCode));
 			break;
 		case Change::Touch:
 			account.untouch();
@@ -538,7 +559,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	e.setResultRecipient(res);
 
 	u256 const startGasUsed = _envInfo.gasUsed();
-	executeTransaction(e, _t, onOp);
+	bool const statusCode = executeTransaction(e, _t, onOp);
 
 	bool removeEmptyAccounts = false;
 	switch (_p)
@@ -554,13 +575,13 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			break;
 	}
 
-	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("metropolisForkBlock") ?
-		TransactionReceipt(startGasUsed + e.gasUsed(), e.logs()) :
+	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("byzantiumForkBlock") ?
+		TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs()) :
 		TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs());
 	return make_pair(res, receipt);
 }
 
-void State::executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine)
+void State::executeBlockTransactions(Block const& _block, unsigned _txCount, LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine)
 {
 	u256 gasUsed = 0;
 	for (unsigned i = 0; i < _txCount; ++i)
@@ -659,7 +680,60 @@ State& dev::eth::createIntermediateState(State& o_s, Block const& _block, unsign
 	else
 	{
 		o_s.setRoot(_block.stateRootBeforeTx(0));
-		o_s.executeBlockTransactions(_block, _txIndex, _bc.lastHashes(_block.info().parentHash()), *_bc.sealEngine());
+		o_s.executeBlockTransactions(_block, _txIndex, _bc.lastBlockHashes(), *_bc.sealEngine());
 	}
 	return o_s;
 }
+
+template <class DB>
+AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
+{
+	AddressHash ret;
+	for (auto const& i: _cache)
+		if (i.second.isDirty())
+		{
+			if (!i.second.isAlive())
+				_state.remove(i.first);
+			else
+			{
+				RLPStream s(4);
+				s << i.second.nonce() << i.second.balance();
+
+				if (i.second.storageOverlay().empty())
+				{
+					assert(i.second.baseRoot());
+					s.append(i.second.baseRoot());
+				}
+				else
+				{
+					SecureTrieDB<h256, DB> storageDB(_state.db(), i.second.baseRoot());
+					for (auto const& j: i.second.storageOverlay())
+						if (j.second)
+							storageDB.insert(j.first, rlp(j.second));
+						else
+							storageDB.remove(j.first);
+					assert(storageDB.root());
+					s.append(storageDB.root());
+				}
+
+				if (i.second.hasNewCode())
+				{
+					h256 ch = i.second.codeHash();
+					// Store the size of the code
+					CodeSizeCache::instance().store(ch, i.second.code().size());
+					_state.db()->insert(ch, &i.second.code());
+					s << ch;
+				}
+				else
+					s << i.second.codeHash();
+
+				_state.insert(i.first, &s.out());
+			}
+			ret.insert(i.first);
+		}
+	return ret;
+}
+
+
+template AddressHash dev::eth::commit<OverlayDB>(AccountMap const& _cache, SecureTrieDB<Address, OverlayDB>& _state);
+template AddressHash dev::eth::commit<MemoryDB>(AccountMap const& _cache, SecureTrieDB<Address, MemoryDB>& _state);

@@ -148,13 +148,17 @@ All development goes in develop branch.
 ## Mining
 
 This project is **not suitable for Ethereum mining**. The support for GPU mining 
-has been dropped some time ago including the ethminer tool. Try using
-the fork https://github.com/genoil/cpp-ethereum.
+has been dropped some time ago including the ethminer tool. Use the ethminer tool from https://github.com/ethereum-mining/ethminer.
 
 ## Testing
 
 To run the tests, make sure you clone https://github.com/ethereum/tests and point the environment variable
 `ETHEREUM_TEST_PATH` to that path.
+
+## Documentation
+
+- [Internal documentation for developers](doc/index.rst).
+- [Outdated documentation for end users](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/).
 
 
 ## License

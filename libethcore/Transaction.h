@@ -147,6 +147,9 @@ public:
 	/// @returns true if the transaction was signed with zero signature
 	bool hasZeroSignature() const { return m_vrs && !m_vrs->s && !m_vrs->r; }
 
+	/// @returns true if the transaction uses EIP155 replay protection
+	bool isReplayProtected() const { return m_chainId != -4; }
+
 	/// @returns the signature of the transaction (the signature has the sender encoded in it)
 	/// @throws TransactionIsUnsigned if signature was not initialized
 	SignatureStruct const& signature() const;

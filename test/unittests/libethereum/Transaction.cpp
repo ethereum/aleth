@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(toTransactionExceptionConvert)
 
 BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
 {
-	TestBlockChain::s_sealEngineNetwork = eth::Network::MetropolisTest;
+	TestBlockChain::s_sealEngineNetwork = eth::Network::ByzantiumTest;
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 	TestBlockChain bc(genesis);
 
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
 	bc.addBlock(block);
 	BOOST_CHECK_MESSAGE(bc.interface().info().number() == 1, "Mining Block with zero transaction failed!");
 
-	//Transaction should be able to mine on METROPOLIS
+	//Transaction should be able to mine on BYZANTIUM
 	//Not implemented yet
 	//BOOST_CHECK_MESSAGE(bc.interface().transactions().size() == 1, "Failed importing zero transaction to block!");
 }

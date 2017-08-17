@@ -17,8 +17,9 @@
 /** @file ExtVMTest.cpp
  */
 
-#include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtestutils/TestLastBlockHashes.h>
 
 #include <libethereum/Block.h>
 #include <libethereum/ExtVM.h>
@@ -32,18 +33,18 @@ class ExtVMTestFixture: public TestOutputHelper
 {
 public:
 	ExtVMTestFixture():
-		networkSelector(Network::MetropolisTransitionTest),
+		networkSelector(Network::ByzantiumTransitionTest),
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),
 		blockchain(testBlockchain.interface())
 	{
 		TestBlock testBlock;
-		// block 1 - before Metropolis
+		// block 1 - before Byzantium
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 
-		// block 2 - first Metropolis block
+		// block 2 - first Byzantium block
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 	}
@@ -62,29 +63,31 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain);
 
-	EnvInfo envInfo(block.info(), {}, 0);
+	TestLastBlockHashes lastBlockHashes({});
+	EnvInfo envInfo(block.info(), lastBlockHashes, 0);
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 
 	BOOST_CHECK_EQUAL(extVM.blockHash(100), h256());
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashBeforeMetropolisReliesOnLastHashes)
+BOOST_AUTO_TEST_CASE(BlockhashBeforeByzantiumReliesOnLastHashes)
 {
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain);
-
-	LastHashes lastHashes{ h256("0xaaabbbccc"), h256("0xdddeeefff")};
-	EnvInfo envInfo(block.info(), lastHashes, 0);
+	
+	h256s lastHashes{h256("0xaaabbbccc"), h256("0xdddeeefff")};
+	TestLastBlockHashes lastBlockHashes(lastHashes);
+	EnvInfo envInfo(block.info(), lastBlockHashes, 0);
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 	h256 hash = extVM.blockHash(1);
 	BOOST_REQUIRE_EQUAL(hash, lastHashes[0]);
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInMetropolis)
+BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInByzantium)
 {
-	// BLOCKHASH starts to work through the call to a contract 256 block after Metro fork block
+	// BLOCKHASH starts to work through the call to a contract 256 block after Byzantium fork block
 	TestBlock testBlock;
 	for (int i = 0; i < 256; ++i)
 	{
@@ -95,8 +98,8 @@ BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInMetropolis)
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.sync(blockchain);
 
-	LastHashes lastHashes{};
-	EnvInfo envInfo(block.info(), lastHashes, 0);
+	TestLastBlockHashes lastBlockHashes({});
+	EnvInfo envInfo(block.info(), lastBlockHashes, 0);
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 

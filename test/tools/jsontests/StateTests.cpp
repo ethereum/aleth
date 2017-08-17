@@ -41,10 +41,17 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& _v, bool _fillin)
 {
+	BOOST_REQUIRE_MESSAGE(!_fillin || _v.get_obj().size() == 1,
+		TestOutputHelper::testFileName() + " A GeneralStateTest filler should contain only one test.");
+
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
+
+		if (_fillin)
+			BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::testFileName(),
+				TestOutputHelper::testFileName() + " contains a test with a different name '" + testname + "'" );
 
 		if (!TestOutputHelper::passTest(testname))
 			continue;
@@ -53,12 +60,11 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin == false && Options::get().fillchain)
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "transaction not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + " transaction not set!");
 
-		ImportTest importer(o, _fillin, testType::GeneralStateTest);
-		const State importedStatePost = importer.m_statePost;
+		ImportTest importer(o, testType::GeneralStateTest);
 
 		Listener::ExecTimeGuard guard{i.first};
 		importer.executeTest();
@@ -71,12 +77,12 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 			if (importer.exportTest(bytes()))
 				cerr << testname << endl;
 #else
-			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "You can not fill tests when FATDB is switched off"));
+			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + " You can not fill tests when FATDB is switched off"));
 #endif
 		}
 		else
 		{
-			BOOST_REQUIRE(o.count("post") > 0);
+			BOOST_REQUIRE_MESSAGE(o.count("post") > 0, testname + " post not set!");
 
 			//check post hashes against cpp client on all networks
 			mObject post = o["post"].get_obj();
@@ -86,6 +92,8 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 				for (auto const& exp: i->second.get_array())
 				{
 					if (!Options::get().singleTestNet.empty() && i->first != Options::get().singleTestNet)
+						continue;
+					if (test::isDisabledNetwork(test::stringToNetId(i->first)))
 						continue;
 					importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first);
 				}
@@ -104,20 +112,17 @@ public:
 	generaltestfixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
-		if (casename == "stBoundsTest" && !test::Options::get().memory)
-			return;
-		if (casename == "stMemoryStressTest" && !test::Options::get().memory)
-			return;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
 			return;
 		fillAllFilesInFolder(casename);
 	}
 
-	void fillAllFilesInFolder(string _folder)
+	void fillAllFilesInFolder(string const& _folder)
 	{
 		std::string fillersPath = test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
 
-		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+		string filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
 		int fileCount = files.size();
 
 		if (test::Options::get().filltests)
@@ -125,7 +130,10 @@ public:
 		test::TestOutputHelper::initTest(fileCount);
 
 		for (auto const& file: files)
+		{
+			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 			test::executeTests(file.filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
+		}
 
 		test::TestOutputHelper::finishTest();
 	}
@@ -134,7 +142,6 @@ public:
 BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
 
 //Frontier Tests
-BOOST_AUTO_TEST_CASE(stBoundsTest){}
 BOOST_AUTO_TEST_CASE(stCallCodes){}
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest){}
 BOOST_AUTO_TEST_CASE(stExample){}

@@ -22,7 +22,6 @@
 
 #include "JsonHelper.h"
 
-#include <libevmcore/Instruction.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
@@ -185,7 +184,10 @@ Json::Value toJson(dev::eth::TransactionSkeleton const& _t)
 Json::Value toJson(dev::eth::TransactionReceipt const& _t)
 {
 	Json::Value res;
-	res["stateRoot"] = toJS(_t.stateRoot());
+	if (_t.hasStatusCode())
+		res["statusCode"] = toJS(_t.statusCode());
+	else
+		res["stateRoot"] = toJS(_t.stateRoot());
 	res["gasUsed"] = toJS(_t.gasUsed());
 	res["bloom"] = toJS(_t.bloom());
 	res["log"] = dev::toJson(_t.log());

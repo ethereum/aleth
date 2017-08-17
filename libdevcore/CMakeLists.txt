@@ -3,12 +3,12 @@ file(GLOB HEADERS "*.h")
 
 add_library(devcore ${SRC_LIST} ${HEADERS})
 
-target_include_directories(devcore PRIVATE ..)
-target_include_directories(devcore SYSTEM PUBLIC ${BOOST_INCLUDE_DIR})
-
 add_dependencies(devcore BuildInfo.h)
 
-target_link_libraries(devcore Boost::Filesystem Boost::Random Boost::Thread)
+target_include_directories(devcore PRIVATE ..)
+# Needed to prevent including system-level boost headers:
+target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
+target_link_libraries(devcore Boost::filesystem Boost::system Boost::random Boost::thread)
 
 if (ROCKSDB)
     find_package(RocksDB)

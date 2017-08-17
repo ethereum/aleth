@@ -88,15 +88,10 @@ public:
 	virtual ExecutionResult call(Address const& _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) override;
 	using Interface::call;
 
-	/// Makes the given create. Nothing is recorded into the state.
-	virtual ExecutionResult create(Address const& _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) override;
-
 	/// Estimate gas usage for call/create.
 	/// @param _maxGas An upper bound value for estimation, if not provided default value of c_maxGasEstimate will be used.
 	/// @param _callback Optional callback function for progress reporting
 	virtual std::pair<u256, ExecutionResult> estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, int64_t _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback) override;
-
-	using Interface::create;
 
 	using Interface::balanceAt;
 	using Interface::countAt;
@@ -148,7 +143,7 @@ public:
 	virtual BlockHeader pendingInfo() const override;
 	virtual BlockDetails pendingDetails() const override;
 
-	virtual EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(EnvInfo(pendingInfo())); }
+	virtual EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(pendingInfo().number()); }
 
 	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }
 	virtual ImportResult injectBlock(bytes const& _block) override;

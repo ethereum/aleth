@@ -99,8 +99,9 @@ private:
 
 	unsigned m_idleWaitMs = 0;
 	
-	mutable Mutex x_work;						///< Lock for the network existance.
+	mutable Mutex x_work;						///< Lock for the network existance and m_state_notifier.
 	std::unique_ptr<std::thread> m_work;		///< The network thread.
+    mutable std::condition_variable m_state_notifier; //< Notification when m_state changes.
 	std::atomic<WorkerState> m_state = {WorkerState::Starting};
 };
 

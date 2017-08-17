@@ -42,6 +42,7 @@ Ethash::Ethash()
 	m_farm.setSealers(sealers);
 	m_farm.onSolutionFound([=](EthashProofOfWork::Solution const& sol)
 	{
+		std::unique_lock<Mutex> l(m_submitLock);
 //		cdebug << m_farm.work().seedHash << m_farm.work().headerHash << sol.nonce << EthashAux::eval(m_farm.work().seedHash, m_farm.work().headerHash, sol.nonce).value;
 		setMixHash(m_sealing, sol.mixHash);
 		setNonce(m_sealing, sol.nonce);
@@ -52,10 +53,17 @@ Ethash::Ethash()
 		{
 			RLPStream ret;
 			m_sealing.streamRLP(ret);
+			l.unlock();
 			m_onSealGenerated(ret.out());
 		}
 		return true;
 	});
+}
+
+Ethash::~Ethash()
+{
+	// onSolutionFound closure sometimes has references to destroyed members.
+	m_farm.onSolutionFound({});
 }
 
 strings Ethash::sealers() const
@@ -144,13 +152,13 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	}
 }
 
-void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, EnvInfo const& _env) const
+void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _header, u256 const& _startGasUsed) const
 {
-	SealEngineFace::verifyTransaction(_ir, _t, _env);
+	SealEngineFace::verifyTransaction(_ir, _t, _header, _startGasUsed);
 
 	if (_ir & ImportRequirements::TransactionSignatures)
 	{
-		if (_env.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		if (_header.number() >= chainParams().u256Param("EIP158ForkBlock"))
 		{
 			int chainID(chainParams().u256Param("chainID"));
 			_t.checkChainId(chainID);
@@ -158,13 +166,12 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 		else
 			_t.checkChainId(-4);
 	}
-	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_env)) > _t.gas())
-		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
+	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_header.number())) > _t.gas())
+		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError((bigint)(_t.baseGasRequired(evmSchedule(_header.number()))), (bigint)_t.gas()));
 
 	// Avoid transactions that would take us beyond the block gas limit.
-	u256 startGasUsed = _env.gasUsed();
-	if (startGasUsed + (bigint)_t.gas() > _env.gasLimit())
-		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_env.gasLimit() - startGasUsed), (bigint)_t.gas()));
+	if (_startGasUsed + (bigint)_t.gas() > _header.gasLimit())
+		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_header.gasLimit() - _startGasUsed), (bigint)_t.gas()));
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
@@ -200,9 +207,9 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	else
 	{
 		bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
-		bigint const adjFactor = _bi.number() < chainParams().u256Param("metropolisForkBlock") ?
+		bigint const adjFactor = _bi.number() < chainParams().u256Param("byzantiumForkBlock") ?
 			max<bigint>(1 - timestampDiff / 10, -99) : // Homestead-era difficulty adjustment
-			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Metropolis-era difficulty adjustment
+			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Byzantium-era difficulty adjustment
 
 		target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
 	}
@@ -273,10 +280,13 @@ bool Ethash::verifySeal(BlockHeader const& _bi) const
 
 void Ethash::generateSeal(BlockHeader const& _bi)
 {
-	m_sealing = _bi;
-	m_farm.setWork(m_sealing);
-	m_farm.start(m_sealer);
-	m_farm.setWork(m_sealing);		// TODO: take out one before or one after...
+	{
+		Guard l(m_submitLock);
+		m_sealing = _bi;
+		m_farm.setWork(m_sealing);
+		m_farm.start(m_sealer);
+		m_farm.setWork(m_sealing);		// TODO: take out one before or one after...
+	}
 	bytes shouldPrecompute = option("precomputeDAG");
 	if (!shouldPrecompute.empty() && shouldPrecompute[0] == 1)
 		ensurePrecomputed((unsigned)_bi.number());

@@ -26,11 +26,14 @@ branches:
   only:
     - master
     - develop
+    - appveyor
 os: Visual Studio 2015
 configuration:
     - RelWithDebInfo
 environment:
     TESTS: On
+    GITHUB_USER_PASSWORD:
+      secure: 7TuNppxpvI3M/IF1PfvzZ8LluCeCQAsdFoJY+KhNv/pe/rAw5HEsTjqdbyM1mEtd
 clone_script:
 # We have to overwrite the clone script to update submodules before
 # the cache invalidation check.
@@ -46,7 +49,6 @@ clone_script:
           git submodule -q update --init --recursive
       }
 cache:
-#    - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
     - deps
 #RDP LOGIN details for trouble shooting
 #init:
@@ -64,6 +66,12 @@ build_script:
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\release.bat %CONFIGURATION% %ETHEREUM_DEPS_PATH% %TESTS%
+after_build:
+  ps: |
+    if (-not $env:appveyor_pull_request_number) {
+      pip install requests
+      cmake --build build --target hunter_upload_cache
+    }
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\tests.bat %TESTS% %CONFIGURATION% %APPVEYOR_BUILD_FOLDER% %ETHEREUM_DEPS_PATH%

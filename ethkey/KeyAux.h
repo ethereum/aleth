@@ -25,7 +25,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
-#include <iostream>
+#include <iosfwd>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include <libdevcore/SHA3.h>

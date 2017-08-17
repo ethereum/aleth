@@ -29,10 +29,12 @@ branches:
     only:
         - develop
         - release
+        - /travis/
 env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
         - TRAVIS_TESTS=On
+        - secure: "Nm9HEvhW8wtbF9v44g2Vo2CfX8cFlw3UWutHMmVl5nrcri34BVPXulsPF3CrIdoGgdBQvGxzNmbmAgi0KokaWhLZ2WvuDUXRAU8wuU3SB/AV7hNIGFZDqgk1LBBzwaFngqDCqqIQ29v2Z59s3y8qakmPQbR8eNJ1YAc2F9O8iVI="
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
@@ -107,12 +109,12 @@ cache:
         # build external dependencies next build.
         - $TRAVIS_BUILD_DIR/deps
 install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then clang --version; brew install llvm; $(brew --prefix llvm)/bin/clang --version; export PATH=$(brew --prefix llvm)/bin:$PATH; export CC=$(brew --prefix llvm)/bin/clang; export CXX=$(brew --prefix llvm)/bin/clang++; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then clang --version; travis_wait 150 brew install llvm; $(brew --prefix llvm)/bin/clang --version; export PATH=$(brew --prefix llvm)/bin:$PATH; export CC=$(brew --prefix llvm)/bin/clang; export CXX=$(brew --prefix llvm)/bin/clang++; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh; fi
     - ./scripts/install_deps.sh
 before_script:
     - ./scripts/prepare_ccache.sh
-    - ./scripts/build.sh $TRAVIS_BUILD_TYPE
+    - travis_wait 150 ./scripts/build.sh $TRAVIS_BUILD_TYPE
     - ./scripts/cleanup_ccache.sh
 script:
     - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
@@ -121,6 +123,9 @@ after_success:
     - make coverage.data
     # Get CodeCov script (fixed commit) and upload coverage report.
     - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/e7985c0ea6dd4d365403f389337f3b43b517fb35/codecov) -X fix -f coverage.data
+after_script:
+    # Hunter: upload cache to the cache server.
+    - if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" ]]; then pip install requests && make -C $TRAVIS_BUILD_DIR/build hunter_upload_cache; fi
 deploy:
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that

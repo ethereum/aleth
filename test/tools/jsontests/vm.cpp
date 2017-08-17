@@ -20,12 +20,14 @@
  * vm test functions.
  */
 
-#include <boost/filesystem.hpp>
-
+#include "vm.h"
+#include <test/tools/libtestutils/TestLastBlockHashes.h>
+#include <libethereum/ChainParams.h>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include <libevm/ExtVMFace.h>
-#include "vm.h"
+#include <boost/filesystem.hpp>
+
 
 using namespace std;
 using namespace json_spirit;
@@ -37,10 +39,9 @@ FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX:
 	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, _depth)
 {}
 
-std::pair<h160, eth::owning_bytes_ref> FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
+std::pair<h160, eth::owning_bytes_ref> FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, Instruction , u256, OnOpFunc const&)
 {
 	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
-
 	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
 	callcreates.push_back(t);
 	return {na, eth::owning_bytes_ref{}};
@@ -80,15 +81,15 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 mObject FakeExtVM::exportEnv()
 {
 	mObject ret;
-	ret["currentDifficulty"] = toCompactHex(envInfo().difficulty(), HexPrefix::Add, 1);
-	ret["currentTimestamp"] =  toCompactHex(envInfo().timestamp(), HexPrefix::Add, 1);
-	ret["currentCoinbase"] = "0x" + toString(envInfo().author());
-	ret["currentNumber"] = toCompactHex(envInfo().number(), HexPrefix::Add, 1);
-	ret["currentGasLimit"] = toCompactHex(envInfo().gasLimit(), HexPrefix::Add, 1);
+	ret["currentDifficulty"] = toCompactHexPrefixed(envInfo().difficulty(), 1);
+	ret["currentTimestamp"] =  toCompactHexPrefixed(envInfo().timestamp(), 1);
+	ret["currentCoinbase"] = toHexPrefixed(envInfo().author());
+	ret["currentNumber"] = toCompactHexPrefixed(envInfo().number(), 1);
+	ret["currentGasLimit"] = toCompactHexPrefixed(envInfo().gasLimit(), 1);
 	return ret;
 }
 
-EnvInfo FakeExtVM::importEnv(mObject& _o)
+EnvInfo FakeExtVM::importEnv(mObject& _o, LastBlockHashesFace const& _lastBlockHashes)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
 	assert(_o.count("currentGasLimit") > 0);
@@ -99,13 +100,13 @@ EnvInfo FakeExtVM::importEnv(mObject& _o)
 	auto gasLimit = toInt(_o["currentGasLimit"]);
 	assert(gasLimit <= std::numeric_limits<int64_t>::max());
 
-	EnvInfo info;
-	info.setGasLimit(gasLimit.convert_to<int64_t>());
-	info.setDifficulty(toInt(_o["currentDifficulty"]));
-	info.setTimestamp(toInt(_o["currentTimestamp"]));
-	info.setAuthor(Address(_o["currentCoinbase"].get_str()));
-	info.setNumber(toInt(_o["currentNumber"]));
-	return info;
+	BlockHeader blockHeader;
+	blockHeader.setGasLimit(gasLimit.convert_to<int64_t>());
+	blockHeader.setDifficulty(toInt(_o["currentDifficulty"]));
+	blockHeader.setTimestamp(toInt(_o["currentTimestamp"]));
+	blockHeader.setAuthor(Address(_o["currentCoinbase"].get_str()));
+	blockHeader.setNumber(toInt(_o["currentNumber"]));
+	return EnvInfo(blockHeader, _lastBlockHashes, 0);
 }
 
 mObject FakeExtVM::exportState()
@@ -114,16 +115,16 @@ mObject FakeExtVM::exportState()
 	for (auto const& a: addresses)
 	{
 		mObject o;
-		o["balance"] = toCompactHex(get<0>(a.second), HexPrefix::Add, 1);
-		o["nonce"] = toCompactHex(get<1>(a.second), HexPrefix::Add, 1);
+		o["balance"] = toCompactHexPrefixed(get<0>(a.second), 1);
+		o["nonce"] = toCompactHexPrefixed(get<1>(a.second), 1);
 		{
 			mObject store;
 			for (auto const& s: get<2>(a.second))
-				store[toCompactHex(s.first, HexPrefix::Add, 1)] = toCompactHex(s.second, HexPrefix::Add, 1);
+				store[toCompactHexPrefixed(s.first, 1)] = toCompactHexPrefixed(s.second, 1);
 			o["storage"] = store;
 		}
-		o["code"] = toHex(get<3>(a.second), 2, HexPrefix::Add);
-		ret["0x" + toString(a.first)] = o;
+		o["code"] = toHexPrefixed(get<3>(a.second));
+		ret[toHexPrefixed(a.first)] = o;
 	}
 	return ret;
 }
@@ -152,14 +153,14 @@ void FakeExtVM::importState(mObject& _object)
 mObject FakeExtVM::exportExec()
 {
 	mObject ret;
-	ret["address"] = "0x" + toString(myAddress);
-	ret["caller"] = "0x" + toString(caller);
-	ret["origin"] = "0x" + toString(origin);
-	ret["value"] = toCompactHex(value, HexPrefix::Add, 1);
-	ret["gasPrice"] = toCompactHex(gasPrice, HexPrefix::Add, 1);
-	ret["gas"] = toCompactHex(execGas, HexPrefix::Add, 1);
-	ret["data"] = toHex(data, 2, HexPrefix::Add);
-	ret["code"] = toHex(code, 2, HexPrefix::Add);
+	ret["address"] = toHexPrefixed(myAddress);
+	ret["caller"] = toHexPrefixed(caller);
+	ret["origin"] = toHexPrefixed(origin);
+	ret["value"] = toCompactHexPrefixed(value, 1);
+	ret["gasPrice"] = toCompactHexPrefixed(gasPrice, 1);
+	ret["gas"] = toCompactHexPrefixed(execGas, 1);
+	ret["data"] = toHexPrefixed(data);
+	ret["code"] = toHexPrefixed(code);
 	return ret;
 }
 
@@ -201,10 +202,10 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = tx.isCreation() ? "" : "0x" + toString(tx.receiveAddress());
-		o["gasLimit"] = toCompactHex(tx.gas(), HexPrefix::Add, 1);
-		o["value"] = toCompactHex(tx.value(), HexPrefix::Add, 1);
-		o["data"] = toHex(tx.data(), 2, HexPrefix::Add);
+		o["destination"] = tx.isCreation() ? "" : toHexPrefixed(tx.receiveAddress());
+		o["gasLimit"] = toCompactHexPrefixed(tx.gas(), 1);
+		o["value"] = toCompactHexPrefixed(tx.value(), 1);
+		o["data"] = toHexPrefixed(tx.data());
 		ret.push_back(o);
 	}
 	return ret;
@@ -307,11 +308,14 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 			continue;
 		}
 
-		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("exec") > 0, testname + "exec not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
+		BOOST_REQUIRE_MESSAGE(o.count("exec") > 0, testname + " exec not set!");
+		if (! _fillin)
+			BOOST_REQUIRE_MESSAGE(o.count("expect") == 0, testname + " expect set!");
 
-		eth::EnvInfo env = FakeExtVM::importEnv(o["env"].get_obj());
+		TestLastBlockHashes lastBlockHashes(h256s(256, h256()));
+		eth::EnvInfo env = FakeExtVM::importEnv(o["env"].get_obj(), lastBlockHashes);
 		FakeExtVM fev(env);
 		fev.importState(o["pre"].get_obj());
 
@@ -376,37 +380,52 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 		{
 			o["env"] = mValue(fev.exportEnv());
 			o["exec"] = mValue(fev.exportExec());
-			if (!vmExceptionOccured)
+			if (vmExceptionOccured)
+			{
+				if (o.count("expect") > 0)
+				{
+					BOOST_REQUIRE_MESSAGE(o.count("expect") == 1, testname + " multiple expect set!");
+					State postState(State::Null);
+					State expectState(State::Null);
+					AccountMaskMap expectStateMap;
+					ImportTest::importState(mValue(fev.exportState()).get_obj(), postState);
+					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
+					ImportTest::compareStates(expectState, postState, expectStateMap, WhenError::Throw);
+					o.erase(o.find("expect"));
+				}
+				BOOST_REQUIRE_MESSAGE(o.count("expect") == 0, testname + " expect should have been erased!");
+			}
+			else
 			{
 				o["post"] = mValue(fev.exportState());
 
 				if (o.count("expect") > 0)
 				{
+					BOOST_REQUIRE_MESSAGE(o.count("expect") == 1, testname + " multiple expect set!");
+
 					State postState(State::Null);
 					State expectState(State::Null);
 					AccountMaskMap expectStateMap;
 					ImportTest::importState(o["post"].get_obj(), postState);
 					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
-					ImportTest::compareStates(expectState, postState, expectStateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);
+					ImportTest::compareStates(expectState, postState, expectStateMap, WhenError::Throw);
 					o.erase(o.find("expect"));
 				}
 
+				BOOST_REQUIRE_MESSAGE(o.count("expect") == 0, testname + " expect should have been erased!");
+
 				o["callcreates"] = fev.exportCallCreates();
-				o["out"] = output.size() > 4096 ? "#" + toString(output.size()) : toHex(output, 2, HexPrefix::Add);
+				o["out"] = output.size() > 4096 ? "#" + toString(output.size()) : toHexPrefixed(output);
 
 				// compare expected output with post output
 				if (o.count("expectOut") > 0)
 				{
 					std::string warning = " Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
-					if (Options::get().checkstate)
-						BOOST_CHECK_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
-					else
-						BOOST_WARN_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
-
+					BOOST_CHECK_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
 					o.erase(o.find("expectOut"));
 				}
 
-				o["gas"] = toCompactHex(fev.gas, HexPrefix::Add, 1);
+				o["gas"] = toCompactHexPrefixed(fev.gas, 1);
 				o["logs"] = exportLog(fev.sub.logs);
 			}
 		}
@@ -422,7 +441,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_REQUIRE(o.count("gas") > 0);
 				BOOST_REQUIRE(o.count("logs") > 0);
 
-				dev::test::FakeExtVM test(eth::EnvInfo{});
+				dev::test::FakeExtVM test(eth::EnvInfo{BlockHeader{}, lastBlockHashes, 0});
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
 				test.sub.logs = importLog(o["logs"].get_array());

@@ -34,11 +34,10 @@
 #include <array>
 #include <sstream>
 #include <string>
-#include <iostream>
+#include <iosfwd>
 #include <chrono>
 #include "Common.h"
 #include "CommonData.h"
-#include "Base64.h"
 
 namespace dev
 {
@@ -77,12 +76,11 @@ std::string memDump(bytes const& _bytes, unsigned _width = 8, bool _html = false
 template <class S, class T> struct StreamOut { static S& bypass(S& _out, T const& _t) { _out << _t; return _out; } };
 template <class S> struct StreamOut<S, uint8_t> { static S& bypass(S& _out, uint8_t const& _t) { _out << (int)_t; return _out; } };
 
-inline std::ostream& operator<<(std::ostream& _out, bytes const& _e) { _out << toHex(_e, 2, HexPrefix::Add); return _out; }
+inline std::ostream& operator<<(std::ostream& _out, bytes const& _e) { _out << toHexPrefixed(_e); return _out; }
 template <class T> inline std::ostream& operator<<(std::ostream& _out, std::vector<T> const& _e);
 template <class T, std::size_t Z> inline std::ostream& operator<<(std::ostream& _out, std::array<T, Z> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::pair<T, U> const& _e);
 template <class T> inline std::ostream& operator<<(std::ostream& _out, std::list<T> const& _e);
-template <class T1, class T2, class T3> inline std::ostream& operator<<(std::ostream& _out, std::tuple<T1, T2, T3> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::map<T, U> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::unordered_map<T, U> const& _e);
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::set<T, U> const& _e);
@@ -262,11 +260,17 @@ template <class _S, class _T> _S& operator<<(_S& _out, std::shared_ptr<_T> const
 
 /// Converts arbitrary value to string representation using std::stringstream.
 template <class _T>
-std::string toString(_T const& _t)
+inline std::string toString(_T const& _t)
 {
 	std::ostringstream o;
 	o << _t;
 	return o.str();
+}
+
+template <>
+inline std::string toString<std::string>(std::string const& _s)
+{
+	return _s;
 }
 
 }

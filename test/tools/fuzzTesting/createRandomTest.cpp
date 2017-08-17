@@ -63,30 +63,7 @@ int createRandomTest(std::vector<char*> const& _parameters)
 
 		if (arg == "--fulloutput")
 			options.fulloutput = true;
-		else
-		if (arg == "--checktest" || arg == "--filltest")
-		{
-			std::string s = options.rCheckTest;
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Error! Content of argument is empty! (Usage -checktest textstream)");
-
-			if (arg == "--filltest")
-			{
-				testFillString = s;
-				filltest = true;
-			}
-			else
-			{
-				if (s.find(".json") != std::string::npos)
-				{
-					boost::filesystem::path p(__FILE__);
-					s = asString(dev::contents(s));
-				}
-				read_string(s, testmValue);
-				checktest = true;
-			}
-		}
-		else
-		if (arg == "--debug")
+		else if (arg == "--debug")
 			debug = true;
 		else
 		if (arg == "--filldebug")
@@ -208,84 +185,99 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 /// Parse Test string replacing keywords to fuzzed values
 void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap)
 {
-	dev::test::RandomCodeOptions options;
-	options.setWeight(dev::eth::Instruction::STOP, 10);		//default 50
-	options.setWeight(dev::eth::Instruction::SSTORE, 70);
-	options.setWeight(dev::eth::Instruction::CALL, 75);
-	options.setWeight(dev::eth::Instruction::CALLCODE, 55);
-	options.addAddress(dev::Address("0xffffffffffffffffffffffffffffffffffffffff"));
-	options.addAddress(dev::Address("0x1000000000000000000000000000000000000000"));
-	options.addAddress(dev::Address("0x095e7baea6a6c7c4c2dfeb977efac326af552d87"));
-	options.addAddress(dev::Address("0x945304eb96065b2a98b57a48a06ae28d285a71b5"));
-	options.addAddress(dev::Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"));
-	options.addAddress(dev::Address("0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000001"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000002"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000003"));
-	options.addAddress(dev::Address("0x0000000000000000000000000000000000000004"));
-	options.smartCodeProbability = 60;
-
+	dev::test::RandomCodeOptions options; //use default options
 	std::vector<std::string> types = getTypes();
 
 	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
 		types.push_back(it->first);
 
-	for (unsigned i = 0; i < types.size(); i++)
+	for (auto const& type: types)
 	{
-		std::size_t pos = _test.find(types.at(i));
+		std::size_t pos = _test.find(type);
 		while (pos != std::string::npos)
 		{
-			if (types.at(i) == "[RLP]")
+			std::string replace;
+			if (type == "[RLP]")
 			{
 				std::string debug;
 				int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;
-				_test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));
+				replace = dev::test::RandomCode::rndRLPSequence(randomDepth, debug);
 				cnote << debug;
 			}
-			else
-			if (types.at(i) == "[CODE]")
-				_test.replace(pos, 6, "0x"+dev::test::RandomCode::generate(10, options));
-			else
-			if (types.at(i) == "[HEX]")
-				_test.replace(pos, 5, dev::test::RandomCode::randomUniIntHex());
-			else
-			if (types.at(i) == "[HEX32]")
-				_test.replace(pos, 7, dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max()));
-			else
-			if (types.at(i) == "[GASLIMIT]")
-				_test.replace(pos, 10, dev::test::RandomCode::randomUniIntHex(dev::u256("3000000000")));
-			else
-			if (types.at(i) == "[HASH20]")
-				_test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(20));
-			else
-			if (types.at(i) == "[0xHASH32]")
-				_test.replace(pos, 10, "0x" + dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[HASH32]")
-				_test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(32));
-			else
-			if (types.at(i) == "[V]")
+			else if (type == "[CODE]")
+				replace = dev::test::RandomCode::generate(10, options);
+			else if (type == "[HEX]")
+				replace = dev::test::RandomCode::randomUniIntHex();
+			else if (type == "[HEX32]")
+				replace = dev::test::RandomCode::randomUniIntHex(0, std::numeric_limits<uint32_t>::max());
+			else if (type == "[HASH20]")
+				replace = dev::test::RandomCode::rndByteSequence(20);
+			else if (type == "[HASH32]")
+				replace = dev::test::RandomCode::rndByteSequence(32);
+			else if (type == "[0xHASH32]")
+				replace = "0x" + dev::test::RandomCode::rndByteSequence(32);
+			else if (type == "[V]")
 			{
-				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
+				int random = test::RandomCode::randomPercent();
 				if (random < 30)
-					_test.replace(pos, 3, "0x1c");
+					replace = "0x1c";
+				else if (random < 60)
+					replace = "0x1d";
 				else
-				if (random < 60)
-					_test.replace(pos, 3, "0x1d");
-				else
-					_test.replace(pos, 3, "0x" + dev::test::RandomCode::rndByteSequence(1));
+					replace = "0x" + dev::test::RandomCode::rndByteSequence(1);
 			}
+			else if (type == "[BLOCKGASLIMIT]")
+				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
+			else if (type == "[DESTADDRESS]")
+			{
+				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::CallOnlyOrStateOrCreate);
+				if (address != ZeroAddress) //else transaction creation
+					replace = "0x" + toString(address);
+			}
+			else if (type == "[ADDRESS]")
+				replace = toString(options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
+			else if (type == "[0xADDRESS]")
+				replace = "0x" + toString(options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
+			else if (type == "[TRANSACTIONGASLIMIT]")
+				replace = test::RandomCode::randomUniIntHex(dev::u256("5000"), dev::u256("10000000"));
+			else if (type == "[GASPRICE]")
+				replace = test::RandomCode::randomUniIntHex(0, dev::u256("10"));
 			else
-				_test.replace(pos, types.at(i).size(), _varMap.at(types.at(i)));
+			{
+				//Replace type from varMap if varMap is set
+				if (_varMap.count(type))
+					replace = _varMap.at(type);
+				else
+					BOOST_ERROR("Skipping undeclared type: " + type);
+			}
 
-			pos = _test.find(types.at(i));
+			if (replace.empty() && type != "[DESTADDRESS]" && type != "[CODE]")
+				BOOST_ERROR("Empty replace of type occured: " + type);
+
+			_test.replace(pos, type.length(), replace);
+			pos = _test.find(type);
 		}
 	}
 }
 
 std::vector<std::string> dev::test::RandomCode::getTypes()
 {
-	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]"};
+	return {
+		"[RLP]",				//Random RLP String
+		"[CODE]",				//Random bytecode (could be empty string)
+		"[HEX]",				//Random hex value string 0x...  max value uint64
+		"[HEX32]",				//Random hex value string 0x...  max value uint32
+		"[HASH20]",				//Random hash 20 byte length
+		"[HASH32]",				//Random hash 32 byte length
+		"[0xHASH32]",			//Random hash string 0x...  32 byte length
+		"[V]",					//Random V value for transaction sig. could be invalid.
+		"[BLOCKGASLIMIT]",		//Random block gas limit with max of 2**55-1
+		"[DESTADDRESS]",		//Random destination address for transaction (could be empty string)
+		"[ADDRESS]",			//Random account address
+		"[0xADDRESS]",			//Random account address
+		"[TRANSACTIONGASLIMIT]", //Random reasonable gas limit for a transaction
+		"[GASPRICE]"			//Random reasonable gas price for transaction (could be 0)
+	};
 }
 
 std::string const c_testExampleTransactionTest = R"(
@@ -311,22 +303,36 @@ std::string const c_testExampleStateTest = R"(
 {
 	"randomStatetest" : {
 		"env" : {
-		"currentCoinbase" : "[HASH20]",
-		"currentDifficulty" : "[HEX]",
-		"currentGasLimit" : "[GASLIMIT]",
-		"currentNumber" : "[HEX32]",
-		"currentTimestamp" : "[HEX]",
+		"currentCoinbase" : "[0xADDRESS]",
+		"currentDifficulty" : "0x20000",
+		"currentGasLimit" : "[BLOCKGASLIMIT]",
+		"currentNumber" : "1",
+		"currentTimestamp" : "1000",
 		"previousHash" : "[HASH32]"
 		},
 	"pre" : {
-		"095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+		"[ADDRESS]" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",
 			"storage" : {
 			}
 		},
-		"945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+		"[ADDRESS]" : {
+			"balance" : "[HEX]",
+			"code" : "[CODE]",
+			"nonce" : "[V]",
+			"storage" : {
+			}
+		},
+		"[ADDRESS]" : {
+			"balance" : "[HEX]",
+			"code" : "[CODE]",
+			"nonce" : "[V]",
+			"storage" : {
+			}
+		},
+		"[ADDRESS]" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",
@@ -334,7 +340,7 @@ std::string const c_testExampleStateTest = R"(
 			}
 		},
 		"a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-			"balance" : "[HEX]",
+			"balance" : "[BALANCE]",
 			"code" : "0x",
 			"nonce" : "0",
 			"storage" : {
@@ -342,13 +348,19 @@ std::string const c_testExampleStateTest = R"(
 		}
 	},
 	"transaction" : {
-		"data" : "[CODE]",
-		"gasLimit" : "[HEX]",
-		"gasPrice" : "[HEX32]",
+		"data" : [
+			"[CODE]"
+		],
+		"gasLimit" : [
+			"[TRANSACTIONGASLIMIT]"
+		],
+		"gasPrice" : "[GASPRICE]",
 		"nonce" : "0",
 		"secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-		"to" : "0x095e7baea6a6c7c4c2dfeb977efac326af552d87",
-		"value" : "[HEX]"
+		"to" : "[DESTADDRESS]",
+		"value" : [
+			"[HEX32]"
+		]
 		}
 	}
 }
@@ -360,7 +372,7 @@ std::string const c_testExampleVMTest = R"(
 		"env" : {
 				"previousHash" : "[HASH32]",
 				"currentNumber" : "[HEX]",
-				"currentGasLimit" : "[GASLIMIT]",
+				"currentGasLimit" : "[BLOCKGASLIMIT]",
 				"currentDifficulty" : "[HEX]",
 				"currentTimestamp" : "[HEX]",
 				"currentCoinbase" : "[HASH20]"

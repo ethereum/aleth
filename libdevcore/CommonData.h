@@ -42,22 +42,36 @@ enum class WhenError
 	Throw = 1,
 };
 
-enum class HexPrefix
+template <class Iterator>
+std::string toHex(Iterator _it, Iterator _end, std::string _prefix)
 {
-	DontAdd = 0,
-	Add = 1,
-};
-/// Convert a series of bytes to the corresponding string of hex duplets.
-/// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
+	typedef std::iterator_traits<Iterator> traits;
+	static_assert(sizeof(typename traits::value_type) == 1, "toHex needs byte-sized element type");
+
+	static char const* hexdigits = "0123456789abcdef";
+	size_t off = _prefix.size();
+	std::string hex(std::distance(_it, _end)*2 + off, '0');
+	hex.replace(0, off, _prefix);
+	for (; _it != _end; _it++)
+	{
+		hex[off++] = hexdigits[(*_it >> 4) & 0x0f];
+		hex[off++] = hexdigits[*_it & 0x0f];
+	}
+	return hex;
+}
+
+/// Convert a series of bytes to the corresponding hex string.
 /// @example toHex("A\x69") == "4169"
-template <class T>
-std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd)
+template <class T> std::string toHex(T const& _data)
 {
-	std::ostringstream ret;
-	unsigned ii = 0;
-	for (auto i: _data)
-		ret << std::hex << std::setfill('0') << std::setw(ii++ ? 2 : _w) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
-	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
+	return toHex(_data.begin(), _data.end(), "");
+}
+
+/// Convert a series of bytes to the corresponding hex string with 0x prefix.
+/// @example toHexPrefixed("A\x69") == "0x4169"
+template <class T> std::string toHexPrefixed(T const& _data)
+{
+	return toHex(_data.begin(), _data.end(), "0x");
 }
 
 /// Converts a (printable) ASCII hex string into the corresponding byte stream.
@@ -165,17 +179,14 @@ inline std::string toCompactBigEndianString(T _val, unsigned _min = 0)
 	return ret;
 }
 
-/// Convenience function for conversion of a u256 to hex
-inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
+inline std::string toCompactHex(u256 _val, unsigned _min = 0)
 {
-	std::string str = toHex(toBigEndian(val));
-	return (prefix == HexPrefix::Add) ? "0x" + str : str;
+	return toHex(toCompactBigEndian(_val, _min));
 }
 
-inline std::string toCompactHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd, unsigned _min = 0)
+inline std::string toCompactHexPrefixed(u256 _val, unsigned _min = 0)
 {
-	std::string str = toHex(toCompactBigEndian(val, _min));
-	return (prefix == HexPrefix::Add) ? "0x" + str : str;
+	return toHexPrefixed(toCompactBigEndian(_val, _min));
 }
 
 // Algorithms for string and string-like collections.

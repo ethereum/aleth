@@ -30,7 +30,6 @@
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
 #include <libethereum/CodeSizeCache.h>
-#include <libethereum/GenericMiner.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
 #include "Transaction.h"
@@ -111,14 +110,18 @@ struct Change
 		/// Change::value the storage value.
 		Storage,
 
-		/// Account nonce was increased by 1.
+		/// Account storage root was modified.  Change::value contains the old
+		/// account storage root.
+		StorageRoot,
+
+		/// Account nonce was changed.
 		Nonce,
 
 		/// Account was created (it was not existing before).
 		Create,
 
 		/// New code was added to an account (by "create" message execution).
-		NewCode,
+		Code,
 
 		/// Account was touched for the first time.
 		Touch
@@ -126,17 +129,30 @@ struct Change
 
 	Kind kind;        ///< The kind of the change.
 	Address address;  ///< Changed account address.
-	u256 value;       ///< Change value, e.g. balance, storage.
+	u256 value;       ///< Change value, e.g. balance, storage and nonce.
 	u256 key;         ///< Storage key. Last because used only in one case.
+	bytes oldCode;    ///< Code overwritten by CREATE, empty except in case of address collision.
 
 	/// Helper constructor to make change log update more readable.
 	Change(Kind _kind, Address const& _addr, u256 const& _value = 0):
 			kind(_kind), address(_addr), value(_value)
-	{}
+	{
+		assert(_kind != Code); // For this the special constructor needs to be used.
+	}
 
 	/// Helper constructor especially for storage change log.
 	Change(Address const& _addr, u256 const& _key, u256 const& _value):
 			kind(Storage), address(_addr), value(_value), key(_key)
+	{}
+
+	/// Helper constructor for nonce change log.
+	Change(Address const& _addr, u256 const& _value):
+			kind(Nonce), address(_addr), value(_value)
+	{}
+
+	/// Helper constructor especially for new code change log.
+	Change(Address const& _addr, bytes const& _oldCode):
+			kind(Code), address(_addr), oldCode(_oldCode)
 	{}
 };
 
@@ -206,7 +222,7 @@ public:
 
 	/// Execute @a _txCount transactions of a given block.
 	/// This will change the state accordingly.
-	void executeBlockTransactions(Block const& _block, unsigned _txCount, LastHashes const& _lastHashes, SealEngineFace const& _sealEngine);
+	void executeBlockTransactions(Block const& _block, unsigned _txCount, LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine);
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
@@ -249,11 +265,14 @@ public:
 	/// Set the value of a storage position of an account.
 	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value);
 
+	/// Clear the storage root hash of an account to the hash of the empty trie.
+	void clearStorage(Address const& _contract);
+
 	/// Create a contract at the given address (with unset code and unchanged balance).
 	void createContract(Address const& _address);
 
 	/// Sets the code of the account. Must only be called during / after contract creation.
-	void setNewCode(Address const& _address, bytes&& _code);
+	void setCode(Address const& _address, bytes&& _code);
 
 	/// Delete an account (used for processing suicides).
 	void kill(Address _a);
@@ -279,6 +298,9 @@ public:
 
 	/// Increament the account nonce.
 	void incNonce(Address const& _id);
+
+	/// Set the account nonce.
+	void setNonce(Address const& _addr, u256 const& _newNonce);
 
 	/// Get the account nonce -- the number of transactions it has sent.
 	/// @returns 0 if the address has never been used.
@@ -343,53 +365,7 @@ std::ostream& operator<<(std::ostream& _out, State const& _s);
 State& createIntermediateState(State& o_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc);
 
 template <class DB>
-AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
-{
-	AddressHash ret;
-	for (auto const& i: _cache)
-		if (i.second.isDirty())
-		{
-			if (!i.second.isAlive())
-				_state.remove(i.first);
-			else
-			{
-				RLPStream s(4);
-				s << i.second.nonce() << i.second.balance();
-
-				if (i.second.storageOverlay().empty())
-				{
-					assert(i.second.baseRoot());
-					s.append(i.second.baseRoot());
-				}
-				else
-				{
-					SecureTrieDB<h256, DB> storageDB(_state.db(), i.second.baseRoot());
-					for (auto const& j: i.second.storageOverlay())
-						if (j.second)
-							storageDB.insert(j.first, rlp(j.second));
-						else
-							storageDB.remove(j.first);
-					assert(storageDB.root());
-					s.append(storageDB.root());
-				}
-
-				if (i.second.hasNewCode())
-				{
-					h256 ch = i.second.codeHash();
-					// Store the size of the code
-					CodeSizeCache::instance().store(ch, i.second.code().size());
-					_state.db()->insert(ch, &i.second.code());
-					s << ch;
-				}
-				else
-					s << i.second.codeHash();
-
-				_state.insert(i.first, &s.out());
-			}
-			ret.insert(i.first);
-		}
-	return ret;
-}
+AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);
 
 }
 }

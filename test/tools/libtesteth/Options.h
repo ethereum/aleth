@@ -21,6 +21,8 @@
 #pragma once
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <libdevcore/Exceptions.h>
+#include <libethereum/Executive.h>
 
 namespace dev
 {
@@ -37,18 +39,23 @@ enum class Verbosity
 class Options
 {
 public:
+	struct InvalidOption: public Exception
+	{
+		InvalidOption(std::string _message = std::string()): Exception(_message) {}
+	};
+
 	bool vmtrace = false;	///< Create EVM execution tracer
 	bool filltests = false; ///< Create JSON test files from execution results
 	bool fillchain = false; ///< Fill tests as a blockchain tests if possible
 	bool stats = false;		///< Execution time and stats for state tests
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool exectimelog = false; ///< Print execution time for each test suite
-	std::string rCheckTest;   ///< Test Input (for random tests)
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
-	bool checkstate = false;///< Throw error when checking test states
 	bool statediff = false;///< Fill full post state in General tests
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
+	bool jsontrace = false; ///< Vmtrace to stdout in json format
+	eth::StandardTrace::DebugOptions jsontraceOptions; ///< output config for jsontrace
 	std::string testpath;	///< Custom test folder path
 	Verbosity logVerbosity = Verbosity::NiceReport;
 

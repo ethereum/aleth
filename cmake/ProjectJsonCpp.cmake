@@ -24,6 +24,8 @@ ExternalProject_Add(jsoncpp
                ${_only_release_configuration}
                -DJSONCPP_WITH_TESTS=Off
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=Off
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     LOG_CONFIGURE 1
     BUILD_COMMAND ""
     ${_overwrite_install_command}
@@ -36,7 +38,8 @@ add_library(JsonCpp STATIC IMPORTED)
 set(JSONCPP_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(JSONCPP_INCLUDE_DIR ${INSTALL_DIR}/include)
 file(MAKE_DIRECTORY ${JSONCPP_INCLUDE_DIR})  # Must exist.
-set_property(TARGET JsonCpp PROPERTY IMPORTED_LOCATION ${JSONCPP_LIBRARY})
+set_property(TARGET JsonCpp PROPERTY IMPORTED_CONFIGURATIONS Release)
+set_property(TARGET JsonCpp PROPERTY IMPORTED_LOCATION_RELEASE ${JSONCPP_LIBRARY})
 set_property(TARGET JsonCpp PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONCPP_INCLUDE_DIR})
 add_dependencies(JsonCpp jsoncpp)
 unset(INSTALL_DIR)

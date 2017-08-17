@@ -20,9 +20,12 @@
  */
 
 #include "TrieCommon.h"
+#include "SHA3.h"
 
 namespace dev
 {
+
+h256 const EmptyTrie = sha3(rlp(""));
 
 /*
  * Hex-prefix Notation. First nibble has flags: oddness = 2^0 & termination = 2^1

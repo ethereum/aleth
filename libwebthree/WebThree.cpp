@@ -34,7 +34,7 @@ using namespace dev::p2p;
 using namespace dev::eth;
 using namespace dev::shh;
 
-static_assert(BOOST_VERSION == 106300, "Wrong boost headers version");
+static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 WebThreeDirect::WebThreeDirect(
 	std::string const& _clientVersion,

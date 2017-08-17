@@ -148,7 +148,7 @@ public:
 		assert(m_value.size());
 		std::cerr << _indent;
 		if (m_ext.size())
-			std::cerr << toHex(m_ext, 1) << ": ";
+			std::cerr << toHex(m_ext) << ": ";
 		else
 			std::cerr << "@: ";
 		std::cerr << m_value << std::endl;
@@ -175,7 +175,7 @@ public:
 #if ENABLE_DEBUG_PRINT
 	virtual void debugPrintBody(std::string const& _indent) const
 	{
-		std::cerr << _indent << toHex(m_ext, 1) << ": ";
+		std::cerr << _indent << toHex(m_ext) << ": ";
 		m_next->debugPrint(_indent + "  ");
 	}
 #endif

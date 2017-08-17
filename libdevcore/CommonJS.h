@@ -33,7 +33,7 @@ namespace dev
 
 template <unsigned S> std::string toJS(FixedHash<S> const& _h)
 {
-	return "0x" + toHex(_h.ref());
+	return toHexPrefixed(_h.ref());
 }
 
 template <unsigned N> std::string toJS(boost::multiprecision::number<boost::multiprecision::cpp_int_backend<N, N, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>> const& _n)
@@ -48,7 +48,7 @@ inline std::string toJS(bytes const& _n, std::size_t _padding = 0)
 {
 	bytes n = _n;
 	n.resize(std::max<unsigned>(n.size(), _padding));
-	return "0x" + toHex(n);
+	return toHexPrefixed(n);
 }
 
 template<unsigned T> std::string toJS(SecureFixedHash<T> const& _i)

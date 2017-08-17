@@ -323,10 +323,7 @@ template<> inline size_t FixedHash<32>::hash::operator()(FixedHash<32> const& va
 template <unsigned N>
 inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 {
-	_out << std::noshowbase << std::hex << std::setfill('0');
-	for (unsigned i = 0; i < N; ++i)
-		_out << std::setw(2) << (int)_h[i];
-	_out << std::dec;
+	_out << toHex(_h);
 	return _out;
 }
 
@@ -379,7 +376,7 @@ inline std::string toString(h256s const& _bs)
 {
 	std::ostringstream out;
 	out << "[ ";
-	for (auto i: _bs)
+	for (h256 const& i: _bs)
 		out << i.abridged() << ", ";
 	out << "]";
 	return out.str();

@@ -77,8 +77,10 @@ DEV_SIMPLE_EXCEPTION(InvalidUncleParentHash);
 DEV_SIMPLE_EXCEPTION(InvalidNumber);
 DEV_SIMPLE_EXCEPTION(InvalidZeroSignatureTransaction);
 DEV_SIMPLE_EXCEPTION(InvalidTransactionReceiptFormat);
+DEV_SIMPLE_EXCEPTION(TransactionReceiptVersionError);
 DEV_SIMPLE_EXCEPTION(BlockNotFound);
 DEV_SIMPLE_EXCEPTION(UnknownParent);
+DEV_SIMPLE_EXCEPTION(AddressAlreadyUsed);
 
 DEV_SIMPLE_EXCEPTION(DatabaseAlreadyOpen);
 DEV_SIMPLE_EXCEPTION(DAGCreationFailure);

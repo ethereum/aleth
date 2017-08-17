@@ -65,7 +65,7 @@ public:
 	virtual size_t codeSizeAt(Address _a) override final;
 
 	/// Create a new contract.
-	virtual std::pair<h160, owning_bytes_ref> create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp = {}) override final;
+	virtual std::pair<h160, owning_bytes_ref> create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp = {}) override final;
 
 	/// Create a new message call. Leave _myAddressOverride as the default to use the present address as caller.
 	/// @returns success flag and output data, if any.
@@ -87,7 +87,7 @@ public:
 	virtual void suicide(Address _a) override final;
 
 	/// Return the EVM gas-price schedule for this execution context.
-	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo()); }
+	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo().number()); }
 
 	State const& state() const { return m_s; }
 

@@ -30,6 +30,8 @@
 namespace dev
 {
 
+struct DBDetail: public LogChannel { static const char* name() { return "DBDetail"; } static const int verbosity = 14; };
+
 class OverlayDB: public MemoryDB
 {
 public:
@@ -44,7 +46,6 @@ public:
 	std::string lookup(h256 const& _h) const;
 	bool exists(h256 const& _h) const;
 	void kill(h256 const& _h);
-	bool deepkill(h256 const& _h);
 
 	bytes lookupAux(h256 const& _h) const;
 

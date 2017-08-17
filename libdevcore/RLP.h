@@ -26,10 +26,9 @@
 #include <vector>
 #include <array>
 #include <exception>
-#include <iostream>
+#include <iosfwd>
 #include <iomanip>
 #include "vector_ref.h"
-#include "Common.h"
 #include "Exceptions.h"
 #include "FixedHash.h"
 
@@ -271,7 +270,7 @@ public:
 		return ret;
 	}
 
-	/// Converts to int of type given; if isString(), decodes as big-endian bytestream. @returns 0 if not an int or string.
+	/// Converts to int of type given; if isData(), decodes as big-endian bytestream. @returns 0 if not an int or data.
 	template <class _T = unsigned> _T toInt(int _flags = Strict) const
 	{
 		requireGood();

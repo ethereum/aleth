@@ -45,32 +45,39 @@ void VM::copyDataToMemory(bytesConstRef _data, u256*_sp)
 
 void VM::throwOutOfGas()
 {
-	if (m_onFail)
-		(this->*m_onFail)();
+	// disabled to prevent duplicate steps in vmtrace log
+	//if (m_onFail)
+	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(OutOfGas());
 }
 
 void VM::throwBadInstruction()
 {
-	if (m_onFail)
-		(this->*m_onFail)();
+	// disabled to prevent duplicate steps in vmtrace log
+	//if (m_onFail)
+	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(BadInstruction());
 }
 
 void VM::throwBadJumpDestination()
 {
-	if (m_onFail)
-		(this->*m_onFail)();
+	// disabled to prevent duplicate steps in vmtrace log
+	//if (m_onFail)
+	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(BadJumpDestination());
 }
 
 void VM::throwDisallowedStateChange()
 {
-	if (m_onFail)
-		(this->*m_onFail)();
+	// disabled to prevent duplicate steps in vmtrace log
+	//if (m_onFail)
+	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(DisallowedStateChange());
 }
 
+// throwBadStack is called from fetchInstruction() -> adjustStack()
+// its the only exception that can happen before ON_OP() log is done for an opcode case in VM.cpp
+// so the call to m_onFail is needed here
 void VM::throwBadStack(unsigned _removed, unsigned _added)
 {
 	bigint size = m_stackEnd - m_SPP;
@@ -96,6 +103,7 @@ void VM::throwRevertInstruction(owning_bytes_ref&& _output)
 
 void VM::throwBufferOverrun(bigint const& _endOfAccess)
 {
+	// todo: disable this m_onFail, may result in duplicate log step in the trace
 	if (m_onFail)
 		(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
@@ -124,15 +132,27 @@ int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 
 void VM::caseCreate()
 {
+	ON_OP();
 	m_bounce = &VM::interpretCases;
 	m_runGas = toInt63(m_schedule->createGas);
 	updateMem(memNeed(m_SP[1], m_SP[2]));
-	ON_OP();
 	updateIOGas();
 
 	auto const& endowment = m_SP[0];
-	uint64_t initOff = (uint64_t)m_SP[1];
-	uint64_t initSize = (uint64_t)m_SP[2];
+	uint64_t initOff;
+	uint64_t initSize;
+	u256 salt;
+	if (m_OP == Instruction::CREATE)
+	{
+		initOff = (uint64_t)m_SP[1];
+		initSize = (uint64_t)m_SP[2];
+	}
+	else
+	{
+		salt = m_SP[1];
+		initOff = (uint64_t)m_SP[2];
+		initSize = (uint64_t)m_SP[3];
+	}
 
 	// Clear the return data buffer. This will not free the memory.
 	m_returnData.clear();
@@ -146,9 +166,10 @@ void VM::caseCreate()
 		u256 gas = createGas;
 		h160 addr;
 		owning_bytes_ref output;
-		std::tie(addr, output) = m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		std::tie(addr, output) = m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_OP, salt, m_onOp);
 		m_SPP[0] = (u160)addr;
 		m_returnData = output.toBytes();
+
 		*m_io_gas_p -= (createGas - gas);
 		m_io_gas = uint64_t(*m_io_gas_p);
 	}
@@ -194,19 +215,26 @@ void VM::caseCall()
 
 bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 {
+	// Make sure the params were properly initialized.
+	assert(callParams->valueTransfer == 0);
+	assert(callParams->apparentValue == 0);
+
+	ON_OP();
 	m_runGas = toInt63(m_schedule->callGas);
 
 	callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
+
+	bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
 	Address destinationAddr = asAddress(m_SP[1]);
 	if (m_OP == Instruction::CALL && !m_ext->exists(destinationAddr))
 		if (m_SP[2] > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
 			m_runGas += toInt63(m_schedule->callNewAccountGas);
 
-	if ((m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE) && m_SP[2] > 0)
+	if (haveValueArg && m_SP[2] > 0)
 		m_runGas += toInt63(m_schedule->callValueTransferGas);
 
-	size_t sizesOffset = (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL) ? 2 : 3;
+	size_t const sizesOffset = haveValueArg ? 3 : 2;
 	u256 inputOffset  = m_SP[sizesOffset];
 	u256 inputSize    = m_SP[sizesOffset + 1];
 	u256 outputOffset = m_SP[sizesOffset + 2];
@@ -232,30 +260,26 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	}
 
 	m_runGas = toInt63(callParams->gas);
-	ON_OP();
 	updateIOGas();
 
-	if (m_OP != Instruction::DELEGATECALL && m_SP[2] > 0)
+	if (haveValueArg && m_SP[2] > 0)
 		callParams->gas += m_schedule->callStipend;
 
 	callParams->codeAddress = destinationAddr;
 
-	unsigned inOutOffset = 0;
-	if (m_OP == Instruction::DELEGATECALL || m_OP == Instruction::STATICCALL)
+	if (haveValueArg)
 	{
+		callParams->valueTransfer = m_SP[2];
+		callParams->apparentValue = m_SP[2];
+	}
+	else if (m_OP == Instruction::DELEGATECALL)
+		// Forward VALUE.
 		callParams->apparentValue = m_ext->value;
-		callParams->valueTransfer = 0;
-	}
-	else
-	{
-		callParams->apparentValue = callParams->valueTransfer = m_SP[2];
-		inOutOffset = 1;
-	}
 
-	uint64_t inOff = (uint64_t)m_SP[inOutOffset + 2];
-	uint64_t inSize = (uint64_t)m_SP[inOutOffset + 3];
-	uint64_t outOff = (uint64_t)m_SP[inOutOffset + 4];
-	uint64_t outSize = (uint64_t)m_SP[inOutOffset + 5];
+	uint64_t inOff = (uint64_t)inputOffset;
+	uint64_t inSize = (uint64_t)inputSize;
+	uint64_t outOff = (uint64_t)outputOffset;
+	uint64_t outSize = (uint64_t)outputSize;
 
 	if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
 	{
@@ -266,7 +290,6 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 		o_output = bytesRef(m_mem.data() + outOff, outSize);
 		return true;
 	}
-	else
-		return false;
+	return false;
 }
 

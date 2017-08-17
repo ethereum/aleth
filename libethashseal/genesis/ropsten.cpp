@@ -16,7 +16,6 @@
 */
 #include "../GenesisInfo.h"
 
-static dev::h256 const c_genesisStateRootRopsten;
 static std::string const c_genesisInfoRopsten = std::string() +
 R"E(
 {
@@ -26,7 +25,8 @@ R"E(
 		"homsteadForkBlock": "0x00",
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x0a",
-		"metropolisForkBlock": "0xfffffffffffffff",
+		"byzantiumForkBlock": "0xfffffffffffffff",
+		"constantinopleForkBlock": "0xfffffffffffffff",
 		"chainID": "0x03",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,

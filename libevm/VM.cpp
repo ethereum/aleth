@@ -115,6 +115,19 @@ void VM::adjustStack(unsigned _removed, unsigned _added)
 #endif
 }
 
+void VM::updateSSGas()
+{
+	if (!m_ext->store(m_SP[0]) && m_SP[1])
+		m_runGas = toInt63(m_schedule->sstoreSetGas);
+	else if (m_ext->store(m_SP[0]) && !m_SP[1])
+	{
+		m_runGas = toInt63(m_schedule->sstoreResetGas);
+		m_ext->sub.refunds += m_schedule->sstoreRefundGas;
+	}
+	else
+		m_runGas = toInt63(m_schedule->sstoreResetGas);
+}
+
 
 uint64_t VM::gasForMem(u512 _size)
 {
@@ -172,7 +185,6 @@ void VM::fetchInstruction()
 	#define updateIOGas()
 #endif
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // interpreter entry point
@@ -184,7 +196,7 @@ owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 	m_ext = &_ext;
 	m_schedule = &m_ext->evmSchedule();
 	m_onOp = _onOp;
-	m_onFail = &VM::onOperation;
+	m_onFail = &VM::onOperation; // this results in operations that fail being logged twice in the trace
 	
 	try
 	{
@@ -216,6 +228,14 @@ void VM::interpretCases()
 		//
 		// Call-related instructions
 		//
+
+		CASE(CREATE2)
+		{
+			if (!m_schedule->haveCreate2)
+				throwBadInstruction();
+			m_bounce = &VM::caseCreate;
+		}
+		BREAK
 		
 		CASE(CREATE)
 		{
@@ -243,9 +263,9 @@ void VM::interpretCases()
 
 		CASE(RETURN)
 		{
+			ON_OP();
 			m_copyMemSize = 0;
 			updateMem(memNeed(m_SP[0], m_SP[1]));
-			ON_OP();
 			updateIOGas();
 
 			uint64_t b = (uint64_t)m_SP[0];
@@ -257,7 +277,7 @@ void VM::interpretCases()
 
 		CASE(REVERT)
 		{
-			// Pre-metropolis 
+			// Pre-byzantium
 			if (!m_schedule->haveRevert)
 				throwBadInstruction();
 
@@ -310,8 +330,8 @@ void VM::interpretCases()
 		
 		CASE(MLOAD)
 		{
-			updateMem(toInt63(m_SP[0]) + 32);
 			ON_OP();
+			updateMem(toInt63(m_SP[0]) + 32);
 			updateIOGas();
 
 			m_SPP[0] = (u256)*(h256 const*)(m_mem.data() + (unsigned)m_SP[0]);
@@ -320,8 +340,8 @@ void VM::interpretCases()
 
 		CASE(MSTORE)
 		{
-			updateMem(toInt63(m_SP[0]) + 32);
 			ON_OP();
+			updateMem(toInt63(m_SP[0]) + 32);
 			updateIOGas();
 
 			*(h256*)&m_mem[(unsigned)m_SP[0]] = (h256)m_SP[1];
@@ -330,8 +350,8 @@ void VM::interpretCases()
 
 		CASE(MSTORE8)
 		{
-			updateMem(toInt63(m_SP[0]) + 1);
 			ON_OP();
+			updateMem(toInt63(m_SP[0]) + 1);
 			updateIOGas();
 
 			m_mem[(unsigned)m_SP[0]] = (byte)(m_SP[1] & 0xff);
@@ -340,9 +360,9 @@ void VM::interpretCases()
 
 		CASE(SHA3)
 		{
+			ON_OP();
 			m_runGas = toInt63(m_schedule->sha3Gas + (u512(m_SP[1]) + 31) / 32 * m_schedule->sha3WordGas);
 			updateMem(memNeed(m_SP[0], m_SP[1]));
-			ON_OP();
 			updateIOGas();
 
 			uint64_t inOff = (uint64_t)m_SP[0];
@@ -353,11 +373,11 @@ void VM::interpretCases()
 
 		CASE(LOG0)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -366,11 +386,11 @@ void VM::interpretCases()
 
 		CASE(LOG1)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -379,11 +399,11 @@ void VM::interpretCases()
 
 		CASE(LOG2)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2], m_SP[3]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -392,11 +412,11 @@ void VM::interpretCases()
 
 		CASE(LOG3)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2], m_SP[3], m_SP[4]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -405,11 +425,11 @@ void VM::interpretCases()
 
 		CASE(LOG4)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
 			logGasMem();
-			ON_OP();
 			updateIOGas();
 
 			m_ext->log({m_SP[2], m_SP[3], m_SP[4], m_SP[5]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
@@ -635,7 +655,461 @@ void VM::interpretCases()
 					number &= mask;
 			}
 		}
+		NEXT		
+
+#if EIP_615
+		CASE(JUMPTO)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			m_PC = decodeJumpDest(m_code.data(), m_PC);
+		}
+		CONTINUE
+
+		CASE(JUMPIF)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			if (m_SP[0])
+				m_PC = decodeJumpDest(m_code.data(), m_PC);
+			else
+				++m_PC;
+		}
+		CONTINUE
+
+		CASE(JUMPV)
+		{
+			ON_OP();
+			updateIOGas();
+			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
+		}
+		CONTINUE
+
+		CASE(JUMPSUB)
+		{
+			ON_OP();
+			updateIOGas();
+			*m_RP++ = m_PC++;
+			m_PC = decodeJumpDest(m_code.data(), m_PC);
+		}
+		CONTINUE
+
+		CASE(JUMPSUBV)
+		{
+			ON_OP();
+			updateIOGas();
+			*m_RP++ = m_PC;
+			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
+		}
+		CONTINUE
+
+		CASE(RETURNSUB)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			m_PC = *m_RP--;
+		}
 		NEXT
+
+		CASE(BEGINSUB)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+		
+
+		CASE(BEGINDATA)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+
+		CASE(GETLOCAL)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+
+		CASE(PUTLOCAL)
+		{
+			ON_OP();
+			updateIOGas();
+		}
+		NEXT
+
+#else
+		CASE(JUMPTO)
+		CASE(JUMPIF)
+		CASE(JUMPV)
+		CASE(JUMPSUB)
+		CASE(JUMPSUBV)
+		CASE(RETURNSUB)
+		CASE(BEGINSUB)
+		CASE(BEGINDATA)
+		CASE(GETLOCAL)
+		CASE(PUTLOCAL)
+		{
+			throwBadInstruction();
+		}
+		CONTINUE
+#endif
+
+#if EIP_616
+		
+		CASE(XADD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xadd(simdType());
+		}
+		CONTINUE
+	         
+		CASE(XMUL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xmul(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSUB)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsub(simdType());
+		}
+		CONTINUE
+         
+		CASE(XDIV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xdiv(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSDIV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsdiv(simdType());
+		}
+		CONTINUE
+        
+		CASE(XMOD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xmod(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSMOD)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsmod(simdType());
+		}
+		CONTINUE
+        
+		CASE(XLT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xlt(simdType());
+		}
+		CONTINUE
+          
+		CASE(XGT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xgt(simdType());
+		}
+		CONTINUE
+          
+		CASE(XSLT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xslt(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSGT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsgt(simdType());
+		}
+		CONTINUE
+         
+		CASE(XEQ)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xeq(simdType());
+		}
+		CONTINUE
+          
+		CASE(XISZERO)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xzero(simdType());
+		}
+		CONTINUE
+      
+		CASE(XAND)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xand(simdType());
+		}
+		CONTINUE
+         
+		CASE(XOOR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xoor(simdType());
+		}
+		CONTINUE
+         
+		CASE(XXOR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xxor(simdType());
+		}
+		CONTINUE
+         
+		CASE(XNOT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xnot(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSHL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshl(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSHR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshr(simdType());
+		}
+		CONTINUE
+         
+		CASE(XSAR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xsar(simdType());
+		}
+		CONTINUE
+         
+		CASE(XROL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xrol(simdType());
+		}
+		CONTINUE
+         
+		CASE(XROR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xror(simdType());
+		}
+		CONTINUE
+
+		CASE(XMLOAD)
+		{
+			updateMem(toInt63(m_SP[0]) + 32);
+			ON_OP();
+			updateIOGas();
+
+			xmload(simdType());
+		}
+		CONTINUE
+
+		CASE(XMSTORE)
+		{
+			updateMem(toInt63(m_SP[0]) + 32);
+			ON_OP();
+			updateIOGas();
+
+			xmstore(simdType());
+		}
+		CONTINUE
+
+		CASE(XSLOAD)
+		{
+			m_runGas = toInt63(m_schedule->sloadGas);
+			ON_OP();
+			updateIOGas();
+
+			xsload(simdType());
+		}
+		CONTINUE
+
+		CASE(XSSTORE)
+		{
+			if (m_ext->staticCall)
+				throwDisallowedStateChange();
+
+			updateSSGas();
+			ON_OP();
+			updateIOGas();
+	
+			xsstore(simdType());
+		}
+		CONTINUE
+
+		CASE(XVTOWIDE)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xvtowide(simdType());
+		}
+		CONTINUE
+
+		CASE(XWIDETOV)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xwidetov(simdType());
+		}
+		CONTINUE
+
+		CASE(XPUSH)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xpush(simdType());
+		}
+		CONTINUE
+
+		CASE(XPUT)
+		{
+			ON_OP();
+			updateIOGas();
+
+			uint8_t b = ++m_PC;
+			uint8_t c = ++m_PC;
+			xput(m_code[b], m_code[c]);
+			++m_PC;
+		}
+		CONTINUE
+
+		CASE(XGET)
+		{
+			ON_OP();
+			updateIOGas();
+
+			uint8_t b = ++m_PC;
+			uint8_t c = ++m_PC;
+			xget(m_code[b], m_code[c]);
+			++m_PC;
+		}
+		CONTINUE
+
+		CASE(XSWIZZLE)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xswizzle(simdType());
+		}
+		CONTINUE
+
+		CASE(XSHUFFLE)
+		{
+			ON_OP();
+			updateIOGas();
+
+			xshuffle(simdType());
+		}
+		CONTINUE
+#else
+		CASE(XADD)
+		CASE(XMUL)
+		CASE(XSUB)
+		CASE(XDIV)
+		CASE(XSDIV)
+		CASE(XMOD)
+		CASE(XSMOD)
+		CASE(XLT)
+		CASE(XGT)
+		CASE(XSLT)
+		CASE(XSGT)
+		CASE(XEQ)
+		CASE(XISZERO)
+		CASE(XAND)
+		CASE(XOOR)
+		CASE(XXOR)
+		CASE(XNOT)
+		CASE(XSHL)
+		CASE(XSHR)
+		CASE(XSAR)
+		CASE(XROL)
+		CASE(XROR)
+		CASE(XMLOAD)
+		CASE(XMSTORE)
+		CASE(XSLOAD)
+		CASE(XSSTORE)
+		CASE(XVTOWIDE)
+		CASE(XWIDETOV)
+		CASE(XPUSH)
+		CASE(XPUT)
+		CASE(XGET)
+		CASE(XSWIZZLE)
+		CASE(XSHUFFLE)
+		{
+			throwBadInstruction();
+		}
+		CONTINUE
+#endif
 
 		CASE(ADDRESS)
 		{
@@ -746,9 +1220,9 @@ void VM::interpretCases()
 
 		CASE(CALLDATACOPY)
 		{
+			ON_OP();
 			m_copyMemSize = toInt63(m_SP[2]);
 			updateMem(memNeed(m_SP[0], m_SP[2]));
-			ON_OP();
 			updateIOGas();
 
 			copyDataToMemory(m_ext->data, m_SP);
@@ -774,9 +1248,9 @@ void VM::interpretCases()
 
 		CASE(CODECOPY)
 		{
+			ON_OP();
 			m_copyMemSize = toInt63(m_SP[2]);
 			updateMem(memNeed(m_SP[0], m_SP[2]));
-			ON_OP();
 			updateIOGas();
 
 			copyDataToMemory(&m_ext->code, m_SP);
@@ -785,10 +1259,10 @@ void VM::interpretCases()
 
 		CASE(EXTCODECOPY)
 		{
+			ON_OP();
 			m_runGas = toInt63(m_schedule->extcodecopyGas);
 			m_copyMemSize = toInt63(m_SP[3]);
 			updateMem(memNeed(m_SP[1], m_SP[3]));
-			ON_OP();
 			updateIOGas();
 
 			Address a = asAddress(m_SP[0]);
@@ -808,8 +1282,8 @@ void VM::interpretCases()
 
 		CASE(BLOCKHASH)
 		{
-			m_runGas = toInt63(m_schedule->blockhashGas);
 			ON_OP();
+			m_runGas = toInt63(m_schedule->blockhashGas);
 			updateIOGas();
 
 			m_SPP[0] = (u256)m_ext->blockHash(m_SP[0]);
@@ -965,76 +1439,6 @@ void VM::interpretCases()
 		}
 		CONTINUE
 
-#if EVM_JUMPS_AND_SUBS
-		CASE(JUMPTO)
-		{
-			ON_OP();
-			updateIOGas();
-			
-			m_PC = decodeJumpDest(m_code.data(), m_PC);
-		}
-		CONTINUE
-
-		CASE(JUMPIF)
-		{
-			ON_OP();
-			updateIOGas();
-			
-			if (m_SP[0])
-				m_PC = decodeJumpDest(m_code.data(), m_PC);
-			else
-				++m_PC;
-		}
-		CONTINUE
-
-		CASE(JUMPV)
-		{
-			ON_OP();
-			updateIOGas();
-			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
-		}
-		CONTINUE
-
-		CASE(JUMPSUB)
-		{
-			ON_OP();
-			updateIOGas();
-			*m_RP++ = m_PC++;
-			m_PC = decodeJumpDest(m_code.data(), m_PC);
-			}
-		}
-		CONTINUE
-
-		CASE(JUMPSUBV)
-		{
-			ON_OP();
-			updateIOGas();
-			*m_RP++ = m_PC;
-			m_PC = decodeJumpvDest(m_code.data(), m_PC, byte(m_SP[0]));
-		}
-		CONTINUE
-
-		CASE(RETURNSUB)
-		{
-			ON_OP();
-			updateIOGas();
-			
-			m_PC = *m_RP--;
-		}
-		NEXT
-#else
-		CASE(JUMPTO)
-		CASE(JUMPIF)
-		CASE(JUMPV)
-		CASE(JUMPSUB)
-		CASE(JUMPSUBV)
-		CASE(RETURNSUB)
-		{
-			throwBadInstruction();
-		}
-		CONTINUE
-#endif
-
 		CASE(JUMPC)
 		{
 #if EVM_REPLACE_CONST_JUMP
@@ -1088,7 +1492,9 @@ void VM::interpretCases()
 #if EVM_HACK_DUP_64
 			*(uint64_t*)m_SPP = *(uint64_t*)(m_SP + n);
 #else
-			m_SPP[0] = m_SP[n];
+			// the stack slot being copied into may no longer hold a u256
+			// so we construct a new one in the memory, rather than assign
+			new(m_SPP) u256(m_SP[n]);
 #endif
 		}
 		NEXT
@@ -1134,16 +1540,8 @@ void VM::interpretCases()
 		{
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
-
-			if (!m_ext->store(m_SP[0]) && m_SP[1])
-				m_runGas = toInt63(m_schedule->sstoreSetGas);
-			else if (m_ext->store(m_SP[0]) && !m_SP[1])
-			{
-				m_runGas = toInt63(m_schedule->sstoreResetGas);
-				m_ext->sub.refunds += m_schedule->sstoreRefundGas;
-			}
-			else
-				m_runGas = toInt63(m_schedule->sstoreResetGas);
+				
+			updateSSGas();
 			ON_OP();
 			updateIOGas();
 	
@@ -1186,18 +1584,6 @@ void VM::interpretCases()
 		}
 		NEXT
 
-#if EVM_JUMPS_AND_SUBS
-		CASE(BEGINSUB)
-		{
-			m_runGas = 1;
-			ON_OP();
-			updateIOGas();
-		}
-		NEXT
-#else
-		CASE(BEGINSUB)
-#endif
-		CASE(BEGINDATA)
 		CASE(INVALID)
 		DEFAULT
 		{

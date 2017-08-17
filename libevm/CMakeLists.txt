@@ -1,9 +1,11 @@
 
 set(SOURCES
 	ExtVMFace.cpp
+	Instruction.cpp
 	VM.cpp
 	VMOpt.cpp
 	VMCalls.cpp
+	VMSIMD.cpp
 	VMValidate.cpp
 	VMFactory.cpp
 )
@@ -19,9 +21,7 @@ file(GLOB HEADERS "*.h")
 
 add_library(evm ${SOURCES} ${HEADERS})
 
-# TODO: We have horrible cilcular dependency: evm depends also on ethereum
-#       library. Here we only explicitly add jsoncpp to fix includes.
-target_link_libraries(evm PRIVATE evmcore ethcore JsonCpp)
+target_link_libraries(evm PRIVATE ethcore)
 target_include_directories(evm PRIVATE ..)
 
 if (EVMJIT)

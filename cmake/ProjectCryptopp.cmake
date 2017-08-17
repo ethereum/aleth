@@ -155,6 +155,8 @@ ExternalProject_Add(cryptopp
         -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
         -DBUILD_SHARED=Off
         -DBUILD_TESTING=Off
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     LOG_CONFIGURE 1
     # Overwrite build and install commands to force Release build on MSVC.
     BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
@@ -172,7 +174,8 @@ else()
 endif()
 set(CRYPTOPP_INCLUDE_DIR ${INSTALL_DIR}/include)
 file(MAKE_DIRECTORY ${CRYPTOPP_INCLUDE_DIR})  # Must exist.
-set_property(TARGET Cryptopp PROPERTY IMPORTED_LOCATION ${CRYPTOPP_LIBRARY})
+set_property(TARGET Cryptopp PROPERTY IMPORTED_CONFIGURATIONS Release)
+set_property(TARGET Cryptopp PROPERTY IMPORTED_LOCATION_RELEASE ${CRYPTOPP_LIBRARY})
 set_property(TARGET Cryptopp PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CRYPTOPP_INCLUDE_DIR})
 add_dependencies(Cryptopp cryptopp)
 unset(INSTALL_DIR)

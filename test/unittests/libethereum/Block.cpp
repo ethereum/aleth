@@ -48,15 +48,20 @@ BOOST_AUTO_TEST_CASE(bStructures)
 }
 #endif
 
+class FrontierNoProofTestFixture: public TestOutputHelper
+{
+public:
+	FrontierNoProofTestFixture(): networkSelector(Network::FrontierNoProofTest) {}
+
+	NetworkSelector networkSelector;
+};
+
+BOOST_FIXTURE_TEST_SUITE(FrontierBlockSuite, FrontierNoProofTestFixture)
+
 BOOST_AUTO_TEST_CASE(bStates)
 {
-	// this test does full Ethash mining
-	if (!dev::test::Options::get().quadratic)
-		return;
 	try
 	{
-		TestBlockChain::s_sealEngineNetwork = Network::FrontierTest;
-
 		TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
 		TestBlock const& genesisBlock = testBlockchain.testGenesis();
 		OverlayDB const& genesisDB = genesisBlock.state().db();
@@ -118,6 +123,56 @@ BOOST_AUTO_TEST_CASE(bStates)
 		BOOST_ERROR("Failed test with Exception: " << _e.what());
 	}
 }
+
+BOOST_AUTO_TEST_CASE(bCopyOperator)
+{
+	try
+	{
+		TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
+		TestBlock const& genesisBlock = testBlockchain.testGenesis();
+
+		OverlayDB const& genesisDB = genesisBlock.state().db();
+		BlockChain const& blockchain = testBlockchain.interface();
+		Block block = blockchain.genesisBlock(genesisDB);
+		block.setAuthor(genesisBlock.beneficiary());
+
+		block = block;
+		Block block2 = block;
+		BOOST_REQUIRE(ImportTest::compareStates(block.state(), block2.state()) == 0);
+		BOOST_REQUIRE(block2.pending() == block.pending());
+		BOOST_REQUIRE(block2.author() == block.author());
+		BOOST_REQUIRE(block2.info() == block.info());
+
+		TestBlock testBlock;
+		TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
+		testBlock.addTransaction(transaction1);
+		testBlock.mine(testBlockchain);
+		testBlockchain.addBlock(testBlock);
+
+		Block block3 = blockchain.genesisBlock(genesisDB);
+		block3.populateFromChain(blockchain, testBlock.blockHeader().hash());
+		BOOST_REQUIRE(block3.info() == testBlock.blockHeader());
+
+		//Genesis is populating wrong???
+		//Block block31 = blockchain.genesisBlock(genesisDB);
+		//block31.populateFromChain(blockchain, genesisBlock.getBlockHeader().hash());
+		//BOOST_REQUIRE(block31.info() == (BlockInfo)genesisBlock.getBlockHeader());
+
+		Block block32 = blockchain.genesisBlock(genesisDB);
+		auto is_critical = [](std::exception const& _e) { return string(_e.what()).find("BlockNotFound") != string::npos; };
+		BOOST_CHECK_EXCEPTION(block32.populateFromChain(blockchain, h256("0x0000000000000000000000000000000000000000000000000000000000000001")), BlockNotFound, is_critical);
+	}
+	catch (Exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << _e.what());
+	}
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(bGasPricer)
 {
@@ -204,54 +259,6 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(bCopyOperator)
-{
-	try
-	{
-		TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
-		TestBlock const& genesisBlock = testBlockchain.testGenesis();
-
-		OverlayDB const& genesisDB = genesisBlock.state().db();
-		BlockChain const& blockchain = testBlockchain.interface();
-		Block block = blockchain.genesisBlock(genesisDB);
-		block.setAuthor(genesisBlock.beneficiary());
-
-		block = block;
-		Block block2 = block;
-		BOOST_REQUIRE(ImportTest::compareStates(block.state(), block2.state()) == 0);
-		BOOST_REQUIRE(block2.pending() == block.pending());
-		BOOST_REQUIRE(block2.author() == block.author());
-		BOOST_REQUIRE(block2.info() == block.info());
-
-		TestBlock testBlock;
-		TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
-		testBlock.addTransaction(transaction1);
-		testBlock.mine(testBlockchain);
-		testBlockchain.addBlock(testBlock);
-
-		Block block3 = blockchain.genesisBlock(genesisDB);
-		block3.populateFromChain(blockchain, testBlock.blockHeader().hash());
-		BOOST_REQUIRE(block3.info() == testBlock.blockHeader());
-
-		//Genesis is populating wrong???
-		//Block block31 = blockchain.genesisBlock(genesisDB);
-		//block31.populateFromChain(blockchain, genesisBlock.getBlockHeader().hash());
-		//BOOST_REQUIRE(block31.info() == (BlockInfo)genesisBlock.getBlockHeader());
-
-		Block block32 = blockchain.genesisBlock(genesisDB);
-		auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("BlockNotFound") != string::npos; };
-		BOOST_CHECK_EXCEPTION(block32.populateFromChain(blockchain, h256("0x0000000000000000000000000000000000000000000000000000000000000001")), BlockNotFound, is_critical);
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed test with Exception: " << _e.what());
-	}
-}
-
 BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
 {
 	TestBlockChain bc;
@@ -262,23 +269,23 @@ BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
 	BOOST_CHECK_THROW(block.receipt(123), std::out_of_range);
 }
 
-class MetropolisTransitionTestFixture: public TestOutputHelper
+class ByzantiumTransitionTestFixture: public TestOutputHelper
 {
 public:
-	MetropolisTransitionTestFixture():
-		networkSelector(Network::MetropolisTransitionTest),
+	ByzantiumTransitionTestFixture():
+		networkSelector(Network::ByzantiumTransitionTest),
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),
 		blockchain(testBlockchain.interface())
 	{
 		TestBlock testBlock;
-		// block 1 - before Metropolis
+		// block 1 - before Byzantium
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 		block1hash = blockchain.currentHash();
 
-		// block 2 - first Metropolis block
+		// block 2 - first Byzantium block
 		testBlock.mine(testBlockchain);
 		testBlockchain.addBlock(testBlock);
 		block2hash = blockchain.currentHash();
@@ -294,7 +301,7 @@ public:
 	h256 block2hash;
 };
 
-BOOST_FIXTURE_TEST_SUITE(MetropolisBlockSuite, MetropolisTransitionTestFixture)
+BOOST_FIXTURE_TEST_SUITE(ByzantiumBlockSuite, ByzantiumTransitionTestFixture)
 
 BOOST_AUTO_TEST_CASE(bBlockhashContractIsCreated)
 {

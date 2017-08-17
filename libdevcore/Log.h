@@ -25,33 +25,19 @@
 
 #include <ctime>
 #include <chrono>
-#include "vector_ref.h"
-#include "Common.h"
+#include <string>
 #include "CommonIO.h"
-#include "CommonData.h"
 #include "FixedHash.h"
 #include "Terminal.h"
-
-namespace boost { namespace asio { namespace ip { template<class T>class basic_endpoint; class tcp; } } }
 
 namespace dev
 {
 
-/// The null output stream. Used when logging is disabled.
-class NullOutputStream
-{
-public:
-	template <class T> NullOutputStream& operator<<(T const&) { return *this; }
-};
-
 /// A simple log-output function that prints log messages to stdout.
-void simpleDebugOut(std::string const&, char const*);
+void debugOut(std::string const& _s);
 
 /// The logging system's current verbosity.
 extern int g_logVerbosity;
-
-/// The current method that the logging system uses to output the log messages. Defaults to simpleDebugOut().
-extern std::function<void(std::string const&, char const*)> g_logPost;
 
 class LogOverrideAux
 {
@@ -180,7 +166,7 @@ public:
 	{
 		m_sstr << EthWhite "[" EthReset;
 		int n = 0;
-		for (auto const& i: _t)
+		for (T const& i: _t)
 		{
 			m_sstr << (n++ ? EthWhite ", " EthReset : "");
 			append(i);
@@ -191,7 +177,7 @@ public:
 	{
 		m_sstr << EthYellow "{" EthReset;
 		int n = 0;
-		for (auto const& i: _t)
+		for (T const& i: _t)
 		{
 			m_sstr << (n++ ? EthYellow ", " EthReset : "");
 			append(i);
@@ -215,7 +201,7 @@ public:
 	{
 		m_sstr << EthYellow "{" EthReset;
 		int n = 0;
-		for (auto const& i: _t)
+		for (T const& i: _t)
 		{
 			m_sstr << (n++ ? EthYellow ", " EthReset : "");
 			append(i);
@@ -264,8 +250,8 @@ public:
 	/// If _term is true the the prefix info is terminated with a ']' character; if not it ends only with a '|' character.
 	LogOutputStream(): LogOutputStreamBase(Id::name(), &typeid(Id), Id::verbosity, _AutoSpacing) {}
 
-	/// Destructor. Posts the accrued log entry to the g_logPost function.
-	~LogOutputStream() { if (Id::verbosity <= g_logVerbosity) g_logPost(m_sstr.str(), Id::name()); }
+	/// Destructor. Posts the accrued log entry to the output stream.
+	~LogOutputStream() { if (Id::verbosity <= g_logVerbosity) debugOut(m_sstr.str()); }
 
 	LogOutputStream& operator<<(std::string const& _t) { if (Id::verbosity <= g_logVerbosity) { if (_AutoSpacing && m_sstr.str().size() && m_sstr.str().back() != ' ') m_sstr << " "; comment(_t); } return *this; }
 
@@ -303,10 +289,5 @@ public:
 #define cnote clog(dev::NoteChannel)
 #define cwarn clog(dev::WarnChannel)
 #define ctrace clog(dev::TraceChannel)
-
-// Null stream-like objects.
-#define ndebug DEV_STATEMENT_SKIP() dev::NullOutputStream()
-#define nlog(X) DEV_STATEMENT_SKIP() dev::NullOutputStream()
-#define nslog(X) DEV_STATEMENT_SKIP() dev::NullOutputStream()
 
 }

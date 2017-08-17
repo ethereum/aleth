@@ -29,10 +29,10 @@ using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(EthashTests, TestOutputHelper)
 
-BOOST_AUTO_TEST_CASE(calculateDifficultyMetropolisWithoutUncles)
+BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 {
 	ChainOperationParams params;
-	params.otherParams["metropolisForkBlock"] = "0x1000";
+	params.otherParams["byzantiumForkBlock"] = "0x1000";
 
 	Ethash ethash;
 	ethash.setChainParams(params);
@@ -51,10 +51,10 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyMetropolisWithoutUncles)
 	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999024);
 }
 
-BOOST_AUTO_TEST_CASE(calculateDifficultyMetropolisWithUncles)
+BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 {
 	ChainOperationParams params;
-	params.otherParams["metropolisForkBlock"] = "0x1000";
+	params.otherParams["byzantiumForkBlock"] = "0x1000";
 
 	Ethash ethash;
 	ethash.setChainParams(params);
@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyMetropolisWithUncles)
 	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999512);
 }
 
-BOOST_AUTO_TEST_CASE(calculateDifficultyMetropolisMaxAdjustment)
+BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
 {
 	ChainOperationParams params;
-	params.otherParams["metropolisForkBlock"] = "0x1000";
+	params.otherParams["byzantiumForkBlock"] = "0x1000";
 
 	Ethash ethash;
 	ethash.setChainParams(params);

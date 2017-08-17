@@ -39,7 +39,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
-using namespace CryptoPP;
 
 namespace
 {
@@ -169,10 +168,10 @@ bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _pl
 {
 	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
 		return bytes();
-	SecByteBlock key(_k.data(), _k.size());
+	CryptoPP::SecByteBlock key(_k.data(), _k.size());
 	try
 	{
-		CTR_Mode<AES>::Encryption e;
+		CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption e;
 		e.SetKeyWithIV(key, key.size(), _iv.data());
 		bytes ret(_plain.size());
 		e.ProcessData(ret.data(), _plain.data(), _plain.size());
@@ -189,10 +188,10 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
 {
 	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
 		return bytesSec();
-	SecByteBlock key(_k.data(), _k.size());
+	CryptoPP::SecByteBlock key(_k.data(), _k.size());
 	try
 	{
-		CTR_Mode<AES>::Decryption d;
+		CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d;
 		d.SetKeyWithIV(key, key.size(), _iv.data());
 		bytesSec ret(_cipher.size());
 		d.ProcessData(ret.writable().data(), _cipher.data(), _cipher.size());
@@ -268,7 +267,7 @@ bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
 	bytesSec ret(_dkLen);
-	if (PKCS5_PBKDF2_HMAC<SHA256>().DeriveKey(
+	if (CryptoPP::PKCS5_PBKDF2_HMAC<CryptoPP::SHA256>().DeriveKey(
 		ret.writable().data(),
 		_dkLen,
 		0,

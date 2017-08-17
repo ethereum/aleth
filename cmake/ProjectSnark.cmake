@@ -14,10 +14,11 @@ ExternalProject_Add(snark
         -DGMPXX_LIBRARIES=${MPIR_LIBRARY}
         -DCURVE=ALT_BN128 -DPERFORMANCE=Off -DWITH_PROCPS=Off
         -DUSE_PT_COMPRESSION=Off
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
     INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
 )
-add_dependencies(snark boost)
 add_dependencies(snark mpir)
 
 # Create snark imported library
@@ -26,7 +27,8 @@ add_library(Snark STATIC IMPORTED)
 set(SNARK_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ff${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(SNARK_INCLUDE_DIR ${INSTALL_DIR}/include/libff)
 file(MAKE_DIRECTORY ${SNARK_INCLUDE_DIR})
-set_property(TARGET Snark PROPERTY IMPORTED_LOCATION ${SNARK_LIBRARY})
+set_property(TARGET Snark PROPERTY IMPORTED_CONFIGURATIONS Release)
+set_property(TARGET Snark PROPERTY IMPORTED_LOCATION_RELEASE ${SNARK_LIBRARY})
 set_property(TARGET Snark PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SNARK_INCLUDE_DIR})
 set_property(TARGET Snark PROPERTY INTERFACE_LINK_LIBRARIES MPIR::mpir)
 add_dependencies(Snark snark)
