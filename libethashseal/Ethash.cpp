@@ -215,7 +215,18 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	}
 
 	bigint o = target;
-	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
+	unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number() + 1);
+
+	// EIP-649 modifies exponentialIceAgeBlockNumber
+	if (_bi.number() >= chainParams().u256Param("byzantiumForkBlock"))
+	{
+		if (exponentialIceAgeBlockNumber >= 3000000)
+			exponentialIceAgeBlockNumber -= 3000000;
+		else
+			exponentialIceAgeBlockNumber = 0;
+	}
+
+	unsigned periodCount = exponentialIceAgeBlockNumber / c_expDiffPeriod;
 	if (periodCount > 1)
 		o += (bigint(1) << (periodCount - 2));	// latter will eventually become huge, so ensure it's a bigint.
 
