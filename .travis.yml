@@ -30,6 +30,7 @@ branches:
         - develop
         - release
         - /travis/
+        - hunter
 env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
