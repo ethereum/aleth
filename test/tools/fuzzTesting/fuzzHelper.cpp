@@ -246,11 +246,11 @@ std::string RandomCode::rndRLPSequence(int _depth, std::string& _debug)
 std::string RandomCode::rndByteSequence(int _length, SizeStrictness _sizeType)
 {
 	refreshSeed();
-	std::string hash = "";
+	std::string hash;
 	_length = (_sizeType == SizeStrictness::Strict) ? std::max(0, _length) : (int)randomUniInt(0, _length);
 	for (auto i = 0; i < _length; i++)
 	{
-		uint8_t byte = randOpCodeGen();
+		uint8_t byte = static_cast<uint8_t>(randOpCodeGen());
 		hash += toCompactHex(byte, 1);
 	}
 	return hash;
@@ -268,7 +268,7 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 	//random opCode amount
 	boostIntDistrib sizeDist (1, _maxOpNumber);
 	boostIntGenerator rndSizeGen(gen, sizeDist);
-	int size = (int)rndSizeGen();
+	int size = rndSizeGen();
 
 	boostWeightGenerator randOpCodeWeight (gen, _options.opCodeProbability);
 	bool weightsDefined = _options.opCodeProbability.probabilities().size() == 255;
@@ -350,13 +350,9 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 	eth::InstructionInfo info = eth::instructionInfo(_opcode);
 
 	std::string code;
-	bool smart = false;
-	unsigned argsNum = info.args;
 	int rand = randomPercent();
-	if (rand < _options.smartCodeProbability)
-		smart = true;
 
-	if (smart)
+	if (rand < _options.smartCodeProbability)  // Smart.
 	{
 		//PUSH1 ... PUSH32
 		if (eth::Instruction::PUSH1 <= _opcode && _opcode <= eth::Instruction::PUSH32)
@@ -375,7 +371,6 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			if (isSWAP)
 				times = int(_opcode) - int(eth::Instruction::SWAP1) + 2;
 			else
-			if (isDUP)
 				times = int(_opcode) - int(eth::Instruction::DUP1) + 1;
 
 			for (int i = 0; i < times; i ++)
@@ -437,13 +432,11 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			code += getPushCode(randOpMemrGen());	//memlen1
 			break;
 		default:
-			smart = false;
+			break;
 		}
 	}
-
-	//generate random parameters
-	if (smart == false)
-		for (unsigned i = 0; i < argsNum; i++)
+	else  //generate random parameters
+		for (int i = 0; i < info.args; i++)
 			code += getPushCode(rndByteSequence(randOpLengGen()));
 
 	return code;
@@ -516,8 +509,8 @@ void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
 {
 	switch(_type)
 	{
-		case AddressType::Precompiled:
-			precompiledAddressList.push_back(_address);
+		case AddressType::CallOnly:
+			callAddressList.push_back(_address);
 			break;
 		case AddressType::StateAccount:
 			stateAddressList.push_back(_address);
@@ -572,17 +565,16 @@ BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(rndCode)
 {
-	std::string code;
-	cnote << "Testing Random Code: ";
 	try
 	{
-		code = test::RandomCode::generate(10);
+		cnote << "Testing Random Code: ";
+		std::string code = test::RandomCode::generate(1000);
+		cnote << code;
 	}
 	catch(...)
 	{
 		BOOST_ERROR("Exception thrown when generating random code!");
 	}
-	cnote << code;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
