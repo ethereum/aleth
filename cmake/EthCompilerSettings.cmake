@@ -18,8 +18,7 @@
 # ccache is auto-enabled if the tool is found. To disable set -DCCACHE=Off option.
 find_program(CCACHE ccache)
 if(CCACHE)
-	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-	set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+	set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
 	message(STATUS "ccache enabled (${CCACHE})")
 endif()
 
