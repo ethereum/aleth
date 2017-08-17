@@ -129,7 +129,7 @@ mObject FakeExtVM::exportState()
 	return ret;
 }
 
-void FakeExtVM::importState(mObject& _object)
+void FakeExtVM::importState(mObject const& _object)
 {
 	for (auto const& i: _object)
 	{
@@ -164,7 +164,7 @@ mObject FakeExtVM::exportExec()
 	return ret;
 }
 
-void FakeExtVM::importExec(mObject& _o)
+void FakeExtVM::importExec(mObject const& _o)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
 	assert(_o.count("address")> 0);
@@ -175,19 +175,19 @@ void FakeExtVM::importExec(mObject& _o)
 	assert(_o.count("gasPrice") > 0);
 	assert(_o.count("gas") > 0);
 
-	myAddress = Address(_o["address"].get_str());
-	caller = Address(_o["caller"].get_str());
-	origin = Address(_o["origin"].get_str());
-	value = toInt(_o["value"]);
-	gasPrice = toInt(_o["gasPrice"]);
-	gas = toInt(_o["gas"]);
+	myAddress = Address(_o.at("address").get_str());
+	caller = Address(_o.at("caller").get_str());
+	origin = Address(_o.at("origin").get_str());
+	value = toInt(_o.at("value"));
+	gasPrice = toInt(_o.at("gasPrice"));
+	gas = toInt(_o.at("gas"));
 	execGas = gas;
 
 	thisTxCode.clear();
 	code = thisTxCode;
 
 	thisTxCode = importCode(_o);
-	if (_o["code"].type() != str_type && _o["code"].type() != array_type)
+	if (_o.at("code").type() != str_type && _o.at("code").type() != array_type)
 		code.clear();
 
 	thisTxData.clear();

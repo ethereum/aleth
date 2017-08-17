@@ -316,24 +316,24 @@ void checkHexHasEvenLength(string const& _str)
 		BOOST_ERROR(TestOutputHelper::testName() + " An odd-length hex string represents a byte sequence: " + _str);
 }
 
-bytes importCode(json_spirit::mObject& _o)
+bytes importCode(json_spirit::mObject const& _o)
 {
 	bytes code;
-	if (_o["code"].type() == json_spirit::str_type)
-		if (_o["code"].get_str().find("0x") != 0)
-			code = fromHex(compileLLL(_o["code"].get_str()));
+	if (_o.at("code").type() == json_spirit::str_type)
+		if (_o.at("code").get_str().find("0x") != 0)
+			code = fromHex(compileLLL(_o.at("code").get_str()));
 		else
-			code = importByteArray(_o["code"].get_str());
-	else if (_o["code"].type() == json_spirit::array_type)
+			code = importByteArray(_o.at("code").get_str());
+	else if (_o.at("code").type() == json_spirit::array_type)
 	{
 		code.clear();
-		for (auto const& j: _o["code"].get_array())
+		for (auto const& j: _o.at("code").get_array())
 			code.push_back(toByte(j));
 	}
 	return code;
 }
 
-LogEntries importLog(json_spirit::mArray& _a)
+LogEntries importLog(json_spirit::mArray const& _a)
 {
 	LogEntries logEntries;
 	for (auto const& l: _a)
@@ -344,8 +344,8 @@ LogEntries importLog(json_spirit::mArray& _a)
 		BOOST_REQUIRE(o.count("data") > 0);
 		BOOST_REQUIRE(o.count("bloom") > 0);
 		LogEntry log;
-		log.address = Address(o["address"].get_str());
-		for (auto const& t: o["topics"].get_array())
+		log.address = Address(o.at("address").get_str());
+		for (auto const& t: o.at("topics").get_array())
 			log.topics.push_back(h256(t.get_str()));
 		log.data = importData(o);
 		logEntries.push_back(log);
@@ -353,15 +353,15 @@ LogEntries importLog(json_spirit::mArray& _a)
 	return logEntries;
 }
 
-void checkOutput(bytesConstRef _output, json_spirit::mObject& _o)
+void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o)
 {
 	int j = 0;
-	auto expectedOutput = _o["out"].get_str();
+	auto expectedOutput = _o.at("out").get_str();
 
 	if (expectedOutput.find("#") == 0)
 		BOOST_CHECK(_output.size() == toInt(expectedOutput.substr(1)));
-	else if (_o["out"].type() == json_spirit::array_type)
-		for (auto const& d: _o["out"].get_array())
+	else if (_o.at("out").type() == json_spirit::array_type)
+		for (auto const& d: _o.at("out").get_array())
 		{
 			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
 			++j;
@@ -372,9 +372,8 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject& _o)
 		BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput)));
 }
 
-void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, Address _expectedAddr)
+void checkStorage(map<u256, u256> const& _expectedStore, map<u256, u256> const& _resultStore, Address const& _expectedAddr)
 {
-	_expectedAddr = _expectedAddr; //unsed parametr when macro
 	for (auto&& expectedStorePair : _expectedStore)
 	{
 		auto& expectedStoreKey = expectedStorePair.first;
@@ -396,7 +395,7 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 	}
 }
 
-void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
+void checkLog(LogEntries const& _resultLogs, LogEntries const& _expectedLogs)
 {
 	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
 
@@ -408,7 +407,7 @@ void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 	}
 }
 
-void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates)
+void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates)
 {
 	BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
 
