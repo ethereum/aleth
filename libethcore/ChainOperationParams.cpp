@@ -75,7 +75,7 @@ u256 ChainOperationParams::blockReward(bool isByzantiumOrLater) const
 		return m_blockReward;
 }
 
-void ChainOperationParams::setBlockReward(u256 const& newBlockReward)
+void ChainOperationParams::setBlockReward(u256 const& _newBlockReward)
 {
-	m_blockReward = newBlockReward;
+	m_blockReward = _newBlockReward;
 }
