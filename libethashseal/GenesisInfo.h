@@ -47,7 +47,7 @@ enum class Network
 	ByzantiumTransitionTest = 76, ///< EIP158Test + Byzantium active from block 2
 	FrontierNoProofTest = 77, ///< Frontier rules + NoProof seal engine
 	ConstantinopleTest = 78, ///< ByzantiumTest + Constantinople active from block 0
-	
+	ConstantinopleTransitionTest = 79, ///< ByzantiumTest + Constantinople active from block 2
 
 	//TransitionTest networks
 	FrontierToHomesteadAt5 = 100,
