@@ -67,10 +67,10 @@ u256 ChainOperationParams::u256Param(string const& _name) const
 	return u256(fromBigEndian<u256>(fromHex(at)));
 }
 
-u256 ChainOperationParams::blockReward(bool isByzantiumOrLater) const
+u256 ChainOperationParams::blockReward(EVMSchedule const& _schedule) const
 {
-	if (isByzantiumOrLater)
-		return 3 * ether;
+	if (_schedule.blockRewardOverwrite)
+		return *_schedule.blockRewardOverwrite;
 	else
 		return m_blockReward;
 }
