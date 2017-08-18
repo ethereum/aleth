@@ -158,7 +158,7 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 	string s = contentsString(_testFileFullName);
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of '" << _testFileFullName << "' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
-	dev::test::TestOutputHelper::initTest(v);
+	dev::test::TestOutputHelper::initTest(v.get_obj().size());
 
 	for (auto& i: v.get_obj())
 	{

@@ -37,7 +37,7 @@ namespace dev {  namespace test {
 json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin)
 {
 	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
-	TestOutputHelper::initTest(v);
+	TestOutputHelper::initTest(v.get_obj().size());
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
 	for (auto& i: v.get_obj())
 	{
