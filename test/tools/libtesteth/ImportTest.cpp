@@ -648,9 +648,18 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 					cerr << trInfo << "\n";
 					_errorTransactions.push_back(i);
 				}
-			}			
+			}
 			else if (_expects.count("hash"))
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()), TestOutputHelper::testName() + " Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(tr.postState.rootHash().asBytes()) + " in " + trInfo);
+			{
+				//checking filled state test against client
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()),
+									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + ": Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(tr.postState.rootHash().asBytes()) + " in " + trInfo);
+				if (_expects.count("logs"))
+					BOOST_CHECK_MESSAGE(_expects.at("logs").get_str() == exportLog(tr.output.second.log()),
+									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + " Transaction log mismatch! expected: " + _expects.at("logs").get_str() + " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
+				else
+					BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing logs field!");
+			}
 			else
 				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
 
