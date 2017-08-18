@@ -171,23 +171,13 @@ std::vector<eth::Network> const& getNetworks()
 	return networks;
 }
 
-json_spirit::mArray exportLog(eth::LogEntries const& _logs)
+std::string exportLog(eth::LogEntries const& _logs)
 {
-	json_spirit::mArray ret;
-	if (_logs.size() == 0) return ret;
+	RLPStream s;
+	s.appendList(_logs.size());
 	for (LogEntry const& l: _logs)
-	{
-		json_spirit::mObject o;
-		o["address"] = toHex(l.address);
-		json_spirit::mArray topics;
-		for (auto const& t: l.topics)
-			topics.push_back(toHex(t));
-		o["topics"] = topics;
-		o["data"] = toHexPrefixed(l.data);
-		o["bloom"] = toHex(l.bloom());
-		ret.push_back(o);
-	}
-	return ret;
+		l.streamRLP(s);
+	return toHexPrefixed(sha3(s.out()));
 }
 
 u256 toInt(json_spirit::mValue const& _v)

@@ -139,7 +139,7 @@ bytes importByteArray(std::string const& _str);
 void checkHexHasEvenLength(std::string const&);
 void copyFile(std::string const& _source, std::string const& _destination);
 eth::LogEntries importLog(json_spirit::mArray const& _o);
-json_spirit::mArray exportLog(eth::LogEntries const& _logs);
+std::string exportLog(eth::LogEntries const& _logs);
 void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
 void checkLog(eth::LogEntries const& _resultLogs, eth::LogEntries const& _expectedLogs);
