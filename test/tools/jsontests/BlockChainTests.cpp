@@ -103,7 +103,7 @@ void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
 bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, SealEngineFace const& _sealEngine);
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
-void testBCTest(json_spirit::mObject& _o);
+void testBCTest(json_spirit::mObject const& _o);
 
 //percent output for many tests in one file
 json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _v, bool _fillin)
@@ -440,10 +440,10 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 	return output;
 }
 
-void testBCTest(json_spirit::mObject& _o)
+void testBCTest(json_spirit::mObject const& _o)
 {
 	string testName = TestOutputHelper::testName();
-	TestBlock genesisBlock(_o["genesisBlockHeader"].get_obj(), _o["pre"].get_obj());
+	TestBlock genesisBlock(_o.at("genesisBlockHeader").get_obj(), _o.at("pre").get_obj());
 	TestBlockChain blockchain(genesisBlock);
 
 	TestBlockChain testChain(genesisBlock);
@@ -451,11 +451,11 @@ void testBCTest(json_spirit::mObject& _o)
 
 	if (_o.count("genesisRLP") > 0)
 	{
-		TestBlock genesisFromRLP(_o["genesisRLP"].get_str());
+		TestBlock genesisFromRLP(_o.at("genesisRLP").get_str());
 		checkBlocks(genesisBlock, genesisFromRLP, testName);
 	}
 
-	for (auto const& bl: _o["blocks"].get_array())
+	for (auto const& bl: _o.at("blocks").get_array())
 	{
 		mObject blObj = bl.get_obj();
 		TestBlock blockFromRlp;
@@ -572,8 +572,8 @@ void testBCTest(json_spirit::mObject& _o)
 	//Check lastblock hash
 	BOOST_REQUIRE((_o.count("lastblockhash") > 0));
 	string lastTrueBlockHash = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
-	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o["lastblockhash"].get_str(),
-			testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o["lastblockhash"].get_str());
+	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o.at("lastblockhash").get_str(),
+			testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o.at("lastblockhash").get_str());
 
 	//Check final state (just to be sure)
 	BOOST_CHECK_MESSAGE(toString(testChain.topBlock().state().rootHash()) ==
@@ -582,7 +582,7 @@ void testBCTest(json_spirit::mObject& _o)
 
 	State postState(State::Null); //Compare post states
 	BOOST_REQUIRE((_o.count("postState") > 0));
-	ImportTest::importState(_o["postState"].get_obj(), postState);
+	ImportTest::importState(_o.at("postState").get_obj(), postState);
 	ImportTest::compareStates(postState, testChain.topBlock().state());
 	ImportTest::compareStates(postState, blockchain.topBlock().state());
 }
