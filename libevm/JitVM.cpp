@@ -329,7 +329,7 @@ public:
 	/// Handy wrapper for evm_execute().
 	Result execute(ExtVMFace& _ext, int64_t gas)
 	{
-		auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
+		auto mode = JitVM::toRevision(_ext.evmSchedule());
 		uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 		evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
 						   toEvmC(_ext.value), _ext.data.data(),
@@ -340,12 +340,12 @@ public:
 		)};
 	}
 
-	bool isCodeReady(evm_mode _mode, uint32_t _flags, h256 _codeHash)
+	bool isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
 	{
 		return m_instance->get_code_status(m_instance, _mode, _flags, toEvmC(_codeHash)) == EVM_READY;
 	}
 
-	void compile(evm_mode _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
+	void compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
 	{
 		m_instance->prepare_code(
 			m_instance, _mode, _flags, toEvmC(_codeHash), _code.data(), _code.size()
@@ -397,25 +397,27 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	return output;
 }
 
-evm_mode JitVM::scheduleToMode(EVMSchedule const& _schedule)
+evm_revision JitVM::toRevision(EVMSchedule const& _schedule)
 {
 	if (_schedule.haveCreate2)
 		return EVM_CONSTANTINOPLE;
 	if (_schedule.haveRevert)
 		return EVM_BYZANTIUM;
 	if (_schedule.eip158Mode)
-		return EVM_CLEARING;
+		return EVM_SPURIOUS_DRAGON;
 	if (_schedule.eip150Mode)
-		return EVM_ANTI_DOS;
-	return _schedule.haveDelegateCall ? EVM_HOMESTEAD : EVM_FRONTIER;
+		return EVM_TANGERINE_WHISTLE;
+	if (_schedule.haveDelegateCall)
+		return EVM_HOMESTEAD;
+	return EVM_FRONTIER;
 }
 
-bool JitVM::isCodeReady(evm_mode _mode, uint32_t _flags, h256 _codeHash)
+bool JitVM::isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
 {
 	return getJit().isCodeReady(_mode, _flags, _codeHash);
 }
 
-void JitVM::compile(evm_mode _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
+void JitVM::compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
 {
 	getJit().compile(_mode, _flags, _code, _codeHash);
 }
