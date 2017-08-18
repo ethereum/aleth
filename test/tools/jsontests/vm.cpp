@@ -301,15 +301,13 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 	json_spirit::mObject& output = v.get_obj();
 	for (auto& i: _input.get_obj())
 	{
-		output[i.first] = i.second;
-		string testname = i.first;
-		json_spirit::mObject& o = output[i.first].get_obj();
-
+		string const& testname = i.first;
+		json_spirit::mValue const& testInput = i.second;
 		if (!TestOutputHelper::passTest(testname))
-		{
-			o.clear(); //don't add irrelevant tests to the final file when filling
 			continue;
-		}
+
+		output[testname] = testInput;
+		json_spirit::mObject& o = output[testname].get_obj(); // TODO: avoid copying and add valid fields one by one
 
 		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
