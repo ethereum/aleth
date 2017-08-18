@@ -165,11 +165,11 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 			continue;
 		}
 
-		BOOST_REQUIRE_MESSAGE(outputTest.count("genesisBlockHeader"),
+		BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
 			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
-		BOOST_REQUIRE_MESSAGE(outputTest.count("pre"),
+		BOOST_REQUIRE_MESSAGE(inputTest.count("pre"),
 			"\"pre\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
@@ -186,21 +186,21 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 				string newtestname = testname + "_" + test::netIdToString(network);
 
 				json_spirit::mObject jObj = outputTest;
-				if (outputTest.count("expect"))
+				if (inputTest.count("expect"))
 				{
 					//prepare the corresponding expect section for the test
-					json_spirit::mArray& expects = outputTest["expect"].get_array();
+					json_spirit::mArray const& expects = inputTest.at("expect").get_array();
 					bool found = false;
 
 					for (auto& expect : expects)
 					{
 						vector<string> netlist;
-						json_spirit::mObject& expectObj = expect.get_obj();
-						ImportTest::parseJsonStrValueIntoVector(expectObj["network"], netlist);
+						json_spirit::mObject const& expectObj = expect.get_obj();
+						ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
 						if (std::find(netlist.begin(), netlist.end(), test::netIdToString(network)) != netlist.end() ||
 							std::find(netlist.begin(), netlist.end(), "ALL") != netlist.end())
 						{
-							jObj["expect"] = expectObj["result"];
+							jObj["expect"] = expectObj.at("result");
 							found = true;
 							break;
 						}
@@ -220,11 +220,11 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 		}
 		else
 		{
-			BOOST_REQUIRE_MESSAGE(outputTest.count("network"),
+			BOOST_REQUIRE_MESSAGE(inputTest.count("network"),
 				"\"network\" field is not found. filename: " + TestOutputHelper::testFileName() +
 				" testname: " + TestOutputHelper::testName()
 			);
-			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(outputTest["network"].get_str());
+			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
 			if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
 				continue;
 			testBCTest(outputTest);
