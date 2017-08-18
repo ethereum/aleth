@@ -43,12 +43,14 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 {
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
 		TestOutputHelper::testFileName() + " A GeneralStateTest filler should contain only one test.");
-	json_spirit::mValue v = _input;  // TODO: avoid copying and only add valid fields into the new object.
+	json_spirit::mValue v = json_spirit::mObject();
 
-	for (auto& i: v.get_obj())
+	for (auto& i: _input.get_obj())
 	{
-		string testname = i.first;
-		json_spirit::mObject& o = i.second.get_obj();
+		string const testname = i.first;
+		json_spirit::mObject const& inputTest = i.second.get_obj();
+		v.get_obj()[testname] = inputTest;
+		json_spirit::mObject& o = v.get_obj()[testname].get_obj();
 
 		if (_fillin && !TestOutputHelper::testFileName().empty())
 			BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::testFileName(),
