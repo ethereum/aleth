@@ -41,17 +41,18 @@ vector<h256> lastHashes(u256 _currentBlockNumber)
 }
 }
 
-ImportTest::ImportTest(json_spirit::mObject& _o, testType testTemplate):
+ImportTest::ImportTest(json_spirit::mObject const& _input, json_spirit::mObject& _output, testType testTemplate):
 	m_statePre(0, OverlayDB(), eth::BaseState::Empty),
 	m_statePost(0, OverlayDB(), eth::BaseState::Empty),
-	m_testObject(_o),
+	m_testInputObject(_input),
+	m_testOutputObject(_output),
 	m_testType(testTemplate)
 {
 	if (m_testType == testType::GeneralStateTest)
 	{
-		importEnv(_o["env"].get_obj());
-		importTransaction(_o["transaction"].get_obj());
-		importState(_o["pre"].get_obj(), m_statePre);
+		importEnv(_input.at("env").get_obj());
+		importTransaction(_input.at("transaction").get_obj());
+		importState(_input.at("pre").get_obj(), m_statePre);
 	}
 }
 
@@ -114,7 +115,7 @@ bytes ImportTest::executeTest()
 				testObj["pre"] = fillJsonWithState(m_statePre);
 
 				//generate expect sections for this transaction
-				if (m_testObject.count("expect"))
+				if (m_testInputObject.count("expect"))
 				{
 					State s = State (0, OverlayDB(), eth::BaseState::Empty);
 					AccountMaskMap m = std::unordered_map<Address, AccountMask>();
@@ -131,7 +132,7 @@ bytes ImportTest::executeTest()
 							continue;
 
 						TrExpectSection search {tr, smap};
-						for (auto const& exp: m_testObject["expect"].get_array())
+						for (auto const& exp: m_testInputObject.at("expect").get_array())
 						{
 							TrExpectSection* search2 = &search;
 							checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
@@ -258,13 +259,15 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 	return std::make_tuple(initialState, out, initialState.changeLog());
 }
 
-json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader)
+json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _input, bool _isHeader)
 {
 	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
 									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
 									 "previousHash", "to", "address", "caller", "origin", "secretKey", "data", "extraData"};
 
-	for (auto const& i: _o)
+	json_spirit::mObject output = _input;
+
+	for (auto const& i: output)
 	{
 		bool isHash = false;
 		std::string key = i.first;
@@ -293,34 +296,34 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 				str = j.get_str();
 				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
 			}
-			_o[key] = arr;
+			output[key] = arr;
 			continue;
 		}
 		else continue;
 
 		if (isHash)
-			_o[key] = (str.substr(0, 2) == "0x" || str.empty()) ? str : "0x" + str;
+			output[key] = (str.substr(0, 2) == "0x" || str.empty()) ? str : "0x" + str;
 		else
-			_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1);
+			output[key] = (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1);
 	}
-	return _o;
+	return output;
 }
 
-void ImportTest::importEnv(json_spirit::mObject& _o)
+void ImportTest::importEnv(json_spirit::mObject const& _o)
 {
 	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
 	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
 	BOOST_REQUIRE(_o.count("currentNumber") > 0);
 	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
 	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-	auto gasLimit = toInt(_o["currentGasLimit"]);
+	auto gasLimit = toInt(_o.at("currentGasLimit"));
 	BOOST_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
 	BlockHeader header;
 	header.setGasLimit(gasLimit.convert_to<int64_t>());
-	header.setDifficulty(toInt(_o["currentDifficulty"]));
-	header.setNumber(toInt(_o["currentNumber"]));
-	header.setTimestamp(toInt(_o["currentTimestamp"]));
-	header.setAuthor(Address(_o["currentCoinbase"].get_str()));
+	header.setDifficulty(toInt(_o.at("currentDifficulty")));
+	header.setNumber(toInt(_o.at("currentNumber")));
+	header.setTimestamp(toInt(_o.at("currentTimestamp")));
+	header.setAuthor(Address(_o.at("currentCoinbase").get_str()));
 
 	m_lastBlockHashes.reset(new TestLastBlockHashes(lastHashes(header.number())));
 	m_envInfo.reset(new EnvInfo(header, *m_lastBlockHashes, 0));
@@ -694,11 +697,10 @@ int ImportTest::exportTest(bytes const& _output)
 	if (m_testType == testType::GeneralStateTest)
 	{
 		vector<size_t> stateIndexesToPrint;
-		if (m_testObject.count("expect") > 0)
+		if (m_testInputObject.count("expect") > 0)
 		{
-			for (auto const& exp: m_testObject["expect"].get_array())
+			for (auto const& exp: m_testInputObject.at("expect").get_array())
 				checkGeneralTestSection(exp.get_obj(), stateIndexesToPrint);
-			m_testObject.erase(m_testObject.find("expect"));
 		}
 
 		std::map<string, json_spirit::mArray> postState;
@@ -729,44 +731,41 @@ int ImportTest::exportTest(bytes const& _output)
 		for(std::map<string, json_spirit::mArray>::iterator it = postState.begin(); it != postState.end(); ++it)
 			obj[it->first] = it->second;
 
-		m_testObject["post"] = obj;
+		m_testOutputObject["post"] = obj;
 	}
 	else
 	{
 		// export output
-		m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHexPrefixed(_output);
+		m_testOutputObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHexPrefixed(_output);
 
 		// compare expected output with post output
-		if (m_testObject.count("expectOut") > 0)
+		if (m_testInputObject.count("expectOut") > 0)
 		{
-			std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
+			std::string warning = "Check State: Error! Unexpected output: " + m_testOutputObject["out"].get_str() + " Expected: " + m_testInputObject.at("expectOut").get_str();
 
-			bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
+			bool statement = (m_testOutputObject["out"].get_str() == m_testInputObject.at("expectOut").get_str());
 			BOOST_CHECK_MESSAGE(statement, warning);
 			if (!statement)
 				err = 1;
-
-			m_testObject.erase(m_testObject.find("expectOut"));
 		}
 
 		// compare expected state with post state
-		if (m_testObject.count("expect") > 0)
+		if (m_testInputObject.count("expect") > 0)
 		{
 			eth::AccountMaskMap stateMap;
 			State expectState(0, OverlayDB(), eth::BaseState::Empty);
-			importState(m_testObject["expect"].get_obj(), expectState, stateMap);
+			importState(m_testInputObject.at("expect").get_obj(), expectState, stateMap);
 			compareStates(expectState, m_statePost, stateMap, WhenError::Throw);
-			m_testObject.erase(m_testObject.find("expect"));
 		}
 
 		// export post state
-		m_testObject["post"] = fillJsonWithState(m_statePost);
-		m_testObject["postStateRoot"] = toHex(m_statePost.rootHash().asBytes());
+		m_testOutputObject["post"] = fillJsonWithState(m_statePost);
+		m_testOutputObject["postStateRoot"] = toHex(m_statePost.rootHash().asBytes());
 	}
 
 	// export pre state
-	m_testObject["pre"] = fillJsonWithState(m_statePre);
-	m_testObject["env"] = makeAllFieldsHex(m_testObject["env"].get_obj());
-	m_testObject["transaction"] = makeAllFieldsHex(m_testObject["transaction"].get_obj());
+	m_testOutputObject["pre"] = fillJsonWithState(m_statePre);
+	m_testOutputObject["env"] = makeAllFieldsHex(m_testInputObject.at("env").get_obj());
+	m_testOutputObject["transaction"] = makeAllFieldsHex(m_testInputObject.at("transaction").get_obj());
 	return err;
 }

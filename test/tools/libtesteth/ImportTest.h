@@ -39,15 +39,15 @@ enum class testType
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o, testType _testTemplate);
+	ImportTest(json_spirit::mObject const& _input, json_spirit::mObject& _output, testType _testTemplate);
 
 	// imports
-	void importEnv(json_spirit::mObject& _o);
+	void importEnv(json_spirit::mObject const& _o);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
-	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader = false);
+	static json_spirit::mObject makeAllFieldsHex(json_spirit::mObject const& _o, bool _isHeader = false);
 	static void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, std::vector<std::string>& _out);
 
 	//check functions
@@ -92,7 +92,8 @@ private:
 	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
 	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
 
-	json_spirit::mObject& m_testObject;
+	json_spirit::mObject const& m_testInputObject;
+	json_spirit::mObject& m_testOutputObject;
 	testType m_testType;
 };
 
