@@ -266,25 +266,26 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 
 	for (auto const& bl: _input.at("blocks").get_array())
 	{
-		mObject blObj = bl.get_obj();
-		if (blObj.count("blocknumber") > 0)
-			importBlockNumber = max((int)toInt(blObj["blocknumber"]), 1);
+		mObject const& blObjInput = bl.get_obj();
+		mObject blObj = blObjInput;
+		if (blObjInput.count("blocknumber") > 0)
+			importBlockNumber = max((int)toInt(blObjInput.at("blocknumber")), 1);
 		else
 			importBlockNumber++;
 
-		if (blObj.count("chainname") > 0)
-			chainname = blObj["chainname"].get_str();
+		if (blObjInput.count("chainname") > 0)
+			chainname = blObjInput.at("chainname").get_str();
 		else
 			chainname = "default";
 
-		if (blObj.count("chainnetwork") > 0)
-			chainnetwork = blObj["chainnetwork"].get_str();
+		if (blObjInput.count("chainnetwork") > 0)
+			chainnetwork = blObjInput.at("chainnetwork").get_str();
 		else
 			chainnetwork = "default";
 
 		if (chainMap.count(chainname) > 0)
 		{
-			if (_o.count("noBlockChainHistory") == 0)
+			if (_input.count("noBlockChainHistory") == 0)
 			{
 				ChainBranch::forceBlockchain(chainnetwork);
 				chainMap[chainname]->reset();
@@ -304,15 +305,15 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		vector<TestBlock>& importedBlocks = chainMap[chainname]->importedBlocks;
 
 		//Import Transactions
-		BOOST_REQUIRE(blObj.count("transactions"));
-		for (auto const& txObj: blObj["transactions"].get_array())
+		BOOST_REQUIRE(blObjInput.count("transactions"));
+		for (auto const& txObj: blObjInput.at("transactions").get_array())
 		{
 			TestTransaction transaction(txObj.get_obj());
 			block.addTransaction(transaction);
 		}
 
 		//Import Uncles
-		for (auto const& uHObj: blObj.at("uncleHeaders").get_array())
+		for (auto const& uHObj: blObjInput.at("uncleHeaders").get_array())
 		{
 			cnote << "Generating uncle block at test " << testName;
 			TestBlock uncle;
@@ -328,9 +329,9 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		vector<TestBlock> validUncles = blockchain.syncUncles(block.uncles());
 		block.setUncles(validUncles);
 
-		if (blObj.count("blockHeaderPremine"))
+		if (blObjInput.count("blockHeaderPremine"))
 		{
-			overwriteBlockHeaderForTest(blObj.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
+			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
 			blObj.erase("blockHeaderPremine");
 		}
 
@@ -343,8 +344,8 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		TestBlock alterBlock(block);
 		checkBlocks(block, alterBlock, testName);
 
-		if (blObj.count("blockHeader"))
-			overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
+		if (blObjInput.count("blockHeader"))
+			overwriteBlockHeaderForTest(blObjInput.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
 
 		blObj["rlp"] = toHexPrefixed(alterBlock.bytes());
 		blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
@@ -361,15 +362,15 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		compareBlocks(block, alterBlock);
 		try
 		{
-			if (blObj.count("expectException"))
+			if (blObjInput.count("expectException"))
 				BOOST_ERROR("Deprecated expectException field! " + testName);
 
 			blockchain.addBlock(alterBlock);
 			if (testChain.addBlock(alterBlock))
 				cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testName;
 
-			bool isException = (blObj.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
-								|| blObj.count("expectExceptionALL"));
+			bool isException = (blObjInput.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
+								|| blObjInput.count("expectExceptionALL"));
 			BOOST_REQUIRE_MESSAGE(!isException, "block import expected exception, but no exception was thrown!");
 
 			if (_o.count("noBlockChainHistory") == 0)
