@@ -246,7 +246,7 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
-	json_spirit::mObject _o = _input;
+	json_spirit::mObject output;
 	string const& testName = TestOutputHelper::testName();
 	TestBlock genesisBlock(_input.at("genesisBlockHeader").get_obj(), _input.at("pre").get_obj());
 	genesisBlock.setBlockHeader(genesisBlock.blockHeader());
@@ -254,9 +254,9 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 	TestBlockChain testChain(genesisBlock);
 	assert(testChain.interface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
 
-	_o["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
-	_o["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
-	BOOST_REQUIRE(_o.count("blocks"));
+	output["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
+	output["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
+	BOOST_REQUIRE(_input.count("blocks"));
 
 	mArray blArray;
 	size_t importBlockNumber = 0;
@@ -264,24 +264,41 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 	string chainnetwork = "default";
 	std::map<string, ChainBranch*> chainMap = { {chainname , new ChainBranch(genesisBlock)}};
 
+	if (_input.count("noBlockChainHistory") > 0)
+		output["noBlockChainHistory"] = _input.at("noBlockChainHistory");
+
 	for (auto const& bl: _input.at("blocks").get_array())
 	{
 		mObject const& blObjInput = bl.get_obj();
-		mObject blObj = blObjInput;
+		mObject blObj;
 		if (blObjInput.count("blocknumber") > 0)
+		{
 			importBlockNumber = max((int)toInt(blObjInput.at("blocknumber")), 1);
+			blObj["blocknumber"] = blObjInput.at("blocknumber");
+		}
 		else
 			importBlockNumber++;
 
 		if (blObjInput.count("chainname") > 0)
+		{
 			chainname = blObjInput.at("chainname").get_str();
+			blObj["chainname"] = blObjInput.at("chainname");
+		}
 		else
 			chainname = "default";
 
 		if (blObjInput.count("chainnetwork") > 0)
+		{
 			chainnetwork = blObjInput.at("chainnetwork").get_str();
+			blObj["chainnetwork"] = blObjInput.at("chainnetwork");
+		}
 		else
 			chainnetwork = "default";
+
+		// Copy expectException* fields
+		for (auto const& field: blObjInput)
+			if (field.first.substr(0, 15) == "expectException")
+				blObj[field.first] = field.second;
 
 		if (chainMap.count(chainname) > 0)
 		{
@@ -330,10 +347,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		block.setUncles(validUncles);
 
 		if (blObjInput.count("blockHeaderPremine"))
-		{
 			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
-			blObj.erase("blockHeaderPremine");
-		}
 
 		cnote << "Mining block" <<  importBlockNumber << "for chain" << chainname << "at test " << testName;
 		block.mine(blockchain);
@@ -373,7 +387,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 								|| blObjInput.count("expectExceptionALL"));
 			BOOST_REQUIRE_MESSAGE(!isException, "block import expected exception, but no exception was thrown!");
 
-			if (_o.count("noBlockChainHistory") == 0)
+			if (_input.count("noBlockChainHistory") == 0)
 			{
 				importedBlocks.push_back(alterBlock);
 				importedBlocks.back().clearState(); //close the state as it wont be needed. too many open states would lead to exception.
@@ -401,29 +415,28 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		this_thread::sleep_for(chrono::seconds(1));
 	}//each blocks
 
-	if (_o.count("expect") > 0)
+	if (_input.count("expect") > 0)
 	{
 		AccountMaskMap expectStateMap;
 		State stateExpect(State::Null);
-		ImportTest::importState(_o["expect"].get_obj(), stateExpect, expectStateMap);
+		ImportTest::importState(_input.at("expect").get_obj(), stateExpect, expectStateMap);
 		if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, WhenError::Throw))
 				cerr << testName << endl;
-		_o.erase(_o.find("expect"));
 	}
 
-	_o["blocks"] = blArray;
-	_o["postState"] = fillJsonWithState(testChain.topBlock().state());
-	_o["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
+	output["blocks"] = blArray;
+	output["postState"] = fillJsonWithState(testChain.topBlock().state());
+	output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 
 	//make all values hex in pre section
 	State prestate(State::Null);
-	ImportTest::importState(_o["pre"].get_obj(), prestate);
-	_o["pre"] = fillJsonWithState(prestate);
+	ImportTest::importState(_input.at("pre").get_obj(), prestate);
+	output["pre"] = fillJsonWithState(prestate);
 
 	for (auto iterator = chainMap.begin(); iterator != chainMap.end(); iterator++)
 		delete iterator->second;
 
-	return _o;
+	return output;
 }
 
 void testBCTest(json_spirit::mObject& _o)
