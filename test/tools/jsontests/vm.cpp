@@ -297,11 +297,13 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom")
 		TestOutputHelper::initTest(_input.get_obj().size());
 
-	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
-	for (auto& i: v.get_obj())
+	json_spirit::mValue v = json_spirit::mObject();
+	json_spirit::mObject& output = v.get_obj();
+	for (auto& i: _input.get_obj())
 	{
+		output[i.first] = i.second;
 		string testname = i.first;
-		json_spirit::mObject& o = i.second.get_obj();
+		json_spirit::mObject& o = output[i.first].get_obj();
 
 		if (!TestOutputHelper::passTest(testname))
 		{
