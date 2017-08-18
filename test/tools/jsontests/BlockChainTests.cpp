@@ -248,7 +248,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
 	json_spirit::mObject _o = _input;
 	string const& testName = TestOutputHelper::testName();
-	TestBlock genesisBlock(_o["genesisBlockHeader"].get_obj(), _o["pre"].get_obj());
+	TestBlock genesisBlock(_input.at("genesisBlockHeader").get_obj(), _input.at("pre").get_obj());
 	genesisBlock.setBlockHeader(genesisBlock.blockHeader());
 
 	TestBlockChain testChain(genesisBlock);
@@ -264,7 +264,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 	string chainnetwork = "default";
 	std::map<string, ChainBranch*> chainMap = { {chainname , new ChainBranch(genesisBlock)}};
 
-	for (auto const& bl: _o["blocks"].get_array())
+	for (auto const& bl: _input.at("blocks").get_array())
 	{
 		mObject blObj = bl.get_obj();
 		if (blObj.count("blocknumber") > 0)
