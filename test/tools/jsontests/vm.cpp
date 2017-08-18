@@ -296,7 +296,7 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 {
 	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
 	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom")
-		TestOutputHelper::initTest(v);
+		TestOutputHelper::initTest(v.get_obj().size());
 
 	for (auto& i: v.get_obj())
 	{

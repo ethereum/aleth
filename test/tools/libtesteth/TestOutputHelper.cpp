@@ -32,32 +32,21 @@ using namespace boost;
 
 Timer TestOutputHelper::m_timer;
 size_t TestOutputHelper::m_currTest = 0;
-size_t TestOutputHelper::m_maxTests = 0;
+size_t TestOutputHelper::m_maxTests = 1;
 string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
-string TestOutputHelper::m_currentTestFileName = "n/a";
+string TestOutputHelper::m_currentTestFileName;
 std::vector<TestOutputHelper::execTimeName> TestOutputHelper::m_execTimeResults;
-void TestOutputHelper::initTest(int _maxTests)
+void TestOutputHelper::initTest(size_t _maxTests)
 {
 	Ethash::init();
 	BasicAuthority::init();
 	NoProof::init();
 	m_timer.restart();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
+	if (!Options::get().createRandomTest)
+		std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _maxTests;
-	m_currTest = 0;
-}
-
-void TestOutputHelper::initTest(json_spirit::mValue const& _v)
-{
-	Ethash::init();
-	BasicAuthority::init();
-	NoProof::init();
-	m_timer.restart();
-	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
-	m_maxTests = _v.get_obj().size();
 	m_currTest = 0;
 }
 

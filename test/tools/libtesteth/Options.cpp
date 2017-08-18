@@ -272,9 +272,25 @@ Options::Options(int argc, char** argv)
 			cout << dev::test::RandomCode::generate(maxCodes) << endl;
 			exit(0);
 		}
+		else if (arg == "--createRandomTest")
+			createRandomTest = true;
 		else if (seenSeparator)
 		{
 			cerr << "Unknown option: " + arg << endl;
+			exit(1);
+		}
+	}
+
+	//check restrickted options
+	if (createRandomTest)
+	{
+		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
+			|| performance || quadratic || memory || inputLimits || bigData || wallet
+			|| stats || filltests || fillchain)
+		{
+			cerr << "--createRandomTest cannot be used with any of the options: " <<
+					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, performance, " <<
+					"quadratic, memory, inputLimits, bigData, wallet, stats, filltests, fillchain" << endl;
 			exit(1);
 		}
 	}
