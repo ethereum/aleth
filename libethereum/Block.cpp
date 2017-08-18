@@ -805,7 +805,6 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 
 	clog(StateDetail) << "Post-reward stateRoot:" << m_state.rootHash();
 	clog(StateDetail) << m_state;
-	clog(StateDetail) << *this;
 
 	m_currentBlock.setLogBloom(logBloom());
 	m_currentBlock.setGasUsed(gasUsed());
@@ -881,68 +880,32 @@ LogBloom Block::logBloom() const
 	return ret;
 }
 
-void Block::cleanup(bool _fullCommit)
+void Block::cleanup()
 {
-	if (_fullCommit)
+	// Commit the new trie to disk.
+	if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
+		clog(StateTrace) << "Committing to disk: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
+
+	try
 	{
-		// Commit the new trie to disk.
-		if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
-			clog(StateTrace) << "Committing to disk: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
-
-		try
-		{
-			EnforceRefs er(db(), true);
-			rootHash();
-		}
-		catch (BadRoot const&)
-		{
-			clog(StateChat) << "Trie corrupt! :-(";
-			throw;
-		}
-
-		m_state.db().commit();	// TODO: State API for this?
-
-		if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
-			clog(StateTrace) << "Committed: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
-
-		m_previousBlock = m_currentBlock;
-		sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
-
-		clog(StateTrace) << "finalising enactment. current -> previous, hash is" << m_previousBlock.hash();
+		EnforceRefs er(db(), true);
+		rootHash();
 	}
-	else
-		m_state.db().rollback();	// TODO: State API for this?
+	catch (BadRoot const&)
+	{
+		clog(StateChat) << "Trie corrupt! :-(";
+		throw;
+	}
+
+	m_state.db().commit();	// TODO: State API for this?
+
+	if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
+		clog(StateTrace) << "Committed: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
+
+	m_previousBlock = m_currentBlock;
+	sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
+
+	clog(StateTrace) << "finalising enactment. current -> previous, hash is" << m_previousBlock.hash();
 
 	resetCurrent();
-}
-
-string Block::vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequirements::value _ir)
-{
-	noteChain(_bc);
-
-	RLP rlp(_block);
-
-	cleanup(false);
-	BlockHeader bi(_block);
-	m_currentBlock = bi;
-	m_currentBlock.verify((_ir & ImportRequirements::ValidSeal) ? CheckEverything : IgnoreSeal, _block);
-	m_currentBlock.noteDirty();
-
-	string ret;
-	unsigned i = 0;
-	for (auto const& tr: rlp[1])
-	{
-		StandardTrace st;
-		st.setShowMnemonics();
-		execute(_bc.lastBlockHashes(), Transaction(tr.data(), CheckTransaction::Everything), Permanence::Committed, st.onOp());
-		ret += (ret.empty() ? "[" : ",") + st.json();
-		++i;
-	}
-	return ret.empty() ? "[]" : (ret + "]");
-}
-
-std::ostream& dev::eth::operator<<(std::ostream& _out, Block const& _s)
-{
-	(void)_s;
-	return _out;
 }

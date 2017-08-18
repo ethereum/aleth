@@ -234,9 +234,7 @@ public:
 	u256 enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc);
 
 	/// Returns back to a pristine state after having done a playback.
-	/// @arg _fullCommit if true flush everything out to disk. If false, this effectively only validates
-	/// the block since all state changes are ultimately reversed.
-	void cleanup(bool _fullCommit);
+	void cleanup();
 
 	/// Sets m_currentBlock to a clean state, (i.e. no change from m_previousBlock) and
 	/// optionally modifies the timestamp.
@@ -286,15 +284,6 @@ private:
 	/// Undo the changes to the state for committing to mine.
 	void uncommitToSeal();
 
-	/// Retrieve all information about a given address into the cache.
-	/// If _requireMemory is true, grab the full memory should it be a contract item.
-	/// If _forceCreate is true, then insert a default item into the cache, in the case it doesn't
-	/// exist in the DB.
-	void ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const;
-
-	/// Retrieve all information about a given address into a cache.
-	void ensureCached(std::unordered_map<Address, Account>& _cache, Address const& _a, bool _requireCode, bool _forceCreate) const;
-
 	/// Execute the given block, assuming it corresponds to m_currentBlock.
 	/// Throws on failure.
 	u256 enact(VerifiedBlockRef const& _block, BlockChain const& _bc);
@@ -310,9 +299,6 @@ private:
 
 	/// Creates and updates the special contract for storing block hashes according to EIP96
 	void updateBlockhashContract();
-
-	/// Provide a standard VM trace for debugging purposes.
-	std::string vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequirements::value _ir);
 
 	State m_state;								///< Our state tree, as an OverlayDB DB.
 	Transactions m_transactions;				///< The current list of transactions that we've included in the state.
@@ -331,11 +317,7 @@ private:
 	Address m_author;							///< Our address (i.e. the address to which fees go).
 
 	SealEngineFace* m_sealEngine = nullptr;		///< The chain's seal engine.
-
-	friend std::ostream& operator<<(std::ostream& _out, Block const& _s);
 };
-
-std::ostream& operator<<(std::ostream& _out, Block const& _s);
 
 
 }
