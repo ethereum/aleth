@@ -131,17 +131,17 @@ byte toByte(json_spirit::mValue const& _v);
 void replaceLLLinState(json_spirit::mObject& _o);
 std::string compileLLL(std::string const& _code);
 std::string executeCmd(std::string const& _command);
-bytes importCode(json_spirit::mObject& _o);
+bytes importCode(json_spirit::mObject const& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
 void checkHexHasEvenLength(std::string const&);
 void copyFile(std::string const& _source, std::string const& _destination);
-eth::LogEntries importLog(json_spirit::mArray& _o);
+eth::LogEntries importLog(json_spirit::mArray const& _o);
 json_spirit::mArray exportLog(eth::LogEntries const& _logs);
-void checkOutput(bytesConstRef _output, json_spirit::mObject& _o);
+void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
-void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
-void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
+void checkLog(eth::LogEntries const& _resultLogs, eth::LogEntries const& _expectedLogs);
+void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates);
 dev::eth::BlockHeader constructHeader(
 	h256 const& _parentHash,
 	h256 const& _sha3Uncles,
