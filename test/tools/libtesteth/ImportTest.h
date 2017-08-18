@@ -42,7 +42,7 @@ public:
 	ImportTest(json_spirit::mObject& _o, testType _testTemplate);
 
 	// imports
-	void importEnv(json_spirit::mObject& _o);
+	void importEnv(json_spirit::mObject const& _o);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);

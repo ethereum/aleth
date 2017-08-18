@@ -306,21 +306,21 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o, boo
 	return _o;
 }
 
-void ImportTest::importEnv(json_spirit::mObject& _o)
+void ImportTest::importEnv(json_spirit::mObject const& _o)
 {
 	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
 	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
 	BOOST_REQUIRE(_o.count("currentNumber") > 0);
 	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
 	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-	auto gasLimit = toInt(_o["currentGasLimit"]);
+	auto gasLimit = toInt(_o.at("currentGasLimit"));
 	BOOST_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
 	BlockHeader header;
 	header.setGasLimit(gasLimit.convert_to<int64_t>());
-	header.setDifficulty(toInt(_o["currentDifficulty"]));
-	header.setNumber(toInt(_o["currentNumber"]));
-	header.setTimestamp(toInt(_o["currentTimestamp"]));
-	header.setAuthor(Address(_o["currentCoinbase"].get_str()));
+	header.setDifficulty(toInt(_o.at("currentDifficulty")));
+	header.setNumber(toInt(_o.at("currentNumber")));
+	header.setTimestamp(toInt(_o.at("currentTimestamp")));
+	header.setAuthor(Address(_o.at("currentCoinbase").get_str()));
 
 	m_lastBlockHashes.reset(new TestLastBlockHashes(lastHashes(header.number())));
 	m_envInfo.reset(new EnvInfo(header, *m_lastBlockHashes, 0));
