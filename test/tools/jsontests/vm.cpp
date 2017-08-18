@@ -302,7 +302,7 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 	for (auto& i: _input.get_obj())
 	{
 		string const& testname = i.first;
-		json_spirit::mValue const& testInput = i.second;
+		json_spirit::mObject const& testInput = i.second.get_obj();
 		if (!TestOutputHelper::passTest(testname))
 			continue;
 
