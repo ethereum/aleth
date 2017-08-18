@@ -185,7 +185,7 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 				dev::test::TestBlockChain::s_sealEngineNetwork = network;
 				string newtestname = testname + "_" + test::netIdToString(network);
 
-				json_spirit::mObject jObj = inputTest;
+				json_spirit::mObject jObjOutput = inputTest;
 				if (inputTest.count("expect"))
 				{
 					//prepare the corresponding expect section for the test
@@ -200,18 +200,18 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 						if (std::find(netlist.begin(), netlist.end(), test::netIdToString(network)) != netlist.end() ||
 							std::find(netlist.begin(), netlist.end(), "ALL") != netlist.end())
 						{
-							jObj["expect"] = expectObj.at("result");
+							jObjOutput["expect"] = expectObj.at("result");
 							found = true;
 							break;
 						}
 					}
 					if (!found)
-						jObj.erase(jObj.find("expect"));
+						jObjOutput.erase(jObjOutput.find("expect"));
 				}
 				TestOutputHelper::setCurrentTestName(newtestname);
-				jObj = fillBCTest(jObj);
-				jObj["network"] = test::netIdToString(network);
-				tests[newtestname] = jObj;
+				jObjOutput = fillBCTest(jObjOutput);
+				jObjOutput["network"] = test::netIdToString(network);
+				tests[newtestname] = jObjOutput;
 			}
 
 			// will be deleted once after the loop.
