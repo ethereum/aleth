@@ -40,38 +40,38 @@ inline u256 fromEvmC(evm_uint256be const& _n)
 }
 
 int accountExists(
-	evm_env* _opaqueEnv,
+	evm_context* _context,
 	evm_uint160be const* _addr
 ) noexcept
 {
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	Address addr = fromEvmC(*_addr);
 	return env.exists(addr) ? 1 : 0;
 }
 
 void getStorage(
 	evm_uint256be* o_result,
-	evm_env* _opaqueEnv,
+	evm_context* _context,
 	evm_uint160be const* _addr,
 	evm_uint256be const* _key
 ) noexcept
 {
 	(void) _addr;
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	assert(fromEvmC(*_addr) == env.myAddress);
 	u256 key = fromEvmC(*_key);
 	*o_result = toEvmC(env.store(key));
 }
 
 void setStorage(
-	evm_env* _opaqueEnv,
+	evm_context* _context,
 	evm_uint160be const* _addr,
 	evm_uint256be const* _key,
 	evm_uint256be const* _value
 ) noexcept
 {
 	(void) _addr;
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	assert(fromEvmC(*_addr) == env.myAddress);
 	u256 index = fromEvmC(*_key);
 	u256 value = fromEvmC(*_value);
@@ -83,19 +83,19 @@ void setStorage(
 
 void getBalance(
 	evm_uint256be* o_result,
-	evm_env* _opaqueEnv,
+	evm_context* _context,
 	evm_uint160be const* _addr
 ) noexcept
 {
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	*o_result = toEvmC(env.balance(fromEvmC(*_addr)));
 }
 
-size_t getCode(byte const** o_code, evm_env* _opaqueEnv, evm_uint160be const* _addr)
+size_t getCode(byte const** o_code, evm_context* _context, evm_uint160be const* _addr)
 {
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	Address addr = fromEvmC(*_addr);
-	if (o_code)
+	if (o_code != nullptr)
 	{
 		auto &code = env.codeAt(addr);
 		*o_code = code.data();
@@ -105,20 +105,20 @@ size_t getCode(byte const** o_code, evm_env* _opaqueEnv, evm_uint160be const* _a
 }
 
 void selfdestruct(
-	evm_env* _opaqueEnv,
+	evm_context* _context,
 	evm_uint160be const* _addr,
 	evm_uint160be const* _beneficiary
 ) noexcept
 {
 	(void) _addr;
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	assert(fromEvmC(*_addr) == env.myAddress);
 	env.suicide(fromEvmC(*_beneficiary));
 }
 
 
 void log(
-	evm_env* _opaqueEnv,
+	evm_context* _context,
 	evm_uint160be const* _addr,
 	uint8_t const* _data,
 	size_t _dataSize,
@@ -127,15 +127,15 @@ void log(
 ) noexcept
 {
 	(void) _addr;
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	assert(fromEvmC(*_addr) == env.myAddress);
 	h256 const* pTopics = reinterpret_cast<h256 const*>(_topics);
 	env.log(h256s{pTopics, pTopics + _numTopics}, bytesConstRef{_data, _dataSize});
 }
 
-void getTxContext(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
+void getTxContext(evm_tx_context* result, evm_context* _context) noexcept
 {
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 	result->tx_gas_price = toEvmC(env.gasPrice);
 	result->tx_origin = toEvmC(env.origin);
 	result->block_coinbase = toEvmC(env.envInfo().author());
@@ -145,9 +145,9 @@ void getTxContext(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
 	result->block_difficulty = toEvmC(env.envInfo().difficulty());
 }
 
-void getBlockHash(evm_uint256be* o_hash, evm_env* _envPtr, int64_t _number)
+void getBlockHash(evm_uint256be* o_hash, evm_context* _envPtr, int64_t _number)
 {
-	auto &env = reinterpret_cast<ExtVMFace&>(*_envPtr);
+	auto& env = static_cast<ExtVMFace&>(*_envPtr);
 	*o_hash = toEvmC(env.blockHash(_number));
 }
 
@@ -200,10 +200,10 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 	}
 }
 
-void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) noexcept
+void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) noexcept
 {
 	assert(_msg->gas >= 0 && "Invalid gas value");
-	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	auto& env = static_cast<ExtVMFace&>(*_context);
 
 	// Handle CREATE separately.
 	if (_msg->kind == EVM_CREATE)
@@ -270,7 +270,7 @@ const evm_host hostInterface =
 class EVM
 {
 public:
-	EVM(evm_host const& _host)
+	explicit EVM(evm_host const& _host)
 	{
 		auto factory = evmjit_get_factory();
 		m_instance = factory.create(&_host);
@@ -329,7 +329,6 @@ public:
 	/// Handy wrapper for evm_execute().
 	Result execute(ExtVMFace& _ext, int64_t gas)
 	{
-		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
 		uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 		evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
@@ -337,7 +336,7 @@ public:
 						   _ext.data.size(), toEvmC(_ext.codeHash), gas,
 						   static_cast<int32_t>(_ext.depth), EVM_CALL, flags};
 		return Result{m_instance->execute(
-			m_instance, env, mode, &msg, _ext.code.data(), _ext.code.size()
+			m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size()
 		)};
 	}
 
