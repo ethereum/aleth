@@ -236,14 +236,14 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 		eth::VM& vm = *voidVM;
 
 		std::ostringstream o;
-		o << std::endl << "    STACK" << std::endl;
+		o << "\n    STACK\n";
 		for (auto i: vm.stack())
-			o << (h256)i << std::endl;
-		o << "    MEMORY" << std::endl << memDump(vm.memory());
-		o << "    STORAGE" << std::endl;
+			o << (h256)i << "\n";
+		o << "    MEMORY\n" << memDump(vm.memory());
+		o << "    STORAGE\n";
 
 		for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
-			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
+			o << std::showbase << std::hex << i.first << ": " << i.second << "\n";
 
 		dev::LogOutputStream<eth::VMTraceChannel, false>() << o.str();
 		dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << pc << " : " << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";

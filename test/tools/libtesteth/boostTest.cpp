@@ -82,7 +82,7 @@ void travisOut()
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		++tickCounter;
 		if (tickCounter % 10 == 0)
-			std::cout << "." << std::endl;  // Output dot every 10s.
+			std::cout << ".\n" << std::flush;  // Output dot every 10s.
 	}
 }
 
@@ -149,7 +149,7 @@ int main( int argc, char* argv[] )
 	}
 	catch (dev::test::Options::InvalidOption const& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << e.what() << "\n";
 		exit(1);
 	}
 

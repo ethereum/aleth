@@ -555,7 +555,7 @@ void ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
 		if (!inArray(allowedNetowks, net))
 		{
 			//Can't use boost at this point
-			std::cerr << TestOutputHelper::testName() + " Specified Network not found: " + net << endl;
+			std::cerr << TestOutputHelper::testName() + " Specified Network not found: " << net << "\n";
 			exit(1);
 		}
 	}
@@ -642,7 +642,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 				int errcode = compareStates(expectState, postState, stateMap, WhenError::Throw);
 				if (errcode > 0)
 				{
-					cerr << trInfo << std::endl;
+					cerr << trInfo << "\n";
 					_errorTransactions.push_back(i);
 				}
 			}			
@@ -680,8 +680,8 @@ void ImportTest::traceStateDiff()
 		if ((d == tr.dataInd || d == -1) && (g == tr.gasInd || g == -1) && (v == tr.valInd || v == -1))
 		{
 			std::ostringstream log;
-			log << "trNetID: " << netIdToString(tr.netId) << endl;
-			log << "trDataInd: " << tr.dataInd << " tdGasInd: " << tr.gasInd << " trValInd: " << tr.valInd << std::endl;
+			log << "trNetID: " << netIdToString(tr.netId) << "\n";
+			log << "trDataInd: " << tr.dataInd << " tdGasInd: " << tr.gasInd << " trValInd: " << tr.valInd << "\n";
 			dev::LogOutputStream<eth::StateTrace, false>() << log.str();
 			fillJsonWithStateChange(m_statePre, tr.postState, tr.changeLog); //output std log
 		}

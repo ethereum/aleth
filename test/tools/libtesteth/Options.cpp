@@ -28,44 +28,44 @@ using namespace dev::eth;
 
 void printHelp()
 {
-	cout << "Usage: " << std::endl;
+	cout << "Usage: \n";
 	cout << std::left;
-	cout << std::endl << "Setting test suite" << std::endl;
-	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations" << std::endl;
-	cout << setw(30) << "-t <TestSuite>/<TestCase>" << std::endl;
-	cout << setw(30) << "--testpath <PathToTheTestRepo>" << std::endl;
+	cout << "\nSetting test suite\n";
+	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations\n";
+	cout << setw(30) << "-t <TestSuite>/<TestCase>\n";
+	cout << setw(30) << "--testpath <PathToTheTestRepo>\n";
 
-	cout << std::endl << "Debugging" << std::endl;
-	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests" << std::endl;
-	cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests" << std::endl;
-	cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests" << std::endl;
-	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test" << std::endl;
-	cout << setw(30) << "--singletest <TestFile> <TestName>" << std::endl;
-	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed" << std::endl;
-	cout << setw(30) << "--vm <interpreter|jit|smart>" << setw(25) << "Set VM type for VMTests suite" << std::endl;
-	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test. (Require build with VMTRACE=1)" << std::endl;
-	cout << setw(30) << "--jsontrace <Options>" << setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'" << std::endl;
-	cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file" << std::endl;
-	cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite" << std::endl;
-	cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests" << std::endl;
+	cout << "\nDebugging\n";
+	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
+	cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
+	cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
+	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test\n";
+	cout << setw(30) << "--singletest <TestFile> <TestName>\n";
+	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
+	cout << setw(30) << "--vm <interpreter|jit|smart>" << setw(25) << "Set VM type for VMTests suite\n";
+	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test. (Require build with VMTRACE=1)\n";
+	cout << setw(30) << "--jsontrace <Options>" << setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'\n";
+	cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file\n";
+	cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";
+	cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
 
-	cout << std::endl << "Additional Tests" << std::endl;
-	cout << setw(30) << "--performance" << setw(25) << "Enable perfomance tests" << std::endl;
-	cout << setw(30) << "--quadratic" << setw(25) << "Enable quadratic complexity tests" << std::endl;
-	cout << setw(30) << "--memory" << setw(25) << "Enable memory consuming tests" << std::endl;
-	cout << setw(30) << "--inputLimits" << setw(25) << "Enable inputLimits tests" << std::endl;
-	cout << setw(30) << "--bigdata" << setw(25) << "Enable bigdata tests" << std::endl;
-	cout << setw(30) << "--wallet" << setw(25) << "Enable wallet tests" << std::endl;
-	cout << setw(30) << "--all" << setw(25) << "Enable all tests" << std::endl;
+	cout << "\nAdditional Tests\n";
+	cout << setw(30) << "--performance" << setw(25) << "Enable perfomance tests\n";
+	cout << setw(30) << "--quadratic" << setw(25) << "Enable quadratic complexity tests\n";
+	cout << setw(30) << "--memory" << setw(25) << "Enable memory consuming tests\n";
+	cout << setw(30) << "--inputLimits" << setw(25) << "Enable inputLimits tests\n";
+	cout << setw(30) << "--bigdata" << setw(25) << "Enable bigdata tests\n";
+	cout << setw(30) << "--wallet" << setw(25) << "Enable wallet tests\n";
+	cout << setw(30) << "--all" << setw(25) << "Enable all tests\n";
 
-	cout << std::endl << "Test Generation" << std::endl;
-	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers" << std::endl;
-	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead" << std::endl;
-	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code" << std::endl;
-	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console" << std::endl;
-	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field" << std::endl;
+	cout << "\nTest Generation\n";
+	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers\n";
+	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
+	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
+	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
+	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
 
-	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments" << std::endl;
+	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments\n";
 }
 
 StandardTrace::DebugOptions debugOptions(Json::Value const& _json)
@@ -127,7 +127,7 @@ Options::Options(int argc, char** argv)
 			else if (vmKind == "smart")
 				VMFactory::setKind(VMKind::Smart);
 			else
-				cerr << "Unknown VM kind: " << vmKind << endl;
+				cerr << "Unknown VM kind: " << vmKind << "\n";
 		}
 		else if (arg == "--jit") // TODO: Remove deprecated option "--jit"
 			VMFactory::setKind(VMKind::JIT);
@@ -266,17 +266,17 @@ Options::Options(int argc, char** argv)
 			int maxCodes = atoi(argv[++i]);
 			if (maxCodes > 1000 || maxCodes <= 0)
 			{
-				cerr << "Argument for the option is invalid! (use range: 1...1000)" << endl;
+				cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
 				exit(1);
 			}
-			cout << dev::test::RandomCode::generate(maxCodes) << endl;
+			cout << dev::test::RandomCode::generate(maxCodes) << "\n";
 			exit(0);
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
 		else if (seenSeparator)
 		{
-			cerr << "Unknown option: " + arg << endl;
+			cerr << "Unknown option: " + arg << "\n";
 			exit(1);
 		}
 	}
