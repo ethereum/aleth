@@ -102,7 +102,7 @@ void checkJsonSectionForInvalidBlock(mObject& _blObj);
 void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
 bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1 = 0, u256 const& _unNumber2 = 0);
-void fillBCTest(json_spirit::mObject& _o);
+json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
 void testBCTest(json_spirit::mObject& _o);
 
 //percent output for many tests in one file
@@ -137,7 +137,7 @@ json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fi
 		}
 
 		if (_fillin)
-			fillBCTest(o);
+			o = fillBCTest(o);
 		else
 			testBCTest(o);
 	}
@@ -207,7 +207,7 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 						jObj.erase(jObj.find("expect"));
 				}
 				TestOutputHelper::setCurrentTestName(newtestname);
-				fillBCTest(jObj);
+				jObj = fillBCTest(jObj);
 				jObj["network"] = test::netIdToString(network);
 				tests[newtestname] = jObj;
 			}
@@ -244,8 +244,9 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 	return v;
 }
 
-void fillBCTest(json_spirit::mObject& _o)
+json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
+	json_spirit::mObject _o = _input;
 	string const& testName = TestOutputHelper::testName();
 	TestBlock genesisBlock(_o["genesisBlockHeader"].get_obj(), _o["pre"].get_obj());
 	genesisBlock.setBlockHeader(genesisBlock.blockHeader());
@@ -420,6 +421,8 @@ void fillBCTest(json_spirit::mObject& _o)
 
 	for (auto iterator = chainMap.begin(); iterator != chainMap.end(); iterator++)
 		delete iterator->second;
+
+	return _o;
 }
 
 void testBCTest(json_spirit::mObject& _o)
