@@ -153,22 +153,23 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 	// range-for is not used because iterators are necessary for removing elements later.
 	for (auto i = _input.get_obj().begin(); i != _input.get_obj().end(); i++)
 	{
-		string testname = i->first;
-		v.get_obj()[testname] = i->second.get_obj();
-		json_spirit::mObject& o = v.get_obj()[testname].get_obj();
+		string const& testname = i->first;
+		json_spirit::mObject const& inputTest = i->second.get_obj();
+		v.get_obj()[testname] = inputTest;
+		json_spirit::mObject& outputTest = v.get_obj()[testname].get_obj();
 
 		//Select test by name if --singletest is set and not filling state tests as blockchain
 		if (!Options::get().fillchain && !TestOutputHelper::passTest(testname))
 		{
-			o.clear(); //don't add irrelevant tests to the final file when filling
+			outputTest.clear(); //don't add irrelevant tests to the final file when filling
 			continue;
 		}
 
-		BOOST_REQUIRE_MESSAGE(o.count("genesisBlockHeader"),
+		BOOST_REQUIRE_MESSAGE(outputTest.count("genesisBlockHeader"),
 			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
-		BOOST_REQUIRE_MESSAGE(o.count("pre"),
+		BOOST_REQUIRE_MESSAGE(outputTest.count("pre"),
 			"\"pre\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
@@ -184,11 +185,11 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 				dev::test::TestBlockChain::s_sealEngineNetwork = network;
 				string newtestname = testname + "_" + test::netIdToString(network);
 
-				json_spirit::mObject jObj = o;
-				if (o.count("expect"))
+				json_spirit::mObject jObj = outputTest;
+				if (outputTest.count("expect"))
 				{
 					//prepare the corresponding expect section for the test
-					json_spirit::mArray& expects = o["expect"].get_array();
+					json_spirit::mArray& expects = outputTest["expect"].get_array();
 					bool found = false;
 
 					for (auto& expect : expects)
@@ -219,14 +220,14 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 		}
 		else
 		{
-			BOOST_REQUIRE_MESSAGE(o.count("network"),
+			BOOST_REQUIRE_MESSAGE(outputTest.count("network"),
 				"\"network\" field is not found. filename: " + TestOutputHelper::testFileName() +
 				" testname: " + TestOutputHelper::testName()
 			);
-			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
+			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(outputTest["network"].get_str());
 			if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
 				continue;
-			testBCTest(o);
+			testBCTest(outputTest);
 		}
 	}
 
