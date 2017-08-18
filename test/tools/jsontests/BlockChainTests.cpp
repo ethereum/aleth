@@ -185,7 +185,7 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 				dev::test::TestBlockChain::s_sealEngineNetwork = network;
 				string newtestname = testname + "_" + test::netIdToString(network);
 
-				json_spirit::mObject jObj = outputTest;
+				json_spirit::mObject jObj = inputTest;
 				if (inputTest.count("expect"))
 				{
 					//prepare the corresponding expect section for the test
@@ -227,7 +227,7 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
 			if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
 				continue;
-			testBCTest(outputTest);
+			testBCTest(inputTest);
 		}
 	}
 
