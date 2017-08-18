@@ -4,4 +4,5 @@
 	branch = develop
 [submodule "test/tests"]
 	path = test/jsontests
-	url = https://github.com/ethereum/tests.git
+	url = https://github.com/jwasinger/tests.git
+  branch = invalid-ops
