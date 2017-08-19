@@ -45,7 +45,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
 	m_timer.restart();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	if (!Options::get().createRandomTest)
-		std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
+		std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
 	m_maxTests = _maxTests;
 	m_currTest = 0;
 }
@@ -60,7 +60,7 @@ bool TestOutputHelper::passTest(std::string const& _testName)
 		std::cout << percent << "%";
 		if (percent != 100)
 			std::cout << "...";
-		std::cout << std::endl;
+		std::cout << "\n";
 	}
 
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
@@ -78,7 +78,7 @@ void TestOutputHelper::finishTest()
 		execTimeName res;
 		res.first = m_timer.elapsed();
 		res.second = caseName();
-		std::cout << res.second + " time: " + toString(res.first) << std::endl;
+		std::cout << res.second + " time: " + toString(res.first) << "\n";
 		m_execTimeResults.push_back(res);
 	}
 }
@@ -90,6 +90,6 @@ void TestOutputHelper::printTestExecStats()
 		std::cout << std::left;
 		std::sort(m_execTimeResults.begin(), m_execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
 		for (size_t i = 0; i < m_execTimeResults.size(); i++)
-			std::cout << setw(45) << m_execTimeResults[i].second << setw(25) << " time: " + toString(m_execTimeResults[i].first) << std::endl;
+			std::cout << setw(45) << m_execTimeResults[i].second << setw(25) << " time: " + toString(m_execTimeResults[i].first) << "\n";
 	}
 }

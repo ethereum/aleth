@@ -105,7 +105,7 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 {
 	int testN = 0;
 	ostringstream finalTest;
-	finalTest << "{" << std::endl;
+	finalTest << "{\n";
 	dev::test::TestOutputHelper::initTest(900);
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
@@ -145,7 +145,7 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 		}
 	}
 
-	finalTest << std::endl << "}";
+	finalTest << "\n}";
 	string testFile = finalTest.str();
 	testFile = testFile.replace(testFile.find_last_of(","), 1, "");
 	writeFile(_testFileFullName, asBytes(testFile));
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 
 		int testN = 0;
 		ostringstream finalTest;
-		finalTest << "{" << std::endl;
+		finalTest << "{\n";
 
 		for (size_t bN = 0; bN < blockNumberVector.size(); bN++)
 			for (size_t pdN = 0; pdN < parentDifficultyVector.size(); pdN++)
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 					finalTest << tmptest;
 				}
 
-		finalTest << std::endl << "}";
+		finalTest << "\n}";
 		string testFile = finalTest.str();
 		testFile = testFile.replace(testFile.find_last_of(","), 1, "");
 		writeFile(testFileFullName, asBytes(testFile));

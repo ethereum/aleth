@@ -386,12 +386,12 @@ void fillBCTest(json_spirit::mObject& _o)
 		catch (std::exception const& _e)
 		{
 			cnote << testName + "block import throw an exception: " << _e.what();
-			cout << testName + "block import thrown std exeption" << std::endl;
+			cout << testName + "block import thrown std exeption\n";
 			eraseJsonSectionForInvalidBlock(blObj);
 		}
 		catch (...)
 		{
-			cout << testName + "block import thrown unknown exeption" << std::endl;
+			cout << testName + "block import thrown unknown exeption\n";
 			eraseJsonSectionForInvalidBlock(blObj);
 		}
 
@@ -405,7 +405,7 @@ void fillBCTest(json_spirit::mObject& _o)
 		State stateExpect(State::Null);
 		ImportTest::importState(_o["expect"].get_obj(), stateExpect, expectStateMap);
 		if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, WhenError::Throw))
-				cerr << testName << endl;
+				cerr << testName << "\n";
 		_o.erase(_o.find("expect"));
 	}
 
@@ -659,7 +659,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		}
 		else
 		{
-			cerr << TestOutputHelper::testName() + "Could not populate blockHeader from block: there are no block with number!" << TestOutputHelper::testName() << endl;
+			cerr << TestOutputHelper::testName() + "Could not populate blockHeader from block: there are no block with number!" << TestOutputHelper::testName() << "\n";
 		}
 	}
 
@@ -716,10 +716,10 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 			if (prevBlockUncles.size())
 				uncle = prevBlockUncles[0];  //exact uncle??
 			else
-				cerr << TestOutputHelper::testName() + "Could not create uncle sameAsPreviousBlockUncle: previous block has no uncles!" << TestOutputHelper::testName() << endl;
+				cerr << TestOutputHelper::testName() + "Could not create uncle sameAsPreviousBlockUncle: previous block has no uncles!" << TestOutputHelper::testName() << "\n";
 		}
 		else
-			cerr << TestOutputHelper::testName() + "Could not create uncle sameAsPreviousBlockUncle: there are no block imported!" << TestOutputHelper::testName() << endl;
+			cerr << TestOutputHelper::testName() + "Could not create uncle sameAsPreviousBlockUncle: there are no block imported!" << TestOutputHelper::testName() << "\n";
 		return;
 	}
 
@@ -757,7 +757,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 			}
 		}
 		else
-			cerr << TestOutputHelper::testName() + "Could not create uncle populateFromBlock: there are no block with number " << number << TestOutputHelper::testName() << endl;
+			cerr << TestOutputHelper::testName() + "Could not create uncle populateFromBlock: there are no block with number " << number << TestOutputHelper::testName() << "\n";
 	}
 	else
 	{
