@@ -5,7 +5,7 @@ ExternalProject_Add(mpir
     URL https://github.com/chfast/mpir/archive/cmake.tar.gz
     URL_HASH SHA256=2bf35ad7aa2b61bf4c2dcdab9aab48b2b4f9d6db8b937be4b0b5fe3b5efbdfa6
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-        -DCMAKE_BUILD_TYPE=Debug
+        -DCMAKE_BUILD_TYPE=Release
         -DMPIR_GMP=On
 )
 

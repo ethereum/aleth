@@ -45,7 +45,7 @@ int createRandomTest()
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
 	if (options.rCurrentTestSuite != test::c_StateTestsGeneral)
 	{
-		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)" << std::endl;
+		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)\n";
 		return 1;
 	}
 	else
@@ -81,12 +81,12 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 	}
 	catch (dev::Exception const& _e)
 	{
-		std::cout << " Failed test with Exception: " << diagnostic_information(_e) << std::endl;
+		std::cout << " Failed test with Exception: " << diagnostic_information(_e) << "\n";
 		ret = 1;
 	}
 	catch (std::exception const& _e)
 	{
-		std::cout << " Failed test with Exception: " << _e.what() << std::endl;
+		std::cout << " Failed test with Exception: " << _e.what() << "\n";
 		ret = 1;
 	}
 	return ret;

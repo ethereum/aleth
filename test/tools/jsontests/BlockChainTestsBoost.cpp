@@ -39,7 +39,7 @@ class bcTestFixture {
 			{
 				if (!dev::test::Options::get().filltests)
 				{
-					clog << "\\/ " << file.filename().string() << std::endl;
+					clog << "\\/ " << file.filename().string() << "\n";
 					dev::test::executeTests(file.filename().string(), "/BlockchainTests/bcForgedTest", "/BlockchainTestsFiller/bcForgedTest", dev::test::doBlockchainTests);
 				}
 				else
