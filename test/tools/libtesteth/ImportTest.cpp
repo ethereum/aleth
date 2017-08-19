@@ -658,7 +658,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 					BOOST_CHECK_MESSAGE(_expects.at("logs").get_str() == exportLog(tr.output.second.log()),
 									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + " Transaction log mismatch! expected: " + _expects.at("logs").get_str() + " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
 				else
-					BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing logs field!");
+					BOOST_ERROR(TestOutputHelper::testName() + "PostState missing logs field!");
 			}
 			else
 				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
