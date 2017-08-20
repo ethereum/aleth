@@ -39,34 +39,14 @@ inline u256 fromEvmC(evm_uint256be const& _n)
 	return fromBigEndian<u256>(_n.bytes);
 }
 
-void queryState(
-	evm_variant* o_result,
+int accountExists(
 	evm_env* _opaqueEnv,
-	evm_query_key _key,
 	evm_uint160be const* _addr
 ) noexcept
 {
 	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
 	Address addr = fromEvmC(*_addr);
-	switch (_key)
-	{
-	case EVM_CODE_BY_ADDRESS:
-	{
-		auto &code = env.codeAt(addr);
-		o_result->data = code.data();
-		o_result->data_size = code.size();
-		break;
-	}
-	case EVM_CODE_SIZE:
-		o_result->int64 = env.codeSizeAt(addr);
-		break;
-	case EVM_BALANCE:
-		o_result->uint256be = toEvmC(env.balance(addr));
-		break;
-	case EVM_ACCOUNT_EXISTS:
-		o_result->int64 = env.exists(addr);
-		break;
-	}
+	return env.exists(addr) ? 1 : 0;
 }
 
 void getStorage(
@@ -99,6 +79,29 @@ void setStorage(
 		env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
 
 	env.setStore(index, value);    // Interface uses native endianness
+}
+
+void getBalance(
+	evm_uint256be* o_result,
+	evm_env* _opaqueEnv,
+	evm_uint160be const* _addr
+) noexcept
+{
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	*o_result = toEvmC(env.balance(fromEvmC(*_addr)));
+}
+
+size_t getCode(byte const** o_code, evm_env* _opaqueEnv, evm_uint160be const* _addr)
+{
+	auto &env = reinterpret_cast<ExtVMFace&>(*_opaqueEnv);
+	Address addr = fromEvmC(*_addr);
+	if (o_code)
+	{
+		auto &code = env.codeAt(addr);
+		*o_code = code.data();
+		return code.size();
+	}
+	return env.codeSizeAt(addr);
 }
 
 void selfdestruct(
@@ -250,9 +253,11 @@ void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) no
 
 const evm_host hostInterface =
 {
-	queryState,
+	accountExists,
 	getStorage,
 	setStorage,
+	getBalance,
+	getCode,
 	selfdestruct,
 	call,
 	getTxContext,
