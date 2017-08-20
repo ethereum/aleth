@@ -5,4 +5,3 @@
 [submodule "test/tests"]
 	path = test/jsontests
 	url = https://github.com/ethereum/tests.git
-  branch = invalid-ops
