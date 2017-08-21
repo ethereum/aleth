@@ -58,7 +58,10 @@ class bcTestFixture {
 
 		//skip wallet test as it takes too much time (250 blocks) run it with --all flag
 		if (casename == "bcWalletTest" && !test::Options::get().wallet)
+		{
+			clog << "skipping bcWalletTest. Use --all to run it.\n";
 			return;
+		}
 
 		fillAllFilesInFolder(casename);
 	}
