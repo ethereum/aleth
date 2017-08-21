@@ -309,6 +309,8 @@ void checkHexHasEvenLength(string const& _str)
 bytes importCode(json_spirit::mObject const& _o)
 {
 	bytes code;
+	if (_o.count("code") == 0)
+		return code;
 	if (_o.at("code").type() == json_spirit::str_type)
 		if (_o.at("code").get_str().find("0x") != 0)
 			code = fromHex(compileLLL(_o.at("code").get_str()));
