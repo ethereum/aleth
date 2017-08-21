@@ -43,12 +43,14 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 {
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
 		TestOutputHelper::testFileName() + " A GeneralStateTest filler should contain only one test.");
-	json_spirit::mValue v = _input;  // TODO: avoid copying and only add valid fields into the new object.
+	json_spirit::mValue v = json_spirit::mObject();
 
-	for (auto& i: v.get_obj())
+	for (auto& i: _input.get_obj())
 	{
-		string testname = i.first;
-		json_spirit::mObject& o = i.second.get_obj();
+		string const testname = i.first;
+		json_spirit::mObject const& inputTest = i.second.get_obj();
+		v.get_obj()[testname] = json_spirit::mObject();
+		json_spirit::mObject& outputTest = v.get_obj()[testname].get_obj();
 
 		if (_fillin && !TestOutputHelper::testFileName().empty())
 			BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::testFileName(),
@@ -61,11 +63,11 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 		if (_fillin == false && Options::get().fillchain)
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + " transaction not set!");
+		BOOST_REQUIRE_MESSAGE(inputTest.count("env") > 0, testname + " env not set!");
+		BOOST_REQUIRE_MESSAGE(inputTest.count("pre") > 0, testname + " pre not set!");
+		BOOST_REQUIRE_MESSAGE(inputTest.count("transaction") > 0, testname + " transaction not set!");
 
-		ImportTest importer(o, testType::GeneralStateTest);
+		ImportTest importer(inputTest, outputTest, testType::GeneralStateTest);
 
 		Listener::ExecTimeGuard guard{i.first};
 		importer.executeTest();
@@ -83,10 +85,10 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 		}
 		else
 		{
-			BOOST_REQUIRE_MESSAGE(o.count("post") > 0, testname + " post not set!");
+			BOOST_REQUIRE_MESSAGE(inputTest.count("post") > 0, testname + " post not set!");
 
 			//check post hashes against cpp client on all networks
-			mObject post = o["post"].get_obj();
+			mObject post = inputTest.at("post").get_obj();
 			vector<size_t> wrongTransactionsIndexes;
 			for (mObject::const_iterator i = post.begin(); i != post.end(); ++i)
 			{
