@@ -106,6 +106,8 @@ include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
 include(ProjectSnark)
 
+find_package(Threads)
+
 configure_project()
 
 add_subdirectory(eth)

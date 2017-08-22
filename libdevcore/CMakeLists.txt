@@ -1,13 +1,16 @@
-file(GLOB SRC_LIST "*.cpp")
-file(GLOB HEADERS "*.h")
+file(GLOB sources "*.cpp")
+file(GLOB headers "*.h")
 
-add_library(devcore ${SRC_LIST} ${HEADERS})
+add_library(devcore ${sources} ${headers})
 
 add_dependencies(devcore BuildInfo.h)
 
-target_include_directories(devcore PRIVATE ..)
+# This "local" include path will be propagated to all other libs.
+target_include_directories(devcore PUBLIC ..)
+
 # Needed to prevent including system-level boost headers:
 target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIR})
+
 target_link_libraries(devcore Boost::filesystem Boost::system Boost::random Boost::thread)
 
 if (ROCKSDB)
