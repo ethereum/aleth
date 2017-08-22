@@ -264,8 +264,8 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 	string chainnetwork = "default";
 	std::map<string, ChainBranch*> chainMap = { {chainname , new ChainBranch(genesisBlock)}};
 
-	if (_input.count("noBlockChainHistory") > 0)
-		output["noBlockChainHistory"] = _input.at("noBlockChainHistory");
+	if (_input.count("network") > 0)
+		output["network"] = _input.at("network");
 
 	for (auto const& bl: _input.at("blocks").get_array())
 	{
