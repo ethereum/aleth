@@ -8,8 +8,7 @@ set(
 add_executable(eth ${sources})
 target_link_libraries(
     eth
-    PUBLIC ethereum ethashseal evm web3jsonrpc webthree devcore
-    PRIVATE Threads::Threads
+    PRIVATE ethereum ethashseal evm web3jsonrpc webthree devcore
 )
 
 install(TARGETS eth DESTINATION bin)
