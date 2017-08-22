@@ -102,7 +102,10 @@ BOOST_FIXTURE_TEST_SUITE(p2pCapability, P2PFixture)
 BOOST_AUTO_TEST_CASE(capability)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test p2pCapability/capability. --nonetwork flag is set.\n";
 		return;
+	}
 
 	VerbosityHolder verbosityHolder(10);
 	cnote << "Testing Capability...";

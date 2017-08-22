@@ -612,6 +612,8 @@ BOOST_AUTO_TEST_CASE(triePerf)
 		perfTestTrie<SpecificTrieDB<HashedGenericTrieDB<MemoryDB>, h256>>("HashedGenericTrieDB");
 		perfTestTrie<SpecificTrieDB<FatGenericTrieDB<MemoryDB>, h256>>("FatGenericTrieDB");
 	}
+	else
+		clog << "Skipping hive test Crypto/Trie/triePerf. Use --all or --performance to run it.\n";
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -160,7 +160,10 @@ public:
 BOOST_AUTO_TEST_CASE(requestTimeout)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test network/net/requestTimeout. --nonetwork flag is set.\n";
 		return;
+	}
 
 	using TimePoint = std::chrono::steady_clock::time_point;
 	using RequestTimeout = std::pair<NodeID, TimePoint>;
@@ -230,7 +233,10 @@ BOOST_AUTO_TEST_CASE(isIPAddressType)
 BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test network/net/neighboursPacketLength. --nonetwork flag is set.\n";
 		return;
+	}
 
 	KeyPair k = KeyPair::create();
 	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
@@ -258,7 +264,10 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 BOOST_AUTO_TEST_CASE(neighboursPacket)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test network/net/neighboursPacket. --nonetwork flag is set.\n";
 		return;
+	}
 
 	KeyPair k = KeyPair::create();
 	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
@@ -295,7 +304,10 @@ BOOST_AUTO_TEST_CASE(test_findnode_neighbours)
 BOOST_AUTO_TEST_CASE(kademlia)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test network/net/kademlia. --nonetwork flag is set.\n";
 		return;
+	}
 
 	TestNodeTableHost node(8);
 	node.start();
@@ -313,7 +325,10 @@ BOOST_AUTO_TEST_CASE(kademlia)
 BOOST_AUTO_TEST_CASE(udpOnce)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test network/net/udpOnce. --nonetwork flag is set.\n";
 		return;
+	}
 
 	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300), bytes({65,65,65,65}));
 	TestUDPSocket a; a.m_socket->connect(); a.start();
@@ -368,7 +383,10 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelper)
 BOOST_AUTO_TEST_CASE(unspecifiedNode)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test network/net/unspecifiedNode. --nonetwork flag is set.\n";
 		return;
+	}
 
 	Node n = UnspecifiedNode;
 	BOOST_REQUIRE(!n);
