@@ -108,6 +108,10 @@ include(ProjectSnark)
 
 find_package(Threads)
 
+if(MINIUPNPC)
+    find_package(Miniupnpc 1.8.2013 REQUIRED)
+endif()
+
 configure_project()
 
 add_subdirectory(eth)
