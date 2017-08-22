@@ -89,7 +89,6 @@ eth::LogEntries importLog(json_spirit::mArray const& _o);
 std::string exportLog(eth::LogEntries const& _logs);
 void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
-void checkLog(eth::LogEntries const& _resultLogs, eth::LogEntries const& _expectedLogs);
 void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates);
 dev::eth::BlockHeader constructHeader(
 	h256 const& _parentHash,

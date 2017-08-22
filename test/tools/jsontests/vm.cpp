@@ -443,8 +443,6 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 				dev::test::FakeExtVM test(eth::EnvInfo{BlockHeader{}, lastBlockHashes, 0});
 				test.importState(testInput.at("post").get_obj());
 				test.importCallCreates(testInput.at("callcreates").get_array());
-				test.sub.logs = importLog(testInput.at("logs").get_array());
-
 
 				checkOutput(output, testInput);
 
@@ -461,7 +459,7 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 
 				checkCallCreates(fev.callcreates, test.callcreates);
 
-				checkLog(fev.sub.logs, test.sub.logs);
+				BOOST_CHECK_EQUAL(exportLog(fev.sub.logs), testInput.at("logs").get_str());
 			}
 			else	// Exception expected
 				BOOST_CHECK(vmExceptionOccured);
