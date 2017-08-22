@@ -52,7 +52,6 @@ void printHelp()
 	cout << "\nAdditional Tests\n";
 	cout << setw(30) << "--performance" << setw(25) << "Enable perfomance tests\n";
 	cout << setw(30) << "--quadratic" << setw(25) << "Enable quadratic complexity tests\n";
-	cout << setw(30) << "--memory" << setw(25) << "Enable memory consuming tests\n";
 	cout << setw(30) << "--inputLimits" << setw(25) << "Enable inputLimits tests\n";
 	cout << setw(30) << "--bigdata" << setw(25) << "Enable bigdata tests\n";
 	cout << setw(30) << "--wallet" << setw(25) << "Enable wallet tests\n";
@@ -161,8 +160,6 @@ Options::Options(int argc, char** argv)
 			performance = true;
 		else if (arg == "--quadratic")
 			quadratic = true;
-		else if (arg == "--memory")
-			memory = true;
 		else if (arg == "--inputlimits")
 			inputLimits = true;
 		else if (arg == "--bigdata")
@@ -173,7 +170,6 @@ Options::Options(int argc, char** argv)
 		{
 			performance = true;
 			quadratic = true;
-			memory = true;
 			inputLimits = true;
 			bigData = true;
 			wallet = true;
@@ -285,12 +281,12 @@ Options::Options(int argc, char** argv)
 	if (createRandomTest)
 	{
 		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-			|| performance || quadratic || memory || inputLimits || bigData || wallet
+			|| performance || quadratic || inputLimits || bigData || wallet
 			|| stats || filltests || fillchain)
 		{
 			cerr << "--createRandomTest cannot be used with any of the options: " <<
 					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, performance, " <<
-					"quadratic, memory, inputLimits, bigData, wallet, stats, filltests, fillchain" << endl;
+					"quadratic, inputLimits, bigData, wallet, stats, filltests, fillchain" << endl;
 			exit(1);
 		}
 	}

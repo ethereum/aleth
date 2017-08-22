@@ -66,7 +66,10 @@ BOOST_FIXTURE_TEST_SUITE(p2p, P2PFixture)
 BOOST_AUTO_TEST_CASE(host)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test libp2p/p2p/host. --nonetwork flag is set.\n";
 		return;
+	}
 
 	VerbosityHolder setTemporaryLevel(10);
 
@@ -127,7 +130,10 @@ BOOST_AUTO_TEST_CASE(host)
 BOOST_AUTO_TEST_CASE(networkConfig)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test libp2p/p2p/networkConfig. --nonetwork flag is set.\n";
 		return;
+	}
 
 	Host save("Test", NetworkPreferences(false));
 	bytes store(save.saveNetwork());
@@ -139,7 +145,10 @@ BOOST_AUTO_TEST_CASE(networkConfig)
 BOOST_AUTO_TEST_CASE(saveNodes)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test libp2p/p2p/saveNodes. --nonetwork flag is set.\n";
 		return;
+	}
 
 	VerbosityHolder setTemporaryLevel(2);
 
@@ -208,7 +217,10 @@ BOOST_FIXTURE_TEST_SUITE(p2pPeer, P2PFixture)
 BOOST_AUTO_TEST_CASE(requirePeer)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test libp2p/p2pPeer/requirePeer. --nonetwork flag is set.\n";
 		return;
+	}
 
 	VerbosityHolder setTemporaryLevel(10);
 
@@ -285,7 +297,10 @@ BOOST_FIXTURE_TEST_SUITE(peerTypes, TestOutputHelper)
 BOOST_AUTO_TEST_CASE(emptySharedPeer)
 {
 	if (test::Options::get().nonetwork)
+	{
+		clog << "Skipping test libp2p/peerTypes/emptySharedPeer. --nonetwork flag is set.\n";
 		return;
+	}
 
 	shared_ptr<Peer> p;
 	BOOST_REQUIRE(!p);
