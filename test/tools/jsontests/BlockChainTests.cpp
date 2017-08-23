@@ -146,8 +146,7 @@ json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fi
 
 json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin)
 {
-	json_spirit::mValue v = json_spirit::mObject();
-	json_spirit::mObject& tests = v.get_obj();
+	json_spirit::mObject tests;
 
 	// range-for is not used because iterators are necessary for removing elements later.
 	for (auto i = _input.get_obj().begin(); i != _input.get_obj().end(); i++)
@@ -221,7 +220,7 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 		}
 	}
 
-	return v;
+	return tests;
 }
 
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
