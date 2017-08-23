@@ -26,7 +26,6 @@
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
-#include <libethcore/ICAP.h>
 #include <libwhisper/Message.h>
 #include <libwhisper/WhisperHost.h>
 #include <jsonrpccpp/common/exception.h>

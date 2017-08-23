@@ -31,7 +31,6 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/KeyManager.h>
-#include <libethcore/ICAP.h>
 #include <libethcore/Transaction.h>
 
 using namespace std;
@@ -39,14 +38,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace boost::algorithm;
 
-#undef RETURN
-
 class BadArgument: public Exception {};
-
-string getAccountPassword(KeyManager& keyManager, Address const& a)
-{
-	return getPassword("Enter passphrase for address " + keyManager.accountName(a) + " (" + a.abridged() + "; hint:" + keyManager.passwordHint(a) + "): ");
-}
 
 string createPassword(std::string const& _prompt)
 {
@@ -319,8 +311,6 @@ public:
 		}
 	}
 
-	std::string userVisible(Address const& _a) const { return ICAP(_a).encoded() + " (" + _a.abridged() + ")"; }
-
 	void execute()
 	{
 		switch (m_mode)
@@ -354,15 +344,15 @@ public:
 				else
 				{
 					cout << "  type: message" << endl;
-					cout << "  to: " << userVisible(t.to()) << endl;
+					cout << "  to: " << t.to() << endl;
 					cout << "  data: " << (t.data().empty() ? "none" : toHex(t.data())) << endl;
 				}
 				try
 				{
 					auto s = t.sender();
 					if (t.isCreation())
-						cout << "  creates: " << userVisible(toAddress(s, t.nonce())) << endl;
-					cout << "  from: " << userVisible(s) << endl;
+						cout << "  creates: " << toAddress(s, t.nonce()) << endl;
+					cout << "  from: " << s << endl;
 				}
 				catch (...)
 				{
@@ -428,8 +418,7 @@ public:
 					cout << keyManager().accountName(a) << " (" << a.abridged() << ")" << endl;
 				else
 					cout << a.abridged() << endl;
-				cout << "  ICAP: " << ICAP(a).encoded() << endl;
-				cout << "  Raw hex: " << a.hex() << endl;
+				cout << "  Address: " << a.hex() << endl;
 				if (m_showSecret)
 				{
 					Secret s = keyManager(true).secret(a);
@@ -452,8 +441,7 @@ public:
 			auto k = makeKey();
 			h128 u = secretStore().importSecret(k.secret().ref(), m_lock);
 			cout << "Created key " << toUUID(u) << endl;
-			cout << "  ICAP: " << ICAP(k.address()).encoded() << endl;
-			cout << "  Raw hex: " << k.address().hex() << endl;
+			cout << "  Address: " << k.address().hex() << endl;
 			break;
 		}
 		case OperationMode::ImportBare:
@@ -487,23 +475,20 @@ public:
 					bytesSec s = secretStore().secret(u, [&](){ return getPassword("Enter passphrase for key " + i + ": "); });
 					cout << "Key " << i << ":" << endl;
 					cout << "  UUID: " << toUUID(u) << ":" << endl;
-					cout << "  ICAP: " << ICAP(toAddress(Secret(s))).encoded() << endl;
-					cout << "  Raw hex: " << toAddress(Secret(s)).hex() << endl;
+					cout << "  Address: " << toAddress(Secret(s)).hex() << endl;
 					cout << "  Secret: " << (m_showSecret ? toHex(s.ref()) : (toHex(s.ref().cropped(0, 8)) + "...")) << endl;
 				}
 				else if (h128 u = fromUUID(i))
 				{
 					bytesSec s = secretStore().secret(u, [&](){ return getPassword("Enter passphrase for key " + toUUID(u) + ": "); });
 					cout << "Key " << i << ":" << endl;
-					cout << "  ICAP: " << ICAP(toAddress(Secret(s))).encoded() << endl;
-					cout << "  Raw hex: " << toAddress(Secret(s)).hex() << endl;
+					cout << "  Address: " << toAddress(Secret(s)).hex() << endl;
 					cout << "  Secret: " << (m_showSecret ? toHex(s.ref()) : (toHex(s.ref().cropped(0, 8)) + "...")) << endl;
 				}
 				else if (Address a = toAddress(i))
 				{
 					cout << "Key " << a.abridged() << ":" << endl;
-					cout << "  ICAP: " << ICAP(a).encoded() << endl;
-					cout << "  Raw hex: " << a.hex() << endl;
+					cout << "  Address: " << a.hex() << endl;
 				}
 				else
 					cerr << "Couldn't inspect " << i << "; not found." << endl;
@@ -539,8 +524,7 @@ public:
 				cout << "  Uses master passphrase." << endl;
 			else
 				cout << "  Password hint: " << m_lockHint << endl;
-			cout << "  ICAP: " << ICAP(k.address()).encoded() << endl;
-			cout << "  Raw hex: " << k.address().hex() << endl;
+			cout << "  Address: " << k.address().hex() << endl;
 			break;
 		}
 		case OperationMode::Import:
@@ -576,8 +560,7 @@ public:
 				cout << "  Uses master passphrase." << endl;
 			else
 				cout << "  Password hint: " << m_lockHint << endl;
-			cout << "  ICAP: " << ICAP(a).encoded() << endl;
-			cout << "  Raw hex: " << a.hex() << endl;
+			cout << "  Address: " << a.hex() << endl;
 			break;
 		}
 		case OperationMode::ImportWithAddress:
@@ -610,7 +593,7 @@ public:
 			cout << "Successfully imported " << i << ":" << endl;
 			cout << "  Name: " << m_name << endl;
 			cout << "  UUID: " << toUUID(u) << endl;
-			cout << "  Raw hex: " << m_address << endl;
+			cout << "  Address: " << m_address << endl;
 			break;
 		}
 		case OperationMode::ImportPresale:
@@ -629,7 +612,7 @@ public:
 					Secret s = keyManager().secret(a, [&](){ return pw = getPassword("Enter old passphrase for key '" + i + "' (hint: " + keyManager().passwordHint(a) + "): "); });
 					if (!s)
 					{
-						cerr << "Invalid password for key " << userVisible(a) << endl;
+						cerr << "Invalid password for address " << a << endl;
 						continue;
 					}
 					pair<string, string> np = createPassword(keyManager(), "Enter new passphrase for key '" + i + "': ");
@@ -670,8 +653,7 @@ public:
 				{
 					got.insert(a);
 					cout << toUUID(u) << " " << a.abridged();
-					string s = ICAP(a).encoded();
-					cout << " " << s << string(35 - s.size(), ' ');
+					cout << " " << a << " ";
 					cout << " " << keyManager().accountName(a) << endl;
 				}
 				else
@@ -680,7 +662,7 @@ public:
 				if (!got.count(a))
 				{
 					cout << "               (Brain)               " << a.abridged();
-					cout << " " << ICAP(a).encoded() << " ";
+					cout << " " << a << " ";
 					cout << " " << keyManager().accountName(a) << endl;
 				}
 			for (auto const& u: bare)
@@ -775,16 +757,6 @@ public:
 		return b;
 	}
 
-	static bool isTrue(std::string const& _m)
-	{
-		return _m == "on" || _m == "yes" || _m == "true" || _m == "1";
-	}
-
-	static bool isFalse(std::string const& _m)
-	{
-		return _m == "off" || _m == "no" || _m == "false" || _m == "0";
-	}
-
 private:
 	void openWallet(KeyManager& _w)
 	{
@@ -874,6 +846,4 @@ private:
 
 	string m_kdf = "scrypt";
 	map<string, string> m_kdfParams;
-//	string m_cipher;
-//	map<string, string> m_cipherParams;
 };

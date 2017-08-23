@@ -36,7 +36,6 @@
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 #include <libethcore/KeyManager.h>
-#include <libethcore/ICAP.h>
 #include <libethereum/Defaults.h>
 #include <libethereum/BlockChainSync.h>
 #include <libethashseal/EthashClient.h>
@@ -1082,7 +1081,7 @@ int main(int argc, char** argv)
 
 	auto renderFullAddress = [&](Address const& _a) -> std::string
 	{
-		return ICAP(_a).encoded() + " (" + toUUID(keyManager.uuid(_a)) + " - " + toHex(_a.ref().cropped(0, 4)) + ")";
+		return toUUID(keyManager.uuid(_a)) + " - " + _a.hex();
 	};
 
 	if (author)
@@ -1120,7 +1119,7 @@ int main(int argc, char** argv)
 						return std::make_pair(false, std::string());
 					// TODO: actually figure out the natspec. we'll need the natspec database here though.
 					return std::make_pair(true, std::string());
-				}, [&](Address const& _a) { return ICAP(_a).encoded() + " (" + _a.abridged() + ")"; }
+				}, [&](Address const& _a) { return _a.hex(); }
 			) + "\nEnter yes/no/always (always to this address): ", {"yes", "n", "N", "no", "NO", "always"});
 			if (r == "always")
 				allowedDestinations.insert(_t.to);
