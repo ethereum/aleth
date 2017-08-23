@@ -20,13 +20,14 @@
  */
 
 #include <boost/test/unit_test.hpp>
+#include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 #include <libdevcore/Worker.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcrypto/Common.h>
 #include <libp2p/UDP.h>
 #include <libp2p/NodeTable.h>
-#include <test/tools/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;

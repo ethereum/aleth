@@ -36,7 +36,7 @@
 #include <libp2p/RLPxHandshake.h>
 #include <libp2p/RLPXFrameWriter.h>
 #include <libp2p/RLPXFrameReader.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;

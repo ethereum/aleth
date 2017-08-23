@@ -20,7 +20,8 @@
  */
 
 #include <libdevcore/RangeMask.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;

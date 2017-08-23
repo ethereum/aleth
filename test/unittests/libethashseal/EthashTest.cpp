@@ -19,7 +19,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 #include <libethashseal/Ethash.h>
 
 using namespace std;

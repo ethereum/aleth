@@ -20,8 +20,8 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <test/tools/libtesteth/TestHelper.h>
 #include <libdevcore/Base64.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;
