@@ -67,7 +67,7 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 		BOOST_REQUIRE_MESSAGE(inputTest.count("pre") > 0, testname + " pre not set!");
 		BOOST_REQUIRE_MESSAGE(inputTest.count("transaction") > 0, testname + " transaction not set!");
 
-		ImportTest importer(inputTest, outputTest, testType::GeneralStateTest);
+		ImportTest importer(inputTest, outputTest);
 
 		Listener::ExecTimeGuard guard{i.first};
 		importer.executeTest();
@@ -77,7 +77,7 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 		if (_fillin)
 		{
 #if ETH_FATDB
-			if (importer.exportTest(bytes()))
+			if (importer.exportTest())
 				cerr << testname << endl;
 #else
 			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + " You can not fill tests when FATDB is switched off"));
