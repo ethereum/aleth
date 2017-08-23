@@ -22,7 +22,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Base64.h>
 #include <libdevcore/TrieCommon.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;

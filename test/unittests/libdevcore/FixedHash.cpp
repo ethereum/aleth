@@ -19,9 +19,10 @@
  * @date 2015
  */
 
+#include <boost/test/unit_test.hpp>
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/SHA3.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;

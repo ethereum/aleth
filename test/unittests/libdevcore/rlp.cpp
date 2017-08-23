@@ -20,17 +20,19 @@
  * RLP test functions.
  */
 
-#include <fstream>
-#include <sstream>
-
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <algorithm>
 #include <json_spirit/JsonSpiritHeaders.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/TestHelper.h>
+
 #include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 using namespace dev;
