@@ -412,54 +412,6 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 	}
 }
 
-void userDefinedTest(std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests)
-{
-	if (!Options::get().singleTest)
-		return;
-
-	if (Options::get().singleTestFile.empty() || Options::get().singleTestName.empty())
-	{
-		cnote << "Missing user test specification\nUsage: testeth --singletest <filename> <testname>\n";
-		return;
-	}
-
-	auto& filename = Options::get().singleTestFile;
-	auto& testname = Options::get().singleTestName;
-
-	if (g_logVerbosity != -1)
-		VerbosityHolder sentinel(12);
-
-	try
-	{
-		cnote << "Testing user defined test: " << filename;
-		json_spirit::mValue v;
-		string s = contentsString(filename);
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
-		json_spirit::read_string(s, v);
-		json_spirit::mObject oSingleTest;
-
-		json_spirit::mObject::const_iterator pos = v.get_obj().find(testname);
-		if (pos == v.get_obj().end())
-		{
-			cnote << "Could not find test: " << testname << " in " << filename << "\n";
-			return;
-		}
-		else
-			oSingleTest[pos->first] = pos->second;
-
-		json_spirit::mValue v_singleTest(oSingleTest);
-		doTests(v_singleTest, test::Options::get().filltests);
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed Test with Exception: " << _e.what());
-	}
-}
-
 void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
 {
 	string testPath = getTestPath() + _testPathAppendix;
