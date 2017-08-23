@@ -147,8 +147,7 @@ json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fi
 json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin)
 {
 	json_spirit::mValue v = json_spirit::mObject();
-	map<string, json_spirit::mObject> tests;
-	vector<string> erase_list;
+	json_spirit::mObject& tests = v.get_obj();
 
 	// range-for is not used because iterators are necessary for removing elements later.
 	for (auto i = _input.get_obj().begin(); i != _input.get_obj().end(); i++)
@@ -159,8 +158,6 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 		//Select test by name if --singletest is set and not filling state tests as blockchain
 		if (!Options::get().fillchain && !TestOutputHelper::passTest(testname))
 			continue;
-
-		v.get_obj()[testname] = inputTest;
 
 		BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
 			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::testFileName() +
@@ -210,10 +207,6 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 				jObjOutput["network"] = test::netIdToString(network);
 				tests[newtestname] = jObjOutput;
 			}
-
-			// will be deleted once after the loop.
-			// removing an element while in this loop causes memory corruption.
-			erase_list.push_back(testname);
 		}
 		else
 		{
@@ -228,18 +221,6 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 		}
 	}
 
-	//Delete source test from the json
-	for (auto testname: erase_list)
-		v.get_obj().erase(v.get_obj().find(testname));
-
-	//Add generated tests to the result file
-	if (_fillin)
-	{
-		BOOST_CHECK_MESSAGE(v.get_obj().size() == 0, " Test Filler is incorrect. Still having the test source when generating from filler " + TestOutputHelper::testName());
-		json_spirit::mObject& obj = v.get_obj();
-		for (auto& test : tests)
-			obj[test.first] = test.second;
-	}
 	return v;
 }
 
