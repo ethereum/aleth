@@ -232,14 +232,17 @@ void VM::interpretCases()
 
 		CASE(CREATE2)
 		{
+			ON_OP();
 			if (!m_schedule->haveCreate2)
 				throwBadInstruction();
+
 			m_bounce = &VM::caseCreate;
 		}
 		BREAK
 		
 		CASE(CREATE)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
@@ -252,6 +255,7 @@ void VM::interpretCases()
 		CASE(CALL)
 		CASE(CALLCODE)
 		{
+			ON_OP();
 			if (m_OP == Instruction::DELEGATECALL && !m_schedule->haveDelegateCall)
 				throwBadInstruction();
 			if (m_OP == Instruction::STATICCALL && !m_schedule->haveStaticCall)
@@ -282,9 +286,9 @@ void VM::interpretCases()
 			if (!m_schedule->haveRevert)
 				throwBadInstruction();
 
+			ON_OP();
 			m_copyMemSize = 0;
 			updateMem(memNeed(m_SP[0], m_SP[1]));
-			ON_OP();
 			updateIOGas();
 
 			uint64_t b = (uint64_t)m_SP[0];
@@ -296,6 +300,7 @@ void VM::interpretCases()
 
 		CASE(SUICIDE)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 
@@ -309,7 +314,6 @@ void VM::interpretCases()
 				if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
 					m_runGas += m_schedule->callNewAccountGas;
 
-			ON_OP();
 			updateIOGas();
 			m_ext->suicide(dest);
 			m_bounce = 0;
@@ -1539,11 +1543,11 @@ void VM::interpretCases()
 
 		CASE(SSTORE)
 		{
+			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
 				
 			updateSSGas();
-			ON_OP();
 			updateIOGas();
 	
 			m_ext->setStore(m_SP[0], m_SP[1]);

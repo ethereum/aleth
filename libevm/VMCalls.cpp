@@ -132,7 +132,6 @@ int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 
 void VM::caseCreate()
 {
-	ON_OP();
 	m_bounce = &VM::interpretCases;
 	m_runGas = toInt63(m_schedule->createGas);
 	updateMem(memNeed(m_SP[1], m_SP[2]));
@@ -219,7 +218,6 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	assert(callParams->valueTransfer == 0);
 	assert(callParams->apparentValue == 0);
 
-	ON_OP();
 	m_runGas = toInt63(m_schedule->callGas);
 
 	callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
