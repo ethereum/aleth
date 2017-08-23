@@ -73,7 +73,11 @@ struct ChainOperationParams
 	std::string sealEngineName = "NoProof";
 
 	/// General chain params.
-	u256 blockReward = 0;
+private:
+	u256 m_blockReward;
+public:
+	u256 blockReward(EVMSchedule const& _schedule) const;
+	void setBlockReward(u256 const& _newBlockReward);
 	u256 maximumExtraDataSize = 1024;
 	u256 accountStartNonce = 0;
 	bool tieBreakingGas = true;

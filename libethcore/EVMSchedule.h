@@ -18,6 +18,7 @@
 #pragma once
 
 #include <array>
+#include <boost/optional.hpp>
 
 namespace dev
 {
@@ -71,6 +72,8 @@ struct EVMSchedule
 	unsigned blockhashGas = 20;
 	unsigned maxCodeSize = unsigned(-1);
 
+	boost::optional<u256> blockRewardOverwrite;
+
 	bool staticCallDepthLimit() const { return !eip150Mode; }
 	bool suicideChargesNewAccountGas() const { return eip150Mode; }
 	bool emptinessIsNonexistence() const { return eip158Mode; }
@@ -109,6 +112,7 @@ static const EVMSchedule ByzantiumSchedule = []
 	schedule.haveRevert = true;
 	schedule.haveReturnData = true;
 	schedule.haveStaticCall = true;
+	schedule.blockRewardOverwrite = {3 * ether};
 	return schedule;
 }();
 
