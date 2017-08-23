@@ -89,7 +89,7 @@ mObject FakeExtVM::exportEnv()
 	return ret;
 }
 
-EnvInfo FakeExtVM::importEnv(mObject& _o, LastBlockHashesFace const& _lastBlockHashes)
+EnvInfo FakeExtVM::importEnv(mObject const& _o, LastBlockHashesFace const& _lastBlockHashes)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
 	assert(_o.count("currentGasLimit") > 0);
@@ -97,15 +97,15 @@ EnvInfo FakeExtVM::importEnv(mObject& _o, LastBlockHashesFace const& _lastBlockH
 	assert(_o.count("currentTimestamp") > 0);
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
-	auto gasLimit = toInt(_o["currentGasLimit"]);
+	auto gasLimit = toInt(_o.at("currentGasLimit"));
 	assert(gasLimit <= std::numeric_limits<int64_t>::max());
 
 	BlockHeader blockHeader;
 	blockHeader.setGasLimit(gasLimit.convert_to<int64_t>());
-	blockHeader.setDifficulty(toInt(_o["currentDifficulty"]));
-	blockHeader.setTimestamp(toInt(_o["currentTimestamp"]));
-	blockHeader.setAuthor(Address(_o["currentCoinbase"].get_str()));
-	blockHeader.setNumber(toInt(_o["currentNumber"]));
+	blockHeader.setDifficulty(toInt(_o.at("currentDifficulty")));
+	blockHeader.setTimestamp(toInt(_o.at("currentTimestamp")));
+	blockHeader.setAuthor(Address(_o.at("currentCoinbase").get_str()));
+	blockHeader.setNumber(toInt(_o.at("currentNumber")));
 	return EnvInfo(blockHeader, _lastBlockHashes, 0);
 }
 
@@ -129,11 +129,11 @@ mObject FakeExtVM::exportState()
 	return ret;
 }
 
-void FakeExtVM::importState(mObject& _object)
+void FakeExtVM::importState(mObject const& _object)
 {
 	for (auto const& i: _object)
 	{
-		mObject o = i.second.get_obj();
+		mObject const& o = i.second.get_obj();
 		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
 		assert(o.count("balance") > 0);
 		assert(o.count("nonce") > 0);
@@ -141,9 +141,9 @@ void FakeExtVM::importState(mObject& _object)
 		assert(o.count("code") > 0);
 
 		auto& a = addresses[Address(i.first)];
-		get<0>(a) = toInt(o["balance"]);
-		get<1>(a) = toInt(o["nonce"]);
-		for (auto const& j: o["storage"].get_obj())
+		get<0>(a) = toInt(o.at("balance"));
+		get<1>(a) = toInt(o.at("nonce"));
+		for (auto const& j: o.at("storage").get_obj())
 			get<2>(a)[toInt(j.first)] = toInt(j.second);
 
 		get<3>(a) = importCode(o);
@@ -164,7 +164,7 @@ mObject FakeExtVM::exportExec()
 	return ret;
 }
 
-void FakeExtVM::importExec(mObject& _o)
+void FakeExtVM::importExec(mObject const& _o)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
 	assert(_o.count("address")> 0);
@@ -175,19 +175,19 @@ void FakeExtVM::importExec(mObject& _o)
 	assert(_o.count("gasPrice") > 0);
 	assert(_o.count("gas") > 0);
 
-	myAddress = Address(_o["address"].get_str());
-	caller = Address(_o["caller"].get_str());
-	origin = Address(_o["origin"].get_str());
-	value = toInt(_o["value"]);
-	gasPrice = toInt(_o["gasPrice"]);
-	gas = toInt(_o["gas"]);
+	myAddress = Address(_o.at("address").get_str());
+	caller = Address(_o.at("caller").get_str());
+	origin = Address(_o.at("origin").get_str());
+	value = toInt(_o.at("value"));
+	gasPrice = toInt(_o.at("gasPrice"));
+	gas = toInt(_o.at("gas"));
 	execGas = gas;
 
 	thisTxCode.clear();
 	code = thisTxCode;
 
 	thisTxCode = importCode(_o);
-	if (_o["code"].type() != str_type && _o["code"].type() != array_type)
+	if (_o.count("code") == 0 || (_o.at("code").type() != str_type && _o.at("code").type() != array_type))
 		code.clear();
 
 	thisTxData.clear();
@@ -211,9 +211,9 @@ mArray FakeExtVM::exportCallCreates()
 	return ret;
 }
 
-void FakeExtVM::importCallCreates(mArray& _callcreates)
+void FakeExtVM::importCallCreates(mArray const& _callcreates)
 {
-	for (mValue& v: _callcreates)
+	for (mValue const& v: _callcreates)
 	{
 		auto tx = v.get_obj();
 		assert(tx.count("data") > 0);
@@ -236,14 +236,14 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 		eth::VM& vm = *voidVM;
 
 		std::ostringstream o;
-		o << std::endl << "    STACK" << std::endl;
+		o << "\n    STACK\n";
 		for (auto i: vm.stack())
-			o << (h256)i << std::endl;
-		o << "    MEMORY" << std::endl << memDump(vm.memory());
-		o << "    STORAGE" << std::endl;
+			o << (h256)i << "\n";
+		o << "    MEMORY\n" << memDump(vm.memory());
+		o << "    STORAGE\n";
 
 		for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
-			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
+			o << std::showbase << std::hex << i.first << ": " << i.second << "\n";
 
 		dev::LogOutputStream<eth::VMTraceChannel, false>() << o.str();
 		dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << pc << " : " << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
@@ -292,37 +292,39 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 
 namespace dev { namespace test {
 
-void doVMTests(json_spirit::mValue& _v, bool _fillin)
+json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 {
 	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom")
-		TestOutputHelper::initTest(_v);
+		TestOutputHelper::initTest(_input.get_obj().size());
 
-	for (auto& i: _v.get_obj())
+	json_spirit::mValue v = json_spirit::mObject();
+	json_spirit::mObject& output = v.get_obj();
+	for (auto& i: _input.get_obj())
 	{
-		string testname = i.first;
-		json_spirit::mObject& o = i.second.get_obj();
-
+		string const& testname = i.first;
+		json_spirit::mObject const& testInput = i.second.get_obj();
 		if (!TestOutputHelper::passTest(testname))
-		{
-			o.clear(); //don't add irrelevant tests to the final file when filling
 			continue;
-		}
 
-		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("exec") > 0, testname + " exec not set!");
+		output[testname] = json_spirit::mObject();
+		json_spirit::mObject& testOutput = output[testname].get_obj(); // TODO: avoid copying and add valid fields one by one
+
+		BOOST_REQUIRE_MESSAGE(testInput.count("env") > 0, testname + " env not set!");
+		BOOST_REQUIRE_MESSAGE(testInput.count("pre") > 0, testname + " pre not set!");
+		BOOST_REQUIRE_MESSAGE(testInput.count("exec") > 0, testname + " exec not set!");
+		// testOutput["pre"], ["env"] and ["exec"] will be filled later
 		if (! _fillin)
-			BOOST_REQUIRE_MESSAGE(o.count("expect") == 0, testname + " expect set!");
+			BOOST_REQUIRE_MESSAGE(testInput.count("expect") == 0, testname + " expect set!");
 
 		TestLastBlockHashes lastBlockHashes(h256s(256, h256()));
-		eth::EnvInfo env = FakeExtVM::importEnv(o["env"].get_obj(), lastBlockHashes);
+		eth::EnvInfo env = FakeExtVM::importEnv(testInput.at("env").get_obj(), lastBlockHashes);
 		FakeExtVM fev(env);
-		fev.importState(o["pre"].get_obj());
+		fev.importState(testInput.at("pre").get_obj());
 
 		if (_fillin)
-			o["pre"] = mValue(fev.exportState());
+			testOutput["pre"] = mValue(fev.exportState());
 
-		fev.importExec(o["exec"].get_obj());
+		fev.importExec(testInput.at("exec").get_obj());
 		if (fev.code.empty())
 		{
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
@@ -378,84 +380,81 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 
 		if (_fillin)
 		{
-			o["env"] = mValue(fev.exportEnv());
-			o["exec"] = mValue(fev.exportExec());
+			testOutput["env"] = mValue(fev.exportEnv());
+			testOutput["exec"] = mValue(fev.exportExec());
 			if (vmExceptionOccured)
 			{
-				if (o.count("expect") > 0)
+				if (testInput.count("expect") > 0)
 				{
-					BOOST_REQUIRE_MESSAGE(o.count("expect") == 1, testname + " multiple expect set!");
+					BOOST_REQUIRE_MESSAGE(testInput.count("expect") == 1, testname + " multiple expect set!");
 					State postState(State::Null);
 					State expectState(State::Null);
 					AccountMaskMap expectStateMap;
 					ImportTest::importState(mValue(fev.exportState()).get_obj(), postState);
-					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
+					ImportTest::importState(testInput.at("expect").get_obj(), expectState, expectStateMap);
 					ImportTest::compareStates(expectState, postState, expectStateMap, WhenError::Throw);
-					o.erase(o.find("expect"));
 				}
-				BOOST_REQUIRE_MESSAGE(o.count("expect") == 0, testname + " expect should have been erased!");
+				BOOST_REQUIRE_MESSAGE(testOutput.count("expect") == 0, testname + " expect should have been erased!");
 			}
 			else
 			{
-				o["post"] = mValue(fev.exportState());
+				testOutput["post"] = mValue(fev.exportState());
 
-				if (o.count("expect") > 0)
+				if (testInput.count("expect") > 0)
 				{
-					BOOST_REQUIRE_MESSAGE(o.count("expect") == 1, testname + " multiple expect set!");
+					BOOST_REQUIRE_MESSAGE(testInput.count("expect") == 1, testname + " multiple expect set!");
 
 					State postState(State::Null);
 					State expectState(State::Null);
 					AccountMaskMap expectStateMap;
-					ImportTest::importState(o["post"].get_obj(), postState);
-					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
+					ImportTest::importState(testOutput.at("post").get_obj(), postState);
+					ImportTest::importState(testInput.at("expect").get_obj(), expectState, expectStateMap);
 					ImportTest::compareStates(expectState, postState, expectStateMap, WhenError::Throw);
-					o.erase(o.find("expect"));
 				}
 
-				BOOST_REQUIRE_MESSAGE(o.count("expect") == 0, testname + " expect should have been erased!");
+				BOOST_REQUIRE_MESSAGE(testOutput.count("expect") == 0, testname + " expect should have been erased!");
 
-				o["callcreates"] = fev.exportCallCreates();
-				o["out"] = output.size() > 4096 ? "#" + toString(output.size()) : toHexPrefixed(output);
+				testOutput["callcreates"] = fev.exportCallCreates();
+				testOutput["out"] = output.size() > 4096 ? "#" + toString(output.size()) : toHexPrefixed(output);
 
 				// compare expected output with post output
-				if (o.count("expectOut") > 0)
+				if (testInput.count("expectOut") > 0)
 				{
-					std::string warning = " Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
-					BOOST_CHECK_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
-					o.erase(o.find("expectOut"));
+					std::string warning = " Check State: Error! Unexpected output: " + testOutput["out"].get_str() + " Expected: " + testInput.at("expectOut").get_str();
+					BOOST_CHECK_MESSAGE(testOutput["out"].get_str() == testInput.at("expectOut").get_str(), warning);
 				}
 
-				o["gas"] = toCompactHexPrefixed(fev.gas, 1);
-				o["logs"] = exportLog(fev.sub.logs);
+				testOutput["gas"] = toCompactHexPrefixed(fev.gas, 1);
+				testOutput["logs"] = exportLog(fev.sub.logs);
 			}
 		}
 		else
 		{
-			if (o.count("post") > 0)	// No exceptions expected
+			if (testInput.count("post") > 0)	// No exceptions expected
 			{
 				BOOST_CHECK(!vmExceptionOccured);
 
-				BOOST_REQUIRE(o.count("post") > 0);
-				BOOST_REQUIRE(o.count("callcreates") > 0);
-				BOOST_REQUIRE(o.count("out") > 0);
-				BOOST_REQUIRE(o.count("gas") > 0);
-				BOOST_REQUIRE(o.count("logs") > 0);
+				BOOST_REQUIRE(testInput.count("post") > 0);
+				BOOST_REQUIRE(testInput.count("callcreates") > 0);
+				BOOST_REQUIRE(testInput.count("out") > 0);
+				BOOST_REQUIRE(testInput.count("gas") > 0);
+				BOOST_REQUIRE(testInput.count("logs") > 0);
 
 				dev::test::FakeExtVM test(eth::EnvInfo{BlockHeader{}, lastBlockHashes, 0});
-				test.importState(o["post"].get_obj());
-				test.importCallCreates(o["callcreates"].get_array());
-				test.sub.logs = importLog(o["logs"].get_array());
+				test.importState(testInput.at("post").get_obj());
+				test.importCallCreates(testInput.at("callcreates").get_array());
+				test.sub.logs = importLog(testInput.at("logs").get_array());
 
 
-				checkOutput(output, o);
+				checkOutput(output, testInput);
 
-				BOOST_CHECK_EQUAL(toInt(o["gas"]), fev.gas);
+				BOOST_CHECK_EQUAL(toInt(testInput.at("gas")), fev.gas);
 
 				State postState(State::Null);
 				State expectState(State::Null);
 				mObject mPostState = fev.exportState();
 				ImportTest::importState(mPostState, postState);
-				ImportTest::importState(o["post"].get_obj(), expectState);
+				ImportTest::importState(testInput.at("post").get_obj(), expectState);
 				ImportTest::compareStates(expectState, postState);
 
 				//checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
@@ -470,6 +469,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 	}
 
 	TestOutputHelper::finishTest();
+	return v;
 }
 
 } } // namespace close

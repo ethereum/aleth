@@ -38,7 +38,9 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/CryptoPP.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <libethereum/Transaction.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <test/tools/libtesteth/Options.h>
 
 using namespace std;
 using namespace dev;

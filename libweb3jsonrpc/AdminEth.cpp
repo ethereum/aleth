@@ -1,7 +1,6 @@
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonJS.h>
 #include <libethcore/KeyManager.h>
-#include <libethcore/ICAP.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
 #include <libethashseal/EthashClient.h>
@@ -129,18 +128,18 @@ Json::Value AdminEth::admin_eth_newAccount(Json::Value const& _info, string cons
 	if (!_info.isMember("name"))
 		throw jsonrpc::JsonRpcException("No member found: name");
 	string name = _info["name"].asString();
-	auto s = ICAP::createDirect();
+	KeyPair kp = KeyPair::create();
 	h128 uuid;
 	if (_info.isMember("password"))
 	{
 		string password = _info["password"].asString();
 		string hint = _info["passwordHint"].asString();
-		uuid = m_keyManager.import(s, name, password, hint);
+		uuid = m_keyManager.import(kp.secret(), name, password, hint);
 	}
 	else
-		uuid = m_keyManager.import(s, name);
+		uuid = m_keyManager.import(kp.secret(), name);
 	Json::Value ret;
-	ret["account"] = toJS(toAddress(s));
+	ret["account"] = toJS(kp.pub());
 	ret["uuid"] = toUUID(uuid);
 	return ret;
 }

@@ -31,9 +31,9 @@ namespace test
 
 enum class Verbosity
 {
-	Full,
+	None,
 	NiceReport,
-	None
+	Full
 };
 
 class Options

@@ -21,7 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libweb3jsonrpc/AccountHolder.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;

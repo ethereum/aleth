@@ -67,10 +67,10 @@ void createRandomTest()
 	//For no reason BOOST tend to remove valuable arg -t "TestSuiteName"
 	//And can't hadle large input stream of data
 	//so the actual test suite and raw test input is read into Options
-	if (dev::test::createRandomTest(parameters))
+	if (dev::test::createRandomTest())
 		throw framework::internal_error("Create Random Test Error!");
-	else
-		exit(0);
+
+	exit(0);
 }
 
 static std::atomic_bool stopTravisOut;
@@ -82,7 +82,7 @@ void travisOut()
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		++tickCounter;
 		if (tickCounter % 10 == 0)
-			std::cout << "." << std::endl;  // Output dot every 10s.
+			std::cout << ".\n" << std::flush;  // Output dot every 10s.
 	}
 }
 
@@ -149,7 +149,7 @@ int main( int argc, char* argv[] )
 	}
 	catch (dev::test::Options::InvalidOption const& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::cerr << e.what() << "\n";
 		exit(1);
 	}
 

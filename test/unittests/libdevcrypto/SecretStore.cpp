@@ -25,7 +25,7 @@
 #include <libdevcore/TrieHash.h>
 #include <libdevcore/TransientDirectory.h>
 #include "MemTrie.h"
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 using namespace std;
 using namespace dev;
 using namespace dev::test;

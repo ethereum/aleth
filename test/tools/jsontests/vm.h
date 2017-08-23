@@ -69,13 +69,13 @@ public:
 	void reset(u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage);
 	u256 doPosts();
 	json_spirit::mObject exportEnv();
-	static dev::eth::EnvInfo importEnv(json_spirit::mObject& _o, eth::LastBlockHashesFace const& _lastBlockHashes);
+	static dev::eth::EnvInfo importEnv(json_spirit::mObject const& _o, eth::LastBlockHashesFace const& _lastBlockHashes);
 	json_spirit::mObject exportState();
-	void importState(json_spirit::mObject& _object);
+	void importState(json_spirit::mObject const& _object);
 	json_spirit::mObject exportExec();
-	void importExec(json_spirit::mObject& _o);
+	void importExec(json_spirit::mObject const& _o);
 	json_spirit::mArray exportCallCreates();
-	void importCallCreates(json_spirit::mArray& _callcreates);
+	void importCallCreates(json_spirit::mArray const& _callcreates);
 
 	eth::OnOpFunc simpleTrace() const;
 

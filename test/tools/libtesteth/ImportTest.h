@@ -29,25 +29,18 @@ namespace dev
 namespace test
 {
 
-enum class testType
-{
-	BlockChainTests,
-	GeneralStateTest,
-	Other
-};
-
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o, testType _testTemplate);
+	ImportTest(json_spirit::mObject const& _input, json_spirit::mObject& _output);
 
 	// imports
-	void importEnv(json_spirit::mObject& _o);
+	void importEnv(json_spirit::mObject const& _o);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state);
 	static void importState(json_spirit::mObject const& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
-	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o, bool _isHeader = false);
+	static json_spirit::mObject makeAllFieldsHex(json_spirit::mObject const& _o, bool _isHeader = false);
 	static void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, std::vector<std::string>& _out);
 
 	//check functions
@@ -56,7 +49,7 @@ public:
 	static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
 
 	bytes executeTest();
-	int exportTest(bytes const& _output);
+	int exportTest();
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
 	void traceStateDiff();
@@ -92,8 +85,8 @@ private:
 	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
 	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
 
-	json_spirit::mObject& m_testObject;
-	testType m_testType;
+	json_spirit::mObject const& m_testInputObject;
+	json_spirit::mObject& m_testOutputObject;
 };
 
 } //namespace test

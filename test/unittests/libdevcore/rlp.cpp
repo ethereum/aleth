@@ -20,17 +20,19 @@
  * RLP test functions.
  */
 
-#include <fstream>
-#include <sstream>
-
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <algorithm>
 #include <json_spirit/JsonSpiritHeaders.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/TestHelper.h>
+
 #include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 using namespace dev;
@@ -39,9 +41,9 @@ namespace js = json_spirit;
 namespace dev
 {
 	namespace test
-	{	
-		void buildRLP(js::mValue& _v, RLPStream& _rlp);
-		void checkRLPAgainstJson(js::mValue& v, RLP& u);
+	{
+		void buildRLP(js::mValue const& _v, RLPStream& _rlp);
+		void checkRLPAgainstJson(js::mValue const& v, RLP& u);
 		enum class RlpType
 		{
 			Valid,
@@ -49,116 +51,93 @@ namespace dev
 			Test
 		};
 
-		void doRlpTests(json_spirit::mValue& v, bool _fillin)
+		void doRlpTests(json_spirit::mValue const& _input)
 		{
 			string testname;
-			for (auto& i: v.get_obj())
+			for (auto& i: _input.get_obj())
 			{
-				js::mObject& o = i.second.get_obj();
+				js::mObject const& o = i.second.get_obj();
 
 				cnote << "  " << i.first;
 				testname = "(" + i.first + ") ";
 
 				BOOST_REQUIRE_MESSAGE(o.count("out") > 0, testname + "out not set!");
-				BOOST_REQUIRE_MESSAGE(!o["out"].is_null(), testname + "out is set to null!");
+				BOOST_REQUIRE_MESSAGE(!o.at("out").is_null(), testname + "out is set to null!");
 
-				if (_fillin)
+				//Check Encode
+				BOOST_REQUIRE_MESSAGE(o.count("in") > 0, testname + "in not set!");
+				RlpType rlpType = RlpType::Test;
+				if (o.at("in").type() == js::str_type)
 				{
-					try
-					{
-						bytes payloadToDecode = fromHex(o["out"].get_str());
-						RLP payload(payloadToDecode);
-						ostringstream() << payload;
-						o["in"] = "VALID";
-					}
-					catch (Exception const& _e)
-					{
-						cnote << "Exception: " << diagnostic_information(_e);
-						o["in"] = "INVALID";
-					}
-					catch (std::exception const& _e)
-					{
-						cnote << "rlp exception: " << _e.what();
-						o["in"] = "INVALID";
-					}
+					if (o.at("in").get_str() == "INVALID")
+						rlpType = RlpType::Invalid;
+					else if (o.at("in").get_str() == "VALID")
+						rlpType = RlpType::Valid;
 				}
-				else
+
+				if (rlpType == RlpType::Test)
 				{
-					//Check Encode
-					BOOST_REQUIRE_MESSAGE(o.count("in") > 0, testname + "in not set!");
-					RlpType rlpType = RlpType::Test;
-					if (o["in"].type() == js::str_type)
-					{
-						if (o["in"].get_str() == "INVALID")
-							rlpType = RlpType::Invalid;
-						else	if (o["in"].get_str() == "VALID")
-							rlpType = RlpType::Valid;
-					}
+					RLPStream s;
+					dev::test::buildRLP(o.at("in"), s);
+					string computedText = toHex(s.out());
+
+					string expectedText(o.at("out").get_str());
+					transform(expectedText.begin(), expectedText.end(), expectedText.begin(), ::tolower );
+
+					stringstream msg;
+					msg << "Encoding Failed: expected: " << expectedText << std::endl;
+					msg << " But Computed: " << computedText;
+					BOOST_CHECK_MESSAGE(expectedText == computedText, testname + msg.str());
+				}
+
+				//Check Decode
+				// Uses the same test cases as encoding but in reverse.
+				// We read into the string of hex values, convert to bytes,
+				// and then compare the output structure to the json of the
+				// input object.
+				bool was_exception = false;
+				js::mValue const& inputData = o.at("in");
+				try
+				{
+					bytes payloadToDecode = fromHex(o.at("out").get_str());
+					RLP payload(payloadToDecode);
+
+					//attempt to read all the contents of RLP
+					ostringstream() << payload;
 
 					if (rlpType == RlpType::Test)
-					{
-						RLPStream s;
-						dev::test::buildRLP(o["in"], s);
-						string computedText = toHex(s.out());
-
-						string expectedText(o["out"].get_str());
-						transform(expectedText.begin(), expectedText.end(), expectedText.begin(), ::tolower );
-
-						stringstream msg;
-						msg << "Encoding Failed: expected: " << expectedText << std::endl;
-						msg << " But Computed: " << computedText;
-						BOOST_CHECK_MESSAGE(expectedText == computedText, testname + msg.str());
-					}
-
-					//Check Decode
-					// Uses the same test cases as encoding but in reverse.
-					// We read into the string of hex values, convert to bytes,
-					// and then compare the output structure to the json of the
-					// input object.
-					bool was_exception = false;
-					js::mValue& inputData = o["in"];
-					try
-					{
-						bytes payloadToDecode = fromHex(o["out"].get_str());
-						RLP payload(payloadToDecode);
-
-						//attempt to read all the contents of RLP
-						ostringstream() << payload;
-
-						if (rlpType == RlpType::Test)
-							dev::test::checkRLPAgainstJson(inputData, payload);
-					}
-					catch (Exception const& _e)
-					{
-						cnote << "Exception: " << diagnostic_information(_e);
-						was_exception = true;
-					}
-					catch (exception const& _e)
-					{
-						cnote << "rlp exception: " << _e.what();
-						was_exception = true;
-					}
-					catch (...)
-					{
-						was_exception = true;
-					}
-
-					//Expect exception as input is INVALID
-					if (rlpType == RlpType::Invalid && was_exception)
-						continue;
-
-					//Check that there was an exception as input is INVALID
-					if (rlpType == RlpType::Invalid && !was_exception)
-						BOOST_ERROR(testname + "Expected RLP Exception as rlp should be invalid!");
-
-					//input is VALID check that there was no exceptions
-					if (was_exception)
-						BOOST_ERROR(testname + "Unexpected RLP Exception!");
+						dev::test::checkRLPAgainstJson(inputData, payload);
 				}
+				catch (Exception const& _e)
+				{
+					cnote << "Exception: " << diagnostic_information(_e);
+					was_exception = true;
+				}
+				catch (exception const& _e)
+				{
+					cnote << "rlp exception: " << _e.what();
+					was_exception = true;
+				}
+				catch (...)
+				{
+					was_exception = true;
+				}
+
+				//Expect exception as input is INVALID
+				if (rlpType == RlpType::Invalid && was_exception)
+					continue;
+
+				//Check that there was an exception as input is INVALID
+				if (rlpType == RlpType::Invalid && !was_exception)
+					BOOST_ERROR(testname + "Expected RLP Exception as rlp should be invalid!");
+
+				//input is VALID check that there was no exceptions
+				if (was_exception)
+					BOOST_ERROR(testname + "Unexpected RLP Exception!");
 			}
 		}
 
-		void buildRLP(js::mValue& _v, RLPStream& _rlp)
+		void buildRLP(js::mValue const& _v, RLPStream& _rlp)
 		{
 			if (_v.type() == js::array_type)
 			{
@@ -179,7 +158,7 @@ namespace dev
 			}
 		}
 
-		void checkRLPAgainstJson(js::mValue& v, RLP& u)
+		void checkRLPAgainstJson(js::mValue const& v, RLP& u)
 		{
 			if ( v.type() == js::str_type )
 			{
@@ -217,7 +196,7 @@ namespace dev
 				BOOST_CHECK( u.isList() );
 				BOOST_CHECK( !u.isInt() );
 				BOOST_CHECK( !u.isData() );
-				js::mArray& arr = v.get_array();
+				js::mArray const& arr = v.get_array();
 				BOOST_CHECK( u.itemCount() == arr.size() );
 				unsigned i;
 				for( i = 0; i < arr.size(); i++ )
@@ -247,7 +226,7 @@ void runRlpTest(string _name, string _path)
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
 		//Listener::notifySuiteStarted(_name);
-		dev::test::doRlpTests(v, false);
+		dev::test::doRlpTests(v);
 	}
 	catch (Exception const& _e)
 	{
@@ -311,7 +290,7 @@ BOOST_AUTO_TEST_CASE(rlpRandom)
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
 			//test::Listener::notifySuiteStarted(path.filename().string());
-			dev::test::doRlpTests(v, false);
+			dev::test::doRlpTests(v);
 		}
 
 		catch (Exception const& _e)

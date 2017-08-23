@@ -39,17 +39,20 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-void doStateTests(json_spirit::mValue& _v, bool _fillin)
+json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin)
 {
-	BOOST_REQUIRE_MESSAGE(!_fillin || _v.get_obj().size() == 1,
+	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
 		TestOutputHelper::testFileName() + " A GeneralStateTest filler should contain only one test.");
+	json_spirit::mValue v = json_spirit::mObject();
 
-	for (auto& i: _v.get_obj())
+	for (auto& i: _input.get_obj())
 	{
-		string testname = i.first;
-		json_spirit::mObject& o = i.second.get_obj();
+		string const testname = i.first;
+		json_spirit::mObject const& inputTest = i.second.get_obj();
+		v.get_obj()[testname] = json_spirit::mObject();
+		json_spirit::mObject& outputTest = v.get_obj()[testname].get_obj();
 
-		if (_fillin)
+		if (_fillin && !TestOutputHelper::testFileName().empty())
 			BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::testFileName(),
 				TestOutputHelper::testFileName() + " contains a test with a different name '" + testname + "'" );
 
@@ -60,11 +63,11 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin == false && Options::get().fillchain)
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + " env not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + " pre not set!");
-		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + " transaction not set!");
+		BOOST_REQUIRE_MESSAGE(inputTest.count("env") > 0, testname + " env not set!");
+		BOOST_REQUIRE_MESSAGE(inputTest.count("pre") > 0, testname + " pre not set!");
+		BOOST_REQUIRE_MESSAGE(inputTest.count("transaction") > 0, testname + " transaction not set!");
 
-		ImportTest importer(o, testType::GeneralStateTest);
+		ImportTest importer(inputTest, outputTest);
 
 		Listener::ExecTimeGuard guard{i.first};
 		importer.executeTest();
@@ -74,7 +77,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 #if ETH_FATDB
-			if (importer.exportTest(bytes()))
+			if (importer.exportTest())
 				cerr << testname << endl;
 #else
 			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + " You can not fill tests when FATDB is switched off"));
@@ -82,10 +85,10 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		}
 		else
 		{
-			BOOST_REQUIRE_MESSAGE(o.count("post") > 0, testname + " post not set!");
+			BOOST_REQUIRE_MESSAGE(inputTest.count("post") > 0, testname + " post not set!");
 
 			//check post hashes against cpp client on all networks
-			mObject post = o["post"].get_obj();
+			mObject post = inputTest.at("post").get_obj();
 			vector<size_t> wrongTransactionsIndexes;
 			for (mObject::const_iterator i = post.begin(); i != post.end(); ++i)
 			{
@@ -103,6 +106,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 				importer.traceStateDiff();
 		}
 	}
+	return v;
 }
 } }// Namespace Close
 
@@ -139,6 +143,7 @@ public:
 	}
 };
 
+std::string const test::c_StateTestsGeneral = "StateTestsGeneral";
 BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
 
 //Frontier Tests
@@ -190,4 +195,7 @@ BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
 BOOST_AUTO_TEST_CASE(stAttackTest){}
 BOOST_AUTO_TEST_CASE(stMemoryStressTest){}
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest){}
+
+//Invalid Opcode Tests
+BOOST_AUTO_TEST_CASE(stBadOpcode){}
 BOOST_AUTO_TEST_SUITE_END()

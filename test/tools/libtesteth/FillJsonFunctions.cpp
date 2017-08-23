@@ -48,7 +48,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 	txObject["v"] = toCompactHexPrefixed(_txn.signature().v + 27, 1);
 	txObject["to"] = _txn.isCreation() ? "" : toHexPrefixed(_txn.receiveAddress());
 	txObject["value"] = toCompactHexPrefixed(_txn.value(), 1);
-	ImportTest::makeAllFieldsHex(txObject);
+	txObject = ImportTest::makeAllFieldsHex(txObject);
 	return txObject;
 }
 
@@ -96,7 +96,7 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					record.push_back("->");
 					record.push_back(after);
 					o["code"] = record;
-					logInfo["code"] << "'code' : ['" + before + "', '->', '" + after + "']" << std::endl;
+					logInfo["code"] << "'code' : ['" + before + "', '->', '" + after + "']\n";
 				break;
 				case Change::Kind::Nonce:
 					//take the original and final nonce only
@@ -106,7 +106,7 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					record.push_back("->");
 					record.push_back(after);
 					o["nonce"] = record;
-					logInfo["nonce"] << "'nonce' : ['" + before + "', '->', '" + after + "']" << std::endl;
+					logInfo["nonce"] << "'nonce' : ['" + before + "', '->', '" + after + "']\n";
 				break;
 				case Change::Kind::Balance:
 					before = toCompactHexPrefixed(tmpBalance, 1);
@@ -116,11 +116,11 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					record.push_back(after);
 					tmpBalance += change.value;
 					agregatedBalance.push_back(record);
-					logInfo["balance"] << "'balance' : ['" + before + "', '+=', '" + after + "']" << std::endl;
+					logInfo["balance"] << "'balance' : ['" + before + "', '+=', '" + after + "']\n";
 				break;
 				case Change::Kind::Touch:
 					o["hasBeenTouched"] = "true";
-					logInfo["hasBeenTouched"] << "'hasBeenTouched' : ['true']" << std::endl;
+					logInfo["hasBeenTouched"] << "'hasBeenTouched' : ['true']\n";
 				break;
 				case Change::Kind::Storage:
 					//take the original and final storage only
@@ -131,15 +131,15 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 					record.push_back(after);
 					agregatedStorage.push_back(record);
 					o["storage"] = agregatedStorage;
-					logInfo["storage"] << "'storage' : ['" + before + "', '->', '" + after + "']" << std::endl;
+					logInfo["storage"] << "'storage' : ['" + before + "', '->', '" + after + "']\n";
 				break;
 				case Change::Kind::Create:
 					o["newlyCreated"] = "true";
-					logInfo["newlyCreated"] << "'newlyCreated' : ['true']" << std::endl;
+					logInfo["newlyCreated"] << "'newlyCreated' : ['true']\n";
 				break;
 				default:
 					o["unknownChange"] = "true";
-					logInfo["unknownChange"] << "'unknownChange' : ['true']" << std::endl;
+					logInfo["unknownChange"] << "'unknownChange' : ['true']\n";
 				break;
 			}
 			++i;
@@ -156,12 +156,12 @@ json_spirit::mObject fillJsonWithStateChange(State const& _stateOrig, eth::State
 			record.push_back(after);
 			agregatedBalance.push_back(record);
 			o["balance"] = agregatedBalance;
-			logInfo["balance"] << "'balance' : ['" + before + "', '->', '" + after + "']" << std::endl;
+			logInfo["balance"] << "'balance' : ['" + before + "', '->', '" + after + "']\n";
 		}
 
 		//commit changes
 		oState[toHexPrefixed(currentAddress)] = o;
-		log << endl << currentAddress << endl;
+		log << "\n" << currentAddress << "\n";
 		for (std::map<string, ostringstream>::iterator it = logInfo.begin(); it != logInfo.end(); it++)
 			log << (*it).second.str();
 	}

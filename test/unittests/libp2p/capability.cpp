@@ -27,7 +27,8 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libp2p/Session.h>
 #include <libp2p/Capability.h>
 #include <libp2p/HostCapability.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <test/tools/libtesteth/Options.h>
 
 using namespace std;
 using namespace dev;

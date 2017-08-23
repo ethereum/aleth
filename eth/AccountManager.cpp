@@ -22,7 +22,6 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/CommonIO.h>
-#include <libethcore/ICAP.h>
 #include <libethcore/KeyManager.h>
 #include "AccountManager.h"
 using namespace std;
@@ -123,8 +122,7 @@ bool AccountManager::execute(int argc, char** argv)
 			auto k = makeKey();
 			h128 u = m_keyManager->import(k.secret(), name, lock, lockHint);
 			cout << "Created key " << toUUID(u) << endl;
-			cout << "  ICAP: " << ICAP(k.address()).encoded() << endl;
-			cout << "  Address: {" << k.address().hex() << "}" << endl;
+			cout << "  Address: " << k.address().hex() << endl;
 		}
 		else if (3 < argc && string(argv[2]) == "import")
 		{
@@ -149,8 +147,7 @@ bool AccountManager::execute(int argc, char** argv)
 				m_keyManager->importExisting(u, name, pw, lockHint);
 				auto a = m_keyManager->address(u);
 				cout << "Imported key " << toUUID(u) << endl;
-				cout << "  ICAP: " << ICAP(a).encoded() << endl;
-				cout << "  Address: {" << a.hex() << "}" << endl;
+				cout << "  Address: " << a.hex() << endl;
 			}
 		}
 		else if (3 < argc && string(argv[2]) == "update")

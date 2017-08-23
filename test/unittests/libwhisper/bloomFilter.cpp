@@ -22,7 +22,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libwhisper/BloomFilter.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;

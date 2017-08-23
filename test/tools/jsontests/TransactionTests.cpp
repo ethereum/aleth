@@ -34,11 +34,12 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
+json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin)
 {
-	TestOutputHelper::initTest(_v);
+	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
+	TestOutputHelper::initTest(v.get_obj().size());
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
-	for (auto& i: _v.get_obj())
+	for (auto& i: v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
@@ -159,6 +160,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		}
 	}//for
 	dev::test::TestOutputHelper::finishTest();
+	return v;
 }//doTransactionTests
 
 } }// Namespace Close

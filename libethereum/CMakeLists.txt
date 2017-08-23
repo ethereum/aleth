@@ -3,7 +3,7 @@ file(GLOB HEADERS "*.h")
 
 add_library(ethereum ${SRC_LIST} ${HEADERS})
 
-target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES} JsonCpp)
+target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES} jsoncpp_lib_static)
 
 find_package(Dev)
 find_package(Eth)

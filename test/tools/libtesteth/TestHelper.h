@@ -59,58 +59,7 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 struct MissingFields : virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
-
-/// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
-/// Our version of BOOST_REQUIRE_NO_THROW()
-/// @param _statenent    The statement for which to make sure no exceptions are thrown
-/// @param _message       A message to act as a prefix to the expression's error information
-#define ETH_TEST_REQUIRE_NO_THROW(_statement, _message)				\
-	do																	\
-	{																	\
-		try															\
-		{																\
-			BOOST_TEST_PASSPOINT();										\
-			_statement;												\
-		}																\
-		catch (boost::exception const& _e)								\
-		{																\
-			auto msg = std::string(_message " due to an exception thrown by " \
-				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
-			BOOST_CHECK_IMPL(false, msg, REQUIRE, CHECK_MSG);			\
-		}																\
-		catch (...)														\
-		{																\
-			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
-				BOOST_STRINGIZE(_statement), REQUIRE, CHECK_MSG);		\
-		}																\
-	}																	\
-	while (0)
-
-/// Check if an Exception is thrown during testing. If one is thrown show its info and continue the test
-/// Our version of BOOST_CHECK_NO_THROW()
-/// @param _statement    The statement for which to make sure no exceptions are thrown
-/// @param _message       A message to act as a prefix to the expression's error information
-#define ETH_TEST_CHECK_NO_THROW(_statement, _message)					\
-	do																	\
-	{																	\
-		try															\
-		{																\
-			BOOST_TEST_PASSPOINT();										\
-			_statement;												\
-		}																\
-		catch (boost::exception const& _e)								\
-		{																\
-			auto msg = std::string(_message " due to an exception thrown by " \
-				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
-			BOOST_CHECK_IMPL(false, msg, CHECK, CHECK_MSG);				\
-		}																\
-		catch (...)														\
-		{																\
-			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
-				BOOST_STRINGIZE(_statement), CHECK, CHECK_MSG );		\
-		}																\
-	}																	\
-	while (0)
+extern std::string const c_StateTestsGeneral;
 
 
 class ZeroGasPricer: public eth::GasPricer
@@ -131,17 +80,17 @@ byte toByte(json_spirit::mValue const& _v);
 void replaceLLLinState(json_spirit::mObject& _o);
 std::string compileLLL(std::string const& _code);
 std::string executeCmd(std::string const& _command);
-bytes importCode(json_spirit::mObject& _o);
+bytes importCode(json_spirit::mObject const& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
 void checkHexHasEvenLength(std::string const&);
 void copyFile(std::string const& _source, std::string const& _destination);
-eth::LogEntries importLog(json_spirit::mArray& _o);
-json_spirit::mArray exportLog(eth::LogEntries const& _logs);
-void checkOutput(bytesConstRef _output, json_spirit::mObject& _o);
+eth::LogEntries importLog(json_spirit::mArray const& _o);
+std::string exportLog(eth::LogEntries const& _logs);
+void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
-void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
-void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
+void checkLog(eth::LogEntries const& _resultLogs, eth::LogEntries const& _expectedLogs);
+void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates);
 dev::eth::BlockHeader constructHeader(
 	h256 const& _parentHash,
 	h256 const& _sha3Uncles,
@@ -157,8 +106,8 @@ dev::eth::BlockHeader constructHeader(
 	u256 const& _timestamp,
 	bytes const& _extraData);
 void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
-void executeTests(const std::string& _name, const std::string& _testPathAppendix, const std::string& _fillerPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix = true);
-void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
+void executeTests(const std::string& _name, const std::string& _testPathAppendix, const std::string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix = true);
+void userDefinedTest(std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::State const& _statePost, eth::ChangeLog const& _changeLog);
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
@@ -166,14 +115,16 @@ json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMas
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
-int createRandomTest(std::vector<char*> const& _parameters);
-void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
-void doStateTests(json_spirit::mValue& v, bool _fillin);
-void doVMTests(json_spirit::mValue& v, bool _fillin);
-void doBlockchainTests(json_spirit::mValue& _v, bool _fillin);
-void doBlockchainTestNoLog(json_spirit::mValue& _v, bool _fillin);
-void doTransitionTest(json_spirit::mValue& _v, bool _fillin);
-void doRlpTests(json_spirit::mValue& v, bool _fillin);
+int createRandomTest();	//returns 0 if succeed, 1 if there was an error;
+//do*Tests(_input, _fillin) always return a filled test.
+//When _fillin is true, _input is supposed to contain a filler.  Otherwise, _input is also a filled test.
+json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin);
+void doRlpTests(json_spirit::mValue const& _input);
 void addClientInfo(json_spirit::mValue& v, std::string const& _testSource);
 void removeComments(json_spirit::mValue& _obj);
 

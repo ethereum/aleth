@@ -626,11 +626,12 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 			}
 		}
 
+	assert(_bc.sealEngine());
 	DEV_TIMED_ABOVE("applyRewards", 500)
-		applyRewards(rewarded, _bc.chainParams().blockReward);
+		applyRewards(rewarded, _bc.sealEngine()->blockReward(m_currentBlock.number()));
 
 	// Commit all cached state changes to the state trie.
-	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock");
+	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock"); // TODO: use EVMSchedule
 	DEV_TIMED_ABOVE("commit", 500)
 		m_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
@@ -702,15 +703,15 @@ void Block::updateBlockhashContract()
 {
 	u256 const blockNumber = info().number();
 
-	u256 const byzantiumForkBlock = m_sealEngine->chainParams().u256Param("byzantiumForkBlock");
-	if (blockNumber == byzantiumForkBlock)
+	u256 const constantinopleForkBlock = m_sealEngine->chainParams().u256Param("constantinopleForkBlock");
+	if (blockNumber == constantinopleForkBlock)
 	{
 		m_state.createContract(c_blockhashContractAddress);
 		m_state.setCode(c_blockhashContractAddress, bytes(c_blockhashContractCode));
 		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 	}
 
-	if (blockNumber >= byzantiumForkBlock)
+	if (blockNumber >= constantinopleForkBlock)
 	{
 		DummyLastBlockHashes lastBlockHashes; // assuming blockhash contract won't need BLOCKHASH itself
 		Executive e(*this, lastBlockHashes);
@@ -796,16 +797,16 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	RLPStream(unclesCount).appendRaw(unclesData.out(), unclesCount).swapOut(m_currentUncles);
 
 	// Apply rewards last of all.
-	applyRewards(uncleBlockHeaders, _bc.chainParams().blockReward);
+	assert(_bc.sealEngine());
+	applyRewards(uncleBlockHeaders, _bc.sealEngine()->blockReward(m_currentBlock.number()));
 
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
-	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock");
+	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock"); // TODO: use EVMSchedule
 	DEV_TIMED_ABOVE("commit", 500)
 		m_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
 	clog(StateDetail) << "Post-reward stateRoot:" << m_state.rootHash();
 	clog(StateDetail) << m_state;
-	clog(StateDetail) << *this;
 
 	m_currentBlock.setLogBloom(logBloom());
 	m_currentBlock.setGasUsed(gasUsed());
@@ -881,68 +882,32 @@ LogBloom Block::logBloom() const
 	return ret;
 }
 
-void Block::cleanup(bool _fullCommit)
+void Block::cleanup()
 {
-	if (_fullCommit)
+	// Commit the new trie to disk.
+	if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
+		clog(StateTrace) << "Committing to disk: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
+
+	try
 	{
-		// Commit the new trie to disk.
-		if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
-			clog(StateTrace) << "Committing to disk: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
-
-		try
-		{
-			EnforceRefs er(db(), true);
-			rootHash();
-		}
-		catch (BadRoot const&)
-		{
-			clog(StateChat) << "Trie corrupt! :-(";
-			throw;
-		}
-
-		m_state.db().commit();	// TODO: State API for this?
-
-		if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
-			clog(StateTrace) << "Committed: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
-
-		m_previousBlock = m_currentBlock;
-		sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
-
-		clog(StateTrace) << "finalising enactment. current -> previous, hash is" << m_previousBlock.hash();
+		EnforceRefs er(db(), true);
+		rootHash();
 	}
-	else
-		m_state.db().rollback();	// TODO: State API for this?
+	catch (BadRoot const&)
+	{
+		clog(StateChat) << "Trie corrupt! :-(";
+		throw;
+	}
+
+	m_state.db().commit();	// TODO: State API for this?
+
+	if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
+		clog(StateTrace) << "Committed: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
+
+	m_previousBlock = m_currentBlock;
+	sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
+
+	clog(StateTrace) << "finalising enactment. current -> previous, hash is" << m_previousBlock.hash();
 
 	resetCurrent();
-}
-
-string Block::vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequirements::value _ir)
-{
-	noteChain(_bc);
-
-	RLP rlp(_block);
-
-	cleanup(false);
-	BlockHeader bi(_block);
-	m_currentBlock = bi;
-	m_currentBlock.verify((_ir & ImportRequirements::ValidSeal) ? CheckEverything : IgnoreSeal, _block);
-	m_currentBlock.noteDirty();
-
-	string ret;
-	unsigned i = 0;
-	for (auto const& tr: rlp[1])
-	{
-		StandardTrace st;
-		st.setShowMnemonics();
-		execute(_bc.lastBlockHashes(), Transaction(tr.data(), CheckTransaction::Everything), Permanence::Committed, st.onOp());
-		ret += (ret.empty() ? "[" : ",") + st.json();
-		++i;
-	}
-	return ret.empty() ? "[]" : (ret + "]");
-}
-
-std::ostream& dev::eth::operator<<(std::ostream& _out, Block const& _s)
-{
-	(void)_s;
-	return _out;
 }

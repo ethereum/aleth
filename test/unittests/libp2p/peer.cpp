@@ -20,13 +20,14 @@
  * Peer Network test functions.
  */
 
-#include <boost/test/unit_test.hpp>
-#include <chrono>
-#include <thread>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <test/tools/libtesteth/Options.h>
 #include <libp2p/Host.h>
-#include <test/tools/libtesteth/TestHelper.h>
 #include <libp2p/Capability.h>
 #include <libp2p/HostCapability.h>
+#include <chrono>
+#include <thread>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;

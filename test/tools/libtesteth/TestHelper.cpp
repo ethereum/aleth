@@ -171,23 +171,13 @@ std::vector<eth::Network> const& getNetworks()
 	return networks;
 }
 
-json_spirit::mArray exportLog(eth::LogEntries const& _logs)
+std::string exportLog(eth::LogEntries const& _logs)
 {
-	json_spirit::mArray ret;
-	if (_logs.size() == 0) return ret;
+	RLPStream s;
+	s.appendList(_logs.size());
 	for (LogEntry const& l: _logs)
-	{
-		json_spirit::mObject o;
-		o["address"] = toHex(l.address);
-		json_spirit::mArray topics;
-		for (auto const& t: l.topics)
-			topics.push_back(toHex(t));
-		o["topics"] = topics;
-		o["data"] = toHexPrefixed(l.data);
-		o["bloom"] = toHex(l.bloom());
-		ret.push_back(o);
-	}
-	return ret;
+		l.streamRLP(s);
+	return toHexPrefixed(sha3(s.out()));
 }
 
 u256 toInt(json_spirit::mValue const& _v)
@@ -316,24 +306,26 @@ void checkHexHasEvenLength(string const& _str)
 		BOOST_ERROR(TestOutputHelper::testName() + " An odd-length hex string represents a byte sequence: " + _str);
 }
 
-bytes importCode(json_spirit::mObject& _o)
+bytes importCode(json_spirit::mObject const& _o)
 {
 	bytes code;
-	if (_o["code"].type() == json_spirit::str_type)
-		if (_o["code"].get_str().find("0x") != 0)
-			code = fromHex(compileLLL(_o["code"].get_str()));
+	if (_o.count("code") == 0)
+		return code;
+	if (_o.at("code").type() == json_spirit::str_type)
+		if (_o.at("code").get_str().find("0x") != 0)
+			code = fromHex(compileLLL(_o.at("code").get_str()));
 		else
-			code = importByteArray(_o["code"].get_str());
-	else if (_o["code"].type() == json_spirit::array_type)
+			code = importByteArray(_o.at("code").get_str());
+	else if (_o.at("code").type() == json_spirit::array_type)
 	{
 		code.clear();
-		for (auto const& j: _o["code"].get_array())
+		for (auto const& j: _o.at("code").get_array())
 			code.push_back(toByte(j));
 	}
 	return code;
 }
 
-LogEntries importLog(json_spirit::mArray& _a)
+LogEntries importLog(json_spirit::mArray const& _a)
 {
 	LogEntries logEntries;
 	for (auto const& l: _a)
@@ -344,8 +336,8 @@ LogEntries importLog(json_spirit::mArray& _a)
 		BOOST_REQUIRE(o.count("data") > 0);
 		BOOST_REQUIRE(o.count("bloom") > 0);
 		LogEntry log;
-		log.address = Address(o["address"].get_str());
-		for (auto const& t: o["topics"].get_array())
+		log.address = Address(o.at("address").get_str());
+		for (auto const& t: o.at("topics").get_array())
 			log.topics.push_back(h256(t.get_str()));
 		log.data = importData(o);
 		logEntries.push_back(log);
@@ -353,15 +345,15 @@ LogEntries importLog(json_spirit::mArray& _a)
 	return logEntries;
 }
 
-void checkOutput(bytesConstRef _output, json_spirit::mObject& _o)
+void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o)
 {
 	int j = 0;
-	auto expectedOutput = _o["out"].get_str();
+	auto expectedOutput = _o.at("out").get_str();
 
 	if (expectedOutput.find("#") == 0)
 		BOOST_CHECK(_output.size() == toInt(expectedOutput.substr(1)));
-	else if (_o["out"].type() == json_spirit::array_type)
-		for (auto const& d: _o["out"].get_array())
+	else if (_o.at("out").type() == json_spirit::array_type)
+		for (auto const& d: _o.at("out").get_array())
 		{
 			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
 			++j;
@@ -372,9 +364,8 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject& _o)
 		BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput)));
 }
 
-void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, Address _expectedAddr)
+void checkStorage(map<u256, u256> const& _expectedStore, map<u256, u256> const& _resultStore, Address const& _expectedAddr)
 {
-	_expectedAddr = _expectedAddr; //unsed parametr when macro
 	for (auto&& expectedStorePair : _expectedStore)
 	{
 		auto& expectedStoreKey = expectedStorePair.first;
@@ -396,7 +387,7 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 	}
 }
 
-void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
+void checkLog(LogEntries const& _resultLogs, LogEntries const& _expectedLogs)
 {
 	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
 
@@ -408,7 +399,7 @@ void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 	}
 }
 
-void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates)
+void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates)
 {
 	BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
 
@@ -421,7 +412,7 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 	}
 }
 
-void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
+void userDefinedTest(std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests)
 {
 	if (!Options::get().singleTest)
 		return;
@@ -469,7 +460,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix)
+void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
 {
 	string testPath = getTestPath() + _testPathAppendix;
 	string testFillerPath = getTestPath() + "/src" + _fillerPathAppendix;
@@ -500,9 +491,9 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 
 			json_spirit::read_string(s, v);
 			removeComments(v);
-			doTests(v, true);
-			addClientInfo(v, testfilename);
-			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
+			json_spirit::mValue output = doTests(v, true);
+			addClientInfo(output, testfilename);
+			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(output, true)));
 		}
 		catch (Exception const& _e)
 		{

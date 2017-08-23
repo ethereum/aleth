@@ -49,7 +49,7 @@ public:
 	void putRLP(RLPStream& _parentStream) const;
 
 #if ENABLE_DEBUG_PRINT
-	void debugPrint(std::string const& _indent = "") const { std::cerr << std::hex << hash256() << ":" << std::dec << std::endl; debugPrintBody(_indent); }
+	void debugPrint(std::string const& _indent = "") const { std::cerr << std::hex << hash256() << ":" << std::dec << "\n"; debugPrintBody(_indent); }
 #endif
 
 	/// 256-bit hash of the node - this is a SHA-3/256 hash of the RLP of the node.
@@ -112,7 +112,7 @@ public:
 	{
 
 		if (m_value.size())
-			std::cerr << _indent << "@: " << m_value << std::endl;
+			std::cerr << _indent << "@: " << m_value << "\n";
 		for (auto i = 0; i < 16; ++i)
 			if (m_nodes[i])
 			{
@@ -151,7 +151,7 @@ public:
 			std::cerr << toHex(m_ext) << ": ";
 		else
 			std::cerr << "@: ";
-		std::cerr << m_value << std::endl;
+		std::cerr << m_value << "\n";
 	}
 #endif
 
