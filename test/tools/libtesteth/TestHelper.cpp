@@ -460,6 +460,34 @@ void userDefinedTest(std::function<json_spirit::mValue(json_spirit::mValue const
 	}
 }
 
+void executeTests2(test::testType _type, const std::string& _testFolder)
+{
+	string testSuiteFolder;
+	std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests;
+	switch (_type)
+	{
+		case test::testType::StateTestsGeneral:
+			testSuiteFolder = "GeneralStateTests"; //test::c_StateTestsGeneral;
+			doTests = test::doStateTests;
+			break;
+		default:
+		break;
+	}
+	std::string fillersPath = test::getTestPath() + "/src/" + testSuiteFolder + "Filler/" + _testFolder;
+	string filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
+	std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
+	int fileCount = files.size();
+	if (test::Options::get().filltests)
+		fileCount *= 2; //tests are checked when filled and after they been filled
+	test::TestOutputHelper::initTest(fileCount);
+	for (auto const& file: files)
+	{
+		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
+		test::executeTests(file.filename().string(), "/" + testSuiteFolder + "/" + _testFolder, "/" + testSuiteFolder + "Filler/"+ _testFolder, doTests);
+	}
+	test::TestOutputHelper::finishTest();
+}
+
 void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
 {
 	string testPath = getTestPath() + _testPathAppendix;

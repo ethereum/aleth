@@ -118,28 +118,7 @@ public:
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
 			return;
-		fillAllFilesInFolder(casename);
-	}
-
-	void fillAllFilesInFolder(string const& _folder)
-	{
-		std::string fillersPath = test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
-
-		string filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
-		int fileCount = files.size();
-
-		if (test::Options::get().filltests)
-			fileCount *= 2; //tests are checked when filled and after they been filled
-		test::TestOutputHelper::initTest(fileCount);
-
-		for (auto const& file: files)
-		{
-			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-			test::executeTests(file.filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
-		}
-
-		test::TestOutputHelper::finishTest();
+		test::executeTests2(test::testType::StateTestsGeneral, casename);
 	}
 };
 
