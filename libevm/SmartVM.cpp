@@ -43,7 +43,7 @@ namespace
 	{
 		bytes code;
 		h256 codeHash;
-		evm_mode mode;
+		evm_revision mode;
 		uint32_t flags;
 
 		static JitTask createStopSentinel() { return JitTask(); }
@@ -90,7 +90,7 @@ namespace
 owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	auto vmKind = VMKind::Interpreter; // default VM
-	auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
+	auto mode = JitVM::toRevision(_ext.evmSchedule());
 	uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 	// Jitted EVM code already in memory?
 	if (JitVM::isCodeReady(mode, flags, _ext.codeHash))

@@ -24,6 +24,7 @@
 #include <set>
 #include <functional>
 #include <boost/optional.hpp>
+#include <evm.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/RLP.h>
@@ -257,7 +258,7 @@ private:
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
  */
-class ExtVMFace
+class ExtVMFace: public evm_context
 {
 public:
 	/// Null constructor.
