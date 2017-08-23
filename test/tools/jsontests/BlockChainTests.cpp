@@ -155,15 +155,12 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 	{
 		string const& testname = i->first;
 		json_spirit::mObject const& inputTest = i->second.get_obj();
-		v.get_obj()[testname] = inputTest;
-		json_spirit::mObject& outputTest = v.get_obj()[testname].get_obj();
 
 		//Select test by name if --singletest is set and not filling state tests as blockchain
 		if (!Options::get().fillchain && !TestOutputHelper::passTest(testname))
-		{
-			outputTest.clear(); //don't add irrelevant tests to the final file when filling
 			continue;
-		}
+
+		v.get_obj()[testname] = inputTest;
 
 		BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
 			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::testFileName() +
