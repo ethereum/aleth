@@ -28,7 +28,6 @@ set ETHEREUM_DEPS_PATH=%2
 set TESTS=%3
 
 7z a cpp-ethereum-windows.zip ^
-    .\build\bench\%CONFIGURATION%\bench.exe ^
     .\build\eth\%CONFIGURATION%\eth.exe ^
     .\build\ethkey\%CONFIGURATION%\ethkey.exe ^
     .\build\ethvm\%CONFIGURATION%\ethvm.exe ^

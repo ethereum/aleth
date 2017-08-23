@@ -131,7 +131,6 @@ if (TOOLS)
     add_subdirectory(ethkey)
     add_subdirectory(ethvm)
     add_subdirectory(rlp)
-    add_subdirectory(bench)
 endif()
 
 if (TESTS)
