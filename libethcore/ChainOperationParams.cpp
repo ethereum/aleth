@@ -56,6 +56,22 @@ ChainOperationParams::ChainOperationParams()
 	m_blockReward = u256("0x4563918244F40000");
 }
 
+EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blockNumber) const
+{
+	if (_blockNumber >= u256Param("constantinopleForkBlock"))
+		return ConstantinopleSchedule;
+	else if (_blockNumber >= u256Param("byzantiumForkBlock"))
+		return ByzantiumSchedule;
+	else if (_blockNumber >= u256Param("EIP158ForkBlock"))
+		return EIP158Schedule;
+	else if (_blockNumber >= u256Param("EIP150ForkBlock"))
+		return EIP150Schedule;
+	else if (_blockNumber >= u256Param("homsteadForkBlock"))
+		return HomesteadSchedule;
+	else
+		return FrontierSchedule;
+}
+
 u256 ChainOperationParams::u256Param(string const& _name) const
 {
 	std::string at("");

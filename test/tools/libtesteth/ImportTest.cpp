@@ -125,6 +125,11 @@ bytes ImportTest::executeTest()
 					if (std::find(checkedNetworks.begin(), checkedNetworks.end(), test::netIdToString(net)) != checkedNetworks.end())
 						continue;
 
+					// Calculate the block reward
+					ChainParams const chainParams{genesisInfo(net)};
+					EVMSchedule const schedule = chainParams.scheduleForBlockNumber(1);
+					u256 const blockReward = chainParams.blockReward(schedule);
+
 					TrExpectSection search {tr, smap};
 					for (auto const& exp: m_testInputObject.at("expect").get_array())
 					{
@@ -141,7 +146,7 @@ bytes ImportTest::executeTest()
 									if (adr.second.get_obj().count("balance"))
 									{
 										u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
-										expectCoinbaseBalance += u256("5000000000000000000");
+										expectCoinbaseBalance += blockReward;
 										adr.second.get_obj()["balance"] = toCompactHexPrefixed(expectCoinbaseBalance);
 									}
 								}
