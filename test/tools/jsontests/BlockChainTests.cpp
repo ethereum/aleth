@@ -412,7 +412,6 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		}
 
 		blArray.push_back(blObj);  //json data
-		this_thread::sleep_for(chrono::seconds(1));
 	}//each blocks
 
 	if (_input.count("expect") > 0)

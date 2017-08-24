@@ -38,6 +38,7 @@ WhisperHost::WhisperHost(bool _storeMessagesInDB): Worker("shh"), m_storeMessage
 WhisperHost::~WhisperHost()
 {
 	saveMessagesToBD();
+	terminate();
 }
 
 void WhisperHost::streamMessage(h256 _m, RLPStream& _s) const

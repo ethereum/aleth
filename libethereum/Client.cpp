@@ -80,6 +80,7 @@ Client::Client(
 Client::~Client()
 {
 	stopWorking();
+	terminate();
 }
 
 void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId)
