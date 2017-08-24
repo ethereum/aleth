@@ -36,7 +36,7 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
+int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
 int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug = false);
 
 namespace dev { namespace test {
@@ -93,7 +93,7 @@ int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, js
 }
 
 //Prints a generated test Json into std::out
-int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
+int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
 {
 	bool wasError = false;
 	bool debug = (dev::test::Options::get().logVerbosity > dev::test::Verbosity::NiceReport);
@@ -113,7 +113,7 @@ int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std
 		std::map<std::string, std::string> nullReplaceMap;
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
-		_doTests(v, true);
+		v = _doTests(v, true);
 	}
 	catch (dev::Exception const& _e)
 	{
