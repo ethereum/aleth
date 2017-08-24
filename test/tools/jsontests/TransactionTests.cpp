@@ -266,9 +266,4 @@ BOOST_AUTO_TEST_CASE(tt10mbDataField)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFile)
-{
-	dev::test::userDefinedTest(dev::test::doTransactionTests);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
