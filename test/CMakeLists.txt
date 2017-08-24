@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRC_LIST *.cpp *.sol)
+file(GLOB_RECURSE sources "*.cpp" "*.h" "*.sol")
 
 # search for test names and create ctest tests
 set(excludeSuites jsonrpc \"RandomTestCreationSuite\" shhrpc whisperDB whisperMessage whisper BlockQueueSuite)
@@ -42,22 +42,9 @@ foreach(file ${SRC_LIST})
 	endforeach(test_raw)
 endforeach(file)
 
-file(GLOB_RECURSE HEADERS "*.h")
-add_executable(testeth ${SRC_LIST} ${HEADERS})
-
-find_package(Web3)
-
-target_include_directories(testeth PRIVATE ..)
+add_executable(testeth ${sources})
 target_include_directories(testeth PRIVATE ../utils)
-
-target_link_libraries(testeth Boost::unit_test_framework)
-
-if (UNIX AND NOT APPLE)
-	target_link_libraries(testeth pthread)
-endif()
-
-target_link_libraries(testeth ${Web3_WEB3JSONRPC_LIBRARIES})
-target_link_libraries(testeth ${Web3_WEBTHREE_LIBRARIES})
+target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore Boost::unit_test_framework Cryptopp)
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
