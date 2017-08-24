@@ -54,7 +54,7 @@ bool TestOutputHelper::passTest(std::string const& _testName)
 {
 	m_currTest++;
 	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
-	if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)
+	if (!test::Options::get().createRandomTest && (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests))
 	{
 		int percent = int(m_currTest*100/m_maxTests);
 		std::cout << percent << "%";
