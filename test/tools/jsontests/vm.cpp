@@ -532,13 +532,13 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest)
 {
-	if (test::Options::get().inputLimits)
+	if (test::Options::get().all)
 		dev::test::executeTests("vmInputLimits", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 {
-	if (test::Options::get().inputLimits)
+	if (test::Options::get().all)
 		dev::test::executeTests("vmInputLimitsLight", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
