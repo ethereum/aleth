@@ -133,8 +133,13 @@ Options::Options(int argc, char** argv)
 			VMFactory::setKind(VMKind::JIT);
 		else if (arg == "--vmtrace")
 		{
+#if ETH_VMTRACE
 			vmtrace = true;
 			g_logVerbosity = 13;
+#else
+			cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
+			exit(1);
+#endif
 		}
 		else if (arg == "--jsontrace")
 		{
