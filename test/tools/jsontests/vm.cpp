@@ -528,18 +528,24 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 {
 	if (test::Options::get().all)
 		dev::test::executeTests("vmPerformanceTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		cnote << "vmPerformanceTest is skipped because --all option is not specified.\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest)
 {
 	if (test::Options::get().all)
 		dev::test::executeTests("vmInputLimits", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		cnote << "vmInputLimitsTest is skipped because --all option is not specified.\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 {
 	if (test::Options::get().all)
 		dev::test::executeTests("vmInputLimitsLight", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		cnote << "vmInputLimitsLightTest is skipped because --all option is not specified\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)
