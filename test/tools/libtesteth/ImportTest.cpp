@@ -153,7 +153,7 @@ bytes ImportTest::executeTest()
 							}
 
 							json_spirit::mObject expetSectionObj;
-							expetSectionObj["network"] = exp.get_obj().at("network");
+							expetSectionObj["network"] = test::netIdToString(net);
 							std::vector<string> networks;
 							ImportTest::parseJsonStrValueIntoVector(exp.get_obj().at("network"), networks);
 							for(auto const& netname : networks)
