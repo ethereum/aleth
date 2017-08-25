@@ -528,18 +528,24 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 {
 	if (test::Options::get().performance)
 		dev::test::executeTests("vmPerformanceTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		clog << "Skipping hive test vmPerformanceTest. Use --all or --performance to run it.\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest)
 {
 	if (test::Options::get().inputLimits)
 		dev::test::executeTests("vmInputLimits", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		clog << "Skipping vmInputLimitsTest. Use --all or --inputlimits to run it.\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 {
 	if (test::Options::get().inputLimits)
 		dev::test::executeTests("vmInputLimitsLight", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		clog << "Skipping vmInputLimitsLightTest. Use --all or --inputlimits to run it.\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)

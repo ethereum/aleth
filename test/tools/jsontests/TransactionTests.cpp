@@ -250,6 +250,8 @@ BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
 		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
 		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
+	else
+		clog << "Skipping tt10mbDataFieldHomestead. Use --all or --bigdata to run it.\n";
 }
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)
@@ -264,6 +266,8 @@ BOOST_AUTO_TEST_CASE(tt10mbDataField)
 		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
 		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
+	else
+		clog << "Skipping tt10mbDataField. Use --all or --bigdata to run it.\n";
 }
 
 BOOST_AUTO_TEST_SUITE_END()

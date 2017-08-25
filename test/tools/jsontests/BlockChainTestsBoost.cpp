@@ -58,7 +58,10 @@ class bcTestFixture {
 
 		//skip wallet test as it takes too much time (250 blocks) run it with --all flag
 		if (casename == "bcWalletTest" && !test::Options::get().wallet)
+		{
+			clog << "Skipping " << casename << ". Use --all or --wallet to run it.\n";
 			return;
+		}
 
 		fillAllFilesInFolder(casename);
 	}
@@ -127,11 +130,13 @@ class bcGeneralTestsFixture
 	bcGeneralTestsFixture()
 	{
 		//general tests are filled from state tests
-		//skip this test suite if not run with --all flag (cases are already tested in state tests)
-		if (test::Options::get().filltests || !test::Options::get().performance)
+		if (test::Options::get().filltests)
 			return;
 
 		string casename = boost::unit_test::framework::current_test_case().p_name;
+		//skip this test suite if not run with --all flag (cases are already tested in state tests)
+		if (!test::Options::get().performance)
+			clog << "Skipping hive test " << casename << ". Use --all or --performance to run it.\n";
 		runAllFilesInFolder("GeneralStateTests/" + casename);
 	}
 

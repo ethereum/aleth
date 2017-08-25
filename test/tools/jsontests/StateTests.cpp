@@ -117,7 +117,10 @@ public:
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
+		{
+			clog << "Skipping " << casename << ". Use --all or --quadratic to run it.\n";
 			return;
+		}
 		fillAllFilesInFolder(casename);
 	}
 
