@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::disabled() *utf::label("perf"))
 {
-	if (!test::Options::get().performance)
+	if (!test::Options::get().all)
 		return;
 
 	h256 hash;
@@ -811,7 +811,7 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::disabled() *utf::label("perf"))
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::disabled() *utf::label("perf"))
 {
-	if (!test::Options::get().performance)
+	if (!test::Options::get().all)
 		return;
 
 	static const size_t dataSize = 4097;

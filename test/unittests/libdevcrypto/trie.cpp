@@ -606,7 +606,7 @@ template<typename Trie> void perfTestTrie(char const* _name)
 
 BOOST_AUTO_TEST_CASE(triePerf)
 {
-	if (test::Options::get().performance)
+	if (test::Options::get().all)
 	{
 		perfTestTrie<SpecificTrieDB<GenericTrieDB<MemoryDB>, h256>>("GenericTrieDB");
 		perfTestTrie<SpecificTrieDB<HashedGenericTrieDB<MemoryDB>, h256>>("HashedGenericTrieDB");

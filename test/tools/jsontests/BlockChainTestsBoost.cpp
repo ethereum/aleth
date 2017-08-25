@@ -128,7 +128,7 @@ class bcGeneralTestsFixture
 	{
 		//general tests are filled from state tests
 		//skip this test suite if not run with --all flag (cases are already tested in state tests)
-		if (test::Options::get().filltests || !test::Options::get().performance)
+		if (test::Options::get().filltests || !test::Options::get().all)
 			return;
 
 		string casename = boost::unit_test::framework::current_test_case().p_name;

@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 
 BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 {
-	if (test::Options::get().performance)
+	if (test::Options::get().all)
 		dev::test::executeTests("vmPerformanceTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
