@@ -116,8 +116,11 @@ public:
 	generaltestfixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
-		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
+		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
+		{
+			cnote << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
+		}
 		fillAllFilesInFolder(casename);
 	}
 

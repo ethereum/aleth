@@ -70,7 +70,6 @@ public:
 	int trValueIndex;	///< GeneralState value
 	bool all = false;	///< Running every test, including time consuming ones.
 	bool nonetwork = false;///< For libp2p
-	bool quadratic = false;///< Time consuming tests
 	bool memory = false;
 	bool inputLimits = false;
 	bool bigData = false;

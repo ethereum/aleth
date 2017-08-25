@@ -50,7 +50,6 @@ void printHelp()
 	cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
 
 	cout << "\nAdditional Tests\n";
-	cout << setw(30) << "--quadratic" << setw(25) << "Enable quadratic complexity tests\n";
 	cout << setw(30) << "--memory" << setw(25) << "Enable memory consuming tests\n";
 	cout << setw(30) << "--inputLimits" << setw(25) << "Enable inputLimits tests\n";
 	cout << setw(30) << "--bigdata" << setw(25) << "Enable bigdata tests\n";
@@ -161,8 +160,6 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--exectimelog")
 			exectimelog = true;
-		else if (arg == "--quadratic")
-			quadratic = true;
 		else if (arg == "--memory")
 			memory = true;
 		else if (arg == "--inputlimits")
@@ -174,7 +171,6 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--all")
 		{
 			all = true;
-			quadratic = true;
 			memory = true;
 			inputLimits = true;
 			bigData = true;
@@ -287,12 +283,12 @@ Options::Options(int argc, char** argv)
 	if (createRandomTest)
 	{
 		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-			|| all || quadratic || memory || inputLimits || bigData || wallet
+			|| all || memory || inputLimits || bigData || wallet
 			|| stats || filltests || fillchain)
 		{
 			cerr << "--createRandomTest cannot be used with any of the options: " <<
 					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
-					"quadratic, memory, inputLimits, bigData, wallet, stats, filltests, fillchain" << endl;
+					"memory, inputLimits, bigData, wallet, stats, filltests, fillchain" << endl;
 			exit(1);
 		}
 	}
