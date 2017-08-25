@@ -117,13 +117,9 @@ bytes ImportTest::executeTest()
 				vector<size_t> stateIndexesToPrint; //not used
 				json_spirit::mArray expetSectionArray;
 
-				//gather the expect sections for such a transaction on all networks (if defined)
-				std::vector<string> checkedNetworks;
 				for (auto const& net : networks)
 				{
 					tr.netId = net;
-					if (std::find(checkedNetworks.begin(), checkedNetworks.end(), test::netIdToString(net)) != checkedNetworks.end())
-						continue;
 
 					// Calculate the block reward
 					ChainParams const chainParams{genesisInfo(net)};
@@ -154,10 +150,6 @@ bytes ImportTest::executeTest()
 
 							json_spirit::mObject expetSectionObj;
 							expetSectionObj["network"] = test::netIdToString(net);
-							std::vector<string> networks;
-							ImportTest::parseJsonStrValueIntoVector(exp.get_obj().at("network"), networks);
-							for(auto const& netname : networks)
-								checkedNetworks.push_back(netname);
 							expetSectionObj["result"] = obj;
 							expetSectionArray.push_back(expetSectionObj);
 							break;
