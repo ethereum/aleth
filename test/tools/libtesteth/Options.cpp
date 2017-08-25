@@ -50,7 +50,6 @@ void printHelp()
 	cout << setw(30) << "--statediff" << setw(25) << "Trace state difference for state tests\n";
 
 	cout << "\nAdditional Tests\n";
-	cout << setw(30) << "--bigdata" << setw(25) << "Enable bigdata tests\n";
 	cout << setw(30) << "--all" << setw(25) << "Enable all tests\n";
 
 	cout << "\nTest Generation\n";
@@ -157,13 +156,8 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--exectimelog")
 			exectimelog = true;
-		else if (arg == "--bigdata")
-			bigData = true;
 		else if (arg == "--all")
-		{
 			all = true;
-			bigData = true;
-		}
 		else if (arg == "--singletest")
 		{
 			throwIfNoArgumentFollows();
@@ -271,11 +265,11 @@ Options::Options(int argc, char** argv)
 	if (createRandomTest)
 	{
 		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-			|| all || bigData || stats || filltests || fillchain)
+			|| all || stats || filltests || fillchain)
 		{
 			cerr << "--createRandomTest cannot be used with any of the options: " <<
 					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
-					"bigData, stats, filltests, fillchain" << endl;
+					"stats, filltests, fillchain" << endl;
 			exit(1);
 		}
 	}

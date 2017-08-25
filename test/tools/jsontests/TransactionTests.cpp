@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 
 BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
 {
-	if (test::Options::get().bigData)
+	if (test::Options::get().all)
 	{
 		auto start = chrono::steady_clock::now();
 
@@ -250,11 +250,13 @@ BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
 		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
 		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
+	else
+		cnote << "tt10mbDataFieldHomestead skipped because --all option was not specified.\n";
 }
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)
 {
-	if (test::Options::get().bigData)
+	if (test::Options::get().all)
 	{
 		auto start = chrono::steady_clock::now();
 
@@ -264,6 +266,8 @@ BOOST_AUTO_TEST_CASE(tt10mbDataField)
 		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
 		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
+	else
+		cnote << "tt10mbDataField skipped because --all option was not specified.";
 }
 
 BOOST_AUTO_TEST_SUITE_END()
