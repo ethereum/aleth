@@ -52,7 +52,6 @@ void printHelp()
 	cout << "\nAdditional Tests\n";
 	cout << setw(30) << "--inputLimits" << setw(25) << "Enable inputLimits tests\n";
 	cout << setw(30) << "--bigdata" << setw(25) << "Enable bigdata tests\n";
-	cout << setw(30) << "--wallet" << setw(25) << "Enable wallet tests\n";
 	cout << setw(30) << "--all" << setw(25) << "Enable all tests\n";
 
 	cout << "\nTest Generation\n";
@@ -163,14 +162,11 @@ Options::Options(int argc, char** argv)
 			inputLimits = true;
 		else if (arg == "--bigdata")
 			bigData = true;
-		else if (arg == "--wallet")
-			wallet = true;
 		else if (arg == "--all")
 		{
 			all = true;
 			inputLimits = true;
 			bigData = true;
-			wallet = true;
 		}
 		else if (arg == "--singletest")
 		{
@@ -279,12 +275,11 @@ Options::Options(int argc, char** argv)
 	if (createRandomTest)
 	{
 		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-			|| all || inputLimits || bigData || wallet
-			|| stats || filltests || fillchain)
+			|| all || inputLimits || bigData || stats || filltests || fillchain)
 		{
 			cerr << "--createRandomTest cannot be used with any of the options: " <<
 					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
-					"inputLimits, bigData, wallet, stats, filltests, fillchain" << endl;
+					"inputLimits, bigData, stats, filltests, fillchain" << endl;
 			exit(1);
 		}
 	}

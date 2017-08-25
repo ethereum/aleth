@@ -72,7 +72,6 @@ public:
 	bool nonetwork = false;///< For libp2p
 	bool inputLimits = false;
 	bool bigData = false;
-	bool wallet = false;
 	/// @}
 
 	/// Get reference to options
