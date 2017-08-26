@@ -138,7 +138,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
 			else if (type == "[DESTADDRESS]")
 			{
-				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::CallOnlyOrStateOrCreate);
+				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrStateOrCreate);
 				if (address != ZeroAddress) //else transaction creation
 					replace = "0x" + toString(address);
 			}

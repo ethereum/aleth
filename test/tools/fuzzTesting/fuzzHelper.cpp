@@ -452,11 +452,12 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 
 //Default Random Code Options
 RandomCodeOptions::RandomCodeOptions() :
-	useUndefinedOpCodes(false),		//spawn undefined bytecodes in code
-	smartCodeProbability(100),		//spawn correct opcodes (with correct argument stack and reasonable arguments)
-	randomAddressProbability(10),	//probability of generating a random address instead of defined from list
-	emptyCodeProbability(20),		//probability of code being empty (empty code mean empty account)
-	emptyAddressProbability(30)		//probability of generating an empty address for transaction creation (CALLONLY addresses)
+	useUndefinedOpCodes(false),			//spawn undefined bytecodes in code
+	smartCodeProbability(100),			//spawn correct opcodes (with correct argument stack and reasonable arguments)
+	randomAddressProbability(10),		//probability of generating a random address instead of defined from list
+	emptyCodeProbability(20),			//probability of code being empty (empty code mean empty account)
+	emptyAddressProbability(30),		//probability of generating an empty address for transaction creation (CALLONLY addresses)
+	precompiledAddressProbability(20)	//probability of generating a precompiled address in transaction or code calls
 {
 	//each op code with same weight-probability
 	for (auto i = 0; i < 255; i++)
@@ -495,14 +496,14 @@ RandomCodeOptions::RandomCodeOptions() :
 	addAddress(Address("0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
 	addAddress(Address("0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
 	addAddress(Address("0xd94f5374fce5edbc8e2a8697c15331677e6ebf0b"), AddressType::StateAccount);
-	addAddress(Address("0x0000000000000000000000000000000000000001"), AddressType::CallOnly);
-	addAddress(Address("0x0000000000000000000000000000000000000002"), AddressType::CallOnly);
-	addAddress(Address("0x0000000000000000000000000000000000000003"), AddressType::CallOnly);
-	addAddress(Address("0x0000000000000000000000000000000000000004"), AddressType::CallOnly);
-	addAddress(Address("0x0000000000000000000000000000000000000005"), AddressType::CallOnly);
-	addAddress(Address("0x0000000000000000000000000000000000000006"), AddressType::CallOnly);
-	addAddress(Address("0x0000000000000000000000000000000000000007"), AddressType::CallOnly);
-	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::CallOnly);
+	addAddress(Address("0x0000000000000000000000000000000000000001"), AddressType::Precompiled);
+	addAddress(Address("0x0000000000000000000000000000000000000002"), AddressType::Precompiled);
+	addAddress(Address("0x0000000000000000000000000000000000000003"), AddressType::Precompiled);
+	addAddress(Address("0x0000000000000000000000000000000000000004"), AddressType::Precompiled);
+	addAddress(Address("0x0000000000000000000000000000000000000005"), AddressType::Precompiled);
+	addAddress(Address("0x0000000000000000000000000000000000000006"), AddressType::Precompiled);
+	addAddress(Address("0x0000000000000000000000000000000000000007"), AddressType::Precompiled);
+	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::Precompiled);
 }
 
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
@@ -515,8 +516,8 @@ void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
 {
 	switch(_type)
 	{
-		case AddressType::CallOnly:
-			callAddressList.push_back(_address);
+		case AddressType::Precompiled:
+			precompiledAddressList.push_back(_address);
 			break;
 		case AddressType::StateAccount:
 			stateAddressList.push_back(_address);
@@ -531,13 +532,13 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 {
 	switch(_type)
 	{
-		case AddressType::CallOnly:
-			return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
-		case AddressType::CallOnlyOrStateOrCreate:
+		case AddressType::Precompiled:
+			return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
+		case AddressType::PrecompiledOrStateOrCreate:
 			if (RandomCode::randomPercent() < emptyAddressProbability)
 				return ZeroAddress;
-			if (test::RandomCode::randomPercent() < 50)
-				return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
+			if (test::RandomCode::randomPercent() < precompiledAddressProbability)
+				return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
 			else
 				return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
 		case AddressType::StateAccount:
@@ -546,8 +547,8 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 			//if not random address then chose from both lists
 			if (test::RandomCode::randomPercent() > randomAddressProbability)
 			{
-				if (test::RandomCode::randomPercent() < 50)
-					return callAddressList[(int)RandomCode::randomUniInt(0, callAddressList.size())];
+				if (test::RandomCode::randomPercent() < precompiledAddressProbability)
+					return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
 				else
 					return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
 			}

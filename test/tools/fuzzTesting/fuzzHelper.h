@@ -47,9 +47,9 @@ struct RandomCodeOptions
 {
 public:
 	enum AddressType{
-		CallOnly,
+		Precompiled,
 		StateAccount,
-		CallOnlyOrStateOrCreate,
+		PrecompiledOrStateOrCreate,
 		All
 	};
 	RandomCodeOptions();
@@ -62,11 +62,12 @@ public:
 	int randomAddressProbability;
 	int emptyCodeProbability;
 	int emptyAddressProbability;
+	int precompiledAddressProbability;
 	boostDescreteDistrib opCodeProbability;
 private:
 	void setWeights();
 	std::map<int, int> mapWeights;
-	std::vector<dev::Address> callAddressList;
+	std::vector<dev::Address> precompiledAddressList;
 	std::vector<dev::Address> stateAddressList;
 };
 
