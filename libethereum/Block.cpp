@@ -516,7 +516,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	if (receiptsRoot != m_currentBlock.receiptsRoot())
 	{
 		InvalidReceiptsStateRoot ex;
-		ex << Hash256RequirementError(receiptsRoot, m_currentBlock.receiptsRoot());
+		ex << Hash256RequirementError(m_currentBlock.receiptsRoot(), receiptsRoot);
 		ex << errinfo_receipts(receipts);
 //		ex << errinfo_vmtrace(vmTrace(_block.block, _bc, ImportRequirements::None));
 		BOOST_THROW_EXCEPTION(ex);
@@ -525,7 +525,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	if (m_currentBlock.logBloom() != logBloom())
 	{
 		InvalidLogBloom ex;
-		ex << LogBloomRequirementError(logBloom(), m_currentBlock.logBloom());
+		ex << LogBloomRequirementError(m_currentBlock.logBloom(), logBloom());
 		ex << errinfo_receipts(receipts);
 		BOOST_THROW_EXCEPTION(ex);
 	}
@@ -640,14 +640,14 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	{
 		auto r = rootHash();
 		m_state.db().rollback();		// TODO: API in State for this?
-		BOOST_THROW_EXCEPTION(InvalidStateRoot() << Hash256RequirementError(r, m_currentBlock.stateRoot()));
+		BOOST_THROW_EXCEPTION(InvalidStateRoot() << Hash256RequirementError(m_currentBlock.stateRoot(), r));
 	}
 
 	if (m_currentBlock.gasUsed() != gasUsed())
 	{
 		// Rollback the trie.
 		m_state.db().rollback();		// TODO: API in State for this?
-		BOOST_THROW_EXCEPTION(InvalidGasUsed() << RequirementError(bigint(gasUsed()), bigint(m_currentBlock.gasUsed())));
+		BOOST_THROW_EXCEPTION(InvalidGasUsed() << RequirementError(bigint(m_currentBlock.gasUsed()), bigint(gasUsed())));
 	}
 
 	return tdIncrease;
