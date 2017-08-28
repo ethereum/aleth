@@ -282,13 +282,14 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			bytes output;
 			bool success;
 			tie(success, output) = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
+			size_t outputSize = output.size();
+			m_output = owning_bytes_ref{std::move(output), 0, outputSize};
 			if (!success)
 			{
 				m_gas = 0;
 				m_excepted = TransactionException::OutOfGas;
+				return true;	// true means no need to run go().
 			}
-			size_t outputSize = output.size();
-			m_output = owning_bytes_ref{std::move(output), 0, outputSize};
 		}
 	}
 	else
