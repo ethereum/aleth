@@ -461,10 +461,6 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << diagnostic_information(_e));
 	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << _e.what());
-	}
 }
 
 void removeComments(json_spirit::mValue& _obj)
