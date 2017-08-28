@@ -111,7 +111,7 @@ void UnixDomainSocketServer::Listen()
 			DEV_GUARDED(x_sockets)
 				m_sockets.insert(connection);
 
-			std::thread handler([this, connection](){ GenerateResponse(connection); });
+			std::thread handler([this, connection](){ GenerateResponse(connection); CloseConnection(connection);});
 			handler.detach();
 		}
 	}
@@ -119,6 +119,7 @@ void UnixDomainSocketServer::Listen()
 
 void UnixDomainSocketServer::CloseConnection(int _socket)
 {
+	shutdown(_socket, SHUT_RDWR);
 	close(_socket);
 }
 
