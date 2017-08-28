@@ -286,6 +286,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			{
 				m_gas = 0;
 				m_excepted = TransactionException::OutOfGas;
+				return true;
 			}
 			size_t outputSize = output.size();
 			m_output = owning_bytes_ref{std::move(output), 0, outputSize};
