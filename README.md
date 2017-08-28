@@ -36,8 +36,7 @@ Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-
 Git and GitHub is used to maintain the source code. Clone the repository by:
 
 ```shell
-git clone --recursive https://github.com/ethereum/cpp-ethereum.git
-cd cpp-ethereum
+git clone --recursive https://github.com/ethereum/cpp-ethereum.git && cd cpp-ethereum
 ```
 
 The `--recursive` option is important. It orders git to clone additional 
@@ -46,6 +45,10 @@ If you missed it you can correct your mistake with command
 `git submodule update --init`.
 
 ### Install CMake
+
+```shell
+sudo scripts/install_cmake.sh --prefix /usr/local
+```
 
 CMake is used to control the build configuration of the project. Quite recent 
 version of CMake is required 
@@ -104,9 +107,9 @@ Configure the project build with the following command. It will create the
 `build` directory with the configuration.
 
 ```shell
-mkdir build; cd build  # Create a build directory.
-cmake ..               # Configure the project.
-cmake --build .        # Build all default targets.
+sudo mkdir build && cd build         # Create a build directory.
+sudo cmake ..                       # Configure the project.
+sudo cmake --build .                # Build all default targets.
 ```
 
 On **Windows** Visual Studio 2015 is required. You should generate Visual Studio 
