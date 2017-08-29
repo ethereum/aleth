@@ -168,7 +168,7 @@ class transactiontestfixture
 public:
 	transactiontestfixture()
 	{
-		string casename = boost::unit_test::framework::current_test_case().p_name;
+		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 
 		if ((casename == "ttWrongRLPFrontier" || casename == "ttWrongRLPHomestead") && test::Options::get().filltests)
 			copyAllFilesFromFolder(casename);
@@ -179,10 +179,10 @@ public:
 	void fillAllFilesInFolder(string const& _folder)
 	{
 		using path = boost::filesystem::path;
-		path fillersPath = path(test::getTestPath()) / "src/TransactionTestsFiller" / path(_folder);
+		path const fillersPath = path(test::getTestPath()) / "src/TransactionTestsFiller" / path(_folder);
 		string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 
-		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath.c_str(), filter);
+		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.c_str(), filter);
 		size_t fileCount = files.size();
 		if (test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
@@ -198,20 +198,19 @@ public:
 	void copyAllFilesFromFolder(string const& _folder)
 	{
 		using path = boost::filesystem::path;
-		path fillersPath = path(dev::test::getTestPath()) / path("src/TransactionTestsFiller") / path(_folder);
+		path const fillersPath = path(dev::test::getTestPath()) / path("src/TransactionTestsFiller") / path(_folder);
 		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.c_str());
 
 		for (auto const& file : files)
 		{
-			path copytoFile = path(dev::test::getTestPath()) / path("TransactionTests") / path(_folder) / path(file.filename().string());
-			path destFile = fillersPath / path(file.filename().string());
+			path const copytoFile = path(dev::test::getTestPath()) / path("TransactionTests") / path(_folder) / path(file.filename().string());
+			path const destFile = fillersPath / path(file.filename().string());
 			clog << "Copying " << destFile.c_str() << "\n";
 			clog << " TO " << copytoFile.c_str() << "\n";
 			auto testOutput = dev::test::TestOutputHelper();
 			dev::test::copyFile(destFile.c_str(), copytoFile.c_str());
 			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copytoFile.c_str()), "Error when copying the test file!");
 		}
-		return;
 	}
 };
 
