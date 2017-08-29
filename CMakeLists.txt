@@ -89,6 +89,7 @@ endif()
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY On)
 
+include(EthCcache)
 include(EthOptions)
 include(EthCompilerSettings)
 include(EthExecutableHelper)

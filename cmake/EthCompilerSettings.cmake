@@ -14,14 +14,6 @@
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
-# Setup ccache.
-# ccache is auto-enabled if the tool is found. To disable set -DCCACHE=Off option.
-find_program(CCACHE ccache)
-if(CCACHE)
-	set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
-	message(STATUS "ccache enabled (${CCACHE})")
-endif()
-
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
