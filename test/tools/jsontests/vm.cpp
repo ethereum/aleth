@@ -296,8 +296,9 @@ namespace dev { namespace test {
 
 json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 {
-	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom")
-		TestOutputHelper::initTest(_input.get_obj().size());
+	unique_ptr<TestOutputHelper> testOutputHelper;
+	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom") // TODO: remove this hard-coding
+		testOutputHelper.reset(new TestOutputHelper(_input.get_obj().size()));
 
 	json_spirit::mValue v = json_spirit::mObject();
 	json_spirit::mObject& output = v.get_obj();
@@ -472,7 +473,6 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 		}
 	}
 
-	TestOutputHelper::finishTest();
 	return v;
 }
 
@@ -563,8 +563,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 
 	std::vector<boost::filesystem::path> testFiles = test::getJsonFiles(testPath);
 
-	test::TestOutputHelper::initTest();
-	test::TestOutputHelper::setMaxTests(testFiles.size());
+	test::TestOutputHelper testOutputHelper(testFiles.size());
 
 	for (auto& path: testFiles)
 	{

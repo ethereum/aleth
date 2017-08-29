@@ -44,13 +44,12 @@ class bcTestFixture {
 				}
 				else
 				{
-					dev::test::TestOutputHelper::initTest();
+					dev::test::TestOutputHelper testOutputHelper;
 					string copyto = dev::test::getTestPath() + "/BlockchainTests/bcForgedTest/" + file.filename().string();
 					clog << "Copying " + fillersPath + "/" + file.filename().string();
 					clog << " TO " << copyto;
 					dev::test::copyFile(fillersPath + "/" + file.filename().string(), dev::test::getTestPath() + "/BlockchainTests/bcForgedTest/" + file.filename().string());
 					BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copyto), "Error when copying the test file!");
-					dev::test::TestOutputHelper::finishTest();
 				}
 			}
 			return;
@@ -81,13 +80,12 @@ class bcTestFixture {
 		if (test::Options::get().filltests)
 			testcount += testcount / test::getNetworks().size();
 
-		test::TestOutputHelper::initTest(testcount);
+		test::TestOutputHelper testOutputHelper(testcount);
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 			test::executeTests(file.filename().string(), "/BlockchainTests/" + _folder, "/BlockchainTestsFiller/" + _folder, dev::test::doBlockchainTestNoLog);
 		}
-		test::TestOutputHelper::finishTest();
 	}
 };
 
@@ -114,13 +112,12 @@ class bcTransitionFixture {
 		if (test::Options::get().filltests)
 			testcount *= 2;
 
-		test::TestOutputHelper::initTest(testcount);
+		test::TestOutputHelper testOutputHelper(testcount);
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 			test::executeTests(file.filename().string(), "/BlockchainTests/" + _subfolder + _folder, "/BlockchainTestsFiller/" + _subfolder +_folder, dev::test::doTransitionTest);
 		}
-		test::TestOutputHelper::finishTest();
 	}
 };
 
@@ -146,13 +143,12 @@ class bcGeneralTestsFixture
 		std::vector<boost::filesystem::path> files = test::getJsonFiles(test::getTestPath() + "/BlockchainTests/" +_folder);
 		int testcount = files.size() * test::getNetworks().size();  //each file contains a test per network fork
 
-		test::TestOutputHelper::initTest(testcount);
+		test::TestOutputHelper testOutputHelper(testcount);
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 			test::executeTests(file.filename().string(), "/BlockchainTests/" + _folder, "/BlockchainTests/" +_folder, dev::test::doBlockchainTestNoLog);
 		}
-		test::TestOutputHelper::finishTest();
 	}
 };
 
