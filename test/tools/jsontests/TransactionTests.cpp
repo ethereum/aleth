@@ -178,39 +178,38 @@ public:
 
 	void fillAllFilesInFolder(string const& _folder)
 	{
-		std::string fillersPath = test::getTestPath() + "/src/TransactionTestsFiller/" + _folder;
+		using path = boost::filesystem::path;
+		path fillersPath = path(test::getTestPath()) / "src/TransactionTestsFiller" / path(_folder);
+		string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 
-		string filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
-		int fileCount = files.size();
-
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath.c_str(), filter);
+		size_t fileCount = files.size();
 		if (test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
-		test::TestOutputHelper::initTest(fileCount);
 
+		auto testOutput = dev::test::TestOutputHelper(fileCount);
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 			test::executeTests(file.filename().string(), "/TransactionTests/"+_folder, "/TransactionTestsFiller/"+_folder, dev::test::doTransactionTests);
 		}
-
-		test::TestOutputHelper::finishTest();
 	}
 
 	void copyAllFilesFromFolder(string const& _folder)
 	{
-		std::string fillersPath =  dev::test::getTestPath() + "/src/TransactionTestsFiller/" + _folder;
-		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
+		using path = boost::filesystem::path;
+		path fillersPath = path(dev::test::getTestPath()) / path("src/TransactionTestsFiller") / path(_folder);
+		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.c_str());
 
 		for (auto const& file : files)
 		{
-			dev::test::TestOutputHelper::initTest();
-			string copyto = dev::test::getTestPath() + "/TransactionTests/" + _folder + "/" + file.filename().string();
-			clog << "Copying " + fillersPath + "/" + file.filename().string() + "\n";
-			clog << " TO " << copyto + "\n";
-			dev::test::copyFile(fillersPath + "/" + file.filename().string(), dev::test::getTestPath() + "/TransactionTests/" + _folder + "/" + file.filename().string());
-			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copyto), "Error when copying the test file!");
-			dev::test::TestOutputHelper::finishTest();
+			path copytoFile = path(dev::test::getTestPath()) / path("TransactionTests") / path(_folder) / path(file.filename().string());
+			path destFile = fillersPath / path(file.filename().string());
+			clog << "Copying " << destFile.c_str() << "\n";
+			clog << " TO " << copytoFile.c_str() << "\n";
+			auto testOutput = dev::test::TestOutputHelper();
+			dev::test::copyFile(destFile.c_str(), copytoFile.c_str());
+			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copytoFile.c_str()), "Error when copying the test file!");
 		}
 		return;
 	}

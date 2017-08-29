@@ -30,7 +30,7 @@ namespace test
 class TestOutputHelper
 {
 public:
-	TestOutputHelper() { TestOutputHelper::initTest(); }
+	TestOutputHelper(size_t _maxTests = 1) { TestOutputHelper::initTest(_maxTests); }
 	static void initTest(size_t _maxTests = 1);
 	static bool passTest(std::string const& _testName);
 	static void setMaxTests(int _count) { m_maxTests = _count; }
