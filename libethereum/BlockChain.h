@@ -314,7 +314,9 @@ public:
 
 	BlockHeader const& genesis() const;
 
+	/// @returns first block number of the chain, non-zero when we have partial chain e.g. after snapshot import.
 	unsigned chainStartBlockNumber() const;
+	/// Change the chain start block.
 	void setChainStartBlockNumber(unsigned _number);
 
 private:
