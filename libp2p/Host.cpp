@@ -119,6 +119,7 @@ Host::Host(string const& _clientVersion, NetworkPreferences const& _n, bytesCons
 Host::~Host()
 {
 	stop();
+	terminate();
 }
 
 void Host::start()

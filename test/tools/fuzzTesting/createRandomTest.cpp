@@ -36,8 +36,7 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
-int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug = false);
+int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
 
 namespace dev { namespace test {
 int createRandomTest()
@@ -56,56 +55,10 @@ int createRandomTest()
 }
 }} //namespaces
 
-int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug)
-{
-	bool ret = 0;
-	try
-	{
-		//redirect all output to the stream
-		std::ostringstream strCout;
-		std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-		if (!_debug)
-		{
-			std::cout.rdbuf( strCout.rdbuf() );
-			std::cerr.rdbuf( strCout.rdbuf() );
-		}
-
-		_doTests(_value, false);
-
-		//restroe output
-		if (!_debug)
-		{
-			std::cout.rdbuf(oldCoutStreamBuf);
-			std::cerr.rdbuf(oldCoutStreamBuf);
-		}
-	}
-	catch (dev::Exception const& _e)
-	{
-		std::cout << " Failed test with Exception: " << diagnostic_information(_e) << "\n";
-		ret = 1;
-	}
-	catch (std::exception const& _e)
-	{
-		std::cout << " Failed test with Exception: " << _e.what() << "\n";
-		ret = 1;
-	}
-	return ret;
-}
-
 //Prints a generated test Json into std::out
-int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
+int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
 {
 	bool wasError = false;
-	bool debug = (dev::test::Options::get().logVerbosity > dev::test::Verbosity::NiceReport);
-	//redirect all output to the stream
-	std::ostringstream strCout;
-	std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-	if (!debug)
-	{
-		std::cout.rdbuf( strCout.rdbuf() );
-		std::cerr.rdbuf( strCout.rdbuf() );
-	}
-
 	json_spirit::mValue v;
 	try
 	{
@@ -113,7 +66,8 @@ int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std
 		std::map<std::string, std::string> nullReplaceMap;
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
-		_doTests(v, true);
+		v = _doTests(v, true); //filltests
+		_doTests(v, false);	//checktest
 	}
 	catch (dev::Exception const& _e)
 	{
@@ -126,15 +80,11 @@ int fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std
 		wasError = true;
 	}
 
-	//restroe output
-	if (!debug)
-	{
-		std::cout.rdbuf(oldCoutStreamBuf);
-		std::cerr.rdbuf(oldCoutStreamBuf);
-	}
-
 	if (wasError)
+	{
+		std::cerr << json_spirit::write_string(v, true);
 		return 1;
+	}
 
 	std::cout << json_spirit::write_string(v, true);
 	return 0;
@@ -188,7 +138,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
 			else if (type == "[DESTADDRESS]")
 			{
-				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::CallOnlyOrStateOrCreate);
+				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrStateOrCreate);
 				if (address != ZeroAddress) //else transaction creation
 					replace = "0x" + toString(address);
 			}

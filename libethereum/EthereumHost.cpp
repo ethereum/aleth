@@ -394,6 +394,7 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 
 EthereumHost::~EthereumHost()
 {
+	terminate();
 }
 
 bool EthereumHost::ensureInitialised()

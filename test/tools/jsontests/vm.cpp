@@ -96,6 +96,7 @@ EnvInfo FakeExtVM::importEnv(mObject const& _o, LastBlockHashesFace const& _last
 	assert(_o.count("currentDifficulty") > 0);
 	assert(_o.count("currentTimestamp") > 0);
 	assert(_o.count("currentCoinbase") > 0);
+	assert(_o.at("currentCoinbase").type() == str_type);
 	assert(_o.count("currentNumber") > 0);
 	auto gasLimit = toInt(_o.at("currentGasLimit"));
 	assert(gasLimit <= std::numeric_limits<int64_t>::max());
@@ -138,6 +139,7 @@ void FakeExtVM::importState(mObject const& _object)
 		assert(o.count("balance") > 0);
 		assert(o.count("nonce") > 0);
 		assert(o.count("storage") > 0);
+		assert(o.at("storage").type() == obj_type);
 		assert(o.count("code") > 0);
 
 		auto& a = addresses[Address(i.first)];
@@ -399,6 +401,7 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 			else
 			{
 				testOutput["post"] = mValue(fev.exportState());
+				BOOST_REQUIRE_MESSAGE(testOutput.at("post").type() == obj_type, testname + "fev.exportState returned something not an object.");
 
 				if (testInput.count("expect") > 0)
 				{
@@ -412,7 +415,7 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 					ImportTest::compareStates(expectState, postState, expectStateMap, WhenError::Throw);
 				}
 
-				BOOST_REQUIRE_MESSAGE(testOutput.count("expect") == 0, testname + " expect should have been erased!");
+				BOOST_REQUIRE_MESSAGE(testOutput.count("expect") == 0, testname + " expect should never been added to the output!");
 
 				testOutput["callcreates"] = fev.exportCallCreates();
 				testOutput["out"] = output.size() > 4096 ? "#" + toString(output.size()) : toHexPrefixed(output);
@@ -420,6 +423,7 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 				// compare expected output with post output
 				if (testInput.count("expectOut") > 0)
 				{
+					BOOST_REQUIRE_MESSAGE(testInput.at("expectOut").type() == str_type, testname + " expectOut field is not a string.");
 					std::string warning = " Check State: Error! Unexpected output: " + testOutput["out"].get_str() + " Expected: " + testInput.at("expectOut").get_str();
 					BOOST_CHECK_MESSAGE(testOutput["out"].get_str() == testInput.at("expectOut").get_str(), warning);
 				}
@@ -432,19 +436,19 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 		{
 			if (testInput.count("post") > 0)	// No exceptions expected
 			{
+				BOOST_REQUIRE_MESSAGE(testInput.at("post").type() == obj_type, testname + " post field is not an object.");
 				BOOST_CHECK(!vmExceptionOccured);
 
-				BOOST_REQUIRE(testInput.count("post") > 0);
-				BOOST_REQUIRE(testInput.count("callcreates") > 0);
-				BOOST_REQUIRE(testInput.count("out") > 0);
-				BOOST_REQUIRE(testInput.count("gas") > 0);
-				BOOST_REQUIRE(testInput.count("logs") > 0);
+				BOOST_REQUIRE_MESSAGE(testInput.count("callcreates") > 0, testname + " callcreates field is missing.");
+				BOOST_REQUIRE_MESSAGE(testInput.at("callcreates").type() == array_type, testname + " callcreates field is not an array.");
+				BOOST_REQUIRE_MESSAGE(testInput.count("out") > 0, testname + " out field is missing.");
+				BOOST_REQUIRE_MESSAGE(testInput.count("gas") > 0, testname + " gas field is missing.");
+				BOOST_REQUIRE_MESSAGE(testInput.count("logs") > 0, testname + " logs field is missing.");
+				BOOST_REQUIRE_MESSAGE(testInput.at("logs").type() == str_type, testname + " logs field is not a string.");
 
 				dev::test::FakeExtVM test(eth::EnvInfo{BlockHeader{}, lastBlockHashes, 0});
 				test.importState(testInput.at("post").get_obj());
 				test.importCallCreates(testInput.at("callcreates").get_array());
-				test.sub.logs = importLog(testInput.at("logs").get_array());
-
 
 				checkOutput(output, testInput);
 
@@ -461,7 +465,7 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 
 				checkCallCreates(fev.callcreates, test.callcreates);
 
-				checkLog(fev.sub.logs, test.sub.logs);
+				BOOST_CHECK_EQUAL(exportLog(fev.sub.logs), testInput.at("logs").get_str());
 			}
 			else	// Exception expected
 				BOOST_CHECK(vmExceptionOccured);
@@ -528,20 +532,26 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 
 BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 {
-	if (test::Options::get().performance)
+	if (test::Options::get().all)
 		dev::test::executeTests("vmPerformanceTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		cnote << "vmPerformanceTest is skipped because --all option is not specified.\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest)
 {
-	if (test::Options::get().inputLimits)
+	if (test::Options::get().all)
 		dev::test::executeTests("vmInputLimits", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		cnote << "vmInputLimitsTest is skipped because --all option is not specified.\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 {
-	if (test::Options::get().inputLimits)
+	if (test::Options::get().all)
 		dev::test::executeTests("vmInputLimitsLight", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
+	else
+		cnote << "vmInputLimitsLightTest is skipped because --all option is not specified\n";
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)
@@ -577,11 +587,6 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 			BOOST_ERROR(" Failed test with Exception: " << _e.what());
 		}
 	}
-}
-
-BOOST_AUTO_TEST_CASE(userDefinedFile)
-{
-	dev::test::userDefinedTest(dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -103,7 +103,7 @@ void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
 bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, SealEngineFace const& _sealEngine);
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
-void testBCTest(json_spirit::mObject& _o);
+void testBCTest(json_spirit::mObject const& _o);
 
 //percent output for many tests in one file
 json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _v, bool _fillin)
@@ -146,28 +146,23 @@ json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fi
 
 json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin)
 {
-	json_spirit::mValue v = _input; // TODO: avoid copying and add only valid fields to the new object.
-	map<string, json_spirit::mObject> tests;
-	vector<decltype(v.get_obj().begin())> erase_list;
+	json_spirit::mObject tests;
 
 	// range-for is not used because iterators are necessary for removing elements later.
-	for (auto i = v.get_obj().begin(); i != v.get_obj().end(); i++)
+	for (auto i = _input.get_obj().begin(); i != _input.get_obj().end(); i++)
 	{
-		string testname = i->first;
-		json_spirit::mObject& o = i->second.get_obj();
+		string const& testname = i->first;
+		json_spirit::mObject const& inputTest = i->second.get_obj();
 
 		//Select test by name if --singletest is set and not filling state tests as blockchain
 		if (!Options::get().fillchain && !TestOutputHelper::passTest(testname))
-		{
-			o.clear(); //don't add irrelevant tests to the final file when filling
 			continue;
-		}
 
-		BOOST_REQUIRE_MESSAGE(o.count("genesisBlockHeader"),
+		BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
 			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
-		BOOST_REQUIRE_MESSAGE(o.count("pre"),
+		BOOST_REQUIRE_MESSAGE(inputTest.count("pre"),
 			"\"pre\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
@@ -183,65 +178,49 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 				dev::test::TestBlockChain::s_sealEngineNetwork = network;
 				string newtestname = testname + "_" + test::netIdToString(network);
 
-				json_spirit::mObject jObj = o;
-				if (o.count("expect"))
+				json_spirit::mObject jObjOutput = inputTest;
+				if (inputTest.count("expect"))
 				{
 					//prepare the corresponding expect section for the test
-					json_spirit::mArray& expects = o["expect"].get_array();
+					json_spirit::mArray const& expects = inputTest.at("expect").get_array();
 					bool found = false;
 
 					for (auto& expect : expects)
 					{
 						vector<string> netlist;
-						json_spirit::mObject& expectObj = expect.get_obj();
-						ImportTest::parseJsonStrValueIntoVector(expectObj["network"], netlist);
+						json_spirit::mObject const& expectObj = expect.get_obj();
+						ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
 						if (std::find(netlist.begin(), netlist.end(), test::netIdToString(network)) != netlist.end() ||
 							std::find(netlist.begin(), netlist.end(), "ALL") != netlist.end())
 						{
-							jObj["expect"] = expectObj["result"];
+							jObjOutput["expect"] = expectObj.at("result");
 							found = true;
 							break;
 						}
 					}
 					if (!found)
-						jObj.erase(jObj.find("expect"));
+						jObjOutput.erase(jObjOutput.find("expect"));
 				}
 				TestOutputHelper::setCurrentTestName(newtestname);
-				jObj = fillBCTest(jObj);
-				jObj["network"] = test::netIdToString(network);
-				tests[newtestname] = jObj;
+				jObjOutput = fillBCTest(jObjOutput);
+				jObjOutput["network"] = test::netIdToString(network);
+				tests[newtestname] = jObjOutput;
 			}
-
-			// will be deleted once after the loop.
-			// removing an element while in this loop causes memory corruption.
-			erase_list.push_back(i);
 		}
 		else
 		{
-			BOOST_REQUIRE_MESSAGE(o.count("network"),
+			BOOST_REQUIRE_MESSAGE(inputTest.count("network"),
 				"\"network\" field is not found. filename: " + TestOutputHelper::testFileName() +
 				" testname: " + TestOutputHelper::testName()
 			);
-			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
+			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
 			if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
 				continue;
-			testBCTest(o);
+			testBCTest(inputTest);
 		}
 	}
 
-	//Delete source test from the json
-	for (auto i: erase_list)
-		v.get_obj().erase(i);
-
-	//Add generated tests to the result file
-	if (_fillin)
-	{
-		BOOST_CHECK_MESSAGE(v.get_obj().size() == 0, " Test Filler is incorrect. Still having the test source when generating from filler " + TestOutputHelper::testName());
-		json_spirit::mObject& obj = v.get_obj();
-		for (auto& test : tests)
-			obj[test.first] = test.second;
-	}
-	return v;
+	return tests;
 }
 
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
@@ -412,7 +391,6 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		}
 
 		blArray.push_back(blObj);  //json data
-		this_thread::sleep_for(chrono::seconds(1));
 	}//each blocks
 
 	if (_input.count("expect") > 0)
@@ -439,10 +417,10 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 	return output;
 }
 
-void testBCTest(json_spirit::mObject& _o)
+void testBCTest(json_spirit::mObject const& _o)
 {
 	string testName = TestOutputHelper::testName();
-	TestBlock genesisBlock(_o["genesisBlockHeader"].get_obj(), _o["pre"].get_obj());
+	TestBlock genesisBlock(_o.at("genesisBlockHeader").get_obj(), _o.at("pre").get_obj());
 	TestBlockChain blockchain(genesisBlock);
 
 	TestBlockChain testChain(genesisBlock);
@@ -450,11 +428,11 @@ void testBCTest(json_spirit::mObject& _o)
 
 	if (_o.count("genesisRLP") > 0)
 	{
-		TestBlock genesisFromRLP(_o["genesisRLP"].get_str());
+		TestBlock genesisFromRLP(_o.at("genesisRLP").get_str());
 		checkBlocks(genesisBlock, genesisFromRLP, testName);
 	}
 
-	for (auto const& bl: _o["blocks"].get_array())
+	for (auto const& bl: _o.at("blocks").get_array())
 	{
 		mObject blObj = bl.get_obj();
 		TestBlock blockFromRlp;
@@ -571,8 +549,8 @@ void testBCTest(json_spirit::mObject& _o)
 	//Check lastblock hash
 	BOOST_REQUIRE((_o.count("lastblockhash") > 0));
 	string lastTrueBlockHash = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
-	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o["lastblockhash"].get_str(),
-			testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o["lastblockhash"].get_str());
+	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o.at("lastblockhash").get_str(),
+			testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o.at("lastblockhash").get_str());
 
 	//Check final state (just to be sure)
 	BOOST_CHECK_MESSAGE(toString(testChain.topBlock().state().rootHash()) ==
@@ -581,7 +559,7 @@ void testBCTest(json_spirit::mObject& _o)
 
 	State postState(State::Null); //Compare post states
 	BOOST_REQUIRE((_o.count("postState") > 0));
-	ImportTest::importState(_o["postState"].get_obj(), postState);
+	ImportTest::importState(_o.at("postState").get_obj(), postState);
 	ImportTest::compareStates(postState, testChain.topBlock().state());
 	ImportTest::compareStates(postState, blockchain.topBlock().state());
 }

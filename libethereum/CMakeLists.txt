@@ -1,23 +1,6 @@
-file(GLOB SRC_LIST "*.cpp")
-file(GLOB HEADERS "*.h")
+file(GLOB sources "*.cpp" "*.h")
 
-add_library(ethereum ${SRC_LIST} ${HEADERS})
+add_library(ethereum ${sources})
 
-target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES} jsoncpp_lib_static)
-
-find_package(Dev)
-find_package(Eth)
-
-target_include_directories(ethereum PRIVATE ..)
 target_include_directories(ethereum PRIVATE ../utils)
-target_link_libraries(ethereum ${Eth_ETHCORE_LIBRARIES})
-target_link_libraries(ethereum ${Eth_EVM_LIBRARIES})
-
-if (NOT EMSCRIPTEN)
-	target_link_libraries(ethereum ${Dev_P2P_LIBRARIES})
-	target_link_libraries(ethereum ${Dev_DEVCRYPTO_LIBRARIES})
-endif()
-
-if (EVMJIT)
-	target_link_libraries(ethereum ${Eth_EVMJIT_LIBRARIES})
-endif()
+target_link_libraries(ethereum PUBLIC evm ethcore p2p devcrypto devcore PRIVATE jsoncpp_lib_static)

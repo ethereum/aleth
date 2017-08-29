@@ -41,6 +41,8 @@ namespace dev {  namespace test {
 
 json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin)
 {
+	BOOST_REQUIRE_MESSAGE(_input.type() == obj_type,
+		TestOutputHelper::testFileName() + " A GeneralStateTest file should contain an object.");
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
 		TestOutputHelper::testFileName() + " A GeneralStateTest filler should contain only one test.");
 	json_spirit::mValue v = json_spirit::mObject();
@@ -48,6 +50,8 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 	for (auto& i: _input.get_obj())
 	{
 		string const testname = i.first;
+		BOOST_REQUIRE_MESSAGE(i.second.type() == obj_type,
+			TestOutputHelper::testFileName() + " should contain an object under a test name.");
 		json_spirit::mObject const& inputTest = i.second.get_obj();
 		v.get_obj()[testname] = json_spirit::mObject();
 		json_spirit::mObject& outputTest = v.get_obj()[testname].get_obj();
@@ -86,14 +90,17 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 		else
 		{
 			BOOST_REQUIRE_MESSAGE(inputTest.count("post") > 0, testname + " post not set!");
+			BOOST_REQUIRE_MESSAGE(inputTest.at("post").type() == obj_type, testname + " post field is not an object.");
 
 			//check post hashes against cpp client on all networks
 			mObject post = inputTest.at("post").get_obj();
 			vector<size_t> wrongTransactionsIndexes;
 			for (mObject::const_iterator i = post.begin(); i != post.end(); ++i)
 			{
+				BOOST_REQUIRE_MESSAGE(i->second.type() == array_type, testname + " post field should contain an array for each network.");
 				for (auto const& exp: i->second.get_array())
 				{
+					BOOST_REQUIRE_MESSAGE(exp.type() == obj_type, " post field should contain an array of objects for each network.");
 					if (!Options::get().singleTestNet.empty() && i->first != Options::get().singleTestNet)
 						continue;
 					if (test::isDisabledNetwork(test::stringToNetId(i->first)))
@@ -116,8 +123,11 @@ public:
 	generaltestfixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
-		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
+		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
+		{
+			cnote << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
+		}
 		fillAllFilesInFolder(casename);
 	}
 

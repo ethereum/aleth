@@ -8,7 +8,9 @@ ExternalProject_Add(snark
     DOWNLOAD_NO_PROGRESS TRUE
     URL https://github.com/chfast/libff/archive/97d3fa6cdbd4b7549c7a8a179dc97308dbfd044d.tar.gz
     URL_HASH SHA256=f102f3ee43c96c9a81c20d8c0446c805c6b8c0e3121518b3625f08e2c230096e
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    CMAKE_ARGS
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
         -DGMP_INCLUDE_DIR=${MPIR_INCLUDE_DIR}
         -DGMP_LIBRARIES=${MPIR_LIBRARY}
         -DGMPXX_LIBRARIES=${MPIR_LIBRARY}
@@ -17,6 +19,7 @@ ExternalProject_Add(snark
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
+    LOG_BUILD 1
     INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
 )
 add_dependencies(snark mpir)

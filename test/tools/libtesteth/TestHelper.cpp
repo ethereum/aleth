@@ -141,7 +141,8 @@ eth::Network stringToNetId(string const& _netname)
 
 bool isDisabledNetwork(eth::Network _net)
 {
-	if (Options::get().performance || Options::get().filltests)
+	Options const& opt = Options::get();
+	if (opt.all || opt.filltests || opt.createRandomTest)
 		return false;
 	switch (_net)
 	{
@@ -387,18 +388,6 @@ void checkStorage(map<u256, u256> const& _expectedStore, map<u256, u256> const& 
 	}
 }
 
-void checkLog(LogEntries const& _resultLogs, LogEntries const& _expectedLogs)
-{
-	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
-
-	for (size_t i = 0; i < _resultLogs.size(); ++i)
-	{
-		BOOST_CHECK_EQUAL(_resultLogs[i].address, _expectedLogs[i].address);
-		BOOST_CHECK_EQUAL(_resultLogs[i].topics, _expectedLogs[i].topics);
-		BOOST_CHECK(_resultLogs[i].data == _expectedLogs[i].data);
-	}
-}
-
 void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates)
 {
 	BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
@@ -409,54 +398,6 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 		BOOST_CHECK(_resultCallCreates[i].receiveAddress() == _expectedCallCreates[i].receiveAddress());
 		BOOST_CHECK(_resultCallCreates[i].gas() == _expectedCallCreates[i].gas());
 		BOOST_CHECK(_resultCallCreates[i].value() == _expectedCallCreates[i].value());
-	}
-}
-
-void userDefinedTest(std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests)
-{
-	if (!Options::get().singleTest)
-		return;
-
-	if (Options::get().singleTestFile.empty() || Options::get().singleTestName.empty())
-	{
-		cnote << "Missing user test specification\nUsage: testeth --singletest <filename> <testname>\n";
-		return;
-	}
-
-	auto& filename = Options::get().singleTestFile;
-	auto& testname = Options::get().singleTestName;
-
-	if (g_logVerbosity != -1)
-		VerbosityHolder sentinel(12);
-
-	try
-	{
-		cnote << "Testing user defined test: " << filename;
-		json_spirit::mValue v;
-		string s = contentsString(filename);
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
-		json_spirit::read_string(s, v);
-		json_spirit::mObject oSingleTest;
-
-		json_spirit::mObject::const_iterator pos = v.get_obj().find(testname);
-		if (pos == v.get_obj().end())
-		{
-			cnote << "Could not find test: " << testname << " in " << filename << "\n";
-			return;
-		}
-		else
-			oSingleTest[pos->first] = pos->second;
-
-		json_spirit::mValue v_singleTest(oSingleTest);
-		doTests(v_singleTest, test::Options::get().filltests);
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed Test with Exception: " << _e.what());
 	}
 }
 
@@ -519,10 +460,6 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	catch (Exception const& _e)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << _e.what());
 	}
 }
 

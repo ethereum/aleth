@@ -41,6 +41,7 @@ EthashCPUMiner::EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo
 
 EthashCPUMiner::~EthashCPUMiner()
 {
+	terminate();
 }
 
 void EthashCPUMiner::kickOff()
