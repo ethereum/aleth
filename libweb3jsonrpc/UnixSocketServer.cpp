@@ -111,8 +111,12 @@ void UnixDomainSocketServer::Listen()
 			DEV_GUARDED(x_sockets)
 				m_sockets.insert(connection);
 
-			std::thread handler([this, connection](){ GenerateResponse(connection); CloseConnection(connection);});
-			handler.detach();
+			// Handle the request in a new detached thread.
+			std::thread{[this, connection]
+			{
+				GenerateResponse(connection);
+				CloseConnection(connection);
+			}}.detach();
 		}
 	}
 }
