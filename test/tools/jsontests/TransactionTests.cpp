@@ -26,6 +26,7 @@
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
+#include <string>
 
 using namespace std;
 using namespace json_spirit;
@@ -182,7 +183,7 @@ public:
 		path const fillersPath = path(test::getTestPath()) / "src/TransactionTestsFiller" / path(_folder);
 		string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 
-		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.c_str(), filter);
+		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
 		size_t fileCount = files.size();
 		if (test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
@@ -199,17 +200,17 @@ public:
 	{
 		using path = boost::filesystem::path;
 		path const fillersPath = path(dev::test::getTestPath()) / path("src/TransactionTestsFiller") / path(_folder);
-		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.c_str());
+		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string());
 
 		for (auto const& file : files)
 		{
 			path const copytoFile = path(dev::test::getTestPath()) / path("TransactionTests") / path(_folder) / path(file.filename().string());
 			path const destFile = fillersPath / path(file.filename().string());
-			clog << "Copying " << destFile.c_str() << "\n";
-			clog << " TO " << copytoFile.c_str() << "\n";
+			clog << "Copying " << destFile.string() << "\n";
+			clog << " TO " << copytoFile.string() << "\n";
 			auto testOutput = dev::test::TestOutputHelper();
-			dev::test::copyFile(destFile.c_str(), copytoFile.c_str());
-			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copytoFile.c_str()), "Error when copying the test file!");
+			dev::test::copyFile(destFile.string(), copytoFile.string());
+			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copytoFile.string()), "Error when copying the test file!");
 		}
 	}
 };

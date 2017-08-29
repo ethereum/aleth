@@ -30,6 +30,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <libethereum/Client.h>
 #include <test/tools/libtesteth/Stats.h>
+#include <string>
 
 using namespace std;
 using namespace dev::eth;
