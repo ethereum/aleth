@@ -67,6 +67,8 @@ class ImportPerformanceLogger;
 DEV_SIMPLE_EXCEPTION(AlreadyHaveBlock);
 DEV_SIMPLE_EXCEPTION(FutureTime);
 DEV_SIMPLE_EXCEPTION(TransientError);
+DEV_SIMPLE_EXCEPTION(FailedToWriteChainStart);
+DEV_SIMPLE_EXCEPTION(UnknownBlockNumber);
 
 struct BlockChainChat: public LogChannel { static const char* name(); static const int verbosity = 5; };
 struct BlockChainNote: public LogChannel { static const char* name(); static const int verbosity = 3; };
@@ -311,6 +313,11 @@ public:
 	SealEngineFace* sealEngine() const { return m_sealEngine.get(); }
 
 	BlockHeader const& genesis() const;
+
+	/// @returns first block number of the chain, non-zero when we have partial chain e.g. after snapshot import.
+	unsigned chainStartBlockNumber() const;
+	/// Change the chain start block.
+	void setChainStartBlockNumber(unsigned _number);
 
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }

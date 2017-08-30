@@ -159,6 +159,7 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 
 BlockChainSync::BlockChainSync(EthereumHost& _host):
 	m_host(_host),
+	m_chainStartBlock(_host.chain().chainStartBlockNumber()),
 	m_startingBlock(_host.chain().number()),
 	m_lastImportedBlock(m_startingBlock),
 	m_lastImportedBlockHash(_host.chain().currentHash())
@@ -316,8 +317,8 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 			m_lastImportedBlock = start;
 			m_lastImportedBlockHash = host().chain().numberHash(start);
 
-			if (start <= 1)
-				m_haveCommonHeader = true; //reached genesis
+			if (start <= m_chainStartBlock + 1)
+				m_haveCommonHeader = true; //reached chain start
 		}
 		if (m_haveCommonHeader)
 		{
@@ -441,6 +442,11 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	{
 		BlockHeader info(_r[i].data(), HeaderData);
 		unsigned blockNumber = static_cast<unsigned>(info.number());
+		if (blockNumber < m_chainStartBlock)
+		{
+			clog(NetMessageSummary) << "Skipping too old header " << blockNumber;
+			continue;
+		}
 		if (haveItem(m_headers, blockNumber))
 		{
 			clog(NetMessageSummary) << "Skipping header " << blockNumber;

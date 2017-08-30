@@ -142,6 +142,7 @@ private:
 	mutable RecursiveMutex x_sync;
 	SyncState m_state = SyncState::Idle;		///< Current sync state
 	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
+	unsigned m_chainStartBlock = 0;
 	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
 	unsigned m_highestBlock = 0;       	     	///< Highest block number seen
 	std::unordered_set<unsigned> m_downloadingHeaders;		///< Set of block body numbers being downloaded
