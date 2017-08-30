@@ -22,7 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
 #include <libethashseal/Ethash.h>
-#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/TestUtils.h>
 #include <test/tools/libtestutils/FixedClient.h>
 
@@ -35,7 +35,7 @@ BOOST_FIXTURE_TEST_SUITE(ClientBase, ParallelClientBaseFixture)
 
 BOOST_AUTO_TEST_CASE(blocks)
 {
-	test::TestOutputHelper::initTest();
+	TestOutputHelper testOutputHelper{};
 	enumerateClients([](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
 	{
 		auto compareState = [&_client](Json::Value const& _o, string const& _name, BlockNumber _blockNumber) -> void
