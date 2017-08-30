@@ -49,6 +49,8 @@ set_target_properties(
 	testeth PROPERTIES
 	# Ignore boost test header-only implementation -- included only in single compilation unit.
 	COTIRE_PREFIX_HEADER_IGNORE_PATH "${CMAKE_SOURCE_DIR};${Boost_INCLUDE_DIR}/boost/test/included"
+	# Split unit build into 2, single one is too big.
+	COTIRE_UNITY_SOURCE_MAXIMUM_NUMBER_OF_INCLUDES -j2
 )
 
 cotire(testeth)
