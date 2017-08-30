@@ -36,6 +36,7 @@ env:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
         - TRAVIS_TESTS=On
         - secure: "Nm9HEvhW8wtbF9v44g2Vo2CfX8cFlw3UWutHMmVl5nrcri34BVPXulsPF3CrIdoGgdBQvGxzNmbmAgi0KokaWhLZ2WvuDUXRAU8wuU3SB/AV7hNIGFZDqgk1LBBzwaFngqDCqqIQ29v2Z59s3y8qakmPQbR8eNJ1YAc2F9O8iVI="
+        - NODE_PATH="/usr/lib/node_modules"
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
@@ -111,7 +112,7 @@ cache:
         - $TRAVIS_BUILD_DIR/deps
 install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then clang --version; travis_wait 150 brew install llvm; $(brew --prefix llvm)/bin/clang --version; export PATH=$(brew --prefix llvm)/bin:$PATH; export CC=$(brew --prefix llvm)/bin/clang; export CXX=$(brew --prefix llvm)/bin/clang++; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh && ./scripts/install_travis_linux_deps.sh; fi
     - ./scripts/install_deps.sh
 before_script:
     - ./scripts/prepare_ccache.sh
