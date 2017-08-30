@@ -296,10 +296,12 @@ namespace dev { namespace test {
 
 json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 {
-	unique_ptr<TestOutputHelper> testOutputHelper;
-	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom") // TODO: remove this hard-coding
-		testOutputHelper.reset(new TestOutputHelper(_input.get_obj().size()));
+	TestOutputHelper testOutputHelper(_input.get_obj().size());
+	return doVMTestsNoLog(_input, _fillin);
+}
 
+json_spirit::mValue doVMTestsNoLog(json_spirit::mValue const& _input, bool _fillin)
+{
 	json_spirit::mValue v = json_spirit::mObject();
 	json_spirit::mObject& output = v.get_obj();
 	for (auto& i: _input.get_obj())
@@ -575,7 +577,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
 			test::Listener::notifySuiteStarted(path.filename().string());
-			doVMTests(v, false);
+			doVMTestsNoLog(v, false);
 		}
 		catch (Exception const& _e)
 		{
