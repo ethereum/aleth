@@ -45,6 +45,11 @@ endforeach(file)
 add_executable(testeth ${sources})
 target_include_directories(testeth PRIVATE ../utils)
 target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore Cryptopp)
+set_target_properties(
+	testeth PROPERTIES
+	# Ignore boost test header-only implementation -- included only in single compilation unit.
+	COTIRE_PREFIX_HEADER_IGNORE_PATH "${CMAKE_SOURCE_DIR};${Boost_INCLUDE_DIR}/boost/test/included"
+)
 
 cotire(testeth)
 
