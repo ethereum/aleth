@@ -36,7 +36,7 @@ struct SnapshotImportLog: public LogChannel
 {
 	static char const* name() { return "SNAP"; }
 	static int const verbosity = 9;
-	static const bool debug = false;
+	// static const bool debug = false; // breaks mac build somehow
 };
 
 
@@ -268,7 +268,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 			Ethash::setNonce(header, abridgedBlock[11].toHash<Nonce>(RLP::VeryStrict));
 
 			totalDifficulty += difficulty;
-			bcImporter.importBlock(header, transactions, uncles, receipts, number, totalDifficulty);
+			bcImporter.importBlock(header, transactions, uncles, receipts, totalDifficulty);
 
 			parentHash = header.hash();
 			//				cout << "i = " << i << " author " << author << " state root " <<  blockStateRoot << " timestamp " << timestamp << endl;
