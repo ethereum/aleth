@@ -38,4 +38,4 @@ else
     cmake .. -DCMAKE_BUILD_TYPE=$1 -DCOVERAGE=ON
 fi
 
-make -j2
+make -j2 all_unity
