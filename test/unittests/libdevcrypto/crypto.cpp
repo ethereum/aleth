@@ -748,6 +748,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 
 BOOST_AUTO_TEST_CASE(recoverVgt3)
 {
+	using namespace CryptoPP;
 	// base secret
 	Secret secret(sha3("privacy"));
 
