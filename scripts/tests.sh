@@ -42,8 +42,8 @@ if [[ "$TESTS" == "On" ]]; then
     $BUILD_ROOT/test/testeth -t StateTestsGeneral/stExample -- --filltests --testpath $BUILD_ROOT/../test/jsontests && \
     $BUILD_ROOT/test/testeth -t 'TransitionTests/bcEIP158ToByzantium' -- --filltests --singletest  ByzantiumTransition --testpath $BUILD_ROOT/../test/jsontests && \
     cd $BUILD_ROOT/../test/jsontests && \
-    echo -e "$(find GeneralStateTests/stExample -name '*.json')" | node JSONSchema/validate.js JSONSchema/st-schema.js && \
-    echo -e "BlockchainTests/TransitionTests/bcEIP158ToByzantium/ByzantiumTransition.json" | node JSONSchema/validate.js JSONSchema/bc-schema.js
+    echo -e "$(find GeneralStateTests/stExample -name '*.json')" | node JSONSchema/validate.js JSONSchema/st-schema.json && \
+    echo -e "BlockchainTests/TransitionTests/bcEIP158ToByzantium/ByzantiumTransition.json" | node JSONSchema/validate.js JSONSchema/bc-schema.json
 
     # Run the tests for the JIT (but only for Ubuntu, not macOS)
     # The whole automation process is too slow for macOS, and we don't have
