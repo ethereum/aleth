@@ -24,3 +24,4 @@ else()
 endif()
 
 cotire(devcore)
+add_dependencies(devcore_unity BuildInfo.h)
