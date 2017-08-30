@@ -922,7 +922,9 @@ function (cotire_add_includes_to_cmd _cmdVar _language _includesVar _systemInclu
 					list (FIND ${_systemIncludesVar} "${_include}" _index)
 				endif()
 				if (_index GREATER -1)
-					list (APPEND ${_cmdVar} "${CMAKE_INCLUDE_SYSTEM_FLAG_${_language}}${CMAKE_INCLUDE_FLAG_SEP_${_language}}${_include}")
+					# Pass -isystem as a separated flag, not as "-isystem <include_dir>".
+					string(STRIP "${CMAKE_INCLUDE_SYSTEM_FLAG_${_language}}" _include_system_flag)
+					list (APPEND ${_cmdVar} "${_include_system_flag}" "${_include}")
 				else()
 					list (APPEND ${_cmdVar} "${CMAKE_INCLUDE_FLAG_${_language}}${CMAKE_INCLUDE_FLAG_SEP_${_language}}${_include}")
 				endif()
