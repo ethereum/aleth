@@ -114,22 +114,26 @@ endif()
 
 configure_project()
 
-add_subdirectory(eth)
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
-add_subdirectory(libethash)
-add_subdirectory(libethashseal)
-add_subdirectory(libethcore)
-add_subdirectory(libethereum)
-add_subdirectory(libevm)
 add_subdirectory(libp2p)
-add_subdirectory(libweb3jsonrpc)
-add_subdirectory(libwebthree)
+
+add_subdirectory(libethash)
+
+add_subdirectory(libethcore)
+add_subdirectory(libevm)
+add_subdirectory(libethereum)
+add_subdirectory(libethashseal)
+
 add_subdirectory(libwhisper)
+add_subdirectory(libwebthree)
+add_subdirectory(libweb3jsonrpc)
 
 if (EVMJIT)
     add_subdirectory(evmjit)
 endif()
+
+add_subdirectory(eth)
 
 if (TOOLS)
     add_subdirectory(ethkey)
