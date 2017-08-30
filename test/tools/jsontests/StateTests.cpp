@@ -141,15 +141,13 @@ public:
 
 		if (test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
-		test::TestOutputHelper::initTest(fileCount);
+		test::TestOutputHelper testOutputHelper(fileCount);
 
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 			test::executeTests(file.filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
 		}
-
-		test::TestOutputHelper::finishTest();
 	}
 };
 

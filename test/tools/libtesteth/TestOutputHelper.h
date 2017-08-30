@@ -31,7 +31,6 @@ class TestOutputHelper
 {
 public:
 	TestOutputHelper(size_t _maxTests = 1) { TestOutputHelper::initTest(_maxTests); }
-	static void initTest(size_t _maxTests = 1);
 	static bool passTest(std::string const& _testName);
 	static void setMaxTests(int _count) { m_maxTests = _count; }
 	static void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
@@ -39,10 +38,11 @@ public:
 	static std::string const& testName() { return m_currentTestName; }
 	static std::string const& caseName() { return m_currentTestCaseName; }
 	static std::string const& testFileName() { return m_currentTestFileName; }
-	static void finishTest();
 	static void printTestExecStats();
 	~TestOutputHelper() { TestOutputHelper::finishTest(); }
 private:
+	static void initTest(size_t _maxTests = 1);
+	static void finishTest();
 	static Timer m_timer;
 	static size_t m_currTest;
 	static size_t m_maxTests;

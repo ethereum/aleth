@@ -49,7 +49,7 @@ int createRandomTest()
 	}
 	else
 	{
-		TestOutputHelper::initTest();
+		TestOutputHelper testOutputHelper;
 		return fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
 	}
 }
@@ -67,7 +67,7 @@ int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
 		v = _doTests(v, true); //filltests
-		_doTests(v, false);	//checktest
+		_doTests(v, false); //checktest
 	}
 	catch (dev::Exception const& _e)
 	{

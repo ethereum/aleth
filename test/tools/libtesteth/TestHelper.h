@@ -118,7 +118,10 @@ int createRandomTest();	//returns 0 if succeed, 1 if there was an error;
 //When _fillin is true, _input is supposed to contain a filler.  Otherwise, _input is also a filled test.
 json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin);
 json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin);
+// Call doVMTests() if you have neither called TestOutputHelper::initTest() nor created a TestOutputHelper object.
 json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin);
+// Call doVMTestsNoLog() if you have called TestOutputHelper::initTest() or created a TestOutputHelper object (in special cases like vmRandom).
+json_spirit::mValue doVMTestsNoLog(json_spirit::mValue const& _input, bool _fillin);
 json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _input, bool _fillin);
 json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin);
 json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin);

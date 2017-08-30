@@ -106,7 +106,7 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 	int testN = 0;
 	ostringstream finalTest;
 	finalTest << "{\n";
-	dev::test::TestOutputHelper::initTest(900);
+	dev::test::TestOutputHelper testOutputHelper(900);
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
@@ -158,7 +158,7 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 	string s = contentsString(_testFileFullName);
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of '" << _testFileFullName << "' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
-	dev::test::TestOutputHelper::initTest(v.get_obj().size());
+	dev::test::TestOutputHelper testOutputHelper(v.get_obj().size());
 
 	for (auto& i: v.get_obj())
 	{
@@ -186,7 +186,6 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 		//Manual formula test
 		checkCalculatedDifficulty(current, parent, _n, _sealEngine.chainParams(), "(" + i.first + ")");
 	}
-	dev::test::TestOutputHelper::finishTest();
 }
 
 BOOST_AUTO_TEST_SUITE(DifficultyTests)
