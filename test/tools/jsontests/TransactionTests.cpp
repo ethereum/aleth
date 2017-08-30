@@ -26,6 +26,7 @@
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
+#include <string>
 
 using namespace std;
 using namespace json_spirit;
@@ -37,7 +38,6 @@ namespace dev {  namespace test {
 json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin)
 {
 	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
-	TestOutputHelper::initTest(v.get_obj().size());
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
 	for (auto& i: v.get_obj())
 	{
@@ -159,115 +159,74 @@ json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
 		}
 	}//for
-	dev::test::TestOutputHelper::finishTest();
 	return v;
 }//doTransactionTests
 
 } }// Namespace Close
 
-
-BOOST_AUTO_TEST_SUITE(TransactionTests)
-
-
-BOOST_AUTO_TEST_CASE(ttTransactionTestZeroSig)
+class transactiontestfixture
 {
-	dev::test::executeTests("ttTransactionTestZeroSig", "/TransactionTests/Metropolis", "/TransactionTestsFiller/Metropolis", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttTransactionTestMetropolis)
-{
-	dev::test::executeTests("ttTransactionTest", "/TransactionTests/Metropolis", "/TransactionTestsFiller/Metropolis", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttMetropolisTests)
-{
-	dev::test::executeTests("ttMetropolisTest", "/TransactionTests/Metropolis", "/TransactionTestsFiller/Metropolis", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTests)
-{
-	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/EIP155", "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VCheck)
-{
-	dev::test::executeTests("ttTransactionTestVRule", "/TransactionTests/EIP155", "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttTransactionTestEip155)
-{
-	dev::test::executeTests("ttTransactionTest", "/TransactionTests/EIP155", "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTestsHomestead)
-{
-	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/Homestead", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttTransactionTestHomestead)
-{
-	dev::test::executeTests("ttTransactionTest", "/TransactionTests/Homestead", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttTransactionTest)
-{
-	dev::test::executeTests("ttTransactionTest", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
-}
-
-BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
-{
-	std::string fillersPath =  dev::test::getTestPath() + "/src/TransactionTestsFiller/Homestead";
-	if (!dev::test::Options::get().filltests)
-		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
-	else
+public:
+	transactiontestfixture()
 	{
-		dev::test::TestOutputHelper::initTest();
-		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/Homestead/ttWrongRLPTransaction.json");
-	}
-}
+		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 
-BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
-{
-	std::string fillersPath = dev::test::getTestPath() + "/src/TransactionTestsFiller";
-	if (!dev::test::Options::get().filltests)
-		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
-	else
+		if ((casename == "ttWrongRLPFrontier" || casename == "ttWrongRLPHomestead") && test::Options::get().filltests)
+			copyAllFilesFromFolder(casename);
+		else
+			fillAllFilesInFolder(casename);
+	}
+
+	void fillAllFilesInFolder(string const& _folder)
 	{
-		dev::test::TestOutputHelper::initTest();
-		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/ttWrongRLPTransaction.json");
-	}
-}
+		using path = boost::filesystem::path;
+		path const fillersPath = path(test::getTestPath()) / "src/TransactionTestsFiller" / path(_folder);
+		string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 
-BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
-{
-	if (test::Options::get().all)
+		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
+		size_t fileCount = files.size();
+		if (test::Options::get().filltests)
+			fileCount *= 2; //tests are checked when filled and after they been filled
+
+		auto testOutput = dev::test::TestOutputHelper(fileCount);
+		for (auto const& file: files)
+		{
+			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
+			test::executeTests(file.filename().string(), "/TransactionTests/"+_folder, "/TransactionTestsFiller/"+_folder, dev::test::doTransactionTests);
+		}
+	}
+
+	void copyAllFilesFromFolder(string const& _folder)
 	{
-		auto start = chrono::steady_clock::now();
+		using path = boost::filesystem::path;
+		path const fillersPath = path(dev::test::getTestPath()) / path("src/TransactionTestsFiller") / path(_folder);
+		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string());
 
-		dev::test::executeTests("tt10mbDataField", "/TransactionTests/Homestead", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
-
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-		cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		for (auto const& file : files)
+		{
+			path const copytoFile = path(dev::test::getTestPath()) / path("TransactionTests") / path(_folder) / path(file.filename().string());
+			path const destFile = fillersPath / path(file.filename().string());
+			clog << "Copying " << destFile.string() << "\n";
+			clog << " TO " << copytoFile.string() << "\n";
+			auto testOutput = dev::test::TestOutputHelper();
+			dev::test::copyFile(destFile.string(), copytoFile.string());
+			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copytoFile.string()), "Error when copying the test file!");
+		}
 	}
-	else
-		cnote << "tt10mbDataFieldHomestead skipped because --all option was not specified.\n";
-}
+};
 
-BOOST_AUTO_TEST_CASE(tt10mbDataField)
-{
-	if (test::Options::get().all)
-	{
-		auto start = chrono::steady_clock::now();
+BOOST_FIXTURE_TEST_SUITE(TransactionTests, transactiontestfixture)
 
-		dev::test::executeTests("tt10mbDataField", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
-
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-		cnote << "test duration: " << duration.count() << " milliseconds.\n";
-	}
-	else
-		cnote << "tt10mbDataField skipped because --all option was not specified.";
-}
+BOOST_AUTO_TEST_CASE(ttConstantinople){}
+BOOST_AUTO_TEST_CASE(ttEip155VitaliksEip158){}
+BOOST_AUTO_TEST_CASE(ttEip155VitaliksHomesead){}
+BOOST_AUTO_TEST_CASE(ttEip158){}
+BOOST_AUTO_TEST_CASE(ttFrontier){}
+BOOST_AUTO_TEST_CASE(ttHomestead){}
+BOOST_AUTO_TEST_CASE(ttSpecConstantinople){}
+BOOST_AUTO_TEST_CASE(ttVRuleEip158){}
+BOOST_AUTO_TEST_CASE(ttWrongRLPFrontier){}
+BOOST_AUTO_TEST_CASE(ttWrongRLPHomestead){}
+BOOST_AUTO_TEST_CASE(ttZeroSigConstantinople){}
 
 BOOST_AUTO_TEST_SUITE_END()
