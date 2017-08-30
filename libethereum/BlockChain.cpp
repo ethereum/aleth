@@ -723,10 +723,10 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 	// All ok - insert into DB
 	bytes const receipts = br.rlp();
-	return insertBlockAndExtras(_block, ref(receipts), pd.number + 1, td, performanceLogger);
+	return insertBlockAndExtras(_block, ref(receipts), td, performanceLogger);
 }
 
-ImportRoute BlockChain::insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _number, u256 const& _totalDifficulty)
+ImportRoute BlockChain::insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty)
 {
 	VerifiedBlockRef const block = verifyBlock(&_block, m_onBad, ImportRequirements::OutOfOrderChecks);
 
@@ -736,7 +736,7 @@ ImportRoute BlockChain::insertWithoutParent(bytes const& _block, bytesConstRef _
 	checkBlockTimestamp(block.info);
 
 	ImportPerformanceLogger performanceLogger;
-	return insertBlockAndExtras(block, _receipts, _number, _totalDifficulty, performanceLogger);
+	return insertBlockAndExtras(block, _receipts, _totalDifficulty, performanceLogger);
 }
 
 void BlockChain::checkBlockIsNew(VerifiedBlockRef const& _block) const
@@ -759,7 +759,7 @@ void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
 	}
 }
 
-ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _number, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger)
+ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger)
 {
 	ldb::WriteBatch blocksBatch;
 	ldb::WriteBatch extrasBatch;
@@ -783,7 +783,8 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 		DEV_READ_GUARDED(x_details)
 			extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
-		extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(BlockDetails((unsigned)_number, _totalDifficulty, _block.info.parentHash(), {}).rlp()));
+		BlockDetails const details((unsigned)_block.info.number(), _totalDifficulty, _block.info.parentHash(), {});
+		extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(details.rlp()));
 
 		BlockLogBlooms blb;
 		for (auto i: RLP(_receipts))

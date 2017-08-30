@@ -141,7 +141,7 @@ public:
 	void insert(bytes const& _block, bytesConstRef _receipts, bool _mustBeNew = true);
 	void insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew = true);
 	/// Insert that doesn't require parent to be imported, useful when we don't have the full blockchain (like restoring from partial snapshot).
-	ImportRoute insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _number, u256 const& _totalDifficulty);
+	ImportRoute insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty);
 
 	/// Returns true if the given block is known (though not necessarily a part of the canon chain).
 	bool isKnown(h256 const& _hash, bool _isCurrent = true) const;
@@ -331,7 +331,7 @@ private:
 	/// Finalise everything and close the database.
 	void close();
 
-	ImportRoute insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _number, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger);
+	ImportRoute insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger);
 	void checkBlockIsNew(VerifiedBlockRef const& _block) const;
 	void checkBlockTimestamp(BlockHeader const& _header) const;
 
