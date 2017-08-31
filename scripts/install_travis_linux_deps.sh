@@ -1,5 +1,5 @@
 set -e
-sudo npm install -g jsonschema
+npm install -g jsonschema
 # install lllc
 git clone --recursive https://github.com/ethereum/solidity.git
 cd solidity
