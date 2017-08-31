@@ -21,7 +21,6 @@
  */
 
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/Block.h>
