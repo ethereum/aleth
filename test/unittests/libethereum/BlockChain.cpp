@@ -32,7 +32,7 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace utf = boost::unit_test;
 
-BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(BlockChainFrontierSuite, FrontierNoProofTestFixture)
 
 BOOST_AUTO_TEST_CASE(output)
 {
@@ -83,7 +83,6 @@ BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
 {
 	try
 	{
-		dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 		TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 		TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1
 		TestBlock block;
@@ -110,7 +109,6 @@ BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)
 {
 	try
 	{
-		dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 		TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 		TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1
 		TestBlock block;
@@ -155,7 +153,6 @@ See https://github.com/ethereum/cpp-ethereum/issues/3256.
 {
 	try
 	{
-		dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 		TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 		TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1
 		TestBlock block;
@@ -211,7 +208,6 @@ See https://github.com/ethereum/cpp-ethereum/issues/3059.
 {
 	try
 	{
-		dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 		TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 		TestBlockChain bc2(TestBlockChain::defaultGenesisBlock());
 
@@ -259,12 +255,35 @@ See https://github.com/ethereum/cpp-ethereum/issues/3059.
 }
 */
 
+BOOST_AUTO_TEST_CASE(insertWithoutParent)
+{
+	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
+	TestTransaction tr = TestTransaction::defaultTransaction();
+	TestBlock block;
+	block.mine(bc);
+
+	BlockHeader header = block.blockHeader();
+	header.setNumber(10);
+	block.setBlockHeader(header);
+
+	BlockChain& bcRef = bc.interfaceUnsafe();
+
+	bcRef.insertWithoutParent(block.bytes(), block.receipts(), 0x040000);
+	BOOST_CHECK_EQUAL(bcRef.number(), 10);
+
+	bcRef.setChainStartBlockNumber(10);
+	BOOST_REQUIRE_EQUAL(bcRef.chainStartBlockNumber(), 10);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(BlockChainMainNetworkSuite, MainNetworkNoProofTestFixture)
 
 BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 {
 	try
 	{
-		dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::MainNetworkTest;
 		TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 		TestBlock uncleBlock;
@@ -490,76 +509,42 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 	}
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelper)
+
 BOOST_AUTO_TEST_CASE(updateStats)
 {
-	try
-	{
-		TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
-		BlockChain& bcRef = bc.interfaceUnsafe();
-
-		BlockChain::Statistics stat = bcRef.usage();
-		//Absolutely random values here!
-		//BOOST_REQUIRE(stat.memBlockHashes == 0);
-		//BOOST_REQUIRE(stat.memBlocks == 1); //incorrect value here
-		//BOOST_REQUIRE(stat.memDetails == 0);
-		//BOOST_REQUIRE(stat.memLogBlooms == 0);
-		//BOOST_REQUIRE(stat.memReceipts == 0);
-		//BOOST_REQUIRE(stat.memTotal() == 0);
-		//BOOST_REQUIRE(stat.memTransactionAddresses == 0); //incorrect value here
-
-		TestTransaction tr = TestTransaction::defaultTransaction();
-		TestBlock block;
-		block.addTransaction(tr);
-		block.mine(bc);
-		bc.addBlock(block);
-
-		stat = bcRef.usage(true);
-		BOOST_REQUIRE(stat.memBlockHashes == 0);
-		BOOST_REQUIRE(stat.memBlocks == 675);
-		BOOST_REQUIRE(stat.memDetails == 138);
-		BOOST_REQUIRE(stat.memLogBlooms == 8422);
-		BOOST_REQUIRE(stat.memReceipts == 0);
-		BOOST_REQUIRE(stat.memTotal() == 9235);
-		BOOST_REQUIRE(stat.memTransactionAddresses == 0);
-
-		//memchache size 33554432 - 3500 blocks before cache to be cleared
-		bcRef.garbageCollect(true);
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed test with Exception: " << _e.what());
-	}
-	catch(...)
-	{
-		BOOST_ERROR("Exception thrown when trying to mine or import a block!");
-	}
-}
-
-BOOST_AUTO_TEST_CASE(insertWithoutParent)
-{
-	NetworkSelector networkSelector(Network::FrontierNoProofTest);
-
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
-	TestTransaction tr = TestTransaction::defaultTransaction();
-	TestBlock block;
-	block.mine(bc);
-
-	BlockHeader header = block.blockHeader();
-	header.setNumber(10);
-	block.setBlockHeader(header);
-
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
-	bcRef.insertWithoutParent(block.bytes(), block.receipts(), 0x040000);
-	BOOST_CHECK_EQUAL(bcRef.number(), 10);
+	BlockChain::Statistics stat = bcRef.usage();
+	//Absolutely random values here!
+	//BOOST_REQUIRE(stat.memBlockHashes == 0);
+	//BOOST_REQUIRE(stat.memBlocks == 1); //incorrect value here
+	//BOOST_REQUIRE(stat.memDetails == 0);
+	//BOOST_REQUIRE(stat.memLogBlooms == 0);
+	//BOOST_REQUIRE(stat.memReceipts == 0);
+	//BOOST_REQUIRE(stat.memTotal() == 0);
+	//BOOST_REQUIRE(stat.memTransactionAddresses == 0); //incorrect value here
 
-	bcRef.setChainStartBlockNumber(10);
-	BOOST_REQUIRE_EQUAL(bcRef.chainStartBlockNumber(), 10);
+	TestTransaction tr = TestTransaction::defaultTransaction();
+	TestBlock block;
+	block.addTransaction(tr);
+	block.mine(bc);
+	bc.addBlock(block);
+
+	stat = bcRef.usage(true);
+	BOOST_REQUIRE_EQUAL(stat.memBlockHashes, 0);
+	BOOST_REQUIRE_EQUAL(stat.memBlocks, 675);
+	BOOST_REQUIRE_EQUAL(stat.memDetails, 138);
+	BOOST_REQUIRE_EQUAL(stat.memLogBlooms, 8422);
+	BOOST_REQUIRE_EQUAL(stat.memReceipts, 0);
+	BOOST_REQUIRE_EQUAL(stat.memTotal(), 9235);
+	BOOST_REQUIRE_EQUAL(stat.memTransactionAddresses, 0);
+
+	//memchache size 33554432 - 3500 blocks before cache to be cleared
+	bcRef.garbageCollect(true);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
