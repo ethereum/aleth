@@ -8,6 +8,8 @@ namespace dev
 namespace eth
 {
 class Client;
+
+StandardTrace::DebugOptions debugOptions(Json::Value const& _json);
 }
 
 namespace rpc

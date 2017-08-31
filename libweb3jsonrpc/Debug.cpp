@@ -15,7 +15,7 @@ Debug::Debug(eth::Client const& _eth):
 	m_eth(_eth)
 {}
 
-StandardTrace::DebugOptions debugOptions(Json::Value const& _json)
+StandardTrace::DebugOptions dev::eth::debugOptions(Json::Value const& _json)
 {
 	StandardTrace::DebugOptions op;
 	if (!_json.isObject() || _json.empty())
