@@ -239,12 +239,12 @@ void replaceLLLinState(json_spirit::mObject& _o)
 	}
 }
 
-std::vector<boost::filesystem::path> getJsonFiles(std::string const& _dirPath, std::string const& _particularFile)
+std::vector<boost::filesystem::path> getJsonFiles(boost::filesystem::path const& _dirPath, std::string const& _particularFile)
 {
 	vector<boost::filesystem::path> jsonFiles;
 	if (!_particularFile.empty())
 	{
-		boost::filesystem::path file = boost::filesystem::path(_dirPath) / (_particularFile + ".json");
+		boost::filesystem::path file = _dirPath / (_particularFile + ".json");
 		if (boost::filesystem::exists(file))
 			jsonFiles.push_back(file);
 	}
