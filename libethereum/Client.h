@@ -40,6 +40,8 @@
 #include "CommonNet.h"
 #include "ClientBase.h"
 
+#include <boost/filesystem/path.hpp>
+
 namespace dev
 {
 namespace eth
@@ -79,7 +81,7 @@ public:
 		int _networkID,
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
-		std::string const& _dbPath = std::string(),
+		boost::filesystem::path const& _dbPath = boost::filesystem::path(),
 		WithExisting _forceAction = WithExisting::Trust,
 		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
@@ -194,7 +196,7 @@ public:
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.
-	void init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId);
+	void init(p2p::Host* _extNet, boost::filesystem::path const& _dbPath, WithExisting _forceAction, u256 _networkId);
 
 	/// InterfaceStub methods
 	BlockChain& bc() override { return m_bc; }

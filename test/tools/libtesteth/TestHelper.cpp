@@ -28,12 +28,14 @@
 #include <stdio.h>
 #endif
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/filesystem/path.hpp>
 #include <libethereum/Client.h>
 #include <test/tools/libtesteth/Stats.h>
 #include <string>
 
 using namespace std;
 using namespace dev::eth;
+namespace fs = boost::filesystem;
 
 namespace dev
 {
@@ -402,10 +404,9 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
+void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
 {
-	string testPath = getTestPath() + _testPathAppendix;
-	string testFillerPath = getTestPath() + "/src" + _fillerPathAppendix;
+	fs::path const testPath = getTestPath() / _testPathAppendix;
 
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
@@ -424,24 +425,25 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 		json_spirit::mValue v;
 		boost::filesystem::path p(__FILE__);
 
-		string nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
-		string testfilename = testFillerPath + "/" + name + nameEnding;
-		string 	s = asString(dev::contents(testfilename));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testfilename + " is empty.");
+		string const nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
+		fs::path const testfileUnderTestPath = fs::path ("src") / _fillerPathAppendix / fs::path(name + nameEnding);
+		fs::path const testfilename = getTestPath() / testfileUnderTestPath;
+		string s = asString(dev::contents(testfilename));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testfilename.string() + " is empty.");
 
 		json_spirit::read_string(s, v);
 		removeComments(v);
 		json_spirit::mValue output = doTests(v, true);
 		addClientInfo(output, testfilename);
-		writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(output, true)));
+		writeFile(testPath / fs::path(name + ".json"), asBytes(json_spirit::write_string(output, true)));
 	}
 
 	if ((Options::get().singleTest && Options::get().singleTestName == name) || !Options::get().singleTest)
 		cnote << "TEST " << name << ":";
 
 	json_spirit::mValue v;
-	string s = asString(dev::contents(testPath + "/" + name + ".json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+	string s = asString(dev::contents(testPath / fs::path(name + ".json")));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << (testPath / fs::path(name + ".json")).string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 	json_spirit::read_string(s, v);
 	Listener::notifySuiteStarted(name);
 	doTests(v, false);
@@ -482,7 +484,7 @@ string prepareVersionString()
 	return version;
 }
 
-void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
+void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
 {
 	for (auto& i: _v.get_obj())
 	{
@@ -497,20 +499,17 @@ void addClientInfo(json_spirit::mValue& _v, std::string const& _testSource)
 				comment = existingInfo["comment"].get_str();
 		}
 
-		//prepare the relative src path
-		string source = _testSource.substr(_testSource.rfind("/src/"), _testSource.length());
-
 		clientinfo["filledwith"] = prepareVersionString();
-		clientinfo["source"] = source;
+		clientinfo["source"] = _testSource.string();
 		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
 	}
 }
 
-void copyFile(std::string const& _source, std::string const& _destination)
+void copyFile(fs::path const& _source, fs::path const& _destination)
 {
-	std::ifstream src(_source, std::ios::binary);
-	std::ofstream dst(_destination, std::ios::binary);
+	fs::ifstream src(_source, std::ios::binary);
+	fs::ofstream dst(_destination, std::ios::binary);
 	dst << src.rdbuf();
 }
 

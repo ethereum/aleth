@@ -40,13 +40,13 @@ BOOST_FIXTURE_TEST_SUITE(KeyStore, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {
-	string testPath = test::getTestPath();
+	fs::path testPath = test::getTestPath();
 
-	testPath += "/KeyStoreTests";
+	testPath /= fs::path("KeyStoreTests");
 
 	cnote << "Testing Key Store...";
 	js::mValue v;
-	string s = contentsString(testPath + "/basic_tests.json");
+	string const s = contentsString(testPath / fs::path("basic_tests.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'KeyStoreTests/basic_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())

@@ -20,15 +20,17 @@
  * Keymanager test functions.
  */
 
-#include <boost/test/unit_test.hpp>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <libdevcore/TransientDirectory.h>
 #include <libethcore/KeyManager.h>
+#include <boost/test/unit_test.hpp>
+#include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
+namespace fs = boost::filesystem;
 
 BOOST_FIXTURE_TEST_SUITE(KeyManagerTests, TestOutputHelper)
 
@@ -52,7 +54,7 @@ BOOST_AUTO_TEST_CASE(KeyManagerConstructor)
 {
 	KeyManager km;
 	BOOST_CHECK_EQUAL(km.keysFile(), km.defaultPath());
-	BOOST_CHECK_EQUAL(km.defaultPath(), getDataDir("ethereum") + "/keys.info");
+	BOOST_CHECK_EQUAL(km.defaultPath(), getDataDir("ethereum") / fs::path("keys.info"));
 	BOOST_CHECK(km.store().keys() == SecretStore(SecretStore::defaultPath()).keys());
 	for (auto a: km.accounts())
 		km.kill(a);

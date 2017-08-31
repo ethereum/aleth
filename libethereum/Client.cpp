@@ -35,6 +35,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
+namespace fs = boost::filesystem;
 
 static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
@@ -62,7 +63,7 @@ Client::Client(
 	int _networkID,
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
-	std::string const& _dbPath,
+	fs::path const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _l
 ):
@@ -83,7 +84,7 @@ Client::~Client()
 	terminate();
 }
 
-void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId)
+void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _forceAction, u256 _networkId)
 {
 	DEV_TIMED_FUNCTION_ABOVE(500);
 

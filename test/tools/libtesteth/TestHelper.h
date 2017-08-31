@@ -70,7 +70,7 @@ protected:
 };
 
 // helping functions
-std::vector<boost::filesystem::path> getJsonFiles(std::string const& _dirPath, std::string const& _particularFile = {});
+std::vector<boost::filesystem::path> getJsonFiles(boost::filesystem::path const& _dirPath, std::string const& _particularFile = {});
 std::string netIdToString(eth::Network _netId);
 eth::Network stringToNetId(std::string const& _netname);
 bool isDisabledNetwork(eth::Network _net);
@@ -84,7 +84,7 @@ bytes importCode(json_spirit::mObject const& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
 void checkHexHasEvenLength(std::string const&);
-void copyFile(std::string const& _source, std::string const& _destination);
+void copyFile(boost::filesystem::path const& _source, boost::filesystem::path const& _destination);
 eth::LogEntries importLog(json_spirit::mArray const& _o);
 std::string exportLog(eth::LogEntries const& _logs);
 void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o);
@@ -105,7 +105,7 @@ dev::eth::BlockHeader constructHeader(
 	u256 const& _timestamp,
 	bytes const& _extraData);
 void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
-void executeTests(const std::string& _name, const std::string& _testPathAppendix, const std::string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix = true);
+void executeTests(const std::string& _name, boost::filesystem::path const& _testPathAppendix, boost::filesystem::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix = true);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::State const& _statePost, eth::ChangeLog const& _changeLog);
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
@@ -123,7 +123,7 @@ json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _input, bool _f
 json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin);
 json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin);
 void doRlpTests(json_spirit::mValue const& _input);
-void addClientInfo(json_spirit::mValue& v, std::string const& _testSource);
+void addClientInfo(json_spirit::mValue& v, boost::filesystem::path const& _testSource);
 void removeComments(json_spirit::mValue& _obj);
 
 /// Allows observing test execution process.

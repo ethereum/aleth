@@ -32,7 +32,7 @@ namespace fs = boost::filesystem;
 WhisperDB::WhisperDB(string const& _type)
 {
 	m_readOptions.verify_checksums = true;
-	string path = dev::getDataDir("shh");
+	fs::path path = dev::getDataDir("shh");
 	fs::create_directories(path);
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
 	path += "/" + _type;
@@ -40,7 +40,7 @@ WhisperDB::WhisperDB(string const& _type)
 	op.create_if_missing = true;
 	op.max_open_files = 256;
 	ldb::DB* p = nullptr;
-	ldb::Status status = ldb::DB::Open(op, path, &p);
+	ldb::Status status = ldb::DB::Open(op, path.string(), &p);
 	m_db.reset(p);
 	if (!status.ok())
 		BOOST_THROW_EXCEPTION(FailedToOpenLevelDB(status.ToString()));

@@ -25,6 +25,8 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 
+namespace fs = boost::filesystem;
+
 class bcTestFixture {
 	public:
 	bcTestFixture()
@@ -32,7 +34,7 @@ class bcTestFixture {
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "bcForgedTest")
 		{
-			std::string fillersPath =  dev::test::getTestPath() + "/src/BlockchainTestsFiller/bcForgedTest";
+			fs::path fillersPath =  dev::test::getTestPath() / fs::path("src/BlockchainTestsFiller/bcForgedTest");
 			std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath);
 
 			for (auto const& file : files)
@@ -45,10 +47,10 @@ class bcTestFixture {
 				else
 				{
 					dev::test::TestOutputHelper testOutputHelper;
-					string copyto = dev::test::getTestPath() + "/BlockchainTests/bcForgedTest/" + file.filename().string();
-					clog << "Copying " + fillersPath + "/" + file.filename().string();
-					clog << " TO " << copyto;
-					dev::test::copyFile(fillersPath + "/" + file.filename().string(), dev::test::getTestPath() + "/BlockchainTests/bcForgedTest/" + file.filename().string());
+					fs::path const copyto = dev::test::getTestPath() / fs::path("BlockchainTests/bcForgedTest") / file.filename();
+					clog << "Copying " << (fillersPath / file.filename()).string();
+					clog << " TO " << copyto.string();
+					dev::test::copyFile(fillersPath / file, dev::test::getTestPath() / fs::path("BlockchainTests/bcForgedTest") / file);
 					BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copyto), "Error when copying the test file!");
 				}
 			}
@@ -67,7 +69,7 @@ class bcTestFixture {
 
 	void fillAllFilesInFolder(string const& _folder)
 	{
-		std::string fillersPath = test::getTestPath() + "/src/BlockchainTestsFiller/" + _folder;
+		fs::path const fillersPath = test::getTestPath() / fs::path("src/BlockchainTestsFiller") / fs::path(_folder);
 
 		string filter;
 		if (test::Options::get().filltests)
@@ -99,7 +101,7 @@ class bcTransitionFixture {
 
 	void fillAllFilesInFolder(string const& _subfolder, string const& _folder)
 	{
-		std::string fillersPath = test::getTestPath() + "/src/BlockchainTestsFiller/" + _subfolder + _folder;
+		fs::path const fillersPath = test::getTestPath() / fs::path("src/BlockchainTestsFiller") / fs::path(_subfolder + _folder); // XXX maybe _subfolder and _folder each can be fs::path
 
 		string filter;
 		if (test::Options::get().filltests)
@@ -138,16 +140,16 @@ class bcGeneralTestsFixture
 		runAllFilesInFolder("GeneralStateTests/" + casename);
 	}
 
-	void runAllFilesInFolder(string const& _folder)
+	void runAllFilesInFolder(fs::path const& _folder)
 	{
-		std::vector<boost::filesystem::path> files = test::getJsonFiles(test::getTestPath() + "/BlockchainTests/" +_folder);
+		std::vector<boost::filesystem::path> files = test::getJsonFiles(test::getTestPath() / fs::path("BlockchainTests") / _folder);
 		int testcount = files.size() * test::getNetworks().size();  //each file contains a test per network fork
 
 		test::TestOutputHelper testOutputHelper(testcount);
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-			test::executeTests(file.filename().string(), "/BlockchainTests/" + _folder, "/BlockchainTests/" +_folder, dev::test::doBlockchainTestNoLog);
+			test::executeTests(file.filename().string(), fs::path("BlockchainTests") / _folder, fs::path("BlockchainTests") / _folder, dev::test::doBlockchainTestNoLog);
 		}
 	}
 };

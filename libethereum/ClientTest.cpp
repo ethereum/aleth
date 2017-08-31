@@ -21,11 +21,13 @@
 
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
+#include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
+namespace fs = boost::filesystem;
 
 ClientTest& dev::eth::asClientTest(Interface& _c)
 {
@@ -42,7 +44,7 @@ ClientTest::ClientTest(
 	int _networkID,
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
-	std::string const& _dbPath,
+	fs::path const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _limits
 ):

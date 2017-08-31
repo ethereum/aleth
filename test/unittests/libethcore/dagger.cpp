@@ -25,14 +25,16 @@
 #include <libdevcore/CommonIO.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/EthashAux.h>
-#include <boost/test/unit_test.hpp>
 #include <test/tools/libtesteth/TestHelper.h>
+#include <boost/test/unit_test.hpp>
+#include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
+namespace fs = boost::filesystem;
 namespace js = json_spirit;
 
 using dev::operator <<;
@@ -41,13 +43,11 @@ BOOST_FIXTURE_TEST_SUITE(DashimotoTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {
-	string testPath = test::getTestPath();
-
-	testPath += "/PoWTests";
+	fs::path const testPath = test::getTestPath() / fs::path("PoWTests");;
 
 	cnote << "Testing Proof of Work...";
 	js::mValue v;
-	string s = contentsString(testPath + "/ethash_tests.json");
+	string const s = contentsString(testPath / fs::path("ethash_tests.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'ethash_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())

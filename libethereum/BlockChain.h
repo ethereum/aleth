@@ -41,6 +41,7 @@
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
+#include <boost/filesystem/path.hpp>
 
 namespace std
 {
@@ -99,7 +100,7 @@ using ProgressCallback = std::function<void(unsigned, unsigned)>;
 class VersionChecker
 {
 public:
-	VersionChecker(std::string const& _dbPath, h256 const& _genesisHash);
+	VersionChecker(boost::filesystem::path const& _dbPath, h256 const& _genesisHash);
 };
 
 /**
@@ -111,7 +112,7 @@ class BlockChain
 public:
 	/// Doesn't open the database - if you want it open it's up to you to subclass this and open it
 	/// in the constructor there.
-	BlockChain(ChainParams const& _p, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
+	BlockChain(ChainParams const& _p, boost::filesystem::path const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
 	~BlockChain();
 
 	/// Reopen everything.
@@ -242,7 +243,7 @@ public:
 
 	/// Run through database and verify all blocks by reevaluating.
 	/// Will call _progress with the progress in this operation first param done, second total.
-	void rebuild(std::string const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>());
+	void rebuild(boost::filesystem::path const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>());
 
 	/// Alter the head of the chain to some prior block along it.
 	void rewind(unsigned _newHead);
@@ -325,9 +326,9 @@ private:
 	/// Initialise everything and ready for openning the database.
 	void init(ChainParams const& _p);
 	/// Open the database.
-	unsigned open(std::string const& _path, WithExisting _we);
+	unsigned open(boost::filesystem::path const& _path, WithExisting _we);
 	/// Open the database, rebuilding if necessary.
-	void open(std::string const& _path, WithExisting _we, ProgressCallback const& _pc);
+	void open(boost::filesystem::path const& _path, WithExisting _we, ProgressCallback const& _pc);
 	/// Finalise everything and close the database.
 	void close();
 
@@ -420,7 +421,7 @@ private:
 	std::function<void(Exception&)> m_onBad;									///< Called if we have a block that doesn't verify.
 	std::function<void(BlockHeader const&)> m_onBlockImport;										///< Called if we have imported a new block into the db
 
-	std::string m_dbPath;
+	boost::filesystem::path m_dbPath;
 
 	friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
 };

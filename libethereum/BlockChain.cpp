@@ -195,7 +195,7 @@ static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 
 #endif
 
-BlockChain::BlockChain(ChainParams const& _p, std::string const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
+BlockChain::BlockChain(ChainParams const& _p, fs::path const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
 	m_lastBlockHashes(new LastBlockHashes(*this)),
 	m_dbPath(_dbPath)
 {
@@ -235,43 +235,43 @@ void BlockChain::init(ChainParams const& _p)
 	genesis();
 }
 
-unsigned BlockChain::open(std::string const& _path, WithExisting _we)
+unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 {
-	string path = _path.empty() ? Defaults::get()->m_dbPath : _path;
-	string chainPath = path + "/" + toHex(m_genesisHash.ref().cropped(0, 4));
-	string extrasPath = chainPath + "/" + toString(c_databaseVersion);
+	fs::path path = _path.empty() ? Defaults::get()->m_dbPath : _path;
+	fs::path chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
+	fs::path extrasPath = chainPath / fs::path(toString(c_databaseVersion));
 
 	fs::create_directories(extrasPath);
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
 
-	bytes status = contents(extrasPath + "/minor");
+	bytes status = contents(extrasPath / fs::path("minor"));
 	unsigned lastMinor = c_minorProtocolVersion;
 	if (!status.empty())
 		DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));
 	if (c_minorProtocolVersion != lastMinor)
 	{
 		cnote << "Killing extras database (DB minor version:" << lastMinor << " != our miner version: " << c_minorProtocolVersion << ").";
-		DEV_IGNORE_EXCEPTIONS(boost::filesystem::remove_all(extrasPath + "/details.old"));
-		boost::filesystem::rename(extrasPath + "/extras", extrasPath + "/extras.old");
-		boost::filesystem::remove_all(extrasPath + "/state");
-		writeFile(extrasPath + "/minor", rlp(c_minorProtocolVersion));
+		DEV_IGNORE_EXCEPTIONS(fs::remove_all(extrasPath / fs::path("details.old")));
+		fs::rename(extrasPath / fs::path("extras"), extrasPath / fs::path("extras.old"));
+		fs::remove_all(extrasPath / fs::path("state"));
+		writeFile(extrasPath / fs::path("minor"), rlp(c_minorProtocolVersion));
 		lastMinor = (unsigned)RLP(status);
 	}
 	if (_we == WithExisting::Kill)
 	{
 		cnote << "Killing blockchain & extras database (WithExisting::Kill).";
-		boost::filesystem::remove_all(chainPath + "/blocks");
-		boost::filesystem::remove_all(extrasPath + "/extras");
+		fs::remove_all(chainPath / fs::path("blocks"));
+		fs::remove_all(extrasPath / fs::path("extras"));
 	}
 
 	ldb::Options o;
 	o.create_if_missing = true;
 	o.max_open_files = 256;
-	ldb::DB::Open(o, chainPath + "/blocks", &m_blocksDB);
-	ldb::DB::Open(o, extrasPath + "/extras", &m_extrasDB);
+	ldb::DB::Open(o, (chainPath / fs::path("blocks")).string(), &m_blocksDB);
+	ldb::DB::Open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
 	if (!m_blocksDB || !m_extrasDB)
 	{
-		if (boost::filesystem::space(chainPath + "/blocks").available < 1024)
+		if (fs::space(chainPath / fs::path("blocks")).available < 1024)
 		{
 			cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
 			BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
@@ -280,9 +280,9 @@ unsigned BlockChain::open(std::string const& _path, WithExisting _we)
 		{
 			cwarn <<
 				"Database " <<
-				(chainPath + "/blocks") <<
+				(chainPath / fs::path("blocks")) <<
 				"or " <<
-				(extrasPath + "/extras") <<
+				(extrasPath / fs::path("extras")) <<
 				"already open. You appear to have another instance of ethereum running. Bailing.";
 			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
 		}
@@ -314,7 +314,7 @@ unsigned BlockChain::open(std::string const& _path, WithExisting _we)
 	return lastMinor;
 }
 
-void BlockChain::open(std::string const& _path, WithExisting _we, ProgressCallback const& _pc)
+void BlockChain::open(fs::path const& _path, WithExisting _we, ProgressCallback const& _pc)
 {
 	if (open(_path, _we) != c_minorProtocolVersion || _we == WithExisting::Verify)
 		rebuild(_path, _pc);
@@ -347,11 +347,11 @@ void BlockChain::close()
 	m_lastBlockHashes->clear();
 }
 
-void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, unsigned)> const& _progress)
+void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, unsigned)> const& _progress)
 {
-	string path = _path.empty() ? Defaults::get()->m_dbPath : _path;
-	string chainPath = path + "/" + toHex(m_genesisHash.ref().cropped(0, 4));
-	string extrasPath = chainPath + "/" + toString(c_databaseVersion);
+	fs::path path = _path.empty() ? Defaults::get()->m_dbPath : _path;
+	fs::path chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
+	fs::path extrasPath = chainPath / fs::path(toString(c_databaseVersion));
 
 #if ETH_PROFILING_GPERF
 	ProfilerStart("BlockChain_rebuild.log");
@@ -368,15 +368,15 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 	// Keep extras DB around, but under a temp name
 	delete m_extrasDB;
 	m_extrasDB = nullptr;
-	boost::filesystem::rename(extrasPath + "/extras", extrasPath + "/extras.old");
+	fs::rename(extrasPath / fs::path("extras"), extrasPath / fs::path("extras.old"));
 	ldb::DB* oldExtrasDB;
 	ldb::Options o;
 	o.create_if_missing = true;
-	ldb::DB::Open(o, extrasPath + "/extras.old", &oldExtrasDB);
-	ldb::DB::Open(o, extrasPath + "/extras", &m_extrasDB);
+	ldb::DB::Open(o, (extrasPath / fs::path("extras.old")).string(), &oldExtrasDB);
+	ldb::DB::Open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
 
 	// Open a fresh state DB
-	Block s = genesisBlock(State::openDB(path, m_genesisHash, WithExisting::Kill));
+	Block s = genesisBlock(State::openDB(path.string(), m_genesisHash, WithExisting::Kill));
 
 	// Clear all memos ready for replay.
 	m_details.clear();
@@ -431,7 +431,7 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 #endif
 
 	delete oldExtrasDB;
-	boost::filesystem::remove_all(path + "/extras.old");
+	fs::remove_all(path / fs::path("extras.old"));
 }
 
 string BlockChain::dumpDatabase() const

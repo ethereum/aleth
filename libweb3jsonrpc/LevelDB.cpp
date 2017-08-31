@@ -34,12 +34,12 @@ namespace fs = boost::filesystem;
 
 LevelDB::LevelDB()
 {
-	auto path = getDataDir() + "/.web3";
+	fs::path path = getDataDir() / fs::path(".web3");
 	fs::create_directories(path);
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
 	ldb::Options o;
 	o.create_if_missing = true;
-	ldb::DB::Open(o, path, &m_db);
+	ldb::DB::Open(o, path.string(), &m_db);
 }
 
 bool LevelDB::db_put(std::string const& _name, std::string const& _key, std::string const& _value)

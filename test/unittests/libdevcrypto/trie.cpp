@@ -25,11 +25,13 @@
 #include "MemTrie.h"
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
+#include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::test;
 
+namespace fs = boost::filesystem;
 namespace js = json_spirit;
 
 static unsigned fac(unsigned _i)
@@ -65,13 +67,11 @@ BOOST_AUTO_TEST_CASE(fat_trie)
 
 BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 {
-	string testPath = test::getTestPath();
-
-	testPath += "/TrieTests";
+	fs::path const testPath = test::getTestPath() / fs::path("TrieTests");
 
 	cnote << "Testing Secure Trie...";
 	js::mValue v;
-	string s = contentsString(testPath + "/hex_encoded_securetrie_test.json");
+	string const s = contentsString(testPath / fs::path("hex_encoded_securetrie_test.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'hex_encoded_securetrie_test.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
@@ -132,13 +132,11 @@ BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 
 BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 {
-	string testPath = test::getTestPath();
-
-	testPath += "/TrieTests";
+	fs::path const testPath = test::getTestPath() / fs::path("TrieTests");
 
 	cnote << "Testing Trie...";
 	js::mValue v;
-	string s = contentsString(testPath + "/trieanyorder.json");
+	string const s = contentsString(testPath / fs::path("trieanyorder.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trieanyorder.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
@@ -199,13 +197,11 @@ BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 
 BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 {
-	string testPath = test::getTestPath();
-
-	testPath += "/TrieTests";
+	fs::path const testPath = test::getTestPath() / fs::path("TrieTests");
 
 	cnote << "Testing Trie...";
 	js::mValue v;
-	string s = contentsString(testPath + "/trietest.json");
+	string const s = contentsString(testPath / fs::path("trietest.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 

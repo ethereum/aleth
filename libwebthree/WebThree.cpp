@@ -38,7 +38,7 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 WebThreeDirect::WebThreeDirect(
 	std::string const& _clientVersion,
-	std::string const& _dbPath,
+	boost::filesystem::path const& _dbPath,
 	eth::ChainParams const& _params,
 	WithExisting _we,
 	std::set<std::string> const& _interfaces,

@@ -20,20 +20,21 @@
  */
 
 #include <random>
-#include <boost/filesystem.hpp>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/FileSystem.h>
 #include <test/tools/libtesteth/Options.h>
 #include "Common.h"
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::test;
+namespace fs = boost::filesystem;
 
 const char* TestChannel::name() { return "TST"; }
 
-std::string dev::test::getTestPath()
+boost::filesystem::path dev::test::getTestPath()
 {
 	if (!Options::get().testpath.empty())
 		return Options::get().testpath;
@@ -41,7 +42,7 @@ std::string dev::test::getTestPath()
 	string testPath;
 	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
 
-	if (ptestPath == NULL)
+	if (ptestPath == nullptr)
 	{
 		ctest << " could not find environment variable ETHEREUM_TEST_PATH \n";
 		testPath = "../../test/jsontests";
@@ -49,7 +50,7 @@ std::string dev::test::getTestPath()
 	else
 		testPath = ptestPath;
 
-	return testPath;
+	return boost::filesystem::path(testPath);
 }
 
 int dev::test::randomNumber()
@@ -59,34 +60,29 @@ int dev::test::randomNumber()
 	return std::uniform_int_distribution<int>(1)(randomGenerator);
 }
 
-Json::Value dev::test::loadJsonFromFile(std::string const& _path)
+Json::Value dev::test::loadJsonFromFile(fs::path const& _path)
 {
 	Json::Reader reader;
 	Json::Value result;
 	string s = dev::contentsString(_path);
 	if (!s.length())
-		ctest << "Contents of " + _path + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?";
+		ctest << "Contents of " << _path.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?";
 	else
-		ctest << "FIXTURE: loaded test from file: " << _path;
-	
+		ctest << "FIXTURE: loaded test from file: " << _path.string();
+
 	reader.parse(s, result);
 	return result;
 }
 
-std::string dev::test::toTestFilePath(std::string const& _filename)
+fs::path dev::test::toTestFilePath(std::string const& _filename)
 {
-	return getTestPath() + "/" + _filename + ".json";
+	return getTestPath() / fs::path(_filename + ".json");
 }
 
-std::string dev::test::getFolder(std::string const& _file)
-{
-	return boost::filesystem::path(_file).parent_path().string();
-}
-
-std::string dev::test::getRandomPath()
+fs::path dev::test::getRandomPath()
 {
 	std::stringstream stream;
-	stream << getDataDir("EthereumTests") << "/" << randomNumber();
-	return stream.str();
+	stream << randomNumber();
+	return getDataDir("EthereumTests") / fs::path(stream.str());
 }
 
