@@ -849,7 +849,7 @@ int main(int argc, char** argv)
 	if (!privateChain.empty())
 	{
 		chainParams.extraData = sha3(privateChain).asBytes();
-		chainParams.difficulty = chainParams.u256Param("minimumDifficulty");
+		chainParams.difficulty = chainParams.minimumDifficulty;
 		chainParams.gasLimit = u256(1) << 32;
 	}
 	// TODO: Open some other API path
@@ -917,7 +917,7 @@ int main(int argc, char** argv)
 	if (testingMode)
 	{
 		chainParams.sealEngineName = "NoProof";
-		chainParams.otherParams["allowFutureBlocks"] = true;
+		chainParams.allowFutureBlocks = true;
 	}
 
 	dev::WebThreeDirect web3(

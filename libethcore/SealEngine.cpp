@@ -45,19 +45,19 @@ void SealEngineFace::populateFromParent(BlockHeader& _bi, BlockHeader const& _pa
 
 void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _header, u256 const&) const
 {
-	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().u256Param("EIP158ForkBlock") && _t.isReplayProtected())
+	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().EIP158ForkBlock && _t.isReplayProtected())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 
-	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().u256Param("constantinopleForkBlock") && _t.hasZeroSignature())
+	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().constantinopleForkBlock && _t.hasZeroSignature())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 
 	if ((_ir & ImportRequirements::TransactionBasic) &&
-		_header.number() >= chainParams().u256Param("constantinopleForkBlock") &&
+		_header.number() >= chainParams().constantinopleForkBlock &&
 		_t.hasZeroSignature() &&
 		(_t.value() != 0 || _t.gasPrice() != 0 || _t.nonce() != 0))
 			BOOST_THROW_EXCEPTION(InvalidZeroSignatureTransaction() << errinfo_got((bigint)_t.gasPrice()) << errinfo_got((bigint)_t.value()) << errinfo_got((bigint)_t.nonce()));
 
-	if (_header.number() >= chainParams().u256Param("homesteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures) && _t.hasSignature())
+	if (_header.number() >= chainParams().homesteadForkBlock && (_ir & ImportRequirements::TransactionSignatures) && _t.hasSignature())
 		_t.checkLowS();
 }
 

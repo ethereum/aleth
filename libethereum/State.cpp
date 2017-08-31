@@ -568,14 +568,14 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 			m_cache.clear();
 			break;
 		case Permanence::Committed:
-			removeEmptyAccounts = _envInfo.number() >= _sealEngine.chainParams().u256Param("EIP158ForkBlock");
+			removeEmptyAccounts = _envInfo.number() >= _sealEngine.chainParams().EIP158ForkBlock;
 			commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 			break;
 		case Permanence::Uncommitted:
 			break;
 	}
 
-	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().u256Param("byzantiumForkBlock") ?
+	TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().byzantiumForkBlock ?
 		TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs()) :
 		TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs());
 	return make_pair(res, receipt);

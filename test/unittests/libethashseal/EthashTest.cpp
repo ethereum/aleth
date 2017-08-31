@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_SUITE(EthashTests, TestOutputHelper)
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 {
 	ChainOperationParams params;
-	params.otherParams["byzantiumForkBlock"] = "0x1000";
+	params.byzantiumForkBlock = u256(0x1000);
 
 	Ethash ethash;
 	ethash.setChainParams(params);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 {
 	ChainOperationParams params;
-	params.otherParams["byzantiumForkBlock"] = "0x1000";
+	params.byzantiumForkBlock = u256(0x1000);
 
 	Ethash ethash;
 	ethash.setChainParams(params);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
 {
 	ChainOperationParams params;
-	params.otherParams["byzantiumForkBlock"] = "0x1000";
+	params.byzantiumForkBlock = u256(0x1000);
 
 	Ethash ethash;
 	ethash.setChainParams(params);

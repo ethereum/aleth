@@ -45,12 +45,12 @@ std::string const c_testDifficulty = R"(
 void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _parent, eth::Network _n, ChainOperationParams const& _p, string const& _testName = "")
 {
 	u256 difficulty = _bi.difficulty();
-	u256 frontierDiff = _p.u256Param("homesteadForkBlock");
+	u256 const& frontierDiff = _p.homesteadForkBlock;
 
 	//The ultimate formula (Homestead)
 	if (_bi.number() > frontierDiff)
 	{
-		u256 minimumDifficulty = _p.u256Param("minimumDifficulty");
+		u256 const& minimumDifficulty = _p.minimumDifficulty;
 		bigint block_diff = _parent.difficulty();
 
 		bigint a = (_parent.difficulty() / 2048);
@@ -81,9 +81,9 @@ void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _paren
 	break;
 	default:
 		cerr << "testing undefined network difficulty";
-		durationLimit = _p.u256Param("durationLimit");
-		minimumDifficulty = _p.u256Param("minimumDifficulty");
-		difficultyBoundDivisor = _p.u256Param("difficultyBoundDivisor");
+		durationLimit = _p.durationLimit;
+		minimumDifficulty = _p.minimumDifficulty;
+		difficultyBoundDivisor = _p.difficultyBoundDivisor;
 		break;
 	}
 

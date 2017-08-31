@@ -631,7 +631,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		applyRewards(rewarded, _bc.sealEngine()->blockReward(m_currentBlock.number()));
 
 	// Commit all cached state changes to the state trie.
-	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock"); // TODO: use EVMSchedule
+	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().EIP158ForkBlock; // TODO: use EVMSchedule
 	DEV_TIMED_ABOVE("commit", 500)
 		m_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
@@ -688,7 +688,7 @@ void Block::applyRewards(vector<BlockHeader> const& _uncleBlockHeaders, u256 con
 
 void Block::performIrregularModifications()
 {
-	u256 daoHardfork = m_sealEngine->chainParams().u256Param("daoHardforkBlock");
+	u256 const& daoHardfork = m_sealEngine->chainParams().daoHardforkBlock;
 	if (daoHardfork != 0 && info().number() == daoHardfork)
 	{
 		Address recipient("0xbf4ed7b27f1d666546e30d74d50d173d20bca754");
@@ -701,9 +701,9 @@ void Block::performIrregularModifications()
 
 void Block::updateBlockhashContract()
 {
-	u256 const blockNumber = info().number();
+	u256 const& blockNumber = info().number();
 
-	u256 const constantinopleForkBlock = m_sealEngine->chainParams().u256Param("constantinopleForkBlock");
+	u256 const& constantinopleForkBlock = m_sealEngine->chainParams().constantinopleForkBlock;
 	if (blockNumber == constantinopleForkBlock)
 	{
 		m_state.createContract(c_blockhashContractAddress);
@@ -801,7 +801,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	applyRewards(uncleBlockHeaders, _bc.sealEngine()->blockReward(m_currentBlock.number()));
 
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
-	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock"); // TODO: use EVMSchedule
+	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().EIP158ForkBlock; // TODO: use EVMSchedule
 	DEV_TIMED_ABOVE("commit", 500)
 		m_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 

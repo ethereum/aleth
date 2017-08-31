@@ -374,7 +374,7 @@ void TestBlock::verify(TestBlockChain const& _bc) const
 	}
 	catch (Exception const& _e)
 	{
-		u256 daoHardfork = _bc.interface().sealEngine()->chainParams().u256Param("daoHardforkBlock");
+		u256 const& daoHardfork = _bc.interface().sealEngine()->chainParams().daoHardforkBlock;
 		if ((m_blockHeader.number() >= daoHardfork && m_blockHeader.number() <= daoHardfork + 9) || m_blockHeader.number() == 0)
 		{
 			string exWhat {	_e.what() };

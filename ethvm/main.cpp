@@ -44,7 +44,7 @@ namespace
 {
 int64_t maxBlockGasLimit()
 {
-	static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).u256Param("maxGasLimit").convert_to<int64_t>();
+	static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).maxGasLimit.convert_to<int64_t>();
 	return limit;
 }
 

@@ -751,7 +751,7 @@ void BlockChain::checkBlockIsNew(VerifiedBlockRef const& _block) const
 void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
 {
 	// Check it's not crazy
-	if (_header.timestamp() > utcTime() && !m_params.otherParams.count("allowFutureBlocks"))
+	if (_header.timestamp() > utcTime() && !m_params.allowFutureBlocks)
 	{
 		clog(BlockChainChat) << _header.hash() << ": Future time " << _header.timestamp() << " (now at " << utcTime() << ")";
 		// Block has a timestamp in the future. This is no good.

@@ -55,7 +55,7 @@ json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _
 		BlockHeader bh;
 		bh.setNumber(transactionBlock);
 		bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-		bool onConstantinople = (transactionBlock >= se->chainParams().u256Param("constantinopleForkBlock"));
+		bool onConstantinople = (transactionBlock >= se->chainParams().constantinopleForkBlock);
 
 		if (_fillin)
 		{
