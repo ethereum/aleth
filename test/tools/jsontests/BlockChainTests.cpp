@@ -143,6 +143,18 @@ json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fi
 	return output;
 }
 
+void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects)
+{
+	for (auto& expect: _expects)
+	{
+		vector<string> netlist;
+		json_spirit::mObject const& expectObj = expect.get_obj();
+			ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
+			for (string const& networkName: netlist)
+				(void)stringToNetId(networkName);
+	}
+}
+
 json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin)
 {
 	json_spirit::mObject tests;
@@ -165,6 +177,12 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 			"\"pre\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
+
+		if (inputTest.count("expect"))
+		{
+			BOOST_REQUIRE_MESSAGE(_fillin, "a filled test should not contain any expect fields.");
+			spellCheckNetworkNamesInExpectField(inputTest.at("expect").get_array());
+		}
 
 		if (_fillin)
 		{
@@ -189,6 +207,7 @@ json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, boo
 						vector<string> netlist;
 						json_spirit::mObject const& expectObj = expect.get_obj();
 						ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
+
 						if (std::find(netlist.begin(), netlist.end(), test::netIdToString(network)) != netlist.end() ||
 							std::find(netlist.begin(), netlist.end(), "ALL") != netlist.end())
 						{
