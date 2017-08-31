@@ -19,28 +19,15 @@
  * Original code taken from boost sources.
  */
 
+
 #define BOOST_TEST_MODULE EthereumTests
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-//#define BOOST_DISABLE_WIN32 //disables SEH warning
 #define BOOST_TEST_NO_MAIN
-
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable:4535) // calling _set_se_translator requires /EHa
-#endif
 #include <boost/test/included/unit_test.hpp>
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-
-#pragma GCC diagnostic pop
 
 #include <clocale>
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 #include <test/tools/libtesteth/TestHelper.h>
-#include <boost/version.hpp>
 
 using namespace boost::unit_test;
 
@@ -48,15 +35,6 @@ std::vector<char*> parameters;
 static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;
 std::streambuf* oldCerrStreamBuf;
-
-//Custom Boost Initialization
-test_suite* fake_init_func(int argc, char* argv[])
-{
-	//Required for boost. -nowarning
-	(void) argc;
-	(void) argv;
-	return 0;
-}
 
 void createRandomTest()
 {
@@ -158,7 +136,8 @@ int main( int argc, char* argv[] )
 
 	stopTravisOut = false;
 	std::thread outputThread(travisOut);
-	int result = unit_test_main(fake_init_func, argc, argv);
+	auto fakeInit = [](int, char*[]) -> boost::unit_test::test_suite* { return nullptr; };
+	int result = unit_test_main(fakeInit, argc, argv);
 	stopTravisOut = true;
 	outputThread.join();
 	dev::test::TestOutputHelper::printTestExecStats();

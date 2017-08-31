@@ -14,28 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file MemTrie.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "MemTrie.h"
 
 #include <libdevcore/TrieCommon.h>
 #include <libdevcore/SHA3.h>
-using namespace std;
-using namespace dev;
 
 namespace dev
 {
-
-#define ENABLE_DEBUG_PRINT 0
-
-/*/
-#define APPEND_CHILD appendData
-/*/
-#define APPEND_CHILD appendRaw
-/**/
 
 class MemTrieNode
 {
@@ -48,10 +34,6 @@ public:
 	virtual MemTrieNode* remove(bytesConstRef _key) = 0;
 	void putRLP(RLPStream& _parentStream) const;
 
-#if ENABLE_DEBUG_PRINT
-	void debugPrint(std::string const& _indent = "") const { std::cerr << std::hex << hash256() << ":" << std::dec << "\n"; debugPrintBody(_indent); }
-#endif
-
 	/// 256-bit hash of the node - this is a SHA-3/256 hash of the RLP of the node.
 	h256 hash256() const { RLPStream s; makeRLP(s); return dev::sha3(s.out()); }
 	bytes rlp() const { RLPStream s; makeRLP(s); return s.out(); }
@@ -59,10 +41,6 @@ public:
 
 protected:
 	virtual void makeRLP(RLPStream& _intoStream) const = 0;
-
-#if ENABLE_DEBUG_PRINT
-	virtual void debugPrintBody(std::string const& _indent = "") const = 0;
-#endif
 
 	static MemTrieNode* newBranch(bytesConstRef _k1, std::string const& _v1, bytesConstRef _k2, std::string const& _v2);
 
@@ -107,21 +85,6 @@ public:
 			delete i;
 	}
 
-#if ENABLE_DEBUG_PRINT
-	virtual void debugPrintBody(std::string const& _indent) const
-	{
-
-		if (m_value.size())
-			std::cerr << _indent << "@: " << m_value << "\n";
-		for (auto i = 0; i < 16; ++i)
-			if (m_nodes[i])
-			{
-				std::cerr << _indent << std::hex << i << ": " << std::dec;
-				m_nodes[i]->debugPrint(_indent + "  ");
-			}
-	}
-#endif
-
 	virtual std::string const& at(bytesConstRef _key) const override;
 	virtual MemTrieNode* insert(bytesConstRef _key, std::string const& _value) override;
 	virtual MemTrieNode* remove(bytesConstRef _key) override;
@@ -142,19 +105,6 @@ class TrieLeafNode: public TrieExtNode
 public:
 	TrieLeafNode(bytesConstRef _key, std::string const& _value): TrieExtNode(_key), m_value(_value) {}
 
-#if ENABLE_DEBUG_PRINT
-	virtual void debugPrintBody(std::string const& _indent) const
-	{
-		assert(m_value.size());
-		std::cerr << _indent;
-		if (m_ext.size())
-			std::cerr << toHex(m_ext) << ": ";
-		else
-			std::cerr << "@: ";
-		std::cerr << m_value << "\n";
-	}
-#endif
-
 	virtual std::string const& at(bytesConstRef _key) const override { return contains(_key) ? m_value : c_nullString; }
 	virtual MemTrieNode* insert(bytesConstRef _key, std::string const& _value) override;
 	virtual MemTrieNode* remove(bytesConstRef _key) override;
@@ -172,14 +122,6 @@ public:
 	TrieInfixNode(bytesConstRef _key, MemTrieNode* _next): TrieExtNode(_key), m_next(_next) {}
 	virtual ~TrieInfixNode() { delete m_next; }
 
-#if ENABLE_DEBUG_PRINT
-	virtual void debugPrintBody(std::string const& _indent) const
-	{
-		std::cerr << _indent << toHex(m_ext) << ": ";
-		m_next->debugPrint(_indent + "  ");
-	}
-#endif
-
 	virtual std::string const& at(bytesConstRef _key) const override { assert(m_next); return contains(_key) ? m_next->at(_key.cropped(m_ext.size())) : c_nullString; }
 	virtual MemTrieNode* insert(bytesConstRef _key, std::string const& _value) override;
 	virtual MemTrieNode* remove(bytesConstRef _key) override;
@@ -196,7 +138,7 @@ void MemTrieNode::putRLP(RLPStream& _parentStream) const
 	RLPStream s;
 	makeRLP(s);
 	if (s.out().size() < 32)
-		_parentStream.APPEND_CHILD(s.out());
+		_parentStream.appendRaw(s.out());
 	else
 		_parentStream << dev::sha3(s.out());
 }
@@ -441,14 +383,6 @@ h256 MemTrie::hash256() const
 bytes MemTrie::rlp() const
 {
 	return m_root ? m_root->rlp() : dev::rlp(bytesConstRef());
-}
-
-void MemTrie::debugPrint()
-{
-#if ENABLE_DEBUG_PRINT
-	if (m_root)
-		m_root->debugPrint();
-#endif
 }
 
 std::string const& MemTrie::at(std::string const& _key) const
