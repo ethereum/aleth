@@ -23,7 +23,7 @@ R"E(
 	"sealEngine": "NoProof",
 	"params":{
 		"accountStartNonce": "0x00",
-		"homsteadForkBlock": "0xffffffffffffffff",
+		"homesteadForkBlock": "0xffffffffffffffff",
 		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0xfffffffffffffff",
 		"EIP158ForkBlock": "0xfffffffffffffff",

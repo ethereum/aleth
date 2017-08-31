@@ -23,7 +23,7 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"maximumExtraDataSize": "0x20",
-		"homsteadForkBlock": "0x00",
+		"homesteadForkBlock": "0x00",
 		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0xfffffffffffffff",

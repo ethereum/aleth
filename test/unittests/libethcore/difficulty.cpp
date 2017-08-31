@@ -44,7 +44,7 @@ std::string const c_testDifficulty = R"(
 void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _parent, Network _n, ChainOperationParams const& _p, string const& _testName = "")
 {
 	u256 difficulty = _bi.difficulty();
-	u256 frontierDiff = _p.u256Param("homsteadForkBlock");
+	u256 frontierDiff = _p.u256Param("homesteadForkBlock");
 
 	//The ultimate formula (Homestead)
 	if (_bi.number() > frontierDiff)
@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 
 	if (dev::test::Options::get().filltests)
 	{
-		u256 homsteadBlockNumber = 1000000;
-		std::vector<u256> blockNumberVector = {homsteadBlockNumber - 100000, homsteadBlockNumber, homsteadBlockNumber + 100000};
+		u256 homesteadBlockNumber = 1000000;
+		std::vector<u256> blockNumberVector = {homesteadBlockNumber - 100000, homesteadBlockNumber, homesteadBlockNumber + 100000};
 		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
 		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
 

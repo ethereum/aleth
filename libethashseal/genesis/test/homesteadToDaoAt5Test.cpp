@@ -22,7 +22,7 @@ R"E(
 	"sealEngine": "Ethash",
 	"params": {
 		"accountStartNonce": "0x00",
-		"homsteadForkBlock": "0xfffffffffffffff",
+		"homesteadForkBlock": "0xfffffffffffffff",
 		"daoHardforkBlock": "0x05",
 		"EIP150ForkBlock": "0xfffffffffffffff",
 		"EIP158ForkBlock": "0xfffffffffffffff",
