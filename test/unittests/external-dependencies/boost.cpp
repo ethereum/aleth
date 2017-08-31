@@ -26,7 +26,7 @@ using namespace dev::test;
 using namespace boost;
 using namespace boost::multiprecision;
 
-BOOST_FIXTURE_TEST_SUITE(boost, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(boostTests, TestOutputHelper)
 
 // test that reproduces issue https://github.com/ethereum/cpp-ethereum/issues/1977
 BOOST_AUTO_TEST_CASE(u256_overflow_test)

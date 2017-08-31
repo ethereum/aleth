@@ -595,7 +595,7 @@ dev::eth::BlockHeader constructHeader(
 	rlpStream.appendList(15);
 
 	rlpStream << _parentHash << _sha3Uncles << _author << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
-		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << Nonce{};
+		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << eth::Nonce{};
 
 	return BlockHeader(rlpStream.out(), HeaderData);
 }

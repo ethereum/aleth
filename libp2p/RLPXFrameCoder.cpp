@@ -33,7 +33,6 @@ static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
-using namespace CryptoPP;
 
 RLPXFrameInfo::RLPXFrameInfo(bytesConstRef _header):
 	length((_header[0] * 256 + _header[1]) * 256 + _header[2]),
@@ -236,7 +235,7 @@ bool RLPXFrameCoder::authAndDecryptFrame(bytesRef io)
 
 h128 RLPXFrameCoder::egressDigest()
 {
-	Keccak_256 h(m_impl->egressMac);
+	CryptoPP::Keccak_256 h(m_impl->egressMac);
 	h128 digest;
 	h.TruncatedFinal(digest.data(), h128::size);
 	return digest;
@@ -244,7 +243,7 @@ h128 RLPXFrameCoder::egressDigest()
 
 h128 RLPXFrameCoder::ingressDigest()
 {
-	Keccak_256 h(m_impl->ingressMac);
+	CryptoPP::Keccak_256 h(m_impl->ingressMac);
 	h128 digest;
 	h.TruncatedFinal(digest.data(), h128::size);
 	return digest;
@@ -272,12 +271,12 @@ void RLPXFrameCoder::updateIngressMACWithFrame(bytesConstRef _cipher)
 	m_impl->updateMAC(m_impl->ingressMac);
 }
 
-void RLPXFrameCoderImpl::updateMAC(Keccak_256& _mac, bytesConstRef _seed)
+void RLPXFrameCoderImpl::updateMAC(CryptoPP::Keccak_256& _mac, bytesConstRef _seed)
 {
 	if (_seed.size() && _seed.size() != h128::size)
 		asserts(false);
 
-	Keccak_256 prevDigest(_mac);
+	CryptoPP::Keccak_256 prevDigest(_mac);
 	h128 encDigest(h128::size);
 	prevDigest.TruncatedFinal(encDigest.data(), h128::size);
 	h128 prevDigestOut = encDigest;

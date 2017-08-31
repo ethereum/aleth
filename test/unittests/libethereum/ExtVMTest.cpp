@@ -33,7 +33,7 @@ class ExtVMTestFixture: public TestOutputHelper
 {
 public:
 	ExtVMTestFixture():
-		networkSelector(Network::ConstantinopleTransitionTest),
+		networkSelector(eth::Network::ConstantinopleTransitionTest),
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),

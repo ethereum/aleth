@@ -45,7 +45,7 @@ class TestClient
 {
 public:
 	TestClient(Secret const& _authority):
-		m_path(boost::filesystem::temp_directory_path().string() + "/" + toString(chrono::system_clock::now().time_since_epoch().count()) + "-" + FixedHash<4>::random().hex()),
+		m_path(boost::filesystem::temp_directory_path().string() + "/" + toString(std::chrono::system_clock::now().time_since_epoch().count()) + "-" + FixedHash<4>::random().hex()),
 		m_stateDB(State::openDB(m_path, h256())),
 		m_bc(eth::ChainParams(c_genesisInfoTestBasicAuthority), m_path)
 	{
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(bcBasicInsert)
 	block.sync(tcFull.bc());
 	cnote << block.state();
 	while (utcTime() < block.info().timestamp())
-		this_thread::sleep_for(chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	// Inject a transaction to transfer funds from miner to me.
 	Transaction t(1000, 10000, 100000, me.address(), bytes(), block.transactionsFrom(myMiner.address()), myMiner.secret());

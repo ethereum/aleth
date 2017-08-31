@@ -113,13 +113,9 @@ namespace dev
 					cnote << "Exception: " << diagnostic_information(_e);
 					was_exception = true;
 				}
-				catch (exception const& _e)
+				catch (std::exception const& _e)
 				{
 					cnote << "rlp exception: " << _e.what();
-					was_exception = true;
-				}
-				catch (...)
-				{
 					was_exception = true;
 				}
 
@@ -258,7 +254,7 @@ BOOST_AUTO_TEST_CASE(EmptyArrayList)
 	{
 		BOOST_ERROR("(EmptyArrayList) Failed test with Exception: " << _e.what());
 	}
-	catch (exception const& _e)
+	catch (std::exception const& _e)
 	{
 		BOOST_ERROR("(EmptyArrayList) Failed test with Exception: " << _e.what());
 	}

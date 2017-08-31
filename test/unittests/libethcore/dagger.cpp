@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 		vector<pair<string, string>> ss;
 		BlockHeader header(fromHex(o["header"].get_str()), HeaderData);
 		h256 headerHash(o["header_hash"].get_str());
-		Nonce nonce(o["nonce"].get_str());
+		eth::Nonce nonce(o["nonce"].get_str());
 		BOOST_REQUIRE_EQUAL(headerHash, header.hash(WithoutSeal));
 		BOOST_REQUIRE_EQUAL(nonce, Ethash::nonce(header));
 

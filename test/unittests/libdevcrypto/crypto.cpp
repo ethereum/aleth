@@ -46,7 +46,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::test;
 using namespace dev::crypto;
-using namespace CryptoPP;
 
 namespace utf = boost::unit_test;
 
@@ -327,30 +326,30 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 
 BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 {
-	ECDH<ECP>::Domain dhLocal(curveOID());
-	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
-	SecByteBlock pubLocal(dhLocal.PublicKeyLength());
+	CryptoPP::ECDH<CryptoPP::ECP>::Domain dhLocal(curveOID());
+	CryptoPP::SecByteBlock privLocal(dhLocal.PrivateKeyLength());
+	CryptoPP::SecByteBlock pubLocal(dhLocal.PublicKeyLength());
 	dhLocal.GenerateKeyPair(rng(), privLocal, pubLocal);
-	
-	ECDH<ECP>::Domain dhRemote(curveOID());
-	SecByteBlock privRemote(dhRemote.PrivateKeyLength());
-	SecByteBlock pubRemote(dhRemote.PublicKeyLength());
+
+	CryptoPP::ECDH<CryptoPP::ECP>::Domain dhRemote(curveOID());
+	CryptoPP::SecByteBlock privRemote(dhRemote.PrivateKeyLength());
+	CryptoPP::SecByteBlock pubRemote(dhRemote.PublicKeyLength());
 	dhRemote.GenerateKeyPair(rng(), privRemote, pubRemote);
-	
+
 	assert(dhLocal.AgreedValueLength() == dhRemote.AgreedValueLength());
-	
+
 	// local: send public to remote; remote: send public to local
-	
+
 	// Local
-	SecByteBlock sharedLocal(dhLocal.AgreedValueLength());
+	CryptoPP::SecByteBlock sharedLocal(dhLocal.AgreedValueLength());
 	assert(dhLocal.Agree(sharedLocal, privLocal, pubRemote));
 	
 	// Remote
-	SecByteBlock sharedRemote(dhRemote.AgreedValueLength());
+	CryptoPP::SecByteBlock sharedRemote(dhRemote.AgreedValueLength());
 	assert(dhRemote.Agree(sharedRemote, privRemote, pubLocal));
 	
 	// Test
-	Integer ssLocal, ssRemote;
+	CryptoPP::Integer ssLocal, ssRemote;
 	ssLocal.Decode(sharedLocal.BytePtr(), sharedLocal.SizeInBytes());
 	ssRemote.Decode(sharedRemote.BytePtr(), sharedRemote.SizeInBytes());
 	
@@ -366,8 +365,8 @@ BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 	KeyPair b = KeyPair::create();
 	byte pubb[65] = {0x04};
 	memcpy(&pubb[1], b.pub().data(), 64);
-	
-	ECDH<ECP>::Domain dhA(curveOID());
+
+	CryptoPP::ECDH<CryptoPP::ECP>::Domain dhA(curveOID());
 	Secret shared;
 	BOOST_REQUIRE(dhA.Agree(shared.writable().data(), a.secret().data(), pubb));
 	BOOST_REQUIRE(shared);
@@ -638,16 +637,16 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
 	
 	// generate test key
-	AutoSeededRandomPool rng;
-	SecByteBlock key(0x00, aesKeyLen);
+	CryptoPP::AutoSeededRandomPool rng;
+	CryptoPP::SecByteBlock key(0x00, aesKeyLen);
 	rng.GenerateBlock(key, key.size());
 	
 	// cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
-	FixedHash<AES::BLOCKSIZE> ctr;
+	FixedHash<CryptoPP::AES::BLOCKSIZE> ctr;
 	rng.GenerateBlock(ctr.data(), sizeof(ctr));
 
 	// used for decrypt
-	FixedHash<AES::BLOCKSIZE> ctrcopy(ctr);
+	FixedHash<CryptoPP::AES::BLOCKSIZE> ctrcopy(ctr);
 	
 	string text = "Now is the time for all good persons to come to the aid of humanity.";
 	unsigned char const* in = (unsigned char*)&text[0];
@@ -658,7 +657,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	string cipherCopy;
 	try
 	{
-		CTR_Mode<AES>::Encryption e;
+		CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption e;
 		e.SetKeyWithIV(key, key.size(), ctr.data());
 		
 		// 68 % 255 should be difference of counter
@@ -675,7 +674,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	
 	try
 	{
-		CTR_Mode< AES >::Decryption d;
+		CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d;
 		d.SetKeyWithIV(key, key.size(), ctrcopy.data());
 		d.ProcessData(out, in, text.size());
 		BOOST_REQUIRE(text == original);
@@ -692,8 +691,8 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		BOOST_REQUIRE(cipherCopy != text);
 		in = (unsigned char*)&cipherCopy[0];
 		out = (unsigned char*)&cipherCopy[0];
-		
-		CTR_Mode<AES>::Encryption e;
+
+		CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption e;
 		e.SetKeyWithIV(key, key.size(), ctrcopy.data());
 		e.ProcessData(out, in, text.size());
 		
@@ -711,23 +710,23 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 {
 	const int aesKeyLen = 16;
 	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
-	
-	AutoSeededRandomPool rng;
-	SecByteBlock key(0x00, aesKeyLen);
+
+	CryptoPP::AutoSeededRandomPool rng;
+	CryptoPP::SecByteBlock key(0x00, aesKeyLen);
 	rng.GenerateBlock(key, key.size());
 	
 	// Generate random IV
-	byte iv[AES::BLOCKSIZE];
-	rng.GenerateBlock(iv, AES::BLOCKSIZE);
+	byte iv[CryptoPP::AES::BLOCKSIZE];
+	rng.GenerateBlock(iv, CryptoPP::AES::BLOCKSIZE);
 	
 	string string128("AAAAAAAAAAAAAAAA");
 	string plainOriginal = string128;
 	
-	CryptoPP::CBC_Mode<Rijndael>::Encryption cbcEncryption(key, key.size(), iv);
+	CryptoPP::CBC_Mode<CryptoPP::Rijndael>::Encryption cbcEncryption(key, key.size(), iv);
 	cbcEncryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
 	BOOST_REQUIRE(string128 != plainOriginal);
-	
-	CBC_Mode<Rijndael>::Decryption cbcDecryption(key, key.size(), iv);
+
+	CryptoPP::CBC_Mode<CryptoPP::Rijndael>::Decryption cbcDecryption(key, key.size(), iv);
 	cbcDecryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
 	BOOST_REQUIRE(plainOriginal == string128);
 	
@@ -737,8 +736,8 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	plainOriginal = string192;
 
 	string cipher;
-	StreamTransformationFilter* aesStream = new StreamTransformationFilter(cbcEncryption, new StringSink(cipher));
-	StringSource source(string192, true, aesStream);
+	CryptoPP::StreamTransformationFilter* aesStream = new CryptoPP::StreamTransformationFilter(cbcEncryption, new CryptoPP::StringSink(cipher));
+	CryptoPP::StringSource source(string192, true, aesStream);
 	BOOST_REQUIRE(cipher.size() == 32);
 
 	byte* pOut = reinterpret_cast<byte*>(&string192[0]);
@@ -753,7 +752,7 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	Secret secret(sha3("privacy"));
 
 	// we get ec params from signer
-	ECDSA<ECP, Keccak_256>::Signer signer;
+	CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::Keccak_256>::Signer signer;
 
 	// e := sha3(msg)
 	bytes e(fromHex("0x01"));
@@ -763,20 +762,20 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	{
 		KeyPair key(secret);
 		Public pkey = key.pub();
-		signer.AccessKey().Initialize(params(), Integer(secret.data(), Secret::size));
+		signer.AccessKey().Initialize(params(), CryptoPP::Integer(secret.data(), Secret::size));
 
 		h256 he(sha3(e));
-		Integer heInt(he.asBytes().data(), 32);
+		CryptoPP::Integer heInt(he.asBytes().data(), 32);
 		h256 k(crypto::kdf(secret, he));
-		Integer kInt(k.asBytes().data(), 32);
+		CryptoPP::Integer kInt(k.asBytes().data(), 32);
 		kInt %= params().GetSubgroupOrder()-1;
 
-		ECP::Point rp = params().ExponentiateBase(kInt);
-		Integer const& q = params().GetGroupOrder();
-		Integer r = params().ConvertElementToInteger(rp);
+		CryptoPP::ECP::Point rp = params().ExponentiateBase(kInt);
+		CryptoPP::Integer const& q = params().GetGroupOrder();
+		CryptoPP::Integer r = params().ConvertElementToInteger(rp);
 
-		Integer kInv = kInt.InverseMod(q);
-		Integer s = (kInv * (Integer(secret.data(), 32) * r + heInt)) % q;
+		CryptoPP::Integer kInv = kInt.InverseMod(q);
+		CryptoPP::Integer s = (kInv * (CryptoPP::Integer(secret.data(), 32) * r + heInt)) % q;
 		BOOST_REQUIRE(!!r && !!s);
 
 		//try recover function on diffrent v values (should be invalid)
