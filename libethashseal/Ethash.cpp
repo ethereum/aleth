@@ -201,7 +201,7 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	auto durationLimit = chainParams().u256Param("durationLimit");
 
 	bigint target;	// stick to a bigint for the target. Don't want to risk going negative.
-	if (_bi.number() < chainParams().u256Param("homsteadForkBlock"))
+	if (_bi.number() < chainParams().u256Param("homesteadForkBlock"))
 		// Frontier-era difficulty adjustment
 		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
 	else

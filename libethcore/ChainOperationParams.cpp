@@ -66,7 +66,7 @@ EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blo
 		return EIP158Schedule;
 	else if (_blockNumber >= u256Param("EIP150ForkBlock"))
 		return EIP150Schedule;
-	else if (_blockNumber >= u256Param("homsteadForkBlock"))
+	else if (_blockNumber >= u256Param("homesteadForkBlock"))
 		return HomesteadSchedule;
 	else
 		return FrontierSchedule;

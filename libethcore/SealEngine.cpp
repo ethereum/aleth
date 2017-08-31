@@ -57,7 +57,7 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
 		(_t.value() != 0 || _t.gasPrice() != 0 || _t.nonce() != 0))
 			BOOST_THROW_EXCEPTION(InvalidZeroSignatureTransaction() << errinfo_got((bigint)_t.gasPrice()) << errinfo_got((bigint)_t.value()) << errinfo_got((bigint)_t.nonce()));
 
-	if (_header.number() >= chainParams().u256Param("homsteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures) && _t.hasSignature())
+	if (_header.number() >= chainParams().u256Param("homesteadForkBlock") && (_ir & ImportRequirements::TransactionSignatures) && _t.hasSignature())
 		_t.checkLowS();
 }
 
