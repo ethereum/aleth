@@ -539,4 +539,27 @@ BOOST_AUTO_TEST_CASE(updateStats)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(insertWithoutParent)
+{
+	NetworkSelector networkSelector(Network::FrontierNoProofTest);
+
+	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
+	TestTransaction tr = TestTransaction::defaultTransaction();
+	TestBlock block;
+	block.mine(bc);
+
+	BlockHeader header = block.blockHeader();
+	header.setNumber(10);
+	block.setBlockHeader(header);
+
+	BlockChain& bcRef = bc.interfaceUnsafe();
+
+	bcRef.insertWithoutParent(block.bytes(), block.receipts(), 0x040000);
+	BOOST_CHECK_EQUAL(bcRef.number(), 10);
+
+	bcRef.setChainStartBlockNumber(10);
+	BOOST_REQUIRE_EQUAL(bcRef.chainStartBlockNumber(), 10);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
