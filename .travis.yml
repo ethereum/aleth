@@ -50,6 +50,8 @@ matrix:
         - os: linux
           dist: trusty
           sudo: required
+          node_js:
+              - "8"
           env:
               - ZIP_SUFFIX=ubuntu-trusty
 

@@ -38,11 +38,11 @@ if [[ "$TESTS" == "On" ]]; then
     $BUILD_ROOT/test/testeth -- --testpath $BUILD_ROOT/../test/jsontests
 
     # Fill some state tests and make sure the result passes linting
-    echo "Running testeth filler tests..." && \
-    $BUILD_ROOT/test/testeth -t StateTestsGeneral/stExample -- --filltests --testpath $BUILD_ROOT/../test/jsontests && \
-    $BUILD_ROOT/test/testeth -t 'TransitionTests/bcEIP158ToByzantium' -- --filltests --singletest  ByzantiumTransition --testpath $BUILD_ROOT/../test/jsontests && \
-    cd $BUILD_ROOT/../test/jsontests && \
-    echo -e "$(find GeneralStateTests/stExample -name '*.json')" | node JSONSchema/validate.js JSONSchema/st-schema.json && \
+    echo "Running testeth filler tests..."
+    $BUILD_ROOT/test/testeth -t StateTestsGeneral/stExample -- --filltests --testpath $BUILD_ROOT/../test/jsontests
+    $BUILD_ROOT/test/testeth -t 'TransitionTests/bcEIP158ToByzantium' -- --filltests --singletest  ByzantiumTransition --testpath $BUILD_ROOT/../test/jsontests
+    cd $BUILD_ROOT/../test/jsontests
+    echo -e "$(find GeneralStateTests/stExample -name '*.json')" | node JSONSchema/validate.js JSONSchema/st-schema.json
     echo -e "BlockchainTests/TransitionTests/bcEIP158ToByzantium/ByzantiumTransition.json" | node JSONSchema/validate.js JSONSchema/bc-schema.json
 
     # Run the tests for the JIT (but only for Ubuntu, not macOS)
