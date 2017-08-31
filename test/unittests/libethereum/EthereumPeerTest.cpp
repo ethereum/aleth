@@ -31,7 +31,7 @@ protected:
 	string name() const override { return "mock capability name"; }
 	u256 version() const override { return 0; }
 	unsigned messageCount() const override { return 0;  }
-	shared_ptr<Capability> newPeerCapability(shared_ptr<SessionFace> const&, unsigned, CapDesc const&, uint16_t) override { return shared_ptr<Capability>(); }
+	std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<SessionFace> const&, unsigned, CapDesc const&, uint16_t) override { return std::shared_ptr<Capability>(); }
 };
 
 class MockSession: public SessionFace
@@ -59,17 +59,17 @@ public:
 		m_notes[_k] = _v;
 	}
 
-	PeerSessionInfo info() const override { return PeerSessionInfo{ NodeID{}, "", "", 0, chrono::steady_clock::duration{}, {}, 0, {}, 0 }; }
-	chrono::steady_clock::time_point connectionTime() override { return chrono::steady_clock::time_point{}; }
+	PeerSessionInfo info() const override { return PeerSessionInfo{ NodeID{}, "", "", 0, std::chrono::steady_clock::duration{}, {}, 0, {}, 0 }; }
+	std::chrono::steady_clock::time_point connectionTime() override { return std::chrono::steady_clock::time_point{}; }
 
-	void registerCapability(CapDesc const& /*_desc*/, shared_ptr<Capability> /*_p*/) override { }
+	void registerCapability(CapDesc const& /*_desc*/, std::shared_ptr<Capability> /*_p*/) override { }
 	void registerFraming(uint16_t /*_id*/) override { }
 
-	map<CapDesc, shared_ptr<Capability>> const&  capabilities() const override { return m_capabilities; }
+	map<CapDesc, std::shared_ptr<Capability>> const&  capabilities() const override { return m_capabilities; }
 
-	shared_ptr<Peer> peer() const override { return shared_ptr<Peer>();  }
+	std::shared_ptr<Peer> peer() const override { return nullptr;  }
 
-	chrono::steady_clock::time_point lastReceived() const override { return chrono::steady_clock::time_point{}; }
+	std::chrono::steady_clock::time_point lastReceived() const override { return std::chrono::steady_clock::time_point{}; }
 
 	ReputationManager& repMan() override { return m_repMan; }
 
@@ -106,17 +106,17 @@ class EthereumPeerTestFixture: public TestOutputHelper
 {
 public:
 	EthereumPeerTestFixture():
-		session(make_shared<MockSession>()),
-		observer(make_shared<MockEthereumPeerObserver>()),
+		session(std::make_shared<MockSession>()),
+		observer(std::make_shared<MockEthereumPeerObserver>()),
 		offset(UserPacket),
 		peer(session, &hostCap, offset, { "eth", 0 }, 0)
 	{
-		peer.init(63, 2, 0, h256(0), h256(0), shared_ptr<EthereumHostDataFace>(), observer);
+		peer.init(63, 2, 0, h256(0), h256(0), std::shared_ptr<EthereumHostDataFace>(), observer);
 	}
 
 	MockHostCapability hostCap;
-	shared_ptr<MockSession> session;
-	shared_ptr<MockEthereumPeerObserver> observer;
+	std::shared_ptr<MockSession> session;
+	std::shared_ptr<MockEthereumPeerObserver> observer;
 	uint8_t offset;
 	EthereumPeer peer;
 };

@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(opendb)
 {
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 	TransientDirectory tempDirBlockchain;
-	ChainParams p(genesisInfo(Network::TransitionnetTest), genesis.bytes(), genesis.accountMap());
+	ChainParams p(genesisInfo(eth::Network::TransitionnetTest), genesis.bytes(), genesis.accountMap());
 	BlockChain bc(p, tempDirBlockchain.path(), WithExisting::Kill);
 	auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("DatabaseAlreadyOpen") != string::npos; };
 	BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 		BlockQueue uncleBlockQueue;
 		uncleBlockQueue.setChain(bc.interface());
 		uncleBlockQueue.import(&uncleBlock.bytes(), false);
-		this_thread::sleep_for(chrono::seconds(2));
+		std::this_thread::sleep_for(std::chrono::seconds(2));
 
 		BlockChain& bcRef = bc.interfaceUnsafe();
 		bcRef.sync(uncleBlockQueue, bc.testGenesis().state().db(), unsigned(4));

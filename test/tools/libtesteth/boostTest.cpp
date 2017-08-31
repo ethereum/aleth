@@ -36,7 +36,7 @@ static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;
 std::streambuf* oldCerrStreamBuf;
 
-void createRandomTest()
+void createRandomTestWrapper()
 {
 	//restore output for creating test
 	std::cout.rdbuf(oldCoutStreamBuf);
@@ -120,8 +120,9 @@ int main( int argc, char* argv[] )
 			}
 
 			//add random tests suite
+			// FIXME:
 			test_suite* ts1 = BOOST_TEST_SUITE("RandomTestCreationSuite");
-			ts1->add(BOOST_TEST_CASE(&createRandomTest));
+			ts1->add(BOOST_TEST_CASE(&createRandomTestWrapper));
 			framework::master_test_suite().add(ts1);
 		}
 	}

@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(bStructures)
 class FrontierNoProofTestFixture: public TestOutputHelper
 {
 public:
-	FrontierNoProofTestFixture(): networkSelector(Network::FrontierNoProofTest) {}
+	FrontierNoProofTestFixture(): networkSelector(eth::Network::FrontierNoProofTest) {}
 
 	NetworkSelector networkSelector;
 };
@@ -273,7 +273,7 @@ class ConstantinopleTransitionTestFixture: public TestOutputHelper
 {
 public:
 	ConstantinopleTransitionTestFixture():
-		networkSelector(Network::ConstantinopleTransitionTest),
+		networkSelector(eth::Network::ConstantinopleTransitionTest),
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),

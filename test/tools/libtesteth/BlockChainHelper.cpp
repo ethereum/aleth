@@ -132,7 +132,7 @@ void TestBlock::addTransaction(TestTransaction const& _tr)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed transaction constructor with Exception: " << diagnostic_information(_e));
 	}
-	catch (exception const& _e)
+	catch (std::exception const& _e)
 	{
 		cnote << _e.what();
 	}
@@ -498,7 +498,7 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
 		}
 		catch (FutureTime)
 		{
-			this_thread::sleep_for(chrono::milliseconds(100));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			break;
 		}
 	}
@@ -537,7 +537,7 @@ vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)
 		try
 		{
 			uncleBlockQueue.import(&uncles.at(i).bytes(), false);
-			this_thread::sleep_for(chrono::seconds(1)); // wait until block is verified
+			std::this_thread::sleep_for(std::chrono::seconds(1)); // wait until block is verified
 			validUncles.push_back(uncles.at(i));
 		}
 		catch(...)

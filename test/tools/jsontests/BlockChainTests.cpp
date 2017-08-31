@@ -636,7 +636,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		}
 
 		Ethash::setMixHash(tmp, ho.count("mixHash") ? h256(ho["mixHash"].get_str()) : Ethash::mixHash(header));
-		Ethash::setNonce(tmp, ho.count("nonce") ? Nonce(ho["nonce"].get_str()) : Ethash::nonce(header));
+		Ethash::setNonce(tmp, ho.count("nonce") ? eth::Nonce(ho["nonce"].get_str()) : Ethash::nonce(header));
 		tmp.noteDirty();
 	}
 	else
@@ -785,7 +785,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 	if (overwrite == "nonce" || overwrite == "mixHash")
 	{
 		if (overwrite == "nonce")
-			Ethash::setNonce(uncleHeader, Nonce(uncleHeaderObj["nonce"].get_str()));
+			Ethash::setNonce(uncleHeader, eth::Nonce(uncleHeaderObj["nonce"].get_str()));
 		if (overwrite == "mixHash")
 			Ethash::setMixHash(uncleHeader, h256(uncleHeaderObj["mixHash"].get_str()));
 

@@ -34,10 +34,10 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-struct P2PFixture: public TestOutputHelper
+struct P2PPeerFixture: public TestOutputHelper
 {
-	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
-	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
+	P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
+	~P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
 class TestCap: public Capability
@@ -61,7 +61,7 @@ public:
 };
 
 BOOST_AUTO_TEST_SUITE(libp2p)
-BOOST_FIXTURE_TEST_SUITE(p2p, P2PFixture)
+BOOST_FIXTURE_TEST_SUITE(p2p, P2PPeerFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(p2pPeer, P2PFixture)
+BOOST_FIXTURE_TEST_SUITE(p2pPeer, P2PPeerFixture)
 
 BOOST_AUTO_TEST_CASE(requirePeer)
 {

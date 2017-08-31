@@ -141,8 +141,8 @@ private:
 class NetworkSelector
 {
 public:
-	explicit NetworkSelector(Network _network) { TestBlockChain::s_sealEngineNetwork = _network; }
-	~NetworkSelector() { TestBlockChain::s_sealEngineNetwork = Network::FrontierTest; } // reset to default
+	explicit NetworkSelector(eth::Network _network) { TestBlockChain::s_sealEngineNetwork = _network; }
+	~NetworkSelector() { TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest; } // reset to default
 };
 
 }}
