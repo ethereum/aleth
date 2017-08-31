@@ -55,7 +55,7 @@ json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _
 		BlockHeader bh;
 		bh.setNumber(transactionBlock);
 		bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-		bool onMetropolis = (transactionBlock >= se->chainParams().u256Param("metropolisForkBlock"));
+		bool onConstantinople = (transactionBlock >= se->chainParams().u256Param("constantinopleForkBlock"));
 
 		if (_fillin)
 		{
@@ -69,10 +69,10 @@ json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _
 			try
 			{
 				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
-				bool onMetropolisAndZeroSig = onMetropolis && txFromFields.hasZeroSignature();
+				bool onConstantinopleAndZeroSig = onConstantinople && txFromFields.hasZeroSignature();
 
 				if (!txFromFields.signature().isValid())
-				if (!onMetropolisAndZeroSig)
+				if (!onConstantinopleAndZeroSig)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh, 0);
 
@@ -117,10 +117,10 @@ json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _
 				bytes stream = importByteArray(o["rlp"].get_str());
 				RLP rlp(stream);
 				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
-				bool onMetropolisAndZeroSig = onMetropolis && txFromRlp.hasZeroSignature();
+				bool onConstantinopleAndZeroSig = onConstantinople && txFromRlp.hasZeroSignature();
 				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
 				if (!txFromRlp.signature().isValid())
-				if (!onMetropolisAndZeroSig)
+				if (!onConstantinopleAndZeroSig)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 			}
 			catch(Exception const& _e)
