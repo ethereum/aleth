@@ -475,10 +475,10 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 } } // namespace close
 
 
-class vmtestfixture
+class VmTestFixture
 {
 public:
-	vmtestfixture()
+	VmTestFixture()
 	{
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "vmPerformance" && !Options::get().all)
@@ -510,7 +510,7 @@ public:
 };
 
 
-BOOST_FIXTURE_TEST_SUITE(VMTests, vmtestfixture)
+BOOST_FIXTURE_TEST_SUITE(VMTests, VmTestFixture)
 
 BOOST_AUTO_TEST_CASE(vmArithmeticTest){}
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation){}

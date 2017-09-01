@@ -164,10 +164,10 @@ json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _
 
 } }// Namespace Close
 
-class transactiontestfixture
+class TransactionTestFixture
 {
 public:
-	transactiontestfixture()
+	TransactionTestFixture()
 	{
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 
@@ -215,7 +215,7 @@ public:
 	}
 };
 
-BOOST_FIXTURE_TEST_SUITE(TransactionTests, transactiontestfixture)
+BOOST_FIXTURE_TEST_SUITE(TransactionTests, TransactionTestFixture)
 
 BOOST_AUTO_TEST_CASE(ttConstantinople){}
 BOOST_AUTO_TEST_CASE(ttEip155VitaliksEip158){}
