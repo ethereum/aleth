@@ -296,12 +296,6 @@ namespace dev { namespace test {
 
 json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 {
-	TestOutputHelper testOutputHelper(_input.get_obj().size());
-	return doVMTestsNoLog(_input, _fillin);
-}
-
-json_spirit::mValue doVMTestsNoLog(json_spirit::mValue const& _input, bool _fillin)
-{
 	json_spirit::mValue v = json_spirit::mObject();
 	json_spirit::mObject& output = v.get_obj();
 	for (auto& i: _input.get_obj())
@@ -470,114 +464,55 @@ json_spirit::mValue doVMTestsNoLog(json_spirit::mValue const& _input, bool _fill
 
 } } // namespace close
 
-BOOST_AUTO_TEST_SUITE(VMTests)
 
-BOOST_AUTO_TEST_CASE(vmtests)
+class VmTestFixture
 {
-	dev::test::executeTests("vmtests", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmArithmeticTest)
-{
-	dev::test::executeTests("vmArithmeticTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperationTest)
-{
-	dev::test::executeTests("vmBitwiseLogicOperationTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmSha3Test)
-{
-	dev::test::executeTests("vmSha3Test", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmEnvironmentalInfoTest)
-{
-	dev::test::executeTests("vmEnvironmentalInfoTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmBlockInfoTest)
-{
-	dev::test::executeTests("vmBlockInfoTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
-{
-	dev::test::executeTests("vmIOandFlowOperationsTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
-{
-	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmLogTest)
-{
-	dev::test::executeTests("vmLogTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
-{
-	dev::test::executeTests("vmSystemOperationsTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-}
-
-BOOST_AUTO_TEST_CASE(vmPerformanceTest)
-{
-	if (test::Options::get().all)
-		dev::test::executeTests("vmPerformanceTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-	else
-		cnote << "vmPerformanceTest is skipped because --all option is not specified.\n";
-}
-
-BOOST_AUTO_TEST_CASE(vmInputLimitsTest)
-{
-	if (test::Options::get().all)
-		dev::test::executeTests("vmInputLimits", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-	else
-		cnote << "vmInputLimitsTest is skipped because --all option is not specified.\n";
-}
-
-BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
-{
-	if (test::Options::get().all)
-		dev::test::executeTests("vmInputLimitsLight", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
-	else
-		cnote << "vmInputLimitsLightTest is skipped because --all option is not specified\n";
-}
-
-BOOST_AUTO_TEST_CASE(vmRandom)
-{
-	test::Options::get(); // parse command line options, e.g. to enable JIT
-
-	string testPath = getTestPath();
-	testPath += "/VMTests/RandomTests";
-
-	std::vector<boost::filesystem::path> testFiles = test::getJsonFiles(testPath);
-
-	test::TestOutputHelper testOutputHelper(testFiles.size());
-
-	for (auto& path: testFiles)
+public:
+	VmTestFixture()
 	{
-		try
+		string const& casename = boost::unit_test::framework::current_test_case().p_name;
+		if (casename == "vmPerformance" && !Options::get().all)
 		{
-			cnote << "TEST " << path.filename();
-			json_spirit::mValue v;
-			string s = asString(dev::contents(path.string()));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-			json_spirit::read_string(s, v);
-			test::Listener::notifySuiteStarted(path.filename().string());
-			doVMTestsNoLog(v, false);
+			cnote << "Skipping " << casename << " because --all option is not specified.\n";
+			return;
 		}
-		catch (Exception const& _e)
+		fillAllFilesInFolder(casename);
+	}
+
+	void fillAllFilesInFolder(string const& _folder)
+	{
+		using path = boost::filesystem::path;
+		path const fillersPath = path(test::getTestPath()) / "src/VMTestsFiller" / path(_folder);
+		string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
+
+		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
+		size_t fileCount = files.size();
+		if (test::Options::get().filltests)
+			fileCount *= 2; //tests are checked when filled and after they been filled
+
+		auto testOutput = dev::test::TestOutputHelper(fileCount);
+		for (auto const& file: files)
 		{
-			BOOST_ERROR(" Failed test with Exception: " << diagnostic_information(_e));
-		}
-		catch (std::exception const& _e)
-		{
-			BOOST_ERROR(" Failed test with Exception: " << _e.what());
+			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
+			test::executeTests(file.filename().string(), "/VMTests/"+_folder, "/VMTestsFiller/"+_folder, dev::test::doVMTests);
 		}
 	}
-}
+};
+
+
+BOOST_FIXTURE_TEST_SUITE(VMTests, VmTestFixture)
+
+BOOST_AUTO_TEST_CASE(vmArithmeticTest){}
+BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperation){}
+BOOST_AUTO_TEST_CASE(vmBlockInfoTest){}
+BOOST_AUTO_TEST_CASE(vmEnvironmentalInfo){}
+BOOST_AUTO_TEST_CASE(vmIOandFlowOperations){}
+BOOST_AUTO_TEST_CASE(vmLogTest){}
+BOOST_AUTO_TEST_CASE(vmPerformance){}
+BOOST_AUTO_TEST_CASE(vmPushDupSwapTest){}
+BOOST_AUTO_TEST_CASE(vmRandomTest){}
+BOOST_AUTO_TEST_CASE(vmSha3Test){}
+BOOST_AUTO_TEST_CASE(vmSystemOperations){}
+BOOST_AUTO_TEST_CASE(vmTests){}
 
 BOOST_AUTO_TEST_SUITE_END()

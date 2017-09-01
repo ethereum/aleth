@@ -117,10 +117,10 @@ json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin
 }
 } }// Namespace Close
 
-class generaltestfixture
+class GeneralTestFixture
 {
 public:
-	generaltestfixture()
+	GeneralTestFixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
@@ -152,7 +152,7 @@ public:
 };
 
 std::string const test::c_StateTestsGeneral = "StateTestsGeneral";
-BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
+BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, GeneralTestFixture)
 
 //Frontier Tests
 BOOST_AUTO_TEST_CASE(stCallCodes){}
