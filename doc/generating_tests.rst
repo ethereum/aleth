@@ -7,7 +7,7 @@ Generating Consensus Tests
 Consensus Tests
 ===============
 
-Consensus tests are test cases for all Ethereum implementations. The test cases are distributed in the "filled" form, which contains, for example, the expected state root hash after transactions.
+This article is for testing with the C++ Ethereum client. For non-client specific Ethereum testing, refer to http://ethereum-tests.readthedocs.io/. Consensus tests are test cases for all Ethereum implementations. The test cases are distributed in the "filled" form, which contains, for example, the expected state root hash after transactions.
 The filled test cases are usually not written by hand, but generated from "test filler" files.
 ``testeth`` executable in cpp-ethereum can convert test fillers into test cases.
 
