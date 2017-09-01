@@ -40,6 +40,7 @@ if [[ "$TESTS" == "On" ]]; then
     $BUILD_ROOT/test/testeth -t StateTestsGeneral/stExample -- --filltests --testpath $BUILD_ROOT/../test/jsontests
     $BUILD_ROOT/test/testeth -t 'TransitionTests/bcEIP158ToByzantium' -- --filltests --singletest  ByzantiumTransition --testpath $BUILD_ROOT/../test/jsontests
     cd $BUILD_ROOT/../test/jsontests
+
     npm init -y
     npm install jsonschema
     echo -e "$(find GeneralStateTests/stExample -name '*.json')" | node JSONSchema/validate.js JSONSchema/st-schema.json
