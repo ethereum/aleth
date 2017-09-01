@@ -34,6 +34,7 @@ pwd
 
 if [[ "$TESTS" == "On" ]]; then
 
+		echo "$NODEPATH"
     # Run the tests for the Interpreter
     $BUILD_ROOT/test/testeth -- --testpath $BUILD_ROOT/../test/jsontests
 
