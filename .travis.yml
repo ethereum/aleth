@@ -36,6 +36,7 @@ env:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
         - TRAVIS_TESTS=On
         - secure: "Nm9HEvhW8wtbF9v44g2Vo2CfX8cFlw3UWutHMmVl5nrcri34BVPXulsPF3CrIdoGgdBQvGxzNmbmAgi0KokaWhLZ2WvuDUXRAU8wuU3SB/AV7hNIGFZDqgk1LBBzwaFngqDCqqIQ29v2Z59s3y8qakmPQbR8eNJ1YAc2F9O8iVI="
+				- NODE_PATH="/usr/lib/node_modules"
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
