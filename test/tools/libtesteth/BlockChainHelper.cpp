@@ -122,21 +122,9 @@ void TestBlock::setState(State const& _state)
 
 void TestBlock::addTransaction(TestTransaction const& _tr)
 {
-	try
-	{
-		m_testTransactions.push_back(_tr);
-		if (m_transactionQueue.import(_tr.transaction().rlp()) != ImportResult::Success)
-			cnote << TestOutputHelper::testName() + " Test block failed importing transaction\n";
-	}
-	catch (dev::Exception const& _e)
-	{
-		BOOST_ERROR(TestOutputHelper::testName() + " Failed transaction constructor with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		cnote << _e.what();
-	}
-
+	m_testTransactions.push_back(_tr);
+	if (m_transactionQueue.import(_tr.transaction().rlp()) != ImportResult::Success)
+		cnote << TestOutputHelper::testName() + " Test block failed importing transaction\n";
 	recalcBlockHeaderBytes();
 }
 

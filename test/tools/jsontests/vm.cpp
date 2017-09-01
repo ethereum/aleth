@@ -356,16 +356,6 @@ json_spirit::mValue doVMTestsNoLog(json_spirit::mValue const& _input, bool _fill
 			cnote << "    Safe VM Exception\n";
 			vmExceptionOccured = true;
 		}
-		catch (dev::Exception const& _e)
-		{
-			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-		}
-		catch (std::exception const& _e)
-		{
-			cnote << "VM did throw an exception: " << _e.what();
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-		}
 
 		// delete null entries in storage for the sake of comparison
 

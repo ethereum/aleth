@@ -419,49 +419,32 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 
 	if (Options::get().filltests)
 	{
-		try
-		{
-			if (!Options::get().singleTest)
-				cnote << "Populating tests...";
-			json_spirit::mValue v;
-			boost::filesystem::path p(__FILE__);
-
-			string nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
-			string testfilename = testFillerPath + "/" + name + nameEnding;
-			string 	s = asString(dev::contents(testfilename));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testfilename + " is empty.");
-
-			json_spirit::read_string(s, v);
-			removeComments(v);
-			json_spirit::mValue output = doTests(v, true);
-			addClientInfo(output, testfilename);
-			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(output, true)));
-		}
-		catch (dev::Exception const& _e)
-		{
-			BOOST_ERROR(TestOutputHelper::testName() + " Failed filling test with Exception: " << diagnostic_information(_e));
-		}
-		catch (std::exception const& _e)
-		{
-			BOOST_ERROR(TestOutputHelper::testName() + " Failed filling test with Exception: " << _e.what());
-		}
-	}
-	try
-	{
-		if ((Options::get().singleTest && Options::get().singleTestName == name) || !Options::get().singleTest)
-			cnote << "TEST " << name << ":";
-
+		if (!Options::get().singleTest)
+			cnote << "Populating tests...";
 		json_spirit::mValue v;
-		string s = asString(dev::contents(testPath + "/" + name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		boost::filesystem::path p(__FILE__);
+
+		string nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
+		string testfilename = testFillerPath + "/" + name + nameEnding;
+		string 	s = asString(dev::contents(testfilename));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testfilename + " is empty.");
+
 		json_spirit::read_string(s, v);
-		Listener::notifySuiteStarted(name);
-		doTests(v, false);
+		removeComments(v);
+		json_spirit::mValue output = doTests(v, true);
+		addClientInfo(output, testfilename);
+		writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(output, true)));
 	}
-	catch (dev::Exception const& _e)
-	{
-		BOOST_ERROR(TestOutputHelper::testName() + " Failed test with Exception: " << diagnostic_information(_e));
-	}
+
+	if ((Options::get().singleTest && Options::get().singleTestName == name) || !Options::get().singleTest)
+		cnote << "TEST " << name << ":";
+
+	json_spirit::mValue v;
+	string s = asString(dev::contents(testPath + "/" + name + ".json"));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+	json_spirit::read_string(s, v);
+	Listener::notifySuiteStarted(name);
+	doTests(v, false);
 }
 
 void removeComments(json_spirit::mValue& _obj)
