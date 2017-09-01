@@ -33,7 +33,7 @@ using namespace dev;
 int const c_bufferSize = 1024;
 
 WindowsPipeServer::WindowsPipeServer(string const& _appId):
-	IpcServerBase("\\\\.\\pipe\\" + getIpcPath() + "\\" + _appId + ".ipc")
+	IpcServerBase("\\\\.\\pipe\\" + getIpcPath().string() + "\\" + _appId + ".ipc")
 {
 }
 
