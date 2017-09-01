@@ -19,6 +19,7 @@
 
 #pragma once
 #include "JsonSpiritHeaders.h"
+#include "TestOutputHelper.h"
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
 #include <libdevcore/TransientDirectory.h>
@@ -143,6 +144,22 @@ class NetworkSelector
 public:
 	explicit NetworkSelector(eth::Network _network) { TestBlockChain::s_sealEngineNetwork = _network; }
 	~NetworkSelector() { TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest; } // reset to default
+};
+
+class FrontierNoProofTestFixture: public TestOutputHelper
+{
+public:
+	FrontierNoProofTestFixture(): networkSelector(Network::FrontierNoProofTest) {}
+
+	NetworkSelector networkSelector;
+};
+
+class MainNetworkNoProofTestFixture: public TestOutputHelper
+{
+public:
+	MainNetworkNoProofTestFixture(): networkSelector(Network::MainNetworkNoProofTest) {}
+
+	NetworkSelector networkSelector;
 };
 
 }}

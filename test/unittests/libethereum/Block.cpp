@@ -48,14 +48,6 @@ BOOST_AUTO_TEST_CASE(bStructures)
 }
 #endif
 
-class FrontierNoProofTestFixture: public TestOutputHelper
-{
-public:
-	FrontierNoProofTestFixture(): networkSelector(eth::Network::FrontierNoProofTest) {}
-
-	NetworkSelector networkSelector;
-};
-
 BOOST_FIXTURE_TEST_SUITE(FrontierBlockSuite, FrontierNoProofTestFixture)
 
 BOOST_AUTO_TEST_CASE(bStates)
