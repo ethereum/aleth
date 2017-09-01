@@ -143,7 +143,7 @@ eth::Network stringToNetId(string const& _netname)
 bool isDisabledNetwork(eth::Network _net)
 {
 	Options const& opt = Options::get();
-	if (opt.all || opt.filltests || opt.createRandomTest)
+	if (opt.all || opt.filltests || opt.createRandomTest || !opt.singleTestNet.empty())
 		return false;
 	switch (_net)
 	{
