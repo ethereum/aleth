@@ -30,11 +30,8 @@ TESTS=$1
 
 # There is an implicit assumption here that we HAVE to run from build directory.
 BUILD_ROOT=$(pwd)
-pwd
 
 if [[ "$TESTS" == "On" ]]; then
-
-		echo "$NODEPATH"
     # Run the tests for the Interpreter
     $BUILD_ROOT/test/testeth -- --testpath $BUILD_ROOT/../test/jsontests
 
@@ -43,6 +40,7 @@ if [[ "$TESTS" == "On" ]]; then
     $BUILD_ROOT/test/testeth -t StateTestsGeneral/stExample -- --filltests --testpath $BUILD_ROOT/../test/jsontests
     $BUILD_ROOT/test/testeth -t 'TransitionTests/bcEIP158ToByzantium' -- --filltests --singletest  ByzantiumTransition --testpath $BUILD_ROOT/../test/jsontests
     cd $BUILD_ROOT/../test/jsontests
+    npm install -p $BUILD_ROOT jsonschema
     echo -e "$(find GeneralStateTests/stExample -name '*.json')" | node JSONSchema/validate.js JSONSchema/st-schema.json
     echo -e "BlockchainTests/TransitionTests/bcEIP158ToByzantium/ByzantiumTransition.json" | node JSONSchema/validate.js JSONSchema/bc-schema.json
 
