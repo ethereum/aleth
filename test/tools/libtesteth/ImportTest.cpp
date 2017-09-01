@@ -190,9 +190,6 @@ bytes ImportTest::executeTest()
 	m_transactions.clear();
 	m_transactions = transactionResults;
 	return bytes();
-
-	BOOST_ERROR("Error when executing test ImportTest::executeTest()");
-	return bytes();
 }
 
 void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward)
