@@ -236,7 +236,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 		initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 		return std::make_tuple(initialState, out, changeLog);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		cnote << "Exception: " << diagnostic_information(_e);
 	}
@@ -388,7 +388,7 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 				Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce"))) :
 				Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o), toInt(_o.at("nonce")));
 		}
-		catch (Exception& _e)
+		catch (dev::Exception& _e)
 		{
 			cnote << "invalid transaction" << boost::diagnostic_information(_e);
 		}

@@ -12,3 +12,5 @@ target_link_libraries(
 )
 
 install(TARGETS eth DESTINATION bin)
+
+cotire(eth)

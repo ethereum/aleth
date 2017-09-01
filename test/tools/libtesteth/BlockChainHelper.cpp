@@ -128,7 +128,7 @@ void TestBlock::addTransaction(TestTransaction const& _tr)
 		if (m_transactionQueue.import(_tr.transaction().rlp()) != ImportResult::Success)
 			cnote << TestOutputHelper::testName() + " Test block failed importing transaction\n";
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + " Failed transaction constructor with Exception: " << diagnostic_information(_e));
 	}
@@ -221,7 +221,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
 		for (size_t i = 0; i < block.pending().size(); i++)
 			m_transactionQueue.import(block.pending()[i]);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		cnote << TestOutputHelper::testName() + " block sync or mining did throw an exception: " << diagnostic_information(_e);
 		return;
@@ -280,7 +280,7 @@ BlockHeader TestBlock::constructBlock(mObject const& _o, h256 const& _stateRoot)
 		ret = BlockHeader(c_blockRLP, HeaderData);
 //		cdebug << "Block constructed of hash" << ret.hash() << "(without:" << ret.hash(WithoutSeal) << ")";
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		cnote << TestOutputHelper::testName() + " block population did throw an exception: " << diagnostic_information(_e);
 	}
@@ -372,7 +372,7 @@ void TestBlock::verify(TestBlockChain const& _bc) const
 	{
 		_bc.interface().sealEngine()->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		u256 const& daoHardfork = _bc.interface().sealEngine()->chainParams().daoHardforkBlock;
 		if ((m_blockHeader.number() >= daoHardfork && m_blockHeader.number() <= daoHardfork + 9) || m_blockHeader.number() == 0)
