@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(bStates)
 			BOOST_REQUIRE(string(_e.what()).find("InvalidStateRoot") != string::npos);
 		}
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 		auto is_critical = [](std::exception const& _e) { return string(_e.what()).find("BlockNotFound") != string::npos; };
 		BOOST_CHECK_EXCEPTION(block32.populateFromChain(blockchain, h256("0x0000000000000000000000000000000000000000000000000000000000000001")), BlockNotFound, is_critical);
 	}
-	catch (Exception const& _e)
+	catch (dev::Exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
