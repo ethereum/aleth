@@ -75,104 +75,88 @@ static std::atomic<bool> g_silence = {false};
 void help()
 {
 	cout
-		<< "Usage eth [OPTIONS]" << endl
-		<< "Options:" << endl << endl
-		<< "Wallet usage:" << endl;
+		<< "Usage eth [OPTIONS]\n"
+		<< "Options:\n\n"
+		<< "Wallet usage:\n";
 	AccountManager::streamAccountHelp(cout);
 	AccountManager::streamWalletHelp(cout);
 	cout
-		<< endl;
-	cout
-		<< "Client mode (default):" << endl
-		<< "    --mainnet  Use the main network protocol." << endl
-		<< "    --ropsten  Use the Ropsten testnet." << endl
-		<< "    --private <name>  Use a private chain." << endl
-		<< "    --test  Testing mode: Disable PoW and provide test rpc interface." << endl
-		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
-		<< "    --oppose-dao-fork  Ignore DAO hard fork (default is to participate)." << endl
-		<< endl
-		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
-		<< endl
-		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
-		<< "    --ipc  Enable IPC server (default: on)." << endl
-		<< "    --ipcpath Set .ipc socket path (default: data directory)" << endl
-		<< "    --admin-via-http  Expose admin interface via http - UNSAFE! (default: off)." << endl
-		<< "    --no-ipc  Disable IPC server." << endl
-		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
-		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
-		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up)." << endl
-		<< "    -K,--kill  Kill the blockchain first." << endl
-		<< "    -R,--rebuild  Rebuild the blockchain from the existing database." << endl
-		<< "    --rescue  Attempt to rescue a corrupt database." << endl
-		<< endl
-		<< "    --import-presale <file>  Import a pre-sale key; you'll need to specify the password to this key." << endl
-		<< "    -s,--import-secret <secret>  Import a secret key into the key store." << endl
-		<< "    --master <password>  Give the master password for the key store. Use --master \"\" to show a prompt." << endl
-		<< "    --password <password>  Give a password for a private key." << endl
-		<< endl
-		<< "Client transacting:" << endl
-		/*<< "    -B,--block-fees <n>  Set the block fee profit in the reference unit, e.g. ¢ (default: 15)." << endl
-		<< "    -e,--ether-price <n>  Set the ether price in the reference unit, e.g. ¢ (default: 30.679)." << endl
-		<< "    -P,--priority <0 - 100>  Set the default priority percentage (%) of a transaction (default: 50)." << endl*/
-		<< "    --ask <wei>  Set the minimum ask gas price under which no transaction will be mined (default " << toString(DefaultGasPrice) << " )." << endl
-		<< "    --bid <wei>  Set the bid gas price to pay for transactions (default " << toString(DefaultGasPrice) << " )." << endl
-		<< "    --unsafe-transactions  Allow all transactions to proceed without verification. EXTREMELY UNSAFE."
-		<< endl
-		<< "Client mining:" << endl
-		<< "    -a,--address <addr>  Set the author (mining payout) address to given address (default: auto)." << endl
-		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (default: off)." << endl
-		<< "    -f,--force-mining  Mine even when there are no transactions to mine (default: off)." << endl
-		<< "    -C,--cpu  When mining, use the CPU." << endl
-		<< "    -t, --mining-threads <n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform)." << endl
-		<< endl
-		<< "Client networking:" << endl
-		<< "    --client-name <name>  Add a name to your client's version string (default: blank)." << endl
-		<< "    --bootstrap  Connect to the default Ethereum peer servers (default unless --no-discovery used)." << endl
-		<< "    --no-bootstrap  Do not connect to the default Ethereum peer servers (default only when --no-discovery is used)." << endl
-		<< "    -x,--peers <number>  Attempt to connect to a given number of peers (default: 11)." << endl
-		<< "    --peer-stretch <number>  Give the accepted connection multiplier (default: 7)." << endl
+		<< "\nClient mode (default):\n"
+		<< "    --mainnet  Use the main network protocol.\n"
+		<< "    --ropsten  Use the Ropsten testnet.\n"
+		<< "    --private <name>  Use a private chain.\n"
+		<< "    --test  Testing mode: Disable PoW and provide test rpc interface.\n"
+		<< "    --config <file>  Configure specialised blockchain using given JSON information.\n"
+		<< "    --oppose-dao-fork  Ignore DAO hard fork (default is to participate).\n\n"
+		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full).\n\n"
+		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off).\n"
+		<< "    --ipc  Enable IPC server (default: on).\n"
+		<< "    --ipcpath Set .ipc socket path (default: data directory)\n"
+		<< "    --admin-via-http  Expose admin interface via http - UNSAFE! (default: off).\n"
+		<< "    --no-ipc  Disable IPC server.\n"
+		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ").\n"
+		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header.\n"
+		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up).\n"
+		<< "    -K,--kill  Kill the blockchain first.\n"
+		<< "    -R,--rebuild  Rebuild the blockchain from the existing database.\n"
+		<< "    --rescue  Attempt to rescue a corrupt database.\n\n"
+		<< "    --import-presale <file>  Import a pre-sale key; you'll need to specify the password to this key.\n"
+		<< "    -s,--import-secret <secret>  Import a secret key into the key store.\n"
+		<< "    --master <password>  Give the master password for the key store. Use --master \"\" to show a prompt.\n"
+		<< "    --password <password>  Give a password for a private key.\n\n"
+		<< "Client transacting:\n"
+		<< "    --ask <wei>  Set the minimum ask gas price under which no transaction will be mined (default " << toString(DefaultGasPrice) << " ).\n"
+		<< "    --bid <wei>  Set the bid gas price to pay for transactions (default " << toString(DefaultGasPrice) << " ).\n"
+		<< "    --unsafe-transactions  Allow all transactions to proceed without verification. EXTREMELY UNSAFE.\n"
+		<< "Client mining:\n"
+		<< "    -a,--address <addr>  Set the author (mining payout) address to given address (default: auto).\n"
+		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (default: off).\n"
+		<< "    -f,--force-mining  Mine even when there are no transactions to mine (default: off).\n"
+		<< "    -C,--cpu  When mining, use the CPU.\n"
+		<< "    -t, --mining-threads <n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform).\n\n"
+		<< "Client networking:\n"
+		<< "    --client-name <name>  Add a name to your client's version string (default: blank).\n"
+		<< "    --bootstrap  Connect to the default Ethereum peer servers (default unless --no-discovery used).\n"
+		<< "    --no-bootstrap  Do not connect to the default Ethereum peer servers (default only when --no-discovery is used).\n"
+		<< "    -x,--peers <number>  Attempt to connect to a given number of peers (default: 11).\n"
+		<< "    --peer-stretch <number>  Give the accepted connection multiplier (default: 7).\n"
 
-		<< "    --public-ip <ip>  Force advertised public IP to the given IP (default: auto)." << endl
-		<< "    --listen-ip <ip>(:<port>)  Listen on the given IP for incoming connections (default: 0.0.0.0)." << endl
-		<< "    --listen <port>  Listen on the given port for incoming connections (default: 30303)." << endl
-		<< "    -r,--remote <host>(:<port>)  Connect to the given remote host (default: none)." << endl
-		<< "    --port <port>  Connect to the given remote port (default: 30303)." << endl
-		<< "    --network-id <n>  Only connect to other hosts with this network id." << endl
-		<< "    --upnp <on/off>  Use UPnP for NAT (default: on)." << endl
+		<< "    --public-ip <ip>  Force advertised public IP to the given IP (default: auto).\n"
+		<< "    --listen-ip <ip>(:<port>)  Listen on the given IP for incoming connections (default: 0.0.0.0).\n"
+		<< "    --listen <port>  Listen on the given port for incoming connections (default: 30303).\n"
+		<< "    -r,--remote <host>(:<port>)  Connect to the given remote host (default: none).\n"
+		<< "    --port <port>  Connect to the given remote port (default: 30303).\n"
+		<< "    --network-id <n>  Only connect to other hosts with this network id.\n"
+		<< "    --upnp <on/off>  Use UPnP for NAT (default: on).\n"
 
-		<< "    --peerset <list>  Space delimited list of peers; element format: type:publickey@ipAddress[:port]." << endl
-		<< "        Types:" << endl
-		<< "        default		Attempt connection when no other peers are available and pinning is disabled." << endl
-		<< "        required		Keep connected at all times." << endl
+		<< "    --peerset <list>  Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n"
+		<< "        Types:\n"
+		<< "        default		Attempt connection when no other peers are available and pinning is disabled.\n"
+		<< "        required		Keep connected at all times.\n"
 // TODO:
 //		<< "	--trust-peers <filename>  Space delimited list of publickeys." << endl
 
-		<< "    --no-discovery  Disable node discovery, implies --no-bootstrap." << endl
-		<< "    --pin  Only accept or connect to trusted peers." << endl
-		<< "    --hermit  Equivalent to --no-discovery --pin." << endl
-		<< "    --sociable  Force discovery and no pinning." << endl
-		<< endl;
+		<< "    --no-discovery  Disable node discovery, implies --no-bootstrap.\n"
+		<< "    --pin  Only accept or connect to trusted peers.\n"
+		<< "    --hermit  Equivalent to --no-discovery --pin.\n"
+		<< "    --sociable  Force discovery and no pinning.\n\n";
 	MinerCLI::streamHelp(cout);
 	cout
-		<< "Import/export modes:" << endl
-		<< "    --from <n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'." << endl
-		<< "    --to <n>  Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'." << endl
-		<< "    --only <n>  Equivalent to --export-from n --export-to n." << endl
-		<< "    --dont-check  Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid." << endl
-		<< endl
-		<< "General Options:" << endl
-		<< "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ")." << endl
+		<< "Import/export modes:\n"
+		<< "    --from <n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'.\n"
+		<< "    --to <n>  Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'.\n"
+		<< "    --only <n>  Equivalent to --export-from n --export-to n.\n"
+		<< "    --dont-check  Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.\n\n"
+		<< "General Options:\n"
+		<< "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ").\n"
 #if ETH_EVMJIT
-		<< "    --vm <vm-kind>  Select VM; options are: interpreter, jit or smart (default: interpreter)." << endl
+		<< "    --vm <vm-kind>  Select VM; options are: interpreter, jit or smart (default: interpreter).\n"
 #endif // ETH_EVMJIT
-		<< "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (default: 8)." << endl
-		<< "    -V,--version  Show the version and exit." << endl
-		<< "    -h,--help  Show this help message and exit." << endl
-		<< endl
-		<< "Experimental / Proof of Concept:" << endl
-		<< "    --shh  Enable Whisper." << endl
-		<< endl
-		;
+		<< "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (default: 8).\n"
+		<< "    -V,--version  Show the version and exit.\n"
+		<< "    -h,--help  Show this help message and exit.\n\n"
+		<< "Experimental / Proof of Concept:\n"
+		<< "    --shh  Enable Whisper.\n\n";
 		exit(0);
 }
 
@@ -181,16 +165,16 @@ string ethCredits(bool _interactive = false)
 	std::ostringstream cout;
 	if (_interactive)
 		cout
-			<< "Type 'exit' to quit" << endl << endl;
+			<< "Type 'exit' to quit\n\n";
 	return credits() + cout.str();
 }
 
 void version()
 {
-	cout << "eth version " << dev::Version << endl;
-	cout << "eth network protocol version: " << dev::eth::c_protocolVersion << endl;
-	cout << "Client database version: " << dev::eth::c_databaseVersion << endl;
-	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
+	cout << "eth version " << dev::Version << "\n";
+	cout << "eth network protocol version: " << dev::eth::c_protocolVersion << "\n";
+	cout << "Client database version: " << dev::eth::c_databaseVersion << "\n";
+	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << "\n";
 	exit(0);
 }
 
@@ -485,7 +469,7 @@ int main(int argc, char** argv)
 				exportFormat = Format::Human;
 			else
 			{
-				cerr << "Bad " << arg << " option: " << m << endl;
+				cerr << "Bad " << arg << " option: " << m << "\n";
 				return -1;
 			}
 		}
@@ -504,7 +488,7 @@ int main(int argc, char** argv)
 				upnp = false;
 			else
 			{
-				cerr << "Bad " << arg << " option: " << m << endl;
+				cerr << "Bad " << arg << " option: " << m << "\n";
 				return -1;
 			}
 		}
@@ -514,7 +498,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		else if (arg == "--private" && i + 1 < argc)
@@ -523,7 +507,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		else if (arg == "--independent" && i + 1 < argc)
@@ -533,7 +517,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		else if (arg == "-K" || arg == "--kill-blockchain" || arg == "--kill")
@@ -550,12 +534,12 @@ int main(int argc, char** argv)
 			}
 			catch (BadHexCharacter&)
 			{
-				cerr << "Bad hex in " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad hex in " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		else if ((arg == "-s" || arg == "--import-secret") && i + 1 < argc)
@@ -580,7 +564,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		}
@@ -592,7 +576,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		}
@@ -604,7 +588,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		}
@@ -622,7 +606,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		}
@@ -634,7 +618,7 @@ int main(int argc, char** argv)
 			}
 			catch (...)
 			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				cerr << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
 		}
@@ -650,7 +634,7 @@ int main(int argc, char** argv)
 					mining = stoi(m);
 				}
 				catch (...) {
-					cerr << "Unknown " << arg << " option: " << m << endl;
+					cerr << "Unknown " << arg << " option: " << m << "\n";
 					return -1;
 				}
 		}
@@ -747,7 +731,7 @@ int main(int argc, char** argv)
 				}
 				catch (...)
 				{
-					cerr << "Unrecognized peerset: " << peerset << endl;
+					cerr << "Unrecognized peerset: " << peerset << "\n";
 					return -1;
 				}
 			}
@@ -761,7 +745,7 @@ int main(int argc, char** argv)
 				nodeMode = NodeMode::PeerServer;
 			else
 			{
-				cerr << "Unknown mode: " << m << endl;
+				cerr << "Unknown mode: " << m << "\n";
 				return -1;
 			}
 		}
@@ -777,7 +761,7 @@ int main(int argc, char** argv)
 				VMFactory::setKind(VMKind::Smart);
 			else
 			{
-				cerr << "Unknown VM kind: " << vmKind << endl;
+				cerr << "Unknown VM kind: " << vmKind << "\n";
 				return -1;
 			}
 		}
@@ -798,7 +782,7 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			cerr << "Invalid argument: " << arg << endl;
+			cerr << "Invalid argument: " << arg << "\n";
 			exit(-1);
 		}
 	}
@@ -811,8 +795,8 @@ int main(int argc, char** argv)
 		}
 		catch (...)
 		{
-			cerr << "provided configuration is not well formatted" << endl;
-			cerr << "sample: " << endl << genesisInfo(eth::Network::MainNetworkTest) << endl;
+			cerr << "provided configuration is not well formatted\n";
+			cerr << "sample: \n" << genesisInfo(eth::Network::MainNetworkTest) << "\n";
 			return 0;
 		}
 	}
@@ -826,7 +810,7 @@ int main(int argc, char** argv)
 		}
 		catch (...)
 		{
-			cerr << "provided genesis block description is not well formatted" << endl;
+			cerr << "provided genesis block description is not well formatted\n";
 			string genesisSample =
 			R"E(
 			{
@@ -840,7 +824,7 @@ int main(int argc, char** argv)
 				"gasLimit": "0x1388"
 			}
 			)E";
-			cerr << "sample: " << endl << genesisSample << endl;
+			cerr << "sample: \n" << genesisSample << "\n";
 			return 0;
 		}
 	}
@@ -857,7 +841,7 @@ int main(int argc, char** argv)
 //		c_gasFloorTarget = gasFloor;
 
 	if (g_logVerbosity > 0)
-		cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << endl;
+		cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << "\n";
 
 	m.execute();
 
@@ -882,7 +866,7 @@ int main(int argc, char** argv)
 	auto getPassword = [&](string const& prompt) {
 		bool s = g_silence;
 		g_silence = true;
-		cout << endl;
+		cout << "\n";
 		string ret = dev::getPassword(prompt);
 		g_silence = s;
 		return ret;
@@ -890,7 +874,7 @@ int main(int argc, char** argv)
 	auto getResponse = [&](string const& prompt, unordered_set<string> const& acceptable) {
 		bool s = g_silence;
 		g_silence = true;
-		cout << endl;
+		cout << "\n";
 		string ret;
 		while (true)
 		{
@@ -898,7 +882,7 @@ int main(int argc, char** argv)
 			getline(cin, ret);
 			if (acceptable.count(ret))
 				break;
-			cout << "Invalid response: " << ret << endl;
+			cout << "Invalid response: " << ret << "\n";
 		}
 		g_silence = s;
 		return ret;
@@ -944,7 +928,7 @@ int main(int argc, char** argv)
 		}
 		catch (...)
 		{
-			cerr << "Bad block number/hash option: " << s << endl;
+			cerr << "Bad block number/hash option: " << s << "\n";
 			exit(-1);
 		}
 	};
@@ -961,8 +945,8 @@ int main(int argc, char** argv)
 			switch (exportFormat)
 			{
 			case Format::Binary: out.write((char const*)block.data(), block.size()); break;
-			case Format::Hex: out << toHex(block) << endl; break;
-			case Format::Human: out << RLP(block) << endl; break;
+			case Format::Hex: out << toHex(block) << "\n"; break;
+			case Format::Human: out << RLP(block) << "\n"; break;
 			default:;
 			}
 		}
@@ -1008,10 +992,9 @@ int main(int argc, char** argv)
 			{
 				auto i = imported - lastImported;
 				auto d = e - last;
-				cout << i << " more imported at " << (round(i * 10 / d) / 10) << " blocks/s. " << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")" << endl;
+				cout << i << " more imported at " << (round(i * 10 / d) / 10) << " blocks/s. " << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")" << "\n";
 				last = (unsigned)e;
 				lastImported = imported;
-//				cout << web3.ethereum()->blockQueueStatus() << endl;
 			}
 		}
 
@@ -1022,7 +1005,7 @@ int main(int argc, char** argv)
 			tie(ignore, moreToImport, ignore) = web3.ethereum()->syncQueue(100000);
 		}
 		double e = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - t).count() / 1000.0;
-		cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")" << endl;
+		cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")\n";
 		return 0;
 	}
 
@@ -1037,7 +1020,7 @@ int main(int argc, char** argv)
 					masterPassword = getPassword("Please enter your MASTER password: ");
 					if (keyManager.load(masterPassword))
 						break;
-					cout << "The password you entered is incorrect. If you have forgotten your password, and you wish to start afresh, manually remove the file: " + getDataDir("ethereum") + "/keys.info" << endl;
+					cout << "The password you entered is incorrect. If you have forgotten your password, and you wish to start afresh, manually remove the file: " + getDataDir("ethereum") + "/keys.info\n";
 				}
 			}
 		}
@@ -1051,7 +1034,7 @@ int main(int argc, char** argv)
 	}
 	catch(...)
 	{
-		cerr << "Error initializing key manager: " << boost::current_exception_diagnostic_information() << endl;
+		cerr << "Error initializing key manager: " << boost::current_exception_diagnostic_information() << "\n";
 		return -1;
 	}
 
@@ -1085,15 +1068,15 @@ int main(int argc, char** argv)
 	};
 
 	if (author)
-		cout << "Mining Beneficiary: " << renderFullAddress(author) << endl;
+		cout << "Mining Beneficiary: " << renderFullAddress(author) << "\n";
 
 	if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet)
 	{
 		web3.startNetwork();
-		cout << "Node ID: " << web3.enode() << endl;
+		cout << "Node ID: " << web3.enode() << "\n";
 	}
 	else
-		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
+		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host.\n";
 
 	unique_ptr<ModularServer<>> jsonrpcHttpServer;
 	unique_ptr<ModularServer<>> jsonrpcIpcServer;
@@ -1191,7 +1174,7 @@ int main(int argc, char** argv)
 		else
 			sessionManager->addSession(jsonAdmin, rpc::SessionPermissions{{rpc::Privilege::Admin}});
 
-		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
+		cout << "JSONRPC Admin Session Key: " << jsonAdmin << "\n";
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
 	}

@@ -23,7 +23,6 @@
 
 #include <libethereum/ClientBase.h>
 #include <libethereum/BlockChain.h>
-#include <libethereum/State.h>
 
 namespace dev
 {

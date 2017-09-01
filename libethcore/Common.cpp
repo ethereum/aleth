@@ -129,13 +129,13 @@ static void badBlockInfo(BlockHeader const& _bi, string const& _err)
 	string const c_border = EthReset EthOnMaroon + string(2, ' ') + EthReset EthMaroonBold;
 	string const c_space = c_border + string(76, ' ') + c_border + EthReset;
 	stringstream ss;
-	ss << c_line << endl;
-	ss << c_space << endl;
-	ss << c_border + "  Import Failure     " + _err + string(max<int>(0, 53 - _err.size()), ' ') + "  " + c_border << endl;
-	ss << c_space << endl;
+	ss << c_line << "\n";
+	ss << c_space << "\n";
+	ss << c_border + "  Import Failure     " + _err + string(max<int>(0, 53 - _err.size()), ' ') + "  " + c_border << "\n";
+	ss << c_space << "\n";
 	string bin = toString(_bi.number());
-	ss << c_border + ("                     Guru Meditation #" + string(max<int>(0, 8 - bin.size()), '0') + bin + "." + _bi.hash().abridged() + "                    ") + c_border << endl;
-	ss << c_space << endl;
+	ss << c_border + ("                     Guru Meditation #" + string(max<int>(0, 8 - bin.size()), '0') + bin + "." + _bi.hash().abridged() + "                    ") + c_border << "\n";
+	ss << c_space << "\n";
 	ss << c_line;
 	cwarn << "\n" + ss.str();
 }

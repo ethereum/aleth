@@ -21,7 +21,6 @@
  */
 
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/Block.h>
@@ -51,39 +50,36 @@ int64_t maxBlockGasLimit()
 void help()
 {
 	cout
-		<< "Usage ethvm <options> [trace|stats|output|test] (<file>|-)" << endl
-		<< "Transaction options:" << endl
-		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
-		<< "    --gas <n>    Transaction should be given <n> gas (default: block gas limit)." << endl
-		<< "    --gas-limit <n>  Block gas limit (default: " << maxBlockGasLimit() << ")." << endl
-		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
-		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
-		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
-		<< "    --input <d>   Transaction code should be <d>" << endl
-		<< "    --code <d>    Contract code <d>. Makes transaction a call to this contract" << endl
+		<< "Usage ethvm <options> [trace|stats|output|test] (<file>|-)\n"
+		<< "Transaction options:\n"
+		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0).\n"
+		<< "    --gas <n>    Transaction should be given <n> gas (default: block gas limit).\n"
+		<< "    --gas-limit <n>  Block gas limit (default: " << maxBlockGasLimit() << ").\n"
+		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0).\n"
+		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069).\n"
+		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069).\n"
+		<< "    --input <d>   Transaction code should be <d>\n"
+		<< "    --code <d>    Contract code <d>. Makes transaction a call to this contract\n"
 #if ETH_EVMJIT
-		<< endl
-		<< "VM options:" << endl
-		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)" << endl
+		<< "\nVM options:\n"
+		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)\n"
 #endif // ETH_EVMJIT
-		<< "Network options:" << endl
-		<< "    --network Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople" << endl
-		<< endl
-		<< "Options for trace:" << endl
-		<< "    --flat  Minimal whitespace in the JSON." << endl
-		<< "    --mnemonics  Show instruction mnemonics in the trace (non-standard)." << endl
-		<< endl
-		<< "General options:" << endl
-		<< "    -V,--version  Show the version and exit." << endl
-		<< "    -h,--help  Show this help message and exit." << endl;
+		<< "Network options:\n"
+		<< "    --network Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n\n"
+		<< "Options for trace:\n"
+		<< "    --flat  Minimal whitespace in the JSON.\n"
+		<< "    --mnemonics  Show instruction mnemonics in the trace (non-standard).\n\n"
+		<< "General options:\n"
+		<< "    -V,--version  Show the version and exit.\n"
+		<< "    -h,--help  Show this help message and exit.\n";
 	exit(0);
 }
 
 void version()
 {
-	cout << "ethvm version " << dev::Version << endl;
-	cout << "By Gav Wood, 2015." << endl;
-	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
+	cout << "ethvm version " << dev::Version << "\n";
+	cout << "By Gav Wood, 2015.\n";
+	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << "\n";
 	exit(0);
 }
 
@@ -174,7 +170,7 @@ int main(int argc, char** argv)
 #endif
 			else
 			{
-				cerr << "Unknown/unsupported VM kind: " << vmKindStr << endl;
+				cerr << "Unknown/unsupported VM kind: " << vmKindStr << "\n";
 				return -1;
 			}
 		}
@@ -219,7 +215,7 @@ int main(int argc, char** argv)
 				networkName = Network::MainNetwork;
 			else
 			{
-				cerr << "Unknown network type: " << network << endl;
+				cerr << "Unknown network type: " << network << "\n";
 				return -1;
 			}
 		}
@@ -330,23 +326,23 @@ int main(int argc, char** argv)
 
 	if (mode == Mode::Statistics)
 	{
-		cout << "Gas used: " << res.gasUsed << " (+" << t.baseGasRequired(se->evmSchedule(envInfo.number())) << " for transaction, -" << res.gasRefunded << " refunded)" << endl;
-		cout << "Output: " << toHex(output) << endl;
+		cout << "Gas used: " << res.gasUsed << " (+" << t.baseGasRequired(se->evmSchedule(envInfo.number())) << " for transaction, -" << res.gasRefunded << " refunded)\n";
+		cout << "Output: " << toHex(output) << "\n";
 		LogEntries logs = executive.logs();
-		cout << logs.size() << " logs" << (logs.empty() ? "." : ":") << endl;
+		cout << logs.size() << " logs" << (logs.empty() ? "." : ":") << "\n";
 		for (LogEntry const& l: logs)
 		{
-			cout << "  " << l.address.hex() << ": " << toHex(t.data()) << endl;
+			cout << "  " << l.address.hex() << ": " << toHex(t.data()) << "\n";
 			for (h256 const& t: l.topics)
-				cout << "    " << t.hex() << endl;
+				cout << "    " << t.hex() << "\n";
 		}
 
-		cout << total << " operations in " << execTime << " seconds." << endl;
-		cout << "Maximum memory usage: " << memTotal * 32 << " bytes" << endl;
-		cout << "Expensive operations:" << endl;
+		cout << total << " operations in " << execTime << " seconds.\n";
+		cout << "Maximum memory usage: " << memTotal * 32 << " bytes\n";
+		cout << "Expensive operations:\n";
 		for (auto const& c: {Instruction::SSTORE, Instruction::SLOAD, Instruction::CALL, Instruction::CREATE, Instruction::CALLCODE, Instruction::DELEGATECALL, Instruction::MSTORE8, Instruction::MSTORE, Instruction::MLOAD, Instruction::SHA3})
 			if (!!counts[(byte)c].first)
-				cout << "  " << instructionInfo(c).name << " x " << counts[(byte)c].first << " (" << counts[(byte)c].second << " gas)" << endl;
+				cout << "  " << instructionInfo(c).name << " x " << counts[(byte)c].first << " (" << counts[(byte)c].second << " gas)\n";
 	}
 	else if (mode == Mode::Trace)
 		cout << st.json(styledJson);
