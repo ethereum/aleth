@@ -40,7 +40,7 @@ void printHelp()
 	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
 	cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
 	cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
-	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test\n";
+	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test, implies --all.\n";
 	cout << setw(30) << "--singletest <TestFile> <TestName>\n";
 	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
 	cout << setw(30) << "--vm <interpreter|jit|smart>" << setw(25) << "Set VM type for VMTests suite\n";
@@ -147,6 +147,7 @@ Options::Options(int argc, char** argv)
 		{
 			throwIfNoArgumentFollows();
 			singleTest = true;
+			all = true; // The user wants to run one test, so let it happen even when the test is slow, or the network is disabled.
 			auto name1 = std::string{argv[++i]};
 			if (i + 1 < argc) // two params
 			{
