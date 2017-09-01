@@ -41,46 +41,33 @@ PrecompiledContract::PrecompiledContract(
 	}, _exec, _startingBlock)
 {}
 
-ChainOperationParams::ChainOperationParams()
+ChainOperationParams::ChainOperationParams():
+	m_blockReward("0x4563918244F40000"),
+	minGasLimit(0x1388),
+	maxGasLimit("0x7fffffffffffffff"),
+	gasLimitBoundDivisor(0x0400),
+	networkID(0x0),
+	minimumDifficulty(0x020000),
+	difficultyBoundDivisor(0x0800),
+	durationLimit(0x0d),
+	registrar("0x5e70c0bbcd5636e0f9f9316e9f8633feb64d4050")
 {
-	otherParams = std::unordered_map<std::string, std::string>{
-		{"minGasLimit", "0x1388"},
-		{"maxGasLimit", "0x7fffffffffffffff"},
-		{"gasLimitBoundDivisor", "0x0400"},
-		{"minimumDifficulty", "0x020000"},
-		{"difficultyBoundDivisor", "0x0800"},
-		{"durationLimit", "0x0d"},
-		{"registrar", "5e70c0bbcd5636e0f9f9316e9f8633feb64d4050"},
-		{"networkID", "0x0"}
-	};
-	m_blockReward = u256("0x4563918244F40000");
 }
 
 EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blockNumber) const
 {
-	if (_blockNumber >= u256Param("constantinopleForkBlock"))
+	if (_blockNumber >= constantinopleForkBlock)
 		return ConstantinopleSchedule;
-	else if (_blockNumber >= u256Param("byzantiumForkBlock"))
+	else if (_blockNumber >= byzantiumForkBlock)
 		return ByzantiumSchedule;
-	else if (_blockNumber >= u256Param("EIP158ForkBlock"))
+	else if (_blockNumber >= EIP158ForkBlock)
 		return EIP158Schedule;
-	else if (_blockNumber >= u256Param("EIP150ForkBlock"))
+	else if (_blockNumber >= EIP150ForkBlock)
 		return EIP150Schedule;
-	else if (_blockNumber >= u256Param("homesteadForkBlock"))
+	else if (_blockNumber >= homesteadForkBlock)
 		return HomesteadSchedule;
 	else
 		return FrontierSchedule;
-}
-
-u256 ChainOperationParams::u256Param(string const& _name) const
-{
-	std::string at("");
-
-	auto it = otherParams.find(_name);
-	if (it != otherParams.end())
-		at = it->second;
-
-	return u256(fromBigEndian<u256>(fromHex(at)));
 }
 
 u256 ChainOperationParams::blockReward(EVMSchedule const& _schedule) const

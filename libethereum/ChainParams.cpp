@@ -65,21 +65,30 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params["maximumExtraDataSize"].get_str())));
 	cp.tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
 	cp.setBlockReward(u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str()))));
-	for (auto i: params)
+
+	auto setOptionalU256Parameter = [&params](u256 &_destination, string const& _name)
 	{
-		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" &&
-			i.first != "blockReward" && i.first != "tieBreakingGas" && i.first != "allowFutureBlocks")
-			cp.otherParams[i.first] = i.second.get_str();
-		else
-		{
-			if (i.first == "allowFutureBlocks")
-			{
-				// The value in otherParams is irrelevant, we only check for the presence of the key.
-				if (i.second.type() != json_spirit::bool_type || i.second.get_bool())
-					cp.otherParams[i.first] = "true";
-			}
-		}
-	}
+		if (params.count(_name))
+			_destination = u256(fromBigEndian<u256>(fromHex(params.at(_name).get_str())));
+	};
+	setOptionalU256Parameter(cp.minGasLimit, "minGasLimit");
+	setOptionalU256Parameter(cp.maxGasLimit, "maxGasLimit");
+	setOptionalU256Parameter(cp.gasLimitBoundDivisor, "gasLimitBoundDivisor");
+	setOptionalU256Parameter(cp.homesteadForkBlock, "homesteadForkBlock");
+	setOptionalU256Parameter(cp.EIP150ForkBlock, "EIP150ForkBlock");
+	setOptionalU256Parameter(cp.EIP158ForkBlock, "EIP158ForkBlock");
+	setOptionalU256Parameter(cp.byzantiumForkBlock, "byzantiumForkBlock");
+	setOptionalU256Parameter(cp.constantinopleForkBlock, "constantinopleForkBlock");
+	setOptionalU256Parameter(cp.daoHardforkBlock, "daoHardforkBlock");
+	setOptionalU256Parameter(cp.minimumDifficulty, "minimumDifficulty");
+	setOptionalU256Parameter(cp.difficultyBoundDivisor, "difficultyBoundDivisor");
+	setOptionalU256Parameter(cp.durationLimit, "durationLimit");
+
+	if (params.count("chainID"))
+		cp.chainID = int(u256(fromBigEndian<u256>(fromHex(params.at("chainID").get_str()))));
+	if (params.count("networkID"))
+		cp.networkID = int(u256(fromBigEndian<u256>(fromHex(params.at("networkID").get_str()))));
+	cp.allowFutureBlocks = params.count("allowFutureBlocks");
 
 	// genesis
 	string genesisStr = json_spirit::write_string(obj["genesis"], false);

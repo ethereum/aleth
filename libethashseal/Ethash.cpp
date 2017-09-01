@@ -87,19 +87,19 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 	if (_s != CheckNothingNew)
 	{
-		if (_bi.difficulty() < chainParams().u256Param("minimumDifficulty"))
-			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().u256Param("minimumDifficulty")), bigint(_bi.difficulty())) );
+		if (_bi.difficulty() < chainParams().minimumDifficulty)
+			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().minimumDifficulty), bigint(_bi.difficulty())) );
 
-		if (_bi.gasLimit() < chainParams().u256Param("minGasLimit"))
-			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().u256Param("minGasLimit")), bigint(_bi.gasLimit())) );
+		if (_bi.gasLimit() < chainParams().minGasLimit)
+			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().minGasLimit), bigint(_bi.gasLimit())) );
 
-		if (_bi.gasLimit() > chainParams().u256Param("maxGasLimit"))
-			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().u256Param("maxGasLimit")), bigint(_bi.gasLimit())) );
+		if (_bi.gasLimit() > chainParams().maxGasLimit)
+			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().maxGasLimit), bigint(_bi.gasLimit())) );
 
 		if (_bi.number() && _bi.extraData().size() > chainParams().maximumExtraDataSize)
 			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
 
-		u256 daoHardfork = chainParams().u256Param("daoHardforkBlock");
+		u256 const& daoHardfork = chainParams().daoHardforkBlock;
 		if (daoHardfork != 0 && daoHardfork + 9 >= daoHardfork && _bi.number() >= daoHardfork && _bi.number() <= daoHardfork + 9)
 			if (_bi.extraData() != fromHex("0x64616f2d686172642d666f726b"))
 				BOOST_THROW_EXCEPTION(ExtraDataIncorrect() << errinfo_comment("Received block from the wrong fork (invalid extradata)."));
@@ -116,15 +116,15 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		auto gasLimit = _bi.gasLimit();
 		auto parentGasLimit = _parent.gasLimit();
 		if (
-			gasLimit < chainParams().u256Param("minGasLimit") ||
-			gasLimit > chainParams().u256Param("maxGasLimit") ||
-			gasLimit <= parentGasLimit - parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor") ||
-			gasLimit >= parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor"))
+			gasLimit < chainParams().minGasLimit ||
+			gasLimit > chainParams().maxGasLimit ||
+			gasLimit <= parentGasLimit - parentGasLimit / chainParams().gasLimitBoundDivisor ||
+			gasLimit >= parentGasLimit + parentGasLimit / chainParams().gasLimitBoundDivisor)
 			BOOST_THROW_EXCEPTION(
 				InvalidGasLimit()
-				<< errinfo_min((bigint)((bigint)parentGasLimit - (bigint)(parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor"))))
+				<< errinfo_min((bigint)((bigint)parentGasLimit - (bigint)(parentGasLimit / chainParams().gasLimitBoundDivisor)))
 				<< errinfo_got((bigint)gasLimit)
-				<< errinfo_max((bigint)((bigint)parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor")))
+				<< errinfo_max((bigint)((bigint)parentGasLimit + parentGasLimit / chainParams().gasLimitBoundDivisor))
 			);
 	}
 
@@ -158,9 +158,9 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 
 	if (_ir & ImportRequirements::TransactionSignatures)
 	{
-		if (_header.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		if (_header.number() >= chainParams().EIP158ForkBlock)
 		{
-			int chainID(chainParams().u256Param("chainID"));
+			int chainID = chainParams().chainID;
 			_t.checkChainId(chainID);
 		}
 		else
@@ -178,7 +178,7 @@ u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) 
 {
 	u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
 	u256 gasLimit = _bi.gasLimit();
-	u256 boundDivisor = chainParams().u256Param("gasLimitBoundDivisor");
+	u256 boundDivisor = chainParams().gasLimitBoundDivisor;
 	if (gasLimit < gasFloorTarget)
 		return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
 	else
@@ -196,18 +196,18 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 
 	if (!_bi.number())
 		throw GenesisBlockCannotBeCalculated();
-	auto minimumDifficulty = chainParams().u256Param("minimumDifficulty");
-	auto difficultyBoundDivisor = chainParams().u256Param("difficultyBoundDivisor");
-	auto durationLimit = chainParams().u256Param("durationLimit");
+	auto const& minimumDifficulty = chainParams().minimumDifficulty;
+	auto const& difficultyBoundDivisor = chainParams().difficultyBoundDivisor;
+	auto const& durationLimit = chainParams().durationLimit;
 
 	bigint target;	// stick to a bigint for the target. Don't want to risk going negative.
-	if (_bi.number() < chainParams().u256Param("homesteadForkBlock"))
+	if (_bi.number() < chainParams().homesteadForkBlock)
 		// Frontier-era difficulty adjustment
 		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
 	else
 	{
 		bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
-		bigint const adjFactor = _bi.number() < chainParams().u256Param("byzantiumForkBlock") ?
+		bigint const adjFactor = _bi.number() < chainParams().byzantiumForkBlock ?
 			max<bigint>(1 - timestampDiff / 10, -99) : // Homestead-era difficulty adjustment
 			max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Byzantium-era difficulty adjustment
 
@@ -218,7 +218,7 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number() + 1);
 
 	// EIP-649 modifies exponentialIceAgeBlockNumber
-	if (_bi.number() >= chainParams().u256Param("byzantiumForkBlock"))
+	if (_bi.number() >= chainParams().byzantiumForkBlock)
 	{
 		if (exponentialIceAgeBlockNumber >= 3000000)
 			exponentialIceAgeBlockNumber -= 3000000;
