@@ -20,7 +20,6 @@
  */
 
 #include <chrono>
-#include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
 #include <libevm/Instruction.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
@@ -82,7 +81,7 @@ namespace dev
 namespace test
 {
 
-boost::random::mt19937 RandomCode::gen;
+std::mt19937_64 RandomCode::gen;
 IntDistrib RandomCode::percentDist = IntDistrib (0, 100);
 IntDistrib RandomCode::opCodeDist = IntDistrib (0, 255);
 IntDistrib RandomCode::opLengDist = IntDistrib (1, 32);
@@ -556,7 +555,7 @@ void RandomCodeOptions::setWeights()
 	std::vector<int> weights;
 	for (auto const& element: mapWeights)
 		weights.push_back(element.second);
-	opCodeProbability = DescreteDistrib(weights);
+	opCodeProbability = DescreteDistrib{weights.begin(), weights.end()};
 }
 
 BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelper)

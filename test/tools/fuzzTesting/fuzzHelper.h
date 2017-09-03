@@ -20,7 +20,7 @@
  */
 
 #include <string>
-#include <boost/random.hpp>
+#include <random>
 #include <boost/filesystem/path.hpp>
 
 #include <test/tools/libtesteth/TestHelper.h>
@@ -35,8 +35,8 @@ namespace dev
 namespace test
 {
 
-using IntDistrib = boost::random::uniform_int_distribution<>;
-using DescreteDistrib = boost::random::discrete_distribution<>;
+using IntDistrib = std::uniform_int_distribution<>;
+using DescreteDistrib = std::discrete_distribution<>;
 
 using IntGenerator = std::function<int()>;
 
@@ -115,7 +115,7 @@ private:
 	static void refreshSeed();
 	static std::vector<std::string> getTypes();
 
-	static boost::random::mt19937 gen;			///< Random generator
+	static std::mt19937_64 gen;				///< Random generator
 	static IntDistrib opCodeDist;			///< 0..255 opcodes
 	static IntDistrib percentDist;			///< 0..100 percent
 	static IntDistrib opLengDist;			///< 1..32  byte string
