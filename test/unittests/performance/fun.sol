@@ -23,8 +23,7 @@ contract fun is derived {
 		uint u = 8;
 		for (int i = 0; i <5000000; ++i)
 			u = nada(nada(u));
-		if (u != 8)
-			throw;
+		assert(u == 8);
 	}
 
 	function fun() {

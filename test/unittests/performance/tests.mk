@@ -12,58 +12,66 @@
 #     make -f tests.mk SOLC=solc all
 #
 # or many other such possibilities
+
+# the programs don't need to be at global scope
 #
-# define path to these programs to pick one or more of them to run
-# the default is to do nothing but print the command line
+#     make -f tests.mk SOLC=solc ETHVM=../../../build/ethvm/ethvm all
+
+# define a path to these programs on make command line to pick one or more of them to run
+# the default is to do nothing
 #
-ifndef SOLC
-	SOLC_=:
-else
-	SOLC_=$(SOLC)
+ifdef SOLC
+	SOLC_SOL_= $(SOLC) -o . --overwrite --asm --bin $*.sol 
+	SOLC_ASM_= $(SOLC) --assemble $*.asm | grep '^[0-9a-f]\+$\' > $*.bin
 endif
-ifndef ETHVM
-	ETHVM_=:
-else
-	ETHVM_ = $(STATS) $(ETHVM) --network Homestead test
+ifdef ETHVM
+	ETHVM_ = $(call STATS,ethvm) $(ETHVM) $*.bin test; touch $*.ran
 endif
-ifndef EVM
-	EVM_=:
-else
-	EVM_ = $(STATS) $(EVM) --codefile 
+ifdef EVM
+	EVM_ = $(call STATS,evm) $(EVM) --codefile $*.bin run; touch $*.ran
 endif
-ifndef PARITY
-	PARITY_=:
-else
-	PARITY_ = $(STATS) $(PARITY) stats --gas 10000000000 --code 
+ifdef PARITY
+	PARITY_ = $(call STATS,parity) $(PARITY) stats --gas 10000000000 --code `cat $*.bin`; touch $*.ran
 endif
 
-# overide these if desired
-ifndef STATS
-	STATS = time --format "stats: %U user %S system %E elapsed %P CPU %Mk res mem\n"
-endif
-ifndef CCC
-	CCC = gcc -O0 -o
-endif
+# Mac ignores --format parameter
+STATS = time --format "$(1) $*: user=%Us system=%Ss elapsed=%es CPU=%P mem=%Mk\n"
 
+#
+# to support new clients
+#   *  add new calls here
+#   *  add corresponding functions above
+#   *  add corresponding .ran targets below
+#
+# .ran files are just empty targets that indicate a program ran
 %.ran : %.bin
-	$(ETHVM_) $*.bin; touch $*.ran
-	$(EVM_) $*.bin run; touch $*.ran
-	$(PARITY_) `cat $*.bin`; touch $*.ran
+	$(call ETHVM_)
+	$(call EVM_)
+	$(call PARITY_)
+
+# hold on to intermediate binaries until source changes
+.PRECIOUS : %.bin
 
 %.bin : %.asm
-	$(SOLC_) --assemble $*.asm | grep '^[0-9a-f]\+$\' > $*.bin
+	$(call SOLC_ASM_)
 
 %.bin : %.sol
-	$(SOLC_) -o . --overwrite --asm --bin $*.sol 
+	$(call SOLC_SOL_)
 	
-mul64c: mul64c.c
-	$(CCC) mul64c mul64c.c
-	$(STATS) ./mul64c
+all: ops mul64c programs
 
+# programs for timing individual operators
+#
+# for many purposes the raw times will suffice.  when more accurate estimates
+# are wanted these formulas isolate the times for operators from the overhead
+#   * t(nop) = user time for nop is just for start up and shut down
+#   * t(pop) = user time for pop can be much less than big arithmetic OPs
+#   * t(OP) - t(nop) = estimated time for 320,000,000 DUP2/OP dispatch and eval
+#   * t(OP) - t(pop) = estimated time for 320,000,000 OP eval alone
+#
 ops : \
 	nop.ran \
 	pop.ran \
-	popa.ran \
 	add64.ran \
 	add128.ran \
 	add256.ran \
@@ -75,18 +83,25 @@ ops : \
 	mul256.ran \
 	div64.ran \
 	div128.ran \
-	div256.ran
+	div256.ran \
+	exp.ran
 
+# a C version of mul64.asm for comparison
+mul64c: mul64c.c
+	gcc -O0 -S mul64c.c
+	gcc mul64c.s -o mul64c
+	$(call STATS,C) ./mul64c
+
+# programs for more realistic timing
 programs : \
 	loop.ran \
 	rng.ran \
 	fun.ran \
 	rc5.ran \
 	mix.ran
-	
-all: ops mul64c programs
 
-
-.PHONY : clean
 clean :
-	rm *.ran *.bin *.evm mul64c
+	rm *.ran *.bin *.evm *.s mul64c
+	
+rerun :
+	rm *.ran

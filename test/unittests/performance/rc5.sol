@@ -74,13 +74,12 @@ contract rc5 {
 	}
 
 	// decrypt of encrypt should be the same
-	function test(uint32[26] S, uint32[4] msg) {
-		uint32[4] memory tmp = msg;
+	function test(uint32[26] S, uint32[4] messg) {
+		uint32[4] memory tmp = messg;
 		encrypt(S, tmp);
 		decrypt(S, tmp);
 		for (uint i = 0; i < 4; ++i) {
-			if (msg[i] != tmp[i])
-				throw;
+                        assert(messg[i] == tmp[i]);
 		}
 	}
 
@@ -90,9 +89,9 @@ contract rc5 {
 		uint32[26] memory box;
 		expand(key, box);
 
-		uint32[4] memory msg = [0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef];
+		uint32[4] memory messg = [0xfeedface, 0xdeadbeef, 0xfeedbabe, 0xcafebeef];
 
 		for (int i = 0; i < 70000; ++i)
-			test(box, msg);
+			test(box, messg);
 	}
 }
