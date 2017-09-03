@@ -234,4 +234,7 @@ BOOST_AUTO_TEST_CASE(stAttackTest){}
 BOOST_AUTO_TEST_CASE(stMemoryStressTest){}
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest){}
 
+//Bad opcodes test
+BOOST_AUTO_TEST_CASE(stBadOpcode){}
+
 BOOST_AUTO_TEST_SUITE_END()
