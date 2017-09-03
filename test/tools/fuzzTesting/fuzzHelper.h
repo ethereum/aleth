@@ -35,13 +35,10 @@ namespace dev
 namespace test
 {
 
-typedef boost::random::uniform_int_distribution<> boostIntDistrib;
-typedef boost::random::discrete_distribution<> boostDescreteDistrib;
-typedef boost::uniform_int<uint64_t> boostUint64;
+using IntDistrib = boost::random::uniform_int_distribution<>;
+using DescreteDistrib = boost::random::discrete_distribution<>;
 
-typedef boost::random::variate_generator<boost::mt19937&, boostIntDistrib > boostIntGenerator;
-typedef boost::random::variate_generator<boost::mt19937&, boostDescreteDistrib > boostWeightGenerator;
-typedef boost::random::variate_generator<boost::mt19937&, boostUint64 > boostUInt64Generator;
+using IntGenerator = std::function<int()>;
 
 struct RandomCodeOptions
 {
@@ -63,7 +60,7 @@ public:
 	int emptyCodeProbability;
 	int emptyAddressProbability;
 	int precompiledAddressProbability;
-	boostDescreteDistrib opCodeProbability;
+	DescreteDistrib opCodeProbability;
 private:
 	void setWeights();
 	std::map<int, int> mapWeights;
@@ -108,7 +105,7 @@ public:
 	/// Generate random
 	static std::string randomUniIntHex(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
 	static u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
-	static int randomPercent() { refreshSeed(); return randPercentGen();}
+	static int randomPercent() { refreshSeed(); return percentDist(gen); }
 
 private:
 	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
@@ -119,19 +116,16 @@ private:
 	static std::vector<std::string> getTypes();
 
 	static boost::random::mt19937 gen;			///< Random generator
-	static boostIntDistrib opCodeDist;			///< 0..255 opcodes
-	static boostIntDistrib percentDist;			///< 0..100 percent
-	static boostIntDistrib opLengDist;			///< 1..32  byte string
-	static boostIntDistrib opMemrDist;			///< 1..10MB  byte string
-	static boostIntDistrib uniIntDist;			///< 0..0x7fffffff
-	static boostUint64 uInt64Dist;				///< 0..2**64
+	static IntDistrib opCodeDist;			///< 0..255 opcodes
+	static IntDistrib percentDist;			///< 0..100 percent
+	static IntDistrib opLengDist;			///< 1..32  byte string
+	static IntDistrib opMemrDist;			///< 1..10MB  byte string
+	static IntDistrib uniIntDist;			///< 0..0x7fffffff
 
-	static boostIntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
-	static boostIntGenerator randPercentGen;		///< Generate random value from prcentDist
-	static boostIntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
-	static boostIntGenerator randOpLengGen;		///< Generate random length from opLengDist
-	static boostIntGenerator randOpMemrGen;		///< Generate random length from opMemrDist
-	static boostUInt64Generator randUInt64Gen;	///< Generate random uInt64
+	static IntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
+	static IntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
+	static IntGenerator randOpLengGen;		///< Generate random length from opLengDist
+	static IntGenerator randOpMemrGen;		///< Generate random length from opMemrDist
 };
 
 }
