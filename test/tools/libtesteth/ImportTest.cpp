@@ -494,7 +494,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 			if (addressOptions.hasCode())
 				CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),
-				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect code '" << toHexPrefixed(_statePost.code(a.first)) << "', expected '" << toHexPrefixed(_stateExpect.code(a.first)) << "'");
 		}
 	}
 
@@ -640,7 +640,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			{
 				//checking filled state test against client
 				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()),
-									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + ": Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHex(tr.postState.rootHash().asBytes()) + " in " + trInfo);
+									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + ": Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
 				if (_expects.count("logs"))
 					BOOST_CHECK_MESSAGE(_expects.at("logs").get_str() == exportLog(tr.output.second.log()),
 									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + " Transaction log mismatch! expected: " + _expects.at("logs").get_str() + " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
