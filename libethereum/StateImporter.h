@@ -32,6 +32,9 @@ namespace dev
 namespace eth
 {
 
+DEV_SIMPLE_EXCEPTION(TryingToImportEmptyAccount);
+DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
+
 class StateImporter
 {
 public:
@@ -39,25 +42,25 @@ public:
 
 	void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash)
 	{
+		if (_nonce == 0 && _balance == 0 && _codeHash == EmptySHA3 && _storage.empty())
+			BOOST_THROW_EXCEPTION(TryingToImportEmptyAccount());
+
+		if (containsAccount(_addressHash))
+			BOOST_THROW_EXCEPTION(AccountAlreadyImported());
+
+
 		RLPStream s(4);
 		s << _nonce << _balance;
 
 		h256 const storageRoot = EmptyTrie;
 		if (_storage.empty())
-		{
 			s.append(storageRoot);
-		}
 		else
 		{
 			SpecificTrieDB<GenericTrieDB<OverlayDB>, h256> storageDB(m_trie.db(), storageRoot);
 			for (auto const& hashAndValue: _storage)
-			{
-				assert(RLP(hashAndValue.second).toInt<u256>() != 0);
-/*				if (!value)
-					std::cout << "Zero value in storage " << _addressHash << " (" << _storage.size() << " values in storage)\n";
-*/				storageDB.insert(hashAndValue.first, hashAndValue.second);
-			}
-			assert(storageDB.root());
+				storageDB.insert(hashAndValue.first, hashAndValue.second);
+
 			s.append(storageDB.root());
 		}
 
@@ -79,9 +82,10 @@ public:
 
 	std::string lookupCode(h256 const& _hash) const { return m_trie.db()->lookup(_hash);  }
 
-	bool containsAccount(h256 const& _addressHash) const { return m_trie.contains(_addressHash); }
 
 private:
+	bool containsAccount(h256 const& _addressHash) const { return m_trie.contains(_addressHash); }
+
 	SpecificTrieDB<GenericTrieDB<OverlayDB>, h256> m_trie;
 };
 

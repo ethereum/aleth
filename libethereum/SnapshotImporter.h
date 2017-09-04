@@ -35,9 +35,14 @@ namespace eth
 
 class Client;
 
+DEV_SIMPLE_EXCEPTION(FailedToReadSnapshotManifestFile);
 DEV_SIMPLE_EXCEPTION(UnsupportedSnapshotManifestVersion);
+DEV_SIMPLE_EXCEPTION(InvalidSnapshotManifest);
 DEV_SIMPLE_EXCEPTION(StateTrieReconstructionFailed);
+DEV_SIMPLE_EXCEPTION(FailedToReadChunkFile);
+DEV_SIMPLE_EXCEPTION(ChunkDataCorrupted);
 DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
+DEV_SIMPLE_EXCEPTION(InvalidBlockChunkData);
 DEV_SIMPLE_EXCEPTION(FailedToGetUncompressedLength);
 DEV_SIMPLE_EXCEPTION(FailedToUncompressedSnapshotChunk);
 
