@@ -817,7 +817,7 @@ void compareBlocks(TestBlock const& _a, TestBlock const& _b)
 	if (sha3(RLP(_a.bytes())[0].data()) != sha3(RLP(_b.bytes())[0].data()))
 	{
 		cnote << "block header mismatch\n";
-		cnote << toHex(RLP(_a.bytes())[0].data()) << "vs" << toHex(RLP(_b.bytes())[0].data());
+		cnote << toHexPrefixed(RLP(_a.bytes())[0].data()) << "vs" << toHexPrefixed(RLP(_b.bytes())[0].data());
 	}
 
 	if (sha3(RLP(_a.bytes())[1].data()) != sha3(RLP(_b.bytes())[1].data()))
