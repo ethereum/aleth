@@ -35,6 +35,7 @@
 #include <chrono>
 #include "Common.h"
 #include "CommonData.h"
+#include <boost/filesystem.hpp>
 
 namespace dev
 {
@@ -44,20 +45,20 @@ std::string getPassword(std::string const& _prompt);
 
 /// Retrieve and returns the contents of the given file.
 /// If the file doesn't exist or isn't readable, returns an empty container / bytes.
-bytes contents(std::string const& _file);
+bytes contents(boost::filesystem::path const& _file);
 /// Secure variation.
-bytesSec contentsSec(std::string const& _file);
+bytesSec contentsSec(boost::filesystem::path const& _file);
 /// Retrieve and returns the contents of the given file as a std::string.
 /// If the file doesn't exist or isn't readable, returns an empty container / bytes.
-std::string contentsString(std::string const& _file);
+std::string contentsString(boost::filesystem::path const& _file);
 
 /// Write the given binary data into the given file, replacing the file if it pre-exists.
 /// Throws exception on error.
 /// @param _writeDeleteRename useful not to lose any data: If set, first writes to another file in
 /// the same directory and then moves that file.
-void writeFile(std::string const& _file, bytesConstRef _data, bool _writeDeleteRename = false);
+void writeFile(boost::filesystem::path const& _file, bytesConstRef _data, bool _writeDeleteRename = false);
 /// Write the given binary data into the given file, replacing the file if it pre-exists.
-inline void writeFile(std::string const& _file, bytes const& _data, bool _writeDeleteRename = false) { writeFile(_file, bytesConstRef(&_data), _writeDeleteRename); }
+inline void writeFile(boost::filesystem::path const& _file, bytes const& _data, bool _writeDeleteRename = false) { writeFile(_file, bytesConstRef(&_data), _writeDeleteRename); }
 
 /// Nicely renders the given bytes to a string, optionally as HTML.
 /// @a _bytes: bytes array to be rendered as string. @a _width of a bytes line.

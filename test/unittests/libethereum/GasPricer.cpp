@@ -27,19 +27,21 @@
 #include <libethereum/BasicGasPricer.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtestutils/BlockChainLoader.h>
+#include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
+namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
 
-void executeGasPricerTest(string const& name, double _etherPrice, double _blockFee, string const& bcTestPath, TransactionPriority _txPrio, u256 _expectedAsk, u256 _expectedBid, eth::Network _sealEngineNetwork = eth::Network::TransitionnetTest)
+void executeGasPricerTest(string const& name, double _etherPrice, double _blockFee, fs::path const& _bcTestPath, TransactionPriority _txPrio, u256 _expectedAsk, u256 _expectedBid, eth::Network _sealEngineNetwork = eth::Network::TransitionnetTest)
 {
 	BasicGasPricer gp(u256(double(ether / 1000) / _etherPrice), u256(_blockFee * 1000));
 
-	Json::Value vJson = test::loadJsonFromFile(test::getTestPath() + bcTestPath);
+	Json::Value vJson = test::loadJsonFromFile(test::getTestPath() / _bcTestPath);
 	test::BlockChainLoader bcLoader(vJson[name], _sealEngineNetwork);
 	BlockChain const& bc = bcLoader.bc();
 

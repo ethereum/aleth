@@ -36,6 +36,7 @@
 
 using namespace std;
 using namespace dev;
+namespace fs = boost::filesystem;
 namespace js = json_spirit;
 
 namespace dev
@@ -209,17 +210,16 @@ namespace dev
 	}
 }
 
-void runRlpTest(string _name, string _path)
+void runRlpTest(string _name, fs::path const& _path)
 {
-	string testPath = dev::test::getTestPath();
-	testPath += _path;
+	fs::path const testPath = dev::test::getTestPath() / _path;
 
 	try
 	{
 		cnote << "TEST " << _name << ":";
 		json_spirit::mValue v;
-		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		string const s = asString(dev::contents(testPath / fs::path(_name + ".json")));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << (testPath / fs::path(_name + ".json")).string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
 		//Listener::notifySuiteStarted(_name);
 		dev::test::doRlpTests(v);
@@ -272,8 +272,8 @@ BOOST_AUTO_TEST_CASE(rlptest)
 
 BOOST_AUTO_TEST_CASE(rlpRandom)
 {
-	string testPath = dev::test::getTestPath();
-	testPath += "/RLPTests/RandomRLPTests";
+	fs::path testPath = dev::test::getTestPath();
+	testPath /= fs::path("RLPTests/RandomRLPTests");
 
 	vector<boost::filesystem::path> testFiles = getJsonFiles(testPath);
 	for (auto& path: testFiles)

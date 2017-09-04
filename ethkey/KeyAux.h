@@ -819,8 +819,8 @@ private:
 	OperationMode m_mode;
 
 	/// Wallet stuff
-	string m_secretsPath = SecretStore::defaultPath();
-	string m_walletPath = KeyManager::defaultPath();
+	boost::filesystem::path m_secretsPath = SecretStore::defaultPath();
+	boost::filesystem::path m_walletPath = KeyManager::defaultPath();
 
 	/// Wallet passphrase stuff
 	string m_masterPassword;

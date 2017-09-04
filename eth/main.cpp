@@ -69,6 +69,7 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
 using namespace boost::algorithm;
+namespace fs = boost::filesystem;
 
 static std::atomic<bool> g_silence = {false};
 
@@ -374,7 +375,7 @@ int main(int argc, char** argv)
 	bool useWhisper = false;
 	bool testingMode = false;
 
-	string configFile = getDataDir() + "/config.rlp";
+	fs::path configFile = getDataDir() / fs::path("config.rlp");
 	bytes b = contents(configFile);
 
 	strings passwordsToNote;
@@ -845,9 +846,9 @@ int main(int argc, char** argv)
 
 	m.execute();
 
-	std::string secretsPath;
+	fs::path secretsPath;
 	if (testingMode)
-		secretsPath = (boost::filesystem::path(getDataDir()) / "keystore").string();
+		secretsPath = boost::filesystem::path(getDataDir()) / "keystore";
 	else
 		secretsPath = SecretStore::defaultPath();
 	KeyManager keyManager(KeyManager::defaultPath(), secretsPath);
@@ -895,7 +896,7 @@ int main(int argc, char** argv)
 	netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
 	netPrefs.pin = (pinning || !privateChain.empty()) && !noPinning;
 
-	auto nodesState = contents(getDataDir() + "/network.rlp");
+	auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
 	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
 
 	if (testingMode)
@@ -1020,7 +1021,7 @@ int main(int argc, char** argv)
 					masterPassword = getPassword("Please enter your MASTER password: ");
 					if (keyManager.load(masterPassword))
 						break;
-					cout << "The password you entered is incorrect. If you have forgotten your password, and you wish to start afresh, manually remove the file: " + getDataDir("ethereum") + "/keys.info\n";
+					cout << "The password you entered is incorrect. If you have forgotten your password, and you wish to start afresh, manually remove the file: " << (getDataDir("ethereum") / fs::path("keys.info")).string() << "\n";
 				}
 			}
 		}
@@ -1175,8 +1176,8 @@ int main(int argc, char** argv)
 			sessionManager->addSession(jsonAdmin, rpc::SessionPermissions{{rpc::Privilege::Admin}});
 
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << "\n";
-		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
-		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
+		writeFile(getDataDir("web3") / fs::path("session.key"), jsonAdmin);
+		writeFile(getDataDir("web3") / fs::path("session.url"), "http://localhost:" + toString(jsonRPCURL));
 	}
 
 	for (auto const& p: preferredNodes)
@@ -1215,6 +1216,6 @@ int main(int argc, char** argv)
 
 	auto netData = web3.saveNetwork();
 	if (!netData.empty())
-		writeFile(getDataDir() + "/network.rlp", netData);
+		writeFile(getDataDir() / fs::path("network.rlp"), netData);
 	return 0;
 }

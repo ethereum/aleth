@@ -23,10 +23,12 @@
 #include <libdevcore/Base64.h>
 #include <libdevcore/TrieCommon.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
+#include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::test;
+namespace fs = boost::filesystem;
 namespace js = json_spirit;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
@@ -36,12 +38,12 @@ BOOST_FIXTURE_TEST_SUITE(Basic, TestOutputHelper)
 BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
 
-	string testPath = test::getTestPath();
-	testPath += "/BasicTests";
+	fs::path testPath = test::getTestPath();
+	testPath /= fs::path("BasicTests");
 
 	cnote << "Testing Hex-Prefix-Encode...";
 	js::mValue v;
-	string s = contentsString(testPath + "/hexencodetest.json");
+	string const s = contentsString(testPath / fs::path("hexencodetest.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content from 'hexencodetest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())

@@ -26,9 +26,12 @@
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtestutils/TestLastBlockHashes.h>
 
+#include <boost/filesystem/path.hpp>
+
 using namespace dev;
 using namespace dev::test;
 using namespace std;
+namespace fs = boost::filesystem;
 
 namespace
 {
@@ -179,7 +182,7 @@ bytes ImportTest::executeTest()
 			json[testname] = testObj;
 
 			//testName() is changed during the execution of bctest!!!
-			string tmpFillerName = getTestPath() + "/src/GenStateTestAsBcTemp/" + TestOutputHelper::caseName() + "/" + testname + "Filler.json";
+			fs::path const tmpFillerName = getTestPath() / fs::path("src/GenStateTestAsBcTemp") / fs::path(TestOutputHelper::caseName()) / fs::path(testname + "Filler.json");
 			writeFile(tmpFillerName, asBytes(json_spirit::write_string((json_spirit::mValue)json, true)));
 			dev::test::executeTests(testname, "/BlockchainTests/GeneralStateTests/" + TestOutputHelper::caseName(),
 											 "/GenStateTestAsBcTemp/" + TestOutputHelper::caseName(), dev::test::doBlockchainTestNoLog);

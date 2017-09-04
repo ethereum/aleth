@@ -204,7 +204,7 @@ public:
 	State& operator=(State const& _s);
 
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
-	static OverlayDB openDB(std::string const& _path, h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
+	static OverlayDB openDB(boost::filesystem::path const& _path, h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
 	OverlayDB const& db() const { return m_db; }
 	OverlayDB& db() { return m_db; }
 

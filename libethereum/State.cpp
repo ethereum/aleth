@@ -77,28 +77,28 @@ State::State(State const& _s):
 	m_accountStartNonce(_s.m_accountStartNonce)
 {}
 
-OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, WithExisting _we)
+OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
-	std::string path = _basePath.empty() ? Defaults::get()->m_dbPath : _basePath;
+	fs::path path = _basePath.empty() ? Defaults::get()->m_dbPath : _basePath;
 
 	if (_we == WithExisting::Kill)
 	{
 		clog(StateDetail) << "Killing state database (WithExisting::Kill).";
-		boost::filesystem::remove_all(path + "/state");
+		fs::remove_all(path / fs::path("state"));
 	}
 
-	path += "/" + toHex(_genesisHash.ref().cropped(0, 4)) + "/" + toString(c_databaseVersion);
-	boost::filesystem::create_directories(path);
+	path /= fs::path(toHex(_genesisHash.ref().cropped(0, 4))) / fs::path(toString(c_databaseVersion));
+	fs::create_directories(path);
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
 
 	ldb::Options o;
 	o.max_open_files = 256;
 	o.create_if_missing = true;
 	ldb::DB* db = nullptr;
-	ldb::Status status = ldb::DB::Open(o, path + "/state", &db);
+	ldb::Status status = ldb::DB::Open(o, (path / fs::path("state")).string(), &db);
 	if (!status.ok() || !db)
 	{
-		if (boost::filesystem::space(path + "/state").available < 1024)
+		if (fs::space(path / fs::path("state")).available < 1024)
 		{
 			cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
 			BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
@@ -108,7 +108,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 			cwarn << status.ToString();
 			cwarn <<
 				"Database " <<
-				(path + "/state") <<
+				(path / fs::path("state")) <<
 				"already open. You appear to have another instance of ethereum running. Bailing.";
 			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
 		}

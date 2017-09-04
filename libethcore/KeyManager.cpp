@@ -34,7 +34,7 @@ using namespace eth;
 namespace js = json_spirit;
 namespace fs = boost::filesystem;
 
-KeyManager::KeyManager(string const& _keysFile, string const& _secretsPath):
+KeyManager::KeyManager(fs::path const& _keysFile, fs::path const& _secretsPath):
 	m_keysFile(_keysFile), m_store(_secretsPath)
 {
 	for (auto const& uuid: m_store.keys())
@@ -50,7 +50,7 @@ KeyManager::~KeyManager()
 
 bool KeyManager::exists() const
 {
-	return !contents(m_keysFile + ".salt").empty() && !contents(m_keysFile).empty();
+	return !contents(appendToFilename(m_keysFile, ".salt")).empty() && !contents(m_keysFile).empty();
 }
 
 void KeyManager::create(string const& _pass)
@@ -89,7 +89,7 @@ bool KeyManager::load(string const& _pass)
 {
 	try
 	{
-		bytes salt = contents(m_keysFile + ".salt");
+		bytes salt = contents(appendToFilename(m_keysFile, ".salt"));
 		bytes encKeys = contents(m_keysFile);
 		if (encKeys.empty())
 			return false;
@@ -396,7 +396,7 @@ void KeyManager::cachePassword(string const& _password) const
 	m_cachedPasswords[hashPassword(_password)] = _password;
 }
 
-bool KeyManager::write(string const& _keysFile) const
+bool KeyManager::write(fs::path const& _keysFile) const
 {
 	if (!m_keysFileKey)
 		return false;
@@ -404,10 +404,10 @@ bool KeyManager::write(string const& _keysFile) const
 	return true;
 }
 
-void KeyManager::write(string const& _pass, string const& _keysFile) const
+void KeyManager::write(string const& _pass, fs::path const& _keysFile) const
 {
 	bytes salt = h256::random().asBytes();
-	writeFile(_keysFile + ".salt", salt, true);
+	writeFile(appendToFilename(_keysFile, ".salt"), salt, true);
 	auto key = SecureFixedHash<16>(pbkdf2(_pass, salt, 262144, 16));
 
 	cachePassword(_pass);
@@ -415,7 +415,7 @@ void KeyManager::write(string const& _pass, string const& _keysFile) const
 	write(key, _keysFile);
 }
 
-void KeyManager::write(SecureFixedHash<16> const& _key, string const& _keysFile) const
+void KeyManager::write(SecureFixedHash<16> const& _key, fs::path const& _keysFile) const
 {
 	RLPStream s(4);
 	s << 1; // version

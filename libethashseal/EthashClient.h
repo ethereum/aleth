@@ -21,8 +21,9 @@
 
 #pragma once
 
-#include <tuple>
 #include <libethereum/Client.h>
+#include <boost/filesystem/path.hpp>
+#include <tuple>
 
 namespace dev
 {
@@ -42,7 +43,7 @@ public:
 		int _networkID,
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
-		std::string const& _dbPath = std::string(),
+		boost::filesystem::path const& _dbPath = boost::filesystem::path(),
 		WithExisting _forceAction = WithExisting::Trust,
 		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);

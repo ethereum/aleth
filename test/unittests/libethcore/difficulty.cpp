@@ -20,17 +20,17 @@
  * difficulty calculation tests.
  */
 
-#include <boost/test/unit_test.hpp>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
-
+#include <boost/filesystem/path.hpp>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+namespace fs = boost::filesystem;
 namespace js = json_spirit;
 std::string const c_testDifficulty = R"(
  "DifficultyTest[N]" : {
@@ -102,7 +102,7 @@ void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _paren
 	return;
 }
 
-void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
+void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _sealEngine)
 {
 	int testN = 0;
 	ostringstream finalTest;
@@ -152,7 +152,7 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 	writeFile(_testFileFullName, asBytes(testFile));
 }
 
-void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, eth::Network _n)
+void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine, eth::Network _n)
 {
 	//Test File
 	js::mValue v;
@@ -193,8 +193,7 @@ BOOST_AUTO_TEST_SUITE(DifficultyTests)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 {
-	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyFrontier.json";
+	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyFrontier.json");
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::FrontierTest)));
@@ -207,8 +206,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
 {
-	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyRopsten.json";
+	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyRopsten.json");
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::Ropsten)));
@@ -221,8 +219,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 {
-	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyHomestead.json";
+	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyHomestead.json");
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::HomesteadTest)));
@@ -235,8 +232,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 {
-	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyMainNetwork.json";
+	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyMainNetwork.json");
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetwork)));
@@ -249,8 +245,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 {
-	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyCustomMainNetwork.json";
+	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyCustomMainNetwork.json");
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetwork)));
@@ -312,8 +307,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 
 BOOST_AUTO_TEST_CASE(basicDifficultyTest)
 {
-	string testPath = test::getTestPath();
-	testPath += "/BasicTests/difficulty.json";
+	fs::path const testPath = test::getTestPath() / fs::path("BasicTests/difficulty.json");
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetwork)));

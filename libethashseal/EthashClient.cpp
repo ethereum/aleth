@@ -21,10 +21,12 @@
 
 #include "EthashClient.h"
 #include "Ethash.h"
+#include <boost/filesystem/path.hpp>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
+namespace fs = boost::filesystem;
 
 EthashClient& dev::eth::asEthashClient(Interface& _c)
 {
@@ -47,7 +49,7 @@ EthashClient::EthashClient(
 	int _networkID,
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
-	std::string const& _dbPath,
+	fs::path const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _limits
 ):

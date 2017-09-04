@@ -27,6 +27,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/FileSystem.h>
+#include <boost/filesystem/path.hpp>
 
 // "Mac OS X does not support the flag MSG_NOSIGNAL but we have an equivalent."
 // See http://lists.apple.com/archives/macnetworkprog/2002/Dec/msg00091.html
@@ -39,15 +40,16 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 using namespace jsonrpc;
 using namespace dev;
+namespace fs = boost::filesystem;
 
 namespace
 {
 size_t const c_socketPathMaxLength = sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]);
 
-string getIpcPathOrDataDir()
+fs::path getIpcPathOrDataDir()
 {
 	// On Unix use datadir as default IPC path.
-	string path = getIpcPath();
+	fs::path path = getIpcPath();
 	if (path.empty())
 		return getDataDir();
 	return path;
@@ -55,7 +57,7 @@ string getIpcPathOrDataDir()
 }
 
 UnixDomainSocketServer::UnixDomainSocketServer(string const& _appId):
-	IpcServerBase((getIpcPathOrDataDir() + "/" + _appId + ".ipc").substr(0, c_socketPathMaxLength))
+	IpcServerBase((getIpcPathOrDataDir() / fs::path(_appId + ".ipc")).string().substr(0, c_socketPathMaxLength))
 {
 }
 

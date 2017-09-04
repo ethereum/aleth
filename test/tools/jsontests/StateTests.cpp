@@ -36,6 +36,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
 
@@ -133,7 +134,7 @@ public:
 
 	void fillAllFilesInFolder(string const& _folder)
 	{
-		std::string fillersPath = test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
+		fs::path fillersPath = test::getTestPath() / fs::path("src/GeneralStateTestsFiller") / fs::path(_folder);
 
 		string filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 		std::vector<boost::filesystem::path> files = test::getJsonFiles(fillersPath, filter);
