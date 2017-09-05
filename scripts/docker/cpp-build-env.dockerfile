@@ -5,7 +5,7 @@ LABEL repo="https://github.com/ethereum/cpp-ethereum"
 LABEL version="0.0.1"
 LABEL description="A Docker image for building cpp-ethereum."
 
-RUN echo $DEBIAN_FRONTEND && apt-get -qq update && apt-get install -yq \
+RUN export DEBIAN_FRONTEND=noninteractive && apt-get -qq update && apt-get install -yq \
     # Build tools
     git \
     curl \
