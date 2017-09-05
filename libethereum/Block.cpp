@@ -720,7 +720,7 @@ void Block::updateBlockhashContract()
 			e.go();
 		e.finalize();
 
-		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
+		m_state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 	}
 }
 
