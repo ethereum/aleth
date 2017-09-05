@@ -260,14 +260,18 @@ std::string const c_testExampleStateTest = R"(
 			"[CODE]"
 		],
 		"gasLimit" : [
-			"[TRANSACTIONGASLIMIT]"
+			"[TRANSACTIONGASLIMIT]",
+			"0",
+			"21000",
+			"60000"
 		],
 		"gasPrice" : "[GASPRICE]",
 		"nonce" : "0",
 		"secretKey" : "0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
 		"to" : "[DESTADDRESS]",
 		"value" : [
-			"[HEX32]"
+			"[HEX32]",
+			"0"
 		]
 		}
 	}
