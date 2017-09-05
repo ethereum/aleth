@@ -70,7 +70,6 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 {
 	size_t const stateChunkCount = _stateChunkHashes.size();
 
-	StateImporter stateImporter = m_client.createStateImporter();
 	std::map<h256, bytes> storageMap;
 	h256 addressHash;
 	u256 nonce;
@@ -101,7 +100,7 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 				if (addressHashNew != addressHash)
 				{
 					// previous account was not splitted, so import it
-					stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
+					m_stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
 					++accountsImported;
 					storageMap.clear();
 				}
@@ -146,11 +145,11 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 				codeHash = EmptySHA3;
 				break;
 			case 1:
-				codeHash = stateImporter.importCode(account[3].toBytesConstRef(RLP::VeryStrict));
+				codeHash = m_stateImporter.importCode(account[3].toBytesConstRef(RLP::VeryStrict));
 				break;
 			case 2:
 				codeHash = account[3].toHash<h256>(RLP::VeryStrict);
-				if (!codeHash || stateImporter.lookupCode(codeHash).empty())
+				if (!codeHash || m_stateImporter.lookupCode(codeHash).empty())
 					BOOST_THROW_EXCEPTION(InvalidStateChunkData());
 				break;
 			default:
@@ -158,7 +157,7 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 			}
 		}
 
-		stateImporter.commitStateDatabase();
+		m_stateImporter.commitStateDatabase();
 
 		++chunksImported;
 		clog(SnapshotImportLog) << "Imported chunk " << chunksImported << " (" << accounts.itemCount() << " accounts) Total accounts imported: " << accountsImported;
@@ -166,23 +165,21 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 	}
 
 	// last account
-	stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
-	stateImporter.commitStateDatabase();
+	m_stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
+	m_stateImporter.commitStateDatabase();
 	++accountsImported;
 
 	// check root
 	clog(SnapshotImportLog) << "Chunks imported: " << chunksImported;
 	clog(SnapshotImportLog) << "Accounts imported: " << accountsImported;
-	clog(SnapshotImportLog) << "Reconstructed state root: " << stateImporter.stateRoot();
+	clog(SnapshotImportLog) << "Reconstructed state root: " << m_stateImporter.stateRoot();
 	clog(SnapshotImportLog) << "Manifest state root:      " << _stateRoot;
-	if (stateImporter.stateRoot() != _stateRoot)
+	if (m_stateImporter.stateRoot() != _stateRoot)
 		BOOST_THROW_EXCEPTION(StateTrieReconstructionFailed());
 }
 
 void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _blockChunkHashes)
 {
-	BlockChainImporter bcImporter = m_client.createBlockChainImporter();
-
 	size_t const blockChunkCount = _blockChunkHashes.size();
 	size_t blockChunksImported = 0;
 	// chunks are in decreasing order of first block number, so we go backwards to start from the oldest block
@@ -243,7 +240,7 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
 			Ethash::setNonce(header, abridgedBlock[11].toHash<Nonce>(RLP::VeryStrict));
 
 			totalDifficulty += difficulty;
-			bcImporter.importBlock(header, transactions, uncles, receipts, totalDifficulty);
+			m_blockChainImporter.importBlock(header, transactions, uncles, receipts, totalDifficulty);
 
 			parentHash = header.hash();
 		}
@@ -254,7 +251,7 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
 		if (chunk == _blockChunkHashes.rbegin())
 		{
 			clog(SnapshotImportLog) << "Setting chain start block: " << firstBlockNumber + 1;
-			bcImporter.setChainStartBlockNumber(firstBlockNumber + 1);
+			m_blockChainImporter.setChainStartBlockNumber(firstBlockNumber + 1);
 		}
 	}
 }

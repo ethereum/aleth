@@ -20,43 +20,32 @@
 
 #pragma once
 
-#include "BlockChain.h"
-
 #include <libdevcore/Common.h>
-#include <libdevcore/RLP.h>
-#include <libethcore/BlockHeader.h>
+
+#include <memory>
 
 namespace dev
 {
 
+class RLP;
+
 namespace eth
 {
 
-class BlockChainImporter
+class BlockChain;
+class BlockHeader;
+
+class BlockChainImporterFace
 {
 public:
-	explicit BlockChainImporter(BlockChain& _blockChain): m_blockChain(_blockChain) {}
+	virtual ~BlockChainImporterFace() {}
 
-	void importBlock(BlockHeader const& _header, RLP _transactions, RLP _uncles, RLP _receipts, u256 const& _totalDifficulty)
-	{
-		RLPStream headerRlp;
-		_header.streamRLP(headerRlp);
+	virtual void importBlock(BlockHeader const& _header, RLP _transactions, RLP _uncles, RLP _receipts, u256 const& _totalDifficulty) = 0;
 
-		RLPStream block(3);
-		block.appendRaw(headerRlp.out());
-		block << _transactions << _uncles;
-
-		m_blockChain.insertWithoutParent(block.out(), _receipts.data(), _totalDifficulty);
-	}
-
-	void setChainStartBlockNumber(u256 const& _number)
-	{
-		m_blockChain.setChainStartBlockNumber(static_cast<unsigned>(_number));
-	}
-
-private:
-	BlockChain& m_blockChain;
+	virtual void setChainStartBlockNumber(u256 const& _number) = 0;
 };
+
+std::unique_ptr<BlockChainImporterFace> createBlockChainImporter(BlockChain& _blockChain);
 
 }
 }

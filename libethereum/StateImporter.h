@@ -21,68 +21,38 @@
 #pragma once
 
 #include <libdevcore/Common.h>
+#include <libdevcore/Exceptions.h>
 #include <libdevcore/FixedHash.h>
-#include <libdevcore/OverlayDB.h>
-#include <libdevcore/RLP.h>
-#include <libdevcore/TrieDB.h>
+
+#include <memory>
 
 namespace dev
 {
+
+class OverlayDB;
 
 namespace eth
 {
 
 DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
 
-class StateImporter
+class StateImporterFace
 {
 public:
-	explicit StateImporter(OverlayDB& _stateDb): m_trie(&_stateDb) { m_trie.init(); }
+	virtual ~StateImporterFace() {}
 
-	void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash)
-	{
-		if (containsAccount(_addressHash))
-			BOOST_THROW_EXCEPTION(AccountAlreadyImported());
+	virtual void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash) = 0;
 
-		RLPStream s(4);
-		s << _nonce << _balance;
+	virtual h256 importCode(bytesConstRef _code) = 0;
 
-		h256 const storageRoot = EmptyTrie;
-		if (_storage.empty())
-			s.append(storageRoot);
-		else
-		{
-			SpecificTrieDB<GenericTrieDB<OverlayDB>, h256> storageDB(m_trie.db(), storageRoot);
-			for (auto const& hashAndValue: _storage)
-				storageDB.insert(hashAndValue.first, hashAndValue.second);
+	virtual void commitStateDatabase() = 0;
 
-			s.append(storageDB.root());
-		}
+	virtual h256 stateRoot() const = 0;
 
-		s << _codeHash;
-
-		m_trie.insert(_addressHash, &s.out());
-	}
-
-	h256 importCode(bytesConstRef _code)
-	{
-		h256 const hash = sha3(_code);
-		m_trie.db()->insert(hash, _code);
-		return hash;
-	}
-
-	void commitStateDatabase() { m_trie.db()->commit(); }
-
-	h256 stateRoot() const { return m_trie.root(); }
-
-	std::string lookupCode(h256 const& _hash) const { return m_trie.db()->lookup(_hash);  }
-
-
-private:
-	bool containsAccount(h256 const& _addressHash) const { return m_trie.contains(_addressHash); }
-
-	SpecificTrieDB<GenericTrieDB<OverlayDB>, h256> m_trie;
+	virtual std::string lookupCode(h256 const& _hash) const = 0;
 };
+		
+std::unique_ptr<StateImporterFace> createStateImporter(OverlayDB& _stateDb);
 
 }
 }

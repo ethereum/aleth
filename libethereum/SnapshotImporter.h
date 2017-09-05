@@ -32,7 +32,9 @@ namespace eth
 {
 
 class Client;
+class BlockChainImporterFace;
 class SnapshotStorageFace;
+class StateImporterFace;
 
 DEV_SIMPLE_EXCEPTION(UnsupportedSnapshotManifestVersion);
 DEV_SIMPLE_EXCEPTION(InvalidSnapshotManifest);
@@ -43,7 +45,7 @@ DEV_SIMPLE_EXCEPTION(InvalidBlockChunkData);
 class SnapshotImporter
 {
 public:
-	explicit SnapshotImporter(Client& _client): m_client(_client) {}
+	SnapshotImporter(StateImporterFace& _stateImporter, BlockChainImporterFace& _bcImporter): m_stateImporter(_stateImporter), m_blockChainImporter(_bcImporter) {}
 
 	void import(SnapshotStorageFace const& _snapshotStorage);
 
@@ -51,7 +53,8 @@ private:
 	void importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot);
 	void importBlockChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _blockChunkHashes);
 
-	Client& m_client;
+	StateImporterFace& m_stateImporter;
+	BlockChainImporterFace& m_blockChainImporter;
 };
 
 }

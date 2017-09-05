@@ -1060,8 +1060,11 @@ int main(int argc, char** argv)
 	{
 		try
 		{
-			SnapshotImporter importer(*web3.ethereum());
-			std::unique_ptr<SnapshotStorageFace> snapshotStorage(createSnapshotStorage(filename));
+			auto stateImporter = web3.ethereum()->createStateImporter();
+			auto blockChainImporter = web3.ethereum()->createBlockChainImporter();
+			SnapshotImporter importer(*stateImporter, *blockChainImporter);
+			
+			auto snapshotStorage(createSnapshotStorage(filename));
 			importer.import(*snapshotStorage);
 			// continue with regular sync from the snapshot block
 		}
