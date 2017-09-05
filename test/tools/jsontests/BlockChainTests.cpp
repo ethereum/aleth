@@ -151,7 +151,8 @@ void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects)
 		json_spirit::mObject const& expectObj = expect.get_obj();
 			ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
 			for (string const& networkName: netlist)
-				(void)stringToNetId(networkName);
+				if (networkName != "ALL") // "ALL" is allowed as a wildcard.
+					(void)stringToNetId(networkName);
 	}
 }
 
