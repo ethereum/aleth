@@ -38,6 +38,7 @@
 #include <libethcore/KeyManager.h>
 #include <libethereum/Defaults.h>
 #include <libethereum/SnapshotImporter.h>
+#include <libethereum/SnapshotStorage.h>
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
@@ -1060,7 +1061,8 @@ int main(int argc, char** argv)
 		try
 		{
 			SnapshotImporter importer(*web3.ethereum());
-			importer.import(filename);
+			std::unique_ptr<SnapshotStorageFace> snapshotStorage(createSnapshotStorage(filename));
+			importer.import(*snapshotStorage);
 			// continue with regular sync from the snapshot block
 		}
 		catch (...)

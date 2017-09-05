@@ -32,7 +32,6 @@ namespace dev
 namespace eth
 {
 
-DEV_SIMPLE_EXCEPTION(TryingToImportEmptyAccount);
 DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
 
 class StateImporter
@@ -42,12 +41,8 @@ public:
 
 	void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash)
 	{
-		if (_nonce == 0 && _balance == 0 && _codeHash == EmptySHA3 && _storage.empty())
-			BOOST_THROW_EXCEPTION(TryingToImportEmptyAccount());
-
 		if (containsAccount(_addressHash))
 			BOOST_THROW_EXCEPTION(AccountAlreadyImported());
-
 
 		RLPStream s(4);
 		s << _nonce << _balance;

@@ -17,6 +17,7 @@
 
 #include "SnapshotImporter.h"
 #include "Client.h"
+#include "SnapshotStorage.h"
 
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieHash.h>
@@ -37,48 +38,13 @@ struct SnapshotImportLog: public LogChannel
 	static const bool debug = false;
 };
 
-
-std::string snappyUncompress(std::string const& _compressed)
-{
-	size_t uncompressedSize = 0;
-	if (!snappy::GetUncompressedLength(_compressed.data(), _compressed.size(), &uncompressedSize))
-		BOOST_THROW_EXCEPTION(FailedToGetUncompressedLength());
-
-	std::vector<char> uncompressed(uncompressedSize);
-	if (!snappy::RawUncompress(_compressed.data(), _compressed.size(), uncompressed.data()))
-		BOOST_THROW_EXCEPTION(FailedToUncompressedSnapshotChunk());
-
-	return std::string(uncompressed.begin(), uncompressed.end());
 }
 
-std::string readChunk(boost::filesystem::path const& _snapshotDir, h256 const& _chunkHash)
-{
-	std::string const chunkCompressed = dev::contentsString((_snapshotDir / toHex(_chunkHash)).string());
-	if (chunkCompressed.empty())
-		BOOST_THROW_EXCEPTION(FailedToReadChunkFile());
-
-	h256 const chunkHash = sha3(chunkCompressed);
-	if (chunkHash != _chunkHash)
-		BOOST_THROW_EXCEPTION(ChunkDataCorrupted());
-
-	std::string const chunkUncompressed = snappyUncompress(chunkCompressed);
-	assert(!chunkUncompressed.empty());
-
-	return chunkUncompressed;
-}
-
-}
-
-void SnapshotImporter::import(std::string const& _snapshotDirPath)
+void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage)
 {
 	(void)SnapshotImportLog::debug; // override "unused variable" error on macOS
 
-	boost::filesystem::path const snapshotDir(_snapshotDirPath);
-
-	bytes const manifestBytes = dev::contents((snapshotDir / "MANIFEST").string());
-	if (manifestBytes.empty())
-		BOOST_THROW_EXCEPTION(FailedToReadSnapshotManifestFile());
-
+	bytes const manifestBytes = _snapshotStorage.readManifest();
 	RLP manifest(manifestBytes);
 
 	// For Snapshot format see https://github.com/paritytech/parity/wiki/Warp-Sync-Snapshot-Format
@@ -94,13 +60,13 @@ void SnapshotImporter::import(std::string const& _snapshotDirPath)
 
 	h256s const stateChunkHashes = manifest[1].toVector<h256>(RLP::VeryStrict);
 	h256 const stateRoot = manifest[3].toHash<h256>(RLP::VeryStrict);
-	importStateChunks(snapshotDir, stateChunkHashes, stateRoot);
+	importStateChunks(_snapshotStorage, stateChunkHashes, stateRoot);
 
 	h256s const blockChunkHashes = manifest[2].toVector<h256>(RLP::VeryStrict);
-	importBlocks(snapshotDir, blockChunkHashes);
+	importBlockChunks(_snapshotStorage, blockChunkHashes);
 }
 
-void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapshotDir, h256s const& _stateChunkHashes, h256 const& _stateRoot)
+void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot)
 {
 	size_t const stateChunkCount = _stateChunkHashes.size();
 
@@ -116,7 +82,7 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 
 	for (auto const& stateChunkHash: _stateChunkHashes)
 	{
-		std::string const chunkUncompressed = readChunk(_snapshotDir, stateChunkHash);
+		std::string const chunkUncompressed = _snapshotStorage.readChunk(stateChunkHash);
 
 		RLP const accounts(chunkUncompressed);
 		size_t const accountCount = accounts.itemCount();
@@ -125,11 +91,11 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 			RLP const addressAndAccount = accounts[accountIndex];
 			if (addressAndAccount.itemCount() != 2)
 				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
-	
+
 			h256 const addressHashNew = addressAndAccount[0].toHash<h256>(RLP::VeryStrict);
 			if (!addressHashNew)
 				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
-			
+
 			if (addressHash)
 			{
 				if (addressHashNew != addressHash)
@@ -213,7 +179,7 @@ void SnapshotImporter::importStateChunks(boost::filesystem::path const& _snapsho
 		BOOST_THROW_EXCEPTION(StateTrieReconstructionFailed());
 }
 
-void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir, h256s const& _blockChunkHashes)
+void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _blockChunkHashes)
 {
 	BlockChainImporter bcImporter = m_client.createBlockChainImporter();
 
@@ -222,7 +188,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 	// chunks are in decreasing order of first block number, so we go backwards to start from the oldest block
 	for (auto chunk = _blockChunkHashes.rbegin(); chunk != _blockChunkHashes.rend(); ++chunk)
 	{
-		std::string const chunkUncompressed = readChunk(_snapshotDir, *chunk);
+		std::string const chunkUncompressed = _snapshotStorage.readChunk(*chunk);
 
 		RLP blockChunk(chunkUncompressed);
 		if (blockChunk.itemCount() < 3)
@@ -231,7 +197,7 @@ void SnapshotImporter::importBlocks(boost::filesystem::path const& _snapshotDir,
 		u256 const firstBlockNumber = blockChunk[0].toInt<u256>(RLP::VeryStrict);
 		h256 const firstBlockHash = blockChunk[1].toHash<h256>(RLP::VeryStrict);
 		u256 const firstBlockDifficulty = blockChunk[2].toInt<u256>(RLP::VeryStrict);
-		if (!firstBlockNumber || firstBlockHash || firstBlockDifficulty)
+		if (!firstBlockNumber || !firstBlockHash || !firstBlockDifficulty)
 			BOOST_THROW_EXCEPTION(InvalidBlockChunkData());
 
 		clog(SnapshotImportLog) << "chunk first block " << firstBlockNumber << " first block hash " << firstBlockHash << " difficulty " << firstBlockDifficulty;

@@ -14,16 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file
- *  Class for importing snapshot from directory on disk
- */
 
 #pragma once
 
 #include <libdevcore/Common.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/FixedHash.h>
-#include <libdevcore/Log.h>
+
+#include <memory>
 
 namespace dev
 {
@@ -31,28 +29,24 @@ namespace dev
 namespace eth
 {
 
-class Client;
-class SnapshotStorageFace;
+DEV_SIMPLE_EXCEPTION(FailedToReadSnapshotManifestFile);
+DEV_SIMPLE_EXCEPTION(FailedToReadChunkFile);
+DEV_SIMPLE_EXCEPTION(ChunkDataCorrupted);
+DEV_SIMPLE_EXCEPTION(FailedToGetUncompressedLength);
+DEV_SIMPLE_EXCEPTION(FailedToUncompressedSnapshotChunk);
 
-DEV_SIMPLE_EXCEPTION(UnsupportedSnapshotManifestVersion);
-DEV_SIMPLE_EXCEPTION(InvalidSnapshotManifest);
-DEV_SIMPLE_EXCEPTION(StateTrieReconstructionFailed);
-DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
-DEV_SIMPLE_EXCEPTION(InvalidBlockChunkData);
-
-class SnapshotImporter
+class SnapshotStorageFace
 {
 public:
-	explicit SnapshotImporter(Client& _client): m_client(_client) {}
+	virtual ~SnapshotStorageFace() {}
 
-	void import(SnapshotStorageFace const& _snapshotStorage);
+	virtual bytes readManifest() const = 0;
 
-private:
-	void importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot);
-	void importBlockChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _blockChunkHashes);
-
-	Client& m_client;
+	virtual std::string readChunk(h256 const& _chunkHash) const = 0;
 };
+
+
+std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(std::string const& _snapshotDirPath);
 
 }
 }
