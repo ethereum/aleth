@@ -20,7 +20,6 @@
  */
 
 #include <chrono>
-#include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
 #include <libevm/Instruction.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
@@ -82,20 +81,17 @@ namespace dev
 namespace test
 {
 
-boost::random::mt19937 RandomCode::gen;
-boostIntDistrib RandomCode::percentDist = boostIntDistrib (0, 100);
-boostIntDistrib RandomCode::opCodeDist = boostIntDistrib (0, 255);
-boostIntDistrib RandomCode::opLengDist = boostIntDistrib (1, 32);
-boostIntDistrib RandomCode::opMemrDist = boostIntDistrib (0, 10485760);
-boostIntDistrib RandomCode::uniIntDist = boostIntDistrib (0, 0x7fffffff);
-boostUint64 RandomCode::uInt64Dist = boostUint64 (0, std::numeric_limits<uint64_t>::max());
+std::mt19937_64 RandomCode::gen;
+IntDistrib RandomCode::percentDist = IntDistrib (0, 100);
+IntDistrib RandomCode::opCodeDist = IntDistrib (0, 255);
+IntDistrib RandomCode::opLengDist = IntDistrib (1, 32);
+IntDistrib RandomCode::opMemrDist = IntDistrib (0, 10485760);
+IntDistrib RandomCode::uniIntDist = IntDistrib (0, 0x7fffffff);
 
-boostIntGenerator RandomCode::randPercentGen = boostIntGenerator(gen, percentDist);
-boostIntGenerator RandomCode::randOpCodeGen = boostIntGenerator(gen, opCodeDist);
-boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist);
-boostIntGenerator RandomCode::randOpMemrGen = boostIntGenerator(gen, opMemrDist);
-boostIntGenerator RandomCode::randUniIntGen = boostIntGenerator(gen, uniIntDist);
-boostUInt64Generator RandomCode::randUInt64Gen = boostUInt64Generator(gen, uInt64Dist);
+IntGenerator RandomCode::randOpCodeGen = std::bind(opCodeDist, gen);
+IntGenerator RandomCode::randOpLengGen = std::bind(opLengDist, gen);
+IntGenerator RandomCode::randOpMemrGen = std::bind(opMemrDist, gen);
+IntGenerator RandomCode::randUniIntGen = std::bind(uniIntDist, gen);
 
 int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _debug)
 {
@@ -266,16 +262,15 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 		return code;
 
 	//random opCode amount
-	boostIntDistrib sizeDist (1, _maxOpNumber);
-	boostIntGenerator rndSizeGen(gen, sizeDist);
+	IntDistrib sizeDist (1, _maxOpNumber);
+	IntGenerator rndSizeGen = std::bind(sizeDist, gen);
 	int size = rndSizeGen();
 
-	boostWeightGenerator randOpCodeWeight (gen, _options.opCodeProbability);
 	bool weightsDefined = _options.opCodeProbability.probabilities().size() == 255;
 
 	for (auto i = 0; i < size; i++)
 	{
-		uint8_t opcode = weightsDefined ? randOpCodeWeight() : randOpCodeGen();
+		uint8_t opcode = weightsDefined ? _options.opCodeProbability(gen) : randOpCodeGen();
 		eth::Instruction inst = (eth::Instruction) opcode;
 		eth::InstructionInfo info = eth::instructionInfo(inst);
 
@@ -317,7 +312,8 @@ u256 RandomCode::randomUniInt(u256 const& _minVal, u256 const& _maxVal)
 {
 	assert(_minVal <= _maxVal);
 	refreshSeed();
-	u256 value = _minVal + (u256)randUInt64Gen() % (_maxVal - _minVal);
+	std::uniform_int_distribution<uint64_t> uint64Dist{0, std::numeric_limits<uint64_t>::max()};
+	u256 value = _minVal + (u256)uint64Dist(gen) % (_maxVal - _minVal);
 	return value;
 }
 
@@ -559,7 +555,7 @@ void RandomCodeOptions::setWeights()
 	std::vector<int> weights;
 	for (auto const& element: mapWeights)
 		weights.push_back(element.second);
-	opCodeProbability = boostDescreteDistrib(weights);
+	opCodeProbability = DescreteDistrib{weights.begin(), weights.end()};
 }
 
 BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelper)

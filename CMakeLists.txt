@@ -96,8 +96,8 @@ include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
 
-hunter_add_package(Boost COMPONENTS filesystem random system thread)
-find_package(Boost CONFIG REQUIRED filesystem random system thread)
+hunter_add_package(Boost COMPONENTS filesystem system thread)
+find_package(Boost CONFIG REQUIRED filesystem system thread)
 
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)

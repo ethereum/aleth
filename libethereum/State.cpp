@@ -201,7 +201,8 @@ void State::clearCacheIfTooLarge() const
 	while (m_unchangedCacheEntries.size() > 1000)
 	{
 		// Remove a random element
-		size_t const randomIndex = boost::random::uniform_int_distribution<size_t>(0, m_unchangedCacheEntries.size() - 1)(dev::s_fixedHashEngine);
+		// FIXME: Do not use random device as the engine. The random device should be only used to seed other engine.
+		size_t const randomIndex = std::uniform_int_distribution<size_t>(0, m_unchangedCacheEntries.size() - 1)(dev::s_fixedHashEngine);
 
 		Address const addr = m_unchangedCacheEntries[randomIndex];
 		swap(m_unchangedCacheEntries[randomIndex], m_unchangedCacheEntries.back());
