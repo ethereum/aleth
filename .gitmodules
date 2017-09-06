@@ -5,3 +5,4 @@
 [submodule "test/tests"]
 	path = test/jsontests
 	url = https://github.com/ethereum/tests.git
+	shallow = true
