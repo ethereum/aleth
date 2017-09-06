@@ -976,7 +976,8 @@ class bcTestFixture {
 			return;
 		}
 
-		suite.runAllTestsInFolder(casename);
+		test::AccessSwitch accessSwitch = test::Options::get().filltests ? test::AccessSwitch::Writable : test::AccessSwitch::ReadOnly;
+		suite.runAllTestsInFolder(casename, accessSwitch);
 	}
 };
 
@@ -986,7 +987,8 @@ class bcTransitionFixture {
 	{
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		test::TransitionTestsSuite suite;
-		suite.runAllTestsInFolder(casename);
+		test::AccessSwitch accessSwitch = test::Options::get().filltests ? test::AccessSwitch::Writable : test::AccessSwitch::ReadOnly;
+		suite.runAllTestsInFolder(casename, accessSwitch);
 	}
 };
 
@@ -1006,7 +1008,7 @@ class bcGeneralTestsFixture
 			cnote << "Skipping hive test " << casename << ". Use --all to run it.\n";
 
 		test::BCGeneralStateTestsSuite suite;
-		suite.runAllTestsInFolder(casename);
+		suite.runAllTestsInFolder(casename, test::AccessSwitch::ReadOnly);
 	}
 };
 

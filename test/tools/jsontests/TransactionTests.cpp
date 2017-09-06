@@ -27,12 +27,15 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
+#include <boost/filesystem/path.hpp>
 #include <string>
 
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+
+namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
 
@@ -192,7 +195,8 @@ public:
 			return;
 		}
 
-		suite.runAllTestsInFolder(casename);
+		dev::test::AccessSwitch const accessSwitch = test::Options::get().filltests ? dev::test::AccessSwitch::Writable : dev::test::AccessSwitch::ReadOnly;
+		suite.runAllTestsInFolder(casename, accessSwitch);
 	}
 };
 

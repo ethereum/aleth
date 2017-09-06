@@ -43,7 +43,7 @@ public:
 	virtual json_spirit::mValue doTests(json_spirit::mValue const&, bool) const = 0;
 
 	// Execute all tests from _folder
-	void runAllTestsInFolder(std::string const& _testFolder) const;
+	void runAllTestsInFolder(std::string const& _testFolder, test::AccessSwitch _accessSwitch) const;
 
 	// Copy .json tests from the src folder to the dest folder because such test is crafted manually and could not be filled.
 	// Used in bcForgedTest, ttWrongRLP tests and such.
@@ -55,7 +55,7 @@ public:
 	// Structure  <suiteFolder>/<testFolder>/<test>.json
 	boost::filesystem::path getFullPath(std::string const& _testFolder) const;
 
-	void executeTests(const std::string& _name, boost::filesystem::path const& _testPathAppendix, boost::filesystem::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests) const;
+	void executeTests(const std::string& _name, std::pair<boost::filesystem::path const&, AccessSwitch> _testPathAppendix, boost::filesystem::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests) const;
 };
 
 }
