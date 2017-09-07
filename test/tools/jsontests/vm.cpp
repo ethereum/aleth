@@ -482,7 +482,7 @@ public:
 			return;
 		}
 		VmTestSuite suite;
-		test::runAllTestsInFolder(suite, casename);
+		suite.runAllTestsInFolder(casename);
 	}
 };
 

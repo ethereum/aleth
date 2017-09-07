@@ -404,21 +404,21 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 	}
 }
 
-void runAllTestsInFolder(test::TestSute const& _suite, const std::string& _folder)
+void TestSute::runAllTestsInFolder(const std::string& _folder) const
 {
-	fs::path const fillersPath = fs::path(test::getTestPath()) / "src" / fs::path(_suite.folder() + "Filler") / fs::path(_folder);
+	fs::path const fillersPath = fs::path(test::getTestPath()) / "src" / fs::path(folder() + "Filler") / fs::path(_folder);
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 	std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
 	size_t fileCount = files.size();
 	if (test::Options::get().filltests)
 		fileCount *= 2; //tests are checked when filled and after they been filled
 
-	fs::path const destTestFolder = fs::path(_suite.folder()) / fs::path(_folder);
-	fs::path const srcTestFolder = fs::path(_suite.folder() + "Filler") / fs::path(_folder);
+	fs::path const destTestFolder = fs::path(folder()) / fs::path(_folder);
+	fs::path const srcTestFolder = fs::path(folder() + "Filler") / fs::path(_folder);
 
-	auto suiteTestDo = [&_suite](json_spirit::mValue const& _input, bool _fillin)
+	auto suiteTestDo = [&](json_spirit::mValue const& _input, bool _fillin)
 	{
-		return _suite.doTests(_input, _fillin);
+		return doTests(_input, _fillin);
 	};
 
 	auto testOutput = dev::test::TestOutputHelper(fileCount);
