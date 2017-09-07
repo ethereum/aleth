@@ -15,6 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @file
+ * Base functions for all test suites
  */
 
 #include <test/tools/libtesteth/TestHelper.h>
@@ -42,7 +43,7 @@ void TestSute::runAllTestsInFolder(const std::string& _folder) const
 	fs::path const destTestFolder = fs::path(folder()) / fs::path(_folder);
 	fs::path const srcTestFolder = fs::path(folder() + "Filler") / fs::path(_folder);
 
-	auto suiteTestDo = [&](json_spirit::mValue const& _input, bool _fillin)
+	auto suiteTestDo = [this](json_spirit::mValue const& _input, bool _fillin)
 	{
 		return doTests(_input, _fillin);
 	};

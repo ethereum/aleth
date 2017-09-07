@@ -27,6 +27,7 @@
 #include <libevm/VMFactory.h>
 #include <libevm/ExtVMFace.h>
 #include <boost/filesystem.hpp>
+#include <test/tools/libtesteth/TestSuite.h>
 
 using namespace std;
 using namespace json_spirit;

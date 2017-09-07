@@ -15,6 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @file
+ * A base class for test suites
  */
 
 #pragma once
