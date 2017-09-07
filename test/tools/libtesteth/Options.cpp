@@ -61,6 +61,12 @@ void printHelp()
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
 
 	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments\n";
+	cout << setw(30) << "--version" << setw(25) << "Display build information\n";
+}
+
+void printVersion()
+{
+	cout << prepareVersionString() << "\n";
 }
 
 Options::Options(int argc, char** argv)
@@ -94,8 +100,12 @@ Options::Options(int argc, char** argv)
 			printHelp();
 			exit(0);
 		}
-		else
-		if (arg == "--vm")
+		else if (arg == "--version")
+		{
+			printVersion();
+			exit(0);
+		}
+		else if (arg == "--vm")
 		{
 			throwIfNoArgumentFollows();
 			string vmKind = argv[++i];
