@@ -404,31 +404,6 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 	}
 }
 
-void TestSute::runAllTestsInFolder(const std::string& _folder) const
-{
-	fs::path const fillersPath = fs::path(test::getTestPath()) / "src" / fs::path(folder() + "Filler") / fs::path(_folder);
-	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-	std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
-	size_t fileCount = files.size();
-	if (test::Options::get().filltests)
-		fileCount *= 2; //tests are checked when filled and after they been filled
-
-	fs::path const destTestFolder = fs::path(folder()) / fs::path(_folder);
-	fs::path const srcTestFolder = fs::path(folder() + "Filler") / fs::path(_folder);
-
-	auto suiteTestDo = [&](json_spirit::mValue const& _input, bool _fillin)
-	{
-		return doTests(_input, _fillin);
-	};
-
-	auto testOutput = dev::test::TestOutputHelper(fileCount);
-	for (auto const& file: files)
-	{
-		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-		executeTests(file.filename().string(), destTestFolder.string(), srcTestFolder.string(), suiteTestDo);
-	}
-}
-
 void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests)
 {
 	fs::path const testPath = getTestPath() / _testPathAppendix;
