@@ -42,7 +42,7 @@ namespace dev { namespace test {
 int createRandomTest()
 {
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
-	if (options.rCurrentTestSuite != test::c_StateTestsGeneral)
+	if (options.rCurrentTestSuite != test::c_GeneralStateTests)
 	{
 		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)\n";
 		return 1;

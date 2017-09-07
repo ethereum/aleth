@@ -59,7 +59,7 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 struct MissingFields : virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
-extern std::string const c_StateTestsGeneral;
+extern std::string const c_GeneralStateTests;
 
 
 class ZeroGasPricer: public eth::GasPricer

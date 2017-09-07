@@ -152,8 +152,8 @@ public:
 	}
 };
 
-std::string const test::c_StateTestsGeneral = "StateTestsGeneral";
-BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, GeneralTestFixture)
+std::string const test::c_GeneralStateTests = "GeneralStateTests";
+BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralTestFixture)
 
 //Frontier Tests
 BOOST_AUTO_TEST_CASE(stCallCodes){}

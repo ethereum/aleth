@@ -47,7 +47,7 @@ Option 1: Using a docker image
 
 * `Install Docker`_
 * Pull the ``testeth`` repository with ``docker pull holiman/testeth``
-* ``docker run -v <LOCAL_PATH_TO_ETH_TESTS>:/foobar holiman/testeth -t StateTestsGeneral/stCallCodes -- --singletest callcall_00 --singlenet EIP150 -d 0 -g 0 -v 0 --statediff --verbosity 5 --testpath /foobar`` should show something like
+* ``docker run -v <LOCAL_PATH_TO_ETH_TESTS>:/foobar holiman/testeth -t GeneralStateTests/stCallCodes -- --singletest callcall_00 --singlenet EIP150 -d 0 -g 0 -v 0 --statediff --verbosity 5 --testpath /foobar`` should show something like
 
 .. code::
 
@@ -253,7 +253,7 @@ After building ``testeth``, you are ready to fill the test.
 
 .. code:: bash
 
-   ETHEREUM_TEST_PATH="<LOCAL_PATH_TO_ETH_TESTS>" test/testeth -t StateTestsGeneral/stExample2 -- --filltests --checkstate
+   ETHEREUM_TEST_PATH="<LOCAL_PATH_TO_ETH_TESTS>" test/testeth -t GeneralStateTests/stExample2 -- --filltests --checkstate
 
 where the environmental variable ``ETHEREUM_TEST_PATH`` should point to the directory where ``tests`` repository is checked out.  ``stExample2`` should be replaced with the name of the subdirectory you are working on.  ``--filltests`` option tells ``testeth`` to fill tests.  ``--checkstate`` tells ``testeth`` to check the final states against the ``expect`` fields.
 
@@ -275,7 +275,7 @@ For trying the filled test, in ``cpp-ethereum/build`` directory, run
 
 .. code:: bash
 
-   ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stExample2
+   ETHEREUM_TEST_PATH="../../tests" test/testeth -t GeneralStateTests/stExample2
 
 Trying the Filled Test in Travis CI
 +++++++++++++++++++++++++++++++++++
@@ -303,13 +303,13 @@ In the tests repository, each GeneralStateTest is eventually translated into a B
 
 .. code::
 
-  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stExample2 -- --filltests --fillchain --checkstate
+  ETHEREUM_TEST_PATH="../../tests" test/testeth -t GeneralStateTests/stExample2 -- --filltests --fillchain --checkstate
 
 followed by
 
 .. code::
 
-  ETHEREUM_TEST_PATH="../../tests" test/testeth -t StateTestsGeneral/stExample2 -- --filltests --checkstate
+  ETHEREUM_TEST_PATH="../../tests" test/testeth -t GeneralStateTests/stExample2 -- --filltests --checkstate
 
 The second command is necessary because the first command modifies the GeneralStateTests in an undesired way.
 

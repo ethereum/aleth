@@ -56,16 +56,16 @@ If you need to debug a specific test on a specific network rules use this comman
    
 Currently network names <NET_NAME> are following: Frontier, Homestead, EIP150, EIP158, Byzantine, Constantinople
 
-The main test suites are <TEST_SUITE>: StateTestsGeneral, BlockchainTests, TransitionTests, TransactionTests, VMTests
+The main test suites are <TEST_SUITE>: GeneralStateTests, BlockchainTests, TransitionTests, TransactionTests, VMTests
 
 <TEST_CASE> correspond to a folder name in the tests repo. And <TEST_NAME> correspond to the filename in that folder describing a specific test. 
 
-StateTestsGeneral has a single transaction being executed on a given pre state to produce a post state. 
-This transaction has arrays <data>, <value>, <gasLimit>. So a single test execute transaction with different arguments taken from those arrays to test different conditions on the same pre state. To run a transaction from the StateTestsGeneral with the specified arguments use: 
+GeneralStateTests has a single transaction being executed on a given pre state to produce a post state. 
+This transaction has arrays <data>, <value>, <gasLimit>. So a single test execute transaction with different arguments taken from those arrays to test different conditions on the same pre state. To run a transaction from the GeneralStateTests with the specified arguments use: 
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --singletest <TEST_NAME> --singlenet <NET_NAME> -d <DATA_INDEX> -g <GASLIMIT_INDEX> -v <VALUE_INDEX>``
    
-This will run a transaction with given data, gasLimit, and value as described in the test on a given network rules. Note that parameters here are indexes. The actual values described in the test file itself. This is only valid when <TEST_SUITE> is StateTestsGeneral. 
+This will run a transaction with given data, gasLimit, and value as described in the test on a given network rules. Note that parameters here are indexes. The actual values described in the test file itself. This is only valid when <TEST_SUITE> is GeneralStateTests. 
  
 Debugging and tracing a state test
 --------------------------------------------------------------------------------
