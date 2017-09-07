@@ -14,7 +14,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     cmake \
     ninja-build \
     g++ \
-    lcov \
     gnupg2 \
     python-requests \
     # Dependencies
@@ -27,9 +26,11 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && curl -s https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -q - \
   && apt-get -qq update && apt-get install -yq --no-install-recommends \
     clang-5.0 \
+    llvm-5.0 \
   && rm -rf /var/lib/apt/lists/* \
   && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-5.0 1 \
-  && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-5.0 1
+  && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-5.0 1 \
+  && update-alternatives --install /usr/bin/gcov gcov /usr/bin/llvm-cov-5.0 1
 
 RUN adduser --disabled-password --gecos '' builder && adduser builder sudo && printf 'builder\tALL=NOPASSWD: ALL\n' >> /etc/sudoers
 
