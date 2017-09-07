@@ -7,37 +7,47 @@ Generating Consensus Tests
 Consensus Tests
 ===============
 
-This article is for testing with the C++ Ethereum client. For non-client specific Ethereum testing, refer to http://ethereum-tests.readthedocs.io/. Consensus tests are test cases for all Ethereum implementations. The test cases are distributed in the "filled" form, which contains, for example, the expected state root hash after transactions.
+This article is for testing with the C++ Ethereum client. For non-client specific
+Ethereum testing, refer to http://ethereum-tests.readthedocs.io/. Consensus tests 
+are test cases for all Ethereum implementations. The test cases are distributed 
+in the "filled" form, which contains, for example, the expected state root hash after transactions.
 The filled test cases are usually not written by hand, but generated from "test filler" files.
 ``testeth`` executable in cpp-ethereum can convert test fillers into test cases.
 
-When you add a test case in the consensus test suite, you are supposed to push both the filler and the filled test cases into the `tests repository`_.
+When you add a test case in the consensus test suite, you are supposed to push both 
+the filler and the filled test cases into the `tests repository`_.
 
 .. _`tests repository`: https://github.com/ethereum/tests
 
-Checking Out the ``tests`` Repository
+Checking Out the tests Repository
 =================================
 
-The consensus tests are stored in the tests repository.  The command
+The consensus tests are stored in the tests repository. The command
 
-.. code:: bash
-   git clone https://github.com/ethereum/tests.git
+::
 
-should create a local copy of the ``develop`` branch of the tests repository.  From here on, ``<LOCAL_PATH_TO_ETH_TESTS>`` points to this local copy.
+  git clone https://github.com/ethereum/tests.git
 
-Preparing ``testeth`` and LLL
+should create a local copy of the ``develop`` branch of the tests repository. 
+From here on, ``<LOCAL_PATH_TO_ETH_TESTS>`` points to this local copy.
+
+Preparing testeth and LLL
 =========================
 
-For generating consensus tests, an executable ``testeth`` is necessary.  Moreover, ``testeth`` uses the LLL compiler when it generates consensus tests.
-The easier way is to use the docker image provided by winsvega_.
+For generating consensus tests, an executable ``testeth`` is necessary.  Moreover, 
+``testeth`` uses the LLL compiler when it generates consensus tests. The easier way is 
+to use the `docker image <https://hub.docker.com/r/holiman/testeth/>`_ provided by 
+holiman_ (another `image <https://hub.docker.com/r/winsvega/testeth/>`_ is provided by winsvega_).
 
+.. _holiman: https://github.com/holiman
 .. _winsvega: https://github.com/winsvega
 
-Option 1:  Using a docker image
-----------------------
+Option 1: Using a docker image
+------------------------------
 
-* `install Docker`_
-* ``docker run -v <LOCAL_PATH_TO_ETH_TESTS>:/foobar winsvega/testeth -t StateTestsGeneral/stCallCodes -- --singletest callcall_00 --singlenet EIP150 -d 0 -g 0 -v 0 --statediff --verbosity 5 --testpath /foobar`` should show something like
+* `Install Docker`_
+* Pull the ``testeth`` repository with ``docker pull holiman/testeth``
+* ``docker run -v <LOCAL_PATH_TO_ETH_TESTS>:/foobar holiman/testeth -t StateTestsGeneral/stCallCodes -- --singletest callcall_00 --singlenet EIP150 -d 0 -g 0 -v 0 --statediff --verbosity 5 --testpath /foobar`` should show something like
 
 .. code::
 
@@ -52,12 +62,19 @@ Option 1:  Using a docker image
 
    *** No errors detected
 
+.. note::
+   The ``StateTestsGeneral`` folder naming is no mistake (folder in test repo is ``GeneralStateTests``)
+   but there due to slightly different naming in ``c++ client`` implementation (might be fixed in the future). 
+
+.. note::
+   Some problems with running the ``testeth`` command can be fixed by adding the ``--all`` option
+   at the end.
 
 .. _`install Docker`: https://www.docker.com/community-edition
 
 
 Option 2: Building locally
--------------------------------
+--------------------------
 
 Sometimes, you need a tweaked version of ``testeth`` or ``lllc`` when your tests are about very new features not available in the docker image.
 
@@ -244,6 +261,10 @@ Depending on your shell, there are various ways to set up ``ETHEREUM_TEST_PATH``
 
 ``testeth`` with ``--filltests`` fills every test filler it finds. The command might modify existing test cases. After running ``testeth`` with ``--filltests``, try running ``git status`` in the ``tests`` directory. If ``git status`` indicates changes in unexpected files, that is an indication that the behavior of ``cpp-ethereum`` changed unexpectedly.
 
+.. note::
+   If ``testeth`` is looking for tests in the ``../../test/jsontests`` directory, 
+   you have probably not specified the ``--testpath`` option.
+
 Trying the Filled Test
 ----------------------
 
@@ -276,7 +297,7 @@ If changes in the cpp-client were necessary, also file a pull-request there.
 
 
 Advanced: Converting a GeneralStateTest Case into a BlockchainTest Case
-=============================================================
+=======================================================================
 
 In the tests repository, each GeneralStateTest is eventually translated into a BlockchainTest.  This can be done by the following sequence of commands.
 
@@ -296,8 +317,8 @@ After these two commands,
 * ``git status`` to check if any GeneralStateTest has changed.  If yes, revert the changes, and follow section _`Trying the Filled Test Locally`.  That will probably reveail an error that you need to debug.
 * ``git add`` to add only the desired BlockchainTests.  Not all modified BlockchainTests are valuable because, when you run ``--fillchain`` twice, the two invocations always produce different BlockchainTests even there are no changes in the source.
 
-Advanced: When ``testeth`` Takes Too Much Time
-===============================
+Advanced: When testeth Takes Too Much Time
+==========================================
 
 Sometimes, especially when you are running BlockchainTests, ``testeth`` takes a lot of time.
 
@@ -322,6 +343,6 @@ This happens when the GeneralTest fillers contain wrong parameters.  The ``"env"
 ``--singletest`` option removes skipped tests from the final test file, when ``testeth`` is filling a BlockchainTest.
 
 Advanced: Generating a BlockchainTest Case
-================================
+==========================================
 
 (To be described.)
