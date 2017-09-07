@@ -36,7 +36,7 @@ if (WIN32)
 endif()
 
 ExternalProject_Add(jsonrpccpp
-    PREFIX ${CMAKE_SOURCE_DIR}/deps
+    PREFIX deps
     DOWNLOAD_NAME jsonrcpcpp-0.7.0.tar.gz
     DOWNLOAD_NO_PROGRESS 1
     URL https://github.com/cinemast/libjson-rpc-cpp/archive/v0.7.0.tar.gz

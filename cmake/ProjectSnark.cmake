@@ -3,7 +3,7 @@ include(ProjectMPIR)
 # FIXME: Rename to LibFF as that's the name of the library.
 
 ExternalProject_Add(snark
-    PREFIX ${CMAKE_SOURCE_DIR}/deps
+    PREFIX deps
     DOWNLOAD_NAME libff-97d3fa6c.tar.gz
     DOWNLOAD_NO_PROGRESS TRUE
     URL https://github.com/chfast/libff/archive/97d3fa6cdbd4b7549c7a8a179dc97308dbfd044d.tar.gz

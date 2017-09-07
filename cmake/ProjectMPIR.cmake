@@ -1,5 +1,5 @@
 ExternalProject_Add(mpir
-    PREFIX ${CMAKE_SOURCE_DIR}/deps
+    PREFIX deps
     DOWNLOAD_NAME mpir-cmake.tar.gz
     DOWNLOAD_NO_PROGRESS TRUE
     URL https://github.com/chfast/mpir/archive/cmake.tar.gz

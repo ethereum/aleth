@@ -2,7 +2,7 @@ include(ExternalProject)
 include(GNUInstallDirs)
 
 ExternalProject_Add(cryptopp
-    PREFIX ${CMAKE_SOURCE_DIR}/deps
+    PREFIX deps
     # This points to unreleased version 5.6.5+ but contains very small
     # warning fix:
     # https://github.com/weidai11/cryptopp/commit/903b8feaa70199eb39a313b32a71268745ddb600
