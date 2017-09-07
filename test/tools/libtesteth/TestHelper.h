@@ -105,7 +105,8 @@ dev::eth::BlockHeader constructHeader(
 	u256 const& _timestamp,
 	bytes const& _extraData);
 void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
-void executeTests(const std::string& _name, boost::filesystem::path const& _testPathAppendix, boost::filesystem::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix = true);
+void runAllTestsInFolder(test::TestSute const& _testSuite, std::string const& _folder);
+void executeTests(const std::string& _name, boost::filesystem::path const& _testPathAppendix, boost::filesystem::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::State const& _statePost, eth::ChangeLog const& _changeLog);
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
