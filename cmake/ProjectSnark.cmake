@@ -2,8 +2,12 @@ include(ProjectMPIR)
 
 # FIXME: Rename to LibFF as that's the name of the library.
 
+set(prefix "${CMAKE_BINARY_DIR}/deps")
+set(SNARK_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ff${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(SNARK_INCLUDE_DIR "${prefix}/include/libff")
+
 ExternalProject_Add(snark
-    PREFIX deps
+    PREFIX "${prefix}"
     DOWNLOAD_NAME libff-97d3fa6c.tar.gz
     DOWNLOAD_NO_PROGRESS TRUE
     URL https://github.com/chfast/libff/archive/97d3fa6cdbd4b7549c7a8a179dc97308dbfd044d.tar.gz
@@ -21,18 +25,15 @@ ExternalProject_Add(snark
     BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
     LOG_BUILD 1
     INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
+    BUILD_BYPRODUCTS "${SNARK_LIBRARY}"
 )
 add_dependencies(snark mpir)
 
 # Create snark imported library
-ExternalProject_Get_Property(snark INSTALL_DIR)
 add_library(Snark STATIC IMPORTED)
-set(SNARK_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ff${CMAKE_STATIC_LIBRARY_SUFFIX})
-set(SNARK_INCLUDE_DIR ${INSTALL_DIR}/include/libff)
 file(MAKE_DIRECTORY ${SNARK_INCLUDE_DIR})
 set_property(TARGET Snark PROPERTY IMPORTED_CONFIGURATIONS Release)
 set_property(TARGET Snark PROPERTY IMPORTED_LOCATION_RELEASE ${SNARK_LIBRARY})
 set_property(TARGET Snark PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SNARK_INCLUDE_DIR})
 set_property(TARGET Snark PROPERTY INTERFACE_LINK_LIBRARIES MPIR::mpir)
 add_dependencies(Snark snark)
-unset(INSTALL_DIR)
