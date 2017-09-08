@@ -62,11 +62,26 @@ namespace
 		int commitCounter = 0;
 	};
 
+
+	struct ImportedBlock
+	{
+		BlockHeader header;
+		bytes transactions;
+		bytes uncles;
+		bytes receipts;
+		u256 totalDifficulty;
+	};
+
 	class MockBlockChainImporter: public BlockChainImporterFace
 	{
 	public:
-		void importBlock(BlockHeader const& /*_header*/, RLP /*_transactions*/, RLP /*_uncles*/, RLP /*_receipts*/, u256 const& /*_totalDifficulty*/) override {}
+		void importBlock(BlockHeader const& _header, RLP _transactions, RLP _uncles, RLP _receipts, u256 const& _totalDifficulty) override
+		{
+			importedBlocks.push_back({_header, _transactions.data().toBytes(), _uncles.data().toBytes(), _receipts.data().toBytes(), _totalDifficulty});
+		}
 		void setChainStartBlockNumber(u256 const& /*_number*/) override {}
+
+		std::vector<ImportedBlock> importedBlocks;
 	};
 
 	class MockSnapshotStorage: public SnapshotStorageFace
@@ -131,6 +146,37 @@ namespace
 			s << addressAccount.first;
 			s.appendRaw(addressAccount.second);
 		}
+
+		return s.out();
+	}
+
+	bytes createRlpSingleItemList(unsigned _item)
+	{
+		RLPStream s;
+		s << _item;
+		return s.out();
+	}
+
+	bytes createAbridgedBlock(Address const& _author, h256 const& _stateRoot, h2048 const& _logBloom, u256 const& _difficulty, u256 const& _gasLimit,
+		u256 const& _gasUsed, u256 const& _timestamp, bytes const& _extraData, h256 const& _mixHash, h64 const& _nonce, 
+		bytes const& _transactions, bytes const& _uncles)
+	{
+		RLPStream s(12);
+		s << _author << _stateRoot << _logBloom << _difficulty << _gasLimit << _gasUsed << _timestamp << _extraData;
+		s.appendRaw(_transactions);
+		s.appendRaw(_uncles);
+		s << _mixHash << _nonce;
+
+		return s.out();
+	}
+
+	bytes createSingleBlockChunk(unsigned _number, h256 const& _hash, u256 const& _totalDifficulty, bytes const& _abridgedBlock, bytes const& _receipts)
+	{
+		RLPStream s(4);
+		s << _number << _hash << _totalDifficulty;
+		s.appendList(2);
+		s.appendRaw(_abridgedBlock);
+		s.appendRaw(_receipts);
 
 		return s.out();
 	}
@@ -200,7 +246,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
 	BOOST_CHECK_EQUAL(importedAccount.codeHash, EmptySHA3);
 
 	std::map<h256, bytes> expectedStorage{storagePair1, storagePair2, storagePair3, storagePair4};
-	BOOST_CHECK_EQUAL(importedAccount.storage, expectedStorage);
+	BOOST_CHECK(importedAccount.storage == expectedStorage);
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
@@ -274,6 +320,72 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
 	BOOST_REQUIRE_EQUAL(stateImporter.commitCounter, 3); // once every chunk + 1 last commit
+}
+
+
+BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
+{
+	h256 blockChunk = sha3("123");
+	snapshotStorage.manifest = createManifest(2, {}, {blockChunk}, h256{}, 0, h256{});
+
+	Address author("111");
+	h256 stateRoot(sha3("222"));
+	h2048 logBloom(333);
+	u256 difficulty = 444;
+	u256 gasLimit = 555;
+	u256 gasUsed = 666;
+	u256 timestamp = 777;
+	bytes extraData = {8, 8, 8};
+	h256 mixHash = sha3("999");
+	Nonce nonce(012);
+	bytes block = createAbridgedBlock(author, stateRoot, logBloom, difficulty, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce, RLPEmptyList, RLPEmptyList);
+
+	unsigned parentNumber = 345;
+	h256 parentHash = sha3("678");
+	u256 parentTotalDifficulty = 910;
+	bytes chunkBytes = createSingleBlockChunk(parentNumber, parentHash, parentTotalDifficulty, block, RLPEmptyList);
+	snapshotStorage.chunks[blockChunk] = chunkBytes;
+
+	snapshotImporter.import(snapshotStorage);
+
+	BOOST_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
+	ImportedBlock const& importedBlock = blockChainImporter.importedBlocks.front();
+	BlockHeader const& header = importedBlock.header;
+	BOOST_CHECK_EQUAL(header.author(), author);
+	BOOST_CHECK_EQUAL(header.stateRoot(), stateRoot);
+	BOOST_CHECK_EQUAL(header.logBloom(), logBloom);
+	BOOST_CHECK_EQUAL(header.difficulty(), difficulty);
+	BOOST_CHECK_EQUAL(header.gasLimit(), gasLimit);
+	BOOST_CHECK_EQUAL(header.gasUsed(), gasUsed);
+	BOOST_CHECK_EQUAL(header.timestamp(), timestamp);
+	BOOST_CHECK_EQUAL_COLLECTIONS(header.extraData().begin(), header.extraData().end(), extraData.begin(), extraData.end());
+	BOOST_CHECK_EQUAL(Ethash::mixHash(header), mixHash);
+	BOOST_CHECK_EQUAL(Ethash::nonce(header), nonce);
+	BOOST_CHECK_EQUAL(header.number(), parentNumber + 1);
+	BOOST_CHECK_EQUAL(header.parentHash(), parentHash);
+	BOOST_CHECK_EQUAL(importedBlock.totalDifficulty, parentTotalDifficulty + difficulty);
+}
+
+BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
+{
+	h256 blockChunk = sha3("123");
+	snapshotStorage.manifest = createManifest(2, {}, {blockChunk}, h256{}, 0, h256{});
+
+	bytes transactions = createRlpSingleItemList(123);
+	bytes uncles = createRlpSingleItemList(456);
+	bytes block = createAbridgedBlock(Address("111"), sha3("222"), h2048(333), 444, 555, 666, 777, {8, 8, 8}, sha3("999"), Nonce(012), transactions, uncles);
+
+	bytes receipts = createRlpSingleItemList(789);
+	bytes chunkBytes = createSingleBlockChunk(345, sha3("678"), 910, block, receipts);
+	snapshotStorage.chunks[blockChunk] = chunkBytes;
+
+	snapshotImporter.import(snapshotStorage);
+
+	BOOST_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
+	ImportedBlock const& importedBlock = blockChainImporter.importedBlocks.front();
+	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.transactions.begin(), importedBlock.transactions.end(), transactions.begin(), transactions.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.uncles.begin(), importedBlock.uncles.end(), uncles.begin(), uncles.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.receipts.begin(), importedBlock.receipts.end(), receipts.begin(), receipts.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
