@@ -70,6 +70,7 @@ protected:
 };
 
 // helping functions
+std::string prepareVersionString();
 std::vector<boost::filesystem::path> getJsonFiles(boost::filesystem::path const& _dirPath, std::string const& _particularFile = {});
 std::string netIdToString(eth::Network _netId);
 eth::Network stringToNetId(std::string const& _netname);
