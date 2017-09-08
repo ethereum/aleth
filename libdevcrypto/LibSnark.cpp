@@ -146,16 +146,20 @@ pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 		for (size_t i = 0; i < pairs; ++i)
 		{
 			bytesConstRef const pair = _in.cropped(i * pairSize, pairSize);
+			libff::alt_bn128_G1 const g1 = decodePointG1(pair);
 			libff::alt_bn128_G2 const p = decodePointG2(pair.cropped(2 * 32));
 			if (-libff::alt_bn128_G2::scalar_field::one() * p + p != libff::alt_bn128_G2::zero())
 				// p is not an element of the group (has wrong order)
 				return {false, bytes()};
+			if (-libff::alt_bn128_G1::scalar_field::one() * g1 + g1 != libff::alt_bn128_G1::zero())
+				// g1 is not an element of the group (has wrong order)
+				return {false, bytes()};
 			if (p.is_zero())
 				continue; // the pairing is one
-			if (decodePointG1(pair).is_zero())
+			if (g1.is_zero())
 				continue; // the pairing is one
 			x = x * libff::alt_bn128_miller_loop(
-				libff::alt_bn128_precompute_G1(decodePointG1(pair)),
+				libff::alt_bn128_precompute_G1(g1),
 				libff::alt_bn128_precompute_G2(p)
 			);
 		}
