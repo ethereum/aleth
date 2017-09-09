@@ -47,6 +47,7 @@
 
 		=: r
 		pop
+		pop
 	}
 	switch r
 	case 1 {
