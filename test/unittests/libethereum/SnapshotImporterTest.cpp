@@ -79,9 +79,10 @@ namespace
 		{
 			importedBlocks.push_back({_header, _transactions.data().toBytes(), _uncles.data().toBytes(), _receipts.data().toBytes(), _totalDifficulty});
 		}
-		void setChainStartBlockNumber(u256 const& /*_number*/) override {}
+		void setChainStartBlockNumber(u256 const& _number) override { chainStartBlockNumber = _number; }
 
 		std::vector<ImportedBlock> importedBlocks;
+		u256 chainStartBlockNumber;
 	};
 
 	class MockSnapshotStorage: public SnapshotStorageFace
@@ -364,6 +365,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
 	BOOST_CHECK_EQUAL(header.number(), parentNumber + 1);
 	BOOST_CHECK_EQUAL(header.parentHash(), parentHash);
 	BOOST_CHECK_EQUAL(importedBlock.totalDifficulty, parentTotalDifficulty + difficulty);
+	
+	BOOST_CHECK_EQUAL(blockChainImporter.chainStartBlockNumber, parentNumber + 1);
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
