@@ -181,7 +181,7 @@ ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
 	bigint const maxLength(max(modLength, baseLength));
 	bigint const adjustedExpLength(expLengthAdjust(baseLength + 96, expLength, _in));
 
-	return multComplexity(maxLength) * max<bigint>(adjustedExpLength, 1) / 100;
+	return multComplexity(maxLength) * max<bigint>(adjustedExpLength, 1) / 20;
 }
 
 ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in)
@@ -201,7 +201,7 @@ ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
 
 ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
 {
-	return 100000 + (_in.size() / 192) * 80000;
+	return 40000 + (_in.size() / 192) * 60000;
 }
 
 }
