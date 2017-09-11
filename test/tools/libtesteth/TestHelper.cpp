@@ -404,7 +404,7 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 	}
 }
 
-void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
+void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests)
 {
 	fs::path const testPath = getTestPath() / _testPathAppendix;
 
@@ -425,7 +425,7 @@ void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::pa
 		json_spirit::mValue v;
 		boost::filesystem::path p(__FILE__);
 
-		string const nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
+		string const nameEnding = "Filler.json";
 		fs::path const testfileUnderTestPath = fs::path ("src") / _fillerPathAppendix / fs::path(name + nameEnding);
 		fs::path const testfilename = getTestPath() / testfileUnderTestPath;
 		string s = asString(dev::contents(testfilename));
@@ -434,7 +434,7 @@ void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::pa
 		json_spirit::read_string(s, v);
 		removeComments(v);
 		json_spirit::mValue output = doTests(v, true);
-		addClientInfo(output, testfilename);
+		addClientInfo(output, testfileUnderTestPath);
 		writeFile(testPath / fs::path(name + ".json"), asBytes(json_spirit::write_string(output, true)));
 	}
 
