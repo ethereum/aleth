@@ -146,11 +146,16 @@ bool isDisabledNetwork(eth::Network _net)
 {
 	Options const& opt = Options::get();
 	if (opt.all || opt.filltests || opt.createRandomTest || !opt.singleTestNet.empty())
+	{
+		if (_net == eth::Network::ConstantinopleTest)
+			return true;
 		return false;
+	}
 	switch (_net)
 	{
 		case eth::Network::FrontierTest:
 		case eth::Network::HomesteadTest:
+		case eth::Network::ConstantinopleTest:
 		case eth::Network::FrontierToHomesteadAt5:
 		case eth::Network::HomesteadToDaoAt5:
 		case eth::Network::HomesteadToEIP150At5:
