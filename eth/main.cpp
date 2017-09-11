@@ -149,6 +149,7 @@ void help()
 		<< "    --to <n>  Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'.\n"
 		<< "    --only <n>  Equivalent to --export-from n --export-to n.\n"
 		<< "    --dont-check  Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.\n\n"
+		<< "    --import-snapshot <path>  Import blockchain and state data from the Parity Warp Sync snapshot." << endl
 		<< "General Options:\n"
 		<< "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ").\n"
 #if ETH_EVMJIT
