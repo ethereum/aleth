@@ -9,7 +9,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && apt-get -qq update && apt-get install -yq --no-install-recommends \
     # Build tools
     git \
-    ssh \
+    ssh-client \
     curl \
     cmake \
     ninja-build \
