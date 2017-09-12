@@ -271,16 +271,27 @@ std::string executeCmd(std::string const& _command)
 	BOOST_ERROR("executeCmd() has not been implemented for Windows.");
 	return "";
 #else
+	string out;
 	char output[1024];
 	FILE *fp = popen(_command.c_str(), "r");
 	if (fp == NULL)
 		BOOST_ERROR("Failed to run " + _command);
 	if (fgets(output, sizeof(output) - 1, fp) == NULL)
 		BOOST_ERROR("Reading empty result for " + _command);
+	else
+	{
+		while(true)
+		{
+			out += string(output);
+			if (fgets(output, sizeof(output) - 1, fp) == NULL)
+				break;
+		}
+	}
+
 	int exitCode = pclose(fp);
 	if (exitCode != 0)
 		BOOST_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
-	return boost::trim_copy(string(output));
+	return boost::trim_copy(out);
 #endif
 }
 
@@ -489,6 +500,15 @@ string prepareVersionString()
 	return version;
 }
 
+string prepareLLLCVersionString()
+{
+	string result = test::executeCmd("lllc --version");
+	string::size_type pos = result.rfind("Version");
+	if (pos != string::npos)
+		return result.substr(pos, result.length());
+	return "Error getting LLLC Version";
+}
+
 void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
 {
 	for (auto& i: _v.get_obj())
@@ -505,6 +525,7 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
 		}
 
 		clientinfo["filledwith"] = prepareVersionString();
+		clientinfo["lllcversion"] = prepareLLLCVersionString();
 		clientinfo["source"] = _testSource.string();
 		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
