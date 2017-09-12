@@ -10,7 +10,7 @@ contract rng {
 		uint rand2 = 0x18f36bbc46ac3dc13cfd37825;
 		uint rand3 = 0x15681eefd0b362a892bed8d6f605b1997;
 		uint rand4 = 0x1e96f1ffe206d52abac9fcdac9bb17814cb748a6b5;
-		for (int i = 0; i < 5000000; ++i) {
+		for (int i = 0; i < 2000000; ++i) {
 			rand1 *= 0x16b8ce501af6621e7e3f4e366d6c967a6667d65c329d9ac2a7e35db2f092073;
 			rand1 += 0x1b036d1e2832839b693e9c83d786056b977602ef8a354592b;
 			rand2 *= 0xfd4d51ba81bcb0cb635868f6e3dbffb10bd4734bdc4160bcd2ff9665868ad6cf;

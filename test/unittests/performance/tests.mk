@@ -34,8 +34,9 @@ ifdef PARITY
 	PARITY_ = $(call STATS,parity) $(PARITY) stats --gas 10000000000 --code `cat $*.bin`; touch $*.ran
 endif
 
-# Mac ignores --format parameter
-STATS = time --format "$(1) $*: user=%Us system=%Ss elapsed=%es CPU=%P mem=%Mk\n"
+# Macs ignore or reject --format parameter
+#STATS = time --format "stats: $(1) $* %U %M"
+STATS = time 
 
 #
 # to support new clients

@@ -21,7 +21,7 @@ contract fun is derived {
 	
 	function test() {
 		uint u = 8;
-		for (int i = 0; i <5000000; ++i)
+		for (int i = 0; i < 2000000; ++i)
 			u = nada(nada(u));
 		assert(u == 8);
 	}
