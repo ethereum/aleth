@@ -59,7 +59,7 @@ STATS = time
 %.bin : %.sol
 	$(call SOLC_SOL_)
 	
-all: ops mul64c programs
+all: ops programs
 
 # programs for timing individual operators
 #
