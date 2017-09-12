@@ -20,19 +20,32 @@
 
 #pragma once
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <boost/filesystem/path.hpp>
 
 namespace dev
 {
 namespace test
 {
 
-class TestSute
+class TestSuite
 {
 public:
-	virtual ~TestSute() {}
+	virtual ~TestSuite() {}
+
+	//Main test executive function. should be declared for each test suite. it fills and run the test .json file
 	virtual json_spirit::mValue doTests(json_spirit::mValue const&, bool) const = 0;
-	virtual std::string folder() const = 0;
-	void runAllTestsInFolder(std::string const& _folder) const;
+
+	//A folder of the test suite. like "VMTests". should be declared for each test suite.
+	virtual std::string suiteFolder() const = 0;
+
+	//Structure  <suiteFolder>/<testFolder>/<test>.json
+	//Return full path to folder for tests from _testFolder
+	boost::filesystem::path getFullPath(std::string const& _testFolder, bool _isFiller) const;
+
+	//Execute all tests from _folder
+	void runAllTestsInFolder(std::string const& _testFolder) const;
+
+	void copyAllTestsFromFolder(std::string const& _testFolder) const;
 };
 
 }

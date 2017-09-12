@@ -31,17 +31,22 @@ namespace dev
 namespace test
 {
 
-void TestSute::runAllTestsInFolder(const std::string& _folder) const
+fs::path TestSuite::getFullPath(string const& _testFolder, bool _isFiller) const
 {
-	fs::path const fillersPath = fs::path(test::getTestPath()) / "src" / fs::path(folder() + "Filler") / fs::path(_folder);
+	string isFiller = _isFiller ? "Filler" : string();
+	return fs::path(test::getTestPath()) / "src" / fs::path(suiteFolder() + isFiller) / fs::path(_testFolder);
+}
+
+void TestSuite::runAllTestsInFolder(string const& _testFolder) const
+{
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-	std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
+	std::vector<boost::filesystem::path> const files = test::getJsonFiles(getFullPath(_testFolder, true).string(), filter);
 	size_t fileCount = files.size();
 	if (test::Options::get().filltests)
 		fileCount *= 2; //tests are checked when filled and after they been filled
 
-	fs::path const destTestFolder = fs::path(folder()) / fs::path(_folder);
-	fs::path const srcTestFolder = fs::path(folder() + "Filler") / fs::path(_folder);
+	fs::path const destTestFolder = fs::path(suiteFolder()) / fs::path(_testFolder);
+	fs::path const srcTestFolder = fs::path(suiteFolder() + "Filler") / fs::path(_testFolder);
 
 	auto suiteTestDo = [this](json_spirit::mValue const& _input, bool _fillin)
 	{
@@ -53,6 +58,21 @@ void TestSute::runAllTestsInFolder(const std::string& _folder) const
 	{
 		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 		executeTests(file.filename().string(), destTestFolder.string(), srcTestFolder.string(), suiteTestDo);
+	}
+}
+
+void TestSuite::copyAllTestsFromFolder(string const& _testFolder) const
+{
+	std::vector<fs::path> const files = test::getJsonFiles(getFullPath(_testFolder, true).string());
+	for (auto const& file : files)
+	{
+		fs::path const destFile = getFullPath(_testFolder, false) / fs::path(file.filename().string());
+		fs::path const srcFile = getFullPath(_testFolder, true) / fs::path(file.filename().string());
+		clog << "Copying " << srcFile.string() << "\n";
+		clog << " TO " << destFile.string() << "\n";
+		auto testOutput = dev::test::TestOutputHelper();
+		dev::test::copyFile(srcFile.string(), destFile.string());
+		BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(destFile.string()), "Error when copying the test file!");
 	}
 }
 

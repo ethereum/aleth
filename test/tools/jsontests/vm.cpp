@@ -295,7 +295,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 
 namespace dev { namespace test {
 
-class VmTestSuite: public TestSute
+class VmTestSuite: public TestSuite
 {
 	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override
 	{
@@ -465,11 +465,13 @@ class VmTestSuite: public TestSute
 		return v;
 	}
 
-	std::string folder() const override
+	std::string suiteFolder() const override
 	{
 		return "VMTests";
 	}
 };
+
+} } // namespace close
 
 class VmTestFixture
 {
@@ -482,13 +484,10 @@ public:
 			cnote << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
 		}
-		VmTestSuite suite;
+		dev::test::VmTestSuite suite;
 		suite.runAllTestsInFolder(casename);
 	}
 };
-
-} } // namespace close
-
 
 BOOST_FIXTURE_TEST_SUITE(VMTests, VmTestFixture)
 
