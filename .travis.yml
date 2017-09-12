@@ -110,7 +110,7 @@ cache:
         - ~/Library/Caches/Homebrew
         # Cache whole deps dir hoping you will not need to download and
         # build external dependencies next build.
-        - $TRAVIS_BUILD_DIR/deps
+        - $TRAVIS_BUILD_DIR/build/deps
 install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then clang --version; travis_wait 150 brew install llvm; $(brew --prefix llvm)/bin/clang --version; export PATH=$(brew --prefix llvm)/bin:$PATH; export CC=$(brew --prefix llvm)/bin/clang; export CXX=$(brew --prefix llvm)/bin/clang++; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh && ./scripts/install_travis_linux_deps.sh; fi
