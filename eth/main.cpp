@@ -327,7 +327,7 @@ int main(int argc, char** argv)
 	std::string rpcCorsDomain = "";
 
 	string jsonAdmin;
-	ChainParams chainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
+	ChainParams chainParams;
 	u256 gasFloor = Invalid256;
 	string privateChain;
 
@@ -400,6 +400,7 @@ int main(int argc, char** argv)
 	MinerCLI m(MinerCLI::OperationMode::None);
 
 	bool listenSet = false;
+	bool chainConfigIsSet = false;
 	string configJSON;
 	string genesisJSON;
 	for (int i = 1; i < argc; ++i)
@@ -596,9 +597,15 @@ int main(int argc, char** argv)
 		else if (arg == "--gas-floor" && i + 1 < argc)
 			gasFloor = u256(argv[++i]);
 		else if (arg == "--mainnet")
+		{
 			chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
+			chainConfigIsSet = true;
+		}
 		else if (arg == "--ropsten" || arg == "--testnet")
+		{
 			chainParams = ChainParams(genesisInfo(eth::Network::Ropsten), genesisStateRoot(eth::Network::Ropsten));
+			chainConfigIsSet = true;
+		}
 		else if (arg == "--ask" && i + 1 < argc)
 		{
 			try
@@ -793,6 +800,7 @@ int main(int argc, char** argv)
 		try
 		{
 			chainParams = chainParams.loadConfig(configJSON);
+			chainConfigIsSet = true;
 		}
 		catch (...)
 		{
@@ -808,6 +816,7 @@ int main(int argc, char** argv)
 		try
 		{
 			chainParams = chainParams.loadGenesis(genesisJSON);
+			chainConfigIsSet = true;
 		}
 		catch (...)
 		{
@@ -840,6 +849,10 @@ int main(int argc, char** argv)
 	// TODO: Open some other API path
 //	if (gasFloor != Invalid256)
 //		c_gasFloorTarget = gasFloor;
+
+	if (!chainConfigIsSet)
+		// default to mainnet if not already set with any of `--mainnet`, `--testnet`, `--genesis`, `--config`
+		chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 
 	if (g_logVerbosity > 0)
 		cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << "\n";
