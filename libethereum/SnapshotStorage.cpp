@@ -30,23 +30,29 @@ namespace eth
 namespace
 {
 
+size_t const c_maxChunkUncomressedSize = 10 * 1024 * 1024;
+
+
 std::string snappyUncompress(std::string const& _compressed)
 {
 	size_t uncompressedSize = 0;
 	if (!snappy::GetUncompressedLength(_compressed.data(), _compressed.size(), &uncompressedSize))
 		BOOST_THROW_EXCEPTION(FailedToGetUncompressedLength());
 
-	std::vector<char> uncompressed(uncompressedSize);
-	if (!snappy::RawUncompress(_compressed.data(), _compressed.size(), uncompressed.data()))
+	if (uncompressedSize > c_maxChunkUncomressedSize)
+		BOOST_THROW_EXCEPTION(ChunkIsTooBig());
+
+	std::string uncompressed;
+	if (!snappy::Uncompress(_compressed.data(), _compressed.size(), &uncompressed))
 		BOOST_THROW_EXCEPTION(FailedToUncompressedSnapshotChunk());
 
-	return std::string(uncompressed.begin(), uncompressed.end());
+	return uncompressed;
 }
 
 class SnapshotStorage: public SnapshotStorageFace
 {
 public:
-	explicit SnapshotStorage(const std::string& _snapshotDir): m_snapshotDir(_snapshotDir) {}
+	explicit SnapshotStorage(std::string const& _snapshotDir): m_snapshotDir(_snapshotDir) {}
 
 	bytes readManifest() const override
 	{
@@ -61,11 +67,11 @@ public:
 	{
 		std::string const chunkCompressed = dev::contentsString((m_snapshotDir / toHex(_chunkHash)).string());
 		if (chunkCompressed.empty())
-			BOOST_THROW_EXCEPTION(FailedToReadChunkFile());
+			BOOST_THROW_EXCEPTION(FailedToReadChunkFile() << errinfo_hash256(_chunkHash));
 
 		h256 const chunkHash = sha3(chunkCompressed);
 		if (chunkHash != _chunkHash)
-			BOOST_THROW_EXCEPTION(ChunkDataCorrupted());
+			BOOST_THROW_EXCEPTION(ChunkDataCorrupted() << errinfo_hash256(_chunkHash));
 
 		std::string const chunkUncompressed = snappyUncompress(chunkCompressed);
 		assert(!chunkUncompressed.empty());

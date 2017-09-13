@@ -31,6 +31,7 @@ namespace eth
 
 DEV_SIMPLE_EXCEPTION(FailedToReadSnapshotManifestFile);
 DEV_SIMPLE_EXCEPTION(FailedToReadChunkFile);
+DEV_SIMPLE_EXCEPTION(ChunkIsTooBig);
 DEV_SIMPLE_EXCEPTION(ChunkDataCorrupted);
 DEV_SIMPLE_EXCEPTION(FailedToGetUncompressedLength);
 DEV_SIMPLE_EXCEPTION(FailedToUncompressedSnapshotChunk);
