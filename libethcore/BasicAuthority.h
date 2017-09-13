@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <libdevcrypto/Common.h>
 #include "SealEngine.h"
 
 namespace dev

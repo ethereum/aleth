@@ -14,10 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file FixedHash.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "FixedHash.h"
 #include <boost/algorithm/string.hpp>
@@ -25,9 +21,18 @@
 using namespace std;
 using namespace dev;
 
-std::random_device dev::s_fixedHashEngine;
+namespace dev
+{
 
-h128 dev::fromUUID(std::string const& _uuid)
+const Address ZeroAddress = Address();
+
+const Address MaxAddress = Address("0xffffffffffffffffffffffffffffffffffffffff");
+
+const Address SystemAddress = Address("0xfffffffffffffffffffffffffffffffffffffffe");
+
+std::random_device s_fixedHashEngine;
+
+h128 fromUUID(std::string const& _uuid)
 {
 	try
 	{
@@ -39,11 +44,15 @@ h128 dev::fromUUID(std::string const& _uuid)
 	}
 }
 
-std::string dev::toUUID(h128 const& _uuid)
+std::string toUUID(h128 const& _uuid)
 {
 	std::string ret = toHex(_uuid.ref());
 	for (unsigned i: {20, 16, 12, 8})
 		ret.insert(ret.begin() + i, '-');
 	return ret;
 }
+
+}
+
+
 

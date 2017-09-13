@@ -27,7 +27,7 @@
 #include <functional>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
-#include <libdevcrypto/Common.h>
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {

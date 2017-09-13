@@ -57,21 +57,6 @@ struct SignatureStruct
 	byte v = 0;
 };
 
-/// The zero address.
-extern const Address ZeroAddress;
-
-/// The last address.
-extern const Address MaxAddress;
-
-/// The SYSTEM address.
-extern const Address SystemAddress;
-
-/// A vector of Ethereum addresses.
-using Addresses = h160s;
-
-/// A hash set of Ethereum addresses.
-using AddressHash = std::unordered_set<h160>;
-
 /// A vector of secrets.
 using Secrets = std::vector<Secret>;
 
