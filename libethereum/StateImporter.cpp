@@ -21,8 +21,10 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieDB.h>
 
-using namespace dev;
-using namespace eth;
+namespace dev
+{
+namespace eth
+{
 
 namespace
 {
@@ -78,7 +80,10 @@ private:
 
 }
 
-std::unique_ptr<StateImporterFace> dev::eth::createStateImporter(OverlayDB& _stateDb)
+std::unique_ptr<StateImporterFace> createStateImporter(OverlayDB& _stateDb)
 {
 	return std::unique_ptr<StateImporterFace>(new StateImporter(_stateDb));
+}
+
+}
 }

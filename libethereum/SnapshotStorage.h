@@ -38,7 +38,7 @@ DEV_SIMPLE_EXCEPTION(FailedToUncompressedSnapshotChunk);
 class SnapshotStorageFace
 {
 public:
-	virtual ~SnapshotStorageFace() {}
+	virtual ~SnapshotStorageFace() = default;
 
 	virtual bytes readManifest() const = 0;
 

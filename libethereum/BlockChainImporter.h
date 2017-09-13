@@ -38,7 +38,7 @@ class BlockHeader;
 class BlockChainImporterFace
 {
 public:
-	virtual ~BlockChainImporterFace() {}
+	virtual ~BlockChainImporterFace() = default;
 
 	virtual void importBlock(BlockHeader const& _header, RLP _transactions, RLP _uncles, RLP _receipts, u256 const& _totalDifficulty) = 0;
 

@@ -21,8 +21,10 @@
 #include <libdevcore/RLP.h>
 #include <libethcore/BlockHeader.h>
 
-using namespace dev;
-using namespace eth;
+namespace dev
+{
+namespace eth
+{
 
 namespace
 {
@@ -55,7 +57,10 @@ private:
 
 }
 
-std::unique_ptr<BlockChainImporterFace> dev::eth::createBlockChainImporter(BlockChain& _blockChain)
+std::unique_ptr<BlockChainImporterFace> createBlockChainImporter(BlockChain& _blockChain)
 {
 	return std::unique_ptr<BlockChainImporterFace>(new BlockChainImporter(_blockChain));
+}
+
+}
 }

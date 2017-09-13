@@ -39,7 +39,7 @@ DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
 class StateImporterFace
 {
 public:
-	virtual ~StateImporterFace() {}
+	virtual ~StateImporterFace() = default;
 
 	virtual void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash) = 0;
 

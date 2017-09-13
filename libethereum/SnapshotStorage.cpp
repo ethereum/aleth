@@ -22,8 +22,10 @@
 #include <boost/filesystem.hpp>
 #include <snappy.h>
 
-using namespace dev;
-using namespace eth;
+namespace dev
+{
+namespace eth
+{
 
 namespace
 {
@@ -77,7 +79,10 @@ private:
 
 }
 
-std::unique_ptr<SnapshotStorageFace> dev::eth::createSnapshotStorage(std::string const& _snapshotDirPath)
+std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(std::string const& _snapshotDirPath)
 {
 	return std::unique_ptr<SnapshotStorageFace>(new SnapshotStorage(_snapshotDirPath));
+}
+
+}
 }
