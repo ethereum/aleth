@@ -88,9 +88,9 @@ private:
 
 struct LogEntry
 {
-	LogEntry() {}
-	LogEntry(RLP const& _r) { address = (Address)_r[0]; topics = _r[1].toVector<h256>(); data = _r[2].toBytes(); }
-	LogEntry(Address const& _address, h256s const& _ts, bytes&& _d): address(_address), topics(_ts), data(std::move(_d)) {}
+	LogEntry() = default;
+	explicit LogEntry(RLP const& _r) { address = (Address)_r[0]; topics = _r[1].toVector<h256>(); data = _r[2].toBytes(); }
+	LogEntry(Address const& _address, h256s _ts, bytes&& _d): address(_address), topics(std::move(_ts)), data(std::move(_d)) {}
 
 	void streamRLP(RLPStream& _s) const { _s.appendList(3) << address << topics << data; }
 
@@ -112,19 +112,16 @@ using LogEntries = std::vector<LogEntry>;
 
 struct LocalisedLogEntry: public LogEntry
 {
-	LocalisedLogEntry() {}
+	LocalisedLogEntry() = default;
 	explicit LocalisedLogEntry(LogEntry const& _le): LogEntry(_le) {}
 
-	explicit LocalisedLogEntry(
-		LogEntry const& _le,
-		h256 _special
-	):
+	LocalisedLogEntry(LogEntry const& _le, h256 _special):
 		LogEntry(_le),
 		isSpecial(true),
 		special(_special)
 	{}
 
-	explicit LocalisedLogEntry(
+	LocalisedLogEntry(
 		LogEntry const& _le,
 		h256 const& _blockHash,
 		BlockNumber _blockNumber,
