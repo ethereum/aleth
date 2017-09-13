@@ -45,8 +45,8 @@ if(CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # Map current configuration to congigurations of imported targets.
-set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG RelWithDebInfo Release)
-set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO RelWithDebInfo Release)
+set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
+set(CMAKE_MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
 
 set(HUNTER_CONFIGURATION_TYPES Release)
 set(HUNTER_JOBS_NUMBER 4)
