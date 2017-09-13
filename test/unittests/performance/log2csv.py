@@ -2,9 +2,9 @@ import sys
 import re
 
 # regex for the lines with relevant data
-test_line = 'time  ([-_./A-Za-z0-9]*/)*([-_A-Za-z0-9]+) .*; touch (.+).ran$'
+test_line = 'time -p ([-_./A-Za-z0-9]*/)*([-_A-Za-z0-9]+) .*; touch (.+).ran$'
 gas_line = 'as used: ([0-9]+)'
-secs_line = '([0-9.]+)user '
+secs_line = 'user ([0-9.]+)'
 
 # read in data
 path = ''
@@ -34,6 +34,7 @@ for line in sys.stdin:
 		if test not in data:
 			data[test] = {}
 		data[test][client] = match.group(1)
+		continue
 
 # print the header
 if len(gas):
