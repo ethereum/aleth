@@ -26,6 +26,7 @@
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
+#include <test/tools/libtesteth/TestSuite.h>
 #include <string>
 
 using namespace std;
@@ -35,132 +36,140 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin)
+class TransactionTestSuite: public TestSuite
 {
-	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
-	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
-	for (auto& i: v.get_obj())
+	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override
 	{
-		string testname = i.first;
-		json_spirit::mObject& o = i.second.get_obj();
-
-		if (!TestOutputHelper::passTest(testname))
+		json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
+		for (auto& i: v.get_obj())
 		{
-			o.clear(); //don't add irrelevant tests to the final file when filling
-			continue;
-		}
+			string testname = i.first;
+			json_spirit::mObject& o = i.second.get_obj();
 
-		BOOST_REQUIRE(o.count("blocknumber") > 0);
-		u256 transactionBlock = toInt(o["blocknumber"].get_str());
-		BlockHeader bh;
-		bh.setNumber(transactionBlock);
-		bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-		bool onConstantinople = (transactionBlock >= se->chainParams().constantinopleForkBlock);
-
-		if (_fillin)
-		{
-			BOOST_REQUIRE(o.count("transaction") > 0);
-			mObject tObj = o["transaction"].get_obj();
-
-			//Construct Rlp of the given transaction
-			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
-			o["rlp"] = toHexPrefixed(rlpStream.out());
-
-			try
+			if (!TestOutputHelper::passTest(testname))
 			{
-				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
-				bool onConstantinopleAndZeroSig = onConstantinople && txFromFields.hasZeroSignature();
-
-				if (!txFromFields.signature().isValid())
-				if (!onConstantinopleAndZeroSig)
-					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
-				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh, 0);
-
-				if (o.count("sender") > 0)
-				{
-					string expectSender = toString(o["sender"].get_str());
-					BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
-				}
-				o["sender"] = toString(txFromFields.sender());
-				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
-				o["hash"] = toString(txFromFields.sha3());
+				o.clear(); //don't add irrelevant tests to the final file when filling
+				continue;
 			}
-			catch(Exception const& _e)
+
+			BOOST_REQUIRE(o.count("blocknumber") > 0);
+			u256 transactionBlock = toInt(o["blocknumber"].get_str());
+			BlockHeader bh;
+			bh.setNumber(transactionBlock);
+			bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+			bool onConstantinople = (transactionBlock >= se->chainParams().constantinopleForkBlock);
+
+			if (_fillin)
 			{
-				//Transaction is InValid
-				cnote << "Transaction Exception: " << diagnostic_information(_e);
-				o.erase(o.find("transaction"));
-				if (o.count("sender") > 0)
-					o.erase(o.find("sender"));
+				BOOST_REQUIRE(o.count("transaction") > 0);
+				mObject tObj = o["transaction"].get_obj();
+
+				//Construct Rlp of the given transaction
+				RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
+				o["rlp"] = toHexPrefixed(rlpStream.out());
+
+				try
+				{
+					Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
+					bool onConstantinopleAndZeroSig = onConstantinople && txFromFields.hasZeroSignature();
+
+					if (!txFromFields.signature().isValid())
+					if (!onConstantinopleAndZeroSig)
+						BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
+					se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh, 0);
+
+					if (o.count("sender") > 0)
+					{
+						string expectSender = toString(o["sender"].get_str());
+						BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
+					}
+					o["sender"] = toString(txFromFields.sender());
+					o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
+					o["hash"] = toString(txFromFields.sha3());
+				}
+				catch(Exception const& _e)
+				{
+					//Transaction is InValid
+					cnote << "Transaction Exception: " << diagnostic_information(_e);
+					o.erase(o.find("transaction"));
+					if (o.count("sender") > 0)
+						o.erase(o.find("sender"));
+					if (o.count("expect") > 0)
+					{
+						bool expectInValid = (o["expect"].get_str() == "invalid");
+						BOOST_CHECK_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
+						o.erase(o.find("expect"));
+					}
+				}
+
+				//Transaction is Valid
 				if (o.count("expect") > 0)
 				{
-					bool expectInValid = (o["expect"].get_str() == "invalid");
-					BOOST_CHECK_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
+					bool expectValid = (o["expect"].get_str() == "valid");
+					BOOST_CHECK_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
 					o.erase(o.find("expect"));
 				}
 			}
-
-			//Transaction is Valid
-			if (o.count("expect") > 0)
+			else
 			{
-				bool expectValid = (o["expect"].get_str() == "valid");
-				BOOST_CHECK_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
-				o.erase(o.find("expect"));
-			}
-		}
-		else
-		{
-			BOOST_REQUIRE(o.count("rlp") > 0);
-			Transaction txFromRlp;
-			try
-			{
-				bytes stream = importByteArray(o["rlp"].get_str());
-				RLP rlp(stream);
-				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
-				bool onConstantinopleAndZeroSig = onConstantinople && txFromRlp.hasZeroSignature();
-				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
-				if (!txFromRlp.signature().isValid())
-				if (!onConstantinopleAndZeroSig)
-					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
-			}
-			catch(Exception const& _e)
-			{
-				cnote << i.first;
-				cnote << "Transaction Exception: " << diagnostic_information(_e);
-				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
-				continue;
-			}
-			catch(...)
-			{
-				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
-				continue;
-			}
+				BOOST_REQUIRE(o.count("rlp") > 0);
+				Transaction txFromRlp;
+				try
+				{
+					bytes stream = importByteArray(o["rlp"].get_str());
+					RLP rlp(stream);
+					txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
+					bool onConstantinopleAndZeroSig = onConstantinople && txFromRlp.hasZeroSignature();
+					se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
+					if (!txFromRlp.signature().isValid())
+					if (!onConstantinopleAndZeroSig)
+						BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
+				}
+				catch(Exception const& _e)
+				{
+					cnote << i.first;
+					cnote << "Transaction Exception: " << diagnostic_information(_e);
+					BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
+					continue;
+				}
+				catch(...)
+				{
+					BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
+					continue;
+				}
 
-			BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "Expected a valid transaction!");
+				BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "Expected a valid transaction!");
 
-			mObject tObj = o["transaction"].get_obj();
-			h256 txSha3Expected = h256(o["hash"].get_str());
-			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckTransaction::Everything);
+				mObject tObj = o["transaction"].get_obj();
+				h256 txSha3Expected = h256(o["hash"].get_str());
+				Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckTransaction::Everything);
 
-			//Check the fields restored from RLP to original fields
-			BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), testname + "Data in given RLP not matching the Transaction data!");
-			BOOST_CHECK_MESSAGE(txFromFields.value() == txFromRlp.value(), testname + "Value in given RLP not matching the Transaction value!");
-			BOOST_CHECK_MESSAGE(txFromFields.gasPrice() == txFromRlp.gasPrice(), testname + "GasPrice in given RLP not matching the Transaction gasPrice!");
-			BOOST_CHECK_MESSAGE(txFromFields.gas() == txFromRlp.gas(), testname + "Gas in given RLP not matching the Transaction gas!");
-			BOOST_CHECK_MESSAGE(txFromFields.nonce() == txFromRlp.nonce(), testname + "Nonce in given RLP not matching the Transaction nonce!");
-			BOOST_CHECK_MESSAGE(txFromFields.receiveAddress() == txFromRlp.receiveAddress(), testname + "Receive address in given RLP not matching the Transaction 'to' address!");
-			BOOST_CHECK_MESSAGE(txFromFields.sender() == txFromRlp.sender(), testname + "Transaction sender address in given RLP not matching the Transaction 'vrs' signature!");
-			BOOST_CHECK_MESSAGE(txFromFields.sha3() == txFromRlp.sha3(), testname + "Transaction sha3 hash in given RLP not matching the Transaction 'vrs' signature!");
-			BOOST_CHECK_MESSAGE(txFromFields.sha3() == txSha3Expected, testname + "Expected different transaction hash!");
-			BOOST_CHECK_MESSAGE(txFromFields == txFromRlp, testname + "However, txFromFields != txFromRlp!");
-			BOOST_REQUIRE (o.count("sender") > 0);
+				//Check the fields restored from RLP to original fields
+				BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), testname + "Data in given RLP not matching the Transaction data!");
+				BOOST_CHECK_MESSAGE(txFromFields.value() == txFromRlp.value(), testname + "Value in given RLP not matching the Transaction value!");
+				BOOST_CHECK_MESSAGE(txFromFields.gasPrice() == txFromRlp.gasPrice(), testname + "GasPrice in given RLP not matching the Transaction gasPrice!");
+				BOOST_CHECK_MESSAGE(txFromFields.gas() == txFromRlp.gas(), testname + "Gas in given RLP not matching the Transaction gas!");
+				BOOST_CHECK_MESSAGE(txFromFields.nonce() == txFromRlp.nonce(), testname + "Nonce in given RLP not matching the Transaction nonce!");
+				BOOST_CHECK_MESSAGE(txFromFields.receiveAddress() == txFromRlp.receiveAddress(), testname + "Receive address in given RLP not matching the Transaction 'to' address!");
+				BOOST_CHECK_MESSAGE(txFromFields.sender() == txFromRlp.sender(), testname + "Transaction sender address in given RLP not matching the Transaction 'vrs' signature!");
+				BOOST_CHECK_MESSAGE(txFromFields.sha3() == txFromRlp.sha3(), testname + "Transaction sha3 hash in given RLP not matching the Transaction 'vrs' signature!");
+				BOOST_CHECK_MESSAGE(txFromFields.sha3() == txSha3Expected, testname + "Expected different transaction hash!");
+				BOOST_CHECK_MESSAGE(txFromFields == txFromRlp, testname + "However, txFromFields != txFromRlp!");
+				BOOST_REQUIRE (o.count("sender") > 0);
 
-			Address addressReaded = Address(o["sender"].get_str());
-			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
-		}
-	}//for
-	return v;
-}//doTransactionTests
+				Address addressReaded = Address(o["sender"].get_str());
+				BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
+			}
+		}//for
+		return v;
+	}//doTransactionTests
+
+	std::string suiteFolder() const override
+	{
+		return "TransactionTests";
+	}
+};
 
 } }// Namespace Close
 
@@ -170,48 +179,12 @@ public:
 	TransactionTestFixture()
 	{
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
+		dev::test::TransactionTestSuite suite;
 
 		if ((casename == "ttWrongRLPFrontier" || casename == "ttWrongRLPHomestead") && test::Options::get().filltests)
-			copyAllFilesFromFolder(casename);
+			suite.copyAllTestsFromFolder(casename);
 		else
-			fillAllFilesInFolder(casename);
-	}
-
-	void fillAllFilesInFolder(string const& _folder)
-	{
-		using path = boost::filesystem::path;
-		path const fillersPath = path(test::getTestPath()) / "src/TransactionTestsFiller" / path(_folder);
-		string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-
-		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
-		size_t fileCount = files.size();
-		if (test::Options::get().filltests)
-			fileCount *= 2; //tests are checked when filled and after they been filled
-
-		auto testOutput = dev::test::TestOutputHelper(fileCount);
-		for (auto const& file: files)
-		{
-			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-			test::executeTests(file.filename().string(), "/TransactionTests/"+_folder, "/TransactionTestsFiller/"+_folder, dev::test::doTransactionTests);
-		}
-	}
-
-	void copyAllFilesFromFolder(string const& _folder)
-	{
-		using path = boost::filesystem::path;
-		path const fillersPath = path(dev::test::getTestPath()) / path("src/TransactionTestsFiller") / path(_folder);
-		std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string());
-
-		for (auto const& file : files)
-		{
-			path const copytoFile = path(dev::test::getTestPath()) / path("TransactionTests") / path(_folder) / path(file.filename().string());
-			path const destFile = fillersPath / path(file.filename().string());
-			clog << "Copying " << destFile.string() << "\n";
-			clog << " TO " << copytoFile.string() << "\n";
-			auto testOutput = dev::test::TestOutputHelper();
-			dev::test::copyFile(destFile.string(), copytoFile.string());
-			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(copytoFile.string()), "Error when copying the test file!");
-		}
+			suite.runAllTestsInFolder(casename);
 	}
 };
 

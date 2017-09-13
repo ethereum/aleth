@@ -25,23 +25,38 @@
 #include <string>
 namespace fs = boost::filesystem;
 using namespace std;
+using namespace dev;
+
+namespace
+{
+	// Structure  <suiteFolder>/<testFolder>/<test>.json
+	// Return full path to folder for tests from _testFolder
+	fs::path getFullPathFiller(string const& _suiteFolder, string const& _testFolder)
+	{
+		return fs::path(test::getTestPath()) / "src" / fs::path(_suiteFolder + "Filler") / _testFolder;
+	}
+
+	fs::path getFullPathTest(string const& _suiteFolder, string const& _testFolder)
+	{
+		return fs::path(test::getTestPath()) / "src" / _suiteFolder / _testFolder;
+	}
+}
 
 namespace dev
 {
 namespace test
 {
 
-void TestSute::runAllTestsInFolder(const std::string& _folder) const
+void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
-	fs::path const fillersPath = fs::path(test::getTestPath()) / "src" / fs::path(folder() + "Filler") / fs::path(_folder);
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-	std::vector<boost::filesystem::path> const files = test::getJsonFiles(fillersPath.string(), filter);
+	std::vector<boost::filesystem::path> const files = test::getJsonFiles(getFullPathFiller(suiteFolder(), _testFolder).string(), filter);
 	size_t fileCount = files.size();
 	if (test::Options::get().filltests)
 		fileCount *= 2; //tests are checked when filled and after they been filled
 
-	fs::path const destTestFolder = fs::path(folder()) / fs::path(_folder);
-	fs::path const srcTestFolder = fs::path(folder() + "Filler") / fs::path(_folder);
+	fs::path const destTestFolder = fs::path(suiteFolder()) / _testFolder;
+	fs::path const srcTestFolder = fs::path(suiteFolder() + "Filler") / _testFolder;
 
 	auto suiteTestDo = [this](json_spirit::mValue const& _input, bool _fillin)
 	{
@@ -53,6 +68,21 @@ void TestSute::runAllTestsInFolder(const std::string& _folder) const
 	{
 		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 		executeTests(file.filename().string(), destTestFolder.string(), srcTestFolder.string(), suiteTestDo);
+	}
+}
+
+void TestSuite::copyAllTestsFromFolder(string const& _testFolder) const
+{
+	std::vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(suiteFolder(), _testFolder).string());
+	for (auto const& file: files)
+	{
+		fs::path const destFile = getFullPathTest(suiteFolder(), _testFolder) / file.filename().string();
+		fs::path const srcFile = getFullPathFiller(suiteFolder(), _testFolder) / file.filename().string();
+		clog << "Copying " << srcFile.string() << "\n";
+		clog << " TO " << destFile.string() << "\n";
+		auto testOutput = dev::test::TestOutputHelper();
+		dev::test::copyFile(srcFile.string(), destFile.string());
+		BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(destFile.string()), "Error when copying the test file!");
 	}
 }
 

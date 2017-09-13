@@ -26,13 +26,23 @@ namespace dev
 namespace test
 {
 
-class TestSute
+class TestSuite
 {
 public:
-	virtual ~TestSute() {}
+	virtual ~TestSuite() {}
+
+	// Main test executive function. should be declared for each test suite. it fills and runs the test .json file
 	virtual json_spirit::mValue doTests(json_spirit::mValue const&, bool) const = 0;
-	virtual std::string folder() const = 0;
-	void runAllTestsInFolder(std::string const& _folder) const;
+
+	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
+	virtual std::string suiteFolder() const = 0;
+
+	// Execute all tests from _folder
+	void runAllTestsInFolder(std::string const& _testFolder) const;
+
+	// Copy .json tests from the src folder to the dest folder because such test is crafted manually and could not be filled.
+	// Used in bcForgedTest, ttWrongRLP tests and such.
+	void copyAllTestsFromFolder(std::string const& _testFolder) const;
 };
 
 }
