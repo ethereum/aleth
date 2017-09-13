@@ -20,10 +20,8 @@
  */
 
 #include "Common.h"
-#include <boost/algorithm/string/case_conv.hpp>
 #include <libdevcore/Base64.h>
 #include <libdevcore/Terminal.h>
-#include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
@@ -189,6 +187,27 @@ string TransactionSkeleton::userReadable(bool _toProxy, function<pair<bool, stri
 	:
 		"Additional network fees are at most" +
 		formatBalance(gas * gasPrice) + ".");
+}
+
+LogEntry::LogEntry(RLP const& _r)
+{
+	address = (Address)_r[0];
+	topics = _r[1].toVector<h256>();
+	data = _r[2].toBytes();
+}
+
+void LogEntry::streamRLP(RLPStream& _s) const
+{
+	_s.appendList(3) << address << topics << data;
+}
+
+LogBloom LogEntry::bloom() const
+{
+	LogBloom ret;
+	ret.shiftBloom<3>(sha3(address.ref()));
+	for (auto t: topics)
+		ret.shiftBloom<3>(sha3(t.ref()));
+	return ret;
 }
 
 }
