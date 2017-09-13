@@ -90,6 +90,13 @@ enum class RelativeBlock: BlockNumber
 	Pending = PendingBlock
 };
 
+enum class BlockPolarity
+{
+	Unknown,
+	Dead,
+	Live
+};
+
 class Transaction;
 
 struct ImportRoute

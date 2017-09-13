@@ -86,13 +86,6 @@ private:
 	bytes m_bytes;
 };
 
-enum class BlockPolarity
-{
-	Unknown,
-	Dead,
-	Live
-};
-
 struct LogEntry
 {
 	LogEntry() {}
