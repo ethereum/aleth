@@ -201,7 +201,7 @@ ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
 
 ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
 {
-	return 40000 + (_in.size() / 192) * 60000;
+	return 100000 + (_in.size() / 192) * 80000;
 }
 
 }
