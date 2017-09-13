@@ -9,5 +9,4 @@ ExternalProject_Add(lcov
     BUILD_COMMAND ""
     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/bin <INSTALL_DIR>/bin
 )
-file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/deps/bin)
-set(LCOV_TOOL ${CMAKE_SOURCE_DIR}/deps/bin/lcov)
+set(LCOV_TOOL ${CMAKE_BINARY_DIR}/deps/bin/lcov)
