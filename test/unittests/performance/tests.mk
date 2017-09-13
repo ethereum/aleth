@@ -36,7 +36,7 @@ endif
 
 # Macs ignore or reject --format parameter
 #STATS = time --format "stats: $(1) $* %U %M"
-STATS = time 
+STATS = time -p
 
 #
 # to support new clients
@@ -59,7 +59,7 @@ STATS = time
 %.bin : %.sol
 	$(call SOLC_SOL_)
 	
-all: ops programs
+all: ops programs popincc poplnkc mul64c
 
 # programs for timing individual operators
 #
@@ -67,9 +67,10 @@ all: ops programs
 # are wanted these formulas isolate the times for operators from the overhead
 #   * t(nop) = user time for nop is just for start up and shut down
 #   * t(pop) = user time for pop can be much less than big arithmetic OPs
-#   * t(OP) - t(nop) = estimated time for 320,000,000 DUP2/OP dispatch and eval
-#   * t(OP) - t(pop) = estimated time for 320,000,000 OP eval alone
-#
+#   * (t(OP) - t(pop))/N = estimated time per DUP2/OP
+#   * (t(OP) - t(pop))/N = estimated time per OP
+# since pop will take more than zero time these last two estimates are biased low
+# for all tests except exp N = 2**27, for exp N=2**17
 ops : \
 	nop.ran \
 	pop.ran \
@@ -87,11 +88,12 @@ ops : \
 	div256.ran \
 	exp.ran
 
-# a C version of mul64.asm for comparison
-mul64c: mul64c.c
-	gcc -O0 -S mul64c.c
-	gcc mul64c.s -o mul64c
-	$(call STATS,C) ./mul64c
+# C versions for comparison
+%.ran: %.c
+	gcc -O0 -S $*.c
+	gcc -o $* $*.s
+	$(call STATS,C) ./$*
+	touch $*.ran
 
 # programs for more realistic timing
 programs : \

@@ -29,12 +29,6 @@ int main() {
 		x = z;
 		x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y;
 		x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y;
-		x = z;
-		x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y;
-		x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y;
-		x = z;
-		x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y;
-		x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y; x *= y;
 		r = x;
 	}
 	printf(r == 0x780c7372621bd74d ? "success\n\n" : "failure\n");
