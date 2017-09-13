@@ -5,6 +5,17 @@ find_package(MHD REQUIRED)
 get_property(jsoncpp_include_dir TARGET jsoncpp_lib_static PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 get_property(jsoncpp_library TARGET jsoncpp_lib_static PROPERTY IMPORTED_LOCATION_RELEASE)
 
+set(prefix "${CMAKE_BINARY_DIR}/deps")
+if (WIN32)
+    # On Windows CMAKE_INSTALL_PREFIX is ignored and installs to dist dir.
+    set(INSTALL_DIR ${prefix}/src/jsonrpccpp-build/dist)
+else()
+    set(INSTALL_DIR ${prefix})
+endif()
+set(JSONRPCCPP_INCLUDE_DIR ${INSTALL_DIR}/include)
+set(JSONRPCCPP_COMMON_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-common${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(JSONRPCCPP_SERVER_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-server${CMAKE_STATIC_LIBRARY_SUFFIX})
+
 set(CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_BUILD_TYPE=Release
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -35,8 +46,9 @@ if (WIN32)
         -DMHD_LIBRARY_DEBUG=${MHD_LIBRARY})
 endif()
 
-ExternalProject_Add(jsonrpccpp
-    PREFIX ${CMAKE_SOURCE_DIR}/deps
+ExternalProject_Add(
+    jsonrpccpp
+    PREFIX "${prefix}"
     DOWNLOAD_NAME jsonrcpcpp-0.7.0.tar.gz
     DOWNLOAD_NO_PROGRESS 1
     URL https://github.com/cinemast/libjson-rpc-cpp/archive/v0.7.0.tar.gz
@@ -49,29 +61,22 @@ ExternalProject_Add(jsonrpccpp
     BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
     INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
     LOG_INSTALL 1
+    BUILD_BYPRODUCTS "${JSONRPCCPP_COMMON_LIBRARY}" "${JSONRPCCPP_SERVER_LIBRARY}"
 )
 
 # Create imported libraries
-if (WIN32)
-    # On Windows CMAKE_INSTALL_PREFIX is ignored and installs to dist dir.
-    ExternalProject_Get_Property(jsonrpccpp BINARY_DIR)
-    set(INSTALL_DIR ${BINARY_DIR}/dist)
-else()
-    ExternalProject_Get_Property(jsonrpccpp INSTALL_DIR)
-endif()
-set(JSONRPCCPP_INCLUDE_DIR ${INSTALL_DIR}/include)
 file(MAKE_DIRECTORY ${JSONRPCCPP_INCLUDE_DIR})  # Must exist.
 
 add_library(JsonRpcCpp::Common STATIC IMPORTED)
 set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_CONFIGURATIONS Release)
-set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_LOCATION_RELEASE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-common${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET JsonRpcCpp::Common PROPERTY IMPORTED_LOCATION_RELEASE ${JSONRPCCPP_COMMON_LIBRARY})
 set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_LINK_LIBRARIES jsoncpp_lib_static)
 set_property(TARGET JsonRpcCpp::Common PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${JSONRPCCPP_INCLUDE_DIR} ${jsoncpp_include_dir})
 add_dependencies(JsonRpcCpp::Common jsonrpccpp)
 
 add_library(JsonRpcCpp::Server STATIC IMPORTED)
 set_property(TARGET JsonRpcCpp::Server PROPERTY IMPORTED_CONFIGURATIONS Release)
-set_property(TARGET JsonRpcCpp::Server PROPERTY IMPORTED_LOCATION_RELEASE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsonrpccpp-server${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET JsonRpcCpp::Server PROPERTY IMPORTED_LOCATION_RELEASE ${JSONRPCCPP_SERVER_LIBRARY})
 set_property(TARGET JsonRpcCpp::Server PROPERTY INTERFACE_LINK_LIBRARIES JsonRpcCpp::Common ${MHD_LIBRARY})
 set_property(TARGET JsonRpcCpp::Server PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${MHD_INCLUDE_DIR})
 add_dependencies(JsonRpcCpp::Server jsonrpccpp)

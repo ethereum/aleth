@@ -5,8 +5,13 @@ if (MSVC)
     set(_overwrite_install_command INSTALL_COMMAND cmake --build <BINARY_DIR> --config Release --target install)
 endif()
 
-ExternalProject_Add(secp256k1
-    PREFIX ${CMAKE_SOURCE_DIR}/deps
+set(prefix "${CMAKE_BINARY_DIR}/deps")
+set(SECP256K1_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}secp256k1${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(SECP256K1_INCLUDE_DIR "${prefix}/include")
+
+ExternalProject_Add(
+    secp256k1
+    PREFIX "${prefix}"
     DOWNLOAD_NAME secp256k1-ac8ccf29.tar.gz
     DOWNLOAD_NO_PROGRESS 1
     URL https://github.com/chfast/secp256k1/archive/ac8ccf29b8c6b2b793bc734661ce43d1f952977a.tar.gz
@@ -22,16 +27,13 @@ ExternalProject_Add(secp256k1
     BUILD_COMMAND ""
     ${_overwrite_install_command}
     LOG_INSTALL 1
+    BUILD_BYPRODUCTS "${SECP256K1_LIBRARY}"
 )
 
 # Create imported library
-ExternalProject_Get_Property(secp256k1 INSTALL_DIR)
 add_library(Secp256k1 STATIC IMPORTED)
-set(SECP256K1_LIBRARY ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}secp256k1${CMAKE_STATIC_LIBRARY_SUFFIX})
-set(SECP256K1_INCLUDE_DIR ${INSTALL_DIR}/include)
 file(MAKE_DIRECTORY ${SECP256K1_INCLUDE_DIR})  # Must exist.
 set_property(TARGET Secp256k1 PROPERTY IMPORTED_CONFIGURATIONS Release)
 set_property(TARGET Secp256k1 PROPERTY IMPORTED_LOCATION_RELEASE ${SECP256K1_LIBRARY})
 set_property(TARGET Secp256k1 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SECP256K1_INCLUDE_DIR})
 add_dependencies(Secp256k1 secp256k1)
-unset(INSTALL_DIR)

@@ -50,7 +50,7 @@ clone_script:
           git submodule -q update --init --recursive
       }
 cache:
-    - deps -> cmake/ProjectJsonRpc.cmake
+    - build/deps -> cmake/ProjectJsonRpc.cmake
 #RDP LOGIN details for trouble shooting
 #init:
 #    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
