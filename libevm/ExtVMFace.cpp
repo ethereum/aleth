@@ -14,17 +14,27 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file ExtVMFace.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "ExtVMFace.h"
-#include <libethcore/SealEngine.h>
-using namespace dev;
-using namespace dev::eth;
 
-ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash, unsigned _depth, bool _staticCall):
+namespace dev
+{
+namespace eth
+{
+
+ExtVMFace::ExtVMFace(
+	EnvInfo const& _envInfo,
+	Address _myAddress,
+	Address _caller,
+	Address _origin,
+	u256 _value,
+	u256 _gasPrice,
+	bytesConstRef _data,
+	bytes _code,
+	h256 const& _codeHash,
+	unsigned _depth,
+	bool _staticCall
+):
 	m_envInfo(_envInfo),
 	myAddress(_myAddress),
 	caller(_caller),
@@ -37,3 +47,6 @@ ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _calle
 	depth(_depth),
 	staticCall(_staticCall)
 {}
+
+}
+}
