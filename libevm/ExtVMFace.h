@@ -241,7 +241,19 @@ public:
 	SubState sub;				///< Sub-band VM state (suicides, refund counter, logs).
 	unsigned depth = 0;			///< Depth of the present call.
 	bool staticCall = false;	///< Throw on state changing.
+
+	static const evm_host evmcFnTable;
 };
+
+inline evm_uint160be toEvmC(Address const& _addr)
+{
+	return reinterpret_cast<evm_uint160be const&>(_addr);
+}
+
+inline evm_uint256be toEvmC(h256 const& _h)
+{
+	return reinterpret_cast<evm_uint256be const&>(_h);
+}
 
 }
 }
