@@ -22,11 +22,9 @@
 #pragma once
 
 #include <array>
-#include <libdevcore/Common.h>
-#include <libdevcore/RLP.h>
-#include <libevm/ExtVMFace.h>
-
 #include <boost/variant/variant.hpp>
+#include <libdevcore/RLP.h>
+#include <libethcore/Common.h>
 
 namespace dev
 {

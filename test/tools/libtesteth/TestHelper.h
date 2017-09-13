@@ -30,7 +30,6 @@
 #include <libethashseal/Ethash.h>
 #include <libethereum/State.h>
 #include <libethashseal/GenesisInfo.h>
-#include <libevm/ExtVMFace.h>
 #include <test/tools/libtestutils/Common.h>
 
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
