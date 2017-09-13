@@ -57,10 +57,6 @@ struct SignatureStruct
 	byte v = 0;
 };
 
-/// An Ethereum address: 20 bytes.
-/// @NOTE This is not endian-specific; it's just a bunch of bytes.
-using Address = h160;
-
 /// The zero address.
 extern const Address ZeroAddress;
 
