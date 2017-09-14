@@ -123,7 +123,7 @@ public:
 
 	std::string suiteFolder() const override
 	{
-		return "GeneralStateTests";
+		return test::c_GeneralStateTests;
 	}
 };
 
