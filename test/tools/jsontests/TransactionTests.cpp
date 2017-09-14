@@ -179,7 +179,7 @@ public:
 	TransactionTestFixture()
 	{
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
-		dev::test::TransactionTestSuite suite;
+		test::TransactionTestSuite suite;
 
 		if ((casename == "ttWrongRLPFrontier" || casename == "ttWrongRLPHomestead") && test::Options::get().filltests)
 			suite.copyAllTestsFromFolder(casename);
