@@ -125,7 +125,7 @@ after_success:
     - cd $TRAVIS_BUILD_DIR/build
     - make coverage.data
     # Get CodeCov script (fixed commit) and upload coverage report.
-    - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/e7985c0ea6dd4d365403f389337f3b43b517fb35/codecov) -X fix -f coverage.data
+    - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/d8016a07d67d813f98afdbaf98dc4f46d9806118/codecov) -X fix -f coverage.data
 after_script:
     # Hunter: upload cache to the cache server.
     - if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" ]]; then pip install requests && make -C $TRAVIS_BUILD_DIR/build hunter_upload_cache; fi
