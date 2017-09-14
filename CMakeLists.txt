@@ -103,6 +103,9 @@ find_package(Boost CONFIG REQUIRED filesystem system thread)
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
 
+hunter_add_package(Snappy)
+find_package(Snappy CONFIG)
+
 include(ProjectCryptopp)
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
