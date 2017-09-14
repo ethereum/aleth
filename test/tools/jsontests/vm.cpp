@@ -469,6 +469,11 @@ class VmTestSuite: public TestSuite
 	{
 		return "VMTests";
 	}
+
+	std::string suiteFillerFolder() const override
+	{
+		return "VMTestsFiller";
+	}
 };
 
 } } // namespace close

@@ -169,6 +169,11 @@ class TransactionTestSuite: public TestSuite
 	{
 		return "TransactionTests";
 	}
+
+	std::string suiteFillerFolder() const override
+	{
+		return "TransactionTestsFiller";
+	}
 };
 
 } }// Namespace Close
@@ -182,9 +187,12 @@ public:
 		test::TransactionTestSuite suite;
 
 		if ((casename == "ttWrongRLPFrontier" || casename == "ttWrongRLPHomestead") && test::Options::get().filltests)
+		{
 			suite.copyAllTestsFromFolder(casename);
-		else
-			suite.runAllTestsInFolder(casename);
+			return;
+		}
+
+		suite.runAllTestsInFolder(casename);
 	}
 };
 

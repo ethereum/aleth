@@ -36,6 +36,7 @@ public:
 
 	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
 	virtual std::string suiteFolder() const = 0;
+	virtual std::string suiteFillerFolder() const = 0;
 
 	// Execute all tests from _folder
 	void runAllTestsInFolder(std::string const& _testFolder) const;

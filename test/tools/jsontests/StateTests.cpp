@@ -125,6 +125,11 @@ public:
 	{
 		return test::c_GeneralStateTests;
 	}
+
+	std::string suiteFillerFolder() const override
+	{
+		return test::c_GeneralStateTests + "Filler";
+	}
 };
 
 //for fuzzed tests
