@@ -85,12 +85,12 @@ public:
 
 			if (_fillin)
 			{
-	#if ETH_FATDB
+#if ETH_FATDB
 				if (importer.exportTest())
 					cerr << testname << endl;
-	#else
+#else
 				BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + " You can not fill tests when FATDB is switched off"));
-	#endif
+#endif
 			}
 			else
 			{
