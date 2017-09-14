@@ -484,7 +484,7 @@ public:
 			cnote << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
 		}
-		dev::test::VmTestSuite suite;
+		test::VmTestSuite suite;
 		suite.runAllTestsInFolder(casename);
 	}
 };
