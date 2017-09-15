@@ -37,9 +37,9 @@ for line in sys.stdin:
 		continue
 
 # print the header
-sys.stdout.write("s/run")
+sys.stdout.write("(sec/run)")
 if len(gas):
-	sys.stdout.write(", gas")
+	sys.stdout.write(", gas/run")
 for client in clients:
 	sys.stdout.write(", %s" % client)
 sys.stdout.write("\n")

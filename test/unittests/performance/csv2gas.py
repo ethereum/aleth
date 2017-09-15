@@ -26,27 +26,24 @@ for line in sys.stdin:
 		data[test][clients[i]] = second
 
 # print extended header
-sys.stdout.write("ns/gas")
+sys.stdout.write("(ns/gas)")
 for client in clients:
+	if client == 'gas/run':
+		continue
 	sys.stdout.write(", " + client)
 sys.stdout.write("\n")
 
-# nanos = ns/gas is gas secs scaled by amount of gas
-# print the test,
+# nanos = ns/gas is run time scaled by amount of gas
+# print the test, gas, nanos ...
 N_ops = 2**27
-N_exp = 2**17
-n = 0
+N_exp = 2**20
 for test in tests:
 	sys.stdout.write(test)
-	if test == "exp":
-		n = N_exp
-	else:
-		n = N_ops
+	gas = float(data[test]['gas/run'])
 	for client in clients:
-		if client == 'gas':
-			sys.stdout.write(", %d" % int(float(data[test]['gas'])/n + .5))
+		if client == 'gas/run':
 			continue
-		run_seconds = float(data[test][client])
-		nanos_per_gas = int(run_seconds*10**9/float(data[test]['gas']) + .5)
+		run_nanos = float(data[test][client])*10**9
+		nanos_per_gas = int(run_nanos/gas + .5)
 		sys.stdout.write(", %d" % nanos_per_gas)
 	sys.stdout.write("\n")
