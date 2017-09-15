@@ -207,7 +207,7 @@ public:
 	}
 };
 
-class BCGeneralStateTests: public BlockchainTestSuite
+class BCGeneralStateTestsSuite: public BlockchainTestSuite
 {
 	std::string suiteFolder() const override
 	{
@@ -221,7 +221,7 @@ class BCGeneralStateTests: public BlockchainTestSuite
 	}
 };
 
-class TransitionTests: public TestSuite
+class TransitionTestsSuite: public TestSuite
 {
 public:
 	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override
@@ -265,6 +265,7 @@ public:
 	}
 };
 
+//used in state tests --fillchain.
 json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin)
 {
 	BlockchainTestSuite suite;
@@ -1038,7 +1039,7 @@ class bcTransitionFixture {
 	bcTransitionFixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
-		test::TransitionTests suite;
+		test::TransitionTestsSuite suite;
 		suite.runAllTestsInFolder(casename);
 	}
 };
@@ -1058,7 +1059,7 @@ class bcGeneralTestsFixture
 		if (!test::Options::get().all)
 			cnote << "Skipping hive test " << casename << ". Use --all to run it.\n";
 
-		test::BCGeneralStateTests suite;
+		test::BCGeneralStateTestsSuite suite;
 		suite.runAllTestsInFolder(casename);
 	}
 };

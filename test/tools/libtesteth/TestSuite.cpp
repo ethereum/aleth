@@ -33,7 +33,7 @@ namespace
 	// Return full path to folder for tests from _testFolder
 	fs::path getFullPathFiller(string const& _suiteFolder, string const& _testFolder)
 	{
-		return fs::path(test::getTestPath()) / "src" / fs::path(_suiteFolder) / _testFolder;
+		return fs::path(test::getTestPath()) / "src" / _suiteFolder / _testFolder;
 	}
 
 	fs::path getFullPathTest(string const& _suiteFolder, string const& _testFolder)
@@ -66,6 +66,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 	auto testOutput = dev::test::TestOutputHelper(fileCount);
 	for (auto const& file: files)
 	{
+		testOutput.showProgress();
 		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
 		executeTests(file.filename().string(), destTestFolder.string(), srcTestFolder.string(), suiteTestDo);
 	}
@@ -81,6 +82,7 @@ void TestSuite::copyAllTestsFromFolder(string const& _testFolder) const
 		clog << "Copying " << srcFile.string() << "\n";
 		clog << " TO " << destFile.string() << "\n";
 		auto testOutput = dev::test::TestOutputHelper();
+		testOutput.showProgress();
 		dev::test::copyFile(srcFile.string(), destFile.string());
 		BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(destFile.string()), "Error when copying the test file!");
 	}
