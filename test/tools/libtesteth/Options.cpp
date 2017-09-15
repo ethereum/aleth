@@ -151,6 +151,8 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--exectimelog")
 			exectimelog = true;
+		else if (arg == "--bench")
+			bench = true;
 		else if (arg == "--all")
 			all = true;
 		else if (arg == "--singletest")

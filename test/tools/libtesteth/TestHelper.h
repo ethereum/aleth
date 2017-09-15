@@ -56,6 +56,22 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify = true);
 namespace test
 {
 
+/// Common test case properties for benchmarks. They are supposed to be run
+/// only if explicitly asked by --bench command line flag.
+inline boost::unit_test::decorator::collector& bench()
+{
+	return
+		*boost::unit_test::disabled()		// Disabled by default.
+		*boost::unit_test::label("bench")	// Have [bench] label.
+		*boost::unit_test::precondition(
+			[](boost::unit_test::test_unit_id)
+			{
+				// Run only if --bench command line option is provided.
+				return boost::test_tools::assertion_result{Options::get().bench};
+			}
+		);
+}
+
 struct ValueTooLarge: virtual Exception {};
 struct MissingFields : virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;

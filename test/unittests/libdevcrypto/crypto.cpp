@@ -40,7 +40,7 @@
 #include <libdevcrypto/CryptoPP.h>
 #include <libethereum/Transaction.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
-#include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;
@@ -796,14 +796,8 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::disabled() *utf::label("perf"))
+BOOST_AUTO_TEST_CASE(PerfSHA256_32, bench())
 {
-	if (!test::Options::get().all)
-	{
-		clog << "Skipping test Crypto/devcrypto/PerfSHA256_32. Use --all to run it.\n";
-		return;
-	}
-
 	h256 hash;
 	for (auto i = 0; i < 1000000; ++i)
 		hash = sha256(hash.ref());
@@ -811,14 +805,8 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::disabled() *utf::label("perf"))
 	BOOST_CHECK_EQUAL(hash[0], 0x2a);
 }
 
-BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::disabled() *utf::label("perf"))
+BOOST_AUTO_TEST_CASE(PerfSHA256_4000, bench())
 {
-	if (!test::Options::get().all)
-	{
-		clog << "Skipping test Crypto/devcrypto/PerfSHA256_4000. Use --all to run it.\n";
-		return;
-	}
-
 	static const size_t dataSize = 4097;
 	bytes data(dataSize);
 	for (auto i = 0; i < 100000; ++i)
