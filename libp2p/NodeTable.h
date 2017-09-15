@@ -262,7 +262,7 @@ private:
 	std::unordered_map<bi::address, TimePoint> m_pubkDiscoverPings;	///< List of pending pings where node entry wasn't created due to unkown pubk.
 
 	Mutex x_findNodeTimeout;
-	std::list<NodeIdTimePoint> m_findNodeTimeout;					///< Timeouts for pending Ping and FindNode requests.
+	std::list<NodeIdTimePoint> m_findNodeTimeout;					///< Timeouts for FindNode requests.
 
 	std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 	NodeSocket* m_socketPointer;									///< Set to m_socket.get(). Socket is created in constructor and disconnected in destructor to ensure access to pointer is safe.
