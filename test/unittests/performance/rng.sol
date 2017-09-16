@@ -30,7 +30,7 @@ contract rng {
 					out[k] |= (sqr & 255) << j;
 				}
 			}
-			log4(bytes32(out[0]), bytes32(out[1]), bytes32(out[2]), bytes32(out[3]), bytes32(out[4]));
+// parity chokes	log4(bytes32(out[0]), bytes32(out[1]), bytes32(out[2]), bytes32(out[3]), bytes32(out[4]));
 		}
 	}
 }
