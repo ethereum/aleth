@@ -42,11 +42,8 @@ N_app = 2**20
 N = 0
 for test in tests:
 	sys.stdout.write(test)
-	if 		test == 'nop'   or test == 'pop'    or \
-			test == 'add64' or test == 'add128' or test == 'add256' or \
-	 		test == 'sub64' or test == 'sub128' or test == 'sub256' or \
-	 		test == 'mul64' or test == 'mul128' or test == 'mul256' or \
-	 		test == 'div64' or test == 'div128' or test == 'div256' :
+	if test in ['nop', 'pop', 'add64', 'add128', 'add256', 'sub64', 'sub128', 'sub256',
+	            'mul64', 'mul128', 'mul256', 'div64', 'div128', 'div256']:
 		N = N_ops
 	else:
 		N = N_app
