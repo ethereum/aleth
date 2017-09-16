@@ -98,10 +98,10 @@ ops : \
 # programs for more realistic timing
 programs : \
 	loop.ran \
-	rng.ran \
 	fun.ran \
 	rc5.ran \
-	mix.ran
+	mix.ran \
+	rng.ran
 
 clean :
 	rm *.ran *.bin *.evm *.s mul64c

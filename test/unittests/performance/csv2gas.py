@@ -35,15 +35,13 @@ sys.stdout.write("\n")
 
 # nanos = ns/gas is run time scaled by amount of gas
 # print the test, gas, nanos ...
-N_ops = 2**27
-N_exp = 2**20
 for test in tests:
 	sys.stdout.write(test)
-	gas = float(data[test]['gas/run'])
+	gas_per_run = float(data[test]['gas'])
 	for client in clients:
-		if client == 'gas/run':
+		if client == 'gas':
 			continue
 		run_nanos = float(data[test][client])*10**9
-		nanos_per_gas = int(run_nanos/gas + .5)
+		nanos_per_gas = int(run_nanos/gas_per_run + .5)
 		sys.stdout.write(", %d" % nanos_per_gas)
 	sys.stdout.write("\n")

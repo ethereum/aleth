@@ -91,7 +91,7 @@ contract rc5 {
 
 		uint32[4] memory messg = [0xfeedface, 0xdeadbeef, 0xfeedbabe, 0xcafebeef];
 
-		for (int i = 0; i < 10919; ++i)
+		for (int i = 0; i < 43690; ++i)
 			test(box, messg);
 	}
 }

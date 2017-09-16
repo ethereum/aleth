@@ -30,7 +30,7 @@ for line in sys.stdin:
 sys.stdout.write("(ns/test)")
 for client in clients:
 	if client == 'gas':
-		sys.stdout.write(", " + 'gas/test')
+		sys.stdout.write(", " + 'gas')
 	else:
 		sys.stdout.write(", " + client)
 sys.stdout.write("\n")
@@ -42,17 +42,15 @@ N_exp = 2**20
 N = 0
 for test in tests:
 	sys.stdout.write(test)
-	if test == "exp" or test == 'rc5' or test == 'mix':
+	if test == 'exp' or test == 'rng' or test == 'rc5' or test == 'mix':
 		N = N_exp
 	else:
 		N = N_ops
 	for client in clients:
-		if client == 'gas/run':
-			gas = float(data[test][client])
-			gas_per_test = int(gas/N + .5)
+		if client == 'gas':
+			gas_per_test = int(float(data[test][client])/N + .5)
 			sys.stdout.write(", %d" % gas_per_test)
 			continue
-		run_nanos = float(data[test][client])*10**9
-		nanos_per_test = int(run_nanos/N + .5)
+		nanos_per_test = int(float(data[test][client])*10**9/N + .5)
 		sys.stdout.write(", %d" % nanos_per_test)
 	sys.stdout.write("\n")
