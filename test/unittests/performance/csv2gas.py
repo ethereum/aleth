@@ -28,7 +28,7 @@ for line in sys.stdin:
 # print extended header
 sys.stdout.write("(ns/gas)")
 for client in clients:
-	if client == 'gas/run':
+	if client == 'gas':
 		continue
 	sys.stdout.write(", " + client)
 sys.stdout.write("\n")
