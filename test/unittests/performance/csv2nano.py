@@ -38,14 +38,18 @@ sys.stdout.write("\n")
 # nanos = ns/test is run time scaled by number of operations
 # print the test, gas, nanos, ...
 N_ops = 2**27
-N_exp = 2**20
+N_app = 2**20
 N = 0
 for test in tests:
 	sys.stdout.write(test)
-	if test == 'exp' or test == 'rng' or test == 'rc5' or test == 'mix':
-		N = N_exp
-	else:
+	if 		test == 'nop'   or test == 'pop'    or \
+			test == 'add64' or test == 'add128' or test == 'add256' or \
+	 		test == 'sub64' or test == 'sub128' or test == 'sub256' or \
+	 		test == 'mul64' or test == 'mul128' or test == 'mul256' or \
+	 		test == 'div64' or test == 'div128' or test == 'div256' :
 		N = N_ops
+	else:
+		N = N_app
 	for client in clients:
 		if client == 'gas':
 			gas_per_test = int(float(data[test][client])/N + .5)
