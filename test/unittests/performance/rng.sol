@@ -2,27 +2,35 @@ pragma solidity ^0.4.0;
 
 contract rng {
 
-	// not a good RNG, just enough 256-bit operations to dominate loop overhead
-	uint rand;
-	function test() returns (uint) {
-		
-		uint rand1 = 0x13bc89fed82f60a73;
-		uint rand2 = 0x18f36bbc46ac3dc13cfd37825;
-		uint rand3 = 0x15681eefd0b362a892bed8d6f605b1997;
-		uint rand4 = 0x1e96f1ffe206d52abac9fcdac9bb17814cb748a6b5;
-		for (int i = 0; i < 5000000; ++i) {
-			rand1 *= 0x16b8ce501af6621e7e3f4e366d6c967a6667d65c329d9ac2a7e35db2f092073;
-			rand1 += 0x1b036d1e2832839b693e9c83d786056b977602ef8a354592b;
-			rand2 *= 0xfd4d51ba81bcb0cb635868f6e3dbffb10bd4734bdc4160bcd2ff9665868ad6cf;
-			rand2 += 0x13d31725f8e66d8f22ad1c138ded01b17a7bb376a52d7606b4d1e60f9;
-			rand3 *= 0xfd4d51ba81bcb0cb635868f6e3dbffb10bd4734bdc4160bcd2ff9665868ad6cf;
-			rand3 += 0x91d73316855198e20240e120e592ce37d8642ebc4d8f6835a70561fcc3dd;
-			rand4 *= 0x85b97faf7f8511f3173347ea124749fb69335f577897cc4550e16888749aa7;
-			rand4 += 0xb19bb307991f810548aac2ebe127f0d19e8b2fc09b0bc88c4773b2dce8bbbc91;
-		}
-		return rand1 ^ rand2 ^ rand3 ^ rand4;
-	}
+	// 2**20 tests
 	function rng() {
-		rand = test();
+	
+		// magic seeds
+		uint blum = 0x20fa78d1fb3d86d2b02d955ec04ed801
+				  * 0x2fc84408f87e831d280a05613124dc35;
+		uint[5] memory shub = [uint(0xa96d80548950c6e1fd4299395ee381a3),
+									0xec36bfc9cfdfcbf201fd78ee4cdad4fb,
+		                            0xdba29b85a759fb10848f01256f2b5c39,
+		                            0xa9390182a3a79447c8394ae189edcfc1,
+		                            0xd66ec8a137fb01fae6b7a83c83d0adf9];
+
+		// 2**20 / 32
+		for (uint i = 0; i < 32768; ++i) {
+			uint[5] memory out = [uint256(0),0,0,0,0];
+
+			// need 32 bytes of output for each log argument
+			for (uint j = 1; j< 32; ++j) {
+			
+				// harvest low order bytes of 5 Blum Blum Shubs for 5-word log output
+				for (uint k = 0; k < 5; ++k) {
+					uint sqr = shub[k];
+					sqr *= sqr;
+					sqr %= blum;
+					shub[k] = sqr;
+					out[k] |= (sqr & 255) << j;
+				}
+			}
+// parity chokes	log4(bytes32(out[0]), bytes32(out[1]), bytes32(out[2]), bytes32(out[3]), bytes32(out[4]));
+		}
 	}
 }

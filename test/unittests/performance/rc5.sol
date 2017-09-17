@@ -30,7 +30,7 @@ contract rc5 {
 			uint32 B = inout[i+1];
 			A += S[0];
 			B += S[1];
-			for (int j = 12; j <= 4; ++j) {
+			for (int j = 0; j < 12; ++j) {
 				A = rotate_left((A ^ B), B) + S[2 * i];
 				B = rotate_left((B ^ A), A) + S[2 * i + 1];
 			}
@@ -74,25 +74,24 @@ contract rc5 {
 	}
 
 	// decrypt of encrypt should be the same
-	function test(uint32[26] S, uint32[4] msg) {
-		uint32[4] memory tmp = msg;
+	function test(uint32[26] S, uint32[4] messg) {
+		uint32[4] memory tmp = messg;
 		encrypt(S, tmp);
 		decrypt(S, tmp);
 		for (uint i = 0; i < 4; ++i) {
-			if (msg[i] != tmp[i])
-				throw;
+            assert(messg[i] == tmp[i]);
 		}
 	}
 
 	function rc5() {
-	
+
 		uint32[4] memory key = [0x243F6A88, 0x85A308D3, 0x452821E6, 0x38D01377];
 		uint32[26] memory box;
 		expand(key, box);
 
-		uint32[4] memory msg = [0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef];
+		uint32[4] memory messg = [0xfeedface, 0xdeadbeef, 0xfeedbabe, 0xcafebeef];
 
-		for (int i = 0; i < 70000; ++i)
-			test(box, msg);
+		for (int i = 0; i < 43690; ++i)
+			test(box, messg);
 	}
 }

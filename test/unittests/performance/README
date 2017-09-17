@@ -1,0 +1,129 @@
+This directory contains a small collection of EVM assembly and Solidity performance tests.
+The .asm tests are meant to isolate individual opcodes.  The .sol tests are meant to
+exercise larger units, like kernels for random numnber generation and message encryption.
+
+Running the tests can be handled indiviually at the command line, or with tests.mk.
+
+	make -f tests.mk [SOLC=solc] [ETHVM=ethvm] [EVM=evm] [PARITY=parity-evm] \
+	                 [all | ops | programs | mul64 | <test>.bin | <test>.ran]
+
+Runs only the programs for which a path is provided on the command line to make the given
+targets.  There is further documentation in tests.mk.
+
+We also provide a few python scripts to help make sense of the output.
+
+	log2csv.py
+	
+Converts a log file from tests.mk output from one or more clients into a .csv file
+suitable for use by spreadsheets.
+
+	csv2nano.py
+	
+Converts a .csv file from log2csv into another .csv file with the times scaled to
+nanoseconds per test.
+
+	csv2gas.py
+	
+Converts a .csv file from log2csv into another .csv file with the times scaled to
+nanoseconds per unit of gas.
+
+	csv2ops.py
+
+Converts a .csv file from log2csv into another .csv file with the times scaled to
+nanoseconds per individual operation, with the estimated overhead from the interpreter
+and the test harness removed.
+
+An example of a complete run follows.
+
+	# compile, assemble, and run all the tests and log their output
+	$ make -f tests.mk SOLC=solc ETHVM=ethvm EVM=evm PARITY=parity-evm all >& times.log
+
+	# scrape log to a CSV file of gas and seconds per test run for each client
+	$ python log2csv.py < times.log > times.csv
+	$ cat times.csv
+	(sec/run), gas, ethvm, evm, parity-evm
+	nop, 378535997, 4.88, 19.41, 14.62
+	pop, 781189181, 5.38, 23.92, 19.85
+	add64, 915406909, 7.98, 35.11, 21.49
+	add128, 915406909, 10.12, 32.64, 21.58
+	add256, 915406909, 11.20, 34.68, 21.79
+	sub64, 915406909, 8.24, 32.96, 21.44
+	sub128, 915406909, 9.76, 33.78, 21.50
+	sub256, 915406909, 10.31, 35.62, 21.95
+	mul64, 1183842365, 8.40, 33.12, 24.64
+	mul128, 1183842365, 8.96, 33.83, 26.32
+	mul256, 1183842365, 15.16, 69.21, 50.19
+	div64, 1183842365, 15.12, 38.88, 122.54
+	div128, 1183842365, 25.28, 46.76, 191.37
+	div256, 1183842365, 39.14, 108.77, 350.33
+	exp, 1692213309, 34.64, 153.59, 73.22
+	loop, 53497491, 0.90, 1.94, 1.24
+	fun, 1060110591, 13.38, 36.19, 29.22
+	rc5, 2304011914, 27.55, 99.50, 52.16
+	mix, 1074334585, 14.32, 53.56, 35.23
+	rng, 2081599617, 27.39, 106.10, 50.99
+
+	# calculate nanoseconds per test
+	$ python csv2nano.py < times.csv
+	(ns/test), gas, ethvm, evm, parity-evm
+	nop, 3, 36, 145, 109
+	pop, 6, 40, 178, 148
+	add64, 7, 59, 262, 160
+	add128, 7, 75, 243, 161
+	add256, 7, 83, 258, 162
+	sub64, 7, 61, 246, 160
+	sub128, 7, 73, 252, 160
+	sub256, 7, 77, 265, 164
+	mul64, 9, 63, 247, 184
+	mul128, 9, 67, 252, 196
+	mul256, 9, 113, 516, 374
+	div64, 9, 113, 290, 913
+	div128, 9, 188, 348, 1426
+	div256, 9, 292, 810, 2610
+	exp, 1614, 33035, 146475, 69828
+	loop, 51, 858, 1850, 1183
+	fun, 1011, 12760, 34513, 27866
+	rc5, 2197, 26274, 94891, 49744
+	mix, 1025, 13657, 51079, 33598
+	rng, 1985, 26121, 101185, 48628
+
+	# calculate nanoseconds per unit of gas
+	$ python csv2gas.py < times.csv
+	(ns/gas), ethvm, evm, parity-evm
+	nop, 13, 51, 39
+	pop, 7, 31, 25
+	add64, 9, 38, 23
+	add128, 11, 36, 24
+	add256, 12, 38, 24
+	sub64, 9, 36, 23
+	sub128, 11, 37, 23
+	sub256, 11, 39, 24
+	mul64, 7, 28, 21
+	mul128, 8, 29, 22
+	mul256, 13, 58, 42
+	div64, 13, 33, 104
+	div128, 21, 39, 162
+	div256, 33, 92, 296
+	exp, 20, 91, 43
+	loop, 17, 36, 23
+	fun, 13, 34, 28
+	rc5, 12, 43, 23
+	mix, 13, 50, 33
+	rng, 13, 51, 24
+
+	# estimate nanoseconds per opcode
+	$ python csv2ops.py < times.csv
+	(ns/OP), ethvm, evm, parity-evm
+	add64, 21, 101, 32
+	add128, 37, 82, 33
+	add256, 45, 97, 34
+	sub64, 23, 85, 32
+	sub128, 35, 91, 32
+	sub256, 39, 104, 36
+	mul64, 25, 86, 56
+	mul128, 29, 91, 68
+	mul256, 75, 355, 246
+	div64, 75, 129, 785
+	div128, 150, 187, 1298
+	div256, 254, 649, 2482
+
