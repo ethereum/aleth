@@ -50,7 +50,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
 	m_currTest = 0;
 }
 
-bool TestOutputHelper::passTest(std::string const& _testName)
+bool TestOutputHelper::checkTest(std::string const& _testName)
 {
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
 		return false;

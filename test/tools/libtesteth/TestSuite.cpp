@@ -81,6 +81,7 @@ void TestSuite::copyAllTestsFromFolder(string const& _testFolder) const
 		fs::path const srcFile = getFullPathFiller(suiteFillerFolder(), _testFolder) / file.filename().string();
 		clog << "Copying " << srcFile.string() << "\n";
 		clog << " TO " << destFile.string() << "\n";
+		assert(srcFile.string() != destFile.string());
 		auto testOutput = dev::test::TestOutputHelper();
 		testOutput.showProgress();
 		dev::test::copyFile(srcFile.string(), destFile.string());

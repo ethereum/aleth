@@ -65,7 +65,7 @@ public:
 				BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::testFileName(),
 					TestOutputHelper::testFileName() + " contains a test with a different name '" + testname + "'" );
 
-			if (!TestOutputHelper::passTest(testname))
+			if (!TestOutputHelper::checkTest(testname))
 				continue;
 
 			//For 100% at the log output when making blockchain tests out of state tests

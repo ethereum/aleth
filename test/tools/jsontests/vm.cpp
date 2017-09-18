@@ -305,7 +305,7 @@ class VmTestSuite: public TestSuite
 		{
 			string const& testname = i.first;
 			json_spirit::mObject const& testInput = i.second.get_obj();
-			if (!TestOutputHelper::passTest(testname))
+			if (!TestOutputHelper::checkTest(testname))
 				continue;
 
 			output[testname] = json_spirit::mObject();

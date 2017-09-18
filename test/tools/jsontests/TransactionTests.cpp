@@ -47,7 +47,7 @@ class TransactionTestSuite: public TestSuite
 			string testname = i.first;
 			json_spirit::mObject& o = i.second.get_obj();
 
-			if (!TestOutputHelper::passTest(testname))
+			if (!TestOutputHelper::checkTest(testname))
 			{
 				o.clear(); //don't add irrelevant tests to the final file when filling
 				continue;
