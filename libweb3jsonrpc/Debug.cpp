@@ -212,3 +212,11 @@ Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& 
 	}
 	return ret;
 }
+
+bool Debug::debug_accountIsInTrie(std::string const& _blockNumber, int _pos, std::string const& _address)
+{
+	(void)_blockNumber;
+	(void)_pos;
+	(void)_address;
+	return true; // TODO: implement
+}

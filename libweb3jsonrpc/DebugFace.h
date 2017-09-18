@@ -58,7 +58,7 @@ namespace dev {
                 virtual Json::Value debug_traceBlockByHash(const std::string& param1, const Json::Value& param2) = 0;
                 virtual Json::Value debug_traceCall(const Json::Value& param1, const std::string& param2, const Json::Value& param3) = 0;
 
-                virtual bool debug_accountIsInTrie(const std::string& param1, int param2, const std::string& param3);
+                virtual bool debug_accountIsInTrie(const std::string& param1, int param2, const std::string& param3) = 0;
         };
 
     }
