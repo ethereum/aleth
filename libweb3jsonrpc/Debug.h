@@ -35,6 +35,10 @@ public:
 	virtual Json::Value debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, std::string const& _begin, int _maxResults) override;
 	virtual std::string debug_preimage(std::string const& _hashedKey) override;
 	virtual Json::Value debug_traceBlock(std::string const& _blockRlp, Json::Value const& _json);
+	/// \param _blockNumber the block where the trie is searched
+	/// \param _pos the number of transactions in the block before the trie is searched
+	/// \param _address the address searched for in the trie
+	/// \return true if the address exists in the trie
 	virtual bool debug_accountIsInTrie(std::string const& _blockNumber, int _pos, std::string const& _address) override;
 
 private:
