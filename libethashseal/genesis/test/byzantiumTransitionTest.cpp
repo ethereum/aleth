@@ -56,10 +56,10 @@ R"E(
 		"0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
 		"0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
 		"0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-		"0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp", "startBlock": "0x02" } },
-		"0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "startBlock": "0x02", "linear": { "base": 500, "word": 0 } } },
-		"0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "startBlock": "0x02", "linear": { "base": 40000, "word": 0 } } },
-		"0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product", "startBlock": "0x02" } }
+		"0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp", "startingBlock": "0x02" } },
+		"0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "startingBlock": "0x02", "linear": { "base": 500, "word": 0 } } },
+		"0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "startingBlock": "0x02", "linear": { "base": 40000, "word": 0 } } },
+		"0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product", "startingBlock": "0x02" } }
 	}
 }
 )E";
