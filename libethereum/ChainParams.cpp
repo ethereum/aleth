@@ -55,7 +55,7 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 {
 	ChainParams cp(*this);
 	js::mValue val;
-	json_spirit::read_string(_json, val);
+	json_spirit::read_string_or_throw(_json, val);
 	js::mObject obj = val.get_obj();
 
 	cp.sealEngineName = obj["sealEngine"].get_str();
