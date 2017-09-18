@@ -44,6 +44,7 @@ public:
 		InvalidOption(std::string _message = std::string()): Exception(_message) {}
 	};
 
+	bool bench = false;		///< Run benchmarks.
 	bool vmtrace = false;	///< Create EVM execution tracer
 	bool filltests = false; ///< Create JSON test files from execution results
 	bool fillchain = false; ///< Fill tests as a blockchain tests if possible

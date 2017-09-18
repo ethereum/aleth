@@ -681,31 +681,31 @@ void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> t
 
 /// @}
 
-BOOST_AUTO_TEST_CASE(bench_ecrecover, *ut::label("bench") *ut::disabled())
+BOOST_AUTO_TEST_CASE(bench_ecrecover, bench())
 {
 	vector_ref<const PrecompiledTest> tests{ecrecoverTests, sizeof(ecrecoverTests) / sizeof(ecrecoverTests[0])};
 	benchmarkPrecompiled("ecrecover", tests, 100000);
 }
 
-BOOST_AUTO_TEST_CASE(bench_modexp, *ut::label("bench") *ut::disabled())
+BOOST_AUTO_TEST_CASE(bench_modexp, bench())
 {
 	vector_ref<const PrecompiledTest> tests{modexpTests, sizeof(modexpTests) / sizeof(modexpTests[0])};
 	benchmarkPrecompiled("modexp", tests, 10000);
 }
 
-BOOST_AUTO_TEST_CASE(bench_bn256Add, *ut::label("bench") *ut::disabled())
+BOOST_AUTO_TEST_CASE(bench_bn256Add, bench())
 {
 	vector_ref<const PrecompiledTest> tests{bn256AddTests, sizeof(bn256AddTests) / sizeof(bn256AddTests[0])};
 	benchmarkPrecompiled("alt_bn128_G1_add", tests, 1000000);
 }
 
-BOOST_AUTO_TEST_CASE(bench_bn256ScalarMul, *ut::label("bench") *ut::disabled())
+BOOST_AUTO_TEST_CASE(bench_bn256ScalarMul, bench())
 {
 	vector_ref<const PrecompiledTest> tests{bn256ScalarMulTests, sizeof(bn256ScalarMulTests) / sizeof(bn256ScalarMulTests[0])};
 	benchmarkPrecompiled("alt_bn128_G1_mul", tests, 10000);
 }
 
-BOOST_AUTO_TEST_CASE(bench_bn256Pairing, *ut::label("bench") *ut::disabled())
+BOOST_AUTO_TEST_CASE(bench_bn256Pairing, bench())
 {
 	vector_ref<const PrecompiledTest> tests{bn256PairingTests, sizeof(bn256PairingTests) / sizeof(bn256PairingTests[0])};
 	benchmarkPrecompiled("alt_bn128_pairing_product", tests, 1000);
