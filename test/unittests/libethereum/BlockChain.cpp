@@ -25,6 +25,7 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <libethereum/GenesisInfo.h>
+#include <libethereum/ChainParams.h>
 
 using namespace std;
 using namespace dev;
@@ -387,6 +388,13 @@ BOOST_AUTO_TEST_CASE(updateStats)
 
 	//memchache size 33554432 - 3500 blocks before cache to be cleared
 	bcRef.garbageCollect(true);
+}
+
+BOOST_AUTO_TEST_CASE(invalidJsonThrows)
+{
+	h256 emptyStateRoot;
+	/* Below, a comma is missing between fields. */
+	BOOST_CHECK_THROW(ChainParams("{ \"sealEngine\" : \"unknown\" \"accountStartNonce\" : \"3\" }", emptyStateRoot), json_spirit::Error_position);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
