@@ -211,7 +211,8 @@ void ChainBranch::restoreFromHistory(size_t _importBlockNumber)
 void ChainBranch::forceBlockchain(string const& chainname)
 {
 	s_tempBlockchainNetwork = dev::test::TestBlockChain::s_sealEngineNetwork;
-	dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(chainname);
+	if (chainname != "default")
+		dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(chainname);
 }
 
 void ChainBranch::resetBlockchain()
