@@ -397,4 +397,11 @@ BOOST_AUTO_TEST_CASE(invalidJsonThrows)
 	BOOST_CHECK_THROW(ChainParams("{ \"sealEngine\" : \"unknown\" \"accountStartNonce\" : \"3\" }", emptyStateRoot), json_spirit::Error_position);
 }
 
+BOOST_AUTO_TEST_CASE(unknownFieldThrows)
+{
+	h256 emptyStateRoot;
+	/* Below, an unknown field is passed. */
+	BOOST_CHECK_THROW(ChainParams("{ \"usuallyNotThere\" : \"unknown\" }", emptyStateRoot), UnknownField);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

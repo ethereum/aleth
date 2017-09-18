@@ -51,6 +51,64 @@ ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
 	*this = loadConfig(_json, _stateRoot);
 }
 
+string const c_str_sealEngine = "sealEngine";
+string const c_str_params = "params";
+string const c_str_genesis = "genesis";
+string const c_str_accounts = "accounts";
+
+set<string> const c_knownChainConfigFields =
+	{c_str_sealEngine, c_str_params, c_str_genesis, c_str_accounts};
+
+void validateConfig(js::mObject const& _obj)
+{
+	for (auto const& elm: _obj)
+		if (c_knownChainConfigFields.find(elm.first) == c_knownChainConfigFields.end())
+		{
+			string const comment = "Unknown field in genesis config: " + elm.first;
+			cerr << comment << "\n";
+			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
+		}
+}
+
+string const c_str_minGasLimit = "minGasLimit";
+string const c_str_maxGasLimit = "maxGasLimit";
+string const c_str_gasLimitBoundDivisor = "gasLimitBoundDivisor";
+string const c_str_homesteadForkBlock = "homesteadForkBlock";
+string const c_str_daoHardforkBlock = "daoHardforkBlock";
+string const c_str_EIP150ForkBlock = "EIP150ForkBlock";
+string const c_str_EIP158ForkBlock = "EIP158ForkBlock";
+string const c_str_byzantiumForkBlock = "byzantiumForkBlock";
+string const c_str_constantinopleForkBlock = "constantinopleForkBlock";
+string const c_str_accountStartNonce = "accountStartNonce";
+string const c_str_maximumExtraDataSize = "maximumExtraDataSize";
+string const c_str_tieBreakingGas = "tieBreakingGas";
+string const c_str_blockReward = "blockReward";
+string const c_str_difficultyBoundDivisor = "difficultyBoundDivisor";
+string const c_str_minimumDifficulty = "minimumDifficulty";
+string const c_str_durationLimit = "durationLimit";
+string const c_str_chainID = "chainID";
+string const c_str_networkID = "networkID";
+string const c_str_allowFutureBlocks = "allowFutureBlocks";
+
+set<string> const c_knownParamNames =	{
+	c_str_minGasLimit, c_str_maxGasLimit, c_str_gasLimitBoundDivisor, c_str_homesteadForkBlock,
+	c_str_EIP150ForkBlock, c_str_EIP158ForkBlock, c_str_accountStartNonce, c_str_maximumExtraDataSize,
+	c_str_tieBreakingGas, c_str_blockReward, c_str_byzantiumForkBlock, c_str_constantinopleForkBlock,
+	c_str_daoHardforkBlock, c_str_minimumDifficulty, c_str_difficultyBoundDivisor, c_str_durationLimit,
+	c_str_chainID, c_str_networkID, c_str_allowFutureBlocks
+};
+
+void validateParams(js::mObject const& _params)
+{
+	for (auto const& param: _params)
+		if (c_knownParamNames.find(param.first) == c_knownParamNames.end())
+		{
+			string const comment = "Unknown field in genesis config[params]: " + param.first;
+			cerr << comment << "\n";
+			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
+		}
+}
+
 ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
 {
 	ChainParams cp(*this);
@@ -58,43 +116,46 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	json_spirit::read_string_or_throw(_json, val);
 	js::mObject obj = val.get_obj();
 
-	cp.sealEngineName = obj["sealEngine"].get_str();
+	validateConfig(obj);
+
+	cp.sealEngineName = obj[c_str_sealEngine].get_str();
 	// params
-	js::mObject params = obj["params"].get_obj();
-	cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params["accountStartNonce"].get_str())));
-	cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params["maximumExtraDataSize"].get_str())));
-	cp.tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
-	cp.setBlockReward(u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str()))));
+	js::mObject params = obj[c_str_params].get_obj();
+	validateParams(params);
+	cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params[c_str_accountStartNonce].get_str())));
+	cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params[c_str_maximumExtraDataSize].get_str())));
+	cp.tieBreakingGas = params.count(c_str_tieBreakingGas) ? params[c_str_tieBreakingGas].get_bool() : true;
+	cp.setBlockReward(u256(fromBigEndian<u256>(fromHex(params[c_str_blockReward].get_str()))));
 
 	auto setOptionalU256Parameter = [&params](u256 &_destination, string const& _name)
 	{
 		if (params.count(_name))
 			_destination = u256(fromBigEndian<u256>(fromHex(params.at(_name).get_str())));
 	};
-	setOptionalU256Parameter(cp.minGasLimit, "minGasLimit");
-	setOptionalU256Parameter(cp.maxGasLimit, "maxGasLimit");
-	setOptionalU256Parameter(cp.gasLimitBoundDivisor, "gasLimitBoundDivisor");
-	setOptionalU256Parameter(cp.homesteadForkBlock, "homesteadForkBlock");
-	setOptionalU256Parameter(cp.EIP150ForkBlock, "EIP150ForkBlock");
-	setOptionalU256Parameter(cp.EIP158ForkBlock, "EIP158ForkBlock");
-	setOptionalU256Parameter(cp.byzantiumForkBlock, "byzantiumForkBlock");
-	setOptionalU256Parameter(cp.constantinopleForkBlock, "constantinopleForkBlock");
-	setOptionalU256Parameter(cp.daoHardforkBlock, "daoHardforkBlock");
-	setOptionalU256Parameter(cp.minimumDifficulty, "minimumDifficulty");
-	setOptionalU256Parameter(cp.difficultyBoundDivisor, "difficultyBoundDivisor");
-	setOptionalU256Parameter(cp.durationLimit, "durationLimit");
+	setOptionalU256Parameter(cp.minGasLimit, c_str_minGasLimit);
+	setOptionalU256Parameter(cp.maxGasLimit, c_str_maxGasLimit);
+	setOptionalU256Parameter(cp.gasLimitBoundDivisor, c_str_gasLimitBoundDivisor);
+	setOptionalU256Parameter(cp.homesteadForkBlock, c_str_homesteadForkBlock);
+	setOptionalU256Parameter(cp.EIP150ForkBlock, c_str_EIP150ForkBlock);
+	setOptionalU256Parameter(cp.EIP158ForkBlock, c_str_EIP158ForkBlock);
+	setOptionalU256Parameter(cp.byzantiumForkBlock, c_str_byzantiumForkBlock);
+	setOptionalU256Parameter(cp.constantinopleForkBlock, c_str_constantinopleForkBlock);
+	setOptionalU256Parameter(cp.daoHardforkBlock, c_str_daoHardforkBlock);
+	setOptionalU256Parameter(cp.minimumDifficulty, c_str_minimumDifficulty);
+	setOptionalU256Parameter(cp.difficultyBoundDivisor, c_str_difficultyBoundDivisor);
+	setOptionalU256Parameter(cp.durationLimit, c_str_durationLimit);
 
-	if (params.count("chainID"))
-		cp.chainID = int(u256(fromBigEndian<u256>(fromHex(params.at("chainID").get_str()))));
-	if (params.count("networkID"))
-		cp.networkID = int(u256(fromBigEndian<u256>(fromHex(params.at("networkID").get_str()))));
-	cp.allowFutureBlocks = params.count("allowFutureBlocks");
+	if (params.count(c_str_chainID))
+		cp.chainID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_str_chainID).get_str()))));
+	if (params.count(c_str_networkID))
+		cp.networkID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_str_networkID).get_str()))));
+	cp.allowFutureBlocks = params.count(c_str_allowFutureBlocks);
 
 	// genesis
-	string genesisStr = json_spirit::write_string(obj["genesis"], false);
+	string genesisStr = json_spirit::write_string(obj[c_str_genesis], false);
 	cp = cp.loadGenesis(genesisStr, _stateRoot);
 	// genesis state
-	string genesisStateStr = json_spirit::write_string(obj["accounts"], false);
+	string genesisStateStr = json_spirit::write_string(obj[c_str_accounts], false);
 	cp = cp.loadGenesisState(genesisStateStr, _stateRoot);
 	return cp;
 }
@@ -107,6 +168,33 @@ ChainParams ChainParams::loadGenesisState(string const& _json, h256 const& _stat
 	return cp;
 }
 
+string const c_str_parentHash = "parentHash";
+string const c_str_coinbase = "coinbase";
+string const c_str_author = "author";
+string const c_str_difficulty = "difficulty";
+string const c_str_gasLimit = "gasLimit";
+string const c_str_gasUsed = "gasUsed";
+string const c_str_timestamp = "timestamp";
+string const c_str_extraData = "extraData";
+string const c_str_mixhash = "mixhash";
+string const c_str_nonce = "nonce";
+
+set<string> const c_knownGenesisFields = {
+	c_str_parentHash, c_str_coinbase, c_str_author, c_str_difficulty, c_str_gasLimit, c_str_gasUsed, c_str_timestamp,
+	c_str_extraData, c_str_mixhash, c_str_nonce
+};
+
+void validateGenesis(js::mObject const& _genesis)
+{
+	for (auto const& elm: _genesis)
+		if (c_knownGenesisFields.find(elm.first) == c_knownGenesisFields.end())
+		{
+			string const comment = "Unknown field in genesis config[genesis]: " + elm.first;
+			cerr << comment << "\n";
+			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
+		}
+}
+
 ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot) const
 {
 	ChainParams cp(*this);
@@ -115,19 +203,21 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 	json_spirit::read_string(_json, val);
 	js::mObject genesis = val.get_obj();
 
-	cp.parentHash = h256(genesis["parentHash"].get_str());
-	cp.author = genesis.count("coinbase") ? h160(genesis["coinbase"].get_str()) : h160(genesis["author"].get_str());
-	cp.difficulty = genesis.count("difficulty") ? u256(fromBigEndian<u256>(fromHex(genesis["difficulty"].get_str()))) : 0;
-	cp.gasLimit = u256(fromBigEndian<u256>(fromHex(genesis["gasLimit"].get_str())));
-	cp.gasUsed = genesis.count("gasUsed") ? u256(fromBigEndian<u256>(fromHex(genesis["gasUsed"].get_str()))) : 0;
-	cp.timestamp = u256(fromBigEndian<u256>(fromHex(genesis["timestamp"].get_str())));
-	cp.extraData = bytes(fromHex(genesis["extraData"].get_str()));
+	validateGenesis(genesis);
+
+	cp.parentHash = h256(genesis[c_str_parentHash].get_str());
+	cp.author = genesis.count(c_str_coinbase) ? h160(genesis[c_str_coinbase].get_str()) : h160(genesis[c_str_author].get_str());
+	cp.difficulty = genesis.count(c_str_difficulty) ? u256(fromBigEndian<u256>(fromHex(genesis[c_str_difficulty].get_str()))) : 0;
+	cp.gasLimit = u256(fromBigEndian<u256>(fromHex(genesis[c_str_gasLimit].get_str())));
+	cp.gasUsed = genesis.count(c_str_gasUsed) ? u256(fromBigEndian<u256>(fromHex(genesis[c_str_gasUsed].get_str()))) : 0;
+	cp.timestamp = u256(fromBigEndian<u256>(fromHex(genesis[c_str_timestamp].get_str())));
+	cp.extraData = bytes(fromHex(genesis[c_str_extraData].get_str()));
 
 	// magic code for handling ethash stuff:
-	if ((genesis.count("mixhash") || genesis.count("mixHash")) && genesis.count("nonce"))
+	if ((genesis.count(c_str_mixhash) || genesis.count(c_str_mixhash)) && genesis.count(c_str_nonce))
 	{
-		h256 mixHash(genesis[genesis.count("mixhash") ? "mixhash" : "mixHash"].get_str());
-		h64 nonce(genesis["nonce"].get_str());
+		h256 mixHash(genesis[genesis.count(c_str_mixhash) ? c_str_mixhash : c_str_mixhash].get_str());
+		h64 nonce(genesis[c_str_nonce].get_str());
 		cp.sealFields = 2;
 		cp.sealRLP = rlp(mixHash) + rlp(nonce);
 	}
