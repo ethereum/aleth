@@ -24,7 +24,9 @@ jobs:
       - run:
           name: "Upload Hunter cache"
           command: |
-            cmake --build build --target hunter_upload_cache
+            if [ ! "$CIRCLE_PR_NUMBER" ]; then  # Skip forked PRs.
+              cmake --build build --target hunter_upload_cache
+            fi
 
       - run:
           name: "Build"
