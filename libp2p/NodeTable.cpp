@@ -313,7 +313,10 @@ void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _n
 	unsigned evicts = 0;
 	DEV_GUARDED(x_evictions)
 	{
-		EvictionTimeout evictTimeout{ _leastSeen->id,chrono::steady_clock::now(),_new->id };
+		EvictionTimeout evictTimeout{ _leastSeen->id, 
+			_new->id,
+			chrono::steady_clock::now() };
+
 		m_evictions[_leastSeen->id] = evictTimeout;
 		evicts = m_evictions.size();
 	}

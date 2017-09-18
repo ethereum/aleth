@@ -129,9 +129,9 @@ class NodeTable: UDPSocketEvents, public std::enable_shared_from_this<NodeTable>
 	using NodeIdTimePoint = std::pair<NodeID, TimePoint>;
 	struct EvictionTimeout
 	{
-		NodeID m_leastSeenID;
-		TimePoint m_evictedTimePoint;
-		NodeID m_newNodeID;
+		NodeID leastSeenID; 
+		NodeID newNodeID;
+		TimePoint evictedTimePoint;
 	};
 
 public:
