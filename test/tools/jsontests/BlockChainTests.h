@@ -52,8 +52,6 @@ class TransitionTestsSuite: public TestSuite
 	std::string suiteFillerFolder() const override;
 };
 
-eth::Network TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
-
 struct ChainBranch
 {
 	ChainBranch(TestBlock const& _genesis);
@@ -69,7 +67,6 @@ private:
 	static eth::Network s_tempBlockchainNetwork;
 };
 
-eth::Network ChainBranch::s_tempBlockchainNetwork = eth::Network::MainNetwork;
 //Functions that working with test json
 void compareBlocks(TestBlock const& _a, TestBlock const& _b);
 mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);

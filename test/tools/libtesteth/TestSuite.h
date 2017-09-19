@@ -19,7 +19,9 @@
  */
 
 #pragma once
+#include <boost/filesystem/path.hpp>
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
+namespace fs = boost::filesystem;
 
 namespace dev
 {
@@ -47,6 +49,12 @@ public:
 	// Copy .json tests from the src folder to the dest folder because such test is crafted manually and could not be filled.
 	// Used in bcForgedTest, ttWrongRLP tests and such.
 	void copyAllTestsFromFolder(std::string const& _testFolder) const;
+
+	// Return full path to folder for tests from _testFolder
+	fs::path getFullPathFiller(std::string const& _testFolder) const;
+
+	// Structure  <suiteFolder>/<testFolder>/<test>.json
+	fs::path getFullPath(std::string const& _testFolder) const;
 };
 
 }

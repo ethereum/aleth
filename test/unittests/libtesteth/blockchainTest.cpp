@@ -20,6 +20,7 @@
 
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/jsontests/BlockChainTests.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -83,7 +84,8 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 	)";
 	json_spirit::mValue input;
 	json_spirit::read_string(s, input);
-	json_spirit::mValue output = doBlockchainTestNoLog(input, true);
+	BlockchainTestSuite suite;
+	json_spirit::mValue output = suite.doTests(input, true);
 	BOOST_CHECK_MESSAGE(output.get_obj().size() == getNetworks().size(), "A wrong number of tests were generated.");
 }
 
@@ -144,7 +146,9 @@ BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
 	)";
 	json_spirit::mValue input;
 	json_spirit::read_string(s, input);
-	doBlockchainTestNoLog(input, true);
+
+	BlockchainTestSuite suite;
+	suite.doTests(input, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
