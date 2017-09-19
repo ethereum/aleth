@@ -22,7 +22,6 @@
 #pragma once
 
 #include <algorithm>
-#include <deque>
 
 #include <boost/integer/static_log2.hpp>
 
