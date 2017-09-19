@@ -31,6 +31,7 @@
 #include <libethcore/SealEngine.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
+#include "State.h"
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"

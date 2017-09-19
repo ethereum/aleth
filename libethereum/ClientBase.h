@@ -107,6 +107,7 @@ public:
 	virtual bytes codeAt(Address _a, BlockNumber _block) const override;
 	virtual h256 codeHashAt(Address _a, BlockNumber _block) const override;
 	virtual std::map<h256, std::pair<u256, u256>> storageAt(Address _a, BlockNumber _block) const override;
+	virtual bool existsInTrie(Address _a, BlockNumber _block, unsigned _afterNthTransaction) const override;
 
 	virtual LocalisedLogEntries logs(unsigned _watchId) const override;
 	virtual LocalisedLogEntries logs(LogFilter const& _filter) const override;

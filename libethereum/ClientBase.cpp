@@ -173,6 +173,12 @@ map<h256, pair<u256, u256>> ClientBase::storageAt(Address _a, BlockNumber _block
 	return block(_block).storage(_a);
 }
 
+bool ClientBase::existsInTrie(Address _a, BlockNumber _block, unsigned _afterNthTransaction) const
+{
+	State state(State::Null);
+	return createIntermediateState(state, block(_block), _afterNthTransaction, bc()).addressInUse(_a);
+}
+
 // TODO: remove try/catch, allow exceptions
 LocalisedLogEntries ClientBase::logs(unsigned _watchId) const
 {

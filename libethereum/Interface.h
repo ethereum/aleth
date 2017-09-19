@@ -125,6 +125,7 @@ public:
 	virtual bytes codeAt(Address _a, BlockNumber _block) const = 0;
 	virtual h256 codeHashAt(Address _a, BlockNumber _block) const = 0;
 	virtual std::map<h256, std::pair<u256, u256>> storageAt(Address _a, BlockNumber _block) const = 0;
+	virtual bool existsInTrie(Address _a, BlockNumber _block, unsigned _afterNthTransaction) const = 0;
 
 	// [LOGS API]
 	

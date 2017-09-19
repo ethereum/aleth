@@ -213,10 +213,16 @@ Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& 
 	return ret;
 }
 
-bool Debug::debug_accountIsInTrie(std::string const& _blockNumber, int _pos, std::string const& _address)
+bool Debug::debug_accountIsInTrie(std::string const& _blockNumber, int _transactionPosition, std::string const& _address)
 {
-	(void)_blockNumber;
-	(void)_pos;
-	(void)_address;
-	return true; // TODO: implement
+	try
+	{
+		if (_transactionPosition < 0)
+			throw 0;
+		return m_eth.existsInTrie(jsToAddress(_address), jsToBlockNumber(_blockNumber), unsigned(_transactionPosition));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
