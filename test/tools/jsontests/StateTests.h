@@ -21,9 +21,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 #include <test/tools/libtesteth/TestSuite.h>
 
-
-using namespace dev;
-
 namespace dev
 {
 namespace test

@@ -37,7 +37,7 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-int fillRandomTest(test::TestSuite const& _testSuite, std::string const& _testString);
+int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString);
 
 namespace dev { namespace test {
 int createRandomTest()
@@ -58,7 +58,7 @@ int createRandomTest()
 }} //namespaces
 
 //Prints a generated test Json into std::out
-int fillRandomTest(test::TestSuite const& _testSuite, std::string const& _testString)
+int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
