@@ -204,6 +204,7 @@ BOOST_AUTO_TEST_CASE(stStackTests){}
 BOOST_AUTO_TEST_CASE(stStaticCall){}
 BOOST_AUTO_TEST_CASE(stReturnDataTest){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
+BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}
