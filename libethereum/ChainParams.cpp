@@ -176,12 +176,12 @@ string const c_str_gasLimit = "gasLimit";
 string const c_str_gasUsed = "gasUsed";
 string const c_str_timestamp = "timestamp";
 string const c_str_extraData = "extraData";
-string const c_str_mixhash = "mixhash";
+string const c_str_mixHash = "mixHash";
 string const c_str_nonce = "nonce";
 
 set<string> const c_knownGenesisFields = {
 	c_str_parentHash, c_str_coinbase, c_str_author, c_str_difficulty, c_str_gasLimit, c_str_gasUsed, c_str_timestamp,
-	c_str_extraData, c_str_mixhash, c_str_nonce
+	c_str_extraData, c_str_mixHash, c_str_nonce
 };
 
 void validateGenesis(js::mObject const& _genesis)
@@ -214,9 +214,9 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 	cp.extraData = bytes(fromHex(genesis[c_str_extraData].get_str()));
 
 	// magic code for handling ethash stuff:
-	if ((genesis.count(c_str_mixhash) || genesis.count(c_str_mixhash)) && genesis.count(c_str_nonce))
+	if (genesis.count(c_str_mixHash) && genesis.count(c_str_nonce))
 	{
-		h256 mixHash(genesis[genesis.count(c_str_mixhash) ? c_str_mixhash : c_str_mixhash].get_str());
+		h256 mixHash(genesis[c_str_mixHash].get_str());
 		h64 nonce(genesis[c_str_nonce].get_str());
 		cp.sealFields = 2;
 		cp.sealRLP = rlp(mixHash) + rlp(nonce);
