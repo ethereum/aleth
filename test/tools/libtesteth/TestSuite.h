@@ -21,7 +21,6 @@
 #pragma once
 #include <boost/filesystem/path.hpp>
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
-namespace fs = boost::filesystem;
 
 namespace dev
 {
@@ -51,10 +50,10 @@ public:
 	void copyAllTestsFromFolder(std::string const& _testFolder) const;
 
 	// Return full path to folder for tests from _testFolder
-	fs::path getFullPathFiller(std::string const& _testFolder) const;
+	boost::filesystem::path getFullPathFiller(std::string const& _testFolder) const;
 
 	// Structure  <suiteFolder>/<testFolder>/<test>.json
-	fs::path getFullPath(std::string const& _testFolder) const;
+	boost::filesystem::path getFullPath(std::string const& _testFolder) const;
 };
 
 }
