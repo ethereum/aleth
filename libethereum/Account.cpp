@@ -81,6 +81,50 @@ PrecompiledContract createPrecompiledContract(js::mObject& _precompiled)
 }
 
 }
+namespace
+{
+	string const c_str_wei = "wei";
+	string const c_str_finney = "finney";
+	string const c_str_balance = "balance";
+	string const c_str_nonce = "nonce";
+	string const c_str_code = "code";
+	string const c_str_storage = "storage";
+	string const c_str_shouldnotexist = "shouldnotexist";
+	string const c_str_precompiled = "precompiled";
+	std::set<string> const c_known_account_fields = {
+		c_str_wei, c_str_finney, c_str_balance, c_str_nonce, c_str_code, c_str_storage, c_str_shouldnotexist,
+		c_str_code, c_str_precompiled
+	};
+	void validateAccount(js::mObject const& o)
+	{
+		for (auto const& field: o)
+			if (c_known_account_fields.find(field.first) == c_known_account_fields.end())
+			{
+				string const comment = "Unrecognized account field: " + field.first;
+				cerr << comment << "\n";
+				BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
+			}
+	}
+	void validateAccounts(js::mObject const& o)
+	{
+		for (auto const& account: o)
+			validateAccount(account.second.get_obj());
+	}
+	string const c_str_alloc = "alloc";
+	string const c_str_accounts = "accounts";
+	void validateAccountMapObj(js::mObject const& o)
+	{
+		for (auto const& field: o)
+		{
+			if (field.first == c_str_alloc)
+				validateAccounts(field.second.get_obj());
+			else if (field.first == c_str_accounts)
+				validateAccounts(field.second.get_obj());
+			else
+				validateAccount(field.second.get_obj());
+		}
+	}
+}
 AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
 {
 	auto u256Safe = [](std::string const& s) -> u256 {
@@ -93,40 +137,41 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 	std::unordered_map<Address, Account> ret;
 
 	js::mValue val;
-	json_spirit::read_string(_json, val);
+	json_spirit::read_string_or_throw(_json, val);
 	js::mObject o = val.get_obj();
-	for (auto const& account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
+	validateAccountMapObj(o);
+	for (auto const& account: o.count(c_str_alloc) ? o[c_str_alloc].get_obj() : o.count(c_str_accounts) ? o[c_str_accounts].get_obj() : o)
 	{
 		Address a(fromHex(account.first));
 		auto o = account.second.get_obj();
 
-		bool haveBalance = (o.count("wei") || o.count("finney") || o.count("balance"));
-		bool haveNonce = o.count("nonce");
-		bool haveCode = o.count("code");
-		bool haveStorage = o.count("storage");
-		bool shouldNotExists = o.count("shouldnotexist");
+		bool haveBalance = (o.count(c_str_wei) || o.count(c_str_finney) || o.count(c_str_balance));
+		bool haveNonce = o.count(c_str_nonce);
+		bool haveCode = o.count(c_str_code);
+		bool haveStorage = o.count(c_str_storage);
+		bool shouldNotExists = o.count(c_str_shouldnotexist);
 
 		if (haveStorage || haveCode || haveNonce || haveBalance)
 		{
 			u256 balance = 0;
-			if (o.count("wei"))
-				balance = u256Safe(o["wei"].get_str());
-			else if (o.count("finney"))
-				balance = u256Safe(o["finney"].get_str()) * finney;
-			else if (o.count("balance"))
-				balance = u256Safe(o["balance"].get_str());
+			if (o.count(c_str_wei))
+				balance = u256Safe(o[c_str_wei].get_str());
+			else if (o.count(c_str_finney))
+				balance = u256Safe(o[c_str_finney].get_str()) * finney;
+			else if (o.count(c_str_balance))
+				balance = u256Safe(o[c_str_balance].get_str());
 
-			u256 nonce = haveNonce ? u256Safe(o["nonce"].get_str()) : _defaultNonce;
+			u256 nonce = haveNonce ? u256Safe(o[c_str_nonce].get_str()) : _defaultNonce;
 
 			if (haveCode)
 			{
 				ret[a] = Account(nonce, balance);
-				if (o["code"].type() == json_spirit::str_type)
+				if (o[c_str_code].type() == json_spirit::str_type)
 				{
-					if (o["code"].get_str().find("0x") != 0 && !o["code"].get_str().empty())
+					if (o[c_str_code].get_str().find("0x") != 0 && !o[c_str_code].get_str().empty())
 						cerr << "Error importing code of account " << a << "! Code needs to be hex bytecode prefixed by \"0x\".";
 					else
-						ret[a].setCode(fromHex(o["code"].get_str()));
+						ret[a].setCode(fromHex(o[c_str_code].get_str()));
 				}
 				else
 					cerr << "Error importing code of account " << a << "! Code field needs to be a string";
@@ -135,7 +180,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 				ret[a] = Account(nonce, balance);
 
 			if (haveStorage)
-				for (pair<string, js::mValue> const& j: o["storage"].get_obj())
+				for (pair<string, js::mValue> const& j: o[c_str_storage].get_obj())
 					ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
 		}
 
@@ -146,9 +191,9 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 				ret[a] = Account(0, 0);
 		}
 
-		if (o_precompiled && o.count("precompiled"))
+		if (o_precompiled && o.count(c_str_precompiled))
 		{
-			js::mObject p = o["precompiled"].get_obj();
+			js::mObject p = o[c_str_precompiled].get_obj();
 			o_precompiled->insert(make_pair(a, createPrecompiledContract(p)));
 		}
 	}
