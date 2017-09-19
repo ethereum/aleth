@@ -417,19 +417,19 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				NodeID leastSeenID;
 				EvictionTimeout evictionEntry;
 				DEV_GUARDED(x_evictions)
+				{ 
+					auto e = m_evictions.find(in.sourceid);
+					if (e != m_evictions.end())
 					{ 
-						auto e = m_evictions.find(in.sourceid);
-						if (e != m_evictions.end())
-						{ 
-							if (e->second.evictedTimePoint > std::chrono::steady_clock::now())
-							{
-								found = true;
-								leastSeenID = e->first;
-								evictionEntry = e->second;
-								m_evictions.erase(e);
-							}
+						if (e->second.evictedTimePoint > std::chrono::steady_clock::now())
+						{
+							found = true;
+							leastSeenID = e->first;
+							evictionEntry = e->second;
+							m_evictions.erase(e);
 						}
 					}
+				}
 
 				if (found)
 				{
