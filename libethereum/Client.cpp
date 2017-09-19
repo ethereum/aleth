@@ -398,6 +398,8 @@ void Client::syncBlockQueue()
 
 void Client::syncTransactionQueue()
 {
+	resyncStateFromChain();
+
 	Timer timer;
 
 	h256Hash changeds;
@@ -475,46 +477,45 @@ void Client::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 
 void Client::resyncStateFromChain()
 {
+	DEV_READ_GUARDED(x_working)
+		if (bc().currentHash() == m_working.info().parentHash())
+			return;
+		
 	// RESTART MINING
 
-//	ctrace << "resyncStateFromChain()";
+	bool preChanged = false;
+	Block newPreMine(chainParams().accountStartNonce);
+	DEV_READ_GUARDED(x_preSeal)
+		newPreMine = m_preSeal;
 
-	if (!isMajorSyncing())
+	// TODO: use m_postSeal to avoid re-evaluating our own blocks.
+	preChanged = newPreMine.sync(bc());
+
+	if (preChanged || m_postSeal.author() != m_preSeal.author())
 	{
-		bool preChanged = false;
-		Block newPreMine(chainParams().accountStartNonce);
-		DEV_READ_GUARDED(x_preSeal)
-			newPreMine = m_preSeal;
-
-		// TODO: use m_postSeal to avoid re-evaluating our own blocks.
-		preChanged = newPreMine.sync(bc());
-
-		if (preChanged || m_postSeal.author() != m_preSeal.author())
-		{
-			DEV_WRITE_GUARDED(x_preSeal)
-				m_preSeal = newPreMine;
-			DEV_WRITE_GUARDED(x_working)
-				m_working = newPreMine;
-			DEV_READ_GUARDED(x_postSeal)
-				if (!m_postSeal.isSealed() || m_postSeal.info().hash() != newPreMine.info().parentHash())
-					for (auto const& t: m_postSeal.pending())
-					{
-						clog(ClientTrace) << "Resubmitting post-seal transaction " << t;
+		DEV_WRITE_GUARDED(x_preSeal)
+			m_preSeal = newPreMine;
+		DEV_WRITE_GUARDED(x_working)
+			m_working = newPreMine;
+		DEV_READ_GUARDED(x_postSeal)
+			if (!m_postSeal.isSealed() || m_postSeal.info().hash() != newPreMine.info().parentHash())
+				for (auto const& t: m_postSeal.pending())
+				{
+					clog(ClientTrace) << "Resubmitting post-seal transaction " << t;
 //						ctrace << "Resubmitting post-seal transaction " << t;
-						auto ir = m_tq.import(t, IfDropped::Retry);
-						if (ir != ImportResult::Success)
-							onTransactionQueueReady();
-					}
-			DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postSeal)
-				m_postSeal = m_working;
+					auto ir = m_tq.import(t, IfDropped::Retry);
+					if (ir != ImportResult::Success)
+						onTransactionQueueReady();
+				}
+		DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postSeal)
+			m_postSeal = m_working;
 
-			onPostStateChanged();
-		}
-
-		// Quick hack for now - the TQ at this point already has the prior pending transactions in it;
-		// we should resync with it manually until we are stricter about what constitutes "knowing".
-		onTransactionQueueReady();
+		onPostStateChanged();
 	}
+
+	// Quick hack for now - the TQ at this point already has the prior pending transactions in it;
+	// we should resync with it manually until we are stricter about what constitutes "knowing".
+	onTransactionQueueReady();
 }
 
 void Client::resetState()
@@ -543,7 +544,8 @@ void Client::onChainChanged(ImportRoute const& _ir)
 		m_tq.dropGood(t);
 	}
 	onNewBlocks(_ir.liveBlocks, changeds);
-	resyncStateFromChain();
+	if (!isMajorSyncing())
+		resyncStateFromChain();
 	noteChanged(changeds);
 }
 
@@ -659,7 +661,7 @@ void Client::doWork(bool _doWait)
 	bool isSealed = false;
 	DEV_READ_GUARDED(x_working)
 		isSealed = m_working.isSealed();
-	if (!isSealed && !isSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
+	if (!isSealed && !isMajorSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
 		syncTransactionQueue();
 
 	tick();
