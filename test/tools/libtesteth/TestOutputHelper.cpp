@@ -50,7 +50,17 @@ void TestOutputHelper::initTest(size_t _maxTests)
 	m_currTest = 0;
 }
 
-bool TestOutputHelper::passTest(std::string const& _testName)
+bool TestOutputHelper::checkTest(std::string const& _testName)
+{
+	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
+		return false;
+
+	cnote << _testName;
+	m_currentTestName = _testName;
+	return true;
+}
+
+void TestOutputHelper::showProgress()
 {
 	m_currTest++;
 	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
@@ -62,13 +72,6 @@ bool TestOutputHelper::passTest(std::string const& _testName)
 			std::cout << "...";
 		std::cout << "\n";
 	}
-
-	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
-		return false;
-
-	cnote << _testName;
-	m_currentTestName = _testName;
-	return true;
 }
 
 void TestOutputHelper::finishTest()

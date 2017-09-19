@@ -31,7 +31,10 @@ class TestOutputHelper
 {
 public:
 	TestOutputHelper(size_t _maxTests = 1) { TestOutputHelper::initTest(_maxTests); }
-	static bool passTest(std::string const& _testName);
+	static bool checkTest(std::string const& _testName);
+
+	// Display percantage of completed tests to std::out. Has to be called before execution of every test.
+	static void showProgress();
 	static void setMaxTests(int _count) { m_maxTests = _count; }
 	static void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
 	static void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }

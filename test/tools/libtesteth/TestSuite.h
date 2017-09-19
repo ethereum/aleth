@@ -28,14 +28,18 @@ namespace test
 
 class TestSuite
 {
+protected:
+	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
+	virtual std::string suiteFolder() const = 0;
+
+	// A folder of the test suite in src folder. like "VMTestsFiller". should be implemented for each test suite.
+	virtual std::string suiteFillerFolder() const = 0;
+
 public:
 	virtual ~TestSuite() {}
 
 	// Main test executive function. should be declared for each test suite. it fills and runs the test .json file
 	virtual json_spirit::mValue doTests(json_spirit::mValue const&, bool) const = 0;
-
-	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
-	virtual std::string suiteFolder() const = 0;
 
 	// Execute all tests from _folder
 	void runAllTestsInFolder(std::string const& _testFolder) const;

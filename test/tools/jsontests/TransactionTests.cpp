@@ -47,7 +47,7 @@ class TransactionTestSuite: public TestSuite
 			string testname = i.first;
 			json_spirit::mObject& o = i.second.get_obj();
 
-			if (!TestOutputHelper::passTest(testname))
+			if (!TestOutputHelper::checkTest(testname))
 			{
 				o.clear(); //don't add irrelevant tests to the final file when filling
 				continue;
@@ -169,6 +169,11 @@ class TransactionTestSuite: public TestSuite
 	{
 		return "TransactionTests";
 	}
+
+	std::string suiteFillerFolder() const override
+	{
+		return "TransactionTestsFiller";
+	}
 };
 
 } }// Namespace Close
@@ -182,9 +187,12 @@ public:
 		test::TransactionTestSuite suite;
 
 		if ((casename == "ttWrongRLPFrontier" || casename == "ttWrongRLPHomestead") && test::Options::get().filltests)
+		{
 			suite.copyAllTestsFromFolder(casename);
-		else
-			suite.runAllTestsInFolder(casename);
+			return;
+		}
+
+		suite.runAllTestsInFolder(casename);
 	}
 };
 

@@ -65,7 +65,7 @@ public:
 				BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::testFileName(),
 					TestOutputHelper::testFileName() + " contains a test with a different name '" + testname + "'" );
 
-			if (!TestOutputHelper::passTest(testname))
+			if (!TestOutputHelper::checkTest(testname))
 				continue;
 
 			//For 100% at the log output when making blockchain tests out of state tests
@@ -124,6 +124,11 @@ public:
 	std::string suiteFolder() const override
 	{
 		return test::c_GeneralStateTests;
+	}
+
+	std::string suiteFillerFolder() const override
+	{
+		return test::c_GeneralStateTests + "Filler";
 	}
 };
 

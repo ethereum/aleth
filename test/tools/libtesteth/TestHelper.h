@@ -118,9 +118,7 @@ int createRandomTest();	//returns 0 if succeed, 1 if there was an error;
 //do*Tests(_input, _fillin) always return a filled test.
 //When _fillin is true, _input is supposed to contain a filler.  Otherwise, _input is also a filled test.
 json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin);
+json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin); //used for --fillchain
 void doRlpTests(json_spirit::mValue const& _input);
 void addClientInfo(json_spirit::mValue& v, boost::filesystem::path const& _testSource);
 void removeComments(json_spirit::mValue& _obj);

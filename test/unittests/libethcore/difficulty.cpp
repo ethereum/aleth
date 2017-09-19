@@ -115,7 +115,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 		{
 			testN++;
 			string testName = "DifficultyTest"+toString(testN);
-			if (!dev::test::TestOutputHelper::passTest(testName))
+			if (!dev::test::TestOutputHelper::checkTest(testName))
 				continue;
 
 			u256 pStamp = dev::test::RandomCode::randomUniInt();
@@ -165,7 +165,7 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine, eth:
 	{
 		js::mObject o = i.second.get_obj();
 		string testname = i.first;
-		if (!dev::test::TestOutputHelper::passTest(testname))
+		if (!dev::test::TestOutputHelper::checkTest(testname))
 		{
 			o.clear();
 			continue;
