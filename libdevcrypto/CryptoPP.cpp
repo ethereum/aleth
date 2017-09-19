@@ -27,7 +27,7 @@
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
 
-static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
+static_assert(CRYPTOPP_VERSION == 565, "Wrong Crypto++ version");
 
 using namespace dev;
 using namespace dev::crypto;
@@ -179,11 +179,20 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 void Secp256k1PP::encrypt(Public const& _k, bytes& io_cipher)
 {
 	auto& ctx = Secp256k1PPCtx::get();
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	CryptoPP::ECIES<CryptoPP::ECP>::Encryptor e;
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+
 	{
 		Guard l(ctx.x_params);
 		e.AccessKey().Initialize(ctx.m_params, publicToPoint(_k));
 	}
+
 
 	size_t plen = io_cipher.size();
 	bytes ciphertext;
@@ -201,7 +210,15 @@ void Secp256k1PP::encrypt(Public const& _k, bytes& io_cipher)
 void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 {
 	auto& ctx = Secp256k1PPCtx::get();
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	CryptoPP::ECIES<CryptoPP::ECP>::Decryptor d;
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+
 	{
 		Guard l(ctx.x_params);
 		d.AccessKey().Initialize(ctx.m_params, secretToExponent(_k));

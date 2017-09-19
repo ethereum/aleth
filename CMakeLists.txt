@@ -100,9 +100,11 @@ hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
 
 hunter_add_package(Snappy)
-find_package(Snappy CONFIG)
+find_package(Snappy CONFIG REQUIRED)
 
-include(ProjectCryptopp)
+hunter_add_package(cryptopp)
+find_package(cryptopp CONFIG REQUIRED)
+
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
 include(ProjectSnark)

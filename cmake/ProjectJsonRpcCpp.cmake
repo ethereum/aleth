@@ -1,3 +1,5 @@
+include(ExternalProject)
+
 # HTTP server from JSON RPC CPP requires microhttpd library. It can find it itself,
 # but we need to know the MHD location for static linking.
 find_package(MHD REQUIRED)

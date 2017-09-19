@@ -1,3 +1,6 @@
+include(ExternalProject)
+include(GNUInstallDirs)
+
 set(prefix "${CMAKE_BINARY_DIR}/deps")
 set(MPIR_LIBRARY "${prefix}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}mpir${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(MPIR_INCLUDE_DIR "${prefix}/include")
