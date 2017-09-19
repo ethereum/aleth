@@ -89,13 +89,14 @@ string const c_str_durationLimit = "durationLimit";
 string const c_str_chainID = "chainID";
 string const c_str_networkID = "networkID";
 string const c_str_allowFutureBlocks = "allowFutureBlocks";
+string const c_str_registrar = "registrar";
 
-set<string> const c_knownParamNames =	{
+set<string> const c_knownParamNames = {
 	c_str_minGasLimit, c_str_maxGasLimit, c_str_gasLimitBoundDivisor, c_str_homesteadForkBlock,
 	c_str_EIP150ForkBlock, c_str_EIP158ForkBlock, c_str_accountStartNonce, c_str_maximumExtraDataSize,
 	c_str_tieBreakingGas, c_str_blockReward, c_str_byzantiumForkBlock, c_str_constantinopleForkBlock,
 	c_str_daoHardforkBlock, c_str_minimumDifficulty, c_str_difficultyBoundDivisor, c_str_durationLimit,
-	c_str_chainID, c_str_networkID, c_str_allowFutureBlocks
+	c_str_chainID, c_str_networkID, c_str_allowFutureBlocks, c_str_registrar
 };
 
 void validateParams(js::mObject const& _params)
@@ -144,6 +145,7 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	setOptionalU256Parameter(cp.minimumDifficulty, c_str_minimumDifficulty);
 	setOptionalU256Parameter(cp.difficultyBoundDivisor, c_str_difficultyBoundDivisor);
 	setOptionalU256Parameter(cp.durationLimit, c_str_durationLimit);
+	setOptionalU256Parameter(cp.registrar, c_str_registrar);
 
 	if (params.count(c_str_chainID))
 		cp.chainID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_str_chainID).get_str()))));
