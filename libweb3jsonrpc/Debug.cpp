@@ -219,7 +219,9 @@ bool Debug::debug_accountIsInTrie(std::string const& _blockNumber, int _transact
 	{
 		if (_transactionPosition < 0)
 			throw 0;
-		return m_eth.existsInTrie(jsToAddress(_address), jsToBlockNumber(_blockNumber), unsigned(_transactionPosition));
+		Address a = jsToAddress(_address);
+		BlockNumber b = jsToBlockNumber(_blockNumber);
+		return m_eth.existsInTrie(a, b, unsigned(_transactionPosition));
 	}
 	catch (...)
 	{

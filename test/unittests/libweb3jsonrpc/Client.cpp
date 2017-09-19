@@ -27,6 +27,7 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Personal.h>
 #include <libweb3jsonrpc/Eth.h>
+#include <libweb3jsonrpc/Debug.h>
 #include <libdevcore/TransientDirectory.h>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/KeyManager.h>
@@ -136,6 +137,33 @@ BOOST_AUTO_TEST_CASE(Personal)
 	BOOST_TEST_CHECKPOINT("Unlocking again with empty password should not work.");
 	BOOST_CHECK(!personal.personal_unlockAccount(address, string(), 2));
 	BOOST_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
+}
+
+BOOST_AUTO_TEST_CASE(DebugAccountIsInTrie)
+{
+	TransientDirectory tempDir;
+	boost::filesystem::create_directories(tempDir.path() + "/keys");
+
+	setDataDir(tempDir.path());
+
+	dev::WebThreeDirect web3(
+		WebThreeDirect::composeClientVersion("eth"),
+		getDataDir(),
+		ChainParams(),
+		WithExisting::Kill,
+		set<string>{"eth"},
+		p2p::NetworkPreferences(0)
+	);
+	web3.stopNetwork();
+	web3.ethereum()->stopSealing();
+
+	rpc::Debug debug(*web3.ethereum());
+
+	// Create account
+	string address = "0x0000000000000000000000000000000000000000";
+
+	BOOST_TEST_CHECKPOINT("A non-existent account is not in the trie.");
+	BOOST_CHECK(!debug.debug_accountIsInTrie("latest", 0, address));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
