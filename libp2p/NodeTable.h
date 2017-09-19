@@ -127,9 +127,13 @@ class NodeTable: UDPSocketEvents, public std::enable_shared_from_this<NodeTable>
 	using NodeSocket = UDPSocket<NodeTable, 1280>;
 	using TimePoint = std::chrono::steady_clock::time_point;	///< Steady time point.
 	using NodeIdTimePoint = std::pair<NodeID, TimePoint>;
+
+	/**
+	 * EvictionTimeout is used to record the timepoint of the evicted node 
+	 * and the new node ID is used to replace it.
+	 */
 	struct EvictionTimeout
-	{
-		NodeID leastSeenID; 
+	{ 
 		NodeID newNodeID;
 		TimePoint evictedTimePoint;
 	};

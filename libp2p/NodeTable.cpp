@@ -313,8 +313,8 @@ void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _n
 	unsigned evicts = 0;
 	DEV_GUARDED(x_evictions)
 	{
-		EvictionTimeout evictTimeout{_leastSeen->id, _new->id, chrono::steady_clock::now()}; 
-		m_evictions[_leastSeen->id] = evictTimeout;
+		EvictionTimeout evictTimeout{_new->id, chrono::steady_clock::now()};  
+		m_evictions.emplace(_leastSeen->id, evictTimeout);
 		evicts = m_evictions.size();
 	}
 
@@ -414,15 +414,20 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				auto in = dynamic_cast<Pong const&>(*packet);
 				// whenever a pong is received, check if it's in m_evictions
 				bool found = false;
+				NodeID leastSeenID;
 				EvictionTimeout evictionEntry;
 				DEV_GUARDED(x_evictions)
-					if (m_evictions.count(in.sourceid))
-					{
-						if (m_evictions[in.sourceid].evictedTimePoint > std::chrono::steady_clock::now())
-						{
-							found = true;
-							evictionEntry = m_evictions[in.sourceid];
-							m_evictions.erase(in.sourceid); 
+					{ 
+						auto e = m_evictions.find(in.sourceid);
+						if (e != m_evictions.end())
+						{ 
+							if (e->second.evictedTimePoint > std::chrono::steady_clock::now())
+							{
+								found = true;
+								leastSeenID = e->first;
+								evictionEntry = e->second;
+								m_evictions.erase(e);
+							}
 						}
 					}
 
@@ -430,7 +435,7 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				{
 					if (auto n = nodeEntry(evictionEntry.newNodeID))
 						dropNode(n);
-					if (auto n = nodeEntry(evictionEntry.leastSeenID))
+					if (auto n = nodeEntry(leastSeenID))
 						n->pending = false;
 				}
 				else
@@ -546,7 +551,7 @@ void NodeTable::doCheckEvictions()
 		{
 			Guard le(x_evictions);
 			Guard ln(x_nodes);
-			for (auto& e : m_evictions)
+			for (auto& e: m_evictions)
 				if (chrono::steady_clock::now() - e.second.evictedTimePoint > c_reqTimeout)
 					if (m_nodes.count(e.second.newNodeID))
 						drop.push_back(m_nodes[e.second.newNodeID]);
