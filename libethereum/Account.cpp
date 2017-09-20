@@ -95,24 +95,10 @@ namespace
 		c_wei, c_finney, c_balance, c_nonce, c_code, c_storage, c_shouldnotexist,
 		c_code, c_precompiled
 	};
-	void validateAccounts(js::mObject const& _o)
-	{
-		for (auto const& account: _o)
-			validateFieldNames(account.second.get_obj(), c_knownAccountFields);
-	}
-	string const c_alloc = "alloc";
-	string const c_accounts = "accounts";
 	void validateAccountMapObj(js::mObject const& _o)
 	{
 		for (auto const& field: _o)
-		{
-			if (field.first == c_alloc)
-				validateAccounts(field.second.get_obj());
-			else if (field.first == c_accounts)
-				validateAccounts(field.second.get_obj());
-			else
-				validateFieldNames(field.second.get_obj(), c_knownAccountFields);
-		}
+			validateFieldNames(field.second.get_obj(), c_knownAccountFields);
 	}
 }
 AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
@@ -130,7 +116,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 	json_spirit::read_string_or_throw(_json, val);
 	js::mObject o = val.get_obj();
 	validateAccountMapObj(o);
-	for (auto const& account: o.count(c_alloc) ? o[c_alloc].get_obj() : o.count(c_accounts) ? o[c_accounts].get_obj() : o)
+	for (auto const& account: o)
 	{
 		Address a(fromHex(account.first));
 		auto o = account.second.get_obj();
