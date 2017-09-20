@@ -61,12 +61,12 @@ string const c_accounts = "accounts";
 set<string> const c_knownChainConfigFields =
 	{c_sealEngine, c_params, c_genesis, c_accounts};
 
-void validateConfig(js::mObject const& _obj)
+void validateFieldNames(js::mObject const& _obj, set<string> const& _allowedFields)
 {
 	for (auto const& elm: _obj)
-		if (c_knownChainConfigFields.find(elm.first) == c_knownChainConfigFields.end())
+		if (_allowedFields.find(elm.first) == _allowedFields.end())
 		{
-			string const comment = "Unknown field in genesis config: " + elm.first;
+			string const comment = "Unknown field in config: " + elm.first;
 			cerr << comment << "\n";
 			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
 		}
@@ -100,17 +100,6 @@ set<string> const c_knownParamNames = {
 	c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor, c_durationLimit,
 	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar
 };
-
-void validateParams(js::mObject const& _params)
-{
-	for (auto const& param: _params)
-		if (c_knownParamNames.find(param.first) == c_knownParamNames.end())
-		{
-			string const comment = "Unknown field in genesis config[params]: " + param.first;
-			cerr << comment << "\n";
-			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
-		}
-}
 } // anonymous namespace
 
 ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
@@ -120,12 +109,12 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	json_spirit::read_string_or_throw(_json, val);
 	js::mObject obj = val.get_obj();
 
-	validateConfig(obj);
+	validateFieldNames(obj, c_knownChainConfigFields);
 
 	cp.sealEngineName = obj[c_sealEngine].get_str();
 	// params
 	js::mObject params = obj[c_params].get_obj();
-	validateParams(params);
+	validateFieldNames(params, c_knownParamNames);
 	cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params[c_accountStartNonce].get_str())));
 	cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params[c_maximumExtraDataSize].get_str())));
 	cp.tieBreakingGas = params.count(c_tieBreakingGas) ? params[c_tieBreakingGas].get_bool() : true;
@@ -190,17 +179,6 @@ set<string> const c_knownGenesisFields = {
 	c_parentHash, c_coinbase, c_author, c_difficulty, c_gasLimit, c_gasUsed, c_timestamp,
 	c_extraData, c_mixHash, c_nonce
 };
-
-void validateGenesis(js::mObject const& _genesis)
-{
-	for (auto const& elm: _genesis)
-		if (c_knownGenesisFields.find(elm.first) == c_knownGenesisFields.end())
-		{
-			string const comment = "Unknown field in genesis config[genesis]: " + elm.first;
-			cerr << comment << "\n";
-			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
-		}
-}
 }
 
 ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot) const
@@ -211,7 +189,7 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 	json_spirit::read_string(_json, val);
 	js::mObject genesis = val.get_obj();
 
-	validateGenesis(genesis);
+	validateFieldNames(genesis, c_knownGenesisFields);
 
 	cp.parentHash = h256(genesis[c_parentHash].get_str());
 	cp.author = genesis.count(c_coinbase) ? h160(genesis[c_coinbase].get_str()) : h160(genesis[c_author].get_str());
