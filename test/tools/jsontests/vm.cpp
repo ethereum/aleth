@@ -25,7 +25,6 @@
 #include <libethereum/ChainParams.h>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
-#include <libevm/ExtVMFace.h>
 #include <boost/filesystem.hpp>
 #include <test/tools/libtesteth/TestSuite.h>
 

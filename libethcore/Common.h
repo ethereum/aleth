@@ -23,14 +23,20 @@
 
 #pragma once
 
-#include <string>
-#include <functional>
+#include <libdevcore/Address.h>
 #include <libdevcore/Common.h>
+#include <libdevcore/Exceptions.h>
 #include <libdevcore/FixedHash.h>
-#include <libdevcrypto/Common.h>
+
+#include <functional>
+#include <string>
 
 namespace dev
 {
+
+class RLP;
+class RLPStream;
+
 namespace eth
 {
 
@@ -88,6 +94,13 @@ enum class RelativeBlock: BlockNumber
 {
 	Latest = LatestBlock,
 	Pending = PendingBlock
+};
+
+enum class BlockPolarity
+{
+	Unknown,
+	Dead,
+	Live
 };
 
 class Transaction;

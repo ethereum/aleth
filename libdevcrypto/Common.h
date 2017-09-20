@@ -25,9 +25,10 @@
 #pragma once
 
 #include <mutex>
+#include <libdevcore/Address.h>
 #include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {
@@ -56,25 +57,6 @@ struct SignatureStruct
 	h256 s;
 	byte v = 0;
 };
-
-/// An Ethereum address: 20 bytes.
-/// @NOTE This is not endian-specific; it's just a bunch of bytes.
-using Address = h160;
-
-/// The zero address.
-extern const Address ZeroAddress;
-
-/// The last address.
-extern const Address MaxAddress;
-
-/// The SYSTEM address.
-extern const Address SystemAddress;
-
-/// A vector of Ethereum addresses.
-using Addresses = h160s;
-
-/// A hash set of Ethereum addresses.
-using AddressHash = std::unordered_set<h160>;
 
 /// A vector of secrets.
 using Secrets = std::vector<Secret>;

@@ -62,12 +62,6 @@ bool dev::SignatureStruct::isValid() const noexcept
 	return (v <= 1 && r > s_zero && s > s_zero && r < s_max && s < s_max);
 }
 
-const Address dev::ZeroAddress = Address();
-
-const Address dev::MaxAddress = Address("0xffffffffffffffffffffffffffffffffffffffff");
-
-const Address dev::SystemAddress = Address("0xfffffffffffffffffffffffffffffffffffffffe");
-
 Public dev::toPublic(Secret const& _secret)
 {
 	auto* ctx = getCtx();

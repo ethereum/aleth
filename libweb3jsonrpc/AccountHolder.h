@@ -28,7 +28,6 @@
 #include <vector>
 #include <map>
 #include <chrono>
-#include <libdevcrypto/Common.h>
 #include <libethcore/CommonJS.h>
 #include <libethereum/Transaction.h>
 

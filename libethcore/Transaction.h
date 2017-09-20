@@ -14,16 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TransactionBase.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
+#include <libethcore/Common.h>
+#include <libdevcrypto/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
-#include <libethcore/Common.h>
 
 #include <boost/optional.hpp>
 

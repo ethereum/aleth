@@ -359,14 +359,6 @@ inline h160 right160(h256 const& _t)
 	return ret;
 }
 
-/// Convert the given value into h160 (160-bit unsigned integer) using the left 20 bytes.
-inline h160 left160(h256 const& _t)
-{
-	h160 ret;
-	memcpy(&ret[0], _t.data(), 20);
-	return ret;
-}
-
 h128 fromUUID(std::string const& _uuid);
 
 std::string toUUID(h128 const& _uuid);

@@ -30,7 +30,6 @@
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/ChainOperationParams.h>
-#include <libevm/ExtVMFace.h>
 #include "Account.h"
 #include "Transaction.h"
 #include "TransactionReceipt.h"

@@ -36,7 +36,6 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Common.h>
 #include <libethcore/SealEngine.h>
-#include <libevm/ExtVMFace.h>
 #include <chrono>
 #include <deque>
 #include <unordered_map>

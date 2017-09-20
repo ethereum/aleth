@@ -15,35 +15,37 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "FixedHash.h"
-#include <boost/algorithm/string.hpp>
+#include "LogEntry.h"
+
+#include <libdevcore/RLP.h>
+#include <libdevcore/SHA3.h>
 
 namespace dev
 {
-
-std::random_device s_fixedHashEngine;
-
-h128 fromUUID(std::string const& _uuid)
+namespace eth
 {
-	try
-	{
-		return h128(boost::replace_all_copy(_uuid, "-", ""));
-	}
-	catch (...)
-	{
-		return h128();
-	}
+
+LogEntry::LogEntry(RLP const& _r)
+{
+	assert(_r.itemCount() == 3);
+	address = (Address)_r[0];
+	topics = _r[1].toVector<h256>();
+	data = _r[2].toBytes();
 }
 
-std::string toUUID(h128 const& _uuid)
+void LogEntry::streamRLP(RLPStream& _s) const
 {
-	std::string ret = toHex(_uuid.ref());
-	for (unsigned i: {20, 16, 12, 8})
-		ret.insert(ret.begin() + i, '-');
+	_s.appendList(3) << address << topics << data;
+}
+
+LogBloom LogEntry::bloom() const
+{
+	LogBloom ret;
+	ret.shiftBloom<3>(sha3(address.ref()));
+	for (auto t: topics)
+		ret.shiftBloom<3>(sha3(t.ref()));
 	return ret;
 }
 
 }
-
-
-
+}

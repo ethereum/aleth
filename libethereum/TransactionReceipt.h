@@ -21,16 +21,15 @@
 
 #pragma once
 
-#include <array>
-#include <libdevcore/Common.h>
+#include <libethcore/Common.h>
+#include <libethcore/LogEntry.h>
 #include <libdevcore/RLP.h>
-#include <libevm/ExtVMFace.h>
 
 #include <boost/variant/variant.hpp>
+#include <array>
 
 namespace dev
 {
-
 namespace eth
 {
 

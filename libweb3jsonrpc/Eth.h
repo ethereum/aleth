@@ -27,7 +27,7 @@
 #include <iosfwd>
 #include <jsonrpccpp/server.h>
 #include <jsonrpccpp/common/exception.h>
-#include <libdevcrypto/Common.h>
+#include <libdevcore/Common.h>
 #include "SessionManager.h"
 #include "EthFace.h"
 
@@ -40,10 +40,6 @@ namespace eth
 {
 class AccountHolder;
 struct TransactionSkeleton;
-class Interface;
-}
-namespace shh
-{
 class Interface;
 }
 
