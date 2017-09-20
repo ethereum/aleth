@@ -113,8 +113,6 @@ json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 //Fill Test Functions
 int createRandomTest();	//returns 0 if succeed, 1 if there was an error;
 void doRlpTests(json_spirit::mValue const& _input);
-void addClientInfo(json_spirit::mValue& v, boost::filesystem::path const& _testSource);
-void removeComments(json_spirit::mValue& _obj);
 
 /// Allows observing test execution process.
 /// This class also provides methods for registering and notifying the listener

@@ -182,15 +182,14 @@ bytes ImportTest::executeTest()
 			testObj["blocks"] = blocksArr;
 			json[testname] = testObj;
 
-			//Write a filler file to the filler folder
+			// Write a filler file to the filler folder
 			BCGeneralStateTestsSuite genSuite;
 			fs::path const testFillerFile = genSuite.getFullPathFiller(TestOutputHelper::caseName()) / fs::path(testname + "Filler.json");
 			writeFile(testFillerFile, asBytes(json_spirit::write_string((mValue)json, true)));
 
-			//Write a blockchain test .json file from dynamic filler 'json' that is produced from state test filler
-			fs::path const testFile = genSuite.getFullPath(TestOutputHelper::caseName()) / fs::path(testname + ".json");
-			json_spirit::mValue const generatedJson = genSuite.doTests((json_spirit::mValue)json, true);
-			writeFile(testFile, asBytes(json_spirit::write_string(generatedJson, true)));
+			// Execute test filling for this file
+			genSuite.executeTest(TestOutputHelper::caseName(), testFillerFile);
+
 		} //transactions
 	}//fillchain
 

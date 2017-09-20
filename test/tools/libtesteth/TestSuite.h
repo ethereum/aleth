@@ -45,9 +45,8 @@ public:
 	// Execute all tests from _folder
 	void runAllTestsInFolder(std::string const& _testFolder) const;
 
-	// Copy .json tests from the src folder to the dest folder because such test is crafted manually and could not be filled.
-	// Used in bcForgedTest, ttWrongRLP tests and such.
-	void copyAllTestsFromFolder(std::string const& _testFolder) const;
+	//Execute Filler.json or Copier.json test file in a given folder
+	void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
 
 	// Return full path to folder for tests from _testFolder
 	boost::filesystem::path getFullPathFiller(std::string const& _testFolder) const;
