@@ -57,4 +57,6 @@ jsonrpcstub_create(web3jsonrpc test.json
 	TestClient ${CMAKE_CURRENT_BINARY_DIR} TestClient
 )
 
+target_include_directories(web3jsonrpc PRIVATE ../utils)
+
 target_link_libraries(web3jsonrpc ethashseal webthree whisper JsonRpcCpp::Server)

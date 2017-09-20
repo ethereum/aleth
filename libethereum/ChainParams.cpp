@@ -23,6 +23,7 @@
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/TrieDB.h>
+#include <libdevcore/JsonUtils.h>
 #include <libethcore/SealEngine.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Precompiled.h>
@@ -60,17 +61,6 @@ string const c_accounts = "accounts";
 
 set<string> const c_knownChainConfigFields =
 	{c_sealEngine, c_params, c_genesis, c_accounts};
-
-void validateFieldNames(js::mObject const& _obj, set<string> const& _allowedFields)
-{
-	for (auto const& elm: _obj)
-		if (_allowedFields.find(elm.first) == _allowedFields.end())
-		{
-			string const comment = "Unknown field in config: " + elm.first;
-			cerr << comment << "\n";
-			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
-		}
-}
 
 string const c_minGasLimit = "minGasLimit";
 string const c_maxGasLimit = "maxGasLimit";

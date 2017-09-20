@@ -95,20 +95,10 @@ namespace
 		c_wei, c_finney, c_balance, c_nonce, c_code, c_storage, c_shouldnotexist,
 		c_code, c_precompiled
 	};
-	void validateAccount(js::mObject const& o)
-	{
-		for (auto const& field: o)
-			if (c_knownAccountFields.find(field.first) == c_knownAccountFields.end())
-			{
-				string const comment = "Unrecognized account field: " + field.first;
-				cerr << comment << "\n";
-				BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
-			}
-	}
 	void validateAccounts(js::mObject const& o)
 	{
 		for (auto const& account: o)
-			validateAccount(account.second.get_obj());
+			validateFieldNames(account.second.get_obj(), c_knownAccountFields);
 	}
 	string const c_alloc = "alloc";
 	string const c_accounts = "accounts";
@@ -121,7 +111,7 @@ namespace
 			else if (field.first == c_accounts)
 				validateAccounts(field.second.get_obj());
 			else
-				validateAccount(field.second.get_obj());
+				validateFieldNames(field.second.get_obj(), c_knownAccountFields);
 		}
 	}
 }
