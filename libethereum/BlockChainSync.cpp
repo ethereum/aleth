@@ -522,6 +522,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	}
 	collectBlocks();
 	continueSync();
+	DEV_INVARIANT_CHECK_HERE;
 }
 
 void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
@@ -570,6 +571,7 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 	}
 	collectBlocks();
 	continueSync();
+	DEV_INVARIANT_CHECK_HERE;
 }
 
 void BlockChainSync::collectBlocks()
@@ -680,6 +682,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 	{
 		clog(NetAllDetail) << "Received unknown new block";
 		syncPeer(_peer, true);
+		DEV_INVARIANT_CHECK_HERE;
 		return;
 	}
 	switch (host().bq().import(_r[0].data()))
@@ -715,10 +718,12 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 	case ImportResult::BadChain:
 		logNewBlock(h);
 		_peer->disable("Malformed block received.");
+		DEV_INVARIANT_CHECK_HERE;
 		return;
 
 	case ImportResult::AlreadyInChain:
 	case ImportResult::AlreadyKnown:
+		DEV_INVARIANT_CHECK_HERE;
 		break;
 
 	case ImportResult::FutureTimeUnknown:
@@ -737,6 +742,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 			clog(NetMessageDetail) << "Received block with no known parent. Peer needs syncing...";
 			syncPeer(_peer, true);
 		}
+		DEV_INVARIANT_CHECK_HERE;
 		break;
 	}
 	default:;
@@ -766,6 +772,7 @@ void BlockChainSync::resetSync()
 	m_headerIdToNumber.clear();
 	m_syncingTotalDifficulty = 0;
 	m_state = SyncState::NotSynced;
+	DEV_INVARIANT_CHECK_HERE;
 }
 
 void BlockChainSync::restartSync()
@@ -778,6 +785,7 @@ void BlockChainSync::restartSync()
 	m_startingBlock = host().chain().number();
 	m_lastImportedBlock = m_startingBlock;
 	m_lastImportedBlockHash = host().chain().currentHash();
+	DEV_INVARIANT_CHECK_HERE;
 }
 
 void BlockChainSync::completeSync()
@@ -803,6 +811,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 	if (_peer->isConversing())
 	{
 		clog(NetMessageDetail) << "Ignoring new hashes since we're already downloading.";
+		DEV_INVARIANT_CHECK_HERE;
 		return;
 	}
 	clog(NetMessageDetail) << "Not syncing and new block hash discovered: syncing.";
@@ -821,6 +830,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 		else if (status == QueueStatus::Bad)
 		{
 			cwarn << "block hash bad!" << h << ". Bailing...";
+			DEV_INVARIANT_CHECK_HERE;
 			return;
 		}
 		else if (status == QueueStatus::Unknown)
@@ -841,6 +851,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 		clog(NetMessageDetail) << "Not syncing and new block hash discovered: syncing.";
 		syncPeer(_peer, true);
 	}
+	DEV_INVARIANT_CHECK_HERE;
 }
 
 void BlockChainSync::onPeerAborting()
