@@ -22,7 +22,6 @@
 #pragma once
 
 #include <algorithm>
-#include <deque>
 
 #include <boost/integer/static_log2.hpp>
 
@@ -127,8 +126,17 @@ class NodeTable: UDPSocketEvents, public std::enable_shared_from_this<NodeTable>
 	using NodeSocket = UDPSocket<NodeTable, 1280>;
 	using TimePoint = std::chrono::steady_clock::time_point;	///< Steady time point.
 	using NodeIdTimePoint = std::pair<NodeID, TimePoint>;
-	using EvictionTimeout = std::pair<NodeIdTimePoint, NodeID>;	///< First NodeID (NodeIdTimePoint) may be evicted and replaced with second NodeID.
-	
+
+	/**
+	 * EvictionTimeout is used to record the timepoint of the evicted node 
+	 * and the new node ID is used to replace it.
+	 */
+	struct EvictionTimeout
+	{ 
+		NodeID newNodeID;
+		TimePoint evictedTimePoint;
+	};
+
 public:
 	enum NodeRelation { Unknown = 0, Known };
 	enum DiscoverType { Random = 0 };
@@ -256,7 +264,7 @@ private:
 	std::array<NodeBucket, s_bins> m_state;							///< State of p2p node network.
 
 	Mutex x_evictions;												///< LOCK x_evictions first if both x_nodes and x_evictions locks are required.
-	std::deque<EvictionTimeout> m_evictions;						///< Eviction timeouts.
+	std::unordered_map<NodeID, EvictionTimeout> m_evictions;		///< Eviction timeouts.
 	
 	Mutex x_pubkDiscoverPings;										///< LOCK x_nodes first if both x_nodes and x_pubkDiscoverPings locks are required.
 	std::unordered_map<bi::address, TimePoint> m_pubkDiscoverPings;	///< List of pending pings where node entry wasn't created due to unkown pubk.
