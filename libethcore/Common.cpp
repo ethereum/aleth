@@ -191,6 +191,7 @@ string TransactionSkeleton::userReadable(bool _toProxy, function<pair<bool, stri
 
 LogEntry::LogEntry(RLP const& _r)
 {
+	assert(_r.itemCount() == 3);
 	address = (Address)_r[0];
 	topics = _r[1].toVector<h256>();
 	data = _r[2].toBytes();
