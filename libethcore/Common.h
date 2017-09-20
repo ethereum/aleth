@@ -23,12 +23,13 @@
 
 #pragma once
 
-#include <string>
-#include <functional>
 #include <libdevcore/Address.h>
 #include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/FixedHash.h>
+
+#include <functional>
+#include <string>
 
 namespace dev
 {

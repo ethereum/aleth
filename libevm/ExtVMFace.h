@@ -14,24 +14,22 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file ExtVMFace.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
-#include <set>
-#include <functional>
-#include <boost/optional.hpp>
-#include <evm.h>
+#include "Instruction.h"
+
+#include <libethcore/BlockHeader.h>
+#include <libethcore/ChainOperationParams.h>
+#include <libethcore/Common.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
-#include <libethcore/Common.h>
-#include <libethcore/BlockHeader.h>
-#include <libethcore/ChainOperationParams.h>
-#include "Instruction.h"
+
+#include <evm.h>
+#include <boost/optional.hpp>
+#include <functional>
+#include <set>
 
 namespace dev
 {

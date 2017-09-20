@@ -21,8 +21,9 @@
 
 #pragma once
 
-#include <string>
 #include <libdevcore/Common.h>
+
+#include <string>
 
 namespace dev
 {

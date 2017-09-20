@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
-
+#include <libethcore/Common.h>
+#include <libdevcrypto/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
-#include <libdevcrypto/Common.h>
-#include <libethcore/Common.h>
+
+#include <boost/optional.hpp>
 
 namespace dev
 {

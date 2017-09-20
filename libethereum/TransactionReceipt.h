@@ -21,14 +21,14 @@
 
 #pragma once
 
-#include <array>
-#include <boost/variant/variant.hpp>
-#include <libdevcore/RLP.h>
 #include <libethcore/Common.h>
+#include <libdevcore/RLP.h>
+
+#include <boost/variant/variant.hpp>
+#include <array>
 
 namespace dev
 {
-
 namespace eth
 {
 
