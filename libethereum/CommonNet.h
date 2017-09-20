@@ -93,7 +93,6 @@ enum class SyncState
 	Waiting,			///< Block downloading paused. Waiting for block queue to process blocks and free space
 	Blocks,				///< Downloading blocks
 	State,				///< Downloading state
-	NewBlocks,			///< Downloading blocks learned from NewHashes packet
 
 	Size		/// Must be kept last
 };

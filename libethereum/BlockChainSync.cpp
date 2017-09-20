@@ -46,7 +46,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 {
 	_out << "protocol: " << _sync.protocolVersion << endl;
 	_out << "state: " << EthereumHost::stateName(_sync.state) << " ";
-	if (_sync.state == SyncState::Blocks || _sync.state == SyncState::NewBlocks)
+	if (_sync.state == SyncState::Blocks)
 		_out << _sync.currentBlockNumber << "/" << _sync.highestBlockNumber;
 	return _out;
 }
@@ -411,8 +411,6 @@ void BlockChainSync::clearPeerDownload()
 
 void BlockChainSync::logNewBlock(h256 const& _h)
 {
-	if (m_state == SyncState::NewBlocks)
-		clog(NetNote) << "NewBlock: " << _h;
 	m_knownNewHashes.erase(_h);
 }
 
@@ -423,7 +421,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
 	clearPeerDownload(_peer);
-	if (m_state != SyncState::Blocks && m_state != SyncState::NewBlocks && m_state != SyncState::Waiting)
+	if (m_state != SyncState::Blocks && m_state != SyncState::Waiting)
 	{
 		clog(NetMessageSummary) << "Ignoring unexpected blocks";
 		return;
@@ -531,7 +529,7 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreBodies");
 	clearPeerDownload(_peer);
-	if (m_state != SyncState::Blocks && m_state != SyncState::NewBlocks && m_state != SyncState::Waiting) {
+	if (m_state != SyncState::Blocks && m_state != SyncState::Waiting) {
 		clog(NetMessageSummary) << "Ignoring unexpected blocks";
 		return;
 	}

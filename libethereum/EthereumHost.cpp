@@ -41,7 +41,7 @@ using namespace p2p;
 unsigned const EthereumHost::c_oldProtocolVersion = 62; //TODO: remove this once v63+ is common
 static unsigned const c_maxSendTransactions = 256;
 
-char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State", "NewBlocks" };
+char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State"};
 
 #if defined(_WIN32)
 const char* EthereumHostTrace::name() { return EthPurple "^" EthGray "  "; }
