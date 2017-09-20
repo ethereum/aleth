@@ -207,7 +207,10 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	DEV_INVARIANT_CHECK;
 	std::shared_ptr<SessionFace> session = _peer->session();
 	if (!session)
+	{
+		DEV_INVARIANT_CHECK;
 		return; // Expired
+	}
 	if (_peer->m_genesisHash != host().chain().genesisHash())
 		_peer->disable("Invalid genesis hash");
 	else if (_peer->m_protocolVersion != host().protocolVersion() && _peer->m_protocolVersion != EthereumHost::c_oldProtocolVersion)
@@ -222,6 +225,7 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 		_peer->disable("Peer banned for unexpected status message.");
 	else
 		syncPeer(_peer, false);
+	DEV_INVARIANT_CHECK;
 }
 
 void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
@@ -419,7 +423,7 @@ void BlockChainSync::logNewBlock(h256 const& _h)
 void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
-	DEV_INVARIANT_CHECK;
+	DEV_INVARIANT_CHECK; // this thing fails.
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
 	clearPeerDownload(_peer);
@@ -671,6 +675,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 	if (_r.itemCount() != 2)
 	{
 		_peer->disable("NewBlock without 2 data fields.");
+		DEV_INVARIANT_CHECK;
 		return;
 	}
 	BlockHeader info(_r[0][0].data(), HeaderData);
@@ -747,6 +752,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 	}
 	default:;
 	}
+	DEV_INVARIANT_CHECK;
 }
 
 SyncStatus BlockChainSync::status() const
