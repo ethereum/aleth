@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libethcore/Common.h>
+#include <libethcore/LogEntry.h>
 #include <libdevcore/RLP.h>
 
 #include <boost/variant/variant.hpp>
