@@ -658,7 +658,7 @@ void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> t
 {
 	if (!Options::get().all)
 	{
-		std::cout << "Skipping benchmart test because --all option is not specified.\n";
+		std::cout << "Skipping benchmark test because --all option is not specified.\n";
 		return;
 	}
 
