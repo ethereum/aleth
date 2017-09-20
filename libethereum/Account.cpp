@@ -95,16 +95,16 @@ namespace
 		c_wei, c_finney, c_balance, c_nonce, c_code, c_storage, c_shouldnotexist,
 		c_code, c_precompiled
 	};
-	void validateAccounts(js::mObject const& o)
+	void validateAccounts(js::mObject const& _o)
 	{
-		for (auto const& account: o)
+		for (auto const& account: _o)
 			validateFieldNames(account.second.get_obj(), c_knownAccountFields);
 	}
 	string const c_alloc = "alloc";
 	string const c_accounts = "accounts";
-	void validateAccountMapObj(js::mObject const& o)
+	void validateAccountMapObj(js::mObject const& _o)
 	{
-		for (auto const& field: o)
+		for (auto const& field: _o)
 		{
 			if (field.first == c_alloc)
 				validateAccounts(field.second.get_obj());
