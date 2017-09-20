@@ -351,38 +351,11 @@ using h160Set = std::set<h160>;
 using h256Hash = std::unordered_set<h256>;
 using h160Hash = std::unordered_set<h160>;
 
-/// An Ethereum address: 20 bytes.
-/// @NOTE This is not endian-specific; it's just a bunch of bytes.
-using Address = h160;
-
-/// A vector of Ethereum addresses.
-using Addresses = h160s;
-
-/// A hash set of Ethereum addresses.
-using AddressHash = std::unordered_set<h160>;
-
-/// The zero address.
-extern const Address ZeroAddress;
-
-/// The last address.
-extern const Address MaxAddress;
-
-/// The SYSTEM address.
-extern const Address SystemAddress;
-
 /// Convert the given value into h160 (160-bit unsigned integer) using the right 20 bytes.
 inline h160 right160(h256 const& _t)
 {
 	h160 ret;
 	memcpy(ret.data(), _t.data() + 12, 20);
-	return ret;
-}
-
-/// Convert the given value into h160 (160-bit unsigned integer) using the left 20 bytes.
-inline h160 left160(h256 const& _t)
-{
-	h160 ret;
-	memcpy(&ret[0], _t.data(), 20);
 	return ret;
 }
 

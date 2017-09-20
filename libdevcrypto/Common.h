@@ -25,9 +25,10 @@
 #pragma once
 
 #include <mutex>
+#include <libdevcore/Address.h>
 #include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {

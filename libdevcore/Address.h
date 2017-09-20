@@ -14,36 +14,35 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
+/// @file
+/// This file defined Address alias for FixedHash of 160 bits and some
+/// special Address constants.
+
+#pragma once
 
 #include "FixedHash.h"
-#include <boost/algorithm/string.hpp>
 
 namespace dev
 {
 
-std::random_device s_fixedHashEngine;
+/// An Ethereum address: 20 bytes.
+/// @NOTE This is not endian-specific; it's just a bunch of bytes.
+using Address = h160;
 
-h128 fromUUID(std::string const& _uuid)
-{
-	try
-	{
-		return h128(boost::replace_all_copy(_uuid, "-", ""));
-	}
-	catch (...)
-	{
-		return h128();
-	}
-}
+/// A vector of Ethereum addresses.
+using Addresses = h160s;
 
-std::string toUUID(h128 const& _uuid)
-{
-	std::string ret = toHex(_uuid.ref());
-	for (unsigned i: {20, 16, 12, 8})
-		ret.insert(ret.begin() + i, '-');
-	return ret;
-}
+/// A hash set of Ethereum addresses.
+using AddressHash = std::unordered_set<h160>;
+
+/// The zero address.
+extern Address const ZeroAddress;
+
+/// The last address.
+extern Address const MaxAddress;
+
+/// The SYSTEM address.
+extern Address const SystemAddress;
 
 }
-
-
 
