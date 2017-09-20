@@ -38,6 +38,8 @@ namespace dev {
 
 namespace test {
 
+eth::Network ChainBranch::s_tempBlockchainNetwork = eth::Network::MainNetwork;
+eth::Network TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {
 	json_spirit::mObject tests;
@@ -167,20 +169,15 @@ json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _in
 	}
 	return output;
 }
+
 std::string TransitionTestsSuite::suiteFolder() const {
 	fs::path folder = fs::path("BlockchainTests") / "TransitionTests";
 	return folder.string();
 }
+
 std::string TransitionTestsSuite::suiteFillerFolder() const {
 	fs::path folder = fs::path("BlockchainTestsFiller") / "TransitionTests";
 	return folder.string();
-}
-
-//used in state tests --fillchain.
-json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin)
-{
-	BlockchainTestSuite suite;
-	return suite.doTests(_input, _fillin);
 }
 
 ChainBranch::ChainBranch(TestBlock const& _genesis): blockchain(_genesis)

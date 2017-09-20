@@ -25,6 +25,7 @@
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtestutils/TestLastBlockHashes.h>
+#include <test/tools/jsontests/BlockChainTests.h>
 
 #include <boost/filesystem/path.hpp>
 
@@ -181,12 +182,15 @@ bytes ImportTest::executeTest()
 			testObj["blocks"] = blocksArr;
 			json[testname] = testObj;
 
-			//testName() is changed during the execution of bctest!!!
-			fs::path const tmpFillerName = getTestPath() / fs::path("src/GenStateTestAsBcTemp") / fs::path(TestOutputHelper::caseName()) / fs::path(testname + "Filler.json");
-			writeFile(tmpFillerName, asBytes(json_spirit::write_string((json_spirit::mValue)json, true)));
-			dev::test::executeTests(testname, "/BlockchainTests/GeneralStateTests/" + TestOutputHelper::caseName(),
-											 "/GenStateTestAsBcTemp/" + TestOutputHelper::caseName(), dev::test::doBlockchainTestNoLog);
+			//Write a filler file to the filler folder
+			BCGeneralStateTestsSuite genSuite;
+			fs::path const testFillerFile = genSuite.getFullPathFiller(TestOutputHelper::caseName()) / fs::path(testname + "Filler.json");
+			writeFile(testFillerFile, asBytes(json_spirit::write_string((mValue)json, true)));
 
+			//Write a blockchain test .json file from dynamic filler 'json' that is produced from state test filler
+			fs::path const testFile = genSuite.getFullPath(TestOutputHelper::caseName()) / fs::path(testname + ".json");
+			json_spirit::mValue const generatedJson = genSuite.doTests((json_spirit::mValue)json, true);
+			writeFile(testFile, asBytes(json_spirit::write_string(generatedJson, true)));
 		} //transactions
 	}//fillchain
 

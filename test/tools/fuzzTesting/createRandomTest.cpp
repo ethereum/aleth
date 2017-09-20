@@ -27,6 +27,7 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <libevm/VMFactory.h>
 #include <libdevcore/Common.h>
+#include <test/tools/jsontests/StateTests.h>
 
 //String Variables
 extern std::string const c_testExampleStateTest;
@@ -36,13 +37,14 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
+int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString);
 
 namespace dev { namespace test {
 int createRandomTest()
 {
+	StateTestSuite suite;
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
-	if (options.rCurrentTestSuite != test::c_GeneralStateTests)
+	if (options.rCurrentTestSuite != suite.suiteFolder())
 	{
 		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)\n";
 		return 1;
@@ -50,13 +52,13 @@ int createRandomTest()
 	else
 	{
 		TestOutputHelper testOutputHelper;
-		return fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
+		return fillRandomTest(suite, c_testExampleStateTest);
 	}
 }
 }} //namespaces
 
 //Prints a generated test Json into std::out
-int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
+int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
@@ -66,8 +68,8 @@ int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)
 		std::map<std::string, std::string> nullReplaceMap;
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
-		v = _doTests(v, true); //filltests
-		_doTests(v, false); //checktest
+		v = _testSuite.doTests(v, true); //filltests
+		_testSuite.doTests(v, false); //checktest
 	}
 	catch (dev::Exception const& _e)
 	{
