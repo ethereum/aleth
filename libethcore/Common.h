@@ -107,7 +107,9 @@ struct LogEntry
 {
 	LogEntry() = default;
 	explicit LogEntry(RLP const& _r);
-	LogEntry(Address const& _address, h256s _ts, bytes&& _d): address(_address), topics(std::move(_ts)), data(std::move(_d)) {}
+	LogEntry(Address const& _address, h256s _topics, bytes _data):
+		address(_address), topics(std::move(_topics)), data(std::move(_data))
+	{}
 
 	void streamRLP(RLPStream& _s) const;
 
