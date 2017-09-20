@@ -465,31 +465,6 @@ void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::pa
 	doTests(v, false);
 }
 
-void removeComments(json_spirit::mValue& _obj)
-{
-	if (_obj.type() == json_spirit::obj_type)
-	{
-		std::list<string> removeList;
-		for (auto& i: _obj.get_obj())
-		{
-			if (i.first.substr(0, 2) == "//")
-			{
-				removeList.push_back(i.first);
-				continue;
-			}
-
-			removeComments(i.second);
-		}
-		for (auto& i: removeList)
-			_obj.get_obj().erase(_obj.get_obj().find(i));
-	}
-	else if (_obj.type() == json_spirit::array_type)
-	{
-		for (auto& i: _obj.get_array())
-			removeComments(i);
-	}
-}
-
 string prepareVersionString()
 {
 	//cpp-1.3.0+commit.6be76b64.Linux.g++
@@ -507,29 +482,6 @@ string prepareLLLCVersionString()
 	if (pos != string::npos)
 		return result.substr(pos, result.length());
 	return "Error getting LLLC Version";
-}
-
-void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
-{
-	for (auto& i: _v.get_obj())
-	{
-		json_spirit::mObject& o = i.second.get_obj();
-		json_spirit::mObject clientinfo;
-
-		string comment;
-		if (o.count("_info"))
-		{
-			json_spirit::mObject& existingInfo = o["_info"].get_obj();
-			if (existingInfo.count("comment"))
-				comment = existingInfo["comment"].get_str();
-		}
-
-		clientinfo["filledwith"] = prepareVersionString();
-		clientinfo["lllcversion"] = prepareLLLCVersionString();
-		clientinfo["source"] = _testSource.string();
-		clientinfo["comment"] = comment;
-		o["_info"] = clientinfo;
-	}
 }
 
 void copyFile(fs::path const& _source, fs::path const& _destination)
