@@ -471,16 +471,33 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 
 			// validate chain
 			HeaderId headerId { info.transactionsRoot(), info.sha3Uncles() };
-			if (m_haveCommonHeader)
+			if (!m_haveCommonHeader)
+			{
+				if (!m_headers.empty() && m_headers.begin()->first <= m_startingBlock - 128)
+				{
+					clog(NetImpolite) << "Too many block from another chain downloaded " << blockNumber << " " << info.hash() << " (Restart syncing)";
+					_peer->addRating(-1);
+					restartSync();
+					return;
+				}
+
+			}
+			else
 			{
 				Header const* prevBlock = findItem(m_headers, blockNumber - 1);
-				if ((prevBlock && prevBlock->hash != info.parentHash()) || (blockNumber == m_lastImportedBlock + 1 && info.parentHash() != m_lastImportedBlockHash))
+				if (prevBlock && prevBlock->hash != info.parentHash())
+				{
+					// mismatching parent id, delete the previous block and don't add this one
+					clog(NetImpolite) << "Unexpected block header " << blockNumber << " " << info.hash();
+					break;
+				}
+				if (blockNumber == m_lastImportedBlock + 1 && info.parentHash() != m_lastImportedBlockHash)
 				{
 					// mismatching parent id, delete the previous block and don't add this one
 					clog(NetImpolite) << "Unknown block header " << blockNumber << " " << info.hash() << " (Restart syncing)";
 					_peer->addRating(-1);
 					restartSync();
-					return ;
+					return;
 				}
 
 				Header const* nextBlock = findItem(m_headers, blockNumber + 1);
@@ -810,7 +827,6 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 	for (auto const& p: _hashes)
 	{
 		h256 const& h = p.first;
-		_peer->addRating(1);
 		DEV_GUARDED(_peer->x_knownBlocks)
 			_peer->m_knownBlocks.insert(h);
 		auto status = host().bq().blockStatus(h);
