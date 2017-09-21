@@ -112,7 +112,7 @@ json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMas
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
-bool createRandomTest();	//returns 0 if succeed, 1 if there was an error;
+bool createRandomTest();	//returns true if succeed, false if there was an error;
 void doRlpTests(json_spirit::mValue const& _input);
 void addClientInfo(json_spirit::mValue& v, boost::filesystem::path const& _testSource);
 void removeComments(json_spirit::mValue& _obj);
