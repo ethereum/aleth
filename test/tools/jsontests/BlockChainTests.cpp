@@ -125,11 +125,11 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 }
 fs::path BlockchainTestSuite::suiteFolder() const
 {
-	return "BlockchainTests";
+	return fs::path("BlockchainTests");
 }
 fs::path BlockchainTestSuite::suiteFillerFolder() const
 {
-	return "BlockchainTestsFiller";
+	return fs::path("BlockchainTestsFiller");
 }
 fs::path BCGeneralStateTestsSuite::suiteFolder() const
 {
@@ -137,8 +137,7 @@ fs::path BCGeneralStateTestsSuite::suiteFolder() const
 }
 fs::path BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
-	fs::path folder = fs::path("BlockchainTestsFiller") / "GeneralStateTests";
-	return folder.string();
+	return fs::path("BlockchainTestsFiller") / "GeneralStateTests";
 }
 json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {

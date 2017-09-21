@@ -118,12 +118,12 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 
 fs::path StateTestSuite::suiteFolder() const
 {
-	return "GeneralStateTests";
+	return boost::filesystem::path("GeneralStateTests");
 }
 
 fs::path StateTestSuite::suiteFillerFolder() const
 {
-	return "GeneralStateTestsFiller";
+	return boost::filesystem::path("GeneralStateTestsFiller");
 }
 
 } }// Namespace Close
