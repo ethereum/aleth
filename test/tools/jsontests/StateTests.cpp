@@ -116,12 +116,12 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 	return v;
 }
 
-std::string StateTestSuite::suiteFolder() const
+fs::path StateTestSuite::suiteFolder() const
 {
 	return "GeneralStateTests";
 }
 
-std::string StateTestSuite::suiteFillerFolder() const
+fs::path StateTestSuite::suiteFillerFolder() const
 {
 	return "GeneralStateTestsFiller";
 }

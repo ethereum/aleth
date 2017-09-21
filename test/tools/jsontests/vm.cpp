@@ -464,12 +464,12 @@ class VmTestSuite: public TestSuite
 		return v;
 	}
 
-	std::string suiteFolder() const override
+	fs::path suiteFolder() const override
 	{
 		return "VMTests";
 	}
 
-	std::string suiteFillerFolder() const override
+	fs::path suiteFillerFolder() const override
 	{
 		return "VMTestsFiller";
 	}

@@ -20,6 +20,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 #include <test/tools/libtesteth/TestSuite.h>
+#include <boost/filesystem/path.hpp>
 
 namespace dev
 {
@@ -30,8 +31,8 @@ class StateTestSuite: public TestSuite
 {
 public:
 	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
-	std::string suiteFolder() const override;
-	std::string suiteFillerFolder() const override;
+	boost::filesystem::path suiteFolder() const override;
+	boost::filesystem::path suiteFillerFolder() const override;
 };
 
 }

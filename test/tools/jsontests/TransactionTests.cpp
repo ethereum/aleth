@@ -27,12 +27,14 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
+#include <boost/filesystem/path.hpp>
 #include <string>
 
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
 
@@ -165,12 +167,12 @@ class TransactionTestSuite: public TestSuite
 		return v;
 	}//doTransactionTests
 
-	std::string suiteFolder() const override
+	fs::path suiteFolder() const override
 	{
 		return "TransactionTests";
 	}
 
-	std::string suiteFillerFolder() const override
+	fs::path suiteFillerFolder() const override
 	{
 		return "TransactionTestsFiller";
 	}
