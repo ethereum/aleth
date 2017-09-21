@@ -51,7 +51,7 @@ foreach(file ${sources})
 endforeach(file)
 
 add_executable(testeth ${sources})
-target_include_directories(testeth PRIVATE ../utils)
+target_include_directories(testeth PRIVATE ${UTILS_INCLUDE_DIR})
 target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore cryptopp-static)
 
 enable_testing()
