@@ -36,71 +36,12 @@ std::string const c_testDifficulty = R"(
  "DifficultyTest[N]" : {
 		"parentTimestamp" : "[PSTAMP]",
 		"parentDifficulty" : "[PDIFF]",
+		"parrentUncles" : "[PUNCLS]",
 		"currentTimestamp" : "[СSTAMP]",
 		"currentBlockNumber" : "[CNUM]",
 		"currentDifficulty" : "[CDIFF]"
 	},
 )";
-
-void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _parent, eth::Network _n, ChainOperationParams const& _p, string const& _testName = "")
-{
-	u256 difficulty = _bi.difficulty();
-	u256 const& frontierDiff = _p.homesteadForkBlock;
-
-	//The ultimate formula (Homestead)
-	if (_bi.number() > frontierDiff)
-	{
-		u256 const& minimumDifficulty = _p.minimumDifficulty;
-		bigint block_diff = _parent.difficulty();
-
-		bigint a = (_parent.difficulty() / 2048);
-		int b = 1 - int(_bi.timestamp() - _parent.timestamp()) / 10;
-		bigint c = (_bi.number() / 100000) - 2;
-
-		block_diff += a * max<int>(b, -99);
-		block_diff += u256(1) << (unsigned)c;
-		block_diff = max<bigint>(minimumDifficulty, block_diff);
-
-		BOOST_CHECK_MESSAGE(difficulty == block_diff, "Homestead Check Calculated diff = " << difficulty << " expected diff = " << block_diff << _testName);
-		return;
-	}
-
-	u256 durationLimit;
-	u256 minimumDifficulty;
-	u256 difficultyBoundDivisor;
-	switch(_n)
-	{
-	case eth::Network::MainNetwork:
-	case eth::Network::FrontierTest:
-	case eth::Network::HomesteadTest:
-	case eth::Network::Ropsten:
-	case eth::Network::TransitionnetTest:
-		durationLimit = 13;
-		minimumDifficulty = 131072;
-		difficultyBoundDivisor = 2048;
-	break;
-	default:
-		cerr << "testing undefined network difficulty";
-		durationLimit = _p.durationLimit;
-		minimumDifficulty = _p.minimumDifficulty;
-		difficultyBoundDivisor = _p.difficultyBoundDivisor;
-		break;
-	}
-
-	//Frontier Era
-	bigint block_diff = _parent.difficulty();
-
-	bigint a = (_parent.difficulty() / difficultyBoundDivisor);
-	bigint b = ((_bi.timestamp() - _parent.timestamp()) < durationLimit) ?  1 : -1;
-	bigint c = (_bi.number() / 100000) - 2;
-
-	block_diff += a * b;
-	block_diff += u256(1) << (unsigned)c;
-	block_diff = max<bigint>(minimumDifficulty, block_diff);
-
-	BOOST_CHECK_MESSAGE(difficulty == block_diff, "Check Calculated diff = " << difficulty << " expected diff = " << block_diff << _testName);
-	return;
-}
 
 void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _sealEngine)
 {
@@ -111,38 +52,43 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
-		for (u256 blockNumber = 1; blockNumber < 1500000; blockNumber += 25000)
+		for (int pUncles = 0; pUncles < 3; pUncles++)
 		{
-			testN++;
-			string testName = "DifficultyTest"+toString(testN);
-			if (!dev::test::TestOutputHelper::checkTest(testName))
-				continue;
+			for (u256 blockNumber = 1; blockNumber < 5000000; blockNumber += 250000)
+			{
+				testN++;
+				string testName = "DifficultyTest"+toString(testN);
+				if (!dev::test::TestOutputHelper::checkTest(testName))
+					continue;
 
-			u256 pStamp = dev::test::RandomCode::randomUniInt();
-			u256 pDiff = dev::test::RandomCode::randomUniInt();
-			u256 cStamp = pStamp + stampDelta;
-			u256 cNum = blockNumber;
+				u256 pStamp = dev::test::RandomCode::randomUniInt();
+				u256 pDiff = dev::test::RandomCode::randomUniInt();
+				u256 cStamp = pStamp + stampDelta;
+				u256 cNum = blockNumber;
 
-			BlockHeader parent;
-			parent.setTimestamp(pStamp);
-			parent.setDifficulty(pDiff);
-			parent.setNumber(cNum - 1);
+				BlockHeader parent;
+				parent.setTimestamp(pStamp);
+				parent.setDifficulty(pDiff);
+				parent.setNumber(cNum - 1);
+				parent.setSha3Uncles(sha3(toString(pUncles)));
 
-			BlockHeader current;
-			current.setTimestamp(cStamp);
-			current.setNumber(cNum);
+				BlockHeader current;
+				current.setTimestamp(cStamp);
+				current.setNumber(cNum);
 
-			string tmptest = c_testDifficulty;
-			std::map<string, string> replaceMap;
-			replaceMap["[N]"] = toString(testN);
-			replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
-			replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
-			replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
-			replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
-			replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
+				string tmptest = c_testDifficulty;
+				std::map<string, string> replaceMap;
+				replaceMap["[N]"] = toString(testN);
+				replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
+				replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
+				replaceMap["[PUNCLS]"] = toCompactHexPrefixed(pUncles, 1);
+				replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
+				replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
+				replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
 
-			dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
-			finalTest << tmptest;
+				dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
+				finalTest << tmptest;
+			}
 		}
 	}
 
@@ -152,7 +98,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 	writeFile(_testFileFullName, asBytes(testFile));
 }
 
-void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine, eth::Network _n)
+void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 {
 	//Test File
 	js::mValue v;
@@ -175,17 +121,15 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine, eth:
 		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
 		parent.setNumber(test::toInt(o["currentBlockNumber"]) - 1);
+		u256 uncles = (test::toInt(o["parrentUncles"]));
+		parent.setSha3Uncles(sha3(toString(uncles)));
 
 		BlockHeader current;
 		current.setTimestamp(test::toInt(o["currentTimestamp"]));
 		current.setNumber(test::toInt(o["currentBlockNumber"]));
 
 		u256 difficulty = _sealEngine.calculateDifficulty(current, parent);
-		current.setDifficulty(difficulty);
 		BOOST_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));
-
-		//Manual formula test
-		checkCalculatedDifficulty(current, parent, _n, _sealEngine.chainParams(), "(" + i.first + ")");
 	}
 }
 
@@ -201,7 +145,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
-	testDifficulty(testFileFullName, sealEngine, eth::Network::FrontierTest);
+	testDifficulty(testFileFullName, sealEngine);
 }
 
 BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
@@ -214,7 +158,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
 	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
-	testDifficulty(testFileFullName, sealEngine, eth::Network::Ropsten);
+	testDifficulty(testFileFullName, sealEngine);
 }
 
 BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
@@ -227,7 +171,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
-	testDifficulty(testFileFullName, sealEngine, eth::Network::HomesteadTest);
+	testDifficulty(testFileFullName, sealEngine);
 }
 
 BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
@@ -240,7 +184,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
-	testDifficulty(testFileFullName, sealEngine, eth::Network::MainNetwork);
+	testDifficulty(testFileFullName, sealEngine);
 }
 
 BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
@@ -252,7 +196,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 
 	if (dev::test::Options::get().filltests)
 	{
-		u256 homesteadBlockNumber = 1000000;
+		u256 homesteadBlockNumber = 3500000;
 		std::vector<u256> blockNumberVector = {homesteadBlockNumber - 100000, homesteadBlockNumber, homesteadBlockNumber + 100000};
 		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
 		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
@@ -263,38 +207,41 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 
 		for (size_t bN = 0; bN < blockNumberVector.size(); bN++)
 			for (size_t pdN = 0; pdN < parentDifficultyVector.size(); pdN++)
-				for (size_t tsN = 0; tsN < timestampDeltaVector.size(); tsN++)
-				{
-					testN++;
-					int stampDelta = timestampDeltaVector.at(tsN);
-					u256 blockNumber = blockNumberVector.at(bN);
-					u256 pDiff = parentDifficultyVector.at(pdN);
+				for (int pUncles = 0; pUncles < 3; pUncles++)
+					for (size_t tsN = 0; tsN < timestampDeltaVector.size(); tsN++)
+					{
+						testN++;
+						int stampDelta = timestampDeltaVector.at(tsN);
+						u256 blockNumber = blockNumberVector.at(bN);
+						u256 pDiff = parentDifficultyVector.at(pdN);
 
-					u256 pStamp = dev::test::RandomCode::randomUniInt();
-					u256 cStamp = pStamp + stampDelta;
-					u256 cNum = blockNumber;
+						u256 pStamp = dev::test::RandomCode::randomUniInt();
+						u256 cStamp = pStamp + stampDelta;
+						u256 cNum = blockNumber;
 
-					BlockHeader parent;
-					parent.setTimestamp(pStamp);
-					parent.setDifficulty(pDiff);
-					parent.setNumber(cNum - 1);
+						BlockHeader parent;
+						parent.setTimestamp(pStamp);
+						parent.setDifficulty(pDiff);
+						parent.setNumber(cNum - 1);
+						parent.setSha3Uncles(sha3(toString(pUncles)));
 
-					BlockHeader current;
-					current.setTimestamp(cStamp);
-					current.setNumber(cNum);
+						BlockHeader current;
+						current.setTimestamp(cStamp);
+						current.setNumber(cNum);
 
-					string tmptest = c_testDifficulty;
-					std::map<string, string> replaceMap;
-					replaceMap["[N]"] = toString(testN);
-					replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
-					replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
-					replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
-					replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
-					replaceMap["[CDIFF]"] = toCompactHexPrefixed(sealEngine.calculateDifficulty(current, parent));
+						string tmptest = c_testDifficulty;
+						std::map<string, string> replaceMap;
+						replaceMap["[N]"] = toString(testN);
+						replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
+						replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
+						replaceMap["[PUNCLS]"] = toCompactHexPrefixed(pUncles, 1);
+						replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
+						replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
+						replaceMap["[CDIFF]"] = toCompactHexPrefixed(sealEngine.calculateDifficulty(current, parent));
 
-					dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
-					finalTest << tmptest;
-				}
+						dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
+						finalTest << tmptest;
+					}
 
 		finalTest << "\n}";
 		string testFile = finalTest.str();
@@ -302,7 +249,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 		writeFile(testFileFullName, asBytes(testFile));
 	}
 
-	testDifficulty(testFileFullName, sealEngine, eth::Network::MainNetwork);
+	testDifficulty(testFileFullName, sealEngine);
 }
 
 BOOST_AUTO_TEST_CASE(basicDifficultyTest)
@@ -312,7 +259,7 @@ BOOST_AUTO_TEST_CASE(basicDifficultyTest)
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetwork)));
 
-	testDifficulty(testPath, sealEngine, eth::Network::MainNetwork);
+	testDifficulty(testPath, sealEngine);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
