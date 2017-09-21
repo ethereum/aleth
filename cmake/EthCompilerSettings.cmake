@@ -14,17 +14,14 @@
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
-include(CheckCXXCompilerFlag)
+include(EthCheckCXXCompilerFlag)
 
-check_cxx_compiler_flag(-fstack-protector-strong have_stack_protector_strong)
-if (have_stack_protector_strong)
-	add_compile_options(-fstack-protector-strong)
-else()
-	check_cxx_compiler_flag(-fstack-protector have_stack_protector)
-	if(have_stack_protector)
-		add_compile_options(-fstack-protector)
-	endif()
+eth_add_cxx_compiler_flag_if_supported(-fstack-protector-strong have_stack_protector_strong_support)
+if(NOT have_stack_protector_strong_support)
+	eth_add_cxx_compiler_flag_if_supported(-fstack-protector)
 endif()
+
+eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	# Enables all the warnings about constructions that some users consider questionable,
@@ -53,20 +50,10 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		endif ()
 	endif ()
 
-	# Additional GCC-specific compiler settings.
+	# Check GCC compiler version.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-
-		# Check that we've got GCC 4.7 or newer.
-		execute_process(
-			COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-		if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
-			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
-		endif ()
-
-		# Until https://github.com/ethereum/solidity/issues/2479 is handled
-		# disable all implicit fallthrough warnings in the codebase for GCC > 7.0
-		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
-			add_compile_options(-Wno-implicit-fallthrough)
+		if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 4.8)
+			message(FATAL_ERROR "This compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not supported. GCC 4.8 or newer is required.")
 		endif()
 
 	# Stop if buggy clang compiler detected.
@@ -79,7 +66,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 # The major alternative compiler to GCC/Clang is Microsoft's Visual C++ compiler, only available on Windows.
 elseif (MSVC)
 
-    add_compile_options(/MP)						# enable parallel compilation
+	add_compile_options(/MP)						# enable parallel compilation
 	add_compile_options(/EHsc)						# specify Exception Handling Model in msvc
 	add_compile_options(/WX)						# enable warnings-as-errors
 	add_compile_options(/wd4068)					# disable unknown pragma warning (4068)

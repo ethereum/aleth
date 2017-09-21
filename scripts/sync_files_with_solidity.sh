@@ -2,6 +2,7 @@
 
 files=(
   cmake/EthCcache.cmake
+  cmake/EthCheckCXXCompilerFlag.cmake
   cmake/EthCompilerSettings.cmake
 )
 
