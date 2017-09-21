@@ -1,73 +1,81 @@
+default-steps: &default-steps
+  - checkout
+
+  - run:
+      name: "Init submodules"
+      command: git submodule update --init
+
+  - cache-restore:
+      name: "Restore dependencies cache"
+      key: deps-4-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
+
+  - run:
+      name: "Configure"
+      command: |
+        mkdir -p build && cd build
+        cmake .. -G Ninja -DCOVERAGE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+
+  - run:
+      name: "Upload Hunter cache"
+      command: |
+        if [ ! "$CIRCLE_PR_NUMBER" ]; then  # Skip forked PRs.
+          cmake --build build --target hunter_upload_cache
+        fi
+
+  - run:
+      name: "Build"
+      pwd: ~/cpp-ethereum/build
+      command: |
+        ninja -j8
+
+  - cache-save:
+      name: "Save dependencies cache"
+      key: deps-4-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
+      paths:
+        - ~/cpp-ethereum/build/deps
+
+  - store_artifacts:
+      path: build/eth/eth
+      destination: eth
+
+  - cache-restore:
+      name: "Restore Ethash DAG file"
+      key: ethash-dag0
+
+  - run:
+      name: "Test"
+      pwd: ~/cpp-ethereum/build
+      command: |
+        export ETHEREUM_TEST_PATH=~/cpp-ethereum/test/jsontests
+        export TMPDIR=/dev/shm
+        test/testeth -t BlockchainTests &
+        test/testeth -t StateTestsGeneral &
+        test/testeth -t 'KeyStore:Crypto:KeyManagerTests' &
+        test/testeth -t '!BlockchainTests:!StateTestsGeneral:!KeyStore:!Crypto:!KeyManagerTests' &
+        wait
+
+  - cache-save:
+      name: "Save Ethash DAG file"
+      key: ethash-dag0
+      paths:
+        - ~/.ethash/full-R23-0000000000000000
+
+  - run:
+      name: "Code coverage"
+      pwd: ~/cpp-ethereum/build
+      command: |
+        bash <(curl -s https://codecov.io/bash) -X fix
+
 version: 2
 jobs:
-  build:
+  default-clang5-ninja:
     docker:
       - image: ethereum/cpp-build-env:experimental
     working_directory: ~/cpp-ethereum
-    steps:
-      - checkout
+    steps: *default-steps
 
-      - run:
-          name: "Init submodules"
-          command: git submodule update --init
-
-      - cache-restore:
-          name: "Restore dependencies cache"
-          key: deps-4-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
-
-      - run:
-          name: "Configure"
-          command: |
-            mkdir -p build && cd build
-            cmake .. -G Ninja -DCOVERAGE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
-
-      - run:
-          name: "Upload Hunter cache"
-          command: |
-            if [ ! "$CIRCLE_PR_NUMBER" ]; then  # Skip forked PRs.
-              cmake --build build --target hunter_upload_cache
-            fi
-
-      - run:
-          name: "Build"
-          pwd: ~/cpp-ethereum/build
-          command: |
-            ninja -j8
-
-      - cache-save:
-          name: "Save dependencies cache"
-          key: deps-4-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
-          paths:
-            - ~/cpp-ethereum/build/deps
-
-      - store_artifacts:
-          path: build/eth/eth
-          destination: eth
-
-      - cache-restore:
-          name: "Restore Ethash DAG file"
-          key: ethash-dag0
-
-      - run:
-          name: "Test"
-          pwd: ~/cpp-ethereum/build
-          command: |
-            export ETHEREUM_TEST_PATH=~/cpp-ethereum/test/jsontests
-            export TMPDIR=/dev/shm
-            test/testeth -t BlockchainTests &
-            test/testeth -t StateTestsGeneral &
-            test/testeth -t 'KeyStore:Crypto:KeyManagerTests' &
-            test/testeth -t '!BlockchainTests:!StateTestsGeneral:!KeyStore:!Crypto:!KeyManagerTests' &
-            wait
-
-      - cache-save:
-          name: "Save Ethash DAG file"
-          key: ethash-dag0
-          paths:
-            - ~/.ethash/full-R23-0000000000000000
-
-      - run:
-          name: "Code coverage"
-          pwd: ~/cpp-ethereum/build
-          command: |
-            bash <(curl -s https://codecov.io/bash) -X fix
+workflows:
+  version: 2
+  cpp-ethereum:
+    jobs:
+      - default-clang5-ninja
