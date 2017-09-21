@@ -14,6 +14,18 @@
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
+include(CheckCXXCompilerFlag)
+
+check_cxx_compiler_flag(-fstack-protector-strong have_stack_protector_strong)
+if (have_stack_protector_strong)
+	add_compile_options(-fstack-protector-strong)
+else()
+	check_cxx_compiler_flag(-fstack-protector have_stack_protector)
+	if(have_stack_protector)
+		add_compile_options(-fstack-protector)
+	endif()
+endif()
+
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
@@ -51,58 +63,16 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
 		endif ()
 
-		# Strong stack protection was only added in GCC 4.9.
-		# Use it if we have the option to do so.
-		# See https://lwn.net/Articles/584225/
-		if (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
-			add_compile_options(-fstack-protector-strong)
-			add_compile_options(-fstack-protector)
+		# Until https://github.com/ethereum/solidity/issues/2479 is handled
+		# disable all implicit fallthrough warnings in the codebase for GCC > 7.0
+		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
+			add_compile_options(-Wno-implicit-fallthrough)
 		endif()
 
-	# Additional Clang-specific compiler settings.
-	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-
-		# Stop if buggy clang compiler detected.
-		if("${CMAKE_CXX_COMPILER_ID}" MATCHES AppleClang)
-			if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 8.4)
-				message(FATAL_ERROR "This compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not able to compile required libff. Install clang 4+ from Homebrew.")
-			endif()
-		endif()
-
-
-		add_compile_options(-fstack-protector)
-
-		# Enable strong stack protection only on Mac and only for OS X Yosemite
-		# or newer (AppleClang 7.0+).  We should be able to re-enable this setting
-		# on non-Apple Clang as well, if we can work out what expression to use for
-		# the version detection.
-
-		# The fact that the version-reporting for AppleClang loses the original
-		# Clang versioning is rather annoying.  Ideally we could just have
-		# a single cross-platform "if version >= 3.4.1" check.
-		#
-		# There is debug text in the else clause below, to help us work out what
-		# such an expression should be, if we can get this running on a Trusty box
-		# with Clang.  Greg Colvin previously replicated the issue there too.
-		#
-		# See https://github.com/ethereum/webthree-umbrella/issues/594
-
-		if (APPLE)
-			if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
-				add_compile_options(-fstack-protector-strong)
-			endif()
-		else()
-			message(WARNING "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
-		endif()
-
-		# Some Linux-specific Clang settings.  We don't want these for OS X.
-		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-
-			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
-			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
-
-			# Use fancy colors in the compiler diagnostics
-			add_compile_options(-fcolor-diagnostics)
+	# Stop if buggy clang compiler detected.
+	elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES AppleClang)
+		if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 8.4)
+			message(FATAL_ERROR "This compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not able to compile required libff. Install clang 4+ from Homebrew or XCode 9.")
 		endif()
 	endif()
 
