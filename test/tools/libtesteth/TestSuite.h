@@ -54,6 +54,8 @@ public:
 
 	// Structure  <suiteFolder>/<testFolder>/<test>.json
 	boost::filesystem::path getFullPath(std::string const& _testFolder) const;
+
+	void executeTests(const std::string& _name, boost::filesystem::path const& _testPathAppendix, boost::filesystem::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests) const;
 };
 
 }

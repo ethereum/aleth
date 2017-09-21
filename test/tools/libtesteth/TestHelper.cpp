@@ -30,7 +30,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <libethereum/Client.h>
-#include <test/tools/libtesteth/Stats.h>
 #include <string>
 
 using namespace std;
@@ -418,51 +417,6 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 		BOOST_CHECK(_resultCallCreates[i].gas() == _expectedCallCreates[i].gas());
 		BOOST_CHECK(_resultCallCreates[i].value() == _expectedCallCreates[i].value());
 	}
-}
-
-void executeTests(const string& _name, fs::path const& _testPathAppendix, fs::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests)
-{
-	fs::path const testPath = getTestPath() / _testPathAppendix;
-
-	if (Options::get().stats)
-		Listener::registerListener(Stats::get());
-
-	//Get the test name
-	string name = _name;
-	if (_name.rfind("Filler.json") != std::string::npos)
-		name = _name.substr(0, _name.rfind("Filler.json"));
-	else if (_name.rfind(".json") != std::string::npos)
-		name = _name.substr(0, _name.rfind(".json"));
-
-	if (Options::get().filltests)
-	{
-		if (!Options::get().singleTest)
-			cnote << "Populating tests...";
-		json_spirit::mValue v;
-		boost::filesystem::path p(__FILE__);
-
-		string const nameEnding = "Filler.json";
-		fs::path const testfileUnderTestPath = fs::path ("src") / _fillerPathAppendix / fs::path(name + nameEnding);
-		fs::path const testfilename = getTestPath() / testfileUnderTestPath;
-		string s = asString(dev::contents(testfilename));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testfilename.string() + " is empty.");
-
-		json_spirit::read_string(s, v);
-		removeComments(v);
-		json_spirit::mValue output = doTests(v, true);
-		addClientInfo(output, testfileUnderTestPath);
-		writeFile(testPath / fs::path(name + ".json"), asBytes(json_spirit::write_string(output, true)));
-	}
-
-	if ((Options::get().singleTest && Options::get().singleTestName == name) || !Options::get().singleTest)
-		cnote << "TEST " << name << ":";
-
-	json_spirit::mValue v;
-	string s = asString(dev::contents(testPath / fs::path(name + ".json")));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << (testPath / fs::path(name + ".json")).string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-	json_spirit::read_string(s, v);
-	Listener::notifySuiteStarted(name);
-	doTests(v, false);
 }
 
 string prepareVersionString()
