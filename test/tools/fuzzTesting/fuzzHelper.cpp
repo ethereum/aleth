@@ -24,6 +24,7 @@
 #include <libevm/Instruction.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
+#include <test/tools/jsontests/StateTests.h>
 
 using namespace dev;
 const static std::array<eth::Instruction, 47> invalidOpcodes {{
@@ -87,6 +88,7 @@ IntDistrib RandomCode::opCodeDist = IntDistrib (0, 255);
 IntDistrib RandomCode::opLengDist = IntDistrib (1, 32);
 IntDistrib RandomCode::opMemrDist = IntDistrib (0, 10485760);
 IntDistrib RandomCode::uniIntDist = IntDistrib (0, 0x7fffffff);
+DescreteDistrib RandomCode::opCodeProbability = DescreteDistrib();
 
 IntGenerator RandomCode::randOpCodeGen = std::bind(opCodeDist, gen);
 IntGenerator RandomCode::randOpLengGen = std::bind(opLengDist, gen);
@@ -253,7 +255,7 @@ std::string RandomCode::rndByteSequence(int _length, SizeStrictness _sizeType)
 }
 
 //generate smart random code
-std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
+std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions const& _options)
 {
 	refreshSeed();
 	std::string code;
@@ -266,11 +268,9 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 	IntGenerator rndSizeGen = std::bind(sizeDist, gen);
 	int size = rndSizeGen();
 
-	bool weightsDefined = _options.opCodeProbability.probabilities().size() == 255;
-
 	for (auto i = 0; i < size; i++)
 	{
-		uint8_t opcode = weightsDefined ? _options.opCodeProbability(gen) : randOpCodeGen();
+		uint8_t opcode = _options.getWeightedRandomOpcode();
 		eth::Instruction inst = (eth::Instruction) opcode;
 		eth::InstructionInfo info = eth::instructionInfo(inst);
 
@@ -453,8 +453,6 @@ RandomCodeOptions::RandomCodeOptions() :
 	for (auto i = 0; i < 255; i++)
 		mapWeights.insert(std::pair<int, int>(i, 40));
 
-	setWeights();
-
 	//Probability of instructions
 	setWeight(eth::Instruction::STOP, 1);
 	for (int i = (int)(eth::Instruction::PUSH1); i < 32; i++)
@@ -499,7 +497,6 @@ RandomCodeOptions::RandomCodeOptions() :
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
 {
 	mapWeights.at((int)_opCode) = _weight;
-	setWeights();
 }
 
 void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
@@ -550,12 +547,19 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 	}
 }
 
-void RandomCodeOptions::setWeights()
+int RandomCode::weightedOpcode(std::vector<int>& _weights)
+{
+	refreshSeed();
+	opCodeProbability = DescreteDistrib{_weights.begin(), _weights.end()};
+	return opCodeProbability(gen);
+}
+
+int RandomCodeOptions::getWeightedRandomOpcode() const
 {
 	std::vector<int> weights;
 	for (auto const& element: mapWeights)
 		weights.push_back(element.second);
-	opCodeProbability = DescreteDistrib{weights.begin(), weights.end()};
+	return RandomCode::weightedOpcode(weights);
 }
 
 BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelper)
@@ -564,13 +568,28 @@ BOOST_AUTO_TEST_CASE(rndCode)
 {
 	try
 	{
-		cnote << "Testing Random Code: ";
-		std::string code = test::RandomCode::generate(1000);
-		cnote << code;
+		test::RandomCodeOptions options;
+		std::string code = test::RandomCode::generate(1000, options);
+		BOOST_REQUIRE(!code.empty());
 	}
-	catch(...)
+	catch(dev::Exception const& _e)
 	{
-		BOOST_ERROR("Exception thrown when generating random code!");
+		BOOST_ERROR("Exception thrown when generating random code! " + diagnostic_information(_e));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(rndStateTest)
+{
+	try
+	{
+		test::StateTestSuite suite;
+		test::RandomCodeOptions options;
+		std::string test = dev::test::RandomCode::fillRandomTest(suite, c_testExampleStateTest, options);
+		BOOST_REQUIRE(!test.empty());
+	}
+	catch(dev::Exception const& _e)
+	{
+		BOOST_ERROR("Exception thrown when generating random code! " + diagnostic_information(_e));
 	}
 }
 

@@ -29,36 +29,30 @@
 #include <libdevcore/Common.h>
 #include <test/tools/jsontests/StateTests.h>
 
-//String Variables
-extern std::string const c_testExampleStateTest;
-extern std::string const c_testExampleTransactionTest;
-extern std::string const c_testExampleVMTest;
-extern std::string const c_testExampleBlockchainTest;
-extern std::string const c_testExampleRLPTest;
-
-//Main Test functinos
-int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString);
-
 namespace dev { namespace test {
-int createRandomTest()
+
+bool createRandomTest()
 {
 	StateTestSuite suite;
 	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
 	if (options.rCurrentTestSuite != suite.suiteFolder())
 	{
 		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)\n";
-		return 1;
+		return false;
 	}
 	else
 	{
+		RandomCodeOptions options;
 		TestOutputHelper testOutputHelper;
-		return fillRandomTest(suite, c_testExampleStateTest);
+		std::string test = test::RandomCode::fillRandomTest(suite, c_testExampleStateTest, options);
+		return test.empty() ? false : true;
 	}
 }
+
 }} //namespaces
 
 //Prints a generated test Json into std::out
-int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString)
+std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, dev::test::RandomCodeOptions const& _options)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
@@ -66,7 +60,7 @@ int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _t
 	{
 		std::string newTest = _testString;
 		std::map<std::string, std::string> nullReplaceMap;
-		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
+		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap, _options);
 		json_spirit::read_string(newTest, v);
 		v = _testSuite.doTests(v, true); //filltests
 		_testSuite.doTests(v, false); //checktest
@@ -85,17 +79,17 @@ int fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _t
 	if (wasError)
 	{
 		std::cerr << json_spirit::write_string(v, true);
-		return 1;
+		return std::string();
 	}
+	else
+		std::cout << json_spirit::write_string(v, true);
 
-	std::cout << json_spirit::write_string(v, true);
-	return 0;
+	return json_spirit::write_string(v, true);
 }
 
 /// Parse Test string replacing keywords to fuzzed values
-void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap)
+void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options)
 {
-	dev::test::RandomCodeOptions options; //use default options
 	std::vector<std::string> types = getTypes();
 
 	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
@@ -115,7 +109,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				cnote << debug;
 			}
 			else if (type == "[CODE]")
-				replace = dev::test::RandomCode::generate(10, options);
+				replace = dev::test::RandomCode::generate(10, _options);
 			else if (type == "[HEX]")
 				replace = dev::test::RandomCode::randomUniIntHex();
 			else if (type == "[HEX32]")
@@ -140,14 +134,14 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
 			else if (type == "[DESTADDRESS]")
 			{
-				Address address = options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrStateOrCreate);
+				Address address = _options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrStateOrCreate);
 				if (address != ZeroAddress) //else transaction creation
 					replace = "0x" + toString(address);
 			}
 			else if (type == "[ADDRESS]")
-				replace = toString(options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
+				replace = toString(_options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
 			else if (type == "[0xADDRESS]")
-				replace = "0x" + toString(options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
+				replace = "0x" + toString(_options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
 			else if (type == "[TRANSACTIONGASLIMIT]")
 				replace = test::RandomCode::randomUniIntHex(dev::u256("5000"), dev::u256("10000000"));
 			else if (type == "[GASPRICE]")
