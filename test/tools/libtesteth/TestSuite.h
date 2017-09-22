@@ -31,10 +31,10 @@ class TestSuite
 {
 protected:
 	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
-	virtual std::string suiteFolder() const = 0;
+	virtual boost::filesystem::path suiteFolder() const = 0;
 
 	// A folder of the test suite in src folder. like "VMTestsFiller". should be implemented for each test suite.
-	virtual std::string suiteFillerFolder() const = 0;
+	virtual boost::filesystem::path suiteFillerFolder() const = 0;
 
 public:
 	virtual ~TestSuite() {}

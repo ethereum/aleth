@@ -123,20 +123,19 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 
 	return tests;
 }
-std::string BlockchainTestSuite::suiteFolder() const
+fs::path BlockchainTestSuite::suiteFolder() const
 {
 	return "BlockchainTests";
 }
-std::string BlockchainTestSuite::suiteFillerFolder() const
+fs::path BlockchainTestSuite::suiteFillerFolder() const
 {
 	return "BlockchainTestsFiller";
 }
-std::string BCGeneralStateTestsSuite::suiteFolder() const
+fs::path BCGeneralStateTestsSuite::suiteFolder() const
 {
-	fs::path folder = fs::path("BlockchainTests") / "GeneralStateTests";
-	return folder.string();
+	return fs::path("BlockchainTests") / "GeneralStateTests";
 }
-std::string BCGeneralStateTestsSuite::suiteFillerFolder() const
+fs::path BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
 	return "GenStateTestAsBcTemp";
 }
@@ -170,14 +169,12 @@ json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _in
 	return output;
 }
 
-std::string TransitionTestsSuite::suiteFolder() const {
-	fs::path folder = fs::path("BlockchainTests") / "TransitionTests";
-	return folder.string();
+fs::path TransitionTestsSuite::suiteFolder() const {
+	return fs::path("BlockchainTests") / "TransitionTests";
 }
 
-std::string TransitionTestsSuite::suiteFillerFolder() const {
-	fs::path folder = fs::path("BlockchainTestsFiller") / "TransitionTests";
-	return folder.string();
+fs::path TransitionTestsSuite::suiteFillerFolder() const {
+	return fs::path("BlockchainTestsFiller") / "TransitionTests";
 }
 
 ChainBranch::ChainBranch(TestBlock const& _genesis): blockchain(_genesis)
