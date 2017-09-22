@@ -260,7 +260,7 @@ private:
 	void connect(std::shared_ptr<Peer> const& _p);
 
 	/// Returns true if pending and connected peer count is less than maximum
-	bool peerSlotsAvailable(PeerSlotType _type = Ingress) { Guard l(x_pendingNodeConns); return peerCount() + m_pendingPeerConns.size() < peerSlots(_type); }
+	bool peerSlotsAvailable(PeerSlotType _type = Ingress);
 	
 	/// Ping the peers to update the latency information and disconnect peers which have timed out.
 	void keepAlivePeers();

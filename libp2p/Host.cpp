@@ -942,6 +942,16 @@ void Host::restoreNetwork(bytesConstRef _b)
 	}
 }
 
+bool Host::peerSlotsAvailable(Host::PeerSlotType _type)
+{
+	size_t peerNodeConns = 0;
+	{
+		Guard l(x_pendingNodeConns);
+		peerNodeConns = m_pendingPeerConns.size();
+	}
+	return peerCount() + peerNodeConns < peerSlots(_type);
+}
+
 KeyPair Host::networkAlias(bytesConstRef _b)
 {
 	RLP r(_b);
