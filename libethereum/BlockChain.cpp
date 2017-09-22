@@ -31,6 +31,7 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieHash.h>
 #include <libdevcore/FileSystem.h>
+#include <libdevcore/FixedHash.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
 
@@ -1211,8 +1212,11 @@ void BlockChain::garbageCollect(bool _force)
 			break;
 		}
 		case ExtraBlockHash:
-
-		// TODO: ExtraBlockHash seems missing.
+		{
+			// m_cacheUsage should not contain ExtraBlockHash elements currently.  See the second noteUsed() in BlockChain.h, which is a no-op.
+			assert(false);
+			break;
+		}
 		case ExtraReceipts:
 		{
 			WriteGuard l(x_receipts);
