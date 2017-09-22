@@ -36,7 +36,7 @@ std::string const c_testDifficulty = R"(
  "DifficultyTest[N]" : {
 		"parentTimestamp" : "[PSTAMP]",
 		"parentDifficulty" : "[PDIFF]",
-		"parrentUncles" : "[PUNCLS]",
+		"parentUncles" : "[PUNCLS]",
 		"currentTimestamp" : "[СSTAMP]",
 		"currentBlockNumber" : "[CNUM]",
 		"currentDifficulty" : "[CDIFF]"
@@ -49,12 +49,13 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 	ostringstream finalTest;
 	finalTest << "{\n";
 	dev::test::TestOutputHelper testOutputHelper(900);
+	h256 someHash = sha3("whatever nonempty string");
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
-		for (int pUncles = 0; pUncles < 3; pUncles++)
+		for (int pUncles = 0; pUncles < 2; pUncles++)
 		{
-			for (u256 blockNumber = 1; blockNumber < 5000000; blockNumber += 250000)
+			for (u256 blockNumber = 100000; blockNumber < 5000000; blockNumber += 100000)
 			{
 				testN++;
 				string testName = "DifficultyTest"+toString(testN);
@@ -70,7 +71,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				parent.setTimestamp(pStamp);
 				parent.setDifficulty(pDiff);
 				parent.setNumber(cNum - 1);
-				parent.setSha3Uncles(sha3(toString(pUncles)));
+				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : someHash);
 
 				BlockHeader current;
 				current.setTimestamp(cStamp);
@@ -81,7 +82,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				replaceMap["[N]"] = toString(testN);
 				replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
 				replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
-				replaceMap["[PUNCLS]"] = toCompactHexPrefixed(pUncles, 1);
+				replaceMap["[PUNCLS]"] = toCompactHexPrefixed(parent.sha3Uncles());
 				replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
 				replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
 				replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
@@ -112,17 +113,21 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		js::mObject o = i.second.get_obj();
 		string testname = i.first;
 		if (!dev::test::TestOutputHelper::checkTest(testname))
-		{
-			o.clear();
 			continue;
-		}
+
+		BOOST_REQUIRE_MESSAGE(o.count("parentTimestamp") > 0, testname + " missing parentTimestamp field");
+		BOOST_REQUIRE_MESSAGE(o.count("parentDifficulty") > 0, testname + " missing parentDifficulty field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
+		BOOST_REQUIRE_MESSAGE(o.count("parentUncles") > 0, testname + " missing parentUncles field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentTimestamp") > 0, testname + " missing currentTimestamp field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentDifficulty") > 0, testname + " missing currentDifficulty field");
 
 		BlockHeader parent;
 		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
 		parent.setNumber(test::toInt(o["currentBlockNumber"]) - 1);
-		u256 uncles = (test::toInt(o["parrentUncles"]));
-		parent.setSha3Uncles(sha3(toString(uncles)));
+		parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
 
 		BlockHeader current;
 		current.setTimestamp(test::toInt(o["currentTimestamp"]));
@@ -167,6 +172,19 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::HomesteadTest)));
+
+	if (dev::test::Options::get().filltests)
+		fillDifficulty(testFileFullName, sealEngine);
+
+	testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyByzantium)
+{
+	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyByzantium.json");
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::ByzantiumTest)));
 
 	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
