@@ -287,8 +287,7 @@ private:
 
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
-	bool m_run = false;													///< Whether network is running.
-	mutable std::mutex x_runTimer;	///< Start/stop mutex.
+	std::atomic<bool> m_run{false};													///< Whether network is running.
 
 	std::string m_clientVersion;											///< Our version string.
 
@@ -303,6 +302,7 @@ private:
 	bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
 	std::unique_ptr<boost::asio::deadline_timer> m_timer;					///< Timer which, when network is running, calls scheduler() every c_timerInterval ms.
+	mutable std::mutex x_runTimer;	///< Start/stop mutex.
 	static const unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
 
 	std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).

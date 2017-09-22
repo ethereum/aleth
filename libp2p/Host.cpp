@@ -143,16 +143,10 @@ void Host::stop()
 	// such tasks may involve socket reads from Capabilities that maintain references
 	// to resources we're about to free.
 
-	{
-		// Although m_run is set by stop() or start(), it effects m_runTimer so x_runTimer is used instead of a mutex for m_run.
-		Guard l(x_runTimer);
-		// ignore if already stopped/stopping
-		if (!m_run)
-			return;
-		
-		// signal run() to prepare for shutdown and reset m_timer
-		m_run = false;
-	}
+	// ignore if already stopped/stopping, at the same time,
+	// signal run() to prepare for shutdown and reset m_timer
+	if (!m_run.exchange(false))
+		return;
 
 	// wait for m_timer to reset (indicating network scheduler has stopped)
 	while (!!m_timer)
