@@ -49,6 +49,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 	ostringstream finalTest;
 	finalTest << "{\n";
 	dev::test::TestOutputHelper testOutputHelper(900);
+	h256 someHash = sha3("whatever nonempty string");
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
@@ -70,7 +71,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				parent.setTimestamp(pStamp);
 				parent.setDifficulty(pDiff);
 				parent.setNumber(cNum - 1);
-				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : sha3("whatever nonempty string"));
+				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : someHash);
 
 				BlockHeader current;
 				current.setTimestamp(cStamp);
