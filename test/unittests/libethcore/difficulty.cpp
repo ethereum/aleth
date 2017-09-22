@@ -36,7 +36,7 @@ std::string const c_testDifficulty = R"(
  "DifficultyTest[N]" : {
 		"parentTimestamp" : "[PSTAMP]",
 		"parentDifficulty" : "[PDIFF]",
-		"parrentUncles" : "[PUNCLS]",
+		"parentUncles" : "[PUNCLS]",
 		"currentTimestamp" : "[СSTAMP]",
 		"currentBlockNumber" : "[CNUM]",
 		"currentDifficulty" : "[CDIFF]"
@@ -70,7 +70,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				parent.setTimestamp(pStamp);
 				parent.setDifficulty(pDiff);
 				parent.setNumber(cNum - 1);
-				parent.setSha3Uncles(sha3(toString(pUncles)));
+				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : sha3(toString(pUncles)));
 
 				BlockHeader current;
 				current.setTimestamp(cStamp);
@@ -81,7 +81,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				replaceMap["[N]"] = toString(testN);
 				replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
 				replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
-				replaceMap["[PUNCLS]"] = toCompactHexPrefixed(pUncles, 1);
+				replaceMap["[PUNCLS]"] = toCompactHexPrefixed(parent.sha3Uncles());
 				replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
 				replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
 				replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
@@ -121,8 +121,11 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
 		parent.setNumber(test::toInt(o["currentBlockNumber"]) - 1);
-		u256 uncles = (test::toInt(o["parrentUncles"]));
-		parent.setSha3Uncles(sha3(toString(uncles)));
+
+		if (o.count("parentUncles"))
+			parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
+		else
+			std::cout << "Warning difficulty test files does not have 'parentUncles' field \n";
 
 		BlockHeader current;
 		current.setTimestamp(test::toInt(o["currentTimestamp"]));
@@ -167,6 +170,19 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::HomesteadTest)));
+
+	if (dev::test::Options::get().filltests)
+		fillDifficulty(testFileFullName, sealEngine);
+
+	testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyByzantium)
+{
+	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyByzantium.json");
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::ByzantiumTest)));
 
 	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
