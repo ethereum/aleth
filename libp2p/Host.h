@@ -29,6 +29,7 @@
 #include <memory>
 #include <utility>
 #include <thread>
+#include <atomic>
 #include <chrono>
 
 #include <libdevcore/Guards.h>
@@ -194,7 +195,7 @@ public:
 	std::string listenAddress() const { return m_tcpPublic.address().is_unspecified() ? "0.0.0.0" : m_tcpPublic.address().to_string(); }
 
 	/// Get the port we're listening on currently.
-	unsigned short listenPort() const { return std::max(0, m_listenPort); }
+	unsigned short listenPort() const { return std::max(0, m_listenPort.load()); }
 
 	/// Serialise the set of known peers.
 	bytes saveNetwork() const;
@@ -296,7 +297,7 @@ private:
 	/// Interface addresses (private, public)
 	std::set<bi::address> m_ifAddresses;								///< Interface addresses.
 
-	int m_listenPort = -1;												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
+	std::atomic<int> m_listenPort{-1};												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
 
 	ba::io_service m_ioService;											///< IOService for network stuff.
 	bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
