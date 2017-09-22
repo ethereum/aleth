@@ -24,30 +24,23 @@ namespace eth
 namespace
 {
 
-static_assert(sizeof(Address) == sizeof(evm_uint160be),
-			  "Address types size mismatch");
-static_assert(alignof(Address) == alignof(evm_uint160be),
-			  "Address types alignment mismatch");
+static_assert(sizeof(Address) == sizeof(evm_uint160be), "Address types size mismatch");
+static_assert(alignof(Address) == alignof(evm_uint160be), "Address types alignment mismatch");
 
 inline Address fromEvmC(evm_uint160be const& _addr)
 {
 	return reinterpret_cast<Address const&>(_addr);
 }
 
-static_assert(sizeof(h256) == sizeof(evm_uint256be),
-			  "Hash types size mismatch");
-static_assert(alignof(h256) == alignof(evm_uint256be),
-			  "Hash types alignment mismatch");
+static_assert(sizeof(h256) == sizeof(evm_uint256be), "Hash types size mismatch");
+static_assert(alignof(h256) == alignof(evm_uint256be), "Hash types alignment mismatch");
 
 inline u256 fromEvmC(evm_uint256be const& _n)
 {
 	return fromBigEndian<u256>(_n.bytes);
 }
 
-int accountExists(
-	evm_context* _context,
-	evm_uint160be const* _addr
-) noexcept
+int accountExists(evm_context* _context, evm_uint160be const* _addr) noexcept
 {
 	auto& env = static_cast<ExtVMFace&>(*_context);
 	Address addr = fromEvmC(*_addr);
@@ -96,8 +89,7 @@ void getBalance(
 	*o_result = toEvmC(env.balance(fromEvmC(*_addr)));
 }
 
-size_t
-getCode(byte const** o_code, evm_context* _context, evm_uint160be const* _addr)
+size_t getCode(byte const** o_code, evm_context* _context, evm_uint160be const* _addr)
 {
 	auto& env = static_cast<ExtVMFace&>(*_context);
 	Address addr = fromEvmC(*_addr);
@@ -158,8 +150,7 @@ void getBlockHash(evm_uint256be* o_hash, evm_context* _envPtr, int64_t _number)
 	*o_hash = toEvmC(env.blockHash(_number));
 }
 
-void
-create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noexcept
+void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noexcept
 {
 	u256 gas = _msg->gas;
 	u256 value = fromEvmC(_msg->value);
@@ -209,8 +200,7 @@ create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noexcept
 	}
 }
 
-void call(evm_result* o_result, evm_context* _context,
-		  evm_message const* _msg) noexcept
+void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) noexcept
 {
 	assert(_msg->gas >= 0 && "Invalid gas value");
 	auto& env = static_cast<ExtVMFace&>(*_context);
