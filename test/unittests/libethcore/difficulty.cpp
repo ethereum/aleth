@@ -52,7 +52,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
-		for (int pUncles = 0; pUncles < 3; pUncles++)
+		for (int pUncles = 0; pUncles < 2; pUncles++)
 		{
 			for (u256 blockNumber = 100000; blockNumber < 5000000; blockNumber += 100000)
 			{
@@ -70,7 +70,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				parent.setTimestamp(pStamp);
 				parent.setDifficulty(pDiff);
 				parent.setNumber(cNum - 1);
-				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : sha3(toString(pUncles)));
+				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : sha3("whatever nonempty string"));
 
 				BlockHeader current;
 				current.setTimestamp(cStamp);
