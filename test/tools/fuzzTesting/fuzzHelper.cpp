@@ -88,7 +88,6 @@ IntDistrib RandomCode::opCodeDist = IntDistrib (0, 255);
 IntDistrib RandomCode::opLengDist = IntDistrib (1, 32);
 IntDistrib RandomCode::opMemrDist = IntDistrib (0, 10485760);
 IntDistrib RandomCode::uniIntDist = IntDistrib (0, 0x7fffffff);
-DescreteDistrib RandomCode::opCodeProbability = DescreteDistrib();
 
 IntGenerator RandomCode::randOpCodeGen = std::bind(opCodeDist, gen);
 IntGenerator RandomCode::randOpLengGen = std::bind(opLengDist, gen);
@@ -550,7 +549,7 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 int RandomCode::weightedOpcode(std::vector<int>& _weights)
 {
 	refreshSeed();
-	opCodeProbability = DescreteDistrib{_weights.begin(), _weights.end()};
+	DescreteDistrib opCodeProbability = DescreteDistrib{_weights.begin(), _weights.end()};
 	return opCodeProbability(gen);
 }
 

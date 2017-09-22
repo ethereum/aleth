@@ -138,7 +138,6 @@ private:
 	static IntDistrib opLengDist;			///< 1..32  byte string
 	static IntDistrib opMemrDist;			///< 1..10MB  byte string
 	static IntDistrib uniIntDist;			///< 0..0x7fffffff
-	static DescreteDistrib opCodeProbability; ///< An Opcode distribution with weights
 
 	static IntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
 	static IntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
