@@ -54,7 +54,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 	{
 		for (int pUncles = 0; pUncles < 3; pUncles++)
 		{
-			for (u256 blockNumber = 1; blockNumber < 5000000; blockNumber += 250000)
+			for (u256 blockNumber = 100000; blockNumber < 5000000; blockNumber += 100000)
 			{
 				testN++;
 				string testName = "DifficultyTest"+toString(testN);
