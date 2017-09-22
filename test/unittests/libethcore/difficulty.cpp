@@ -113,20 +113,21 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		js::mObject o = i.second.get_obj();
 		string testname = i.first;
 		if (!dev::test::TestOutputHelper::checkTest(testname))
-		{
-			o.clear();
 			continue;
-		}
+
+		BOOST_REQUIRE_MESSAGE(o.count("parentTimestamp") > 0, testname + " missing parentTimestamp field");
+		BOOST_REQUIRE_MESSAGE(o.count("parentDifficulty") > 0, testname + " missing parentDifficulty field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
+		BOOST_REQUIRE_MESSAGE(o.count("parentUncles") > 0, testname + " missing parentUncles field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentTimestamp") > 0, testname + " missing currentTimestamp field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
+		BOOST_REQUIRE_MESSAGE(o.count("currentDifficulty") > 0, testname + " missing currentDifficulty field");
 
 		BlockHeader parent;
 		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
 		parent.setNumber(test::toInt(o["currentBlockNumber"]) - 1);
-
-		if (o.count("parentUncles"))
-			parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
-		else
-			std::cout << "Warning difficulty test files does not have 'parentUncles' field \n";
+		parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
 
 		BlockHeader current;
 		current.setTimestamp(test::toInt(o["currentTimestamp"]));
