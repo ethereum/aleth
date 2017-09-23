@@ -621,6 +621,58 @@ void VM::interpretCases()
 		}
 		NEXT
 
+		CASE(SHL)
+		{
+			ON_OP();
+			updateIOGas();
+
+			// boost insists shift argument must be built-in int type
+			const uint64_t shift = 0x100000000;
+			while (m_SP[0] > shift)
+			{
+				m_SP[1] <<= shift;
+				m_SP[0] -= shift;
+			}
+			m_SPP[0] = m_SP[1] << uint64_t(m_SP[0]);
+		}
+		NEXT
+
+		CASE(SHR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			// boost insists shift argument must be built-in int type
+			const uint64_t shift = 0x100000000;
+			while (m_SP[0] > shift)
+			{
+				m_SP[1] >>= shift;
+				m_SP[0] -= shift;
+			}
+			m_SPP[0] = m_SP[1] >> uint64_t(m_SP[0]);
+		}
+		NEXT
+
+		CASE(SAR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			throwBadInstruction();
+
+			// boost insists shift argument must be built-in int type
+			const uint64_t shift = 0x100000000;
+			s256 temp = m_SP[1];
+			while (m_SP[0] > shift)
+			{
+				temp >>= shift;
+				m_SP[0] -= shift;
+			}
+			temp >>= uint64_t(m_SP[0]);;
+			m_SPP[0] = u256(temp);
+		}
+		NEXT
+
 		CASE(ADDMOD)
 		{
 			ON_OP();
