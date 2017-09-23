@@ -41,6 +41,6 @@ else
         exit 1
     fi
     mkdir -p "$PREFIX"
-    unzip $TMPFILE -d $PREFIX
+    unzip $TMPFILE -d $BIN
     rm -rf $TMPFILE
 fi
