@@ -635,11 +635,7 @@ void VM::interpretCases()
 			if (m_SP[0] >= 256)
 				m_SPP[0] = 0;
 			else
-			{
-				/// This workarounds a bug in Boost...
-				u256 mask = (u256(1) << (256 - m_SP[0])) - 1;
-				m_SPP[0] = (m_SP[1] & mask) << m_SP[0];
-			}
+				m_SPP[0] = m_SP[1] << unsigned(m_SP[0]);
 		}
 		NEXT
 
@@ -651,8 +647,7 @@ void VM::interpretCases()
 			if (m_SP[0] >= 256)
 				m_SPP[0] = 0;
 			else
-				/// TODO: confirm shift >= 256 results in 0 on Boost
-				m_SPP[0] = m_SP[1] >> m_SP[0];
+				m_SPP[0] = m_SP[1] >> unsigned(m_SP[0]);
 		}
 		NEXT
 
@@ -661,17 +656,25 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			s256 value = u2s(m_SP[1]);
-			u256 shift = m_SP[0];
-			if (shift >= 256)
+			static u256 const hibit = u256(1) << 255;
+			static u256 const allbits =
+				u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+			u256 shiftee = m_SP[1];
+			if (m_SP[0] >= 256)
 			{
-				if (value >= 0)
-					m_SPP[0] = 0;
+				if (shiftee & hibit)
+					m_SPP[0] = allbits;
 				else
-					m_SPP[0] = s2u(-1);
+					m_SPP[0] = 0;
 			}
 			else
-				m_SPP[0] = s2u(divWorkaround(value, exp256(2, shift)));
+			{
+				unsigned amount = unsigned(m_SP[0]);
+				m_SPP[0] = shiftee >> amount;
+				if (shiftee & hibit)
+					m_SPP[0] |= allbits << (256 - amount);
+			}
 		}
 		NEXT
 #endif
