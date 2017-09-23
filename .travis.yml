@@ -113,7 +113,7 @@ cache:
         - $TRAVIS_BUILD_DIR/build/deps
 install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then clang --version; travis_wait 150 brew install llvm; $(brew --prefix llvm)/bin/clang --version; export PATH=$(brew --prefix llvm)/bin:$PATH; export CC=$(brew --prefix llvm)/bin/clang; export CXX=$(brew --prefix llvm)/bin/clang++; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh && ./scripts/install_solc_lllc.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh && ./scripts/install_solc_lllc.sh --prefix /usr/local; fi
     - ./scripts/install_deps.sh
 before_script:
     - ./scripts/prepare_ccache.sh
