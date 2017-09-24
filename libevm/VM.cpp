@@ -621,19 +621,19 @@ void VM::interpretCases()
 		}
 		NEXT
 
+#if EIP_145
+
 		CASE(SHL)
 		{
 			ON_OP();
 			updateIOGas();
-
-			// boost insists shift argument must be built-in int type
-			const uint64_t shift = 0x100000000;
-			while (m_SP[0] > shift)
+			
+			if (m_SP[0] >= 256)
+				m_SPP[0] = 0;
+			else
 			{
-				m_SP[1] <<= shift;
-				m_SP[0] -= shift;
+				m_SPP[0] = m_SP[1] << uint64_t(m_SP[0]);
 			}
-			m_SPP[0] = m_SP[1] << uint64_t(m_SP[0]);
 		}
 		NEXT
 
@@ -642,14 +642,12 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			// boost insists shift argument must be built-in int type
-			const uint64_t shift = 0x100000000;
-			while (m_SP[0] > shift)
+			if (m_SP[0] >= 256)
+				m_SPP[0] = 0;
+			else
 			{
-				m_SP[1] >>= shift;
-				m_SP[0] -= shift;
+				m_SPP[0] = m_SP[1] >> uint64_t(m_SP[0]);
 			}
-			m_SPP[0] = m_SP[1] >> uint64_t(m_SP[0]);
 		}
 		NEXT
 
@@ -658,20 +656,26 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			throwBadInstruction();
-
-			// boost insists shift argument must be built-in int type
-			const uint64_t shift = 0x100000000;
-			s256 temp = m_SP[1];
-			while (m_SP[0] > shift)
+			s256 shiftee = m_SP[1];
+			if (m_SP[0] >= 256)
 			{
-				temp >>= shift;
-				m_SP[0] -= shift;
+				if (shiftee < 0)
+					m_SPP[0] = u256(-1);
 			}
-			temp >>= uint64_t(m_SP[0]);;
-			m_SPP[0] = u256(temp);
+			else
+			{
+				m_SPP[0] = u256(shiftee >> uint64_t(m_SP[0]));
+			}
 		}
 		NEXT
+#else
+		CASE(SHL)
+		CASE(SHR)
+		CASE(SAR)
+		{
+			throwBadInstruction();
+		}
+#endif
 
 		CASE(ADDMOD)
 		{
