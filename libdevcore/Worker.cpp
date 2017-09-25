@@ -39,12 +39,15 @@ void Worker::startWorking()
 	}
 	else
 	{
-		m_state = WorkerState::Starting;
-		m_state_notifier.notify_all();
 		m_work.reset(new thread([&]()
 		{
 			setThreadName(m_name.c_str());
 //			cnote << "Thread begins";
+			{
+				std::unique_lock<std::mutex> l(x_work);
+				while (m_state == WorkerState::Constructor) // The constructor is still running, so cannot access vptrs.
+					m_state_notifier.wait(l);
+			}
 			while (m_state != WorkerState::Killing)
 			{
 				WorkerState ex = WorkerState::Starting;
@@ -127,6 +130,12 @@ void Worker::terminate()
 		l.lock();
 		m_work.reset();
 	}
+}
+
+void Worker::allowVptrAccess()
+{
+	m_state = WorkerState::Starting;
+	m_state_notifier.notify_all();
 }
 
 void Worker::workLoop()

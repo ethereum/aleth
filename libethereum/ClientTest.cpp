@@ -49,7 +49,9 @@ ClientTest::ClientTest(
 	TransactionQueue::Limits const& _limits
 ):
 	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
-{}
+{
+	allowVptrAccess();
+}
 
 void ClientTest::setChainParams(string const& _genesis)
 {

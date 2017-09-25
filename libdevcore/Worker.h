@@ -38,6 +38,7 @@ enum class IfRunning
 
 enum class WorkerState
 {
+	Constructor,
 	Starting,
 	Started,
 	Stopping,
@@ -95,16 +96,20 @@ protected:
 	/// This has to be called in the destructor of any derived class.  Otherwise the worker thread will try to lookup vptrs.
 	void terminate();
 
+	/// Start threads.
+	/// This has to be called in the constructor of any most-derived class, to notify that vptr is ready.
+	void allowVptrAccess();
+
 private:
 
 	std::string m_name;
 
 	unsigned m_idleWaitMs = 0;
 	
-	mutable Mutex x_work;						///< Lock for the network existance and m_state_notifier.
+	mutable Mutex x_work;						///< Lock for the network existance, m_state_notifier and vptr table.
 	std::unique_ptr<std::thread> m_work;		///< The network thread.
     mutable std::condition_variable m_state_notifier; //< Notification when m_state changes.
-	std::atomic<WorkerState> m_state = {WorkerState::Starting};
+	std::atomic<WorkerState> m_state = {WorkerState::Constructor};
 };
 
 }

@@ -33,6 +33,7 @@ using namespace dev::shh;
 WhisperHost::WhisperHost(bool _storeMessagesInDB): Worker("shh"), m_storeMessagesInDB(_storeMessagesInDB)
 {
 	loadMessagesFromBD();
+	allowVptrAccess();
 }
 
 WhisperHost::~WhisperHost()

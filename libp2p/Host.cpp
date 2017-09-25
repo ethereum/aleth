@@ -114,6 +114,7 @@ Host::Host(string const& _clientVersion, NetworkPreferences const& _n, bytesCons
 	Host(_clientVersion, networkAlias(_restoreNetwork), _n)
 {
 	m_restoreNetwork = _restoreNetwork.toBytes();
+	allowVptrAccess();
 }
 
 Host::~Host()
