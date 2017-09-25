@@ -221,7 +221,24 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	else if (_peer->m_asking != Asking::State && _peer->m_asking != Asking::Nothing)
 		_peer->disable("Peer banned for unexpected status message.");
 	else
-		syncPeer(_peer, false);
+	{
+		// Before starting to exchange the data with the node, let's verify that it's on our chain
+		if (!requestDaoForkBlockHeader(_peer))
+			// DAO challenge not needed
+			syncPeer(_peer, true); 
+	}
+}
+
+bool BlockChainSync::requestDaoForkBlockHeader(std::shared_ptr<EthereumPeer> _peer)
+{
+	// DAO challenge
+	unsigned const daoHardfork = static_cast<unsigned>(host().chain().sealEngine()->chainParams().daoHardforkBlock);
+	if (daoHardfork == 0)
+		return false;
+
+	m_daoChallengedPeers.insert(_peer);
+	_peer->requestBlockHeaders(daoHardfork, 1, 0, false);
+	return true;
 }
 
 void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
@@ -381,6 +398,7 @@ void BlockChainSync::clearPeerDownload(std::shared_ptr<EthereumPeer> _peer)
 			m_downloadingBodies.erase(block);
 		m_bodySyncPeers.erase(syncPeer);
 	}
+	m_daoChallengedPeers.erase(_peer);
 }
 
 void BlockChainSync::clearPeerDownload()
@@ -407,6 +425,13 @@ void BlockChainSync::clearPeerDownload()
 		else
 			++s;
 	}
+	for (auto s = m_daoChallengedPeers.begin(); s != m_daoChallengedPeers.end();)
+	{
+		if (s->expired())
+			m_daoChallengedPeers.erase(s++);
+		else
+			++s;
+	}
 }
 
 void BlockChainSync::logNewBlock(h256 const& _h)
@@ -420,6 +445,18 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	DEV_INVARIANT_CHECK;
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
+
+	if (m_daoChallengedPeers.find(_peer) != m_daoChallengedPeers.end())
+	{
+		if (verifyDaoChallengeResponse(_r))
+			syncPeer(_peer, false);
+		else
+			_peer->disable("Peer from another fork.");
+
+		m_daoChallengedPeers.erase(_peer);
+		return;
+	}
+
 	clearPeerDownload(_peer);
 	if (m_state != SyncState::Blocks && m_state != SyncState::Waiting)
 	{
@@ -520,6 +557,16 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	}
 	collectBlocks();
 	continueSync();
+}
+
+bool BlockChainSync::verifyDaoChallengeResponse(RLP const& _r)
+{
+	if (_r.itemCount() != 1)
+		return false;
+
+	BlockHeader info(_r[0].data(), HeaderData);
+	return info.number() == host().chain().sealEngine()->chainParams().daoHardforkBlock &&
+		info.extraData() == fromHex("0x64616f2d686172642d666f726b");
 }
 
 void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
