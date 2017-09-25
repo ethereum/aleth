@@ -30,7 +30,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include <boost/filesystem.hpp>
-
+#include <boost/program_options.hpp>
 #include <libdevcore/FileSystem.h>
 #include <libethashseal/EthashAux.h>
 #include <libevm/VM.h>
@@ -70,6 +70,7 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
 using namespace boost::algorithm;
+
 namespace fs = boost::filesystem;
 
 static std::atomic<bool> g_silence = {false};
@@ -305,7 +306,7 @@ int main(int argc, char** argv)
 #else
 	g_logVerbosity = 1;
 #endif
-
+	boost::program_options::option_description desc;
 	/// Operating mode.
 	OperationMode mode = OperationMode::Node;
 //	unsigned prime = 0;
