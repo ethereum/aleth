@@ -123,7 +123,6 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	doWork(false);
-	startWorking();
 }
 
 ImportResult Client::queueBlock(bytes const& _block, bool _isSafe)

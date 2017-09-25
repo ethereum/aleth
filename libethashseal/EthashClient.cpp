@@ -58,6 +58,7 @@ EthashClient::EthashClient(
 	// will throw if we're not an Ethash seal engine.
 	asEthashClient(*this);
 	allowVptrAccess();
+	startWorking();
 }
 
 Ethash* EthashClient::ethash() const
