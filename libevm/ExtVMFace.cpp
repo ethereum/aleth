@@ -254,9 +254,7 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 	};
 }
 
-}
-
-evm_host const ExtVMFace::evmcFnTable = {
+evm_host const fnTable = {
 	accountExists,
 	getStorage,
 	setStorage,
@@ -268,6 +266,8 @@ evm_host const ExtVMFace::evmcFnTable = {
 	getBlockHash,
 	eth::log
 };
+
+}
 
 ExtVMFace::ExtVMFace(
 	EnvInfo const& _envInfo,
@@ -282,6 +282,7 @@ ExtVMFace::ExtVMFace(
 	unsigned _depth,
 	bool _staticCall
 ):
+	evm_context{&fnTable},
 	m_envInfo(_envInfo),
 	myAddress(_myAddress),
 	caller(_caller),

@@ -16,11 +16,9 @@ namespace
 class EVM
 {
 public:
-	explicit EVM(evm_host const& _host)
-	{
-		auto factory = evmjit_get_factory();
-		m_instance = factory.create(&_host);
-	}
+	EVM():
+		m_instance(evmjit_get_factory().create())
+	{}
 
 	~EVM()
 	{
@@ -106,7 +104,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(ExtVMFace::evmcFnTable);
+	static EVM jit;
 	return jit;
 }
 
