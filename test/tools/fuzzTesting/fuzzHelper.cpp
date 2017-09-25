@@ -568,6 +568,7 @@ BOOST_AUTO_TEST_CASE(rndCode)
 	try
 	{
 		test::RandomCodeOptions options;
+		options.emptyCodeProbability = 0;
 		std::string code = test::RandomCode::generate(1000, options);
 		BOOST_REQUIRE(!code.empty());
 	}
