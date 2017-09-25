@@ -31,6 +31,7 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieHash.h>
 #include <libdevcore/FileSystem.h>
+#include <libdevcore/FixedHash.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
 
@@ -1165,9 +1166,13 @@ void BlockChain::updateStats() const
 			m_lastStats.memBlocks += i.second.size() + 64;
 	DEV_READ_GUARDED(x_details)
 		m_lastStats.memDetails = getHashSize(m_details);
+	size_t logBloomsSize = 0;
+	size_t blocksBloomsSize = 0;
 	DEV_READ_GUARDED(x_logBlooms)
-		DEV_READ_GUARDED(x_blocksBlooms)
-			m_lastStats.memLogBlooms = getHashSize(m_logBlooms) + getHashSize(m_blocksBlooms);
+		logBloomsSize = getHashSize(m_logBlooms);
+	DEV_READ_GUARDED(x_blocksBlooms)
+		blocksBloomsSize = getHashSize(m_blocksBlooms);
+	m_lastStats.memLogBlooms = logBloomsSize + blocksBloomsSize;
 	DEV_READ_GUARDED(x_receipts)
 		m_lastStats.memReceipts = getHashSize(m_receipts);
 	DEV_READ_GUARDED(x_blockHashes)
@@ -1188,13 +1193,6 @@ void BlockChain::garbageCollect(bool _force)
 	m_lastCollection = chrono::system_clock::now();
 
 	Guard l(x_cacheUsage);
-	WriteGuard l1(x_blocks);
-	WriteGuard l2(x_details);
-	WriteGuard l3(x_blockHashes);
-	WriteGuard l4(x_receipts);
-	WriteGuard l5(x_logBlooms);
-	WriteGuard l6(x_transactionAddresses);
-	WriteGuard l7(x_blocksBlooms);
 	for (CacheID const& id: m_cacheUsage.back())
 	{
 		m_inUse.erase(id);
@@ -1202,23 +1200,47 @@ void BlockChain::garbageCollect(bool _force)
 		switch (id.second)
 		{
 		case (unsigned)-1:
+		{
+			WriteGuard l(x_blocks);
 			m_blocks.erase(id.first);
 			break;
+		}
 		case ExtraDetails:
+		{
+			WriteGuard l(x_details);
 			m_details.erase(id.first);
 			break;
+		}
+		case ExtraBlockHash:
+		{
+			// m_cacheUsage should not contain ExtraBlockHash elements currently.  See the second noteUsed() in BlockChain.h, which is a no-op.
+			assert(false);
+			break;
+		}
 		case ExtraReceipts:
+		{
+			WriteGuard l(x_receipts);
 			m_receipts.erase(id.first);
 			break;
+		}
 		case ExtraLogBlooms:
+		{
+			WriteGuard l(x_logBlooms);
 			m_logBlooms.erase(id.first);
 			break;
+		}
 		case ExtraTransactionAddress:
+		{
+			WriteGuard l(x_transactionAddresses);
 			m_transactionAddresses.erase(id.first);
 			break;
+		}
 		case ExtraBlocksBlooms:
+		{
+			WriteGuard l(x_blocksBlooms);
 			m_blocksBlooms.erase(id.first);
 			break;
+		}
 		}
 	}
 	m_cacheUsage.pop_back();

@@ -29,6 +29,7 @@
 #include <memory>
 #include <utility>
 #include <thread>
+#include <atomic>
 #include <chrono>
 
 #include <libdevcore/Guards.h>
@@ -194,7 +195,7 @@ public:
 	std::string listenAddress() const { return m_tcpPublic.address().is_unspecified() ? "0.0.0.0" : m_tcpPublic.address().to_string(); }
 
 	/// Get the port we're listening on currently.
-	unsigned short listenPort() const { return std::max(0, m_listenPort); }
+	unsigned short listenPort() const { return std::max(0, m_listenPort.load()); }
 
 	/// Serialise the set of known peers.
 	bytes saveNetwork() const;
@@ -259,7 +260,7 @@ private:
 	void connect(std::shared_ptr<Peer> const& _p);
 
 	/// Returns true if pending and connected peer count is less than maximum
-	bool peerSlotsAvailable(PeerSlotType _type = Ingress) { Guard l(x_pendingNodeConns); return peerCount() + m_pendingPeerConns.size() < peerSlots(_type); }
+	bool peerSlotsAvailable(PeerSlotType _type = Ingress);
 	
 	/// Ping the peers to update the latency information and disconnect peers which have timed out.
 	void keepAlivePeers();
@@ -286,8 +287,7 @@ private:
 
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
-	bool m_run = false;													///< Whether network is running.
-	mutable std::mutex x_runTimer;	///< Start/stop mutex.
+	std::atomic<bool> m_run{false};													///< Whether network is running.
 
 	std::string m_clientVersion;											///< Our version string.
 
@@ -296,12 +296,13 @@ private:
 	/// Interface addresses (private, public)
 	std::set<bi::address> m_ifAddresses;								///< Interface addresses.
 
-	int m_listenPort = -1;												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
+	std::atomic<int> m_listenPort{-1};												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
 
 	ba::io_service m_ioService;											///< IOService for network stuff.
 	bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
 	std::unique_ptr<boost::asio::deadline_timer> m_timer;					///< Timer which, when network is running, calls scheduler() every c_timerInterval ms.
+	mutable std::mutex x_runTimer;	///< Start/stop mutex.
 	static const unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
 
 	std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).

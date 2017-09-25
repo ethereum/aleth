@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <vector>
 #include <string>
+#include <atomic>
 
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:597) //will not be called for implicit or explicit conversions
@@ -75,7 +76,7 @@ public:
 	/// @note adapted from OpenSSL's implementation.
 	void cleanse()
 	{
-		static unsigned char s_cleanseCounter = 0;
+		static std::atomic<unsigned char> s_cleanseCounter{0u};
 		uint8_t* p = (uint8_t*)begin();
 		size_t const len = (uint8_t*)end() - p;
 		size_t loop = len;
