@@ -80,7 +80,7 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
 	}
 }
 
-void TestSuite::runAllTestsInFolder(string const& _testFolder) const
+void TestSuite::runAllTestsInFolder(string const& _testFolder, test::AccessSwitch _accessSwitch) const
 {
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 	std::vector<boost::filesystem::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
@@ -101,7 +101,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 	{
 		testOutput.showProgress();
 		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-		executeTests(file.filename().string(), destTestFolder.string(), srcTestFolder.string(), suiteTestDo);
+		executeTests(file.filename().string(), {destTestFolder, _accessSwitch}, srcTestFolder, suiteTestDo);
 	}
 }
 
@@ -120,7 +120,7 @@ void TestSuite::copyAllTestsFromFolder(string const& _testFolder) const
 		dev::test::copyFile(srcFile.string(), destFile.string());
 		BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(destFile.string()), "Error when copying the test file!");
 	}
-	runAllTestsInFolder(_testFolder); //check that copied tests are valid
+	runAllTestsInFolder(_testFolder, AccessSwitch::ReadOnly); //check that copied tests are valid
 }
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
@@ -133,9 +133,9 @@ fs::path TestSuite::getFullPath(string const& _testFolder) const
 	return fs::path(test::getTestPath()) / suiteFolder() / _testFolder;
 }
 
-void TestSuite::executeTests(const string& _name, fs::path const& _testPathAppendix, fs::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests) const
+void TestSuite::executeTests(const string& _name, std::pair<fs::path const&, AccessSwitch> _testPathAppendix, fs::path const& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests) const
 {
-	fs::path const testPath = getTestPath() / _testPathAppendix;
+	fs::path const testPath = getTestPath() / _testPathAppendix.first;
 
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
@@ -163,6 +163,8 @@ void TestSuite::executeTests(const string& _name, fs::path const& _testPathAppen
 		json_spirit::read_string(s, v);
 		removeComments(v);
 		json_spirit::mValue output = doTests(v, true);
+		if (_testPathAppendix.second != AccessSwitch::Writable)
+			return; // This happens in -t StateTestsGeneral -- --fillchain --filltests, where the GeneralStateTest should not be updated.
 		addClientInfo(output, testfileUnderTestPath);
 		writeFile(testPath / fs::path(name + ".json"), asBytes(json_spirit::write_string(output, true)));
 	}

@@ -36,6 +36,8 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
+namespace fs = boost::filesystem;
+
 namespace dev {  namespace test {
 
 class TransactionTestSuite: public TestSuite
@@ -194,7 +196,8 @@ public:
 			return;
 		}
 
-		suite.runAllTestsInFolder(casename);
+		dev::test::AccessSwitch const accessSwitch = test::Options::get().filltests ? dev::test::AccessSwitch::Writable : dev::test::AccessSwitch::ReadOnly;
+		suite.runAllTestsInFolder(casename, accessSwitch);
 	}
 };
 

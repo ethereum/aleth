@@ -139,8 +139,9 @@ public:
 			std::cout << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
 		}
+		test::AccessSwitch const accessSwitch = test::Options::get().filltests && !test::Options::get().fillchain ? test::AccessSwitch::Writable : test::AccessSwitch::ReadOnly;
 		test::StateTestSuite suite;
-		suite.runAllTestsInFolder(casename);
+		suite.runAllTestsInFolder(casename, accessSwitch);
 	}
 };
 
