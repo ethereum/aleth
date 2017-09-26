@@ -64,7 +64,7 @@ class TransactionTestSuite: public TestSuite
 
 			if (_fillin)
 			{
-				BOOST_REQUIRE(o.count("transaction") > 0);
+				BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::testFileName());
 				mObject tObj = o["transaction"].get_obj();
 
 				//Construct Rlp of the given transaction
@@ -187,13 +187,6 @@ public:
 	{
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		test::TransactionTestSuite suite;
-
-		if ((casename == "ttWrongRLPFrontier" || casename == "ttWrongRLPHomestead") && test::Options::get().filltests)
-		{
-			suite.copyAllTestsFromFolder(casename);
-			return;
-		}
-
 		suite.runAllTestsInFolder(casename);
 	}
 };
