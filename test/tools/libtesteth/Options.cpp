@@ -244,7 +244,8 @@ Options::Options(int argc, char** argv)
 				cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
 				exit(1);
 			}
-			cout << dev::test::RandomCode::generate(maxCodes) << "\n";
+			test::RandomCodeOptions options;
+			cout << dev::test::RandomCode::generate(maxCodes, options) << "\n";
 			exit(0);
 		}
 		else if (arg == "--createRandomTest")

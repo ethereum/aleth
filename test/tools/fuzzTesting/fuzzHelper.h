@@ -27,8 +27,16 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libevm/Instruction.h>
+#include <test/tools/libtesteth/TestSuite.h>
 
 #pragma once
+
+//Test Templates
+extern std::string const c_testExampleStateTest;
+extern std::string const c_testExampleTransactionTest;
+extern std::string const c_testExampleVMTest;
+extern std::string const c_testExampleBlockchainTest;
+extern std::string const c_testExampleRLPTest;
 
 namespace dev
 {
@@ -37,7 +45,6 @@ namespace test
 
 using IntDistrib = std::uniform_int_distribution<>;
 using DescreteDistrib = std::discrete_distribution<>;
-
 using IntGenerator = std::function<int()>;
 
 struct RandomCodeOptions
@@ -53,6 +60,7 @@ public:
 	void setWeight(dev::eth::Instruction _opCode, int _weight);
 	void addAddress(dev::Address const& _address, AddressType _type);
 	dev::Address getRandomAddress(AddressType _type = AddressType::All) const;
+	int getWeightedRandomOpcode() const;
 
 	bool useUndefinedOpCodes;
 	int smartCodeProbability;
@@ -60,9 +68,8 @@ public:
 	int emptyCodeProbability;
 	int emptyAddressProbability;
 	int precompiledAddressProbability;
-	DescreteDistrib opCodeProbability;
+
 private:
-	void setWeights();
 	std::map<int, int> mapWeights;
 	std::vector<dev::Address> precompiledAddressList;
 	std::vector<dev::Address> stateAddressList;
@@ -84,10 +91,19 @@ class RandomCode
 {
 public:
 	/// Generate random vm code
-	static std::string generate(int _maxOpNumber = 1, RandomCodeOptions _options = RandomCodeOptions());
+	static std::string generate(int _maxOpNumber, RandomCodeOptions const& _options);
 
 	/// Replace keywords in given string with values
-	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap);
+	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options);
+	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap)
+	{
+		RandomCodeOptions defaultOptions;
+		parseTestWithTypes(_test, _varMap, defaultOptions);
+	}
+
+	// Returns empty string if there was an error, a filled test otherwise.
+	// prints test to the std::out or std::error if error when filling
+	static std::string fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testFillerTemplate, dev::test::RandomCodeOptions const& _options);
 
 	/// Generate random byte string of a given length
 	static std::string rndByteSequence(int _length = 1, SizeStrictness _sizeType = SizeStrictness::Strict);
@@ -106,6 +122,7 @@ public:
 	static std::string randomUniIntHex(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
 	static u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
 	static int randomPercent() { refreshSeed(); return percentDist(gen); }
+	static int weightedOpcode(std::vector<int>& _weights);
 
 private:
 	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
