@@ -20,8 +20,8 @@
 
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
-#include <test/tools/libtesteth/JsonSpiritHeaders.h>
 #include <test/tools/libtesteth/Stats.h>
+#include <test/tools/libtesteth/JsonSpiritHeaders.h>
 #include <string>
 using namespace std;
 using namespace dev;
@@ -90,11 +90,8 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 	std::vector<boost::filesystem::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
-	size_t fileCount = files.size();
-	if (test::Options::get().filltests)
-		fileCount *= 2; //tests are checked when filled and after they been filled
 
-	auto testOutput = dev::test::TestOutputHelper(fileCount);
+	auto testOutput = dev::test::TestOutputHelper(files.size());
 	for (auto const& file: files)
 	{
 		testOutput.showProgress();
@@ -105,18 +102,17 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
 {
-	return fs::path(test::getTestPath()) / "src" / suiteFillerFolder() / _testFolder;
+	return test::getTestPath() / "src" / suiteFillerFolder() / _testFolder;
 }
 
 fs::path TestSuite::getFullPath(string const& _testFolder) const
 {
-	return fs::path(test::getTestPath()) / suiteFolder() / _testFolder;
+	return test::getTestPath() / suiteFolder() / _testFolder;
 }
 
 void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFileName) const
 {
-	fs::path boostTestsRepoPath = fs::path(getTestPath());
-	fs::path boostRelativeTestPath = fs::relative(_jsonFileName, boostTestsRepoPath);
+	fs::path const boostRelativeTestPath = fs::relative(_jsonFileName, getTestPath());
 	string testname = _jsonFileName.stem().string();
 	bool isCopySource = false;
 	if (testname.rfind("Filler") != string::npos)
@@ -144,7 +140,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 			clog << " TO " << boostTestPath.string() << "\n";
 			assert(_jsonFileName.string() != boostTestPath.string());
 			TestOutputHelper::showProgress();
-			dev::test::copyFile(_jsonFileName.string(), boostTestPath.string());
+			dev::test::copyFile(_jsonFileName, boostTestPath);
 			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
 		}
 		else
@@ -153,14 +149,14 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 				cnote << "Populating tests...";
 
 			json_spirit::mValue v;
-			string s = asString(dev::contents(_jsonFileName.string()));
+			string const s = asString(dev::contents(_jsonFileName));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _jsonFileName.string() + " is empty.");
 
 			json_spirit::read_string(s, v);
 			removeComments(v);
 			json_spirit::mValue output = doTests(v, true);
 			addClientInfo(output, boostRelativeTestPath);
-			writeFile(boostTestPath.string(), asBytes(json_spirit::write_string(output, true)));
+			writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
 		}
 	}
 
@@ -169,7 +165,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 		cnote << "TEST " << testname << ":";
 
 	json_spirit::mValue v;
-	string s = asString(dev::contents(boostTestPath.string()));
+	string const s = asString(dev::contents(boostTestPath.string()));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << boostTestPath.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 	json_spirit::read_string(s, v);
 	Listener::notifySuiteStarted(testname);

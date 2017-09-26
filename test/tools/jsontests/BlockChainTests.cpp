@@ -125,11 +125,11 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 }
 fs::path BlockchainTestSuite::suiteFolder() const
 {
-	return fs::path("BlockchainTests");
+	return "BlockchainTests";
 }
 fs::path BlockchainTestSuite::suiteFillerFolder() const
 {
-	return fs::path("BlockchainTestsFiller");
+	return "BlockchainTestsFiller";
 }
 fs::path BCGeneralStateTestsSuite::suiteFolder() const
 {
@@ -986,14 +986,13 @@ class bcGeneralTestsFixture
 	public:
 	bcGeneralTestsFixture()
 	{
-		//skip this test suite if not run with --all flag (cases are already tested in state tests)
-		if (!test::Options::get().all)
-			return;
-
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		//skip this test suite if not run with --all flag (cases are already tested in state tests)
 		if (!test::Options::get().all)
+		{
 			cnote << "Skipping hive test " << casename << ". Use --all to run it.\n";
+			return;
+		}
 
 		test::BCGeneralStateTestsSuite suite;
 		suite.runAllTestsInFolder(casename);
