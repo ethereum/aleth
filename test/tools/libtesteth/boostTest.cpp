@@ -106,7 +106,7 @@ int main( int argc, char* argv[] )
 				std::string arg = std::string{argv[i]};
 				if (arg == "-t" && i+1 < argc)
 				{
-					argv[i+1] = (char*)dynamicTestSuiteName.c_str();
+					argv[i + 1] = (char*)dynamicTestSuiteName.c_str();
 					break;
 				}
 			}
