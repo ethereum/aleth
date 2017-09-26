@@ -42,6 +42,7 @@ std::string const c_testDifficulty = R"(
 		"currentDifficulty" : "[CDIFF]"
 	},
 )";
+h256 const nonzeroHash = sha3("whatever nonempty string");
 
 void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _sealEngine)
 {
@@ -49,7 +50,6 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 	ostringstream finalTest;
 	finalTest << "{\n";
 	dev::test::TestOutputHelper testOutputHelper(900);
-	h256 someHash = sha3("whatever nonempty string");
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
@@ -71,7 +71,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				parent.setTimestamp(pStamp);
 				parent.setDifficulty(pDiff);
 				parent.setNumber(cNum - 1);
-				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : someHash);
+				parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : nonzeroHash);
 
 				BlockHeader current;
 				current.setTimestamp(cStamp);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyMainNetwork.json");
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetwork)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetworkTest)));
 
 	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
@@ -210,12 +210,12 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyCustomMainNetwork.json");
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetwork)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MainNetworkTest)));
 
 	if (dev::test::Options::get().filltests)
 	{
-		u256 homesteadBlockNumber = 3500000;
-		std::vector<u256> blockNumberVector = {homesteadBlockNumber - 100000, homesteadBlockNumber, homesteadBlockNumber + 100000};
+		u256 byzantiumBlockNumber = 4370000;
+		std::vector<u256> blockNumberVector = {byzantiumBlockNumber - 100000, byzantiumBlockNumber, byzantiumBlockNumber + 100000};
 		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
 		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
 
@@ -241,7 +241,8 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						parent.setTimestamp(pStamp);
 						parent.setDifficulty(pDiff);
 						parent.setNumber(cNum - 1);
-						parent.setSha3Uncles(sha3(toString(pUncles)));
+
+						parent.setSha3Uncles((pUncles == 0) ? EmptyListSHA3 : nonzeroHash);
 
 						BlockHeader current;
 						current.setTimestamp(cStamp);
@@ -252,7 +253,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						replaceMap["[N]"] = toString(testN);
 						replaceMap["[PDIFF]"] = toCompactHexPrefixed(pDiff);
 						replaceMap["[PSTAMP]"] = toCompactHexPrefixed(pStamp);
-						replaceMap["[PUNCLS]"] = toCompactHexPrefixed(pUncles, 1);
+						replaceMap["[PUNCLS]"] = toCompactHexPrefixed(parent.sha3Uncles());
 						replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
 						replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
 						replaceMap["[CDIFF]"] = toCompactHexPrefixed(sealEngine.calculateDifficulty(current, parent));
