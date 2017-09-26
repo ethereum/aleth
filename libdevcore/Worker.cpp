@@ -48,9 +48,13 @@ void Worker::startWorking()
 			while (m_state != WorkerState::Killing)
 			{
 				WorkerState ex = WorkerState::Starting;
-				bool ok = m_state.compare_exchange_strong(ex, WorkerState::Started);
+				{
+					// When somebody waits for this change on m_state, they'll give me the lock saying 'm_state_notifier.wait(l)'
+					Guard l(x_work);
+					bool ok = m_state.compare_exchange_strong(ex, WorkerState::Started);
+					(void)ok;
+				}
 //				cnote << "Trying to set Started: Thread was" << (unsigned)ex << "; " << ok;
-				(void)ok;
 				m_state_notifier.notify_all();
 
 				try
@@ -67,10 +71,14 @@ void Worker::startWorking()
 //				ex = WorkerState::Stopping;
 //				m_state.compare_exchange_strong(ex, WorkerState::Stopped);
 
-				ex = m_state.exchange(WorkerState::Stopped);
-//				cnote << "State: Stopped: Thread was" << (unsigned)ex;
-				if (ex == WorkerState::Killing || ex == WorkerState::Starting)
-					m_state.exchange(ex);
+				{
+					// When somebody waits for this change on m_state, they'll give me the lock saying 'm_state_notifier.wait(l)'
+					Guard l(x_work);
+					ex = m_state.exchange(WorkerState::Stopped);
+//					cnote << "State: Stopped: Thread was" << (unsigned)ex;
+					if (ex == WorkerState::Killing || ex == WorkerState::Starting)
+						m_state.exchange(ex);
+				}
 				m_state_notifier.notify_all();
 //				cnote << "Waiting until not Stopped...";
 
