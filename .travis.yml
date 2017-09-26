@@ -126,9 +126,13 @@ after_success:
     - make coverage.data
     # Get CodeCov script (fixed commit) and upload coverage report.
     - bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/d8016a07d67d813f98afdbaf98dc4f46d9806118/codecov) -X fix -f coverage.data
-after_script:
+after_script: |
     # Hunter: upload cache to the cache server.
-    - if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" ]]; then pip install requests && make -C $TRAVIS_BUILD_DIR/build hunter_upload_cache; fi
+    if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" ]]; then
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install --upgrade requests pyopenssl; fi
+      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip install requests; fi
+      make -C $TRAVIS_BUILD_DIR/build hunter_upload_cache
+    fi
 deploy:
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that
