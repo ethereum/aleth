@@ -31,6 +31,8 @@
 #include <boost/algorithm/string/trim_all.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
+
 #include <libdevcore/FileSystem.h>
 #include <libethashseal/EthashAux.h>
 #include <libevm/VM.h>
