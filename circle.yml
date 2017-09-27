@@ -5,15 +5,16 @@ default-steps: &default-steps
       name: "Init submodules"
       command: git submodule update --init
 
-  - cache-restore:
-      name: "Restore dependencies cache"
-      key: deps-4-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
-
   - run:
       name: "Configure"
       command: |
         mkdir -p build && cd build
-        cmake .. -G Ninja -DCOVERAGE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+        cmake .. -G "${GENERATOR}" -DCOVERAGE=ON
+        echo $CXX > compiler
+
+  - cache-restore:
+      name: "Restore dependencies cache"
+      key: &deps-cache-key deps-0-{{ checksum "build/compiler" }}-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
 
   - run:
       name: "Upload Hunter cache"
@@ -24,13 +25,11 @@ default-steps: &default-steps
 
   - run:
       name: "Build"
-      pwd: ~/cpp-ethereum/build
-      command: |
-        ninja -j8
+      command: cmake --build build -- -j $BUILD_PARALLEL_JOBS
 
   - cache-save:
       name: "Save dependencies cache"
-      key: deps-4-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
+      key: *deps-cache-key
       paths:
         - ~/cpp-ethereum/build/deps
 
@@ -48,11 +47,7 @@ default-steps: &default-steps
       command: |
         export ETHEREUM_TEST_PATH=~/cpp-ethereum/test/jsontests
         export TMPDIR=/dev/shm
-        test/testeth -t BlockchainTests &
-        test/testeth -t StateTestsGeneral &
-        test/testeth -t 'KeyStore:Crypto:KeyManagerTests' &
-        test/testeth -t '!BlockchainTests:!StateTestsGeneral:!KeyStore:!Crypto:!KeyManagerTests' &
-        wait
+        CTEST_OUTPUT_ON_FAILURE=1 ctest -j8
 
   - cache-save:
       name: "Save Ethash DAG file"
@@ -68,9 +63,27 @@ default-steps: &default-steps
 
 version: 2
 jobs:
+
   default-clang5-ninja:
+    environment:
+      - CXX: clang++-5.0
+      - CC:  clang-5.0
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 8
     docker:
-      - image: ethereum/cpp-build-env:experimental
+      - image: ethereum/cpp-build-env
+    working_directory: ~/cpp-ethereum
+    steps: *default-steps
+
+  debug-gcc4-ninja:
+    environment:
+      - BUILD_TYPE: Debug
+      - CXX: g++-4.8
+      - CC:  gcc-4.8
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 4
+    docker:
+      - image: ethereum/cpp-build-env
     working_directory: ~/cpp-ethereum
     steps: *default-steps
 
@@ -79,3 +92,4 @@ workflows:
   cpp-ethereum:
     jobs:
       - default-clang5-ninja
+      - debug-gcc4-ninja
