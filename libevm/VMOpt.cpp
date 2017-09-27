@@ -35,9 +35,9 @@ void VM::reportStackUse()
 std::array<InstructionMetric, 256> VM::c_metrics;
 void VM::initMetrics()
 {
-	// FIXME: This is not thread safe.
-	static bool done=false;
-	if (!done)
+	// initialization of statics is thread safe, so exchange() will return false only once
+	static std::atomic<bool> done(false);
+	if (!done.exchange(true))
 	{
 		for (unsigned i = 0; i < 256; ++i)
 		{
@@ -47,7 +47,6 @@ void VM::initMetrics()
 			c_metrics[i].ret = op.ret;
 		}
 	}
-	done = true;
 }
 
 void VM::copyCode(int _extraBytes)
