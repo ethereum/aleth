@@ -313,37 +313,6 @@ inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& 
 	return ret += _b;
 }
 
-/// Merge two sets of elements.
-template <class T>
-inline std::set<T>& operator+=(std::set<T>& _a, std::set<T> const& _b)
-{
-	for (auto& i: _b)
-		_a.insert(i);
-	return _a;
-}
-
-/// Merge two sets of elements.
-template <class T>
-inline std::set<T> operator+(std::set<T> const& _a, std::set<T> const& _b)
-{
-	std::set<T> ret(_a);
-	return ret += _b;
-}
-
-template <class A, class B>
-std::unordered_map<A, B>& operator+=(std::unordered_map<A, B>& _x, std::unordered_map<A, B> const& _y)
-{
-	for (auto const& i: _y)
-		_x.insert(i);
-	return _x;
-}
-
-template <class A, class B>
-std::unordered_map<A, B> operator+(std::unordered_map<A, B> const& _x, std::unordered_map<A, B> const& _y)
-{
-	std::unordered_map<A, B> ret(_x);
-	return ret += _y;
-}
 
 /// Make normal string from fixed-length string.
 std::string toString(string32 const& _s);
