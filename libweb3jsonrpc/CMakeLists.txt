@@ -7,11 +7,6 @@ jsonrpcstub_create(web3jsonrpc eth.json
 	EthClient ${CMAKE_CURRENT_BINARY_DIR} EthClient
 )
 
-jsonrpcstub_create(web3jsonrpc db.json
-	dev::rpc::DBFace ${CMAKE_CURRENT_SOURCE_DIR} DBFace
-	DBClient ${CMAKE_CURRENT_BINARY_DIR} DBClient
-)
-
 jsonrpcstub_create(web3jsonrpc debug.json
 	dev::rpc::DebugFace ${CMAKE_CURRENT_SOURCE_DIR} DebugFace
 	DebugClient ${CMAKE_CURRENT_BINARY_DIR} DebugClient
