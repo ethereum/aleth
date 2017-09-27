@@ -83,6 +83,7 @@ public:
 		int _networkID,
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
+		bool _final, // true when no derived object is to be constructed!
 		boost::filesystem::path const& _dbPath = boost::filesystem::path(),
 		WithExisting _forceAction = WithExisting::Trust,
 		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}

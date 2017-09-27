@@ -48,7 +48,7 @@ ClientTest::ClientTest(
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _limits
 ):
-	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
+	Client(_params, _networkID, _host, _gpForAdoption, false, _dbPath, _forceAction, _limits)
 {
 	allowVptrAccess();
 	startWorking();
