@@ -23,7 +23,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcrypto/Common.h>
 #include <libethcore/Exceptions.h>
-#include "Transaction.h"
+#include "TransactionBase.h"
 #include "EVMSchedule.h"
 
 using namespace std;
