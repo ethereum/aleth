@@ -667,6 +667,7 @@ public:
 				}
 			for (auto const& u: bare)
 				cout << toUUID(u) << " (Bare)" << endl;
+			break;
 		}
 		default: break;
 		}
