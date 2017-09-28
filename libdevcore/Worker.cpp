@@ -48,9 +48,12 @@ void Worker::startWorking()
 			while (m_state != WorkerState::Killing)
 			{
 				WorkerState ex = WorkerState::Starting;
-				bool ok = m_state.compare_exchange_strong(ex, WorkerState::Started);
+				{
+					// the condition variable-related lock
+					unique_lock<mutex> l(x_work);
+					m_state = WorkerState::Started;
+				}
 //				cnote << "Trying to set Started: Thread was" << (unsigned)ex << "; " << ok;
-				(void)ok;
 				m_state_notifier.notify_all();
 
 				try
@@ -67,15 +70,19 @@ void Worker::startWorking()
 //				ex = WorkerState::Stopping;
 //				m_state.compare_exchange_strong(ex, WorkerState::Stopped);
 
-				ex = m_state.exchange(WorkerState::Stopped);
-//				cnote << "State: Stopped: Thread was" << (unsigned)ex;
-				if (ex == WorkerState::Killing || ex == WorkerState::Starting)
-					m_state.exchange(ex);
+				{
+					// the condition variable-related lock
+					unique_lock<mutex> l(x_work);
+					ex = m_state.exchange(WorkerState::Stopped);
+//					cnote << "State: Stopped: Thread was" << (unsigned)ex;
+					if (ex == WorkerState::Killing || ex == WorkerState::Starting)
+						m_state.exchange(ex);
+				}
 				m_state_notifier.notify_all();
 //				cnote << "Waiting until not Stopped...";
 
 				{
-					std::unique_lock<std::mutex> l(x_work);
+					unique_lock<mutex> l(x_work);
 					DEV_TIMED_ABOVE("Worker stopping", 100)
 						while (m_state == WorkerState::Stopped)
 							m_state_notifier.wait(l);
