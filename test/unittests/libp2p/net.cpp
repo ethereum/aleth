@@ -65,7 +65,7 @@ protected:
 struct TestNodeTable: public NodeTable
 {
 	/// Constructor
-	TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30300): NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port)) {}
+	TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311): NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port)) {}
 
 	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(unsigned _count)
 	{
@@ -147,7 +147,7 @@ struct TestNodeTableHost: public TestHost
 class TestUDPSocket: UDPSocketEvents, public TestHost
 {
 public:
-	TestUDPSocket(): m_socket(new UDPSocket<TestUDPSocket, 1024>(m_io, *this, 30300)) {}
+	TestUDPSocket(unsigned _port): m_socket(new UDPSocket<TestUDPSocket, 1024>(m_io, *this, _port)) {}
 
 	void onDisconnected(UDPSocketFace*) {};
 	void onReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }
@@ -330,8 +330,11 @@ BOOST_AUTO_TEST_CASE(udpOnce)
 		return;
 	}
 
-	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300), bytes({65,65,65,65}));
-	TestUDPSocket a; a.m_socket->connect(); a.start();
+	unsigned short port = 30333;
+	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), port), bytes({65,65,65,65}));
+	TestUDPSocket a{port};
+	a.m_socket->connect();
+	a.start();
 	a.m_socket->send(d);
 	this_thread::sleep_for(chrono::seconds(1));
 	BOOST_REQUIRE_EQUAL(true, a.success);
