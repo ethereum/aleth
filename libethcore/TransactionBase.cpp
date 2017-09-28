@@ -46,7 +46,7 @@ TransactionBase::TransactionBase(TransactionSkeleton const& _ts, Secret const& _
 
 TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _checkSig)
 {
-	RLP rlp(_rlpData);
+	RLP const rlp(_rlpData);
 	try
 	{
 		if (!rlp.isList())
