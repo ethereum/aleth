@@ -11,4 +11,6 @@ target_link_libraries(
     PRIVATE ethereum ethashseal evm web3jsonrpc webthree devcore
 )
 
+target_include_directories(eth PRIVATE ../utils)
+
 install(TARGETS eth DESTINATION bin)
