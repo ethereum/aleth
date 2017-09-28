@@ -193,6 +193,7 @@ void BlockChainSync::onBlockImported(BlockHeader const& _info)
 
 void BlockChainSync::abortSync()
 {
+	RecursiveGuard l(x_sync);
 	resetSync();
 	host().foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
 	{
@@ -780,6 +781,7 @@ void BlockChainSync::restartSync()
 
 void BlockChainSync::completeSync()
 {
+	RecursiveGuard l(x_sync);
 	resetSync();
 	m_state = SyncState::Idle;
 }
