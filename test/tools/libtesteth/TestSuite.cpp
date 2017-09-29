@@ -22,6 +22,7 @@
 #include <test/tools/libtesteth/TestSuite.h>
 #include <test/tools/libtesteth/Stats.h>
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <test/tools/libtesteth/ThreadUtils.h>
 #include <string>
 using namespace std;
 using namespace dev;
@@ -78,25 +79,42 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
 	}
 }
 
+struct workerArgsStruct
+{
+	workerArgsStruct(TestSuite const& _testSuite, string const& _testFolder, fs::path const& _file):
+		m_testSuite(_testSuite), m_testFolder(_testFolder), m_file(_file)
+	{}
+	TestSuite const& m_testSuite;
+	string const& m_testFolder;
+	fs::path const m_file;
+};
+
+void workerTask(void* _args)
+{
+	workerArgsStruct* args = static_cast<workerArgsStruct*>(_args);
+	args->m_testSuite.executeTest(args->m_testFolder, args->m_file);
+	delete args;
 }
+
+} // namespace
 
 namespace dev
 {
 namespace test
 {
 
-
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 	std::vector<boost::filesystem::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
 
+	ThreadPool tasks(2);
 	auto testOutput = dev::test::TestOutputHelper(files.size());
 	for (auto const& file: files)
 	{
-		testOutput.showProgress();
-		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-		executeTest(_testFolder, file);
+		testOutput.showProgress();;
+		workerArgsStruct* args = new workerArgsStruct(*this, _testFolder, file);
+		tasks.addTask(workerTask, (void*) args);
 	}
 }
 
