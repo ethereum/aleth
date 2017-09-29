@@ -52,8 +52,12 @@ struct RandomCodeOptions
 public:
 	enum AddressType{
 		Precompiled,
+		ByzantiumPrecompiled,
 		StateAccount,
+		SendingAccount,
 		PrecompiledOrStateOrCreate,
+		DestinationAccount,
+		CallAccount,
 		All
 	};
 	RandomCodeOptions();
@@ -68,11 +72,17 @@ public:
 	int emptyCodeProbability;
 	int emptyAddressProbability;
 	int precompiledAddressProbability;
+	int byzPrecompiledAddressProbability;
+	int precompiledDestProbability;
+	int sendingAddressProbability;
 
 private:
 	std::map<int, int> mapWeights;
 	std::vector<dev::Address> precompiledAddressList;
+	std::vector<dev::Address> byzPrecompiledAddressList;
 	std::vector<dev::Address> stateAddressList;
+	std::vector<dev::Address> sendingAddressList;
+	std::vector<dev::Address> destinationAddressList;
 };
 
 enum class SizeStrictness
@@ -91,10 +101,10 @@ class RandomCode
 {
 public:
 	/// Generate random vm code
-	static std::string generate(int _maxOpNumber, RandomCodeOptions const& _options);
+	static std::string generate(int _maxOpNumber, RandomCodeOptions& _options);
 
 	/// Replace keywords in given string with values
-	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options);
+	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions& _options);
 	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap)
 	{
 		RandomCodeOptions defaultOptions;
@@ -103,7 +113,8 @@ public:
 
 	// Returns empty string if there was an error, a filled test otherwise.
 	// prints test to the std::out or std::error if error when filling
-	static std::string fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testFillerTemplate, dev::test::RandomCodeOptions const& _options);
+	static std::string fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testFillerTemplate, dev::test::RandomCodeOptions& _options);
+
 
 	/// Generate random byte string of a given length
 	static std::string rndByteSequence(int _length = 1, SizeStrictness _sizeType = SizeStrictness::Strict);
@@ -125,7 +136,7 @@ public:
 	static int weightedOpcode(std::vector<int>& _weights);
 
 private:
-	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
+	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions& _options);
 	static std::string getPushCode(int _value);
 	static std::string getPushCode(std::string const& _hex);
 	static int recursiveRLP(std::string& _result, int _depth, std::string& _debug);
@@ -137,12 +148,14 @@ private:
 	static IntDistrib percentDist;			///< 0..100 percent
 	static IntDistrib opLengDist;			///< 1..32  byte string
 	static IntDistrib opMemrDist;			///< 1..10MB  byte string
+	static IntDistrib opSmallMemrDist; // 0..1kb
 	static IntDistrib uniIntDist;			///< 0..0x7fffffff
 
 	static IntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
 	static IntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
 	static IntGenerator randOpLengGen;		///< Generate random length from opLengDist
 	static IntGenerator randOpMemrGen;		///< Generate random length from opMemrDist
+	static IntGenerator randoOpSmallMemrGen;		///< Generate random length from opSmallMemrDist
 };
 
 }

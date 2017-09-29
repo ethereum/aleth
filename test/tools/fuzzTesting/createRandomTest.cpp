@@ -34,7 +34,8 @@ namespace dev { namespace test {
 bool createRandomTest()
 {
 	StateTestSuite suite;
-	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
+	dev::test::Options& optionsConst = const_cast<dev::test::Options&>(dev::test::Options::get());
+	dev::test::Options& options = optionsConst;
 	if (options.rCurrentTestSuite != suite.suiteFolder())
 	{
 		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)\n";
@@ -52,7 +53,7 @@ bool createRandomTest()
 }} //namespaces
 
 //Prints a generated test Json into std::out
-std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, dev::test::RandomCodeOptions const& _options)
+std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, dev::test::RandomCodeOptions& _options)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
@@ -88,7 +89,7 @@ std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _t
 }
 
 /// Parse Test string replacing keywords to fuzzed values
-void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options)
+void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions& _options)
 {
 	std::vector<std::string> types = getTypes();
 
@@ -109,7 +110,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				cnote << debug;
 			}
 			else if (type == "[CODE]")
-				replace = dev::test::RandomCode::generate(10, _options);
+				replace = dev::test::RandomCode::generate(50, _options);
 			else if (type == "[HEX]")
 				replace = dev::test::RandomCode::randomUniIntHex();
 			else if (type == "[HEX32]")
@@ -134,16 +135,20 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
 			else if (type == "[DESTADDRESS]")
 			{
-				Address address = _options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrStateOrCreate);
+				Address address = _options.getRandomAddress(RandomCodeOptions::AddressType::DestinationAccount);
 				if (address != ZeroAddress) //else transaction creation
 					replace = "0x" + toString(address);
 			}
-			else if (type == "[ADDRESS]")
-				replace = toString(_options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
-			else if (type == "[0xADDRESS]")
+			else if (type == "[ADDRESS]") {
+				Address destAddress = _options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount);
+				_options.addAddress(destAddress, RandomCodeOptions::AddressType::DestinationAccount);
+				replace = toString(destAddress);
+			}
+			else if (type == "[0xADDRESS]") {
 				replace = "0x" + toString(_options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
+			}
 			else if (type == "[TRANSACTIONGASLIMIT]")
-				replace = test::RandomCode::randomUniIntHex(dev::u256("5000"), dev::u256("10000000"));
+				replace = test::RandomCode::randomUniIntHex(dev::u256("25000"), dev::u256("10000000"));
 			else if (type == "[GASPRICE]")
 				replace = test::RandomCode::randomUniIntHex(0, dev::u256("10"));
 			else
@@ -176,8 +181,8 @@ std::vector<std::string> dev::test::RandomCode::getTypes()
 		"[0xHASH32]",			//Random hash string 0x...  32 byte length
 		"[V]",					//Random V value for transaction sig. could be invalid.
 		"[BLOCKGASLIMIT]",		//Random block gas limit with max of 2**55-1
-		"[DESTADDRESS]",		//Random destination address for transaction (could be empty string)
 		"[ADDRESS]",			//Random account address
+		"[DESTADDRESS]",		//Random destination address for transaction (could be empty string)
 		"[0xADDRESS]",			//Random account address
 		"[TRANSACTIONGASLIMIT]", //Random reasonable gas limit for a transaction
 		"[GASPRICE]"			//Random reasonable gas price for transaction (could be 0)
@@ -257,9 +262,7 @@ std::string const c_testExampleStateTest = R"(
 		],
 		"gasLimit" : [
 			"[TRANSACTIONGASLIMIT]",
-			"0",
-			"21000",
-			"60000"
+			"3000000"
 		],
 		"gasPrice" : "[GASPRICE]",
 		"nonce" : "0",
