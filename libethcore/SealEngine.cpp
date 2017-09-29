@@ -16,7 +16,7 @@
 */
 
 #include "SealEngine.h"
-#include "Transaction.h"
+#include "TransactionBase.h"
 
 using namespace std;
 using namespace dev;
