@@ -72,7 +72,7 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
 using namespace boost::algorithm;
-
+namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
 static std::atomic<bool> g_silence = {false};
@@ -409,6 +409,31 @@ int main(int argc, char** argv)
 	bool chainConfigIsSet = false;
 	string configJSON;
 	string genesisJSON;
+    po::options_description client_default_mode("Client mode (default)");
+    client_default_mode.add_options()
+            ("mainnet", "Use the main network protocol.")
+            ("ropsten", "Use the Ropsten testnet.")
+            ("private", po::value<string>(), "<name>  Use a private chain.")
+            ("test", "Testing mode: Disable PoW and provide test rpc interface.")
+            ("config", po::value<string>(), "<file> Configure specialised blockchain using given JSON information.")
+//("oppose-dao-fork", "Ignore DAO hard fork (default is to participate).")
+            ("mode,o", po::value<string>(), "<full/peer>  Start a full node or a peer node (default: full).\n")
+            ("json-rpc,j", "Enable JSON-RPC server (default: off).")
+            ("ipc", "Enable IPC server (default: on).")
+            ("ipcpath", po::value<string>(), "Set .ipc socket path (default: data directory)")
+            ("admin-via-http", "Expose admin interface via http - UNSAFE! (default: off).")
+            ("no-ipc", "Disable IPC server.")
+		    //TODO << "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ").\n"
+		    ("rpccorsdomain", po::value<string>(), "<domain>  Domain on which to send Access-Control-Allow-Origin header.")
+		    ("admin", po::value<string>(), "<password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up).")
+		    ("kill,K", "Kill the blockchain first.")
+		    ("rebuild,R", "Rebuild the blockchain from the existing database.")
+		    ("rescue", "Attempt to rescue a corrupt database.\n")
+		    ("import-presale", po::value<string>(), "<file>  Import a pre-sale key; you'll need to specify the password to this key.")
+		    ("import-secret,s", po::value<string>(), "<secret>  Import a secret key into the key store.")
+		    ("master", po::value<string>(), "<password>  Give the master password for the key store. Use --master \"\" to show a prompt.")
+		    ("password", po::value<string>(), "<password>  Give a password for a private key.\n")
+    ;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
