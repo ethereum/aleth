@@ -409,14 +409,14 @@ int main(int argc, char** argv)
 	bool chainConfigIsSet = false;
 	string configJSON;
 	string genesisJSON;
-    po::options_description client_default_mode("Client mode (default)");
-    client_default_mode.add_options()
+    po::options_description clientDefaultMode("Client mode (default)");
+    clientDefaultMode.add_options()
             ("mainnet", "Use the main network protocol.")
             ("ropsten", "Use the Ropsten testnet.")
             ("private", po::value<string>(), "<name>  Use a private chain.")
             ("test", "Testing mode: Disable PoW and provide test rpc interface.")
             ("config", po::value<string>(), "<file> Configure specialised blockchain using given JSON information.")
-//("oppose-dao-fork", "Ignore DAO hard fork (default is to participate).")
+            ("oppose-dao-fork", "Ignore DAO hard fork (default is to participate).")
             ("mode,o", po::value<string>(), "<full/peer>  Start a full node or a peer node (default: full).\n")
             ("json-rpc,j", "Enable JSON-RPC server (default: off).")
             ("ipc", "Enable IPC server (default: on).")
@@ -427,6 +427,7 @@ int main(int argc, char** argv)
 		    ("rpccorsdomain", po::value<string>(), "<domain>  Domain on which to send Access-Control-Allow-Origin header.")
 		    ("admin", po::value<string>(), "<password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up).")
 		    ("kill,K", "Kill the blockchain first.")
+		    ("kill-blockchain", "Kill the blockchain first.")
 		    ("rebuild,R", "Rebuild the blockchain from the existing database.")
 		    ("rescue", "Attempt to rescue a corrupt database.\n")
 		    ("import-presale", po::value<string>(), "<file>  Import a pre-sale key; you'll need to specify the password to this key.")
@@ -434,6 +435,21 @@ int main(int argc, char** argv)
 		    ("master", po::value<string>(), "<password>  Give the master password for the key store. Use --master \"\" to show a prompt.")
 		    ("password", po::value<string>(), "<password>  Give a password for a private key.\n")
     ;
+	po::options_description clientTransacting("Client transactions");
+	clientTransacting.add_options()
+			//TODO << "    --ask <wei>  Set the minimum ask gas price under which no transaction will be mined (default " << toString(DefaultGasPrice) << " ).\n;
+			//TODO << "    --bid <wei>  Set the bid gas price to pay for transactions (default " << toString(DefaultGasPrice) << " ).\n"
+			("unsafe-transactions", "Allow all transactions to proceed without verification. EXTREMELY UNSAFE.")
+	;
+	po::options_description clientMining("Client mining");
+	clientMining.add_options()
+			("address,a", po::value<string>(), "<addr>  Set the author (mining payout) address to given address (default: auto).")
+			("author", po::value<string>(), "<addr>  Set the author (mining payout) address to given address (default: auto).")
+			("mining,m", po::value<string>(), "<on/off/number>  Enable mining, optionally for a specified number of blocks (default: off).")
+			("force-mining,f", "Mine even when there are no transactions to mine (default: off).")
+			("cpu,C", "When mining, use the CPU.")
+			("mining-threads,t", "<n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform).")
+	;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
