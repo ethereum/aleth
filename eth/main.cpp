@@ -437,8 +437,8 @@ int main(int argc, char** argv)
     ;
 	po::options_description clientTransacting("Client transactions");
 	clientTransacting.add_options()
-			//TODO << "    --ask <wei>  Set the minimum ask gas price under which no transaction will be mined (default " << toString(DefaultGasPrice) << " ).\n;
-			//TODO << "    --bid <wei>  Set the bid gas price to pay for transactions (default " << toString(DefaultGasPrice) << " ).\n"
+			//TODO << "--ask <wei>  Set the minimum ask gas price under which no transaction will be mined (default " << toString(DefaultGasPrice) << " ).\n;
+			//TODO << "--bid <wei>  Set the bid gas price to pay for transactions (default " << toString(DefaultGasPrice) << " ).\n"
 			("unsafe-transactions", "Allow all transactions to proceed without verification. EXTREMELY UNSAFE.")
 	;
 	po::options_description clientMining("Client mining");
