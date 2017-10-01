@@ -47,7 +47,7 @@ namespace eth
 
 #ifndef EVM_JUMP_DISPATCH
 	#ifdef __GNUC__
-		#define EVM_JUMP_DISPATCH true
+		#define EVM_JUMP_DISPATCH false
 	#else
 		#define EVM_JUMP_DISPATCH false
 	#endif
@@ -137,7 +137,7 @@ namespace eth
 //
 #if EVM_SWITCH_DISPATCH
 
-	#define INIT_CASES if (!m_caseInit) { m_PC = 0; m_caseInit = true; return; }
+	#define INIT_CASES
 	#define DO_CASES for(;;) { fetchInstruction(); switch(m_OP) {
 	#define CASE(name) case Instruction::name:
 	#define NEXT ++m_PC; break;
