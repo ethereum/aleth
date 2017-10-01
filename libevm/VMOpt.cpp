@@ -35,9 +35,8 @@ void VM::reportStackUse()
 std::array<InstructionMetric, 256> VM::c_metrics;
 void VM::initMetrics()
 {
-	// initialization of statics is thread safe, so exchange() will return false only once
-	static std::atomic<bool> done(false);
-	if (!done.exchange(true))
+	static bool done =
+	[]()
 	{
 		for (unsigned i = 0; i < 256; ++i)
 		{
@@ -46,7 +45,9 @@ void VM::initMetrics()
 			c_metrics[i].args = op.args;
 			c_metrics[i].ret = op.ret;
 		}
-	}
+		return true;
+	} ();
+	(void)done;
 }
 
 void VM::copyCode(int _extraBytes)
@@ -204,7 +205,6 @@ void VM::optimize()
 void VM::initEntry()
 {
 	m_bounce = &VM::interpretCases; 	
-	interpretCases(); // first call initializes jump table
 	initMetrics();
 	optimize();
 }

@@ -414,13 +414,7 @@ namespace eth
 			&&REVERT,  \
 			&&INVALID,  \
 			&&SUICIDE,  \
-		};  \
-		if (!m_caseInit) {            \
-			c_jumpTable = jumpTable;  \
-			m_PC = 0;                 \
-			m_caseInit = true;        \
-			return;                   \
-		}
+		};
 
 	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_OP];
 	#define CASE(name) name:
