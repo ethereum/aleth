@@ -450,6 +450,30 @@ int main(int argc, char** argv)
 			("cpu,C", "When mining, use the CPU.")
 			("mining-threads,t", "<n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform).")
 	;
+	po::options_description clientNetworking("Client networking");
+	clientNetworking.add_options()
+			("client-name", po::value<string>(), "<name>  Add a name to your client's version string (default: blank).")
+			("bootstrap,b",  "Connect to the default Ethereum peer servers (default unless --no-discovery used).")
+			("no-bootstrap",  "Do not connect to the default Ethereum peer servers (default only when --no-discovery is used).")
+			("peers,x", po::value<int>(), "<number>  Attempt to connect to a given number of peers (default: 11).")
+			("peer-stretch", po::value<int>(), "<number>  Give the accepted connection multiplier (default: 7).")
+			("public-ip", po::value<string>(), "<ip>  Force advertised public IP to the given IP (default: auto).")
+			("public", po::value<string>(), "<ip>  Force advertised public IP to the given IP (default: auto).")
+			("listen-ip", po::value<string>(), "<ip>(:<port>)  Listen on the given IP for incoming connections (default: 0.0.0.0).")
+			("listen", po::value<short>(), "<port>  Listen on the given port for incoming connections (default: 30303).")
+			("listen-port", po::value<short>(), "<port>  Listen on the given port for incoming connections (default: 30303).")
+			("remote,r", po::value<string>(), "<host>(:<port>)  Connect to the given remote host (default: none).")
+			("port", po::value<short>(), "<port>  Connect to the given remote port (default: 30303).")
+			("network-id", po::value<long>(), "<n>  Only connect to other hosts with this network id.")
+			("upnp", po::value<string>(), "<on/off>  Use UPnP for NAT (default: on).")
+			("peerset", po::value<string>(), "<list>  Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n        Types:\n        default		Attempt connection when no other peers are available and pinning is disabled.\n        required		Keep connected at all times.\n")
+			// TODO:
+			//		<< "	--trust-peers <filename>  Space delimited list of publickeys." << endl
+			("no-discovery",  "Disable node discovery, implies --no-bootstrap.")
+			("pin",  "Only accept or connect to trusted peers.")
+			("hermit",  "Equivalent to --no-discovery --pin.")
+			("sociable",  "Force discovery and no pinning.\n")
+	;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
