@@ -11,7 +11,7 @@ contract rc5 {
 	}
 
 	function shift_right(uint32 v, uint32 n) internal returns (uint32) {
-		return v *= uint32(2)**n;
+		return v /= uint32(2)**n;
 	}
 	
 	function rotate_left(uint32 v, uint32 n) internal returns (uint32) {

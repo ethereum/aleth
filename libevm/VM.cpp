@@ -621,6 +621,70 @@ void VM::interpretCases()
 		}
 		NEXT
 
+#if EIP_145
+
+		CASE(SHL)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			if (m_SP[0] >= 256)
+				m_SPP[0] = 0;
+			else
+			{
+				m_SPP[0] = m_SP[1] << uint64_t(m_SP[0]);
+			}
+		}
+		NEXT
+
+		CASE(SHR)
+		{
+			ON_OP();
+			updateIOGas();
+
+			if (m_SP[0] >= 256)
+				m_SPP[0] = 0;
+			else
+			{
+				m_SPP[0] = m_SP[1] >> uint64_t(m_SP[0]);
+			}
+		}
+		NEXT
+
+		CASE(SAR)
+		{
+			ON_OP();
+			updateIOGas();
+			
+			static u256 const hibit = u256(1) << 255;
+			static u256 const allbits =
+				u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+			u256 shiftee = m_SP[1];
+			if (m_SP[0] >= 256)
+			{
+				if (shiftee & hibit)
+					m_SPP[0] = allbits;
+				else
+					m_SPP[0] = 0;
+			}
+			else
+			{
+				uint64_t amount = uint64_t(m_SP[0]);
+			    m_SPP[0] = shiftee >> amount;
+			    m_SPP[0] |= allbits << (256 - amount);
+			}
+		}
+		NEXT
+#else
+		CASE(SHL)
+		CASE(SHR)
+		CASE(SAR)
+		{
+			throwBadInstruction();
+		}
+#endif
+
 		CASE(ADDMOD)
 		{
 			ON_OP();

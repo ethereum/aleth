@@ -37,6 +37,10 @@ namespace eth
 //
 // EVM_TRACE              - provides various levels of tracing
 
+#ifndef EIP_145
+	#define EIP_145 true
+#endif
+
 #ifndef EIP_615
 	#define EIP_615 false
 #endif
@@ -47,7 +51,7 @@ namespace eth
 
 #ifndef EVM_JUMP_DISPATCH
 	#ifdef __GNUC__
-		#define EVM_JUMP_DISPATCH true
+		#define EVM_JUMP_DISPATCH false//true
 	#else
 		#define EVM_JUMP_DISPATCH false
 	#endif
@@ -185,9 +189,9 @@ namespace eth
 			&&XOR,  \
 			&&NOT,  \
 			&&BYTE,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
+			&&SHL,  \
+			&&SHR,  \
+			&&SAR,  \
 			&&INVALID,  \
 			&&INVALID,  \
 			&&SHA3,        /* 20, */  \
