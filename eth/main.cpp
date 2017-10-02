@@ -282,10 +282,10 @@ public:
 	bool shouldExit() const { return s_shouldExit; }
 
 private:
-	static bool s_shouldExit;
+	static std::atomic<bool> s_shouldExit;
 };
 
-bool ExitHandler::s_shouldExit = false;
+std::atomic<bool> ExitHandler::s_shouldExit = {false};
 
 int main(int argc, char** argv)
 {

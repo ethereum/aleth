@@ -37,6 +37,7 @@ unsigned EthashCPUMiner::s_numInstances = 0;
 EthashCPUMiner::EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci):
 	GenericMiner<EthashProofOfWork>(_ci), Worker("miner" + toString(index()))
 {
+	allowVptrAccess();
 }
 
 EthashCPUMiner::~EthashCPUMiner()

@@ -114,6 +114,7 @@ Host::Host(string const& _clientVersion, NetworkPreferences const& _n, bytesCons
 	Host(_clientVersion, networkAlias(_restoreNetwork), _n)
 {
 	m_restoreNetwork = _restoreNetwork.toBytes();
+	allowVptrAccess();
 }
 
 Host::~Host()
@@ -126,7 +127,7 @@ void Host::start()
 {
 	DEV_TIMED_FUNCTION_ABOVE(500);
 	startWorking();
-	while (isWorking() && !haveNetwork())
+	while (inConstructor() || isStarting() || (isWorking() && !haveNetwork()))
 		this_thread::sleep_for(chrono::milliseconds(10));
 	
 	// network start failed!
@@ -287,11 +288,16 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		return;
 	}
 
-	if (m_netPrefs.pin && !m_requiredPeers.count(_id))
+	size_t requiredPeersCount = 0;
 	{
-		cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
-		ps->disconnect(UnexpectedIdentity);
-		return;
+		Guard l(x_requiredPeers);
+		requiredPeersCount = m_requiredPeers.count(_id);
+		if (m_netPrefs.pin && !requiredPeersCount)
+		{
+			cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
+			ps->disconnect(UnexpectedIdentity);
+			return;
+		}
 	}
 	
 	{
@@ -511,7 +517,10 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 {
-	m_requiredPeers.insert(_n);
+	{
+		Guard l(x_requiredPeers);
+		m_requiredPeers.insert(_n);
+	}
 
 	if (!m_run)
 		return;

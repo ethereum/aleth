@@ -125,9 +125,9 @@ struct TestNodeTable: public NodeTable
 /**
  * Only used for testing. Not useful beyond tests.
  */
-struct TestNodeTableHost: public TestHost
+struct TestNodeTableHost final: public TestHost
 {
-	TestNodeTableHost(unsigned _count = 8): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"))), testNodes(TestNodeTable::createTestNodes(_count)) {};
+	TestNodeTableHost(unsigned _count = 8): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"))), testNodes(TestNodeTable::createTestNodes(_count)) { allowVptrAccess(); };
 	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 
 	void setup() { for (auto n: testNodes) nodeTables.push_back(make_shared<TestNodeTable>(m_io,n.first, bi::address::from_string("127.0.0.1"),n.second)); }
@@ -144,10 +144,10 @@ struct TestNodeTableHost: public TestHost
 	std::vector<shared_ptr<TestNodeTable>> nodeTables;
 };
 
-class TestUDPSocket: UDPSocketEvents, public TestHost
+class TestUDPSocket final: UDPSocketEvents, public TestHost
 {
 public:
-	TestUDPSocket(unsigned _port): m_socket(new UDPSocket<TestUDPSocket, 1024>(m_io, *this, _port)) {}
+	TestUDPSocket(unsigned _port): m_socket(new UDPSocket<TestUDPSocket, 1024>(m_io, *this, _port)) { allowVptrAccess(); }
 
 	void onDisconnected(UDPSocketFace*) {};
 	void onReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }

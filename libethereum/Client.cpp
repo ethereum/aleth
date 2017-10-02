@@ -63,6 +63,7 @@ Client::Client(
 	int _networkID,
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
+	bool _final,
 	fs::path const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _l
@@ -76,6 +77,8 @@ Client::Client(
 	m_working(chainParams().accountStartNonce)
 {
 	init(_host, _dbPath, _forceAction, _networkID);
+	if (_final)
+		allowVptrAccess();
 }
 
 Client::~Client()
@@ -123,7 +126,6 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	doWork(false);
-	startWorking();
 }
 
 ImportResult Client::queueBlock(bytes const& _block, bool _isSafe)
