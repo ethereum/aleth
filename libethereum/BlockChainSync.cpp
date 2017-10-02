@@ -465,6 +465,16 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 			m_haveCommonHeader = true;
 			m_lastImportedBlock = (unsigned)info.number();
 			m_lastImportedBlockHash = info.hash();
+		
+			if (!m_headers.empty() && m_headers.begin()->first == m_lastImportedBlock + 1 && 
+				m_headers.begin()->second[0].parent != m_lastImportedBlockHash)
+			{
+				// Start of the header chain in m_headers doesn't match our known chain,
+				// probably we've downloaded other fork
+				clog(NetWarn) << "Unknown parent of the downloaded headers, restarting sync";
+				restartSync();
+				return;
+			}
 		}
 		else
 		{
