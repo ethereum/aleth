@@ -655,16 +655,24 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
+			
+			static u256 const hibit = u256(1) << 255;
+			static u256 const allbits =
+				u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
-			s256 shiftee = m_SP[1];
+			u256 shiftee = m_SP[1];
 			if (m_SP[0] >= 256)
 			{
-				if (shiftee < 0)
-					m_SPP[0] = u256(-1);
+				if (shiftee & hibit)
+					m_SPP[0] = allbits;
+				else
+					m_SPP[0] = 0;
 			}
 			else
 			{
-				m_SPP[0] = u256(shiftee >> uint64_t(m_SP[0]));
+				uint64_t amount = uint64_t(m_SP[0]);
+			    m_SPP[0] = shiftee >> amount;
+			    m_SPP[0] |= allbits << (256 - amount);
 			}
 		}
 		NEXT
