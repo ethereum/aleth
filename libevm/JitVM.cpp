@@ -17,8 +17,10 @@ class EVM
 {
 public:
 	EVM():
-		m_instance(evmjit_get_factory().create())
-	{}
+		m_instance(evmjit_create())
+	{
+		assert(m_instance->abi_version == EVM_ABI_VERSION);
+	}
 
 	~EVM()
 	{
@@ -51,9 +53,9 @@ public:
 		Result(Result const&) = delete;
 		Result& operator=(Result const&) = delete;
 
-		evm_result_code code() const
+		evm_status_code status() const
 		{
-			return m_result.code;
+			return m_result.status_code;
 		}
 
 		int64_t gasLeft() const
@@ -128,14 +130,14 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	auto r = getJit().execute(_ext, gas);
 
 	// TODO: Add EVM-C result codes mapping with exception types.
-	if (r.code() == EVM_FAILURE)
+	if (r.status() == EVM_FAILURE)
 		BOOST_THROW_EXCEPTION(OutOfGas());
 
 	io_gas = r.gasLeft();
 	// FIXME: Copy the output for now, but copyless version possible.
 	owning_bytes_ref output{r.output().toVector(), 0, r.output().size()};
 
-	if (r.code() == EVM_REVERT)
+	if (r.status() == EVM_REVERT)
 		throw RevertInstruction(std::move(output));
 
 	return output;
