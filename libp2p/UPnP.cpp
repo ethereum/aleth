@@ -90,7 +90,7 @@ UPnP::UPnP()
 #endif
 	{
 		cnote << "UPnP device not found.";
-		BOOST_THROW_EXCEPTION(NoUPnPDevice());
+		ETH_THROW_EXCEPTION(NoUPnPDevice());
 	}
 }
 

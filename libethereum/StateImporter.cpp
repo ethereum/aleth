@@ -37,7 +37,7 @@ public:
 	void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash) override
 	{
 		if (containsAccount(_addressHash))
-			BOOST_THROW_EXCEPTION(AccountAlreadyImported());
+			ETH_THROW_EXCEPTION(AccountAlreadyImported());
 
 		RLPStream s(4);
 		s << _nonce << _balance;

@@ -25,6 +25,7 @@
 #include <libdevcore/Log.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 
+using namespace dev;
 using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(CoreLibTests, TestOutputHelper)
@@ -32,19 +33,19 @@ BOOST_FIXTURE_TEST_SUITE(CoreLibTests, TestOutputHelper)
 BOOST_AUTO_TEST_CASE(toHex)
 {
 	dev::bytes b = dev::fromHex("f0e1d2c3b4a59687");
-	BOOST_CHECK_EQUAL(dev::toHex(b), "f0e1d2c3b4a59687");
-	BOOST_CHECK_EQUAL(dev::toHexPrefixed(b), "0xf0e1d2c3b4a59687");
+	ETH_CHECK_EQUAL(dev::toHex(b), "f0e1d2c3b4a59687");
+	ETH_CHECK_EQUAL(dev::toHexPrefixed(b), "0xf0e1d2c3b4a59687");
 
 	dev::h256 h("705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
-	BOOST_CHECK_EQUAL(dev::toHex(h), "705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
-	BOOST_CHECK_EQUAL(dev::toHexPrefixed(h), "0x705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
+	ETH_CHECK_EQUAL(dev::toHex(h), "705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
+	ETH_CHECK_EQUAL(dev::toHexPrefixed(h), "0x705a1849c02140e7197fbde82987a9eb623f97e32fc479a3cd8e4b3b52dcc4b2");
 }
 
 BOOST_AUTO_TEST_CASE(toCompactHex)
 {
 	dev::u256 i("0x123456789abcdef");
-	BOOST_CHECK_EQUAL(dev::toCompactHex(i), "0123456789abcdef");
-	BOOST_CHECK_EQUAL(dev::toCompactHexPrefixed(i), "0x0123456789abcdef");
+	ETH_CHECK_EQUAL(dev::toCompactHex(i), "0123456789abcdef");
+	ETH_CHECK_EQUAL(dev::toCompactHexPrefixed(i), "0x0123456789abcdef");
 }
 
 BOOST_AUTO_TEST_CASE(byteRef)
@@ -55,21 +56,21 @@ BOOST_AUTO_TEST_CASE(byteRef)
 	dev::h256 hash32("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
 	hash32.ref().copyTo(out);
 
-	BOOST_CHECK_MESSAGE(out.size() == 32, "Error wrong result size when h256::ref().copyTo(dev::bytesRef out)");
-	BOOST_CHECK_MESSAGE(out.toBytes() == originalSequence, "Error when h256::ref().copyTo(dev::bytesRef out)");
+	ETH_CHECK_MESSAGE(out.size() == 32, "Error wrong result size when h256::ref().copyTo(dev::bytesRef out)");
+	ETH_CHECK_MESSAGE(out.toBytes() == originalSequence, "Error when h256::ref().copyTo(dev::bytesRef out)");
 }
 
 BOOST_AUTO_TEST_CASE(isHex)
 {
-	BOOST_CHECK(dev::isHex("0x"));
-	BOOST_CHECK(dev::isHex("0xA"));
-	BOOST_CHECK(dev::isHex("0xAB"));
-	BOOST_CHECK(dev::isHex("0x0AA"));
-	BOOST_CHECK(!dev::isHex("0x0Ag"));
-	BOOST_CHECK(!dev::isHex("0Ag"));
-	BOOST_CHECK(!dev::isHex(" "));
-	BOOST_CHECK(dev::isHex("aa"));
-	BOOST_CHECK(dev::isHex("003"));
+	ETH_CHECK(dev::isHex("0x"));
+	ETH_CHECK(dev::isHex("0xA"));
+	ETH_CHECK(dev::isHex("0xAB"));
+	ETH_CHECK(dev::isHex("0x0AA"));
+	ETH_CHECK(!dev::isHex("0x0Ag"));
+	ETH_CHECK(!dev::isHex("0Ag"));
+	ETH_CHECK(!dev::isHex(" "));
+	ETH_CHECK(dev::isHex("aa"));
+	ETH_CHECK(dev::isHex("003"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

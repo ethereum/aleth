@@ -35,14 +35,14 @@ PrecompiledRegistrar* PrecompiledRegistrar::s_this = nullptr;
 PrecompiledExecutor const& PrecompiledRegistrar::executor(std::string const& _name)
 {
 	if (!get()->m_execs.count(_name))
-		BOOST_THROW_EXCEPTION(ExecutorNotFound());
+		ETH_THROW_EXCEPTION(ExecutorNotFound());
 	return get()->m_execs[_name];
 }
 
 PrecompiledPricer const& PrecompiledRegistrar::pricer(std::string const& _name)
 {
 	if (!get()->m_pricers.count(_name))
-		BOOST_THROW_EXCEPTION(PricerNotFound());
+		ETH_THROW_EXCEPTION(PricerNotFound());
 	return get()->m_pricers[_name];
 }
 

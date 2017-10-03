@@ -43,13 +43,13 @@ BOOST_AUTO_TEST_CASE(FixedHashComparisons)
 	FixedHash<4> h5(0xAAAAAAAA);
 	FixedHash<4> h6(0xBAADF00D);
 
-	BOOST_CHECK(h1 == h2);
-	BOOST_CHECK(h2 != h3);
+	ETH_CHECK(h1 == h2);
+	ETH_CHECK(h2 != h3);
 
-	BOOST_CHECK(h4 > h5);
-	BOOST_CHECK(h5 < h4);
-	BOOST_CHECK(h6 <= h4);
-	BOOST_CHECK(h6 >= h4);
+	ETH_CHECK(h4 > h5);
+	ETH_CHECK(h5 < h4);
+	ETH_CHECK(h6 <= h4);
+	ETH_CHECK(h6 >= h4);
 }
 
 BOOST_AUTO_TEST_CASE(FixedHashXOR)
@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_CASE(FixedHashXOR)
 	FixedHash<2> h1("0xAAAA");
 	FixedHash<2> h2("0xBBBB");
 
-	BOOST_CHECK((h1 ^ h2) == FixedHash<2>("0x1111"));
+	ETH_CHECK((h1 ^ h2) == FixedHash<2>("0x1111"));
 	h1 ^= h2;
-	BOOST_CHECK(h1 == FixedHash<2>("0x1111"));
+	ETH_CHECK(h1 == FixedHash<2>("0x1111"));
 }
 
 BOOST_AUTO_TEST_CASE(FixedHashOR)
@@ -68,9 +68,9 @@ BOOST_AUTO_TEST_CASE(FixedHashOR)
 	FixedHash<4> h2("0xBAADF00D");
 	FixedHash<4> res("0xFBADF33F");
 
-	BOOST_CHECK((h1 | h2) == res);
+	ETH_CHECK((h1 | h2) == res);
 	h1 |= h2;
-	BOOST_CHECK(h1 == res);
+	ETH_CHECK(h1 == res);
 }
 
 BOOST_AUTO_TEST_CASE(FixedHashAND)
@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_CASE(FixedHashAND)
 	FixedHash<4> h2("0xBAADF00D");
 	FixedHash<4> h3("0x92aDB00D");
 
-	BOOST_CHECK((h1 & h2) == h3);
+	ETH_CHECK((h1 & h2) == h3);
 	h1 &= h2;
-	BOOST_CHECK(h1 = h3);
+	ETH_CHECK(h1 = h3);
 }
 
 BOOST_AUTO_TEST_CASE(FixedHashInvert)
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(FixedHashInvert)
 	FixedHash<4> h1("0xD3ADB33F");
 	FixedHash<4> h2("0x2C524CC0");
 
-	BOOST_CHECK(~h1  == h2);
+	ETH_CHECK(~h1  == h2);
 }
 
 BOOST_AUTO_TEST_CASE(FixedHashContains)
@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(FixedHashContains)
 	FixedHash<4> h2("0x0000B331");
 	FixedHash<4> h3("0x0000000C");
 
-	BOOST_CHECK(h1.contains(h2));
-	BOOST_CHECK(!h1.contains(h3));
+	ETH_CHECK(h1.contains(h2));
+	ETH_CHECK(!h1.contains(h3));
 }
 
 void incrementSingleIteration(unsigned seed)
@@ -114,17 +114,17 @@ void incrementSingleIteration(unsigned seed)
 	FixedHash<32> hh2 = hh1;
 	FixedHash<32> hh3(next);
 
-	BOOST_CHECK_EQUAL(++h2, h3);
-	BOOST_CHECK_EQUAL(++hh2, hh3);
+	ETH_CHECK_EQUAL(++h2, h3);
+	ETH_CHECK_EQUAL(++hh2, hh3);
 
-	BOOST_CHECK(h2 > h1);
-	BOOST_CHECK(hh2 > hh1);
+	ETH_CHECK(h2 > h1);
+	ETH_CHECK(hh2 > hh1);
 
 	unsigned reverse1 = ((FixedHash<4>::Arith)h2).convert_to<unsigned>();
 	unsigned reverse2 = ((FixedHash<32>::Arith)hh2).convert_to<unsigned>();
 
-	BOOST_CHECK_EQUAL(next, reverse1);
-	BOOST_CHECK_EQUAL(next, reverse2);
+	ETH_CHECK_EQUAL(next, reverse1);
+	ETH_CHECK_EQUAL(next, reverse2);
 }
 
 BOOST_AUTO_TEST_CASE(FixedHashIncrement)
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(FixedHashIncrement)
 
 	FixedHash<4> h(0xFFFFFFFF);
 	FixedHash<4> zero;
-	BOOST_CHECK_EQUAL(++h, zero);
+	ETH_CHECK_EQUAL(++h, zero);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

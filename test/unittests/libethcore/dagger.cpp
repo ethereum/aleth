@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	cnote << "Testing Proof of Work...";
 	js::mValue v;
 	string const s = contentsString(testPath / fs::path("ethash_tests.json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'ethash_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'ethash_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
 	{
@@ -58,25 +58,25 @@ BOOST_AUTO_TEST_CASE(basic_test)
 		BlockHeader header(fromHex(o["header"].get_str()), HeaderData);
 		h256 headerHash(o["header_hash"].get_str());
 		eth::Nonce nonce(o["nonce"].get_str());
-		BOOST_REQUIRE_EQUAL(headerHash, header.hash(WithoutSeal));
-		BOOST_REQUIRE_EQUAL(nonce, Ethash::nonce(header));
+		ETH_REQUIRE_EQUAL(headerHash, header.hash(WithoutSeal));
+		ETH_REQUIRE_EQUAL(nonce, Ethash::nonce(header));
 
 		unsigned cacheSize(o["cache_size"].get_int());
 		h256 cacheHash(o["cache_hash"].get_str());
-		BOOST_REQUIRE_EQUAL(EthashAux::get()->light(Ethash::seedHash(header))->size, cacheSize);
-		BOOST_REQUIRE_EQUAL(sha3(EthashAux::get()->light(Ethash::seedHash(header))->data()), cacheHash);
+		ETH_REQUIRE_EQUAL(EthashAux::get()->light(Ethash::seedHash(header))->size, cacheSize);
+		ETH_REQUIRE_EQUAL(sha3(EthashAux::get()->light(Ethash::seedHash(header))->data()), cacheHash);
 
 #if TEST_FULL
 		unsigned fullSize(o["full_size"].get_int());
 		h256 fullHash(o["full_hash"].get_str());
-		BOOST_REQUIRE_EQUAL(EthashAux::get()->full(Ethash::seedHash(header))->size(), fullSize);
-		BOOST_REQUIRE_EQUAL(sha3(EthashAux::get()->full(Ethash::seedHash(header))->data()), fullHash);
+		ETH_REQUIRE_EQUAL(EthashAux::get()->full(Ethash::seedHash(header))->size(), fullSize);
+		ETH_REQUIRE_EQUAL(sha3(EthashAux::get()->full(Ethash::seedHash(header))->data()), fullHash);
 #endif
 
 		h256 result(o["result"].get_str());
 		EthashProofOfWork::Result r = EthashAux::eval(Ethash::seedHash(header), header.hash(WithoutSeal), Ethash::nonce(header));
-		BOOST_REQUIRE_EQUAL(r.value, result);
-		BOOST_REQUIRE_EQUAL(r.mixHash, Ethash::mixHash(header));
+		ETH_REQUIRE_EQUAL(r.value, result);
+		ETH_REQUIRE_EQUAL(r.mixHash, Ethash::mixHash(header));
 	}
 }
 

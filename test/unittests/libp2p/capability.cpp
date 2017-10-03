@@ -122,9 +122,9 @@ BOOST_AUTO_TEST_CASE(capability)
 	host2.start();
 	auto port1 = host1.listenPort();
 	auto port2 = host2.listenPort();
-	BOOST_REQUIRE(port1);
-	BOOST_REQUIRE(port2);	
-	BOOST_REQUIRE_NE(port1, port2);
+	ETH_REQUIRE(port1);
+	ETH_REQUIRE(port2);	
+	ETH_REQUIRE_NE(port1, port2);
 
 	for (unsigned i = 0; i < 3000; i += step)
 	{
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(capability)
 			break;
 	}
 
-	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
+	ETH_REQUIRE(host1.isStarted() && host2.isStarted());
 	host1.requirePeer(host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
 	// Wait for up to 12 seconds, to give the hosts time to connect to each other.
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(capability)
 			break;
 	}
 
-	BOOST_REQUIRE(host1.peerCount() > 0 && host2.peerCount() > 0);
+	ETH_REQUIRE(host1.peerCount() > 0 && host2.peerCount() > 0);
 
 	int const target = 64;
 	int checksum = 0;
@@ -155,8 +155,8 @@ BOOST_AUTO_TEST_CASE(capability)
 
 	this_thread::sleep_for(chrono::seconds(target / 64 + 1));
 	std::pair<int, int> testData = thc1->retrieveTestData(host2.id());
-	BOOST_REQUIRE_EQUAL(target, testData.first);
-	BOOST_REQUIRE_EQUAL(checksum, testData.second);
+	ETH_REQUIRE_EQUAL(target, testData.first);
+	ETH_REQUIRE_EQUAL(checksum, testData.second);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

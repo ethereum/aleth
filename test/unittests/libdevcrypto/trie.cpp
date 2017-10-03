@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 	cnote << "Testing Secure Trie...";
 	js::mValue v;
 	string const s = contentsString(testPath / fs::path("hex_encoded_securetrie_test.json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'hex_encoded_securetrie_test.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'hex_encoded_securetrie_test.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
 	{
@@ -102,30 +102,30 @@ BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
 			t.init();
 			ht.init();
 			ft.init();
-			BOOST_REQUIRE(t.check(true));
-			BOOST_REQUIRE(ht.check(true));
-			BOOST_REQUIRE(ft.check(true));
+			ETH_REQUIRE(t.check(true));
+			ETH_REQUIRE(ht.check(true));
+			ETH_REQUIRE(ft.check(true));
 			for (auto const& k: ss)
 			{
 				t.insert(k.first, k.second);
 				ht.insert(k.first, k.second);
 				ft.insert(k.first, k.second);
-				BOOST_REQUIRE(t.check(true));
-				BOOST_REQUIRE(ht.check(true));
-				BOOST_REQUIRE(ft.check(true));
+				ETH_REQUIRE(t.check(true));
+				ETH_REQUIRE(ht.check(true));
+				ETH_REQUIRE(ft.check(true));
 				auto i = ft.begin();
 				auto j = t.begin();
 				for (; i != ft.end() && j != t.end(); ++i, ++j)
 				{
-					BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());
-					BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
-					BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
+					ETH_CHECK_EQUAL(i == ft.end(), j == t.end());
+					ETH_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
+					ETH_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
 				}
-				BOOST_CHECK_EQUAL(ht.root(), ft.root());
+				ETH_CHECK_EQUAL(ht.root(), ft.root());
 			}
-			BOOST_REQUIRE(!o["root"].is_null());
-			BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(ht.root().asArray()));
-			BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(ft.root().asArray()));
+			ETH_REQUIRE(!o["root"].is_null());
+			ETH_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(ht.root().asArray()));
+			ETH_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(ft.root().asArray()));
 		}
 	}
 }
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 	cnote << "Testing Trie...";
 	js::mValue v;
 	string const s = contentsString(testPath / fs::path("trieanyorder.json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trieanyorder.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trieanyorder.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
 	{
@@ -167,30 +167,30 @@ BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 			t.init();
 			ht.init();
 			ft.init();
-			BOOST_REQUIRE(t.check(true));
-			BOOST_REQUIRE(ht.check(true));
-			BOOST_REQUIRE(ft.check(true));
+			ETH_REQUIRE(t.check(true));
+			ETH_REQUIRE(ht.check(true));
+			ETH_REQUIRE(ft.check(true));
 			for (auto const& k: ss)
 			{
 				t.insert(k.first, k.second);
 				ht.insert(k.first, k.second);
 				ft.insert(k.first, k.second);
-				BOOST_REQUIRE(t.check(true));
-				BOOST_REQUIRE(ht.check(true));
-				BOOST_REQUIRE(ft.check(true));
+				ETH_REQUIRE(t.check(true));
+				ETH_REQUIRE(ht.check(true));
+				ETH_REQUIRE(ft.check(true));
 				auto i = ft.begin();
 				auto j = t.begin();
 				for (; i != ft.end() && j != t.end(); ++i, ++j)
 				{
-					BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());
-					BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
-					BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
+					ETH_CHECK_EQUAL(i == ft.end(), j == t.end());
+					ETH_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
+					ETH_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
 				}
-				BOOST_CHECK_EQUAL(ht.root(), ft.root());
+				ETH_CHECK_EQUAL(ht.root(), ft.root());
 			}
-			BOOST_REQUIRE(!o["root"].is_null());
-			BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(t.root().asArray()));
-			BOOST_CHECK_EQUAL(ht.root(), ft.root());
+			ETH_REQUIRE(!o["root"].is_null());
+			ETH_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(t.root().asArray()));
+			ETH_CHECK_EQUAL(ht.root(), ft.root());
 		}
 	}
 }
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 	cnote << "Testing Trie...";
 	js::mValue v;
 	string const s = contentsString(testPath / fs::path("trietest.json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 
 	for (auto& i: v.get_obj())
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 					BOOST_FAIL("Bad type (expected string)");
 			}
 
-			BOOST_REQUIRE(values.size() == 2);
+			ETH_REQUIRE(values.size() == 2);
 			ss.push_back(make_pair(values[0], values[1]));
 			if (!ss.back().first.find("0x"))
 				ss.back().first = asString(fromHex(ss.back().first.substr(2)));
@@ -250,9 +250,9 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 		t.init();
 		ht.init();
 		ft.init();
-		BOOST_REQUIRE(t.check(true));
-		BOOST_REQUIRE(ht.check(true));
-		BOOST_REQUIRE(ft.check(true));
+		ETH_REQUIRE(t.check(true));
+		ETH_REQUIRE(ht.check(true));
+		ETH_REQUIRE(ft.check(true));
 
 		for (auto const& k: ss)
 		{
@@ -260,22 +260,22 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 				t.remove(k.first), ht.remove(k.first), ft.remove(k.first);
 			else
 				t.insert(k.first, k.second), ht.insert(k.first, k.second), ft.insert(k.first, k.second);
-			BOOST_REQUIRE(t.check(true));
-			BOOST_REQUIRE(ht.check(true));
-			BOOST_REQUIRE(ft.check(true));
+			ETH_REQUIRE(t.check(true));
+			ETH_REQUIRE(ht.check(true));
+			ETH_REQUIRE(ft.check(true));
 			auto i = ft.begin();
 			auto j = t.begin();
 			for (; i != ft.end() && j != t.end(); ++i, ++j)
 			{
-				BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());
-				BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
-				BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
+				ETH_CHECK_EQUAL(i == ft.end(), j == t.end());
+				ETH_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
+				ETH_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
 			}
-			BOOST_CHECK_EQUAL(ht.root(), ft.root());
+			ETH_CHECK_EQUAL(ht.root(), ft.root());
 		}
 
-		BOOST_REQUIRE(!o["root"].is_null());
-		BOOST_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(t.root().asArray()));
+		ETH_REQUIRE(!o["root"].is_null());
+		ETH_CHECK_EQUAL(o["root"].get_str(), toHexPrefixed(t.root().asArray()));
 	}
 }
 
@@ -392,14 +392,14 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 			cnote << d.root();
 			cnote << stringMapHash256(s);
 
-			BOOST_REQUIRE(d.check(true));
-			BOOST_REQUIRE_EQUAL(t.hash256(), stringMapHash256(s));
-			BOOST_REQUIRE_EQUAL(d.root(), stringMapHash256(s));
+			ETH_REQUIRE(d.check(true));
+			ETH_REQUIRE_EQUAL(t.hash256(), stringMapHash256(s));
+			ETH_REQUIRE_EQUAL(d.root(), stringMapHash256(s));
 			for (auto const& i: s)
 			{
 				(void)i;
-				BOOST_REQUIRE_EQUAL(t.at(i.first), i.second);
-				BOOST_REQUIRE_EQUAL(d.at(i.first), i.second);
+				ETH_REQUIRE_EQUAL(t.at(i.first), i.second);
+				ETH_REQUIRE_EQUAL(d.at(i.first), i.second);
 			}
 		};
 
@@ -416,16 +416,16 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 			cnote << d.root();
 			cnote << hash256(s);*/
 
-			BOOST_REQUIRE(d.check(true));
-			BOOST_REQUIRE(t.at(a).empty());
-			BOOST_REQUIRE(d.at(string(a)).empty());
-			BOOST_REQUIRE_EQUAL(t.hash256(), stringMapHash256(s));
-			BOOST_REQUIRE_EQUAL(d.root(), stringMapHash256(s));
+			ETH_REQUIRE(d.check(true));
+			ETH_REQUIRE(t.at(a).empty());
+			ETH_REQUIRE(d.at(string(a)).empty());
+			ETH_REQUIRE_EQUAL(t.hash256(), stringMapHash256(s));
+			ETH_REQUIRE_EQUAL(d.root(), stringMapHash256(s));
 			for (auto const& i: s)
 			{
 				(void)i;
-				BOOST_REQUIRE_EQUAL(t.at(i.first), i.second);
-				BOOST_REQUIRE_EQUAL(d.at(i.first), i.second);
+				ETH_REQUIRE_EQUAL(t.at(i.first), i.second);
+				ETH_REQUIRE_EQUAL(d.at(i.first), i.second);
 			}
 		};
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(trieLowerBound)
 				for (auto iit = d.begin(); iit != d.end(); ++iit)
 					if ((*iit).first.toString() >= i.first.toString())
 					{
-						BOOST_REQUIRE(it == iit);
+						ETH_REQUIRE(it == iit);
 						break;
 					}
 			}
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(trieLowerBound)
 				for (auto iit = d.begin(); iit != d.end(); ++iit)
 					if ((*iit).first.toString() >= k)
 					{
-						BOOST_REQUIRE(it == iit);
+						ETH_REQUIRE(it == iit);
 						break;
 					}
 			}
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(trieStess)
 		GenericTrieDB<MemoryDB> d(&dm);
 		d.init();	// initialise as empty tree.
 		MemTrie t;
-		BOOST_REQUIRE(d.check(true));
+		ETH_REQUIRE(d.check(true));
 		for (int a = 0; a < 20; ++a)
 		{
 			StringMap m;
@@ -509,9 +509,9 @@ BOOST_AUTO_TEST_CASE(trieStess)
 				m[k] = v;
 				t.insert(k, v);
 				d.insert(k, v);
-				BOOST_REQUIRE_EQUAL(stringMapHash256(m), t.hash256());
-				BOOST_REQUIRE_EQUAL(stringMapHash256(m), d.root());
-				BOOST_REQUIRE(d.check(true));
+				ETH_REQUIRE_EQUAL(stringMapHash256(m), t.hash256());
+				ETH_REQUIRE_EQUAL(stringMapHash256(m), d.root());
+				ETH_REQUIRE(d.check(true));
 			}
 			while (!m.empty())
 			{
@@ -555,9 +555,9 @@ BOOST_AUTO_TEST_CASE(trieStess)
 
 					cwarn << "Good?" << d2.root();
 				}
-				BOOST_REQUIRE(d.check(true));
-				BOOST_REQUIRE_EQUAL(stringMapHash256(m), t.hash256());
-				BOOST_REQUIRE_EQUAL(stringMapHash256(m), d.root());
+				ETH_REQUIRE(d.check(true));
+				ETH_REQUIRE_EQUAL(stringMapHash256(m), t.hash256());
+				ETH_REQUIRE_EQUAL(stringMapHash256(m), d.root());
 			}
 		}
 	}

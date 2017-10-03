@@ -23,6 +23,7 @@
 #include <test/tools/libtesteth/Stats.h>
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
 #include <test/tools/libtesteth/ThreadUtils.h>
+#include <test/tools/libtesteth/TestUtils.h>
 #include <string>
 using namespace std;
 using namespace dev;
@@ -141,7 +142,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 		isCopySource = true;
 	}
 	else
-		BOOST_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _jsonFileName.string());
+		ETH_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _jsonFileName.string());
 
 	// Filename of the test that would be generated
 	fs::path boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
@@ -159,7 +160,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 			assert(_jsonFileName.string() != boostTestPath.string());
 			TestOutputHelper::showProgress();
 			dev::test::copyFile(_jsonFileName, boostTestPath);
-			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
+			ETH_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
 		}
 		else
 		{
@@ -168,7 +169,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 
 			json_spirit::mValue v;
 			string const s = asString(dev::contents(_jsonFileName));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _jsonFileName.string() + " is empty.");
+			ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _jsonFileName.string() + " is empty.");
 
 			json_spirit::read_string(s, v);
 			removeComments(v);
@@ -184,7 +185,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 
 	json_spirit::mValue v;
 	string const s = asString(dev::contents(boostTestPath.string()));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << boostTestPath.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+	//ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << boostTestPath.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 	json_spirit::read_string(s, v);
 	Listener::notifySuiteStarted(testname);
 	doTests(v, false);

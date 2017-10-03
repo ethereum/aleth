@@ -70,7 +70,7 @@ string Eth::eth_hashrate()
 	}
 	catch (InvalidSealEngine&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -82,7 +82,7 @@ bool Eth::eth_mining()
 	}
 	catch (InvalidSealEngine&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -110,7 +110,7 @@ string Eth::eth_getBalance(string const& _address, string const& _blockNumber)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -122,7 +122,7 @@ string Eth::eth_getStorageAt(string const& _address, string const& _position, st
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -134,7 +134,7 @@ string Eth::eth_getStorageRoot(string const& _address, string const& _blockNumbe
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -165,7 +165,7 @@ string Eth::eth_getTransactionCount(string const& _address, string const& _block
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -181,7 +181,7 @@ Json::Value Eth::eth_getBlockTransactionCountByHash(string const& _blockHash)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -197,7 +197,7 @@ Json::Value Eth::eth_getBlockTransactionCountByNumber(string const& _blockNumber
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -213,7 +213,7 @@ Json::Value Eth::eth_getUncleCountByBlockHash(string const& _blockHash)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -229,7 +229,7 @@ Json::Value Eth::eth_getUncleCountByBlockNumber(string const& _blockNumber)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -241,7 +241,7 @@ string Eth::eth_getCode(string const& _address, string const& _blockNumber)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -265,13 +265,13 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 		case TransactionRepercussion::ProxySuccess:
 			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
 		case TransactionRepercussion::UnknownAccount:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Account unknown."));
+			ETH_THROW_EXCEPTION(JsonRpcException("Account unknown."));
 		case TransactionRepercussion::Locked:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Account is locked."));
+			ETH_THROW_EXCEPTION(JsonRpcException("Account is locked."));
 		case TransactionRepercussion::Refused:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Transaction rejected by user."));
+			ETH_THROW_EXCEPTION(JsonRpcException("Transaction rejected by user."));
 		case TransactionRepercussion::Unknown:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Unknown reason."));
+			ETH_THROW_EXCEPTION(JsonRpcException("Unknown reason."));
 		}
 	}
 	catch (JsonRpcException&)
@@ -280,9 +280,9 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	return string();
 }
 
@@ -301,12 +301,12 @@ string Eth::eth_signTransaction(Json::Value const& _json)
 			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
 		default:
 			// TODO: provide more useful information in the exception.
-			BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+			ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 		}
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -318,7 +318,7 @@ Json::Value Eth::eth_inspectTransaction(std::string const& _rlp)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -336,7 +336,7 @@ string Eth::eth_sendRawTransaction(std::string const& _rlp)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -351,7 +351,7 @@ string Eth::eth_call(Json::Value const& _json, string const& _blockNumber)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -366,7 +366,7 @@ string Eth::eth_estimateGas(Json::Value const& _json)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -391,7 +391,7 @@ Json::Value Eth::eth_getBlockByHash(string const& _blockHash, bool _includeTrans
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -410,7 +410,7 @@ Json::Value Eth::eth_getBlockByNumber(string const& _blockNumber, bool _includeT
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -426,7 +426,7 @@ Json::Value Eth::eth_getTransactionByHash(string const& _transactionHash)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -443,7 +443,7 @@ Json::Value Eth::eth_getTransactionByBlockHashAndIndex(string const& _blockHash,
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -461,7 +461,7 @@ Json::Value Eth::eth_getTransactionByBlockNumberAndIndex(string const& _blockNum
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -477,7 +477,7 @@ Json::Value Eth::eth_getTransactionReceipt(string const& _transactionHash)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -489,7 +489,7 @@ Json::Value Eth::eth_getUncleByBlockHashAndIndex(string const& _blockHash, strin
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -501,7 +501,7 @@ Json::Value Eth::eth_getUncleByBlockNumberAndIndex(string const& _blockNumber, s
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -513,7 +513,7 @@ string Eth::eth_newFilter(Json::Value const& _json)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -525,7 +525,7 @@ string Eth::eth_newFilterEx(Json::Value const& _json)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -549,7 +549,7 @@ bool Eth::eth_uninstallFilter(string const& _filterId)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -565,7 +565,7 @@ Json::Value Eth::eth_getFilterChanges(string const& _filterId)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -581,7 +581,7 @@ Json::Value Eth::eth_getFilterChangesEx(string const& _filterId)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -593,7 +593,7 @@ Json::Value Eth::eth_getFilterLogs(string const& _filterId)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -605,7 +605,7 @@ Json::Value Eth::eth_getFilterLogsEx(string const& _filterId)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -617,7 +617,7 @@ Json::Value Eth::eth_getLogs(Json::Value const& _json)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -629,7 +629,7 @@ Json::Value Eth::eth_getLogsEx(Json::Value const& _json)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -646,7 +646,7 @@ Json::Value Eth::eth_getWork()
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -671,7 +671,7 @@ bool Eth::eth_submitWork(string const& _nonce, string const&, string const& _mix
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -684,7 +684,7 @@ bool Eth::eth_submitHashrate(string const& _hashes, string const& _id)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -696,7 +696,7 @@ string Eth::eth_register(string const& _address)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -708,7 +708,7 @@ bool Eth::eth_unregister(string const& _accountId)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
 
@@ -726,6 +726,6 @@ Json::Value Eth::eth_fetchQueuedTransactions(string const& _accountId)
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }

@@ -36,7 +36,7 @@ string Personal::personal_sendTransaction(Json::Value const& _transaction, strin
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 
 	if (Secret s = m_keyManager.secret(t.from, [&](){ return _password; }, false))
@@ -44,7 +44,7 @@ string Personal::personal_sendTransaction(Json::Value const& _transaction, strin
 		// return the tx hash
 		return toJS(m_eth.submitTransaction(t, s).first);
 	}
-	BOOST_THROW_EXCEPTION(JsonRpcException("Invalid password or account."));
+	ETH_THROW_EXCEPTION(JsonRpcException("Invalid password or account."));
 }
 
 string Personal::personal_signAndSendTransaction(Json::Value const& _transaction, string const& _password)

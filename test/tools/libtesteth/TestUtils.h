@@ -31,12 +31,6 @@ namespace dev
 namespace test
 {
 
-// should be used for multithread tests
-static SharedMutex x_boostTest;
-#define ETH_CHECK_EQUAL(x, y) { dev::WriteGuard(x_boostTest); BOOST_CHECK_EQUAL(x, y); }
-#define ETH_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye) { dev::WriteGuard(x_boostTest); BOOST_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye); }
-#define ETH_REQUIRE(x) { dev::WriteGuard(x_boostTest); BOOST_REQUIRE(x); }
-
 struct LoadTestFileFixture
 {
 	LoadTestFileFixture();
@@ -61,8 +55,8 @@ struct ClientBaseFixture: public BlockChainFixture
 };
 
 // important BOOST TEST do have problems with thread safety!!!
-// BOOST_CHECK is not thread safe
-// BOOST_MESSAGE is not thread safe
+// ETH_CHECK is not thread safe
+// ETH_MESSAGE is not thread safe
 // http://boost.2283326.n4.nabble.com/Is-boost-test-thread-safe-td3471644.html
 // http://lists.boost.org/boost-users/2010/03/57691.php
 // worth reading

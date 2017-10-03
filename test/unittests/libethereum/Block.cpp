@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_CASE(bStructures)
 	BlockDetail details;
 	BlockSafeExceptions exeptions;
 
-	BOOST_REQUIRE(string(chat.name()).find("◌") != string::npos);
-	BOOST_REQUIRE(string(trace.name()).find("◎") != string::npos);
-	BOOST_REQUIRE(string(details.name()).find("◌") != string::npos);
-	BOOST_REQUIRE(string(exeptions.name()).find("ℹ") != string::npos);
+	ETH_REQUIRE(string(chat.name()).find("◌") != string::npos);
+	ETH_REQUIRE(string(trace.name()).find("◎") != string::npos);
+	ETH_REQUIRE(string(details.name()).find("◌") != string::npos);
+	ETH_REQUIRE(string(exeptions.name()).find("ℹ") != string::npos);
 }
 #endif
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(bStates)
 	BlockChain const& blockchain = testBlockchain.interface();
 
 	h256 stateRootBefore = testBlockchain.topBlock().state().rootHash();
-	BOOST_REQUIRE(stateRootBefore != h256());
+	ETH_REQUIRE(stateRootBefore != h256());
 
 	TestBlock testBlock;
 	TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
@@ -76,22 +76,22 @@ BOOST_AUTO_TEST_CASE(bStates)
 	Block block2 = blockchain.genesisBlock(genesisDB);
 	block2.populateFromChain(blockchain, testBlock.blockHeader().hash());
 	h256 stateRootAfterInsert = block2.stateRootBeforeTx(0); //get the state of blockchain on previous block
-	BOOST_REQUIRE(stateRootAfterInsert != h256());
-	BOOST_REQUIRE_EQUAL(stateRootBefore, stateRootAfterInsert);
+	ETH_REQUIRE(stateRootAfterInsert != h256());
+	ETH_REQUIRE_EQUAL(stateRootBefore, stateRootAfterInsert);
 
 	h256 stateRootAfterInsert1 = block2.stateRootBeforeTx(1); //get the state of blockchain on current block executed
-	BOOST_REQUIRE(stateRootAfterInsert1 != h256());
-	BOOST_REQUIRE(stateRootAfterInsert != stateRootAfterInsert1);
+	ETH_REQUIRE(stateRootAfterInsert1 != h256());
+	ETH_REQUIRE(stateRootAfterInsert != stateRootAfterInsert1);
 
 	h256 stateRootAfterInsert2 = block2.stateRootBeforeTx(2); //get the state of blockchain on current block executed
-	BOOST_REQUIRE(stateRootAfterInsert2 != h256());
-	BOOST_REQUIRE(stateRootBefore != stateRootAfterInsert2);
-	BOOST_REQUIRE(stateRootAfterInsert1 != stateRootAfterInsert2);
+	ETH_REQUIRE(stateRootAfterInsert2 != h256());
+	ETH_REQUIRE(stateRootBefore != stateRootAfterInsert2);
+	ETH_REQUIRE(stateRootAfterInsert1 != stateRootAfterInsert2);
 
 	//Block2 will start a new block on top of blockchain
-	BOOST_REQUIRE(block1.info() == block2.info());
+	ETH_REQUIRE(block1.info() == block2.info());
 	block2.sync(blockchain);
-	BOOST_REQUIRE(block1.info() != block2.info());
+	ETH_REQUIRE(block1.info() != block2.info());
 
 	try
 	{
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(bStates)
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_REQUIRE(string(_e.what()).find("InvalidStateRoot") != string::npos);
+		ETH_REQUIRE(string(_e.what()).find("InvalidStateRoot") != string::npos);
 	}
 }
 
@@ -117,10 +117,10 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 
 	block = block;
 	Block block2 = block;
-	BOOST_REQUIRE(ImportTest::compareStates(block.state(), block2.state()) == 0);
-	BOOST_REQUIRE(block2.pending() == block.pending());
-	BOOST_REQUIRE(block2.author() == block.author());
-	BOOST_REQUIRE(block2.info() == block.info());
+	ETH_REQUIRE(ImportTest::compareStates(block.state(), block2.state()) == 0);
+	ETH_REQUIRE(block2.pending() == block.pending());
+	ETH_REQUIRE(block2.author() == block.author());
+	ETH_REQUIRE(block2.info() == block.info());
 
 	TestBlock testBlock;
 	TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
@@ -130,16 +130,16 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 
 	Block block3 = blockchain.genesisBlock(genesisDB);
 	block3.populateFromChain(blockchain, testBlock.blockHeader().hash());
-	BOOST_REQUIRE(block3.info() == testBlock.blockHeader());
+	ETH_REQUIRE(block3.info() == testBlock.blockHeader());
 
 	//Genesis is populating wrong???
 	//Block block31 = blockchain.genesisBlock(genesisDB);
 	//block31.populateFromChain(blockchain, genesisBlock.getBlockHeader().hash());
-	//BOOST_REQUIRE(block31.info() == (BlockInfo)genesisBlock.getBlockHeader());
+	//ETH_REQUIRE(block31.info() == (BlockInfo)genesisBlock.getBlockHeader());
 
 	Block block32 = blockchain.genesisBlock(genesisDB);
 	auto is_critical = [](std::exception const& _e) { return string(_e.what()).find("BlockNotFound") != string::npos; };
-	BOOST_CHECK_EXCEPTION(block32.populateFromChain(blockchain, h256("0x0000000000000000000000000000000000000000000000000000000000000001")), BlockNotFound, is_critical);
+	ETH_CHECK_EXCEPTION(block32.populateFromChain(blockchain, h256("0x0000000000000000000000000000000000000000000000000000000000000001")), BlockNotFound, is_critical);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		block.sync(blockchain);
 		TestBlock testBlockT = testBlock;
 		block.sync(blockchain, testBlockT.transactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
+		ETH_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		ZeroGasPricer gp;
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain, testBlockT.transactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
+		ETH_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
 		block.sync(blockchain, testBlockT.transactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
+		ETH_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
 		block.sync(blockchain, testBlockT.transactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 3);
+		ETH_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 3);
 	}
 
 	{
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
 		block.sync(blockchain, testBlockT.transactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
+		ETH_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
 		block.sync(blockchain, testBlockT.transactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
+		ETH_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 }
 
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
 	OverlayDB const& genesisDB = genesisBlock.state().db();
 	BlockChain const& blockchain = bc.interface();
 	Block block = blockchain.genesisBlock(genesisDB);
-	BOOST_CHECK_THROW(block.receipt(123), std::out_of_range);
+	ETH_CHECK_THROW(block.receipt(123), std::out_of_range);
 }
 
 class ConstantinopleTransitionTestFixture: public TestOutputHelper
@@ -276,10 +276,10 @@ BOOST_FIXTURE_TEST_SUITE(ConstantinopleBlockSuite, ConstantinopleTransitionTestF
 BOOST_AUTO_TEST_CASE(bBlockhashContractIsCreated)
 {
 	Block block = blockchain.genesisBlock(genesisDB);
-	BOOST_CHECK(!block.state().addressHasCode(Address(0xf0)));
+	ETH_CHECK(!block.state().addressHasCode(Address(0xf0)));
 
 	block.sync(blockchain);
-	BOOST_REQUIRE(block.state().addressHasCode(Address(0xf0)));
+	ETH_REQUIRE(block.state().addressHasCode(Address(0xf0)));
 }
 
 BOOST_AUTO_TEST_CASE(bBlockhashContractIsUpdated)
@@ -288,13 +288,13 @@ BOOST_AUTO_TEST_CASE(bBlockhashContractIsUpdated)
 	block.sync(blockchain, block1hash); // sync to the beginning of block 2
 
 	h256 storageRoot2 = block.state().storageRoot(Address(0xf0));
-	BOOST_CHECK(storageRoot2 != EmptyTrie);
+	ETH_CHECK(storageRoot2 != EmptyTrie);
 
 	block.sync(blockchain); // sync to the beginning of block 3
 	h256 storageRoot3 = block.state().storageRoot(Address(0xf0));
-	BOOST_CHECK(storageRoot3 != EmptyTrie);
+	ETH_CHECK(storageRoot3 != EmptyTrie);
 	
-	BOOST_REQUIRE(storageRoot2 != storageRoot3);
+	ETH_REQUIRE(storageRoot2 != storageRoot3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

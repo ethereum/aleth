@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importChecksManifestVersion)
 	s << h256{} << 0 << h256{};
 	snapshotStorage.manifest = createManifest(3, {}, {}, h256{}, 0, h256{});
 
-	BOOST_REQUIRE_THROW(snapshotImporter.import(snapshotStorage), UnsupportedSnapshotManifestVersion);
+	ETH_REQUIRE_THROW(snapshotImporter.import(snapshotStorage), UnsupportedSnapshotManifestVersion);
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
@@ -209,13 +209,13 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
 	
 	snapshotImporter.import(snapshotStorage);
 
-	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
+	ETH_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
 	ImportedAccount const& importedAccount = stateImporter.importedAccounts.front();
-	BOOST_CHECK_EQUAL(importedAccount.address, addressHash);
-	BOOST_CHECK_EQUAL(importedAccount.nonce, 1);
-	BOOST_CHECK_EQUAL(importedAccount.balance, 10);
-	BOOST_CHECK_EQUAL(importedAccount.codeHash, EmptySHA3);
-	BOOST_CHECK(importedAccount.storage.empty());
+	ETH_CHECK_EQUAL(importedAccount.address, addressHash);
+	ETH_CHECK_EQUAL(importedAccount.nonce, 1);
+	ETH_CHECK_EQUAL(importedAccount.balance, 10);
+	ETH_CHECK_EQUAL(importedAccount.codeHash, EmptySHA3);
+	ETH_CHECK(importedAccount.storage.empty());
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
@@ -239,15 +239,15 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
 
 	snapshotImporter.import(snapshotStorage);
 
-	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
+	ETH_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
 	ImportedAccount const& importedAccount = stateImporter.importedAccounts.front();
-	BOOST_CHECK_EQUAL(importedAccount.address, addressHash);
-	BOOST_CHECK_EQUAL(importedAccount.nonce, 2);
-	BOOST_CHECK_EQUAL(importedAccount.balance, 10);
-	BOOST_CHECK_EQUAL(importedAccount.codeHash, EmptySHA3);
+	ETH_CHECK_EQUAL(importedAccount.address, addressHash);
+	ETH_CHECK_EQUAL(importedAccount.nonce, 2);
+	ETH_CHECK_EQUAL(importedAccount.balance, 10);
+	ETH_CHECK_EQUAL(importedAccount.codeHash, EmptySHA3);
 
 	std::map<h256, bytes> expectedStorage{storagePair1, storagePair2, storagePair3, storagePair4};
-	BOOST_CHECK(importedAccount.storage == expectedStorage);
+	ETH_CHECK(importedAccount.storage == expectedStorage);
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
@@ -263,14 +263,14 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
 
 	snapshotImporter.import(snapshotStorage);
 
-	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
+	ETH_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
 	ImportedAccount const& importedAccount = stateImporter.importedAccounts.front();
-	BOOST_CHECK_EQUAL(importedAccount.address, addressHash);
-	BOOST_CHECK_EQUAL(importedAccount.codeHash, sha3(code));
+	ETH_CHECK_EQUAL(importedAccount.address, addressHash);
+	ETH_CHECK_EQUAL(importedAccount.codeHash, sha3(code));
 
-	BOOST_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
+	ETH_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
 	bytes const& importedCode = stateImporter.importedCodes.front();
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedCode.begin(), importedCode.end(), code.begin(), code.end());
+	ETH_CHECK_EQUAL_COLLECTIONS(importedCode.begin(), importedCode.end(), code.begin(), code.end());
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
@@ -290,15 +290,15 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
 
 	snapshotImporter.import(snapshotStorage);
 
-	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[0].address, addressHash1);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[0].codeHash, codeHash);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[1].address, addressHash2);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[1].codeHash, codeHash);
+	ETH_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
+	ETH_CHECK_EQUAL(stateImporter.importedAccounts[0].address, addressHash1);
+	ETH_CHECK_EQUAL(stateImporter.importedAccounts[0].codeHash, codeHash);
+	ETH_CHECK_EQUAL(stateImporter.importedAccounts[1].address, addressHash2);
+	ETH_CHECK_EQUAL(stateImporter.importedAccounts[1].codeHash, codeHash);
 
-	BOOST_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
+	ETH_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
 	bytes const& importedCode = stateImporter.importedCodes.front();
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedCode.begin(), importedCode.end(), code.begin(), code.end());
+	ETH_CHECK_EQUAL_COLLECTIONS(importedCode.begin(), importedCode.end(), code.begin(), code.end());
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
@@ -319,8 +319,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
 
 	snapshotImporter.import(snapshotStorage);
 
-	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
-	BOOST_REQUIRE_EQUAL(stateImporter.commitCounter, 3); // once every chunk + 1 last commit
+	ETH_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
+	ETH_REQUIRE_EQUAL(stateImporter.commitCounter, 3); // once every chunk + 1 last commit
 }
 
 
@@ -349,24 +349,24 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
 
 	snapshotImporter.import(snapshotStorage);
 
-	BOOST_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
+	ETH_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
 	ImportedBlock const& importedBlock = blockChainImporter.importedBlocks.front();
 	BlockHeader const& header = importedBlock.header;
-	BOOST_CHECK_EQUAL(header.author(), author);
-	BOOST_CHECK_EQUAL(header.stateRoot(), stateRoot);
-	BOOST_CHECK_EQUAL(header.logBloom(), logBloom);
-	BOOST_CHECK_EQUAL(header.difficulty(), difficulty);
-	BOOST_CHECK_EQUAL(header.gasLimit(), gasLimit);
-	BOOST_CHECK_EQUAL(header.gasUsed(), gasUsed);
-	BOOST_CHECK_EQUAL(header.timestamp(), timestamp);
-	BOOST_CHECK_EQUAL_COLLECTIONS(header.extraData().begin(), header.extraData().end(), extraData.begin(), extraData.end());
-	BOOST_CHECK_EQUAL(Ethash::mixHash(header), mixHash);
-	BOOST_CHECK_EQUAL(Ethash::nonce(header), nonce);
-	BOOST_CHECK_EQUAL(header.number(), parentNumber + 1);
-	BOOST_CHECK_EQUAL(header.parentHash(), parentHash);
-	BOOST_CHECK_EQUAL(importedBlock.totalDifficulty, parentTotalDifficulty + difficulty);
+	ETH_CHECK_EQUAL(header.author(), author);
+	ETH_CHECK_EQUAL(header.stateRoot(), stateRoot);
+	ETH_CHECK_EQUAL(header.logBloom(), logBloom);
+	ETH_CHECK_EQUAL(header.difficulty(), difficulty);
+	ETH_CHECK_EQUAL(header.gasLimit(), gasLimit);
+	ETH_CHECK_EQUAL(header.gasUsed(), gasUsed);
+	ETH_CHECK_EQUAL(header.timestamp(), timestamp);
+	ETH_CHECK_EQUAL_COLLECTIONS(header.extraData().begin(), header.extraData().end(), extraData.begin(), extraData.end());
+	ETH_CHECK_EQUAL(Ethash::mixHash(header), mixHash);
+	ETH_CHECK_EQUAL(Ethash::nonce(header), nonce);
+	ETH_CHECK_EQUAL(header.number(), parentNumber + 1);
+	ETH_CHECK_EQUAL(header.parentHash(), parentHash);
+	ETH_CHECK_EQUAL(importedBlock.totalDifficulty, parentTotalDifficulty + difficulty);
 	
-	BOOST_CHECK_EQUAL(blockChainImporter.chainStartBlockNumber, parentNumber + 1);
+	ETH_CHECK_EQUAL(blockChainImporter.chainStartBlockNumber, parentNumber + 1);
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
@@ -384,11 +384,11 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
 
 	snapshotImporter.import(snapshotStorage);
 
-	BOOST_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
+	ETH_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
 	ImportedBlock const& importedBlock = blockChainImporter.importedBlocks.front();
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.transactions.begin(), importedBlock.transactions.end(), transactions.begin(), transactions.end());
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.uncles.begin(), importedBlock.uncles.end(), uncles.begin(), uncles.end());
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.receipts.begin(), importedBlock.receipts.end(), receipts.begin(), receipts.end());
+	ETH_CHECK_EQUAL_COLLECTIONS(importedBlock.transactions.begin(), importedBlock.transactions.end(), transactions.begin(), transactions.end());
+	ETH_CHECK_EQUAL_COLLECTIONS(importedBlock.uncles.begin(), importedBlock.uncles.end(), uncles.begin(), uncles.end());
+	ETH_CHECK_EQUAL_COLLECTIONS(importedBlock.receipts.begin(), importedBlock.receipts.end(), receipts.begin(), receipts.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

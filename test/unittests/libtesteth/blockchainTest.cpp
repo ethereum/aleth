@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 	json_spirit::read_string(s, input);
 	BlockchainTestSuite suite;
 	json_spirit::mValue output = suite.doTests(input, true);
-	BOOST_CHECK_MESSAGE(output.get_obj().size() == getNetworks().size(), "A wrong number of tests were generated.");
+	ETH_CHECK_MESSAGE(output.get_obj().size() == getNetworks().size(), "A wrong number of tests were generated.");
 }
 
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(fillingWithWrongExpectation, 2)

@@ -81,7 +81,7 @@ public:
 	dev::bytes const& bytes() const { return m_bytes; }
 	bytesConstRef receipts() const { return bytesConstRef(&m_receipts.out()[0], m_receipts.out().size()); }
 	AccountMap const& accountMap() const { return m_accountMap; }
-	State const& state() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
+	State const& state() const { if (m_state.get() == 0) ETH_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
 	BlockHeader const& blockHeader() const { return m_blockHeader;}
 	TransactionQueue const& transactionQueue() const { return m_transactionQueue; }
 	TransactionQueue & transactionQueue() { return m_transactionQueue; }

@@ -161,11 +161,11 @@ public:
 	virtual bool isKnownTransaction(h256 const& _transactionHash) const override;
 	virtual bool isKnownTransaction(h256 const& _blockHash, unsigned _i) const override;
 
-	virtual void startSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::startSealing")); }
-	virtual void stopSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::stopSealing")); }
-	virtual bool wouldSeal() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::wouldSeal")); }
+	virtual void startSealing() override { ETH_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::startSealing")); }
+	virtual void stopSealing() override { ETH_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::stopSealing")); }
+	virtual bool wouldSeal() const override { ETH_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::wouldSeal")); }
 
-	virtual SyncStatus syncStatus() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::syncStatus")); }
+	virtual SyncStatus syncStatus() const override { ETH_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::syncStatus")); }
 
 	Block block(BlockNumber _h) const;
 

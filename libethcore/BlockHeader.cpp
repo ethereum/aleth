@@ -157,14 +157,14 @@ RLP BlockHeader::extractHeader(bytesConstRef _block)
 {
 	RLP root(_block);
 	if (!root.isList())
-		BOOST_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block must be a list") << BadFieldError(0, _block.toString()));
+		ETH_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block must be a list") << BadFieldError(0, _block.toString()));
 	RLP header = root[0];
 	if (!header.isList())
-		BOOST_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block header must be a list") << BadFieldError(0, header.data().toString()));
+		ETH_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block header must be a list") << BadFieldError(0, header.data().toString()));
 	if (!root[1].isList())
-		BOOST_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block transactions must be a list") << BadFieldError(1, root[1].data().toString()));
+		ETH_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block transactions must be a list") << BadFieldError(1, root[1].data().toString()));
 	if (!root[2].isList())
-		BOOST_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block uncles must be a list") << BadFieldError(2, root[2].data().toString()));
+		ETH_THROW_EXCEPTION(InvalidBlockFormat() << errinfo_comment("Block uncles must be a list") << BadFieldError(2, root[2].data().toString()));
 	return header;
 }
 
@@ -212,21 +212,21 @@ void BlockHeader::populateFromParent(BlockHeader const& _parent)
 void BlockHeader::verify(Strictness _s, BlockHeader const& _parent, bytesConstRef _block) const
 {
 	if (m_number > ~(unsigned)0)
-		BOOST_THROW_EXCEPTION(InvalidNumber());
+		ETH_THROW_EXCEPTION(InvalidNumber());
 
 	if (_s != CheckNothingNew && m_gasUsed > m_gasLimit)
-		BOOST_THROW_EXCEPTION(TooMuchGasUsed() << RequirementError(bigint(m_gasLimit), bigint(m_gasUsed)));
+		ETH_THROW_EXCEPTION(TooMuchGasUsed() << RequirementError(bigint(m_gasLimit), bigint(m_gasUsed)));
 
 	if (_parent)
 	{
 		if (m_parentHash && _parent.hash() != m_parentHash)
-			BOOST_THROW_EXCEPTION(InvalidParentHash());
+			ETH_THROW_EXCEPTION(InvalidParentHash());
 
 		if (m_timestamp <= _parent.m_timestamp)
-			BOOST_THROW_EXCEPTION(InvalidTimestamp());
+			ETH_THROW_EXCEPTION(InvalidTimestamp());
 
 		if (m_number != _parent.m_number + 1)
-			BOOST_THROW_EXCEPTION(InvalidNumber());
+			ETH_THROW_EXCEPTION(InvalidNumber());
 	}
 
 	if (_block)
@@ -262,10 +262,10 @@ void BlockHeader::verify(Strictness _s, BlockHeader const& _parent, bytesConstRe
 			for (auto const& t: txs)
 				cdebug << toHex(t);
 
-			BOOST_THROW_EXCEPTION(InvalidTransactionsRoot() << Hash256RequirementError(expectedRoot, m_transactionsRoot));
+			ETH_THROW_EXCEPTION(InvalidTransactionsRoot() << Hash256RequirementError(expectedRoot, m_transactionsRoot));
 		}
 		clog(BlockInfoDiagnosticsChannel) << "Expected uncle hash:" << toString(sha3(root[2].data()));
 		if (m_sha3Uncles != sha3(root[2].data()))
-			BOOST_THROW_EXCEPTION(InvalidUnclesHash() << Hash256RequirementError(sha3(root[2].data()), m_sha3Uncles));
+			ETH_THROW_EXCEPTION(InvalidUnclesHash() << Hash256RequirementError(sha3(root[2].data()), m_sha3Uncles));
 	}
 }

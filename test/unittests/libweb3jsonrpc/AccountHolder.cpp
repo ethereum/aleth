@@ -38,15 +38,15 @@ BOOST_AUTO_TEST_CASE(ProxyAccountUseCase)
 {
 	FixedAccountHolder h = FixedAccountHolder(function<Interface*()>(), vector<KeyPair>());
 
-	BOOST_CHECK(h.allAccounts().empty());
-	BOOST_CHECK(h.realAccounts().empty());
+	ETH_CHECK(h.allAccounts().empty());
+	ETH_CHECK(h.realAccounts().empty());
 	Address addr("abababababababababababababababababababab");
 	Address addr2("abababababababababababababababababababab");
 	int id = h.addProxyAccount(addr);
-	BOOST_CHECK(h.queuedTransactions(id).empty());
+	ETH_CHECK(h.queuedTransactions(id).empty());
 	// register it again
 	int secondID = h.addProxyAccount(addr);
-	BOOST_CHECK(h.queuedTransactions(secondID).empty());
+	ETH_CHECK(h.queuedTransactions(secondID).empty());
 
 	eth::TransactionSkeleton t1;
 	eth::TransactionSkeleton t2;
@@ -54,23 +54,23 @@ BOOST_AUTO_TEST_CASE(ProxyAccountUseCase)
 	t1.data = fromHex("12345678");
 	t2.from = addr;
 	t2.data = fromHex("abcdef");
-	BOOST_CHECK(h.queuedTransactions(id).empty());
+	ETH_CHECK(h.queuedTransactions(id).empty());
 	h.queueTransaction(t1);
-	BOOST_CHECK_EQUAL(1, h.queuedTransactions(id).size());
+	ETH_CHECK_EQUAL(1, h.queuedTransactions(id).size());
 	h.queueTransaction(t2);
-	BOOST_REQUIRE_EQUAL(2, h.queuedTransactions(id).size());
+	ETH_REQUIRE_EQUAL(2, h.queuedTransactions(id).size());
 
 	// second proxy should not see transactions
-	BOOST_CHECK(h.queuedTransactions(secondID).empty());
+	ETH_CHECK(h.queuedTransactions(secondID).empty());
 
-	BOOST_CHECK(h.queuedTransactions(id)[0].data == t1.data);
-	BOOST_CHECK(h.queuedTransactions(id)[1].data == t2.data);
+	ETH_CHECK(h.queuedTransactions(id)[0].data == t1.data);
+	ETH_CHECK(h.queuedTransactions(id)[1].data == t2.data);
 
 	h.clearQueue(id);
-	BOOST_CHECK(h.queuedTransactions(id).empty());
+	ETH_CHECK(h.queuedTransactions(id).empty());
 	// removing fails because it never existed
-	BOOST_CHECK(!h.removeProxyAccount(secondID));
-	BOOST_CHECK(h.removeProxyAccount(id));
+	ETH_CHECK(!h.removeProxyAccount(secondID));
+	ETH_CHECK(h.removeProxyAccount(id));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

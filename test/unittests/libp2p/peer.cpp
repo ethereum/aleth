@@ -76,14 +76,14 @@ BOOST_AUTO_TEST_CASE(host)
 	Host host1("Test", NetworkPreferences("127.0.0.1", 0, false));
 	host1.start();
 	auto host1port = host1.listenPort();
-	BOOST_REQUIRE(host1port);
+	ETH_REQUIRE(host1port);
 
 	Host host2("Test", NetworkPreferences("127.0.0.1", 0, false));
 	host2.start();
 	auto host2port = host2.listenPort();
-	BOOST_REQUIRE(host2port);
+	ETH_REQUIRE(host2port);
 	
-	BOOST_REQUIRE_NE(host1port, host2port);
+	ETH_REQUIRE_NE(host1port, host2port);
 
 	host1.registerCapability(make_shared<TestHostCap>());
 	host2.registerCapability(make_shared<TestHostCap>());
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(host)
 			break;
 	}
 
-	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
+	ETH_REQUIRE(host1.isStarted() && host2.isStarted());
 	
 	// Wait for up to 6 seconds, to give the hosts time to get their network connection established
 	for (unsigned i = 0; i < 6000; i += step)
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(host)
 			break;
 	}
 
-	BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
+	ETH_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
 	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
 
 	// Wait for up to 24 seconds, to give the hosts time to find each other
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(host)
 			break;
 	}
 
-	BOOST_REQUIRE_EQUAL(host1.peerCount(), 1);
-	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+	ETH_REQUIRE_EQUAL(host1.peerCount(), 1);
+	ETH_REQUIRE_EQUAL(host2.peerCount(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(networkConfig)
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(networkConfig)
 	bytes store(save.saveNetwork());
 	
 	Host restore("Test", NetworkPreferences(false), bytesConstRef(&store));
-	BOOST_REQUIRE(save.id() == restore.id());
+	ETH_REQUIRE(save.id() == restore.id());
 }
 
 BOOST_AUTO_TEST_CASE(saveNodes)
@@ -166,9 +166,9 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 		while (!h->haveNetwork())
 			this_thread::sleep_for(chrono::milliseconds(c_step));
 
-		BOOST_REQUIRE(h->listenPort());
+		ETH_REQUIRE(h->listenPort());
 		bool inserted = ports.insert(h->listenPort()).second;
-		BOOST_REQUIRE(inserted);
+		ETH_REQUIRE(inserted);
 		h->registerCapability(make_shared<TestHostCap>());
 		hosts.push_back(h);
 	}
@@ -187,23 +187,23 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 	for (unsigned i = 0; i < c_peers * 2000 && host2.peerCount() < c_peers; i += c_step)
 		this_thread::sleep_for(chrono::milliseconds(c_step));
 
-	BOOST_CHECK_EQUAL(host.peerCount(), c_peers);
-	BOOST_CHECK_EQUAL(host2.peerCount(), c_peers);
+	ETH_CHECK_EQUAL(host.peerCount(), c_peers);
+	ETH_CHECK_EQUAL(host2.peerCount(), c_peers);
 
 	bytes firstHostNetwork(host.saveNetwork());
 	bytes secondHostNetwork(host.saveNetwork());	
-	BOOST_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));	
+	ETH_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));	
 	
 	RLP r(firstHostNetwork);
-	BOOST_REQUIRE(r.itemCount() == 3);
-	BOOST_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
-	BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
-	BOOST_REQUIRE(r[2].itemCount() >= c_nodes);
+	ETH_REQUIRE(r.itemCount() == 3);
+	ETH_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
+	ETH_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
+	ETH_REQUIRE(r[2].itemCount() >= c_nodes);
 	
 	for (auto i: r[2])
 	{
-		BOOST_REQUIRE(i.itemCount() == 4 || i.itemCount() == 11);
-		BOOST_REQUIRE(i[0].size() == 4 || i[0].size() == 16);
+		ETH_REQUIRE(i.itemCount() == 4 || i.itemCount() == 11);
+		ETH_REQUIRE(i[0].size() == 4 || i[0].size() == 16);
 	}
 
 	for (auto host: hosts)
@@ -235,9 +235,9 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	auto node2 = host2.id();
 	auto port1 = host1.listenPort();
 	auto port2 = host2.listenPort();
-	BOOST_REQUIRE(port1);
-	BOOST_REQUIRE(port2);
-	BOOST_REQUIRE_NE(port1, port2);
+	ETH_REQUIRE(port1);
+	ETH_REQUIRE(port2);
+	ETH_REQUIRE_NE(port1, port2);
 
 	host1.registerCapability(make_shared<TestHostCap>());
 	host2.registerCapability(make_shared<TestHostCap>());
@@ -255,23 +255,23 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	auto host1peerCount = host1.peerCount();
 	auto host2peerCount = host2.peerCount();
-	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
-	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
+	ETH_REQUIRE_EQUAL(host1peerCount, 1);
+	ETH_REQUIRE_EQUAL(host2peerCount, 1);
 
 	PeerSessionInfos sis1 = host1.peerSessionInfo();
 	PeerSessionInfos sis2 = host2.peerSessionInfo();
 
-	BOOST_REQUIRE_EQUAL(sis1.size(), 1);
-	BOOST_REQUIRE_EQUAL(sis2.size(), 1);
+	ETH_REQUIRE_EQUAL(sis1.size(), 1);
+	ETH_REQUIRE_EQUAL(sis2.size(), 1);
 
 	Peers peers1 = host1.getPeers();
 	Peers peers2 = host2.getPeers();
-	BOOST_REQUIRE_EQUAL(peers1.size(), 1);
-	BOOST_REQUIRE_EQUAL(peers2.size(), 1);
+	ETH_REQUIRE_EQUAL(peers1.size(), 1);
+	ETH_REQUIRE_EQUAL(peers2.size(), 1);
 
 	DisconnectReason disconnect1 = peers1[0].lastDisconnect();
 	DisconnectReason disconnect2 = peers2[0].lastDisconnect();
-	BOOST_REQUIRE_EQUAL(disconnect1, disconnect2);
+	ETH_REQUIRE_EQUAL(disconnect1, disconnect2);
 
 	host1.relinquishPeer(node2);
 
@@ -286,8 +286,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	host1peerCount = host1.peerCount();
 	host2peerCount = host2.peerCount();
-	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
-	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
+	ETH_REQUIRE_EQUAL(host1peerCount, 1);
+	ETH_REQUIRE_EQUAL(host2peerCount, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -303,20 +303,20 @@ BOOST_AUTO_TEST_CASE(emptySharedPeer)
 	}
 
 	shared_ptr<Peer> p;
-	BOOST_REQUIRE(!p);
+	ETH_REQUIRE(!p);
 	
 	std::map<NodeID, std::shared_ptr<Peer>> peers;
 	p = peers[NodeID()];
-	BOOST_REQUIRE(!p);
+	ETH_REQUIRE(!p);
 	
 	p.reset(new Peer(UnspecifiedNode));
-	BOOST_REQUIRE(!p->id);
-	BOOST_REQUIRE(!*p);
+	ETH_REQUIRE(!p->id);
+	ETH_REQUIRE(!*p);
 	
 	p.reset(new Peer(Node(NodeID(EmptySHA3), UnspecifiedNodeIPEndpoint)));
-	BOOST_REQUIRE(!(!*p));
-	BOOST_REQUIRE(*p);
-	BOOST_REQUIRE(p);
+	ETH_REQUIRE(!(!*p));
+	ETH_REQUIRE(*p);
+	ETH_REQUIRE(p);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

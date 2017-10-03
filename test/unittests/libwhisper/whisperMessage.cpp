@@ -57,10 +57,10 @@ void comparePayloads(Message const& m1, Message const& m2)
 {
 	bytes const& p1 = m1.payload();
 	bytes const& p2 = m2.payload();
-	BOOST_REQUIRE_EQUAL(p1.size(), p2.size());
+	ETH_REQUIRE_EQUAL(p1.size(), p2.size());
 
 	for (size_t i = 0; i < p1.size(); ++i)
-		BOOST_REQUIRE_EQUAL(p1[i], p2[i]);
+		ETH_REQUIRE_EQUAL(p1[i], p2[i]);
 }
 
 void sealAndOpenSingleMessage(unsigned int i)
@@ -112,7 +112,7 @@ BOOST_FIXTURE_TEST_SUITE(whisperMessage, TestOutputHelper)
 //		Envelope e = m.seal(zero, topics, 1, 50);
 //		unsigned x = e.workProved();
 //		//cnote << x;
-//		BOOST_REQUIRE(x > 4);
+//		ETH_REQUIRE(x > 4);
 //	}
 //}
 

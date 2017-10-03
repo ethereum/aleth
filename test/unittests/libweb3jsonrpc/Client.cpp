@@ -109,33 +109,33 @@ BOOST_AUTO_TEST_CASE(Personal)
 	};
 	auto sendingShouldSucceed = [&]()
 	{
-		BOOST_CHECK(!eth.eth_sendTransaction(tx).empty());
+		ETH_CHECK(!eth.eth_sendTransaction(tx).empty());
 	};
 
 	BOOST_TEST_CHECKPOINT("Account is locked at the start.");
-	BOOST_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
+	ETH_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
 
 	BOOST_TEST_CHECKPOINT("Unlocking without password should not work.");
-	BOOST_CHECK(!personal.personal_unlockAccount(address, string(), 2));
-	BOOST_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
+	ETH_CHECK(!personal.personal_unlockAccount(address, string(), 2));
+	ETH_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
 
 	BOOST_TEST_CHECKPOINT("Unlocking with wrong password should not work.");
-	BOOST_CHECK(!personal.personal_unlockAccount(address, "abcd", 2));
-	BOOST_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
+	ETH_CHECK(!personal.personal_unlockAccount(address, "abcd", 2));
+	ETH_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
 
 	BOOST_TEST_CHECKPOINT("Unlocking with correct password should work.");
-	BOOST_CHECK(personal.personal_unlockAccount(address, password, 2));
+	ETH_CHECK(personal.personal_unlockAccount(address, password, 2));
 	sendingShouldSucceed();
 	BOOST_TEST_CHECKPOINT("Transaction should be sendable multiple times in unlocked mode.");
 	sendingShouldSucceed();
 
 	this_thread::sleep_for(chrono::seconds(2));
 	BOOST_TEST_CHECKPOINT("After unlock time, account should be locked again.");
-	BOOST_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
+	ETH_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
 
 	BOOST_TEST_CHECKPOINT("Unlocking again with empty password should not work.");
-	BOOST_CHECK(!personal.personal_unlockAccount(address, string(), 2));
-	BOOST_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
+	ETH_CHECK(!personal.personal_unlockAccount(address, string(), 2));
+	ETH_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

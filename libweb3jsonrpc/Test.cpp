@@ -43,7 +43,7 @@ bool Test::test_setChainParams(Json::Value const& param1)
 	}
 	catch (std::exception const&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
 	}
 
 	return true;
@@ -57,7 +57,7 @@ bool Test::test_mineBlocks(int _number)
 	}
 	catch (std::exception const&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
 	}
 
 	return true;
@@ -71,7 +71,7 @@ bool Test::test_modifyTimestamp(int _timestamp)
 	}
 	catch (std::exception const&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
 	}
 	return true;
 }
@@ -84,7 +84,7 @@ bool Test::test_addBlock(std::string const& _rlp)
 	}
 	catch (std::exception const&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
 	}
 	return true;
 }
@@ -98,7 +98,7 @@ bool Test::test_rewindToBlock(int _number)
 	}
 	catch (std::exception const&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+		ETH_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
 	}
 	return true;
 }

@@ -464,7 +464,7 @@ bool BlockQueue::invariants() const
 	{
 		std::stringstream s;
 		s << "Failed BlockQueue invariant: m_readySet: " << m_readySet.size() << " m_verified: " << m_verified.count() << " m_unverified: " << m_unverified.count() << " m_verifying" << m_verifying.count();
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment(s.str()));
+		ETH_THROW_EXCEPTION(FailedInvariant() << errinfo_comment(s.str()));
 	}
 	return true;
 }

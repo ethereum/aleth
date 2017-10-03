@@ -104,7 +104,7 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 	//Test File
 	js::mValue v;
 	string s = contentsString(_testFileFullName);
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of '" << _testFileFullName << "' is empty. Have you cloned the 'tests' repo branch develop?");
+	ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of '" << _testFileFullName << "' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	dev::test::TestOutputHelper testOutputHelper(v.get_obj().size());
 
@@ -115,13 +115,13 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		if (!dev::test::TestOutputHelper::checkTest(testname))
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(o.count("parentTimestamp") > 0, testname + " missing parentTimestamp field");
-		BOOST_REQUIRE_MESSAGE(o.count("parentDifficulty") > 0, testname + " missing parentDifficulty field");
-		BOOST_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
-		BOOST_REQUIRE_MESSAGE(o.count("parentUncles") > 0, testname + " missing parentUncles field");
-		BOOST_REQUIRE_MESSAGE(o.count("currentTimestamp") > 0, testname + " missing currentTimestamp field");
-		BOOST_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
-		BOOST_REQUIRE_MESSAGE(o.count("currentDifficulty") > 0, testname + " missing currentDifficulty field");
+		ETH_REQUIRE_MESSAGE(o.count("parentTimestamp") > 0, testname + " missing parentTimestamp field");
+		ETH_REQUIRE_MESSAGE(o.count("parentDifficulty") > 0, testname + " missing parentDifficulty field");
+		ETH_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
+		ETH_REQUIRE_MESSAGE(o.count("parentUncles") > 0, testname + " missing parentUncles field");
+		ETH_REQUIRE_MESSAGE(o.count("currentTimestamp") > 0, testname + " missing currentTimestamp field");
+		ETH_REQUIRE_MESSAGE(o.count("currentBlockNumber") > 0, testname + " missing currentBlockNumber field");
+		ETH_REQUIRE_MESSAGE(o.count("currentDifficulty") > 0, testname + " missing currentDifficulty field");
 
 		BlockHeader parent;
 		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
@@ -134,7 +134,7 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		current.setNumber(test::toInt(o["currentBlockNumber"]));
 
 		u256 difficulty = _sealEngine.calculateDifficulty(current, parent);
-		BOOST_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));
+		ETH_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));
 	}
 }
 

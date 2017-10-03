@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 
-	BOOST_CHECK_EQUAL(extVM.blockHash(100), h256());
+	ETH_CHECK_EQUAL(extVM.blockHash(100), h256());
 }
 
 BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
 	Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 	h256 hash = extVM.blockHash(1);
-	BOOST_REQUIRE_EQUAL(hash, lastHashes[0]);
+	ETH_REQUIRE_EQUAL(hash, lastHashes[0]);
 }
 
 BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInConstantinople)
@@ -104,10 +104,10 @@ BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInConstantinople)
 	ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, bytesConstRef(), bytesConstRef(), h256());
 
 	// older than 256 not available
-	BOOST_CHECK_EQUAL(extVM.blockHash(1), h256());
+	ETH_CHECK_EQUAL(extVM.blockHash(1), h256());
 
 	h256 hash = extVM.blockHash(200);
-	BOOST_REQUIRE_EQUAL(hash, blockchain.numberHash(200));
+	ETH_REQUIRE_EQUAL(hash, blockchain.numberHash(200));
 }
 
 

@@ -50,9 +50,9 @@ void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage)
 	// For Snapshot format see https://github.com/paritytech/parity/wiki/Warp-Sync-Snapshot-Format
 	u256 const version = manifest[0].toInt<u256>(RLP::VeryStrict);
 	if (version != 2)
-		BOOST_THROW_EXCEPTION(UnsupportedSnapshotManifestVersion());
+		ETH_THROW_EXCEPTION(UnsupportedSnapshotManifestVersion());
 	if (manifest.itemCount() != 6)
-		BOOST_THROW_EXCEPTION(InvalidSnapshotManifest());
+		ETH_THROW_EXCEPTION(InvalidSnapshotManifest());
 
 	u256 const blockNumber = manifest[4].toInt<u256>(RLP::VeryStrict);
 	h256 const blockHash = manifest[5].toHash<h256>(RLP::VeryStrict);
@@ -89,11 +89,11 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 		{
 			RLP const addressAndAccount = accounts[accountIndex];
 			if (addressAndAccount.itemCount() != 2)
-				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+				ETH_THROW_EXCEPTION(InvalidStateChunkData());
 
 			h256 const addressHashNew = addressAndAccount[0].toHash<h256>(RLP::VeryStrict);
 			if (!addressHashNew)
-				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+				ETH_THROW_EXCEPTION(InvalidStateChunkData());
 
 			if (addressHash)
 			{
@@ -108,7 +108,7 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 				{
 					// splitted account can only be the first in chunk
 					if (accountIndex != 0)
-						BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+						ETH_THROW_EXCEPTION(InvalidStateChunkData());
 				}
 			}
 
@@ -116,7 +116,7 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 
 			RLP const account = addressAndAccount[1];
 			if (account.itemCount() != 5)
-				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+				ETH_THROW_EXCEPTION(InvalidStateChunkData());
 
 			nonce = account[0].toInt<u256>(RLP::VeryStrict);
 			balance = account[1].toInt<u256>(RLP::VeryStrict);
@@ -125,15 +125,15 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 			for (auto hashAndValue: storage)
 			{
 				if (hashAndValue.itemCount() != 2)
-					BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+					ETH_THROW_EXCEPTION(InvalidStateChunkData());
 
 				h256 const keyHash = hashAndValue[0].toHash<h256>(RLP::VeryStrict);
 				if (!keyHash || storageMap.find(keyHash) != storageMap.end())
-					BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+					ETH_THROW_EXCEPTION(InvalidStateChunkData());
 
 				bytes value = hashAndValue[1].toBytes(RLP::VeryStrict);
 				if (value.empty())
-					BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+					ETH_THROW_EXCEPTION(InvalidStateChunkData());
 
 				storageMap.emplace(keyHash, std::move(value));
 			}
@@ -150,10 +150,10 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 			case 2:
 				codeHash = account[3].toHash<h256>(RLP::VeryStrict);
 				if (!codeHash || m_stateImporter.lookupCode(codeHash).empty())
-					BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+					ETH_THROW_EXCEPTION(InvalidStateChunkData());
 				break;
 			default:
-				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
+				ETH_THROW_EXCEPTION(InvalidStateChunkData());
 			}
 		}
 
@@ -175,7 +175,7 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 	clog(SnapshotImportLog) << "Reconstructed state root: " << m_stateImporter.stateRoot();
 	clog(SnapshotImportLog) << "Manifest state root:      " << _stateRoot;
 	if (m_stateImporter.stateRoot() != _stateRoot)
-		BOOST_THROW_EXCEPTION(StateTrieReconstructionFailed());
+		ETH_THROW_EXCEPTION(StateTrieReconstructionFailed());
 }
 
 void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _blockChunkHashes)
@@ -189,13 +189,13 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
 
 		RLP blockChunk(chunkUncompressed);
 		if (blockChunk.itemCount() < 3)
-			BOOST_THROW_EXCEPTION(InvalidBlockChunkData());
+			ETH_THROW_EXCEPTION(InvalidBlockChunkData());
 
 		u256 const firstBlockNumber = blockChunk[0].toInt<u256>(RLP::VeryStrict);
 		h256 const firstBlockHash = blockChunk[1].toHash<h256>(RLP::VeryStrict);
 		u256 const firstBlockDifficulty = blockChunk[2].toInt<u256>(RLP::VeryStrict);
 		if (!firstBlockNumber || !firstBlockHash || !firstBlockDifficulty)
-			BOOST_THROW_EXCEPTION(InvalidBlockChunkData());
+			ETH_THROW_EXCEPTION(InvalidBlockChunkData());
 
 		clog(SnapshotImportLog) << "chunk first block " << firstBlockNumber << " first block hash " << firstBlockHash << " difficulty " << firstBlockDifficulty;
 
@@ -207,7 +207,7 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
 		{
 			RLP blockAndReceipts = blockChunk[i];
 			if (blockAndReceipts.itemCount() != 2)
-				BOOST_THROW_EXCEPTION(InvalidBlockChunkData());
+				ETH_THROW_EXCEPTION(InvalidBlockChunkData());
 
 			RLP abridgedBlock = blockAndReceipts[0];
 

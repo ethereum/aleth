@@ -48,7 +48,7 @@ void VM::throwOutOfGas()
 	// disabled to prevent duplicate steps in vmtrace log
 	//if (m_onFail)
 	//	(this->*m_onFail)();
-	BOOST_THROW_EXCEPTION(OutOfGas());
+	ETH_THROW_EXCEPTION(OutOfGas());
 }
 
 void VM::throwBadInstruction()
@@ -56,7 +56,7 @@ void VM::throwBadInstruction()
 	// disabled to prevent duplicate steps in vmtrace log
 	//if (m_onFail)
 	//	(this->*m_onFail)();
-	BOOST_THROW_EXCEPTION(BadInstruction());
+	ETH_THROW_EXCEPTION(BadInstruction());
 }
 
 void VM::throwBadJumpDestination()
@@ -64,7 +64,7 @@ void VM::throwBadJumpDestination()
 	// disabled to prevent duplicate steps in vmtrace log
 	//if (m_onFail)
 	//	(this->*m_onFail)();
-	BOOST_THROW_EXCEPTION(BadJumpDestination());
+	ETH_THROW_EXCEPTION(BadJumpDestination());
 }
 
 void VM::throwDisallowedStateChange()
@@ -72,7 +72,7 @@ void VM::throwDisallowedStateChange()
 	// disabled to prevent duplicate steps in vmtrace log
 	//if (m_onFail)
 	//	(this->*m_onFail)();
-	BOOST_THROW_EXCEPTION(DisallowedStateChange());
+	ETH_THROW_EXCEPTION(DisallowedStateChange());
 }
 
 // throwBadStack is called from fetchInstruction() -> adjustStack()
@@ -85,19 +85,19 @@ void VM::throwBadStack(unsigned _removed, unsigned _added)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, size));
+		ETH_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, size));
 	}
 	else
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), size));
+		ETH_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), size));
 	}
 }
 
 void VM::throwRevertInstruction(owning_bytes_ref&& _output)
 {
-	// We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and RevertInstruction has no copy constructor 
+	// We can't use ETH_THROW_EXCEPTION here because it makes a copy of exception inside and RevertInstruction has no copy constructor 
 	throw RevertInstruction(move(_output));
 }
 
@@ -106,7 +106,7 @@ void VM::throwBufferOverrun(bigint const& _endOfAccess)
 	// todo: disable this m_onFail, may result in duplicate log step in the trace
 	if (m_onFail)
 		(this->*m_onFail)();
-	BOOST_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
+	ETH_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
 }
 
 int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)

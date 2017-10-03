@@ -124,9 +124,9 @@ namespace eth
 #else
 	#if EVM_TRACE > 0
 		#define THROW_EXCEPTION(X) \
-			((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), BOOST_THROW_EXCEPTION(X))
+			((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), ETH_THROW_EXCEPTION(X))
 	#else
-		#define THROW_EXCEPTION(X) BOOST_THROW_EXCEPTION(X)
+		#define THROW_EXCEPTION(X) ETH_THROW_EXCEPTION(X)
 	#endif
 #endif
 

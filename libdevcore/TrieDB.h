@@ -87,7 +87,7 @@ public:
 		if (_v == Verification::Normal)
 #endif
 			if (!node(m_root).size())
-				BOOST_THROW_EXCEPTION(RootNotFound());
+				ETH_THROW_EXCEPTION(RootNotFound());
 	}
 
 	/// True if the trie is uninitialised (i.e. that the DB doesn't contain the root node).
@@ -95,7 +95,7 @@ public:
 	/// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
 	bool isEmpty() const { return m_root == EmptyTrie && node(m_root).size(); }
 
-	h256 const& root() const { if (node(m_root).empty()) BOOST_THROW_EXCEPTION(BadRoot(m_root)); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return m_root; }	// patch the root in the case of the empty trie. TODO: handle this properly.
+	h256 const& root() const { if (node(m_root).empty()) ETH_THROW_EXCEPTION(BadRoot(m_root)); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return m_root; }	// patch the root in the case of the empty trie. TODO: handle this properly.
 
 	std::string at(bytes const& _key) const { return at(&_key); }
 	std::string at(bytesConstRef _key) const;
@@ -174,7 +174,7 @@ public:
 		else if (_r.isList())
 			descendList(_r, _keyMask, _wasExt, _out, _indent);
 		else
-			BOOST_THROW_EXCEPTION(InvalidTrie());
+			ETH_THROW_EXCEPTION(InvalidTrie());
 	}
 
 	/// Used for debugging, scans the whole trie.
@@ -196,7 +196,7 @@ public:
 					descendEntry(_r[i], _keyMask, false, _out, _indent + 1);
 		}
 		else
-			BOOST_THROW_EXCEPTION(InvalidTrie());
+			ETH_THROW_EXCEPTION(InvalidTrie());
 	}
 
 	/// Used for debugging, scans the whole trie.
@@ -559,7 +559,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next(NibbleSlice _key)
 				cwarn << rlp;
 				auto c = rlp.itemCount();
 				cwarn << c;
-				BOOST_THROW_EXCEPTION(InvalidTrie());
+				ETH_THROW_EXCEPTION(InvalidTrie());
 #else
 				m_that = nullptr;
 				return;
@@ -694,7 +694,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
 				cwarn << rlp;
 				auto c = rlp.itemCount();
 				cwarn << c;
-				BOOST_THROW_EXCEPTION(InvalidTrie());
+				ETH_THROW_EXCEPTION(InvalidTrie());
 #else
 				m_that = nullptr;
 				return;

@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_CASE(TransactionEIP86)
 	streamRLP << to << 0 << bytes() << 0 << 0 << 0;
 	Transaction tx0(streamRLP.out(), CheckTransaction::Everything);
 	ImportResult result = txq.import(tx0);
-	BOOST_CHECK(result == ImportResult::ZeroSignature);
-	BOOST_CHECK(txq.knownTransactions().size() == 0);
+	ETH_CHECK(result == ImportResult::ZeroSignature);
+	ETH_CHECK(txq.knownTransactions().size() == 0);
 }
 
 BOOST_AUTO_TEST_CASE(tqMaxNonce)
@@ -62,17 +62,17 @@ BOOST_AUTO_TEST_CASE(tqMaxNonce)
 	Transaction tx9(0, gasCost, gas, dest, bytes(), 9, sec );
 
 	txq.import(tx0);
-	BOOST_CHECK(1 == txq.maxNonce(to));
+	ETH_CHECK(1 == txq.maxNonce(to));
 	txq.import(tx0);
-	BOOST_CHECK(1 == txq.maxNonce(to));
+	ETH_CHECK(1 == txq.maxNonce(to));
 	txq.import(tx0_1);
-	BOOST_CHECK(1 == txq.maxNonce(to));
+	ETH_CHECK(1 == txq.maxNonce(to));
 	txq.import(tx1);
-	BOOST_CHECK(2 == txq.maxNonce(to));
+	ETH_CHECK(2 == txq.maxNonce(to));
 	txq.import(tx9);
-	BOOST_CHECK(10 == txq.maxNonce(to));
+	ETH_CHECK(10 == txq.maxNonce(to));
 	txq.import(tx2);
-	BOOST_CHECK(10 == txq.maxNonce(to));
+	ETH_CHECK(10 == txq.maxNonce(to));
 }
 
 BOOST_AUTO_TEST_CASE(tqPriority)
@@ -95,37 +95,37 @@ BOOST_AUTO_TEST_CASE(tqPriority)
 	Transaction tx5(0, gasCostMed, gas, dest, bytes(), 2, sender2 );
 
 	txq.import(tx0);
-	BOOST_CHECK(Transactions { tx0 } == txq.topTransactions(256));
+	ETH_CHECK(Transactions { tx0 } == txq.topTransactions(256));
 	txq.import(tx0);
-	BOOST_CHECK(Transactions { tx0 } == txq.topTransactions(256));
+	ETH_CHECK(Transactions { tx0 } == txq.topTransactions(256));
 	txq.import(tx0_1);
-	BOOST_CHECK(Transactions { tx0_1 } == txq.topTransactions(256));
+	ETH_CHECK(Transactions { tx0_1 } == txq.topTransactions(256));
 	txq.import(tx1);
-	BOOST_CHECK((Transactions { tx0_1, tx1 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx0_1, tx1 }) == txq.topTransactions(256));
 	txq.import(tx2);
-	BOOST_CHECK((Transactions { tx2, tx0_1, tx1 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx0_1, tx1 }) == txq.topTransactions(256));
 	txq.import(tx3);
-	BOOST_CHECK((Transactions { tx2, tx0_1, tx1, tx3 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx0_1, tx1, tx3 }) == txq.topTransactions(256));
 	txq.import(tx4);
-	BOOST_CHECK((Transactions { tx2, tx0_1, tx1, tx3, tx4 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx0_1, tx1, tx3, tx4 }) == txq.topTransactions(256));
 	txq.import(tx5);
-	BOOST_CHECK((Transactions { tx2, tx0_1, tx1, tx3, tx5, tx4 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx0_1, tx1, tx3, tx5, tx4 }) == txq.topTransactions(256));
 
 	txq.drop(tx0_1.sha3());
-	BOOST_CHECK((Transactions { tx2, tx1, tx3, tx5, tx4 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx1, tx3, tx5, tx4 }) == txq.topTransactions(256));
 	txq.drop(tx1.sha3());
-	BOOST_CHECK((Transactions { tx2, tx3, tx5, tx4 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx3, tx5, tx4 }) == txq.topTransactions(256));
 	txq.drop(tx5.sha3());
-	BOOST_CHECK((Transactions { tx2, tx3, tx4 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx3, tx4 }) == txq.topTransactions(256));
 
 	Transaction tx6(0, gasCostMed, gas, dest, bytes(), 20, sender1 );
 	txq.import(tx6);
-	BOOST_CHECK((Transactions { tx2, tx3, tx4, tx6 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx3, tx4, tx6 }) == txq.topTransactions(256));
 
 	Transaction tx7(0, gasCostMed, gas, dest, bytes(), 2, sender2 );
 	txq.import(tx7);
 	// deterministic signature: hash of tx5 and tx7 will be same
-	BOOST_CHECK((Transactions { tx2, tx3, tx4, tx6 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx2, tx3, tx4, tx6 }) == txq.topTransactions(256));
 
 }
 
@@ -149,14 +149,14 @@ BOOST_AUTO_TEST_CASE(tqFuture)
 	txq.import(tx2);
 	txq.import(tx3);
 	txq.import(tx4);
-	BOOST_CHECK((Transactions { tx0, tx1, tx2, tx3, tx4 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx0, tx1, tx2, tx3, tx4 }) == txq.topTransactions(256));
 
 	txq.setFuture(tx2.sha3());
-	BOOST_CHECK((Transactions { tx0, tx1 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx0, tx1 }) == txq.topTransactions(256));
 
 	Transaction tx2_2(1, gasCostMed, gas, dest, bytes(), 2, sender );
 	txq.import(tx2_2);
-	BOOST_CHECK((Transactions { tx0, tx1, tx2_2, tx3, tx4 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx0, tx1, tx2_2, tx3, tx4 }) == txq.topTransactions(256));
 }
 
 
@@ -181,12 +181,12 @@ BOOST_AUTO_TEST_CASE(tqLimits)
 	txq.import(tx3);
 	txq.import(tx4);
 	txq.import(tx5);
-	BOOST_CHECK((Transactions { tx5, tx0, tx1 }) == txq.topTransactions(256));
+	ETH_CHECK((Transactions { tx5, tx0, tx1 }) == txq.topTransactions(256));
 }
 
 BOOST_AUTO_TEST_CASE(tqOutput)
 {
-	BOOST_REQUIRE(string(TransactionQueueChannel().name()) == string(EthCyan "┉┅▶"));
+	ETH_REQUIRE(string(TransactionQueueChannel().name()) == string(EthCyan "┉┅▶"));
 }
 
 
@@ -195,42 +195,42 @@ BOOST_AUTO_TEST_CASE(tqImport)
 	TestTransaction testTransaction = TestTransaction::defaultTransaction();
 	TransactionQueue tq;
 	h256Hash known = tq.knownTransactions();
-	BOOST_REQUIRE(known.size() == 0);
+	ETH_REQUIRE(known.size() == 0);
 
 	ImportResult ir = tq.import(testTransaction.transaction().rlp());
-	BOOST_REQUIRE(ir == ImportResult::Success);
+	ETH_REQUIRE(ir == ImportResult::Success);
 	known = tq.knownTransactions();
-	BOOST_REQUIRE(known.size() == 1);
+	ETH_REQUIRE(known.size() == 1);
 
 	ir = tq.import(testTransaction.transaction().rlp());
-	BOOST_REQUIRE(ir == ImportResult::AlreadyKnown);
+	ETH_REQUIRE(ir == ImportResult::AlreadyKnown);
 
 	bytes rlp = testTransaction.transaction().rlp();
 	rlp.at(0) = 03;
 	ir = tq.import(rlp);
-	BOOST_REQUIRE(ir == ImportResult::Malformed);
+	ETH_REQUIRE(ir == ImportResult::Malformed);
 
 	known = tq.knownTransactions();
-	BOOST_REQUIRE(known.size() == 1);
+	ETH_REQUIRE(known.size() == 1);
 
 	TestTransaction testTransaction2 = TestTransaction::defaultTransaction(1, 2);
 	TestTransaction testTransaction3 = TestTransaction::defaultTransaction(1, 1);
 	TestTransaction testTransaction4 = TestTransaction::defaultTransaction(1, 4);
 	ir = tq.import(testTransaction2.transaction().rlp());
 	ir = tq.import(testTransaction3.transaction().rlp());
-	BOOST_REQUIRE(ir == ImportResult::OverbidGasPrice);
+	ETH_REQUIRE(ir == ImportResult::OverbidGasPrice);
 	ir = tq.import(testTransaction4.transaction().rlp());
 	known = tq.knownTransactions();
-	BOOST_REQUIRE(known.size() == 1);
+	ETH_REQUIRE(known.size() == 1);
 	Transactions ts = tq.topTransactions(4);
-	BOOST_REQUIRE(ts.size() == 1);
-	BOOST_REQUIRE(Transaction(ts.at(0)).gasPrice() == 4);
+	ETH_REQUIRE(ts.size() == 1);
+	ETH_REQUIRE(Transaction(ts.at(0)).gasPrice() == 4);
 
 	tq.setFuture(Transaction(ts.at(0)).sha3());
 	Address from = Transaction(ts.at(0)).from();
 	ts = tq.topTransactions(4);
-	BOOST_REQUIRE(ts.size() == 0);
-	BOOST_REQUIRE(tq.waiting(from) == 1);
+	ETH_REQUIRE(ts.size() == 0);
+	ETH_REQUIRE(tq.waiting(from) == 1);
 }
 
 BOOST_AUTO_TEST_CASE(tqDrop)
@@ -239,9 +239,9 @@ BOOST_AUTO_TEST_CASE(tqDrop)
 	TestTransaction testTransaction = TestTransaction::defaultTransaction();
 	tq.dropGood(testTransaction.transaction());
 	tq.import(testTransaction.transaction().rlp());
-	BOOST_REQUIRE(tq.topTransactions(4).size() == 1);
+	ETH_REQUIRE(tq.topTransactions(4).size() == 1);
 	tq.dropGood(testTransaction.transaction());
-	BOOST_REQUIRE(tq.topTransactions(4).size() == 0);
+	ETH_REQUIRE(tq.topTransactions(4).size() == 0);
 }
 
 BOOST_AUTO_TEST_CASE(tqLimit)
@@ -253,33 +253,33 @@ BOOST_AUTO_TEST_CASE(tqLimit)
 		TestTransaction testTransaction = TestTransaction::defaultTransaction(i);
 		ImportResult res = tq.import(testTransaction.transaction());
 		from = testTransaction.transaction().from();
-		BOOST_REQUIRE(res == ImportResult::Success);
+		ETH_REQUIRE(res == ImportResult::Success);
 	}
 
 	//5 is imported and 6th is dropped
-	BOOST_REQUIRE(tq.waiting(from) == 5);
+	ETH_REQUIRE(tq.waiting(from) == 5);
 
 	Transactions topTr = tq.topTransactions(10);
-	BOOST_REQUIRE(topTr.size() == 5);
+	ETH_REQUIRE(topTr.size() == 5);
 
 	for (int i = topTr.size() - 1; i >= 0 ; i--)
 		tq.setFuture(topTr.at(i).sha3());
 
 	topTr = tq.topTransactions(10);
-	BOOST_REQUIRE(topTr.size() == 0);
+	ETH_REQUIRE(topTr.size() == 0);
 
 	TestTransaction testTransaction = TestTransaction::defaultTransaction(7);
-	BOOST_REQUIRE(tq.waiting(from) == 5);
+	ETH_REQUIRE(tq.waiting(from) == 5);
 
 	//Drop out of bound feauture
 	ImportResult res = tq.import(testTransaction.transaction());
-	BOOST_REQUIRE(res == ImportResult::Success);
+	ETH_REQUIRE(res == ImportResult::Success);
 
 	//future list size is now 3  + 1 imported transaction
-	BOOST_REQUIRE(tq.waiting(testTransaction.transaction().from()) == 4);
+	ETH_REQUIRE(tq.waiting(testTransaction.transaction().from()) == 4);
 
 	topTr = tq.topTransactions(10);
-	BOOST_REQUIRE(topTr.size() == 1); // 1 imported transaction
+	ETH_REQUIRE(topTr.size() == 1); // 1 imported transaction
 }
 
 BOOST_AUTO_TEST_CASE(tqEqueue)
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(tqEqueue)
 
 	//check that Transaction could be recreated from the RLP
 	Transaction tRlpTransaction(payloadToDecode, CheckTransaction::Cheap);
-	BOOST_REQUIRE(tRlpTransaction.data() == testTransaction.transaction().data());
+	ETH_REQUIRE(tRlpTransaction.data() == testTransaction.transaction().data());
 
 	//try to import transactions
 	string hashStr = "01020304050607080910111213141516171819202122232425262728293031320102030405060708091011121314151617181920212223242526272829303132";
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(tqEqueue)
 
 	//at least 1 transaction should be imported through RLP
 	Transactions topTr = tq.topTransactions(10);
-	BOOST_REQUIRE(topTr.size() == 1);
+	ETH_REQUIRE(topTr.size() == 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

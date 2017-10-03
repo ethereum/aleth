@@ -66,7 +66,7 @@ void TopicBloomFilterBase<N>::addRaw(FixedHash<N> const& _h)
 			if (m_refCounter[i] != std::numeric_limits<uint16_t>::max())
 				m_refCounter[i]++;
 			else
-				BOOST_THROW_EXCEPTION(Overflow());
+				ETH_THROW_EXCEPTION(Overflow());
 		}
 }
 

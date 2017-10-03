@@ -60,7 +60,7 @@ std::string dev::test::getCommandLineArgument(string const& _name, bool _require
 			return str.substr(str.find("=") + 1);
 	}
 	if (_require)
-		BOOST_ERROR("Failed getting command line argument: " << _name << " from: " << argv);
+		ETH_ERROR("Failed getting command line argument: " << _name << " from: " << argv);
 	return "";
 }
 

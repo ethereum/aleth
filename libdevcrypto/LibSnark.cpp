@@ -78,7 +78,7 @@ libff::alt_bn128_Fq decodeFqElement(dev::bytesConstRef _data)
 	h256 xbin(_data, h256::AlignLeft);
 	// TODO: Consider using a compiler time constant for comparison.
 	if (u256(xbin) >= u256(fromLibsnarkBigint(libff::alt_bn128_Fq::mod)))
-		BOOST_THROW_EXCEPTION(InvalidEncoding());
+		ETH_THROW_EXCEPTION(InvalidEncoding());
 	return toLibsnarkBigint(xbin);
 }
 
@@ -90,7 +90,7 @@ libff::alt_bn128_G1 decodePointG1(dev::bytesConstRef _data)
 		return libff::alt_bn128_G1::zero();
 	libff::alt_bn128_G1 p(x, y, libff::alt_bn128_Fq::one());
 	if (!p.is_well_formed())
-		BOOST_THROW_EXCEPTION(InvalidEncoding());
+		ETH_THROW_EXCEPTION(InvalidEncoding());
 	return p;
 }
 
@@ -122,7 +122,7 @@ libff::alt_bn128_G2 decodePointG2(dev::bytesConstRef _data)
 		return libff::alt_bn128_G2::zero();
 	libff::alt_bn128_G2 p(x, y, libff::alt_bn128_Fq2::one());
 	if (!p.is_well_formed())
-		BOOST_THROW_EXCEPTION(InvalidEncoding());
+		ETH_THROW_EXCEPTION(InvalidEncoding());
 	return p;
 }
 

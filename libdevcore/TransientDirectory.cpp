@@ -38,10 +38,10 @@ TransientDirectory::TransientDirectory(std::string const& _path):
 {
 	// we never ever want to delete a directory (including all its contents) that we did not create ourselves.
 	if (boost::filesystem::exists(m_path))
-		BOOST_THROW_EXCEPTION(FileError());
+		ETH_THROW_EXCEPTION(FileError());
 
 	if (!fs::create_directories(m_path))
-		BOOST_THROW_EXCEPTION(FileError());
+		ETH_THROW_EXCEPTION(FileError());
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(m_path, fs::owner_all));
 }
 

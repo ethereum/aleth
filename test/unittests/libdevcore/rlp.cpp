@@ -62,11 +62,11 @@ namespace dev
 				cnote << "  " << i.first;
 				testname = "(" + i.first + ") ";
 
-				BOOST_REQUIRE_MESSAGE(o.count("out") > 0, testname + "out not set!");
-				BOOST_REQUIRE_MESSAGE(!o.at("out").is_null(), testname + "out is set to null!");
+				ETH_REQUIRE_MESSAGE(o.count("out") > 0, testname + "out not set!");
+				ETH_REQUIRE_MESSAGE(!o.at("out").is_null(), testname + "out is set to null!");
 
 				//Check Encode
-				BOOST_REQUIRE_MESSAGE(o.count("in") > 0, testname + "in not set!");
+				ETH_REQUIRE_MESSAGE(o.count("in") > 0, testname + "in not set!");
 				RlpType rlpType = RlpType::Test;
 				if (o.at("in").type() == js::str_type)
 				{
@@ -88,7 +88,7 @@ namespace dev
 					stringstream msg;
 					msg << "Encoding Failed: expected: " << expectedText << std::endl;
 					msg << " But Computed: " << computedText;
-					BOOST_CHECK_MESSAGE(expectedText == computedText, testname + msg.str());
+					ETH_CHECK_MESSAGE(expectedText == computedText, testname + msg.str());
 				}
 
 				//Check Decode
@@ -126,11 +126,11 @@ namespace dev
 
 				//Check that there was an exception as input is INVALID
 				if (rlpType == RlpType::Invalid && !was_exception)
-					BOOST_ERROR(testname + "Expected RLP Exception as rlp should be invalid!");
+					ETH_ERROR(testname + "Expected RLP Exception as rlp should be invalid!");
 
 				//input is VALID check that there was no exceptions
 				if (was_exception)
-					BOOST_ERROR(testname + "Unexpected RLP Exception!");
+					ETH_ERROR(testname + "Unexpected RLP Exception!");
 			}
 		}
 
@@ -167,34 +167,34 @@ namespace dev
 					stringstream bintStream(bigIntStr);
 					bigint val;
 					bintStream >> val;
-					BOOST_CHECK( !u.isList() );
-					BOOST_CHECK( !u.isNull() );
-					BOOST_CHECK( u == val );
+					ETH_CHECK( !u.isList() );
+					ETH_CHECK( !u.isNull() );
+					ETH_CHECK( u == val );
 				}
 				else
 				{
-					BOOST_CHECK( !u.isList() );
-					BOOST_CHECK( !u.isNull() );
-					BOOST_CHECK( u.isData() );
-					BOOST_CHECK( u.size() == expectedText.length() );
-					BOOST_CHECK( u == expectedText );
+					ETH_CHECK( !u.isList() );
+					ETH_CHECK( !u.isNull() );
+					ETH_CHECK( u.isData() );
+					ETH_CHECK( u.size() == expectedText.length() );
+					ETH_CHECK( u == expectedText );
 				}
 			}
 			else if ( v.type() == js::int_type )
 			{
 				const int expectedValue = v.get_int();
-				BOOST_CHECK( u.isInt() );
-				BOOST_CHECK( !u.isList() );
-				BOOST_CHECK( !u.isNull() );
-				BOOST_CHECK( u == expectedValue );
+				ETH_CHECK( u.isInt() );
+				ETH_CHECK( !u.isList() );
+				ETH_CHECK( !u.isNull() );
+				ETH_CHECK( u == expectedValue );
 			}
 			else if ( v.type() == js::array_type )
 			{
-				BOOST_CHECK( u.isList() );
-				BOOST_CHECK( !u.isInt() );
-				BOOST_CHECK( !u.isData() );
+				ETH_CHECK( u.isList() );
+				ETH_CHECK( !u.isInt() );
+				ETH_CHECK( !u.isData() );
 				js::mArray const& arr = v.get_array();
-				BOOST_CHECK( u.itemCount() == arr.size() );
+				ETH_CHECK( u.itemCount() == arr.size() );
 				unsigned i;
 				for( i = 0; i < arr.size(); i++ )
 				{
@@ -204,7 +204,7 @@ namespace dev
 			}
 			else
 			{
-				BOOST_ERROR("Invalid Javascript object!");
+				ETH_ERROR("Invalid Javascript object!");
 			}
 		}
 	}
@@ -219,18 +219,18 @@ void runRlpTest(string _name, fs::path const& _path)
 		cnote << "TEST " << _name << ":";
 		json_spirit::mValue v;
 		string const s = asString(dev::contents(testPath / fs::path(_name + ".json")));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << (testPath / fs::path(_name + ".json")).string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << (testPath / fs::path(_name + ".json")).string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
 		//Listener::notifySuiteStarted(_name);
 		dev::test::doRlpTests(v);
 	}
 	catch (Exception const& _e)
 	{
-		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+		ETH_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR("Failed test with Exception: " << _e.what());
+		ETH_ERROR("Failed test with Exception: " << _e.what());
 	}
 }
 
@@ -252,11 +252,11 @@ BOOST_AUTO_TEST_CASE(EmptyArrayList)
 	}
 	catch (Exception const& _e)
 	{
-		BOOST_ERROR("(EmptyArrayList) Failed test with Exception: " << _e.what());
+		ETH_ERROR("(EmptyArrayList) Failed test with Exception: " << _e.what());
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR("(EmptyArrayList) Failed test with Exception: " << _e.what());
+		ETH_ERROR("(EmptyArrayList) Failed test with Exception: " << _e.what());
 	}
 }
 
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(rlpRandom)
 			cnote << "Testing ..." << path.filename();
 			json_spirit::mValue v;
 			string s = asString(dev::contents(path.string()));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+			ETH_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
 			//test::Listener::notifySuiteStarted(path.filename().string());
 			dev::test::doRlpTests(v);
@@ -291,11 +291,11 @@ BOOST_AUTO_TEST_CASE(rlpRandom)
 
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << diagnostic_information(_e));
+			ETH_ERROR(path.filename().string() + "Failed test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << _e.what());
+			ETH_ERROR(path.filename().string() + "Failed test with Exception: " << _e.what());
 		}
 	}
 }

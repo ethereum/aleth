@@ -101,7 +101,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 		if (fs::space(path / fs::path("state")).available < 1024)
 		{
 			cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
-			BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
+			ETH_THROW_EXCEPTION(NotEnoughAvailableSpace());
 		}
 		else
 		{
@@ -110,7 +110,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 				"Database " <<
 				(path / fs::path("state")) <<
 				"already open. You appear to have another instance of ethereum running. Bailing.";
-			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
+			ETH_THROW_EXCEPTION(DatabaseAlreadyOpen());
 		}
 	}
 
@@ -127,7 +127,7 @@ void State::populateFrom(AccountMap const& _map)
 u256 const& State::requireAccountStartNonce() const
 {
 	if (m_accountStartNonce == Invalid256)
-		BOOST_THROW_EXCEPTION(InvalidAccountStartNonceInState());
+		ETH_THROW_EXCEPTION(InvalidAccountStartNonceInState());
 	return m_accountStartNonce;
 }
 
@@ -136,7 +136,7 @@ void State::noteAccountStartNonce(u256 const& _actual)
 	if (m_accountStartNonce == Invalid256)
 		m_accountStartNonce = _actual;
 	else if (m_accountStartNonce != _actual)
-		BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState());
+		ETH_THROW_EXCEPTION(IncorrectAccountStartNonceInState());
 }
 
 void State::removeEmptyAccounts()
@@ -236,7 +236,7 @@ unordered_map<Address, u256> State::addresses() const
 			ret[i.first] = RLP(i.second)[1].toInt<u256>();
 	return ret;
 #else
-	BOOST_THROW_EXCEPTION(InterfaceNotSupported("State::addresses()"));
+	ETH_THROW_EXCEPTION(InterfaceNotSupported("State::addresses()"));
 #endif
 }
 
@@ -337,7 +337,7 @@ void State::subBalance(Address const& _addr, u256 const& _value)
 	Account* a = account(_addr);
 	if (!a || a->balance() < _value)
 		// TODO: I expect this never happens.
-		BOOST_THROW_EXCEPTION(NotEnoughCash());
+		ETH_THROW_EXCEPTION(NotEnoughCash());
 
 	// Fall back to addBalance().
 	addBalance(_addr, 0 - _value);

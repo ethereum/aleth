@@ -43,7 +43,7 @@ WhisperDB::WhisperDB(string const& _type)
 	ldb::Status status = ldb::DB::Open(op, path.string(), &p);
 	m_db.reset(p);
 	if (!status.ok())
-		BOOST_THROW_EXCEPTION(FailedToOpenLevelDB(status.ToString()));
+		ETH_THROW_EXCEPTION(FailedToOpenLevelDB(status.ToString()));
 }
 
 string WhisperDB::lookup(dev::h256 const& _key) const
@@ -52,7 +52,7 @@ string WhisperDB::lookup(dev::h256 const& _key) const
 	ldb::Slice slice((char const*)_key.data(), _key.size);
 	ldb::Status status = m_db->Get(m_readOptions, slice, &ret);
 	if (!status.ok() && !status.IsNotFound())
-		BOOST_THROW_EXCEPTION(FailedLookupInLevelDB(status.ToString()));
+		ETH_THROW_EXCEPTION(FailedLookupInLevelDB(status.ToString()));
 
 	return ret;
 }
@@ -62,7 +62,7 @@ void WhisperDB::insert(dev::h256 const& _key, string const& _value)
 	ldb::Slice slice((char const*)_key.data(), _key.size);
 	ldb::Status status = m_db->Put(m_writeOptions, slice, _value);	
 	if (!status.ok())
-		BOOST_THROW_EXCEPTION(FailedInsertInLevelDB(status.ToString()));
+		ETH_THROW_EXCEPTION(FailedInsertInLevelDB(status.ToString()));
 }
 
 void WhisperDB::insert(dev::h256 const& _key, bytes const& _value)
@@ -71,7 +71,7 @@ void WhisperDB::insert(dev::h256 const& _key, bytes const& _value)
 	ldb::Slice v((char const*)_value.data(), _value.size());
 	ldb::Status status = m_db->Put(m_writeOptions, k, v);
 	if (!status.ok())
-		BOOST_THROW_EXCEPTION(FailedInsertInLevelDB(status.ToString()));
+		ETH_THROW_EXCEPTION(FailedInsertInLevelDB(status.ToString()));
 }
 
 void WhisperDB::kill(dev::h256 const& _key)
@@ -79,7 +79,7 @@ void WhisperDB::kill(dev::h256 const& _key)
 	ldb::Slice slice((char const*)_key.data(), _key.size);
 	ldb::Status status = m_db->Delete(m_writeOptions, slice);
 	if (!status.ok())
-		BOOST_THROW_EXCEPTION(FailedDeleteInLevelDB(status.ToString()));
+		ETH_THROW_EXCEPTION(FailedDeleteInLevelDB(status.ToString()));
 }
 
 void WhisperMessagesDB::loadAllMessages(std::map<h256, Envelope>& o_dst)

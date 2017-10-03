@@ -32,17 +32,23 @@ TransactionReceipt::TransactionReceipt(bytesConstRef _rlp)
 {
 	RLP r(_rlp);
 	if (!r.isList() || r.itemCount() != 4)
-		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+	{
+		ETH_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+	}
 
 	if (!r[0].isData())
-		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+	{
+		ETH_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+	}
 
 	if (r[0].size() == 32)
 		m_statusCodeOrStateRoot = (h256)r[0];
 	else if (r[0].isInt())
 		m_statusCodeOrStateRoot = (uint8_t)r[0];
 	else
-		BOOST_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+	{
+		ETH_THROW_EXCEPTION(InvalidTransactionReceiptFormat());
+	}
 
 	m_gasUsed = (u256)r[1];
 	m_bloom = (LogBloom)r[2];
@@ -88,13 +94,17 @@ uint8_t TransactionReceipt::statusCode() const
 	if (hasStatusCode())
 		return boost::get<uint8_t>(m_statusCodeOrStateRoot);
 	else
-		BOOST_THROW_EXCEPTION(TransactionReceiptVersionError());
+	{
+		ETH_THROW_EXCEPTION(TransactionReceiptVersionError());
+	}
 }
 
 h256 const& TransactionReceipt::stateRoot() const
 {
 	if (hasStatusCode())
-		BOOST_THROW_EXCEPTION(TransactionReceiptVersionError());
+	{
+		ETH_THROW_EXCEPTION(TransactionReceiptVersionError());
+	}
 	else
 		return boost::get<h256>(m_statusCodeOrStateRoot);
 }

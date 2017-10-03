@@ -28,7 +28,7 @@ using namespace dev::p2p;
 std::vector<RLPXPacket> RLPXFrameReader::demux(RLPXFrameCoder& _coder, RLPXFrameInfo const& _info, bytesRef _frame)
 {
 	if (!_coder.authAndDecryptFrame(_frame))
-		BOOST_THROW_EXCEPTION(RLPXFrameDecryptFailed());
+		ETH_THROW_EXCEPTION(RLPXFrameDecryptFailed());
 	
 	std::vector<RLPXPacket> ret;
 	if (_frame.empty())
@@ -55,13 +55,13 @@ std::vector<RLPXPacket> RLPXFrameReader::demux(RLPXFrameCoder& _coder, RLPXFrame
 			if (remaining)
 			{
 				if (!ret.empty())
-					BOOST_THROW_EXCEPTION(RLPXInvalidPacket());
+					ETH_THROW_EXCEPTION(RLPXInvalidPacket());
 			}
 			else
 			{
 				m_incomplete.erase(_info.sequenceId);
 				if (ret.empty())
-					BOOST_THROW_EXCEPTION(RLPXInvalidPacket());
+					ETH_THROW_EXCEPTION(RLPXInvalidPacket());
 			}
 			
 			return ret;
@@ -89,7 +89,7 @@ std::vector<RLPXPacket> RLPXFrameReader::demux(RLPXFrameCoder& _coder, RLPXFrame
 		else if (_info.multiFrame && remaining)
 			m_incomplete.insert(std::make_pair(_info.sequenceId, std::make_pair(std::move(p), remaining)));
 		else
-			BOOST_THROW_EXCEPTION(RLPXInvalidPacket());
+			ETH_THROW_EXCEPTION(RLPXInvalidPacket());
 	}
 	return ret;
 }

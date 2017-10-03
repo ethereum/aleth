@@ -46,8 +46,8 @@ void executeGasPricerTest(string const& name, double _etherPrice, double _blockF
 	BlockChain const& bc = bcLoader.bc();
 
 	gp.update(bc);
-	BOOST_CHECK_MESSAGE(abs(gp.ask(Block(Block::Null)) - _expectedAsk ) < 100000000, "ASK Got: " + toString(gp.ask(Block(Block::Null))) + " Expected: " + toString(_expectedAsk));
-	BOOST_CHECK_MESSAGE(abs(gp.bid(_txPrio) - _expectedBid ) < 100000000, "BID Got: " + toString(gp.bid(_txPrio)) + " Expected: " + toString(_expectedBid));
+	ETH_CHECK_MESSAGE(abs(gp.ask(Block(Block::Null)) - _expectedAsk ) < 100000000, "ASK Got: " + toString(gp.ask(Block(Block::Null))) + " Expected: " + toString(_expectedAsk));
+	ETH_CHECK_MESSAGE(abs(gp.bid(_txPrio) - _expectedBid ) < 100000000, "BID Got: " + toString(gp.bid(_txPrio)) + " Expected: " + toString(_expectedBid));
 }
 } }
 
@@ -56,39 +56,39 @@ BOOST_FIXTURE_TEST_SUITE(GasPricer, TestOutputHelper)
 BOOST_AUTO_TEST_CASE(trivialGasPricer)
 {
 	std::shared_ptr<dev::eth::GasPricer> gp(new TrivialGasPricer);
-	BOOST_CHECK_EQUAL(gp->ask(Block(Block::Null)), DefaultGasPrice);
-	BOOST_CHECK_EQUAL(gp->bid(), DefaultGasPrice);
+	ETH_CHECK_EQUAL(gp->ask(Block(Block::Null)), DefaultGasPrice);
+	ETH_CHECK_EQUAL(gp->bid(), DefaultGasPrice);
 
 	gp->update(BlockChain(eth::ChainParams(), TransientDirectory().path(), WithExisting::Kill));
-	BOOST_CHECK_EQUAL(gp->ask(Block(Block::Null)), DefaultGasPrice);
-	BOOST_CHECK_EQUAL(gp->bid(), DefaultGasPrice);
+	ETH_CHECK_EQUAL(gp->ask(Block(Block::Null)), DefaultGasPrice);
+	ETH_CHECK_EQUAL(gp->bid(), DefaultGasPrice);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricerNoUpdate)
 {
 	BasicGasPricer gp(u256(double(ether / 1000) / 30.679), u256(15.0 * 1000));
-	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), 103754996057);
-	BOOST_CHECK_EQUAL(gp.bid(), 103754996057);
+	ETH_CHECK_EQUAL(gp.ask(Block(Block::Null)), 103754996057);
+	ETH_CHECK_EQUAL(gp.bid(), 103754996057);
 
 	gp.setRefPrice(u256(0));
-	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), 0);
-	BOOST_CHECK_EQUAL(gp.bid(), 0);
+	ETH_CHECK_EQUAL(gp.ask(Block(Block::Null)), 0);
+	ETH_CHECK_EQUAL(gp.bid(), 0);
 
 	gp.setRefPrice(u256(1));
 	gp.setRefBlockFees(u256(0));
-	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), 0);
-	BOOST_CHECK_EQUAL(gp.bid(), 0);
+	ETH_CHECK_EQUAL(gp.ask(Block(Block::Null)), 0);
+	ETH_CHECK_EQUAL(gp.bid(), 0);
 
 	gp.setRefPrice(u256("0x100000000000000000000000000000000"));
-	BOOST_CHECK_THROW(gp.setRefBlockFees(u256("0x100000000000000000000000000000000")), Overflow);
-	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), 0);
-	BOOST_CHECK_EQUAL(gp.bid(), 0);
+	ETH_CHECK_THROW(gp.setRefBlockFees(u256("0x100000000000000000000000000000000")), Overflow);
+	ETH_CHECK_EQUAL(gp.ask(Block(Block::Null)), 0);
+	ETH_CHECK_EQUAL(gp.bid(), 0);
 
 	gp.setRefPrice(1);
 	gp.setRefBlockFees(u256("0x100000000000000000000000000000000"));
-	BOOST_CHECK_THROW(gp.setRefPrice(u256("0x100000000000000000000000000000000")), Overflow);
-	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), u256("72210176012870430758964373780717"));
-	BOOST_CHECK_EQUAL(gp.bid(), u256("72210176012870430758964373780717"));
+	ETH_CHECK_THROW(gp.setRefPrice(u256("0x100000000000000000000000000000000")), Overflow);
+	ETH_CHECK_EQUAL(gp.ask(Block(Block::Null)), u256("72210176012870430758964373780717"));
+	ETH_CHECK_EQUAL(gp.bid(), u256("72210176012870430758964373780717"));
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_RPC_API_Test_Frontier)

@@ -37,14 +37,14 @@ std::string snappyUncompress(std::string const& _compressed)
 {
 	size_t uncompressedSize = 0;
 	if (!snappy::GetUncompressedLength(_compressed.data(), _compressed.size(), &uncompressedSize))
-		BOOST_THROW_EXCEPTION(FailedToGetUncompressedLength());
+		ETH_THROW_EXCEPTION(FailedToGetUncompressedLength());
 
 	if (uncompressedSize > c_maxChunkUncomressedSize)
-		BOOST_THROW_EXCEPTION(ChunkIsTooBig());
+		ETH_THROW_EXCEPTION(ChunkIsTooBig());
 
 	std::string uncompressed;
 	if (!snappy::Uncompress(_compressed.data(), _compressed.size(), &uncompressed))
-		BOOST_THROW_EXCEPTION(FailedToUncompressedSnapshotChunk());
+		ETH_THROW_EXCEPTION(FailedToUncompressedSnapshotChunk());
 
 	return uncompressed;
 }
@@ -58,7 +58,7 @@ public:
 	{
 		bytes const manifestBytes = dev::contents((m_snapshotDir / "MANIFEST").string());
 		if (manifestBytes.empty())
-			BOOST_THROW_EXCEPTION(FailedToReadSnapshotManifestFile());
+			ETH_THROW_EXCEPTION(FailedToReadSnapshotManifestFile());
 
 		return manifestBytes;
 	}
@@ -67,11 +67,11 @@ public:
 	{
 		std::string const chunkCompressed = dev::contentsString((m_snapshotDir / toHex(_chunkHash)).string());
 		if (chunkCompressed.empty())
-			BOOST_THROW_EXCEPTION(FailedToReadChunkFile() << errinfo_hash256(_chunkHash));
+			ETH_THROW_EXCEPTION(FailedToReadChunkFile() << errinfo_hash256(_chunkHash));
 
 		h256 const chunkHash = sha3(chunkCompressed);
 		if (chunkHash != _chunkHash)
-			BOOST_THROW_EXCEPTION(ChunkDataCorrupted() << errinfo_hash256(_chunkHash));
+			ETH_THROW_EXCEPTION(ChunkDataCorrupted() << errinfo_hash256(_chunkHash));
 
 		std::string const chunkUncompressed = snappyUncompress(chunkCompressed);
 		assert(!chunkUncompressed.empty());

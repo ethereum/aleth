@@ -208,7 +208,7 @@ void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, b
 		postBalance += addr.second;
 
 	//account could destroy ether if it suicides to itself
-	BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::testName());
+	ETH_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::testName());
 }
 
 std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
@@ -304,13 +304,13 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
 
 void ImportTest::importEnv(json_spirit::mObject const& _o)
 {
-	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
-	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
-	BOOST_REQUIRE(_o.count("currentNumber") > 0);
-	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
-	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
+	ETH_REQUIRE(_o.count("currentGasLimit") > 0);
+	ETH_REQUIRE(_o.count("currentDifficulty") > 0);
+	ETH_REQUIRE(_o.count("currentNumber") > 0);
+	ETH_REQUIRE(_o.count("currentTimestamp") > 0);
+	ETH_REQUIRE(_o.count("currentCoinbase") > 0);
 	auto gasLimit = toInt(_o.at("currentGasLimit"));
-	BOOST_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
+	ETH_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
 	BlockHeader header;
 	header.setGasLimit(gasLimit.convert_to<int64_t>());
 	header.setDifficulty(toInt(_o.at("currentDifficulty")));
@@ -339,28 +339,28 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
 	//check that every parameter was declared in state object
 	for (auto const& i: mask)
 		if (!i.second.allSet())
-			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
+			ETH_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
 }
 
 void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr)
 {
 	if (_o.count("secretKey") > 0)
 	{
-		BOOST_REQUIRE(_o.count("nonce") > 0);
-		BOOST_REQUIRE(_o.count("gasPrice") > 0);
-		BOOST_REQUIRE(_o.count("gasLimit") > 0);
-		BOOST_REQUIRE(_o.count("to") > 0);
-		BOOST_REQUIRE(_o.count("value") > 0);
-		BOOST_REQUIRE(_o.count("data") > 0);
+		ETH_REQUIRE(_o.count("nonce") > 0);
+		ETH_REQUIRE(_o.count("gasPrice") > 0);
+		ETH_REQUIRE(_o.count("gasLimit") > 0);
+		ETH_REQUIRE(_o.count("to") > 0);
+		ETH_REQUIRE(_o.count("value") > 0);
+		ETH_REQUIRE(_o.count("data") > 0);
 
 		if (bigint(_o.at("nonce").get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
+			ETH_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
 		if (bigint(_o.at("gasPrice").get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
+			ETH_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
 		if (bigint(_o.at("gasLimit").get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
+			ETH_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
 		if (bigint(_o.at("value").get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
+			ETH_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
 		o_tr = _o.at("to").get_str().empty() ?
 			Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce")), Secret(_o.at("secretKey").get_str())) :
@@ -368,15 +368,15 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 	}
 	else
 	{
-		BOOST_REQUIRE(_o.count("nonce"));
-		BOOST_REQUIRE(_o.count("gasPrice"));
-		BOOST_REQUIRE(_o.count("gasLimit"));
-		BOOST_REQUIRE(_o.count("to"));
-		BOOST_REQUIRE(_o.count("value"));
-		BOOST_REQUIRE(_o.count("data"));
-		BOOST_REQUIRE(_o.count("v"));
-		BOOST_REQUIRE(_o.count("r"));
-		BOOST_REQUIRE(_o.count("s"));
+		ETH_REQUIRE(_o.count("nonce"));
+		ETH_REQUIRE(_o.count("gasPrice"));
+		ETH_REQUIRE(_o.count("gasLimit"));
+		ETH_REQUIRE(_o.count("to"));
+		ETH_REQUIRE(_o.count("value"));
+		ETH_REQUIRE(_o.count("data"));
+		ETH_REQUIRE(_o.count("v"));
+		ETH_REQUIRE(_o.count("r"));
+		ETH_REQUIRE(_o.count("s"));
 
 		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
 		RLP transactionRLP(transactionRLPStream.out());
@@ -401,7 +401,7 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 {
 	//Parse extended transaction
-	BOOST_REQUIRE(o_tr.count("gasLimit") > 0);
+	ETH_REQUIRE(o_tr.count("gasLimit") > 0);
 	size_t dataVectorSize = o_tr.at("data").get_array().size();
 	size_t gasVectorSize = o_tr.at("gasLimit").get_array().size();
 	size_t valueVectorSize = o_tr.at("value").get_array().size();
@@ -433,13 +433,13 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 		{									\
 			if (_throw == WhenError::Throw) \
 			{								\
-				BOOST_CHECK_MESSAGE(a, b);	\
+				ETH_CHECK_MESSAGE(a, b);	\
 				if (!a)						\
 					return 1;				\
 			}								\
 			else							\
 			{								\
-				BOOST_WARN_MESSAGE(a,b);	\
+				ETH_WARN_MESSAGE(a,b);	\
 				if (!a)						\
 					wasError = true;		\
 			}								\
@@ -456,7 +456,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 			}
 			catch(std::out_of_range const&)
 			{
-				BOOST_ERROR(TestOutputHelper::testName() + " expectedStateOptions map does not match expectedState in checkExpectedState!");
+				ETH_ERROR(TestOutputHelper::testName() + " expectedStateOptions map does not match expectedState in checkExpectedState!");
 				break;
 			}
 		}
@@ -570,7 +570,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	else
 		network.push_back(_network);
 
-	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
+	ETH_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
 	checkAllowedNetwork(network);
 
 	if (!Options::get().singleTestNet.empty())
@@ -586,7 +586,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		parseJsonIntValueIntoVector(indexes.at("data"), d);
 		parseJsonIntValueIntoVector(indexes.at("gas"), g);
 		parseJsonIntValueIntoVector(indexes.at("value"), v);
-		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + " Indexes arrays not set!");
+		ETH_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + " Indexes arrays not set!");
 
 		//Skip this check if does not fit to options request
 		Options const& opt = Options::get();
@@ -598,7 +598,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			return;
 	}
 	else
-		BOOST_ERROR(TestOutputHelper::testName() + " indexes section not set!");
+		ETH_ERROR(TestOutputHelper::testName() + " indexes section not set!");
 
 	bool foundResults = false;
 	std::vector<transactionToExecute> lookTransactions;
@@ -642,16 +642,20 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			else if (_expects.count("hash"))
 			{
 				//checking filled state test against client
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()),
+				ETH_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()),
 									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + ": Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
 				if (_expects.count("logs"))
-					BOOST_CHECK_MESSAGE(_expects.at("logs").get_str() == exportLog(tr.output.second.log()),
+				{
+					ETH_CHECK_MESSAGE(_expects.at("logs").get_str() == exportLog(tr.output.second.log()),
 									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + " Transaction log mismatch! expected: " + _expects.at("logs").get_str() + " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
+				}
 				else
-					BOOST_ERROR(TestOutputHelper::testName() + "PostState missing logs field!");
+				{
+					ETH_ERROR(TestOutputHelper::testName() + "PostState missing logs field!");
+				}
 			}
 			else
-				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
+				ETH_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
 
 			foundResults = true;
 
@@ -662,7 +666,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		}
 	}
 	if (!_search) //if search for a single transaction in one of the expect sections then don't need this output.
-		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + " Expect results was not found in test execution!");
+		ETH_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + " Expect results was not found in test execution!");
 }
 
 void ImportTest::traceStateDiff()

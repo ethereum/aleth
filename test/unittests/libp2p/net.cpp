@@ -191,43 +191,43 @@ BOOST_AUTO_TEST_CASE(requestTimeout)
 		return (t.first == nodeA || t.first == nodeB);
 	});
 	
-	BOOST_REQUIRE(nodeAtriggered == false);
-	BOOST_REQUIRE(nodeBtriggered == true);
-	BOOST_REQUIRE(timeouts.size() == 0);
+	ETH_REQUIRE(nodeAtriggered == false);
+	ETH_REQUIRE(nodeBtriggered == true);
+	ETH_REQUIRE(timeouts.size() == 0);
 }
 
 BOOST_AUTO_TEST_CASE(isIPAddressType)
 {
 	string wildcard = "0.0.0.0";
-	BOOST_REQUIRE(bi::address::from_string(wildcard).is_unspecified());
+	ETH_REQUIRE(bi::address::from_string(wildcard).is_unspecified());
 	
 	string empty = "";
-	BOOST_REQUIRE_THROW(bi::address::from_string(empty).is_unspecified(), std::exception);
+	ETH_REQUIRE_THROW(bi::address::from_string(empty).is_unspecified(), std::exception);
 
 	string publicAddress192 = "192.169.0.0";
-	BOOST_REQUIRE(isPublicAddress(publicAddress192));
-	BOOST_REQUIRE(!isPrivateAddress(publicAddress192));
-	BOOST_REQUIRE(!isLocalHostAddress(publicAddress192));
+	ETH_REQUIRE(isPublicAddress(publicAddress192));
+	ETH_REQUIRE(!isPrivateAddress(publicAddress192));
+	ETH_REQUIRE(!isLocalHostAddress(publicAddress192));
 	
 	string publicAddress172 = "172.32.0.0";
-	BOOST_REQUIRE(isPublicAddress(publicAddress172));
-	BOOST_REQUIRE(!isPrivateAddress(publicAddress172));
-	BOOST_REQUIRE(!isLocalHostAddress(publicAddress172));
+	ETH_REQUIRE(isPublicAddress(publicAddress172));
+	ETH_REQUIRE(!isPrivateAddress(publicAddress172));
+	ETH_REQUIRE(!isLocalHostAddress(publicAddress172));
 	
 	string privateAddress192 = "192.168.1.0";
-	BOOST_REQUIRE(isPrivateAddress(privateAddress192));
-	BOOST_REQUIRE(!isPublicAddress(privateAddress192));
-	BOOST_REQUIRE(!isLocalHostAddress(privateAddress192));
+	ETH_REQUIRE(isPrivateAddress(privateAddress192));
+	ETH_REQUIRE(!isPublicAddress(privateAddress192));
+	ETH_REQUIRE(!isLocalHostAddress(privateAddress192));
 	
 	string privateAddress172 = "172.16.0.0";
-	BOOST_REQUIRE(isPrivateAddress(privateAddress172));
-	BOOST_REQUIRE(!isPublicAddress(privateAddress172));
-	BOOST_REQUIRE(!isLocalHostAddress(privateAddress172));
+	ETH_REQUIRE(isPrivateAddress(privateAddress172));
+	ETH_REQUIRE(!isPublicAddress(privateAddress172));
+	ETH_REQUIRE(!isLocalHostAddress(privateAddress172));
 	
 	string privateAddress10 = "10.0.0.0";
-	BOOST_REQUIRE(isPrivateAddress(privateAddress10));
-	BOOST_REQUIRE(!isPublicAddress(privateAddress10));
-	BOOST_REQUIRE(!isLocalHostAddress(privateAddress10));
+	ETH_REQUIRE(isPrivateAddress(privateAddress10));
+	ETH_REQUIRE(!isPublicAddress(privateAddress10));
+	ETH_REQUIRE(!isLocalHostAddress(privateAddress10));
 }
 
 BOOST_AUTO_TEST_CASE(neighboursPacketLength)
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 		}
 		
 		out.sign(k.secret());
-		BOOST_REQUIRE_LE(out.data.size(), 1280);
+		ETH_REQUIRE_LE(out.data.size(), 1280);
 	}
 }
 
@@ -287,9 +287,9 @@ BOOST_AUTO_TEST_CASE(neighboursPacket)
 	int count = 0;
 	for (auto n: dynamic_cast<Neighbours&>(*in).neighbours)
 	{
-		BOOST_REQUIRE_EQUAL(testNodes[count].second, n.endpoint.udpPort);
-		BOOST_REQUIRE_EQUAL(testNodes[count].first.pub(), n.node);
-		BOOST_REQUIRE_EQUAL(sha3(testNodes[count].first.pub()), sha3(n.node));
+		ETH_REQUIRE_EQUAL(testNodes[count].second, n.endpoint.udpPort);
+		ETH_REQUIRE_EQUAL(testNodes[count].first.pub(), n.node);
+		ETH_REQUIRE_EQUAL(sha3(testNodes[count].first.pub()), sha3(n.node));
 		count++;
 	}
 }
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.nodeTable->reset();
 	node.populate(1);
 	this_thread::sleep_for(chrono::milliseconds(2000));
-	BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
+	ETH_REQUIRE_EQUAL(node.nodeTable->count(), 8);
 }
 
 BOOST_AUTO_TEST_CASE(udpOnce)
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(udpOnce)
 	a.start();
 	a.m_socket->send(d);
 	this_thread::sleep_for(chrono::seconds(1));
-	BOOST_REQUIRE_EQUAL(true, a.success);
+	ETH_REQUIRE_EQUAL(true, a.success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -372,12 +372,12 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelper)
 	t.expires_from_now(boost::posix_time::milliseconds(200));
 	start = true;
 	t.async_wait([&](boost::system::error_code const& _ec){ ec = _ec; fired++; });
-	BOOST_REQUIRE_NO_THROW(t.wait());
+	ETH_REQUIRE_NO_THROW(t.wait());
 	this_thread::sleep_for(chrono::milliseconds(250));
 	auto expire = t.expires_from_now().total_milliseconds();
-	BOOST_REQUIRE(expire <= 0);
-	BOOST_REQUIRE(fired == 1);
-	BOOST_REQUIRE(!ec);
+	ETH_REQUIRE(expire <= 0);
+	ETH_REQUIRE(fired == 1);
+	ETH_REQUIRE(!ec);
 	io.stop();
 	thread.join();
 }
@@ -392,14 +392,14 @@ BOOST_AUTO_TEST_CASE(unspecifiedNode)
 	}
 
 	Node n = UnspecifiedNode;
-	BOOST_REQUIRE(!n);
+	ETH_REQUIRE(!n);
 	
 	Node node(Public(sha3("0")), NodeIPEndpoint(bi::address(), 0, 0));
-	BOOST_REQUIRE(node);
-	BOOST_REQUIRE(n != node);
+	ETH_REQUIRE(node);
+	ETH_REQUIRE(n != node);
 	
 	Node nodeEq(Public(sha3("0")), NodeIPEndpoint(bi::address(), 0, 0));
-	BOOST_REQUIRE_EQUAL(node, nodeEq);
+	ETH_REQUIRE_EQUAL(node, nodeEq);
 }
 
 BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
@@ -410,9 +410,13 @@ BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
 	ba::io_service io;
 	NodeTable t(io, KeyPair::create(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30303, 30303));
 	if (Node n = t.node(NodeID()))
-		BOOST_REQUIRE(false);
+	{
+		ETH_REQUIRE(false);
+	}
 	else
-		BOOST_REQUIRE(n == UnspecifiedNode);
+	{
+		ETH_REQUIRE(n == UnspecifiedNode);
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

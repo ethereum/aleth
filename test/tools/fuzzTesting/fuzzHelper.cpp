@@ -509,7 +509,7 @@ void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
 			stateAddressList.push_back(_address);
 			break;
 		default:
-			BOOST_ERROR("RandomCodeOptions::addAddress: Unexpected AddressType!");
+			ETH_ERROR("RandomCodeOptions::addAddress: Unexpected AddressType!");
 		break;
 	}
 }
@@ -541,7 +541,7 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 			else
 				return Address(RandomCode::rndByteSequence(20));
 		default:
-			BOOST_ERROR("RandomCodeOptions::getRandomAddress: Unexpected AddressType!");
+			ETH_ERROR("RandomCodeOptions::getRandomAddress: Unexpected AddressType!");
 			return ZeroAddress;
 	}
 }
@@ -570,11 +570,11 @@ BOOST_AUTO_TEST_CASE(rndCode)
 		test::RandomCodeOptions options;
 		options.emptyCodeProbability = 0;
 		std::string code = test::RandomCode::generate(1000, options);
-		BOOST_REQUIRE(!code.empty());
+		ETH_REQUIRE(!code.empty());
 	}
 	catch(dev::Exception const& _e)
 	{
-		BOOST_ERROR("Exception thrown when generating random code! " + diagnostic_information(_e));
+		ETH_ERROR("Exception thrown when generating random code! " + diagnostic_information(_e));
 	}
 }
 
@@ -585,11 +585,11 @@ BOOST_AUTO_TEST_CASE(rndStateTest)
 		test::StateTestSuite suite;
 		test::RandomCodeOptions options;
 		std::string test = dev::test::RandomCode::fillRandomTest(suite, c_testExampleStateTest, options);
-		BOOST_REQUIRE(!test.empty());
+		ETH_REQUIRE(!test.empty());
 	}
 	catch(dev::Exception const& _e)
 	{
-		BOOST_ERROR("Exception thrown when generating random code! " + diagnostic_information(_e));
+		ETH_ERROR("Exception thrown when generating random code! " + diagnostic_information(_e));
 	}
 }
 

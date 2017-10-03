@@ -314,7 +314,7 @@ KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool
 				if (a != b)
 				{
 					if ((p = _password(false)).empty())
-						BOOST_THROW_EXCEPTION(PasswordUnknown());
+						ETH_THROW_EXCEPTION(PasswordUnknown());
 					continue;
 				}
 			}
@@ -322,7 +322,7 @@ KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool
 		}
 	}
 	else
-		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("encseed type is not js::str_type"));
+		ETH_THROW_EXCEPTION(Exception() << errinfo_comment("encseed type is not js::str_type"));
 }
 
 Addresses KeyManager::accounts() const

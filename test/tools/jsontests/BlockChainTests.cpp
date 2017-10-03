@@ -52,18 +52,18 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 		if (!Options::get().fillchain && !TestOutputHelper::checkTest(testname))
 			continue;
 
-		BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
+		ETH_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
 			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
-		BOOST_REQUIRE_MESSAGE(inputTest.count("pre"),
+		ETH_REQUIRE_MESSAGE(inputTest.count("pre"),
 			"\"pre\" field is not found. filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 		);
 
 		if (inputTest.count("expect"))
 		{
-			BOOST_REQUIRE_MESSAGE(_fillin, "a filled test should not contain any expect fields.");
+			ETH_REQUIRE_MESSAGE(_fillin, "a filled test should not contain any expect fields.");
 			spellCheckNetworkNamesInExpectField(inputTest.at("expect").get_array());
 		}
 
@@ -110,7 +110,7 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 		}
 		else
 		{
-			BOOST_REQUIRE_MESSAGE(inputTest.count("network"),
+			ETH_REQUIRE_MESSAGE(inputTest.count("network"),
 				"\"network\" field is not found. filename: " + TestOutputHelper::testFileName() +
 				" testname: " + TestOutputHelper::testName()
 			);
@@ -147,9 +147,9 @@ json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _in
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		BOOST_REQUIRE(o.count("genesisBlockHeader"));
-		BOOST_REQUIRE(o.count("pre"));
-		BOOST_REQUIRE(o.count("network"));
+		ETH_REQUIRE(o.count("genesisBlockHeader"));
+		ETH_REQUIRE(o.count("pre"));
+		ETH_REQUIRE(o.count("network"));
 
 		dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
 		if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
@@ -241,7 +241,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 
 	output["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
 	output["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
-	BOOST_REQUIRE(_input.count("blocks"));
+	ETH_REQUIRE(_input.count("blocks"));
 
 	mArray blArray;
 	size_t importBlockNumber = 0;
@@ -307,7 +307,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		vector<TestBlock>& importedBlocks = chainMap[chainname]->importedBlocks;
 
 		//Import Transactions
-		BOOST_REQUIRE(blObjInput.count("transactions"));
+		ETH_REQUIRE(blObjInput.count("transactions"));
 		for (auto const& txObj: blObjInput.at("transactions").get_array())
 		{
 			TestTransaction transaction(txObj.get_obj());
@@ -362,7 +362,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		try
 		{
 			if (blObjInput.count("expectException"))
-				BOOST_ERROR("Deprecated expectException field! " + testName);
+				ETH_ERROR("Deprecated expectException field! " + testName);
 
 			blockchain.addBlock(alterBlock);
 			if (testChain.addBlock(alterBlock))
@@ -370,7 +370,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 
 			bool isException = (blObjInput.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork))
 								|| blObjInput.count("expectExceptionALL"));
-			BOOST_REQUIRE_MESSAGE(!isException, "block import expected exception, but no exception was thrown!");
+			ETH_REQUIRE_MESSAGE(!isException, "block import expected exception, but no exception was thrown!");
 
 			if (_input.count("noBlockChainHistory") == 0)
 			{
@@ -473,7 +473,7 @@ void testBCTest(json_spirit::mObject const& _o)
 		}
 
 		//block from RLP successfully imported. now compare this rlp to test sections
-		BOOST_REQUIRE_MESSAGE(blObj.count("blockHeader"),
+		ETH_REQUIRE_MESSAGE(blObj.count("blockHeader"),
 			"blockHeader field is not found. "
 			"filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
@@ -483,7 +483,7 @@ void testBCTest(json_spirit::mObject const& _o)
 		TestBlock blockFromFields(blObj["blockHeader"].get_obj());
 
 		//ImportTransactions
-		BOOST_REQUIRE_MESSAGE(blObj.count("transactions"),
+		ETH_REQUIRE_MESSAGE(blObj.count("transactions"),
 			"transactions field is not found. "
 			"filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
@@ -498,11 +498,11 @@ void testBCTest(json_spirit::mObject const& _o)
 		vector<u256> uncleNumbers;
 		if (blObj["uncleHeaders"].type() != json_spirit::null_type)
 		{
-			BOOST_REQUIRE_MESSAGE(blObj["uncleHeaders"].get_array().size() <= 2, "Too many uncle headers in block! " + TestOutputHelper::testName());
+			ETH_REQUIRE_MESSAGE(blObj["uncleHeaders"].get_array().size() <= 2, "Too many uncle headers in block! " + TestOutputHelper::testName());
 			for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
 			{
 				mObject uBlH = uBlHeaderObj.get_obj();
-				BOOST_REQUIRE((uBlH.size() == 16));
+				ETH_REQUIRE((uBlH.size() == 16));
 
 				TestBlock uncle(uBlH);
 				blockFromFields.addUncle(uncle);
@@ -553,18 +553,18 @@ void testBCTest(json_spirit::mObject const& _o)
 	}//allBlocks
 
 	//Check lastblock hash
-	BOOST_REQUIRE((_o.count("lastblockhash") > 0));
+	ETH_REQUIRE((_o.count("lastblockhash") > 0));
 	string lastTrueBlockHash = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
-	BOOST_CHECK_MESSAGE(lastTrueBlockHash == _o.at("lastblockhash").get_str(),
+	ETH_CHECK_MESSAGE(lastTrueBlockHash == _o.at("lastblockhash").get_str(),
 			testName + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + _o.at("lastblockhash").get_str());
 
 	//Check final state (just to be sure)
-	BOOST_CHECK_MESSAGE(toString(testChain.topBlock().state().rootHash()) ==
+	ETH_CHECK_MESSAGE(toString(testChain.topBlock().state().rootHash()) ==
 						toString(blockchain.topBlock().state().rootHash()),
 						testName + "State root in chain from RLP blocks != State root in chain from Field blocks!");
 
 	State postState(State::Null); //Compare post states
-	BOOST_REQUIRE((_o.count("postState") > 0));
+	ETH_REQUIRE((_o.count("postState") > 0));
 	ImportTest::importState(_o.at("postState").get_obj(), postState);
 	ImportTest::compareStates(postState, testChain.topBlock().state());
 	ImportTest::compareStates(postState, blockchain.topBlock().state());
@@ -856,7 +856,7 @@ void checkExpectedException(mObject& _blObj, Exception const& _e)
 	bool isNetException = (_blObj.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork)) > 0);
 	bool isAllNetException = (_blObj.count("expectExceptionALL") > 0);
 
-	BOOST_REQUIRE_MESSAGE(isNetException || isAllNetException, TestOutputHelper::testName() + " block import thrown unexpected Excpetion! (" + exWhat + ")");
+	ETH_REQUIRE_MESSAGE(isNetException || isAllNetException, TestOutputHelper::testName() + " block import thrown unexpected Excpetion! (" + exWhat + ")");
 
 	string exExpect;
 	if (isNetException)
@@ -864,22 +864,22 @@ void checkExpectedException(mObject& _blObj, Exception const& _e)
 	if (isAllNetException)
 		exExpect = _blObj.at("expectExceptionALL").get_str();
 
-	BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + " block import expected another exeption: " + exExpect + ", but got: " + exWhat);
+	ETH_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + " block import expected another exeption: " + exExpect + ", but got: " + exWhat);
 }
 
 void checkJsonSectionForInvalidBlock(mObject& _blObj)
 {
-	BOOST_CHECK_MESSAGE(_blObj.count("blockHeader") == 0,
+	ETH_CHECK_MESSAGE(_blObj.count("blockHeader") == 0,
 			"blockHeader field is found in the should-be invalid block. "
 			"filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 	);
-	BOOST_CHECK_MESSAGE(_blObj.count("transactions") == 0,
+	ETH_CHECK_MESSAGE(_blObj.count("transactions") == 0,
 			"transactions field is found in the should-be invalid block. "
 			"filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
 	);
-	BOOST_CHECK_MESSAGE(_blObj.count("uncleHeaders") == 0,
+	ETH_CHECK_MESSAGE(_blObj.count("uncleHeaders") == 0,
 			"uncleHeaders field is found in the should-be invalid block. "
 			"filename: " + TestOutputHelper::testFileName() +
 			" testname: " + TestOutputHelper::testName()
@@ -900,53 +900,55 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 	BlockHeader const& blockHeaderFromFields = _blockFromFields.blockHeader();
 	BlockHeader const& blockFromRlp = _blockFromRlp.blockHeader();
 
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.hash(WithoutSeal) == blockFromRlp.hash(WithoutSeal), _testname + "hash in given RLP not matching the block hash!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.parentHash() == blockFromRlp.parentHash(), _testname + "parentHash in given RLP not matching the block parentHash!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.sha3Uncles() == blockFromRlp.sha3Uncles(), _testname + "sha3Uncles in given RLP not matching the block sha3Uncles!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.author() == blockFromRlp.author(), _testname + "author in given RLP not matching the block author!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.stateRoot() == blockFromRlp.stateRoot(), _testname + "stateRoot in given RLP not matching the block stateRoot!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.transactionsRoot() == blockFromRlp.transactionsRoot(), _testname + "transactionsRoot in given RLP not matching the block transactionsRoot!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.receiptsRoot() == blockFromRlp.receiptsRoot(), _testname + "receiptsRoot in given RLP not matching the block receiptsRoot!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.logBloom() == blockFromRlp.logBloom(), _testname + "logBloom in given RLP not matching the block logBloom!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.difficulty() == blockFromRlp.difficulty(), _testname + "difficulty in given RLP not matching the block difficulty!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.number() == blockFromRlp.number(), _testname + "number in given RLP not matching the block number!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasLimit() == blockFromRlp.gasLimit(),"testname + gasLimit in given RLP not matching the block gasLimit!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasUsed() == blockFromRlp.gasUsed(), _testname + "gasUsed in given RLP not matching the block gasUsed!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.timestamp() == blockFromRlp.timestamp(), _testname + "timestamp in given RLP not matching the block timestamp!");
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.extraData() == blockFromRlp.extraData(), _testname + "extraData in given RLP not matching the block extraData!");
-	//BOOST_CHECK_MESSAGE(Ethash::mixHash(blockHeaderFromFields) == Ethash::mixHash(blockFromRlp), _testname + "mixHash in given RLP not matching the block mixHash!");
-	//BOOST_CHECK_MESSAGE(Ethash::nonce(blockHeaderFromFields) == Ethash::nonce(blockFromRlp), _testname + "nonce in given RLP not matching the block nonce!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.hash(WithoutSeal) == blockFromRlp.hash(WithoutSeal), _testname + "hash in given RLP not matching the block hash!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.parentHash() == blockFromRlp.parentHash(), _testname + "parentHash in given RLP not matching the block parentHash!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.sha3Uncles() == blockFromRlp.sha3Uncles(), _testname + "sha3Uncles in given RLP not matching the block sha3Uncles!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.author() == blockFromRlp.author(), _testname + "author in given RLP not matching the block author!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.stateRoot() == blockFromRlp.stateRoot(), _testname + "stateRoot in given RLP not matching the block stateRoot!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.transactionsRoot() == blockFromRlp.transactionsRoot(), _testname + "transactionsRoot in given RLP not matching the block transactionsRoot!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.receiptsRoot() == blockFromRlp.receiptsRoot(), _testname + "receiptsRoot in given RLP not matching the block receiptsRoot!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.logBloom() == blockFromRlp.logBloom(), _testname + "logBloom in given RLP not matching the block logBloom!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.difficulty() == blockFromRlp.difficulty(), _testname + "difficulty in given RLP not matching the block difficulty!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.number() == blockFromRlp.number(), _testname + "number in given RLP not matching the block number!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.gasLimit() == blockFromRlp.gasLimit(),"testname + gasLimit in given RLP not matching the block gasLimit!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.gasUsed() == blockFromRlp.gasUsed(), _testname + "gasUsed in given RLP not matching the block gasUsed!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.timestamp() == blockFromRlp.timestamp(), _testname + "timestamp in given RLP not matching the block timestamp!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields.extraData() == blockFromRlp.extraData(), _testname + "extraData in given RLP not matching the block extraData!");
+	//ETH_CHECK_MESSAGE(Ethash::mixHash(blockHeaderFromFields) == Ethash::mixHash(blockFromRlp), _testname + "mixHash in given RLP not matching the block mixHash!");
+	//ETH_CHECK_MESSAGE(Ethash::nonce(blockHeaderFromFields) == Ethash::nonce(blockFromRlp), _testname + "nonce in given RLP not matching the block nonce!");
 
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, _testname + "However, blockHeaderFromFields != blockFromRlp!");
+	ETH_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, _testname + "However, blockHeaderFromFields != blockFromRlp!");
 
 	vector<TestTransaction> const& txsFromField = _blockFromFields.testTransactions();
 	vector<TestTransaction> const& txsFromRlp = _blockFromRlp.testTransactions();
-	BOOST_CHECK_MESSAGE(txsFromRlp.size() == txsFromField.size(), _testname + "transaction list size does not match");
+	ETH_CHECK_MESSAGE(txsFromRlp.size() == txsFromField.size(), _testname + "transaction list size does not match");
 
 	for (size_t i = 0; i < txsFromField.size(); ++i)
 	{
 		Transaction const& trField = txsFromField.at(i).transaction();
 		Transaction const& trRlp = txsFromRlp.at(i).transaction();
 
-		BOOST_CHECK_MESSAGE(trField.data() == trRlp.data(), _testname + "transaction data in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.gas() == trRlp.gas(), _testname + "transaction gasLimit in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.gasPrice() == trRlp.gasPrice(), _testname + "transaction gasPrice in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.nonce() == trRlp.nonce(), _testname + "transaction nonce in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.signature().r == trRlp.signature().r, _testname + "transaction r in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.signature().s == trRlp.signature().s, _testname + "transaction s in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.signature().v == trRlp.signature().v, _testname + "transaction v in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.receiveAddress() == trRlp.receiveAddress(), _testname + "transaction receiveAddress in rlp and in field do not match");
-		BOOST_CHECK_MESSAGE(trField.value() == trRlp.value(), _testname + "transaction receiveAddress in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.data() == trRlp.data(), _testname + "transaction data in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.gas() == trRlp.gas(), _testname + "transaction gasLimit in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.gasPrice() == trRlp.gasPrice(), _testname + "transaction gasPrice in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.nonce() == trRlp.nonce(), _testname + "transaction nonce in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.signature().r == trRlp.signature().r, _testname + "transaction r in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.signature().s == trRlp.signature().s, _testname + "transaction s in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.signature().v == trRlp.signature().v, _testname + "transaction v in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.receiveAddress() == trRlp.receiveAddress(), _testname + "transaction receiveAddress in rlp and in field do not match");
+		ETH_CHECK_MESSAGE(trField.value() == trRlp.value(), _testname + "transaction receiveAddress in rlp and in field do not match");
 
-		BOOST_CHECK_MESSAGE(trField == trRlp, _testname + "transactions from  rlp and transaction from field do not match");
-		BOOST_CHECK_MESSAGE(trField.rlp() == trRlp.rlp(), _testname + "transactions rlp do not match");
+		ETH_CHECK_MESSAGE(trField == trRlp, _testname + "transactions from  rlp and transaction from field do not match");
+		ETH_CHECK_MESSAGE(trField.rlp() == trRlp.rlp(), _testname + "transactions rlp do not match");
 	}
 
 	vector<TestBlock> const& unclesFromField = _blockFromFields.uncles();
 	vector<TestBlock> const& unclesFromRlp = _blockFromRlp.uncles();
-	BOOST_REQUIRE_EQUAL(unclesFromField.size(), unclesFromRlp.size());
+	ETH_REQUIRE_EQUAL(unclesFromField.size(), unclesFromRlp.size());
 	for (size_t i = 0; i < unclesFromField.size(); ++i)
-		BOOST_CHECK_MESSAGE(unclesFromField.at(i).blockHeader() == unclesFromRlp.at(i).blockHeader(), _testname + "block header in rlp and in field do not match at uncles");
+	{
+		ETH_CHECK_MESSAGE(unclesFromField.at(i).blockHeader() == unclesFromRlp.at(i).blockHeader(), _testname + "block header in rlp and in field do not match at uncles");
+	}
 }
 
 //namespaces

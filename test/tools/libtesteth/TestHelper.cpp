@@ -137,7 +137,7 @@ eth::Network stringToNetId(string const& _netname)
 		if (netIdToString(net) == _netname)
 			return net;
 
-	BOOST_ERROR(TestOutputHelper::testName() + " network not found: " + _netname);
+	ETH_ERROR(TestOutputHelper::testName() + " network not found: " + _netname);
 	return eth::Network::FrontierTest;
 }
 
@@ -267,16 +267,20 @@ std::vector<boost::filesystem::path> getJsonFiles(boost::filesystem::path const&
 std::string executeCmd(std::string const& _command)
 {
 #if defined(_WIN32)
-	BOOST_ERROR("executeCmd() has not been implemented for Windows.");
+	ETH_ERROR("executeCmd() has not been implemented for Windows.");
 	return "";
 #else
 	string out;
 	char output[1024];
 	FILE *fp = popen(_command.c_str(), "r");
 	if (fp == NULL)
-		BOOST_ERROR("Failed to run " + _command);
+	{
+		ETH_ERROR("Failed to run " + _command);
+	}
 	if (fgets(output, sizeof(output) - 1, fp) == NULL)
-		BOOST_ERROR("Reading empty result for " + _command);
+	{
+		ETH_ERROR("Reading empty result for " + _command);
+	}
 	else
 	{
 		while(true)
@@ -289,7 +293,7 @@ std::string executeCmd(std::string const& _command)
 
 	int exitCode = pclose(fp);
 	if (exitCode != 0)
-		BOOST_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
+		ETH_ERROR("The command '" + _command + "' exited with " + toString(exitCode) + " code.");
 	return boost::trim_copy(out);
 #endif
 }
@@ -305,7 +309,7 @@ string compileLLL(string const& _code)
 	}
 
 #if defined(_WIN32)
-	BOOST_ERROR("LLL compilation only supported on posix systems.");
+	ETH_ERROR("LLL compilation only supported on posix systems.");
 	return "";
 #else
 	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
@@ -322,7 +326,7 @@ string compileLLL(string const& _code)
 void checkHexHasEvenLength(string const& _str)
 {
 	if (_str.size() % 2)
-		BOOST_ERROR(TestOutputHelper::testName() + " An odd-length hex string represents a byte sequence: " + _str);
+		ETH_ERROR(TestOutputHelper::testName() + " An odd-length hex string represents a byte sequence: " + _str);
 }
 
 bytes importCode(json_spirit::mObject const& _o)
@@ -350,10 +354,10 @@ LogEntries importLog(json_spirit::mArray const& _a)
 	for (auto const& l: _a)
 	{
 		json_spirit::mObject o = l.get_obj();
-		BOOST_REQUIRE(o.count("address") > 0);
-		BOOST_REQUIRE(o.count("topics") > 0);
-		BOOST_REQUIRE(o.count("data") > 0);
-		BOOST_REQUIRE(o.count("bloom") > 0);
+		ETH_REQUIRE(o.count("address") > 0);
+		ETH_REQUIRE(o.count("topics") > 0);
+		ETH_REQUIRE(o.count("data") > 0);
+		ETH_REQUIRE(o.count("bloom") > 0);
 		LogEntry log;
 		log.address = Address(o.at("address").get_str());
 		for (auto const& t: o.at("topics").get_array())
@@ -370,17 +374,23 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o)
 	auto expectedOutput = _o.at("out").get_str();
 
 	if (expectedOutput.find("#") == 0)
-		BOOST_CHECK(_output.size() == toInt(expectedOutput.substr(1)));
+	{
+		ETH_CHECK(_output.size() == toInt(expectedOutput.substr(1)));
+	}
 	else if (_o.at("out").type() == json_spirit::array_type)
 		for (auto const& d: _o.at("out").get_array())
 		{
-			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
+			ETH_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
 			++j;
 		}
 	else if (expectedOutput.find("0x") == 0)
-		BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput.substr(2))));
+	{
+		ETH_CHECK(_output.contentsEqual(fromHex(expectedOutput.substr(2))));
+	}
 	else
-		BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput)));
+	{
+		ETH_CHECK(_output.contentsEqual(fromHex(expectedOutput)));
+	}
 }
 
 void checkStorage(map<u256, u256> const& _expectedStore, map<u256, u256> const& _resultStore, Address const& _expectedAddr)
@@ -390,32 +400,34 @@ void checkStorage(map<u256, u256> const& _expectedStore, map<u256, u256> const& 
 		auto& expectedStoreKey = expectedStorePair.first;
 		auto resultStoreIt = _resultStore.find(expectedStoreKey);
 		if (resultStoreIt == _resultStore.end())
-			BOOST_ERROR(_expectedAddr << ": missing store key " << expectedStoreKey);
+		{
+			ETH_ERROR(_expectedAddr << ": missing store key " << expectedStoreKey);
+		}
 		else
 		{
 			auto& expectedStoreValue = expectedStorePair.second;
 			auto& resultStoreValue = resultStoreIt->second;
-			BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
+			ETH_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
 		}
 	}
-	BOOST_CHECK_EQUAL(_resultStore.size(), _expectedStore.size());
+	ETH_CHECK_EQUAL(_resultStore.size(), _expectedStore.size());
 	for (auto&& resultStorePair: _resultStore)
 	{
 		if (!_expectedStore.count(resultStorePair.first))
-			BOOST_ERROR(_expectedAddr << ": unexpected store key " << resultStorePair.first);
+			ETH_ERROR(_expectedAddr << ": unexpected store key " << resultStorePair.first);
 	}
 }
 
 void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates)
 {
-	BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
+	ETH_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
 
 	for (size_t i = 0; i < _resultCallCreates.size(); ++i)
 	{
-		BOOST_CHECK(_resultCallCreates[i].data() == _expectedCallCreates[i].data());
-		BOOST_CHECK(_resultCallCreates[i].receiveAddress() == _expectedCallCreates[i].receiveAddress());
-		BOOST_CHECK(_resultCallCreates[i].gas() == _expectedCallCreates[i].gas());
-		BOOST_CHECK(_resultCallCreates[i].value() == _expectedCallCreates[i].value());
+		ETH_CHECK(_resultCallCreates[i].data() == _expectedCallCreates[i].data());
+		ETH_CHECK(_resultCallCreates[i].receiveAddress() == _expectedCallCreates[i].receiveAddress());
+		ETH_CHECK(_resultCallCreates[i].gas() == _expectedCallCreates[i].gas());
+		ETH_CHECK(_resultCallCreates[i].value() == _expectedCallCreates[i].value());
 	}
 }
 

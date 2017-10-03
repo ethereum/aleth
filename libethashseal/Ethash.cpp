@@ -88,21 +88,21 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	if (_s != CheckNothingNew)
 	{
 		if (_bi.difficulty() < chainParams().minimumDifficulty)
-			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().minimumDifficulty), bigint(_bi.difficulty())) );
+			ETH_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().minimumDifficulty), bigint(_bi.difficulty())) );
 
 		if (_bi.gasLimit() < chainParams().minGasLimit)
-			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().minGasLimit), bigint(_bi.gasLimit())) );
+			ETH_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().minGasLimit), bigint(_bi.gasLimit())) );
 
 		if (_bi.gasLimit() > chainParams().maxGasLimit)
-			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().maxGasLimit), bigint(_bi.gasLimit())) );
+			ETH_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().maxGasLimit), bigint(_bi.gasLimit())) );
 
 		if (_bi.number() && _bi.extraData().size() > chainParams().maximumExtraDataSize)
-			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
+			ETH_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
 
 		u256 const& daoHardfork = chainParams().daoHardforkBlock;
 		if (daoHardfork != 0 && daoHardfork + 9 >= daoHardfork && _bi.number() >= daoHardfork && _bi.number() <= daoHardfork + 9)
 			if (_bi.extraData() != fromHex("0x64616f2d686172642d666f726b"))
-				BOOST_THROW_EXCEPTION(ExtraDataIncorrect() << errinfo_comment("Received block from the wrong fork (invalid extradata)."));
+				ETH_THROW_EXCEPTION(ExtraDataIncorrect() << errinfo_comment("Received block from the wrong fork (invalid extradata)."));
 	}
 
 	if (_parent)
@@ -111,7 +111,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		auto expected = calculateDifficulty(_bi, _parent);
 		auto difficulty = _bi.difficulty();
 		if (difficulty != expected)
-			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
+			ETH_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
 
 		auto gasLimit = _bi.gasLimit();
 		auto parentGasLimit = _parent.gasLimit();
@@ -120,7 +120,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 			gasLimit > chainParams().maxGasLimit ||
 			gasLimit <= parentGasLimit - parentGasLimit / chainParams().gasLimitBoundDivisor ||
 			gasLimit >= parentGasLimit + parentGasLimit / chainParams().gasLimitBoundDivisor)
-			BOOST_THROW_EXCEPTION(
+			ETH_THROW_EXCEPTION(
 				InvalidGasLimit()
 				<< errinfo_min((bigint)((bigint)parentGasLimit - (bigint)(parentGasLimit / chainParams().gasLimitBoundDivisor)))
 				<< errinfo_got((bigint)gasLimit)
@@ -140,7 +140,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		ex << errinfo_hash256(_bi.hash(WithoutSeal));
 		ex << errinfo_difficulty(_bi.difficulty());
 		ex << errinfo_target(boundary(_bi));
-		BOOST_THROW_EXCEPTION(ex);
+		ETH_THROW_EXCEPTION(ex);
 	}
 	else if (_s == QuickNonce && _bi.parentHash() && !quickVerifySeal(_bi))
 	{
@@ -148,7 +148,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		ex << errinfo_hash256(_bi.hash(WithoutSeal));
 		ex << errinfo_difficulty(_bi.difficulty());
 		ex << errinfo_nonce(nonce(_bi));
-		BOOST_THROW_EXCEPTION(ex);
+		ETH_THROW_EXCEPTION(ex);
 	}
 }
 
@@ -167,11 +167,11 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
 			_t.checkChainId(-4);
 	}
 	if (_ir & ImportRequirements::TransactionBasic && _t.baseGasRequired(evmSchedule(_header.number())) > _t.gas())
-		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError((bigint)(_t.baseGasRequired(evmSchedule(_header.number()))), (bigint)_t.gas()));
+		ETH_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError((bigint)(_t.baseGasRequired(evmSchedule(_header.number()))), (bigint)_t.gas()));
 
 	// Avoid transactions that would take us beyond the block gas limit.
 	if (_startGasUsed + (bigint)_t.gas() > _header.gasLimit())
-		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_header.gasLimit() - _startGasUsed), (bigint)_t.gas()));
+		ETH_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(_header.gasLimit() - _startGasUsed), (bigint)_t.gas()));
 }
 
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const

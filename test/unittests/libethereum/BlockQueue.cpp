@@ -46,15 +46,15 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	BlockQueue blockQueue;
 	blockQueue.setChain(blockchain.interface());
 	ImportResult res = blockQueue.import(&block1.bytes());
-	BOOST_REQUIRE_MESSAGE(res == ImportResult::Success, "Simple block import to BlockQueue should have return Success");
+	ETH_REQUIRE_MESSAGE(res == ImportResult::Success, "Simple block import to BlockQueue should have return Success");
 
 	res = blockQueue.import(&block1.bytes());
-	BOOST_REQUIRE_MESSAGE(res == ImportResult::AlreadyKnown, "Simple block import to BlockQueue should have return AlreadyKnown");
+	ETH_REQUIRE_MESSAGE(res == ImportResult::AlreadyKnown, "Simple block import to BlockQueue should have return AlreadyKnown");
 
 	blockQueue.clear();
 	blockchain.addBlock(block1);
 	res = blockQueue.import(&block1.bytes());
-	BOOST_REQUIRE_MESSAGE(res == ImportResult::AlreadyInChain, "Simple block import to BlockQueue should have return AlreadyInChain");
+	ETH_REQUIRE_MESSAGE(res == ImportResult::AlreadyInChain, "Simple block import to BlockQueue should have return AlreadyInChain");
 
 	TestBlock block2;
 	block2.mine(blockchain);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	block2.setBlockHeader(block2Header);
 	block2.updateNonce(blockchain);
 	res = blockQueue.import(&block2.bytes());
-	BOOST_REQUIRE_MESSAGE(res == ImportResult::FutureTimeKnown, "Simple block import to BlockQueue should have return FutureTimeKnown");
+	ETH_REQUIRE_MESSAGE(res == ImportResult::FutureTimeKnown, "Simple block import to BlockQueue should have return FutureTimeKnown");
 
 	TestBlock block3;
 	block3.mine(blockchain);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	block3Header.clear();
 	block3.setBlockHeader(block3Header);
 	res = blockQueue.import(&block3.bytes());
-	BOOST_REQUIRE_MESSAGE(res == ImportResult::Malformed, "Simple block import to BlockQueue should have return Malformed");
+	ETH_REQUIRE_MESSAGE(res == ImportResult::Malformed, "Simple block import to BlockQueue should have return Malformed");
 
 	TestBlock block4;
 	block4.mine(blockchain2);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	block5.setBlockHeader(block5Header);
 	block5.updateNonce(blockchain2);
 	res = blockQueue.import(&block5.bytes());
-	BOOST_REQUIRE_MESSAGE(res == ImportResult::FutureTimeUnknown, "Simple block import to BlockQueue should have return FutureTimeUnknown");
+	ETH_REQUIRE_MESSAGE(res == ImportResult::FutureTimeUnknown, "Simple block import to BlockQueue should have return FutureTimeUnknown");
 
 	blockQueue.clear();
 	TestBlock block3a;
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	block3b.setBlockHeader(block3bHeader);
 	block3b.updateNonce(blockchain2);
 	res = blockQueue.import(&block3b.bytes());
-	BOOST_REQUIRE_MESSAGE(res == ImportResult::UnknownParent, "Simple block import to BlockQueue should have return UnknownParent");
+	ETH_REQUIRE_MESSAGE(res == ImportResult::UnknownParent, "Simple block import to BlockQueue should have return UnknownParent");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

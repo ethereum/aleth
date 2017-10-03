@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 	header.setNumber(0x2001);
 	header.setTimestamp(130);
 
-	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999024);
+	ETH_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999024);
 }
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 	header.setNumber(0x2001);
 	header.setTimestamp(130);
 
-	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999512);
+	ETH_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999512);
 }
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
 	header.setNumber(0x2001);
 	header.setTimestamp(1100);
 
-	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 951688);
+	ETH_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 951688);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

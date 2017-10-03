@@ -28,6 +28,7 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
 #include <boost/filesystem/path.hpp>
+#include <test/tools/libtesteth/TestUtils.h>
 #include <string>
 
 using namespace std;
@@ -55,7 +56,7 @@ class TransactionTestSuite: public TestSuite
 				continue;
 			}
 
-			BOOST_REQUIRE(o.count("blocknumber") > 0);
+			ETH_REQUIRE(o.count("blocknumber") > 0);
 			u256 transactionBlock = toInt(o["blocknumber"].get_str());
 			BlockHeader bh;
 			bh.setNumber(transactionBlock);
@@ -64,7 +65,7 @@ class TransactionTestSuite: public TestSuite
 
 			if (_fillin)
 			{
-				BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::testFileName());
+				ETH_REQUIRE_MESSAGE(o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::testFileName());
 				mObject tObj = o["transaction"].get_obj();
 
 				//Construct Rlp of the given transaction
@@ -78,13 +79,13 @@ class TransactionTestSuite: public TestSuite
 
 					if (!txFromFields.signature().isValid())
 					if (!onConstantinopleAndZeroSig)
-						BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
+						ETH_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 					se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh, 0);
 
 					if (o.count("sender") > 0)
 					{
 						string expectSender = toString(o["sender"].get_str());
-						BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
+						ETH_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
 					}
 					o["sender"] = toString(txFromFields.sender());
 					o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
@@ -100,7 +101,7 @@ class TransactionTestSuite: public TestSuite
 					if (o.count("expect") > 0)
 					{
 						bool expectInValid = (o["expect"].get_str() == "invalid");
-						BOOST_CHECK_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
+						ETH_CHECK_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
 						o.erase(o.find("expect"));
 					}
 				}
@@ -109,13 +110,13 @@ class TransactionTestSuite: public TestSuite
 				if (o.count("expect") > 0)
 				{
 					bool expectValid = (o["expect"].get_str() == "valid");
-					BOOST_CHECK_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
+					ETH_CHECK_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
 					o.erase(o.find("expect"));
 				}
 			}
 			else
 			{
-				BOOST_REQUIRE(o.count("rlp") > 0);
+				ETH_REQUIRE(o.count("rlp") > 0);
 				Transaction txFromRlp;
 				try
 				{
@@ -126,42 +127,42 @@ class TransactionTestSuite: public TestSuite
 					se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
 					if (!txFromRlp.signature().isValid())
 					if (!onConstantinopleAndZeroSig)
-						BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
+						ETH_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 				}
 				catch(Exception const& _e)
 				{
 					cnote << i.first;
 					cnote << "Transaction Exception: " << diagnostic_information(_e);
-					BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
+					ETH_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
 					continue;
 				}
 				catch(...)
 				{
-					BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
+					ETH_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
 					continue;
 				}
 
-				BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "Expected a valid transaction!");
+				ETH_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "Expected a valid transaction!");
 
 				mObject tObj = o["transaction"].get_obj();
 				h256 txSha3Expected = h256(o["hash"].get_str());
 				Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckTransaction::Everything);
 
 				//Check the fields restored from RLP to original fields
-				BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), testname + "Data in given RLP not matching the Transaction data!");
-				BOOST_CHECK_MESSAGE(txFromFields.value() == txFromRlp.value(), testname + "Value in given RLP not matching the Transaction value!");
-				BOOST_CHECK_MESSAGE(txFromFields.gasPrice() == txFromRlp.gasPrice(), testname + "GasPrice in given RLP not matching the Transaction gasPrice!");
-				BOOST_CHECK_MESSAGE(txFromFields.gas() == txFromRlp.gas(), testname + "Gas in given RLP not matching the Transaction gas!");
-				BOOST_CHECK_MESSAGE(txFromFields.nonce() == txFromRlp.nonce(), testname + "Nonce in given RLP not matching the Transaction nonce!");
-				BOOST_CHECK_MESSAGE(txFromFields.receiveAddress() == txFromRlp.receiveAddress(), testname + "Receive address in given RLP not matching the Transaction 'to' address!");
-				BOOST_CHECK_MESSAGE(txFromFields.sender() == txFromRlp.sender(), testname + "Transaction sender address in given RLP not matching the Transaction 'vrs' signature!");
-				BOOST_CHECK_MESSAGE(txFromFields.sha3() == txFromRlp.sha3(), testname + "Transaction sha3 hash in given RLP not matching the Transaction 'vrs' signature!");
-				BOOST_CHECK_MESSAGE(txFromFields.sha3() == txSha3Expected, testname + "Expected different transaction hash!");
-				BOOST_CHECK_MESSAGE(txFromFields == txFromRlp, testname + "However, txFromFields != txFromRlp!");
-				BOOST_REQUIRE (o.count("sender") > 0);
+				ETH_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), testname + "Data in given RLP not matching the Transaction data!");
+				ETH_CHECK_MESSAGE(txFromFields.value() == txFromRlp.value(), testname + "Value in given RLP not matching the Transaction value!");
+				ETH_CHECK_MESSAGE(txFromFields.gasPrice() == txFromRlp.gasPrice(), testname + "GasPrice in given RLP not matching the Transaction gasPrice!");
+				ETH_CHECK_MESSAGE(txFromFields.gas() == txFromRlp.gas(), testname + "Gas in given RLP not matching the Transaction gas!");
+				ETH_CHECK_MESSAGE(txFromFields.nonce() == txFromRlp.nonce(), testname + "Nonce in given RLP not matching the Transaction nonce!");
+				ETH_CHECK_MESSAGE(txFromFields.receiveAddress() == txFromRlp.receiveAddress(), testname + "Receive address in given RLP not matching the Transaction 'to' address!");
+				ETH_CHECK_MESSAGE(txFromFields.sender() == txFromRlp.sender(), testname + "Transaction sender address in given RLP not matching the Transaction 'vrs' signature!");
+				ETH_CHECK_MESSAGE(txFromFields.sha3() == txFromRlp.sha3(), testname + "Transaction sha3 hash in given RLP not matching the Transaction 'vrs' signature!");
+				ETH_CHECK_MESSAGE(txFromFields.sha3() == txSha3Expected, testname + "Expected different transaction hash!");
+				ETH_CHECK_MESSAGE(txFromFields == txFromRlp, testname + "However, txFromFields != txFromRlp!");
+				ETH_REQUIRE (o.count("sender") > 0);
 
 				Address addressReaded = Address(o["sender"].get_str());
-				BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
+				ETH_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
 			}
 		}//for
 		return v;

@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(LoadAccountCode)
 	s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
 	auto& loadedCode = s.code(addr);
-	BOOST_CHECK(std::equal(
+	ETH_CHECK(std::equal(
 			std::begin(codeData), std::end(codeData), std::begin(loadedCode)
 	));
 }

@@ -41,7 +41,7 @@ public:
 	
 	// stub
 	virtual void flushTransactions() override {}
-	virtual eth::BlockChain& bc() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("FixedClient::bc()")); }
+	virtual eth::BlockChain& bc() override { ETH_THROW_EXCEPTION(InterfaceNotSupported("FixedClient::bc()")); }
 	virtual eth::BlockChain const& bc() const override { return m_bc; }
 	using ClientBase::block;
 	virtual eth::Block block(h256 const& _h) const override;

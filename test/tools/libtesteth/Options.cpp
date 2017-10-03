@@ -81,17 +81,17 @@ Options::Options(int argc, char** argv)
 		auto throwIfNoArgumentFollows = [&i, &argc, &arg]()
 		{
 			if (i + 1 >= argc)
-				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
+				ETH_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
 		};
 		auto throwIfAfterSeparator = [&seenSeparator, &arg]()
 		{
 			if (seenSeparator)
-				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option appears after the separator --."));
+				ETH_THROW_EXCEPTION(InvalidOption(arg + " option appears after the separator --."));
 		};
 		if (arg == "--")
 		{
 			if (seenSeparator)
-				BOOST_THROW_EXCEPTION(InvalidOption("The separator -- appears more than once in the command line."));
+				ETH_THROW_EXCEPTION(InvalidOption("The separator -- appears more than once in the command line."));
 			seenSeparator = true;
 			continue;
 		}

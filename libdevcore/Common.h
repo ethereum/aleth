@@ -64,8 +64,38 @@ using byte = uint8_t;
 
 #define DEV_IF_THROWS(X) try{X;}catch(...)
 
+#include <boost/thread.hpp>
+
 namespace dev
 {
+
+// should be used for multithread tests
+using SharedMutex = boost::shared_mutex;
+using WriteGuard = boost::unique_lock<boost::shared_mutex>;
+static SharedMutex x_boostTest;
+#define ETH_CHECK(x) { WriteGuard(x_boostTest); BOOST_CHECK(x); }
+#define ETH_CHECK_NE(x, y) { WriteGuard(x_boostTest); BOOST_CHECK_NE(x, y); }
+#define ETH_CHECK_LT(x, y) { WriteGuard(x_boostTest); BOOST_CHECK_LT(x, y); }
+#define ETH_CHECK_LE(x, y) { WriteGuard(x_boostTest); BOOST_CHECK_LE(x, y); }
+#define ETH_CHECK_MESSAGE(x, y) { WriteGuard(x_boostTest); BOOST_CHECK_MESSAGE(x, y); }
+#define ETH_CHECK_THROW(x, y) { WriteGuard(x_boostTest); BOOST_CHECK_THROW(x, y); }
+#define ETH_CHECK_NO_THROW(x) { WriteGuard(x_boostTest); BOOST_CHECK_NO_THROW(x); }
+#define ETH_CHECK_EQUAL(x, y) { WriteGuard(x_boostTest); BOOST_CHECK_EQUAL(x, y); }
+#define ETH_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye) { WriteGuard(x_boostTest); BOOST_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye); }
+#define ETH_CHECK_EXCEPTION(x, y, z) { WriteGuard(x_boostTest); BOOST_CHECK_EXCEPTION(x, y, z); }
+#define ETH_REQUIRE_EQUAL_COLLECTIONS(xb, xe, yb, ye) { WriteGuard(x_boostTest); BOOST_REQUIRE_EQUAL_COLLECTIONS(xb, xe, yb, ye); }
+#define ETH_REQUIRE(x) { WriteGuard(x_boostTest); BOOST_REQUIRE(x); }
+#define ETH_REQUIRE_NE(x, y) { WriteGuard(x_boostTest); BOOST_REQUIRE_NE(x, y); }
+#define ETH_REQUIRE_LT(x, y) { WriteGuard(x_boostTest); BOOST_REQUIRE_LT(x, y); }
+#define ETH_REQUIRE_LE(x, y) { WriteGuard(x_boostTest); BOOST_REQUIRE_LE(x, y); }
+#define ETH_REQUIRE_EQUAL(x, y) { WriteGuard(x_boostTest); BOOST_REQUIRE_EQUAL(x, y); }
+#define ETH_REQUIRE_MESSAGE(x, y) { WriteGuard(x_boostTest); BOOST_REQUIRE_MESSAGE(x, y); }
+#define ETH_REQUIRE_THROW(x, y) { WriteGuard(x_boostTest); BOOST_REQUIRE_THROW(x, y); }
+#define ETH_THROW_EXCEPTION(x) { WriteGuard(x_boostTest); BOOST_THROW_EXCEPTION(x); }
+#define ETH_ERROR(x) { WriteGuard(x_boostTest); BOOST_ERROR(x); }
+#define ETH_MESSAGE(x) { WriteGuard(x_boostTest); BOOST_MESSAGE(x); }
+#define ETH_WARN_MESSAGE(x, y) { WriteGuard(x_boostTest); BOOST_WARN_MESSAGE(x, y); }
+#define ETH_TEST_MESSAGE(x) { WriteGuard(x_boostTest); BOOST_TEST_MESSAGE(x); }
 
 extern char const* Version;
 

@@ -275,7 +275,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 		if (fs::space(chainPath / fs::path("blocks")).available < 1024)
 		{
 			cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
-			BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
+			ETH_THROW_EXCEPTION(NotEnoughAvailableSpace());
 		}
 		else
 		{
@@ -285,7 +285,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 				"or " <<
 				(extrasPath / fs::path("extras")) <<
 				"already open. You appear to have another instance of ethereum running. Bailing.";
-			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
+			ETH_THROW_EXCEPTION(DatabaseAlreadyOpen());
 		}
 	}
 
@@ -561,7 +561,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
-		BOOST_THROW_EXCEPTION(UnknownParent());
+		ETH_THROW_EXCEPTION(UnknownParent());
 	}
 
 	// Check receipts
@@ -573,7 +573,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Invalid receipts root " << _block.info.receiptsRoot() << " not " << receiptsRoot;
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
-		BOOST_THROW_EXCEPTION(InvalidReceiptsStateRoot());
+		ETH_THROW_EXCEPTION(InvalidReceiptsStateRoot());
 	}
 
 	auto pd = details(_block.info.parentHash());
@@ -661,7 +661,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
-		BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(_block.info.parentHash()));
+		ETH_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(_block.info.parentHash()));
 	}
 
 	auto pd = details(_block.info.parentHash());
@@ -714,7 +714,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		cwarn << "*** BadRoot error! Trying to import" << _block.info.hash() << "needed root" << ex.root;
 		cwarn << _block.info;
 		// Attempt in import later.
-		BOOST_THROW_EXCEPTION(TransientError());
+		ETH_THROW_EXCEPTION(TransientError());
 	}
 	catch (Exception& ex)
 	{
@@ -745,7 +745,7 @@ void BlockChain::checkBlockIsNew(VerifiedBlockRef const& _block) const
 	if (isKnown(_block.info.hash()))
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Not new.";
-		BOOST_THROW_EXCEPTION(AlreadyHaveBlock() << errinfo_block(_block.block.toBytes()));
+		ETH_THROW_EXCEPTION(AlreadyHaveBlock() << errinfo_block(_block.block.toBytes()));
 	}
 }
 
@@ -756,7 +756,7 @@ void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
 	{
 		clog(BlockChainChat) << _header.hash() << ": Future time " << _header.timestamp() << " (now at " << utcTime() << ")";
 		// Block has a timestamp in the future. This is no good.
-		BOOST_THROW_EXCEPTION(FutureTime());
+		ETH_THROW_EXCEPTION(FutureTime());
 	}
 }
 
@@ -1485,14 +1485,14 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 	{
 		h = BlockHeader(_block);
 		if (!!(_ir & ImportRequirements::PostGenesis) && (!h.parentHash() || h.number() == 0))
-			BOOST_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
+			ETH_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
 
 		BlockHeader parent;
 		if (!!(_ir & ImportRequirements::Parent))
 		{
 			bytes parentHeader(headerData(h.parentHash()));
 			if (parentHeader.empty())
-				BOOST_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
+				ETH_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
 			parent = BlockHeader(parentHeader, HeaderData, h.parentHash());
 		}
 		sealEngine()->verify((_ir & ImportRequirements::ValidSeal) ? Strictness::CheckEverything : Strictness::QuickNonce, h, parent, _block);
@@ -1520,7 +1520,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 				{
 					bytes parentHeader(headerData(uh.parentHash()));
 					if (parentHeader.empty())
-						BOOST_THROW_EXCEPTION(InvalidUncleParentHash() << errinfo_required_h256(uh.parentHash()) << errinfo_currentNumber(h.number()) << errinfo_uncleNumber(uh.number()));
+						ETH_THROW_EXCEPTION(InvalidUncleParentHash() << errinfo_required_h256(uh.parentHash()) << errinfo_currentNumber(h.number()) << errinfo_uncleNumber(uh.number()));
 					parent = BlockHeader(parentHeader, HeaderData, uh.parentHash());
 				}
 				sealEngine()->verify((_ir & ImportRequirements::UncleSeals) ? Strictness::CheckEverything : Strictness::IgnoreSeal, uh, parent);
@@ -1567,11 +1567,11 @@ void BlockChain::setChainStartBlockNumber(unsigned _number)
 {
 	h256 const& hash = numberHash(_number);
 	if (!hash)
-		BOOST_THROW_EXCEPTION(UnknownBlockNumber());
+		ETH_THROW_EXCEPTION(UnknownBlockNumber());
 
 	ldb::Status const status = m_extrasDB->Put(m_writeOptions, c_sliceChainStart, ldb::Slice(reinterpret_cast<char const*>(hash.data()), h256::size));
 	if (!status.ok())
-		BOOST_THROW_EXCEPTION(FailedToWriteChainStart() << errinfo_hash256(hash));
+		ETH_THROW_EXCEPTION(FailedToWriteChainStart() << errinfo_hash256(hash));
 }
 
 unsigned BlockChain::chainStartBlockNumber() const

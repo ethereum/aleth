@@ -137,8 +137,8 @@ public:
 
 	// The mainline interfaces:
 
-	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
-	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
+	eth::Client* ethereum() const { if (!m_ethereum) ETH_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
+	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) ETH_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
 
 	// Misc stuff:
 

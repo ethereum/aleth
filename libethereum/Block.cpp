@@ -145,7 +145,7 @@ void Block::resetCurrent(u256 const& _timestamp)
 SealEngineFace* Block::sealEngine() const
 {
 	if (!m_sealEngine)
-		BOOST_THROW_EXCEPTION(ChainOperationWithUnknownBlockChain());
+		ETH_THROW_EXCEPTION(ChainOperationWithUnknownBlockChain());
 	return m_sealEngine;
 }
 
@@ -169,7 +169,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 	{
 		// Might be worth throwing here.
 		cwarn << "Invalid block given for state population: " << _h;
-		BOOST_THROW_EXCEPTION(BlockNotFound() << errinfo_target(_h));
+		ETH_THROW_EXCEPTION(BlockNotFound() << errinfo_target(_h));
 	}
 
 	auto b = _bc.block(_h);
@@ -262,7 +262,7 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
 			cwarn << "Unable to sync to" << bi.hash() << "; state root" << bi.stateRoot() << "not found in database.";
 			cwarn << "Database corrupt: contains block without stateRoot:" << bi;
 			cwarn << "Try rescuing the database by running: eth --rescue";
-			BOOST_THROW_EXCEPTION(InvalidStateRoot() << errinfo_target(bi.stateRoot()));
+			ETH_THROW_EXCEPTION(InvalidStateRoot() << errinfo_target(bi.stateRoot()));
 		}
 		m_previousBlock = bi;
 		resetCurrent();
@@ -313,7 +313,7 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
 pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned msTimeout)
 {
 	if (isSealed())
-		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
+		ETH_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
 
 	noteChain(_bc);
 
@@ -471,7 +471,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 	if (m_currentBlock.parentHash() != m_previousBlock.hash())
 		// Internal client error.
-		BOOST_THROW_EXCEPTION(InvalidParentHash());
+		ETH_THROW_EXCEPTION(InvalidParentHash());
 
 	// Populate m_currentBlock with the correct values.
 	m_currentBlock.noteDirty();
@@ -519,7 +519,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		ex << Hash256RequirementError(m_currentBlock.receiptsRoot(), receiptsRoot);
 		ex << errinfo_receipts(receipts);
 //		ex << errinfo_vmtrace(vmTrace(_block.block, _bc, ImportRequirements::None));
-		BOOST_THROW_EXCEPTION(ex);
+		ETH_THROW_EXCEPTION(ex);
 	}
 
 	if (m_currentBlock.logBloom() != logBloom())
@@ -527,7 +527,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		InvalidLogBloom ex;
 		ex << LogBloomRequirementError(m_currentBlock.logBloom(), logBloom());
 		ex << errinfo_receipts(receipts);
-		BOOST_THROW_EXCEPTION(ex);
+		ETH_THROW_EXCEPTION(ex);
 	}
 
 	// Initialise total difficulty calculation.
@@ -539,7 +539,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		TooManyUncles ex;
 		ex << errinfo_max(2);
 		ex << errinfo_got(rlp[2].itemCount());
-		BOOST_THROW_EXCEPTION(ex);
+		ETH_THROW_EXCEPTION(ex);
 	}
 
 	vector<BlockHeader> rewarded;
@@ -561,7 +561,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 					ex << errinfo_comment("Uncle in block already mentioned");
 					ex << errinfo_unclesExcluded(excluded);
 					ex << errinfo_hash256(sha3(i.data()));
-					BOOST_THROW_EXCEPTION(ex);
+					ETH_THROW_EXCEPTION(ex);
 				}
 				excluded.insert(h);
 
@@ -570,7 +570,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 				BlockHeader uncleParent;
 				if (!_bc.isKnown(uncle.parentHash()))
-					BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(uncle.parentHash()));
+					ETH_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(uncle.parentHash()));
 				uncleParent = BlockHeader(_bc.block(uncle.parentHash()));
 
 				// m_currentBlock.number() - uncle.number()		m_cB.n - uP.n()
@@ -587,14 +587,14 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 					UncleTooOld ex;
 					ex << errinfo_uncleNumber(uncle.number());
 					ex << errinfo_currentNumber(m_currentBlock.number());
-					BOOST_THROW_EXCEPTION(ex);
+					ETH_THROW_EXCEPTION(ex);
 				}
 				else if (depth < 1)
 				{
 					UncleIsBrother ex;
 					ex << errinfo_uncleNumber(uncle.number());
 					ex << errinfo_currentNumber(m_currentBlock.number());
-					BOOST_THROW_EXCEPTION(ex);
+					ETH_THROW_EXCEPTION(ex);
 				}
 				// cB
 				// cB.p^1	    1 depth, valid uncle
@@ -612,7 +612,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 					UncleParentNotInChain ex;
 					ex << errinfo_uncleNumber(uncle.number());
 					ex << errinfo_currentNumber(m_currentBlock.number());
-					BOOST_THROW_EXCEPTION(ex);
+					ETH_THROW_EXCEPTION(ex);
 				}
 				uncle.verify(CheckNothingNew/*CheckParent*/, uncleParent);
 
@@ -640,14 +640,14 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	{
 		auto r = rootHash();
 		m_state.db().rollback();		// TODO: API in State for this?
-		BOOST_THROW_EXCEPTION(InvalidStateRoot() << Hash256RequirementError(m_currentBlock.stateRoot(), r));
+		ETH_THROW_EXCEPTION(InvalidStateRoot() << Hash256RequirementError(m_currentBlock.stateRoot(), r));
 	}
 
 	if (m_currentBlock.gasUsed() != gasUsed())
 	{
 		// Rollback the trie.
 		m_state.db().rollback();		// TODO: API in State for this?
-		BOOST_THROW_EXCEPTION(InvalidGasUsed() << RequirementError(bigint(m_currentBlock.gasUsed()), bigint(gasUsed())));
+		ETH_THROW_EXCEPTION(InvalidGasUsed() << RequirementError(bigint(m_currentBlock.gasUsed()), bigint(gasUsed())));
 	}
 
 	return tdIncrease;
@@ -656,7 +656,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
 	if (isSealed())
-		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
+		ETH_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
 
 	// Uncommitting is a non-trivial operation - only do it once we've verified as much of the
 	// transaction as possible.
@@ -727,7 +727,7 @@ void Block::updateBlockhashContract()
 void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 {
 	if (isSealed())
-		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
+		ETH_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
 
 	noteChain(_bc);
 

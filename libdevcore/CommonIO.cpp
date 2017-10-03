@@ -127,7 +127,7 @@ void dev::writeFile(boost::filesystem::path const& _file, bytesConstRef _data, b
 		boost::filesystem::ofstream s(_file, ios::trunc | ios::binary);
 		s.write(reinterpret_cast<char const*>(_data.data()), _data.size());
 		if (!s)
-			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file.string()));
+			ETH_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file.string()));
 		DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read|fs::owner_write));
 	}
 }
@@ -140,18 +140,18 @@ std::string dev::getPassword(std::string const& _prompt)
 	HANDLE hStdin;
 	DWORD fdwSaveOldMode;
 	if ((hStdin = GetStdHandle(STD_INPUT_HANDLE)) == INVALID_HANDLE_VALUE)
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("GetStdHandle"));
+		ETH_THROW_EXCEPTION(ExternalFunctionFailure("GetStdHandle"));
 	if (!GetConsoleMode(hStdin, &fdwSaveOldMode))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("GetConsoleMode"));
+		ETH_THROW_EXCEPTION(ExternalFunctionFailure("GetConsoleMode"));
 	// Set console flags to no echo
 	if (!SetConsoleMode(hStdin, fdwSaveOldMode & (~ENABLE_ECHO_INPUT)))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
+		ETH_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
 	// Read the string
 	std::string ret;
 	std::getline(cin, ret);
 	// Restore old input mode
 	if (!SetConsoleMode(hStdin, fdwSaveOldMode))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
+		ETH_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
 	return ret;
 #else
 	struct termios oflags;
@@ -165,16 +165,16 @@ std::string dev::getPassword(std::string const& _prompt)
 	nflags.c_lflag |= ECHONL;
 
 	if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0)
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
+		ETH_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
 
 	printf("%s", _prompt.c_str());
 	if (!fgets(password, sizeof(password), stdin))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("fgets"));
+		ETH_THROW_EXCEPTION(ExternalFunctionFailure("fgets"));
 	password[strlen(password) - 1] = 0;
 
 	// restore terminal
 	if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0)
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
+		ETH_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
 
 
 	return password;

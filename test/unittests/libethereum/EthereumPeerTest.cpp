@@ -129,13 +129,13 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeData)
 	peer.requestNodeData({ dataHash });
 
 	uint8_t code = static_cast<uint8_t>(session->m_bytesSent[0]);
-	BOOST_REQUIRE_EQUAL(code, offset + 0x0d);
+	ETH_REQUIRE_EQUAL(code, offset + 0x0d);
 
 	bytes payloadSent(session->m_bytesSent.begin() + 1, session->m_bytesSent.end());
 	RLP rlp(payloadSent);
-	BOOST_REQUIRE(rlp.isList());
-	BOOST_REQUIRE_EQUAL(rlp.itemCount(), 1);
-	BOOST_REQUIRE_EQUAL(static_cast<h256>(rlp[0]), dataHash);
+	ETH_REQUIRE(rlp.isList());
+	ETH_REQUIRE_EQUAL(rlp.itemCount(), 1);
+	ETH_REQUIRE_EQUAL(static_cast<h256>(rlp[0]), dataHash);
 }
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataSeveralHashes)
@@ -147,10 +147,10 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataSeveralHashes)
 
 	bytes payloadSent(session->m_bytesSent.begin() + 1, session->m_bytesSent.end());
 	RLP rlp(payloadSent);
-	BOOST_REQUIRE_EQUAL(rlp.itemCount(), 3);
-	BOOST_REQUIRE_EQUAL(static_cast<h256>(rlp[0]), dataHash0);
-	BOOST_REQUIRE_EQUAL(static_cast<h256>(rlp[1]), dataHash1);
-	BOOST_REQUIRE_EQUAL(static_cast<h256>(rlp[2]), dataHash2);
+	ETH_REQUIRE_EQUAL(rlp.itemCount(), 3);
+	ETH_REQUIRE_EQUAL(static_cast<h256>(rlp[0]), dataHash0);
+	ETH_REQUIRE_EQUAL(static_cast<h256>(rlp[1]), dataHash1);
+	ETH_REQUIRE_EQUAL(static_cast<h256>(rlp[2]), dataHash2);
 }
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataAddsAskingNote)
@@ -158,16 +158,16 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataAddsAskingNote)
 	h256 dataHash("0x949d991d685738352398dff73219ab19c62c06e6f8ce899fbae755d5127ed1ef");
 	peer.requestNodeData({ h256("0x949d991d685738352398dff73219ab19c62c06e6f8ce899fbae755d5127ed1ef") });
 
-	BOOST_REQUIRE(session->m_notes.find("ask") != session->m_notes.end());
-	BOOST_REQUIRE(session->m_notes["ask"] == "NodeData");
+	ETH_REQUIRE(session->m_notes.find("ask") != session->m_notes.end());
+	ETH_REQUIRE(session->m_notes["ask"] == "NodeData");
 }
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestNodeDataWithNoHashesSetsAskNoteToNothing)
 {
 	peer.requestNodeData({});
 
-	BOOST_REQUIRE(session->m_notes.find("ask") != session->m_notes.end());
-	BOOST_REQUIRE(session->m_notes["ask"] == "Nothing");
+	ETH_REQUIRE(session->m_notes.find("ask") != session->m_notes.end());
+	ETH_REQUIRE(session->m_notes["ask"] == "Nothing");
 }
 
 BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestReceipts)
@@ -179,10 +179,10 @@ BOOST_AUTO_TEST_CASE(EthereumPeerSuite_requestReceipts)
 
 	bytes payloadSent(session->m_bytesSent.begin() + 1, session->m_bytesSent.end());
 	RLP rlp(payloadSent);
-	BOOST_REQUIRE_EQUAL(rlp.itemCount(), 3);
-	BOOST_REQUIRE_EQUAL(static_cast<h256>(rlp[0]), blockHash0);
-	BOOST_REQUIRE_EQUAL(static_cast<h256>(rlp[1]), blockHash1);
-	BOOST_REQUIRE_EQUAL(static_cast<h256>(rlp[2]), blockHash2);
+	ETH_REQUIRE_EQUAL(rlp.itemCount(), 3);
+	ETH_REQUIRE_EQUAL(static_cast<h256>(rlp[0]), blockHash0);
+	ETH_REQUIRE_EQUAL(static_cast<h256>(rlp[1]), blockHash1);
+	ETH_REQUIRE_EQUAL(static_cast<h256>(rlp[2]), blockHash2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

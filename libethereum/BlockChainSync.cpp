@@ -855,16 +855,16 @@ void BlockChainSync::onPeerAborting()
 bool BlockChainSync::invariants() const
 {
 	if (!isSyncing() && !m_headers.empty())
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got headers while not syncing"));
+		ETH_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got headers while not syncing"));
 	if (!isSyncing() && !m_bodies.empty())
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got bodies while not syncing"));
+		ETH_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got bodies while not syncing"));
 	if (isSyncing() && m_host.chain().number() > 0 && m_haveCommonHeader && m_lastImportedBlock == 0)
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Common block not found"));
+		ETH_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Common block not found"));
 	if (isSyncing() && !m_headers.empty() &&  m_lastImportedBlock >= m_headers.begin()->first)
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header is too old"));
+		ETH_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header is too old"));
 	if (m_headerSyncPeers.empty() != m_downloadingHeaders.empty())
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header download map mismatch"));
+		ETH_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header download map mismatch"));
 	if (m_bodySyncPeers.empty() != m_downloadingBodies.empty() && m_downloadingBodies.size() <= m_headerIdToNumber.size())
-		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Body download map mismatch"));
+		ETH_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Body download map mismatch"));
 	return true;
 }

@@ -152,11 +152,11 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				if (_varMap.count(type))
 					replace = _varMap.at(type);
 				else
-					BOOST_ERROR("Skipping undeclared type: " + type);
+					ETH_ERROR("Skipping undeclared type: " + type);
 			}
 
 			if (replace.empty() && type != "[DESTADDRESS]" && type != "[CODE]")
-				BOOST_ERROR("Empty replace of type occured: " + type);
+				ETH_ERROR("Empty replace of type occured: " + type);
 
 			_test.replace(pos, type.length(), replace);
 			pos = _test.find(type);

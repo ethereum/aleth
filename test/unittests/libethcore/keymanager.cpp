@@ -37,8 +37,8 @@ BOOST_FIXTURE_TEST_SUITE(KeyManagerTests, TestOutputHelper)
 BOOST_AUTO_TEST_CASE(KeyInfoDefaultConstructor)
 {
 	KeyInfo kiDefault;
-	BOOST_CHECK_EQUAL(kiDefault.accountName, "");
-	BOOST_CHECK(kiDefault.passHash == h256());
+	ETH_CHECK_EQUAL(kiDefault.accountName, "");
+	ETH_CHECK(kiDefault.passHash == h256());
 }
 
 BOOST_AUTO_TEST_CASE(KeyInfoConstructor)
@@ -46,16 +46,16 @@ BOOST_AUTO_TEST_CASE(KeyInfoConstructor)
 	h256 passHash("0x2a");
 	string accountName = "myAccount";
 	KeyInfo ki(passHash, accountName);
-	BOOST_CHECK_EQUAL(ki.accountName, "myAccount");
-	BOOST_CHECK(ki.passHash == h256("0x2a"));
+	ETH_CHECK_EQUAL(ki.accountName, "myAccount");
+	ETH_CHECK(ki.passHash == h256("0x2a"));
 }
 
 BOOST_AUTO_TEST_CASE(KeyManagerConstructor)
 {
 	KeyManager km;
-	BOOST_CHECK_EQUAL(km.keysFile(), km.defaultPath());
-	BOOST_CHECK_EQUAL(km.defaultPath(), getDataDir("ethereum") / fs::path("keys.info"));
-	BOOST_CHECK(km.store().keys() == SecretStore(SecretStore::defaultPath()).keys());
+	ETH_CHECK_EQUAL(km.keysFile(), km.defaultPath());
+	ETH_CHECK_EQUAL(km.defaultPath(), getDataDir("ethereum") / fs::path("keys.info"));
+	ETH_CHECK(km.store().keys() == SecretStore(SecretStore::defaultPath()).keys());
 	for (auto a: km.accounts())
 		km.kill(a);
 }
@@ -64,20 +64,20 @@ BOOST_AUTO_TEST_CASE(KeyManagerKeysFile)
 {
 	KeyManager km;
 	string password = "hardPassword";
-	BOOST_CHECK(!km.load(password));
+	ETH_CHECK(!km.load(password));
 
 	// set to valid path
 	TransientDirectory tmpDir;
 	km.setKeysFile(tmpDir.path());
-	BOOST_CHECK(!km.exists());
-	BOOST_CHECK_THROW(km.create(password), boost::filesystem::filesystem_error);
+	ETH_CHECK(!km.exists());
+	ETH_CHECK_THROW(km.create(password), boost::filesystem::filesystem_error);
 	km.setKeysFile(tmpDir.path() + "/notExistingDir/keysFile.json");
-	BOOST_CHECK_NO_THROW(km.create(password));
-	BOOST_CHECK(km.exists());
+	ETH_CHECK_NO_THROW(km.create(password));
+	ETH_CHECK(km.exists());
 	km.setKeysFile(tmpDir.path() + "keysFile.json");
-	BOOST_CHECK_NO_THROW(km.create(password));
+	ETH_CHECK_NO_THROW(km.create(password));
 	km.save(password);
-	BOOST_CHECK(km.load(password));
+	ETH_CHECK(km.load(password));
 
 	for (auto a: km.accounts())
 		km.kill(a);
@@ -94,9 +94,9 @@ BOOST_AUTO_TEST_CASE(KeyManagerHints)
 	km.create(password);
 	km.save(password);
 
-	BOOST_CHECK(!km.haveHint(password + "2"));
+	ETH_CHECK(!km.haveHint(password + "2"));
 	km.notePassword(password);
-	BOOST_CHECK(km.haveHint(password));
+	ETH_CHECK(km.haveHint(password));
 
 	for (auto a: km.accounts())
 		km.kill(a);
@@ -109,9 +109,9 @@ BOOST_AUTO_TEST_CASE(KeyManagerAccounts)
 	TransientDirectory tmpDir;
 	KeyManager km(tmpDir.path()+ "keysFile.json", tmpDir.path());
 
-	BOOST_CHECK_NO_THROW(km.create(password));
-	BOOST_CHECK(km.accounts().empty());
-	BOOST_CHECK(km.load(password));
+	ETH_CHECK_NO_THROW(km.create(password));
+	ETH_CHECK(km.accounts().empty());
+	ETH_CHECK(km.load(password));
 
 	for (auto a: km.accounts())
 		km.kill(a);
@@ -125,22 +125,22 @@ BOOST_AUTO_TEST_CASE(KeyManagerKill)
 
 	{
 		KeyManager km(tmpDir.path() + "keysFile.json", tmpDir.path());
-		BOOST_CHECK_NO_THROW(km.create(password));
-		BOOST_CHECK(km.accounts().empty());
-		BOOST_CHECK(km.load(password));
-		BOOST_CHECK(km.import(kp.secret(), "test"));
+		ETH_CHECK_NO_THROW(km.create(password));
+		ETH_CHECK(km.accounts().empty());
+		ETH_CHECK(km.load(password));
+		ETH_CHECK(km.import(kp.secret(), "test"));
 	}
 	{
 		KeyManager km(tmpDir.path() + "keysFile.json", tmpDir.path());
-		BOOST_CHECK(km.load(password));
+		ETH_CHECK(km.load(password));
 		Addresses addresses = km.accounts();
-		BOOST_CHECK(addresses.size() == 1 && addresses[0] == kp.address());
+		ETH_CHECK(addresses.size() == 1 && addresses[0] == kp.address());
 		km.kill(addresses[0]);
 	}
 	{
 		KeyManager km(tmpDir.path() + "keysFile.json", tmpDir.path());
-		BOOST_CHECK(km.load(password));
-		BOOST_CHECK(km.accounts().empty());
+		ETH_CHECK(km.load(password));
+		ETH_CHECK(km.accounts().empty());
 	}
 }
 

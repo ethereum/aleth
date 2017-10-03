@@ -50,14 +50,14 @@ std::set<bi::address> Network::getInterfaceAddresses()
 #if defined(_WIN32)
 	WSAData wsaData;
 	if (WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
-		BOOST_THROW_EXCEPTION(NoNetworking());
+		ETH_THROW_EXCEPTION(NoNetworking());
 
 	char ac[80];
 	if (gethostname(ac, sizeof(ac)) == SOCKET_ERROR)
 	{
 		clog(NetWarn) << "Error " << WSAGetLastError() << " when getting local host name.";
 		WSACleanup();
-		BOOST_THROW_EXCEPTION(NoNetworking());
+		ETH_THROW_EXCEPTION(NoNetworking());
 	}
 
 	struct hostent* phe = gethostbyname(ac);
@@ -65,7 +65,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
 	{
 		clog(NetWarn) << "Bad host lookup.";
 		WSACleanup();
-		BOOST_THROW_EXCEPTION(NoNetworking());
+		ETH_THROW_EXCEPTION(NoNetworking());
 	}
 
 	for (int i = 0; phe->h_addr_list[i] != 0; ++i)
@@ -82,7 +82,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
 #else
 	ifaddrs* ifaddr;
 	if (getifaddrs(&ifaddr) == -1)
-		BOOST_THROW_EXCEPTION(NoNetworking());
+		ETH_THROW_EXCEPTION(NoNetworking());
 
 	for (auto ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
 	{

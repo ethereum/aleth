@@ -25,8 +25,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 
-BOOST_AUTO_TEST_SUITE(LibSnark)
-
 namespace dev
 {
 namespace test
@@ -57,18 +55,20 @@ pair<bool, bytes> pairingprod_helper(bytes const& _input)
 bytes negateG1(bytes const& _input)
 {
 	auto ret = ecmul_helper(_input, groupOrder - 1);
-	BOOST_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.first);
 	return ret.second;
 }
 
 bytes addG1(bytes const& _x, bytes const& _y)
 {
 	auto ret = ecadd_helper(_x, _y);
-	BOOST_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.first);
 	return ret.second;
 }
 
 }
+
+BOOST_AUTO_TEST_SUITE(LibSnark)
 
 BOOST_AUTO_TEST_CASE(ecadd)
 {
@@ -76,13 +76,13 @@ BOOST_AUTO_TEST_CASE(ecadd)
 	bytes input(0x20 * 4, 0);
 	bytes expectation(0x20 * 2, 0);
 	auto result = alt_bn128_G1_add(ref(input));
-	BOOST_CHECK(result.first);
-	BOOST_CHECK(result.second == expectation);
+	ETH_CHECK(result.first);
+	ETH_CHECK(result.second == expectation);
 	// The same, truncated.
 	bytes empty;
 	result = alt_bn128_G1_add(ref(empty));
-	BOOST_CHECK(result.first);
-	BOOST_CHECK(result.second == expectation);
+	ETH_CHECK(result.first);
+	ETH_CHECK(result.second == expectation);
 }
 
 BOOST_AUTO_TEST_CASE(fieldPointInvalid)
@@ -90,20 +90,20 @@ BOOST_AUTO_TEST_CASE(fieldPointInvalid)
 	u256 const pMod{"21888242871839275222246405745257275088696311157297823662689037894645226208583"};
 
 	bytes input = toBigEndian(pMod);
-	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
-	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_mul(ref(input)).first);
 
 	input = toBigEndian(pMod + 1);
-	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
-	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_mul(ref(input)).first);
 
 	input = bytes(32, 0) + toBigEndian(pMod);
-	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
-	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_mul(ref(input)).first);
 
 	input = bytes(32, 0) + toBigEndian(pMod + 1);
-	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
-	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_add(ref(input)).first);
+	ETH_CHECK(!alt_bn128_G1_mul(ref(input)).first);
 }
 
 BOOST_AUTO_TEST_CASE(invalid)
@@ -116,11 +116,11 @@ BOOST_AUTO_TEST_CASE(invalid)
 
 	bytes input = x + invalid;
 	// This should fail because the point is not on the curve
-	BOOST_CHECK(!ecadd_helper(x, invalid).first);
-	BOOST_CHECK(!ecadd_helper(invalid, bytes()).first);
+	ETH_CHECK(!ecadd_helper(x, invalid).first);
+	ETH_CHECK(!ecadd_helper(invalid, bytes()).first);
 	// truncated, but valid
-	BOOST_CHECK(ecadd_helper(x, bytes()).first);
-	BOOST_CHECK(ecadd_helper(x, bytes()).second == x);
+	ETH_CHECK(ecadd_helper(x, bytes()).first);
+	ETH_CHECK(ecadd_helper(x, bytes()).second == x);
 }
 
 BOOST_AUTO_TEST_CASE(ecmul_add)
@@ -128,13 +128,13 @@ BOOST_AUTO_TEST_CASE(ecmul_add)
 	bytes x =
 		toBigEndian(u256("6851077925310461602867742977619883934042581405263014789956638244065803308498")) +
 		toBigEndian(u256("10336382210592135525880811046708757754106524561907815205241508542912494488506"));
-	BOOST_CHECK(ecadd_helper(x, x).first);
-	BOOST_CHECK(ecmul_helper(x, u256(2)).first);
+	ETH_CHECK(ecadd_helper(x, x).first);
+	ETH_CHECK(ecmul_helper(x, u256(2)).first);
 	// x + x == x * 2
-	BOOST_CHECK(ecadd_helper(x, x).second == ecmul_helper(x, u256(2)).second);
+	ETH_CHECK(ecadd_helper(x, x).second == ecmul_helper(x, u256(2)).second);
 	// x * -1 + x == 0
-	BOOST_CHECK(ecmul_helper(x, groupOrder - 1).first);
-	BOOST_CHECK(ecadd_helper(ecmul_helper(x, groupOrder - 1).second, x).second == bytes(0x40, 0));
+	ETH_CHECK(ecmul_helper(x, groupOrder - 1).first);
+	ETH_CHECK(ecadd_helper(ecmul_helper(x, groupOrder - 1).second, x).second == bytes(0x40, 0));
 }
 
 BOOST_AUTO_TEST_CASE(pairing)
@@ -280,58 +280,58 @@ BOOST_AUTO_TEST_CASE(pairing)
 	for (size_t i = 0; i < input.size(); ++i)
 	{
 		ret = ecmul_helper(vk.IC[i + 1], input[i]);
-		BOOST_REQUIRE(ret.first);
+		ETH_REQUIRE(ret.first);
 		ret = ecadd_helper(vkx, ret.second);
-		BOOST_REQUIRE(ret.first);
+		ETH_REQUIRE(ret.first);
 		vkx = ret.second;
 	}
 	ret = ecadd_helper(vkx, vk.IC[0]);
-	BOOST_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.first);
 	vkx = ret.second;
 
 	// Now run the pairing checks.
 	ret = pairingprod_helper(proof.A + vk.A + negateG1(proof.Ap) + P2);
-	BOOST_REQUIRE(ret.first);
-	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ETH_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.second == toBigEndian(u256(1)));
 	ret = pairingprod_helper(vk.B + proof.B + negateG1(proof.Bp) + P2);
-	BOOST_REQUIRE(ret.first);
-	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ETH_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.second == toBigEndian(u256(1)));
 	ret = pairingprod_helper(proof.C + vk.C + negateG1(proof.Cp) + P2);
-	BOOST_REQUIRE(ret.first);
-	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ETH_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.second == toBigEndian(u256(1)));
 	ret = pairingprod_helper(
 		proof.K + vk.gamma +
 		negateG1(addG1(vkx, addG1(proof.A, proof.C))) + vk.gammaBeta2 +
 		negateG1(vk.gammaBeta1) + proof.B
 	);
-	BOOST_REQUIRE(ret.first);
-	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ETH_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.second == toBigEndian(u256(1)));
 	ret = pairingprod_helper(
 		addG1(vkx, proof.A) + proof.B +
 		negateG1(proof.H) + vk.Z +
 		negateG1(proof.C) + P2
 	);
-	BOOST_REQUIRE(ret.first);
-	BOOST_REQUIRE(ret.second == toBigEndian(u256(1)));
+	ETH_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.second == toBigEndian(u256(1)));
 
 	// Just for the fun of it, try a wrong check.
 	ret = pairingprod_helper(proof.A + vk.A + proof.Ap + P2);
-	BOOST_REQUIRE(ret.first);
-	BOOST_REQUIRE(ret.second == toBigEndian(u256(0)));
+	ETH_REQUIRE(ret.first);
+	ETH_REQUIRE(ret.second == toBigEndian(u256(0)));
 }
 
 BOOST_AUTO_TEST_CASE(pairingNullInput)
 {
 	// TODO: Maybe the empty input should also be considered invalid?
 	auto r = pairingprod_helper({});
-	BOOST_CHECK(r.first);
+	ETH_CHECK(r.first);
 
 	r = pairingprod_helper(bytes(2 * 32 + 2 * 64, 0));
-	BOOST_CHECK(r.first);
+	ETH_CHECK(r.first);
 
 	// Invalid length of input.
 	r = pairingprod_helper(bytes(2 * 32 + 2 * 64 + 1, 0));
-	BOOST_CHECK(!r.first);
+	ETH_CHECK(!r.first);
 }
 
 BOOST_AUTO_TEST_CASE(generateRandomPoints)
@@ -342,56 +342,56 @@ BOOST_AUTO_TEST_CASE(generateRandomPoints)
 	bytes output;
 	bytes input = trivialPt + toBigEndian(u256(1));
 	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), toHex(trivialPt));
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), toHex(trivialPt));
 
 	input = trivialPt + toBigEndian(u256(123454352435654643));
 	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), "18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), "18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
 	bytes a = std::move(output);
 
 	input = trivialPt + toBigEndian(u256(653179013456575642));
 	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), "07c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), "07c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
 	bytes b = std::move(output);
 
 	input = a + b;
-	BOOST_CHECK_EQUAL(toHex(input), "18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f3726607c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
+	ETH_CHECK_EQUAL(toHex(input), "18b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f3726607c2b7f58a84bd6145f00c9c2bc0bb1a187f20ff2c92963a88019e7c6a014eed06614e20c147e940f2d70da3f74c9a17df361706a4485c742bd6788478fa17d7");
 	std::tie(success, output) = alt_bn128_G1_add(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), "2243525c5efd4b9c3d3c45ac0ca3fe4dd85e830a4ce6b65fa1eeaee202839703301d1d33be6da8e509df21cc35964723180eed7532537db9ae5e7d48f195c915");
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), "2243525c5efd4b9c3d3c45ac0ca3fe4dd85e830a4ce6b65fa1eeaee202839703301d1d33be6da8e509df21cc35964723180eed7532537db9ae5e7d48f195c915");
 	bytes c = std::move(output);
 
 	input = c + a;
-	BOOST_CHECK_EQUAL(toHex(input), "2243525c5efd4b9c3d3c45ac0ca3fe4dd85e830a4ce6b65fa1eeaee202839703301d1d33be6da8e509df21cc35964723180eed7532537db9ae5e7d48f195c91518b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
+	ETH_CHECK_EQUAL(toHex(input), "2243525c5efd4b9c3d3c45ac0ca3fe4dd85e830a4ce6b65fa1eeaee202839703301d1d33be6da8e509df21cc35964723180eed7532537db9ae5e7d48f195c91518b18acfb4c2c30276db5411368e7185b311dd124691610c5d3b74034e093dc9063c909c4720840cb5134cb9f59fa749755796819658d32efc0d288198f37266");
 	std::tie(success, output) = alt_bn128_G1_add(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), "2bd3e6d0f3b142924f5ca7b49ce5b9d54c4703d7ae5648e61d02268b1a0a9fb721611ce0a6af85915e2f1d70300909ce2e49dfad4a4619c8390cae66cefdb204");
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), "2bd3e6d0f3b142924f5ca7b49ce5b9d54c4703d7ae5648e61d02268b1a0a9fb721611ce0a6af85915e2f1d70300909ce2e49dfad4a4619c8390cae66cefdb204");
 	bytes d = std::move(output);
 
 	input = d + toBigEndian(u256(1230482048326178242));
-	BOOST_CHECK_EQUAL(toHex(input), "2bd3e6d0f3b142924f5ca7b49ce5b9d54c4703d7ae5648e61d02268b1a0a9fb721611ce0a6af85915e2f1d70300909ce2e49dfad4a4619c8390cae66cefdb20400000000000000000000000000000000000000000000000011138ce750fa15c2");
+	ETH_CHECK_EQUAL(toHex(input), "2bd3e6d0f3b142924f5ca7b49ce5b9d54c4703d7ae5648e61d02268b1a0a9fb721611ce0a6af85915e2f1d70300909ce2e49dfad4a4619c8390cae66cefdb20400000000000000000000000000000000000000000000000011138ce750fa15c2");
 	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), "070a8d6a982153cae4be29d434e8faef8a47b274a053f5a4ee2a6c9c13c31e5c031b8ce914eba3a9ffb989f9cdd5b0f01943074bf4f0f315690ec3cec6981afc");
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), "070a8d6a982153cae4be29d434e8faef8a47b274a053f5a4ee2a6c9c13c31e5c031b8ce914eba3a9ffb989f9cdd5b0f01943074bf4f0f315690ec3cec6981afc");
 	bytes e = std::move(output);
 
 	// Multiply by (p - 1).
 	input = e + toBigEndian(u256("21888242871839275222246405745257275088696311157297823662689037894645226208582"));
-	BOOST_CHECK_EQUAL(toHex(input), "070a8d6a982153cae4be29d434e8faef8a47b274a053f5a4ee2a6c9c13c31e5c031b8ce914eba3a9ffb989f9cdd5b0f01943074bf4f0f315690ec3cec6981afc30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46");
+	ETH_CHECK_EQUAL(toHex(input), "070a8d6a982153cae4be29d434e8faef8a47b274a053f5a4ee2a6c9c13c31e5c031b8ce914eba3a9ffb989f9cdd5b0f01943074bf4f0f315690ec3cec6981afc30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd46");
 	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), "025a6f4181d2b4ea8b724290ffb40156eb0adb514c688556eb79cdea0752c2bb2eff3f31dea215f1eb86023a133a996eb6300b44da664d64251d05381bb8a02e");
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), "025a6f4181d2b4ea8b724290ffb40156eb0adb514c688556eb79cdea0752c2bb2eff3f31dea215f1eb86023a133a996eb6300b44da664d64251d05381bb8a02e");
 	bytes f = std::move(output);
 
 	// Multiply by (p - 1) / 2.
 	input = f + toBigEndian(u256("10944121435919637611123202872628637544348155578648911831344518947322613104291"));
-	BOOST_CHECK_EQUAL(toHex(input), "025a6f4181d2b4ea8b724290ffb40156eb0adb514c688556eb79cdea0752c2bb2eff3f31dea215f1eb86023a133a996eb6300b44da664d64251d05381bb8a02e183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3");
+	ETH_CHECK_EQUAL(toHex(input), "025a6f4181d2b4ea8b724290ffb40156eb0adb514c688556eb79cdea0752c2bb2eff3f31dea215f1eb86023a133a996eb6300b44da664d64251d05381bb8a02e183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea3");
 	std::tie(success, output) = alt_bn128_G1_mul(ref(input));
-	BOOST_REQUIRE(success);
-	BOOST_CHECK_EQUAL(toHex(output), "14789d0d4a730b354403b5fac948113739e276c23e0258d8596ee72f9cd9d3230af18a63153e0ec25ff9f2951dd3fa90ed0197bfef6e2a1a62b5095b9d2b4a27");
+	ETH_REQUIRE(success);
+	ETH_CHECK_EQUAL(toHex(output), "14789d0d4a730b354403b5fac948113739e276c23e0258d8596ee72f9cd9d3230af18a63153e0ec25ff9f2951dd3fa90ed0197bfef6e2a1a62b5095b9d2b4a27");
 }
 
 BOOST_AUTO_TEST_CASE(benchECADD)
@@ -404,13 +404,13 @@ BOOST_AUTO_TEST_CASE(benchECADD)
 		bool success = false;
 		bytes output;
 		std::tie(success, output) = ecadd_helper(v, w);
-		BOOST_REQUIRE(success);
+		ETH_REQUIRE(success);
 		w = std::move(v);
 		v = std::move(output);
 	}
 
-	BOOST_CHECK_EQUAL(toHex(v), "07ac1ef4e12f6bc2a1c780aa31e3cbea913a3e24d92f0a936817fe825319ae2a2541c130d13107fd99e2aca8bb647f0a098449c9a45ef44be0c9dc5ad298f355");
-	BOOST_CHECK_EQUAL(toHex(w), "002d85fbe013fa580e85705ec058f4868db26e740e5262ac4bb7e2a579d61f381d56f11fb11cc3f6df6fe8f7dcd8a6483424ec9496fcfecf2fbb2c0c32955572");
+	ETH_CHECK_EQUAL(toHex(v), "07ac1ef4e12f6bc2a1c780aa31e3cbea913a3e24d92f0a936817fe825319ae2a2541c130d13107fd99e2aca8bb647f0a098449c9a45ef44be0c9dc5ad298f355");
+	ETH_CHECK_EQUAL(toHex(w), "002d85fbe013fa580e85705ec058f4868db26e740e5262ac4bb7e2a579d61f381d56f11fb11cc3f6df6fe8f7dcd8a6483424ec9496fcfecf2fbb2c0c32955572");
 }
 
 BOOST_AUTO_TEST_CASE(benchECMULRand)
@@ -424,11 +424,11 @@ BOOST_AUTO_TEST_CASE(benchECMULRand)
 		bool success = false;
 		bytes output;
 		std::tie(success, output) = ecmul_helper(v, k);
-		BOOST_REQUIRE(success);
+		ETH_REQUIRE(success);
 		v = std::move(output);
 	}
 
-	BOOST_CHECK_EQUAL(toHex(v), "0e9138e9515b63654de63453e2473362f9e1ef3b457f1b671dcb0513fc43c3b51dd4b43630c4b2835266c0c5c315d546efb53da04dc89fc6f125ff9958b0c7d2");
+	ETH_CHECK_EQUAL(toHex(v), "0e9138e9515b63654de63453e2473362f9e1ef3b457f1b671dcb0513fc43c3b51dd4b43630c4b2835266c0c5c315d546efb53da04dc89fc6f125ff9958b0c7d2");
 }
 
 BOOST_AUTO_TEST_CASE(benchECMULWorstCase1)
@@ -441,11 +441,11 @@ BOOST_AUTO_TEST_CASE(benchECMULWorstCase1)
 		bool success = false;
 		bytes output;
 		std::tie(success, output) = ecmul_helper(v, k);
-		BOOST_REQUIRE(success);
+		ETH_REQUIRE(success);
 		v = std::move(output);
 	}
 
-	BOOST_CHECK_EQUAL(toHex(v), "1701eb8c738f0f3a531d9b5468cbb7a9bb298c93d7c462bc5b06c69e78ee054927e136cbd59c7c29f6333105cee10066e0e1f83ecf376d97059cc311f82bdbd1");
+	ETH_CHECK_EQUAL(toHex(v), "1701eb8c738f0f3a531d9b5468cbb7a9bb298c93d7c462bc5b06c69e78ee054927e136cbd59c7c29f6333105cee10066e0e1f83ecf376d97059cc311f82bdbd1");
 }
 
 BOOST_AUTO_TEST_CASE(benchECMULWorstCase2)
@@ -458,11 +458,11 @@ BOOST_AUTO_TEST_CASE(benchECMULWorstCase2)
 		bool success = false;
 		bytes output;
 		std::tie(success, output) = ecmul_helper(v, k);
-		BOOST_REQUIRE(success);
+		ETH_REQUIRE(success);
 		v = std::move(output);
 	}
 
-	BOOST_CHECK_EQUAL(toHex(v), "002dd4014cc80a8b493f703a8cb6940b54795923e146ef15d264a7627c790d56303c653f248c7612e90683508da0f4a24dcc26825d1a124c0b912a9a217e0b0e");
+	ETH_CHECK_EQUAL(toHex(v), "002dd4014cc80a8b493f703a8cb6940b54795923e146ef15d264a7627c790d56303c653f248c7612e90683508da0f4a24dcc26825d1a124c0b912a9a217e0b0e");
 }
 
 BOOST_AUTO_TEST_CASE(benchECMULIdentity)
@@ -476,11 +476,11 @@ BOOST_AUTO_TEST_CASE(benchECMULIdentity)
 		bool success = false;
 		bytes output;
 		std::tie(success, output) = ecmul_helper(v, k);
-		BOOST_REQUIRE(success);
+		ETH_REQUIRE(success);
 		v = std::move(output);
 	}
 
-	BOOST_CHECK_EQUAL(toHex(v), toHex(w));
+	ETH_CHECK_EQUAL(toHex(v), toHex(w));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -48,7 +48,7 @@ struct NetworkPreferences
 	NetworkPreferences(std::string const& l, unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(), listenIPAddress(l), listenPort(lp), traverseNAT(u) {}
 
 	// Network Preferences with intended Public IP
-	NetworkPreferences(std::string const& publicIP, std::string const& l = std::string(), unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(publicIP), listenIPAddress(l), listenPort(lp), traverseNAT(u) { if (!publicIPAddress.empty() && !isPublicAddress(publicIPAddress)) BOOST_THROW_EXCEPTION(InvalidPublicIPAddress()); }
+	NetworkPreferences(std::string const& publicIP, std::string const& l = std::string(), unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(publicIP), listenIPAddress(l), listenPort(lp), traverseNAT(u) { if (!publicIPAddress.empty() && !isPublicAddress(publicIPAddress)) ETH_THROW_EXCEPTION(InvalidPublicIPAddress()); }
 
 	/// Addressing
 

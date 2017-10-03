@@ -209,7 +209,7 @@ void Executive::initialize(Transaction const& _transaction)
 		{
 			clog(ExecutiveWarnChannel) << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
 			m_excepted = TransactionException::InvalidNonce;
-			BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
+			ETH_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
 		}
 
 		// Avoid unaffordable transactions.
@@ -219,7 +219,7 @@ void Executive::initialize(Transaction const& _transaction)
 		{
 			clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
 			m_excepted = TransactionException::NotEnoughCash;
-			BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().hex()));
+			ETH_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().hex()));
 		}
 		m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 	}
@@ -408,7 +408,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 					m_res->depositSize = out.size();
 				}
 				if (out.size() > m_ext->evmSchedule().maxCodeSize)
-					BOOST_THROW_EXCEPTION(OutOfGas());
+				{
+					ETH_THROW_EXCEPTION(OutOfGas());
+				}
 				else if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
 				{
 					if (m_res)
@@ -418,7 +420,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 				else
 				{
 					if (m_ext->evmSchedule().exceptionalFailedCodeDeposit)
-						BOOST_THROW_EXCEPTION(OutOfGas());
+					{
+						ETH_THROW_EXCEPTION(OutOfGas());
+					}
 					else
 					{
 						if (m_res)

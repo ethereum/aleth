@@ -864,7 +864,7 @@ void Host::restoreNetwork(bytesConstRef _b)
 	
 	// nodes can only be added if network is added
 	if (!isStarted())
-		BOOST_THROW_EXCEPTION(NetworkStartRequired());
+		ETH_THROW_EXCEPTION(NetworkStartRequired());
 
 	if (m_dropPeers)
 		return;

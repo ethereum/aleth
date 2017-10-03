@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(output)
 
 	std::stringstream buffer;
 	buffer << bc.interface();
-	BOOST_REQUIRE(buffer.str().size() == 139);
+	ETH_REQUIRE(buffer.str().size() == 139);
 	buffer.str(std::string());
 }
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(opendb)
 	ChainParams p(genesisInfo(eth::Network::TransitionnetTest), genesis.bytes(), genesis.accountMap());
 	BlockChain bc(p, tempDirBlockchain.path(), WithExisting::Kill);
 	auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("DatabaseAlreadyOpen") != string::npos; };
-	BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
+	ETH_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
 }
 
 BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
 	block.addTransaction(tr);
 	block.mine(bc);
 	bc.addBlock(block);
-	BOOST_REQUIRE(bc.interface().transactions().size() > 0);
+	ETH_REQUIRE(bc.interface().transactions().size() > 0);
 }
 
 BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)
@@ -132,8 +132,8 @@ See https://github.com/ethereum/cpp-ethereum/issues/3256.
 	block3.addTransaction(tr3);
 	block3.mine(bc);
 	bc.addBlock(block3);
-	BOOST_REQUIRE(bc.interface().info().number() == 3);
-	BOOST_REQUIRE(bc.interface().info(uncleBlock.blockHeader().hash()) == uncleBlock.blockHeader());
+	ETH_REQUIRE(bc.interface().info().number() == 3);
+	ETH_REQUIRE(bc.interface().info(uncleBlock.blockHeader().hash()) == uncleBlock.blockHeader());
 }
 */
 
@@ -159,7 +159,7 @@ See https://github.com/ethereum/cpp-ethereum/issues/3059.
 	BlockQueue uncleBlockQueue;
 	uncleBlockQueue.setChain(bc2.interface());
 	ImportResult importIntoQueue = uncleBlockQueue.import(&block2.bytes(), false);
-	BOOST_REQUIRE(importIntoQueue == ImportResult::Success);
+	ETH_REQUIRE(importIntoQueue == ImportResult::Success);
 	this_thread::sleep_for(chrono::seconds(2));
 
 	BlockChain& bcRef = bc.interfaceUnsafe();
@@ -168,16 +168,16 @@ See https://github.com/ethereum/cpp-ethereum/issues/3059.
 	//Attempt import block5 to another blockchain
 	pair<ImportResult, ImportRoute> importAttempt;
 	importAttempt = bcRef.attemptImport(block2.bytes(), bc.testGenesis().state().db());
-	BOOST_REQUIRE(importAttempt.first == ImportResult::UnknownParent);
+	ETH_REQUIRE(importAttempt.first == ImportResult::UnknownParent);
 
 	//Insert block5 to another blockchain
 	auto is_critical = []( std::exception const& _e) { cnote << _e.what(); return true; };
-	BOOST_CHECK_EXCEPTION(bcRef.insert(block2.bytes(), block2.receipts()), UnknownParent, is_critical);
+	ETH_CHECK_EXCEPTION(bcRef.insert(block2.bytes(), block2.receipts()), UnknownParent, is_critical);
 
 	//Get status of block5 in the block queue based on block5's chain (block5 imported into queue but not imported into chain)
 	//BlockQueue(bc2) changed by sync function of original bc
 	QueueStatus status = uncleBlockQueue.blockStatus(block2.blockHeader().hash());
-	BOOST_REQUIRE_MESSAGE(status == QueueStatus::Bad, "Received Queue Status: " + toString(status) + " Expected Queue Status: " + toString(QueueStatus::Bad));
+	ETH_REQUIRE_MESSAGE(status == QueueStatus::Bad, "Received Queue Status: " + toString(status) + " Expected Queue Status: " + toString(QueueStatus::Bad));
 }
 */
 
@@ -195,10 +195,10 @@ BOOST_AUTO_TEST_CASE(insertWithoutParent)
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
 	bcRef.insertWithoutParent(block.bytes(), block.receipts(), 0x040000);
-	BOOST_CHECK_EQUAL(bcRef.number(), 10);
+	ETH_CHECK_EQUAL(bcRef.number(), 10);
 
 	bcRef.setChainStartBlockNumber(10);
-	BOOST_REQUIRE_EQUAL(bcRef.chainStartBlockNumber(), 10);
+	ETH_REQUIRE_EQUAL(bcRef.chainStartBlockNumber(), 10);
 }
 
 
@@ -225,14 +225,14 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 
 	BlockChain& bcRef = bc.interfaceUnsafe();
 	bcRef.sync(uncleBlockQueue, bc.testGenesis().state().db(), unsigned(4));
-	BOOST_REQUIRE(uncleBlockQueue.blockStatus(uncleBlock.blockHeader().hash()) == QueueStatus::Unknown);
+	ETH_REQUIRE(uncleBlockQueue.blockStatus(uncleBlock.blockHeader().hash()) == QueueStatus::Unknown);
 
 	pair<ImportResult, ImportRoute> importAttempt;
 	importAttempt = bcRef.attemptImport(uncleBlock.bytes(), bc.testGenesis().state().db());
-	BOOST_REQUIRE(importAttempt.first == ImportResult::FutureTimeKnown);
+	ETH_REQUIRE(importAttempt.first == ImportResult::FutureTimeKnown);
 
 	auto is_critical = []( std::exception const& _e) { cnote << _e.what(); return true; };
-	BOOST_CHECK_EXCEPTION(bcRef.insert(uncleBlock.bytes(), uncleBlock.receipts()), FutureTime, is_critical);
+	ETH_CHECK_EXCEPTION(bcRef.insert(uncleBlock.bytes(), uncleBlock.receipts()), FutureTime, is_critical);
 }
 
 bool onBadwasCalled = false;
@@ -262,16 +262,16 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 	bcRef.setOnBad(onBad);
 
 	importAttempt = bcRef.attemptImport(block.bytes(), bc.testGenesis().state().db());
-	BOOST_REQUIRE(importAttempt.first == ImportResult::Success);
+	ETH_REQUIRE(importAttempt.first == ImportResult::Success);
 
 	importAttempt = bcRef.attemptImport(block.bytes(), bc.testGenesis().state().db());
-	BOOST_REQUIRE(importAttempt.first == ImportResult::AlreadyKnown);
+	ETH_REQUIRE(importAttempt.first == ImportResult::AlreadyKnown);
 
 	bytes blockBytes = block.bytes();
 	blockBytes[0] = 0;
 	importAttempt = bcRef.attemptImport(blockBytes, bc.testGenesis().state().db());
-	BOOST_REQUIRE(importAttempt.first == ImportResult::Malformed);
-	BOOST_REQUIRE(onBadwasCalled == true);
+	ETH_REQUIRE(importAttempt.first == ImportResult::Malformed);
+	ETH_REQUIRE(onBadwasCalled == true);
 }
 
 BOOST_AUTO_TEST_CASE(insert)
@@ -295,11 +295,11 @@ BOOST_AUTO_TEST_CASE(insert)
 	bytesConstRef receiptRef(&receipt[0], receipt.size());
 
 	auto is_critical = [](std::exception const& _e) { return string(_e.what()).find("InvalidBlockFormat") != string::npos; };
-	BOOST_CHECK_EXCEPTION(bcRef.insert(bl.blockData(), receiptRef), InvalidBlockFormat, is_critical);
+	ETH_CHECK_EXCEPTION(bcRef.insert(bl.blockData(), receiptRef), InvalidBlockFormat, is_critical);
 	auto is_critical2 = [](std::exception const& _e) { return string(_e.what()).find("InvalidReceiptsStateRoot") != string::npos; };
-	BOOST_CHECK_EXCEPTION(bcRef.insert(block.bytes(), receiptRef), InvalidReceiptsStateRoot, is_critical2);
+	ETH_CHECK_EXCEPTION(bcRef.insert(block.bytes(), receiptRef), InvalidReceiptsStateRoot, is_critical2);
 
-	BOOST_REQUIRE(bcRef.number() == 0);
+	ETH_REQUIRE(bcRef.number() == 0);
 
 	bcRef.insert(block.bytes(), block.receipts());
 }
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(insertException)
 	bc.addBlock(block);
 
 	auto is_critical = [](std::exception const& _e) { cnote << _e.what(); return true; };
-	BOOST_CHECK_EXCEPTION(bcRef.insert(block.bytes(), block.receipts()), AlreadyHaveBlock, is_critical);
+	ETH_CHECK_EXCEPTION(bcRef.insert(block.bytes(), block.receipts()), AlreadyHaveBlock, is_critical);
 }
 
 BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 
 	BlockChain& bcRef = bc.interfaceUnsafe();
 	bcRef.rescue(bc.testGenesis().state().db());
-	BOOST_CHECK_EQUAL(bcRef.number(), 3);
+	ETH_CHECK_EQUAL(bcRef.number(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -363,13 +363,13 @@ BOOST_AUTO_TEST_CASE(updateStats)
 
 	BlockChain::Statistics stat = bcRef.usage();
 	//Absolutely random values here!
-	//BOOST_REQUIRE(stat.memBlockHashes == 0);
-	//BOOST_REQUIRE(stat.memBlocks == 1); //incorrect value here
-	//BOOST_REQUIRE(stat.memDetails == 0);
-	//BOOST_REQUIRE(stat.memLogBlooms == 0);
-	//BOOST_REQUIRE(stat.memReceipts == 0);
-	//BOOST_REQUIRE(stat.memTotal() == 0);
-	//BOOST_REQUIRE(stat.memTransactionAddresses == 0); //incorrect value here
+	//ETH_REQUIRE(stat.memBlockHashes == 0);
+	//ETH_REQUIRE(stat.memBlocks == 1); //incorrect value here
+	//ETH_REQUIRE(stat.memDetails == 0);
+	//ETH_REQUIRE(stat.memLogBlooms == 0);
+	//ETH_REQUIRE(stat.memReceipts == 0);
+	//ETH_REQUIRE(stat.memTotal() == 0);
+	//ETH_REQUIRE(stat.memTransactionAddresses == 0); //incorrect value here
 
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
@@ -378,13 +378,13 @@ BOOST_AUTO_TEST_CASE(updateStats)
 	bc.addBlock(block);
 
 	stat = bcRef.usage(true);
-	BOOST_REQUIRE_EQUAL(stat.memBlockHashes, 0);
-	BOOST_REQUIRE_EQUAL(stat.memBlocks, 675);
-	BOOST_REQUIRE_EQUAL(stat.memDetails, 138);
-	BOOST_REQUIRE_EQUAL(stat.memLogBlooms, 8422);
-	BOOST_REQUIRE_EQUAL(stat.memReceipts, 0);
-	BOOST_REQUIRE_EQUAL(stat.memTotal(), 9235);
-	BOOST_REQUIRE_EQUAL(stat.memTransactionAddresses, 0);
+	ETH_REQUIRE_EQUAL(stat.memBlockHashes, 0);
+	ETH_REQUIRE_EQUAL(stat.memBlocks, 675);
+	ETH_REQUIRE_EQUAL(stat.memDetails, 138);
+	ETH_REQUIRE_EQUAL(stat.memLogBlooms, 8422);
+	ETH_REQUIRE_EQUAL(stat.memReceipts, 0);
+	ETH_REQUIRE_EQUAL(stat.memTotal(), 9235);
+	ETH_REQUIRE_EQUAL(stat.memTransactionAddresses, 0);
 
 	//memchache size 33554432 - 3500 blocks before cache to be cleared
 	bcRef.garbageCollect(true);
@@ -394,14 +394,14 @@ BOOST_AUTO_TEST_CASE(invalidJsonThrows)
 {
 	h256 emptyStateRoot;
 	/* Below, a comma is missing between fields. */
-	BOOST_CHECK_THROW(ChainParams("{ \"sealEngine\" : \"unknown\" \"accountStartNonce\" : \"3\" }", emptyStateRoot), json_spirit::Error_position);
+	ETH_CHECK_THROW(ChainParams("{ \"sealEngine\" : \"unknown\" \"accountStartNonce\" : \"3\" }", emptyStateRoot), json_spirit::Error_position);
 }
 
 BOOST_AUTO_TEST_CASE(unknownFieldThrows)
 {
 	h256 emptyStateRoot;
 	/* Below, an unknown field is passed. */
-	BOOST_CHECK_THROW(ChainParams("{ \"usuallyNotThere\" : \"unknown\" }", emptyStateRoot), UnknownField);
+	ETH_CHECK_THROW(ChainParams("{ \"usuallyNotThere\" : \"unknown\" }", emptyStateRoot), UnknownField);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -28,6 +28,6 @@ void dev::validateFieldNames(json_spirit::mObject const& _obj, std::set<std::str
 		{
 			std::string const comment = "Unknown field in config: " + elm.first;
 			std::cerr << comment << "\n";
-			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
+			ETH_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
 		}
 }

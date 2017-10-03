@@ -85,12 +85,12 @@ void BasicAuthority::verify(Strictness _s, BlockHeader const& _bi, BlockHeader c
 	{
 		InvalidBlockNonce ex;
 		ex << errinfo_hash256(_bi.hash(WithoutSeal));
-		BOOST_THROW_EXCEPTION(ex);
+		ETH_THROW_EXCEPTION(ex);
 	}
 	else if (_s == QuickNonce && _bi.parentHash() && !SignatureStruct(sig(_bi)).isValid())
 	{
 		InvalidBlockNonce ex;
 		ex << errinfo_hash256(_bi.hash(WithoutSeal));
-		BOOST_THROW_EXCEPTION(ex);
+		ETH_THROW_EXCEPTION(ex);
 	}
 }

@@ -106,7 +106,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 	auto u256Safe = [](std::string const& s) -> u256 {
 		bigint ret(s);
 		if (ret >= bigint(1) << 256)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State value is equal or greater than 2**256") );
+			ETH_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State value is equal or greater than 2**256") );
 		return (u256)ret;
 	};
 

@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(hexPrefix_test)
 	cnote << "Testing Hex-Prefix-Encode...";
 	js::mValue v;
 	string const s = contentsString(testPath / fs::path("hexencodetest.json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content from 'hexencodetest.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	ETH_REQUIRE_MESSAGE(s.length() > 0, "Content from 'hexencodetest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
 	{
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(hexPrefix_test)
 		for (auto& i: o["seq"].get_array())
 			v.push_back((byte)i.get_int());
 		auto e = hexPrefixEncode(v, o["term"].get_bool());
-		BOOST_REQUIRE( ! o["out"].is_null() );
-		BOOST_CHECK( o["out"].get_str() == toHex(e) );
+		ETH_REQUIRE( ! o["out"].is_null() );
+		ETH_CHECK( o["out"].get_str() == toHex(e) );
 	}
 }
 
@@ -90,10 +90,10 @@ BOOST_AUTO_TEST_CASE(base64)
 		auto expectedEncoded = std::string{s_tests[i][1]};
 
 		auto encoded = toBase64(expectedDecoded);
-		BOOST_CHECK_EQUAL(expectedEncoded, encoded);
+		ETH_CHECK_EQUAL(expectedEncoded, encoded);
 		auto decodedBytes = fromBase64(expectedEncoded);
 		auto decoded = bytesConstRef{decodedBytes.data(), decodedBytes.size()}.toString();
-		BOOST_CHECK_EQUAL(decoded, expectedDecoded);
+		ETH_CHECK_EQUAL(decoded, expectedDecoded);
 	}
 }
 

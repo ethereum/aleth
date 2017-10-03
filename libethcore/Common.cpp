@@ -62,7 +62,7 @@ Address toAddress(std::string const& _s)
 			return Address(b);
 	}
 	catch (BadHexCharacter&) {}
-	BOOST_THROW_EXCEPTION(InvalidAddress());
+	ETH_THROW_EXCEPTION(InvalidAddress());
 }
 
 vector<pair<u256, string>> const& units()

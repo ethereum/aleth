@@ -271,7 +271,7 @@ bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iteratio
 		_salt.size(),
 		_iterations
 	) != _iterations)
-		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
+		ETH_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
 	return ret;
 }
 
@@ -289,7 +289,7 @@ bytesSec dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, 
 		ret.writable().data(),
 		_dkLen
 	) != 0)
-		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
+		ETH_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
 	return ret;
 }
 
@@ -326,7 +326,7 @@ h256 crypto::kdf(Secret const& _priv, h256 const& _hash)
 	sha3(s.ref(), s.ref());
 	
 	if (!s || !_hash || !_priv)
-		BOOST_THROW_EXCEPTION(InvalidState());
+		ETH_THROW_EXCEPTION(InvalidState());
 	return s;
 }
 
@@ -337,7 +337,7 @@ Secret Nonce::next()
 	{
 		m_value = Secret::random();
 		if (!m_value)
-			BOOST_THROW_EXCEPTION(InvalidState());
+			ETH_THROW_EXCEPTION(InvalidState());
 	}
 	m_value = sha3Secure(m_value.ref());
 	return sha3(~m_value);

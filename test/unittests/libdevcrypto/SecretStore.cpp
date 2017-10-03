@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 	cnote << "Testing Key Store...";
 	js::mValue v;
 	string const s = contentsString(testPath / fs::path("basic_tests.json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'KeyStoreTests/basic_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	ETH_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'KeyStoreTests/basic_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
 	{
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 		cdebug << "read uuid" << u;
 		bytesSec s = store.secret(u, [&](){ return o["password"].get_str(); });
 		cdebug << "got secret" << toHex(s.makeInsecure());
-		BOOST_REQUIRE_EQUAL(toHex(s.makeInsecure()), o["priv"].get_str());
+		ETH_REQUIRE_EQUAL(toHex(s.makeInsecure()), o["priv"].get_str());
 	}
 }
 
@@ -90,19 +90,19 @@ BOOST_AUTO_TEST_CASE(import_key_from_file)
 	h128 uuid;
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		ETH_CHECK_EQUAL(store.keys().size(), 0);
 		uuid = store.importKey(importFile);
-		BOOST_CHECK(!!uuid);
-		BOOST_CHECK(contentsString(importFile) == keyData);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK(!!uuid);
+		ETH_CHECK(contentsString(importFile) == keyData);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
 	}
 	fs::remove(importFile);
 	// now do it again to check whether SecretStore properly stored it on disk
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
 	}
 }
 
@@ -116,16 +116,16 @@ BOOST_AUTO_TEST_CASE(import_secret)
 		h128 uuid;
 		{
 			SecretStore store(storeDir.path());
-			BOOST_CHECK_EQUAL(store.keys().size(), 0);
+			ETH_CHECK_EQUAL(store.keys().size(), 0);
 			uuid = store.importSecret(bytesSec(fromHex(priv)), password);
-			BOOST_CHECK(!!uuid);
-			BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-			BOOST_CHECK_EQUAL(store.keys().size(), 1);
+			ETH_CHECK(!!uuid);
+			ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+			ETH_CHECK_EQUAL(store.keys().size(), 1);
 		}
 		{
 			SecretStore store(storeDir.path());
-			BOOST_CHECK_EQUAL(store.keys().size(), 1);
-			BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+			ETH_CHECK_EQUAL(store.keys().size(), 1);
+			ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
 		}
 	}
 }
@@ -140,17 +140,17 @@ BOOST_AUTO_TEST_CASE(import_secret_bytesConstRef)
 		h128 uuid;
 		{
 			SecretStore store(storeDir.path());
-			BOOST_CHECK_EQUAL(store.keys().size(), 0);
+			ETH_CHECK_EQUAL(store.keys().size(), 0);
 			bytes privateBytes = fromHex(priv);
 			uuid = store.importSecret(&privateBytes, password);
-			BOOST_CHECK(!!uuid);
-			BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-			BOOST_CHECK_EQUAL(store.keys().size(), 1);
+			ETH_CHECK(!!uuid);
+			ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+			ETH_CHECK_EQUAL(store.keys().size(), 1);
 		}
 		{
 			SecretStore store(storeDir.path());
-			BOOST_CHECK_EQUAL(store.keys().size(), 1);
-			BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+			ETH_CHECK_EQUAL(store.keys().size(), 1);
+			ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
 		}
 	}
 }
@@ -165,18 +165,18 @@ BOOST_AUTO_TEST_CASE(wrong_password)
 	h128 uuid;
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		ETH_CHECK_EQUAL(store.keys().size(), 0);
 		uuid = store.importSecret(bytesSec(fromHex(priv)), password);
-		BOOST_CHECK(!!uuid);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK(!!uuid);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
 		// password will not be queried
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return "abcdefg"; }).makeInsecure()));
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return "abcdefg"; }).makeInsecure()));
 	}
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK(store.secret(uuid, [&](){ return "abcdefg"; }).empty());
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK(store.secret(uuid, [&](){ return "abcdefg"; }).empty());
 	}
 }
 
@@ -191,28 +191,28 @@ BOOST_AUTO_TEST_CASE(recode)
 	h128 uuid;
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		ETH_CHECK_EQUAL(store.keys().size(), 0);
 		uuid = store.importSecret(bytesSec(fromHex(priv)), password);
-		BOOST_CHECK(!!uuid);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK(!!uuid);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
 	}
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK(store.secret(uuid, [&](){ return "abcdefg"; }).empty());
-		BOOST_CHECK(store.recode(uuid, changedPassword, [&](){ return password; }));
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return changedPassword; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK(store.secret(uuid, [&](){ return "abcdefg"; }).empty());
+		ETH_CHECK(store.recode(uuid, changedPassword, [&](){ return password; }));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return changedPassword; }).makeInsecure()));
 		store.clearCache();
-		BOOST_CHECK(store.secret(uuid, [&](){ return password; }).empty());
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return changedPassword; }).makeInsecure()));
+		ETH_CHECK(store.secret(uuid, [&](){ return password; }).empty());
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return changedPassword; }).makeInsecure()));
 	}
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK(store.secret(uuid, [&](){ return password; }).empty());
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return changedPassword; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK(store.secret(uuid, [&](){ return password; }).empty());
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return changedPassword; }).makeInsecure()));
 	}
 }
 
@@ -243,14 +243,14 @@ BOOST_AUTO_TEST_CASE(keyImport_PBKDF2SHA256, *utf::expected_failures(1))
 	h128 uuid;
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		ETH_CHECK_EQUAL(store.keys().size(), 0);
 		uuid = store.importKey(importFile);
-		BOOST_CHECK(!!uuid);
-		BOOST_CHECK_EQUAL(uuid, h128("3198bc9c66725ab3d9954942343ae5b6"));
-		BOOST_CHECK(contentsString(importFile) == keyData);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
+		ETH_CHECK(!!uuid);
+		ETH_CHECK_EQUAL(uuid, h128("3198bc9c66725ab3d9954942343ae5b6"));
+		ETH_CHECK(contentsString(importFile) == keyData);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
 	}
 	fs::remove(importFile);
 }
@@ -282,14 +282,14 @@ BOOST_AUTO_TEST_CASE(keyImport_Scrypt, *utf::expected_failures(1))
 	h128 uuid;
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		ETH_CHECK_EQUAL(store.keys().size(), 0);
 		uuid = store.importKey(importFile);
-		BOOST_CHECK(!!uuid);
-		BOOST_CHECK_EQUAL(uuid, h128("3198bc9c66725ab3d9954942343ae5b6"));
-		BOOST_CHECK(contentsString(importFile) == keyData);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
+		ETH_CHECK(!!uuid);
+		ETH_CHECK_EQUAL(uuid, h128("3198bc9c66725ab3d9954942343ae5b6"));
+		ETH_CHECK(contentsString(importFile) == keyData);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
 	}
 	fs::remove(importFile);
 }
@@ -321,14 +321,14 @@ BOOST_AUTO_TEST_CASE(keyImport__ScryptV2, *utf::expected_failures(2))
 	h128 uuid;
 	{
 		SecretStore store(storeDir.path());
-		BOOST_CHECK_EQUAL(store.keys().size(), 0);
+		ETH_CHECK_EQUAL(store.keys().size(), 0);
 		uuid = store.importKey(importFile);
-		BOOST_CHECK(!!uuid);
-		BOOST_CHECK_EQUAL(uuid, h128("0498f19a59db4d54ac9533901b4f1870"));
-		BOOST_CHECK(contentsString(importFile) == keyData);
-		BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
-		BOOST_CHECK_EQUAL(store.keys().size(), 1);
-		BOOST_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
+		ETH_CHECK(!!uuid);
+		ETH_CHECK_EQUAL(uuid, h128("0498f19a59db4d54ac9533901b4f1870"));
+		ETH_CHECK(contentsString(importFile) == keyData);
+		ETH_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		ETH_CHECK_EQUAL(store.keys().size(), 1);
+		ETH_CHECK_EQUAL(store.address(uuid), Address("008aeeda4d805471df9b2a5b0f38a0c3bcba786b"));
 	}
 	fs::remove(importFile);
 }

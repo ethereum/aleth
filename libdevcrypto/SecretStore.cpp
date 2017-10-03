@@ -338,7 +338,7 @@ string SecretStore::encrypt(bytesConstRef _v, string const& _pass, KDF _kdf)
 
 	bytesSec derivedKey = deriveNewKey(_pass, _kdf, ret);
 	if (derivedKey.empty())
-		BOOST_THROW_EXCEPTION(crypto::CryptoException() << errinfo_comment("Key derivation failed."));
+		ETH_THROW_EXCEPTION(crypto::CryptoException() << errinfo_comment("Key derivation failed."));
 
 	ret["cipher"] = "aes-128-ctr";
 	SecureFixedHash<16> key(derivedKey, h128::AlignLeft);
@@ -352,7 +352,7 @@ string SecretStore::encrypt(bytesConstRef _v, string const& _pass, KDF _kdf)
 	// cipher text
 	bytes cipherText = encryptSymNoAuth(key, iv, _v);
 	if (cipherText.empty())
-		BOOST_THROW_EXCEPTION(crypto::CryptoException() << errinfo_comment("Key encryption failed."));
+		ETH_THROW_EXCEPTION(crypto::CryptoException() << errinfo_comment("Key encryption failed."));
 	ret["ciphertext"] = toHex(cipherText);
 
 	// and mac.

@@ -32,14 +32,18 @@ RLP::RLP(bytesConstRef _d, Strictness _s):
 	if ((_s & FailIfTooBig) && actualSize() < _d.size())
 	{
 		if (_s & ThrowOnFail)
-			BOOST_THROW_EXCEPTION(OversizeRLP());
+		{
+			ETH_THROW_EXCEPTION(OversizeRLP());
+		}
 		else
 			m_data.reset();
 	}
 	if ((_s & FailIfTooSmall) && actualSize() > _d.size())
 	{
 		if (_s & ThrowOnFail)
-			BOOST_THROW_EXCEPTION(UndersizeRLP());
+		{
+			ETH_THROW_EXCEPTION(UndersizeRLP());
+		}
 		else
 			m_data.reset();
 	}
@@ -96,7 +100,9 @@ RLPs RLP::toList(int _flags) const
 	if (!isList())
 	{
 		if (_flags & ThrowOnFail)
-			BOOST_THROW_EXCEPTION(BadCast());
+		{
+			ETH_THROW_EXCEPTION(BadCast());
+		}
 		else
 			return ret;
 	}
@@ -119,14 +125,20 @@ size_t RLP::actualSize() const
 void RLP::requireGood() const
 {
 	if (isNull())
-		BOOST_THROW_EXCEPTION(BadRLP());
+	{
+		ETH_THROW_EXCEPTION(BadRLP());
+	}
 	byte n = m_data[0];
 	if (n != c_rlpDataImmLenStart + 1)
 		return;
 	if (m_data.size() < 2)
-		BOOST_THROW_EXCEPTION(BadRLP());
+	{
+		ETH_THROW_EXCEPTION(BadRLP());
+	}
 	if (m_data[1] < c_rlpDataImmLenStart)
-		BOOST_THROW_EXCEPTION(BadRLP());
+	{
+		ETH_THROW_EXCEPTION(BadRLP());
+	}
 }
 
 bool RLP::isInt() const
@@ -142,13 +154,17 @@ bool RLP::isInt() const
 	else if (n <= c_rlpDataIndLenZero)
 	{
 		if (m_data.size() <= 1)
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 		return m_data[1] != 0;
 	}
 	else if (n < c_rlpListStart)
 	{
 		if (m_data.size() <= size_t(1 + n - c_rlpDataIndLenZero))
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 		return m_data[1 + n - c_rlpDataIndLenZero] != 0;
 	}
 	else
@@ -170,22 +186,32 @@ size_t RLP::length() const
 	else if (n < c_rlpListStart)
 	{
 		if (m_data.size() <= size_t(n - c_rlpDataIndLenZero))
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 		if (m_data.size() > 1)
 			if (m_data[1] == 0)
-				BOOST_THROW_EXCEPTION(BadRLP());
+			{
+				ETH_THROW_EXCEPTION(BadRLP());
+			}
 		unsigned lengthSize = n - c_rlpDataIndLenZero;
 		if (lengthSize > sizeof(ret))
+		{
 			// We did not check, but would most probably not fit in our memory.
-			BOOST_THROW_EXCEPTION(UndersizeRLP());
+			ETH_THROW_EXCEPTION(UndersizeRLP());
+		}
 		// No leading zeroes.
 		if (!m_data[1])
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 		for (unsigned i = 0; i < lengthSize; ++i)
 			ret = (ret << 8) | m_data[i + 1];
 		// Must be greater than the limit.
 		if (ret < c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes)
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 	}
 	else if (n <= c_rlpListIndLenZero)
 		return n - c_rlpListStart;
@@ -193,24 +219,36 @@ size_t RLP::length() const
 	{
 		unsigned lengthSize = n - c_rlpListIndLenZero;
 		if (m_data.size() <= lengthSize)
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 		if (m_data.size() > 1)
 			if (m_data[1] == 0)
-				BOOST_THROW_EXCEPTION(BadRLP());
+			{
+				ETH_THROW_EXCEPTION(BadRLP());
+			}
 		if (lengthSize > sizeof(ret))
+		{
 			// We did not check, but would most probably not fit in our memory.
-			BOOST_THROW_EXCEPTION(UndersizeRLP());
+			ETH_THROW_EXCEPTION(UndersizeRLP());
+		}
 		if (!m_data[1])
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 		for (unsigned i = 0; i < lengthSize; ++i)
 			ret = (ret << 8) | m_data[i + 1];
 		if (ret < 0x100 - c_rlpListStart - c_rlpMaxLengthBytes)
-			BOOST_THROW_EXCEPTION(BadRLP());
+		{
+			ETH_THROW_EXCEPTION(BadRLP());
+		}
 	}
 	// We have to be able to add payloadOffset to length without overflow.
 	// This rejects roughly 4GB-sized RLPs on some platforms.
 	if (ret >= std::numeric_limits<size_t>::max() - 0x100)
-		BOOST_THROW_EXCEPTION(UndersizeRLP());
+	{
+		ETH_THROW_EXCEPTION(UndersizeRLP());
+	}
 	return ret;
 }
 
@@ -242,7 +280,9 @@ void RLPStream::noteAppended(size_t _itemCount)
 	while (m_listStack.size())
 	{
 		if (m_listStack.back().first < _itemCount)
-			BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("itemCount too large") << RequirementError((bigint)m_listStack.back().first, (bigint)_itemCount));
+		{
+			ETH_THROW_EXCEPTION(RLPException() << errinfo_comment("itemCount too large") << RequirementError((bigint)m_listStack.back().first, (bigint)_itemCount));
+		}
 		m_listStack.back().first -= _itemCount;
 		if (m_listStack.back().first)
 			break;
@@ -267,7 +307,9 @@ void RLPStream::noteAppended(size_t _itemCount)
 					*(b--) = (byte)s;
 			}
 			else
-				BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("itemCount too large for RLP"));
+			{
+				ETH_THROW_EXCEPTION(RLPException() << errinfo_comment("itemCount too large for RLP"));
+			}
 		}
 		_itemCount = 1;	// for all following iterations, we've effectively appended a single item only since we completed a list.
 	}
@@ -329,7 +371,9 @@ RLPStream& RLPStream::append(bigint _i)
 		{
 			auto brbr = bytesRequired(br);
 			if (c_rlpDataIndLenZero + brbr > 0xff)
-				BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("Number too large for RLP"));
+			{
+				ETH_THROW_EXCEPTION(RLPException() << errinfo_comment("Number too large for RLP"));
+			}
 			m_out.push_back((byte)(c_rlpDataIndLenZero + brbr));
 			pushInt(br, brbr);
 		}
@@ -343,7 +387,9 @@ void RLPStream::pushCount(size_t _count, byte _base)
 {
 	auto br = bytesRequired(_count);
 	if (int(br) + _base > 0xff)
-		BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("Count too large for RLP"));
+	{
+		ETH_THROW_EXCEPTION(RLPException() << errinfo_comment("Count too large for RLP"));
+	}
 	m_out.push_back((byte)(br + _base));	// max 8 bytes.
 	pushInt(_count, br);
 }

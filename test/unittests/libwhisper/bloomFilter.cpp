@@ -34,30 +34,30 @@ using TopicBloomFilterTest = TopicBloomFilterBase<TopicBloomFilterSize>;
 
 void testAddNonExisting(TopicBloomFilterShort& _f, AbridgedTopic const& _h)
 {
-	BOOST_REQUIRE(!_f.containsRaw(_h));
+	ETH_REQUIRE(!_f.containsRaw(_h));
 	_f.addRaw(_h);
-	BOOST_REQUIRE(_f.containsRaw(_h));
+	ETH_REQUIRE(_f.containsRaw(_h));
 }
 
 void testRemoveExisting(TopicBloomFilterShort& _f, AbridgedTopic const& _h)
 {
-	BOOST_REQUIRE(_f.containsRaw(_h));
+	ETH_REQUIRE(_f.containsRaw(_h));
 	_f.removeRaw(_h);
-	BOOST_REQUIRE(!_f.containsRaw(_h));
+	ETH_REQUIRE(!_f.containsRaw(_h));
 }
 
 void testAddNonExistingBloom(TopicBloomFilterShort& _f, AbridgedTopic const& _h)
 {
-	BOOST_REQUIRE(!_f.containsBloom(_h));
+	ETH_REQUIRE(!_f.containsBloom(_h));
 	_f.addBloom(_h);
-	BOOST_REQUIRE(_f.containsBloom(_h));
+	ETH_REQUIRE(_f.containsBloom(_h));
 }
 
 void testRemoveExistingBloom(TopicBloomFilterShort& _f, AbridgedTopic const& _h)
 {
-	BOOST_REQUIRE(_f.containsBloom(_h));
+	ETH_REQUIRE(_f.containsBloom(_h));
 	_f.removeBloom(_h);
-	BOOST_REQUIRE(!_f.containsBloom(_h));
+	ETH_REQUIRE(!_f.containsBloom(_h));
 }
 
 double calculateExpected(TopicBloomFilterTest const& f, int n)
@@ -100,7 +100,7 @@ double testFalsePositiveRate(TopicBloomFilterTest const& f, int inserted, Topic&
 	double allowed = expected * 1.2 + 0.05; // allow deviations ~25%
 
 	//cnote << "Inserted: " << inserted << ", False Positive Rate: " << res << ", Expected: " << expected;
-	BOOST_REQUIRE(res <= allowed);
+	ETH_REQUIRE(res <= allowed);
 	return expected;
 }
 
@@ -180,79 +180,79 @@ BOOST_AUTO_TEST_CASE(dummyTest)
 //	testAddNonExisting(f, b00010000);
 //	testAddNonExisting(f, b00011000);
 //	testAddNonExisting(f, b00110000);
-//	BOOST_REQUIRE(f.contains(b00111000));
+//	ETH_REQUIRE(f.contains(b00111000));
 //	testAddNonExisting(f, b00110010);
 //	testAddNonExisting(f, b00000110);
-//	BOOST_REQUIRE(f.contains(b00110110));
-//	BOOST_REQUIRE(f.contains(b00110111));
+//	ETH_REQUIRE(f.contains(b00110110));
+//	ETH_REQUIRE(f.contains(b00110111));
 
 //	f.removeRaw(b00000001);
 //	f.removeRaw(b00000001);
 //	f.removeRaw(b00000001);
-//	BOOST_REQUIRE(!f.contains(b00000001));
-//	BOOST_REQUIRE(f.contains(b00010000));
-//	BOOST_REQUIRE(f.contains(b00011000));
-//	BOOST_REQUIRE(f.contains(b00110000));
-//	BOOST_REQUIRE(f.contains(b00110010));
-//	BOOST_REQUIRE(f.contains(b00111000));
-//	BOOST_REQUIRE(f.contains(b00000110));
-//	BOOST_REQUIRE(f.contains(b00110110));
-//	BOOST_REQUIRE(!f.contains(b00110111));
+//	ETH_REQUIRE(!f.contains(b00000001));
+//	ETH_REQUIRE(f.contains(b00010000));
+//	ETH_REQUIRE(f.contains(b00011000));
+//	ETH_REQUIRE(f.contains(b00110000));
+//	ETH_REQUIRE(f.contains(b00110010));
+//	ETH_REQUIRE(f.contains(b00111000));
+//	ETH_REQUIRE(f.contains(b00000110));
+//	ETH_REQUIRE(f.contains(b00110110));
+//	ETH_REQUIRE(!f.contains(b00110111));
 
 //	f.removeRaw(b00010000);
-//	BOOST_REQUIRE(!f.contains(b00000001));
-//	BOOST_REQUIRE(f.contains(b00010000));
-//	BOOST_REQUIRE(f.contains(b00011000));
-//	BOOST_REQUIRE(f.contains(b00110000));
-//	BOOST_REQUIRE(f.contains(b00110010));
-//	BOOST_REQUIRE(f.contains(b00111000));
-//	BOOST_REQUIRE(f.contains(b00000110));
-//	BOOST_REQUIRE(f.contains(b00110110));
-//	BOOST_REQUIRE(!f.contains(b00110111));
+//	ETH_REQUIRE(!f.contains(b00000001));
+//	ETH_REQUIRE(f.contains(b00010000));
+//	ETH_REQUIRE(f.contains(b00011000));
+//	ETH_REQUIRE(f.contains(b00110000));
+//	ETH_REQUIRE(f.contains(b00110010));
+//	ETH_REQUIRE(f.contains(b00111000));
+//	ETH_REQUIRE(f.contains(b00000110));
+//	ETH_REQUIRE(f.contains(b00110110));
+//	ETH_REQUIRE(!f.contains(b00110111));
 
 //	f.removeRaw(b00111000);
-//	BOOST_REQUIRE(!f.contains(b00000001));
-//	BOOST_REQUIRE(f.contains(b00010000));
-//	BOOST_REQUIRE(!f.contains(b00011000));
-//	BOOST_REQUIRE(f.contains(b00110000));
-//	BOOST_REQUIRE(f.contains(b00110010));
-//	BOOST_REQUIRE(!f.contains(b00111000));
-//	BOOST_REQUIRE(f.contains(b00000110));
-//	BOOST_REQUIRE(f.contains(b00110110));
-//	BOOST_REQUIRE(!f.contains(b00110111));
+//	ETH_REQUIRE(!f.contains(b00000001));
+//	ETH_REQUIRE(f.contains(b00010000));
+//	ETH_REQUIRE(!f.contains(b00011000));
+//	ETH_REQUIRE(f.contains(b00110000));
+//	ETH_REQUIRE(f.contains(b00110010));
+//	ETH_REQUIRE(!f.contains(b00111000));
+//	ETH_REQUIRE(f.contains(b00000110));
+//	ETH_REQUIRE(f.contains(b00110110));
+//	ETH_REQUIRE(!f.contains(b00110111));
 
 //	f.addRaw(b00000001);
-//	BOOST_REQUIRE(f.contains(b00000001));
-//	BOOST_REQUIRE(f.contains(b00010000));
-//	BOOST_REQUIRE(!f.contains(b00011000));
-//	BOOST_REQUIRE(f.contains(b00110000));
-//	BOOST_REQUIRE(f.contains(b00110010));
-//	BOOST_REQUIRE(!f.contains(b00111000));
-//	BOOST_REQUIRE(f.contains(b00000110));
-//	BOOST_REQUIRE(f.contains(b00110110));
-//	BOOST_REQUIRE(f.contains(b00110111));
+//	ETH_REQUIRE(f.contains(b00000001));
+//	ETH_REQUIRE(f.contains(b00010000));
+//	ETH_REQUIRE(!f.contains(b00011000));
+//	ETH_REQUIRE(f.contains(b00110000));
+//	ETH_REQUIRE(f.contains(b00110010));
+//	ETH_REQUIRE(!f.contains(b00111000));
+//	ETH_REQUIRE(f.contains(b00000110));
+//	ETH_REQUIRE(f.contains(b00110110));
+//	ETH_REQUIRE(f.contains(b00110111));
 
 //	f.removeRaw(b00110111);
-//	BOOST_REQUIRE(!f.contains(b00000001));
-//	BOOST_REQUIRE(f.contains(b00010000));
-//	BOOST_REQUIRE(!f.contains(b00011000));
-//	BOOST_REQUIRE(!f.contains(b00110000));
-//	BOOST_REQUIRE(!f.contains(b00110010));
-//	BOOST_REQUIRE(!f.contains(b00111000));
-//	BOOST_REQUIRE(!f.contains(b00000110));
-//	BOOST_REQUIRE(!f.contains(b00110110));
-//	BOOST_REQUIRE(!f.contains(b00110111));
+//	ETH_REQUIRE(!f.contains(b00000001));
+//	ETH_REQUIRE(f.contains(b00010000));
+//	ETH_REQUIRE(!f.contains(b00011000));
+//	ETH_REQUIRE(!f.contains(b00110000));
+//	ETH_REQUIRE(!f.contains(b00110010));
+//	ETH_REQUIRE(!f.contains(b00111000));
+//	ETH_REQUIRE(!f.contains(b00000110));
+//	ETH_REQUIRE(!f.contains(b00110110));
+//	ETH_REQUIRE(!f.contains(b00110111));
 
 //	f.removeRaw(b00110111);
-//	BOOST_REQUIRE(!f.contains(b00000001));
-//	BOOST_REQUIRE(!f.contains(b00010000));
-//	BOOST_REQUIRE(!f.contains(b00011000));
-//	BOOST_REQUIRE(!f.contains(b00110000));
-//	BOOST_REQUIRE(!f.contains(b00110010));
-//	BOOST_REQUIRE(!f.contains(b00111000));
-//	BOOST_REQUIRE(!f.contains(b00000110));
-//	BOOST_REQUIRE(!f.contains(b00110110));
-//	BOOST_REQUIRE(!f.contains(b00110111));
+//	ETH_REQUIRE(!f.contains(b00000001));
+//	ETH_REQUIRE(!f.contains(b00010000));
+//	ETH_REQUIRE(!f.contains(b00011000));
+//	ETH_REQUIRE(!f.contains(b00110000));
+//	ETH_REQUIRE(!f.contains(b00110010));
+//	ETH_REQUIRE(!f.contains(b00111000));
+//	ETH_REQUIRE(!f.contains(b00000110));
+//	ETH_REQUIRE(!f.contains(b00110110));
+//	ETH_REQUIRE(!f.contains(b00110111));
 //}
 
 //static const unsigned DistributionTestSize = TopicBloomFilterSize;
@@ -311,8 +311,8 @@ BOOST_AUTO_TEST_CASE(dummyTest)
 //	}
 
 //	cnote << minimum << average << maximum;
-//	BOOST_REQUIRE(minimum > minAllowed);
-//	BOOST_REQUIRE(maximum < maxAllowed);
+//	ETH_REQUIRE(minimum > minAllowed);
+//	ETH_REQUIRE(maximum < maxAllowed);
 //}
 
 BOOST_AUTO_TEST_SUITE_END()
