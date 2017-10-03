@@ -34,7 +34,7 @@ void removeComments(json_spirit::mValue& _obj)
 {
 	if (_obj.type() == json_spirit::obj_type)
 	{
-		std::list<string> removeList;
+		list<string> removeList;
 		for (auto& i: _obj.get_obj())
 		{
 			if (i.first.substr(0, 2) == "//")
@@ -91,7 +91,7 @@ string const c_copierPostf = "Copier";
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	// check that destination folder test files has according Filler file in src folder
-	std::vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder));
+	vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder));
 	for (auto const& file: compiledFiles)
 	{
 		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
@@ -101,7 +101,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 	}
 
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-	std::vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
+	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
 
 	auto testOutput = dev::test::TestOutputHelper(files.size());
 	for (auto const& file: files)
