@@ -3,7 +3,8 @@ macro(configure_project)
 	if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type on single-configuration generators" FORCE)
 	endif()
-	
+	set(TESTETH_ARGS "" CACHE STRING "Testeth arguments for ctest tests")
+
 	option(BUILD_SHARED_LIBS "Build project libraries shared" OFF)
 
 	# Features:
@@ -105,6 +106,10 @@ macro(print_config)
 	message("-- TESTS            Build tests                              ${TESTS}")
 	message("-- TOOLS            Build tools                              ${TOOLS}")
 	message("-- EVMJIT           Build LLVM-based JIT EVM                 ${EVMJIT}")
+	message("------------------------------------------------------------- tests")
+	message("-- FASTCTEST        Run only test suites in ctest            ${FASTCTEST}")
+	message("-- TESTETH_ARGS     Testeth arguments in ctest:               ")
+	message("                    ${TESTETH_ARGS}")
 	message("------------------------------------------------------------------------")
 	message("")
 endmacro()
