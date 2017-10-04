@@ -334,8 +334,11 @@ void BlockChain::close()
 	// Not thread safe...
 	delete m_extrasDB;
 	delete m_blocksDB;
-	m_lastBlockHash = m_genesisHash;
-	m_lastBlockNumber = 0;
+	DEV_WRITE_GUARDED(x_lastBlockHash)
+	{
+		m_lastBlockHash = m_genesisHash;
+		m_lastBlockNumber = 0;
+	}
 	m_details.clear();
 	m_blocks.clear();
 	m_logBlooms.clear();
