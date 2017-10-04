@@ -34,7 +34,7 @@ void removeComments(json_spirit::mValue& _obj)
 {
 	if (_obj.type() == json_spirit::obj_type)
 	{
-		std::list<string> removeList;
+		list<string> removeList;
 		for (auto& i: _obj.get_obj())
 		{
 			if (i.first.substr(0, 2) == "//")
@@ -85,11 +85,23 @@ namespace dev
 namespace test
 {
 
+string const c_fillerPostf = "Filler";
+string const c_copierPostf = "Copier";
 
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
+	// check that destination folder test files has according Filler file in src folder
+	vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder));
+	for (auto const& file: compiledFiles)
+	{
+		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
+		fs::path const expectedCopierName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_copierPostf + ".json");
+		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
+		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedCopierName)), "Src test could either be Filler.json or Copier.json: " + file.filename().string());
+	}
+
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-	std::vector<boost::filesystem::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
+	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
 
 	auto testOutput = dev::test::TestOutputHelper(files.size());
 	for (auto const& file: files)
@@ -115,11 +127,11 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 	fs::path const boostRelativeTestPath = fs::relative(_jsonFileName, getTestPath());
 	string testname = _jsonFileName.stem().string();
 	bool isCopySource = false;
-	if (testname.rfind("Filler") != string::npos)
+	if (testname.rfind(c_fillerPostf) != string::npos)
 		testname = testname.substr(0, testname.rfind("Filler"));
-	else if (testname.rfind("Copier") != string::npos)
+	else if (testname.rfind(c_copierPostf) != string::npos)
 	{
-		testname = testname.substr(0, testname.rfind("Copier"));
+		testname = testname.substr(0, testname.rfind(c_copierPostf));
 		isCopySource = true;
 	}
 	else
