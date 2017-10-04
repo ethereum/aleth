@@ -47,6 +47,7 @@ public:
 		WithExisting _forceAction = WithExisting::Trust,
 		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
+	~EthashClient();
 
 	Ethash* ethash() const;
 
