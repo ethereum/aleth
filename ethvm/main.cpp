@@ -32,13 +32,14 @@
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/program_options.hpp>
 #include <fstream>
 #include <iostream>
 #include <ctime>
 using namespace std;
 using namespace dev;
 using namespace eth;
-
+namespace po = boost::program_options;
 namespace
 {
 int64_t maxBlockGasLimit()
@@ -149,7 +150,39 @@ int main(int argc, char** argv)
 
 	Ethash::init();
 	NoProof::init();
-
+	po::options_description transactionOptions("Transaction options");
+	transactionOptions.add_options()
+			("value", po::value<string>(), "<n>  Transaction should transfer the <n> wei (default: 0).")
+			("gas", po::value<string>(), "<n>    Transaction should be given <n> gas (default: block gas limit).")
+			//TODO ("gas-limit", "<n>  Block gas limit (default: " << maxBlockGasLimit() << ").")
+			("gas-price", po::value<string>(), "<n>  Transaction's gas price' should be <n> (default: 0).")
+			("sender", po::value<string>(), "<a>  Transaction sender should be <a> (default: 0000...0069).")
+			("origin", po::value<string>(), "<a>  Transaction origin should be <a> (default: 0000...0069).")
+			("input", po::value<string>(), "<d>   Transaction code should be <d>")
+			("code", po::value<string>(), "<d>    Contract code <d>. Makes transaction a call to this contract")
+	;
+	po::options_description vmOptions("VM options");
+	#if ETH_EVMJIT
+			vmOptions.add_options()
+					("vm", "<vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)")
+			;
+	#endif // ETH_EVMJIT
+	po::options_description networkOptions("Network options");
+	networkOptions.add_options()
+			("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
+	;
+	po::options_description optionsForTrace("Options for trace");
+	optionsForTrace.add_options()
+			("flat", "Minimal whitespace in the JSON.")
+			("mnemonics", "Show instruction mnemonics in the trace (non-standard).\n")
+	;
+	po::options_description generalOptions("General options");
+	generalOptions.add_options()
+			("version,v", "Show the version and exit.")
+			("help,h", "Show this help message and exit.")
+	;
+	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
+	allowedOptions.add(transactionOptions).add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions);
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];

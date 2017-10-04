@@ -149,3 +149,5 @@ endif()
 
 # TODO: Split out json_spirit, libscrypt and sec256k1.
 add_subdirectory(utils)
+
+add_executable(main ethvm/main.cpp)

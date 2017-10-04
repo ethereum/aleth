@@ -153,7 +153,7 @@ void help()
 		<< "    --only <n>  Equivalent to --export-from n --export-to n.\n"
 		<< "    --dont-check  Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.\n\n"
 		<< "    --import-snapshot <path>  Import blockchain and state data from the Parity Warp Sync snapshot." << endl
-		<< "General Options:\n"
+	 	<< "General Options:\n"
 		<< "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ").\n"
 #if ETH_EVMJIT
 		<< "    --vm <vm-kind>  Select VM; options are: interpreter, jit or smart (default: interpreter).\n"
@@ -413,10 +413,10 @@ int main(int argc, char** argv)
     clientDefaultMode.add_options()
             ("mainnet", "Use the main network protocol.")
             ("ropsten", "Use the Ropsten testnet.")
-            ("private", po::value<string>(), "<name>  Use a private chain.")
+            ("private", po::value<string>(), "<name> Use a private chain.")
             ("test", "Testing mode: Disable PoW and provide test rpc interface.")
             ("config", po::value<string>(), "<file> Configure specialised blockchain using given JSON information.")
-            ("oppose-dao-fork", "Ignore DAO hard fork (default is to participate).")
+            ("oppose-dao-fork", "Ignore DAO hard fork (default is to participate).\n")
             ("mode,o", po::value<string>(), "<full/peer>  Start a full node or a peer node (default: full).\n")
             ("json-rpc,j", "Enable JSON-RPC server (default: off).")
             ("ipc", "Enable IPC server (default: on).")
@@ -466,7 +466,7 @@ int main(int argc, char** argv)
 			("port", po::value<short>(), "<port>  Connect to the given remote port (default: 30303).")
 			("network-id", po::value<long>(), "<n>  Only connect to other hosts with this network id.")
 			("upnp", po::value<string>(), "<on/off>  Use UPnP for NAT (default: on).")
-			("peerset", po::value<string>(), "<list>  Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n        Types:\n        default		Attempt connection when no other peers are available and pinning is disabled.\n        required		Keep connected at all times.\n")
+			("peerset", po::value<string>(), "<list>  Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n        Types:\n        default      Attempt connection when no other peers are available and pinning is disabled.\n        required	    Keep connected at all times.\n")
 			// TODO:
 			//		<< "	--trust-peers <filename>  Space delimited list of publickeys." << endl
 			("no-discovery",  "Disable node discovery, implies --no-bootstrap.")
@@ -474,6 +474,33 @@ int main(int argc, char** argv)
 			("hermit",  "Equivalent to --no-discovery --pin.")
 			("sociable",  "Force discovery and no pinning.\n")
 	;
+	po::options_description importExportMode("Import/export mode");
+	importExportMode.add_options()
+			("from", po::value<string>(), "<n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'.")
+			("to", po::value<string>(), "<n>  Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'.")
+			("only", po::value<string>(), "<n>  Equivalent to --export-from n --export-to n.")
+			("dont-check", "Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.\n")
+			("import-snapshot", po::value<string>(), "<path>  Import blockchain and state data from the Parity Warp Sync snapshot.")
+	;
+	po::options_description generalOptions("General Options");
+	generalOptions.add_options()
+			//TODO "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ").\n"
+			//TODO #if ETH_EVMJIT
+			//TODO << "    --vm <vm-kind>  Select VM; options are: interpreter, jit or smart (default: interpreter).\n"
+			//TODO #endif // ETH_EVMJIT
+			("verbosity,v", po::value<int>(), "<0 - 9>  Set the log verbosity from 0 to 9 (default: 8).")
+			("version,V",  "Show the version and exit.")
+			("help,h",  "Show this help message and exit.\n")
+	;
+	po::options_description experimentalProofOfConcept("Experimental / Proof of Concept");
+	experimentalProofOfConcept.add_options()
+			("shh", "Enable Whisper.\n")
+	;
+	po::options_description allowedOptions("Allowed options");
+	allowedOptions.add(clientDefaultMode).add(clientTransacting).add(clientMining).add(clientNetworking).add(importExportMode).add(generalOptions);
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, allowedOptions), vm);
+	po::notify(vm);
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
