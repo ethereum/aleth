@@ -198,6 +198,9 @@ public:
 	virtual Block block(h256 const& _block) const override;
 	using ClientBase::block;
 
+	/// should be called after the constructor of the most derived class finishes.
+	void startWorking() { Worker::startWorking(); };
+
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.
