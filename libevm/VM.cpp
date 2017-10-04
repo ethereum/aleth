@@ -626,7 +626,7 @@ void VM::interpretCases()
 		}
 		NEXT
 
-#if EVM_USE_BITSHIFT
+#if EIP_145
 		CASE(SHL)
 		{
 			ON_OP();
