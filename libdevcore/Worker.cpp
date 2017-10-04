@@ -118,7 +118,8 @@ void Worker::terminate()
 	std::unique_lock<Mutex> l(x_work);
 	if (m_work)
 	{
-		m_state.exchange(WorkerState::Killing);
+		if (m_state.exchange(WorkerState::Killing) == WorkerState::Killing)
+			return; // Somebody else is doing this
 		l.unlock();
 		m_state_notifier.notify_all();
 		DEV_TIMED_ABOVE("Terminate worker", 100)
