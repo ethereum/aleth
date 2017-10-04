@@ -285,6 +285,9 @@ private:
 	/// Get or create host identifier (KeyPair).
 	static KeyPair networkAlias(bytesConstRef _b);
 
+	/// returns true if a member of m_requiredPeers
+	bool isRequiredPeer(NodeID const&) const;
+
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
 	std::atomic<bool> m_run{false};													///< Whether network is running.
@@ -317,7 +320,7 @@ private:
 	
 	/// Peers we try to connect regardless of p2p network.
 	std::set<NodeID> m_requiredPeers;
-	Mutex x_requiredPeers;
+	mutable Mutex x_requiredPeers;
 
 	/// The nodes to which we are currently connected. Used by host to service peer requests and keepAlivePeers and for shutdown. (see run())
 	/// Mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.
