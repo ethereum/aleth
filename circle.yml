@@ -14,7 +14,7 @@ default-steps: &default-steps
 
   - cache-restore:
       name: "Restore dependencies cache"
-      key: &deps-cache-key deps-0-{{ checksum "build/compiler" }}-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
+      key: &deps-cache-key deps-1-{{arch}}-{{checksum "build/compiler"}}-{{checksum "cmake/ProjectJsonRpcCpp.cmake"}}
 
   - run:
       name: "Upload Hunter cache"
