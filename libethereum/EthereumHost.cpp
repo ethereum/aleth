@@ -606,7 +606,6 @@ bool EthereumHost::isSyncing() const
 
 SyncStatus EthereumHost::status() const
 {
-	RecursiveGuard l(x_sync);
 	return m_sync->status();
 }
 
