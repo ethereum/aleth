@@ -24,10 +24,10 @@ namespace eth
 namespace
 {
 
-static_assert(sizeof(Address) == sizeof(evm_uint160be), "Address types size mismatch");
-static_assert(alignof(Address) == alignof(evm_uint160be), "Address types alignment mismatch");
+static_assert(sizeof(Address) == sizeof(evm_address), "Address types size mismatch");
+static_assert(alignof(Address) == alignof(evm_address), "Address types alignment mismatch");
 
-inline Address fromEvmC(evm_uint160be const& _addr)
+inline Address fromEvmC(evm_address const& _addr)
 {
 	return reinterpret_cast<Address const&>(_addr);
 }
@@ -40,7 +40,7 @@ inline u256 fromEvmC(evm_uint256be const& _n)
 	return fromBigEndian<u256>(_n.bytes);
 }
 
-int accountExists(evm_context* _context, evm_uint160be const* _addr) noexcept
+int accountExists(evm_context* _context, evm_address const* _addr) noexcept
 {
 	auto& env = static_cast<ExtVMFace&>(*_context);
 	Address addr = fromEvmC(*_addr);
@@ -50,7 +50,7 @@ int accountExists(evm_context* _context, evm_uint160be const* _addr) noexcept
 void getStorage(
 	evm_uint256be* o_result,
 	evm_context* _context,
-	evm_uint160be const* _addr,
+	evm_address const* _addr,
 	evm_uint256be const* _key
 ) noexcept
 {
@@ -63,7 +63,7 @@ void getStorage(
 
 void setStorage(
 	evm_context* _context,
-	evm_uint160be const* _addr,
+	evm_address const* _addr,
 	evm_uint256be const* _key,
 	evm_uint256be const* _value
 ) noexcept
@@ -82,14 +82,14 @@ void setStorage(
 void getBalance(
 	evm_uint256be* o_result,
 	evm_context* _context,
-	evm_uint160be const* _addr
+	evm_address const* _addr
 ) noexcept
 {
 	auto& env = static_cast<ExtVMFace&>(*_context);
 	*o_result = toEvmC(env.balance(fromEvmC(*_addr)));
 }
 
-size_t getCode(byte const** o_code, evm_context* _context, evm_uint160be const* _addr)
+size_t getCode(byte const** o_code, evm_context* _context, evm_address const* _addr)
 {
 	auto& env = static_cast<ExtVMFace&>(*_context);
 	Address addr = fromEvmC(*_addr);
@@ -104,8 +104,8 @@ size_t getCode(byte const** o_code, evm_context* _context, evm_uint160be const* 
 
 void selfdestruct(
 	evm_context* _context,
-	evm_uint160be const* _addr,
-	evm_uint160be const* _beneficiary
+	evm_address const* _addr,
+	evm_address const* _beneficiary
 ) noexcept
 {
 	(void) _addr;
@@ -117,7 +117,7 @@ void selfdestruct(
 
 void log(
 	evm_context* _context,
-	evm_uint160be const* _addr,
+	evm_address const* _addr,
 	uint8_t const* _data,
 	size_t _dataSize,
 	evm_uint256be const _topics[],
@@ -166,7 +166,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 	o_result->release = nullptr;
 	if (addr)
 	{
-		o_result->code = EVM_SUCCESS;
+		o_result->status_code = EVM_SUCCESS;
 		// Use reserved data to store the address.
 		static_assert(sizeof(o_result->reserved.data) >= addr.size,
 					  "Not enough space to store an address");
@@ -175,7 +175,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 		o_result->output_size = addr.size;
 	} else
 	{
-		o_result->code = EVM_REVERT;
+		o_result->status_code = EVM_REVERT;
 
 		// Pass the output to the EVM without a copy. The EVM will delete it
 		// when finished with it.
@@ -229,7 +229,7 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 	// In first case we want to keep the output, in the second one the output
 	// is optional and should not be passed to the contract, but can be useful
 	// for EVM in general.
-	o_result->code = success ? EVM_SUCCESS : EVM_REVERT;
+	o_result->status_code = success ? EVM_SUCCESS : EVM_REVERT;
 	o_result->gas_left = static_cast<int64_t>(params.gas);
 
 	// Pass the output to the EVM without a copy. The EVM will delete it
@@ -254,7 +254,7 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 	};
 }
 
-evm_host const fnTable = {
+evm_context_fn_table const fnTable = {
 	accountExists,
 	getStorage,
 	setStorage,

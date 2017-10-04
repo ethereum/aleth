@@ -243,9 +243,9 @@ public:
 	bool staticCall = false;	///< Throw on state changing.
 };
 
-inline evm_uint160be toEvmC(Address const& _addr)
+inline evm_address toEvmC(Address const& _addr)
 {
-	return reinterpret_cast<evm_uint160be const&>(_addr);
+	return reinterpret_cast<evm_address const&>(_addr);
 }
 
 inline evm_uint256be toEvmC(h256 const& _h)
