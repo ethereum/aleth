@@ -51,6 +51,7 @@ include(HunterGate)
 HunterGate(
     URL "https://github.com/ruslo/hunter/archive/v0.19.105.tar.gz"
     SHA1 "b96750beadc41207e88abf1bcdbe3baeb38f09c4"
+    LOCAL
 )
 
 if(HUNTER_ENABLED)

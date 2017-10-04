@@ -6,15 +6,21 @@ default-steps: &default-steps
       command: git submodule update --init
 
   - run:
+      name: "Environment info"
+      command: |
+        echo CXX: $CXX
+        $CXX --version
+        $CXX --version > compiler.version
+
+  - cache-restore:
+      name: "Restore dependencies cache"
+      key: &deps-cache-key deps-1-{{arch}}-{{checksum "compiler.version"}}-{{checksum "cmake/ProjectJsonRpcCpp.cmake"}}
+
+  - run:
       name: "Configure"
       command: |
         mkdir -p build && cd build
         cmake .. -G "${GENERATOR}" -DCOVERAGE=ON
-        echo $CXX > compiler
-
-  - cache-restore:
-      name: "Restore dependencies cache"
-      key: &deps-cache-key deps-0-{{ checksum "build/compiler" }}-{{ checksum "cmake/ProjectJsonRpcCpp.cmake" }}
 
   - run:
       name: "Upload Hunter cache"
@@ -25,7 +31,8 @@ default-steps: &default-steps
 
   - run:
       name: "Build"
-      command: cmake --build build -- -j $BUILD_PARALLEL_JOBS
+      command: |
+        cmake --build build -- -j $BUILD_PARALLEL_JOBS
 
   - cache-save:
       name: "Save dependencies cache"
