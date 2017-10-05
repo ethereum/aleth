@@ -33,6 +33,7 @@
 #include <libevm/VMFactory.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 #include <fstream>
 #include <iostream>
 #include <ctime>
@@ -46,34 +47,6 @@ int64_t maxBlockGasLimit()
 {
 	static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).maxGasLimit.convert_to<int64_t>();
 	return limit;
-}
-
-void help()
-{
-	cout
-		<< "Usage ethvm <options> [trace|stats|output|test] (<file>|-)\n"
-		<< "Transaction options:\n"
-		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0).\n"
-		<< "    --gas <n>    Transaction should be given <n> gas (default: block gas limit).\n"
-		<< "    --gas-limit <n>  Block gas limit (default: " << maxBlockGasLimit() << ").\n"
-		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0).\n"
-		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069).\n"
-		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069).\n"
-		<< "    --input <d>   Transaction code should be <d>\n"
-		<< "    --code <d>    Contract code <d>. Makes transaction a call to this contract\n"
-#if ETH_EVMJIT
-		<< "\nVM options:\n"
-		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)\n"
-#endif // ETH_EVMJIT
-		<< "Network options:\n"
-		<< "    --network Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n\n"
-		<< "Options for trace:\n"
-		<< "    --flat  Minimal whitespace in the JSON.\n"
-		<< "    --mnemonics  Show instruction mnemonics in the trace (non-standard).\n\n"
-		<< "General options:\n"
-		<< "    -V,--version  Show the version and exit.\n"
-		<< "    -h,--help  Show this help message and exit.\n";
-	exit(0);
 }
 
 void version()
@@ -154,19 +127,19 @@ int main(int argc, char** argv)
 	transactionOptions.add_options()
 			("value", po::value<string>(), "<n>  Transaction should transfer the <n> wei (default: 0).")
 			("gas", po::value<string>(), "<n>    Transaction should be given <n> gas (default: block gas limit).")
-			//TODO ("gas-limit", "<n>  Block gas limit (default: " << maxBlockGasLimit() << ").")
 			("gas-price", po::value<string>(), "<n>  Transaction's gas price' should be <n> (default: 0).")
 			("sender", po::value<string>(), "<a>  Transaction sender should be <a> (default: 0000...0069).")
 			("origin", po::value<string>(), "<a>  Transaction origin should be <a> (default: 0000...0069).")
 			("input", po::value<string>(), "<d>   Transaction code should be <d>")
 			("code", po::value<string>(), "<d>    Contract code <d>. Makes transaction a call to this contract")
+			("gas-limit", po::value<string>(), "")
 	;
 	po::options_description vmOptions("VM options");
-	#if ETH_EVMJIT
-			vmOptions.add_options()
-					("vm", "<vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)")
-			;
-	#endif // ETH_EVMJIT
+	//#if ETH_EVMJIT
+	vmOptions.add_options()
+			("vm", "<vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)")
+	;
+	//#endif // ETH_EVMJIT
 	po::options_description networkOptions("Network options");
 	networkOptions.add_options()
 			("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
@@ -180,78 +153,97 @@ int main(int argc, char** argv)
 	generalOptions.add_options()
 			("version,v", "Show the version and exit.")
 			("help,h", "Show this help message and exit.")
+			("author", po::value<string>(), "<a> Set author")
+			("difficulty", po::value<string>(), "<d> Set difficulty")
+			("number", po::value<string>(), "<d> Set number")
+			("timestamp", po::value<string>(), "<d> Set timestamp")
 	;
 	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
-	allowedOptions.add(transactionOptions).add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions);
-	for (int i = 1; i < argc; ++i)
-	{
-		string arg = argv[i];
-		if (arg == "-h" || arg == "--help")
-			help();
-		else if (arg == "-V" || arg == "--version")
-			version();
-		else if (arg == "--vm" && i + 1 < argc)
-		{
-			string vmKindStr = argv[++i];
-			if (vmKindStr == "interpreter")
-				vmKind = VMKind::Interpreter;
+	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, allowedOptions), vm);
+	po::notify(vm);
+	if (vm.count("help")) {
+		cout << allowedOptions;
+		cout << "                         <n>  Block gas limit (default: " << maxBlockGasLimit() << ").";
+		exit(0);
+	}
+	if (vm.count("version")) {
+		version();
+	}
+	if (vm.count("vm")) {
+		string vmKindStr = vm["vm"].as<string>();
+		if (vmKindStr == "interpreter")
+			vmKind = VMKind::Interpreter;
 #if ETH_EVMJIT
 			else if (vmKindStr == "jit")
 				vmKind = VMKind::JIT;
 			else if (vmKindStr == "smart")
 				vmKind = VMKind::Smart;
 #endif
-			else
-			{
-				cerr << "Unknown/unsupported VM kind: " << vmKindStr << "\n";
-				return -1;
-			}
-		}
-		else if (arg == "--mnemonics")
-			st.setShowMnemonics();
-		else if (arg == "--flat")
-			styledJson = false;
-		else if (arg == "--sender" && i + 1 < argc)
-			sender = Address(argv[++i]);
-		else if (arg == "--origin" && i + 1 < argc)
-			origin = Address(argv[++i]);
-		else if (arg == "--gas" && i + 1 < argc)
-			gas = u256(argv[++i]);
-		else if (arg == "--gas-price" && i + 1 < argc)
-			gasPrice = u256(argv[++i]);
-		else if (arg == "--author" && i + 1 < argc)
-			blockHeader.setAuthor(Address(argv[++i]));
-		else if (arg == "--number" && i + 1 < argc)
-			blockHeader.setNumber(u256(argv[++i]));
-		else if (arg == "--difficulty" && i + 1 < argc)
-			blockHeader.setDifficulty(u256(argv[++i]));
-		else if (arg == "--timestamp" && i + 1 < argc)
-			blockHeader.setTimestamp(u256(argv[++i]));
-		else if (arg == "--gas-limit" && i + 1 < argc)
-			blockHeader.setGasLimit(u256(argv[++i]).convert_to<int64_t>());
-		else if (arg == "--value" && i + 1 < argc)
-			value = u256(argv[++i]);
-		else if (arg == "--network" && i + 1 < argc)
+		else
 		{
-			string network = argv[++i];
-			if (network == "Constantinople")
-				networkName = Network::ConstantinopleTest;
-			else if (network == "Byzantium")
-				networkName = Network::ByzantiumTest;
-			else if (network == "Frontier")
-				networkName = Network::FrontierTest;
-			else if (network == "Ropsten")
-				networkName = Network::Ropsten;
-			else if (network == "Homestead")
-				networkName = Network::HomesteadTest;
-			else if (network == "Main")
-				networkName = Network::MainNetwork;
-			else
-			{
-				cerr << "Unknown network type: " << network << "\n";
-				return -1;
-			}
+			cerr << "Unknown/unsupported VM kind: " << vmKindStr << "\n";
+			return -1;
 		}
+	}
+	if (vm.count("mnemonics"))
+		st.setShowMnemonics();
+	if (vm.count("flat"))
+		styledJson = false;
+	if (vm.count("sender"))
+		sender = Address(vm["sender"].as<string>());
+	if (vm.count("origin"))
+		origin = Address(vm["origin"].as<string>());
+	if (vm.count("gas"))
+		gas = u256(vm["gas"].as<string>());
+	if (vm.count("gas-price"))
+		gasPrice = u256(vm["gas-price"].as<string>());
+	if (vm.count("author"))
+		blockHeader.setAuthor(Address(vm["author"].as<string>()));
+	if (vm.count("number"))
+		blockHeader.setNumber(u256(vm["number"].as<string>()));
+	if (vm.count("difficulty"))
+		blockHeader.setDifficulty(u256(vm["difficulty"].as<string>()));
+	if (vm.count("timestamp"))
+		blockHeader.setTimestamp(u256(vm["timestamp"].as<string>()));
+	if (vm.count("gas-limit"))
+		blockHeader.setGasLimit(u256(vm["gas-limit"].as<string>()).convert_to<int64_t>());
+	if (vm.count("value"))
+		value = u256(vm["value"].as<string>());
+	if (vm.count("network"))
+	{
+		string network = vm["network"].as<string>();
+		if (network == "Constantinople")
+			networkName = Network::ConstantinopleTest;
+		else if (network == "Byzantium")
+			networkName = Network::ByzantiumTest;
+		else if (network == "Frontier")
+			networkName = Network::FrontierTest;
+		else if (network == "Ropsten")
+			networkName = Network::Ropsten;
+		else if (network == "Homestead")
+			networkName = Network::HomesteadTest;
+		else if (network == "Main")
+			networkName = Network::MainNetwork;
+		else
+		{
+			cerr << "Unknown network type: " << network << "\n";
+			return -1;
+		}
+	}
+	if (vm.count("input"))
+		data = fromHex(vm["input"].as<string>());
+	if (vm.count("code"))
+		code = fromHex(vm["code"].as<string>());
+	for (int i = 1; i < argc; ++i)
+	{
+		string arg = argv[i];
+		if ((i + 1 < argc && (arg == "--vm" || arg == "--sender" ||
+			arg == "--origin" || arg == "--gas" || arg == "--gas-price" || arg == "--author" || arg == "--number" ||
+		    arg == "--difficulty" || arg == "--timestamp" || arg == "--gas-limit" || arg == "--value" || arg == "--network"||
+		    arg == "--input" || arg == "--code")) || arg == "--mnemonics" || arg == "--flat")
+			continue;
 		else if (arg == "stats")
 			mode = Mode::Statistics;
 		else if (arg == "output")
@@ -260,10 +252,6 @@ int main(int argc, char** argv)
 			mode = Mode::Trace;
 		else if (arg == "test")
 			mode = Mode::Test;
-		else if (arg == "--input" && i + 1 < argc)
-			data = fromHex(argv[++i]);
-		else if (arg == "--code" && i + 1 < argc)
-			code = fromHex(argv[++i]);
 		else if (inputFile.empty())
 			inputFile = arg;  // Assign input file name only once.
 		else
