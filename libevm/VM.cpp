@@ -197,7 +197,8 @@ owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 	m_schedule = &m_ext->evmSchedule();
 	m_onOp = _onOp;
 	m_onFail = &VM::onOperation; // this results in operations that fail being logged twice in the trace
-	
+	m_PC = 0;
+
 	try
 	{
 		// trampoline to minimize depth of call stack when calling out
