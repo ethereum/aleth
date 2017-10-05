@@ -42,7 +42,7 @@ void createRandomTestWrapper()
 	std::cerr.rdbuf(oldCerrStreamBuf);
 
 	if (!dev::test::createRandomTest())
-		throw framework::internal_error("Create Random Test Error!");
+		throw framework::internal_error("Create random test error! See std::error for more details.");
 
 	exit(0);
 }

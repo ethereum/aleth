@@ -45,6 +45,7 @@ bool createRandomTest()
 		RandomCodeOptions options;
 		TestOutputHelper testOutputHelper;
 		std::string test = test::RandomCode::fillRandomTest(suite, c_testExampleStateTest, options);
+		std::cout << test << "\n";
 		return test.empty() ? false : true;
 	}
 }
@@ -81,9 +82,6 @@ std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _t
 		std::cerr << json_spirit::write_string(v, true);
 		return std::string();
 	}
-	else
-		std::cout << json_spirit::write_string(v, true);
-
 	return json_spirit::write_string(v, true);
 }
 

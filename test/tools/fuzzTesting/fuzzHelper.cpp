@@ -584,6 +584,7 @@ BOOST_AUTO_TEST_CASE(rndStateTest)
 	{
 		test::StateTestSuite suite;
 		test::RandomCodeOptions options;
+		test::TestOutputHelper::setCurrentTestFileName(std::string());
 		std::string test = dev::test::RandomCode::fillRandomTest(suite, c_testExampleStateTest, options);
 		BOOST_REQUIRE(!test.empty());
 	}
