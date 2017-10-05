@@ -161,7 +161,47 @@ int main(int argc, char** argv)
 	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
 	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
 	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, allowedOptions), vm);
+	int ac = 1;
+	for (int i = 1; i < argc; ++i) {
+		string arg = argv[i];
+		if ((i + 1 < argc && (arg == "--vm" || arg == "--sender" ||
+		                      arg == "--origin" || arg == "--gas" || arg == "--gas-price" || arg == "--author" ||
+		                      arg == "--number" ||
+		                      arg == "--difficulty" || arg == "--timestamp" || arg == "--gas-limit" ||
+		                      arg == "--value" || arg == "--network" ||
+		                      arg == "--input" || arg == "--code")) || arg == "--mnemonics" || arg == "--flat" ||
+		                      arg == "-h" || arg == "--help" || arg == "--version" || arg == "-V") {
+			argv[ac] = argv[i];
+			ac++;
+			if (arg == "--vm" || arg == "--sender" ||
+			    arg == "--origin" || arg == "--gas" || arg == "--gas-price" || arg == "--author" ||
+			    arg == "--number" ||
+			    arg == "--difficulty" || arg == "--timestamp" || arg == "--gas-limit" ||
+			    arg == "--value" || arg == "--network" ||
+			    arg == "--input" || arg == "--code") {
+				i++;
+				argv[ac] = argv[i];
+				ac++;
+			}
+			continue;
+		}
+		else if (arg == "stats")
+			mode = Mode::Statistics;
+		else if (arg == "output")
+			mode = Mode::OutputOnly;
+		else if (arg == "trace")
+			mode = Mode::Trace;
+		else if (arg == "test")
+			mode = Mode::Test;
+		else if (inputFile.empty())
+			inputFile = arg;  // Assign input file name only once.
+		else
+		{
+			cerr << "Unknown argument: " << arg << '\n';
+			return -1;
+		}
+	}
+	po::store(po::parse_command_line(ac, argv, allowedOptions), vm);
 	po::notify(vm);
 	if (vm.count("help")) {
 		cout << allowedOptions;
@@ -236,30 +276,7 @@ int main(int argc, char** argv)
 		data = fromHex(vm["input"].as<string>());
 	if (vm.count("code"))
 		code = fromHex(vm["code"].as<string>());
-	for (int i = 1; i < argc; ++i)
-	{
-		string arg = argv[i];
-		if ((i + 1 < argc && (arg == "--vm" || arg == "--sender" ||
-			arg == "--origin" || arg == "--gas" || arg == "--gas-price" || arg == "--author" || arg == "--number" ||
-		    arg == "--difficulty" || arg == "--timestamp" || arg == "--gas-limit" || arg == "--value" || arg == "--network"||
-		    arg == "--input" || arg == "--code")) || arg == "--mnemonics" || arg == "--flat")
-			continue;
-		else if (arg == "stats")
-			mode = Mode::Statistics;
-		else if (arg == "output")
-			mode = Mode::OutputOnly;
-		else if (arg == "trace")
-			mode = Mode::Trace;
-		else if (arg == "test")
-			mode = Mode::Test;
-		else if (inputFile.empty())
-			inputFile = arg;  // Assign input file name only once.
-		else
-		{
-			cerr << "Unknown argument: " << arg << '\n';
-			return -1;
-		}
-	}
+
 
 	VMFactory::setKind(vmKind);
 

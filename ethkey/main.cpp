@@ -26,11 +26,15 @@
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/Log.h>
 #include <libethcore/KeyManager.h>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 #include "BuildInfo.h"
 #include "KeyAux.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+
+namespace po = boost::program_options;
 
 void help()
 {
@@ -82,23 +86,48 @@ int main(int argc, char** argv)
 	setDefaultOrCLocale();
 	KeyCLI m(KeyCLI::OperationMode::ListBare);
 	g_logVerbosity = 0;
-
+	po::options_description generalOptions("General Options");
+	generalOptions.add_options()
+		("verbosity,v", po::value<string>(), "<0 - 9>  Set the log verbosity from 0 to 9 (default: 8).")
+		("version,V", "Show the version and exit.")
+		("help,h",  "Show this help message and exit.")
+	;
+	int ac = 1;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
 		if (m.interpretOption(i, argc, argv)) {}
-		else if ((arg == "-v" || arg == "--verbosity") && i + 1 < argc)
-			g_logVerbosity = atoi(argv[++i]);
-		else if (arg == "-h" || arg == "--help")
-			help();
-		else if (arg == "-V" || arg == "--version")
-			version();
+		else if (((arg == "-v" || arg == "--verbosity") && i + 1 < argc) || arg == "-h" || arg == "--help" || arg == "-V" || arg == "--version") {
+			argv[ac] = argv[i];
+			ac++;
+			if (arg == "-v" || arg == "--verbosity") {
+				i++;
+				argv[ac] = argv[i];
+				ac++;
+			}
+			continue;
+		}
 		else
 		{
 			cerr << "Invalid argument: " << arg << endl;
 			exit(-1);
 		}
 	}
+	po::variables_map vm;
+	po::store(po::parse_command_line(ac, argv, generalOptions), vm);
+	po::notify(vm);
+	if (vm.count("help")) {
+		cout
+				<< "Usage ethkey [OPTIONS]" << endl
+				<< "Options:" << endl << endl;
+		KeyCLI::streamHelp(cout);
+		cout << generalOptions;
+		exit(0);
+	}
+	if (vm.count("version"))
+		version();
+	if (vm.count("verbosity"))
+		g_logVerbosity = atoi(vm["verbosity"].as<string>().c_str());
 
 	m.execute();
 
