@@ -80,7 +80,6 @@ public:
 
 	void onPeerAborting() override
 	{
-		RecursiveGuard l(m_syncMutex);
 		try
 		{
 			m_sync.onPeerAborting();
