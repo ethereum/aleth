@@ -103,7 +103,8 @@ void Worker::stopWorking()
 	if (m_work)
 	{
 		WorkerState ex = WorkerState::Started;
-		m_state.compare_exchange_strong(ex, WorkerState::Stopping);
+		if (!m_state.compare_exchange_strong(ex, WorkerState::Stopping))
+			return;
 		m_state_notifier.notify_all();
 
 		DEV_TIMED_ABOVE("Stop worker", 100)
