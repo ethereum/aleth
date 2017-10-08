@@ -71,6 +71,10 @@ development variant:
 
 - leveldb
 - microhttpd
+- boost (filesystem system thread)
+- jsoncpp
+- Snappy
+- cryptopp
 
 They usually can be installed using system-specific package manager.
 Examples for some systems:
