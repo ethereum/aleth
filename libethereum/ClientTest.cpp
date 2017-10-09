@@ -51,6 +51,11 @@ ClientTest::ClientTest(
 	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
 {}
 
+ClientTest::~ClientTest()
+{
+	terminate();
+}
+
 void ClientTest::setChainParams(string const& _genesis)
 {
 	ChainParams params;
