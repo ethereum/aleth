@@ -55,7 +55,7 @@ void removeComments(json_spirit::mValue& _obj)
 	}
 }
 
-void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
+void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource, h256 const& _testSourceHash)
 {
 	for (auto& i: _v.get_obj())
 	{
@@ -73,8 +73,29 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource)
 		clientinfo["filledwith"] = test::prepareVersionString();
 		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
 		clientinfo["source"] = _testSource.string();
+		clientinfo["sourceHash"] = toString(_testSourceHash);
 		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
+	}
+}
+
+void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
+{
+	json_spirit::mValue v;
+	string const s = asString(dev::contents(_compiledTest));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
+	json_spirit::read_string(s, v);
+	h256 const fillerHash = sha3(dev::contents(_sourceTest));
+
+	for (auto& i: v.get_obj())
+	{
+		BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain an object under a test name.");
+		json_spirit::mObject const& obj = i.second.get_obj();
+		BOOST_REQUIRE_MESSAGE(obj.count("_info") > 0, "_info section not set! " + _compiledTest.string());
+		json_spirit::mObject const& info = obj.at("_info").get_obj();
+		BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.first);
+		h256 const sourceHash = h256(info.at("sourceHash").get_str());
+		BOOST_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.first + " is outdated. Filler hash is different!");
 	}
 }
 
@@ -98,8 +119,18 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 		fs::path const expectedCopierName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_copierPostf + ".json");
 		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
 		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedCopierName)), "Src test could either be Filler.json or Copier.json: " + file.filename().string());
+
+		// Check that filled tests created from actual fillers
+		if (Options::get().filltests == false)
+		{
+			if (fs::exists(expectedFillerName))
+				checkFillerHash(file, expectedFillerName);
+			if (fs::exists(expectedCopierName))
+				checkFillerHash(file, expectedCopierName);
+		}
 	}
 
+	// run all tests
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
 
@@ -138,7 +169,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 		BOOST_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _jsonFileName.string());
 
 	// Filename of the test that would be generated
-	fs::path boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
+	fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
 
 	// TODO: An old unmaintained way to gather execution stats needs review.
 	if (Options::get().stats)
@@ -154,6 +185,13 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 			TestOutputHelper::showProgress();
 			dev::test::copyFile(_jsonFileName, boostTestPath);
 			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
+
+			// Update _info and build information of the copied test
+			json_spirit::mValue v;
+			string const s = asString(dev::contents(boostTestPath));
+			json_spirit::read_string(s, v);
+			addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_jsonFileName)));
+			writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));
 		}
 		else
 		{
@@ -161,13 +199,14 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 				cnote << "Populating tests...";
 
 			json_spirit::mValue v;
-			string const s = asString(dev::contents(_jsonFileName));
+			bytes const byteContents = dev::contents(_jsonFileName);
+			string const s = asString(byteContents);
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _jsonFileName.string() + " is empty.");
 
 			json_spirit::read_string(s, v);
 			removeComments(v);
 			json_spirit::mValue output = doTests(v, true);
-			addClientInfo(output, boostRelativeTestPath);
+			addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
 			writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
 		}
 	}

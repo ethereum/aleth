@@ -147,9 +147,9 @@ json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _in
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
-		BOOST_REQUIRE(o.count("genesisBlockHeader"));
-		BOOST_REQUIRE(o.count("pre"));
-		BOOST_REQUIRE(o.count("network"));
+		BOOST_REQUIRE_MESSAGE(o.count("genesisBlockHeader"), "genesisBlockHeader not found " + testname);
+		BOOST_REQUIRE_MESSAGE(o.count("pre"), "pre not found " + testname);
+		BOOST_REQUIRE_MESSAGE(o.count("network"), "network not found " + testname);
 
 		dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
 		if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
