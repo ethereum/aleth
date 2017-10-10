@@ -63,12 +63,6 @@ void addClientInfo(json_spirit::mValue& _testDestination, json_spirit::mValue co
 		json_spirit::mObject clientinfo;
 
 		string comment;
-		if (o.count("_info")) // take the comment from generated test file
-		{
-			json_spirit::mObject const& info = o["_info"].get_obj();
-			comment = info.count("comment") ? info.at("comment").get_str() : string();
-		}
-
 		// copy comment from test source if there is one
 		for (auto& j: _testSource.get_obj())
 		{
