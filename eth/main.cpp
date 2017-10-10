@@ -498,9 +498,6 @@ int main(int argc, char** argv)
 	;
 	po::options_description allowedOptions("Allowed options");
 	allowedOptions.add(clientDefaultMode).add(clientTransacting).add(clientMining).add(clientNetworking).add(importExportMode).add(generalOptions);
-	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, allowedOptions), vm);
-	po::notify(vm);
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
@@ -897,6 +894,9 @@ int main(int argc, char** argv)
 			exit(-1);
 		}
 	}
+	//po::variables_map vm;
+	//po::store(po::parse_command_line(argc, argv, allowedOptions), vm);
+	//po::notify(vm);
 
 	if (!configJSON.empty())
 	{

@@ -28,11 +28,14 @@
 #include <chrono>
 #include <thread>
 #include <boost/test/unit_test.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
+namespace po = boost::program_options;
 
 struct P2PPeerFixture: public TestOutputHelper
 {
@@ -328,22 +331,42 @@ int peerTest(int argc, char** argv)
 	short listenPort = 30304;
 	string remoteHost;
 	short remotePort = 30304;
-	
+	po::options_description generalOptions("General options");
+	generalOptions.add_options()
+			("listenPort,l", po::value<short>(), " set number of listenPort")
+			("remoteHost,r", po::value<string>(), " set string to remoteHost")
+			("remotePort,p", po::value<short>(), " set number to remotePort")
+			("remoteAlias,ra", po::value<string>(), " set remoteAlias");
+	;
+	int ac = 1;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
-		if (arg == "-l" && i + 1 < argc)
-			listenPort = (short)atoi(argv[++i]);
-		else if (arg == "-r" && i + 1 < argc)
-			remoteHost = argv[++i];
-		else if (arg == "-p" && i + 1 < argc)
-			remotePort = (short)atoi(argv[++i]);
-		else if (arg == "-ra" && i + 1 < argc)
-			remoteAlias = Public(dev::fromHex(argv[++i]));
+		if ((arg == "-l" || arg == "-r" || arg == "-p" || arg == "-ra") && i + 1 < argc) {
+			argv[ac] = argv[i];
+			ac++;
+			i++;
+			argv[ac] = argv[i];
+			ac++;
+		}
 		else
 			remoteHost = argv[i];
 	}
-
+	po::variables_map vm;
+	po::store(po::parse_command_line(ac, argv, generalOptions), vm);
+	po::notify(vm);
+	if (vm.count("listenPort")) {
+		listenPort = vm["listenPort"].as<short>();
+	}
+	if (vm.count("remoteHost")) {
+		remoteHost = vm["remoteHost"].as<string>();
+	}
+	if (vm.count("remotePort")) {
+		remotePort = vm["remotePort"].as<short>();
+	}
+	if (vm.count("remoteAlias")) {
+		remoteAlias = Public(dev::fromHex(vm["remoteAlias"].as<string>()));
+	}
 	Host ph("Test", NetworkPreferences(listenPort));
 
 	if (!remoteHost.empty() && !remoteAlias)

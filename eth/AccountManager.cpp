@@ -23,6 +23,8 @@
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/CommonIO.h>
 #include <libethcore/KeyManager.h>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 #include "AccountManager.h"
 using namespace std;
 using namespace dev;

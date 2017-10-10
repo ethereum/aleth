@@ -150,4 +150,6 @@ endif()
 # TODO: Split out json_spirit, libscrypt and sec256k1.
 add_subdirectory(utils)
 
-add_executable(main ethvm/main.cpp)
+add_executable(main rlp/main.cpp)
+
+add_executable(peer test/unittests/libp2p/peer.cpp)
