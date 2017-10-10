@@ -55,24 +55,30 @@ void removeComments(json_spirit::mValue& _obj)
 	}
 }
 
-void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource, h256 const& _testSourceHash)
+void addClientInfo(json_spirit::mValue& _testDestination, json_spirit::mValue const& _testSource, fs::path const& _testSourcePath, h256 const& _testSourceHash)
 {
-	for (auto& i: _v.get_obj())
+	for (auto& i: _testDestination.get_obj())
 	{
 		json_spirit::mObject& o = i.second.get_obj();
 		json_spirit::mObject clientinfo;
 
 		string comment;
-		if (o.count("_info"))
+		// copy comment from test source if there is one
+		for (auto& j: _testSource.get_obj())
 		{
-			json_spirit::mObject& existingInfo = o["_info"].get_obj();
-			if (existingInfo.count("comment"))
-				comment = existingInfo["comment"].get_str();
+			json_spirit::mObject const& o2 = j.second.get_obj();
+			if (o2.count("_info") && j.first == i.first)
+			{
+				json_spirit::mObject const& existingInfo = o2.at("_info").get_obj();
+				if (existingInfo.count("comment"))
+					comment = existingInfo.at("comment").get_str();
+				break;
+			}
 		}
 
 		clientinfo["filledwith"] = test::prepareVersionString();
 		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
-		clientinfo["source"] = _testSource.string();
+		clientinfo["source"] = _testSourcePath.string();
 		clientinfo["sourceHash"] = toString(_testSourceHash);
 		clientinfo["comment"] = comment;
 		o["_info"] = clientinfo;
@@ -190,7 +196,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 			json_spirit::mValue v;
 			string const s = asString(dev::contents(boostTestPath));
 			json_spirit::read_string(s, v);
-			addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_jsonFileName)));
+			addClientInfo(v, v, boostRelativeTestPath, sha3(dev::contents(_jsonFileName)));
 			writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));
 		}
 		else
@@ -206,7 +212,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 			json_spirit::read_string(s, v);
 			removeComments(v);
 			json_spirit::mValue output = doTests(v, true);
-			addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+			addClientInfo(output, v, boostRelativeTestPath, sha3(byteContents));
 			writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
 		}
 	}
