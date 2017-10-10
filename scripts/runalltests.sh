@@ -31,6 +31,7 @@ echo "cpp-ethereum repository at commit $cppHead"
 echo "tests repository at commit $testHead"
 exec 2> $workdir/testlog.txt
 timestart=$(date +%s.%N)
+TMPDIR=/dev/shm
 test/testeth -- --all --exectimelog
 cd $workdir/tests/RPCTests
 echo "#--------------RPC TESTS--------------"
