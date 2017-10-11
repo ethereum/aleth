@@ -90,7 +90,7 @@ public:
 class Session: public SessionFace, public std::enable_shared_from_this<SessionFace>
 {
 public:
-	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
+	static bool isFramingAllowedForVersion(unsigned /*_version*/) { return false; }
 
 	Session(Host* _server, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
 	virtual ~Session();
