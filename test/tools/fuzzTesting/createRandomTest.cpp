@@ -34,8 +34,7 @@ namespace dev { namespace test {
 bool createRandomTest()
 {
 	StateTestSuite suite;
-	dev::test::Options& optionsConst = const_cast<dev::test::Options&>(dev::test::Options::get());
-	dev::test::Options& options = optionsConst;
+	dev::test::Options const& options = dev::test::Options::get();
 	if (options.rCurrentTestSuite != suite.suiteFolder())
 	{
 		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)\n";
@@ -53,7 +52,7 @@ bool createRandomTest()
 }} //namespaces
 
 //Prints a generated test Json into std::out
-std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, dev::test::RandomCodeOptions& _options)
+std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, dev::test::RandomCodeOptions const& _options)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
@@ -89,7 +88,7 @@ std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _t
 }
 
 /// Parse Test string replacing keywords to fuzzed values
-void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions& _options)
+void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options)
 {
 	std::vector<std::string> types = getTypes();
 
@@ -135,13 +134,15 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
 			else if (type == "[DESTADDRESS]")
 			{
-				Address address = _options.getRandomAddress(RandomCodeOptions::AddressType::DestinationAccount);
-				if (address != ZeroAddress) //else transaction creation
+				Address address = _options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrStateOrCreate);
+				if (address != ZeroAddress)
 					replace = "0x" + toString(address);
+				else
+					replace = std::string(); // transaction creation
 			}
-			else if (type == "[ADDRESS]") {
-				Address destAddress = _options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount);
-				_options.addAddress(destAddress, RandomCodeOptions::AddressType::DestinationAccount);
+			else if (type == "[ADDRESS]")
+			{
+				Address destAddress = _options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrState);
 				replace = toString(destAddress);
 			}
 			else if (type == "[0xADDRESS]") {
@@ -220,28 +221,35 @@ std::string const c_testExampleStateTest = R"(
 		"previousHash" : "[HASH32]"
 		},
 	"pre" : {
-		"[ADDRESS]" : {
+		"ffffffffffffffffffffffffffffffffffffffff" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",
 			"storage" : {
 			}
 		},
-		"[ADDRESS]" : {
+		"1000000000000000000000000000000000000000" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",
 			"storage" : {
 			}
 		},
-		"[ADDRESS]" : {
+		"b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",
 			"storage" : {
 			}
 		},
-		"[ADDRESS]" : {
+		"c94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+			"balance" : "[HEX]",
+			"code" : "[CODE]",
+			"nonce" : "[V]",
+			"storage" : {
+			}
+		},
+		"d94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
 			"balance" : "[HEX]",
 			"code" : "[CODE]",
 			"nonce" : "[V]",

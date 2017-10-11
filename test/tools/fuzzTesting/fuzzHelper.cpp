@@ -256,7 +256,7 @@ std::string RandomCode::rndByteSequence(int _length, SizeStrictness _sizeType)
 }
 
 //generate smart random code
-std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions& _options)
+std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions const& _options)
 {
 	refreshSeed();
 	std::string code;
@@ -342,7 +342,7 @@ std::string RandomCode::getPushCode(int _value)
 	return getPushCode(hexString);
 }
 
-std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOptions& _options)
+std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOptions const& _options)
 {
 	eth::InstructionInfo info = eth::instructionInfo(_opcode);
 
@@ -412,7 +412,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			code += getPushCode(randoOpSmallMemrGen());	//memlen1
 			code += getPushCode(randoOpSmallMemrGen());	//memstart1
 			code += getPushCode(randUniIntGen());	//value
-			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::CallAccount)));//address
+			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrState)));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
 			return code;
 		case eth::Instruction::STATICCALL:
@@ -423,7 +423,7 @@ std::string RandomCode::fillArguments(eth::Instruction _opcode, RandomCodeOption
 			code += getPushCode(randoOpSmallMemrGen());	//memstart2
 			code += getPushCode(randoOpSmallMemrGen());	//memlen1
 			code += getPushCode(randoOpSmallMemrGen());	//memstart1
-			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::CallAccount)));//address
+			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrState)));//address
 			code += getPushCode(randUniIntGen());	//gaslimit
 			return code;
 		case eth::Instruction::SUICIDE: //(SUICIDE address)
@@ -518,86 +518,81 @@ void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
 
 void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
 {
-	switch(_type)
-	{
-		case AddressType::Precompiled:
-			precompiledAddressList.push_back(_address);
-			break;
-		case AddressType::ByzantiumPrecompiled:
-			byzPrecompiledAddressList.push_back(_address);
-			break;
-		case AddressType::StateAccount:
-			stateAddressList.push_back(_address);
-			break;
-		case AddressType::SendingAccount:
-			sendingAddressList.push_back(_address);
-			break;
-		case AddressType::DestinationAccount:
-			destinationAddressList.push_back(_address);
-			break;
-		default:
-			BOOST_ERROR("RandomCodeOptions::addAddress: Unexpected AddressType!");
-		break;
-	}
+	if (_type != Precompiled && _type != ByzantiumPrecompiled && _type != StateAccount && _type != SendingAccount)
+		BOOST_ERROR("RandomCodeOptions::addAddress: address type could not be added! " + toString(_type));
+	std::pair<Address, AddressType> record;
+	record.first = _address;
+	record.second = _type;
+	testAccounts.push_back(record);
 }
 
 Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 {
-	switch(_type)
+	if (_type == Precompiled)
+		return getRandomAddressPriv(AddressType::Precompiled);
+	if (_type == ByzantiumPrecompiled)
+		return getRandomAddressPriv(AddressType::ByzantiumPrecompiled);
+	if (_type == StateAccount)
+		return getRandomAddressPriv(AddressType::StateAccount);
+	if (_type == SendingAccount)
+		return getRandomAddressPriv(AddressType::SendingAccount);
+
+	// Return Precompiled address
+	if (_type == PrecompiledOrStateOrCreate || _type == PrecompiledOrState || _type == All)
 	{
-		case AddressType::Precompiled:
-			return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
-		case AddressType::DestinationAccount:
-			if (RandomCode::randomPercent() < emptyAddressProbability)
-				return ZeroAddress;
-			if (test::RandomCode::randomPercent() < precompiledDestProbability)
-				return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
-			else {
-				if (destinationAddressList.size() == 0) {
-					return ZeroAddress;
-				} else {
-					return destinationAddressList[(int)RandomCode::randomUniInt(0, destinationAddressList.size())];
-				}
-			}
-		case AddressType::PrecompiledOrStateOrCreate:
-			if (RandomCode::randomPercent() < emptyAddressProbability)
-				return ZeroAddress;
-			if (RandomCode::randomPercent() < sendingAddressProbability)
-				return sendingAddressList[(int)RandomCode::randomUniInt(0, sendingAddressList.size())];
-			if (test::RandomCode::randomPercent() < precompiledAddressProbability)
-				return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
+		if (RandomCode::randomPercent() < precompiledDestProbability)
+		{
+			if (RandomCode::randomPercent() < byzPrecompiledAddressProbability)
+				return getRandomAddressPriv(AddressType::ByzantiumPrecompiled);
 			else
-				return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
-		case AddressType::StateAccount:
-			return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
-		case AddressType::CallAccount:
-			//if not random address then chose from both lists
-			if (test::RandomCode::randomPercent() > randomAddressProbability)
-			{
-				if (test::RandomCode::randomPercent() < byzPrecompiledAddressProbability)
-					return byzPrecompiledAddressList[(int)RandomCode::randomUniInt(0, byzPrecompiledAddressList.size())];
-				if (test::RandomCode::randomPercent() < precompiledAddressProbability)
-					return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
-				else
-					return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
-			}
-			else
-				return Address(RandomCode::rndByteSequence(20));
-		case AddressType::All:
-			//if not random address then chose from both lists
-			if (test::RandomCode::randomPercent() > randomAddressProbability)
-			{
-				if (test::RandomCode::randomPercent() < precompiledAddressProbability)
-					return precompiledAddressList[(int)RandomCode::randomUniInt(0, precompiledAddressList.size())];
-				else
-					return stateAddressList[(int)RandomCode::randomUniInt(0, stateAddressList.size())];
-			}
-			else
-				return Address(RandomCode::rndByteSequence(20));
-		default:
-			BOOST_ERROR("RandomCodeOptions::getRandomAddress: Unexpected AddressType!");
+				return getRandomAddressPriv(AddressType::Precompiled);
+		}
+
+		// ZeroAddress means empty account (create)
+		if (_type != PrecompiledOrState)
+		if (RandomCode::randomPercent() < emptyAddressProbability)
 			return ZeroAddress;
+
+		// Return random address
+		if (test::RandomCode::randomPercent() < randomAddressProbability)
+			return Address(RandomCode::rndByteSequence(20));
+
+		// Return address of the sender (sender is  a part of state acount list)
+		if (RandomCode::randomPercent() < sendingAddressProbability)
+			return getRandomAddressPriv(AddressType::SendingAccount);
+		return getRandomAddressPriv(AddressType::StateAccount);
 	}
+
+	return Address(RandomCode::rndByteSequence(20));
+}
+
+Address RandomCodeOptions::getRandomAddressPriv(AddressType _type) const
+{
+	if (_type != Precompiled && _type != ByzantiumPrecompiled && _type != StateAccount && _type != SendingAccount)
+		BOOST_ERROR("RandomCodeOptions::getRandomAddressPriv: address type could not be found! " + toString(_type));
+
+	int random = test::RandomCode::randomPercent();
+	bool found = false;
+	while (random >= 0)
+	{
+		for (auto& i : testAccounts)
+		{
+			if (i.second == _type)
+			{
+				found = true;
+				if (random-- < 0)
+					return i.first;
+			}
+		}
+		if (!found)
+		{
+			BOOST_WARN("Can not find account of the specidied type. Return random instead.");
+			return Address(RandomCode::rndByteSequence(20));
+		}
+	}
+
+	BOOST_WARN("Can not find account of the specidied type. Return random instead.");
+	return Address(RandomCode::rndByteSequence(20));
 }
 
 int RandomCode::weightedOpcode(std::vector<int>& _weights)
