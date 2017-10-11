@@ -77,6 +77,9 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 		if (_fillin)
 		{
 #if ETH_FATDB
+			if (inputTest.count("_info"))
+				outputTest["_info"] = inputTest.at("_info");
+
 			if (importer.exportTest())
 				cerr << testname << endl;
 #else

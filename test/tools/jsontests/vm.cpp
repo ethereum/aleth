@@ -323,7 +323,11 @@ class VmTestSuite: public TestSuite
 			fev.importState(testInput.at("pre").get_obj());
 
 			if (_fillin)
+			{
 				testOutput["pre"] = mValue(fev.exportState());
+				if (testInput.count("_info"))
+					testOutput["_info"] = testInput.at("_info");
+			}
 
 			fev.importExec(testInput.at("exec").get_obj());
 			if (fev.code.empty())
