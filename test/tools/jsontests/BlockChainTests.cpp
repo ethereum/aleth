@@ -105,6 +105,8 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 				TestOutputHelper::setCurrentTestName(newtestname);
 				jObjOutput = fillBCTest(jObjOutput);
 				jObjOutput["network"] = test::netIdToString(network);
+				if (inputTest.count("_info"))
+					jObjOutput["_info"] = inputTest.at("_info");
 				tests[newtestname] = jObjOutput;
 			}
 		}
