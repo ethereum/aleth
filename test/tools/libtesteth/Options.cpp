@@ -22,15 +22,18 @@
 #include <libweb3jsonrpc/Debug.h>
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 
 using namespace std;
 using namespace dev::test;
 using namespace dev::eth;
+namespace po = boost::program_options;
 
 void printHelp()
 {
 	cout << "Usage: \n";
-	cout << std::left;
+	cout << std::left << "\n";
 	cout << "\nSetting test suite\n";
 	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations\n";
 	cout << setw(30) << "-t <TestSuite>/<TestCase>\n";
@@ -75,6 +78,37 @@ Options::Options(int argc, char** argv)
 	trGasIndex = -1;
 	trValueIndex = -1;
 	bool seenSeparator = false; // true if "--" has been seen.
+	po::options_description testSuits("Setting test suite");
+	testSuits.add_options()
+			("testpath", po::value<string>(), "<PathToTheTestRepo>")
+	;
+	po::options_description debugging("Debugging");
+	debugging.add_options()
+			("verbosity", po::value<string>(), "<level> Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed")
+			("vm", po::value<string>(), "<interpreter|jit|smart> Set VM type for VMTests suite")
+			("vmtrace", "Enable VM trace for the test. (Require build with VMTRACE=1)")
+			("jsontrace", po::value<string>(), "<Options> Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'")
+			("stats", po::value<string>(), "<OutFile> Output debug stats to the file")
+			("exectimelog", "Output execution time for each test suite")
+			("statediff","Trace state difference for state tests")
+	;
+	po::options_description additionalTests("Additional Tests");
+	additionalTests.add_options()
+			("all", "Enable all tests")
+	;
+	po::options_description testGeneration("Test Generation");
+	testGeneration.add_options()
+			("filltests", "Run test fillers")
+			("fillchain", "When filling the state tests, fill tests as blockchain instead")
+			("randomcode", po::value<int>(), "<MaxOpcodeNum> Generate smart random EVM code")
+			("createRandomTest", "Create random test and output it to the console")
+			("help", "Display list of command arguments")
+			("versionDisplay", "build information")
+			("jit", "")
+	;
+	po::options_description allowedOptions("");
+	allowedOptions.add(testSuits).add(testGeneration).add(debugging).add(additionalTests);
+	int ac = 1;
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -100,59 +134,24 @@ Options::Options(int argc, char** argv)
 			printHelp();
 			exit(0);
 		}
-		else if (arg == "--version")
+		if (arg == "--version")
 		{
 			printVersion();
 			exit(0);
 		}
-		else if (arg == "--vm")
-		{
+		else if (arg == "--exectimelog" || arg == "--jit" || arg == "--vmtrace" ||  arg == "--filltests" || "--nonetwork" || arg == "--statediff" ||
+				arg == "--fillchain" || arg == "--all" || arg == "--createRandomTest" || arg == "--fulloutput") {
+			argv[ac] = argv[i];
+			ac++;
+		}
+		else if (arg == "--stats" || arg == "--vm" || arg == "--jsontrace" || arg == "--singlenet" ||
+				arg == "--verbosity" || arg == "--randomcode" || arg == "--testpath") {
 			throwIfNoArgumentFollows();
-			string vmKind = argv[++i];
-			if (vmKind == "interpreter")
-				VMFactory::setKind(VMKind::Interpreter);
-			else if (vmKind == "jit")
-				VMFactory::setKind(VMKind::JIT);
-			else if (vmKind == "smart")
-				VMFactory::setKind(VMKind::Smart);
-			else
-				cerr << "Unknown VM kind: " << vmKind << "\n";
+			argv[ac] = argv[i];
+			ac++;
+			argv[ac] = argv[i];
+			ac++;
 		}
-		else if (arg == "--jit") // TODO: Remove deprecated option "--jit"
-			VMFactory::setKind(VMKind::JIT);
-		else if (arg == "--vmtrace")
-		{
-#if ETH_VMTRACE
-			vmtrace = true;
-			g_logVerbosity = 13;
-#else
-			cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
-			exit(1);
-#endif
-		}
-		else if (arg == "--jsontrace")
-		{
-			throwIfNoArgumentFollows();
-			jsontrace = true;
-			auto arg = std::string{argv[++i]};
-			Json::Value value;
-			Json::Reader().parse(arg, value);
-			jsontraceOptions = debugOptions(value);
-		}
-		else if (arg == "--filltests")
-			filltests = true;
-		else if (arg == "--fillchain")
-			fillchain = true;
-		else if (arg == "--stats")
-		{
-			throwIfNoArgumentFollows();
-			stats = true;
-			statsOutFile = argv[++i];
-		}
-		else if (arg == "--exectimelog")
-			exectimelog = true;
-		else if (arg == "--all")
-			all = true;
 		else if (arg == "--singletest")
 		{
 			throwIfNoArgumentFollows();
@@ -175,44 +174,12 @@ Options::Options(int argc, char** argv)
 			else
 				singleTestName = std::move(name1);
 		}
-		else if (arg == "--singlenet")
-		{
-			throwIfNoArgumentFollows();
-			singleTestNet = std::string{argv[++i]};
-			ImportTest::checkAllowedNetwork({singleTestNet});
-		}
-		else if (arg == "--fulloutput")
-			fulloutput = true;
-		else if (arg == "--verbosity")
-		{
-			throwIfNoArgumentFollows();
-			static std::ostringstream strCout; //static string to redirect logs to
-			std::string indentLevel = std::string{argv[++i]};
-			if (indentLevel == "0")
-			{
-				logVerbosity = Verbosity::None;
-				std::cout.rdbuf(strCout.rdbuf());
-				std::cerr.rdbuf(strCout.rdbuf());
-			}
-			else if (indentLevel == "1")
-				logVerbosity = Verbosity::NiceReport;
-			else
-				logVerbosity = Verbosity::Full;
-
-			int indentLevelInt = atoi(argv[i]);
-			if (indentLevelInt > g_logVerbosity)
-				g_logVerbosity = indentLevelInt;
-		}
-		else if (arg == "--createRandomTest")
-			createRandomTest = true;
 		else if (arg == "-t")
 		{
 			throwIfAfterSeparator();
 			throwIfNoArgumentFollows();
 			rCurrentTestSuite = std::string{argv[++i]};
 		}
-		else if (arg == "--nonetwork")
-			nonetwork = true;
 		else if (arg == "-d")
 		{
 			throwIfNoArgumentFollows();
@@ -228,34 +195,111 @@ Options::Options(int argc, char** argv)
 			throwIfNoArgumentFollows();
 			trValueIndex = atoi(argv[++i]);
 		}
-		else if (arg == "--testpath")
-		{
-			throwIfNoArgumentFollows();
-			testpath = std::string{argv[++i]};
-		}
-		else if (arg == "--statediff")
-			statediff = true;
-		else if (arg == "--randomcode")
-		{
-			throwIfNoArgumentFollows();
-			int maxCodes = atoi(argv[++i]);
-			if (maxCodes > 1000 || maxCodes <= 0)
-			{
-				cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
-				exit(1);
-			}
-			cout << dev::test::RandomCode::generate(maxCodes) << "\n";
-			exit(0);
-		}
-		else if (arg == "--createRandomTest")
-			createRandomTest = true;
 		else if (seenSeparator)
 		{
 			cerr << "Unknown option: " + arg << "\n";
 			exit(1);
 		}
 	}
+	po::variables_map vm;
+	po::store(po::parse_command_line(ac, argv, allowedOptions), vm);
+	po::notify(vm);
+	if (vm.count("nonetwork"))
+		nonetwork = true;
+	if (vm.count("testpath"))
+	{
+		testpath = vm["testpath"].as<string>();
+	}
+	if (vm.count("statediff"))
+		statediff = true;
+	if (vm.count("randomcode"))
+	{
 
+		int maxCodes = vm["randomcode"].as<int>();
+		if (maxCodes > 1000 || maxCodes <= 0)
+		{
+			cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
+			exit(1);
+		}
+		cout << dev::test::RandomCode::generate(maxCodes) << "\n";
+		exit(0);
+	}
+	if (vm.count("singlenet"))
+	{
+		singleTestNet = vm["singlenet"].as<string>();
+		ImportTest::checkAllowedNetwork({singleTestNet});
+	}
+	if (vm.count("fulloutput"))
+		fulloutput = true;
+	if (vm.count("verbosity"))
+	{
+
+		static std::ostringstream strCout; //static string to redirect logs to
+		std::string indentLevel = vm["verbosity"].as<string>();
+		if (indentLevel == "0")
+		{
+			logVerbosity = Verbosity::None;
+			std::cout.rdbuf(strCout.rdbuf());
+			std::cerr.rdbuf(strCout.rdbuf());
+		}
+		else if (indentLevel == "1")
+			logVerbosity = Verbosity::NiceReport;
+		else
+			logVerbosity = Verbosity::Full;
+
+		int indentLevelInt = atoi(indentLevel.c_str());
+		if (indentLevelInt > g_logVerbosity)
+			g_logVerbosity = indentLevelInt;
+	}
+	if (vm.count("createRandomTest"))
+		createRandomTest = true;
+	if (vm.count("vm"))
+	{
+		string vmKind = vm["vm"].as<string>();
+		if (vmKind == "interpreter")
+			VMFactory::setKind(VMKind::Interpreter);
+		else if (vmKind == "jit")
+			VMFactory::setKind(VMKind::JIT);
+		else if (vmKind == "smart")
+			VMFactory::setKind(VMKind::Smart);
+		else
+			cerr << "Unknown VM kind: " << vmKind << "\n";
+	}
+
+
+	if (vm.count("jit")) // TODO: Remove deprecated option "--jit"
+		VMFactory::setKind(VMKind::JIT);
+	if (vm.count("vmtrace"))
+	{
+#if ETH_VMTRACE
+		vmtrace = true;
+			g_logVerbosity = 13;
+#else
+		cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
+		exit(1);
+#endif
+	}
+	if (vm.count("jsontrace"))
+	{
+		jsontrace = true;
+		auto arg = std::string{vm["jsontrace"].as<string>()};
+		Json::Value value;
+		Json::Reader().parse(arg, value);
+		jsontraceOptions = debugOptions(value);
+	}
+	if (vm.count("filltests"))
+		filltests = true;
+	if (vm.count("fillchain"))
+		fillchain = true;
+	if (vm.count("stats"))
+	{
+		stats = true;
+		statsOutFile = vm["stats"].as<string>();
+	}
+	if (vm.count("exectimelog"))
+		exectimelog = true;
+	if (vm.count("all"))
+		all = true;
 	//check restrickted options
 	if (createRandomTest)
 	{

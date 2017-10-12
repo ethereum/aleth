@@ -153,3 +153,4 @@ add_subdirectory(utils)
 add_executable(main rlp/main.cpp)
 
 add_executable(peer test/unittests/libp2p/peer.cpp)
+add_executable(Options test/tools/libtesteth/Options.cpp)
