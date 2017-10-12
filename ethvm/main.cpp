@@ -144,6 +144,7 @@ int main(int argc, char** argv)
 	Network networkName = Network::MainNetworkTest;
 	BlockHeader blockHeader; // fake block to be executed in
 	blockHeader.setGasLimit(maxBlockGasLimit());
+	blockHeader.setTimestamp(0);
 	bytes data;
 	bytes code;
 
