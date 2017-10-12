@@ -31,6 +31,18 @@ namespace dev
 namespace p2p
 {
 
+Peer::Peer(Peer const& _original):
+	Node(_original),
+	m_lastConnected(_original.m_lastConnected),
+	m_lastAttempted(_original.m_lastAttempted),
+	m_failedAttempts(_original.m_failedAttempts),
+	m_lastDisconnect(_original.m_lastDisconnect),
+	m_session(_original.m_session)
+{
+	m_score = _original.m_score.load();
+	m_rating = _original.m_rating.load();
+}
+
 bool Peer::shouldReconnect() const
 {
 	return id && endpoint && chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
