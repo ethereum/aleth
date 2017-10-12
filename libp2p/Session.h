@@ -59,7 +59,7 @@ public:
 
 	virtual NodeID id() const = 0;
 
-	virtual void sealAndSend(RLPStream& _s, uint16_t _protocolID) = 0;
+	virtual void sealAndSend(RLPStream& _s) = 0;
 
 	virtual int rating() const = 0;
 	virtual void addRating(int _r) = 0;
@@ -99,7 +99,7 @@ public:
 
 	NodeID id() const override;
 
-	void sealAndSend(RLPStream& _s, uint16_t _protocolID) override;
+	void sealAndSend(RLPStream& _s) override;
 
 	int rating() const override;
 	void addRating(int _r) override;
@@ -122,7 +122,7 @@ public:
 private:
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
 
-	void send(bytes&& _msg, uint16_t _protocolID);
+	void send(bytes&& _msg);
 
 	/// Drop the connection for the reason @a _r.
 	void drop(DisconnectReason _r);

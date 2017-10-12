@@ -158,7 +158,7 @@ bool Session::interpret(PacketType _t, RLP const& _r)
 	{
 		clog(NetTriviaSummary) << "Ping" << m_info.id;
 		RLPStream s;
-		sealAndSend(prep(s, PongPacket), 0);
+		sealAndSend(prep(s, PongPacket));
 		break;
 	}
 	case PongPacket:
@@ -180,7 +180,7 @@ bool Session::interpret(PacketType _t, RLP const& _r)
 void Session::ping()
 {
 	RLPStream s;
-	sealAndSend(prep(s, PingPacket), 0);
+	sealAndSend(prep(s, PingPacket));
 	m_ping = std::chrono::steady_clock::now();
 }
 
@@ -189,11 +189,11 @@ RLPStream& Session::prep(RLPStream& _s, PacketType _id, unsigned _args)
 	return _s.append((unsigned)_id).appendList(_args);
 }
 
-void Session::sealAndSend(RLPStream& _s, uint16_t _protocolID)
+void Session::sealAndSend(RLPStream& _s)
 {
 	bytes b;
 	_s.swapOut(b);
-	send(move(b), _protocolID);
+	send(move(b));
 }
 
 bool Session::checkPacket(bytesConstRef _msg)
@@ -205,7 +205,7 @@ bool Session::checkPacket(bytesConstRef _msg)
 	return true;
 }
 
-void Session::send(bytes&& _msg, uint16_t _protocolID)
+void Session::send(bytes&& _msg)
 {
 	bytesConstRef msg(&_msg);
 	clog(NetLeft) << RLP(msg.cropped(1));
@@ -289,7 +289,7 @@ void Session::disconnect(DisconnectReason _reason)
 	{
 		RLPStream s;
 		prep(s, DisconnectPacket, 1) << (int)_reason;
-		sealAndSend(s, 0);
+		sealAndSend(s);
 	}
 	drop(_reason);
 }

@@ -31,7 +31,7 @@ protected:
 	string name() const override { return "mock capability name"; }
 	u256 version() const override { return 0; }
 	unsigned messageCount() const override { return 0;  }
-	std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<SessionFace> const&, unsigned, CapDesc const&, uint16_t) override { return std::shared_ptr<Capability>(); }
+	std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<SessionFace> const&, unsigned, CapDesc const&) override { return std::shared_ptr<Capability>(); }
 };
 
 class MockSession: public SessionFace
@@ -46,7 +46,7 @@ public:
 
 	NodeID id() const override { return {}; }
 
-	void sealAndSend(RLPStream& _s, uint16_t /*_protocolID*/) override
+	void sealAndSend(RLPStream& _s) override
 	{
 		_s.swapOut(m_bytesSent);
 	}
@@ -108,7 +108,7 @@ public:
 		session(std::make_shared<MockSession>()),
 		observer(std::make_shared<MockEthereumPeerObserver>()),
 		offset(UserPacket),
-		peer(session, &hostCap, offset, { "eth", 0 }, 0)
+		peer(session, &hostCap, offset, { "eth", 0 })
 	{
 		peer.init(63, 2, 0, h256(0), h256(0), std::shared_ptr<EthereumHostDataFace>(), observer);
 	}

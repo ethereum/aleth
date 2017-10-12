@@ -36,7 +36,7 @@ class Capability: public std::enable_shared_from_this<Capability>
 	friend class Session;
 
 public:
-	Capability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _idOffset, uint16_t _protocolID);
+	Capability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _idOffset);
 	virtual ~Capability() {}
 
 	// Implement these in the derived class.
@@ -55,8 +55,6 @@ protected:
 	RLPStream& prep(RLPStream& _s, unsigned _id, unsigned _args = 0);
 	void sealAndSend(RLPStream& _s);
 	void addRating(int _r);
-
-	uint16_t const c_protocolID;
 
 private:
 	std::weak_ptr<SessionFace> m_session;
