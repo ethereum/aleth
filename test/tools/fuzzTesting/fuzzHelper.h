@@ -52,8 +52,11 @@ struct RandomCodeOptions
 public:
 	enum AddressType{
 		Precompiled,
+		ByzantiumPrecompiled,
 		StateAccount,
+		SendingAccount,
 		PrecompiledOrStateOrCreate,
+		PrecompiledOrState,
 		All
 	};
 	RandomCodeOptions();
@@ -68,11 +71,15 @@ public:
 	int emptyCodeProbability;
 	int emptyAddressProbability;
 	int precompiledAddressProbability;
+	int byzPrecompiledAddressProbability;
+	int precompiledDestProbability;
+	int sendingAddressProbability;
 
 private:
 	std::map<int, int> mapWeights;
-	std::vector<dev::Address> precompiledAddressList;
-	std::vector<dev::Address> stateAddressList;
+	typedef std::pair<dev::Address, AddressType> accountRecord;
+	std::vector<accountRecord> testAccounts;
+	dev::Address getRandomAddressPriv(AddressType _type) const;
 };
 
 enum class SizeStrictness
@@ -104,6 +111,7 @@ public:
 	// Returns empty string if there was an error, a filled test otherwise.
 	// prints test to the std::out or std::error if error when filling
 	static std::string fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testFillerTemplate, dev::test::RandomCodeOptions const& _options);
+
 
 	/// Generate random byte string of a given length
 	static std::string rndByteSequence(int _length = 1, SizeStrictness _sizeType = SizeStrictness::Strict);
@@ -137,12 +145,14 @@ private:
 	static IntDistrib percentDist;			///< 0..100 percent
 	static IntDistrib opLengDist;			///< 1..32  byte string
 	static IntDistrib opMemrDist;			///< 1..10MB  byte string
+	static IntDistrib opSmallMemrDist; // 0..1kb
 	static IntDistrib uniIntDist;			///< 0..0x7fffffff
 
 	static IntGenerator randUniIntGen;		///< Generate random UniformInt from uniIntDist
 	static IntGenerator randOpCodeGen;		///< Generate random value from opCodeDist
 	static IntGenerator randOpLengGen;		///< Generate random length from opLengDist
 	static IntGenerator randOpMemrGen;		///< Generate random length from opMemrDist
+	static IntGenerator randoOpSmallMemrGen;		///< Generate random length from opSmallMemrDist
 };
 
 }
