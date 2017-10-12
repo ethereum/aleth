@@ -313,7 +313,6 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		}
 
 		unsigned offset = (unsigned)UserPacket;
-		uint16_t cnt = 1;
 
 		// todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
 		for (auto const& i: caps)
@@ -322,13 +321,8 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 			if (!pcap)
 				return ps->disconnect(IncompatibleProtocol);
 
-			if (Session::isFramingAllowedForVersion(protocolVersion))
-				pcap->newPeerCapability(ps, 0, i, cnt++);
-			else
-			{
-				pcap->newPeerCapability(ps, offset, i, 0);
-				offset += pcap->messageCount();
-			}
+			pcap->newPeerCapability(ps, offset, i, 0);
+			offset += pcap->messageCount();
 		}
 
 		ps->start();

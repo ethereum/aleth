@@ -63,7 +63,6 @@ public:
 	std::chrono::steady_clock::time_point connectionTime() override { return std::chrono::steady_clock::time_point{}; }
 
 	void registerCapability(CapDesc const& /*_desc*/, std::shared_ptr<Capability> /*_p*/) override { }
-	void registerFraming(uint16_t /*_id*/) override { }
 
 	map<CapDesc, std::shared_ptr<Capability>> const&  capabilities() const override { return m_capabilities; }
 
