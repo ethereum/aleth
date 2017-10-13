@@ -153,7 +153,9 @@ BOOST_AUTO_TEST_CASE(stInitCodeTest){}
 BOOST_AUTO_TEST_CASE(stLogTests){}
 BOOST_AUTO_TEST_CASE(stMemoryTest){}
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts){}
+BOOST_AUTO_TEST_CASE(stPreCompiledContracts2){}
 BOOST_AUTO_TEST_CASE(stRandom){}
+BOOST_AUTO_TEST_CASE(stRandom2){}
 BOOST_AUTO_TEST_CASE(stRecursiveCreate){}
 BOOST_AUTO_TEST_CASE(stRefundTest){}
 BOOST_AUTO_TEST_CASE(stSolidityTest){}
@@ -189,6 +191,7 @@ BOOST_AUTO_TEST_CASE(stStackTests){}
 BOOST_AUTO_TEST_CASE(stStaticCall){}
 BOOST_AUTO_TEST_CASE(stReturnDataTest){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
+BOOST_AUTO_TEST_CASE(stZeroKnowledge2){}
 BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 
 //Stress Tests
