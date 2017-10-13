@@ -94,7 +94,7 @@ public:
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
 protected:
-	std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap, uint16_t _capID) override;
+	std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap) override;
 
 private:
 	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
