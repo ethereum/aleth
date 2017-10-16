@@ -8,16 +8,15 @@ set(SNARK_INCLUDE_DIR "${prefix}/include/libff")
 
 ExternalProject_Add(snark
     PREFIX "${prefix}"
-    DOWNLOAD_NAME libff-97d3fa6c.tar.gz
+    DOWNLOAD_NAME libff-v2.tar.gz
     DOWNLOAD_NO_PROGRESS TRUE
-    URL https://github.com/chfast/libff/archive/97d3fa6cdbd4b7549c7a8a179dc97308dbfd044d.tar.gz
-    URL_HASH SHA256=f102f3ee43c96c9a81c20d8c0446c805c6b8c0e3121518b3625f08e2c230096e
+    URL https://github.com/chfast/libff/archive/cpp-ethereum-v2.tar.gz
+    URL_HASH SHA256=f5a23730b9076938cf0b5ba1cb67f1f33873ca23dded58c52d7819c6b6c3ec91
     CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=Release
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
         -DGMP_INCLUDE_DIR=${MPIR_INCLUDE_DIR}
-        -DGMP_LIBRARIES=${MPIR_LIBRARY}
-        -DGMPXX_LIBRARIES=${MPIR_LIBRARY}
+        -DGMP_LIBRARY=${MPIR_LIBRARY}
         -DCURVE=ALT_BN128 -DPERFORMANCE=Off -DWITH_PROCPS=Off
         -DUSE_PT_COMPRESSION=Off
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
