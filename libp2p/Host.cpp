@@ -149,8 +149,15 @@ void Host::stop()
 		return;
 
 	// wait for m_timer to reset (indicating network scheduler has stopped)
-	while (!!m_timer)
-		this_thread::sleep_for(chrono::milliseconds(50));
+	{
+		std::unique_lock<std::mutex> l{x_runTimer};
+		while (!!m_timer)
+		{
+			l.unlock();
+			this_thread::sleep_for(chrono::milliseconds(50));
+			l.lock();
+		}
+	}
 
 	// stop worker thread
 	if (isWorking())
@@ -659,7 +666,8 @@ void Host::run(boost::system::error_code const&)
 		m_ioService.stop();
 
 		// resetting timer signals network that nothing else can be scheduled to run
-		m_timer.reset();
+		DEV_GUARDED(x_runTimer)
+			m_timer.reset();
 		return;
 	}
 
