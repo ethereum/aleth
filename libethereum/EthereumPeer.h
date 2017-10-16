@@ -192,8 +192,8 @@ private:
 	unsigned m_unknownNewBlocks = 0;		///< Number of unknown NewBlocks received from this peer
 	unsigned m_lastAskedHeaders = 0;		///< Number of hashes asked
 
-	std::shared_ptr<EthereumPeerObserverFace> m_observer;
-	std::shared_ptr<EthereumHostDataFace> m_hostData;
+	std::weak_ptr<EthereumPeerObserverFace> m_observer;
+	std::weak_ptr<EthereumHostDataFace> m_hostData;
 };
 
 }
