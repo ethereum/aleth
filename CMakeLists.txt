@@ -108,7 +108,7 @@ find_package(cryptopp CONFIG REQUIRED)
 
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
-include(ProjectSnark)
+include(ProjectLibFF)
 
 find_package(Threads)
 

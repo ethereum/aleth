@@ -1,12 +1,10 @@
 include(ProjectMPIR)
 
-# FIXME: Rename to LibFF as that's the name of the library.
-
 set(prefix "${CMAKE_BINARY_DIR}/deps")
-set(SNARK_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ff${CMAKE_STATIC_LIBRARY_SUFFIX}")
-set(SNARK_INCLUDE_DIR "${prefix}/include/libff")
+set(libff_library "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ff${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(libff_inlcude_dir "${prefix}/include/libff")
 
-ExternalProject_Add(snark
+ExternalProject_Add(libff
     PREFIX "${prefix}"
     DOWNLOAD_NAME libff-v2.tar.gz
     DOWNLOAD_NO_PROGRESS TRUE
@@ -24,15 +22,15 @@ ExternalProject_Add(snark
     BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release
     LOG_BUILD 1
     INSTALL_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release --target install
-    BUILD_BYPRODUCTS "${SNARK_LIBRARY}"
+    BUILD_BYPRODUCTS "${libff_library}"
 )
-add_dependencies(snark mpir)
+add_dependencies(libff mpir)
 
 # Create snark imported library
-add_library(Snark STATIC IMPORTED)
-file(MAKE_DIRECTORY ${SNARK_INCLUDE_DIR})
-set_property(TARGET Snark PROPERTY IMPORTED_CONFIGURATIONS Release)
-set_property(TARGET Snark PROPERTY IMPORTED_LOCATION_RELEASE ${SNARK_LIBRARY})
-set_property(TARGET Snark PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SNARK_INCLUDE_DIR})
-set_property(TARGET Snark PROPERTY INTERFACE_LINK_LIBRARIES MPIR::mpir)
-add_dependencies(Snark snark)
+add_library(libff::ff STATIC IMPORTED)
+file(MAKE_DIRECTORY ${libff_inlcude_dir})
+set_property(TARGET libff::ff PROPERTY IMPORTED_CONFIGURATIONS Release)
+set_property(TARGET libff::ff PROPERTY IMPORTED_LOCATION_RELEASE ${libff_library})
+set_property(TARGET libff::ff PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${libff_inlcude_dir})
+set_property(TARGET libff::ff PROPERTY INTERFACE_LINK_LIBRARIES MPIR::mpir)
+add_dependencies(libff::ff libff)
