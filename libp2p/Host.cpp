@@ -142,21 +142,16 @@ void Host::stop()
 	// called to force io_service to kill any remaining tasks it might have -
 	// such tasks may involve socket reads from Capabilities that maintain references
 	// to resources we're about to free.
-
-	// ignore if already stopped/stopping, at the same time,
-	// signal run() to prepare for shutdown and reset m_timer
-	if (!m_run.exchange(false))
-		return;
-
-	// wait for m_timer to reset (indicating network scheduler has stopped)
+	
 	{
-		std::unique_lock<std::mutex> l{x_runTimer};
-		while (!!m_timer)
-		{
-			l.unlock();
-			this_thread::sleep_for(chrono::milliseconds(50));
-			l.lock();
-		}
+		unique_lock<mutex> l(x_runTimer);
+		// ignore if already stopped/stopping, at the same time,
+		// signal run() to prepare for shutdown and reset m_timer
+		if (!m_run.exchange(false))
+			return;
+
+		while (m_timer)
+			m_timerSemaphore.wait(l);
 	}
 
 	// stop worker thread
@@ -672,6 +667,8 @@ void Host::run(boost::system::error_code const&)
 		// resetting timer signals network that nothing else can be scheduled to run
 		DEV_GUARDED(x_runTimer)
 			m_timer.reset();
+
+		m_timerSemaphore.notify_all();
 		return;
 	}
 
