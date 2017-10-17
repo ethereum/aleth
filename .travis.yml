@@ -38,14 +38,6 @@ env:
         - secure: "Nm9HEvhW8wtbF9v44g2Vo2CfX8cFlw3UWutHMmVl5nrcri34BVPXulsPF3CrIdoGgdBQvGxzNmbmAgi0KokaWhLZ2WvuDUXRAU8wuU3SB/AV7hNIGFZDqgk1LBBzwaFngqDCqqIQ29v2Z59s3y8qakmPQbR8eNJ1YAc2F9O8iVI="
 matrix:
     include:
-        # Ubuntu 14.04 LTS "Trusty Tahr"
-        # https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_14.04_LTS_.28Trusty_Tahr.29
-        #
-        # TravisCI doesn't directly support any new Ubuntu releases.  These is
-        # some Docker support, which we should probably investigate, at least for
-        # Ubuntu 16.04 LTS "Xenial Xerus"
-        # See https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_16.04_LTS_.28Xenial_Xerus.29.
-        # See https://github.com/ethereum/cpp-ethereum/issues/3269
         - os: linux
           dist: trusty
           sudo: required
@@ -54,49 +46,8 @@ matrix:
           env:
               - ZIP_SUFFIX=ubuntu-trusty
 
-        # OS X Mavericks (10.9)
-        # https://en.wikipedia.org/wiki/OS_X_Mavericks
-        # - disabled because it takes too long with non-binary homebrew
-        #- os: osx
-        #  osx_image: beta-xcode6.2
-        #  env:
-        #      - ZIP_SUFFIX=osx-mavericks
-
-        # OS X Yosemite (10.10)
-        # https://en.wikipedia.org/wiki/OS_X_Yosemite
-        # - disabled because it takes too long with non-binary homebrew
-        #- os: osx
-        #  osx_image: xcode7.1
-        #  env:
-        #      - TRAVIS_TESTS=Off
-        #      - ZIP_SUFFIX=osx-yosemite
-
-        # OS X El Capitan (10.11)
-        # https://en.wikipedia.org/wiki/OS_X_El_Capitan
-        #
-        # TODO - This is currently disabled because it is consistently
-        # running into the 48min timeout.  We need to make this process
-        # quicker.
-        #
-        # See https://github.com/ethereum/cpp-ethereum/issues/3267
-        #
-        #- os: osx
-        #  osx_image: xcode7.3
-        #  env:
-        #      - TRAVIS_TESTS=Off
-        #      - ZIP_SUFFIX=osx-elcapitan
-
-        # macOS Sierra (10.12)
-        # https://en.wikipedia.org/wiki/MacOS_Sierra
-        #
-        # TODO - Tests are currently disabled because they are consistently
-        # running into the 48min timeout.  We need to make this process
-        # quicker.
-        #
-        # See https://github.com/ethereum/cpp-ethereum/issues/3268
-
         - os: osx
-          osx_image: xcode8.2
+          osx_image: xcode9
           env:
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
@@ -111,10 +62,12 @@ cache:
         # Cache whole deps dir hoping you will not need to download and
         # build external dependencies next build.
         - $TRAVIS_BUILD_DIR/build/deps
-install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then clang --version; travis_wait 150 brew install llvm; $(brew --prefix llvm)/bin/clang --version; export PATH=$(brew --prefix llvm)/bin:$PATH; export CC=$(brew --prefix llvm)/bin/clang; export CXX=$(brew --prefix llvm)/bin/clang++; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh && ./scripts/install_solc_lllc.sh; fi
-    - ./scripts/install_deps.sh
+install: |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      ./scripts/install_cmake.sh && ./scripts/install_solc_lllc.sh;
+    fi
+    export HOMEBREW_NO_AUTO_UPDATE=1
+    ./scripts/install_deps.sh
 before_script:
     - ./scripts/prepare_ccache.sh
     - travis_wait 150 ./scripts/build.sh $TRAVIS_BUILD_TYPE
