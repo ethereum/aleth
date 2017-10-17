@@ -406,6 +406,10 @@ void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 	size_t gasVectorSize = o_tr.at("gasLimit").get_array().size();
 	size_t valueVectorSize = o_tr.at("value").get_array().size();
 
+	BOOST_REQUIRE_MESSAGE(dataVectorSize > 0, "Transaction should has at least 1 data item!");
+	BOOST_REQUIRE_MESSAGE(gasVectorSize > 0, "Transaction should has at least 1 gas item!");
+	BOOST_REQUIRE_MESSAGE(valueVectorSize > 0, "Transaction should has at least 1 value item!");
+
 	for (size_t d = 0; d < dataVectorSize; d++)
 		for (size_t g = 0; g < gasVectorSize; g++)
 			for (size_t v = 0; v < valueVectorSize; v++)
