@@ -23,6 +23,7 @@
 
 #include <libethereum/ClientBase.h>
 #include <libethereum/BlockChain.h>
+#include <libethcore/Common.h>
 
 namespace dev
 {
@@ -49,6 +50,9 @@ public:
 	virtual eth::Block postSeal() const override { ReadGuard l(x_stateDB); return m_block; }
 	virtual void setAuthor(Address const& _us) override { WriteGuard l(x_stateDB); m_block.setAuthor(_us); }
 	virtual void prepareForTransaction() override {}
+	virtual std::pair<h256, Address> submitTransaction(eth::TransactionSkeleton const&, Secret const&) override { return {}; };
+	virtual eth::ImportResult injectTransaction(bytes const&, eth::IfDropped) override { return {}; }
+	virtual eth::ExecutionResult call(Address const&, u256, Address, bytes const&, u256, u256, eth::BlockNumber, eth::FudgeFactor) override { return {}; };
 
 private:
 	eth::BlockChain const& m_bc;
