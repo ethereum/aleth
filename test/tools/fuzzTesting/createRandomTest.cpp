@@ -29,6 +29,8 @@
 #include <libdevcore/Common.h>
 #include <test/tools/jsontests/StateTests.h>
 
+using namespace dev;
+
 namespace dev { namespace test {
 
 bool createRandomTest()
@@ -44,7 +46,7 @@ bool createRandomTest()
 	{
 		RandomCodeOptions options;
 		TestOutputHelper testOutputHelper;
-		std::string test = test::RandomCode::fillRandomTest(suite, c_testExampleStateTest, options);
+		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, options);
 		std::cout << test << "\n";
 		return test.empty() ? false : true;
 	}
@@ -53,7 +55,7 @@ bool createRandomTest()
 }} //namespaces
 
 //Prints a generated test Json into std::out
-std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, dev::test::RandomCodeOptions const& _options)
+std::string test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, test::RandomCodeOptions const& _options)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
@@ -61,7 +63,7 @@ std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _t
 	{
 		std::string newTest = _testString;
 		std::map<std::string, std::string> nullReplaceMap;
-		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap, _options);
+		parseTestWithTypes(newTest, nullReplaceMap, _options);
 		json_spirit::read_string(newTest, v);
 		v = _testSuite.doTests(v, true); //filltests
 		_testSuite.doTests(v, false); //checktest
@@ -86,7 +88,7 @@ std::string dev::test::RandomCode::fillRandomTest(dev::test::TestSuite const& _t
 }
 
 /// Parse Test string replacing keywords to fuzzed values
-void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options)
+void test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options)
 {
 	std::vector<std::string> types = getTypes();
 
@@ -102,34 +104,34 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 			if (type == "[RLP]")
 			{
 				std::string debug;
-				int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;
-				replace = dev::test::RandomCode::rndRLPSequence(randomDepth, debug);
+				int randomDepth = 1 + (int)randomUniInt() % 10;
+				replace = rndRLPSequence(randomDepth, debug);
 				cnote << debug;
 			}
 			else if (type == "[CODE]")
-				replace = dev::test::RandomCode::generate(50, _options);
+				replace = generate(50, _options);
 			else if (type == "[HEX]")
-				replace = dev::test::RandomCode::randomUniIntHex();
+				replace = randomUniIntHex();
 			else if (type == "[HEX32]")
-				replace = dev::test::RandomCode::randomUniIntHex(0, std::numeric_limits<uint32_t>::max());
+				replace = randomUniIntHex(0, std::numeric_limits<uint32_t>::max());
 			else if (type == "[HASH20]")
-				replace = dev::test::RandomCode::rndByteSequence(20);
+				replace = rndByteSequence(20);
 			else if (type == "[HASH32]")
-				replace = dev::test::RandomCode::rndByteSequence(32);
+				replace = rndByteSequence(32);
 			else if (type == "[0xHASH32]")
-				replace = "0x" + dev::test::RandomCode::rndByteSequence(32);
+				replace = "0x" + rndByteSequence(32);
 			else if (type == "[V]")
 			{
-				int random = test::RandomCode::randomPercent();
+				int random = randomPercent();
 				if (random < 30)
 					replace = "0x1c";
 				else if (random < 60)
 					replace = "0x1d";
 				else
-					replace = "0x" + dev::test::RandomCode::rndByteSequence(1);
+					replace = "0x" + rndByteSequence(1);
 			}
 			else if (type == "[BLOCKGASLIMIT]")
-				replace = test::RandomCode::randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
+				replace = randomUniIntHex(dev::u256("100000"), dev::u256("36028797018963967"));
 			else if (type == "[DESTADDRESS]")
 			{
 				Address address = _options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrStateOrCreate);
@@ -147,9 +149,9 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 				replace = "0x" + toString(_options.getRandomAddress(RandomCodeOptions::AddressType::StateAccount));
 			}
 			else if (type == "[TRANSACTIONGASLIMIT]")
-				replace = test::RandomCode::randomUniIntHex(dev::u256("25000"), dev::u256("10000000"));
+				replace = randomUniIntHex(dev::u256("25000"), dev::u256("10000000"));
 			else if (type == "[GASPRICE]")
-				replace = test::RandomCode::randomUniIntHex(0, dev::u256("10"));
+				replace = randomUniIntHex(0, dev::u256("10"));
 			else
 			{
 				//Replace type from varMap if varMap is set
@@ -168,7 +170,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 	}
 }
 
-std::vector<std::string> dev::test::RandomCode::getTypes()
+std::vector<std::string> test::RandomCode::getTypes()
 {
 	return {
 		"[RLP]",				//Random RLP String
