@@ -21,7 +21,7 @@
 
 #pragma once
 #include <string>
-#include <test/tools/fuzzTesting/randomCode.h>
+#include <test/tools/fuzzTesting/RandomCode.h>
 
 //Test Templates
 extern std::string const c_testExampleStateTest;
