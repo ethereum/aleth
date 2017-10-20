@@ -82,20 +82,6 @@ namespace dev
 namespace test
 {
 
-std::mt19937_64 RandomCode::gen;
-IntDistrib RandomCode::percentDist = IntDistrib (0, 100);
-IntDistrib RandomCode::opCodeDist = IntDistrib (0, 255);
-IntDistrib RandomCode::opLengDist = IntDistrib (1, 32);
-IntDistrib RandomCode::opMemrDist = IntDistrib (0, 10485760);
-IntDistrib RandomCode::opSmallMemrDist = IntDistrib (0, 1024);
-IntDistrib RandomCode::uniIntDist = IntDistrib (0, 0x7fffffff);
-
-IntGenerator RandomCode::randOpCodeGen = std::bind(opCodeDist, gen);
-IntGenerator RandomCode::randOpLengGen = std::bind(opLengDist, gen);
-IntGenerator RandomCode::randOpMemrGen = std::bind(opMemrDist, gen);
-IntGenerator RandomCode::randoOpSmallMemrGen = std::bind(opSmallMemrDist, gen);
-IntGenerator RandomCode::randUniIntGen = std::bind(uniIntDist, gen);
-
 int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _debug)
 {
 	bool genValidRlp = true;
@@ -540,9 +526,9 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 	// Return Precompiled address
 	if (_type == PrecompiledOrStateOrCreate || _type == PrecompiledOrState || _type == All)
 	{
-		if (RandomCode::randomPercent() < precompiledDestProbability)
+		if (RandomCode::get().randomPercent() < precompiledDestProbability)
 		{
-			if (RandomCode::randomPercent() < byzPrecompiledAddressProbability)
+			if (RandomCode::get().randomPercent() < byzPrecompiledAddressProbability)
 				return getRandomAddressPriv(AddressType::ByzantiumPrecompiled);
 			else
 				return getRandomAddressPriv(AddressType::Precompiled);
@@ -550,20 +536,20 @@ Address RandomCodeOptions::getRandomAddress(AddressType _type) const
 
 		// ZeroAddress means empty account (create)
 		if (_type != PrecompiledOrState)
-		if (RandomCode::randomPercent() < emptyAddressProbability)
+		if (RandomCode::get().randomPercent() < emptyAddressProbability)
 			return ZeroAddress;
 
 		// Return random address
-		if (test::RandomCode::randomPercent() < randomAddressProbability)
-			return Address(RandomCode::rndByteSequence(20));
+		if (test::RandomCode::get().randomPercent() < randomAddressProbability)
+			return Address(RandomCode::get().rndByteSequence(20));
 
 		// Return address of the sender (sender is  a part of state acount list)
-		if (RandomCode::randomPercent() < sendingAddressProbability)
+		if (RandomCode::get().randomPercent() < sendingAddressProbability)
 			return getRandomAddressPriv(AddressType::SendingAccount);
 		return getRandomAddressPriv(AddressType::StateAccount);
 	}
 
-	return Address(RandomCode::rndByteSequence(20));
+	return Address(RandomCode::get().rndByteSequence(20));
 }
 
 Address RandomCodeOptions::getRandomAddressPriv(AddressType _type) const
@@ -571,7 +557,7 @@ Address RandomCodeOptions::getRandomAddressPriv(AddressType _type) const
 	if (_type != Precompiled && _type != ByzantiumPrecompiled && _type != StateAccount && _type != SendingAccount)
 		BOOST_ERROR("RandomCodeOptions::getRandomAddressPriv: address type could not be found! " + toString(_type));
 
-	int random = test::RandomCode::randomPercent();
+	int random = test::RandomCode::get().randomPercent();
 	bool found = false;
 	while (random >= 0)
 	{
@@ -587,12 +573,12 @@ Address RandomCodeOptions::getRandomAddressPriv(AddressType _type) const
 		if (!found)
 		{
 			BOOST_WARN("Can not find account of the specidied type. Return random instead.");
-			return Address(RandomCode::rndByteSequence(20));
+			return Address(RandomCode::get().rndByteSequence(20));
 		}
 	}
 
 	BOOST_WARN("Can not find account of the specidied type. Return random instead.");
-	return Address(RandomCode::rndByteSequence(20));
+	return Address(RandomCode::get().rndByteSequence(20));
 }
 
 int RandomCode::weightedOpcode(std::vector<int>& _weights)
@@ -607,7 +593,7 @@ int RandomCodeOptions::getWeightedRandomOpcode() const
 	std::vector<int> weights;
 	for (auto const& element: mapWeights)
 		weights.push_back(element.second);
-	return RandomCode::weightedOpcode(weights);
+	return RandomCode::get().weightedOpcode(weights);
 }
 
 BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelper)
@@ -618,7 +604,7 @@ BOOST_AUTO_TEST_CASE(rndCode)
 	{
 		test::RandomCodeOptions options;
 		options.emptyCodeProbability = 0;
-		std::string code = test::RandomCode::generate(1000, options);
+		std::string code = test::RandomCode::get().generate(1000, options);
 		BOOST_REQUIRE(!code.empty());
 	}
 	catch(dev::Exception const& _e)
@@ -634,7 +620,7 @@ BOOST_AUTO_TEST_CASE(rndStateTest)
 		test::StateTestSuite suite;
 		test::RandomCodeOptions options;
 		test::TestOutputHelper::setCurrentTestFileName(std::string());
-		std::string test = dev::test::RandomCode::fillRandomTest(suite, c_testExampleStateTest, options);
+		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, options);
 		BOOST_REQUIRE(!test.empty());
 	}
 	catch(dev::Exception const& _e)

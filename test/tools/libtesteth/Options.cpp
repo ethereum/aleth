@@ -245,7 +245,7 @@ Options::Options(int argc, char** argv)
 				exit(1);
 			}
 			test::RandomCodeOptions options;
-			cout << dev::test::RandomCode::generate(maxCodes, options) << "\n";
+			cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
 			exit(0);
 		}
 		else if (arg == "--createRandomTest")

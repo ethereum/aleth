@@ -62,8 +62,8 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				if (!dev::test::TestOutputHelper::checkTest(testName))
 					continue;
 
-				u256 pStamp = dev::test::RandomCode::randomUniInt();
-				u256 pDiff = dev::test::RandomCode::randomUniInt();
+				u256 pStamp = test::RandomCode::get().randomUniInt();
+				u256 pDiff = test::RandomCode::get().randomUniInt();
 				u256 cStamp = pStamp + stampDelta;
 				u256 cNum = blockNumber;
 
@@ -87,7 +87,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
 				replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
 
-				dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
+				test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap);
 				finalTest << tmptest;
 			}
 		}
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						u256 blockNumber = blockNumberVector.at(bN);
 						u256 pDiff = parentDifficultyVector.at(pdN);
 
-						u256 pStamp = dev::test::RandomCode::randomUniInt();
+						u256 pStamp = test::RandomCode::get().randomUniInt();
 						u256 cStamp = pStamp + stampDelta;
 						u256 cNum = blockNumber;
 
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
 						replaceMap["[CDIFF]"] = toCompactHexPrefixed(sealEngine.calculateDifficulty(current, parent));
 
-						dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
+						test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap);
 						finalTest << tmptest;
 					}
 
