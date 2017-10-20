@@ -21,7 +21,7 @@
 
 #pragma once
 #include <string>
-#include <test/tools/fuzzTesting/RandomCode.h>
+#include <test/tools/fuzzTesting/BoostRandomCode.h>
 
 //Test Templates
 extern std::string const c_testExampleStateTest;
@@ -39,6 +39,22 @@ struct RlpDebug
 {
 	std::string rlp;
 	int insertions;
+};
+
+class RandomCode
+{
+public:
+	static RandomCodeBase& get()
+	{
+		static RandomCode instance;
+		return instance.generator;
+	}
+	RandomCode(RandomCode const&) = delete;
+	void operator=(RandomCode const&) = delete;
+
+private:
+	RandomCode(){}
+	BoostRandomCode generator;
 };
 
 }
