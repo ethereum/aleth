@@ -103,7 +103,8 @@ void Worker::stopWorking()
 	if (m_work)
 	{
 		WorkerState ex = WorkerState::Started;
-		m_state.compare_exchange_strong(ex, WorkerState::Stopping);
+		if (!m_state.compare_exchange_strong(ex, WorkerState::Stopping))
+			return;
 		m_state_notifier.notify_all();
 
 		DEV_TIMED_ABOVE("Stop worker", 100)
@@ -118,7 +119,8 @@ void Worker::terminate()
 	std::unique_lock<Mutex> l(x_work);
 	if (m_work)
 	{
-		m_state.exchange(WorkerState::Killing);
+		if (m_state.exchange(WorkerState::Killing) == WorkerState::Killing)
+			return; // Somebody else is doing this
 		l.unlock();
 		m_state_notifier.notify_all();
 		DEV_TIMED_ABOVE("Terminate worker", 100)

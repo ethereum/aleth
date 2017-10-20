@@ -92,7 +92,8 @@ protected:
 //	void join() const { Guard l(x_work); try { if (m_work) m_work->join(); } catch (...) {} }
 
 	/// Stop and never start again.
-	/// This has to be called in the destructor of any derived class.  Otherwise the worker thread will try to lookup vptrs.
+	/// This has to be called in the destructor of any most derived class.  Otherwise the worker thread will try to lookup vptrs.
+	/// It's OK to call terminate() in destructors of multiple derived classes.
 	void terminate();
 
 private:

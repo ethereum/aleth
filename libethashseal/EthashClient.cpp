@@ -59,6 +59,11 @@ EthashClient::EthashClient(
 	asEthashClient(*this);
 }
 
+EthashClient::~EthashClient()
+{
+	terminate();
+}
+
 Ethash* EthashClient::ethash() const
 {
 	return dynamic_cast<Ethash*>(Client::sealEngine());

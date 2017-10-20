@@ -200,6 +200,12 @@ void DeadlineOps::reap()
 	});
 }
 
+Node::Node(Node const& _original):
+	id(_original.id),
+	endpoint(_original.endpoint),
+	peerType(_original.peerType.load())
+{}
+
 Node::Node(NodeSpec const& _s, PeerType _p):
 	id(_s.id()),
 	endpoint(_s.nodeIPEndpoint()),

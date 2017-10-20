@@ -143,7 +143,7 @@ private:
 	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
 	mutable RecursiveMutex x_sync;
 	std::set<std::weak_ptr<EthereumPeer>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_daoChallengedPeers; ///> Peers to which we've sent DAO challenge request
-	SyncState m_state = SyncState::Idle;		///< Current sync state
+	std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state
 	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
 	unsigned m_chainStartBlock = 0;
 	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync

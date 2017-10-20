@@ -225,6 +225,12 @@ void Host::doneWorking()
 	m_sessions.clear();
 }
 
+bool Host::isRequiredPeer(NodeID const& _id) const
+{
+	Guard l(x_requiredPeers);
+	return m_requiredPeers.count(_id);
+}
+
 void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
 {
 	// session maybe ingress or egress so m_peers and node table entries may not exist
@@ -287,7 +293,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		return;
 	}
 
-	if (m_netPrefs.pin && !m_requiredPeers.count(_id))
+	if (m_netPrefs.pin && !isRequiredPeer(_id))
 	{
 		cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
 		ps->disconnect(UnexpectedIdentity);
@@ -507,7 +513,10 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 {
-	m_requiredPeers.insert(_n);
+	{
+		Guard l(x_requiredPeers);
+		m_requiredPeers.insert(_n);
+	}
 
 	if (!m_run)
 		return;

@@ -46,6 +46,7 @@ public:
 		WithExisting _forceAction = WithExisting::Trust,
 		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
+	~ClientTest();
 
 	void setChainParams(std::string const& _genesis);
 	void mineBlocks(unsigned _count);
