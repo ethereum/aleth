@@ -302,7 +302,7 @@ std::string RandomCodeBase::getPushCode(std::string const& _hex)
 	return toCompactHex(pushCode) + hexVal;
 }
 
-std::string RandomCodeBase::getPushCode(uint _value)
+std::string RandomCodeBase::getPushCode(unsigned _value)
 {
 	std::string hexString = toCompactHex(_value, 1);
 	return getPushCode(hexString);
@@ -367,7 +367,7 @@ std::string RandomCodeBase::fillArguments(eth::Instruction _opcode, RandomCodeOp
 			//(CREATE value mem1 mem2)
 			code += getPushCode(randomSmallMemoryLength());	//memlen1
 			code += getPushCode(randomSmallMemoryLength());	//memlen1
-			code += getPushCode((uint)randomUniInt());	//value
+			code += getPushCode((unsigned)randomUniInt());	//value
 			return code;
 		case eth::Instruction::CALL:
 		case eth::Instruction::CALLCODE:
@@ -377,9 +377,9 @@ std::string RandomCodeBase::fillArguments(eth::Instruction _opcode, RandomCodeOp
 			code += getPushCode(randomSmallMemoryLength());	//memstart2
 			code += getPushCode(randomSmallMemoryLength());	//memlen1
 			code += getPushCode(randomSmallMemoryLength());	//memstart1
-			code += getPushCode((uint)randomUniInt());	//value
+			code += getPushCode((unsigned)randomUniInt());	//value
 			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrState)));//address
-			code += getPushCode((uint)randomUniInt());	//gaslimit
+			code += getPushCode((unsigned)randomUniInt());	//gaslimit
 			return code;
 		case eth::Instruction::STATICCALL:
 		case eth::Instruction::DELEGATECALL:
@@ -390,7 +390,7 @@ std::string RandomCodeBase::fillArguments(eth::Instruction _opcode, RandomCodeOp
 			code += getPushCode(randomSmallMemoryLength());	//memlen1
 			code += getPushCode(randomSmallMemoryLength());	//memstart1
 			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrState)));//address
-			code += getPushCode((uint)randomUniInt());	//gaslimit
+			code += getPushCode((unsigned)randomUniInt());	//gaslimit
 			return code;
 		case eth::Instruction::SUICIDE: //(SUICIDE address)
 			code += getPushCode(toString(_options.getRandomAddress()));

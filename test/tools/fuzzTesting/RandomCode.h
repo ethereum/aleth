@@ -117,7 +117,7 @@ private:
 	std::vector<std::string> getTypes();
 	int recursiveRLP(std::string& _result, int _depth, std::string& _debug);
 	std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
-	std::string getPushCode(uint _value);
+	std::string getPushCode(unsigned _value);
 	std::string getPushCode(std::string const& _hex);
 };
 
