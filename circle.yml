@@ -26,7 +26,7 @@ defaults:
       name: "Configure"
       command: |
         mkdir -p build && cd build
-        cmake .. -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
+        cmake .. -G "$GENERATOR" -DSANITIZE=address -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
 
   build: &build
     run:
@@ -105,32 +105,6 @@ defaults:
 version: 2
 jobs:
 
-  Linux-Clang5:
-    environment:
-      - CXX: clang++-5.0
-      - CC:  clang-5.0
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
-    docker:
-      - image: ethereum/cpp-build-env
-    steps: *linux-steps
-
-  Linux-GCC6-Debug:
-    environment:
-      - BUILD_TYPE: Debug
-      - CXX: g++-6
-      - CC:  gcc-6
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 4
-      - TEST_PARALLEL_JOBS: 4
-      # TODO: Fix memory leaks reported in leveldb.
-      # - CMAKE_OPTIONS: -DSANITIZE=address
-      # - ASAN_OPTIONS: detect_leaks=0
-    docker:
-      - image: ethereum/cpp-build-env
-    steps: *linux-steps
-
   macOS-XCode9:
     environment:
       - CXX: clang++
@@ -168,5 +142,3 @@ workflows:
   cpp-ethereum:
     jobs:
       - macOS-XCode9
-      - Linux-Clang5
-      - Linux-GCC6-Debug
