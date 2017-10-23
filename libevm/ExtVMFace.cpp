@@ -160,20 +160,19 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 
 	h160 addr;
 	owning_bytes_ref output;
-	std::tie(addr, output) = _env.create(value, gas, init, Instruction::CREATE,
-										 u256(0), {});
+	std::tie(addr, output) = _env.create(
+		value, gas, init, Instruction::CREATE, u256(0), {}
+	);
 	o_result->gas_left = static_cast<int64_t>(gas);
 	o_result->release = nullptr;
 	if (addr)
 	{
 		o_result->status_code = EVM_SUCCESS;
-		// Use reserved data to store the address.
-		static_assert(sizeof(o_result->reserved.data) >= addr.size,
-					  "Not enough space to store an address");
-		std::copy(addr.begin(), addr.end(), o_result->reserved.data);
-		o_result->output_data = o_result->reserved.data;
-		o_result->output_size = addr.size;
-	} else
+		o_result->create_address = toEvmC(addr);
+		o_result->output_data = nullptr;
+		o_result->output_size = 0;
+	}
+	else
 	{
 		o_result->status_code = EVM_REVERT;
 
@@ -186,13 +185,14 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 		o_result->output_size = output.size();
 
 		// Place a new vector of bytes containing output in result's reserved memory.
-		static_assert(sizeof(bytes) <= sizeof(o_result->reserved),
-					  "Vector is too big");
-		new(&o_result->reserved) bytes(output.takeBytes());
+		auto* data = evm_get_optional_data(o_result);
+		static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
+		new(data) bytes(output.takeBytes());
 		// Set the destructor to delete the vector.
 		o_result->release = [](evm_result const* _result)
 		{
-			auto& output = reinterpret_cast<bytes const&>(_result->reserved);
+			auto* data = evm_get_const_optional_data(_result);
+			auto& output = reinterpret_cast<bytes const&>(*data);
 			// Explicitly call vector's destructor to release its data.
 			// This is normal pattern when placement new operator is used.
 			output.~bytes();
@@ -241,13 +241,14 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 	o_result->output_size = output.size();
 
 	// Place a new vector of bytes containing output in result's reserved memory.
-	static_assert(sizeof(bytes) <= sizeof(o_result->reserved),
-				  "Vector is too big");
-	new(&o_result->reserved) bytes(output.takeBytes());
+	auto* data = evm_get_optional_data(o_result);
+	static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
+	new(data) bytes(output.takeBytes());
 	// Set the destructor to delete the vector.
 	o_result->release = [](evm_result const* _result)
 	{
-		auto& output = reinterpret_cast<bytes const&>(_result->reserved);
+		auto* data = evm_get_const_optional_data(_result);
+		auto& output = reinterpret_cast<bytes const&>(*data);
 		// Explicitly call vector's destructor to release its data.
 		// This is normal pattern when placement new operator is used.
 		output.~bytes();
