@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(updateStats)
 {

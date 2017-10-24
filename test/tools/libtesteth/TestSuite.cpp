@@ -134,13 +134,15 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
 	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
 
-	auto testOutput = dev::test::TestOutputHelper(files.size());
+	auto& testOutput = test::TestOutputHelper::get();
+	testOutput.initTest(files.size());
 	for (auto const& file: files)
 	{
 		testOutput.showProgress();
-		test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
+		testOutput.setCurrentTestFileName(file.filename().string());
 		executeTest(_testFolder, file);
 	}
+	testOutput.finishTest();
 }
 
 fs::path TestSuite::getFullPathFiller(string const& _testFolder) const
@@ -182,7 +184,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 			clog << "Copying " << _jsonFileName.string() << "\n";
 			clog << " TO " << boostTestPath.string() << "\n";
 			assert(_jsonFileName.string() != boostTestPath.string());
-			TestOutputHelper::showProgress();
+			TestOutputHelper::get().showProgress();
 			dev::test::copyFile(_jsonFileName, boostTestPath);
 			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
 

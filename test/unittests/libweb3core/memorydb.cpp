@@ -34,7 +34,7 @@ namespace dev {  namespace test {
 
 } }// Namespace Close
 
-BOOST_FIXTURE_TEST_SUITE(memDB, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(memDB, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(kill)
 {

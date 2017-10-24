@@ -51,7 +51,7 @@ void executeGasPricerTest(string const& name, double _etherPrice, double _blockF
 }
 } }
 
-BOOST_FIXTURE_TEST_SUITE(GasPricer, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(GasPricer, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(trivialGasPricer)
 {

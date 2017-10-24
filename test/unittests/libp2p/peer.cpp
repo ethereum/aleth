@@ -34,7 +34,7 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-struct P2PPeerFixture: public TestOutputHelper
+struct P2PPeerFixture: public TestOutputHelperFixture
 {
 	P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(peerTypes, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(peerTypes, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(emptySharedPeer)
 {

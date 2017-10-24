@@ -47,7 +47,7 @@ namespace dev
 namespace test
 {
 
-BOOST_FIXTURE_TEST_SUITE(ClientTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(ClientTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(Personal)
 {

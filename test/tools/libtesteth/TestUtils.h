@@ -25,6 +25,7 @@
 #include <libdevcore/TransientDirectory.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/ClientBase.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 
 namespace dev
 {
@@ -67,7 +68,7 @@ struct ClientBaseFixture: public BlockChainFixture
 // http://lists.boost.org/boost-users/2010/03/57691.php
 // worth reading
 // https://codecrafter.wordpress.com/2012/11/01/c-unit-test-framework-adapter-part-3/
-struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixture
+struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixture, public TestOutputHelperFixture
 {
 	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const;
 };

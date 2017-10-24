@@ -32,7 +32,7 @@ namespace dev
 namespace test
 {
 
-BOOST_FIXTURE_TEST_SUITE(AccountHolderTest, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(AccountHolderTest, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(ProxyAccountUseCase)
 {

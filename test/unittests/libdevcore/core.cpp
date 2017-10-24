@@ -27,7 +27,7 @@
 
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(CoreLibTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(CoreLibTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(toHex)
 {

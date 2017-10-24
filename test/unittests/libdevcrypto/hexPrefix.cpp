@@ -33,7 +33,7 @@ namespace js = json_spirit;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-BOOST_FIXTURE_TEST_SUITE(Basic, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(Basic, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {

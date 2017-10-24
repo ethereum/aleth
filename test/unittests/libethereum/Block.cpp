@@ -31,7 +31,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(BlockSuite, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(BlockSuite, TestOutputHelperFixture)
 
 #if !defined(_WIN32)
 BOOST_AUTO_TEST_CASE(bStructures)
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
 	BOOST_CHECK_THROW(block.receipt(123), std::out_of_range);
 }
 
-class ConstantinopleTransitionTestFixture: public TestOutputHelper
+class ConstantinopleTransitionTestFixture: public TestOutputHelperFixture
 {
 public:
 	ConstantinopleTransitionTestFixture():

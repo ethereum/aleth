@@ -35,7 +35,7 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-struct P2PFixture: public TestOutputHelper
+struct P2PFixture: public TestOutputHelperFixture
 {
 	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }

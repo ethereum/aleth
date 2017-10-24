@@ -137,7 +137,7 @@ eth::Network stringToNetId(string const& _netname)
 		if (netIdToString(net) == _netname)
 			return net;
 
-	BOOST_ERROR(TestOutputHelper::testName() + " network not found: " + _netname);
+	BOOST_ERROR(TestOutputHelper::get().testName() + " network not found: " + _netname);
 	return eth::Network::FrontierTest;
 }
 
@@ -322,7 +322,7 @@ string compileLLL(string const& _code)
 void checkHexHasEvenLength(string const& _str)
 {
 	if (_str.size() % 2)
-		BOOST_ERROR(TestOutputHelper::testName() + " An odd-length hex string represents a byte sequence: " + _str);
+		BOOST_ERROR(TestOutputHelper::get().testName() + " An odd-length hex string represents a byte sequence: " + _str);
 }
 
 bytes importCode(json_spirit::mObject const& _o)

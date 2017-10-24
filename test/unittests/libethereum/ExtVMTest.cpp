@@ -29,7 +29,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-class ExtVMTestFixture: public TestOutputHelper
+class ExtVMTestFixture: public TestOutputHelperFixture
 {
 public:
 	ExtVMTestFixture():

@@ -27,7 +27,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(SealEngineTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(SealEngineTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(UnsignedTransactionIsValidBeforeConstantinople)
 {

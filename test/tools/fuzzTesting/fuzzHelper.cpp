@@ -596,7 +596,7 @@ int RandomCodeOptions::getWeightedRandomOpcode() const
 	return RandomCode::get().weightedOpcode(weights);
 }
 
-BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(rndCode)
 {
@@ -617,9 +617,10 @@ BOOST_AUTO_TEST_CASE(rndStateTest)
 {
 	try
 	{
+		//Mac os bug is here
 		test::StateTestSuite suite;
 		test::RandomCodeOptions options;
-		test::TestOutputHelper::setCurrentTestFileName(std::string());
+		test::TestOutputHelper::get().setCurrentTestFileName(std::string());
 		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, options);
 		BOOST_REQUIRE(!test.empty());
 	}

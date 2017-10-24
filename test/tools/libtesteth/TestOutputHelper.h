@@ -30,30 +30,45 @@ namespace test
 class TestOutputHelper
 {
 public:
-	TestOutputHelper(size_t _maxTests = 1) { TestOutputHelper::initTest(_maxTests); }
-	static bool checkTest(std::string const& _testName);
+	static TestOutputHelper& get()
+	{
+		static TestOutputHelper instance;
+		return instance;
+	}
+	TestOutputHelper(TestOutputHelper const&) = delete;
+	void operator=(TestOutputHelper const&) = delete;
 
+	void initTest(size_t _maxTests = 1);
 	// Display percantage of completed tests to std::out. Has to be called before execution of every test.
-	static void showProgress();
-	static void setMaxTests(int _count) { m_maxTests = _count; }
-	static void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
-	static void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
-	static std::string const& testName() { return m_currentTestName; }
-	static std::string const& caseName() { return m_currentTestCaseName; }
-	static std::string const& testFileName() { return m_currentTestFileName; }
-	static void printTestExecStats();
-	~TestOutputHelper() { TestOutputHelper::finishTest(); }
+	void showProgress();
+	void finishTest();
+
+	//void setMaxTests(int _count) { m_maxTests = _count; }
+	bool checkTest(std::string const& _testName);
+	void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
+	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
+	std::string const& testName() { return m_currentTestName; }
+	std::string const& caseName() { return m_currentTestCaseName; }
+	std::string const& testFileName() { return m_currentTestFileName; }
+	void printTestExecStats();
+
 private:
-	static void initTest(size_t _maxTests = 1);
-	static void finishTest();
-	static Timer m_timer;
-	static size_t m_currTest;
-	static size_t m_maxTests;
-	static std::string m_currentTestName;
-	static std::string m_currentTestCaseName;
-	static std::string m_currentTestFileName;
+	TestOutputHelper() {}
+	Timer m_timer;
+	size_t m_currTest;
+	size_t m_maxTests;
+	std::string m_currentTestName;
+	std::string m_currentTestCaseName;
+	std::string m_currentTestFileName;
 	typedef std::pair<double, std::string> execTimeName;
-	static std::vector<execTimeName> m_execTimeResults;
+	std::vector<execTimeName> m_execTimeResults;
+};
+
+class TestOutputHelperFixture
+{
+public:
+	TestOutputHelperFixture() { TestOutputHelper::get().initTest(); }
+	~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
 };
 
 } //namespace test

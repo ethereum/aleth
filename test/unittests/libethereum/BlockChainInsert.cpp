@@ -39,7 +39,7 @@ namespace dev {
 
 namespace test {
 
-BOOST_FIXTURE_TEST_SUITE(BlockChainInsertTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(BlockChainInsertTests, TestOutputHelperFixture)
 
 class TestClient
 {

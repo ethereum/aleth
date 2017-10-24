@@ -36,7 +36,7 @@ namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-BOOST_FIXTURE_TEST_SUITE(KeyStore, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(KeyStore, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {

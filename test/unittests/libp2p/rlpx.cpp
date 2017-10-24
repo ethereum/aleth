@@ -41,7 +41,7 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::test;
 
-struct RLPXTestFixture: public TestOutputHelper {
+struct RLPXTestFixture: public TestOutputHelperFixture {
 	RLPXTestFixture() : s_secp256k1(crypto::Secp256k1PP::get()) {}
 	~RLPXTestFixture() {}
 

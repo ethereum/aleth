@@ -39,7 +39,7 @@ namespace js = json_spirit;
 
 using dev::operator <<;
 
-BOOST_FIXTURE_TEST_SUITE(DashimotoTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(DashimotoTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {

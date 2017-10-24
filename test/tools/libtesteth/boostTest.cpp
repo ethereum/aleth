@@ -129,6 +129,6 @@ int main( int argc, char* argv[] )
 	int result = unit_test_main(fakeInit, argc, argv);
 	stopTravisOut = true;
 	outputThread.join();
-	dev::test::TestOutputHelper::printTestExecStats();
+	dev::test::TestOutputHelper::get().printTestExecStats();
 	return result;
 }

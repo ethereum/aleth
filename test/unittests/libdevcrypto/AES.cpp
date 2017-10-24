@@ -29,7 +29,7 @@ using namespace dev::test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-BOOST_FIXTURE_TEST_SUITE(AES, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(AES, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(AesDecrypt)
 {

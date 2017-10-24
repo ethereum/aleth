@@ -49,7 +49,7 @@ class TransactionTestSuite: public TestSuite
 			string testname = i.first;
 			json_spirit::mObject& o = i.second.get_obj();
 
-			if (!TestOutputHelper::checkTest(testname))
+			if (!TestOutputHelper::get().checkTest(testname))
 			{
 				o.clear(); //don't add irrelevant tests to the final file when filling
 				continue;
@@ -64,7 +64,7 @@ class TransactionTestSuite: public TestSuite
 
 			if (_fillin)
 			{
-				BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::testFileName());
+				BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::get().testFileName());
 				mObject tObj = o["transaction"].get_obj();
 
 				//Construct Rlp of the given transaction
@@ -84,7 +84,7 @@ class TransactionTestSuite: public TestSuite
 					if (o.count("sender") > 0)
 					{
 						string expectSender = toString(o["sender"].get_str());
-						BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
+						BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::get().testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
 					}
 					o["sender"] = toString(txFromFields.sender());
 					o["transaction"] = ImportTest::makeAllFieldsHex(tObj);

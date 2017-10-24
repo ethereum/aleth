@@ -29,7 +29,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(TransactionQueueSuite, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(TransactionQueueSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(TransactionEIP86)
 {
