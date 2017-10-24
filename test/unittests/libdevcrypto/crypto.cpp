@@ -51,7 +51,7 @@ namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-struct DevcryptoTestFixture: public TestOutputHelper {
+struct DevcryptoTestFixture: public TestOutputHelperFixture {
 	DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
 
 	Secp256k1PP* s_secp256k1;

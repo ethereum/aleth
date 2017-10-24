@@ -28,7 +28,7 @@ using namespace dev;
 using namespace std;
 using namespace test;
 
-BOOST_FIXTURE_TEST_SUITE(CommonJSTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(CommonJSTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(test_toJS)
 {

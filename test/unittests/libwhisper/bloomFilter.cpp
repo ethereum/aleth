@@ -104,7 +104,7 @@ double testFalsePositiveRate(TopicBloomFilterTest const& f, int inserted, Topic&
 	return expected;
 }
 
-BOOST_FIXTURE_TEST_SUITE(bloomFilter, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(bloomFilter, TestOutputHelperFixture)
 
 //
 // Disabled tests as they are unstable and tend to stall the test suite.

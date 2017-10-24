@@ -146,7 +146,7 @@ public:
 	~NetworkSelector() { TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest; } // reset to default
 };
 
-class FrontierNoProofTestFixture: public TestOutputHelper
+class FrontierNoProofTestFixture: public TestOutputHelperFixture
 {
 public:
 	FrontierNoProofTestFixture(): networkSelector(Network::FrontierNoProofTest) {}
@@ -154,7 +154,7 @@ public:
 	NetworkSelector networkSelector;
 };
 
-class MainNetworkNoProofTestFixture: public TestOutputHelper
+class MainNetworkNoProofTestFixture: public TestOutputHelperFixture
 {
 public:
 	MainNetworkNoProofTestFixture(): networkSelector(Network::MainNetworkNoProofTest) {}

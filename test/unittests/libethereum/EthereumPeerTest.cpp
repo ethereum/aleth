@@ -101,7 +101,7 @@ public:
 	void onPeerAborting() override {}
 };
 
-class EthereumPeerTestFixture: public TestOutputHelper
+class EthereumPeerTestFixture: public TestOutputHelperFixture
 {
 public:
 	EthereumPeerTestFixture():

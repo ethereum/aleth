@@ -36,7 +36,7 @@ using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
-struct NetFixture: public TestOutputHelper
+struct NetFixture: public TestOutputHelperFixture
 {
 	NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(udpOnce)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
 
 /*
 

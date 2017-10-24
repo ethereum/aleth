@@ -30,7 +30,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(BlockQueueSuite, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(BlockQueueSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(BlockQueueImport)
 {

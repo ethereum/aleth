@@ -43,7 +43,7 @@ using dev::operator <<;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-BOOST_FIXTURE_TEST_SUITE(Trie, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(Trie, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(fat_trie)
 {

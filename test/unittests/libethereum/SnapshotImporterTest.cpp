@@ -99,7 +99,7 @@ namespace
 		std::map<h256, bytes> chunks;
 	};
 
-	class SnapshotImporterTestFixture: public TestOutputHelper
+	class SnapshotImporterTestFixture: public TestOutputHelperFixture
 	{
 	public:
 		SnapshotImporterTestFixture(): snapshotImporter(stateImporter, blockChainImporter) {}

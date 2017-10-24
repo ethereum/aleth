@@ -49,7 +49,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 	int testN = 0;
 	ostringstream finalTest;
 	finalTest << "{\n";
-	dev::test::TestOutputHelper testOutputHelper(900);
+	test::TestOutputHelper::get().initTest(900);
 
 	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
@@ -59,7 +59,7 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 			{
 				testN++;
 				string testName = "DifficultyTest"+toString(testN);
-				if (!dev::test::TestOutputHelper::checkTest(testName))
+				if (!test::TestOutputHelper::get().checkTest(testName))
 					continue;
 
 				u256 pStamp = test::RandomCode::get().randomUniInt();
@@ -107,13 +107,13 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 	string s = contentsString(_testFileFullName);
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of '" << _testFileFullName << "' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
-	dev::test::TestOutputHelper testOutputHelper(v.get_obj().size());
+	test::TestOutputHelper::get().initTest(v.get_obj().size());
 
 	for (auto& i: v.get_obj())
 	{
 		js::mObject o = i.second.get_obj();
 		string testname = i.first;
-		if (!dev::test::TestOutputHelper::checkTest(testname))
+		if (!test::TestOutputHelper::get().checkTest(testname))
 			continue;
 
 		BOOST_REQUIRE_MESSAGE(o.count("parentTimestamp") > 0, testname + " missing parentTimestamp field");

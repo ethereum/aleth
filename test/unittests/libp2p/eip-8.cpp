@@ -32,7 +32,7 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-BOOST_FIXTURE_TEST_SUITE(eip8, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(eip8, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(test_discovery_packets)
 {

@@ -29,7 +29,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basicUsage)
 {

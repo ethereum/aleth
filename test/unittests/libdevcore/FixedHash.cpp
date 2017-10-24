@@ -32,7 +32,7 @@ namespace dev
 namespace test
 {
 
-BOOST_FIXTURE_TEST_SUITE(FixedHashTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(FixedHashTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(FixedHashComparisons)
 {

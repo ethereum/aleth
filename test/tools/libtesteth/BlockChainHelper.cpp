@@ -124,7 +124,7 @@ void TestBlock::addTransaction(TestTransaction const& _tr)
 {
 	m_testTransactions.push_back(_tr);
 	if (m_transactionQueue.import(_tr.transaction().rlp()) != ImportResult::Success)
-		cnote << TestOutputHelper::testName() + " Test block failed importing transaction\n";
+		cnote << TestOutputHelper::get().testName() + " Test block failed importing transaction\n";
 	recalcBlockHeaderBytes();
 }
 
@@ -198,11 +198,11 @@ void TestBlock::mine(TestBlockChain const& _bc)
 		size_t transactionsOnImport = m_transactionQueue.topTransactions(100).size();
 		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions could be dropped from queue here!!!
 		//if (transactionsOnImport >  m_transactionQueue.topTransactions(1000).size())
-			//BOOST_ERROR(TestOutputHelper::testName() + " Dropped invalid Transactions before mining!");
+			//BOOST_ERROR(TestOutputHelper::get().testName() + " Dropped invalid Transactions before mining!");
 		dev::eth::mine(block, blockchain, blockchain.sealEngine());
 		blockchain.sealEngine()->verify(JustSeal, block.info());
 		if (transactionsOnImport >  block.pending().size())
-			cnote << TestOutputHelper::testName() + " Dropped invalid Transactions when mining!";
+			cnote << TestOutputHelper::get().testName() + " Dropped invalid Transactions when mining!";
 
 		//renew the TestBlock transactions
 		m_transactionQueue.clear();
@@ -211,12 +211,12 @@ void TestBlock::mine(TestBlockChain const& _bc)
 	}
 	catch (Exception const& _e)
 	{
-		cnote << TestOutputHelper::testName() + " block sync or mining did throw an exception: " << diagnostic_information(_e);
+		cnote << TestOutputHelper::get().testName() + " block sync or mining did throw an exception: " << diagnostic_information(_e);
 		return;
 	}
 	catch (std::exception const& _e)
 	{
-		cnote << TestOutputHelper::testName() + " block sync or mining did throw an exception: " << _e.what();
+		cnote << TestOutputHelper::get().testName() + " block sync or mining did throw an exception: " << _e.what();
 		return;
 	}
 
@@ -270,15 +270,15 @@ BlockHeader TestBlock::constructBlock(mObject const& _o, h256 const& _stateRoot)
 	}
 	catch (Exception const& _e)
 	{
-		cnote << TestOutputHelper::testName() + " block population did throw an exception: " << diagnostic_information(_e);
+		cnote << TestOutputHelper::get().testName() + " block population did throw an exception: " << diagnostic_information(_e);
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR(TestOutputHelper::testName() + " Failed block population with Exception: " << _e.what());
+		BOOST_ERROR(TestOutputHelper::get().testName() + " Failed block population with Exception: " << _e.what());
 	}
 	catch(...)
 	{
-		BOOST_ERROR(TestOutputHelper::testName() + " block population did throw an unknown exception\n");
+		BOOST_ERROR(TestOutputHelper::get().testName() + " block population did throw an unknown exception\n");
 	}
 	return ret;
 }
@@ -341,7 +341,7 @@ dev::bytes TestBlock::createBlockRLPFromFields(mObject const& _tObj, h256 const&
 void TestBlock::updateNonce(TestBlockChain const& _bc)
 {
 	if (((BlockHeader)m_blockHeader).difficulty() == 0)
-		BOOST_TEST_MESSAGE("Trying to mine a block with 0 difficulty! " + TestOutputHelper::testName());
+		BOOST_TEST_MESSAGE("Trying to mine a block with 0 difficulty! " + TestOutputHelper::get().testName());
 	else
 	{
 		//do not verify blockheader for validity here
@@ -367,14 +367,14 @@ void TestBlock::verify(TestBlockChain const& _bc) const
 		{
 			string exWhat {	_e.what() };
 			string exExpect = "InvalidTransactionsRoot";
-			BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + "block import expected another exeption: " + exExpect);
+			BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::get().testName() + "block import expected another exeption: " + exExpect);
 		}
 		else
-			BOOST_ERROR(TestOutputHelper::testName() + toString(m_blockHeader.number()) + " BlockHeader Verification failed: " <<  boost::current_exception_diagnostic_information());
+			BOOST_ERROR(TestOutputHelper::get().testName() + toString(m_blockHeader.number()) + " BlockHeader Verification failed: " <<  boost::current_exception_diagnostic_information());
 	}
 	catch (...)
 	{
-		BOOST_ERROR(TestOutputHelper::testName() + " BlockHeader Verification failed: " <<  boost::current_exception_diagnostic_information());
+		BOOST_ERROR(TestOutputHelper::get().testName() + " BlockHeader Verification failed: " <<  boost::current_exception_diagnostic_information());
 	}
 }
 

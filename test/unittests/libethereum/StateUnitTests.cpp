@@ -32,7 +32,7 @@ namespace dev
 namespace test
 {
 
-BOOST_FIXTURE_TEST_SUITE(StateUnitTests, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(StateUnitTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {

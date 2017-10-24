@@ -92,7 +92,7 @@ bytes ImportTest::executeTest()
 	//Generate blockchain test filler
 	if (Options::get().fillchain)
 	{
-		string testnameOrig = TestOutputHelper::testName();
+		string testnameOrig = TestOutputHelper::get().testName();
 		for (auto& tr : m_transactions)
 		{
 			json_spirit::mObject json;
@@ -184,11 +184,11 @@ bytes ImportTest::executeTest()
 
 			// Write a filler file to the filler folder
 			BCGeneralStateTestsSuite genSuite;
-			fs::path const testFillerFile = genSuite.getFullPathFiller(TestOutputHelper::caseName()) / fs::path(testname + "Filler.json");
+			fs::path const testFillerFile = genSuite.getFullPathFiller(TestOutputHelper::get().caseName()) / fs::path(testname + "Filler.json");
 			writeFile(testFillerFile, asBytes(json_spirit::write_string((mValue)json, true)));
 
 			// Execute test filling for this file
-			genSuite.executeTest(TestOutputHelper::caseName(), testFillerFile);
+			genSuite.executeTest(TestOutputHelper::get().caseName(), testFillerFile);
 
 		} //transactions
 	}//fillchain
@@ -208,7 +208,7 @@ void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, b
 		postBalance += addr.second;
 
 	//account could destroy ether if it suicides to itself
-	BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::testName());
+	BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::get().testName());
 }
 
 std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
@@ -460,18 +460,18 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 			}
 			catch(std::out_of_range const&)
 			{
-				BOOST_ERROR(TestOutputHelper::testName() + " expectedStateOptions map does not match expectedState in checkExpectedState!");
+				BOOST_ERROR(TestOutputHelper::get().testName() + " expectedStateOptions map does not match expectedState in checkExpectedState!");
 				break;
 			}
 		}
 
 		if (addressOptions.shouldExist())
 		{
-			CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  " Compare States: " << a.first << " missing expected address!");
+			CHECK(_statePost.addressInUse(a.first), TestOutputHelper::get().testName() +  " Compare States: " << a.first << " missing expected address!");
 		}
 		else
 		{
-			CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::testName() +  " Compare States: " << a.first << " address not expected to exist!");
+			CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::get().testName() +  " Compare States: " << a.first << " address not expected to exist!");
 		}
 
 		if (_statePost.addressInUse(a.first))
@@ -479,29 +479,29 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 			if (addressOptions.hasBalance())
 				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
-				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
+				TestOutputHelper::get().testName() + " Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
 
 			if (addressOptions.hasNonce())
 				CHECK((_stateExpect.getNonce(a.first) == _statePost.getNonce(a.first)),
-				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect nonce " << _statePost.getNonce(a.first) << ", expected " << _stateExpect.getNonce(a.first));
+				TestOutputHelper::get().testName() + " Check State: " << a.first <<  ": incorrect nonce " << _statePost.getNonce(a.first) << ", expected " << _stateExpect.getNonce(a.first));
 
 			if (addressOptions.hasStorage())
 			{
 				map<h256, pair<u256, u256>> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-					TestOutputHelper::testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(stateStorage[s.first].second) << ", expected [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(s.second.second));
+					TestOutputHelper::get().testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(stateStorage[s.first].second) << ", expected [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(s.second.second));
 
 				//Check for unexpected storage values
 				map<h256, pair<u256, u256>> expectedStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
 					CHECK((expectedStorage[s.first] == s.second),
-					TestOutputHelper::testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(s.second.second) << ", expected [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(expectedStorage[s.first].second));
+					TestOutputHelper::get().testName() + " Check State: " << a.first << ": incorrect storage [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(s.second.second) << ", expected [" << toCompactHexPrefixed(s.second.first) << "] = " << toCompactHexPrefixed(expectedStorage[s.first].second));
 			}
 
 			if (addressOptions.hasCode())
 				CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),
-				TestOutputHelper::testName() + " Check State: " << a.first <<  ": incorrect code '" << toHexPrefixed(_statePost.code(a.first)) << "', expected '" << toHexPrefixed(_stateExpect.code(a.first)) << "'");
+				TestOutputHelper::get().testName() + " Check State: " << a.first <<  ": incorrect code '" << toHexPrefixed(_statePost.code(a.first)) << "', expected '" << toHexPrefixed(_stateExpect.code(a.first)) << "'");
 		}
 	}
 
@@ -552,7 +552,7 @@ void ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
 		if (!inArray(allowedNetowks, net))
 		{
 			//Can't use boost at this point
-			std::cerr << TestOutputHelper::testName() + " Specified Network not found: " << net << "\n";
+			std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: " << net << "\n";
 			exit(1);
 		}
 	}
@@ -574,7 +574,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	else
 		network.push_back(_network);
 
-	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + " Network array not set!");
+	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
 	checkAllowedNetwork(network);
 
 	if (!Options::get().singleTestNet.empty())
@@ -590,7 +590,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		parseJsonIntValueIntoVector(indexes.at("data"), d);
 		parseJsonIntValueIntoVector(indexes.at("gas"), g);
 		parseJsonIntValueIntoVector(indexes.at("value"), v);
-		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + " Indexes arrays not set!");
+		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::get().testName() + " Indexes arrays not set!");
 
 		//Skip this check if does not fit to options request
 		Options const& opt = Options::get();
@@ -602,7 +602,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			return;
 	}
 	else
-		BOOST_ERROR(TestOutputHelper::testName() + " indexes section not set!");
+		BOOST_ERROR(TestOutputHelper::get().testName() + " indexes section not set!");
 
 	bool foundResults = false;
 	std::vector<transactionToExecute> lookTransactions;
@@ -647,15 +647,15 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 			{
 				//checking filled state test against client
 				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()),
-									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + ": Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
+									TestOutputHelper::get().testName() + " on " + test::netIdToString(tr.netId) + ": Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
 				if (_expects.count("logs"))
 					BOOST_CHECK_MESSAGE(_expects.at("logs").get_str() == exportLog(tr.output.second.log()),
-									TestOutputHelper::testName() + " on " + test::netIdToString(tr.netId) + " Transaction log mismatch! expected: " + _expects.at("logs").get_str() + " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
+									TestOutputHelper::get().testName() + " on " + test::netIdToString(tr.netId) + " Transaction log mismatch! expected: " + _expects.at("logs").get_str() + " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
 				else
-					BOOST_ERROR(TestOutputHelper::testName() + "PostState missing logs field!");
+					BOOST_ERROR(TestOutputHelper::get().testName() + "PostState missing logs field!");
 			}
 			else
-				BOOST_ERROR(TestOutputHelper::testName() + " Expect section or postState missing some fields!");
+				BOOST_ERROR(TestOutputHelper::get().testName() + " Expect section or postState missing some fields!");
 
 			foundResults = true;
 
@@ -666,7 +666,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		}
 	}
 	if (!_search) //if search for a single transaction in one of the expect sections then don't need this output.
-		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + " Expect results was not found in test execution!");
+		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::get().testName() + " Expect results was not found in test execution!");
 }
 
 void ImportTest::traceStateDiff()

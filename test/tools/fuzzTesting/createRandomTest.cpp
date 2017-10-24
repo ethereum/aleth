@@ -37,6 +37,7 @@ bool createRandomTest()
 {
 	StateTestSuite suite;
 	dev::test::Options const& options = dev::test::Options::get();
+	auto testFixture = TestOutputHelperFixture();
 	if (options.rCurrentTestSuite != suite.suiteFolder())
 	{
 		std::cerr << "Error! Test suite '" + options.rCurrentTestSuite + "' not supported! (Usage -t <TestSuite>)\n";
@@ -45,7 +46,6 @@ bool createRandomTest()
 	else
 	{
 		RandomCodeOptions options;
-		TestOutputHelper testOutputHelper;
 		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, options);
 		std::cout << test << "\n";
 		return test.empty() ? false : true;
