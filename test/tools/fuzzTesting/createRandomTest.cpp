@@ -55,7 +55,7 @@ bool createRandomTest()
 }} //namespaces
 
 //Prints a generated test Json into std::out
-std::string test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, test::RandomCodeOptions const& _options)
+std::string test::RandomCodeBase::fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testString, test::RandomCodeOptions const& _options)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
@@ -88,7 +88,7 @@ std::string test::RandomCode::fillRandomTest(dev::test::TestSuite const& _testSu
 }
 
 /// Parse Test string replacing keywords to fuzzed values
-void test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options)
+void test::RandomCodeBase::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options)
 {
 	std::vector<std::string> types = getTypes();
 
@@ -104,7 +104,7 @@ void test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::stri
 			if (type == "[RLP]")
 			{
 				std::string debug;
-				int randomDepth = 1 + (int)randomUniInt() % 10;
+				int randomDepth = 1 + (int)randomSmallUniInt() % 10;
 				replace = rndRLPSequence(randomDepth, debug);
 				cnote << debug;
 			}
@@ -170,7 +170,7 @@ void test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::stri
 	}
 }
 
-std::vector<std::string> test::RandomCode::getTypes()
+std::vector<std::string> test::RandomCodeBase::getTypes()
 {
 	return {
 		"[RLP]",				//Random RLP String

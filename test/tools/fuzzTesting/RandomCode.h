@@ -35,10 +35,6 @@ namespace dev
 namespace test
 {
 
-using IntDistrib = std::uniform_int_distribution<>;
-using DescreteDistrib = std::discrete_distribution<>;
-using IntGenerator = std::function<int()>;
-
 enum class SizeStrictness
 {
 	Strict,
@@ -80,33 +76,18 @@ private:
 	dev::Address getRandomAddressPriv(AddressType _type) const;
 };
 
-
-class RandomCode
+class RandomCodeBase
 {
 public:
-	static RandomCode& get()
-	{
-		static RandomCode generator;
-		return generator;
-	}
-	RandomCode(RandomCode const&) = delete;
-	void operator=(RandomCode const&) = delete;
-
 	/// Generate random vm code
 	std::string generate(int _maxOpNumber, RandomCodeOptions const& _options);
 
 	/// Replace keywords in given string with values
 	void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap, RandomCodeOptions const& _options);
-	void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap)
-	{
-		RandomCodeOptions defaultOptions;
-		parseTestWithTypes(_test, _varMap, defaultOptions);
-	}
 
 	// Returns empty string if there was an error, a filled test otherwise.
 	// prints test to the std::out or std::error if error when filling
 	std::string fillRandomTest(dev::test::TestSuite const& _testSuite, std::string const& _testFillerTemplate, test::RandomCodeOptions const& _options);
-
 
 	/// Generate random byte string of a given length
 	std::string rndByteSequence(int _length = 1, SizeStrictness _sizeType = SizeStrictness::Strict);
@@ -123,47 +104,21 @@ public:
 
 	/// Generate random
 	std::string randomUniIntHex(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
-	u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
-	int randomPercent() { refreshSeed(); return percentDist(gen); }
-	int weightedOpcode(std::vector<int>& _weights);
+	virtual u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max()) = 0;
+	virtual int randomPercent() = 0;
+	virtual int randomSmallUniInt() = 0;
+	virtual int randomLength32() = 0;
+	virtual int randomSmallMemoryLength() = 0;
+	virtual int randomMemoryLength() = 0;
+	virtual uint8_t randomOpcode() = 0;
+	virtual uint8_t weightedOpcode(std::vector<int>& _weights) = 0;
 
 private:
-	RandomCode()
-	{
-		percentDist = IntDistrib (0, 100);
-		opCodeDist = IntDistrib (0, 255);
-		opLengDist = IntDistrib (1, 32);
-		opMemrDist = IntDistrib (0, 10485760);
-		opSmallMemrDist = IntDistrib (0, 1024);
-		uniIntDist = IntDistrib (0, 0x7fffffff);
-
-		randOpCodeGen = std::bind(opCodeDist, gen);
-		randOpLengGen = std::bind(opLengDist, gen);
-		randOpMemrGen = std::bind(opMemrDist, gen);
-		randoOpSmallMemrGen = std::bind(opSmallMemrDist, gen);
-		randUniIntGen = std::bind(uniIntDist, gen);
-	}
-
-	std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
-	std::string getPushCode(int _value);
-	std::string getPushCode(std::string const& _hex);
-	int recursiveRLP(std::string& _result, int _depth, std::string& _debug);
-	void refreshSeed();
 	std::vector<std::string> getTypes();
-
-	std::mt19937_64 gen;					///< Random generator
-	IntDistrib opCodeDist;					///< 0..255 opcodes
-	IntDistrib percentDist;					///< 0..100 percent
-	IntDistrib opLengDist;					///< 1..32  byte string
-	IntDistrib opMemrDist;					///< 1..10MB  byte string
-	IntDistrib opSmallMemrDist;				/// 0..1kb
-	IntDistrib uniIntDist;					///< 0..0x7fffffff
-
-	IntGenerator randUniIntGen;				///< Generate random UniformInt from uniIntDist
-	IntGenerator randOpCodeGen;				///< Generate random value from opCodeDist
-	IntGenerator randOpLengGen;				///< Generate random length from opLengDist
-	IntGenerator randOpMemrGen;				///< Generate random length from opMemrDist
-	IntGenerator randoOpSmallMemrGen;		///< Generate random length from opSmallMemrDist
+	int recursiveRLP(std::string& _result, int _depth, std::string& _debug);
+	std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
+	std::string getPushCode(unsigned _value);
+	std::string getPushCode(std::string const& _hex);
 };
 
 }

@@ -87,7 +87,8 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
 				replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
 
-				test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap);
+				test::RandomCodeOptions defaultOptions;
+				test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap, defaultOptions);
 				finalTest << tmptest;
 			}
 		}
@@ -258,7 +259,8 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
 						replaceMap["[CDIFF]"] = toCompactHexPrefixed(sealEngine.calculateDifficulty(current, parent));
 
-						test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap);
+						test::RandomCodeOptions defaultOptions;
+						test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap, defaultOptions);
 						finalTest << tmptest;
 					}
 
