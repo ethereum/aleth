@@ -92,7 +92,7 @@ protected:
 	
 	std::chrono::system_clock::time_point m_lastConnected;
 	std::chrono::system_clock::time_point m_lastAttempted;
-	unsigned m_failedAttempts = 0;
+	std::atomic<unsigned> m_failedAttempts{0};
 	DisconnectReason m_lastDisconnect = NoDisconnect;	///< Reason for disconnect that happened last.
 
 	/// Used by isOffline() and (todo) for peer to emit session information.

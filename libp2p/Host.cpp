@@ -846,7 +846,7 @@ bytes Host::saveNetwork() const
 			network << p.id << (p.peerType == PeerType::Required ? true : false)
 				<< chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
 				<< chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
-				<< p.m_failedAttempts << (unsigned)p.m_lastDisconnect << p.m_score.load() << p.m_rating.load();
+				<< p.m_failedAttempts.load() << (unsigned)p.m_lastDisconnect << p.m_score.load() << p.m_rating.load();
 			count++;
 		}
 	}
