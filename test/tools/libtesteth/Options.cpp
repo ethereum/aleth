@@ -75,7 +75,6 @@ Options::Options(int argc, char** argv)
 	trDataIndex = -1;
 	trGasIndex = -1;
 	trValueIndex = -1;
-	randomTestSeed = 0;
 	bool seenSeparator = false; // true if "--" has been seen.
 	for (auto i = 0; i < argc; ++i)
 	{
@@ -210,7 +209,7 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--seed")
 		{
 			throwIfNoArgumentFollows();
-			randomTestSeed = static_cast<uint64_t>(toInt(argv[++i]));
+			randomTestSeed = static_cast<uint64_t>(min<u256>(UINT64_MAX, toInt(argv[++i])));
 		}
 		else if (arg == "-t")
 		{
@@ -278,7 +277,7 @@ Options::Options(int argc, char** argv)
 	}
 	else
 	{
-		if (randomTestSeed != 0)
+		if (randomTestSeed.is_initialized())
 		{
 			cerr << "--seed <uint> could be used only with --createRandomTest \n";
 			exit(1);

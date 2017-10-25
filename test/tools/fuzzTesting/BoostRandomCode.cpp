@@ -38,14 +38,14 @@ u256 BoostRandomCode::randomUniInt(u256 const& _minVal, u256 const& _maxVal)
 
 void BoostRandomCode::refreshSeed()
 {
-	if (Options::get().randomTestSeed == 0)
+	if (!Options::get().randomTestSeed.is_initialized())
 	{
 		auto now = std::chrono::steady_clock::now().time_since_epoch();
 		auto timeSinceEpoch = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 		gen.seed(static_cast<unsigned int>(timeSinceEpoch));
 	}
 	else
-		gen.seed(Options::get().randomTestSeed);
+		gen.seed(Options::get().randomTestSeed.get());
 }
 
 uint8_t BoostRandomCode::weightedOpcode(std::vector<int>& _weights)

@@ -47,13 +47,14 @@ public:
 	static RandomCodeBase& get()
 	{
 		static RandomCode instance;
-		return *instance.generator.get();
+		return *instance.generator;
 	}
 	RandomCode(RandomCode const&) = delete;
 	void operator=(RandomCode const&) = delete;
 
 private:
-	RandomCode(){
+	RandomCode()
+	{
 		generator.reset(new BoostRandomCode());
 	}
 	std::unique_ptr<RandomCodeBase> generator;
