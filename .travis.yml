@@ -46,11 +46,11 @@ matrix:
           env:
               - ZIP_SUFFIX=ubuntu-trusty
 
-        - os: osx
-          osx_image: xcode9
-          env:
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=macos-sierra
+#        - os: osx
+#          osx_image: xcode9
+#          env:
+#              - TRAVIS_TESTS=Off
+#              - ZIP_SUFFIX=macos-sierra
 git:
     depth: 2
 cache:
