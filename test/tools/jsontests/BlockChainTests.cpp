@@ -1080,6 +1080,7 @@ BOOST_AUTO_TEST_CASE(stStaticCall){}
 BOOST_AUTO_TEST_CASE(stReturnDataTest){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge2){}
+BOOST_AUTO_TEST_CASE(stBugs){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}
