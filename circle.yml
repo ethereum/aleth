@@ -3,7 +3,8 @@ defaults:
   update-submodules: &update-submodules
     run:
       name: "Update git submodules"
-      command: git submodule update --init --depth 20
+      command: |
+        git submodule update --init
 
   upload-hunter-cache: &upload-hunter-cache
     run:
