@@ -67,9 +67,10 @@ Client::Client(
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _l
 ):
-	ClientBase(_l),
+	ClientBase(),
 	Worker("eth", 0),
 	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
+	m_tq(_l),
 	m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
 	m_preSeal(chainParams().accountStartNonce),
 	m_postSeal(chainParams().accountStartNonce),
@@ -808,4 +809,46 @@ void Client::rewind(unsigned _n)
 	auto h = m_host.lock();
 	if (h)
 		h->reset();
+}
+
+pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
+{
+	prepareForTransaction();
+
+	TransactionSkeleton ts(_t);
+	ts.from = toAddress(_secret);
+	if (_t.nonce == Invalid256)
+		ts.nonce = max<u256>(postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
+	if (ts.gasPrice == Invalid256)
+		ts.gasPrice = gasBidPrice();
+	if (ts.gas == Invalid256)
+		ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
+
+	Transaction t(ts, _secret);
+	m_tq.import(t.rlp());
+
+	return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));
+}
+
+// TODO: remove try/catch, allow exceptions
+ExecutionResult Client::call(Address const& _from, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff)
+{
+	ExecutionResult ret;
+	try
+	{
+		Block temp = block(_blockNumber);
+		u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
+		u256 gas = _gas == Invalid256 ? gasLimitRemaining() : _gas;
+		u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
+		Transaction t(_value, gasPrice, gas, _dest, _data, nonce);
+		t.forceSender(_from);
+		if (_ff == FudgeFactor::Lenient)
+			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
+		ret = temp.execute(bc().lastBlockHashes(), t, Permanence::Reverted);
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
+	return ret;
 }
