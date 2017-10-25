@@ -257,32 +257,36 @@ std::string RandomCodeBase::generate(int _maxOpNumber, RandomCodeOptions const& 
 		eth::Instruction inst = (eth::Instruction) opcode;
 		eth::InstructionInfo info = eth::instructionInfo(inst);
 
-		if (info.name.find("INVALID_INSTRUCTION") != std::string::npos || info.name.empty()
+		while (info.name.find("INVALID_INSTRUCTION") != std::string::npos || info.name.empty()
 			|| std::find(invalidOpcodes.begin(), invalidOpcodes.end(), inst) != invalidOpcodes.end())
 		{
 			if (_options.useUndefinedOpCodes)
+			{
 				code += toCompactHex(opcode, 1);
+				return "0x" + code;
+			}
 			else
 			{
 				//Byte code is yet not implemented. do not count it.
-				i--;
+				opcode++;
+				inst = (eth::Instruction) opcode;
+				info = eth::instructionInfo(inst);
 				continue;
 			}
 		}
+
+		if (info.name.find("PUSH") != std::string::npos)
+		{
+			code += toCompactHex(opcode);
+			code += fillArguments(inst, _options);
+		}
 		else
 		{
-			if (info.name.find("PUSH") != std::string::npos)
-			{
-				code += toCompactHex(opcode);
-				code += fillArguments(inst, _options);
-			}
-			else
-			{
-				code += fillArguments(inst, _options);
-				code += toCompactHex(opcode, 1);
-			}
+			code += fillArguments(inst, _options);
+			code += toCompactHex(opcode, 1);
 		}
 	}
+
 	return "0x" + code;
 }
 

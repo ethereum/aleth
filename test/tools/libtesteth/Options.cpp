@@ -58,6 +58,7 @@ void printHelp()
 	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
 	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
+	cout << setw(30) << "--seed <uint>" << setw(25) << "Define a seed for random test\n";
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
 
 	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments\n";
@@ -74,6 +75,7 @@ Options::Options(int argc, char** argv)
 	trDataIndex = -1;
 	trGasIndex = -1;
 	trValueIndex = -1;
+	randomTestSeed = 0;
 	bool seenSeparator = false; // true if "--" has been seen.
 	for (auto i = 0; i < argc; ++i)
 	{
@@ -205,6 +207,11 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
+		else if (arg == "--seed")
+		{
+			throwIfNoArgumentFollows();
+			randomTestSeed = static_cast<uint64_t>(toInt(argv[++i]));
+		}
 		else if (arg == "-t")
 		{
 			throwIfAfterSeparator();
@@ -265,7 +272,15 @@ Options::Options(int argc, char** argv)
 		{
 			cerr << "--createRandomTest cannot be used with any of the options: " <<
 					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
-					"stats, filltests, fillchain" << endl;
+					"stats, filltests, fillchain \n";
+			exit(1);
+		}
+	}
+	else
+	{
+		if (randomTestSeed != 0)
+		{
+			cerr << "--seed <uint> could be used only with --createRandomTest \n";
 			exit(1);
 		}
 	}
