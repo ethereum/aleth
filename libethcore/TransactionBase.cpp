@@ -76,7 +76,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 		else
 		{
 			if (v > 36)
-				m_chainId = static_cast<int>((v - 35) / 2);
+				m_chainId = static_cast<int>((v - 35) / 2); 
 			else if (v == 27 || v == 28)
 				m_chainId = -4;
 			else
@@ -167,8 +167,14 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 		if (!m_vrs)
 			BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
 
-		int vOffset = m_chainId*2 + 35;
-		_s << (m_vrs->v + vOffset) << (u256)m_vrs->r << (u256)m_vrs->s;
+		if (hasZeroSignature())
+			_s << m_chainId;
+		else
+		{
+			int const vOffset = m_chainId * 2 + 35;
+			_s << (m_vrs->v + vOffset);
+		}
+		_s << (u256)m_vrs->r << (u256)m_vrs->s;
 	}
 	else if (_forEip155hash)
 		_s << m_chainId << 0 << 0;
