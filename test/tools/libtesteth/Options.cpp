@@ -209,7 +209,10 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--seed")
 		{
 			throwIfNoArgumentFollows();
-			randomTestSeed = static_cast<uint64_t>(min<u256>(UINT64_MAX, toInt(argv[++i])));
+			u256 input = toInt(argv[++i]);
+			if (input > UINT64_MAX)
+				BOOST_WARN("Seed is > u64. Using u64_max instead.");
+			randomTestSeed = static_cast<uint64_t>(min<u256>(UINT64_MAX, input));
 		}
 		else if (arg == "-t")
 		{
