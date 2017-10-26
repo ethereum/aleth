@@ -70,13 +70,13 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 
 		if (isZeroSignature(r, s))
 		{
-			m_chainId = static_cast<int>(v);
+			m_chainId = v;
 			m_vrs = SignatureStruct{r, s, 0};
 		}
 		else
 		{
 			if (v > 36)
-				m_chainId = static_cast<int>((v - 35) / 2); 
+				m_chainId = (v - 35) / 2; 
 			else if (v == 27 || v == 28)
 				m_chainId = -4;
 			else
