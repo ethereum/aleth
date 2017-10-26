@@ -239,51 +239,57 @@ std::string RandomCodeBase::rndByteSequence(int _length, SizeStrictness _sizeTyp
 	return hash;
 }
 
+bool isOpcodeDefined(uint8_t _opcode)
+{
+	eth::Instruction inst = (eth::Instruction) _opcode;
+	eth::InstructionInfo info = eth::instructionInfo(inst);
+	if (info.name.find("INVALID_INSTRUCTION") != std::string::npos || info.name.empty()
+		|| std::find(invalidOpcodes.begin(), invalidOpcodes.end(), inst) != invalidOpcodes.end())
+		return false;
+	return true;
+}
+
+uint8_t makeOpcodeDefined(uint8_t _opcode)
+{
+	while (!isOpcodeDefined(_opcode))
+		_opcode++; //Byte code is yet not implemented. Try next one.
+	return _opcode;
+}
+
 //generate smart random code
 std::string RandomCodeBase::generate(int _maxOpNumber, RandomCodeOptions const& _options)
 {
 	std::string code;
-
 	if (test::RandomCode::get().randomPercent() < _options.emptyCodeProbability)
 		return code;
 
-	//random opCode amount
+	//generate [0 ... _maxOpNumber] opcodes.
 	int size = (int)(test::RandomCode::get().randomPercent() * _maxOpNumber / 100);
 	assert(size <= _maxOpNumber);
 
 	for (auto i = 0; i < size; i++)
 	{
 		uint8_t opcode = _options.getWeightedRandomOpcode();
-		eth::Instruction inst = (eth::Instruction) opcode;
-		eth::InstructionInfo info = eth::instructionInfo(inst);
-
-		while (info.name.find("INVALID_INSTRUCTION") != std::string::npos || info.name.empty()
-			|| std::find(invalidOpcodes.begin(), invalidOpcodes.end(), inst) != invalidOpcodes.end())
+		if (!isOpcodeDefined(opcode) && _options.useUndefinedOpCodes)
 		{
-			if (_options.useUndefinedOpCodes)
-			{
-				code += toCompactHex(opcode, 1);
-				return "0x" + code;
-			}
-			else
-			{
-				//Byte code is yet not implemented. do not count it.
-				opcode++;
-				inst = (eth::Instruction) opcode;
-				info = eth::instructionInfo(inst);
-				continue;
-			}
-		}
-
-		if (info.name.find("PUSH") != std::string::npos)
-		{
-			code += toCompactHex(opcode);
-			code += fillArguments(inst, _options);
+			code += toCompactHex(opcode, 1);
+			continue;
 		}
 		else
 		{
-			code += fillArguments(inst, _options);
-			code += toCompactHex(opcode, 1);
+			opcode = makeOpcodeDefined(opcode);
+			eth::Instruction inst = (eth::Instruction) opcode;
+			eth::InstructionInfo info = eth::instructionInfo(inst);
+			if (info.name.find("PUSH") != std::string::npos)
+			{
+				code += toCompactHex(opcode);
+				code += fillArguments(inst, _options);
+			}
+			else
+			{
+				code += fillArguments(inst, _options);
+				code += toCompactHex(opcode, 1);
+			}
 		}
 	}
 
