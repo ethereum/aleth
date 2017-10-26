@@ -1,5 +1,4 @@
 /*
-<<<<<<< HEAD
     This file is part of cpp-ethereum.
 
     cpp-ethereum is free software: you can redistribute it and/or modify
@@ -48,7 +47,8 @@ private:
     u256 const m_networkId;
 
     std::shared_ptr<SnapshotStorageFace> m_snapshot;
-    std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
+	std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
+	time_t m_lastTick;
 };
 
 }  // namespace eth

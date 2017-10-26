@@ -83,6 +83,9 @@ public:
     void requestManifest();
     void requestData(h256 const& _chunkHash);
 
+    /// Host runs this periodically to check up on the peer.
+    void tick();
+
     u256 snapshotNumber() const { return m_snapshotNumber; }
 
     using p2p::Capability::disable;

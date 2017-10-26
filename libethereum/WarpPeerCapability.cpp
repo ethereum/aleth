@@ -20,6 +20,8 @@
 
 #include "libethcore/Exceptions.h"
 
+#include <chrono>
+
 namespace dev
 {
 namespace eth
@@ -204,6 +206,20 @@ void WarpPeerCapability::setAsking(Asking _a)
 {
     m_asking = _a;
     m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+}
+
+void WarpPeerCapability::tick()
+{
+	auto s = session();
+	time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	if (s && (now - m_lastAsk > 10 && m_asking != Asking::Nothing))
+	{
+		// timeout
+		if (std::shared_ptr<WarpPeerObserverFace> observer = m_observer.lock())
+			observer->onPeerRequestTimeout(std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()), m_asking);
+
+		s->disconnect(p2p::PingTimeout);
+	}
 }
 
 }  // namespace eth
