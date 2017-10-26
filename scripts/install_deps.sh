@@ -192,7 +192,7 @@ Linux)
                 $TRAVIS_PACKAGES
             ;;
 
-        CentOS*)
+        CentOS*|"Red Hat Enterprise Linux"*)
             echo "Installing cpp-ethereum dependencies on CentOS."
             # Enable EPEL repo that contains leveldb-devel
             $SUDO yum -y -q install epel-release
