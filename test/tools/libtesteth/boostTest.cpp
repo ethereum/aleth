@@ -127,8 +127,11 @@ int main( int argc, char* argv[] )
 	std::thread outputThread(travisOut);
 	auto fakeInit = [](int, char*[]) -> boost::unit_test::test_suite* { return nullptr; };
 	int result = unit_test_main(fakeInit, argc, argv);
+	std::cout << "got result" << std::endl;
 	stopTravisOut = true;
 	outputThread.join();
+	std::cout << "joined thread" << std::endl;
 	dev::test::TestOutputHelper::get().printTestExecStats();
+	std::cout << "printed ExecStats" << std::endl;
 	return result;
 }
