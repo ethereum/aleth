@@ -44,20 +44,17 @@ struct RlpDebug
 class RandomCode
 {
 public:
-	static RandomCodeBase& get()
+	static BoostRandomCode& get()
 	{
 		static RandomCode instance;
-		return *instance.generator;
+		return instance.generator;
 	}
 	RandomCode(RandomCode const&) = delete;
 	void operator=(RandomCode const&) = delete;
 
 private:
-	RandomCode()
-	{
-		generator.reset(new BoostRandomCode());
-	}
-	std::unique_ptr<RandomCodeBase> generator;
+	RandomCode(){}
+	BoostRandomCode generator;
 };
 
 }
