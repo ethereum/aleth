@@ -27,6 +27,7 @@
 #include <clocale>
 #include <cstdlib>
 #include <iostream>
+#include <thread>
 #include <test/tools/libtesteth/TestHelper.h>
 
 using namespace boost::unit_test;
@@ -47,11 +48,10 @@ void createRandomTestWrapper()
 	exit(0);
 }
 
-static std::atomic_bool stopTravisOut;
-void travisOut()
+void travisOut(std::atomic_bool *_stopTravisOut)
 {
 	int tickCounter = 0;
-	while (!stopTravisOut)
+	while (!*_stopTravisOut)
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		++tickCounter;
@@ -123,8 +123,8 @@ int main( int argc, char* argv[] )
 		exit(1);
 	}
 
-	stopTravisOut = false;
-	std::thread outputThread(travisOut);
+	std::atomic_bool stopTravisOut{false};
+	std::thread outputThread(travisOut, &stopTravisOut);
 	auto fakeInit = [](int, char*[]) -> boost::unit_test::test_suite* { return nullptr; };
 	int result = unit_test_main(fakeInit, argc, argv);
 	stopTravisOut = true;
