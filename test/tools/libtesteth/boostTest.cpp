@@ -47,18 +47,18 @@ void createRandomTestWrapper()
 	exit(0);
 }
 
-static std::atomic_bool stopTravisOut;
-void travisOut()
-{
-	int tickCounter = 0;
-	while (!stopTravisOut)
-	{
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		++tickCounter;
-		if (tickCounter % 10 == 0)
-			std::cout << ".\n" << std::flush;  // Output dot every 10s.
-	}
-}
+// static std::atomic_bool stopTravisOut;
+// void travisOut()
+// {
+// 	int tickCounter = 0;
+// 	while (!stopTravisOut)
+// 	{
+// 		std::this_thread::sleep_for(std::chrono::seconds(1));
+// 		++tickCounter;
+// 		if (tickCounter % 10 == 0)
+// 			std::cout << ".\n" << std::flush;  // Output dot every 10s.
+// 	}
+// }
 
 /*
 The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
@@ -123,15 +123,15 @@ int main( int argc, char* argv[] )
 		exit(1);
 	}
 
-	stopTravisOut = false;
-	std::thread outputThread(travisOut);
+//	stopTravisOut = false;
+//	std::thread outputThread(travisOut);
 	auto fakeInit = [](int, char*[]) -> boost::unit_test::test_suite* { return nullptr; };
 	int result = unit_test_main(fakeInit, argc, argv);
-	std::cout << "got result" << std::endl;
-	stopTravisOut = true;
-	outputThread.join();
-	std::cout << "joined thread" << std::endl;
+//	std::cout << "got result" << std::endl;
+//	stopTravisOut = true;
+//	outputThread.join();
+//	std::cout << "joined thread" << std::endl;
 	dev::test::TestOutputHelper::get().printTestExecStats();
-	std::cout << "printed ExecStats" << std::endl;
+//	std::cout << "printed ExecStats" << std::endl;
 	return result;
 }
