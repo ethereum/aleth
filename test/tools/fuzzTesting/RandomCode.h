@@ -70,7 +70,7 @@ public:
 	int sendingAddressProbability;
 
 private:
-	std::map<int, int> mapWeights;
+	std::map<uint8_t, int> mapWeights;
 	typedef std::pair<dev::Address, AddressType> accountRecord;
 	std::vector<accountRecord> testAccounts;
 	dev::Address getRandomAddressPriv(AddressType _type) const;
