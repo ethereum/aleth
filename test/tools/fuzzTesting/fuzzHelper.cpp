@@ -425,17 +425,18 @@ RandomCodeOptions::RandomCodeOptions() :
 	precompiledDestProbability(2),	// probability of generating a precompiled address as tx destination
 	sendingAddressProbability(3)	// probability of calling to the tx sending account
 {
+	std::cout << "RandomCodeOptions() starting" << std::endl;
 	//each op code with same weight-probability
-	for (auto i = 0; i < 255; i++)
-		mapWeights.insert(std::pair<int, int>(i, 40));
+	for (uint8_t i = 0; i < 255; i++)
+		mapWeights.insert(std::pair<uint8_t, int>(i, 40));
 
 	//Probability of instructions
 	setWeight(eth::Instruction::STOP, 1);
-	for (int i = (int)(eth::Instruction::PUSH1); i < 32; i++)
+	for (uint8_t i = (int)(eth::Instruction::PUSH1); i <= (uint8_t)(eth::Instruction::PUSH32); i++)
 		setWeight((eth::Instruction) i, 1);
-	for (int i = (int)(eth::Instruction::SWAP1); i < 16; i++)
+	for (uint8_t i = (int)(eth::Instruction::SWAP1); i <= (uint8_t)(eth::Instruction::SWAP16); i++)
 		setWeight((eth::Instruction) i, 10);
-	for (int i = (int)(eth::Instruction::DUP1); i < 16; i++)
+	for (uint8_t i = (int)(eth::Instruction::DUP1); i <= (uint8_t)(eth::Instruction::DUP16); i++)
 		setWeight((eth::Instruction) i, 10);
 
 	setWeight(eth::Instruction::SIGNEXTEND, 100);
@@ -475,6 +476,8 @@ RandomCodeOptions::RandomCodeOptions() :
 	addAddress(Address("0x0000000000000000000000000000000000000006"), AddressType::ByzantiumPrecompiled);
 	addAddress(Address("0x0000000000000000000000000000000000000007"), AddressType::ByzantiumPrecompiled);
 	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::ByzantiumPrecompiled);
+
+	std::cout << "RandomCodeOptions() done" << std::endl;
 }
 
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
