@@ -425,7 +425,6 @@ RandomCodeOptions::RandomCodeOptions() :
 	precompiledDestProbability(2),	// probability of generating a precompiled address as tx destination
 	sendingAddressProbability(3)	// probability of calling to the tx sending account
 {
-	std::cout << "RandomCodeOptions() starting" << std::endl;
 	//each op code with same weight-probability
 	for (uint8_t i = 0; i < 255; i++)
 		mapWeights.insert(std::pair<uint8_t, int>(i, 40));
