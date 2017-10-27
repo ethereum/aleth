@@ -426,16 +426,16 @@ RandomCodeOptions::RandomCodeOptions() :
 	sendingAddressProbability(3)	// probability of calling to the tx sending account
 {
 	//each op code with same weight-probability
-	for (auto i = 0; i < 255; i++)
-		mapWeights.insert(std::pair<int, int>(i, 40));
+	for (uint8_t i = 0; i < 255; i++)
+		mapWeights.insert(std::pair<uint8_t, int>(i, 40));
 
 	//Probability of instructions
 	setWeight(eth::Instruction::STOP, 1);
-	for (int i = (int)(eth::Instruction::PUSH1); i < 32; i++)
+	for (uint8_t i = static_cast<uint8_t>(eth::Instruction::PUSH1); i <= static_cast<uint8_t>(eth::Instruction::PUSH32); i++)
 		setWeight((eth::Instruction) i, 1);
-	for (int i = (int)(eth::Instruction::SWAP1); i < 16; i++)
+	for (uint8_t i = static_cast<uint8_t>(eth::Instruction::SWAP1); i <= static_cast<uint8_t>(eth::Instruction::SWAP16); i++)
 		setWeight((eth::Instruction) i, 10);
-	for (int i = (int)(eth::Instruction::DUP1); i < 16; i++)
+	for (uint8_t i = static_cast<uint8_t>(eth::Instruction::DUP1); i <= static_cast<uint8_t>(eth::Instruction::DUP16); i++)
 		setWeight((eth::Instruction) i, 10);
 
 	setWeight(eth::Instruction::SIGNEXTEND, 100);
@@ -479,7 +479,7 @@ RandomCodeOptions::RandomCodeOptions() :
 
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
 {
-	mapWeights.at((int)_opCode) = _weight;
+	mapWeights.at((uint8_t)_opCode) = _weight;
 }
 
 void RandomCodeOptions::addAddress(Address const& _address, AddressType _type)
