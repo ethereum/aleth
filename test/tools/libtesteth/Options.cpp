@@ -101,8 +101,7 @@ Options::Options(int argc, char** argv)
 			("help", "Display list of command arguments")
 			("version", "Print information about version")
 			("versionDisplay", "build information")
-			("jit", "")
-			;
+			("jit", "");
 	po::options_description allowedOptions("");
 	allowedOptions.add(testSuits).add(testGeneration).add(debugging).add(additionalTests);
 	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
