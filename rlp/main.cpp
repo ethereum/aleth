@@ -24,6 +24,8 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
@@ -34,39 +36,7 @@
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;
-
-void help()
-{
-	cout
-		<< "Usage rlp <mode> [OPTIONS]" << endl
-		<< "Modes:" << endl
-		<< "    create <json>  Given a simplified JSON string, output the RLP." << endl
-		<< "    render [ <file> | -- ]  Render the given RLP. Options:" << endl
-		<< "      --indent <string>  Use string as the level indentation (default '  ')." << endl
-		<< "      --hex-ints  Render integers in hex." << endl
-		<< "      --string-ints  Render integers in the same way as strings." << endl
-		<< "      --ascii-strings  Render data as C-style strings or hex depending on content being ASCII." << endl
-		<< "      --force-string  Force all data to be rendered as C-style strings." << endl
-		<< "      --force-escape  When rendering as C-style strings, force all characters to be escaped." << endl
-		<< "      --force-hex  Force all data to be rendered as raw hex." << endl
-		<< "    list [ <file> | -- ]  List the items in the RLP list by hash and size." << endl
-		<< "    extract [ <file> | -- ]  Extract all items in the RLP list, named by hash." << endl
-		<< "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
-		<< "      -D,--dapp  Dapp-building mode; equivalent to --encrypt --64." << endl
-		<< endl
-		<< "General options:" << endl
-		<< "    -e,--encrypt  Encrypt the RLP data prior to output." << endl
-		<< "    -L,--lenience  Try not to bomb out early if possible." << endl
-		<< "    -x,--hex,--base-16  Treat input RLP as hex encoded data." << endl
-		<< "    -k,--keccak  Output Keccak-256 hash only." << endl
-		<< "    --64,--base-64  Treat input RLP as base-64 encoded data." << endl
-		<< "    -b,--bin,--base-256  Treat input RLP as raw binary data." << endl
-		<< "    -q,--quiet  Don't place additional information on stderr." << endl
-		<< "    -h,--help  Print this help message and exit." << endl
-		<< "    -V,--version  Show the version and exit." << endl
-		;
-	exit(0);
-}
+namespace po = boost::program_options;
 
 void version()
 {
@@ -165,8 +135,8 @@ public:
 			for (auto i: _d)
 			{
 				m_out << (j++ ?
-					(m_prefs.indent.empty() ? ", " : ("," + newline)) :
-					(m_prefs.indent.empty() ? " " : newline));
+				          (m_prefs.indent.empty() ? ", " : ("," + newline)) :
+				          (m_prefs.indent.empty() ? " " : newline));
 				output(i, _level + 1);
 			}
 			newline = newline.substr(0, newline.size() - m_prefs.indent.size());
@@ -189,18 +159,18 @@ void putOut(bytes _out, Encoding _encoding, bool _encrypt, bool _quiet)
 
 	switch (_encoding)
 	{
-	case Encoding::Hex: case Encoding::Auto:
-		cout << toHex(_out) << endl;
-		break;
-	case Encoding::Base64:
-		cout << toBase64(&_out) << endl;
-		break;
-	case Encoding::Binary:
-		cout.write((char const*)_out.data(), _out.size());
-		break;
-	case Encoding::Keccak:
-		cout << sha3(_out).hex() << endl;
-		break;
+		case Encoding::Hex: case Encoding::Auto:
+			cout << toHex(_out) << endl;
+			break;
+		case Encoding::Base64:
+			cout << toBase64(&_out) << endl;
+			break;
+		case Encoding::Binary:
+			cout.write((char const*)_out.data(), _out.size());
+			break;
+		case Encoding::Keccak:
+			cout << sha3(_out).hex() << endl;
+			break;
 	}
 }
 
@@ -215,61 +185,117 @@ int main(int argc, char** argv)
 	bool quiet = false;
 	bool encrypt = false;
 	RLPStreamer::Prefs prefs;
-
-	for (int i = 1; i < argc; ++i)
+	po::options_description modesOptions("Modes");
+	modesOptions.add_options()
+			("indent,i", po::value<string> (), "<string>  Use string as the level indentation (default '  ').")
+			("hex-ints", "Render integers in hex.")
+			("string-ints", "Render integers in the same way as strings.")
+			("ascii-strings", "Render data as C-style strings or hex depending on content being ASCII.")
+			("force-string", "Force all data to be rendered as C-style strings.")
+			("force-escape", "When rendering as C-style strings, force all characters to be escaped.")
+			("force-hex", "Force all data to be rendered as raw hex.")
+			("dapp,D", "Dapp-building mode; equivalent to --encrypt --64.");
+	po::options_description generalOptions("General options");
+	generalOptions.add_options()
+			("encrypt,e", "Encrypt the RLP data prior to output.")
+			("lenience,L", "Try not to bomb out early if possible.")
+			("hex,x", "Treat input RLP as hex encoded data.")
+			("base-16", "Treat input RLP as hex encoded data.")
+			("keccak,k", "Output Keccak-256 hash only.")
+			("base-64", "Treat input RLP as base-64 encoded data.")
+			("64", "Treat input RLP as base-64 encoded data.")
+			("bin,b", "Treat input RLP as raw binary data.")
+			("base-256", "Treat input RLP as raw binary data.")
+			("quiet,q", "Don't place additional information on stderr.")
+			("help,h", "Print this help message and exit.")
+			("version,V", "Show the version and exit.");
+	po::options_description allowedOptions("Allowed options");
+	allowedOptions.add(generalOptions).add(modesOptions);
+	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
+	vector<string> to_pass_further = collect_unrecognized(parsed.options, po::include_positional);
+	po::variables_map vm;
+	po::store(parsed, vm);
+	po::notify(vm);
+	for (size_t i = 0; i < to_pass_further.size(); ++i)
 	{
-		string arg = argv[i];
-		if (arg == "-h" || arg == "--help")
-			help();
-		else if (arg == "render")
+		string arg =  to_pass_further[i];
+		if (arg == "render")
 			mode = Mode::Render;
 		else if (arg == "create")
 			mode = Mode::Create;
-		else if ((arg == "-i" || arg == "--indent") && i + 1 < argc)
-			prefs.indent = argv[++i];
-		else if (arg == "--hex-ints")
-			prefs.hexInts = true;
-		else if (arg == "--string-ints")
-			prefs.stringInts = true;
-		else if (arg == "--ascii-strings")
-			prefs.forceString = prefs.forceHex = false;
-		else if (arg == "--force-string")
-			prefs.forceString = true;
-		else if (arg == "--force-hex")
-			prefs.forceHex = true, prefs.forceString = false;
-		else if (arg == "--force-escape")
-			prefs.escapeAll = true;
-		else if (arg == "-n" || arg == "--nice")
-			prefs.forceString = true, prefs.stringInts = false, prefs.forceHex = false, prefs.indent = "  ";
 		else if (arg == "list")
 			mode = Mode::ListArchive;
 		else if (arg == "extract")
 			mode = Mode::ExtractArchive;
 		else if (arg == "assemble")
 			mode = Mode::AssembleArchive;
-		else if (arg == "-L" || arg == "--lenience")
-			lenience = true;
-		else if (arg == "-D" || arg == "--dapp")
-			encrypt = true, encoding = Encoding::Base64;
-		else if (arg == "-V" || arg == "--version")
-			version();
-		else if (arg == "-q" || arg == "--quiet")
-			quiet = true;
-		else if (arg == "-x" || arg == "--hex" || arg == "--base-16")
-			encoding = Encoding::Hex;
-		else if (arg == "-k" || arg == "--keccak")
-			encoding = Encoding::Keccak;
-		else if (arg == "--64" || arg == "--base-64")
-			encoding = Encoding::Base64;
-		else if (arg == "-b" || arg == "--bin" || arg == "--base-256")
-			encoding = Encoding::Binary;
-		else if (arg == "-e" || arg == "--encrypt")
-			encrypt = true;
 		else if (inputFile.empty())
 			inputFile = arg;
 		else
 			otherInputs.push_back(arg);
 	}
+	if (vm.count("help")) {
+		cout << "Usage rlp <mode> [OPTIONS]" << endl << modesOptions
+		     << "    create <json>  Given a simplified JSON string, output the RLP." << endl
+		     << "    render [ <file> | -- ]  Render the given RLP. Options:" << endl
+		     << "    list [ <file> | -- ]  List the items in the RLP list by hash and size." << endl
+		     << "    extract [ <file> | -- ]  Extract all items in the RLP list, named by hash." << endl
+		     << "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
+		     << generalOptions;
+		exit(0);
+	}
+	if (vm.count("lenience"))
+		lenience = true;
+	if (vm.count("dapp"))
+		encrypt = true, encoding = Encoding::Base64;
+	if (vm.count("version"))
+		version();
+	if (vm.count("quiet"))
+		quiet = true;
+	if (vm.count("hex") || vm.count("base-16"))
+		encoding = Encoding::Hex;
+	if (vm.count("keccak"))
+		encoding = Encoding::Keccak;
+	if (vm.count("64") || vm.count("base-64"))
+		encoding = Encoding::Base64;
+	if (vm.count("bin") || vm.count("base-256"))
+		encoding = Encoding::Binary;
+	if (vm.count("encrypt"))
+		encrypt = true;
+	if (vm.count("indent"))
+		prefs.indent = vm["indent"].as<string>();
+	if (vm.count("hex-ints"))
+		prefs.hexInts = true;
+	if (vm.count("string-ints"))
+		prefs.stringInts = true;
+	if (vm.count("ascii-strings"))
+		prefs.forceString = prefs.forceHex = false;
+	if (vm.count("force-string"))
+		prefs.forceString = true;
+	if (vm.count("force-hex"))
+		prefs.forceHex = true, prefs.forceString = false;
+	if (vm.count("force-escape"))
+		prefs.escapeAll = true;
+	if (vm.count("nice"))
+		prefs.forceString = true, prefs.stringInts = false, prefs.forceHex = false, prefs.indent = "  ";
+	if (vm.count("lenience"))
+		lenience = true;
+	if (vm.count("dapp"))
+		encrypt = true, encoding = Encoding::Base64;
+	if (vm.count("version"))
+		version();
+	if (vm.count("quiet"))
+		quiet = true;
+	if (vm.count("hex") || vm.count("base-16"))
+		encoding = Encoding::Hex;
+	if (vm.count("keccak"))
+		encoding = Encoding::Keccak;
+	if (vm.count("64") || vm.count("base-64"))
+		encoding = Encoding::Base64;
+	if (vm.count("bin") || vm.count("base-256"))
+		encoding = Encoding::Binary;
+	if (vm.count("encrypt"))
+		encrypt = true;
 
 	bytes in;
 	if (inputFile == "--")
@@ -304,27 +330,27 @@ int main(int argc, char** argv)
 		}
 		switch (encoding)
 		{
-		case Encoding::Hex:
-		{
-			string s = asString(in);
-			boost::algorithm::replace_all(s, " ", "");
-			boost::algorithm::replace_all(s, "\n", "");
-			boost::algorithm::replace_all(s, "\t", "");
-			b = fromHex(s);
-			break;
-		}
-		case Encoding::Base64:
-		{
-			string s = asString(in);
-			boost::algorithm::replace_all(s, " ", "");
-			boost::algorithm::replace_all(s, "\n", "");
-			boost::algorithm::replace_all(s, "\t", "");
-			b = fromBase64(s);
-			break;
-		}
-		default:
-			swap(b, in);
-			break;
+			case Encoding::Hex:
+			{
+				string s = asString(in);
+				boost::algorithm::replace_all(s, " ", "");
+				boost::algorithm::replace_all(s, "\n", "");
+				boost::algorithm::replace_all(s, "\t", "");
+				b = fromHex(s);
+				break;
+			}
+			case Encoding::Base64:
+			{
+				string s = asString(in);
+				boost::algorithm::replace_all(s, " ", "");
+				boost::algorithm::replace_all(s, "\n", "");
+				boost::algorithm::replace_all(s, "\t", "");
+				b = fromBase64(s);
+				break;
+			}
+			default:
+				swap(b, in);
+				break;
 		}
 	}
 
@@ -333,166 +359,166 @@ int main(int argc, char** argv)
 		RLP rlp(b);
 		switch (mode)
 		{
-		case Mode::ListArchive:
-		{
-			if (!rlp.isList())
+			case Mode::ListArchive:
 			{
-				cout << "Error: Invalid format; RLP data is not a list." << endl;
-				exit(1);
-			}
-			cout << rlp.itemCount() << " items:" << endl;
-			for (auto i: rlp)
-			{
-				if (!i.isData())
+				if (!rlp.isList())
 				{
-					cout << "Error: Invalid format; RLP list item is not data." << endl;
-					if (!lenience)
-						exit(1);
+					cout << "Error: Invalid format; RLP data is not a list." << endl;
+					exit(1);
 				}
-				cout << "    " << i.size() << " bytes: " << sha3(i.data()) << endl;
-			}
-			break;
-		}
-		case Mode::ExtractArchive:
-		{
-			if (!rlp.isList())
-			{
-				cout << "Error: Invalid format; RLP data is not a list." << endl;
-				exit(1);
-			}
-			cout << rlp.itemCount() << " items:" << endl;
-			for (auto i: rlp)
-			{
-				if (!i.isData())
+				cout << rlp.itemCount() << " items:" << endl;
+				for (auto i: rlp)
 				{
-					cout << "Error: Invalid format; RLP list item is not data." << endl;
-					if (!lenience)
-						exit(1);
-				}
-				ofstream fout;
-				fout.open(toString(sha3(i.data())));
-				fout.write(reinterpret_cast<char const*>(i.data().data()), i.data().size());
-			}
-			break;
-		}
-		case Mode::AssembleArchive:
-		{
-			if (boost::filesystem::is_directory(inputFile))
-			{
-				js::mArray entries;
-				auto basePath = boost::filesystem::canonical(boost::filesystem::path(inputFile)).string();
-				for (string& i: otherInputs)
-				{
-					js::mObject entry;
-					strings parsed;
-					boost::algorithm::split(parsed, i, boost::is_any_of(","));
-					i = parsed[0];
-					for (unsigned j = 1; j < parsed.size(); ++j)
+					if (!i.isData())
 					{
-						strings nv;
-						boost::algorithm::split(nv, parsed[j], boost::is_any_of(":"));
-						if (nv.size() == 2)
-							entry[nv[0]] = nv[1];
-						else{} // TODO: error
+						cout << "Error: Invalid format; RLP list item is not data." << endl;
+						if (!lenience)
+							exit(1);
 					}
-					if (!entry.count("path"))
+					cout << "    " << i.size() << " bytes: " << sha3(i.data()) << endl;
+				}
+				break;
+			}
+			case Mode::ExtractArchive:
+			{
+				if (!rlp.isList())
+				{
+					cout << "Error: Invalid format; RLP data is not a list." << endl;
+					exit(1);
+				}
+				cout << rlp.itemCount() << " items:" << endl;
+				for (auto i: rlp)
+				{
+					if (!i.isData())
 					{
-						std::string path = boost::filesystem::canonical(boost::filesystem::path(parsed[0])).string().substr(basePath.size());
-						if (path == "/index.html")
-							path = "/";
-						entry["path"] = path;
+						cout << "Error: Invalid format; RLP list item is not data." << endl;
+						if (!lenience)
+							exit(1);
 					}
-					entry["hash"] = toHex(dev::sha3(contents(parsed[0])).ref());
-					entries.push_back(entry);
+					ofstream fout;
+					fout.open(toString(sha3(i.data())));
+					fout.write(reinterpret_cast<char const*>(i.data().data()), i.data().size());
 				}
-				js::mObject o;
-				o["entries"] = entries;
-				auto os = js::write_string(js::mValue(o), false);
-				in = asBytes(os);
+				break;
 			}
-
-			strings addedInputs;
-			for (auto i: otherInputs)
-				if (!boost::filesystem::is_regular_file(i))
-					cerr << "Skipped " << i << std::endl;
-				else
-					addedInputs.push_back(i);
-
-			RLPStream r(addedInputs.size() + 1);
-			r.append(in);
-			for (auto i: addedInputs)
-				r.append(contents(i));
-			putOut(r.out(), encoding, encrypt, quiet);
-			break;
-		}
-		case Mode::Render:
-		{
-			RLPStreamer s(cout, prefs);
-			s.output(rlp);
-			cout << endl;
-			break;
-		}
-		case Mode::Create:
-		{
-			vector<js::mValue> v(1);
-			try {
-				js::read_string(asString(in), v[0]);
-			}
-			catch (...)
+			case Mode::AssembleArchive:
 			{
-				cerr << "Error: Invalid format; bad JSON." << endl;
-				exit(1);
-			}
-			RLPStream out;
-			while (!v.empty())
-			{
-				auto vb = v.back();
-				v.pop_back();
-				switch (vb.type())
+				if (boost::filesystem::is_directory(inputFile))
 				{
-				case js::array_type:
-				{
-					js::mArray a = vb.get_array();
-					out.appendList(a.size());
-					for (int i = a.size() - 1; i >= 0; --i)
-						v.push_back(a[i]);
-					break;
+					js::mArray entries;
+					auto basePath = boost::filesystem::canonical(boost::filesystem::path(inputFile)).string();
+					for (string& i: otherInputs)
+					{
+						js::mObject entry;
+						strings parsed;
+						boost::algorithm::split(parsed, i, boost::is_any_of(","));
+						i = parsed[0];
+						for (unsigned j = 1; j < parsed.size(); ++j)
+						{
+							strings nv;
+							boost::algorithm::split(nv, parsed[j], boost::is_any_of(":"));
+							if (nv.size() == 2)
+								entry[nv[0]] = nv[1];
+							else{} // TODO: error
+						}
+						if (!entry.count("path"))
+						{
+							std::string path = boost::filesystem::canonical(boost::filesystem::path(parsed[0])).string().substr(basePath.size());
+							if (path == "/index.html")
+								path = "/";
+							entry["path"] = path;
+						}
+						entry["hash"] = toHex(dev::sha3(contents(parsed[0])).ref());
+						entries.push_back(entry);
+					}
+					js::mObject o;
+					o["entries"] = entries;
+					auto os = js::write_string(js::mValue(o), false);
+					in = asBytes(os);
 				}
-				case js::str_type:
-				{
-					string const& s = vb.get_str();
-					if (s.size() >= 2 && s.substr(0, 2) == "0x")
-						out << fromHex(s);
+
+				strings addedInputs;
+				for (auto i: otherInputs)
+					if (!boost::filesystem::is_regular_file(i))
+						cerr << "Skipped " << i << std::endl;
 					else
-					{
-						// assume it's a normal JS escaped string.
-						bytes ss;
-						ss.reserve(s.size());
-						for (unsigned i = 0; i < s.size(); ++i)
-							if (s[i] == '\\' && i + 1 < s.size())
-							{
-								if (s[++i] == 'x' && i + 2 < s.size())
-									ss.push_back(fromHex(s.substr(i, 2))[0]);
-							}
-							else if (s[i] != '\\')
-								ss.push_back((byte)s[i]);
-						out << ss;
-					}
-					break;
-				}
-				case js::int_type:
-					out << vb.get_int();
-					break;
-				default:
-					cerr << "ERROR: Unsupported type in JSON." << endl;
-					if (!lenience)
-						exit(1);
-				}
+						addedInputs.push_back(i);
+
+				RLPStream r(addedInputs.size() + 1);
+				r.append(in);
+				for (auto i: addedInputs)
+					r.append(contents(i));
+				putOut(r.out(), encoding, encrypt, quiet);
+				break;
 			}
-			putOut(out.out(), encoding, encrypt, quiet);
-			break;
-		}
-		default:;
+			case Mode::Render:
+			{
+				RLPStreamer s(cout, prefs);
+				s.output(rlp);
+				cout << endl;
+				break;
+			}
+			case Mode::Create:
+			{
+				vector<js::mValue> v(1);
+				try {
+					js::read_string(asString(in), v[0]);
+				}
+				catch (...)
+				{
+					cerr << "Error: Invalid format; bad JSON." << endl;
+					exit(1);
+				}
+				RLPStream out;
+				while (!v.empty())
+				{
+					auto vb = v.back();
+					v.pop_back();
+					switch (vb.type())
+					{
+						case js::array_type:
+						{
+							js::mArray a = vb.get_array();
+							out.appendList(a.size());
+							for (int i = a.size() - 1; i >= 0; --i)
+								v.push_back(a[i]);
+							break;
+						}
+						case js::str_type:
+						{
+							string const& s = vb.get_str();
+							if (s.size() >= 2 && s.substr(0, 2) == "0x")
+								out << fromHex(s);
+							else
+							{
+								// assume it's a normal JS escaped string.
+								bytes ss;
+								ss.reserve(s.size());
+								for (unsigned i = 0; i < s.size(); ++i)
+									if (s[i] == '\\' && i + 1 < s.size())
+									{
+										if (s[++i] == 'x' && i + 2 < s.size())
+											ss.push_back(fromHex(s.substr(i, 2))[0]);
+									}
+									else if (s[i] != '\\')
+										ss.push_back((byte)s[i]);
+								out << ss;
+							}
+							break;
+						}
+						case js::int_type:
+							out << vb.get_int();
+							break;
+						default:
+							cerr << "ERROR: Unsupported type in JSON." << endl;
+							if (!lenience)
+								exit(1);
+					}
+				}
+				putOut(out.out(), encoding, encrypt, quiet);
+				break;
+			}
+			default:;
 		}
 	}
 	catch (...)
