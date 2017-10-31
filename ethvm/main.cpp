@@ -156,12 +156,12 @@ int main(int argc, char** argv)
 	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
 	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
 	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
-	vector<string> to_pass_further = collect_unrecognized(parsed.options, po::include_positional);
+	vector<string> unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
 	po::variables_map vm;
 	po::store(parsed, vm);
 	po::notify(vm);
-	for (size_t i = 0; i < to_pass_further.size(); ++i) {
-		string arg = to_pass_further[i];
+	for (size_t i = 0; i < unrecognisedOptions.size(); ++i) {
+		string arg = unrecognisedOptions[i];
 		if (arg == "stats")
 			mode = Mode::Statistics;
 		else if (arg == "output")
