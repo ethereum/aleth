@@ -105,14 +105,14 @@ Options::Options(int argc, char** argv)
 	po::options_description allowedOptions("");
 	allowedOptions.add(testSuits).add(testGeneration).add(debugging).add(additionalTests);
 	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
-	vector<string> to_pass_further = collect_unrecognized(parsed.options, po::include_positional);
+	vector<string> unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
 	po::variables_map vm;
 	po::store(parsed, vm);
 	po::notify(vm);
-	for (size_t i = 0; i < to_pass_further.size(); ++i)
+	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
 	{
-		auto arg = std::string{to_pass_further[i]};
-		auto throwIfNoArgumentFollows = [&i, &to_pass_further.size(), &arg]()
+		auto arg = std::string{unrecognisedOptions[i]};
+		auto throwIfNoArgumentFollows = [&i, &unrecognisedOptions.size(), &arg]()
 		{
 			if (i + 1 >= argc)
 				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
