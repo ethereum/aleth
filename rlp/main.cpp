@@ -212,13 +212,13 @@ int main(int argc, char** argv)
 	po::options_description allowedOptions("Allowed options");
 	allowedOptions.add(generalOptions).add(modesOptions);
 	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
-	vector<string> to_pass_further = collect_unrecognized(parsed.options, po::include_positional);
+	vector<string> unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
 	po::variables_map vm;
 	po::store(parsed, vm);
 	po::notify(vm);
-	for (size_t i = 0; i < to_pass_further.size(); ++i)
+	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
 	{
-		string arg =  to_pass_further[i];
+		string arg =  unrecognisedOptions[i];
 		if (arg == "render")
 			mode = Mode::Render;
 		else if (arg == "create")
