@@ -9,16 +9,13 @@ confinement: devmode
 apps:
   eth:
     command: eth
-  ethkey:
-    command: ethkey
   ethvm:
     command: ethvm
-  rlp:
-    command: rlp
 
 parts:
   cpp-ethereum:
     source: .
+    source-type: git
     plugin: cmake
     build-packages:
       - build-essential
