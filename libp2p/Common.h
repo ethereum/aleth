@@ -244,6 +244,7 @@ class Node
 {
 public:
 	Node() = default;
+	virtual ~Node() = default;
 	Node(Node const&);
 	Node(Public _publicKey, NodeIPEndpoint const& _ip, PeerType _peerType = PeerType::Optional): id(_publicKey), endpoint(_ip), peerType(_peerType) {}
 	Node(NodeSpec const& _s, PeerType _peerType = PeerType::Optional);
