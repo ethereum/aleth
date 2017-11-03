@@ -185,7 +185,7 @@ int main(int argc, char** argv)
 	bool quiet = false;
 	bool encrypt = false;
 	RLPStreamer::Prefs prefs;
-	po::options_description modesOptions("Modes");
+	po::options_description modesOptions("Usage rlp <mode> [OPTIONS]\nModes");
 	modesOptions.add_options()
 			("indent,i", po::value<string> (), "<string>  Use string as the level indentation (default '  ').")
 			("hex-ints", "Render integers in hex.")
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
 			otherInputs.push_back(arg);
 	}
 	if (vm.count("help")) {
-		cout << "Usage rlp <mode> [OPTIONS]" << endl << modesOptions
+		cout << modesOptions
 		     << "    create <json>  Given a simplified JSON string, output the RLP." << endl
 		     << "    render [ <file> | -- ]  Render the given RLP. Options:" << endl
 		     << "    list [ <file> | -- ]  List the items in the RLP list by hash and size." << endl
