@@ -118,6 +118,7 @@ int main(int argc, char** argv)
 	Network networkName = Network::MainNetworkTest;
 	BlockHeader blockHeader; // fake block to be executed in
 	blockHeader.setGasLimit(maxBlockGasLimit());
+	blockHeader.setTimestamp(0);
 	bytes data;
 	bytes code;
 
@@ -125,14 +126,14 @@ int main(int argc, char** argv)
 	NoProof::init();
 	po::options_description transactionOptions("Transaction options");
 	transactionOptions.add_options()
-			("value", po::value<string>(), "<n>  Transaction should transfer the <n> wei (default: 0).")
-			("gas", po::value<string>(), "<n>    Transaction should be given <n> gas (default: block gas limit).")
-			("gas-price", po::value<string>(), "<n>  Transaction's gas price' should be <n> (default: 0).")
+			("value", po::value<u256>(), "<n>  Transaction should transfer the <n> wei (default: 0).")
+			("gas", po::value<u256>(), "<n>    Transaction should be given <n> gas (default: block gas limit).")
+			("gas-price", po::value<u256>(), "<n>  Transaction's gas price' should be <n> (default: 0).")
 			("sender", po::value<string>(), "<a>  Transaction sender should be <a> (default: 0000...0069).")
 			("origin", po::value<string>(), "<a>  Transaction origin should be <a> (default: 0000...0069).")
 			("input", po::value<string>(), "<d>   Transaction code should be <d>")
 			("code", po::value<string>(), "<d>    Contract code <d>. Makes transaction a call to this contract")
-			("gas-limit", po::value<string>(), "");
+			("gas-limit", po::value<u256>(), "");
 	po::options_description vmOptions("VM options");
 	//#if ETH_EVMJIT
 	vmOptions.add_options()
@@ -150,9 +151,9 @@ int main(int argc, char** argv)
 			("version,v", "Show the version and exit.")
 			("help,h", "Show this help message and exit.")
 			("author", po::value<string>(), "<a> Set author")
-			("difficulty", po::value<string>(), "<d> Set difficulty")
-			("number", po::value<string>(), "<d> Set number")
-			("timestamp", po::value<string>(), "<d> Set timestamp");
+			("difficulty", po::value<u256>(), "<d> Set difficulty")
+			("number", po::value<u256>(), "<d> Set number")
+			("timestamp", po::value<u256>(), "<d> Set timestamp");
 	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
 	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
 	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
@@ -160,7 +161,8 @@ int main(int argc, char** argv)
 	po::variables_map vm;
 	po::store(parsed, vm);
 	po::notify(vm);
-	for (size_t i = 0; i < unrecognisedOptions.size(); ++i) {
+	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
+	{
 		string arg = unrecognisedOptions[i];
 		if (arg == "stats")
 			mode = Mode::Statistics;
@@ -178,15 +180,18 @@ int main(int argc, char** argv)
 			return -1;
 		}
 	}
-	if (vm.count("help")) {
+	if (vm.count("help"))
+	{
 		cout << allowedOptions;
 		cout << "                         <n>  Block gas limit (default: " << maxBlockGasLimit() << ").";
 		exit(0);
 	}
-	if (vm.count("version")) {
+	if (vm.count("version"))
+	{
 		version();
 	}
-	if (vm.count("vm")) {
+	if (vm.count("vm"))
+	{
 		string vmKindStr = vm["vm"].as<string>();
 		if (vmKindStr == "interpreter")
 			vmKind = VMKind::Interpreter;
@@ -211,21 +216,21 @@ int main(int argc, char** argv)
 	if (vm.count("origin"))
 		origin = Address(vm["origin"].as<string>());
 	if (vm.count("gas"))
-		gas = u256(vm["gas"].as<string>());
+		gas = vm["gas"].as<u256>();
 	if (vm.count("gas-price"))
-		gasPrice = u256(vm["gas-price"].as<string>());
+		gasPrice = vm["gas-price"].as<u256>();
 	if (vm.count("author"))
 		blockHeader.setAuthor(Address(vm["author"].as<string>()));
 	if (vm.count("number"))
-		blockHeader.setNumber(u256(vm["number"].as<string>()));
+		blockHeader.setNumber(vm["number"].as<u256>());
 	if (vm.count("difficulty"))
-		blockHeader.setDifficulty(u256(vm["difficulty"].as<string>()));
+		blockHeader.setDifficulty(vm["difficulty"].as<u256>());
 	if (vm.count("timestamp"))
-		blockHeader.setTimestamp(u256(vm["timestamp"].as<string>()));
+		blockHeader.setTimestamp(vm["timestamp"].as<u256>());
 	if (vm.count("gas-limit"))
-		blockHeader.setGasLimit(u256(vm["gas-limit"].as<string>()).convert_to<int64_t>());
+		blockHeader.setGasLimit((vm["gas-limit"].as<u256>()).convert_to<int64_t>());
 	if (vm.count("value"))
-		value = u256(vm["value"].as<string>());
+		value = vm["value"].as<u256>();
 	if (vm.count("network"))
 	{
 		string network = vm["network"].as<string>();
