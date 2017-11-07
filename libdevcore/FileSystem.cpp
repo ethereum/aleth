@@ -64,7 +64,7 @@ fs::path dev::getIpcPath()
 		return s_ethereumIpcPath;
 }
 
-fs::path dev::getDataDir(const string& _prefix)
+fs::path dev::getDataDir(string _prefix)
 {
 	if (_prefix.empty())
 		_prefix = "ethereum";
@@ -73,7 +73,7 @@ fs::path dev::getDataDir(const string& _prefix)
 	return getDefaultDataDir(_prefix);
 }
 
-fs::path dev::getDefaultDataDir(const string& _prefix)
+fs::path dev::getDefaultDataDir(string _prefix)
 {
 	if (_prefix.empty())
 		_prefix = "ethereum";
