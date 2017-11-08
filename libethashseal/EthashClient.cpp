@@ -124,14 +124,14 @@ void EthashClient::setShouldPrecomputeDAG(bool _precompute)
 
 void EthashClient::submitExternalHashrate(u256 const& _rate, h256 const& _id)
 {
-	WriteGuard(x_externalRates);
+	WriteGuard writeGuard(x_externalRates);
 	m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
 }
 
 u256 EthashClient::externalHashrate() const
 {
 	u256 ret = 0;
-	WriteGuard(x_externalRates);
+	WriteGuard writeGuard(x_externalRates);
 	for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
 		if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
 			i = m_externalRates.erase(i);
