@@ -135,10 +135,10 @@ int main(int argc, char** argv)
 			("code", po::value<string>(), "<d>    Contract code <d>. Makes transaction a call to this contract")
 			("gas-limit", po::value<u256>(), "");
 	po::options_description vmOptions("VM options");
-	//#if ETH_EVMJIT
+	#if ETH_EVMJIT
 	vmOptions.add_options()
 			("vm", "<vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)");
-	//#endif // ETH_EVMJIT
+	#endif // ETH_EVMJIT
 	po::options_description networkOptions("Network options");
 	networkOptions.add_options()
 			("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
