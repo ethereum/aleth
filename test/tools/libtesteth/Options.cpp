@@ -109,12 +109,13 @@ Options::Options(int argc, char** argv)
 	po::variables_map vm;
 	po::store(parsed, vm);
 	po::notify(vm);
-	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
+	int sizeUnrecognisedOptions = int(unrecognisedOptions.size());
+	for (int i = 0; i < sizeUnrecognisedOptions; ++i)
 	{
 		auto arg = std::string{unrecognisedOptions[i]};
-		auto throwIfNoArgumentFollows = [&i, &unrecognisedOptions.size(), &arg]()
+		auto throwIfNoArgumentFollows = [&i, &sizeUnrecognisedOptions, &arg]()
 		{
-			if (i + 1 >= argc)
+			if (i + 1 >= sizeUnrecognisedOptions)
 				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
 		};
 		auto throwIfAfterSeparator = [&seenSeparator, &arg]()
@@ -133,10 +134,10 @@ Options::Options(int argc, char** argv)
 		{
 			throwIfNoArgumentFollows();
 			singleTest = true;
-			auto name1 = std::string{argv[++i]};
-			if (i + 1 < argc) // two params
+			auto name1 = std::string{unrecognisedOptions[++i]};
+			if (i + 1 < sizeUnrecognisedOptions) // two params
 			{
-				auto name2 = std::string{argv[++i]};
+				auto name2 = std::string{unrecognisedOptions[++i]};
 				if (name2[0] == '-') // not param, another option
 				{
 					singleTestName = std::move(name1);
@@ -155,22 +156,22 @@ Options::Options(int argc, char** argv)
 		{
 			throwIfAfterSeparator();
 			throwIfNoArgumentFollows();
-			rCurrentTestSuite = std::string{argv[++i]};
+			rCurrentTestSuite = std::string{unrecognisedOptions[++i]};
 		}
 		else if (arg == "-d")
 		{
 			throwIfNoArgumentFollows();
-			trDataIndex = atoi(argv[++i]);
+			trDataIndex = atoi(unrecognisedOptions[++i]);
 		}
 		else if (arg == "-g")
 		{
 			throwIfNoArgumentFollows();
-			trGasIndex = atoi(argv[++i]);
+			trGasIndex = atoi(unrecognisedOptions[++i]);
 		}
 		else if (arg == "-v")
 		{
 			throwIfNoArgumentFollows();
-			trValueIndex = atoi(argv[++i]);
+			trValueIndex = atoi(unrecognisedOptions[++i]);
 		}
 		else if (seenSeparator)
 		{
@@ -205,7 +206,8 @@ Options::Options(int argc, char** argv)
 			cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
 			exit(1);
 		}
-		cout << dev::test::RandomCode::generate(maxCodes) << "\n";
+		test::RandomCodeOptions options;
+		cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
 		exit(0);
 	}
 	if (vm.count("singlenet"))
