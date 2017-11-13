@@ -821,7 +821,8 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 		// Most of the time these two will be equal - only when we're doing a chain revert will they not be
 		if (common != last)
-			clearCachesDuringChainReversion(number(common) + 1);
+			DEV_READ_GUARDED(x_lastBlockHash)
+				clearCachesDuringChainReversion(number(common) + 1);
 
 		// Go through ret backwards (i.e. from new head to common) until hash != last.parent and
 		// update m_transactionAddresses, m_blockHashes
@@ -1275,7 +1276,7 @@ void BlockChain::checkConsistency()
 
 void BlockChain::clearCachesDuringChainReversion(unsigned _firstInvalid)
 {
-	unsigned end = number() + 1;
+	unsigned end = m_lastBlockNumber + 1;
 	DEV_WRITE_GUARDED(x_blockHashes)
 		for (auto i = _firstInvalid; i < end; ++i)
 			m_blockHashes.erase(i);
