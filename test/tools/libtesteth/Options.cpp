@@ -161,17 +161,17 @@ Options::Options(int argc, char** argv)
 		else if (arg == "-d")
 		{
 			throwIfNoArgumentFollows();
-			trDataIndex = atoi(unrecognisedOptions[++i]);
+			trDataIndex = atoi(unrecognisedOptions[++i].c_str());
 		}
 		else if (arg == "-g")
 		{
 			throwIfNoArgumentFollows();
-			trGasIndex = atoi(unrecognisedOptions[++i]);
+			trGasIndex = atoi(unrecognisedOptions[++i].c_str());
 		}
 		else if (arg == "-v")
 		{
 			throwIfNoArgumentFollows();
-			trValueIndex = atoi(unrecognisedOptions[++i]);
+			trValueIndex = atoi(unrecognisedOptions[++i].c_str());
 		}
 		else if (seenSeparator)
 		{
