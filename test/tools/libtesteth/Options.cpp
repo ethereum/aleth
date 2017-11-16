@@ -22,10 +22,13 @@
 #include <libweb3jsonrpc/Debug.h>
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 
 using namespace std;
 using namespace dev::test;
 using namespace dev::eth;
+namespace po = boost::program_options;
 
 void printHelp()
 {
@@ -35,7 +38,6 @@ void printHelp()
 	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations\n";
 	cout << setw(30) << "-t <TestSuite>/<TestCase>\n";
 	cout << setw(30) << "--testpath <PathToTheTestRepo>\n";
-
 	cout << "\nDebugging\n";
 	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
 	cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
@@ -75,12 +77,55 @@ Options::Options(int argc, char** argv)
 	trGasIndex = -1;
 	trValueIndex = -1;
 	bool seenSeparator = false; // true if "--" has been seen.
-	for (auto i = 0; i < argc; ++i)
+	po::options_description testSuits("Setting test suite");
+	testSuits.add_options()
+			("testpath", po::value<string>(), "<PathToTheTestRepo>");
+	po::options_description debugging("Debugging");
+	debugging.add_options()
+			("verbosity", po::value<string>(), "<level> Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed")
+			("vm", po::value<string>(), "<interpreter|jit|smart> Set VM type for VMTests suite")
+			("vmtrace", "Enable VM trace for the test. (Require build with VMTRACE=1)")
+			("jsontrace", po::value<string>(), "<Options> Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'")
+			("stats", po::value<string>(), "<OutFile> Output debug stats to the file")
+			("exectimelog", "Output execution time for each test suite")
+			("statediff","Trace state difference for state tests");
+	po::options_description additionalTests("Additional Tests");
+	additionalTests.add_options()
+			("all", "Enable all tests");
+	po::options_description testGeneration("Test Generation");
+	testGeneration.add_options()
+			("filltests", "Run test fillers")
+			("fillchain", "When filling the state tests, fill tests as blockchain instead")
+			("randomcode", po::value<int>(), "<MaxOpcodeNum> Generate smart random EVM code")
+			("createRandomTest", "Create random test and output it to the console")
+			("help", "Display list of command arguments")
+			("version", "Print information about version")
+			("versionDisplay", "build information")
+			("jit", "");
+	po::options_description allowedOptions("");
+	allowedOptions.add(testSuits).add(testGeneration).add(debugging).add(additionalTests);
+	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
+	vector<string> unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
+	po::variables_map vm;
+	po::store(parsed, vm);
+	po::notify(vm);
+	int sizeUnrecognisedOptions = int(unrecognisedOptions.size());
+	if (vm.count("help"))
 	{
-		auto arg = std::string{argv[i]};
-		auto throwIfNoArgumentFollows = [&i, &argc, &arg]()
+		printHelp();
+		exit(0);
+	}
+	if (vm.count("version"))
+	{
+		printVersion();
+		exit(0);
+	}
+	for (int i = 0; i < sizeUnrecognisedOptions; ++i)
+	{
+		auto arg = std::string{unrecognisedOptions[i]};
+		auto throwIfNoArgumentFollows = [&i, &sizeUnrecognisedOptions, &arg]()
 		{
-			if (i + 1 >= argc)
+			if (i + 1 >= sizeUnrecognisedOptions)
 				BOOST_THROW_EXCEPTION(InvalidOption(arg + " option is missing an argument."));
 		};
 		auto throwIfAfterSeparator = [&seenSeparator, &arg]()
@@ -95,72 +140,14 @@ Options::Options(int argc, char** argv)
 			seenSeparator = true;
 			continue;
 		}
-		if (arg == "--help")
-		{
-			printHelp();
-			exit(0);
-		}
-		else if (arg == "--version")
-		{
-			printVersion();
-			exit(0);
-		}
-		else if (arg == "--vm")
-		{
-			throwIfNoArgumentFollows();
-			string vmKind = argv[++i];
-			if (vmKind == "interpreter")
-				VMFactory::setKind(VMKind::Interpreter);
-			else if (vmKind == "jit")
-				VMFactory::setKind(VMKind::JIT);
-			else if (vmKind == "smart")
-				VMFactory::setKind(VMKind::Smart);
-			else
-				cerr << "Unknown VM kind: " << vmKind << "\n";
-		}
-		else if (arg == "--jit") // TODO: Remove deprecated option "--jit"
-			VMFactory::setKind(VMKind::JIT);
-		else if (arg == "--vmtrace")
-		{
-#if ETH_VMTRACE
-			vmtrace = true;
-			g_logVerbosity = 13;
-#else
-			cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
-			exit(1);
-#endif
-		}
-		else if (arg == "--jsontrace")
-		{
-			throwIfNoArgumentFollows();
-			jsontrace = true;
-			auto arg = std::string{argv[++i]};
-			Json::Value value;
-			Json::Reader().parse(arg, value);
-			jsontraceOptions = debugOptions(value);
-		}
-		else if (arg == "--filltests")
-			filltests = true;
-		else if (arg == "--fillchain")
-			fillchain = true;
-		else if (arg == "--stats")
-		{
-			throwIfNoArgumentFollows();
-			stats = true;
-			statsOutFile = argv[++i];
-		}
-		else if (arg == "--exectimelog")
-			exectimelog = true;
-		else if (arg == "--all")
-			all = true;
 		else if (arg == "--singletest")
 		{
 			throwIfNoArgumentFollows();
 			singleTest = true;
-			auto name1 = std::string{argv[++i]};
-			if (i + 1 < argc) // two params
+			auto name1 = std::string{unrecognisedOptions[++i]};
+			if (i + 1 < sizeUnrecognisedOptions) // two params
 			{
-				auto name2 = std::string{argv[++i]};
+				auto name2 = std::string{unrecognisedOptions[++i]};
 				if (name2[0] == '-') // not param, another option
 				{
 					singleTestName = std::move(name1);
@@ -175,97 +162,139 @@ Options::Options(int argc, char** argv)
 			else
 				singleTestName = std::move(name1);
 		}
-		else if (arg == "--singlenet")
-		{
-			throwIfNoArgumentFollows();
-			singleTestNet = std::string{argv[++i]};
-			ImportTest::checkAllowedNetwork({singleTestNet});
-		}
-		else if (arg == "--fulloutput")
-			fulloutput = true;
-		else if (arg == "--verbosity")
-		{
-			throwIfNoArgumentFollows();
-			static std::ostringstream strCout; //static string to redirect logs to
-			std::string indentLevel = std::string{argv[++i]};
-			if (indentLevel == "0")
-			{
-				logVerbosity = Verbosity::None;
-				std::cout.rdbuf(strCout.rdbuf());
-				std::cerr.rdbuf(strCout.rdbuf());
-			}
-			else if (indentLevel == "1")
-				logVerbosity = Verbosity::NiceReport;
-			else
-				logVerbosity = Verbosity::Full;
-
-			int indentLevelInt = atoi(argv[i]);
-			if (indentLevelInt > g_logVerbosity)
-				g_logVerbosity = indentLevelInt;
-		}
-		else if (arg == "--createRandomTest")
-			createRandomTest = true;
 		else if (arg == "-t")
 		{
 			throwIfAfterSeparator();
 			throwIfNoArgumentFollows();
-			rCurrentTestSuite = std::string{argv[++i]};
+			rCurrentTestSuite = std::string{unrecognisedOptions[++i]};
 		}
-		else if (arg == "--nonetwork")
-			nonetwork = true;
 		else if (arg == "-d")
 		{
 			throwIfNoArgumentFollows();
-			trDataIndex = atoi(argv[++i]);
+			trDataIndex = atoi(unrecognisedOptions[++i].c_str());
 		}
 		else if (arg == "-g")
 		{
 			throwIfNoArgumentFollows();
-			trGasIndex = atoi(argv[++i]);
+			trGasIndex = atoi(unrecognisedOptions[++i].c_str());
 		}
 		else if (arg == "-v")
 		{
 			throwIfNoArgumentFollows();
-			trValueIndex = atoi(argv[++i]);
+			trValueIndex = atoi(unrecognisedOptions[++i].c_str());
 		}
-		else if (arg == "--testpath")
-		{
-			throwIfNoArgumentFollows();
-			testpath = std::string{argv[++i]};
-		}
-		else if (arg == "--statediff")
-			statediff = true;
-		else if (arg == "--randomcode")
-		{
-			throwIfNoArgumentFollows();
-			int maxCodes = atoi(argv[++i]);
-			if (maxCodes > 1000 || maxCodes <= 0)
-			{
-				cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
-				exit(1);
-			}
-			test::RandomCodeOptions options;
-			cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
-			exit(0);
-		}
-		else if (arg == "--createRandomTest")
-			createRandomTest = true;
 		else if (seenSeparator)
 		{
 			cerr << "Unknown option: " + arg << "\n";
 			exit(1);
 		}
 	}
+	if (vm.count("nonetwork"))
+		nonetwork = true;
+	if (vm.count("testpath"))
+	{
+		testpath = vm["testpath"].as<string>();
+	}
+	if (vm.count("statediff"))
+		statediff = true;
+	if (vm.count("randomcode"))
+	{
 
+		int maxCodes = vm["randomcode"].as<int>();
+		if (maxCodes > 1000 || maxCodes <= 0)
+		{
+			cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
+			exit(1);
+		}
+		test::RandomCodeOptions options;
+		cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
+		exit(0);
+	}
+	if (vm.count("singlenet"))
+	{
+		singleTestNet = vm["singlenet"].as<string>();
+		ImportTest::checkAllowedNetwork({singleTestNet});
+	}
+	if (vm.count("fulloutput"))
+		fulloutput = true;
+	if (vm.count("verbosity"))
+	{
+
+		static std::ostringstream strCout; //static string to redirect logs to
+		std::string indentLevel = vm["verbosity"].as<string>();
+		if (indentLevel == "0")
+		{
+			logVerbosity = Verbosity::None;
+			std::cout.rdbuf(strCout.rdbuf());
+			std::cerr.rdbuf(strCout.rdbuf());
+		}
+		else if (indentLevel == "1")
+			logVerbosity = Verbosity::NiceReport;
+		else
+			logVerbosity = Verbosity::Full;
+
+		int indentLevelInt = atoi(indentLevel.c_str());
+		if (indentLevelInt > g_logVerbosity)
+			g_logVerbosity = indentLevelInt;
+	}
+	if (vm.count("createRandomTest"))
+		createRandomTest = true;
+	if (vm.count("vm"))
+	{
+		string vmKind = vm["vm"].as<string>();
+		if (vmKind == "interpreter")
+			VMFactory::setKind(VMKind::Interpreter);
+		else if (vmKind == "jit")
+			VMFactory::setKind(VMKind::JIT);
+		else if (vmKind == "smart")
+			VMFactory::setKind(VMKind::Smart);
+		else
+			cerr << "Unknown VM kind: " << vmKind << "\n";
+	}
+
+
+	if (vm.count("jit")) // TODO: Remove deprecated option "--jit"
+		VMFactory::setKind(VMKind::JIT);
+	if (vm.count("vmtrace"))
+	{
+#if ETH_VMTRACE
+		vmtrace = true;
+			g_logVerbosity = 13;
+#else
+		cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
+		exit(1);
+#endif
+	}
+	if (vm.count("jsontrace"))
+	{
+		jsontrace = true;
+		auto arg = std::string{vm["jsontrace"].as<string>()};
+		Json::Value value;
+		Json::Reader().parse(arg, value);
+		jsontraceOptions = debugOptions(value);
+	}
+	if (vm.count("filltests"))
+		filltests = true;
+	if (vm.count("fillchain"))
+		fillchain = true;
+	if (vm.count("stats"))
+	{
+		stats = true;
+		statsOutFile = vm["stats"].as<string>();
+	}
+	if (vm.count("exectimelog"))
+		exectimelog = true;
+	if (vm.count("all"))
+		all = true;
 	//check restrickted options
 	if (createRandomTest)
 	{
 		if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-			|| all || stats || filltests || fillchain)
+		    || all || stats || filltests || fillchain)
 		{
 			cerr << "--createRandomTest cannot be used with any of the options: " <<
-					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
-					"stats, filltests, fillchain" << endl;
+			     "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
+			     "stats, filltests, fillchain" << endl;
 			exit(1);
 		}
 	}

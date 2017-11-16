@@ -52,7 +52,7 @@ endforeach(file)
 
 add_executable(testeth ${sources})
 target_include_directories(testeth PRIVATE ../utils)
-target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore cryptopp-static)
+target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore cryptopp-static Boost::program_options)
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
