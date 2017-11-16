@@ -33,7 +33,7 @@ namespace po = boost::program_options;
 void printHelp()
 {
 	cout << "Usage: \n";
-	cout << std::left << "\n";
+	cout << std::left;
 	cout << "\nSetting test suite\n";
 	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations\n";
 	cout << setw(30) << "-t <TestSuite>/<TestCase>\n";
@@ -110,6 +110,16 @@ Options::Options(int argc, char** argv)
 	po::store(parsed, vm);
 	po::notify(vm);
 	int sizeUnrecognisedOptions = int(unrecognisedOptions.size());
+	if (vm.count("help"))
+	{
+		printHelp();
+		exit(0);
+	}
+	if (vm.count("version"))
+	{
+		printVersion();
+		exit(0);
+	}
 	for (int i = 0; i < sizeUnrecognisedOptions; ++i)
 	{
 		auto arg = std::string{unrecognisedOptions[i]};
@@ -178,16 +188,6 @@ Options::Options(int argc, char** argv)
 			cerr << "Unknown option: " + arg << "\n";
 			exit(1);
 		}
-	}
-	if (vm.count("help"))
-	{
-		printHelp();
-		exit(0);
-	}
-	if (vm.count("version"))
-	{
-		printVersion();
-		exit(0);
 	}
 	if (vm.count("nonetwork"))
 		nonetwork = true;
