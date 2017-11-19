@@ -243,9 +243,8 @@ bool isOpcodeDefined(uint8_t _opcode)
 {
 	eth::Instruction inst = (eth::Instruction) _opcode;
 	eth::InstructionInfo info = eth::instructionInfo(inst);
-	bool isUndefined = (info.name.find("INVALID_INSTRUCTION") != std::string::npos || info.name.empty()
-		|| std::find(invalidOpcodes.begin(), invalidOpcodes.end(), inst) != invalidOpcodes.end());
-	return !isUndefined;
+	return (info.gasPriceTier != dev::eth::Tier::Invalid && !info.name.empty()
+		&& std::find(invalidOpcodes.begin(), invalidOpcodes.end(), inst) == invalidOpcodes.end());
 }
 
 uint8_t makeOpcodeDefined(uint8_t _opcode)

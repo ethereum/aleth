@@ -53,7 +53,7 @@ public:
 	void operator=(RandomCode const&) = delete;
 
 private:
-	RandomCode(){}
+	RandomCode() = default;
 	BoostRandomCode generator;
 };
 
