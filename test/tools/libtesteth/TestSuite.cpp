@@ -112,7 +112,8 @@ string const c_copierPostf = "Copier";
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	// check that destination folder test files has according Filler file in src folder
-	vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder));
+	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName;
+	vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder), filter);
 	for (auto const& file: compiledFiles)
 	{
 		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
@@ -131,8 +132,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 	}
 
 	// run all tests
-	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName + "Filler";
-	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder).string(), filter);
+	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder), filter.empty() ? filter : filter + "Filler");
 
 	auto& testOutput = test::TestOutputHelper::get();
 	testOutput.initTest(files.size());
