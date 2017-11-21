@@ -77,9 +77,9 @@ template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, 
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::unordered_set<T, U> const& _e);
 
 #if defined(_WIN32)
-template <class T> inline std::string toString(std::chrono::time_point<T> const& _e, std::string _format = "%Y-%m-%d %H:%M:%S")
+template <class T> inline std::string toString(std::chrono::time_point<T> const& _e, std::string const& _format = "%Y-%m-%d %H:%M:%S")
 #else
-template <class T> inline std::string toString(std::chrono::time_point<T> const& _e, std::string _format = "%F %T")
+template <class T> inline std::string toString(std::chrono::time_point<T> const& _e, std::string const& _format = "%F %T")
 #endif
 {
 	unsigned long milliSecondsSinceEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(_e.time_since_epoch()).count();

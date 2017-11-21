@@ -9,7 +9,7 @@ namespace rpc
 class Web3: public Web3Face
 {
 public:
-	Web3(std::string _clientVersion = "C++ (ethereum-cpp)"): m_clientVersion(_clientVersion) {}
+	Web3(std::string _clientVersion = "C++ (cpp-ethereum)"): m_clientVersion(std::move(_clientVersion)) {}
 	virtual RPCModules implementedModules() const override
 	{
 		return RPCModules{RPCModule{"web3", "1.0"}};
