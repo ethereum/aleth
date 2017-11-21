@@ -53,6 +53,9 @@ public:
 	// Execute Filler.json or Copier.json test file in a given folder
 	void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
 
+	// Execute Test.json file
+	void executeFile(boost::filesystem::path const& _file) const;
+
 	// Return full path to folder for tests from _testFolder
 	boost::filesystem::path getFullPathFiller(std::string const& _testFolder) const;
 
