@@ -44,7 +44,7 @@ struct RlpDebug
 class RandomCode
 {
 public:
-	static RandomCodeBase& get()
+	static BoostRandomCode& get()
 	{
 		static RandomCode instance;
 		return instance.generator;
@@ -53,7 +53,7 @@ public:
 	void operator=(RandomCode const&) = delete;
 
 private:
-	RandomCode(){}
+	RandomCode() = default;
 	BoostRandomCode generator;
 };
 

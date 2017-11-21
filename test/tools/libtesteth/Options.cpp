@@ -58,6 +58,7 @@ void printHelp()
 	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
 	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
+	cout << setw(30) << "--seed <uint>" << setw(25) << "Define a seed for random test\n";
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
 
 	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments\n";
@@ -205,6 +206,14 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
+		else if (arg == "--seed")
+		{
+			throwIfNoArgumentFollows();
+			u256 input = toInt(argv[++i]);
+			if (input > std::numeric_limits<uint64_t>::max())
+				BOOST_WARN("Seed is > u64. Using u64_max instead.");
+			randomTestSeed = static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));
+		}
 		else if (arg == "-t")
 		{
 			throwIfAfterSeparator();
@@ -265,7 +274,15 @@ Options::Options(int argc, char** argv)
 		{
 			cerr << "--createRandomTest cannot be used with any of the options: " <<
 					"trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
-					"stats, filltests, fillchain" << endl;
+					"stats, filltests, fillchain \n";
+			exit(1);
+		}
+	}
+	else
+	{
+		if (randomTestSeed.is_initialized())
+		{
+			cerr << "--seed <uint> could be used only with --createRandomTest \n";
 			exit(1);
 		}
 	}
