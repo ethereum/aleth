@@ -2,7 +2,8 @@ file(GLOB sources "*.cpp" "*.h")
 
 add_library(web3jsonrpc ${sources})
 
-jsonrpcstub_create(web3jsonrpc eth.json
+jsonrpcstub_create(
+	web3jsonrpc eth.json
 	dev::rpc::EthFace ${CMAKE_CURRENT_SOURCE_DIR} EthFace
 	EthClient ${CMAKE_CURRENT_BINARY_DIR} EthClient
 )
