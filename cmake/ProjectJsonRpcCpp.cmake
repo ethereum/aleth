@@ -1,9 +1,5 @@
 include(ExternalProject)
 
-# HTTP server from JSON RPC CPP requires microhttpd library. It can find it itself,
-# but we need to know the MHD location for static linking.
-find_package(MHD REQUIRED)
-
 get_property(jsoncpp_include_dir TARGET jsoncpp_lib_static PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 get_property(jsoncpp_library TARGET jsoncpp_lib_static PROPERTY IMPORTED_LOCATION_RELEASE)
 
