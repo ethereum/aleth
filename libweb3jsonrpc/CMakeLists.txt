@@ -37,11 +37,6 @@ jsonrpcstub_create(web3jsonrpc admin_eth.json
 	AdminEthClient ${CMAKE_CURRENT_BINARY_DIR} AdminEthClient
 )
 
-jsonrpcstub_create(web3jsonrpc admin_utils.json
-	dev::rpc::AdminUtilsFace ${CMAKE_CURRENT_SOURCE_DIR} AdminUtilsFace
-	AdminUtilsClient ${CMAKE_CURRENT_BINARY_DIR} AdminUtilsClient
-)
-
 jsonrpcstub_create(web3jsonrpc personal.json
 	dev::rpc::PersonalFace ${CMAKE_CURRENT_SOURCE_DIR} PersonalFace
 	PersonalClient ${CMAKE_CURRENT_BINARY_DIR} PersonalClient

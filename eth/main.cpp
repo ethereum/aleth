@@ -55,7 +55,6 @@
 #include <libweb3jsonrpc/Web3.h>
 #include <libweb3jsonrpc/AdminNet.h>
 #include <libweb3jsonrpc/AdminEth.h>
-#include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
 #include <libweb3jsonrpc/Debug.h>
 #include <libweb3jsonrpc/Test.h>
@@ -274,10 +273,9 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
-class ExitHandler: public rpc::SystemManager
+class ExitHandler
 {
 public:
-	void exit() { exitHandler(0); }
 	static void exitHandler(int) { s_shouldExit = true; }
 	bool shouldExit() const { return s_shouldExit; }
 
@@ -1158,7 +1156,7 @@ int main(int argc, char** argv)
 		using FullServer = ModularServer<
 			rpc::EthFace, rpc::WhisperFace,
 			rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-			rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+			rpc::AdminEthFace, rpc::AdminNetFace,
 			rpc::DebugFace, rpc::TestFace
 		>;
 
@@ -1174,19 +1172,17 @@ int main(int argc, char** argv)
 			rpc::AdminEth* adminEth = nullptr;
 			rpc::PersonalFace* personal = nullptr;
 			rpc::AdminNet* adminNet = nullptr;
-			rpc::AdminUtils* adminUtils = nullptr;
 			if (adminViaHttp)
 			{
 				personal = new rpc::Personal(keyManager, *accountHolder, *web3.ethereum());
 				adminEth = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
 				adminNet = new rpc::AdminNet(web3, *sessionManager.get());
-				adminUtils = new rpc::AdminUtils(*sessionManager.get());
 			}
 
 			jsonrpcHttpServer.reset(new FullServer(
 				ethFace, new rpc::Whisper(web3, {}),
 				new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), personal,
-				adminEth, adminNet, adminUtils,
+				adminEth, adminNet,
 				new rpc::Debug(*web3.ethereum()),
 				testEth
 			));
@@ -1202,7 +1198,6 @@ int main(int argc, char** argv)
 				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum()),
 				new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
 				new rpc::AdminNet(web3, *sessionManager.get()),
-				new rpc::AdminUtils(*sessionManager.get()),
 				new rpc::Debug(*web3.ethereum()),
 				testEth
 			));
