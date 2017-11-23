@@ -296,6 +296,11 @@ Options::Options(int argc, char** argv)
 			cerr << "--seed <uint> could be used only with --createRandomTest \n";
 			exit(1);
 		}
+		if (randomCodeOptionsPath.is_initialized())
+		{
+			cerr << "--options <pathToOptions.json> could be used only with --createRandomTest \n";
+			exit(1);
+		}
 	}
 
 	//Default option
