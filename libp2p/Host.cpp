@@ -658,8 +658,8 @@ void Host::run(boost::system::error_code const&)
 		// and also stops blocking worker thread, allowing worker thread to exit
 		m_ioService.stop();
 
-		// resetting timer signals network that nothing else can be scheduled to run
-		m_timer.reset();
+		// cancel any pending timer
+		m_timer->cancel();
 		return;
 	}
 
