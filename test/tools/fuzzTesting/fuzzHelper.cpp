@@ -25,8 +25,10 @@
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/jsontests/StateTests.h>
+#include <json_spirit/json_spirit.h>
 
 using namespace dev;
+using namespace std;
 const static std::array<eth::Instruction, 47> invalidOpcodes {{
 	eth::Instruction::INVALID,
 	eth::Instruction::PUSHC,
@@ -483,6 +485,46 @@ RandomCodeOptions::RandomCodeOptions() :
 	addAddress(Address("0x0000000000000000000000000000000000000006"), AddressType::ByzantiumPrecompiled);
 	addAddress(Address("0x0000000000000000000000000000000000000007"), AddressType::ByzantiumPrecompiled);
 	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::ByzantiumPrecompiled);
+}
+
+void boost_require_range(int _value, int a, int b)
+{
+	BOOST_REQUIRE(_value >= a);
+	BOOST_REQUIRE(_value <= b);
+}
+
+void RandomCodeOptions::loadFromFile(boost::filesystem::path const& _jsonFileName)
+{
+	json_spirit::mValue v;
+	bytes const byteContents = dev::contents(_jsonFileName);
+	string const s = asString(byteContents);
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _jsonFileName.string() + " is empty.");
+	json_spirit::read_string(s, v);
+
+	BOOST_REQUIRE(v.type() == json_spirit::obj_type);
+	json_spirit::mObject obj = v.get_obj();
+	BOOST_REQUIRE(obj.count("probabilities"));
+	BOOST_REQUIRE(obj.at("probabilities").type() == json_spirit::obj_type);
+
+	//Parse Probabilities
+	json_spirit::mObject probObj = obj.at("probabilities").get_obj();
+	useUndefinedOpCodes = probObj.at("useUndefinedOpCodes").get_bool();
+	smartCodeProbability = probObj.at("smartCodeProbability").get_int();
+	boost_require_range(smartCodeProbability, 0, 100);
+	randomAddressProbability = probObj.at("randomAddressProbability").get_int();
+	boost_require_range(randomAddressProbability, 0, 100);
+	emptyCodeProbability = probObj.at("emptyCodeProbability").get_int();
+	boost_require_range(emptyCodeProbability, 0, 100);
+	emptyAddressProbability = probObj.at("emptyAddressProbability").get_int();
+	boost_require_range(emptyAddressProbability, 0, 100);
+	precompiledAddressProbability = probObj.at("precompiledAddressProbability").get_int();
+	boost_require_range(precompiledAddressProbability, 0, 100);
+	byzPrecompiledAddressProbability = probObj.at("byzPrecompiledAddressProbability").get_int();
+	boost_require_range(byzPrecompiledAddressProbability, 0, 100);
+	precompiledDestProbability = probObj.at("precompiledDestProbability").get_int();
+	boost_require_range(precompiledDestProbability, 0, 100);
+	sendingAddressProbability = probObj.at("sendingAddressProbability").get_int();
+	boost_require_range(sendingAddressProbability, 0, 100);
 }
 
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)

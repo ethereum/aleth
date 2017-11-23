@@ -18,6 +18,7 @@
  * @date 2017
  */
 
+#pragma once
 #include <string>
 #include <random>
 #include <boost/filesystem/path.hpp>
@@ -27,8 +28,6 @@
 #include <libdevcore/CommonData.h>
 #include <libevm/Instruction.h>
 #include <test/tools/libtesteth/TestSuite.h>
-
-#pragma once
 
 namespace dev
 {
@@ -56,6 +55,7 @@ public:
 	RandomCodeOptions();
 	void setWeight(dev::eth::Instruction _opCode, int _weight);
 	void addAddress(dev::Address const& _address, AddressType _type);
+	void loadFromFile(boost::filesystem::path const& _file);
 	dev::Address getRandomAddress(AddressType _type = AddressType::All) const;
 	int getWeightedRandomOpcode() const;
 

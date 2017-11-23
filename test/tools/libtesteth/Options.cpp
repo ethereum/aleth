@@ -59,6 +59,7 @@ void printHelp()
 	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
 	cout << setw(30) << "--seed <uint>" << setw(25) << "Define a seed for random test\n";
+	cout << setw(30) << "--options <PathTo.json>" << setw(25) << "Use following options file for random code generation\n";
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
 
 	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments\n";
@@ -203,6 +204,18 @@ Options::Options(int argc, char** argv)
 			int indentLevelInt = atoi(argv[i]);
 			if (indentLevelInt > g_logVerbosity)
 				g_logVerbosity = indentLevelInt;
+		}
+		else if (arg == "--options")
+		{
+			throwIfNoArgumentFollows();
+			boost::filesystem::path file(std::string{argv[++i]});
+			if (boost::filesystem::exists(file))
+				randomCodeOptionsPath = file;
+			else
+			{
+				std::cerr << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
+				exit(0);
+			}
 		}
 		else if (arg == "-t")
 		{

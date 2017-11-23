@@ -45,8 +45,10 @@ bool createRandomTest()
 	}
 	else
 	{
-		RandomCodeOptions options;
-		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, options);
+		RandomCodeOptions codeOptions;
+		if (options.randomCodeOptionsPath.is_initialized())
+			codeOptions.loadFromFile(options.randomCodeOptionsPath.get());
+		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, codeOptions);
 		std::cout << test << "\n";
 		return test.empty() ? false : true;
 	}
