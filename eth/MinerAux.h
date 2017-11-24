@@ -252,7 +252,7 @@ private:
 		exit(0);
 	}
 
-	void doBenchmark(std::string _m, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
+	void doBenchmark(std::string const& _m, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
 	{
 		BlockHeader genesis;
 		genesis.setDifficulty(1 << 18);

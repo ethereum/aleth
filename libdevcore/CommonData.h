@@ -43,7 +43,7 @@ enum class WhenError
 };
 
 template <class Iterator>
-std::string toHex(Iterator _it, Iterator _end, std::string _prefix)
+std::string toHex(Iterator _it, Iterator _end, std::string const& _prefix)
 {
 	typedef std::iterator_traits<Iterator> traits;
 	static_assert(sizeof(typename traits::value_type) == 1, "toHex needs byte-sized element type");
