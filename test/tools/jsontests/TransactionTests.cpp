@@ -203,6 +203,5 @@ BOOST_AUTO_TEST_CASE(ttSpecConstantinople){}
 BOOST_AUTO_TEST_CASE(ttVRuleEip158){}
 BOOST_AUTO_TEST_CASE(ttWrongRLPFrontier){}
 BOOST_AUTO_TEST_CASE(ttWrongRLPHomestead){}
-BOOST_AUTO_TEST_CASE(ttZeroSigConstantinople){}
 
 BOOST_AUTO_TEST_SUITE_END()
