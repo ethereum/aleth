@@ -132,13 +132,14 @@ class GeneralTestFixture
 public:
 	GeneralTestFixture()
 	{
+		test::StateTestSuite suite;
+		test::tryRunSingleTestFile(suite);
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
 		{
 			std::cout << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
 		}
-		test::StateTestSuite suite;
 		suite.runAllTestsInFolder(casename);
 	}
 };

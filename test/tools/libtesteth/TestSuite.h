@@ -29,6 +29,10 @@ namespace test
 
 class TestSuite
 {
+private:
+	// Execute Test.json file
+	void executeFile(boost::filesystem::path const& _file) const;
+
 protected:
 	// A folder of the test suite. like "VMTests". should be implemented for each test suite.
 	virtual boost::filesystem::path suiteFolder() const = 0;
@@ -37,6 +41,7 @@ protected:
 	virtual boost::filesystem::path suiteFillerFolder() const = 0;
 
 public:
+
 	virtual ~TestSuite() {}
 
 	// Main test executive function. should be declared for each test suite. it fills and runs the test .json file
@@ -54,7 +59,7 @@ public:
 	void executeTest(std::string const& _testFolder, boost::filesystem::path const& _jsonFileName) const;
 
 	// Execute Test.json file
-	void executeFile(boost::filesystem::path const& _file) const;
+	void runTestWithoutFiller(boost::filesystem::path const& _file) const;
 
 	// Return full path to folder for tests from _testFolder
 	boost::filesystem::path getFullPathFiller(std::string const& _testFolder) const;

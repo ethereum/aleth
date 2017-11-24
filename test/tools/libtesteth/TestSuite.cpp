@@ -109,18 +109,17 @@ namespace test
 string const c_fillerPostf = "Filler";
 string const c_copierPostf = "Copier";
 
-void TestSuite::runAllTestsInFolder(string const& _testFolder) const
+void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
 {
 	// Allow to execute a custom test .json file on any test suite
-	if (!test::Options::get().singleTestFile.empty())
-	{
-		auto& testOutput = test::TestOutputHelper::get();
-		testOutput.initTest(1);
-		executeFile(fs::path(test::Options::get().singleTestFile));
-		testOutput.finishTest();
-		exit(0);
-	}
+	auto& testOutput = test::TestOutputHelper::get();
+	testOutput.initTest(1);
+	executeFile(_file);
+	testOutput.finishTest();
+}
 
+void TestSuite::runAllTestsInFolder(string const& _testFolder) const
+{
 	// check that destination folder test files has according Filler file in src folder
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName;
 	vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder), filter);
