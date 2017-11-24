@@ -287,6 +287,10 @@ private:
 	/// returns true if a member of m_requiredPeers
 	bool isRequiredPeer(NodeID const&) const;
 
+	bool nodeTableHasNode(Public const& _id) const;
+	Node nodeFromNodeTable(Public const& _id) const;
+	bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
+
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
 	std::atomic<bool> m_run{false};													///< Whether network is running.
