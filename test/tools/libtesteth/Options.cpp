@@ -58,6 +58,7 @@ void printHelp()
 	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
 	cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
+	cout << setw(30) << "--createRandomTest <PathToOptions.json>" << setw(25) << "Use following options file for random code generation\n";
 	cout << setw(30) << "--seed <uint>" << setw(25) << "Define a seed for random test\n";
 	cout << setw(30) << "--options <PathTo.json>" << setw(25) << "Use following options file for random code generation\n";
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
@@ -261,7 +262,26 @@ Options::Options(int argc, char** argv)
 			exit(0);
 		}
 		else if (arg == "--createRandomTest")
+		{
 			createRandomTest = true;
+			if (i + 1 < argc) // two params
+			{
+				auto options = std::string{argv[++i]};
+				if (options[0] == '-') // not param, another option
+					i--;
+				else
+				{
+					boost::filesystem::path file(options);
+					if (boost::filesystem::exists(file))
+						randomCodeOptionsPath = file;
+					else
+					{
+						std::cerr << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
+						exit(0);
+					}
+				}
+			}
+		}
 		else if (arg == "--seed")
 		{
 			throwIfNoArgumentFollows();
