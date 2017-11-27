@@ -45,6 +45,8 @@ namespace po = boost::program_options;
 namespace
 {
 
+unsigned const c_lineWidth = 160;
+
 int64_t maxBlockGasLimit()
 {
 	static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).maxGasLimit.convert_to<int64_t>();
@@ -126,29 +128,34 @@ int main(int argc, char** argv)
 
 	Ethash::init();
 	NoProof::init();
-	po::options_description transactionOptions("Transaction options");
+
+	po::options_description transactionOptions("Transaction options", c_lineWidth);
 	transactionOptions.add_options()
-			("value", po::value<u256>(), "<n>  Transaction should transfer the <n> wei (default: 0).")
-			("gas", po::value<u256>(), "<n>    Transaction should be given <n> gas (default: block gas limit).")
-			("gas-price", po::value<u256>(), "<n>  Transaction's gas price' should be <n> (default: 0).")
-			("sender", po::value<Address>(), "<a>  Transaction sender should be <a> (default: 0000...0069).")
-			("origin", po::value<Address>(), "<a>  Transaction origin should be <a> (default: 0000...0069).")
-			("input", po::value<string>(), "<d>   Transaction code should be <d>")
-			("code", po::value<string>(), "<d>    Contract code <d>. Makes transaction a call to this contract")
+			("value", po::value<u256>(), "<n> Transaction should transfer the <n> wei (default: 0).")
+			("gas", po::value<u256>(), "<n> Transaction should be given <n> gas (default: block gas limit).")
+			("gas-price", po::value<u256>(), "<n> Transaction's gas price' should be <n> (default: 0).")
+			("sender", po::value<Address>(), "<a> Transaction sender should be <a> (default: 0000...0069).")
+			("origin", po::value<Address>(), "<a> Transaction origin should be <a> (default: 0000...0069).")
+			("input", po::value<string>(), "<d> Transaction code should be <d>")
+			("code", po::value<string>(), "<d> Contract code <d>. Makes transaction a call to this contract")
 			("gas-limit", po::value<u256>(), "");
-	po::options_description vmOptions("VM options");
+
+	po::options_description vmOptions("VM options", c_lineWidth);
 #if ETH_EVMJIT
 	vmOptions.add_options()
 			("vm", "<vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)");
 #endif // ETH_EVMJIT
-	po::options_description networkOptions("Network options");
+
+	po::options_description networkOptions("Network options", c_lineWidth);
 	networkOptions.add_options()
 			("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
-	po::options_description optionsForTrace("Options for trace");
+
+	po::options_description optionsForTrace("Options for trace", c_lineWidth);
 	optionsForTrace.add_options()
 			("flat", "Minimal whitespace in the JSON.")
 			("mnemonics", "Show instruction mnemonics in the trace (non-standard).\n");
-	po::options_description generalOptions("General options");
+
+	po::options_description generalOptions("General options", c_lineWidth);
 	generalOptions.add_options()
 			("version,v", "Show the version and exit.")
 			("help,h", "Show this help message and exit.")
@@ -156,6 +163,7 @@ int main(int argc, char** argv)
 			("difficulty", po::value<u256>(), "<n> Set difficulty")
 			("number", po::value<u256>(), "<n> Set number")
 			("timestamp", po::value<u256>(), "<n> Set timestamp");
+
 	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
 	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
 	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
