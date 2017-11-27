@@ -131,8 +131,8 @@ int main(int argc, char** argv)
 			("value", po::value<u256>(), "<n>  Transaction should transfer the <n> wei (default: 0).")
 			("gas", po::value<u256>(), "<n>    Transaction should be given <n> gas (default: block gas limit).")
 			("gas-price", po::value<u256>(), "<n>  Transaction's gas price' should be <n> (default: 0).")
-			("sender", po::value<string>(), "<a>  Transaction sender should be <a> (default: 0000...0069).")
-			("origin", po::value<string>(), "<a>  Transaction origin should be <a> (default: 0000...0069).")
+			("sender", po::value<Address>(), "<a>  Transaction sender should be <a> (default: 0000...0069).")
+			("origin", po::value<Address>(), "<a>  Transaction origin should be <a> (default: 0000...0069).")
 			("input", po::value<string>(), "<d>   Transaction code should be <d>")
 			("code", po::value<string>(), "<d>    Contract code <d>. Makes transaction a call to this contract")
 			("gas-limit", po::value<u256>(), "");
@@ -152,10 +152,10 @@ int main(int argc, char** argv)
 	generalOptions.add_options()
 			("version,v", "Show the version and exit.")
 			("help,h", "Show this help message and exit.")
-			("author", po::value<string>(), "<a> Set author")
-			("difficulty", po::value<u256>(), "<d> Set difficulty")
-			("number", po::value<u256>(), "<d> Set number")
-			("timestamp", po::value<u256>(), "<d> Set timestamp");
+			("author", po::value<Address>(), "<a> Set author")
+			("difficulty", po::value<u256>(), "<n> Set difficulty")
+			("number", po::value<u256>(), "<n> Set number")
+			("timestamp", po::value<u256>(), "<n> Set timestamp");
 	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
 	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
 	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
@@ -214,15 +214,15 @@ int main(int argc, char** argv)
 	if (vm.count("flat"))
 		styledJson = false;
 	if (vm.count("sender"))
-		sender = Address(vm["sender"].as<string>());
+		sender = vm["sender"].as<Address>();
 	if (vm.count("origin"))
-		origin = Address(vm["origin"].as<string>());
+		origin = vm["origin"].as<Address>();
 	if (vm.count("gas"))
 		gas = vm["gas"].as<u256>();
 	if (vm.count("gas-price"))
 		gasPrice = vm["gas-price"].as<u256>();
 	if (vm.count("author"))
-		blockHeader.setAuthor(Address(vm["author"].as<string>()));
+		blockHeader.setAuthor(vm["author"].as<Address>());
 	if (vm.count("number"))
 		blockHeader.setNumber(vm["number"].as<u256>());
 	if (vm.count("difficulty"))

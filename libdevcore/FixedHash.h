@@ -326,6 +326,15 @@ inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 	return _out;
 }
 
+template <unsigned N>
+inline std::istream& operator>>(std::istream& _in, FixedHash<N>& o_h)
+{
+	std::string s;
+	_in >> s;
+	o_h = FixedHash<N>(s, FixedHash<N>::FromHex, FixedHash<N>::AlignRight);
+	return _in;
+}
+
 /// Stream I/O for the SecureFixedHash class.
 template <unsigned N>
 inline std::ostream& operator<<(std::ostream& _out, SecureFixedHash<N> const& _h)
