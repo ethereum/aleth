@@ -41,21 +41,23 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 namespace po = boost::program_options;
+
 namespace
 {
-	int64_t maxBlockGasLimit()
-	{
-		static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).maxGasLimit.convert_to<int64_t>();
-		return limit;
-	}
 
-	void version()
-	{
-		cout << "ethvm version " << dev::Version << "\n";
-		cout << "By Gav Wood, 2015.\n";
-		cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << "\n";
-		exit(0);
-	}
+int64_t maxBlockGasLimit()
+{
+	static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).maxGasLimit.convert_to<int64_t>();
+	return limit;
+}
+
+void version()
+{
+	cout << "ethvm version " << dev::Version << "\n";
+	cout << "By Gav Wood, 2015.\n";
+	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << "\n";
+	exit(0);
+}
 
 /*
 The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
@@ -70,27 +72,27 @@ specified default locale if it is valid, and if not then it will modify the
 environment the process is running in to use a sensible default. This also means
 that users do not need to install language packs for their OS.
 */
-	void setDefaultOrCLocale()
-	{
+void setDefaultOrCLocale()
+{
 #if __unix__
-		if (!std::setlocale(LC_ALL, ""))
-		{
-			setenv("LC_ALL", "C", 1);
-		}
-#endif
-	}
-
-	enum class Mode
+	if (!std::setlocale(LC_ALL, ""))
 	{
-		Trace,
-		Statistics,
-		OutputOnly,
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
+}
 
-		/// Test mode -- output information needed for test verification and
-		/// benchmarking. The execution is not introspected not to degrade
-		/// performance.
-				Test
-	};
+enum class Mode
+{
+	Trace,
+	Statistics,
+	OutputOnly,
+
+	/// Test mode -- output information needed for test verification and
+	/// benchmarking. The execution is not introspected not to degrade
+	/// performance.
+	Test
+};
 
 }
 
@@ -135,10 +137,10 @@ int main(int argc, char** argv)
 			("code", po::value<string>(), "<d>    Contract code <d>. Makes transaction a call to this contract")
 			("gas-limit", po::value<u256>(), "");
 	po::options_description vmOptions("VM options");
-	#if ETH_EVMJIT
+#if ETH_EVMJIT
 	vmOptions.add_options()
 			("vm", "<vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)");
-	#endif // ETH_EVMJIT
+#endif // ETH_EVMJIT
 	po::options_description networkOptions("Network options");
 	networkOptions.add_options()
 			("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
@@ -196,10 +198,10 @@ int main(int argc, char** argv)
 		if (vmKindStr == "interpreter")
 			vmKind = VMKind::Interpreter;
 #if ETH_EVMJIT
-			else if (vmKindStr == "jit")
-				vmKind = VMKind::JIT;
-			else if (vmKindStr == "smart")
-				vmKind = VMKind::Smart;
+		else if (vmKindStr == "jit")
+			vmKind = VMKind::JIT;
+		else if (vmKindStr == "smart")
+			vmKind = VMKind::Smart;
 #endif
 		else
 		{
@@ -265,8 +267,7 @@ int main(int argc, char** argv)
 	if (!inputFile.empty())
 	{
 		if (!code.empty())
-			cerr << "--code argument overwritten by input file "
-			     << inputFile << '\n';
+			cerr << "--code argument overwritten by input file " << inputFile << '\n';
 
 		if (inputFile == "-")
 			for (int i = cin.get(); i != -1; i = cin.get())
