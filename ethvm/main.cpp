@@ -130,15 +130,16 @@ int main(int argc, char** argv)
 	NoProof::init();
 
 	po::options_description transactionOptions("Transaction options", c_lineWidth);
+	string const gasLimitDescription = "<n> Block gas limit (default: " + to_string(maxBlockGasLimit()) + ").";
 	transactionOptions.add_options()
-			("value", po::value<u256>(), "<n> Transaction should transfer the <n> wei (default: 0).")
-			("gas", po::value<u256>(), "<n> Transaction should be given <n> gas (default: block gas limit).")
-			("gas-price", po::value<u256>(), "<n> Transaction's gas price' should be <n> (default: 0).")
-			("sender", po::value<Address>(), "<a> Transaction sender should be <a> (default: 0000...0069).")
-			("origin", po::value<Address>(), "<a> Transaction origin should be <a> (default: 0000...0069).")
-			("input", po::value<string>(), "<d> Transaction code should be <d>")
-			("code", po::value<string>(), "<d> Contract code <d>. Makes transaction a call to this contract")
-			("gas-limit", po::value<u256>(), "");
+		("value", po::value<u256>(), "<n> Transaction should transfer the <n> wei (default: 0).")
+		("gas", po::value<u256>(), "<n> Transaction should be given <n> gas (default: block gas limit).")
+		("gas-limit", po::value<u256>(), gasLimitDescription.c_str())
+		("gas-price", po::value<u256>(), "<n> Transaction's gas price' should be <n> (default: 0).")
+		("sender", po::value<Address>(), "<a> Transaction sender should be <a> (default: 0000...0069).")
+		("origin", po::value<Address>(), "<a> Transaction origin should be <a> (default: 0000...0069).")
+		("input", po::value<string>(), "<d> Transaction code should be <d>")
+		("code", po::value<string>(), "<d> Contract code <d>. Makes transaction a call to this contract");
 
 	po::options_description vmOptions("VM options", c_lineWidth);
 #if ETH_EVMJIT
@@ -148,21 +149,21 @@ int main(int argc, char** argv)
 
 	po::options_description networkOptions("Network options", c_lineWidth);
 	networkOptions.add_options()
-			("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
+		("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
 
 	po::options_description optionsForTrace("Options for trace", c_lineWidth);
 	optionsForTrace.add_options()
-			("flat", "Minimal whitespace in the JSON.")
-			("mnemonics", "Show instruction mnemonics in the trace (non-standard).\n");
+		("flat", "Minimal whitespace in the JSON.")
+		("mnemonics", "Show instruction mnemonics in the trace (non-standard).\n");
 
 	po::options_description generalOptions("General options", c_lineWidth);
 	generalOptions.add_options()
-			("version,v", "Show the version and exit.")
-			("help,h", "Show this help message and exit.")
-			("author", po::value<Address>(), "<a> Set author")
-			("difficulty", po::value<u256>(), "<n> Set difficulty")
-			("number", po::value<u256>(), "<n> Set number")
-			("timestamp", po::value<u256>(), "<n> Set timestamp");
+		("version,v", "Show the version and exit.")
+		("help,h", "Show this help message and exit.")
+		("author", po::value<Address>(), "<a> Set author")
+		("difficulty", po::value<u256>(), "<n> Set difficulty")
+		("number", po::value<u256>(), "<n> Set number")
+		("timestamp", po::value<u256>(), "<n> Set timestamp");
 
 	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
 	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
@@ -171,6 +172,8 @@ int main(int argc, char** argv)
 	po::variables_map vm;
 	po::store(parsed, vm);
 	po::notify(vm);
+
+	// handling mode and input file options separately, as they don't have option name
 	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
 	{
 		string arg = unrecognisedOptions[i];
@@ -193,7 +196,6 @@ int main(int argc, char** argv)
 	if (vm.count("help"))
 	{
 		cout << allowedOptions;
-		cout << "                         <n>  Block gas limit (default: " << maxBlockGasLimit() << ").";
 		exit(0);
 	}
 	if (vm.count("version"))
