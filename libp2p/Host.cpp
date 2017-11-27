@@ -142,14 +142,14 @@ void Host::stop()
 	// called to force io_service to kill any remaining tasks it might have -
 	// such tasks may involve socket reads from Capabilities that maintain references
 	// to resources we're about to free.
-	
+
+	// ignore if already stopped/stopping, at the same time,
+	// signal run() to prepare for shutdown and reset m_timer
+	if (!m_run.exchange(false))
+		return;
+
 	{
 		unique_lock<mutex> l(x_runTimer);
-		// ignore if already stopped/stopping, at the same time,
-		// signal run() to prepare for shutdown and reset m_timer
-		if (!m_run.exchange(false))
-			return;
-
 		while (m_timer)
 			m_timerSemaphore.wait(l);
 	}
