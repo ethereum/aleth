@@ -151,7 +151,7 @@ void Host::stop()
 	{
 		unique_lock<mutex> l(x_runTimer);
 		while (m_timer)
-			m_timerSemaphore.wait(l);
+			m_timerReset.wait(l);
 	}
 
 	// stop worker thread
@@ -661,7 +661,7 @@ void Host::run(boost::system::error_code const&)
 		DEV_GUARDED(x_runTimer)
 			m_timer.reset();
 
-		m_timerSemaphore.notify_all();
+		m_timerReset.notify_all();
 		return;
 	}
 
