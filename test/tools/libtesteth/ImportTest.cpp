@@ -225,12 +225,14 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 			StandardTrace st;
 			st.setShowMnemonics();
 			st.setOptions(Options::get().jsontraceOptions);
-			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted, st.onOp());
+			out = initialState.execute(_env, *se.get(), _tr, Permanence::Committed, st.onOp());
 			cout << st.json();
+			cout << "{\"stateRoot\": \"" << initialState.rootHash().hex() << "\"}";
 		}
 		else
 			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
 
+		// the changeLog might be broken under --jsontrace, because it uses intialState.execute with Permanence::Committed rather than Permanence::Uncommitted
 		eth::ChangeLog changeLog = initialState.changeLog();
 		ImportTest::checkBalance(_preState, initialState);
 
