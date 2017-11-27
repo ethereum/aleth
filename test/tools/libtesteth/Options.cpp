@@ -275,10 +275,7 @@ Options::Options(int argc, char** argv)
 					if (boost::filesystem::exists(file))
 						randomCodeOptionsPath = file;
 					else
-					{
-						std::cerr << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
-						exit(0);
-					}
+						BOOST_THROW_EXCEPTION(InvalidOption("Options file not found! Default options at: tests/src/randomCodeOptions.json\n"));
 				}
 			}
 		}
@@ -312,15 +309,7 @@ Options::Options(int argc, char** argv)
 	else
 	{
 		if (randomTestSeed.is_initialized())
-		{
-			cerr << "--seed <uint> could be used only with --createRandomTest \n";
-			exit(1);
-		}
-		if (randomCodeOptionsPath.is_initialized())
-		{
-			cerr << "--options <pathToOptions.json> could be used only with --createRandomTest \n";
-			exit(1);
-		}
+			BOOST_THROW_EXCEPTION(InvalidOption("--seed <uint> could be used only with --createRandomTest \n"));
 	}
 
 	//Default option
