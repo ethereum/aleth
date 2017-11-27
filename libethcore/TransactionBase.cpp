@@ -64,23 +64,25 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 
 		m_data = rlp[5].toBytes();
 
-		byte v = rlp[6].toInt<byte>();
-		h256 r = rlp[7].toInt<u256>();
-		h256 s = rlp[8].toInt<u256>();
+		int const v = rlp[6].toInt<int>();
+		h256 const r = rlp[7].toInt<u256>();
+		h256 const s = rlp[8].toInt<u256>();
 
-		m_vrs = SignatureStruct{ r, s, v };
-
-		if (hasZeroSignature())
-			m_chainId = m_vrs->v;
+		if (isZeroSignature(r, s))
+		{
+			m_chainId = v;
+			m_vrs = SignatureStruct{r, s, 0};
+		}
 		else
 		{
 			if (v > 36)
-				m_chainId = (v - 35) / 2;
+				m_chainId = (v - 35) / 2; 
 			else if (v == 27 || v == 28)
 				m_chainId = -4;
 			else
 				BOOST_THROW_EXCEPTION(InvalidSignature());
-			m_vrs->v = v - (m_chainId * 2 + 35);
+
+			m_vrs = SignatureStruct{r, s, static_cast<byte>(v - (m_chainId * 2 + 35))};
 
 			if (_checkSig >= CheckTransaction::Cheap && !m_vrs->isValid())
 				BOOST_THROW_EXCEPTION(InvalidSignature());
@@ -165,8 +167,14 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 		if (!m_vrs)
 			BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
 
-		int vOffset = m_chainId*2 + 35;
-		_s << (m_vrs->v + vOffset) << (u256)m_vrs->r << (u256)m_vrs->s;
+		if (hasZeroSignature())
+			_s << m_chainId;
+		else
+		{
+			int const vOffset = m_chainId * 2 + 35;
+			_s << (m_vrs->v + vOffset);
+		}
+		_s << (u256)m_vrs->r << (u256)m_vrs->s;
 	}
 	else if (_forEip155hash)
 		_s << m_chainId << 0 << 0;

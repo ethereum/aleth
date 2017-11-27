@@ -142,7 +142,7 @@ public:
 	bool hasSignature() const { return m_vrs.is_initialized(); }
 
 	/// @returns true if the transaction was signed with zero signature
-	bool hasZeroSignature() const { return m_vrs && !m_vrs->s && !m_vrs->r; }
+	bool hasZeroSignature() const { return m_vrs && isZeroSignature(m_vrs->r, m_vrs->s); }
 
 	/// @returns true if the transaction uses EIP155 replay protection
 	bool isReplayProtected() const { return m_chainId != -4; }
@@ -167,6 +167,8 @@ protected:
 		ContractCreation,				///< Transaction to create contracts - receiveAddress() is ignored.
 		MessageCall						///< Transaction to invoke a message call - receiveAddress() is used.
 	};
+
+	static bool isZeroSignature(u256 const& _r, u256 const& _s) { return !_r && !_s; }
 
 	/// Clears the signature.
 	void clearSignature() { m_vrs = SignatureStruct(); }
