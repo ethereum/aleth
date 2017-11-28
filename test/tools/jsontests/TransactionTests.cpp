@@ -27,6 +27,7 @@
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
+#include <test/tools/libtesteth/ImportTest.h>
 #include <test/tools/jsontests/TransactionTests.h>
 #include <boost/filesystem/path.hpp>
 #include <string>
@@ -39,132 +40,161 @@ namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
 
-json_spirit::mValue TransactionTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
+mObject getExpectSection(mValue const& _expect, eth::Network _network)
 {
-	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
-	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
-	for (auto& i: v.get_obj())
+	mObject obj;
+	for (auto const& value : _expect.get_array())
 	{
-		string testname = i.first;
-		json_spirit::mObject& o = i.second.get_obj();
+		BOOST_REQUIRE(value.type() == json_spirit::obj_type);
+		obj = value.get_obj();
+		BOOST_REQUIRE_MESSAGE(obj.count("network"), "network section not set in expect section!");
+		vector<string> networks;
+		ImportTest::parseJsonStrValueIntoVector(obj["network"], networks);
+		BOOST_CHECK_MESSAGE(networks.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
+		ImportTest::checkAllowedNetwork(networks);
 
-		if (!TestOutputHelper::get().checkTest(testname))
+		if (test::inArray(networks, test::netIdToString(_network)))
+			return obj;
+	}
+	return obj;
+}
+
+json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
+{
+	mObject out;
+	BOOST_REQUIRE_MESSAGE(_o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::get().testFileName());
+	BOOST_REQUIRE_MESSAGE(_o.count("expect") > 0, "expect section not found! " + TestOutputHelper::get().testFileName());
+
+	mObject tObj = _o.at("transaction").get_obj();
+	RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
+	out["rlp"] = toHexPrefixed(rlpStream.out());
+
+	// Theoretical block for transaction check
+	BlockHeader bh;
+	bh.setNumber(1);	//Seal engine below enables network rules from block 0
+	bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+
+	mValue expectObj = _o.at("expect");
+	for (auto const network : test::getNetworks())
+	{
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(network)).createSealEngine());
+		bool onConstantinople = (network == eth::Network::ConstantinopleTest);
+		out[test::netIdToString(network)] = mObject();
+		mObject expectSection = getExpectSection(expectObj, network);
+		try
 		{
-			o.clear(); //don't add irrelevant tests to the final file when filling
+			Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
+			bool onConstantinopleAndZeroSig = onConstantinople && txFromFields.hasZeroSignature();
+			if (!(txFromFields.signature().isValid() || onConstantinopleAndZeroSig))
+				BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(TestOutputHelper::get().testName() + "transaction from RLP signature is invalid") );
+
+			se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh, 0);
+			if (expectSection.count("sender") > 0)
+			{
+				string expectSender = toString(expectSection["sender"].get_str());
+				BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::get().testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
+			}
+
+			mObject resultObject;
+			resultObject["sender"] = toString(txFromFields.sender());
+			//resultObject["transaction"] = ImportTest::makeAllFieldsHex(tObj);
+			resultObject["hash"] = toString(txFromFields.sha3());
+			out[test::netIdToString(network)] = resultObject;
+		}
+		catch(Exception const& _e)
+		{
+			//Transaction is InValid
+			cnote << "Transaction Exception: " << diagnostic_information(_e);
+			bool expectInValid = (expectSection["result"].get_str() == "invalid");
+			BOOST_CHECK_MESSAGE(expectInValid, TestOutputHelper::get().testName() + " Check state: Transaction is expected to be valid! (" + test::netIdToString(network) + ")");
 			continue;
 		}
 
-		BOOST_REQUIRE(o.count("blocknumber") > 0);
-		u256 transactionBlock = toInt(o["blocknumber"].get_str());
-		BlockHeader bh;
-		bh.setNumber(transactionBlock);
-		bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-		bool onConstantinople = (transactionBlock >= se->chainParams().constantinopleForkBlock);
+		//Transaction is Valid
+		bool expectValid = (expectSection["result"].get_str() == "valid");
+		BOOST_CHECK_MESSAGE(expectValid, TestOutputHelper::get().testName() + " Check state: Transaction is expected to be invalid! (" + test::netIdToString(network) + ")");
+	}
+	return out;
+}
+
+void TestTransactionTest(json_spirit::mObject const& _o)
+{
+	BOOST_REQUIRE(_o.count("rlp") > 0);
+	Transaction txFromRlp;
+	bytes stream = importByteArray(_o.at("rlp").get_str());
+	RLP rlp(stream);
+	string const& testname = TestOutputHelper::get().testName();
+
+	// Theoretical block for transaction check
+	BlockHeader bh;
+	bh.setNumber(1);	//Seal engine below enables network rules from block 0
+	bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+
+	for (auto const network : test::getNetworks())
+	{
+		string networkname = test::netIdToString(network);
+		BOOST_REQUIRE_MESSAGE(_o.count(networkname) > 0, testname + " Transaction test missing network results! (" + networkname + ")");
+		BOOST_REQUIRE(_o.at(networkname).type() == json_spirit::obj_type);
+		mObject obj = _o.at(networkname).get_obj();
+		try
+		{
+			txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
+			bool onConstantinople = (network == eth::Network::ConstantinopleTest);
+			bool onConstantinopleAndZeroSig = onConstantinople && txFromRlp.hasZeroSignature();
+			unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(network)).createSealEngine());
+			se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
+			if (!(txFromRlp.signature().isValid() || onConstantinopleAndZeroSig))
+				BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid (" + networkname + ")") );
+		}
+		catch(Exception const& _e)
+		{
+			cnote << testname;
+			cnote << "Transaction Exception: " << diagnostic_information(_e);
+			BOOST_CHECK_MESSAGE(obj.count("hash") == 0,
+			 testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
+			continue;
+		}
+		catch(...)
+		{
+			BOOST_CHECK_MESSAGE(obj.count("hash") == 0,
+			 testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
+			continue;
+		}
+
+		BOOST_REQUIRE(obj.count("sender") > 0);
+		Address addressReaded = Address(obj["sender"].get_str());
+		BOOST_CHECK_MESSAGE(txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address! (" + networkname + ")");
+
+		BOOST_REQUIRE_MESSAGE(obj.count("hash") > 0, testname + "Expected a valid transaction! (" + networkname + ")");
+		h256 txSha3Expected = h256(obj["hash"].get_str());
+		BOOST_CHECK_MESSAGE(txFromRlp.sha3() == txSha3Expected, testname + "Expected different transaction hash! (" + networkname + ")");
+	}
+}
+
+json_spirit::mValue TransactionTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
+{
+	BOOST_REQUIRE_MESSAGE(_input.type() == obj_type,
+	TestOutputHelper::get().get().testFileName() + " TransactionTest file should contain an object.");
+	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
+	TestOutputHelper::get().testFileName() + " TransactionTest filler should contain only one test.");
+
+	json_spirit::mObject v;
+	for (auto const& i: _input.get_obj())
+	{
+		string const& testname = i.first;
+		json_spirit::mObject const& o = i.second.get_obj();
+
+		if (!TestOutputHelper::get().checkTest(testname))
+			continue;
 
 		if (_fillin)
-		{
-			BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::get().testFileName());
-			mObject tObj = o["transaction"].get_obj();
-
-			//Construct Rlp of the given transaction
-			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
-			o["rlp"] = toHexPrefixed(rlpStream.out());
-
-			try
-			{
-				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
-				bool onConstantinopleAndZeroSig = onConstantinople && txFromFields.hasZeroSignature();
-
-				if (!txFromFields.signature().isValid())
-				if (!onConstantinopleAndZeroSig)
-					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
-				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh, 0);
-
-				if (o.count("sender") > 0)
-				{
-					string expectSender = toString(o["sender"].get_str());
-					BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::get().testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
-				}
-				o["sender"] = toString(txFromFields.sender());
-				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
-				o["hash"] = toString(txFromFields.sha3());
-			}
-			catch(Exception const& _e)
-			{
-				//Transaction is InValid
-				cnote << "Transaction Exception: " << diagnostic_information(_e);
-				o.erase(o.find("transaction"));
-				if (o.count("sender") > 0)
-					o.erase(o.find("sender"));
-				if (o.count("expect") > 0)
-				{
-					bool expectInValid = (o["expect"].get_str() == "invalid");
-					BOOST_CHECK_MESSAGE(expectInValid, testname + " Check state: Transaction '" << i.first << "' is expected to be valid!");
-					o.erase(o.find("expect"));
-				}
-			}
-
-			//Transaction is Valid
-			if (o.count("expect") > 0)
-			{
-				bool expectValid = (o["expect"].get_str() == "valid");
-				BOOST_CHECK_MESSAGE(expectValid, testname + " Check state: Transaction '" << i.first << "' is expected to be invalid!");
-				o.erase(o.find("expect"));
-			}
-		}
+			v[testname] = FillTransactionTest(o);
 		else
-		{
-			BOOST_REQUIRE(o.count("rlp") > 0);
-			Transaction txFromRlp;
-			try
-			{
-				bytes stream = importByteArray(o["rlp"].get_str());
-				RLP rlp(stream);
-				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
-				bool onConstantinopleAndZeroSig = onConstantinople && txFromRlp.hasZeroSignature();
-				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
-				if (!txFromRlp.signature().isValid())
-				if (!onConstantinopleAndZeroSig)
-					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
-			}
-			catch(Exception const& _e)
-			{
-				cnote << i.first;
-				cnote << "Transaction Exception: " << diagnostic_information(_e);
-				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
-				continue;
-			}
-			catch(...)
-			{
-				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, testname + "A transaction object should not be defined because the RLP is invalid!");
-				continue;
-			}
+			TestTransactionTest(o);
+	}
 
-			BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "Expected a valid transaction!");
-
-			mObject tObj = o["transaction"].get_obj();
-			h256 txSha3Expected = h256(o["hash"].get_str());
-			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckTransaction::Everything);
-
-			//Check the fields restored from RLP to original fields
-			BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), testname + "Data in given RLP not matching the Transaction data!");
-			BOOST_CHECK_MESSAGE(txFromFields.value() == txFromRlp.value(), testname + "Value in given RLP not matching the Transaction value!");
-			BOOST_CHECK_MESSAGE(txFromFields.gasPrice() == txFromRlp.gasPrice(), testname + "GasPrice in given RLP not matching the Transaction gasPrice!");
-			BOOST_CHECK_MESSAGE(txFromFields.gas() == txFromRlp.gas(), testname + "Gas in given RLP not matching the Transaction gas!");
-			BOOST_CHECK_MESSAGE(txFromFields.nonce() == txFromRlp.nonce(), testname + "Nonce in given RLP not matching the Transaction nonce!");
-			BOOST_CHECK_MESSAGE(txFromFields.receiveAddress() == txFromRlp.receiveAddress(), testname + "Receive address in given RLP not matching the Transaction 'to' address!");
-			BOOST_CHECK_MESSAGE(txFromFields.sender() == txFromRlp.sender(), testname + "Transaction sender address in given RLP not matching the Transaction 'vrs' signature!");
-			BOOST_CHECK_MESSAGE(txFromFields.sha3() == txFromRlp.sha3(), testname + "Transaction sha3 hash in given RLP not matching the Transaction 'vrs' signature!");
-			BOOST_CHECK_MESSAGE(txFromFields.sha3() == txSha3Expected, testname + "Expected different transaction hash!");
-			BOOST_CHECK_MESSAGE(txFromFields == txFromRlp, testname + "However, txFromFields != txFromRlp!");
-			BOOST_REQUIRE (o.count("sender") > 0);
-
-			Address addressReaded = Address(o["sender"].get_str());
-			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
-		}
-	}//for
 	return v;
-}//doTransactionTests
+}
 
 fs::path TransactionTestSuite::suiteFolder() const
 {
@@ -175,6 +205,7 @@ fs::path TransactionTestSuite::suiteFillerFolder() const
 {
 	return "TransactionTestsFiller";
 }
+
 
 } }// Namespace Close
 
