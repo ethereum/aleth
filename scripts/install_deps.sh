@@ -74,16 +74,13 @@ Darwin)
             ;;
         10.12)
             echo "Installing cpp-ethereum dependencies on macOS 10.12 Sierra."
-            echo ""
-            echo "NOTE - You are in unknown territory with this preview OS."
-            echo "Even Homebrew doesn't have official support yet, and there are"
-            echo "known issues (see https://github.com/ethereum/webthree-umbrella/issues/614)."
-            echo "If you would like to partner with us to work through these issues, that"
-            echo "would be fantastic.  Please just comment on that issue.  Thanks!"
+            ;;
+        10.13)
+            echo "Installing cpp-ethereum dependencies on macOS 10.13 High Sierra."
             ;;
         *)
             echo "Unsupported macOS version."
-            echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on Sierra."
+            echo "We only support Mavericks, Yosemite, El Capitan, Sierra and High Sierra."
             exit 1
             ;;
     esac
