@@ -148,9 +148,11 @@ void Host::stop()
 	if (!m_run.exchange(false))
 		return;
 
-	// wait for m_timer to reset (indicating network scheduler has stopped)
-	while (!!m_timer)
-		this_thread::sleep_for(chrono::milliseconds(50));
+	{
+		unique_lock<mutex> l(x_runTimer);
+		while (m_timer)
+			m_timerReset.wait(l);
+	}
 
 	// stop worker thread
 	if (isWorking())
@@ -242,9 +244,8 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		else
 		{
 			// peer doesn't exist, try to get port info from node table
-			if (m_nodeTable)
-				if (Node n = m_nodeTable->node(_id))
-					p = make_shared<Peer>(n);
+			if (Node n = nodeFromNodeTable(_id))
+				p = make_shared<Peer>(n);
 
 			if (!p)
 				p = make_shared<Peer>(Node(_id, UnspecifiedNodeIPEndpoint));
@@ -343,8 +344,7 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
 	if (_e == NodeEntryAdded)
 	{
 		clog(NetP2PNote) << "p2p.host.nodeTable.events.nodeEntryAdded " << _n;
-		// only add iff node is in node table
-		if (Node n = m_nodeTable->node(_n))
+		if (Node n = nodeFromNodeTable(_n))
 		{
 			shared_ptr<Peer> p;
 			DEV_RECURSIVE_GUARDED(x_sessions)
@@ -507,8 +507,7 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 	if (_endpoint.tcpPort < 30300 || _endpoint.tcpPort > 30305)
 		clog(NetConnect) << "Non-standard port being recorded: " << _endpoint.tcpPort;
 
-	if (m_nodeTable)
-		m_nodeTable->addNode(Node(_node, _endpoint));
+	addNodeToNodeTable(Node(_node, _endpoint));
 }
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
@@ -539,20 +538,19 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 				m_peers[_n] = p;
 			}
 		// required for discovery
-		if (m_nodeTable)
-			m_nodeTable->addNode(*p, NodeTable::NodeRelation::Unknown);
+		addNodeToNodeTable(*p, NodeTable::NodeRelation::Unknown);
 	}
-	else if (m_nodeTable)
+	else
 	{
-		m_nodeTable->addNode(node);
+		if (!addNodeToNodeTable(node))
+			return;
 		auto t = make_shared<boost::asio::deadline_timer>(m_ioService);
 		t->expires_from_now(boost::posix_time::milliseconds(600));
 		t->async_wait([this, _n](boost::system::error_code const& _ec)
 		{
 			if (!_ec)
-				if (m_nodeTable)
-					if (auto n = m_nodeTable->node(_n))
-						requirePeer(n.id, n.endpoint);
+				if (auto n = nodeFromNodeTable(_n))
+					requirePeer(n.id, n.endpoint);
 		});
 		DEV_GUARDED(x_timers)
 			m_timers.push_back(t);
@@ -577,7 +575,7 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
 		return;
 	}
 
-	if (!!m_nodeTable && !m_nodeTable->haveNode(_p->id) && _p->peerType == PeerType::Optional)
+	if (!nodeTableHasNode(_p->id) && _p->peerType == PeerType::Optional)
 		return;
 
 	// prevent concurrently connecting to a node
@@ -652,18 +650,23 @@ void Host::run(boost::system::error_code const&)
 	if (!m_run)
 	{
 		// reset NodeTable
-		m_nodeTable.reset();
+		DEV_GUARDED(x_nodeTable)
+			m_nodeTable.reset();
 
 		// stopping io service allows running manual network operations for shutdown
 		// and also stops blocking worker thread, allowing worker thread to exit
 		m_ioService.stop();
 
 		// resetting timer signals network that nothing else can be scheduled to run
-		m_timer.reset();
+		DEV_GUARDED(x_runTimer)
+			m_timer.reset();
+
+		m_timerReset.notify_all();
 		return;
 	}
 
-	m_nodeTable->processEvents();
+	if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
+		nodeTable->processEvents();
 
 	// cleanup zombies
 	DEV_GUARDED(x_connecting)
@@ -755,7 +758,8 @@ void Host::startedWorking()
 		m_netPrefs.discovery
 	);
 	nodeTable->setEventHandler(new HostNodeTableHandler(*this));
-	m_nodeTable = nodeTable;
+	DEV_GUARDED(x_nodeTable)
+		m_nodeTable = nodeTable;
 	restoreNetwork(&m_restoreNetwork);
 
 	clog(NetP2PNote) << "p2p.started id:" << id();
@@ -835,14 +839,14 @@ bytes Host::saveNetwork() const
 			network << p.id << (p.peerType == PeerType::Required ? true : false)
 				<< chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
 				<< chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
-				<< p.m_failedAttempts << (unsigned)p.m_lastDisconnect << p.m_score << p.m_rating;
+				<< p.m_failedAttempts.load() << (unsigned)p.m_lastDisconnect << p.m_score.load() << p.m_rating.load();
 			count++;
 		}
 	}
 
-	if (!!m_nodeTable)
+	if (auto nodeTable = this->nodeTable())
 	{
-		auto state = m_nodeTable->snapshot();
+		auto state = nodeTable->snapshot();
 		state.sort();
 		for (auto const& entry: state)
 		{
@@ -893,7 +897,9 @@ void Host::restoreNetwork(bytesConstRef _b)
 			{
 				Node n((NodeID)i[3], NodeIPEndpoint(i));
 				if (i.itemCount() == 4 && n.endpoint.isAllowed())
-					m_nodeTable->addNode(n);
+				{
+					addNodeToNodeTable(n);
+				}
 				else if (i.itemCount() == 11)
 				{
 					n.peerType = i[4].toInt<bool>() ? PeerType::Required : PeerType::Optional;
@@ -909,15 +915,15 @@ void Host::restoreNetwork(bytesConstRef _b)
 					m_peers[p->id] = p;
 					if (p->peerType == PeerType::Required)
 						requirePeer(p->id, n.endpoint);
-					else
-						m_nodeTable->addNode(*p.get(), NodeTable::NodeRelation::Known);
+					else 
+						addNodeToNodeTable(*p.get(), NodeTable::NodeRelation::Known);
 				}
 			}
 			else if (i.itemCount() == 3 || i.itemCount() == 10)
 			{
 				Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()), i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
 				if (i.itemCount() == 3 && n.endpoint.isAllowed())
-					m_nodeTable->addNode(n);
+					addNodeToNodeTable(n);
 				else if (i.itemCount() == 10)
 				{
 					n.peerType = i[3].toInt<bool>() ? PeerType::Required : PeerType::Optional;
@@ -934,7 +940,7 @@ void Host::restoreNetwork(bytesConstRef _b)
 					if (p->peerType == PeerType::Required)
 						requirePeer(p->id, n.endpoint);
 					else
-						m_nodeTable->addNode(*p.get(), NodeTable::NodeRelation::Known);
+						addNodeToNodeTable(*p.get(), NodeTable::NodeRelation::Known);
 				}
 			}
 		}
@@ -958,4 +964,26 @@ KeyPair Host::networkAlias(bytesConstRef _b)
 		return KeyPair(Secret(r[1].toBytes()));
 	else
 		return KeyPair::create();
+}
+
+bool Host::nodeTableHasNode(Public const& _id) const
+{
+	auto nodeTable = this->nodeTable();
+	return nodeTable && nodeTable->haveNode(_id);
+}
+
+Node Host::nodeFromNodeTable(Public const& _id) const
+{
+	auto nodeTable = this->nodeTable();
+	return nodeTable ? nodeTable->node(_id) : Node{};
+}
+
+bool Host::addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation /* = NodeTable::NodeRelation::Unknown */)
+{
+	auto nodeTable = this->nodeTable();
+	if (!nodeTable)
+		return false;
+
+	nodeTable->addNode(_node, _relation);
+	return true;
 }

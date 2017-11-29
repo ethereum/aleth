@@ -320,6 +320,9 @@ protected:
 
 	std::weak_ptr<EthereumHost> m_host;		///< Our Ethereum Host. Don't do anything if we can't lock.
 
+	std::condition_variable m_signalled;
+	Mutex x_signalled;
+
 	Handler<> m_tqReady;
 	Handler<h256 const&> m_tqReplaced;
 	Handler<> m_bqReady;
@@ -339,8 +342,6 @@ protected:
 	SharedMutex x_functionQueue;
 	std::queue<std::function<void()>> m_functionQueue;	///< Functions waiting to be executed in the main thread.
 
-	std::condition_variable m_signalled;
-	Mutex x_signalled;
 	std::atomic<bool> m_syncTransactionQueue = {false};
 	std::atomic<bool> m_syncBlockQueue = {false};
 

@@ -109,8 +109,8 @@ void EthereumPeer::setRude()
 
 void EthereumPeer::abortSync()
 {
-	if (m_observer)
-		m_observer->onPeerAborting();
+	if (auto observer = m_observer.lock())
+		observer->onPeerAborting();
 }
 
 
@@ -236,7 +236,10 @@ bool EthereumPeer::isCriticalSyncing() const
 
 bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 {
-	assert(m_observer);
+	auto observer = m_observer.lock();
+	auto hostData = m_hostData.lock();
+	if (!observer || !hostData)
+		return false;
 
 	m_lastAsk = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
 	try
@@ -255,12 +258,12 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 		clog(NetMessageSummary) << "Status:" << m_protocolVersion << "/" << m_networkId << "/" << m_genesisHash << ", TD:" << m_totalDifficulty << "=" << m_latestHash;
 		setIdle();
-		m_observer->onPeerStatus(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())));
+		observer->onPeerStatus(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())));
 		break;
 	}
 	case TransactionsPacket:
 	{
-		m_observer->onPeerTransactions(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())), _r);
+		observer->onPeerTransactions(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())), _r);
 		break;
 	}
 	case GetBlockHeadersPacket:
@@ -280,7 +283,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			break;
 		}
 
-		pair<bytes, unsigned> const rlpAndItemCount = m_hostData->blockHeaders(blockId, numHeadersToSend, skip, reverse);
+		pair<bytes, unsigned> const rlpAndItemCount = hostData->blockHeaders(blockId, numHeadersToSend, skip, reverse);
 
 		RLPStream s;
 		prep(s, BlockHeadersPacket, rlpAndItemCount.second).appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
@@ -295,7 +298,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		else
 		{
 			setIdle();
-			m_observer->onPeerBlockHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+			observer->onPeerBlockHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		}
 		break;
 	}
@@ -311,7 +314,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			break;
 		}
 
-		pair<bytes, unsigned> const rlpAndItemCount = m_hostData->blockBodies(_r);
+		pair<bytes, unsigned> const rlpAndItemCount = hostData->blockBodies(_r);
 
 		addRating(0);
 		RLPStream s;
@@ -326,13 +329,13 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		else
 		{
 			setIdle();
-			m_observer->onPeerBlockBodies(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+			observer->onPeerBlockBodies(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		}
 		break;
 	}
 	case NewBlockPacket:
 	{
-		m_observer->onPeerNewBlock(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+		observer->onPeerNewBlock(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		break;
 	}
 	case NewBlockHashesPacket:
@@ -351,7 +354,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		for (unsigned i = 0; i < itemCount; ++i)
 			hashes[i] = std::make_pair(_r[i][0].toHash<h256>(), _r[i][1].toInt<u256>());
 
-		m_observer->onPeerNewHashes(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
+		observer->onPeerNewHashes(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
 		break;
 	}
 	case GetNodeDataPacket:
@@ -365,7 +368,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		}
 		clog(NetMessageSummary) << "GetNodeData (" << dec << count << " entries)";
 
-		strings const data = m_hostData->nodeData(_r);
+		strings const data = hostData->nodeData(_r);
 
 		addRating(0);
 		RLPStream s;
@@ -386,7 +389,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		}
 		clog(NetMessageSummary) << "GetReceipts (" << dec << count << " entries)";
 
-		pair<bytes, unsigned> const rlpAndItemCount = m_hostData->receipts(_r);
+		pair<bytes, unsigned> const rlpAndItemCount = hostData->receipts(_r);
 
 		addRating(0);
 		RLPStream s;
@@ -401,7 +404,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		else
 		{
 			setIdle();
-			m_observer->onPeerNodeData(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+			observer->onPeerNodeData(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		}
 		break;
 	}
@@ -412,7 +415,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		else
 		{
 			setIdle();
-			m_observer->onPeerReceipts(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+			observer->onPeerReceipts(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		}
 		break;
 	}

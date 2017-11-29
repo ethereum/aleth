@@ -257,6 +257,21 @@ void Session::write()
 	});
 }
 
+namespace
+{
+	void halveAtomicInt(atomic<int>& i)
+	{
+		int oldInt = 0;
+		int newInt = 0;
+		do
+		{
+			oldInt = i;
+			newInt = oldInt / 2;
+		}
+		while (i.atomic::compare_exchange_weak(oldInt, newInt));
+	}
+}
+
 void Session::drop(DisconnectReason _reason)
 {
 	if (m_dropped)
@@ -275,8 +290,8 @@ void Session::drop(DisconnectReason _reason)
 	m_peer->m_lastDisconnect = _reason;
 	if (_reason == BadProtocol)
 	{
-		m_peer->m_rating /= 2;
-		m_peer->m_score /= 2;
+		halveAtomicInt(m_peer->m_rating);
+		halveAtomicInt(m_peer->m_score);
 	}
 	m_dropped = true;
 }

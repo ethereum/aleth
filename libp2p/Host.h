@@ -29,7 +29,6 @@
 #include <memory>
 #include <utility>
 #include <thread>
-#include <atomic>
 #include <chrono>
 
 #include <libdevcore/Guards.h>
@@ -221,7 +220,7 @@ public:
 	ReputationManager& repMan() { return m_repMan; }
 
 	/// @returns if network is started and interactive.
-	bool haveNetwork() const { Guard l(x_runTimer); return m_run && !!m_nodeTable; }
+	bool haveNetwork() const { Guard l(x_runTimer); Guard ll(x_nodeTable); return m_run && !!m_nodeTable; }
 	
 	/// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
 	void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
@@ -288,6 +287,10 @@ private:
 	/// returns true if a member of m_requiredPeers
 	bool isRequiredPeer(NodeID const&) const;
 
+	bool nodeTableHasNode(Public const& _id) const;
+	Node nodeFromNodeTable(Public const& _id) const;
+	bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
+
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
 	std::atomic<bool> m_run{false};													///< Whether network is running.
@@ -307,6 +310,7 @@ private:
 	std::unique_ptr<boost::asio::deadline_timer> m_timer;					///< Timer which, when network is running, calls scheduler() every c_timerInterval ms.
 	mutable std::mutex x_runTimer;	///< Start/stop mutex.
 	static const unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
+	std::condition_variable m_timerReset;
 
 	std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
 	Mutex x_pendingNodeConns;
@@ -314,6 +318,8 @@ private:
 	bi::tcp::endpoint m_tcpPublic;											///< Our public listening endpoint.
 	KeyPair m_alias;															///< Alias for network communication. Network address is k*G. k is key material. TODO: Replace KeyPair.
 	std::shared_ptr<NodeTable> m_nodeTable;									///< Node table (uses kademlia-like discovery).
+	mutable std::mutex x_nodeTable;
+	std::shared_ptr<NodeTable> nodeTable() const { Guard l(x_nodeTable); return m_nodeTable; }
 
 	/// Shared storage of Peer objects. Peers are created or destroyed on demand by the Host. Active sessions maintain a shared_ptr to a Peer;
 	std::unordered_map<NodeID, std::shared_ptr<Peer>> m_peers;

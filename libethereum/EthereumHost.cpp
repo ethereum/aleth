@@ -54,19 +54,19 @@ namespace
 class EthereumPeerObserver: public EthereumPeerObserverFace
 {
 public:
-	EthereumPeerObserver(BlockChainSync& _sync, TransactionQueue& _tq): m_sync(_sync), m_tq(_tq) {}
+	EthereumPeerObserver(shared_ptr<BlockChainSync> _sync, TransactionQueue& _tq): m_sync(_sync), m_tq(_tq) {}
 
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) override
 	{
 		try
 		{
-			m_sync.onPeerStatus(_peer);
+			m_sync->onPeerStatus(_peer);
 		}
 		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			m_sync.restartSync();
+			m_sync->restartSync();
 		}
 	}
 
@@ -81,7 +81,7 @@ public:
 	{
 		try
 		{
-			m_sync.onPeerAborting();
+			m_sync->onPeerAborting();
 		}
 		catch (Exception&)
 		{
@@ -93,13 +93,13 @@ public:
 	{
 		try
 		{
-			m_sync.onPeerBlockHeaders(_peer, _headers);
+			m_sync->onPeerBlockHeaders(_peer, _headers);
 		}
 		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			m_sync.restartSync();
+			m_sync->restartSync();
 		}
 	}
 
@@ -107,13 +107,13 @@ public:
 	{
 		try
 		{
-			m_sync.onPeerBlockBodies(_peer, _r);
+			m_sync->onPeerBlockBodies(_peer, _r);
 		}
 		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			m_sync.restartSync();
+			m_sync->restartSync();
 		}
 	}
 
@@ -121,13 +121,13 @@ public:
 	{
 		try
 		{
-			m_sync.onPeerNewHashes(_peer, _hashes);
+			m_sync->onPeerNewHashes(_peer, _hashes);
 		}
 		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			m_sync.restartSync();
+			m_sync->restartSync();
 		}
 	}
 
@@ -135,13 +135,13 @@ public:
 	{
 		try
 		{
-			m_sync.onPeerNewBlock(_peer, _r);
+			m_sync->onPeerNewBlock(_peer, _r);
 		}
 		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			m_sync.restartSync();
+			m_sync->restartSync();
 		}
 	}
 
@@ -158,7 +158,7 @@ public:
 	}
 
 private:
-	BlockChainSync& m_sync;
+	shared_ptr<BlockChainSync> m_sync;
 	TransactionQueue& m_tq;
 };
 
@@ -380,7 +380,7 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	// TODO: Composition would be better. Left like that to avoid initialization
 	//       issues as BlockChainSync accesses other EthereumHost members.
 	m_sync.reset(new BlockChainSync(*this));
-	m_peerObserver = make_shared<EthereumPeerObserver>(*m_sync, m_tq);
+	m_peerObserver = make_shared<EthereumPeerObserver>(m_sync, m_tq);
 	m_latestBlockSent = _ch.currentHash();
 	m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
 }
