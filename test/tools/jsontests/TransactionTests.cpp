@@ -187,6 +187,7 @@ public:
 	{
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		test::TransactionTestSuite suite;
+		test::tryRunSingleTestFile(suite);
 		suite.runAllTestsInFolder(casename);
 	}
 };

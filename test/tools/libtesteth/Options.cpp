@@ -204,16 +204,6 @@ Options::Options(int argc, char** argv)
 			if (indentLevelInt > g_logVerbosity)
 				g_logVerbosity = indentLevelInt;
 		}
-		else if (arg == "--createRandomTest")
-			createRandomTest = true;
-		else if (arg == "--seed")
-		{
-			throwIfNoArgumentFollows();
-			u256 input = toInt(argv[++i]);
-			if (input > std::numeric_limits<uint64_t>::max())
-				BOOST_WARN("Seed is > u64. Using u64_max instead.");
-			randomTestSeed = static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));
-		}
 		else if (arg == "-t")
 		{
 			throwIfAfterSeparator();
@@ -259,6 +249,14 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
+		else if (arg == "--seed")
+		{
+			throwIfNoArgumentFollows();
+			u256 input = toInt(argv[++i]);
+			if (input > std::numeric_limits<uint64_t>::max())
+				BOOST_WARN("Seed is > u64. Using u64_max instead.");
+			randomTestSeed = static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));
+		}
 		else if (seenSeparator)
 		{
 			cerr << "Unknown option: " + arg << "\n";

@@ -109,6 +109,15 @@ namespace test
 string const c_fillerPostf = "Filler";
 string const c_copierPostf = "Copier";
 
+void TestSuite::runTestWithoutFiller(boost::filesystem::path const& _file) const
+{
+	// Allow to execute a custom test .json file on any test suite
+	auto& testOutput = test::TestOutputHelper::get();
+	testOutput.initTest(1);
+	executeFile(_file);
+	testOutput.finishTest();
+}
+
 void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	// check that destination folder test files has according Filler file in src folder
@@ -217,11 +226,16 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 	if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
 		cnote << "TEST " << testname << ":";
 
+	Listener::notifySuiteStarted(testname);	// Outdated logging
+	executeFile(boostTestPath);
+}
+
+void TestSuite::executeFile(boost::filesystem::path const& _file) const
+{
 	json_spirit::mValue v;
-	string const s = asString(dev::contents(boostTestPath.string()));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << boostTestPath.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+	string const s = asString(dev::contents(_file));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " << _file.string() << " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 	json_spirit::read_string(s, v);
-	Listener::notifySuiteStarted(testname);
 	doTests(v, false);
 }
 
