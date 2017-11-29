@@ -53,9 +53,10 @@ mObject getExpectSection(mValue const& _expect, eth::Network _network)
 		BOOST_CHECK_MESSAGE(networks.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
 		ImportTest::checkAllowedNetwork(networks);
 
-		if (test::inArray(networks, test::netIdToString(_network)))
+		if (test::inArray(networks, test::netIdToString(_network)) || test::inArray(networks, string("ALL")))
 			return obj;
 	}
+	BOOST_ERROR("Network not found in expect section of transaction test filler! (" + test::netIdToString(_network) + ")");
 	return obj;
 }
 
