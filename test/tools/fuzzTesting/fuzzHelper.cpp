@@ -487,10 +487,17 @@ RandomCodeOptions::RandomCodeOptions() :
 	addAddress(Address("0x0000000000000000000000000000000000000008"), AddressType::ByzantiumPrecompiled);
 }
 
-void boost_require_range(int _value, int a, int b)
+void boost_require_range(int _value, int _min, int _max)
 {
-	BOOST_REQUIRE(_value >= a);
-	BOOST_REQUIRE(_value <= b);
+	BOOST_REQUIRE(_value >= _min);
+	BOOST_REQUIRE(_value <= _max);
+}
+
+int getProbability(json_spirit::mValue const& _obj)
+{
+	int probability = _obj.get_int();
+	boost_require_range(probability, 0, 100);
+	return probability;
 }
 
 void RandomCodeOptions::loadFromFile(boost::filesystem::path const& _jsonFileName)
@@ -509,22 +516,14 @@ void RandomCodeOptions::loadFromFile(boost::filesystem::path const& _jsonFileNam
 	//Parse Probabilities
 	json_spirit::mObject probObj = obj.at("probabilities").get_obj();
 	useUndefinedOpCodes = probObj.at("useUndefinedOpCodes").get_bool();
-	smartCodeProbability = probObj.at("smartCodeProbability").get_int();
-	boost_require_range(smartCodeProbability, 0, 100);
-	randomAddressProbability = probObj.at("randomAddressProbability").get_int();
-	boost_require_range(randomAddressProbability, 0, 100);
-	emptyCodeProbability = probObj.at("emptyCodeProbability").get_int();
-	boost_require_range(emptyCodeProbability, 0, 100);
-	emptyAddressProbability = probObj.at("emptyAddressProbability").get_int();
-	boost_require_range(emptyAddressProbability, 0, 100);
-	precompiledAddressProbability = probObj.at("precompiledAddressProbability").get_int();
-	boost_require_range(precompiledAddressProbability, 0, 100);
-	byzPrecompiledAddressProbability = probObj.at("byzPrecompiledAddressProbability").get_int();
-	boost_require_range(byzPrecompiledAddressProbability, 0, 100);
-	precompiledDestProbability = probObj.at("precompiledDestProbability").get_int();
-	boost_require_range(precompiledDestProbability, 0, 100);
-	sendingAddressProbability = probObj.at("sendingAddressProbability").get_int();
-	boost_require_range(sendingAddressProbability, 0, 100);
+	smartCodeProbability = getProbability(probObj.at("smartCodeProbability"));
+	randomAddressProbability = getProbability(probObj.at("randomAddressProbability"));
+	emptyCodeProbability = getProbability(probObj.at("emptyCodeProbability"));
+	emptyAddressProbability = getProbability(probObj.at("emptyAddressProbability"));
+	precompiledAddressProbability = getProbability(probObj.at("precompiledAddressProbability"));
+	byzPrecompiledAddressProbability = getProbability(probObj.at("byzPrecompiledAddressProbability"));
+	precompiledDestProbability = getProbability(probObj.at("precompiledDestProbability"));
+	sendingAddressProbability = getProbability(probObj.at("sendingAddressProbability"));
 }
 
 void RandomCodeOptions::setWeight(eth::Instruction _opCode, int _weight)
