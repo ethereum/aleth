@@ -1,16 +1,16 @@
 /*
 	This file is part of cpp-ethereum.
-	
+
 	cpp-ethereum is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-	
+
 	cpp-ethereum is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -461,43 +461,43 @@ int main(int argc, char** argv)
 				v.pop_back();
 				switch (vb.type())
 				{
-					case js::array_type:
+				case js::array_type:
+				{
+					js::mArray a = vb.get_array();
+					out.appendList(a.size());
+					for (int i = a.size() - 1; i >= 0; --i)
+						v.push_back(a[i]);
+					break;
+				}
+				case js::str_type:
+				{
+					string const& s = vb.get_str();
+					if (s.size() >= 2 && s.substr(0, 2) == "0x")
+						out << fromHex(s);
+					else
 					{
-						js::mArray a = vb.get_array();
-						out.appendList(a.size());
-						for (int i = a.size() - 1; i >= 0; --i)
-							v.push_back(a[i]);
-						break;
+						// assume it's a normal JS escaped string.
+						bytes ss;
+						ss.reserve(s.size());
+						for (unsigned i = 0; i < s.size(); ++i)
+							if (s[i] == '\\' && i + 1 < s.size())
+							{
+								if (s[++i] == 'x' && i + 2 < s.size())
+									ss.push_back(fromHex(s.substr(i, 2))[0]);
+							}
+							else if (s[i] != '\\')
+								ss.push_back((byte)s[i]);
+						out << ss;
 					}
-					case js::str_type:
-					{
-						string const& s = vb.get_str();
-						if (s.size() >= 2 && s.substr(0, 2) == "0x")
-							out << fromHex(s);
-						else
-						{
-							// assume it's a normal JS escaped string.
-							bytes ss;
-							ss.reserve(s.size());
-							for (unsigned i = 0; i < s.size(); ++i)
-								if (s[i] == '\\' && i + 1 < s.size())
-								{
-									if (s[++i] == 'x' && i + 2 < s.size())
-										ss.push_back(fromHex(s.substr(i, 2))[0]);
-								}
-								else if (s[i] != '\\')
-									ss.push_back((byte)s[i]);
-							out << ss;
-						}
-						break;
-					}
-					case js::int_type:
-						out << vb.get_int();
-						break;
-					default:
-						cerr << "ERROR: Unsupported type in JSON." << endl;
-						if (!lenience)
-							exit(1);
+					break;
+				}
+				case js::int_type:
+					out << vb.get_int();
+					break;
+				default:
+					cerr << "ERROR: Unsupported type in JSON." << endl;
+					if (!lenience)
+						exit(1);
 				}
 			}
 			putOut(out.out(), encoding, encrypt, quiet);
