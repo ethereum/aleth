@@ -188,7 +188,7 @@ int main(int argc, char** argv)
 
 	po::options_description renderOptions("Render options");
 	renderOptions.add_options()
-		("indent,i", po::value<string> (), "<string>  Use string as the level indentation (default '  ').")
+		("indent,i", po::value<string>()->implicit_value("  "), "<string>  Use string as the level indentation (default '  ').")
 		("hex-ints", "Render integers in hex.")
 		("string-ints", "Render integers in the same way as strings.")
 		("ascii-strings", "Render data as C-style strings or hex depending on content being ASCII.")
@@ -211,11 +211,23 @@ int main(int argc, char** argv)
 
 	po::options_description allowedOptions("Allowed options");
 	allowedOptions.add(generalOptions).add(renderOptions);
-	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
-	vector<string> unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
+
 	po::variables_map vm;
-	po::store(parsed, vm);
-	po::notify(vm);
+	vector<string> unrecognisedOptions;
+	try
+	{
+		po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
+		unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
+		po::store(parsed, vm);
+		po::notify(vm);
+	}
+	catch (po::error const& e)
+	{
+		cerr << e.what();
+		return -1;
+	}
+
+
 	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
 	{
 		string arg =  unrecognisedOptions[i];
