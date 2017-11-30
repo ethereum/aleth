@@ -288,8 +288,6 @@ int main(int argc, char** argv)
 		prefs.forceHex = true, prefs.forceString = false;
 	if (vm.count("force-escape"))
 		prefs.escapeAll = true;
-	if (vm.count("nice"))
-		prefs.forceString = true, prefs.stringInts = false, prefs.forceHex = false, prefs.indent = "  ";
 
 	bytes in;
 	if (inputFile == "--")
