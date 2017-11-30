@@ -17,56 +17,80 @@
 
 #pragma once
 
-#include <array>
-#include <unordered_map>
 #include <libdevcore/Common.h>
+#include <libdevcore/OverlayDB.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieDB.h>
-#include <libdevcore/OverlayDB.h>
-#include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
+#include <libethcore/Exceptions.h>
 #include <libethereum/CodeSizeCache.h>
 #include <libevm/ExtVMFace.h>
+#include <array>
+#include <unordered_map>
 #include "Account.h"
+#include "GasPricer.h"
 #include "Transaction.h"
 #include "TransactionReceipt.h"
-#include "GasPricer.h"
 
 namespace dev
 {
-
-namespace test { class ImportTest; class StateLoader; }
+namespace test
+{
+class ImportTest;
+class StateLoader;
+}
 
 namespace eth
 {
-
 // Import-specific errinfos
 using errinfo_uncleIndex = boost::error_info<struct tag_uncleIndex, unsigned>;
 using errinfo_currentNumber = boost::error_info<struct tag_currentNumber, u256>;
 using errinfo_uncleNumber = boost::error_info<struct tag_uncleNumber, u256>;
-using errinfo_unclesExcluded = boost::error_info<struct tag_unclesExcluded, h256Hash>;
+using errinfo_unclesExcluded =
+	boost::error_info<struct tag_unclesExcluded, h256Hash>;
 using errinfo_block = boost::error_info<struct tag_block, bytes>;
 using errinfo_now = boost::error_info<struct tag_now, unsigned>;
 
-using errinfo_transactionIndex = boost::error_info<struct tag_transactionIndex, unsigned>;
+using errinfo_transactionIndex =
+	boost::error_info<struct tag_transactionIndex, unsigned>;
 
 using errinfo_vmtrace = boost::error_info<struct tag_vmtrace, std::string>;
-using errinfo_receipts = boost::error_info<struct tag_receipts, std::vector<bytes>>;
+using errinfo_receipts =
+	boost::error_info<struct tag_receipts, std::vector<bytes>>;
 using errinfo_transaction = boost::error_info<struct tag_transaction, bytes>;
 using errinfo_phase = boost::error_info<struct tag_phase, unsigned>;
-using errinfo_required_LogBloom = boost::error_info<struct tag_required_LogBloom, LogBloom>;
-using errinfo_got_LogBloom = boost::error_info<struct tag_get_LogBloom, LogBloom>;
-using LogBloomRequirementError = boost::tuple<errinfo_required_LogBloom, errinfo_got_LogBloom>;
+using errinfo_required_LogBloom =
+	boost::error_info<struct tag_required_LogBloom, LogBloom>;
+using errinfo_got_LogBloom =
+	boost::error_info<struct tag_get_LogBloom, LogBloom>;
+using LogBloomRequirementError =
+	boost::tuple<errinfo_required_LogBloom, errinfo_got_LogBloom>;
 
 class BlockChain;
 class State;
 class TransactionQueue;
 struct VerifiedBlockRef;
 
-struct StateChat: public LogChannel { static const char* name(); static const int verbosity = 4; };
-struct StateTrace: public LogChannel { static const char* name(); static const int verbosity = 5; };
-struct StateDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
-struct StateSafeExceptions: public LogChannel { static const char* name(); static const int verbosity = 21; };
+struct StateChat : public LogChannel
+{
+	static const char* name();
+	static const int verbosity = 4;
+};
+struct StateTrace : public LogChannel
+{
+	static const char* name();
+	static const int verbosity = 5;
+};
+struct StateDetail : public LogChannel
+{
+	static const char* name();
+	static const int verbosity = 14;
+};
+struct StateSafeExceptions : public LogChannel
+{
+	static const char* name();
+	static const int verbosity = 21;
+};
 
 enum class BaseState
 {
@@ -78,13 +102,15 @@ enum class Permanence
 {
 	Reverted,
 	Committed,
-	Uncommitted	///< Uncommitted state for change log readings in tests.
+	Uncommitted  ///< Uncommitted state for change log readings in tests.
 };
 
 #if ETH_FATDB
-template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<FatGenericTrieDB<DB>, KeyType>;
+template <class KeyType, class DB>
+using SecureTrieDB = SpecificTrieDB<FatGenericTrieDB<DB>, KeyType>;
 #else
-template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<HashedGenericTrieDB<DB>, KeyType>;
+template <class KeyType, class DB>
+using SecureTrieDB = SpecificTrieDB<HashedGenericTrieDB<DB>, KeyType>;
 #endif
 
 DEV_SIMPLE_EXCEPTION(InvalidAccountStartNonceInState);
@@ -96,7 +122,7 @@ class Executive;
 /// An atomic state changelog entry.
 struct Change
 {
-	enum Kind: int
+	enum Kind : int
 	{
 		/// Account balance changed. Change::value contains the amount the
 		/// balance was increased by.
@@ -123,33 +149,38 @@ struct Change
 		Touch
 	};
 
-	Kind kind;        ///< The kind of the change.
+	Kind kind;		  ///< The kind of the change.
 	Address address;  ///< Changed account address.
-	u256 value;       ///< Change value, e.g. balance, storage and nonce.
-	u256 key;         ///< Storage key. Last because used only in one case.
-	bytes oldCode;    ///< Code overwritten by CREATE, empty except in case of address collision.
+	u256 value;		  ///< Change value, e.g. balance, storage and nonce.
+	u256 key;		  ///< Storage key. Last because used only in one case.
+	bytes oldCode;	///< Code overwritten by CREATE, empty except in case of
+					  ///< address collision.
 
 	/// Helper constructor to make change log update more readable.
-	Change(Kind _kind, Address const& _addr, u256 const& _value = 0):
-			kind(_kind), address(_addr), value(_value)
+	Change(Kind _kind, Address const& _addr, u256 const& _value = 0)
+	  : kind(_kind), address(_addr), value(_value)
 	{
-		assert(_kind != Code); // For this the special constructor needs to be used.
+		assert(_kind !=
+			   Code);  // For this the special constructor needs to be used.
 	}
 
 	/// Helper constructor especially for storage change log.
-	Change(Address const& _addr, u256 const& _key, u256 const& _value):
-			kind(Storage), address(_addr), value(_value), key(_key)
-	{}
+	Change(Address const& _addr, u256 const& _key, u256 const& _value)
+	  : kind(Storage), address(_addr), value(_value), key(_key)
+	{
+	}
 
 	/// Helper constructor for nonce change log.
-	Change(Address const& _addr, u256 const& _value):
-			kind(Nonce), address(_addr), value(_value)
-	{}
+	Change(Address const& _addr, u256 const& _value)
+	  : kind(Nonce), address(_addr), value(_value)
+	{
+	}
 
 	/// Helper constructor especially for new code change log.
-	Change(Address const& _addr, bytes const& _oldCode):
-			kind(Code), address(_addr), oldCode(_oldCode)
-	{}
+	Change(Address const& _addr, bytes const& _oldCode)
+	  : kind(Code), address(_addr), oldCode(_oldCode)
+	{
+	}
 };
 
 using ChangeLog = std::vector<Change>;
@@ -174,24 +205,34 @@ class State
 	friend class dev::test::StateLoader;
 	friend class BlockChain;
 
-public:
+   public:
 	enum class CommitBehaviour
 	{
 		KeepEmptyAccounts,
 		RemoveEmptyAccounts
 	};
 
-	/// Default constructor; creates with a blank database prepopulated with the genesis block.
-	explicit State(u256 const& _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}
+	/// Default constructor; creates with a blank database prepopulated with the
+	/// genesis block.
+	explicit State(u256 const& _accountStartNonce)
+	  : State(_accountStartNonce, OverlayDB(), BaseState::Empty)
+	{
+	}
 
 	/// Basic state object from database.
-	/// Use the default when you already have a database and you just want to make a State object
-	/// which uses it. If you have no preexisting database then set BaseState to something other
-	/// than BaseState::PreExisting in order to prepopulate the Trie.
-	explicit State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs = BaseState::PreExisting);
+	/// Use the default when you already have a database and you just want to
+	/// make a State object which uses it. If you have no preexisting database
+	/// then set BaseState to something other than BaseState::PreExisting in
+	/// order to prepopulate the Trie.
+	explicit State(u256 const& _accountStartNonce,
+				   OverlayDB const& _db,
+				   BaseState _bs = BaseState::PreExisting);
 
-	enum NullType { Null };
-	State(NullType): State(Invalid256, OverlayDB(), BaseState::Empty) {}
+	enum NullType
+	{
+		Null
+	};
+	State(NullType) : State(Invalid256, OverlayDB(), BaseState::Empty) {}
 
 	/// Copy state object.
 	State(State const& _s);
@@ -199,32 +240,46 @@ public:
 	/// Copy state object.
 	State& operator=(State const& _s);
 
-	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
-	static OverlayDB openDB(boost::filesystem::path const& _path, h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
+	/// Open a DB - useful for passing into the constructor & keeping for other
+	/// states that are necessary.
+	static OverlayDB openDB(boost::filesystem::path const& _path,
+							h256 const& _genesisHash,
+							WithExisting _we = WithExisting::Trust);
 	OverlayDB const& db() const { return m_db; }
 	OverlayDB& db() { return m_db; }
 
-	/// Populate the state from the given AccountMap. Just uses dev::eth::commit().
+	/// Populate the state from the given AccountMap. Just uses
+	/// dev::eth::commit().
 	void populateFrom(AccountMap const& _map);
 
 	/// @returns the set containing all addresses currently in use in Ethereum.
-	/// @warning This is slowslowslow. Don't use it unless you want to lock the object for seconds or minutes at a time.
+	/// @warning This is slowslowslow. Don't use it unless you want to lock the
+	/// object for seconds or minutes at a time.
 	/// @throws InterfaceNotSupported if compiled without ETH_FATDB.
 	std::unordered_map<Address, u256> addresses() const;
 
 	/// Execute a given transaction.
 	/// This will change the state accordingly.
-	std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
+	std::pair<ExecutionResult, TransactionReceipt> execute(
+		EnvInfo const& _envInfo,
+		SealEngineFace const& _sealEngine,
+		Transaction const& _t,
+		Permanence _p = Permanence::Committed,
+		OnOpFunc const& _onOp = OnOpFunc());
 
 	/// Execute @a _txCount transactions of a given block.
 	/// This will change the state accordingly.
-	void executeBlockTransactions(Block const& _block, unsigned _txCount, LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine);
+	void executeBlockTransactions(Block const& _block,
+								  unsigned _txCount,
+								  LastBlockHashesFace const& _lastHashes,
+								  SealEngineFace const& _sealEngine);
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
 
-	/// Check if the account exists in the state and is non empty (nonce > 0 || balance > 0 || code nonempty).
-	/// These two notions are equivalent after EIP158.
+	/// Check if the account exists in the state and is non empty (nonce > 0 ||
+	/// balance > 0 || code nonempty). These two notions are equivalent after
+	/// EIP158.
 	bool accountNonemptyAndExisting(Address const& _address) const;
 
 	/// Check if the address contains executable code.
@@ -249,7 +304,13 @@ public:
 	 * @param _to Account to which @a _value will be added.
 	 * @param _value Amount to be transferred.
 	 */
-	void transferBalance(Address const& _from, Address const& _to, u256 const& _value) { subBalance(_from, _value); addBalance(_to, _value); }
+	void transferBalance(Address const& _from,
+						 Address const& _to,
+						 u256 const& _value)
+	{
+		subBalance(_from, _value);
+		addBalance(_to, _value);
+	}
 
 	/// Get the root of the storage of an account.
 	h256 storageRoot(Address const& _contract) const;
@@ -259,15 +320,19 @@ public:
 	u256 storage(Address const& _contract, u256 const& _memory) const;
 
 	/// Set the value of a storage position of an account.
-	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value);
+	void setStorage(Address const& _contract,
+					u256 const& _location,
+					u256 const& _value);
 
 	/// Clear the storage root hash of an account to the hash of the empty trie.
 	void clearStorage(Address const& _contract);
 
-	/// Create a contract at the given address (with unset code and unchanged balance).
+	/// Create a contract at the given address (with unset code and unchanged
+	/// balance).
 	void createContract(Address const& _address);
 
-	/// Sets the code of the account. Must only be called during / after contract creation.
+	/// Sets the code of the account. Must only be called during / after
+	/// contract creation.
 	void setCode(Address const& _address, bytes&& _code);
 
 	/// Delete an account (used for processing suicides).
@@ -275,8 +340,10 @@ public:
 
 	/// Get the storage of an account.
 	/// @note This is expensive. Don't use it unless you need to.
-	/// @returns map of hashed keys to key-value pairs or empty map if no account exists at that address.
-	std::map<h256, std::pair<u256, u256>> storage(Address const& _contract) const;
+	/// @returns map of hashed keys to key-value pairs or empty map if no
+	/// account exists at that address.
+	std::map<h256, std::pair<u256, u256>> storage(
+		Address const& _contract) const;
 
 	/// Get the code of an account.
 	/// @returns bytes() if no account exists at that address.
@@ -285,7 +352,8 @@ public:
 	bytes const& code(Address const& _addr) const;
 
 	/// Get the code hash of an account.
-	/// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
+	/// @returns EmptySHA3 if no account exists at that address or if there is
+	/// no code associated with the address.
 	h256 codeHash(Address const& _contract) const;
 
 	/// Get the byte-size of the code of an account.
@@ -306,7 +374,8 @@ public:
 	h256 rootHash() const { return m_state.root(); }
 
 	/// Commit all changes waiting in the address cache to the DB.
-	/// @param _commitBehaviour whether or not to remove empty accounts during commit.
+	/// @param _commitBehaviour whether or not to remove empty accounts during
+	/// commit.
 	void commit(CommitBehaviour _commitBehaviour);
 
 	/// Resets any uncommitted changes to the cache.
@@ -326,16 +395,18 @@ public:
 
 	ChangeLog const& changeLog() const { return m_changeLog; }
 
-private:
+   private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
 	void removeEmptyAccounts();
 
-	/// @returns the account at the given address or a null pointer if it does not exist.
-	/// The pointer is valid until the next access to the state or account.
+	/// @returns the account at the given address or a null pointer if it does
+	/// not exist. The pointer is valid until the next access to the state or
+	/// account.
 	Account const* account(Address const& _addr) const;
 
-	/// @returns the account at the given address or a null pointer if it does not exist.
-	/// The pointer is valid until the next access to the state or account.
+	/// @returns the account at the given address or a null pointer if it does
+	/// not exist. The pointer is valid until the next access to the state or
+	/// account.
 	Account* account(Address const& _addr);
 
 	/// Purges non-modified entries in m_cache if it grows too large.
@@ -343,12 +414,26 @@ private:
 
 	void createAccount(Address const& _address, Account const&& _account);
 
-	OverlayDB m_db;								///< Our overlay for the state tree.
-	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
-	mutable std::unordered_map<Address, Account> m_cache;	///< Our address cache. This stores the states of each address that has (or at least might have) been changed.
-	mutable std::vector<Address> m_unchangedCacheEntries;	///< Tracks entries in m_cache that can potentially be purged if it grows too large.
-	mutable std::set<Address> m_nonExistingAccountsCache;	///< Tracks addresses that are known to not exist.
-	AddressHash m_touched;						///< Tracks all addresses touched so far.
+	OverlayDB m_db;  ///< Our overlay for the state tree.
+	SecureTrieDB<Address, OverlayDB>
+		m_state;  ///< Our state tree, as an OverlayDB DB.
+	mutable std::unordered_map<Address, Account> m_cache;  ///< Our address
+														   ///< cache. This
+														   ///< stores the
+														   ///< states of each
+														   ///< address that has
+														   ///< (or at least
+														   ///< might have) been
+														   ///< changed.
+	mutable std::vector<Address> m_unchangedCacheEntries;  ///< Tracks entries
+														   ///< in m_cache that
+														   ///< can potentially
+														   ///< be purged if it
+														   ///< grows too large.
+	mutable std::set<Address> m_nonExistingAccountsCache;  ///< Tracks addresses
+														   ///< that are known
+														   ///< to not exist.
+	AddressHash m_touched;  ///< Tracks all addresses touched so far.
 
 	u256 m_accountStartNonce;
 
@@ -358,11 +443,12 @@ private:
 
 std::ostream& operator<<(std::ostream& _out, State const& _s);
 
-State& createIntermediateState(State& o_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc);
+State& createIntermediateState(State& o_s,
+							   Block const& _block,
+							   unsigned _txIndex,
+							   BlockChain const& _bc);
 
 template <class DB>
 AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);
-
 }
 }
-
