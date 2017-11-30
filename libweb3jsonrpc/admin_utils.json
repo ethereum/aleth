@@ -1,5 +1,0 @@
-[
-{ "name": "admin_setVerbosity", "params": [0, ""], "returns": true },
-{ "name": "admin_verbosity", "params": [0], "returns": true },
-{ "name": "admin_exit", "params": [""], "returns": true}
-]
