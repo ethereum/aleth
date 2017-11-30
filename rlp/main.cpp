@@ -1,13 +1,16 @@
 /*
 	This file is part of cpp-ethereum.
+	
 	cpp-ethereum is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
+	
 	cpp-ethereum is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
+	
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -48,6 +51,7 @@ to set locale to fail, so there are only two possible actions, the first is to
 throw a runtime exception and cause the program to quit (default behaviour),
 or the second is to modify the environment to something sensible (least
 surprising behaviour).
+
 The follow code produces the least surprising behaviour. It will use the user
 specified default locale if it is valid, and if not then it will modify the
 environment the process is running in to use a sensible default. This also means
@@ -131,8 +135,8 @@ public:
 			for (auto i: _d)
 			{
 				m_out << (j++ ?
-						  (m_prefs.indent.empty() ? ", " : ("," + newline)) :
-						  (m_prefs.indent.empty() ? " " : newline));
+					(m_prefs.indent.empty() ? ", " : ("," + newline)) :
+					(m_prefs.indent.empty() ? " " : newline));
 				output(i, _level + 1);
 			}
 			newline = newline.substr(0, newline.size() - m_prefs.indent.size());
@@ -155,18 +159,18 @@ void putOut(bytes _out, Encoding _encoding, bool _encrypt, bool _quiet)
 
 	switch (_encoding)
 	{
-		case Encoding::Hex: case Encoding::Auto:
-			cout << toHex(_out) << endl;
-			break;
-		case Encoding::Base64:
-			cout << toBase64(&_out) << endl;
-			break;
-		case Encoding::Binary:
-			cout.write((char const*)_out.data(), _out.size());
-			break;
-		case Encoding::Keccak:
-			cout << sha3(_out).hex() << endl;
-			break;
+	case Encoding::Hex: case Encoding::Auto:
+		cout << toHex(_out) << endl;
+		break;
+	case Encoding::Base64:
+		cout << toBase64(&_out) << endl;
+		break;
+	case Encoding::Binary:
+		cout.write((char const*)_out.data(), _out.size());
+		break;
+	case Encoding::Keccak:
+		cout << sha3(_out).hex() << endl;
+		break;
 	}
 }
 
@@ -311,27 +315,27 @@ int main(int argc, char** argv)
 		}
 		switch (encoding)
 		{
-			case Encoding::Hex:
-			{
-				string s = asString(in);
-				boost::algorithm::replace_all(s, " ", "");
-				boost::algorithm::replace_all(s, "\n", "");
-				boost::algorithm::replace_all(s, "\t", "");
-				b = fromHex(s);
-				break;
-			}
-			case Encoding::Base64:
-			{
-				string s = asString(in);
-				boost::algorithm::replace_all(s, " ", "");
-				boost::algorithm::replace_all(s, "\n", "");
-				boost::algorithm::replace_all(s, "\t", "");
-				b = fromBase64(s);
-				break;
-			}
-			default:
-				swap(b, in);
-				break;
+		case Encoding::Hex:
+		{
+			string s = asString(in);
+			boost::algorithm::replace_all(s, " ", "");
+			boost::algorithm::replace_all(s, "\n", "");
+			boost::algorithm::replace_all(s, "\t", "");
+			b = fromHex(s);
+			break;
+		}
+		case Encoding::Base64:
+		{
+			string s = asString(in);
+			boost::algorithm::replace_all(s, " ", "");
+			boost::algorithm::replace_all(s, "\n", "");
+			boost::algorithm::replace_all(s, "\t", "");
+			b = fromBase64(s);
+			break;
+		}
+		default:
+			swap(b, in);
+			break;
 		}
 	}
 
@@ -340,166 +344,166 @@ int main(int argc, char** argv)
 		RLP rlp(b);
 		switch (mode)
 		{
-			case Mode::ListArchive:
+		case Mode::ListArchive:
+		{
+			if (!rlp.isList())
 			{
-				if (!rlp.isList())
+				cout << "Error: Invalid format; RLP data is not a list." << endl;
+				exit(1);
+			}
+			cout << rlp.itemCount() << " items:" << endl;
+			for (auto i: rlp)
+			{
+				if (!i.isData())
 				{
-					cout << "Error: Invalid format; RLP data is not a list." << endl;
-					exit(1);
+					cout << "Error: Invalid format; RLP list item is not data." << endl;
+					if (!lenience)
+						exit(1);
 				}
-				cout << rlp.itemCount() << " items:" << endl;
-				for (auto i: rlp)
+				cout << "    " << i.size() << " bytes: " << sha3(i.data()) << endl;
+			}
+			break;
+		}
+		case Mode::ExtractArchive:
+		{
+			if (!rlp.isList())
+			{
+				cout << "Error: Invalid format; RLP data is not a list." << endl;
+				exit(1);
+			}
+			cout << rlp.itemCount() << " items:" << endl;
+			for (auto i: rlp)
+			{
+				if (!i.isData())
 				{
-					if (!i.isData())
+					cout << "Error: Invalid format; RLP list item is not data." << endl;
+					if (!lenience)
+						exit(1);
+				}
+				ofstream fout;
+				fout.open(toString(sha3(i.data())));
+				fout.write(reinterpret_cast<char const*>(i.data().data()), i.data().size());
+			}
+			break;
+		}
+		case Mode::AssembleArchive:
+		{
+			if (boost::filesystem::is_directory(inputFile))
+			{
+				js::mArray entries;
+				auto basePath = boost::filesystem::canonical(boost::filesystem::path(inputFile)).string();
+				for (string& i: otherInputs)
+				{
+					js::mObject entry;
+					strings parsed;
+					boost::algorithm::split(parsed, i, boost::is_any_of(","));
+					i = parsed[0];
+					for (unsigned j = 1; j < parsed.size(); ++j)
 					{
-						cout << "Error: Invalid format; RLP list item is not data." << endl;
+						strings nv;
+						boost::algorithm::split(nv, parsed[j], boost::is_any_of(":"));
+						if (nv.size() == 2)
+							entry[nv[0]] = nv[1];
+						else{} // TODO: error
+					}
+					if (!entry.count("path"))
+					{
+						std::string path = boost::filesystem::canonical(boost::filesystem::path(parsed[0])).string().substr(basePath.size());
+						if (path == "/index.html")
+							path = "/";
+						entry["path"] = path;
+					}
+					entry["hash"] = toHex(dev::sha3(contents(parsed[0])).ref());
+					entries.push_back(entry);
+				}
+				js::mObject o;
+				o["entries"] = entries;
+				auto os = js::write_string(js::mValue(o), false);
+				in = asBytes(os);
+			}
+
+			strings addedInputs;
+			for (auto i: otherInputs)
+				if (!boost::filesystem::is_regular_file(i))
+					cerr << "Skipped " << i << std::endl;
+				else
+					addedInputs.push_back(i);
+
+			RLPStream r(addedInputs.size() + 1);
+			r.append(in);
+			for (auto i: addedInputs)
+				r.append(contents(i));
+			putOut(r.out(), encoding, encrypt, quiet);
+			break;
+		}
+		case Mode::Render:
+		{
+			RLPStreamer s(cout, prefs);
+			s.output(rlp);
+			cout << endl;
+			break;
+		}
+		case Mode::Create:
+		{
+			vector<js::mValue> v(1);
+			try {
+				js::read_string(asString(in), v[0]);
+			}
+			catch (...)
+			{
+				cerr << "Error: Invalid format; bad JSON." << endl;
+				exit(1);
+			}
+			RLPStream out;
+			while (!v.empty())
+			{
+				auto vb = v.back();
+				v.pop_back();
+				switch (vb.type())
+				{
+					case js::array_type:
+					{
+						js::mArray a = vb.get_array();
+						out.appendList(a.size());
+						for (int i = a.size() - 1; i >= 0; --i)
+							v.push_back(a[i]);
+						break;
+					}
+					case js::str_type:
+					{
+						string const& s = vb.get_str();
+						if (s.size() >= 2 && s.substr(0, 2) == "0x")
+							out << fromHex(s);
+						else
+						{
+							// assume it's a normal JS escaped string.
+							bytes ss;
+							ss.reserve(s.size());
+							for (unsigned i = 0; i < s.size(); ++i)
+								if (s[i] == '\\' && i + 1 < s.size())
+								{
+									if (s[++i] == 'x' && i + 2 < s.size())
+										ss.push_back(fromHex(s.substr(i, 2))[0]);
+								}
+								else if (s[i] != '\\')
+									ss.push_back((byte)s[i]);
+							out << ss;
+						}
+						break;
+					}
+					case js::int_type:
+						out << vb.get_int();
+						break;
+					default:
+						cerr << "ERROR: Unsupported type in JSON." << endl;
 						if (!lenience)
 							exit(1);
-					}
-					cout << "    " << i.size() << " bytes: " << sha3(i.data()) << endl;
 				}
-				break;
 			}
-			case Mode::ExtractArchive:
-			{
-				if (!rlp.isList())
-				{
-					cout << "Error: Invalid format; RLP data is not a list." << endl;
-					exit(1);
-				}
-				cout << rlp.itemCount() << " items:" << endl;
-				for (auto i: rlp)
-				{
-					if (!i.isData())
-					{
-						cout << "Error: Invalid format; RLP list item is not data." << endl;
-						if (!lenience)
-							exit(1);
-					}
-					ofstream fout;
-					fout.open(toString(sha3(i.data())));
-					fout.write(reinterpret_cast<char const*>(i.data().data()), i.data().size());
-				}
-				break;
-			}
-			case Mode::AssembleArchive:
-			{
-				if (boost::filesystem::is_directory(inputFile))
-				{
-					js::mArray entries;
-					auto basePath = boost::filesystem::canonical(boost::filesystem::path(inputFile)).string();
-					for (string& i: otherInputs)
-					{
-						js::mObject entry;
-						strings parsed;
-						boost::algorithm::split(parsed, i, boost::is_any_of(","));
-						i = parsed[0];
-						for (unsigned j = 1; j < parsed.size(); ++j)
-						{
-							strings nv;
-							boost::algorithm::split(nv, parsed[j], boost::is_any_of(":"));
-							if (nv.size() == 2)
-								entry[nv[0]] = nv[1];
-							else{} // TODO: error
-						}
-						if (!entry.count("path"))
-						{
-							std::string path = boost::filesystem::canonical(boost::filesystem::path(parsed[0])).string().substr(basePath.size());
-							if (path == "/index.html")
-								path = "/";
-							entry["path"] = path;
-						}
-						entry["hash"] = toHex(dev::sha3(contents(parsed[0])).ref());
-						entries.push_back(entry);
-					}
-					js::mObject o;
-					o["entries"] = entries;
-					auto os = js::write_string(js::mValue(o), false);
-					in = asBytes(os);
-				}
-
-				strings addedInputs;
-				for (auto i: otherInputs)
-					if (!boost::filesystem::is_regular_file(i))
-						cerr << "Skipped " << i << std::endl;
-					else
-						addedInputs.push_back(i);
-
-				RLPStream r(addedInputs.size() + 1);
-				r.append(in);
-				for (auto i: addedInputs)
-					r.append(contents(i));
-				putOut(r.out(), encoding, encrypt, quiet);
-				break;
-			}
-			case Mode::Render:
-			{
-				RLPStreamer s(cout, prefs);
-				s.output(rlp);
-				cout << endl;
-				break;
-			}
-			case Mode::Create:
-			{
-				vector<js::mValue> v(1);
-				try {
-					js::read_string(asString(in), v[0]);
-				}
-				catch (...)
-				{
-					cerr << "Error: Invalid format; bad JSON." << endl;
-					exit(1);
-				}
-				RLPStream out;
-				while (!v.empty())
-				{
-					auto vb = v.back();
-					v.pop_back();
-					switch (vb.type())
-					{
-						case js::array_type:
-						{
-							js::mArray a = vb.get_array();
-							out.appendList(a.size());
-							for (int i = a.size() - 1; i >= 0; --i)
-								v.push_back(a[i]);
-							break;
-						}
-						case js::str_type:
-						{
-							string const& s = vb.get_str();
-							if (s.size() >= 2 && s.substr(0, 2) == "0x")
-								out << fromHex(s);
-							else
-							{
-								// assume it's a normal JS escaped string.
-								bytes ss;
-								ss.reserve(s.size());
-								for (unsigned i = 0; i < s.size(); ++i)
-									if (s[i] == '\\' && i + 1 < s.size())
-									{
-										if (s[++i] == 'x' && i + 2 < s.size())
-											ss.push_back(fromHex(s.substr(i, 2))[0]);
-									}
-									else if (s[i] != '\\')
-										ss.push_back((byte)s[i]);
-								out << ss;
-							}
-							break;
-						}
-						case js::int_type:
-							out << vb.get_int();
-							break;
-						default:
-							cerr << "ERROR: Unsupported type in JSON." << endl;
-							if (!lenience)
-								exit(1);
-					}
-				}
-				putOut(out.out(), encoding, encrypt, quiet);
-				break;
-			}
-			default:;
+			putOut(out.out(), encoding, encrypt, quiet);
+			break;
+		}
+		default:;
 		}
 	}
 	catch (...)
