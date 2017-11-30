@@ -198,16 +198,13 @@ int main(int argc, char** argv)
 
 	po::options_description generalOptions("General options");
 	generalOptions.add_options()
-		("dapp,D", "Dapp-building mode; equivalent to --encrypt --64.")
+		("dapp,D", "Dapp-building mode; equivalent to --encrypt --base-64.")
 		("encrypt,e", "Encrypt the RLP data prior to output.")
 		("lenience,L", "Try not to bomb out early if possible.")
 		("hex,x", "Treat input RLP as hex encoded data.")
-		("base-16", "Treat input RLP as hex encoded data.")
 		("keccak,k", "Output Keccak-256 hash only.")
-		("base-64", "Treat input RLP as base-64 encoded data.")
-		("64", "Treat input RLP as base-64 encoded data.")
+		("base-64,6", "Treat input RLP as base-64 encoded data.")
 		("bin,b", "Treat input RLP as raw binary data.")
-		("base-256", "Treat input RLP as raw binary data.")
 		("quiet,q", "Don't place additional information on stderr.")
 		("help,h", "Print this help message and exit.")
 		("version,V", "Show the version and exit.");
@@ -240,7 +237,7 @@ int main(int argc, char** argv)
 	if (vm.count("help")) {
 		cout << "Usage rlp <mode> [OPTIONS]\nModes:\n"
 			 << "    create   <json>  Given a simplified JSON string, output the RLP." << endl
-			 << "    render   [ <file> | -- ]  Render the given RLP. Options:" << endl
+			 << "    render   [ <file> | -- ]  Render the given RLP." << endl
 			 << "    list     [ <file> | -- ]  List the items in the RLP list by hash and size." << endl
 			 << "    extract  [ <file> | -- ]  Extract all items in the RLP list, named by hash." << endl
 			 << "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
@@ -255,13 +252,13 @@ int main(int argc, char** argv)
 		version();
 	if (vm.count("quiet"))
 		quiet = true;
-	if (vm.count("hex") || vm.count("base-16"))
+	if (vm.count("hex"))
 		encoding = Encoding::Hex;
 	if (vm.count("keccak"))
 		encoding = Encoding::Keccak;
-	if (vm.count("64") || vm.count("base-64"))
+	if (vm.count("base-64"))
 		encoding = Encoding::Base64;
-	if (vm.count("bin") || vm.count("base-256"))
+	if (vm.count("bin"))
 		encoding = Encoding::Binary;
 	if (vm.count("encrypt"))
 		encrypt = true;
