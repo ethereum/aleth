@@ -93,14 +93,14 @@ std::string dev::randomWord()
 bytes dev::fromHex(std::string const& _s, WhenError _throw)
 {
 	unsigned s = (_s.size() >= 2 && _s[0] == '0' && _s[1] == 'x') ? 2 : 0;
-	std::vector<uint8_t> ret;
+	std::vector<byte> ret;
 	ret.reserve((_s.size() - s + 1) / 2);
 
 	if (_s.size() % 2)
 	{
 		int h = fromHexChar(_s[s++]);
 		if (h != -1)
-			ret.push_back(h);
+			ret.push_back((byte)h);
 		else if (_throw == WhenError::Throw)
 			BOOST_THROW_EXCEPTION(BadHexCharacter());
 		else
@@ -122,7 +122,7 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 
 bytes dev::asNibbles(bytesConstRef const& _s)
 {
-	std::vector<uint8_t> ret;
+	std::vector<byte> ret;
 	ret.reserve(_s.size() * 2);
 	for (auto i: _s)
 	{

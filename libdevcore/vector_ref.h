@@ -16,6 +16,9 @@
 namespace dev
 {
 
+// Binary data types.
+enum class byte : unsigned char {};
+
 /**
  * A modifiable reference to an existing object or vector in memory.
  */
@@ -45,7 +48,7 @@ public:
 
 	bool contentsEqual(std::vector<mutable_value_type> const& _c) const { if (!m_data || m_count == 0) return _c.empty(); else return _c.size() == m_count && !memcmp(_c.data(), m_data, m_count * sizeof(_T)); }
 	std::vector<mutable_value_type> toVector() const { return std::vector<mutable_value_type>(m_data, m_data + m_count); }
-	std::vector<unsigned char> toBytes() const { return std::vector<unsigned char>(reinterpret_cast<unsigned char const*>(m_data), reinterpret_cast<unsigned char const*>(m_data) + m_count * sizeof(_T)); }
+	std::vector<byte> toBytes() const { return std::vector<byte>(reinterpret_cast<byte const*>(m_data), reinterpret_cast<byte const*>(m_data) + m_count * sizeof(_T)); }
 	std::string toString() const { return std::string((char const*)m_data, ((char const*)m_data) + m_count * sizeof(_T)); }
 
 	template <class _T2> explicit operator vector_ref<_T2>() const { assert(m_count * sizeof(_T) / sizeof(_T2) * sizeof(_T2) / sizeof(_T) == m_count); return vector_ref<_T2>(reinterpret_cast<_T2*>(m_data), m_count * sizeof(_T) / sizeof(_T2)); }

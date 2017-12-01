@@ -62,7 +62,7 @@ public:
 	enum ConstructFromHashType { AlignLeft, AlignRight, FailIfDifferent };
 
 	/// Construct an empty hash.
-	FixedHash() { m_data.fill(0); }
+	FixedHash() { m_data.fill(static_cast<byte>(0)); }
 
 	/// Construct from another hash, filling with zeroes or cropping as necessary.
 	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) { m_data.fill(0); unsigned c = std::min(M, N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; }
@@ -74,7 +74,7 @@ public:
 	explicit FixedHash(unsigned _u) { toBigEndian(_u, m_data); }
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(static_cast<byte>(0)); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
 
 	/// Explicitly construct, copying from a byte array.
 	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
@@ -160,7 +160,7 @@ public:
 	void randomize(Engine& _eng)
 	{
 		for (auto& i: m_data)
-			i = (uint8_t)std::uniform_int_distribution<uint16_t>(0, 255)(_eng);
+			i = (byte)std::uniform_int_distribution<uint16_t>(0, 255)(_eng);
 	}
 
 	/// @returns a random valued object.
@@ -197,7 +197,7 @@ public:
 		{
 			unsigned index = 0;
 			for (unsigned j = 0; j < c_bloomBytes; ++j, ++p)
-				index = (index << 8) | *p;
+				index = as_unsigned_char((index << 8) | *p);
 			index &= c_mask;
 			ret[M - 1 - index / 8] |= (1 << (index % 8));
 		}

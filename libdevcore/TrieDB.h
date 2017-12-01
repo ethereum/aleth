@@ -821,7 +821,7 @@ template <class DB> std::string GenericTrieDB<DB>::atAux(RLP const& _here, Nibbl
 	{
 		if (_key.size() == 0)
 			return _here[16].toString();
-		auto n = _here[_key[0]];
+		auto n = _here[as_unsigned_char(_key[0])];
 		if (n.isEmpty())
 			return std::string();
 		else
@@ -900,11 +900,11 @@ template <class DB> bytes GenericTrieDB<DB>::mergeAt(RLP const& _orig, h256 cons
 		// not exactly our node - delve to next level at the correct index.
 		byte n = _k[0];
 		RLPStream r(17);
-		for (byte i = 0; i < 17; ++i)
+		for (byte i = (byte)0; i < 17; i = i + 1)
 			if (i == n)
-				mergeAtAux(r, _orig[i], _k.mid(1), _v);
+				mergeAtAux(r, _orig[as_unsigned_char(i)], _k.mid(1), _v);
 			else
-				r.append(_orig[i]);
+				r.append(_orig[as_unsigned_char(i)]);
 		return r.out();
 	}
 
@@ -1008,9 +1008,9 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
 			// Kill the node.
 			killNode(_orig);
 
-			byte used = uniqueInUse(_orig, 16);
-			if (used != 255)
-				if (isTwoItemNode(_orig[used]))
+			byte used = uniqueInUse(_orig, (byte)16);
+			if (used != (byte)255)
+				if (isTwoItemNode(_orig[as_unsigned_char(used)]))
 				{
 					auto merged = merge(_orig, used);
 					return graft(RLP(merged));
@@ -1020,8 +1020,8 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
 			else
 			{
 				RLPStream r(17);
-				for (byte i = 0; i < 16; ++i)
-					r << _orig[i];
+				for (byte i = (byte)0; i < 16; i = i + 1)
+					r << _orig[as_unsigned_char(i)];
 				r << "";
 				return r.out();
 			}
@@ -1031,25 +1031,25 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
 			// not exactly our node - delve to next level at the correct index.
 			RLPStream r(17);
 			byte n = _k[0];
-			for (byte i = 0; i < 17; ++i)
+			for (byte i = (byte)0; i < 17; i = i + 1)
 				if (i == n)
-					if (!deleteAtAux(r, _orig[i], _k.mid(1)))	// bomb out if the key didn't turn up.
+					if (!deleteAtAux(r, _orig[as_unsigned_char(i)], _k.mid(1)))	// bomb out if the key didn't turn up.
 						return bytes();
 					else {}
 				else
-					r << _orig[i];
+					r << _orig[as_unsigned_char(i)];
 
 			// Kill the node.
 			killNode(_orig);
 
 			// check if we ended up leaving the node invalid.
 			RLP rlp(r.out());
-			byte used = uniqueInUse(rlp, 255);
-			if (used == 255)	// no - all ok.
+			byte used = uniqueInUse(rlp, (byte)255);
+			if (used == (byte)255)	// no - all ok.
 				return r.out();
 
 			// yes; merge
-			if (isTwoItemNode(rlp[used]))
+			if (isTwoItemNode(rlp[as_unsigned_char(used)]))
 			{
 				auto merged = merge(rlp, used);
 				return graft(RLP(merged));
@@ -1186,14 +1186,14 @@ template <class DB> bytes GenericTrieDB<DB>::merge(RLP const& _orig, byte _i)
 
 	assert(_orig.isList() && _orig.itemCount() == 17);
 	RLPStream s(2);
-	if (_i != 16)
+	if (_i != (byte)16)
 	{
-		assert(!_orig[_i].isEmpty());
+		assert(!_orig[as_unsigned_char(_i)].isEmpty());
 		s << hexPrefixEncode(bytesConstRef(&_i, 1), false, 1, 2, 0);
 	}
 	else
 		s << hexPrefixEncode(bytes(), true);
-	s << _orig[_i];
+	s << _orig[as_unsigned_char(_i)];
 	return s.out();
 }
 
@@ -1219,7 +1219,7 @@ template <class DB> bytes GenericTrieDB<DB>::branch(RLP const& _orig)
 	{
 		byte b = k[0];
 		for (unsigned i = 0; i < 16; ++i)
-			if (i == b)
+			if (i == as_unsigned_char(b))
 				if (isLeaf(_orig) || k.size() > 1)
 					streamNode(r, rlpList(hexPrefixEncode(k.mid(1), isLeaf(_orig)), _orig[1]));
 				else

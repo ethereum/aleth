@@ -47,7 +47,7 @@ bytes jsToBytes(string const& _s, OnFailed _f)
 bytes padded(bytes _b, unsigned _l)
 {
 	while (_b.size() < _l)
-		_b.insert(_b.begin(), 0);
+		_b.insert(_b.begin(), static_cast<byte>(0));
 	return asBytes(asString(_b).substr(_b.size() - max(_l, _l)));
 }
 

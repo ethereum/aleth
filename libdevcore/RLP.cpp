@@ -136,7 +136,7 @@ bool RLP::isInt() const
 	requireGood();
 	byte n = m_data[0];
 	if (n < c_rlpDataImmLenStart)
-		return !!n;
+		return !!as_unsigned_char(n);
 	else if (n == c_rlpDataImmLenStart)
 		return true;
 	else if (n <= c_rlpDataIndLenZero)
@@ -149,7 +149,7 @@ bool RLP::isInt() const
 	{
 		if (m_data.size() <= size_t(1 + n - c_rlpDataIndLenZero))
 			BOOST_THROW_EXCEPTION(BadRLP());
-		return m_data[1 + n - c_rlpDataIndLenZero] != 0;
+		return m_data[as_unsigned_char(1 + n - c_rlpDataIndLenZero)] != byte(0);
 	}
 	else
 		return false;
@@ -166,7 +166,7 @@ size_t RLP::length() const
 	if (n < c_rlpDataImmLenStart)
 		return 1;
 	else if (n <= c_rlpDataIndLenZero)
-		return n - c_rlpDataImmLenStart;
+		return as_unsigned_char(n - c_rlpDataImmLenStart);
 	else if (n < c_rlpListStart)
 	{
 		if (m_data.size() <= size_t(n - c_rlpDataIndLenZero))
@@ -174,24 +174,24 @@ size_t RLP::length() const
 		if (m_data.size() > 1)
 			if (m_data[1] == 0)
 				BOOST_THROW_EXCEPTION(BadRLP());
-		unsigned lengthSize = n - c_rlpDataIndLenZero;
+		unsigned lengthSize = as_unsigned_char(n - c_rlpDataIndLenZero);
 		if (lengthSize > sizeof(ret))
 			// We did not check, but would most probably not fit in our memory.
 			BOOST_THROW_EXCEPTION(UndersizeRLP());
 		// No leading zeroes.
-		if (!m_data[1])
+		if (!as_unsigned_char(m_data[1]))
 			BOOST_THROW_EXCEPTION(BadRLP());
 		for (unsigned i = 0; i < lengthSize; ++i)
-			ret = (ret << 8) | m_data[i + 1];
+			ret = as_unsigned_char((ret << 8) | m_data[i + 1]);
 		// Must be greater than the limit.
 		if (ret < c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes)
 			BOOST_THROW_EXCEPTION(BadRLP());
 	}
 	else if (n <= c_rlpListIndLenZero)
-		return n - c_rlpListStart;
+		return as_unsigned_char(n - c_rlpListStart);
 	else
 	{
-		unsigned lengthSize = n - c_rlpListIndLenZero;
+		unsigned lengthSize = as_unsigned_char(n - c_rlpListIndLenZero);
 		if (m_data.size() <= lengthSize)
 			BOOST_THROW_EXCEPTION(BadRLP());
 		if (m_data.size() > 1)
@@ -200,10 +200,10 @@ size_t RLP::length() const
 		if (lengthSize > sizeof(ret))
 			// We did not check, but would most probably not fit in our memory.
 			BOOST_THROW_EXCEPTION(UndersizeRLP());
-		if (!m_data[1])
+		if (!as_unsigned_char(m_data[1]))
 			BOOST_THROW_EXCEPTION(BadRLP());
 		for (unsigned i = 0; i < lengthSize; ++i)
-			ret = (ret << 8) | m_data[i + 1];
+			ret = as_unsigned_char((ret << 8) | m_data[i + 1]);
 		if (ret < 0x100 - c_rlpListStart - c_rlpMaxLengthBytes)
 			BOOST_THROW_EXCEPTION(BadRLP());
 	}
@@ -298,7 +298,7 @@ RLPStream& RLPStream::append(bytesConstRef _s, bool _compact)
 	size_t s = _s.size();
 	byte const* d = _s.data();
 	if (_compact)
-		for (size_t i = 0; i < _s.size() && !*d; ++i, --s, ++d) {}
+		for (size_t i = 0; i < _s.size() && !as_unsigned_char(*d); ++i, --s, ++d) {}
 
 	if (s == 1 && *d < c_rlpDataImmLenStart)
 		m_out.push_back(*d);
@@ -318,8 +318,10 @@ RLPStream& RLPStream::append(bigint _i)
 {
 	if (!_i)
 		m_out.push_back(c_rlpDataImmLenStart);
-	else if (_i < c_rlpDataImmLenStart)
-		m_out.push_back((byte)_i);
+	else if (_i < as_unsigned_char(c_rlpDataImmLenStart))
+	{
+		m_out.push_back((byte)(unsigned)_i);
+	}
 	else
 	{
 		unsigned br = bytesRequired(_i);
