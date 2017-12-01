@@ -92,7 +92,7 @@ private:
 template<class T>
 bool inArray(std::vector<T> const& _array, const T _val)
 {
-	for (auto const& obj : _array)
+	for (auto const& obj: _array)
 		if (obj == _val)
 			return true;
 	return false;

@@ -43,7 +43,8 @@ namespace dev {  namespace test {
 mObject getExpectSection(mValue const& _expect, eth::Network _network)
 {
 	mObject obj;
-	for (auto const& value : _expect.get_array())
+	BOOST_REQUIRE(_expect.type() == json_spirit::array_type);
+	for (auto const& value: _expect.get_array())
 	{
 		BOOST_REQUIRE(value.type() == json_spirit::obj_type);
 		obj = value.get_obj();
@@ -76,7 +77,7 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 	bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
 	mValue expectObj = _o.at("expect");
-	for (auto const network : test::getNetworks())
+	for (auto const network: test::getNetworks())
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(network)).createSealEngine());
 		bool onConstantinople = (network == eth::Network::ConstantinopleTest);
@@ -129,7 +130,7 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 	bh.setNumber(1);	//Seal engine below enables network rules from block 0
 	bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
-	for (auto const network : test::getNetworks())
+	for (auto const network: test::getNetworks())
 	{
 		string networkname = test::netIdToString(network);
 		BOOST_REQUIRE_MESSAGE(_o.count(networkname) > 0, testname + " Transaction test missing network results! (" + networkname + ")");
