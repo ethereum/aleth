@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include "Account.h"
+#include "GasPricer.h"
+#include "Transaction.h"
+#include "TransactionReceipt.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/OverlayDB.h>
 #include <libdevcore/RLP.h>
@@ -27,10 +31,6 @@
 #include <libevm/ExtVMFace.h>
 #include <array>
 #include <unordered_map>
-#include "Account.h"
-#include "GasPricer.h"
-#include "Transaction.h"
-#include "TransactionReceipt.h"
 
 namespace dev
 {
