@@ -202,7 +202,7 @@ class State
 	friend class dev::test::StateLoader;
 	friend class BlockChain;
 
-   public:
+public:
 	enum class CommitBehaviour
 	{
 		KeepEmptyAccounts,
@@ -391,7 +391,7 @@ class State
 
 	ChangeLog const& changeLog() const { return m_changeLog; }
 
-   private:
+private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
 	void removeEmptyAccounts();
 
