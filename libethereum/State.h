@@ -38,7 +38,7 @@ namespace test
 {
 class ImportTest;
 class StateLoader;
-}
+}  // namespace test
 
 namespace eth
 {
@@ -167,20 +167,17 @@ struct Change
 	/// Helper constructor especially for storage change log.
 	Change(Address const& _addr, u256 const& _key, u256 const& _value)
 	  : kind(Storage), address(_addr), value(_value), key(_key)
-	{
-	}
+	{}
 
 	/// Helper constructor for nonce change log.
 	Change(Address const& _addr, u256 const& _value)
 	  : kind(Nonce), address(_addr), value(_value)
-	{
-	}
+	{}
 
 	/// Helper constructor especially for new code change log.
 	Change(Address const& _addr, bytes const& _oldCode)
 	  : kind(Code), address(_addr), oldCode(_oldCode)
-	{
-	}
+	{}
 };
 
 using ChangeLog = std::vector<Change>;
@@ -216,8 +213,7 @@ class State
 	/// genesis block.
 	explicit State(u256 const& _accountStartNonce)
 	  : State(_accountStartNonce, OverlayDB(), BaseState::Empty)
-	{
-	}
+	{}
 
 	/// Basic state object from database.
 	/// Use the default when you already have a database and you just want to
@@ -450,5 +446,5 @@ State& createIntermediateState(State& o_s,
 
 template <class DB>
 AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);
-}
-}
+}  // namespace eth
+}  // namespace dev
