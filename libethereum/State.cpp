@@ -21,16 +21,16 @@
 
 #include "State.h"
 
-#include <libdevcore/Assertions.h>
-#include <libdevcore/TrieHash.h>
-#include <libevm/VMFactory.h>
-#include <boost/filesystem.hpp>
-#include <boost/timer.hpp>
 #include "Block.h"
 #include "BlockChain.h"
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "TransactionQueue.h"
+#include <libdevcore/Assertions.h>
+#include <libdevcore/TrieHash.h>
+#include <libevm/VMFactory.h>
+#include <boost/filesystem.hpp>
+#include <boost/timer.hpp>
 
 using namespace std;
 using namespace dev;
@@ -55,7 +55,7 @@ bool executeTransaction(Executive& _e,
 		_e.go(_onOp);
 	return _e.finalize();
 }
-}
+}  // namespace
 
 State::State(u256 const& _accountStartNonce,
 			 OverlayDB const& _db,
@@ -76,8 +76,7 @@ State::State(State const& _s)
 	m_nonExistingAccountsCache(_s.m_nonExistingAccountsCache),
 	m_touched(_s.m_touched),
 	m_accountStartNonce(_s.m_accountStartNonce)
-{
-}
+{}
 
 OverlayDB State::openDB(fs::path const& _basePath,
 						h256 const& _genesisHash,

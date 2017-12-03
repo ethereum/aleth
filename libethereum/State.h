@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include "Account.h"
+#include "GasPricer.h"
+#include "Transaction.h"
+#include "TransactionReceipt.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/OverlayDB.h>
 #include <libdevcore/RLP.h>
@@ -27,10 +31,6 @@
 #include <libevm/ExtVMFace.h>
 #include <array>
 #include <unordered_map>
-#include "Account.h"
-#include "GasPricer.h"
-#include "Transaction.h"
-#include "TransactionReceipt.h"
 
 namespace dev
 {
@@ -38,7 +38,7 @@ namespace test
 {
 class ImportTest;
 class StateLoader;
-}
+}  // namespace test
 
 namespace eth
 {
@@ -167,20 +167,17 @@ struct Change
 	/// Helper constructor especially for storage change log.
 	Change(Address const& _addr, u256 const& _key, u256 const& _value)
 	  : kind(Storage), address(_addr), value(_value), key(_key)
-	{
-	}
+	{}
 
 	/// Helper constructor for nonce change log.
 	Change(Address const& _addr, u256 const& _value)
 	  : kind(Nonce), address(_addr), value(_value)
-	{
-	}
+	{}
 
 	/// Helper constructor especially for new code change log.
 	Change(Address const& _addr, bytes const& _oldCode)
 	  : kind(Code), address(_addr), oldCode(_oldCode)
-	{
-	}
+	{}
 };
 
 using ChangeLog = std::vector<Change>;
@@ -205,7 +202,7 @@ class State
 	friend class dev::test::StateLoader;
 	friend class BlockChain;
 
-   public:
+public:
 	enum class CommitBehaviour
 	{
 		KeepEmptyAccounts,
@@ -216,8 +213,7 @@ class State
 	/// genesis block.
 	explicit State(u256 const& _accountStartNonce)
 	  : State(_accountStartNonce, OverlayDB(), BaseState::Empty)
-	{
-	}
+	{}
 
 	/// Basic state object from database.
 	/// Use the default when you already have a database and you just want to
@@ -395,7 +391,7 @@ class State
 
 	ChangeLog const& changeLog() const { return m_changeLog; }
 
-   private:
+private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
 	void removeEmptyAccounts();
 
@@ -417,22 +413,18 @@ class State
 	OverlayDB m_db;  ///< Our overlay for the state tree.
 	SecureTrieDB<Address, OverlayDB>
 		m_state;  ///< Our state tree, as an OverlayDB DB.
-	mutable std::unordered_map<Address, Account> m_cache;  ///< Our address
-														   ///< cache. This
-														   ///< stores the
-														   ///< states of each
-														   ///< address that has
-														   ///< (or at least
-														   ///< might have) been
-														   ///< changed.
-	mutable std::vector<Address> m_unchangedCacheEntries;  ///< Tracks entries
-														   ///< in m_cache that
-														   ///< can potentially
-														   ///< be purged if it
-														   ///< grows too large.
-	mutable std::set<Address> m_nonExistingAccountsCache;  ///< Tracks addresses
-														   ///< that are known
-														   ///< to not exist.
+
+	/// Our address cache. This stores the states of each address that has (or
+	/// at least might have) been changed.
+	mutable std::unordered_map<Address, Account> m_cache;
+
+	/// Tracks entries in m_cache that can potentially be purged if it grows too
+	/// large.
+	mutable std::vector<Address> m_unchangedCacheEntries;
+
+	/// Tracks addresses that are known to not exist.
+	mutable std::set<Address> m_nonExistingAccountsCache;
+
 	AddressHash m_touched;  ///< Tracks all addresses touched so far.
 
 	u256 m_accountStartNonce;
@@ -450,5 +442,5 @@ State& createIntermediateState(State& o_s,
 
 template <class DB>
 AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);
-}
-}
+}  // namespace eth
+}  // namespace dev
