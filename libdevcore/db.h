@@ -39,13 +39,6 @@ namespace db
 class Transaction
 {
 public:
-	// Noncopyable
-	Transaction(const Transaction&) = delete;
-	Transaction& operator=(const Transaction&) = delete;
-	// Movable
-	Transaction(Transaction&&) = default;
-	Transaction& operator=(Transaction&&) = default;
-
 	virtual ~Transaction() = default;
 
 	virtual void insert(Slice const& _key, Slice const& _value) = 0;
@@ -55,6 +48,15 @@ public:
 	virtual void rollback() = 0;
 	// TODO: Consider supporting nested transactions. Difficult to implement
 	// as RAII because parent cannot do rollback while child active.
+
+protected:
+	Transaction() = default;
+	// Noncopyable
+	Transaction(const Transaction&) = delete;
+	Transaction& operator=(const Transaction&) = delete;
+	// Movable
+	Transaction(Transaction&&) = default;
+	Transaction& operator=(Transaction&&) = default;
 };
 
 class DB

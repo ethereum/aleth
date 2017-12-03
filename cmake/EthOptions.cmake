@@ -57,11 +57,15 @@ macro(configure_project)
 	# of LevelDB
 	if (ROCKSDB)
 		add_definitions(-DETH_ROCKSDB)
+		hunter_add_package(rocksdb)
+		find_package(RocksDB CONFIG REQUIRED)
 	endif ()
 
 	# LMDB is an option to build Ethereum against lmdb instead of LevelDB
 	if (LMDB)
 		add_definitions(-DETH_LMDB)
+		hunter_add_package(lmdb)
+		find_package(liblmdb CONFIG REQUIRED)
 	endif ()
 
 	if (PARANOID)
