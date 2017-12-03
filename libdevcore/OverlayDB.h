@@ -35,10 +35,15 @@ struct DBDetail: public LogChannel { static const char* name() { return "DBDetai
 class OverlayDB: public MemoryDB
 {
 public:
-	OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
+	explicit OverlayDB(db::DB* _db = nullptr): m_db(_db, [](db::DB* db) {
+		clog(DBDetail) << "Closing state DB";
+		delete db;
+	})
+	{}
+
 	~OverlayDB();
 
-	ldb::DB* db() const { return m_db.get(); }
+	db::DB* db() const { return m_db.get(); }
 
 	void commit();
 	void rollback();
@@ -52,10 +57,7 @@ public:
 private:
 	using MemoryDB::clear;
 
-	std::shared_ptr<ldb::DB> m_db;
-
-	ldb::ReadOptions m_readOptions;
-	ldb::WriteOptions m_writeOptions;
+	std::shared_ptr<db::DB> m_db;
 };
 
 }

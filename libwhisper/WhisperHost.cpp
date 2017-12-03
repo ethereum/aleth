@@ -32,12 +32,12 @@ using namespace dev::shh;
 
 WhisperHost::WhisperHost(bool _storeMessagesInDB): Worker("shh"), m_storeMessagesInDB(_storeMessagesInDB)
 {
-	loadMessagesFromBD();
+	loadMessagesFromDB();
 }
 
 WhisperHost::~WhisperHost()
 {
-	saveMessagesToBD();
+	saveMessagesToDB();
 	terminate();
 }
 
@@ -235,7 +235,7 @@ bool WhisperHost::isWatched(Envelope const& _e) const
 	return false;
 }
 
-void WhisperHost::saveMessagesToBD()
+void WhisperHost::saveMessagesToDB()
 {
 	if (!m_storeMessagesInDB)
 		return;
@@ -252,19 +252,19 @@ void WhisperHost::saveMessagesToBD()
 	}
 	catch(FailedToOpenLevelDB const& ex)
 	{
-		cwarn << "Exception in WhisperHost::saveMessagesToBD() - failed to open DB:" << ex.what();
+		cwarn << "Exception in WhisperHost::saveMessagesToDB() - failed to open DB:" << ex.what();
 	}
 	catch(Exception const& ex)
 	{
-		cwarn << "Exception in WhisperHost::saveMessagesToBD():" << ex.what();
+		cwarn << "Exception in WhisperHost::saveMessagesToDB():" << ex.what();
 	}
 	catch(...)
 	{
-		cwarn << "Unknown Exception in WhisperHost::saveMessagesToBD()";
+		cwarn << "Unknown Exception in WhisperHost::saveMessagesToDB()";
 	}
 }
 
-void WhisperHost::loadMessagesFromBD()
+void WhisperHost::loadMessagesFromDB()
 {
 	if (!m_storeMessagesInDB)
 		return;
@@ -281,10 +281,10 @@ void WhisperHost::loadMessagesFromBD()
 	}
 	catch(Exception const& ex)
 	{
-		cwarn << "Exception in WhisperHost::loadMessagesFromBD():" << ex.what();
+		cwarn << "Exception in WhisperHost::loadMessagesFromDB():" << ex.what();
 	}
 	catch(...)
 	{
-		cwarn << "Unknown Exception in WhisperHost::loadMessagesFromBD()";
+		cwarn << "Unknown Exception in WhisperHost::loadMessagesFromDB()";
 	}
 }

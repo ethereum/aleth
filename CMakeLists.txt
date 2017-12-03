@@ -110,6 +110,11 @@ find_package(Snappy CONFIG REQUIRED)
 hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
 
+if(LMDB)
+	hunter_add_package(lmdb)
+	find_package(liblmdb CONFIG REQUIRED)
+endif()
+
 include(ProjectJsonRpcCpp)
 include(ProjectSecp256k1)
 include(ProjectLibFF)

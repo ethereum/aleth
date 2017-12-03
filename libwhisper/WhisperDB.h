@@ -31,18 +31,18 @@ namespace dev
 namespace shh
 {
 
-struct WrongTypeLevelDB: virtual Exception {};
-struct FailedToOpenLevelDB: virtual Exception { FailedToOpenLevelDB(std::string const& _message): Exception(_message) {} };
-struct FailedInsertInLevelDB: virtual Exception { FailedInsertInLevelDB(std::string const& _message): Exception(_message) {} };
-struct FailedLookupInLevelDB: virtual Exception { FailedLookupInLevelDB(std::string const& _message): Exception(_message) {} };
-struct FailedDeleteInLevelDB: virtual Exception { FailedDeleteInLevelDB(std::string const& _message): Exception(_message) {} };
+using WrongTypeLevelDB = dev::db::WrongTypeDB;
+using FailedToOpenLevelDB = dev::db::FailedToOpenDB;
+using FailedInsertInLevelDB = dev::db::FailedInsertInDB;
+using FailedLookupInLevelDB = dev::db::FailedLookupInDB;
+using FailedDeleteInLevelDB = dev::db::FailedDeleteInDB;
 
 class WhisperHost;
 
 class WhisperDB
 {
 public:
-	WhisperDB(std::string const& _type);
+	explicit WhisperDB(std::string const& _type);
 	virtual ~WhisperDB() {}
 	std::string lookup(dev::h256 const& _key) const;
 	void insert(dev::h256 const& _key, std::string const& _value);
@@ -50,9 +50,16 @@ public:
 	void kill(dev::h256 const& _key);
 
 protected:
+#if ETH_LMDB
+	void insert(dev::h256 const& _key, void* _valueData, size_t _valueSize);
+
+	std::unique_ptr<MDB_env, &mdb_env_close> m_env;
+	MDB_dbi m_db;
+#else
 	ldb::ReadOptions m_readOptions;
 	ldb::WriteOptions m_writeOptions;
 	std::unique_ptr<ldb::DB> m_db;
+#endif
 };
 
 class WhisperMessagesDB: public WhisperDB

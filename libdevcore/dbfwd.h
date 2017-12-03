@@ -17,14 +17,14 @@
 
 #pragma once
 
-#if ETH_ROCKSDB
-namespace rocksdb {
-    class DB;
+#include "vector_ref.h"
+
+namespace dev
+{
+namespace db
+{
+using Slice = vector_ref<char const>;
+class Transaction;
+class DB;
 }
-namespace ldb = rocksdb;
-#else
-namespace leveldb {
-    class DB;
 }
-namespace ldb = leveldb;
-#endif

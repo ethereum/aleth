@@ -73,8 +73,8 @@ private:
 	virtual void onStarting() override { startWorking(); }
 	virtual void onStopping() override { stopWorking(); }
 	void streamMessage(h256 _m, RLPStream& _s) const;
-	void saveMessagesToBD();
-	void loadMessagesFromBD();
+	void saveMessagesToDB();
+	void loadMessagesFromDB();
 
 	mutable dev::SharedMutex x_messages;
 	std::map<h256, Envelope> m_messages;
