@@ -36,11 +36,13 @@ class RocksDB: public DB
 public:
 	static rocksdb::ReadOptions defaultReadOptions();
 	static rocksdb::WriteOptions defaultWriteOptions();
+	static rocksdb::Options defaultDBOptions();
 
 	explicit RocksDB(
 		std::string const& _path,
 		rocksdb::ReadOptions _readOptions = defaultReadOptions(),
-		rocksdb::WriteOptions _writeOptions = defaultWriteOptions()
+		rocksdb::WriteOptions _writeOptions = defaultWriteOptions(),
+		rocksdb::Options _dbOptions = defaultDBOptions()
 	);
 
 	std::string lookup(Slice const& _key) const override;
@@ -50,7 +52,7 @@ public:
 	std::unique_ptr<Transaction> begin() override;
 
 private:
-	rocksdb::DB m_db;
+	std::unique_ptr<rocksdb::DB> m_db;
 	rocksdb::ReadOptions m_readOptions;
 	rocksdb::WriteOptions m_writeOptions;
 };

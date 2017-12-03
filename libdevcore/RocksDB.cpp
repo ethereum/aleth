@@ -20,6 +20,7 @@
  */
 
 #include "RocksDB.h"
+#include "Assertions.h"
 
 namespace dev
 {
@@ -31,7 +32,7 @@ namespace
 class RocksDBTransaction: public Transaction
 {
 public:
-	RocksDBTransaction(rocksdb::DB* _db, rocksdb::WriteOptions _writeOptions): m_db(db), m_writeOptions(std::move(_writeOptions)), m_writeBatch()
+	RocksDBTransaction(rocksdb::DB* _db, rocksdb::WriteOptions _writeOptions): m_db(_db), m_writeOptions(std::move(_writeOptions))
 	{
 		m_writeBatch.SetSavePoint();
 	}
@@ -46,7 +47,6 @@ public:
 private:
 	rocksdb::DB* m_db;
 	rocksdb::WriteOptions m_writeOptions;
-	rocksdb::ColumnFamilyHandle* m_columnFamily;
 	rocksdb::WriteBatch m_writeBatch;
 };
 
@@ -60,7 +60,6 @@ RocksDBTransaction::~RocksDBTransaction()
 void RocksDBTransaction::insert(Slice const& _key, Slice const& _value)
 {
 	const auto status = m_writeBatch.Put(
-		m_columnFamily,
 		rocksdb::Slice(_key.data(), _key.size()),
 		rocksdb::Slice(_value.data(), _value.size())
 	);
@@ -71,10 +70,7 @@ void RocksDBTransaction::insert(Slice const& _key, Slice const& _value)
 
 void RocksDBTransaction::kill(Slice const& _key)
 {
-	const auto status = m_writeBatch.Delete(
-		m_columnFamily,
-		rocksdb::Slice(_key.data(), _key.size())
-	)
+	const auto status = m_writeBatch.Delete(rocksdb::Slice(_key.data(), _key.size()));
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedDeleteInDB(status.ToString()));
 	}
@@ -87,7 +83,7 @@ void RocksDBTransaction::commit()
 		FailedCommitInDB,
 		"cannot commit, transaction already committed or rolled back"
 	);
-	const auto status = m_db->Commit(m_writeOptions, m_writeBatch);
+	const auto status = m_db->Write(m_writeOptions, &m_writeBatch);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedCommitInDB(status.ToString()));
 	}
@@ -113,7 +109,6 @@ rocksdb::ReadOptions RocksDB::defaultReadOptions()
 {
 	rocksdb::ReadOptions readOptions;
 	readOptions.verify_checksums = true;
-	readOptions.create_if_missing = true;
 	return readOptions;
 }
 
@@ -122,11 +117,34 @@ rocksdb::WriteOptions RocksDB::defaultWriteOptions()
 	return rocksdb::WriteOptions();
 }
 
+rocksdb::Options RocksDB::defaultDBOptions()
+{
+	rocksdb::Options options;
+	options.create_if_missing = true;
+	options.max_open_files = 256;
+	return options;
+}
+
+RocksDB::RocksDB(
+	std::string const& _path,
+	rocksdb::ReadOptions _readOptions,
+	rocksdb::WriteOptions _writeOptions,
+	rocksdb::Options _dbOptions
+): m_db(nullptr), m_readOptions(std::move(_readOptions)), m_writeOptions(std::move(_writeOptions))
+{
+	auto db = static_cast<rocksdb::DB*>(nullptr);
+	const auto status = rocksdb::DB::Open(_dbOptions, _path, &db);
+	if (!status.ok()) {
+		BOOST_THROW_EXCEPTION(FailedToOpenDB(status.ToString()));
+	}
+	m_db.reset(db);
+}
+
 std::string RocksDB::lookup(Slice const& _key) const
 {
 	const rocksdb::Slice key(_key.data(), _key.size());
 	std::string value;
-	const auto status = m_db.Get(m_readOptions, key, &value);
+	const auto status = m_db->Get(m_readOptions, key, &value);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedLookupInDB(status.ToString()));
 	}
@@ -135,11 +153,12 @@ std::string RocksDB::lookup(Slice const& _key) const
 
 bool RocksDB::exists(Slice const& _key) const
 {
-	if (!m_db.KeyMayExist(m_readOptions)) {
+	std::string value;
+	const rocksdb::Slice key(_key.data(), _key.size());
+	if (!m_db->KeyMayExist(m_readOptions, key, &value, nullptr)) {
 		return false;
 	}
-	std::string value;
-	const auto status = m_db.Get(m_readOptions, key, &value);
+	const auto status = m_db->Get(m_readOptions, key, &value);
 	return status.ok();
 }
 
@@ -147,7 +166,7 @@ void RocksDB::insert(Slice const& _key, Slice const& _value)
 {
 	const rocksdb::Slice key(_key.data(), _key.size());
 	const rocksdb::Slice value(_value.data(), _value.size());
-	const auto status = m_db.Put(m_writeOptions, key, value);
+	const auto status = m_db->Put(m_writeOptions, key, value);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedInsertInDB(status.ToString()));
 	}
@@ -156,7 +175,7 @@ void RocksDB::insert(Slice const& _key, Slice const& _value)
 void RocksDB::kill(Slice const& _key)
 {
 	const rocksdb::Slice key(_key.data(), _key.size());
-	const auto status = m_db.Delete(m_writeOptions, key);
+	const auto status = m_db->Delete(m_writeOptions, key);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedDeleteInDB(status.ToString()));
 	}
@@ -164,7 +183,7 @@ void RocksDB::kill(Slice const& _key)
 
 std::unique_ptr<Transaction> RocksDB::begin()
 {
-	return std::unique_ptr<Transaction>(new RocksDBTransaction(m_db, m_writeOptions));
+	return std::unique_ptr<Transaction>(new RocksDBTransaction(m_db.get(), m_writeOptions));
 }
 
 }
