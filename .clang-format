@@ -23,17 +23,20 @@ BinPackParameters: false
 BraceWrapping:
   AfterClass:      false
   AfterControlStatement: false
-  AfterEnum:       false
-  AfterFunction:   false
-  AfterNamespace:  false
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
   AfterObjCDeclaration: false
-  AfterStruct:     false
-  AfterUnion:      false
-  BeforeCatch:     false
-  BeforeElse:      false
+  AfterStruct:     true
+  AfterUnion:      true
+  BeforeCatch:     true
+  BeforeElse:      true
   IndentBraces:    false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
 BreakBeforeBinaryOperators: None
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: false
 ColumnLimit:     80
@@ -45,15 +48,25 @@ Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
+IncludeBlocks: Merge
 IncludeCategories:
-  - Regex:           '^<.*\.h>'
+  - Regex:           '^<libethereum/'
     Priority:        1
-  - Regex:           '^<.*'
+  - Regex:           '^<libethcore/'
     Priority:        2
-  - Regex:           '.*'
+  - Regex:           '^<libdevcrypt/'
     Priority:        3
+  - Regex:           '^<libdevcore/'
+    Priority:        4
+  - Regex:           '^<boost/'
+    Priority:        5
+  - Regex:           '.*'
+    Priority:        6
+IncludeIsMainRegex: '(_test|Test)?$'
 IndentCaseLabels: false
+IndentPPDirectives: false
 IndentWidth:     4
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
@@ -65,14 +78,15 @@ ObjCBlockIndentWidth: 2
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: false
 PenaltyBreakBeforeFirstCallParameter: 1
-PenaltyBreakComment: 300
-PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 1000
-PenaltyExcessCharacter: 1000000
-PenaltyReturnTypeOnItsOwnLine: 200
+PenaltyBreakComment: 100
+PenaltyBreakFirstLessLess: 100
+PenaltyBreakString: 100
+PenaltyExcessCharacter: 200
+PenaltyReturnTypeOnItsOwnLine: 100
 PointerAlignment: Left
 ReflowComments:  true
 SortIncludes:    true
+SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
