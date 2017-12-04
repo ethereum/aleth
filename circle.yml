@@ -56,10 +56,13 @@ defaults:
 
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
-  store-eth: &store-eth
+  store-eth: &store-artifacts
     store_artifacts:
-      path: build/eth/eth
+      path: ~/build/eth/eth
       destination: eth
+    store_artifacts:
+      path: ~/build/test/testeth
+      destination: testeth
 
   save-deps-cache: &save-deps-cache
     cache-save:
@@ -102,7 +105,7 @@ defaults:
     - *upload-hunter-cache
     - *build
     - *save-deps-cache
-    - *store-eth
+    - *store-artifacts
     - *restore-ethash-dag
     - *test
     - *save-ethash-dag
@@ -164,7 +167,7 @@ jobs:
       - *upload-hunter-cache
       - *build
       - *save-deps-cache
-      - *store-eth
+      - *store-artifacts
       - *restore-ethash-dag
       - *test
       - *save-ethash-dag
