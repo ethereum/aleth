@@ -290,11 +290,7 @@ int main(int argc, char** argv)
 	Ethash::init();
 	NoProof::init();
 
-#if ETH_DEBUG
-	g_logVerbosity = 4;
-#else
 	g_logVerbosity = 1;
-#endif
 
 	/// Operating mode.
 	OperationMode mode = OperationMode::Node;
