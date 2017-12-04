@@ -49,5 +49,5 @@ function(create_build_info)
 		-DETH_FATDB=${FATDB10}
 		-P ${ETH_SCRIPTS_DIR}/buildinfo.cmake
 		)
-	include_directories(BEFORE ${PROJECT_BINARY_DIR})
+	include_directories("${PROJECT_BINARY_DIR}/include")
 endfunction()

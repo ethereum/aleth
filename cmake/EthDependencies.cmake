@@ -79,5 +79,3 @@ if (UNIX AND NOT APPLE)
 else()
 	set(Boost_USE_STATIC_LIBS ON)
 endif()
-
-include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")
