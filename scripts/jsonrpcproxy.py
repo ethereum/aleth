@@ -19,6 +19,11 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from os import path
 from urllib.parse import urlparse
 import socket
+import sys
+
+if sys.platform == 'win32':
+    import win32file
+    import pywintypes
 
 
 VERSION = '0.1.0a1'
@@ -30,6 +35,40 @@ Version: {}
 Proxy: {}
 Backend: {}
 """
+
+
+class NamedPipe(object):
+    """Windows named pipe simulating socket."""
+
+    def __init__(self, ipc_path):
+        try:
+            self.handle = win32file.CreateFile(
+                ipc_path, win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+                0, None, win32file.OPEN_EXISTING, 0, None)
+        except pywintypes.error as err:
+            raise IOError(err)
+
+    def recv(self, max_length):
+        (err, data) = win32file.ReadFile(self.handle, max_length)
+        if err:
+            raise IOError(err)
+        return data
+
+    def sendall(self, data):
+        return win32file.WriteFile(self.handle, data)
+
+    def close(self):
+        self.handle.close()
+
+
+def get_ipc_socket(ipc_path, timeout=1):
+    if sys.platform == 'win32':
+        return NamedPipe(ipc_path)
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.connect(ipc_path)
+    sock.settimeout(timeout)
+    return sock
 
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
@@ -62,20 +101,16 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
 class Proxy(HTTPServer):
 
-    def __init__(self, proxy_url, backend_url):
+    def __init__(self, proxy_url, backend_path):
 
         proxy_url = urlparse(proxy_url)
         assert proxy_url.scheme == 'http'
         proxy_address = proxy_url.hostname, proxy_url.port
 
-        backend_url = urlparse(backend_url)
-        assert backend_url.scheme == 'unix'
-
         super(Proxy, self).__init__(proxy_address, HTTPRequestHandler)
 
-        self.backend_address = path.expanduser(backend_url.path)
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.connect(self.backend_address)
+        self.backend_address = path.expanduser(backend_path)
+        self.sock = get_ipc_socket(self.backend_address)
 
     def process(self, request):
         self.sock.sendall(request)
@@ -98,14 +133,22 @@ def run():
         description='HTTP Proxy for JSON-RPC servers',
         formatter_class=ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('backend_url', nargs='?',
-                        default='unix:~/.ethereum/geth.ipc',
-                        help="URL to a backend RPC sever")
+
+    if sys.platform == 'win32':
+        default_backend_path = r'\\.\pipe\geth.ipc'
+        backend_path_help = "Named Pipe of a backend RPC server"
+    else:
+        default_backend_path = '~/.ethereum/geth.ipc'
+        backend_path_help = "Unix Socket of a backend RPC server"
+
+    parser.add_argument('backend_path', nargs='?',
+                        default=default_backend_path,
+                        help=backend_path_help)
     parser.add_argument('proxy_url', nargs='?',
                         default='http://127.0.0.1:8545',
                         help="URL for this proxy server")
     args = parser.parse_args()
-    proxy = Proxy(args.proxy_url, args.backend_url)
+    proxy = Proxy(args.proxy_url, args.backend_path)
     proxy.serve_forever()
 
 
