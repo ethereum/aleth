@@ -12,11 +12,6 @@ jsonrpcstub_create(web3jsonrpc debug.json
 	DebugClient ${CMAKE_CURRENT_BINARY_DIR} DebugClient
 )
 
-jsonrpcstub_create(web3jsonrpc whisper.json
-	dev::rpc::WhisperFace ${CMAKE_CURRENT_SOURCE_DIR} WhisperFace
-	WhisperClient ${CMAKE_CURRENT_BINARY_DIR} WhisperClient
-)
-
 jsonrpcstub_create(web3jsonrpc net.json
 	dev::rpc::NetFace ${CMAKE_CURRENT_SOURCE_DIR} NetFace
 	NetClient ${CMAKE_CURRENT_BINARY_DIR} NetClient
@@ -47,4 +42,4 @@ jsonrpcstub_create(web3jsonrpc test.json
 	TestClient ${CMAKE_CURRENT_BINARY_DIR} TestClient
 )
 
-target_link_libraries(web3jsonrpc ethashseal webthree whisper JsonRpcCpp::Server)
+target_link_libraries(web3jsonrpc ethashseal webthree JsonRpcCpp::Server)

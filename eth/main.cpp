@@ -50,7 +50,6 @@
 #include <libweb3jsonrpc/SafeHttpServer.h>
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/IpcServer.h>
-#include <libweb3jsonrpc/Whisper.h>
 #include <libweb3jsonrpc/Net.h>
 #include <libweb3jsonrpc/Web3.h>
 #include <libweb3jsonrpc/AdminNet.h>
@@ -1154,7 +1153,7 @@ int main(int argc, char** argv)
 	if (jsonRPCURL > -1 || ipc)
 	{
 		using FullServer = ModularServer<
-			rpc::EthFace, rpc::WhisperFace,
+			rpc::EthFace,
 			rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
 			rpc::AdminEthFace, rpc::AdminNetFace,
 			rpc::DebugFace, rpc::TestFace
@@ -1180,7 +1179,7 @@ int main(int argc, char** argv)
 			}
 
 			jsonrpcHttpServer.reset(new FullServer(
-				ethFace, new rpc::Whisper(web3, {}),
+				ethFace,
 				new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), personal,
 				adminEth, adminNet,
 				new rpc::Debug(*web3.ethereum()),
@@ -1194,7 +1193,7 @@ int main(int argc, char** argv)
 		if (ipc)
 		{
 			jsonrpcIpcServer.reset(new FullServer(
-				ethFace, new rpc::Whisper(web3, {}), new rpc::Net(web3),
+				ethFace, new rpc::Net(web3),
 				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum()),
 				new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
 				new rpc::AdminNet(web3, *sessionManager.get()),

@@ -70,9 +70,6 @@ WebThreeDirect::WebThreeDirect(
 		bps.back() = bps.back().substr(0, 3);
 		m_ethereum->setExtraData(rlpList(0, string(dev::Version) + "++" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 4) + (ETH_CLEAN_REPO ? "-" : "*") + string(DEV_QUOTED(ETH_BUILD_TYPE)).substr(0, 1) + boost::join(bps, "/")));
 	}
-
-	if (_interfaces.count("shh"))
-		m_whisper = m_net.registerCapability(make_shared<WhisperHost>());
 }
 
 WebThreeDirect::~WebThreeDirect()
