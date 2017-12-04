@@ -120,15 +120,9 @@ if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_C
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
 endif ()
 
-if (COVERAGE)
-	include(ProjectLcov)
-	set(CMAKE_CXX_FLAGS "-g --coverage ${CMAKE_CXX_FLAGS}")
-	set(CMAKE_C_FLAGS "-g --coverage ${CMAKE_C_FLAGS}")
+option(COVERAGE "Build with code coverage support" OFF)
+if(COVERAGE)
+	add_compile_options(-g --coverage)
 	set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
 	set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
-	add_custom_target(coverage.data
-		COMMAND ${LCOV_TOOL} -o ${CMAKE_BINARY_DIR}/coverage.data -c -d ${CMAKE_BINARY_DIR}
-		COMMAND ${LCOV_TOOL} -o ${CMAKE_BINARY_DIR}/coverage.data -r ${CMAKE_BINARY_DIR}/coverage.data '/usr*' '${CMAKE_SOURCE_DIR}/deps/*'
-	)
-	add_dependencies(coverage.data lcov)
-endif ()
+endif()
