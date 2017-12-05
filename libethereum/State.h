@@ -411,8 +411,8 @@ private:
     void createAccount(Address const& _address, Account const&& _account);
 
     OverlayDB m_db;  ///< Our overlay for the state tree.
-    SecureTrieDB<Address, OverlayDB>
-        m_state;  ///< Our state tree, as an OverlayDB DB.
+    SecureTrieDB<Address, OverlayDB> m_state;  ///< Our state tree, as an
+                                               ///< OverlayDB DB.
 
     /// Our address cache. This stores the states of each address that has (or
     /// at least might have) been changed.
