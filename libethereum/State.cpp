@@ -531,11 +531,21 @@ void State::rollback(size_t _savepoint)
 		case Change::Storage:
 			account.setStorage(change.key, change.value);
 			break;
-		case Change::StorageRoot: account.setStorageRoot(change.value); break;
-		case Change::Balance: account.addBalance(0 - change.value); break;
-		case Change::Nonce: account.setNonce(change.value); break;
-		case Change::Create: m_cache.erase(change.address); break;
-		case Change::Code: account.setCode(std::move(change.oldCode)); break;
+		case Change::StorageRoot:
+			account.setStorageRoot(change.value);
+			break;
+		case Change::Balance:
+			account.addBalance(0 - change.value);
+			break;
+		case Change::Nonce:
+			account.setNonce(change.value);
+			break;
+		case Change::Create:
+			m_cache.erase(change.address);
+			break;
+		case Change::Code:
+			account.setCode(std::move(change.oldCode));
+			break;
 		case Change::Touch:
 			account.untouch();
 			m_unchangedCacheEntries.emplace_back(change.address);
@@ -570,7 +580,9 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(
 	bool removeEmptyAccounts = false;
 	switch (_p)
 	{
-	case Permanence::Reverted: m_cache.clear(); break;
+	case Permanence::Reverted:
+		m_cache.clear();
+		break;
 	case Permanence::Committed:
 		removeEmptyAccounts =
 			_envInfo.number() >= _sealEngine.chainParams().EIP158ForkBlock;
@@ -578,7 +590,8 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(
 				   State::CommitBehaviour::RemoveEmptyAccounts :
 				   State::CommitBehaviour::KeepEmptyAccounts);
 		break;
-	case Permanence::Uncommitted: break;
+	case Permanence::Uncommitted:
+		break;
 	}
 
 	TransactionReceipt const receipt =
