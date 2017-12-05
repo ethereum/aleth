@@ -23,8 +23,8 @@ BinPackParameters: false
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterClass:      false
-  AfterControlStatement: false
+  AfterClass:      true
+  AfterControlStatement: true
   AfterEnum:       true
   AfterFunction:   true
   AfterNamespace:  true
@@ -54,21 +54,25 @@ FixNamespaceComments: false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 IncludeBlocks: Merge
 IncludeCategories:
-  - Regex:           '^<libethereum/'
+  - Regex:           '^"'
     Priority:        1
-  - Regex:           '^<libethcore/'
+  - Regex:           '^<libethereum/'
     Priority:        2
-  - Regex:           '^<libdevcrypt/'
+  - Regex:           '^<libethcore/'
     Priority:        3
-  - Regex:           '^<libdevcore/'
+  - Regex:           '^<libe'
     Priority:        4
-  - Regex:           '^<boost/'
+  - Regex:           '^<libdevcrypt/'
     Priority:        5
-  - Regex:           '.*'
+  - Regex:           '^<libdevcore/'
     Priority:        6
+  - Regex:           '^<boost/'
+    Priority:        7
+  - Regex:           '<[^/]*>'
+    Priority:        8
 IncludeIsMainRegex: '(_test|Test)?$'
 IndentCaseLabels: false
-IndentPPDirectives: false
+IndentPPDirectives: None
 IndentWidth:     4
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false

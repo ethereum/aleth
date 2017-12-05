@@ -21,14 +21,14 @@
 #include "GasPricer.h"
 #include "Transaction.h"
 #include "TransactionReceipt.h"
+#include <libethereum/CodeSizeCache.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/Exceptions.h>
+#include <libevm/ExtVMFace.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/OverlayDB.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieDB.h>
-#include <libethcore/BlockHeader.h>
-#include <libethcore/Exceptions.h>
-#include <libethereum/CodeSizeCache.h>
-#include <libevm/ExtVMFace.h>
 #include <array>
 #include <unordered_map>
 
@@ -256,12 +256,12 @@ public:
 
 	/// Execute a given transaction.
 	/// This will change the state accordingly.
-	std::pair<ExecutionResult, TransactionReceipt> execute(
-		EnvInfo const& _envInfo,
-		SealEngineFace const& _sealEngine,
-		Transaction const& _t,
-		Permanence _p = Permanence::Committed,
-		OnOpFunc const& _onOp = OnOpFunc());
+	std::pair<ExecutionResult, TransactionReceipt>
+	execute(EnvInfo const& _envInfo,
+			SealEngineFace const& _sealEngine,
+			Transaction const& _t,
+			Permanence _p = Permanence::Committed,
+			OnOpFunc const& _onOp = OnOpFunc());
 
 	/// Execute @a _txCount transactions of a given block.
 	/// This will change the state accordingly.
@@ -338,8 +338,8 @@ public:
 	/// @note This is expensive. Don't use it unless you need to.
 	/// @returns map of hashed keys to key-value pairs or empty map if no
 	/// account exists at that address.
-	std::map<h256, std::pair<u256, u256>> storage(
-		Address const& _contract) const;
+	std::map<h256, std::pair<u256, u256>>
+	storage(Address const& _contract) const;
 
 	/// Get the code of an account.
 	/// @returns bytes() if no account exists at that address.
@@ -411,8 +411,8 @@ private:
 	void createAccount(Address const& _address, Account const&& _account);
 
 	OverlayDB m_db;  ///< Our overlay for the state tree.
-	SecureTrieDB<Address, OverlayDB>
-		m_state;  ///< Our state tree, as an OverlayDB DB.
+	SecureTrieDB<Address, OverlayDB> m_state;  ///< Our state tree, as an
+											   ///< OverlayDB DB.
 
 	/// Our address cache. This stores the states of each address that has (or
 	/// at least might have) been changed.
