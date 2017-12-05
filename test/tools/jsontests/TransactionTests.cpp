@@ -58,7 +58,7 @@ mObject getExpectSection(mValue const& _expect, eth::Network _network)
 		if (test::inArray(networks, test::netIdToString(_network)) || test::inArray(networks, string("ALL")))
 			objVector.push_back(obj);
 	}
-	BOOST_REQUIRE_MESSAGE(objVector.size() == 1,"Expect network should occur once in expect section of transaction test filler! (" + test::netIdToString(_network) + ")");
+	BOOST_REQUIRE_MESSAGE(objVector.size() == 1, "Expect network should occur once in expect section of transaction test filler! (" + test::netIdToString(_network) + ")");
 	return objVector.at(0);
 }
 
@@ -104,7 +104,7 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 			resultObject["hash"] = toString(txFromFields.sha3());
 			out[test::netIdToString(network)] = resultObject;
 		}
-		catch(Exception const& _e)
+		catch (Exception const& _e)
 		{
 			//Transaction is InValid
 			cnote << "Transaction Exception: " << diagnostic_information(_e);
@@ -123,7 +123,6 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 void TestTransactionTest(json_spirit::mObject const& _o)
 {
 	BOOST_REQUIRE(_o.count("rlp") > 0);
-	Transaction txFromRlp;
 	string const& testname = TestOutputHelper::get().testName();
 
 	// Theoretical block for transaction check
@@ -133,6 +132,7 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 
 	for (auto const network: test::getNetworks())
 	{
+		Transaction txFromRlp;
 		string networkname = test::netIdToString(network);
 		BOOST_REQUIRE_MESSAGE(_o.count(networkname) > 0, testname + " Transaction test missing network results! (" + networkname + ")");
 		BOOST_REQUIRE(_o.at(networkname).type() == json_spirit::obj_type);
@@ -150,24 +150,24 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 			if (!(txFromRlp.signature().isValid() || onConstantinopleAndZeroSig))
 				BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid (" + networkname + ")") );
 		}
-		catch(Exception const& _e)
+		catch (Exception const& _e)
 		{
 			cnote << testname;
 			cnote << "Transaction Exception: " << diagnostic_information(_e);
 			BOOST_CHECK_MESSAGE(obj.count("hash") == 0,
-			 testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
+				testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
 			continue;
 		}
-		catch(...)
+		catch (...)
 		{
 			BOOST_CHECK_MESSAGE(obj.count("hash") == 0,
-			 testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
+				testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
 			continue;
 		}
 
 		BOOST_REQUIRE(obj.count("sender") > 0);
-		Address addressReaded = Address(obj["sender"].get_str());
-		BOOST_CHECK_MESSAGE(txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address! (" + networkname + ")");
+		Address addressExpected = Address(obj["sender"].get_str());
+		BOOST_CHECK_MESSAGE(txFromRlp.sender() == addressExpected, testname + "Signature address of sender does not match given sender address! (" + networkname + ")");
 
 		BOOST_REQUIRE_MESSAGE(obj.count("hash") > 0, testname + "Expected a valid transaction! (" + networkname + ")");
 		h256 txSha3Expected = h256(obj["hash"].get_str());
