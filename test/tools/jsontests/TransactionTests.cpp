@@ -85,6 +85,7 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 
 		// Test networks has forkblocks set to 0 if rules are enabled
 		bool onConstantinople = (bh.number() >= params.constantinopleForkBlock);
+
 		out[test::netIdToString(network)] = mObject();
 		mObject expectSection = getExpectSection(expectObj, network);
 		try
@@ -103,7 +104,6 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 
 			mObject resultObject;
 			resultObject["sender"] = toString(txFromFields.sender());
-			//resultObject["transaction"] = ImportTest::makeAllFieldsHex(tObj);
 			resultObject["hash"] = toString(txFromFields.sha3());
 			out[test::netIdToString(network)] = resultObject;
 		}
@@ -139,20 +139,16 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 		string networkname = test::netIdToString(network);
 		BOOST_REQUIRE_MESSAGE(_o.count(networkname) > 0, testname + " Transaction test missing network results! (" + networkname + ")");
 		BOOST_REQUIRE(_o.at(networkname).type() == json_spirit::obj_type);
+		ChainParams params(genesisInfo(network));
+		unique_ptr<SealEngineFace> se(params.createSealEngine());
+		bool onConstantinople = (bh.number() >= params.constantinopleForkBlock);
 		mObject obj = _o.at(networkname).get_obj();
 		try
 		{
 			bytes stream = importByteArray(_o.at("rlp").get_str());
 			RLP rlp(stream);
-
 			txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
-			ChainParams params(genesisInfo(network));
-
-			// Test networks has forkblocks set to 0 if rules are enabled
-			bool onConstantinople = (bh.number() >= params.constantinopleForkBlock);
 			bool onConstantinopleAndZeroSig = onConstantinople && txFromRlp.hasZeroSignature();
-			unique_ptr<SealEngineFace> se(params.createSealEngine());
-
 			se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
 			if (!(txFromRlp.signature().isValid() || onConstantinopleAndZeroSig))
 				BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid (" + networkname + ")") );
@@ -161,12 +157,6 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 		{
 			cnote << testname;
 			cnote << "Transaction Exception: " << diagnostic_information(_e);
-			BOOST_CHECK_MESSAGE(obj.count("hash") == 0,
-				testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
-			continue;
-		}
-		catch (...)
-		{
 			BOOST_CHECK_MESSAGE(obj.count("hash") == 0,
 				testname + "A transaction object should not be defined because the RLP is invalid! (" + networkname + ")");
 			continue;
@@ -185,9 +175,9 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 json_spirit::mValue TransactionTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {
 	BOOST_REQUIRE_MESSAGE(_input.type() == obj_type,
-	TestOutputHelper::get().get().testFileName() + " TransactionTest file should contain an object.");
+		TestOutputHelper::get().get().testFileName() + " TransactionTest file should contain an object.");
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
-	TestOutputHelper::get().testFileName() + " TransactionTest filler should contain only one test.");
+		TestOutputHelper::get().testFileName() + " TransactionTest filler should contain only one test.");
 
 	json_spirit::mObject v;
 	for (auto const& i: _input.get_obj())
@@ -216,7 +206,6 @@ fs::path TransactionTestSuite::suiteFillerFolder() const
 {
 	return "TransactionTestsFiller";
 }
-
 
 } }// Namespace Close
 
