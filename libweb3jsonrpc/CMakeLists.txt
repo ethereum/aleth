@@ -2,7 +2,8 @@ file(GLOB sources "*.cpp" "*.h")
 
 add_library(web3jsonrpc ${sources})
 
-jsonrpcstub_create(web3jsonrpc eth.json
+jsonrpcstub_create(
+	web3jsonrpc eth.json
 	dev::rpc::EthFace ${CMAKE_CURRENT_SOURCE_DIR} EthFace
 	EthClient ${CMAKE_CURRENT_BINARY_DIR} EthClient
 )
@@ -10,11 +11,6 @@ jsonrpcstub_create(web3jsonrpc eth.json
 jsonrpcstub_create(web3jsonrpc debug.json
 	dev::rpc::DebugFace ${CMAKE_CURRENT_SOURCE_DIR} DebugFace
 	DebugClient ${CMAKE_CURRENT_BINARY_DIR} DebugClient
-)
-
-jsonrpcstub_create(web3jsonrpc whisper.json
-	dev::rpc::WhisperFace ${CMAKE_CURRENT_SOURCE_DIR} WhisperFace
-	WhisperClient ${CMAKE_CURRENT_BINARY_DIR} WhisperClient
 )
 
 jsonrpcstub_create(web3jsonrpc net.json
@@ -37,11 +33,6 @@ jsonrpcstub_create(web3jsonrpc admin_eth.json
 	AdminEthClient ${CMAKE_CURRENT_BINARY_DIR} AdminEthClient
 )
 
-jsonrpcstub_create(web3jsonrpc admin_utils.json
-	dev::rpc::AdminUtilsFace ${CMAKE_CURRENT_SOURCE_DIR} AdminUtilsFace
-	AdminUtilsClient ${CMAKE_CURRENT_BINARY_DIR} AdminUtilsClient
-)
-
 jsonrpcstub_create(web3jsonrpc personal.json
 	dev::rpc::PersonalFace ${CMAKE_CURRENT_SOURCE_DIR} PersonalFace
 	PersonalClient ${CMAKE_CURRENT_BINARY_DIR} PersonalClient
@@ -52,6 +43,4 @@ jsonrpcstub_create(web3jsonrpc test.json
 	TestClient ${CMAKE_CURRENT_BINARY_DIR} TestClient
 )
 
-target_include_directories(web3jsonrpc PRIVATE ../utils)
-
-target_link_libraries(web3jsonrpc ethashseal webthree whisper JsonRpcCpp::Server)
+target_link_libraries(web3jsonrpc ethashseal webthree JsonRpcCpp::Server)

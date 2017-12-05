@@ -5,9 +5,6 @@ add_library(devcore ${sources} ${headers})
 
 add_dependencies(devcore BuildInfo.h)
 
-# This "local" include path will be propagated to all other libs.
-target_include_directories(devcore PUBLIC ..)
-
 # Needed to prevent including system-level boost headers:
 target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIR} PRIVATE ../utils)
 
