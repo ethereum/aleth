@@ -1,9 +1,5 @@
 include(ExternalProject)
 
-# HTTP server from JSON RPC CPP requires microhttpd library. It can find it itself,
-# but we need to know the MHD location for static linking.
-find_package(MHD REQUIRED)
-
 get_property(jsoncpp_include_dir TARGET jsoncpp_lib_static PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 get_property(jsoncpp_library TARGET jsoncpp_lib_static PROPERTY IMPORTED_LOCATION_RELEASE)
 
@@ -28,7 +24,7 @@ set(CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DBUILD_SHARED_LIBS=Off
                -DUNIX_DOMAIN_SOCKET_SERVER=Off
                -DUNIX_DOMAIN_SOCKET_CLIENT=Off
-               -DHTTP_SERVER=On
+               -DHTTP_SERVER=OFF
                -DHTTP_CLIENT=OFF
                -DCOMPILE_TESTS=Off
                -DCOMPILE_STUBGEN=Off

@@ -95,7 +95,6 @@ Darwin)
     # And finally install all the external dependencies.
     brew install \
         leveldb \
-        libmicrohttpd \
         $TRAVIS_PACKAGES
 
     ;;
@@ -137,8 +136,7 @@ Linux)
             automake \
             gcc \
             libtool \
-            leveldb \
-            libmicrohttpd
+            leveldb
 
     elif [ -f "/etc/os-release" ]; then
 
@@ -152,8 +150,7 @@ Linux)
             $SUDO apt-get -qy install \
                 build-essential \
                 libgmp-dev \
-                libleveldb-dev \
-                libmicrohttpd-dev
+                libleveldb-dev
             ;;
 
         Fedora)
@@ -161,7 +158,6 @@ Linux)
             $SUDO dnf -qy install \
                 gcc-c++ \
                 leveldb-devel \
-                libmicrohttpd-devel \
                 gmp-devel
             ;;
 
@@ -185,7 +181,6 @@ Linux)
                 build-essential \
                 libgmp-dev \
                 libleveldb-dev \
-                libmicrohttpd-dev \
                 $TRAVIS_PACKAGES
             ;;
 
@@ -197,7 +192,6 @@ Linux)
                 make \
                 gcc-c++ \
                 leveldb-devel \
-                libmicrohttpd-devel \
                 gmp-devel
             ;;
 
@@ -215,7 +209,6 @@ Linux)
         $SUDO apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
             g++ \
             make \
-            libmicrohttpd-dev \
             leveldb-dev
 
     else

@@ -1,7 +1,7 @@
 file(GLOB_RECURSE sources "*.cpp" "*.h" "*.sol")
 
 # search for test names and create ctest tests
-set(excludeSuites jsonrpc \"customTestSuite\" shhrpc whisperDB whisperMessage whisper BlockQueueSuite)
+set(excludeSuites jsonrpc \"customTestSuite\" BlockQueueSuite)
 set(allSuites jsonrpc)
 foreach(file ${sources})
 	file(STRINGS ${file} test_list_raw REGEX "BOOST_.*TEST_(SUITE|CASE|SUITE_END)")

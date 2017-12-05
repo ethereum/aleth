@@ -19,8 +19,5 @@ parts:
     plugin: cmake
     build-packages:
       - build-essential
-      - libboost-all-dev
       - libgmp-dev
       - libleveldb-dev
-      - libmicrohttpd-dev
-      - libminiupnpc-dev

@@ -7,9 +7,7 @@ RUN apt-get -q update && \
         build-essential \
         libboost-all-dev \
         libgmp-dev \
-        libleveldb-dev \
-        libmicrohttpd-dev \
-        libminiupnpc-dev && \
+        libleveldb-dev && \
     git clone --recursive https://github.com/ethereum/cpp-ethereum --branch build-on-linux --single-branch --depth 1 && \
     cpp-ethereum/scripts/install_cmake.sh --prefix /tmp && \
     cd /tmp && PATH=$PATH:/tmp/bin cmake /cpp-ethereum && \
