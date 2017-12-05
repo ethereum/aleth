@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(output)
 	bc.addBlock(block);
 
 	std::stringstream buffer;
-	buffer << bc.interface();
+	buffer << bc.getInterface();
 	BOOST_REQUIRE(buffer.str().size() == 139);
 	buffer.str(std::string());
 }
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)
 	block.addTransaction(tr);
 	block.mine(bc);
 	bc.addBlock(block);
-	BOOST_REQUIRE(bc.interface().transactions().size() > 0);
+	BOOST_REQUIRE(bc.getInterface().transactions().size() > 0);
 }
 
 BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 	uncleBlock.updateNonce(bc);
 
 	BlockQueue uncleBlockQueue;
-	uncleBlockQueue.setChain(bc.interface());
+	uncleBlockQueue.setChain(bc.getInterface());
 	uncleBlockQueue.import(&uncleBlock.bytes(), false);
 	std::this_thread::sleep_for(std::chrono::seconds(2));
 
