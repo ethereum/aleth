@@ -960,7 +960,6 @@ class bcTestFixture {
 	bcTestFixture()
 	{
 		test::BlockchainTestSuite suite;
-		tryRunSingleTestFile(suite);
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 
 		//skip wallet test as it takes too much time (250 blocks) run it with --all flag
@@ -979,7 +978,6 @@ class bcTransitionFixture {
 	bcTransitionFixture()
 	{
 		test::TransitionTestsSuite suite;
-		tryRunSingleTestFile(suite);
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		suite.runAllTestsInFolder(casename);
 	}
@@ -991,7 +989,6 @@ class bcGeneralTestsFixture
 	bcGeneralTestsFixture()
 	{
 		test::BCGeneralStateTestsSuite suite;
-		tryRunSingleTestFile(suite);
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		//skip this test suite if not run with --all flag (cases are already tested in state tests)
 		if (!test::Options::get().all)
