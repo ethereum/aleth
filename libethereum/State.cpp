@@ -37,10 +37,22 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
-const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
-const char* StateTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
-const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
+const char* StateSafeExceptions::name()
+{
+	return EthViolet "⚙" EthBlue " ℹ";
+}
+const char* StateDetail::name()
+{
+	return EthViolet "⚙" EthWhite " ◌";
+}
+const char* StateTrace::name()
+{
+	return EthViolet "⚙" EthGray " ◎";
+}
+const char* StateChat::name()
+{
+	return EthViolet "⚙" EthWhite " ◌";
+}
 
 namespace
 {
@@ -259,7 +271,10 @@ void State::setRoot(h256 const& _r)
 	m_state.setRoot(_r);
 }
 
-bool State::addressInUse(Address const& _id) const { return !!account(_id); }
+bool State::addressInUse(Address const& _id) const
+{
+	return !!account(_id);
+}
 
 bool State::accountNonemptyAndExisting(Address const& _address) const
 {
@@ -515,7 +530,10 @@ size_t State::codeSize(Address const& _a) const
 		return 0;
 }
 
-size_t State::savepoint() const { return m_changeLog.size(); }
+size_t State::savepoint() const
+{
+	return m_changeLog.size();
+}
 
 void State::rollback(size_t _savepoint)
 {
