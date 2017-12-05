@@ -80,8 +80,11 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 	mValue expectObj = _o.at("expect");
 	for (auto const network: test::getNetworks())
 	{
-		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(network)).createSealEngine());
-		bool onConstantinople = (network == eth::Network::ConstantinopleTest);
+		ChainParams params(genesisInfo(network));
+		unique_ptr<SealEngineFace> se(params.createSealEngine());
+
+		// Test networks has forkblocks set to 0 if rules are enabled
+		bool onConstantinople = (bh.number() >= params.constantinopleForkBlock);
 		out[test::netIdToString(network)] = mObject();
 		mObject expectSection = getExpectSection(expectObj, network);
 		try
@@ -143,9 +146,13 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 			RLP rlp(stream);
 
 			txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
-			bool onConstantinople = (network == eth::Network::ConstantinopleTest);
+			ChainParams params(genesisInfo(network));
+
+			// Test networks has forkblocks set to 0 if rules are enabled
+			bool onConstantinople = (bh.number() >= params.constantinopleForkBlock);
 			bool onConstantinopleAndZeroSig = onConstantinople && txFromRlp.hasZeroSignature();
-			unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(network)).createSealEngine());
+			unique_ptr<SealEngineFace> se(params.createSealEngine());
+
 			se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh, 0);
 			if (!(txFromRlp.signature().isValid() || onConstantinopleAndZeroSig))
 				BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid (" + networkname + ")") );
