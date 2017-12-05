@@ -42,11 +42,12 @@ namespace dev {  namespace test {
 
 mObject getExpectSection(mValue const& _expect, eth::Network _network)
 {
-	mObject obj;
+	std::vector<mObject> objVector;
 	BOOST_REQUIRE(_expect.type() == json_spirit::array_type);
 	for (auto const& value: _expect.get_array())
 	{
 		BOOST_REQUIRE(value.type() == json_spirit::obj_type);
+		mObject obj;
 		obj = value.get_obj();
 		BOOST_REQUIRE_MESSAGE(obj.count("network"), "network section not set in expect section!");
 		vector<string> networks;
@@ -55,10 +56,10 @@ mObject getExpectSection(mValue const& _expect, eth::Network _network)
 		ImportTest::checkAllowedNetwork(networks);
 
 		if (test::inArray(networks, test::netIdToString(_network)) || test::inArray(networks, string("ALL")))
-			return obj;
+			objVector.push_back(obj);
 	}
-	BOOST_ERROR("Network not found in expect section of transaction test filler! (" + test::netIdToString(_network) + ")");
-	return obj;
+	BOOST_REQUIRE_MESSAGE(objVector.size() == 1,"Expect network should occur once in expect section of transaction test filler! (" + test::netIdToString(_network) + ")");
+	return objVector.at(0);
 }
 
 json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
