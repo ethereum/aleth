@@ -26,8 +26,6 @@
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
-#include <libwhisper/Message.h>
-#include <libwhisper/WhisperHost.h>
 #include <jsonrpccpp/common/exception.h>
 using namespace std;
 using namespace dev;
@@ -452,87 +450,6 @@ dev::eth::LogFilter toLogFilter(Json::Value const& _json, Interface const& _clie
 				filter.topic(i, jsToFixed<32>(_json["topics"][i].asString()));
 		}
 	return filter;
-}
-
-}
-
-// ////////////////////////////////////////////////////////////////////////////////////
-// shh
-// ////////////////////////////////////////////////////////////////////////////////////
-
-namespace shh
-{
-
-Json::Value toJson(h256 const& _h, shh::Envelope const& _e, shh::Message const& _m)
-{
-	Json::Value res;
-	res["hash"] = toJS(_h);
-	res["expiry"] = toJS(_e.expiry());
-	res["sent"] = toJS(_e.sent());
-	res["ttl"] = toJS(_e.ttl());
-	res["workProved"] = toJS(_e.workProved());
-	res["topics"] = Json::Value(Json::arrayValue);
-	for (auto const& t: _e.topic())
-		res["topics"].append(toJS(t));
-	res["payload"] = toJS(_m.payload());
-	res["from"] = toJS(_m.from());
-	res["to"] = toJS(_m.to());
-	return res;
-}
-
-shh::Message toMessage(Json::Value const& _json)
-{
-	shh::Message ret;
-	if (!_json["from"].empty())
-		ret.setFrom(jsToPublic(_json["from"].asString()));
-	if (!_json["to"].empty())
-		ret.setTo(jsToPublic(_json["to"].asString()));
-	if (!_json["payload"].empty())
-		ret.setPayload(jsToBytes(_json["payload"].asString()));
-	return ret;
-}
-
-shh::Envelope toSealed(Json::Value const& _json, shh::Message const& _m, Secret const& _from)
-{
-	unsigned ttl = 50;
-	unsigned workToProve = 50;
-	shh::BuildTopic bt;
-
-	if (!_json["ttl"].empty())
-		ttl = jsToInt(_json["ttl"].asString());
-
-	if (!_json["workToProve"].empty())
-		workToProve = jsToInt(_json["workToProve"].asString());
-
-	if (!_json["topics"].empty())
-		for (auto i: _json["topics"])
-		{
-			if (i.isArray())
-			{
-				for (auto j: i)
-					if (!j.isNull())
-						bt.shift(jsToBytes(j.asString()));
-			}
-			else if (!i.isNull()) // if it is anything else then string, it should and will fail
-				bt.shift(jsToBytes(i.asString()));
-		}
-
-	return _m.seal(_from, bt, ttl, workToProve);
-}
-
-pair<shh::Topics, Public> toWatch(Json::Value const& _json)
-{
-	shh::BuildTopic bt;
-	Public to;
-
-	if (!_json["to"].empty())
-		to = jsToPublic(_json["to"].asString());
-
-	if (!_json["topics"].empty())
-		for (auto i: _json["topics"])
-			bt.shift(jsToBytes(i.asString()));
-
-	return make_pair(bt, to);
 }
 
 }
