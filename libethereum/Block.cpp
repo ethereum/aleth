@@ -464,10 +464,8 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	DEV_TIMED_FUNCTION_ABOVE(500);
 
 	// m_currentBlock is assumed to be prepopulated and reset.
-#if !ETH_RELEASE
 	assert(m_previousBlock.hash() == _block.info.parentHash());
 	assert(m_currentBlock.parentHash() == _block.info.parentHash());
-#endif
 
 	if (m_currentBlock.parentHash() != m_previousBlock.hash())
 		// Internal client error.
