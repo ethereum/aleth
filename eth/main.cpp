@@ -1152,9 +1152,16 @@ int main(int argc, char** argv)
 			new rpc::Debug(*web3.ethereum()),
 			testEth
 		));
-		auto ipcConnector = new IpcServer("geth");
+
+		fs::path ipcPath = getIpcPath();
+		if (ipcPath.empty())
+			ipcPath = getDataDir();
+		ipcPath /= "geth.ipc";
+
+		auto ipcConnector = new IpcServer(ipcPath.string());
 		jsonrpcIpcServer->addConnector(ipcConnector);
 		ipcConnector->StartListening();
+		cnote << "IPC path: " << ipcPath;
 
 
 		if (jsonAdmin.empty())
