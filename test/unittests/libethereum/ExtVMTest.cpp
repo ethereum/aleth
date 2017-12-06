@@ -37,7 +37,7 @@ public:
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),
-		blockchain(testBlockchain.interface())
+		blockchain(testBlockchain.getInterface())
 	{
 		TestBlock testBlock;
 		// block 1 - before Constantinople

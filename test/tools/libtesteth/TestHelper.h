@@ -110,7 +110,6 @@ json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
 json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMaskMap const& _map);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
-void tryRunSingleTestFile(dev::test::TestSuite const& _suite);
 
 //Fill Test Functions
 bool createRandomTest();	//returns true if succeed, false if there was an error;

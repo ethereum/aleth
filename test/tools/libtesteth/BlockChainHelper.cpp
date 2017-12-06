@@ -180,7 +180,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
 	TestBlock const& genesisBlock = _bc.testGenesis();
 	OverlayDB const& genesisDB = genesisBlock.state().db();
 
-	BlockChain const& blockchain = _bc.interface();
+	BlockChain const& blockchain = _bc.getInterface();
 
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.setAuthor(genesisBlock.beneficiary());
@@ -345,7 +345,7 @@ void TestBlock::updateNonce(TestBlockChain const& _bc)
 	else
 	{
 		//do not verify blockheader for validity here
-		dev::eth::mine(m_blockHeader, _bc.interface().sealEngine(), false);
+		dev::eth::mine(m_blockHeader, _bc.getInterface().sealEngine(), false);
 	}
 
 	recalcBlockHeaderBytes();
@@ -358,11 +358,11 @@ void TestBlock::verify(TestBlockChain const& _bc) const
 
 	try
 	{
-		_bc.interface().sealEngine()->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
+		_bc.getInterface().sealEngine()->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
 	}
 	catch (Exception const& _e)
 	{
-		u256 const& daoHardfork = _bc.interface().sealEngine()->chainParams().daoHardforkBlock;
+		u256 const& daoHardfork = _bc.getInterface().sealEngine()->chainParams().daoHardforkBlock;
 		if ((m_blockHeader.number() >= daoHardfork && m_blockHeader.number() <= daoHardfork + 9) || m_blockHeader.number() == 0)
 		{
 			string exWhat {	_e.what() };

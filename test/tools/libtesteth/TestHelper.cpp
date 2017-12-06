@@ -93,16 +93,6 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify)
 namespace test
 {
 
-void tryRunSingleTestFile(dev::test::TestSuite const& _suite)
-{
-	if (test::Options::get().singleTestFile.is_initialized())
-	{
-		boost::filesystem::path file(test::Options::get().singleTestFile.get());
-		_suite.runTestWithoutFiller(file);
-		exit(0);
-	}
-}
-
 string netIdToString(eth::Network _netId)
 {
 	switch(_netId)

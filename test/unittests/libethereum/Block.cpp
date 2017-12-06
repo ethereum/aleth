@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(bStates)
 	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
 	TestBlock const& genesisBlock = testBlockchain.testGenesis();
 	OverlayDB const& genesisDB = genesisBlock.state().db();
-	BlockChain const& blockchain = testBlockchain.interface();
+	BlockChain const& blockchain = testBlockchain.getInterface();
 
 	h256 stateRootBefore = testBlockchain.topBlock().state().rootHash();
 	BOOST_REQUIRE(stateRootBefore != h256());
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 	TestBlock const& genesisBlock = testBlockchain.testGenesis();
 
 	OverlayDB const& genesisDB = genesisBlock.state().db();
-	BlockChain const& blockchain = testBlockchain.interface();
+	BlockChain const& blockchain = testBlockchain.getInterface();
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.setAuthor(genesisBlock.beneficiary());
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock(63000));
 	TestBlock const& genesisBlock = testBlockchain.testGenesis();
 	OverlayDB const& genesisDB = genesisBlock.state().db();
-	BlockChain const& blockchain = testBlockchain.interface();
+	BlockChain const& blockchain = testBlockchain.getInterface();
 
 	TestBlock testBlock;
 	TestTransaction transaction1 = TestTransaction::defaultTransaction(1, 1, 21000);
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
 	TestBlockChain bc;
 	TestBlock const& genesisBlock = bc.testGenesis();
 	OverlayDB const& genesisDB = genesisBlock.state().db();
-	BlockChain const& blockchain = bc.interface();
+	BlockChain const& blockchain = bc.getInterface();
 	Block block = blockchain.genesisBlock(genesisDB);
 	BOOST_CHECK_THROW(block.receipt(123), std::out_of_range);
 }
@@ -247,7 +247,7 @@ public:
 		testBlockchain(TestBlockChain::defaultGenesisBlock()),
 		genesisBlock(testBlockchain.testGenesis()),
 		genesisDB(genesisBlock.state().db()),
-		blockchain(testBlockchain.interface())
+		blockchain(testBlockchain.getInterface())
 	{
 		TestBlock testBlock;
 		// block 1 - before Constantinople

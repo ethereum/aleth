@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
 	block.addTransaction(tr);
 	block.mine(bc);
 	bc.addBlock(block);
-	BOOST_CHECK_MESSAGE(bc.interface().info().number() == 1, "Mining Block with zero transaction failed!");
+	BOOST_CHECK_MESSAGE(bc.getInterface().info().number() == 1, "Mining Block with zero transaction failed!");
 
 	//Transaction should be able to mine on BYZANTIUM
 	//Not implemented yet

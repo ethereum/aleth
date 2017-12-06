@@ -29,6 +29,10 @@
 #include <iostream>
 #include <thread>
 #include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/jsontests/StateTests.h>
+#include <test/tools/jsontests/BlockChainTests.h>
+#include <test/tools/jsontests/TransactionTests.h>
+#include <test/tools/jsontests/vm.h>
 
 using namespace boost::unit_test;
 
@@ -36,16 +40,50 @@ static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;
 std::streambuf* oldCerrStreamBuf;
 
-void createRandomTestWrapper()
+void customTestSuite()
 {
 	//restore output for creating test
 	std::cout.rdbuf(oldCoutStreamBuf);
 	std::cerr.rdbuf(oldCerrStreamBuf);
+	dev::test::Options const& opt = dev::test::Options::get();
 
-	if (!dev::test::createRandomTest())
-		throw framework::internal_error("Create random test error! See std::error for more details.");
+	// if generating a random test
+	if (opt.createRandomTest)
+	{
+		if (!dev::test::createRandomTest())
+			throw framework::internal_error("Create random test error! See std::error for more details.");
+	}
 
-	exit(0);
+	// if running a singletest
+	if (opt.singleTestFile.is_initialized())
+	{
+		boost::filesystem::path file(opt.singleTestFile.get());
+		if (opt.rCurrentTestSuite.find_first_of("GeneralStateTests") != std::string::npos)
+		{
+			dev::test::StateTestSuite suite;
+			suite.runTestWithoutFiller(file);
+		}
+		else if (opt.rCurrentTestSuite.find_first_of("BlockchainTests") != std::string::npos)
+		{
+			dev::test::BlockchainTestSuite suite;
+			suite.runTestWithoutFiller(file);
+		}
+		else if (opt.rCurrentTestSuite.find_first_of("TransitionTests") != std::string::npos)
+		{
+			dev::test::TransitionTestsSuite suite;
+			suite.runTestWithoutFiller(file);
+		}
+		else if (opt.rCurrentTestSuite.find_first_of("VMtests") != std::string::npos)
+		{
+			dev::test::VmTestSuite suite;
+			suite.runTestWithoutFiller(file);
+		}
+		else if (opt.rCurrentTestSuite.find_first_of("TransactionTests") != std::string::npos)
+		{
+			dev::test::TransactionTestSuite suite;
+			suite.runTestWithoutFiller(file);
+		}
+	}
 }
 
 void travisOut(std::atomic_bool *_stopTravisOut)
@@ -86,13 +124,13 @@ void setDefaultOrCLocale()
 //Custom Boost Unit Test Main
 int main( int argc, char* argv[] )
 {
-	std::string const dynamicTestSuiteName = "RandomTestCreationSuite";
+	std::string const dynamicTestSuiteName = "customTestSuite";
 	setDefaultOrCLocale();
 	try
 	{
 		//Initialize options
 		dev::test::Options const& opt = dev::test::Options::get(argc, argv);
-		if (opt.createRandomTest)
+		if (opt.createRandomTest || opt.singleTestFile.is_initialized())
 		{
 			// Disable initial output as the random test will output valid json to std
 			oldCoutStreamBuf = std::cout.rdbuf();
@@ -112,8 +150,8 @@ int main( int argc, char* argv[] )
 			}
 
 			//add random tests suite
-			test_suite* ts1 = BOOST_TEST_SUITE("RandomTestCreationSuite");
-			ts1->add(BOOST_TEST_CASE(&createRandomTestWrapper));
+			test_suite* ts1 = BOOST_TEST_SUITE("customTestSuite");
+			ts1->add(BOOST_TEST_CASE(&customTestSuite));
 			framework::master_test_suite().add(ts1);
 		}
 	}
