@@ -93,23 +93,6 @@ macro(configure_project)
 		add_definitions(-DETH_FATDB)
 	endif ()
 
-	# LMDB is an option to build Ethereum against lmdb instead of LevelDB
-	if(LMDB)
-		add_definitions(-DETH_LMDB)
-		hunter_add_package(lmdb)
-		find_package(liblmdb CONFIG REQUIRED)
-	endif()
-
-	if(LEVELDB)
-		add_definitions(-DETH_LEVELDB)
-		hunter_add_package(leveldb)
-		if(HUNTER_ENABLED)
-			find_package(leveldb CONFIG REQUIRED)
-		else()
-			find_package(LevelDB REQUIRED)
-		endif()
-	endif()
-
 	if (PARANOID)
 		add_definitions(-DETH_PARANOIA)
 	endif ()
