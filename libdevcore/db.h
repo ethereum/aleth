@@ -46,8 +46,6 @@ public:
 
 	virtual void commit() = 0;
 	virtual void rollback() = 0;
-	// TODO: Consider supporting nested transactions. Difficult to implement
-	// as RAII because parent cannot do rollback while child active.
 
 protected:
 	Transaction() = default;

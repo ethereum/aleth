@@ -14,14 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file RocksDB.cpp
+/** @file LevelDB.cpp
  * @author Isaac Hier <isaachier@gmail.com>
  * @date 2017
  */
 
-#ifdef ETH_ROCKSDB
+#ifdef ETH_LEVELDB
 
-#include "RocksDB.h"
+#include "LevelDB.h"
 #include "Assertions.h"
 
 namespace dev
@@ -31,15 +31,14 @@ namespace db
 namespace
 {
 
-class RocksDBTransaction: public Transaction
+class LevelDBTransaction: public Transaction
 {
 public:
-	RocksDBTransaction(rocksdb::DB* _db, rocksdb::WriteOptions _writeOptions): m_db(_db), m_writeOptions(std::move(_writeOptions))
+	LevelDBTransaction(leveldb::DB* _db, leveldb::WriteOptions _writeOptions): m_db(_db), m_writeOptions(std::move(_writeOptions))
 	{
-		m_writeBatch.SetSavePoint();
 	}
 
-	~RocksDBTransaction();
+	~LevelDBTransaction();
 
 	void insert(Slice const& _key, Slice const& _value) override;
 	void kill(Slice const& _key) override;
@@ -47,38 +46,32 @@ public:
 	void rollback() override;
 
 private:
-	rocksdb::DB* m_db;
-	rocksdb::WriteOptions m_writeOptions;
-	rocksdb::WriteBatch m_writeBatch;
+	leveldb::DB* m_db;
+	leveldb::WriteOptions m_writeOptions;
+	leveldb::WriteBatch m_writeBatch;
 };
 
-RocksDBTransaction::~RocksDBTransaction()
+LevelDBTransaction::~LevelDBTransaction()
 {
 	if (m_db) {
 		DEV_IGNORE_EXCEPTIONS(rollback());
 	}
 }
 
-void RocksDBTransaction::insert(Slice const& _key, Slice const& _value)
+void LevelDBTransaction::insert(Slice const& _key, Slice const& _value)
 {
-	const auto status = m_writeBatch.Put(
-		rocksdb::Slice(_key.data(), _key.size()),
-		rocksdb::Slice(_value.data(), _value.size())
+	m_writeBatch.Put(
+		leveldb::Slice(_key.data(), _key.size()),
+		leveldb::Slice(_value.data(), _value.size())
 	);
-	if (!status.ok()) {
-		BOOST_THROW_EXCEPTION(FailedInsertInDB(status.ToString()));
-	}
 }
 
-void RocksDBTransaction::kill(Slice const& _key)
+void LevelDBTransaction::kill(Slice const& _key)
 {
-	const auto status = m_writeBatch.Delete(rocksdb::Slice(_key.data(), _key.size()));
-	if (!status.ok()) {
-		BOOST_THROW_EXCEPTION(FailedDeleteInDB(status.ToString()));
-	}
+	m_writeBatch.Delete(leveldb::Slice(_key.data(), _key.size()));
 }
 
-void RocksDBTransaction::commit()
+void LevelDBTransaction::commit()
 {
 	assertThrow(
 		m_db != nullptr,
@@ -92,60 +85,57 @@ void RocksDBTransaction::commit()
 	m_db = nullptr;
 }
 
-void RocksDBTransaction::rollback()
+void LevelDBTransaction::rollback()
 {
 	assertThrow(
 		m_db != nullptr,
 		FailedRollbackInDB,
 		"cannot rollback, transaction already committed or rolled back"
 	);
-	const auto status = m_writeBatch.RollbackToSavePoint();
-	if (!status.ok()) {
-		BOOST_THROW_EXCEPTION(FailedRollbackInDB(status.ToString()));
-	}
+	m_writeBatch.Clear();
 	m_db = nullptr;
 }
 
 }
 
-rocksdb::ReadOptions RocksDB::defaultReadOptions()
+leveldb::ReadOptions LevelDB::defaultReadOptions()
 {
-	rocksdb::ReadOptions readOptions;
+	leveldb::ReadOptions readOptions;
 	readOptions.verify_checksums = true;
 	return readOptions;
 }
 
-rocksdb::WriteOptions RocksDB::defaultWriteOptions()
+leveldb::WriteOptions LevelDB::defaultWriteOptions()
 {
-	return rocksdb::WriteOptions();
+	return leveldb::WriteOptions();
 }
 
-rocksdb::Options RocksDB::defaultDBOptions()
+leveldb::Options LevelDB::defaultDBOptions()
 {
-	rocksdb::Options options;
+	leveldb::Options options;
 	options.create_if_missing = true;
 	options.max_open_files = 256;
 	return options;
 }
 
-RocksDB::RocksDB(
+LevelDB::LevelDB(
 	std::string const& _path,
-	rocksdb::ReadOptions _readOptions,
-	rocksdb::WriteOptions _writeOptions,
-	rocksdb::Options _dbOptions
+	leveldb::ReadOptions _readOptions,
+	leveldb::WriteOptions _writeOptions,
+	leveldb::Options _dbOptions
 ): m_db(nullptr), m_readOptions(std::move(_readOptions)), m_writeOptions(std::move(_writeOptions))
 {
-	auto db = static_cast<rocksdb::DB*>(nullptr);
-	const auto status = rocksdb::DB::Open(_dbOptions, _path, &db);
+	auto db = static_cast<leveldb::DB*>(nullptr);
+	const auto status = leveldb::DB::Open(_dbOptions, _path, &db);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedToOpenDB(status.ToString()));
 	}
 	m_db.reset(db);
 }
 
-std::string RocksDB::lookup(Slice const& _key) const
+std::string LevelDB::lookup(Slice const& _key) const
 {
-	const rocksdb::Slice key(_key.data(), _key.size());
+	const leveldb::Slice key(_key.data(), _key.size());
 	std::string value;
 	const auto status = m_db->Get(m_readOptions, key, &value);
 	if (!status.ok()) {
@@ -154,39 +144,36 @@ std::string RocksDB::lookup(Slice const& _key) const
 	return value;
 }
 
-bool RocksDB::exists(Slice const& _key) const
+bool LevelDB::exists(Slice const& _key) const
 {
 	std::string value;
-	const rocksdb::Slice key(_key.data(), _key.size());
-	if (!m_db->KeyMayExist(m_readOptions, key, &value, nullptr)) {
-		return false;
-	}
+	const leveldb::Slice key(_key.data(), _key.size());
 	const auto status = m_db->Get(m_readOptions, key, &value);
 	return status.ok();
 }
 
-void RocksDB::insert(Slice const& _key, Slice const& _value)
+void LevelDB::insert(Slice const& _key, Slice const& _value)
 {
-	const rocksdb::Slice key(_key.data(), _key.size());
-	const rocksdb::Slice value(_value.data(), _value.size());
+	const leveldb::Slice key(_key.data(), _key.size());
+	const leveldb::Slice value(_value.data(), _value.size());
 	const auto status = m_db->Put(m_writeOptions, key, value);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedInsertInDB(status.ToString()));
 	}
 }
 
-void RocksDB::kill(Slice const& _key)
+void LevelDB::kill(Slice const& _key)
 {
-	const rocksdb::Slice key(_key.data(), _key.size());
+	const leveldb::Slice key(_key.data(), _key.size());
 	const auto status = m_db->Delete(m_writeOptions, key);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedDeleteInDB(status.ToString()));
 	}
 }
 
-std::unique_ptr<Transaction> RocksDB::begin()
+std::unique_ptr<Transaction> LevelDB::begin()
 {
-	return std::unique_ptr<Transaction>(new RocksDBTransaction(m_db.get(), m_writeOptions));
+	return std::unique_ptr<Transaction>(new LevelDBTransaction(m_db.get(), m_writeOptions));
 }
 
 }
