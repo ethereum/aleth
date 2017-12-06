@@ -10,8 +10,8 @@ AlignOperands:   true
 AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: false
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Inline
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterDefinitionReturnType: None
@@ -28,13 +28,17 @@ BraceWrapping:
   AfterEnum:       true
   AfterFunction:   true
   AfterNamespace:  true
-  AfterObjCDeclaration: true
+  AfterObjCDeclaration: false
   AfterStruct:     true
   AfterUnion:      true
   BeforeCatch:     true
   BeforeElse:      true
   IndentBraces:    false
   SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: BeforeColon
 ColumnLimit:     80
@@ -46,19 +50,29 @@ Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
+IncludeBlocks: Merge
 IncludeCategories:
-  - Regex:           '^".*'
+  - Regex:           '^"'
     Priority:        1
-  - Regex:           '^<boost.*'
-    Priority:        98
-  - Regex:           '^<.*\.h>'
+  - Regex:           '^<libethereum/'
     Priority:        2
-  - Regex:           '^<.*'
-    Priority:        99
-  - Regex:           '.*'
+  - Regex:           '^<libethcore/'
+    Priority:        3
+  - Regex:           '^<libe'
     Priority:        4
+  - Regex:           '^<libdevcrypt/'
+    Priority:        5
+  - Regex:           '^<libdevcore/'
+    Priority:        6
+  - Regex:           '^<boost/'
+    Priority:        7
+  - Regex:           '<[^/]*>'
+    Priority:        8
+IncludeIsMainRegex: '(_test|Test)?$'
 IndentCaseLabels: false
+IndentPPDirectives: None
 IndentWidth:     4
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
@@ -69,16 +83,16 @@ NamespaceIndentation: None
 ObjCBlockIndentWidth: 2
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: false
-PenaltyBreakAssignment: 1
 PenaltyBreakBeforeFirstCallParameter: 1
-PenaltyBreakComment: 50
-PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 1000
-PenaltyExcessCharacter: 1000000
-PenaltyReturnTypeOnItsOwnLine: 200
+PenaltyBreakComment: 100
+PenaltyBreakFirstLessLess: 100
+PenaltyBreakString: 100
+PenaltyExcessCharacter: 200
+PenaltyReturnTypeOnItsOwnLine: 100
 PointerAlignment: Left
 ReflowComments:  true
 SortIncludes:    true
+SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
@@ -91,5 +105,5 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard:        Auto
 TabWidth:        4
-UseTab:          Never
+UseTab:          Always
 ...
