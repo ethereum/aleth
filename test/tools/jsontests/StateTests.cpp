@@ -92,6 +92,7 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 			BOOST_REQUIRE_MESSAGE(inputTest.at("post").type() == obj_type, testname + " post field is not an object.");
 
 			//check post hashes against cpp client on all networks
+			bool foundResults = false;
 			mObject post = inputTest.at("post").get_obj();
 			vector<size_t> wrongTransactionsIndexes;
 			for (mObject::const_iterator i = post.begin(); i != post.end(); ++i)
@@ -104,8 +105,15 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 						continue;
 					if (test::isDisabledNetwork(test::stringToNetId(i->first)))
 						continue;
-					importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first);
+					if (importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first))
+						foundResults = true;
 				}
+			}
+
+			if (!foundResults)
+			{
+				Options const& opt = Options::get();
+				BOOST_ERROR("Transaction not found! (Network: " + (opt.singleTestNet.empty() ? "Any" : opt.singleTestNet) + ", dataInd: " + toString(opt.trDataIndex) + ", gasInd: " + toString(opt.trGasIndex) + ", valInd: " + toString(opt.trValueIndex) + ")");
 			}
 
 			if (Options::get().statediff)
