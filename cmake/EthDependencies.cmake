@@ -1,18 +1,3 @@
-# all dependencies that are not directly included in the cpp-ethereum distribution are defined here
-# for this to work, download the dependency via the cmake script in extdep or install them manually!
-
-function(eth_show_dependency DEP NAME)
-	get_property(DISPLAYED GLOBAL PROPERTY ETH_${DEP}_DISPLAYED)
-	if (NOT DISPLAYED)
-		set_property(GLOBAL PROPERTY ETH_${DEP}_DISPLAYED TRUE)
-		message(STATUS "${NAME} headers: ${${DEP}_INCLUDE_DIRS}")
-		message(STATUS "${NAME} lib   : ${${DEP}_LIBRARIES}")
-		if (NOT("${${DEP}_DLLS}" STREQUAL ""))
-			message(STATUS "${NAME} dll   : ${${DEP}_DLLS}")
-		endif()
-	endif()
-endfunction()
-
 # The Windows platform has not historically had any standard packaging system for delivering
 # versioned releases of libraries.  Homebrew and PPA perform that function for macOS and Ubuntu
 # respectively, and there are analogous standards for other Linux distros.  In the absense of
@@ -48,34 +33,3 @@ endif()
 set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
 
-find_program(CTEST_COMMAND ctest)
-
-# Use Boost "multithreaded mode" for Windows.  The platform C/C++ runtime libraries come in
-# two flavors on Windows, which causes an ABI schism across the whole ecosystem.  This setting
-# is declaring which side of that schism we fall on.
-if (MSVC)
-	set(Boost_USE_MULTITHREADED ON)
-endif()
-
-# Use the dynamic libraries for Boost for Linux and static linkage on Windows and macOS.
-# We would like to use static linkage on Linux too, but on Ubuntu at least it appears that
-# the prebuilt binaries for Boost won't support this.
-#
-# We will need to build Boost from source ourselves, with -fPIC enabled, before we are
-# able to remove this conditional.  That is exactly what has been happening for months for
-# the doublethinkco cross-builds (see https://github.com/doublethinkco/cpp-ethereum-cross).
-#
-# Typical build error we get if trying to do static Boost on Ubunty Trusty (many of them):
-#
-# Linking CXX shared library libdevcore.so
-# /usr/bin/ld.gold: error: /usr/lib/gcc/x86_64-linux-gnu/4.8/../../../x86_64-linux-gnu/
-# libboost_thread.a(thread.o): requires dynamic R_X86_64_32 reloc which may overflow at
-# runtime; recompile with -fPIC
-#
-# https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/145955041
-
-if (UNIX AND NOT APPLE)
-	set(Boost_USE_STATIC_LIBS OFF)
-else()
-	set(Boost_USE_STATIC_LIBS ON)
-endif()
