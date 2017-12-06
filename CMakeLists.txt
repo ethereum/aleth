@@ -110,7 +110,9 @@ find_package(Snappy CONFIG REQUIRED)
 hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
 
-include(ProjectJsonRpcCpp)
+hunter_add_package(libjson-rpc-cpp)
+find_package(libjson-rpc-cpp CONFIG REQUIRED)
+
 include(ProjectSecp256k1)
 include(ProjectLibFF)
 
