@@ -640,6 +640,7 @@ BOOST_AUTO_TEST_CASE(rndStateTest)
 	try
 	{
 		//Mac os bug is here
+		//Analyze
 		test::StateTestSuite suite;
 		test::RandomCodeOptions options;
 		test::TestOutputHelper::get().setCurrentTestFileName(std::string());
