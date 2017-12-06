@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	block1.mine(blockchain);
 
 	BlockQueue blockQueue;
-	blockQueue.setChain(blockchain.interface());
+	blockQueue.setChain(blockchain.getInterface());
 	ImportResult res = blockQueue.import(&block1.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::Success, "Simple block import to BlockQueue should have return Success");
 

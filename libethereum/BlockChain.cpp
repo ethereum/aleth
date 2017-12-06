@@ -175,12 +175,6 @@ void addBlockInfo(Exception& io_ex, BlockHeader const& _header, bytes&& _blockDa
 
 }
 
-#if ETH_DEBUG&&0
-static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(15);
-static const unsigned c_collectionQueueSize = 2;
-static const unsigned c_maxCacheSize = 1024 * 1024 * 1;
-static const unsigned c_minCacheSize = 1;
-#else
 
 /// Duration between flushes.
 static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(60);
@@ -194,7 +188,6 @@ static const unsigned c_maxCacheSize = 1024 * 1024 * 64;
 /// Min size, below which we don't bother flushing it.
 static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 
-#endif
 
 BlockChain::BlockChain(ChainParams const& _p, fs::path const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
 	m_lastBlockHashes(new LastBlockHashes(*this)),

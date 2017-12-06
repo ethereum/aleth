@@ -239,7 +239,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 	genesisBlock.setBlockHeader(genesisBlock.blockHeader());
 
 	TestBlockChain testChain(genesisBlock);
-	assert(testChain.interface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
+	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
 
 	output["genesisBlockHeader"] = writeBlockHeaderToJson(genesisBlock.blockHeader());
 	output["genesisRLP"] = toHexPrefixed(genesisBlock.bytes());
@@ -432,7 +432,7 @@ void testBCTest(json_spirit::mObject const& _o)
 	TestBlockChain blockchain(genesisBlock);
 
 	TestBlockChain testChain(genesisBlock);
-	assert(testChain.interface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
+	assert(testChain.getInterface().isKnown(genesisBlock.blockHeader().hash(WithSeal)));
 
 	if (_o.count("genesisRLP") > 0)
 	{
@@ -525,11 +525,11 @@ void testBCTest(json_spirit::mObject const& _o)
 		}
 
 		//Check that imported block to the chain is equal to declared block from test
-		bytes importedblock = testChain.interface().block(blockFromFields.blockHeader().hash(WithSeal));
+		bytes importedblock = testChain.getInterface().block(blockFromFields.blockHeader().hash(WithSeal));
 		TestBlock inchainBlock(toHex(importedblock));
 		checkBlocks(inchainBlock, blockFromFields, testName);
 
-		string blockNumber = toString(testChain.interface().number());
+		string blockNumber = toString(testChain.getInterface().number());
 		string blockChainName = "default";
 		if (blObj.count("chainname") > 0)
 			blockChainName = blObj["chainname"].get_str();
@@ -540,8 +540,8 @@ void testBCTest(json_spirit::mObject const& _o)
 		if (blockFromFields.blockHeader().parentHash() == preHash)
 		{
 			State const postState = testChain.topBlock().state();
-			assert(testChain.interface().sealEngine());
-			bigint reward = calculateMiningReward(testChain.topBlock().blockHeader().number(), uncleNumbers.size() >= 1 ? uncleNumbers[0] : 0, uncleNumbers.size() >= 2 ? uncleNumbers[1] : 0, *testChain.interface().sealEngine());
+			assert(testChain.getInterface().sealEngine());
+			bigint reward = calculateMiningReward(testChain.topBlock().blockHeader().number(), uncleNumbers.size() >= 1 ? uncleNumbers[0] : 0, uncleNumbers.size() >= 2 ? uncleNumbers[1] : 0, *testChain.getInterface().sealEngine());
 			ImportTest::checkBalance(preState, postState, reward);
 		}
 		else
@@ -599,7 +599,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 	//_parentHeader - parent blockheader
 
 	vector<TestBlock> const& importedBlocks = _chainBranch.importedBlocks;
-	const SealEngineFace* sealEngine = _chainBranch.blockchain.interface().sealEngine();
+	const SealEngineFace* sealEngine = _chainBranch.blockchain.getInterface().sealEngine();
 
 	BlockHeader tmp;
 	BlockHeader const& header = _block.blockHeader();
@@ -685,7 +685,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 	//uncles		 - previously imported uncles
 	//importedBlocks - blocks already included in BlockChain
 	vector<TestBlock> const& importedBlocks = _chainBranch.importedBlocks;
-	const SealEngineFace* sealEngine = _chainBranch.blockchain.interface().sealEngine();
+	const SealEngineFace* sealEngine = _chainBranch.blockchain.getInterface().sealEngine();
 
 	if (uncleHeaderObj.count("sameAsPreviousSibling"))
 	{
@@ -960,7 +960,6 @@ class bcTestFixture {
 	bcTestFixture()
 	{
 		test::BlockchainTestSuite suite;
-		tryRunSingleTestFile(suite);
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 
 		//skip wallet test as it takes too much time (250 blocks) run it with --all flag
@@ -979,7 +978,6 @@ class bcTransitionFixture {
 	bcTransitionFixture()
 	{
 		test::TransitionTestsSuite suite;
-		tryRunSingleTestFile(suite);
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		suite.runAllTestsInFolder(casename);
 	}
@@ -991,7 +989,6 @@ class bcGeneralTestsFixture
 	bcGeneralTestsFixture()
 	{
 		test::BCGeneralStateTestsSuite suite;
-		tryRunSingleTestFile(suite);
 		string const& casename = boost::unit_test::framework::current_test_case().p_name;
 		//skip this test suite if not run with --all flag (cases are already tested in state tests)
 		if (!test::Options::get().all)

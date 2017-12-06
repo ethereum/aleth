@@ -18,18 +18,16 @@
  * Helper functions to work with json::spirit and test files
  */
 
-#include <include/BuildInfo.h>
-#include <libethashseal/EthashCPUMiner.h>
-#include <test/tools/libtesteth/TestHelper.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <test/tools/libtesteth/Options.h>
+#include "TestHelper.h"
+#include "TestOutputHelper.h"
+#include "Options.h"
 
-#if !defined(_WIN32)
-#include <stdio.h>
-#endif
+#include <BuildInfo.h>
+#include <libethashseal/EthashCPUMiner.h>
+#include <libethereum/Client.h>
+
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
-#include <libethereum/Client.h>
 #include <string>
 
 using namespace std;
@@ -94,16 +92,6 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify)
 
 namespace test
 {
-
-void tryRunSingleTestFile(dev::test::TestSuite const& _suite)
-{
-	if (test::Options::get().singleTestFile.is_initialized())
-	{
-		boost::filesystem::path file(test::Options::get().singleTestFile.get());
-		_suite.runTestWithoutFiller(file);
-		exit(0);
-	}
-}
 
 string netIdToString(eth::Network _netId)
 {

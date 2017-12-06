@@ -32,7 +32,6 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/Exceptions.h>
 #include <libp2p/Host.h>
-#include <libwhisper/WhisperHost.h>
 #include <libethereum/Client.h>
 #include <libethereum/ChainParams.h>
 
@@ -138,7 +137,6 @@ public:
 	// The mainline interfaces:
 
 	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
-	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
 
 	// Misc stuff:
 
@@ -215,7 +213,6 @@ private:
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 
 	std::unique_ptr<eth::Client> m_ethereum;		///< Client for Ethereum ("eth") protocol.
-	std::weak_ptr<shh::WhisperHost> m_whisper;		///< Client for Whisper ("shh") protocol.
 };
 
 

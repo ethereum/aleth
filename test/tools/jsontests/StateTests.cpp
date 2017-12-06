@@ -133,7 +133,6 @@ public:
 	GeneralTestFixture()
 	{
 		test::StateTestSuite suite;
-		test::tryRunSingleTestFile(suite);
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().all)
 		{

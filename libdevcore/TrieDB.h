@@ -82,10 +82,7 @@ public:
 			if (m_root == EmptyTrie && !m_db->exists(m_root))
 				init();
 		}
-		/*std::cout << "Setting root to " << _root << " (patched to " << m_root << ")" << std::endl;*/
-#if ETH_DEBUG
 		if (_v == Verification::Normal)
-#endif
 			if (!node(m_root).size())
 				BOOST_THROW_EXCEPTION(RootNotFound());
 	}

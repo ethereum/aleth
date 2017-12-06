@@ -9,9 +9,10 @@ defaults:
   upload-hunter-cache: &upload-hunter-cache
     run:
       name: "Upload Hunter cache"
+      working_directory: ~/build
       command: |  # Upload Hunter cache if not PR build.
         if [ ! "$CIRCLE_PR_NUMBER" ]; then
-          cmake --build build --target hunter_upload_cache
+          cmake --build . --target hunter_upload_cache
         fi
 
   environment-info: &environment-info
@@ -25,19 +26,22 @@ defaults:
   configure: &configure
     run:
       name: "Configure"
+      # Build "out-of-source" to have better coverage report
+      # (ninja is using relative paths otherwise).
+      working_directory: ~/build
       command: |
-        mkdir -p build && cd build
-        cmake .. -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
+        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
 
   build: &build
     run:
       name: "Build"
-      command: cmake --build build -- -j $BUILD_PARALLEL_JOBS
+      working_directory: ~/build
+      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
 
   test: &test
     run:
       name: "Test"
-      pwd: build
+      working_directory: ~/build
       command: |
         if [ $(uname) = Linux ]; then
           export TMPDIR=/dev/shm
@@ -52,10 +56,13 @@ defaults:
 
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
-  store-eth: &store-eth
+  store-eth: &store-artifacts
     store_artifacts:
-      path: build/eth/eth
+      path: ~/build/eth/eth
       destination: eth
+    store_artifacts:
+      path: ~/build/test/testeth
+      destination: testeth
 
   save-deps-cache: &save-deps-cache
     cache-save:
@@ -84,8 +91,10 @@ defaults:
   upload-coverage-data: &upload-coverage-data
     run:
       name: "Upload coverage data"
-      pwd: build
-      command: codecov
+      command: |
+        pwd
+        $GCOV --version
+        codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
 
   linux-steps: &linux-steps
     - checkout
@@ -96,7 +105,7 @@ defaults:
     - *upload-hunter-cache
     - *build
     - *save-deps-cache
-    - *store-eth
+    - *store-artifacts
     - *restore-ethash-dag
     - *test
     - *save-ethash-dag
@@ -110,6 +119,7 @@ jobs:
     environment:
       - CXX: clang++-5.0
       - CC:  clang-5.0
+      - GCOV: llvm-cov-5.0 gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
@@ -122,6 +132,7 @@ jobs:
       - BUILD_TYPE: Debug
       - CXX: g++-6
       - CC:  gcc-6
+      - GCOV: gcov-6
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 4
       - TEST_PARALLEL_JOBS: 4
@@ -135,6 +146,7 @@ jobs:
   macOS-XCode9:
     environment:
       - CXX: clang++
+      - GCOV: gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
@@ -148,14 +160,14 @@ jobs:
           name: "Install macOS dependencies"
           command: |
             pip install -q requests codecov &
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja leveldb libmicrohttpd &
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja leveldb &
             wait
       - *restore-deps-cache
       - *configure
       - *upload-hunter-cache
       - *build
       - *save-deps-cache
-      - *store-eth
+      - *store-artifacts
       - *restore-ethash-dag
       - *test
       - *save-ethash-dag

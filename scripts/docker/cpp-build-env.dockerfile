@@ -36,7 +36,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     llvm-5.0 \
     # Dependencies
     libleveldb-dev \
-    libmicrohttpd-dev \
   && rm -rf /var/lib/apt/lists/* \
   && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-5.0 1 \
   && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-5.0 1 \
