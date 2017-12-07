@@ -54,7 +54,7 @@ defaults:
           test/testeth -t BlockChainSuite/updateStats
         fi
 
-        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
+        ctest --extra-verbose --output-on-failure -j $TEST_PARALLEL_JOBS
 
   store-eth: &store-artifacts
     store_artifacts:
@@ -149,7 +149,7 @@ jobs:
       - GCOV: gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
+      - TEST_PARALLEL_JOBS: 16
     macos:
       xcode: "9.0"
     steps:
