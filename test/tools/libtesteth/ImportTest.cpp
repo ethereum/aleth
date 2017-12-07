@@ -560,12 +560,12 @@ void ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
 	}
 }
 
-void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
+bool ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
 {
-	checkGeneralTestSectionSearch(_expects, _errorTransactions, _network, NULL);
+	return checkGeneralTestSectionSearch(_expects, _errorTransactions, _network, NULL);
 }
 
-void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network, TrExpectSection* _search) const
+bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network, TrExpectSection* _search) const
 {
 	vector<int> d;
 	vector<int> g;
@@ -583,7 +583,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	{
 		//skip this check if we execute transactions only on another specified network
 		if (!inArray(network, Options::get().singleTestNet) && !inArray(network, string{"ALL"}))
-			return;
+			return false;
 	}
 
 	if (_expects.count("indexes"))
@@ -597,11 +597,11 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 		//Skip this check if does not fit to options request
 		Options const& opt = Options::get();
 		if (!inArray(d, opt.trDataIndex) && !inArray(d, -1) && opt.trDataIndex != -1)
-			return;
+			return false;
 		if (!inArray(g, opt.trGasIndex) && !inArray(g, -1) && opt.trGasIndex != -1)
-			return;
+			return false;
 		if (!inArray(v, opt.trValueIndex) && !inArray(v, -1) && opt.trValueIndex != -1)
-			return;
+			return false;
 	}
 	else
 		BOOST_ERROR(TestOutputHelper::get().testName() + " indexes section not set!");
@@ -636,7 +636,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 				{
 					_search->second.first = expectState;
 					_search->second.second = stateMap;
-					return;
+					return true;
 				}
 				int errcode = compareStates(expectState, postState, stateMap, WhenError::Throw);
 				if (errcode > 0)
@@ -669,6 +669,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	}
 	if (!_search) //if search for a single transaction in one of the expect sections then don't need this output.
 		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::get().testName() + " Expect results was not found in test execution!");
+	return foundResults;
 }
 
 void ImportTest::traceStateDiff()
