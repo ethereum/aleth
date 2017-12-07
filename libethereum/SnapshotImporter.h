@@ -41,6 +41,7 @@ DEV_SIMPLE_EXCEPTION(InvalidSnapshotManifest);
 DEV_SIMPLE_EXCEPTION(StateTrieReconstructionFailed);
 DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
 DEV_SIMPLE_EXCEPTION(InvalidBlockChunkData);
+DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
 
 class SnapshotImporter
 {
