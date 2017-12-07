@@ -30,39 +30,21 @@ branches:
     - hunter
 os: Visual Studio 2015
 configuration:
-    - RelWithDebInfo
+  - RelWithDebInfo
 environment:
-    TESTS: On
-    GITHUB_USER_PASSWORD:
-      secure: 7TuNppxpvI3M/IF1PfvzZ8LluCeCQAsdFoJY+KhNv/pe/rAw5HEsTjqdbyM1mEtd
-clone_script:
-# We have to overwrite the clone script to update submodules before
-# the cache invalidation check.
-  - ps: |
-      if(-not $env:appveyor_pull_request_number) {
-          git clone -q --depth 1 --branch=$env:appveyor_repo_branch https://github.com/$env:appveyor_repo_name.git $env:appveyor_build_folder
-          git checkout -qf $env:appveyor_repo_commit
-          git submodule -q update --init --recursive
-      } else {
-          git clone -q --depth 1 https://github.com/$env:appveyor_repo_name.git $env:appveyor_build_folder
-          git fetch -q origin +refs/pull/$env:appveyor_pull_request_number/merge:
-          git checkout -qf FETCH_HEAD
-          git submodule -q update --init --recursive
-      }
+  TESTS: On
+  GITHUB_USER_PASSWORD:
+    secure: 7TuNppxpvI3M/IF1PfvzZ8LluCeCQAsdFoJY+KhNv/pe/rAw5HEsTjqdbyM1mEtd
 cache:
-    - build/deps -> cmake/ProjectJsonRpc.cmake
-#RDP LOGIN details for trouble shooting
-#init:
-#    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-#on_finish:
-#    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  - build/deps -> cmake/ProjectLibFF.cmake
 install:
-    - scripts/install_deps.bat
-    - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps
-before_build:
-    - if not exist build mkdir build
-    - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=%TESTS% -DEVMJIT=OFF
+  - git submodule update --init --recursive
+  - scripts/install_deps.bat
+  - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps
+before_build: |
+  if not exist build mkdir build
+  cd build
+  cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=%TESTS% -DEVMJIT=OFF
 build_script:
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
@@ -70,7 +52,7 @@ build_script:
 after_build:
   ps: |
     if (-not $env:appveyor_pull_request_number) {
-      pip install requests
+      pip install --user requests
       cmake --build build --target hunter_upload_cache
     }
 test_script:
