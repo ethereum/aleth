@@ -107,8 +107,9 @@ public:
 
 	KeyCLI(OperationMode _mode = OperationMode::None): m_mode(_mode) {}
 
-	bool interpretOption(int& i, int argc, char** argv)
+	bool interpretOption(size_t& i, vector<string> const& argv)
 	{
+		size_t argc = argv.size();
 		string arg = argv[i];
 		if (arg == "--wallet-path" && i + 1 < argc)
 			m_walletPath = argv[++i];
