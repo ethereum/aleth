@@ -220,9 +220,8 @@ public:
     /// make a State object which uses it. If you have no preexisting database
     /// then set BaseState to something other than BaseState::PreExisting in
     /// order to prepopulate the Trie.
-    explicit State(u256 const& _accountStartNonce,
-                   OverlayDB const& _db,
-                   BaseState _bs = BaseState::PreExisting);
+    explicit State(u256 const& _accountStartNonce, OverlayDB const& _db,
+        BaseState _bs = BaseState::PreExisting);
 
     enum NullType
     {
@@ -239,8 +238,7 @@ public:
     /// Open a DB - useful for passing into the constructor & keeping for other
     /// states that are necessary.
     static OverlayDB openDB(boost::filesystem::path const& _path,
-                            h256 const& _genesisHash,
-                            WithExisting _we = WithExisting::Trust);
+        h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
     OverlayDB const& db() const { return m_db; }
     OverlayDB& db() { return m_db; }
 
@@ -257,18 +255,15 @@ public:
     /// Execute a given transaction.
     /// This will change the state accordingly.
     std::pair<ExecutionResult, TransactionReceipt> execute(
-        EnvInfo const& _envInfo,
-        SealEngineFace const& _sealEngine,
-        Transaction const& _t,
-        Permanence _p = Permanence::Committed,
+        EnvInfo const& _envInfo, SealEngineFace const& _sealEngine,
+        Transaction const& _t, Permanence _p = Permanence::Committed,
         OnOpFunc const& _onOp = OnOpFunc());
 
     /// Execute @a _txCount transactions of a given block.
     /// This will change the state accordingly.
-    void executeBlockTransactions(Block const& _block,
-                                  unsigned _txCount,
-                                  LastBlockHashesFace const& _lastHashes,
-                                  SealEngineFace const& _sealEngine);
+    void executeBlockTransactions(Block const& _block, unsigned _txCount,
+        LastBlockHashesFace const& _lastHashes,
+        SealEngineFace const& _sealEngine);
 
     /// Check if the address is in use.
     bool addressInUse(Address const& _address) const;
@@ -300,9 +295,8 @@ public:
      * @param _to Account to which @a _value will be added.
      * @param _value Amount to be transferred.
      */
-    void transferBalance(Address const& _from,
-                         Address const& _to,
-                         u256 const& _value)
+    void transferBalance(
+        Address const& _from, Address const& _to, u256 const& _value)
     {
         subBalance(_from, _value);
         addBalance(_to, _value);
@@ -316,9 +310,8 @@ public:
     u256 storage(Address const& _contract, u256 const& _memory) const;
 
     /// Set the value of a storage position of an account.
-    void setStorage(Address const& _contract,
-                    u256 const& _location,
-                    u256 const& _value);
+    void setStorage(
+        Address const& _contract, u256 const& _location, u256 const& _value);
 
     /// Clear the storage root hash of an account to the hash of the empty trie.
     void clearStorage(Address const& _contract);
@@ -435,10 +428,8 @@ private:
 
 std::ostream& operator<<(std::ostream& _out, State const& _s);
 
-State& createIntermediateState(State& o_s,
-                               Block const& _block,
-                               unsigned _txIndex,
-                               BlockChain const& _bc);
+State& createIntermediateState(
+    State& o_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc);
 
 template <class DB>
 AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state);

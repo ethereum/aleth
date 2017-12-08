@@ -57,9 +57,8 @@ const char* StateChat::name()
 namespace
 {
 /// @returns true when normally halted; false when exceptionally halted.
-bool executeTransaction(Executive& _e,
-                        Transaction const& _t,
-                        OnOpFunc const& _onOp)
+bool executeTransaction(
+    Executive& _e, Transaction const& _t, OnOpFunc const& _onOp)
 {
     _e.initialize(_t);
 
@@ -69,9 +68,8 @@ bool executeTransaction(Executive& _e,
 }
 }  // namespace
 
-State::State(u256 const& _accountStartNonce,
-             OverlayDB const& _db,
-             BaseState _bs)
+State::State(
+    u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs)
   : m_db(_db), m_state(&m_db), m_accountStartNonce(_accountStartNonce)
 {
     if (_bs != BaseState::PreExisting)
@@ -90,9 +88,8 @@ State::State(State const& _s)
     m_accountStartNonce(_s.m_accountStartNonce)
 {}
 
-OverlayDB State::openDB(fs::path const& _basePath,
-                        h256 const& _genesisHash,
-                        WithExisting _we)
+OverlayDB State::openDB(
+    fs::path const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
     fs::path path = _basePath.empty() ? Defaults::get()->m_dbPath : _basePath;
 
@@ -203,13 +200,11 @@ Account* State::account(Address const& _addr)
     clearCacheIfTooLarge();
 
     RLP state(stateBack);
-    auto i = m_cache.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(_addr),
-                             std::forward_as_tuple(state[0].toInt<u256>(),
-                                                   state[1].toInt<u256>(),
-                                                   state[2].toHash<h256>(),
-                                                   state[3].toHash<h256>(),
-                                                   Account::Unchanged));
+    auto i =
+        m_cache.emplace(std::piecewise_construct, std::forward_as_tuple(_addr),
+            std::forward_as_tuple(state[0].toInt<u256>(),
+                state[1].toInt<u256>(), state[2].toHash<h256>(),
+                state[3].toHash<h256>(), Account::Unchanged));
     m_unchangedCacheEntries.push_back(_addr);
     return &i.first->second;
 }
@@ -227,7 +222,7 @@ void State::clearCacheIfTooLarge() const
 
         Address const addr = m_unchangedCacheEntries[randomIndex];
         swap(m_unchangedCacheEntries[randomIndex],
-             m_unchangedCacheEntries.back());
+            m_unchangedCacheEntries.back());
         m_unchangedCacheEntries.pop_back();
 
         auto cacheEntry = m_cache.find(addr);
@@ -402,8 +397,7 @@ u256 State::storage(Address const& _id, u256 const& _key) const
             return mit->second;
 
         // Not in the storage cache - go to the DB.
-        SecureTrieDB<h256, OverlayDB> memdb(
-            const_cast<OverlayDB*>(&m_db),
+        SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db),
             a->baseRoot());  // promise we won't change the overlay! :)
         string payload = memdb.at(_key);
         u256 ret = payload.size() ? RLP(payload).toInt<u256>() : 0;
@@ -414,9 +408,8 @@ u256 State::storage(Address const& _id, u256 const& _key) const
         return 0;
 }
 
-void State::setStorage(Address const& _contract,
-                       u256 const& _key,
-                       u256 const& _value)
+void State::setStorage(
+    Address const& _contract, u256 const& _key, u256 const& _value)
 {
     m_changeLog.emplace_back(_contract, _key, storage(_contract, _key));
     m_cache[_contract].setStorage(_key, _value);
@@ -440,8 +433,7 @@ map<h256, pair<u256, u256>> State::storage(Address const& _id) const
         // Pull out all values from trie storage.
         if (h256 root = a->baseRoot())
         {
-            SecureTrieDB<h256, OverlayDB> memdb(
-                const_cast<OverlayDB*>(&m_db),
+            SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db),
                 root);  // promise we won't alter the overlay! :)
 
             for (auto it = memdb.hashedBegin(); it != memdb.hashedEnd(); ++it)
@@ -574,11 +566,8 @@ void State::rollback(size_t _savepoint)
 }
 
 std::pair<ExecutionResult, TransactionReceipt> State::execute(
-    EnvInfo const& _envInfo,
-    SealEngineFace const& _sealEngine,
-    Transaction const& _t,
-    Permanence _p,
-    OnOpFunc const& _onOp)
+    EnvInfo const& _envInfo, SealEngineFace const& _sealEngine,
+    Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
     auto onOp = _onOp;
 #if ETH_VMTRACE
@@ -621,10 +610,8 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(
     return make_pair(res, receipt);
 }
 
-void State::executeBlockTransactions(Block const& _block,
-                                     unsigned _txCount,
-                                     LastBlockHashesFace const& _lastHashes,
-                                     SealEngineFace const& _sealEngine)
+void State::executeBlockTransactions(Block const& _block, unsigned _txCount,
+    LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine)
 {
     u256 gasUsed = 0;
     for (unsigned i = 0; i < _txCount; ++i)
@@ -714,10 +701,10 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
                     if (j.second)
                         contout << std::endl
                                 << (delta.count(j.first) ?
-                                        back.count(j.first) ? " *     " :
-                                                              " +     " :
-                                        cached.count(j.first) ? " .     " :
-                                                                "       ")
+                                           back.count(j.first) ? " *     " :
+                                                                 " +     " :
+                                           cached.count(j.first) ? " .     " :
+                                                                   "       ")
                                 << std::hex << nouppercase << std::setw(64)
                                 << j.first << ": " << std::setw(0) << j.second;
                     else
@@ -736,10 +723,8 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
     return _out;
 }
 
-State& dev::eth::createIntermediateState(State& o_s,
-                                         Block const& _block,
-                                         unsigned _txIndex,
-                                         BlockChain const& _bc)
+State& dev::eth::createIntermediateState(
+    State& o_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc)
 {
     o_s = _block.state();
     u256 const rootHash = _block.stateRootBeforeTx(_txIndex);
@@ -755,8 +740,8 @@ State& dev::eth::createIntermediateState(State& o_s,
 }
 
 template <class DB>
-AddressHash dev::eth::commit(AccountMap const& _cache,
-                             SecureTrieDB<Address, DB>& _state)
+AddressHash dev::eth::commit(
+    AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
 {
     AddressHash ret;
     for (auto const& i : _cache)
@@ -776,8 +761,8 @@ AddressHash dev::eth::commit(AccountMap const& _cache,
                 }
                 else
                 {
-                    SecureTrieDB<h256, DB> storageDB(_state.db(),
-                                                     i.second.baseRoot());
+                    SecureTrieDB<h256, DB> storageDB(
+                        _state.db(), i.second.baseRoot());
                     for (auto const& j : i.second.storageOverlay())
                         if (j.second)
                             storageDB.insert(j.first, rlp(j.second));
