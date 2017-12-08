@@ -1,13 +1,16 @@
 /*
 	This file is part of cpp-ethereum.
+
 	cpp-ethereum is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
+
 	cpp-ethereum is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
+
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -74,7 +77,8 @@ string ethCredits(bool _interactive = false)
 {
 	std::ostringstream cout;
 	if (_interactive)
-		cout << "Type 'exit' to quit\n\n";
+		cout
+			<< "Type 'exit' to quit\n\n";
 	return credits() + cout.str();
 }
 
@@ -94,6 +98,7 @@ to set locale to fail, so there are only two possible actions, the first is to
 throw a runtime exception and cause the program to quit (default behaviour),
 or the second is to modify the environment to something sensible (least
 surprising behaviour).
+
 The follow code produces the least surprising behaviour. It will use the user
 specified default locale if it is valid, and if not then it will modify the
 environment the process is running in to use a sensible default. This also means
@@ -303,6 +308,7 @@ int main(int argc, char** argv)
 	bool chainConfigIsSet = false;
 	string configJSON;
 	string genesisJSON;
+	
 	po::options_description clientDefaultMode("Client mode (default)");
 	clientDefaultMode.add_options()
 		("format", po::value<string>(), "<binary/hex/human> Set format.")
@@ -332,11 +338,13 @@ int main(int argc, char** argv)
 		("genesis", po::value<string>(), "Set genesisJSON")
 		("genesis-json", po::value<string>(), "Set genesisJSON")
 		("json-admin", po::value<string>(), "Set jsonAdmin");
+	
 	po::options_description clientTransacting("Client transactions");
 	clientTransacting.add_options()
 		("ask", po::value<string>(), "See description under.")
 		("bid", po::value<string>(), "See description under.")
 		("unsafe-transactions", "Allow all transactions to proceed without verification. EXTREMELY UNSAFE.");
+	
 	po::options_description clientMining("Client mining");
 	clientMining.add_options()
 		("address,a", po::value<string>(), "<addr>  Set the author (mining payout) address to given address (default: auto).")
@@ -344,6 +352,7 @@ int main(int argc, char** argv)
 		("mining,m", po::value<string>(), "<on/off/number>  Enable mining, optionally for a specified number of blocks (default: off).")
 		("cpu,C", "When mining, use the CPU.")
 		("mining-threads,t", "<n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform).");
+	
 	po::options_description clientNetworking("Client networking");
 	clientNetworking.add_options()
 		("client-name", po::value<string>(), "<name>  Add a name to your client's version string (default: blank).")
@@ -367,6 +376,7 @@ int main(int argc, char** argv)
 		("pin",  "Only accept or connect to trusted peers.")
 		("hermit",  "Equivalent to --no-discovery --pin.")
 		("sociable",  "Force discovery and no pinning.\n");
+	
 	po::options_description importExportMode("Import/export mode");
 	importExportMode.add_options()
 		("from", po::value<string>(), "<n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'.")
@@ -374,6 +384,7 @@ int main(int argc, char** argv)
 		("only", po::value<string>(), "<n>  Equivalent to --export-from n --export-to n.")
 		("dont-check", "Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.\n")
 		("import-snapshot", po::value<string>(), "<path>  Import blockchain and state data from the Parity Warp Sync snapshot.");
+	
 	po::options_description generalOptions("General Options");
 	generalOptions.add_options()
 		("db-path,d", po::value<string>(), "See description under.")
@@ -385,24 +396,27 @@ int main(int argc, char** argv)
 		("verbosity,v", po::value<int>(), "<0 - 9>  Set the log verbosity from 0 to 9 (default: 8).")
 		("version,V",  "Show the version and exit.")
 		("help,h",  "Show this help message and exit.\n");
+	
 	po::options_description experimentalProofOfConcept("Experimental / Proof of Concept");
 	experimentalProofOfConcept.add_options()
 		("shh", "Enable Whisper.\n");
+	
 	po::options_description allowedOptions("Allowed options");
 	allowedOptions.add(clientDefaultMode).add(clientTransacting).add(clientMining).add(clientNetworking).add(importExportMode).add(generalOptions);
+	
 	po::variables_map vm;
 	vector<string> unrecognisedOptions;
 	try
 	{
-			po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
-			unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
-			po::store(parsed, vm);
-			po::notify(vm);
+		po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
+		unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
+		po::store(parsed, vm);
+		po::notify(vm);
 	}
 	catch (po::error const& e)
 	{
-			cerr << e.what();
-			return -1;
+		cerr << e.what();
+		return -1;
 	}
 	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
 	{
@@ -877,7 +891,7 @@ int main(int argc, char** argv)
 		{
 			cerr << "provided genesis block description is not well formatted\n";
 			string genesisSample =
-					R"E(
+			R"E(
 			{
 				"nonce": "0x0000000000000042",
 				"difficulty": "0x400000000",
@@ -1014,10 +1028,10 @@ int main(int argc, char** argv)
 			bytes block = web3.ethereum()->blockChain().block(web3.ethereum()->blockChain().numberHash(i));
 			switch (exportFormat)
 			{
-				case Format::Binary: out.write((char const*)block.data(), block.size()); break;
-				case Format::Hex: out << toHex(block) << "\n"; break;
-				case Format::Human: out << RLP(block) << "\n"; break;
-				default:;
+			case Format::Binary: out.write((char const*)block.data(), block.size()); break;
+			case Format::Hex: out << toHex(block) << "\n"; break;
+			case Format::Human: out << RLP(block) << "\n"; break;
+			default:;
 			}
 		}
 		return 0;
@@ -1045,12 +1059,12 @@ int main(int argc, char** argv)
 
 			switch (web3.ethereum()->queueBlock(block, safeImport))
 			{
-				case ImportResult::Success: good++; break;
-				case ImportResult::AlreadyKnown: alreadyHave++; break;
-				case ImportResult::UnknownParent: unknownParent++; break;
-				case ImportResult::FutureTimeUnknown: unknownParent++; futureTime++; break;
-				case ImportResult::FutureTimeKnown: futureTime++; break;
-				default: bad++; break;
+			case ImportResult::Success: good++; break;
+			case ImportResult::AlreadyKnown: alreadyHave++; break;
+			case ImportResult::UnknownParent: unknownParent++; break;
+			case ImportResult::FutureTimeUnknown: unknownParent++; futureTime++; break;
+			case ImportResult::FutureTimeKnown: futureTime++; break;
+			default: bad++; break;
 			}
 
 			// sync chain with queue
@@ -1185,14 +1199,14 @@ int main(int argc, char** argv)
 				return true;
 
 			string r = getResponse(_t.userReadable(isProxy,
-					[&](TransactionSkeleton const& _t) -> pair<bool, string>
-					{
-							h256 contractCodeHash = web3.ethereum()->postState().codeHash(_t.to);
-							if (contractCodeHash == EmptySHA3)
-									return std::make_pair(false, std::string());
-							// TODO: actually figure out the natspec. we'll need the natspec database here though.
-							return std::make_pair(true, std::string());
-					}, [&](Address const& _a) { return _a.hex(); }
+				[&](TransactionSkeleton const& _t) -> pair<bool, string>
+				{
+					h256 contractCodeHash = web3.ethereum()->postState().codeHash(_t.to);
+					if (contractCodeHash == EmptySHA3)
+						return std::make_pair(false, std::string());
+					// TODO: actually figure out the natspec. we'll need the natspec database here though.
+					return std::make_pair(true, std::string());
+				}, [&](Address const& _a) { return _a.hex(); }
 			) + "\nEnter yes/no/always (always to this address): ", {"yes", "n", "N", "no", "NO", "always"});
 			if (r == "always")
 				allowedDestinations.insert(_t.to);
@@ -1217,21 +1231,17 @@ int main(int argc, char** argv)
 		if (testingMode)
 			testEth = new rpc::Test(*web3.ethereum());
 
-		if (ipc)
-		{
-			jsonrpcIpcServer.reset(new FullServer(
-					ethFace, new rpc::Whisper(web3, {}), new rpc::Net(web3),
-					new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum()),
-					new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
-					new rpc::AdminNet(web3, *sessionManager.get()),
-					new rpc::AdminUtils(*sessionManager.get()),
-					new rpc::Debug(*web3.ethereum()),
-					testEth
-			));
-			auto ipcConnector = new IpcServer("geth");
-			jsonrpcIpcServer->addConnector(ipcConnector);
-			ipcConnector->StartListening();
-		}
+		jsonrpcIpcServer.reset(new FullServer(
+			ethFace, new rpc::Net(web3),
+			new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum()),
+			new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
+			new rpc::AdminNet(web3, *sessionManager.get()),
+			new rpc::Debug(*web3.ethereum()),
+			testEth
+		));
+		auto ipcConnector = new IpcServer("geth");
+		jsonrpcIpcServer->addConnector(ipcConnector);
+		ipcConnector->StartListening();
 
 		if (jsonAdmin.empty())
 			jsonAdmin = sessionManager->newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
