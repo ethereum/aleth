@@ -101,8 +101,9 @@ public:
 		BasicAuthority::init();
 	}
 
-	bool interpretOption(int& i, int argc, char** argv)
+	bool interpretOption(size_t& i, vector<string> const& argv)
 	{
+		size_t argc = argv.size();
 		string arg = argv[i];
 		if (arg == "--benchmark-warmup" && i + 1 < argc)
 			try {

@@ -8,7 +8,7 @@ set(
 add_executable(eth ${sources})
 target_link_libraries(
     eth
-    PRIVATE ethereum ethashseal evm web3jsonrpc webthree devcore
+    PRIVATE ethereum ethashseal evm web3jsonrpc webthree devcore Boost::program_options
 )
 
 target_include_directories(eth PRIVATE ../utils)
