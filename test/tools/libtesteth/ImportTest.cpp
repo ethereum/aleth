@@ -532,15 +532,6 @@ void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& 
 		_out.push_back(_json.get_int());
 }
 
-template<class T>
-bool inArray(vector<T> const& _array, const T _val)
-{
-	for (auto const& obj  : _array)
-		if (obj == _val)
-			return true;
-	return false;
-}
-
 void ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
 {
 	vector<eth::Network> const& allnetworks = test::getNetworks();
