@@ -35,10 +35,8 @@ struct DBDetail: public LogChannel { static const char* name() { return "DBDetai
 class OverlayDB: public MemoryDB
 {
 public:
-	OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
+	explicit OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
 	~OverlayDB();
-
-	ldb::DB* db() const { return m_db.get(); }
 
 	void commit();
 	void rollback();
