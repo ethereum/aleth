@@ -72,6 +72,7 @@ public:
 	std::string lookupCode(h256 const& _hash) const override { return m_trie.db()->lookup(_hash); }
 
 private:
+	// can be used only with already imported accounts
 	h256 accountStorageRoot(h256 const& _addressHash) const
 	{
 		std::string const account = m_trie.at(_addressHash);
