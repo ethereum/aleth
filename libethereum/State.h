@@ -160,8 +160,8 @@ struct Change
     Change(Kind _kind, Address const& _addr, u256 const& _value = 0)
       : kind(_kind), address(_addr), value(_value)
     {
-        assert(_kind !=
-               Code);  // For this the special constructor needs to be used.
+        // For this the special constructor needs to be used.
+        assert(_kind != Code);
     }
 
     /// Helper constructor especially for storage change log.
