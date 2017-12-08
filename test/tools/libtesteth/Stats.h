@@ -41,7 +41,7 @@ public:
 
 	static Stats& get();
 
-	~Stats();
+	~Stats() final;
 
 	void suiteStarted(std::string const& _name) override;
 	void testStarted(std::string const& _name) override;

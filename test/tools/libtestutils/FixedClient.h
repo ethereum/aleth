@@ -38,21 +38,20 @@ class FixedClient: public dev::eth::ClientBase
 {
 public:
 	FixedClient(eth::BlockChain const& _bc, eth::Block const& _block) :  m_bc(_bc), m_block(_block) {}
-	virtual ~FixedClient() {}
-	
+
 	// stub
-	virtual void flushTransactions() override {}
-	virtual eth::BlockChain& bc() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("FixedClient::bc()")); }
-	virtual eth::BlockChain const& bc() const override { return m_bc; }
+	void flushTransactions() override {}
+	eth::BlockChain& bc() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("FixedClient::bc()")); }
+	eth::BlockChain const& bc() const override { return m_bc; }
 	using ClientBase::block;
-	virtual eth::Block block(h256 const& _h) const override;
-	virtual eth::Block preSeal() const override { ReadGuard l(x_stateDB); return m_block; }
-	virtual eth::Block postSeal() const override { ReadGuard l(x_stateDB); return m_block; }
-	virtual void setAuthor(Address const& _us) override { WriteGuard l(x_stateDB); m_block.setAuthor(_us); }
-	virtual void prepareForTransaction() override {}
-	virtual std::pair<h256, Address> submitTransaction(eth::TransactionSkeleton const&, Secret const&) override { return {}; };
-	virtual eth::ImportResult injectTransaction(bytes const&, eth::IfDropped) override { return {}; }
-	virtual eth::ExecutionResult call(Address const&, u256, Address, bytes const&, u256, u256, eth::BlockNumber, eth::FudgeFactor) override { return {}; };
+	eth::Block block(h256 const& _h) const override;
+	eth::Block preSeal() const override { ReadGuard l(x_stateDB); return m_block; }
+	eth::Block postSeal() const override { ReadGuard l(x_stateDB); return m_block; }
+	void setAuthor(Address const& _us) override { WriteGuard l(x_stateDB); m_block.setAuthor(_us); }
+	void prepareForTransaction() override {}
+	std::pair<h256, Address> submitTransaction(eth::TransactionSkeleton const&, Secret const&) override { return {}; };
+	eth::ImportResult injectTransaction(bytes const&, eth::IfDropped) override { return {}; }
+	eth::ExecutionResult call(Address const&, u256, Address, bytes const&, u256, u256, eth::BlockNumber, eth::FudgeFactor) override { return {}; };
 
 private:
 	eth::BlockChain const& m_bc;
