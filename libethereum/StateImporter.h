@@ -34,7 +34,7 @@ class OverlayDB;
 namespace eth
 {
 
-DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
+DEV_SIMPLE_EXCEPTION(InvalidAccountInTheDatabase);
 
 class StateImporterFace
 {
@@ -46,6 +46,8 @@ public:
 	virtual h256 importCode(bytesConstRef _code) = 0;
 
 	virtual void commitStateDatabase() = 0;
+
+	virtual bool isAccountImported(h256 const& _addressHash) const = 0;
 
 	virtual h256 stateRoot() const = 0;
 
