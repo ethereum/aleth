@@ -51,7 +51,7 @@ namespace fs = boost::filesystem;
 namespace
 {
 
-ldb::Slice const c_sliceChainStart{"chainStart"};
+db::Slice const c_sliceChainStart{"chainStart"};
 
 }
 
@@ -67,48 +67,29 @@ const char* BlockChainNote::name() { return EthBlue "☍" EthBlue " ℹ"; }
 const char* BlockChainChat::name() { return EthBlue "☍" EthWhite " ◌"; }
 #endif
 
-std::ostream& dev::eth::operator<<(std::ostream& _out, BlockChain const& _bc)
-{
-	string cmp = toBigEndianString(_bc.currentHash());
-	auto it = _bc.m_blocksDB->NewIterator(_bc.m_readOptions);
-	for (it->SeekToFirst(); it->Valid(); it->Next())
-		if (it->key().ToString() != "best")
-		{
-			try {
-				BlockHeader d(bytesConstRef(it->value()));
-				_out << toHex(it->key().ToString()) << ":   " << d.number() << " @ " << d.parentHash() << (cmp == it->key().ToString() ? "  BEST" : "") << std::endl;
-			}
-			catch (...) {
-				cwarn << "Invalid DB entry:" << toHex(it->key().ToString()) << " -> " << toHex(bytesConstRef(it->value()));
-			}
-		}
-	delete it;
-	return _out;
-}
-
-ldb::Slice dev::eth::toSlice(h256 const& _h, unsigned _sub)
+db::Slice dev::eth::toSlice(h256 const& _h, unsigned _sub)
 {
 #if ALL_COMPILERS_ARE_CPP11_COMPLIANT
 	static thread_local FixedHash<33> h = _h;
 	h[32] = (uint8_t)_sub;
-	return (ldb::Slice)h.ref();
+	return (db::Slice)h.ref();
 #else
 	static boost::thread_specific_ptr<FixedHash<33>> t_h;
 	if (!t_h.get())
 		t_h.reset(new FixedHash<33>);
 	*t_h = FixedHash<33>(_h);
 	(*t_h)[32] = (uint8_t)_sub;
-	return (ldb::Slice)t_h->ref();
+	return (db::Slice)t_h->ref();
 #endif //ALL_COMPILERS_ARE_CPP11_COMPLIANT
 }
 
-ldb::Slice dev::eth::toSlice(uint64_t _n, unsigned _sub)
+db::Slice dev::eth::toSlice(uint64_t _n, unsigned _sub)
 {
 #if ALL_COMPILERS_ARE_CPP11_COMPLIANT
 	static thread_local FixedHash<33> h;
 	toBigEndian(_n, bytesRef(h.data() + 24, 8));
 	h[32] = (uint8_t)_sub;
-	return (ldb::Slice)h.ref();
+	return (db::Slice)h.ref();
 #else
 	static boost::thread_specific_ptr<FixedHash<33>> t_h;
 	if (!t_h.get())
@@ -116,17 +97,8 @@ ldb::Slice dev::eth::toSlice(uint64_t _n, unsigned _sub)
 	bytesRef ref(t_h->data() + 24, 8);
 	toBigEndian(_n, ref);
 	(*t_h)[32] = (uint8_t)_sub;
-	return (ldb::Slice)t_h->ref();
+	return (db::Slice)t_h->ref();
 #endif
-}
-
-namespace dev
-{
-class WriteBatchNoter: public ldb::WriteBatch::Handler
-{
-	virtual void Put(ldb::Slice const& _key, ldb::Slice const& _value) { cnote << "Put" << toHex(bytesConstRef(_key)) << "=>" << toHex(bytesConstRef(_value)); }
-	virtual void Delete(ldb::Slice const& _key) { cnote << "Delete" << toHex(bytesConstRef(_key)); }
-};
 }
 
 namespace
@@ -258,11 +230,9 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 		fs::remove_all(extrasPath / fs::path("extras"));
 	}
 
-	ldb::Options o;
-	o.create_if_missing = true;
-	o.max_open_files = 256;
-	ldb::DB::Open(o, (chainPath / fs::path("blocks")).string(), &m_blocksDB);
-	ldb::DB::Open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
+	// TODO: Open DBs
+	// db::DB::open(o, (chainPath / fs::path("blocks")).string(), &m_blocksDB);
+	// db::DB::open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
 	if (!m_blocksDB || !m_extrasDB)
 	{
 		if (fs::space(chainPath / fs::path("blocks")).available < 1024)
@@ -282,15 +252,13 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 		}
 	}
 
-//	m_writeOptions.sync = true;
-
 	if (_we != WithExisting::Verify && !details(m_genesisHash))
 	{
 		BlockHeader gb(m_params.genesisBlock());
 		// Insert details of genesis block.
 		m_details[m_genesisHash] = BlockDetails(0, gb.difficulty(), h256(), {});
 		auto r = m_details[m_genesisHash].rlp();
-		m_extrasDB->Put(m_writeOptions, toSlice(m_genesisHash, ExtraDetails), (ldb::Slice)dev::ref(r));
+		m_extrasDB->insert(toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(r));
 		assert(isKnown(gb.hash()));
 	}
 
@@ -299,10 +267,17 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 #endif
 
 	// TODO: Implement ability to rebuild details map from DB.
-	std::string l;
-	m_extrasDB->Get(m_readOptions, ldb::Slice("best"), &l);
-	m_lastBlockHash = l.empty() ? m_genesisHash : *(h256*)l.data();
-	m_lastBlockNumber = number(m_lastBlockHash);
+	try
+	{
+		auto const l = m_extrasDB->lookup(db::Slice("best"));
+		m_lastBlockHash = *(h256*)l.data();
+		m_lastBlockNumber = number(m_lastBlockHash);
+	}
+	catch (const db::FailedLookupInDB& /* ex */)
+	{
+		m_lastBlockHash = m_genesisHash;
+		m_lastBlockNumber = number(m_lastBlockHash);
+	}
 
 	ctrace << "Opened blockchain DB. Latest: " << currentHash() << (lastMinor == c_minorProtocolVersion ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
 	return lastMinor;
@@ -366,11 +341,10 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 	delete m_extrasDB;
 	m_extrasDB = nullptr;
 	fs::rename(extrasPath / fs::path("extras"), extrasPath / fs::path("extras.old"));
-	ldb::DB* oldExtrasDB;
-	ldb::Options o;
-	o.create_if_missing = true;
-	ldb::DB::Open(o, (extrasPath / fs::path("extras.old")).string(), &oldExtrasDB);
-	ldb::DB::Open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
+	db::DB* oldExtrasDB = nullptr;
+	// TODO: Open DBs
+	// db::DB::Open(o, (extrasPath / fs::path("extras.old")).string(), &oldExtrasDB);
+	// db::DB::Open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
 
 	// Open a fresh state DB
 	Block s = genesisBlock(State::openDB(path.string(), m_genesisHash, WithExisting::Kill));
@@ -388,7 +362,7 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 
 	m_details[m_lastBlockHash].totalDifficulty = s.info().difficulty();
 
-	m_extrasDB->Put(m_writeOptions, toSlice(m_lastBlockHash, ExtraDetails), (ldb::Slice)dev::ref(m_details[m_lastBlockHash].rlp()));
+	m_extrasDB->insert(toSlice(m_lastBlockHash, ExtraDetails), (db::Slice)dev::ref(m_details[m_lastBlockHash].rlp()));
 
 	h256 lastHash = m_lastBlockHash;
 	Timer t;
@@ -433,13 +407,8 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 
 string BlockChain::dumpDatabase() const
 {
-	stringstream ss;
-
-	ss << m_lastBlockHash << endl;
-	ldb::Iterator* i = m_extrasDB->NewIterator(m_readOptions);
-	for (i->SeekToFirst(); i->Valid(); i->Next())
-		ss << toHex(bytesConstRef(i->key())) << "/" << toHex(bytesConstRef(i->value())) << endl;
-	return ss.str();
+	// TODO
+	return "";
 }
 
 tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
@@ -593,8 +562,8 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
 
 	// OK - we're happy. Insert into database.
-	ldb::WriteBatch blocksBatch;
-	ldb::WriteBatch extrasBatch;
+	std::unique_ptr<db::Transaction> blocksTransaction = m_blocksDB->begin();
+	std::unique_ptr<db::Transaction> extrasTransaction = m_extrasDB->begin();
 
 	BlockLogBlooms blb;
 	for (auto i: RLP(_receipts))
@@ -612,31 +581,33 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 			m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
 	}
 
-	blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
+	blocksTransaction->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
 	DEV_READ_GUARDED(x_details)
-		extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
+		extrasTransaction->insert(toSlice(_block.info.parentHash(), ExtraDetails), (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
 	BlockDetails bd((unsigned)pd.number + 1, pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {});
-	extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(bd.rlp()));
-	extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));
-	extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)_receipts);
+	extrasTransaction->insert(toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(bd.rlp()));
+	extrasTransaction->insert(toSlice(_block.info.hash(), ExtraLogBlooms), (db::Slice)dev::ref(blb.rlp()));
+	extrasTransaction->insert(toSlice(_block.info.hash(), ExtraReceipts), (db::Slice)_receipts);
 
-	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
-	if (!o.ok())
+	try
 	{
-		cwarn << "Error writing to blockchain database: " << o.ToString();
-		WriteBatchNoter n;
-		blocksBatch.Iterate(&n);
+		blocksTransaction->commit();
+	}
+	catch (const db::FailedCommitInDB& ex)
+	{
+		cwarn << "Error writing to blockchain database: " << ex.what();
 		cwarn << "Fail writing to blockchain database. Bombing out.";
 		exit(-1);
 	}
 
-	o = m_extrasDB->Write(m_writeOptions, &extrasBatch);
-	if (!o.ok())
+	try
 	{
-		cwarn << "Error writing to extras database: " << o.ToString();
-		WriteBatchNoter n;
-		extrasBatch.Iterate(&n);
+		extrasTransaction->commit();
+	}
+	catch (const db::FailedCommitInDB& ex)
+	{
+		cwarn << "Error writing to extras database: " << ex.what();
 		cwarn << "Fail writing to extras database. Bombing out.";
 		exit(-1);
 	}
@@ -758,8 +729,8 @@ void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
 
 ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger)
 {
-	ldb::WriteBatch blocksBatch;
-	ldb::WriteBatch extrasBatch;
+	std::unique_ptr<db::Transaction> blocksTransaction = m_blocksDB->begin();
+	std::unique_ptr<db::Transaction> extrasTransaction = m_extrasDB->begin();
 	h256 newLastBlockHash = currentHash();
 	unsigned newLastBlockNumber = number();
 
@@ -776,19 +747,19 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 		_performanceLogger.onStageFinished("collation");
 
-		blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
+		blocksTransaction->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
 		DEV_READ_GUARDED(x_details)
-			extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
+			extrasTransaction->insert(toSlice(_block.info.parentHash(), ExtraDetails), (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
 		BlockDetails const details((unsigned)_block.info.number(), _totalDifficulty, _block.info.parentHash(), {});
-		extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(details.rlp()));
+		extrasTransaction->insert(toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(details.rlp()));
 
 		BlockLogBlooms blb;
 		for (auto i: RLP(_receipts))
 			blb.blooms.push_back(TransactionReceipt(i.data()).bloom());
-		extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));
+		extrasTransaction->insert(toSlice(_block.info.hash(), ExtraLogBlooms), (db::Slice)dev::ref(blb.rlp()));
 
-		extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)_receipts);
+		extrasTransaction->insert(toSlice(_block.info.hash(), ExtraReceipts), (db::Slice)_receipts);
 
 		_performanceLogger.onStageFinished("writing");
 	}
@@ -854,14 +825,14 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 				TransactionAddress ta;
 				ta.blockHash = tbi.hash();
 				for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
-					extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));
+					extrasTransaction->insert(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (db::Slice)dev::ref(ta.rlp()));
 			}
 
 			// Update database with them.
 			ReadGuard l1(x_blocksBlooms);
 			for (auto const& h: alteredBlooms)
-				extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));
-			extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
+				extrasTransaction->insert(toSlice(h, ExtraBlocksBlooms), (db::Slice)dev::ref(m_blocksBlooms[h].rlp()));
+			extrasTransaction->insert(toSlice(h256(tbi.number()), ExtraBlockHash), (db::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
 		}
 
 		// FINALLY! change our best hash.
@@ -878,22 +849,24 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 		clog(BlockChainChat) << "   Imported but not best (oTD:" << details(last).totalDifficulty << " > TD:" << _totalDifficulty << "; " << details(last).number << ".." << _block.info.number() << ")";
 	}
 
-	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
-	if (!o.ok())
+	try
 	{
-		cwarn << "Error writing to blockchain database: " << o.ToString();
-		WriteBatchNoter n;
-		blocksBatch.Iterate(&n);
+		blocksTransaction->commit();
+	}
+	catch (const db::FailedCommitInDB& ex)
+	{
+		cwarn << "Error writing to blockchain database: " << ex.what();
 		cwarn << "Fail writing to blockchain database. Bombing out.";
 		exit(-1);
 	}
 
-	o = m_extrasDB->Write(m_writeOptions, &extrasBatch);
-	if (!o.ok())
+	try
 	{
-		cwarn << "Error writing to extras database: " << o.ToString();
-		WriteBatchNoter n;
-		extrasBatch.Iterate(&n);
+		extrasTransaction->commit();
+	}
+	catch (const db::FailedCommitInDB& ex)
+	{
+		cwarn << "Error writing to extras database: " << ex.what();
 		cwarn << "Fail writing to extras database. Bombing out.";
 		exit(-1);
 	}
@@ -926,11 +899,14 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 		{
 			m_lastBlockHash = newLastBlockHash;
 			m_lastBlockNumber = newLastBlockNumber;
-			o = m_extrasDB->Put(m_writeOptions, ldb::Slice("best"), ldb::Slice((char const*)&m_lastBlockHash, 32));
-			if (!o.ok())
+			try
 			{
-				cwarn << "Error writing to extras database: " << o.ToString();
-				cout << "Put" << toHex(bytesConstRef(ldb::Slice("best"))) << "=>" << toHex(bytesConstRef(ldb::Slice((char const*)&m_lastBlockHash, 32)));
+				m_extrasDB->insert(db::Slice("best"), db::Slice((char const*)&m_lastBlockHash, 32));
+			}
+			catch (const db::FailedInsertInDB& ex)
+			{
+				cwarn << "Error writing to extras database: " << ex.what();
+				cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>" << toHex(bytesConstRef(db::Slice((char const*)&m_lastBlockHash, 32)));
 				cwarn << "Fail writing to extras database. Bombing out.";
 				exit(-1);
 			}
@@ -1071,11 +1047,14 @@ void BlockChain::rewind(unsigned _newHead)
 		clearCachesDuringChainReversion(_newHead + 1);
 		m_lastBlockHash = numberHash(_newHead);
 		m_lastBlockNumber = _newHead;
-		auto o = m_extrasDB->Put(m_writeOptions, ldb::Slice("best"), ldb::Slice((char const*)&m_lastBlockHash, 32));
-		if (!o.ok())
+		try
 		{
-			cwarn << "Error writing to extras database: " << o.ToString();
-			cout << "Put" << toHex(bytesConstRef(ldb::Slice("best"))) << "=>" << toHex(bytesConstRef(ldb::Slice((char const*)&m_lastBlockHash, 32)));
+			m_extrasDB->insert(db::Slice("best"), db::Slice((char const*)&m_lastBlockHash, 32));
+		}
+		catch (const db::FailedInsertInDB& ex)
+		{
+			cwarn << "Error writing to extras database: " << ex.what();
+			cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>" << toHex(bytesConstRef(db::Slice((char const*)&m_lastBlockHash, 32)));
 			cwarn << "Fail writing to extras database. Bombing out.";
 			exit(-1);
 		}
@@ -1246,9 +1225,10 @@ void BlockChain::garbageCollect(bool _force)
 
 void BlockChain::checkConsistency()
 {
+	/* TODO
 	DEV_WRITE_GUARDED(x_details)
 		m_details.clear();
-	ldb::Iterator* it = m_blocksDB->NewIterator(m_readOptions);
+	db::Iterator* it = m_blocksDB->NewIterator(m_readOptions);
 	for (it->SeekToFirst(); it->Valid(); it->Next())
 		if (it->key().size() == 32)
 		{
@@ -1264,7 +1244,7 @@ void BlockChain::checkConsistency()
 					cnote << "Apparently the database is corrupt. Not much we can do at this stage...";
 			}
 		}
-	delete it;
+	delete it; */
 }
 
 void BlockChain::clearCachesDuringChainReversion(unsigned _firstInvalid)
@@ -1375,18 +1355,26 @@ bool BlockChain::isKnown(h256 const& _hash, bool _isCurrent) const
 	DEV_READ_GUARDED(x_blocks)
 		if (!m_blocks.count(_hash))
 		{
-			string d;
-			m_blocksDB->Get(m_readOptions, toSlice(_hash), &d);
-			if (d.empty())
+			try
+			{
+				m_blocksDB->lookup(toSlice(_hash));
+			}
+			catch (const db::FailedLookupInDB& /* ex */)
+			{
 				return false;
+			}
 		}
 	DEV_READ_GUARDED(x_details)
 		if (!m_details.count(_hash))
 		{
-			string d;
-			m_extrasDB->Get(m_readOptions, toSlice(_hash, ExtraDetails), &d);
-			if (d.empty())
+			try
+			{
+				m_extrasDB->lookup(toSlice(_hash, ExtraDetails));
+			}
+			catch (const db::FailedLookupInDB& /* ex */)
+			{
 				return false;
+			}
 		}
 //	return true;
 	return !_isCurrent || details(_hash).number <= m_lastBlockNumber;		// to allow rewind functionality.
@@ -1405,9 +1393,11 @@ bytes BlockChain::block(h256 const& _hash) const
 	}
 
 	string d;
-	m_blocksDB->Get(m_readOptions, toSlice(_hash), &d);
-
-	if (d.empty())
+	try
+	{
+		d = m_blocksDB->lookup(toSlice(_hash));
+	}
+	catch (const db::FailedLookupInDB& /* ex */)
 	{
 		cwarn << "Couldn't find requested block:" << _hash;
 		return bytes();
@@ -1435,9 +1425,11 @@ bytes BlockChain::headerData(h256 const& _hash) const
 	}
 
 	string d;
-	m_blocksDB->Get(m_readOptions, toSlice(_hash), &d);
-
-	if (d.empty())
+	try
+	{
+		d = m_blocksDB->lookup(toSlice(_hash));
+	}
+	catch (const db::FailedLookupInDB& /* ex */)
 	{
 		cwarn << "Couldn't find requested block:" << _hash;
 		return bytes();
@@ -1566,14 +1558,25 @@ void BlockChain::setChainStartBlockNumber(unsigned _number)
 	if (!hash)
 		BOOST_THROW_EXCEPTION(UnknownBlockNumber());
 
-	ldb::Status const status = m_extrasDB->Put(m_writeOptions, c_sliceChainStart, ldb::Slice(reinterpret_cast<char const*>(hash.data()), h256::size));
-	if (!status.ok())
+	try
+	{
+		m_extrasDB->insert(c_sliceChainStart, db::Slice(reinterpret_cast<char const*>(hash.data()), h256::size));
+	}
+	catch (const db::FailedInsertInDB& /* ex */)
+	{
 		BOOST_THROW_EXCEPTION(FailedToWriteChainStart() << errinfo_hash256(hash));
+	}
 }
 
 unsigned BlockChain::chainStartBlockNumber() const
 {
-	std::string value;
-	m_extrasDB->Get(m_readOptions, c_sliceChainStart, &value);
-	return value.empty() ? 0 : number(h256(value, h256::FromBinary));
+	try
+	{
+		auto const value = m_extrasDB->lookup(c_sliceChainStart);
+		return number(h256(value, h256::FromBinary));
+	}
+	catch (const db::FailedLookupInDB& /* ex */)
+	{
+		return 0;
+	}
 }

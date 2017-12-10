@@ -91,11 +91,9 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 	fs::create_directories(path);
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
 
-	ldb::Options o;
-	o.max_open_files = 256;
-	o.create_if_missing = true;
-	ldb::DB* db = nullptr;
-	ldb::Status status = ldb::DB::Open(o, (path / fs::path("state")).string(), &db);
+	db::DB* db = nullptr;
+	/* TODO
+	db::Status status = db::DB::Open(o, (path / fs::path("state")).string(), &db);
 	if (!status.ok() || !db)
 	{
 		if (fs::space(path / fs::path("state")).available < 1024)
@@ -112,7 +110,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 				"already open. You appear to have another instance of ethereum running. Bailing.";
 			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
 		}
-	}
+	}*/
 
 	clog(StateDetail) << "Opened state DB.";
 	return OverlayDB(db);

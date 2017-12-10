@@ -33,13 +33,10 @@ BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basicUsage)
 {
-	ldb::Options o;
-	o.max_open_files = 256;
-	o.create_if_missing = true;
-	ldb::DB* db = nullptr;
+	db::DB* db = nullptr;
 	TransientDirectory td;
-	ldb::Status status = ldb::DB::Open(o, td.path(), &db);
-	BOOST_REQUIRE(status.ok() && db);
+	// TODO: db::DB::Open(o, td.path(), &db);
+	BOOST_REQUIRE(db);
 
 	OverlayDB odb(db);
 	BOOST_CHECK(!odb.get().size());
@@ -69,13 +66,10 @@ BOOST_AUTO_TEST_CASE(basicUsage)
 
 BOOST_AUTO_TEST_CASE(auxMem)
 {
-	ldb::Options o;
-	o.max_open_files = 256;
-	o.create_if_missing = true;
-	ldb::DB* db = nullptr;
+	db::DB* db = nullptr;
 	TransientDirectory td;
-	ldb::Status status = ldb::DB::Open(o, td.path(), &db);
-	BOOST_REQUIRE(status.ok() && db);
+	// TODO: db::DB::Open(o, td.path(), &db);
+	BOOST_REQUIRE(db);
 
 	OverlayDB odb(db);
 
@@ -110,13 +104,10 @@ BOOST_AUTO_TEST_CASE(auxMem)
 
 BOOST_AUTO_TEST_CASE(rollback)
 {
-	ldb::Options o;
-	o.max_open_files = 256;
-	o.create_if_missing = true;
-	ldb::DB* db = nullptr;
+	db::DB* db = nullptr;
 	TransientDirectory td;
-	ldb::Status status = ldb::DB::Open(o, td.path(), &db);
-	BOOST_REQUIRE(status.ok() && db);
+	// TODO: db::DB::Open(o, td.path(), &db);
+	BOOST_REQUIRE(db);
 
 	OverlayDB odb(db);
 	bytes value = fromHex("42");

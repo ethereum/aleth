@@ -78,8 +78,8 @@ struct BlockChainDebug: public LogChannel { static const char* name(); static co
 // TODO: Move all this Genesis stuff into Genesis.h/.cpp
 std::unordered_map<Address, Account> const& genesisState();
 
-ldb::Slice toSlice(h256 const& _h, unsigned _sub = 0);
-ldb::Slice toSlice(uint64_t _n, unsigned _sub = 0);
+db::Slice toSlice(h256 const& _h, unsigned _sub = 0);
+db::Slice toSlice(uint64_t _n, unsigned _sub = 0);
 
 using BlocksHash = std::unordered_map<h256, bytes>;
 using TransactionHashes = h256s;
@@ -335,7 +335,7 @@ private:
 	void checkBlockIsNew(VerifiedBlockRef const& _block) const;
 	void checkBlockTimestamp(BlockHeader const& _header) const;
 
-	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
+	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, db::DB* _extrasDB = nullptr) const
 	{
 		{
 			ReadGuard l(_x);
@@ -345,9 +345,14 @@ private:
 		}
 
 		std::string s;
-		(_extrasDB ? _extrasDB : m_extrasDB)->Get(m_readOptions, toSlice(_h, N), &s);
-		if (s.empty())
+		try
+		{
+			s = (_extrasDB ? _extrasDB : m_extrasDB)->lookup(toSlice(_h, N));
+		}
+		catch (const db::FailedLookupInDB& /* ex */)
+		{
 			return _n;
+		}
 
 		noteUsed(_h, N);
 
@@ -356,7 +361,7 @@ private:
 		return ret.first->second;
 	}
 
-	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
+	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, db::DB* _extrasDB = nullptr) const
 	{
 		return queryExtras<T, h256, N>(_h, _m, _x, _n, _extrasDB);
 	}
@@ -399,16 +404,13 @@ private:
 	mutable Statistics m_lastStats;
 
 	/// The disk DBs. Thread-safe, so no need for locks.
-	ldb::DB* m_blocksDB;
-	ldb::DB* m_extrasDB;
+	db::DB* m_blocksDB;
+	db::DB* m_extrasDB;
 
 	/// Hash of the last (valid) block on the longest chain.
 	mutable boost::shared_mutex x_lastBlockHash; // should protect both m_lastBlockHash and m_lastBlockNumber
 	h256 m_lastBlockHash;
 	unsigned m_lastBlockNumber = 0;
-
-	ldb::ReadOptions m_readOptions;
-	ldb::WriteOptions m_writeOptions;
 
 	ChainParams m_params;
 	std::shared_ptr<SealEngineFace> m_sealEngine;	// consider shared_ptr.
