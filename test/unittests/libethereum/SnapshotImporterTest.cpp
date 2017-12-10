@@ -29,7 +29,6 @@ namespace
 {
 	struct ImportedAccount
 	{
-		h256 address;
 		u256 nonce;
 		u256 balance;
 		std::map<h256, bytes> storage;
@@ -41,7 +40,10 @@ namespace
 	public:
 		void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash) override
 		{
-			importedAccounts.push_back({_addressHash, _nonce, _balance, _storage,  _codeHash});
+			if (importedAccounts.count(_addressHash))
+				importedAccounts[_addressHash].storage.insert(_storage.begin(), _storage.end());
+			else
+				importedAccounts.emplace(std::make_pair(_addressHash, ImportedAccount{_nonce, _balance, _storage,  _codeHash}));
 		}
 
 		h256 importCode(bytesConstRef _code) override
@@ -50,6 +52,7 @@ namespace
 			return sha3(_code);
 		}
 		void commitStateDatabase() override { ++commitCounter; }
+		bool isAccountImported(h256 const& _addressHash) const override { return importedAccounts.count(_addressHash) != 0; }
 		h256 stateRoot() const override { return h256{}; }
 		std::string lookupCode(h256 const& _hash) const override
 		{ 
@@ -57,7 +60,7 @@ namespace
 			return it == importedCodes.end() ? std::string{} : std::string(it->begin(), it->end());
 		}
 
-		std::vector<ImportedAccount> importedAccounts;
+		std::unordered_map<h256, ImportedAccount> importedAccounts;
 		std::vector<bytes> importedCodes;
 		int commitCounter = 0;
 	};
@@ -210,8 +213,9 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
 	snapshotImporter.import(snapshotStorage);
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
-	ImportedAccount const& importedAccount = stateImporter.importedAccounts.front();
-	BOOST_CHECK_EQUAL(importedAccount.address, addressHash);
+	h256 const& importedAddress = stateImporter.importedAccounts.begin()->first;
+	BOOST_CHECK_EQUAL(importedAddress, addressHash);
+	ImportedAccount const& importedAccount = stateImporter.importedAccounts.begin()->second;
 	BOOST_CHECK_EQUAL(importedAccount.nonce, 1);
 	BOOST_CHECK_EQUAL(importedAccount.balance, 10);
 	BOOST_CHECK_EQUAL(importedAccount.codeHash, EmptySHA3);
@@ -240,8 +244,9 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
 	snapshotImporter.import(snapshotStorage);
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
-	ImportedAccount const& importedAccount = stateImporter.importedAccounts.front();
-	BOOST_CHECK_EQUAL(importedAccount.address, addressHash);
+	h256 const& importedAddress = stateImporter.importedAccounts.begin()->first;
+	BOOST_CHECK_EQUAL(importedAddress, addressHash);
+	ImportedAccount const& importedAccount = stateImporter.importedAccounts.begin()->second;
 	BOOST_CHECK_EQUAL(importedAccount.nonce, 2);
 	BOOST_CHECK_EQUAL(importedAccount.balance, 10);
 	BOOST_CHECK_EQUAL(importedAccount.codeHash, EmptySHA3);
@@ -264,8 +269,9 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
 	snapshotImporter.import(snapshotStorage);
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
-	ImportedAccount const& importedAccount = stateImporter.importedAccounts.front();
-	BOOST_CHECK_EQUAL(importedAccount.address, addressHash);
+	h256 const& importedAddress = stateImporter.importedAccounts.begin()->first;
+	BOOST_CHECK_EQUAL(importedAddress, addressHash);
+	ImportedAccount const& importedAccount = stateImporter.importedAccounts.begin()->second;
 	BOOST_CHECK_EQUAL(importedAccount.codeHash, sha3(code));
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
@@ -291,10 +297,10 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
 	snapshotImporter.import(snapshotStorage);
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[0].address, addressHash1);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[0].codeHash, codeHash);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[1].address, addressHash2);
-	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[1].codeHash, codeHash);
+	BOOST_CHECK(stateImporter.importedAccounts.count(addressHash1) > 0);
+	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[addressHash1].codeHash, codeHash);
+	BOOST_CHECK(stateImporter.importedAccounts.count(addressHash2) > 0);
+	BOOST_CHECK_EQUAL(stateImporter.importedAccounts[addressHash2].codeHash, codeHash);
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
 	bytes const& importedCode = stateImporter.importedCodes.front();
@@ -320,7 +326,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
 	snapshotImporter.import(snapshotStorage);
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
-	BOOST_REQUIRE_EQUAL(stateImporter.commitCounter, 3); // once every chunk + 1 last commit
+	BOOST_REQUIRE_EQUAL(stateImporter.commitCounter, 2);
 }
 
 

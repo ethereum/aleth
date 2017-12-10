@@ -51,7 +51,7 @@ public:
 	bytes executeTest();
 	int exportTest();
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
-	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
+	bool checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
 	void traceStateDiff();
 
 	eth::State m_statePre;
@@ -83,11 +83,20 @@ private:
 	std::vector<transactionToExecute> m_transactions;
 	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;
 	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
-	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
+	bool checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
 
 	json_spirit::mObject const& m_testInputObject;
 	json_spirit::mObject& m_testOutputObject;
 };
+
+template<class T>
+bool inArray(std::vector<T> const& _array, const T& _val)
+{
+	for (auto const& obj: _array)
+		if (obj == _val)
+			return true;
+	return false;
+}
 
 } //namespace test
 } //namespace dev

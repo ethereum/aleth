@@ -24,6 +24,8 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
@@ -34,39 +36,7 @@
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;
-
-void help()
-{
-	cout
-		<< "Usage rlp <mode> [OPTIONS]" << endl
-		<< "Modes:" << endl
-		<< "    create <json>  Given a simplified JSON string, output the RLP." << endl
-		<< "    render [ <file> | -- ]  Render the given RLP. Options:" << endl
-		<< "      --indent <string>  Use string as the level indentation (default '  ')." << endl
-		<< "      --hex-ints  Render integers in hex." << endl
-		<< "      --string-ints  Render integers in the same way as strings." << endl
-		<< "      --ascii-strings  Render data as C-style strings or hex depending on content being ASCII." << endl
-		<< "      --force-string  Force all data to be rendered as C-style strings." << endl
-		<< "      --force-escape  When rendering as C-style strings, force all characters to be escaped." << endl
-		<< "      --force-hex  Force all data to be rendered as raw hex." << endl
-		<< "    list [ <file> | -- ]  List the items in the RLP list by hash and size." << endl
-		<< "    extract [ <file> | -- ]  Extract all items in the RLP list, named by hash." << endl
-		<< "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
-		<< "      -D,--dapp  Dapp-building mode; equivalent to --encrypt --64." << endl
-		<< endl
-		<< "General options:" << endl
-		<< "    -e,--encrypt  Encrypt the RLP data prior to output." << endl
-		<< "    -L,--lenience  Try not to bomb out early if possible." << endl
-		<< "    -x,--hex,--base-16  Treat input RLP as hex encoded data." << endl
-		<< "    -k,--keccak  Output Keccak-256 hash only." << endl
-		<< "    --64,--base-64  Treat input RLP as base-64 encoded data." << endl
-		<< "    -b,--bin,--base-256  Treat input RLP as raw binary data." << endl
-		<< "    -q,--quiet  Don't place additional information on stderr." << endl
-		<< "    -h,--help  Print this help message and exit." << endl
-		<< "    -V,--version  Show the version and exit." << endl
-		;
-	exit(0);
-}
+namespace po = boost::program_options;
 
 void version()
 {
@@ -216,60 +186,108 @@ int main(int argc, char** argv)
 	bool encrypt = false;
 	RLPStreamer::Prefs prefs;
 
-	for (int i = 1; i < argc; ++i)
+	po::options_description renderOptions("Render options");
+	renderOptions.add_options()
+		("indent,i", po::value<string>()->implicit_value("  "), "<string>  Use string as the level indentation (default '  ').")
+		("hex-ints", "Render integers in hex.")
+		("string-ints", "Render integers in the same way as strings.")
+		("ascii-strings", "Render data as C-style strings or hex depending on content being ASCII.")
+		("force-string", "Force all data to be rendered as C-style strings.")
+		("force-escape", "When rendering as C-style strings, force all characters to be escaped.")
+		("force-hex", "Force all data to be rendered as raw hex.");
+
+	po::options_description generalOptions("General options");
+	generalOptions.add_options()
+		("dapp,D", "Dapp-building mode; equivalent to --encrypt --base-64.")
+		("encrypt,e", "Encrypt the RLP data prior to output.")
+		("lenience,L", "Try not to bomb out early if possible.")
+		("hex,x", "Treat input RLP as hex encoded data.")
+		("keccak,k", "Output Keccak-256 hash only.")
+		("base-64,6", "Treat input RLP as base-64 encoded data.")
+		("bin,b", "Treat input RLP as raw binary data.")
+		("quiet,q", "Don't place additional information on stderr.")
+		("help,h", "Print this help message and exit.")
+		("version,V", "Show the version and exit.");
+
+	po::options_description allowedOptions("Allowed options");
+	allowedOptions.add(generalOptions).add(renderOptions);
+
+	po::variables_map vm;
+	vector<string> unrecognisedOptions;
+	try
 	{
-		string arg = argv[i];
-		if (arg == "-h" || arg == "--help")
-			help();
-		else if (arg == "render")
+		po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
+		unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
+		po::store(parsed, vm);
+		po::notify(vm);
+	}
+	catch (po::error const& e)
+	{
+		cerr << e.what();
+		return -1;
+	}
+
+
+	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
+	{
+		string arg =  unrecognisedOptions[i];
+		if (arg == "render")
 			mode = Mode::Render;
 		else if (arg == "create")
 			mode = Mode::Create;
-		else if ((arg == "-i" || arg == "--indent") && i + 1 < argc)
-			prefs.indent = argv[++i];
-		else if (arg == "--hex-ints")
-			prefs.hexInts = true;
-		else if (arg == "--string-ints")
-			prefs.stringInts = true;
-		else if (arg == "--ascii-strings")
-			prefs.forceString = prefs.forceHex = false;
-		else if (arg == "--force-string")
-			prefs.forceString = true;
-		else if (arg == "--force-hex")
-			prefs.forceHex = true, prefs.forceString = false;
-		else if (arg == "--force-escape")
-			prefs.escapeAll = true;
-		else if (arg == "-n" || arg == "--nice")
-			prefs.forceString = true, prefs.stringInts = false, prefs.forceHex = false, prefs.indent = "  ";
 		else if (arg == "list")
 			mode = Mode::ListArchive;
 		else if (arg == "extract")
 			mode = Mode::ExtractArchive;
 		else if (arg == "assemble")
 			mode = Mode::AssembleArchive;
-		else if (arg == "-L" || arg == "--lenience")
-			lenience = true;
-		else if (arg == "-D" || arg == "--dapp")
-			encrypt = true, encoding = Encoding::Base64;
-		else if (arg == "-V" || arg == "--version")
-			version();
-		else if (arg == "-q" || arg == "--quiet")
-			quiet = true;
-		else if (arg == "-x" || arg == "--hex" || arg == "--base-16")
-			encoding = Encoding::Hex;
-		else if (arg == "-k" || arg == "--keccak")
-			encoding = Encoding::Keccak;
-		else if (arg == "--64" || arg == "--base-64")
-			encoding = Encoding::Base64;
-		else if (arg == "-b" || arg == "--bin" || arg == "--base-256")
-			encoding = Encoding::Binary;
-		else if (arg == "-e" || arg == "--encrypt")
-			encrypt = true;
 		else if (inputFile.empty())
 			inputFile = arg;
 		else
 			otherInputs.push_back(arg);
 	}
+	if (vm.count("help")) {
+		cout << "Usage rlp <mode> [OPTIONS]\nModes:\n"
+			 << "    create   <json>  Given a simplified JSON string, output the RLP." << endl
+			 << "    render   [ <file> | -- ]  Render the given RLP." << endl
+			 << "    list     [ <file> | -- ]  List the items in the RLP list by hash and size." << endl
+			 << "    extract  [ <file> | -- ]  Extract all items in the RLP list, named by hash." << endl
+			 << "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
+			 << renderOptions << generalOptions;
+		exit(0);
+	}
+	if (vm.count("lenience"))
+		lenience = true;
+	if (vm.count("dapp"))
+		encrypt = true, encoding = Encoding::Base64;
+	if (vm.count("version"))
+		version();
+	if (vm.count("quiet"))
+		quiet = true;
+	if (vm.count("hex"))
+		encoding = Encoding::Hex;
+	if (vm.count("keccak"))
+		encoding = Encoding::Keccak;
+	if (vm.count("base-64"))
+		encoding = Encoding::Base64;
+	if (vm.count("bin"))
+		encoding = Encoding::Binary;
+	if (vm.count("encrypt"))
+		encrypt = true;
+	if (vm.count("indent"))
+		prefs.indent = vm["indent"].as<string>();
+	if (vm.count("hex-ints"))
+		prefs.hexInts = true;
+	if (vm.count("string-ints"))
+		prefs.stringInts = true;
+	if (vm.count("ascii-strings"))
+		prefs.forceString = prefs.forceHex = false;
+	if (vm.count("force-string"))
+		prefs.forceString = true;
+	if (vm.count("force-hex"))
+		prefs.forceHex = true, prefs.forceString = false;
+	if (vm.count("force-escape"))
+		prefs.escapeAll = true;
 
 	bytes in;
 	if (inputFile == "--")

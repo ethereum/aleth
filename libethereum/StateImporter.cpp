@@ -36,19 +36,16 @@ public:
 
 	void importAccount(h256 const& _addressHash, u256 const& _nonce, u256 const& _balance, std::map<h256, bytes> const& _storage, h256 const& _codeHash) override
 	{
-		if (containsAccount(_addressHash))
-			BOOST_THROW_EXCEPTION(AccountAlreadyImported());
-
 		RLPStream s(4);
 		s << _nonce << _balance;
 
-		h256 const storageRoot = EmptyTrie;
+		h256 const storageRoot = isAccountImported(_addressHash) ? accountStorageRoot(_addressHash) : EmptyTrie;
 		if (_storage.empty())
 			s.append(storageRoot);
 		else
 		{
 			SpecificTrieDB<GenericTrieDB<OverlayDB>, h256> storageDB(m_trie.db(), storageRoot);
-			for (auto const& hashAndValue : _storage)
+			for (auto const& hashAndValue: _storage)
 				storageDB.insert(hashAndValue.first, hashAndValue.second);
 
 			s.append(storageDB.root());
@@ -68,12 +65,25 @@ public:
 
 	void commitStateDatabase() override { m_trie.db()->commit(); }
 
+	bool isAccountImported(h256 const& _addressHash) const override { return m_trie.contains(_addressHash); }
+
 	h256 stateRoot() const override { return m_trie.root(); }
 
 	std::string lookupCode(h256 const& _hash) const override { return m_trie.db()->lookup(_hash); }
 
 private:
-	bool containsAccount(h256 const& _addressHash) const { return m_trie.contains(_addressHash); }
+	// can be used only with already imported accounts
+	h256 accountStorageRoot(h256 const& _addressHash) const
+	{
+		std::string const account = m_trie.at(_addressHash);
+		assert(!account.empty());
+		
+		RLP accountRlp(account);
+		if (accountRlp.itemCount() < 3)
+			BOOST_THROW_EXCEPTION(InvalidAccountInTheDatabase());
+
+		return accountRlp[2].toHash<h256>(RLP::VeryStrict);
+	}
 
 	SpecificTrieDB<GenericTrieDB<OverlayDB>, h256> m_trie;
 };

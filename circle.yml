@@ -67,7 +67,7 @@ defaults:
   save-deps-cache: &save-deps-cache
     cache-save:
       name: "Save dependencies cache"
-      key: &deps-cache-key deps-2-{{arch}}-{{checksum "compiler.version"}}-{{checksum "cmake/ProjectJsonRpcCpp.cmake"}}
+      key: &deps-cache-key deps-2-{{arch}}-{{checksum "compiler.version"}}-{{checksum "cmake/ProjectLibFF.cmake"}}
       paths:
         - build/deps
 

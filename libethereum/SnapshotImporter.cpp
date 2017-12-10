@@ -70,12 +70,6 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 {
 	size_t const stateChunkCount = _stateChunkHashes.size();
 
-	std::map<h256, bytes> storageMap;
-	h256 addressHash;
-	u256 nonce;
-	u256 balance;
-	h256 codeHash;
-
 	size_t chunksImported = 0;
 	size_t accountsImported = 0;
 
@@ -91,37 +85,23 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 			if (addressAndAccount.itemCount() != 2)
 				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
 
-			h256 const addressHashNew = addressAndAccount[0].toHash<h256>(RLP::VeryStrict);
-			if (!addressHashNew)
+			h256 const addressHash = addressAndAccount[0].toHash<h256>(RLP::VeryStrict);
+			if (!addressHash)
 				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
 
-			if (addressHash)
-			{
-				if (addressHashNew != addressHash)
-				{
-					// previous account was not splitted, so import it
-					m_stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
-					++accountsImported;
-					storageMap.clear();
-				}
-				else
-				{
-					// splitted account can only be the first in chunk
-					if (accountIndex != 0)
-						BOOST_THROW_EXCEPTION(InvalidStateChunkData());
-				}
-			}
-
-			addressHash = addressHashNew;
+			// splitted parts of account can be only first in chunk
+			if (accountIndex > 0 && m_stateImporter.isAccountImported(addressHash))
+				BOOST_THROW_EXCEPTION(AccountAlreadyImported());
 
 			RLP const account = addressAndAccount[1];
 			if (account.itemCount() != 5)
 				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
 
-			nonce = account[0].toInt<u256>(RLP::VeryStrict);
-			balance = account[1].toInt<u256>(RLP::VeryStrict);
+			u256 const nonce = account[0].toInt<u256>(RLP::VeryStrict);
+			u256 const balance = account[1].toInt<u256>(RLP::VeryStrict);
 
 			RLP const storage = account[4];
+			std::map<h256, bytes> storageMap;
 			for (auto hashAndValue: storage)
 			{
 				if (hashAndValue.itemCount() != 2)
@@ -139,6 +119,7 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 			}
 
 			byte const codeFlag = account[2].toInt<byte>(RLP::VeryStrict);
+			h256 codeHash;
 			switch (codeFlag)
 			{
 			case 0:
@@ -155,23 +136,21 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 			default:
 				BOOST_THROW_EXCEPTION(InvalidStateChunkData());
 			}
+
+			m_stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
 		}
+		accountsImported += accountCount;
 
 		m_stateImporter.commitStateDatabase();
 
 		++chunksImported;
-		clog(SnapshotImportLog) << "Imported chunk " << chunksImported << " (" << accounts.itemCount() << " accounts) Total accounts imported: " << accountsImported;
+		clog(SnapshotImportLog) << "Imported chunk " << chunksImported << " (" << accounts.itemCount() << " account records) Total account records imported: " << accountsImported;
 		clog(SnapshotImportLog) << stateChunkCount - chunksImported << " chunks left to import";
 	}
 
-	// last account
-	m_stateImporter.importAccount(addressHash, nonce, balance, storageMap, codeHash);
-	m_stateImporter.commitStateDatabase();
-	++accountsImported;
-
 	// check root
 	clog(SnapshotImportLog) << "Chunks imported: " << chunksImported;
-	clog(SnapshotImportLog) << "Accounts imported: " << accountsImported;
+	clog(SnapshotImportLog) << "Account records imported: " << accountsImported;
 	clog(SnapshotImportLog) << "Reconstructed state root: " << m_stateImporter.stateRoot();
 	clog(SnapshotImportLog) << "Manifest state root:      " << _stateRoot;
 	if (m_stateImporter.stateRoot() != _stateRoot)
