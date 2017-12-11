@@ -134,24 +134,27 @@ void VM::caseCreate()
 {
 	m_bounce = &VM::interpretCases;
 	m_runGas = toInt63(m_schedule->createGas);
-	updateMem(memNeed(m_SP[1], m_SP[2]));
-	updateIOGas();
 
-	auto const& endowment = m_SP[0];
-	uint64_t initOff;
-	uint64_t initSize;
+	// Collect arguments.
+	u256 endowment = m_SP[0];
 	u256 salt;
+	u256 initOff;
+	u256 initSize;
+
 	if (m_OP == Instruction::CREATE)
 	{
-		initOff = (uint64_t)m_SP[1];
-		initSize = (uint64_t)m_SP[2];
+		initOff = m_SP[1];
+		initSize = m_SP[2];
 	}
 	else
 	{
 		salt = m_SP[1];
-		initOff = (uint64_t)m_SP[2];
-		initSize = (uint64_t)m_SP[3];
+		initOff = m_SP[2];
+		initSize = m_SP[3];
 	}
+
+	updateMem(memNeed(initOff, initSize));
+	updateIOGas();
 
 	// Clear the return data buffer. This will not free the memory.
 	m_returnData.clear();
@@ -163,10 +166,17 @@ void VM::caseCreate()
 		if (!m_schedule->staticCallDepthLimit())
 			createGas -= createGas / 64;
 		u256 gas = createGas;
+
+		// Get init code. Casts are safe because the memory cost has been paid.
+		auto off = static_cast<size_t>(initOff);
+		auto size = static_cast<size_t>(initSize);
+		bytesConstRef initCode{m_mem.data() + off, size};
+
+
 		h160 addr;
 		owning_bytes_ref output;
-		std::tie(addr, output) = m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_OP, salt, m_onOp);
-		m_SPP[0] = (u160)addr;
+		std::tie(addr, output) = m_ext->create(endowment, gas, initCode, m_OP, salt, m_onOp);
+		m_SPP[0] = (u160)addr;  // Convert address to integer.
 		m_returnData = output.toBytes();
 
 		*m_io_gas_p -= (createGas - gas);
