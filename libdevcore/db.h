@@ -70,10 +70,23 @@ public:
 	// A database must implement the `forEach` method that allows the caller
 	// to pass in a function `f`, which will be called with the key and value
 	// of each record in the database. If `f` returns false, the `forEach`
-	// method must return immediately. The method must be thread-safe and
-	// guarantee that reads are not interleaved with database modifications.
+	// method must return immediately.
 	virtual void forEach(std::function<bool(Slice const&, Slice const&)> f) const = 0;
+
+	virtual void print(std::ostream& out) const
+	{
+		forEach([&out](Slice const& key, Slice const& value) {
+			out << toHex(key) << " => " << toHex(value) << '\n';
+			return static_cast<bool>(out);
+		});
+	}
 };
+
+inline std::ostream& operator<<(std::ostream& out, const DB& database)
+{
+	database.print(out);
+	return out;
+}
 
 struct FailedToOpenDB: virtual Exception { using Exception::Exception; };
 struct FailedInsertInDB: virtual Exception { using Exception::Exception; };

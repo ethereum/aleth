@@ -189,6 +189,22 @@ std::unique_ptr<Transaction> RocksDB::begin()
 	return std::unique_ptr<Transaction>(new RocksDBTransaction(m_db.get(), m_writeOptions));
 }
 
+void RocksDB::forEach(std::function<bool(Slice const&, Slice const&)> f) const
+{
+	std::unique_ptr<rocksdb::Iterator> itr(m_db->NewIterator(m_readOptions));
+	if (itr == nullptr) {
+		BOOST_THROW_EXCEPTION(FailedIterateDB("null iterator"));
+	}
+	auto keepIterating = true;
+	for (itr->SeekToFirst(); keepIterating && itr->Valid(); itr->Next()) {
+		const auto dbKey = itr->key();
+		const auto dbValue = itr->value();
+		const Slice key(dbKey.data(), dbKey.size());
+		const Slice value(dbValue.data(), dbValue.size());
+		keepIterating = f(key, value);
+	}
+}
+
 }
 }
 

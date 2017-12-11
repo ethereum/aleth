@@ -176,6 +176,22 @@ std::unique_ptr<Transaction> LevelDB::begin()
 	return std::unique_ptr<Transaction>(new LevelDBTransaction(m_db.get(), m_writeOptions));
 }
 
+void LevelDB::forEach(std::function<bool(Slice const&, Slice const&)> f) const
+{
+	std::unique_ptr<leveldb::Iterator> itr(m_db->NewIterator(m_readOptions));
+	if (itr == nullptr) {
+		BOOST_THROW_EXCEPTION(FailedIterateDB("null iterator"));
+	}
+	auto keepIterating = true;
+	for (itr->SeekToFirst(); keepIterating && itr->Valid(); itr->Next()) {
+		const auto dbKey = itr->key();
+		const auto dbValue = itr->value();
+		const Slice key(dbKey.data(), dbKey.size());
+		const Slice value(dbValue.data(), dbValue.size());
+		keepIterating = f(key, value);
+	}
+}
+
 }
 }
 
