@@ -1,5 +1,6 @@
 /*
 	This file is part of cpp-ethereum.
+
 	cpp-ethereum is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
@@ -8,6 +9,7 @@
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
+
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -69,33 +71,43 @@ int main(int argc, char** argv)
 	g_logVerbosity = 0;
 	po::options_description generalOptions("General Options");
 	generalOptions.add_options()
-			("verbosity,v", po::value<int>(), "<0 - 9>  Set the log verbosity from 0 to 9 (default: 8).")
-			("version,V", "Show the version and exit.")
-			("help,h",  "Show this help message and exit.");
-	po::parsed_options parsed = po::command_line_parser(argc, argv).options(generalOptions).allow_unregistered().run();
-	vector<string> unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
+		("verbosity,v", po::value<int>(), "<0 - 9>  Set the log verbosity from 0 to 9 (default: 8).")
+		("version,V", "Show the version and exit.")
+		("help,h",  "Show this help message and exit.");
+
+	po::variables_map vm;
+	vector<string> unrecognisedOptions;
+	try
+	{
+		po::parsed_options parsed = po::command_line_parser(argc, argv).options(generalOptions).allow_unregistered().run();
+		unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
+		po::store(parsed, vm);
+		po::notify(vm);
+	}
+	catch (po::error const& e)
+	{
+		cerr << e.what();
+		return -1;
+	}
+
 	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
 	{
 		string arg = unrecognisedOptions[i];
-		//cout << arg << " ";
-		if (m.interpretOption(i, unrecognisedOptions)) {}
-		else
+		if (!m.interpretOption(i, unrecognisedOptions))
 		{
 			cerr << "Invalid argument: " << arg << endl;
-			exit(-1);
+			return -1;
 		}
 	}
-	po::variables_map vm;
-	po::store(parsed, vm);
-	po::notify(vm);
+
 	if (vm.count("help"))
 	{
 		cout
-				<< "Usage ethkey [OPTIONS]" << endl
-				<< "Options:" << endl << endl;
+			<< "Usage ethkey [OPTIONS]" << endl
+			<< "Options:" << endl << endl;
 		KeyCLI::streamHelp(cout);
 		cout << generalOptions;
-		exit(0);
+		return 0;
 	}
 	if (vm.count("version"))
 		version();
