@@ -124,33 +124,6 @@ void importPresale(KeyManager& _km, string const& _file, function<string()> _pas
 	_km.import(k.secret(), "Presale wallet" + _file + " (insecure)");
 }
 
-Address c_config = Address("ccdeac59d35627b7de09332e819d5159e7bb7250");
-string pretty(h160 _a, dev::eth::State const& _st)
-{
-	string ns;
-	h256 n;
-	if (h160 nameReg = (u160)_st.storage(c_config, 0))
-		n = _st.storage(nameReg, (u160)(_a));
-	if (n)
-	{
-		std::string s((char const*)n.data(), 32);
-		if (s.find_first_of('\0') != string::npos)
-			s.resize(s.find_first_of('\0'));
-		ns = " " + s;
-	}
-	return ns;
-}
-
-inline bool isPrime(unsigned _number)
-{
-	if (((!(_number & 1)) && _number != 2 ) || (_number < 2) || (_number % 3 == 0 && _number != 3))
-		return false;
-	for(unsigned k = 1; 36 * k * k - 12 * k < _number; ++k)
-		if ((_number % (6 * k + 1) == 0) || (_number % (6 * k - 1) == 0))
-			return false;
-	return true;
-}
-
 enum class NodeMode
 {
 	PeerServer,
