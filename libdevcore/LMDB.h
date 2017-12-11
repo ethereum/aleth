@@ -63,6 +63,7 @@ public:
 	void insert(Slice const& _key, Slice const& _value) override;
 	void kill(Slice const& _key) override;
 	std::unique_ptr<Transaction> begin() override;
+	void forEach(std::function<bool(Slice const&, Slice const&)> f) const override;
 
 private:
 	std::shared_ptr<lmdb::env> m_env;

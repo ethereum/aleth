@@ -66,15 +66,22 @@ public:
 	virtual void insert(Slice const& _key, Slice const& _value) = 0;
 	virtual void kill(Slice const& _key) = 0;
 	virtual std::unique_ptr<Transaction> begin() = 0;
+
+	// A database must implement the `forEach` method that allows the caller
+	// to pass in a function `f`, which will be called with the key and value
+	// of each record in the database. If `f` returns false, the `forEach`
+	// method must return immediately. The method must be thread-safe and
+	// guarantee that reads are not interleaved with database modifications.
+	virtual void forEach(std::function<bool(Slice const&, Slice const&)> f) const = 0;
 };
 
-struct WrongTypeDB: virtual Exception { using Exception::Exception; };
 struct FailedToOpenDB: virtual Exception { using Exception::Exception; };
 struct FailedInsertInDB: virtual Exception { using Exception::Exception; };
 struct FailedLookupInDB: virtual Exception { using Exception::Exception; };
 struct FailedDeleteInDB: virtual Exception { using Exception::Exception; };
 struct FailedCommitInDB: virtual Exception { using Exception::Exception; };
 struct FailedRollbackInDB: virtual Exception { using Exception::Exception; };
+struct FailedIterateDB: virtual Exception { using Exception::Exception; };
 
 }
 }

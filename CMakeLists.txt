@@ -117,7 +117,6 @@ if(LMDB)
 	find_package(liblmdb CONFIG REQUIRED)
 endif()
 
-include(ProjectJsonRpcCpp)
 hunter_add_package(libjson-rpc-cpp)
 find_package(libjson-rpc-cpp CONFIG REQUIRED)
 

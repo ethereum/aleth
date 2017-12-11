@@ -198,6 +198,24 @@ std::unique_ptr<Transaction> LMDB::begin()
 	return std::unique_ptr<Transaction>(new LMDBTransaction(m_db.get(), lmdb::txn::begin(m_env->handle())));
 }
 
+void LMDB::forEach(std::function<bool(Slice const&, Slice const&)> f) const
+{
+	std::function<void()> func([this, &f]() {
+		auto transaction = lmdb::txn::begin(m_env->handle());
+		auto cursor = lmdb::cursor::open(transaction.handle(), m_db->handle());
+		lmdb::val key;
+		lmdb::val value;
+		auto keepIterating = true;
+		while (keepIterating && cursor.get(key, value, MDB_NEXT)) {
+			keepIterating = f(
+				Slice(key.data(), key.size()),
+				Slice(value.data(), value.size())
+			);
+		}
+	});
+	protectedCall<FailedIterateDB>(func);
+}
+
 }
 }
 
