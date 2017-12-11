@@ -49,6 +49,7 @@ to set locale to fail, so there are only two possible actions, the first is to
 throw a runtime exception and cause the program to quit (default behaviour),
 or the second is to modify the environment to something sensible (least
 surprising behaviour).
+
 The follow code produces the least surprising behaviour. It will use the user
 specified default locale if it is valid, and if not then it will modify the
 environment the process is running in to use a sensible default. This also means
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
 	g_logVerbosity = 0;
 	po::options_description generalOptions("General Options");
 	generalOptions.add_options()
-		("verbosity,v", po::value<int>(), "<0 - 9>  Set the log verbosity from 0 to 9 (default: 8).")
+		("verbosity,v", po::value<int>()->value_name("<0 - 9>"), "Set the log verbosity from 0 to 9 (default: 8).")
 		("version,V", "Show the version and exit.")
 		("help,h",  "Show this help message and exit.");
 
@@ -91,14 +92,11 @@ int main(int argc, char** argv)
 	}
 
 	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
-	{
-		string arg = unrecognisedOptions[i];
 		if (!m.interpretOption(i, unrecognisedOptions))
 		{
-			cerr << "Invalid argument: " << arg << endl;
+			cerr << "Invalid argument: " << unrecognisedOptions[i] << endl;
 			return -1;
 		}
-	}
 
 	if (vm.count("help"))
 	{
