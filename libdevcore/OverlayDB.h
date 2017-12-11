@@ -43,8 +43,6 @@ public:
 
 	~OverlayDB();
 
-	db::DB* db() const { return m_db.get(); }
-
 	void commit();
 	void rollback();
 

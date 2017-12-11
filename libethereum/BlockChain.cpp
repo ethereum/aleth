@@ -67,6 +67,26 @@ const char* BlockChainNote::name() { return EthBlue "☍" EthBlue " ℹ"; }
 const char* BlockChainChat::name() { return EthBlue "☍" EthWhite " ◌"; }
 #endif
 
+std::ostream& dev::eth::operator<<(std::ostream& _out, BlockChain const& _bc)
+{
+	string cmp = toBigEndianString(_bc.currentHash());
+	_bc.m_blocksDB->forEach([&_out, &cmp](db::Slice const& _key, db::Slice const& _value) {
+		if (string(_key.data(), _key.size()) != "best")
+		{
+			const string key(_key.data(), _key.size());
+			try {
+				BlockHeader d(bytesConstRef{_value});
+				_out << toHex(key) << ":   " << d.number() << " @ " << d.parentHash() << (cmp == key ? "  BEST" : "") << std::endl;
+			}
+			catch (...) {
+				cwarn << "Invalid DB entry:" << toHex(key) << " -> " << toHex(bytesConstRef(_value));
+			}
+		}
+		return true;
+	});
+	return _out;
+}
+
 db::Slice dev::eth::toSlice(h256 const& _h, unsigned _sub)
 {
 #if ALL_COMPILERS_ARE_CPP11_COMPLIANT
