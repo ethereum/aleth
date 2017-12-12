@@ -92,7 +92,6 @@ void version()
 	cout << "eth network protocol version: " << dev::eth::c_protocolVersion << "\n";
 	cout << "Client database version: " << dev::eth::c_databaseVersion << "\n";
 	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << "\n";
-	exit(0);
 }
 
 /*
@@ -378,7 +377,7 @@ int main(int argc, char** argv)
 		if (!m.interpretOption(i, unrecognisedOptions))
 		{
 			cerr << "Invalid argument: " << unrecognisedOptions[i] << "\n";
-			exit(-1);
+			return -1;
 		}
 
 #if ETH_EVMJIT
@@ -404,7 +403,10 @@ int main(int argc, char** argv)
 		filename = vm["import-snapshot"].as<string>();
 	}
 	if (vm.count("version"))
+	{
 		version();
+		return 0;
+	}
 	if (vm.count("test"))
 	{
 		testingMode = true;
@@ -748,7 +750,7 @@ int main(int argc, char** argv)
 		cout << clientDefaultMode << clientTransacting << clientMining << clientNetworking;
 		MinerCLI::streamHelp(cout);
 		cout << importExportMode << generalOptions;
-		exit(0);
+		return 0;
 	}
 
 
@@ -895,7 +897,7 @@ int main(int argc, char** argv)
 		catch (...)
 		{
 			cerr << "Bad block number/hash option: " << s << "\n";
-			exit(-1);
+			return -1;
 		}
 	};
 
