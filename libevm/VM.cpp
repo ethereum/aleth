@@ -1236,6 +1236,7 @@ void VM::interpretCases()
 
 		CASE(RETURNDATACOPY)
 		{
+			ON_OP();
 			if (!m_schedule->haveReturnData)
 				throwBadInstruction();
 			bigint const endOfAccess = bigint(m_SP[1]) + bigint(m_SP[2]);
@@ -1244,7 +1245,6 @@ void VM::interpretCases()
 
 			m_copyMemSize = toInt63(m_SP[2]);
 			updateMem(memNeed(m_SP[0], m_SP[2]));
-			ON_OP();
 			updateIOGas();
 
 			copyDataToMemory(&m_returnData, m_SP);
