@@ -251,7 +251,6 @@ int main(int argc, char** argv)
 	bool masterSet = false;
 
 	/// Whisper
-	bool useWhisper = false;
 	bool testingMode = false;
 
 	fs::path configFile = getDataDir() / fs::path("config.rlp");
@@ -399,13 +398,11 @@ int main(int argc, char** argv)
 		}
 	}
 #endif
-	if (vm.count(std::string("import-snapshot")))
+	if (vm.count("import-snapshot"))
 	{
 		mode = OperationMode::ImportSnapshot;
-		filename = vm[std::string("import-snapshot")].as<string>();
+		filename = vm["import-snapshot"].as<string>();
 	}
-	if (vm.count("shh"))
-		useWhisper = true;
 	if (vm.count("version"))
 		version();
 	if (vm.count("test"))
@@ -534,12 +531,8 @@ int main(int argc, char** argv)
 		noPinning = enableDiscovery = true;
 	if (vm.count("unsafe-transactions"))
 		alwaysConfirm = false;
-	if (vm.count("path"))
-		setDataDir(vm["path"].as<string>());
 	if (vm.count("db-path"))
 		setDataDir(vm["db-path"].as<string>());
-	if (vm.count("datadir"))
-		setDataDir(vm["datadir"].as<string>());
 	if (vm.count("ipcpath"))
 		setIpcPath(vm["ipcpath"].as<string>());
 	if (vm.count("genesis"))
@@ -713,17 +706,6 @@ int main(int argc, char** argv)
 			cerr << "Bad " << "--private" << " option: " << vm["private"].as<string>() << "\n";
 			return -1;
 		}
-	if (vm.count("independent"))
-		try
-		{
-			privateChain = vm["independent"].as<string>();
-			noPinning = enableDiscovery = true;
-		}
-		catch (...)
-		{
-			cerr << "Bad " << "--independent" << " option: " << vm["independent"].as<string>() << "\n";
-			return -1;
-		}
 	if (vm.count("kill"))
 		withExisting = WithExisting::Kill;
 	if (vm.count("rebuild"))
@@ -879,7 +861,7 @@ int main(int argc, char** argv)
 	netPrefs.pin = (pinning || !privateChain.empty()) && !noPinning;
 
 	auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
-	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
+	auto caps = set<string>{"eth"};
 
 	if (testingMode)
 	{
