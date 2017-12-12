@@ -338,6 +338,8 @@ int main(int argc, char** argv)
 	
 	po::options_description importExportMode("Import/export modes", c_lineWidth);
 	importExportMode.add_options()
+		("import,I", po::value<string>()->value_name("<file>"), "Import blocks from file.")
+		("export,E", po::value<string>()->value_name("<file>"), "Export blocks to file.")
 		("from", po::value<string>()->value_name("<n>"), "Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'.")
 		("to", po::value<string>()->value_name("<n>"), "Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'.")
 		("only", po::value<string>()->value_name("<n>"), "Equivalent to --export-from n --export-to n.")
@@ -374,27 +376,12 @@ int main(int argc, char** argv)
 		return -1;
 	}
 	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
-	{
-		string arg = unrecognisedOptions[i];
-		if (m.interpretOption(i, unrecognisedOptions))
+		if (!m.interpretOption(i, unrecognisedOptions))
 		{
-		}
-		else if ((arg == "-I" || arg == "--import" || arg == "import") && i + 1 < unrecognisedOptions.size())
-		{
-			mode = OperationMode::Import;
-			filename = unrecognisedOptions[++i];
-		}
-		else if ((arg == "-E" || arg == "--export" || arg == "export") && i + 1 < unrecognisedOptions.size())
-		{
-			mode = OperationMode::Export;
-			filename = unrecognisedOptions[++i];
-		}
-		else
-		{
-			cerr << "Invalid argument: " << arg << "\n";
+			cerr << "Invalid argument: " << unrecognisedOptions[i] << "\n";
 			exit(-1);
 		}
-	}
+
 #if ETH_EVMJIT
 	if (vm.count("vm"))
 	{
@@ -652,6 +639,16 @@ int main(int argc, char** argv)
 	if (vm.count("port"))
 	{
 		remotePort = vm["port"].as<short>();
+	}
+	if (vm.count("import"))
+	{
+		mode = OperationMode::Import;
+		filename = vm["import"].as<string>();
+	}
+	if (vm.count("export"))
+	{
+		mode = OperationMode::Export;
+		filename = vm["export"].as<string>();
 	}
 	if (vm.count("password"))
 		passwordsToNote.push_back(vm["password"].as<string>());
