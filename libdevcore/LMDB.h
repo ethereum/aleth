@@ -56,7 +56,7 @@ public:
 		DBOptions m_dbOptions;
 	};
 
-	LMDB(std::string const& _path, Options const& _options);
+	explicit LMDB(std::string const& _path, Options const& _options = Options());
 	LMDB(std::shared_ptr<lmdb::env> _env, DBOptions const& _dbOptions);
 	std::string lookup(Slice const& _key) const override;
 	bool exists(Slice const& _key) const override;

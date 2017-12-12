@@ -29,6 +29,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/RLP.h>
+#include <libdevcore/DBImpl.h>
 #include <libdevcore/TrieHash.h>
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/FixedHash.h>
@@ -250,9 +251,10 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 		fs::remove_all(extrasPath / fs::path("extras"));
 	}
 
-	// TODO: Open DBs
-	// db::DB::open(o, (chainPath / fs::path("blocks")).string(), &m_blocksDB);
-	// db::DB::open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
+	m_blocksDB.reset(new db::DBImpl((chainPath / fs::path("blocks")).string()));
+	m_extrasDB.reset(new db::DBImpl((extrasPath / fs::path("extras")).string()));
+
+
 	if (!m_blocksDB || !m_extrasDB)
 	{
 		if (fs::space(chainPath / fs::path("blocks")).available < 1024)
@@ -320,8 +322,8 @@ void BlockChain::close()
 {
 	ctrace << "Closing blockchain DB";
 	// Not thread safe...
-	delete m_extrasDB;
-	delete m_blocksDB;
+	m_extrasDB.reset();
+	m_blocksDB.reset();
 	DEV_WRITE_GUARDED(x_lastBlockHash)
 	{
 		m_lastBlockHash = m_genesisHash;
@@ -358,13 +360,10 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 	///////////////////////////////
 
 	// Keep extras DB around, but under a temp name
-	delete m_extrasDB;
-	m_extrasDB = nullptr;
+	m_extrasDB.reset();
 	fs::rename(extrasPath / fs::path("extras"), extrasPath / fs::path("extras.old"));
-	db::DB* oldExtrasDB = nullptr;
-	// TODO: Open DBs
-	// db::DB::Open(o, (extrasPath / fs::path("extras.old")).string(), &oldExtrasDB);
-	// db::DB::Open(o, (extrasPath / fs::path("extras")).string(), &m_extrasDB);
+	std::unique_ptr<db::DB> oldExtrasDB(new db::DBImpl((extrasPath / fs::path("extras.old")).string()));
+	m_extrasDB.reset(new db::DBImpl((extrasPath / fs::path("extras")).string()));
 
 	// Open a fresh state DB
 	Block s = genesisBlock(State::openDB(path.string(), m_genesisHash, WithExisting::Kill));
@@ -395,7 +394,7 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 		}
 		try
 		{
-			bytes b = block(queryExtras<BlockHash, uint64_t, ExtraBlockHash>(d, m_blockHashes, x_blockHashes, NullBlockHash, oldExtrasDB).value);
+			bytes b = block(queryExtras<BlockHash, uint64_t, ExtraBlockHash>(d, m_blockHashes, x_blockHashes, NullBlockHash, oldExtrasDB.get()).value);
 
 			BlockHeader bi(&b);
 
@@ -421,7 +420,6 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 	ProfilerStop();
 #endif
 
-	delete oldExtrasDB;
 	fs::remove_all(path / fs::path("extras.old"));
 }
 
@@ -1245,14 +1243,12 @@ void BlockChain::garbageCollect(bool _force)
 
 void BlockChain::checkConsistency()
 {
-	/* TODO
 	DEV_WRITE_GUARDED(x_details)
 		m_details.clear();
-	db::Iterator* it = m_blocksDB->NewIterator(m_readOptions);
-	for (it->SeekToFirst(); it->Valid(); it->Next())
-		if (it->key().size() == 32)
+	m_blocksDB->forEach([this](db::Slice const& _key, db::Slice const& /* _value */) {
+		if (_key.size() == 32)
 		{
-			h256 h((byte const*)it->key().data(), h256::ConstructFromPointer);
+			h256 h((byte const*)_key.data(), h256::ConstructFromPointer);
 			auto dh = details(h);
 			auto p = dh.parent;
 			if (p != h256() && p != m_genesisHash)	// TODO: for some reason the genesis details with the children get squished. not sure why.
@@ -1264,7 +1260,8 @@ void BlockChain::checkConsistency()
 					cnote << "Apparently the database is corrupt. Not much we can do at this stage...";
 			}
 		}
-	delete it; */
+		return true;
+	});
 }
 
 void BlockChain::clearCachesDuringChainReversion(unsigned _firstInvalid)

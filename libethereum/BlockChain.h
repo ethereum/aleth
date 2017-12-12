@@ -347,7 +347,7 @@ private:
 		std::string s;
 		try
 		{
-			s = (_extrasDB ? _extrasDB : m_extrasDB)->lookup(toSlice(_h, N));
+			s = (_extrasDB ? _extrasDB : m_extrasDB.get())->lookup(toSlice(_h, N));
 		}
 		catch (const db::FailedLookupInDB& /* ex */)
 		{
@@ -404,8 +404,8 @@ private:
 	mutable Statistics m_lastStats;
 
 	/// The disk DBs. Thread-safe, so no need for locks.
-	db::DB* m_blocksDB;
-	db::DB* m_extrasDB;
+	std::unique_ptr<db::DB> m_blocksDB;
+	std::unique_ptr<db::DB> m_extrasDB;
 
 	/// Hash of the last (valid) block on the longest chain.
 	mutable boost::shared_mutex x_lastBlockHash; // should protect both m_lastBlockHash and m_lastBlockNumber

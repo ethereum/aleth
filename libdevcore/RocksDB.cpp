@@ -140,6 +140,9 @@ RocksDB::RocksDB(
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedToOpenDB(status.ToString()));
 	}
+	if (!db) {
+		BOOST_THROW_EXCEPTION(FailedToOpenDB("null database pointer"));
+	}
 	m_db.reset(db);
 }
 

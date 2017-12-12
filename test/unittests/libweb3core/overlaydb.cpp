@@ -21,6 +21,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
+#include <libdevcore/DBImpl.h>
 #include <libdevcore/TransientDirectory.h>
 #include <libdevcore/OverlayDB.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
@@ -33,12 +34,11 @@ BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basicUsage)
 {
-	db::DB* db = nullptr;
 	TransientDirectory td;
-	// TODO: db::DB::Open(o, td.path(), &db);
+	std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
 	BOOST_REQUIRE(db);
 
-	OverlayDB odb(db);
+	OverlayDB odb(db.release());
 	BOOST_CHECK(!odb.get().size());
 
 	// commit nothing
@@ -66,12 +66,11 @@ BOOST_AUTO_TEST_CASE(basicUsage)
 
 BOOST_AUTO_TEST_CASE(auxMem)
 {
-	db::DB* db = nullptr;
 	TransientDirectory td;
-	// TODO: db::DB::Open(o, td.path(), &db);
+	std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
 	BOOST_REQUIRE(db);
 
-	OverlayDB odb(db);
+	OverlayDB odb(db.release());
 
 	bytes value = fromHex("43");
 	bytes valueAux = fromHex("44");
@@ -104,12 +103,11 @@ BOOST_AUTO_TEST_CASE(auxMem)
 
 BOOST_AUTO_TEST_CASE(rollback)
 {
-	db::DB* db = nullptr;
 	TransientDirectory td;
-	// TODO: db::DB::Open(o, td.path(), &db);
+	std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
 	BOOST_REQUIRE(db);
 
-	OverlayDB odb(db);
+	OverlayDB odb(db.release());
 	bytes value = fromHex("42");
 
 	odb.insert(h256(43), &value);
