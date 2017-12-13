@@ -126,34 +126,11 @@ int main( int argc, char* argv[] )
 {
 	std::string const dynamicTestSuiteName = "customTestSuite";
 	setDefaultOrCLocale();
+
+	//Initialize options
 	try
 	{
-		//Initialize options
-		dev::test::Options const& opt = dev::test::Options::get(argc, argv);
-		if (opt.createRandomTest || opt.singleTestFile.is_initialized())
-		{
-			// Disable initial output as the random test will output valid json to std
-			oldCoutStreamBuf = std::cout.rdbuf();
-			oldCerrStreamBuf = std::cerr.rdbuf();
-			std::cout.rdbuf(strCout.rdbuf());
-			std::cerr.rdbuf(strCout.rdbuf());
-
-			for (int i = 0; i < argc; i++)
-			{
-				//replace test suite to random tests
-				std::string arg = std::string{argv[i]};
-				if (arg == "-t" && i+1 < argc)
-				{
-					argv[i + 1] = (char*)dynamicTestSuiteName.c_str();
-					break;
-				}
-			}
-
-			//add random tests suite
-			test_suite* ts1 = BOOST_TEST_SUITE("customTestSuite");
-			ts1->add(BOOST_TEST_CASE(&customTestSuite));
-			framework::master_test_suite().add(ts1);
-		}
+		dev::test::Options::get(argc, argv);
 	}
 	catch (dev::test::Options::InvalidOption const& e)
 	{
@@ -161,12 +138,50 @@ int main( int argc, char* argv[] )
 		exit(1);
 	}
 
-	std::atomic_bool stopTravisOut{false};
-	std::thread outputThread(travisOut, &stopTravisOut);
+	dev::test::Options const& opt = dev::test::Options::get();
+	if (opt.createRandomTest || opt.singleTestFile.is_initialized())
+	{
+		// Disable initial output as the random test will output valid json to std
+		oldCoutStreamBuf = std::cout.rdbuf();
+		oldCerrStreamBuf = std::cerr.rdbuf();
+		std::cout.rdbuf(strCout.rdbuf());
+		std::cerr.rdbuf(strCout.rdbuf());
+
+		for (int i = 0; i < argc; i++)
+		{
+			// replace test suite to custom tests
+			std::string arg = std::string{argv[i]};
+			if (arg == "-t" && i+1 < argc)
+			{
+				argv[i + 1] = (char*)dynamicTestSuiteName.c_str();
+				break;
+			}
+		}
+
+		// add custom test suite
+		test_suite* ts1 = BOOST_TEST_SUITE("customTestSuite");
+		ts1->add(BOOST_TEST_CASE(&customTestSuite));
+		framework::master_test_suite().add(ts1);
+	}
+
+	int result = 0;
 	auto fakeInit = [](int, char*[]) -> boost::unit_test::test_suite* { return nullptr; };
-	int result = unit_test_main(fakeInit, argc, argv);
-	stopTravisOut = true;
-	outputThread.join();
-	dev::test::TestOutputHelper::get().printTestExecStats();
-	return result;
+	if (opt.jsontrace || opt.vmtrace || opt.statediff)
+	{
+		// Do not use travis '.' output thread if debug is defined
+		result = unit_test_main(fakeInit, argc, argv);
+		dev::test::TestOutputHelper::get().printTestExecStats();
+		return result;
+	}
+	else
+	{
+		// Initialize travis '.' output thread for log activity
+		std::atomic_bool stopTravisOut{false};
+		std::thread outputThread(travisOut, &stopTravisOut);
+		result = unit_test_main(fakeInit, argc, argv);
+		stopTravisOut = true;
+		outputThread.join();
+		dev::test::TestOutputHelper::get().printTestExecStats();
+		return result;
+	}
 }
