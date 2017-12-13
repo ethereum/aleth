@@ -76,6 +76,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
+        self.addCORS()
         self.end_headers()
         backend_url = 'unix:' + self.server.backend_address
         proxy_url = '{}:{}'.format(self.server.server_name,
@@ -83,20 +84,32 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         info = INFO.format(VERSION, backend_url, proxy_url)
         self.wfile.write(info.encode('utf-8'))
 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.addCORS()
+        self.end_headers()
+
     def do_POST(self):
         request_length = int(self.headers['Content-Length'])
         request_content = self.rfile.read(request_length)
         # self.log_message("Headers:  {}".format(self.headers))
-        self.log_message("Request:  {}".format(request_content))
+        # self.log_message("Request:  {}".format(request_content))
 
         response_content = self.server.process(request_content)
-        self.log_message("Response: {}".format(response_content))
+        # self.log_message("Response: {}".format(response_content))
 
         self.send_response(200)
         self.send_header("Content-type", "application/json")
         self.send_header("Content-length", len(response_content))
+        self.addCORS()
         self.end_headers()
         self.wfile.write(response_content)
+
+    def addCORS(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "content-type")
 
 
 class Proxy(HTTPServer):
