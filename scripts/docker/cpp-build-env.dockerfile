@@ -25,6 +25,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     git \
     ssh-client \
     cmake \
+    make \
     ninja-build \
     python-pip \
     python-requests \
