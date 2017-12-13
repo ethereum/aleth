@@ -26,7 +26,7 @@ coverage:
       default:
         enabled: no
 comment:
-  layout: "reach, diff, flags, files, footer"
+  layout: "reach, diff"
 flags:
   alltests:
     joined: false
