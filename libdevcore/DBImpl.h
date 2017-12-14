@@ -17,14 +17,44 @@
 
 #pragma once
 
-#include "vector_ref.h"
+#include <libdevcore/db.h>
+
+#if defined(ETH_LEVELDB)
+#include <libdevcore/LevelDB.h>
 
 namespace dev
 {
 namespace db
 {
-using Slice = vector_ref<char const>;
-class Transaction;
-class DB;
+
+using DBImpl = LevelDB;
+
 }
 }
+#elif defined(ETH_ROCKSDB)
+#include <libdevcore/RocksDB.h>
+
+namespace dev
+{
+namespace db
+{
+
+using DBImpl = RocksDB;
+
+}
+}
+#elif defined(ETH_LMDB)
+#include <libdevcore/LMDB.h>
+
+namespace dev
+{
+namespace db
+{
+
+using DBImpl = LMDB;
+
+}
+}
+#else
+#error "Unknown database"
+#endif

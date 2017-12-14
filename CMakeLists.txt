@@ -53,8 +53,8 @@ set(HUNTER_JOBS_NUMBER 4)
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache")
 include(HunterGate)
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.19.173.tar.gz"
-    SHA1 "750fb1d621af971fad6f303356b13017ad9f5e15"
+    URL "https://github.com/ruslo/hunter/archive/v0.19.188.tar.gz"
+    SHA1 "67ab3a0206d8cdb9372ce22dc28eafc1d6bcc557"
     LOCAL
 )
 
@@ -111,6 +111,11 @@ find_package(Snappy CONFIG REQUIRED)
 
 hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
+
+if(LMDB)
+	hunter_add_package(lmdb)
+	find_package(liblmdb CONFIG REQUIRED)
+endif()
 
 hunter_add_package(libjson-rpc-cpp)
 find_package(libjson-rpc-cpp CONFIG REQUIRED)

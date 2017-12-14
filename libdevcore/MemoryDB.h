@@ -45,6 +45,8 @@ public:
 
 	MemoryDB& operator=(MemoryDB const& _c);
 
+	virtual ~MemoryDB() = default;
+
 	void clear() { m_main.clear(); m_aux.clear(); }	// WARNING !!!! didn't originally clear m_refCount!!!
 	std::unordered_map<h256, std::string> get() const;
 

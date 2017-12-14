@@ -11,14 +11,59 @@ macro(configure_project)
 	option(VMTRACE "Enable VM tracing" OFF)
 	option(PROFILING "Enable profiling (deprecated)" OFF)
 	option(FATDB "Enable fat state database" ON)
-	option(ROCKSDB "Build with RocksDB instead of LevelDB" OFF)
 	option(PARANOID "Enable additional checks when validating transactions (deprecated)" OFF)
 	option(MINIUPNPC "Build with UPnP support" OFF)
 	option(FASTCTEST "Enable fast ctest" OFF)
 
+	set(supported_dbs LEVELDB ROCKSDB LMDB)
+	string(REPLACE ";" ", " supported_dbs_str "${supported_dbs}")
+	set(DB LEVELDB CACHE STRING "Database implementation to use (${supported_dbs_str})")
+	set_property(CACHE DB PROPERTY STRINGS ${supported_dbs})
+	set(valid_db OFF)
+	foreach(supported_db ${supported_dbs})
+		if(DB STREQUAL supported_db)
+			set(valid_db ON)
+			break()
+		endif()
+	endforeach()
+	if(NOT valid_db)
+		message(WARNING
+			"Invalid database selected ${DB}, must be one of"
+			" ${supported_dbs_str}, using LEVELDB instead")
+		set(DB LEVELDB CACHE STRING
+			  "Database implementation to use (${supported_dbs_str})"
+				FORCE)
+	endif()
+
+	add_definitions("-DETH_${DB}")
+	if(HUNTER_ENABLED)
+		if(DB STREQUAL "LMDB")
+			set(hunter_name lmdbxx)
+		else()
+			string(TOLOWER "${DB}" hunter_name)
+		endif()
+		hunter_add_package(${hunter_name})
+
+		if(DB STREQUAL LMDB)
+			find_package(lmdbxx CONFIG REQUIRED)
+		elseif(DB STREQUAL ROCKSDB)
+			find_package(RocksDB CONFIG REQUIRED)
+		else()
+			find_package(leveldb CONFIG REQUIRED)
+		endif()
+	else()
+		if(DB STREQUAL LMDB)
+			find_package(lmdbxx REQUIRED)
+		elseif(DB STREQUAL ROCKSDB)
+			find_package(RocksDB REQUIRED)
+		else()
+			find_package(LevelDB REQUIRED)
+		endif()
+	endif()
+
 	if(MINIUPNPC)
 		message(WARNING
-			"Security vulnerabilities have been discovered in miniupnpc library."
+			"Security vulnerabilities have been discovered in miniupnpc library. "
 			"This build option is for testing only. Do not use it in public networks")
 	endif()
 
@@ -50,12 +95,6 @@ macro(configure_project)
 	# i.e. it allows you to iterate over the contents of the state.
 	if (FATDB)
 		add_definitions(-DETH_FATDB)
-	endif ()
-
-	# ROCKSDB is an option to build Ethereum against Facebook's RocksDB instead
-	# of LevelDB
-	if (ROCKSDB)
-		add_definitions(-DETH_ROCKSDB)
 	endif ()
 
 	if (PARANOID)
@@ -99,7 +138,7 @@ macro(print_config)
 	message("-- VMTRACE          VM execution tracing                     ${VMTRACE}")
 	message("-- PROFILING        Profiling support                        ${PROFILING}")
 	message("-- FATDB            Full database exploring                  ${FATDB}")
-	message("-- ROCKSDB          Prefer rocksdb to leveldb                ${ROCKSDB}")
+	message("-- DB               Database implementation                  ${DB}")
 	message("-- PARANOID         -                                        ${PARANOID}")
 	message("-- MINIUPNPC        -                                        ${MINIUPNPC}")
 	message("------------------------------------------------------------- components")
