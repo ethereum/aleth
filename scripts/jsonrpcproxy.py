@@ -32,9 +32,9 @@ BUFSIZE = 32
 DELIMITER = ord('\n')
 INFO = """JSON-RPC Proxy
 
-Version: {}
-Proxy: {}
-Backend: {}
+Version:  {version}
+Proxy:    {proxy_url}
+Backend:  {backend_url} (connected: {connected})
 """
 
 
@@ -56,6 +56,9 @@ class UnixSocketConnector(object):
         if os_error_number == errno.ECONNREFUSED:
             return "Connection to '{}' refused"
         return "Unknown error when connecting to '{}'"
+
+    def is_connected(self):
+        return self.socket is not None
 
     def _connect(self):
         if self.socket is None:
@@ -104,6 +107,9 @@ class NamedPipeConnector(object):
         except pywintypes.error as err:
             raise IOError(err)
 
+    def is_connected(self):
+        return True
+
     def recv(self, max_length):
         (err, data) = win32file.ReadFile(self.handle, max_length)
         if err:
@@ -138,7 +144,9 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         backend_url = 'unix:' + self.server.backend_address
         proxy_url = '{}:{}'.format(self.server.server_name,
                                    self.server.server_port)
-        info = INFO.format(VERSION, backend_url, proxy_url)
+        info = INFO.format(version=VERSION, proxy_url=proxy_url,
+                           backend_url=backend_url,
+                           connected=self.server.conn.is_connected())
         self.wfile.write(info.encode('utf-8'))
 
     def do_OPTIONS(self):
