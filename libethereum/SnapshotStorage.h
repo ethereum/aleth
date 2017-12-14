@@ -21,6 +21,8 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/FixedHash.h>
 
+#include <boost/filesystem.hpp>
+
 #include <memory>
 
 namespace dev
@@ -44,6 +46,8 @@ public:
 	virtual bytes readManifest() const = 0;
 
 	virtual std::string readChunk(h256 const& _chunkHash) const = 0;
+
+	virtual void copyTo(boost::filesystem::path const& _path) const = 0;
 };
 
 

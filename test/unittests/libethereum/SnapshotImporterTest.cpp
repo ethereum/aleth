@@ -97,6 +97,7 @@ namespace
 			auto it = chunks.find(_chunkHash);
 			return it == chunks.end() ? std::string{} : std::string(it->second.begin(), it->second.end());
 		}
+		void copyTo(boost::filesystem::path const&) const override {}
 
 		bytes manifest;
 		std::map<h256, bytes> chunks;

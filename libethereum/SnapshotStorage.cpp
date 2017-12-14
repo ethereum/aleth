@@ -19,7 +19,6 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 
-#include <boost/filesystem.hpp>
 #include <snappy.h>
 
 namespace dev
@@ -77,6 +76,11 @@ public:
 		assert(!chunkUncompressed.empty());
 
 		return chunkUncompressed;
+	}
+
+	void copyTo(boost::filesystem::path const& _path) const override
+	{
+		copyDirectory(m_snapshotDir, _path);
 	}
 
 private:

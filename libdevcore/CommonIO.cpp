@@ -35,7 +35,26 @@
 using namespace std;
 using namespace dev;
 
-string dev::memDump(bytes const& _bytes, unsigned _width, bool _html)
+namespace fs = boost::filesystem;
+
+namespace dev
+{
+
+namespace
+{
+
+void createDirectoryIfNotExistent(boost::filesystem::path const& _path)
+{
+	if (!fs::exists(_path))
+	{
+		fs::create_directories(_path);
+		DEV_IGNORE_EXCEPTIONS(fs::permissions(_path, fs::owner_all));
+	}
+}
+
+}
+
+string memDump(bytes const& _bytes, unsigned _width, bool _html)
 {
 	stringstream ret;
 	if (_html)
@@ -87,12 +106,12 @@ inline _T contentsGeneric(boost::filesystem::path const& _file)
 	return ret;
 }
 
-bytes dev::contents(boost::filesystem::path const& _file)
+bytes contents(boost::filesystem::path const& _file)
 {
 	return contentsGeneric<bytes>(_file);
 }
 
-bytesSec dev::contentsSec(boost::filesystem::path const& _file)
+bytesSec contentsSec(boost::filesystem::path const& _file)
 {
 	bytes b = contentsGeneric<bytes>(_file);
 	bytesSec ret(b);
@@ -100,14 +119,13 @@ bytesSec dev::contentsSec(boost::filesystem::path const& _file)
 	return ret;
 }
 
-string dev::contentsString(boost::filesystem::path const& _file)
+string contentsString(boost::filesystem::path const& _file)
 {
 	return contentsGeneric<string>(_file);
 }
 
-void dev::writeFile(boost::filesystem::path const& _file, bytesConstRef _data, bool _writeDeleteRename)
+void writeFile(boost::filesystem::path const& _file, bytesConstRef _data, bool _writeDeleteRename)
 {
-	namespace fs = boost::filesystem;
 	if (_writeDeleteRename)
 	{
 		fs::path tempPath = appendToFilename(_file, "-%%%%%%"); // XXX should not convert to string for this
@@ -117,22 +135,25 @@ void dev::writeFile(boost::filesystem::path const& _file, bytesConstRef _data, b
 	}
 	else
 	{
-		// create directory if not existent
-		if (!fs::exists(_file.parent_path()))
-		{
-			fs::create_directories(_file.parent_path());
-			DEV_IGNORE_EXCEPTIONS(fs::permissions(_file.parent_path(), fs::owner_all));
-		}
+		createDirectoryIfNotExistent(_file.parent_path());
 
 		boost::filesystem::ofstream s(_file, ios::trunc | ios::binary);
 		s.write(reinterpret_cast<char const*>(_data.data()), _data.size());
 		if (!s)
 			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file.string()));
-		DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read|fs::owner_write));
+		DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read | fs::owner_write));
 	}
 }
 
-std::string dev::getPassword(std::string const& _prompt)
+void copyDirectory(boost::filesystem::path const& _srcDir, boost::filesystem::path const& _dstDir)
+{
+	createDirectoryIfNotExistent(_dstDir);
+
+	for (fs::directory_iterator file(_srcDir); file != fs::directory_iterator(); ++file)
+		fs::copy_file(file->path(), _dstDir / file->path().filename());
+}
+
+std::string getPassword(std::string const& _prompt)
 {
 #if defined(_WIN32)
 	cout << _prompt << flush;
@@ -179,4 +200,6 @@ std::string dev::getPassword(std::string const& _prompt)
 
 	return password;
 #endif
+}
+
 }
