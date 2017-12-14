@@ -18,6 +18,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from os import path
 from urllib.parse import urlparse
+import errno
 import socket
 import sys
 
@@ -37,7 +38,62 @@ Backend: {}
 """
 
 
-class NamedPipe(object):
+class BackendError(Exception):
+    pass
+
+
+class UnixSocketConnector(object):
+    """Unix Domain Socket connector. Connects to socket lazily."""
+
+    def __init__(self, socket_path):
+        self.socket_path = socket_path
+        self.socket = None
+
+    @staticmethod
+    def _get_error_message(os_error_number):
+        if os_error_number == errno.ENOENT:
+            return "Unix Domain Socket '{}' does not exist"
+        if os_error_number == errno.ECONNREFUSED:
+            return "Connection to '{}' refused"
+        return "Unknown error when connecting to '{}'"
+
+    def _connect(self):
+        if self.socket is None:
+            try:
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.connect(self.socket_path)
+                s.settimeout(1)
+                # Assign last, to keep it None in case of exception.
+                self.socket = s
+            except OSError as ex:
+                msg = self._get_error_message(ex.errno)
+                err = BackendError(msg.format(self.socket_path))
+                raise err from ex
+
+    def _reconnect(self):
+        self.socket.shutdown(socket.SHUT_RDWR)
+        self.socket.close()
+        self.socket = None
+        self._connect()
+
+    def recv(self, max_length):
+        self._connect()
+        return self.socket.recv(max_length)
+
+    def sendall(self, data):
+        self._connect()
+        try:
+            return self.socket.sendall(data)
+        except OSError as ex:
+            if ex.errno == errno.EPIPE:
+                # The connection was terminated by the backend.
+                self._reconnect()
+                return self.socket.sendall(data)
+            else:
+                raise
+
+
+class NamedPipeConnector(object):
     """Windows named pipe simulating socket."""
 
     def __init__(self, ipc_path):
@@ -61,19 +117,20 @@ class NamedPipe(object):
         self.handle.close()
 
 
-def get_ipc_socket(ipc_path, timeout=1):
+def get_ipc_connector(ipc_path):
     if sys.platform == 'win32':
-        return NamedPipe(ipc_path)
-
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.connect(ipc_path)
-    sock.settimeout(timeout)
-    return sock
+        return NamedPipeConnector(ipc_path)
+    return UnixSocketConnector(ipc_path)
 
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
+        if self.path != '/':
+            self.send_response(404)
+            self.end_headers()
+            return
+
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.addCORS()
@@ -96,15 +153,27 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         # self.log_message("Headers:  {}".format(self.headers))
         # self.log_message("Request:  {}".format(request_content))
 
-        response_content = self.server.process(request_content)
-        # self.log_message("Response: {}".format(response_content))
+        try:
+            response_content = self.server.process(request_content)
+            # self.log_message("Response: {}".format(response_content))
 
-        self.send_response(200)
-        self.send_header("Content-type", "application/json")
-        self.send_header("Content-length", len(response_content))
-        self.addCORS()
-        self.end_headers()
-        self.wfile.write(response_content)
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Content-length", len(response_content))
+            self.addCORS()
+            self.end_headers()
+            self.wfile.write(response_content)
+        except BackendError as err:
+            self.send_response(502)
+            error_msg = str(err).encode('utf-8')
+            # TODO: Send as JSON-RPC response
+            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-length", len(error_msg))
+            self.end_headers()
+            self.wfile.write(error_msg)
+            self.log_message("Backend Error: {}".format(err))
+
+        # TODO: Handle other excaptions as error 500.
 
     def addCORS(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -123,14 +192,14 @@ class Proxy(HTTPServer):
         super(Proxy, self).__init__(proxy_address, HTTPRequestHandler)
 
         self.backend_address = path.expanduser(backend_path)
-        self.sock = get_ipc_socket(self.backend_address)
+        self.conn = get_ipc_connector(self.backend_address)
 
     def process(self, request):
-        self.sock.sendall(request)
+        self.conn.sendall(request)
 
         response = b''
         while True:
-            r = self.sock.recv(BUFSIZE)
+            r = self.conn.recv(BUFSIZE)
             if not r:
                 break
             if r[-1] == DELIMITER:
