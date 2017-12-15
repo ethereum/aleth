@@ -18,8 +18,6 @@
 #pragma once
 
 #include <libdevcore/db.h>
-
-#if defined(ETH_LEVELDB)
 #include <libdevcore/LevelDB.h>
 
 namespace dev
@@ -31,30 +29,3 @@ using DBImpl = LevelDB;
 
 }
 }
-#elif defined(ETH_ROCKSDB)
-#include <libdevcore/RocksDB.h>
-
-namespace dev
-{
-namespace db
-{
-
-using DBImpl = RocksDB;
-
-}
-}
-#elif defined(ETH_LMDB)
-#include <libdevcore/LMDB.h>
-
-namespace dev
-{
-namespace db
-{
-
-using DBImpl = LMDB;
-
-}
-}
-#else
-#error "Unknown database"
-#endif

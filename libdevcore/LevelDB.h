@@ -21,8 +21,6 @@
 
 #pragma once
 
-#ifdef ETH_LEVELDB
-
 #include "db.h"
 
 #include <leveldb/db.h>
@@ -62,5 +60,3 @@ private:
 
 }
 }
-
-#endif

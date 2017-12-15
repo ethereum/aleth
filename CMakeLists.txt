@@ -112,11 +112,6 @@ find_package(Snappy CONFIG REQUIRED)
 hunter_add_package(cryptopp)
 find_package(cryptopp CONFIG REQUIRED)
 
-if(LMDB)
-	hunter_add_package(lmdb)
-	find_package(liblmdb CONFIG REQUIRED)
-endif()
-
 hunter_add_package(libjson-rpc-cpp)
 find_package(libjson-rpc-cpp CONFIG REQUIRED)
 

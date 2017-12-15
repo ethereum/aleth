@@ -19,8 +19,6 @@
  * @date 2017
  */
 
-#ifdef ETH_LEVELDB
-
 #include "LevelDB.h"
 #include "Assertions.h"
 
@@ -197,5 +195,3 @@ void LevelDB::forEach(std::function<bool(Slice const&, Slice const&)> f) const
 
 }
 }
-
-#endif
