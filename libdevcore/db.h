@@ -21,16 +21,80 @@
 
 #pragma once
 
+#include "Exceptions.h"
 #include "dbfwd.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4100 4267)
-#if ETH_ROCKSDB
-#include <rocksdb/db.h>
-#include <rocksdb/write_batch.h>
-#else
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
-#endif
-#pragma warning(pop)
-#define DEV_LDB 1
+#include <memory>
+#include <string>
+
+namespace dev
+{
+namespace db
+{
+
+// Transaction implements database transaction for a specific concrete database
+// implementation. The transaction implementation must call rollback in its
+// destructor if commit has not yet been called (making sure to catch any
+// exceptions).
+class Transaction
+{
+public:
+	virtual ~Transaction() = default;
+
+	virtual void insert(Slice const& _key, Slice const& _value) = 0;
+	virtual void kill(Slice const& _key) = 0;
+
+	virtual void commit() = 0;
+	virtual void rollback() = 0;
+
+protected:
+	Transaction() = default;
+	// Noncopyable
+	Transaction(const Transaction&) = delete;
+	Transaction& operator=(const Transaction&) = delete;
+	// Movable
+	Transaction(Transaction&&) = default;
+	Transaction& operator=(Transaction&&) = default;
+};
+
+class DB
+{
+public:
+	virtual ~DB() = default;
+	virtual std::string lookup(Slice const& _key) const = 0;
+	virtual bool exists(Slice const& _key) const = 0;
+	virtual void insert(Slice const& _key, Slice const& _value) = 0;
+	virtual void kill(Slice const& _key) = 0;
+	virtual std::unique_ptr<Transaction> begin() = 0;
+
+	// A database must implement the `forEach` method that allows the caller
+	// to pass in a function `f`, which will be called with the key and value
+	// of each record in the database. If `f` returns false, the `forEach`
+	// method must return immediately.
+	virtual void forEach(std::function<bool(Slice const&, Slice const&)> f) const = 0;
+
+	virtual void print(std::ostream& out) const
+	{
+		forEach([&out](Slice const& key, Slice const& value) {
+			out << toHex(key) << " => " << toHex(value) << '\n';
+			return static_cast<bool>(out);
+		});
+	}
+};
+
+inline std::ostream& operator<<(std::ostream& out, const DB& database)
+{
+	database.print(out);
+	return out;
+}
+
+struct FailedToOpenDB: virtual Exception { using Exception::Exception; };
+struct FailedInsertInDB: virtual Exception { using Exception::Exception; };
+struct FailedLookupInDB: virtual Exception { using Exception::Exception; };
+struct FailedDeleteInDB: virtual Exception { using Exception::Exception; };
+struct FailedCommitInDB: virtual Exception { using Exception::Exception; };
+struct FailedRollbackInDB: virtual Exception { using Exception::Exception; };
+struct FailedIterateDB: virtual Exception { using Exception::Exception; };
+
+}
+}

@@ -17,14 +17,15 @@
 
 #pragma once
 
-#include "vector_ref.h"
+#include <libdevcore/db.h>
+#include <libdevcore/LevelDB.h>
 
 namespace dev
 {
 namespace db
 {
-using Slice = vector_ref<char const>;
-class Transaction;
-class DB;
+
+using DBImpl = LevelDB;
+
 }
 }
