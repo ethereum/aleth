@@ -11,14 +11,16 @@ macro(configure_project)
 	option(VMTRACE "Enable VM tracing" OFF)
 	option(PROFILING "Enable profiling (deprecated)" OFF)
 	option(FATDB "Enable fat state database" ON)
-	option(ROCKSDB "Build with RocksDB instead of LevelDB" OFF)
 	option(PARANOID "Enable additional checks when validating transactions (deprecated)" OFF)
 	option(MINIUPNPC "Build with UPnP support" OFF)
 	option(FASTCTEST "Enable fast ctest" OFF)
 
+	hunter_add_package(leveldb)
+	find_package(leveldb CONFIG REQUIRED)
+
 	if(MINIUPNPC)
 		message(WARNING
-			"Security vulnerabilities have been discovered in miniupnpc library."
+			"Security vulnerabilities have been discovered in miniupnpc library. "
 			"This build option is for testing only. Do not use it in public networks")
 	endif()
 
@@ -44,12 +46,6 @@ macro(configure_project)
 	# i.e. it allows you to iterate over the contents of the state.
 	if (FATDB)
 		add_definitions(-DETH_FATDB)
-	endif ()
-
-	# ROCKSDB is an option to build Ethereum against Facebook's RocksDB instead
-	# of LevelDB
-	if (ROCKSDB)
-		add_definitions(-DETH_ROCKSDB)
 	endif ()
 
 	if (PARANOID)
@@ -93,7 +89,7 @@ macro(print_config)
 	message("-- VMTRACE          VM execution tracing                     ${VMTRACE}")
 	message("-- PROFILING        Profiling support                        ${PROFILING}")
 	message("-- FATDB            Full database exploring                  ${FATDB}")
-	message("-- ROCKSDB          Prefer rocksdb to leveldb                ${ROCKSDB}")
+	message("-- DB               Database implementation                  LEVELDB")
 	message("-- PARANOID         -                                        ${PARANOID}")
 	message("-- MINIUPNPC        -                                        ${MINIUPNPC}")
 	message("------------------------------------------------------------- components")

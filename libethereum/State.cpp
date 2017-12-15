@@ -24,6 +24,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/timer.hpp>
 #include <libdevcore/Assertions.h>
+#include <libdevcore/DBImpl.h>
 #include <libdevcore/TrieHash.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
@@ -91,13 +92,15 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 	fs::create_directories(path);
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
 
-	ldb::Options o;
-	o.max_open_files = 256;
-	o.create_if_missing = true;
-	ldb::DB* db = nullptr;
-	ldb::Status status = ldb::DB::Open(o, (path / fs::path("state")).string(), &db);
-	if (!status.ok() || !db)
+	try
 	{
+		std::unique_ptr<db::DB> db(new db::DBImpl((path / fs::path("state")).string()));
+		clog(StateDetail) << "Opened state DB.";
+		return OverlayDB(db.release());
+	}
+	catch (db::FailedToOpenDB const& ex)
+	{
+		cwarn << ex.what() << '\n';
 		if (fs::space(path / fs::path("state")).available < 1024)
 		{
 			cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
@@ -105,7 +108,6 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 		}
 		else
 		{
-			cwarn << status.ToString();
 			cwarn <<
 				"Database " <<
 				(path / fs::path("state")) <<
@@ -113,9 +115,6 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
 		}
 	}
-
-	clog(StateDetail) << "Opened state DB.";
-	return OverlayDB(db);
 }
 
 void State::populateFrom(AccountMap const& _map)

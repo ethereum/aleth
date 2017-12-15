@@ -25,23 +25,13 @@
 namespace dev
 {
 
-OverlayDB::~OverlayDB()
-{
-	if (m_db.use_count() == 1 && m_db.get())
-		clog(DBDetail) << "Closing state DB";
-}
-
-class WriteBatchNoter: public ldb::WriteBatch::Handler
-{
-	virtual void Put(ldb::Slice const& _key, ldb::Slice const& _value) { cnote << "Put" << toHex(bytesConstRef(_key)) << "=>" << toHex(bytesConstRef(_value)); }
-	virtual void Delete(ldb::Slice const& _key) { cnote << "Delete" << toHex(bytesConstRef(_key)); }
-};
+OverlayDB::~OverlayDB() = default;
 
 void OverlayDB::commit()
 {
 	if (m_db)
 	{
-		ldb::WriteBatch batch;
+		auto transaction = m_db->begin();
 //		cnote << "Committing nodes to disk DB:";
 #if DEV_GUARDED_DB
 		DEV_READ_GUARDED(x_this)
@@ -50,7 +40,7 @@ void OverlayDB::commit()
 			for (auto const& i: m_main)
 			{
 				if (i.second.second)
-					batch.Put(ldb::Slice((char const*)i.first.data(), i.first.size), ldb::Slice(i.second.first.data(), i.second.first.size()));
+					transaction->insert(db::Slice(reinterpret_cast<char const*>(i.first.data()), i.first.size), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
 //				cnote << i.first << "#" << m_main[i.first].second;
 			}
 			for (auto const& i: m_aux)
@@ -58,25 +48,28 @@ void OverlayDB::commit()
 				{
 					bytes b = i.first.asBytes();
 					b.push_back(255);	// for aux
-					batch.Put(bytesConstRef(&b), bytesConstRef(&i.second.first));
+					transaction->insert(db::Slice(reinterpret_cast<char const*>(&b[0]), b.size()), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
 				}
 		}
 
 		for (unsigned i = 0; i < 10; ++i)
 		{
-			ldb::Status o = m_db->Write(m_writeOptions, &batch);
-			if (o.ok())
-				break;
-			if (i == 9)
+			try
 			{
-				cwarn << "Fail writing to state database. Bombing out.";
-				exit(-1);
+				transaction->commit();
+				break;
 			}
-			cwarn << "Error writing to state database: " << o.ToString();
-			WriteBatchNoter n;
-			batch.Iterate(&n);
-			cwarn << "Sleeping for" << (i + 1) << "seconds, then retrying.";
-			std::this_thread::sleep_for(std::chrono::seconds(i + 1));
+			catch (const db::FailedCommitInDB& ex)
+			{
+				if (i == 9)
+				{
+					cwarn << "Fail writing to state database. Bombing out.";
+					exit(-1);
+				}
+				cwarn << "Error writing to state database: " << ex.what();
+				cwarn << "Sleeping for" << (i + 1) << "seconds, then retrying.";
+				std::this_thread::sleep_for(std::chrono::seconds(i + 1));
+			}
 		}
 #if DEV_GUARDED_DB
 		DEV_WRITE_GUARDED(x_this)
@@ -96,9 +89,14 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
 	std::string v;
 	bytes b = _h.asBytes();
 	b.push_back(255);	// for aux
-	m_db->Get(m_readOptions, bytesConstRef(&b), &v);
-	if (v.empty())
+	try
+	{
+		v = m_db->lookup(db::Slice(reinterpret_cast<char const*>(&b[0]), b.size()));
+	}
+	catch (const db::FailedLookupInDB& ex)
+	{
 		cwarn << "Aux not found: " << _h;
+	}
 	return asBytes(v);
 }
 
@@ -114,7 +112,7 @@ std::string OverlayDB::lookup(h256 const& _h) const
 {
 	std::string ret = MemoryDB::lookup(_h);
 	if (ret.empty() && m_db)
-		m_db->Get(m_readOptions, ldb::Slice((char const*)_h.data(), 32), &ret);
+		DEV_IGNORE_EXCEPTIONS(ret = m_db->lookup(db::Slice(reinterpret_cast<char const*>(_h.data()), 32)));
 	return ret;
 }
 
@@ -122,10 +120,7 @@ bool OverlayDB::exists(h256 const& _h) const
 {
 	if (MemoryDB::exists(_h))
 		return true;
-	std::string ret;
-	if (m_db)
-		m_db->Get(m_readOptions, ldb::Slice((char const*)_h.data(), 32), &ret);
-	return !ret.empty();
+	return m_db && m_db->exists(db::Slice(reinterpret_cast<char const*>(_h.data()), 32));
 }
 
 void OverlayDB::kill(h256 const& _h)
@@ -135,13 +130,20 @@ void OverlayDB::kill(h256 const& _h)
 	{
 		std::string ret;
 		if (m_db)
-			m_db->Get(m_readOptions, ldb::Slice((char const*)_h.data(), 32), &ret);
-		// No point node ref decreasing for EmptyTrie since we never bother incrementing it in the first place for
-		// empty storage tries.
-		if (ret.empty() && _h != EmptyTrie)
-			cnote << "Decreasing DB node ref count below zero with no DB node. Probably have a corrupt Trie." << _h;
-
-		// TODO: for 1.1: ref-counted triedb.
+		{
+			try
+			{
+				ret = m_db->lookup(db::Slice(reinterpret_cast<char const*>(_h.data()), 32));
+			}
+			catch (const db::FailedLookupInDB& ex)
+			{
+				// No point node ref decreasing for EmptyTrie since we never bother incrementing it in the first place for
+				// empty storage tries.
+				if (_h != EmptyTrie)
+					cnote << "Decreasing DB node ref count below zero with no DB node. Probably have a corrupt Trie." << _h;
+				// TODO: for 1.1: ref-counted triedb.
+			}
+		}
 	}
 #else
 	MemoryDB::kill(_h);
@@ -149,4 +151,3 @@ void OverlayDB::kill(h256 const& _h)
 }
 
 }
-
