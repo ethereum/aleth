@@ -22,6 +22,7 @@
 
 #include <thread>
 #include <future>
+#include <set>
 #include <functional>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
@@ -70,7 +71,7 @@ protected:
 // helping functions
 std::string prepareVersionString();
 std::string prepareLLLCVersionString();
-std::vector<boost::filesystem::path> getJsonFiles(boost::filesystem::path const& _dirPath, std::string const& _particularFile = {});
+std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
 std::string netIdToString(eth::Network _netId);
 eth::Network stringToNetId(std::string const& _netname);
 bool isDisabledNetwork(eth::Network _net);

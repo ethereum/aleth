@@ -122,33 +122,36 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	// check that destination folder test files has according Filler file in src folder
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName;
-	vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder), filter);
+	vector<fs::path> const compiledFiles = test::getFiles(getFullPath(_testFolder), {".json", ".yml"} ,filter);
 	for (auto const& file: compiledFiles)
 	{
 		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
+		fs::path const expectedFillerName2 = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".yml");
 		fs::path const expectedCopierName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_copierPostf + ".json");
-		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
-		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedCopierName)), "Src test could either be Filler.json or Copier.json: " + file.filename().string());
+		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
+		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
 		// Check that filled tests created from actual fillers
 		if (Options::get().filltests == false)
 		{
 			if (fs::exists(expectedFillerName))
 				checkFillerHash(file, expectedFillerName);
+			if (fs::exists(expectedFillerName2))
+				checkFillerHash(file, expectedFillerName2);
 			if (fs::exists(expectedCopierName))
 				checkFillerHash(file, expectedCopierName);
 		}
 	}
 
 	// run all tests
-	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder), filter.empty() ? filter : filter + "Filler");
+	vector<fs::path> const files = test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter.empty() ? filter : filter + "Filler");
 
 	auto& testOutput = test::TestOutputHelper::get();
 	testOutput.initTest(files.size());
 	for (auto const& file: files)
 	{
 		testOutput.showProgress();
-		testOutput.setCurrentTestFileName(file.filename().string());
+		testOutput.setCurrentTestFileName(file);
 		executeTest(_testFolder, file);
 	}
 	testOutput.finishTest();
