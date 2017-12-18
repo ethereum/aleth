@@ -81,6 +81,7 @@ byte toByte(json_spirit::mValue const& _v);
 void replaceLLLinState(json_spirit::mObject& _o);
 std::string compileLLL(std::string const& _code);
 std::string executeCmd(std::string const& _command);
+json_spirit::mValue parseYamlToJson(std::string const& _string);
 bytes importCode(json_spirit::mObject const& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
