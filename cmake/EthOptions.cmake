@@ -15,8 +15,12 @@ macro(configure_project)
 	option(MINIUPNPC "Build with UPnP support" OFF)
 	option(FASTCTEST "Enable fast ctest" OFF)
 
-	hunter_add_package(leveldb)
-	find_package(leveldb CONFIG REQUIRED)
+	if(WIN32 OR NOT HUNTER_ENABLED)
+		find_package(LevelDB REQUIRED)
+	else()
+	  hunter_add_package(leveldb)
+	  find_package(leveldb CONFIG REQUIRED)
+	endif()
 
 	if(MINIUPNPC)
 		message(WARNING

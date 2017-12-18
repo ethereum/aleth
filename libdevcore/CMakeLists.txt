@@ -8,4 +8,10 @@ add_dependencies(devcore BuildInfo.h)
 # Needed to prevent including system-level boost headers:
 target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIR} PRIVATE ../utils)
 
-target_link_libraries(devcore Boost::filesystem Boost::system Boost::thread Threads::Threads leveldb::leveldb)
+target_link_libraries(devcore Boost::filesystem Boost::system Boost::thread Threads::Threads)
+if(WIN32 OR NOT HUNTER_ENABLED)
+  target_include_directories(devcore SYSTEM PUBLIC ${LEVELDB_INCLUDE_DIRS})
+  target_link_libraries(devcore ${LEVELDB_LIBRARIES})
+else()
+  target_link_libraries(devcore leveldb::leveldb)
+endif()
