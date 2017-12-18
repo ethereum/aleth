@@ -241,11 +241,10 @@ void RLPStream::noteAppended(size_t _itemCount)
     while (m_listStack.size())
     {
         if (m_listStack.back().first < _itemCount)
-            BOOST_THROW_EXCEPTION(
-                RLPException()
-                << errinfo_comment("itemCount too large")
-                << RequirementError(
-                       (bigint)m_listStack.back().first, (bigint)_itemCount));
+            BOOST_THROW_EXCEPTION(RLPException()
+                                  << errinfo_comment("itemCount too large")
+                                  << RequirementError(
+                                         (bigint)m_listStack.back().first, (bigint)_itemCount));
         m_listStack.back().first -= _itemCount;
         if (m_listStack.back().first)
             break;
@@ -258,7 +257,7 @@ void RLPStream::noteAppended(size_t _itemCount)
             unsigned encodeSize = s < c_rlpListImmLenCount ? 1 : (1 + brs);
             //			cdebug << "s: " << s << ", p: " << p << ", m_out.size(): "
             //<< m_out.size() << ", encodeSize: " << encodeSize << " (br: " <<
-            //brs << ")";
+            // brs << ")";
             auto os = m_out.size();
             m_out.resize(os + encodeSize);
             memmove(m_out.data() + p + encodeSize, m_out.data() + p, os - p);
@@ -272,8 +271,8 @@ void RLPStream::noteAppended(size_t _itemCount)
                     *(b--) = (byte)s;
             }
             else
-                BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment(
-                                          "itemCount too large for RLP"));
+                BOOST_THROW_EXCEPTION(
+                    RLPException() << errinfo_comment("itemCount too large for RLP"));
         }
         _itemCount = 1;  // for all following iterations, we've effectively
                          // appended a single item only since we completed a
@@ -339,8 +338,8 @@ RLPStream& RLPStream::append(bigint _i)
         {
             auto brbr = bytesRequired(br);
             if (c_rlpDataIndLenZero + brbr > 0xff)
-                BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment(
-                                          "Number too large for RLP"));
+                BOOST_THROW_EXCEPTION(
+                    RLPException() << errinfo_comment("Number too large for RLP"));
             m_out.push_back((byte)(c_rlpDataIndLenZero + brbr));
             pushInt(br, brbr);
         }
@@ -354,22 +353,20 @@ void RLPStream::pushCount(size_t _count, byte _base)
 {
     auto br = bytesRequired(_count);
     if (int(br) + _base > 0xff)
-        BOOST_THROW_EXCEPTION(
-            RLPException() << errinfo_comment("Count too large for RLP"));
+        BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("Count too large for RLP"));
     m_out.push_back((byte)(br + _base));  // max 8 bytes.
     pushInt(_count, br);
 }
 
-static void streamOut(
-    std::ostream& _out, dev::RLP const& _d, unsigned _depth = 0)
+static void streamOut(std::ostream& _out, dev::RLP const& _d, unsigned _depth = 0)
 {
     if (_depth > 64)
         _out << "<max-depth-reached>";
     else if (_d.isNull())
         _out << "null";
     else if (_d.isInt())
-        _out << std::showbase << std::hex << std::nouppercase
-             << _d.toInt<bigint>(RLP::LaissezFaire) << dec;
+        _out << std::showbase << std::hex << std::nouppercase << _d.toInt<bigint>(RLP::LaissezFaire)
+             << dec;
     else if (_d.isData())
         _out << escaped(_d.toString(), false);
     else if (_d.isList())

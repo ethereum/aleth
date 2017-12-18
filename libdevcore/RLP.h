@@ -64,12 +64,9 @@ static const byte c_rlpListStart = 0xc0;
 
 static const byte c_rlpDataImmLenCount =
     c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes;
-static const byte c_rlpDataIndLenZero =
-    c_rlpDataImmLenStart + c_rlpDataImmLenCount - 1;
-static const byte c_rlpListImmLenCount =
-    256 - c_rlpListStart - c_rlpMaxLengthBytes;
-static const byte c_rlpListIndLenZero =
-    c_rlpListStart + c_rlpListImmLenCount - 1;
+static const byte c_rlpDataIndLenZero = c_rlpDataImmLenStart + c_rlpDataImmLenCount - 1;
+static const byte c_rlpListImmLenCount = 256 - c_rlpListStart - c_rlpMaxLengthBytes;
+static const byte c_rlpListIndLenZero = c_rlpListStart + c_rlpListImmLenCount - 1;
 
 template <class T>
 struct Converter
@@ -110,8 +107,7 @@ public:
     explicit RLP(bytes const& _d, Strictness _s = VeryStrict) : RLP(&_d, _s) {}
 
     /// Construct a node to read RLP data in the bytes given.
-    RLP(byte const* _b, unsigned _s, Strictness _st = VeryStrict)
-      : RLP(bytesConstRef(_b, _s), _st)
+    RLP(byte const* _b, unsigned _s, Strictness _st = VeryStrict) : RLP(bytesConstRef(_b, _s), _st)
     {}
 
     /// Construct a node to read RLP data in the string.
@@ -131,8 +127,7 @@ public:
     /// Contains a zero-length string or zero-length list.
     bool isEmpty() const
     {
-        return !isNull() && (m_data[0] == c_rlpDataImmLenStart ||
-                                m_data[0] == c_rlpListStart);
+        return !isNull() && (m_data[0] == c_rlpDataImmLenStart || m_data[0] == c_rlpListStart);
     }
 
     /// String value.
@@ -163,22 +158,10 @@ public:
     }
 
     /// Equality operators; does best-effort conversion and checks for equality.
-    bool operator==(char const* _s) const
-    {
-        return isData() && toString() == _s;
-    }
-    bool operator!=(char const* _s) const
-    {
-        return isData() && toString() != _s;
-    }
-    bool operator==(std::string const& _s) const
-    {
-        return isData() && toString() == _s;
-    }
-    bool operator!=(std::string const& _s) const
-    {
-        return isData() && toString() != _s;
-    }
+    bool operator==(char const* _s) const { return isData() && toString() == _s; }
+    bool operator!=(char const* _s) const { return isData() && toString() != _s; }
+    bool operator==(std::string const& _s) const { return isData() && toString() == _s; }
+    bool operator!=(std::string const& _s) const { return isData() && toString() != _s; }
     template <unsigned _N>
     bool operator==(FixedHash<_N> const& _h) const
     {
@@ -189,30 +172,12 @@ public:
     {
         return isData() && toHash<_N>() != _s;
     }
-    bool operator==(unsigned const& _i) const
-    {
-        return isInt() && toInt<unsigned>() == _i;
-    }
-    bool operator!=(unsigned const& _i) const
-    {
-        return isInt() && toInt<unsigned>() != _i;
-    }
-    bool operator==(u256 const& _i) const
-    {
-        return isInt() && toInt<u256>() == _i;
-    }
-    bool operator!=(u256 const& _i) const
-    {
-        return isInt() && toInt<u256>() != _i;
-    }
-    bool operator==(bigint const& _i) const
-    {
-        return isInt() && toInt<bigint>() == _i;
-    }
-    bool operator!=(bigint const& _i) const
-    {
-        return isInt() && toInt<bigint>() != _i;
-    }
+    bool operator==(unsigned const& _i) const { return isInt() && toInt<unsigned>() == _i; }
+    bool operator!=(unsigned const& _i) const { return isInt() && toInt<unsigned>() != _i; }
+    bool operator==(u256 const& _i) const { return isInt() && toInt<u256>() == _i; }
+    bool operator!=(u256 const& _i) const { return isInt() && toInt<u256>() != _i; }
+    bool operator==(bigint const& _i) const { return isInt() && toInt<bigint>() == _i; }
+    bool operator!=(bigint const& _i) const { return isInt() && toInt<bigint>() != _i; }
 
     /// Subscript operator.
     /// @returns the list item @a _i if isList() and @a _i < listItems(), or
@@ -239,14 +204,8 @@ public:
             return ret;
         }
         RLP operator*() const { return RLP(m_currentItem); }
-        bool operator==(iterator const& _cmp) const
-        {
-            return m_currentItem == _cmp.m_currentItem;
-        }
-        bool operator!=(iterator const& _cmp) const
-        {
-            return !operator==(_cmp);
-        }
+        bool operator==(iterator const& _cmp) const { return m_currentItem == _cmp.m_currentItem; }
+        bool operator!=(iterator const& _cmp) const { return !operator==(_cmp); }
 
     private:
         iterator() {}
@@ -487,10 +446,7 @@ private:
     void requireGood() const;
 
     /// Single-byte data payload.
-    bool isSingleByte() const
-    {
-        return !isNull() && m_data[0] < c_rlpDataImmLenStart;
-    }
+    bool isSingleByte() const { return !isNull() && m_data[0] < c_rlpDataImmLenStart; }
 
     /// @returns the amount of bytes used to encode the length of the data.
     /// Valid for all types.
@@ -508,10 +464,7 @@ private:
     size_t length() const;
 
     /// @returns the number of bytes into the data that the payload starts.
-    size_t payloadOffset() const
-    {
-        return isSingleByte() ? 0 : (1 + lengthSize());
-    }
+    size_t payloadOffset() const { return isSingleByte() ? 0 : (1 + lengthSize()); }
 
     /// @returns the number of data items.
     size_t items() const;
@@ -535,18 +488,12 @@ private:
 template <>
 struct Converter<std::string>
 {
-    static std::string convert(RLP const& _r, int _flags)
-    {
-        return _r.toString(_flags);
-    }
+    static std::string convert(RLP const& _r, int _flags) { return _r.toString(_flags); }
 };
 template <>
 struct Converter<bytes>
 {
-    static bytes convert(RLP const& _r, int _flags)
-    {
-        return _r.toBytes(_flags);
-    }
+    static bytes convert(RLP const& _r, int _flags) { return _r.toBytes(_flags); }
 };
 template <>
 struct Converter<RLPs>
@@ -556,58 +503,37 @@ struct Converter<RLPs>
 template <>
 struct Converter<uint8_t>
 {
-    static uint8_t convert(RLP const& _r, int _flags)
-    {
-        return _r.toInt<uint8_t>(_flags);
-    }
+    static uint8_t convert(RLP const& _r, int _flags) { return _r.toInt<uint8_t>(_flags); }
 };
 template <>
 struct Converter<uint16_t>
 {
-    static uint16_t convert(RLP const& _r, int _flags)
-    {
-        return _r.toInt<uint16_t>(_flags);
-    }
+    static uint16_t convert(RLP const& _r, int _flags) { return _r.toInt<uint16_t>(_flags); }
 };
 template <>
 struct Converter<uint32_t>
 {
-    static uint32_t convert(RLP const& _r, int _flags)
-    {
-        return _r.toInt<uint32_t>(_flags);
-    }
+    static uint32_t convert(RLP const& _r, int _flags) { return _r.toInt<uint32_t>(_flags); }
 };
 template <>
 struct Converter<uint64_t>
 {
-    static uint64_t convert(RLP const& _r, int _flags)
-    {
-        return _r.toInt<uint64_t>(_flags);
-    }
+    static uint64_t convert(RLP const& _r, int _flags) { return _r.toInt<uint64_t>(_flags); }
 };
 template <>
 struct Converter<u160>
 {
-    static u160 convert(RLP const& _r, int _flags)
-    {
-        return _r.toInt<u160>(_flags);
-    }
+    static u160 convert(RLP const& _r, int _flags) { return _r.toInt<u160>(_flags); }
 };
 template <>
 struct Converter<u256>
 {
-    static u256 convert(RLP const& _r, int _flags)
-    {
-        return _r.toInt<u256>(_flags);
-    }
+    static u256 convert(RLP const& _r, int _flags) { return _r.toInt<u256>(_flags); }
 };
 template <>
 struct Converter<bigint>
 {
-    static bigint convert(RLP const& _r, int _flags)
-    {
-        return _r.toInt<bigint>(_flags);
-    }
+    static bigint convert(RLP const& _r, int _flags) { return _r.toInt<bigint>(_flags); }
 };
 template <unsigned N>
 struct Converter<FixedHash<N>>
@@ -620,26 +546,17 @@ struct Converter<FixedHash<N>>
 template <class T, class U>
 struct Converter<std::pair<T, U>>
 {
-    static std::pair<T, U> convert(RLP const& _r, int _flags)
-    {
-        return _r.toPair<T, U>(_flags);
-    }
+    static std::pair<T, U> convert(RLP const& _r, int _flags) { return _r.toPair<T, U>(_flags); }
 };
 template <class T>
 struct Converter<std::vector<T>>
 {
-    static std::vector<T> convert(RLP const& _r, int _flags)
-    {
-        return _r.toVector<T>(_flags);
-    }
+    static std::vector<T> convert(RLP const& _r, int _flags) { return _r.toVector<T>(_flags); }
 };
 template <class T>
 struct Converter<std::set<T>>
 {
-    static std::set<T> convert(RLP const& _r, int _flags)
-    {
-        return _r.toSet<T>(_flags);
-    }
+    static std::set<T> convert(RLP const& _r, int _flags) { return _r.toSet<T>(_flags); }
 };
 template <class T>
 struct Converter<std::unordered_set<T>>
@@ -652,10 +569,7 @@ struct Converter<std::unordered_set<T>>
 template <class T, size_t N>
 struct Converter<std::array<T, N>>
 {
-    static std::array<T, N> convert(RLP const& _r, int _flags)
-    {
-        return _r.toArray<T, N>(_flags);
-    }
+    static std::array<T, N> convert(RLP const& _r, int _flags) { return _r.toArray<T, N>(_flags); }
 };
 
 template <class T>
@@ -685,17 +599,12 @@ public:
     RLPStream& append(bigint _s);
     RLPStream& append(bytesConstRef _s, bool _compact = false);
     RLPStream& append(bytes const& _s) { return append(bytesConstRef(&_s)); }
-    RLPStream& append(std::string const& _s)
-    {
-        return append(bytesConstRef(_s));
-    }
+    RLPStream& append(std::string const& _s) { return append(bytesConstRef(_s)); }
     RLPStream& append(char const* _s) { return append(std::string(_s)); }
     template <unsigned N>
-    RLPStream& append(
-        FixedHash<N> _s, bool _compact = false, bool _allOrNothing = false)
+    RLPStream& append(FixedHash<N> _s, bool _compact = false, bool _allOrNothing = false)
     {
-        return _allOrNothing && !_s ? append(bytesConstRef()) :
-                                      append(_s.ref(), _compact);
+        return _allOrNothing && !_s ? append(bytesConstRef()) : append(_s.ref(), _compact);
     }
 
     /// Appends an arbitrary RLP fragment - this *must* be a single item unless
@@ -783,8 +692,7 @@ public:
     bytes const& out() const
     {
         if (!m_listStack.empty())
-            BOOST_THROW_EXCEPTION(
-                RLPException() << errinfo_comment("listStack is not empty"));
+            BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("listStack is not empty"));
         return m_out;
     }
 
@@ -792,8 +700,7 @@ public:
     bytes&& invalidate()
     {
         if (!m_listStack.empty())
-            BOOST_THROW_EXCEPTION(
-                RLPException() << errinfo_comment("listStack is not empty"));
+            BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("listStack is not empty"));
         return std::move(m_out);
     }
 
@@ -801,8 +708,7 @@ public:
     void swapOut(bytes& _dest)
     {
         if (!m_listStack.empty())
-            BOOST_THROW_EXCEPTION(
-                RLPException() << errinfo_comment("listStack is not empty"));
+            BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("listStack is not empty"));
         swap(m_out, _dest);
     }
 

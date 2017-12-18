@@ -46,25 +46,19 @@ namespace eth
 using errinfo_uncleIndex = boost::error_info<struct tag_uncleIndex, unsigned>;
 using errinfo_currentNumber = boost::error_info<struct tag_currentNumber, u256>;
 using errinfo_uncleNumber = boost::error_info<struct tag_uncleNumber, u256>;
-using errinfo_unclesExcluded =
-    boost::error_info<struct tag_unclesExcluded, h256Hash>;
+using errinfo_unclesExcluded = boost::error_info<struct tag_unclesExcluded, h256Hash>;
 using errinfo_block = boost::error_info<struct tag_block, bytes>;
 using errinfo_now = boost::error_info<struct tag_now, unsigned>;
 
-using errinfo_transactionIndex =
-    boost::error_info<struct tag_transactionIndex, unsigned>;
+using errinfo_transactionIndex = boost::error_info<struct tag_transactionIndex, unsigned>;
 
 using errinfo_vmtrace = boost::error_info<struct tag_vmtrace, std::string>;
-using errinfo_receipts =
-    boost::error_info<struct tag_receipts, std::vector<bytes>>;
+using errinfo_receipts = boost::error_info<struct tag_receipts, std::vector<bytes>>;
 using errinfo_transaction = boost::error_info<struct tag_transaction, bytes>;
 using errinfo_phase = boost::error_info<struct tag_phase, unsigned>;
-using errinfo_required_LogBloom =
-    boost::error_info<struct tag_required_LogBloom, LogBloom>;
-using errinfo_got_LogBloom =
-    boost::error_info<struct tag_get_LogBloom, LogBloom>;
-using LogBloomRequirementError =
-    boost::tuple<errinfo_required_LogBloom, errinfo_got_LogBloom>;
+using errinfo_required_LogBloom = boost::error_info<struct tag_required_LogBloom, LogBloom>;
+using errinfo_got_LogBloom = boost::error_info<struct tag_get_LogBloom, LogBloom>;
+using LogBloomRequirementError = boost::tuple<errinfo_required_LogBloom, errinfo_got_LogBloom>;
 
 class BlockChain;
 class State;
@@ -170,9 +164,7 @@ struct Change
     {}
 
     /// Helper constructor for nonce change log.
-    Change(Address const& _addr, u256 const& _value)
-      : kind(Nonce), address(_addr), value(_value)
-    {}
+    Change(Address const& _addr, u256 const& _value) : kind(Nonce), address(_addr), value(_value) {}
 
     /// Helper constructor especially for new code change log.
     Change(Address const& _addr, bytes const& _oldCode)
@@ -237,8 +229,8 @@ public:
 
     /// Open a DB - useful for passing into the constructor & keeping for other
     /// states that are necessary.
-    static OverlayDB openDB(boost::filesystem::path const& _path,
-        h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
+    static OverlayDB openDB(boost::filesystem::path const& _path, h256 const& _genesisHash,
+        WithExisting _we = WithExisting::Trust);
     OverlayDB const& db() const { return m_db; }
     OverlayDB& db() { return m_db; }
 
@@ -254,16 +246,14 @@ public:
 
     /// Execute a given transaction.
     /// This will change the state accordingly.
-    std::pair<ExecutionResult, TransactionReceipt> execute(
-        EnvInfo const& _envInfo, SealEngineFace const& _sealEngine,
-        Transaction const& _t, Permanence _p = Permanence::Committed,
-        OnOpFunc const& _onOp = OnOpFunc());
+    std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo,
+        SealEngineFace const& _sealEngine, Transaction const& _t,
+        Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
 
     /// Execute @a _txCount transactions of a given block.
     /// This will change the state accordingly.
     void executeBlockTransactions(Block const& _block, unsigned _txCount,
-        LastBlockHashesFace const& _lastHashes,
-        SealEngineFace const& _sealEngine);
+        LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine);
 
     /// Check if the address is in use.
     bool addressInUse(Address const& _address) const;
@@ -295,8 +285,7 @@ public:
      * @param _to Account to which @a _value will be added.
      * @param _value Amount to be transferred.
      */
-    void transferBalance(
-        Address const& _from, Address const& _to, u256 const& _value)
+    void transferBalance(Address const& _from, Address const& _to, u256 const& _value)
     {
         subBalance(_from, _value);
         addBalance(_to, _value);
@@ -310,8 +299,7 @@ public:
     u256 storage(Address const& _contract, u256 const& _memory) const;
 
     /// Set the value of a storage position of an account.
-    void setStorage(
-        Address const& _contract, u256 const& _location, u256 const& _value);
+    void setStorage(Address const& _contract, u256 const& _location, u256 const& _value);
 
     /// Clear the storage root hash of an account to the hash of the empty trie.
     void clearStorage(Address const& _contract);
@@ -331,8 +319,7 @@ public:
     /// @note This is expensive. Don't use it unless you need to.
     /// @returns map of hashed keys to key-value pairs or empty map if no
     /// account exists at that address.
-    std::map<h256, std::pair<u256, u256>> storage(
-        Address const& _contract) const;
+    std::map<h256, std::pair<u256, u256>> storage(Address const& _contract) const;
 
     /// Get the code of an account.
     /// @returns bytes() if no account exists at that address.
@@ -403,7 +390,7 @@ private:
 
     void createAccount(Address const& _address, Account const&& _account);
 
-    OverlayDB m_db;  ///< Our overlay for the state tree.
+    OverlayDB m_db;                            ///< Our overlay for the state tree.
     SecureTrieDB<Address, OverlayDB> m_state;  ///< Our state tree, as an
                                                ///< OverlayDB DB.
 

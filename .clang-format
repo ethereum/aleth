@@ -36,7 +36,7 @@ BraceWrapping:
   SplitEmptyFunction: false
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: BeforeColon
-ColumnLimit:     80
+ColumnLimit:     100
 CommentPragmas:  '^ IWYU pragma:'
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 2
