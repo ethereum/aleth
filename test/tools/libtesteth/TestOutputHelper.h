@@ -45,11 +45,11 @@ public:
 
 	//void setMaxTests(int _count) { m_maxTests = _count; }
 	bool checkTest(std::string const& _testName);
-	void setCurrentTestFileName(std::string const& _name) { m_currentTestFileName = _name; }
+	void setCurrentTestFileName(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	std::string const& testName() { return m_currentTestName; }
 	std::string const& caseName() { return m_currentTestCaseName; }
-	std::string const& testFileName() { return m_currentTestFileName; }
+	boost::filesystem::path const& testFileName() { return m_currentTestFileName; }
 	void printTestExecStats();
 
 private:
@@ -59,7 +59,7 @@ private:
 	size_t m_maxTests;
 	std::string m_currentTestName;
 	std::string m_currentTestCaseName;
-	std::string m_currentTestFileName;
+	boost::filesystem::path m_currentTestFileName;
 	typedef std::pair<double, std::string> execTimeName;
 	std::vector<execTimeName> m_execTimeResults;
 };

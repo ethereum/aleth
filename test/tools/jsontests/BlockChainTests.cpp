@@ -53,11 +53,11 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 			continue;
 
 		BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
-			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::get().testFileName() +
+			"\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::get().testFileName().string() +
 			" testname: " + TestOutputHelper::get().testName()
 		);
 		BOOST_REQUIRE_MESSAGE(inputTest.count("pre"),
-			"\"pre\" field is not found. filename: " + TestOutputHelper::get().testFileName() +
+			"\"pre\" field is not found. filename: " + TestOutputHelper::get().testFileName().string() +
 			" testname: " + TestOutputHelper::get().testName()
 		);
 
@@ -113,7 +113,7 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 		else
 		{
 			BOOST_REQUIRE_MESSAGE(inputTest.count("network"),
-				"\"network\" field is not found. filename: " + TestOutputHelper::get().testFileName() +
+				"\"network\" field is not found. filename: " + TestOutputHelper::get().testFileName().string() +
 				" testname: " + TestOutputHelper::get().testName()
 			);
 			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
@@ -477,7 +477,7 @@ void testBCTest(json_spirit::mObject const& _o)
 		//block from RLP successfully imported. now compare this rlp to test sections
 		BOOST_REQUIRE_MESSAGE(blObj.count("blockHeader"),
 			"blockHeader field is not found. "
-			"filename: " + TestOutputHelper::get().testFileName() +
+			"filename: " + TestOutputHelper::get().testFileName().string() +
 			" testname: " + TestOutputHelper::get().testName()
 		);
 
@@ -487,7 +487,7 @@ void testBCTest(json_spirit::mObject const& _o)
 		//ImportTransactions
 		BOOST_REQUIRE_MESSAGE(blObj.count("transactions"),
 			"transactions field is not found. "
-			"filename: " + TestOutputHelper::get().testFileName() +
+			"filename: " + TestOutputHelper::get().testFileName().string() +
 			" testname: " + TestOutputHelper::get().testName()
 		);
 		for (auto const& txObj: blObj["transactions"].get_array())
@@ -873,17 +873,17 @@ void checkJsonSectionForInvalidBlock(mObject& _blObj)
 {
 	BOOST_CHECK_MESSAGE(_blObj.count("blockHeader") == 0,
 			"blockHeader field is found in the should-be invalid block. "
-			"filename: " + TestOutputHelper::get().testFileName() +
+			"filename: " + TestOutputHelper::get().testFileName().string() +
 			" testname: " + TestOutputHelper::get().testName()
 	);
 	BOOST_CHECK_MESSAGE(_blObj.count("transactions") == 0,
 			"transactions field is found in the should-be invalid block. "
-			"filename: " + TestOutputHelper::get().testFileName() +
+			"filename: " + TestOutputHelper::get().testFileName().string() +
 			" testname: " + TestOutputHelper::get().testName()
 	);
 	BOOST_CHECK_MESSAGE(_blObj.count("uncleHeaders") == 0,
 			"uncleHeaders field is found in the should-be invalid block. "
-			"filename: " + TestOutputHelper::get().testFileName() +
+			"filename: " + TestOutputHelper::get().testFileName().string() +
 			" testname: " + TestOutputHelper::get().testName()
 	);
 }

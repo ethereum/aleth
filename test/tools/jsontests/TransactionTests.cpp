@@ -65,8 +65,8 @@ mObject getExpectSection(mValue const& _expect, eth::Network _network)
 json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 {
 	mObject out;
-	BOOST_REQUIRE_MESSAGE(_o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::get().testFileName());
-	BOOST_REQUIRE_MESSAGE(_o.count("expect") > 0, "expect section not found! " + TestOutputHelper::get().testFileName());
+	BOOST_REQUIRE_MESSAGE(_o.count("transaction") > 0, "transaction section not found! " + TestOutputHelper::get().testFileName().string());
+	BOOST_REQUIRE_MESSAGE(_o.count("expect") > 0, "expect section not found! " + TestOutputHelper::get().testFileName().string());
 
 	mObject tObj = _o.at("transaction").get_obj();
 	RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
@@ -175,9 +175,9 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 json_spirit::mValue TransactionTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {
 	BOOST_REQUIRE_MESSAGE(_input.type() == obj_type,
-		TestOutputHelper::get().get().testFileName() + " TransactionTest file should contain an object.");
+		TestOutputHelper::get().get().testFileName().string() + " TransactionTest file should contain an object.");
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
-		TestOutputHelper::get().testFileName() + " TransactionTest filler should contain only one test.");
+		TestOutputHelper::get().testFileName().string() + " TransactionTest filler should contain only one test.");
 
 	json_spirit::mObject v;
 	for (auto const& i: _input.get_obj())
