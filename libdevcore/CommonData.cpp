@@ -78,18 +78,6 @@ std::string dev::escaped(std::string const& _s, bool _all)
 }
 
 
-// FIXME: Move to test utils.
-std::string dev::randomWord()
-{
-	static std::mt19937_64 s_eng(0);
-	std::string ret(std::uniform_int_distribution<size_t>(1, 5)(s_eng), ' ');
-	char const n[] = "qwertyuiop";//asdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
-	std::uniform_int_distribution<int> d(0, sizeof(n) - 2);
-	for (char& c: ret)
-		c = n[d(s_eng)];
-	return ret;
-}
-
 bytes dev::fromHex(std::string const& _s, WhenError _throw)
 {
 	unsigned s = (_s.size() >= 2 && _s[0] == '0' && _s[1] == 'x') ? 2 : 0;
