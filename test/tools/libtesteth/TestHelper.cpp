@@ -297,7 +297,7 @@ json_spirit::mValue convertYamlNodeToJson(YAML::Node _node)
 		return jArray;
 	}
 
-	BOOST_ERROR("Error parsing YAML node. Element type note defined!");
+	BOOST_ERROR("Error parsing YAML node. Element type not defined!");
 	return json_spirit::mValue();
 }
 
