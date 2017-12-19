@@ -54,8 +54,8 @@ std::string toHex(Iterator _it, Iterator _end, std::string const& _prefix)
 	hex.replace(0, off, _prefix);
 	for (; _it != _end; _it++)
 	{
-		hex[off++] = hexdigits[(*_it >> 4) & 0x0f];
-		hex[off++] = hexdigits[*_it & 0x0f];
+		hex[off++] = hexdigits[static_cast<std::underlying_type<byte>::type>((*_it >> 4) & 0x0f)];
+		hex[off++] = hexdigits[static_cast<std::underlying_type<byte>::type>(*_it & 0x0f)];
 	}
 	return hex;
 }
@@ -139,7 +139,7 @@ inline T fromBigEndian(_In const& _bytes)
 {
 	T ret = (T)0;
 	for (auto i: _bytes)
-		ret = (T)((ret << 8) | (byte)(typename std::make_unsigned<decltype(i)>::type)i);
+		ret = (T)((ret << 8) | (typename std::make_unsigned<decltype(i)>::type)i);
 	return ret;
 }
 
@@ -157,13 +157,13 @@ inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
 	int i = 0;
 	for (T v = _val; v; ++i, v >>= 8) {}
-	bytes ret(std::max<unsigned>(_min, i), 0);
+	bytes ret(std::max<unsigned>(_min, i));
 	toBigEndian(_val, ret);
 	return ret;
 }
 inline bytes toCompactBigEndian(byte _val, unsigned _min = 0)
 {
-	return (_min || _val) ? bytes{ _val } : bytes{};
+	return as_unsigned_char(_min || _val) ? bytes{ _val } : bytes{};
 }
 
 /// Convenience function for toBigEndian.

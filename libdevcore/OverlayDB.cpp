@@ -57,7 +57,7 @@ void OverlayDB::commit()
 				if (i.second.second)
 				{
 					bytes b = i.first.asBytes();
-					b.push_back(255);	// for aux
+					b.push_back((byte)255);	// for aux
 					batch.Put(bytesConstRef(&b), bytesConstRef(&i.second.first));
 				}
 		}
@@ -95,7 +95,7 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
 		return ret;
 	std::string v;
 	bytes b = _h.asBytes();
-	b.push_back(255);	// for aux
+	b.push_back((byte)(255));	// for aux
 	m_db->Get(m_readOptions, bytesConstRef(&b), &v);
 	if (v.empty())
 		cwarn << "Aux not found: " << _h;

@@ -98,14 +98,14 @@ inline bool isLeaf(RLP const& _twoItem)
 {
 	assert(_twoItem.isList() && _twoItem.itemCount() == 2);
 	auto pl = _twoItem[0].payload();
-	return (pl[0] & 0x20) != 0;
+	return as_unsigned_char(pl[0] & 0x20) != 0;
 }
 
 inline NibbleSlice keyOf(bytesConstRef _hpe)
 {
 	if (!_hpe.size())
 		return NibbleSlice(_hpe, 0);
-	if (_hpe[0] & 0x10)
+	if (as_unsigned_char(_hpe[0] & 0x10))
 		return NibbleSlice(_hpe, 1);
 	else
 		return NibbleSlice(_hpe, 2);
