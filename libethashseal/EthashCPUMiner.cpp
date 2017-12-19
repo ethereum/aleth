@@ -78,8 +78,8 @@ void EthashCPUMiner::workLoop()
 	for (; !shouldStop(); tryNonce++, hashCount++)
 	{
 		ethashReturn = ethash_full_compute(dag->full, *(ethash_h256_t*)w.headerHash().data(), tryNonce);
-		h256 value = h256((uint8_t*)&ethashReturn.result, h256::ConstructFromPointer);
-		if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce, h256((uint8_t*)&ethashReturn.mix_hash, h256::ConstructFromPointer)}))
+		h256 value = h256((byte*)&ethashReturn.result, h256::ConstructFromPointer);
+		if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce, h256((byte*)&ethashReturn.mix_hash, h256::ConstructFromPointer)}))
 			break;
 		if (!(hashCount % 100))
 			accumulateHashes(100);

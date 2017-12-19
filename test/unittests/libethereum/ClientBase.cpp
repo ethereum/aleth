@@ -25,6 +25,7 @@
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/TestUtils.h>
 #include <test/tools/libtestutils/FixedClient.h>
+#include <test/tools/libtesteth/TestHelper.h>
 
 using namespace std;
 using namespace dev;
@@ -62,8 +63,8 @@ BOOST_AUTO_TEST_CASE(blocks)
 			// codeAt
 			bytes expectedCode = fromHex(_o["code"].asString());
 			bytes code = _client.codeAt(address, _blockNumber);
-			ETH_CHECK_EQUAL_COLLECTIONS(expectedCode.begin(), expectedCode.end(),
-										code.begin(), code.end());
+			ETH_CHECK_EQUAL_COLLECTIONS(bytes2uca(expectedCode).begin(), bytes2uca(expectedCode).end(),
+										bytes2uca(code).begin(), bytes2uca(code).end());
 		};
 
 		for (string const& name: _json["postState"].getMemberNames())
@@ -124,10 +125,10 @@ BOOST_AUTO_TEST_CASE(blocks)
 				ETH_CHECK_EQUAL(expectedBlockInfoCoinbase, _blockInfo.author());
 				ETH_CHECK_EQUAL(expectedBlockInfoDifficulty, _blockInfo.difficulty());
 				ETH_CHECK_EQUAL_COLLECTIONS(
-					expectedBlockInfoExtraData.begin(),
-					expectedBlockInfoExtraData.end(),
-					_blockInfo.extraData().begin(),
-					_blockInfo.extraData().end()
+					bytes2uca(expectedBlockInfoExtraData).begin(),
+					bytes2uca(expectedBlockInfoExtraData).end(),
+					bytes2uca(_blockInfo.extraData()).begin(),
+					bytes2uca(_blockInfo.extraData()).end()
 				);
 				ETH_CHECK_EQUAL(expectedBlockInfoGasLimit, _blockInfo.gasLimit());
 				ETH_CHECK_EQUAL(expectedBlockInfoGasUsed, _blockInfo.gasUsed());
@@ -163,10 +164,10 @@ BOOST_AUTO_TEST_CASE(blocks)
 //				unsigned expectedTransactionSignatureV = jsToInt(t["v"].asString());
 				
 				ETH_CHECK_EQUAL_COLLECTIONS(
-					expectedTransactionData.begin(),
-					expectedTransactionData.end(),
-					_transaction.data().begin(),
-					_transaction.data().end()
+					bytes2uca(expectedTransactionData).begin(),
+					bytes2uca(expectedTransactionData).end(),
+					bytes2uca(_transaction.data()).begin(),
+					bytes2uca(_transaction.data()).end()
 				);
 				ETH_CHECK_EQUAL(expectedTransactionGasLimit, _transaction.gas());
 				ETH_CHECK_EQUAL(expectedTransactionGasPrice, _transaction.gasPrice());

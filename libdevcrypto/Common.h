@@ -55,7 +55,7 @@ struct SignatureStruct
 
 	h256 r;
 	h256 s;
-	byte v = 0;
+	byte v = static_cast<byte>(0);
 };
 
 /// A vector of secrets.
@@ -116,6 +116,24 @@ inline bytes encryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, by
 /// Decrypts payload with specified IV/ctr using AES128-CTR.
 inline bytesSec decryptSymNoAuth(SecureFixedHash<16> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
 inline bytesSec decryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
+
+/// FIXME: Convert const data to const unsigned char *
+inline const unsigned char * as_const_data(byte const* _data)
+{
+	std::vector<unsigned char> ret;
+	for (auto i = 0; i < 32; _data++, i++)
+		ret.push_back(static_cast<unsigned char>(*_data));
+	return const_cast<const unsigned char *>(ret.data());
+}
+
+/// FIXME: Convert data to unsigned char *
+inline unsigned char * as_data(byte * _data)
+{
+	std::vector<unsigned char> ret;
+	for (auto i = 0; i < 32; _data++, i++)
+		ret.push_back(static_cast<unsigned char>(*_data));
+	return ret.data();
+}
 
 /// Recovers Public key from signed message hash.
 Public recover(Signature const& _sig, h256 const& _hash);

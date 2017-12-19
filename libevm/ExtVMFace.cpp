@@ -129,7 +129,7 @@ void log(
 	assert(fromEvmC(*_addr) == env.myAddress);
 	h256 const* pTopics = reinterpret_cast<h256 const*>(_topics);
 	env.log(h256s{pTopics, pTopics + _numTopics},
-			bytesConstRef{_data, _dataSize});
+			bytesConstRef{as_const_data_bytes(_data, _dataSize), _dataSize});
 }
 
 void getTxContext(evm_tx_context* result, evm_context* _context) noexcept
@@ -154,7 +154,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 {
 	u256 gas = _msg->gas;
 	u256 value = fromEvmC(_msg->value);
-	bytesConstRef init = {_msg->input, _msg->input_size};
+	bytesConstRef init = {as_const_data_bytes(_msg->input, _msg->input_size), _msg->input_size};
 	// ExtVM::create takes the sender address from .myAddress.
 	assert(fromEvmC(_msg->sender) == _env.myAddress);
 
@@ -218,7 +218,7 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 	params.codeAddress = fromEvmC(_msg->address);
 	params.receiveAddress =
 		_msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
-	params.data = {_msg->input, _msg->input_size};
+	params.data = {as_const_data_bytes(_msg->input, _msg->input_size), _msg->input_size};
 	params.staticCall = (_msg->flags & EVM_STATIC) != 0;
 	params.onOp = {};
 

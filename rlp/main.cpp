@@ -287,7 +287,7 @@ int main(int argc, char** argv)
 		if (encoding == Encoding::Auto)
 		{
 			encoding = Encoding::Hex;
-			for (char b: in)
+			for (byte b: in)
 				if (b != '\n' && b != ' ' && b != '\t')
 				{
 					if (encoding == Encoding::Hex && (b < '0' || b > '9' ) && (b < 'a' || b > 'f' ) && (b < 'A' || b > 'F' ))

@@ -69,14 +69,14 @@ public:
 	TrieBranchNode(byte _i1, MemTrieNode* _n1, std::string const& _value = std::string()): m_value(_value)
 	{
 		memset(m_nodes.data(), 0, sizeof(MemTrieNode*) * 16);
-		m_nodes[_i1] = _n1;
+		m_nodes[as_unsigned_char(_i1)] = _n1;
 	}
 
 	TrieBranchNode(byte _i1, MemTrieNode* _n1, byte _i2, MemTrieNode* _n2)
 	{
 		memset(m_nodes.data(), 0, sizeof(MemTrieNode*) * 16);
-		m_nodes[_i1] = _n1;
-		m_nodes[_i2] = _n2;
+		m_nodes[as_unsigned_char(_i1)] = _n1;
+		m_nodes[as_unsigned_char(_i2)] = _n2;
 	}
 
 	virtual ~TrieBranchNode()
@@ -190,8 +190,8 @@ std::string const& TrieBranchNode::at(bytesConstRef _key) const
 {
 	if (_key.empty())
 		return m_value;
-	else if (m_nodes[_key[0]] != nullptr)
-		return m_nodes[_key[0]]->at(_key.cropped(1));
+	else if (m_nodes[as_unsigned_char(_key[0])] != nullptr)
+		return m_nodes[as_unsigned_char(_key[0])]->at(_key.cropped(1));
 	return c_nullString;
 }
 
@@ -202,10 +202,10 @@ MemTrieNode* TrieBranchNode::insert(bytesConstRef _key, std::string const& _valu
 	if (_key.empty())
 		m_value = _value;
 	else
-		if (!m_nodes[_key[0]])
-			m_nodes[_key[0]] = new TrieLeafNode(_key.cropped(1), _value);
+		if (!m_nodes[as_unsigned_char(_key[0])])
+			m_nodes[as_unsigned_char(_key[0])] = new TrieLeafNode(_key.cropped(1), _value);
 		else
-			m_nodes[_key[0]] = m_nodes[_key[0]]->insert(_key.cropped(1), _value);
+			m_nodes[as_unsigned_char(_key[0])] = m_nodes[as_unsigned_char(_key[0])]->insert(_key.cropped(1), _value);
 	return this;
 }
 
@@ -218,9 +218,9 @@ MemTrieNode* TrieBranchNode::remove(bytesConstRef _key)
 			return rejig();
 		}
 		else {}
-	else if (m_nodes[_key[0]] != nullptr)
+	else if (m_nodes[as_unsigned_char(_key[0])] != nullptr)
 	{
-		m_nodes[_key[0]] = m_nodes[_key[0]]->remove(_key.cropped(1));
+		m_nodes[as_unsigned_char(_key[0])] = m_nodes[as_unsigned_char(_key[0])]->remove(_key.cropped(1));
 		return rejig();
 	}
 	return this;
@@ -241,20 +241,20 @@ MemTrieNode* TrieBranchNode::rejig()
 	else if (n < 16 && m_value.empty())
 	{
 		// only branching to n...
-		if (auto b = dynamic_cast<TrieBranchNode*>(m_nodes[n]))
+		if (auto b = dynamic_cast<TrieBranchNode*>(m_nodes[as_unsigned_char(n)]))
 		{
 			// switch to infix
-			m_nodes[n] = nullptr;
+			m_nodes[as_unsigned_char(n)] = nullptr;
 			delete this;
 			return new TrieInfixNode(bytesConstRef(&n, 1), b);
 		}
 		else
 		{
-			auto x = dynamic_cast<TrieExtNode*>(m_nodes[n]);
+			auto x = dynamic_cast<TrieExtNode*>(m_nodes[as_unsigned_char(n)]);
 			assert(x);
 			// include in child
 			pushFront(x->m_ext, n);
-			m_nodes[n] = nullptr;
+			m_nodes[as_unsigned_char(n)] = nullptr;
 			delete this;
 			return x;
 		}
@@ -272,7 +272,7 @@ byte TrieBranchNode::activeBranch() const
 			if (n == (byte)-1)
 				n = (byte)i;
 			else
-				return 16;
+				return byte(16);
 		}
 	return n;
 }

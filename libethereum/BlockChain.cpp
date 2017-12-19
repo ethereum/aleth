@@ -97,7 +97,7 @@ ldb::Slice dev::eth::toSlice(h256 const& _h, unsigned _sub)
 	if (!t_h.get())
 		t_h.reset(new FixedHash<33>);
 	*t_h = FixedHash<33>(_h);
-	(*t_h)[32] = (uint8_t)_sub;
+	(*t_h)[32] = (byte)_sub;
 	return (ldb::Slice)t_h->ref();
 #endif //ALL_COMPILERS_ARE_CPP11_COMPLIANT
 }
@@ -115,7 +115,7 @@ ldb::Slice dev::eth::toSlice(uint64_t _n, unsigned _sub)
 		t_h.reset(new FixedHash<33>);
 	bytesRef ref(t_h->data() + 24, 8);
 	toBigEndian(_n, ref);
-	(*t_h)[32] = (uint8_t)_sub;
+	(*t_h)[32] = (byte)_sub;
 	return (ldb::Slice)t_h->ref();
 #endif
 }

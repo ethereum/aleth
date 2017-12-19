@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(tqImport)
 	BOOST_REQUIRE(ir == ImportResult::AlreadyKnown);
 
 	bytes rlp = testTransaction.transaction().rlp();
-	rlp.at(0) = 03;
+	rlp.at(0) = (byte)03;
 	ir = tq.import(rlp);
 	BOOST_REQUIRE(ir == ImportResult::Malformed);
 

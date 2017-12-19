@@ -283,7 +283,7 @@ h256 stringMapHash256(StringMap const& _s)
 {
 	BytesMap bytesMap;
 	for (auto const& _v: _s)
-		bytesMap.insert(std::make_pair(bytes(_v.first.begin(), _v.first.end()), bytes(_v.second.begin(), _v.second.end())));
+		bytesMap.insert(std::make_pair(asBytes(_v.first), asBytes(_v.second)));
 	return hash256(bytesMap);
 }
 
@@ -291,7 +291,7 @@ bytes stringMapRlp256(StringMap const& _s)
 {
 	BytesMap bytesMap;
 	for (auto const& _v: _s)
-		bytesMap.insert(std::make_pair(bytes(_v.first.begin(), _v.first.end()), bytes(_v.second.begin(), _v.second.end())));
+		bytesMap.insert(std::make_pair(asBytes(_v.first), asBytes(_v.second)));
 	return rlp256(bytesMap);
 }
 

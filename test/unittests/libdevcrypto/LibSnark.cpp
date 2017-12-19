@@ -73,8 +73,8 @@ bytes addG1(bytes const& _x, bytes const& _y)
 BOOST_AUTO_TEST_CASE(ecadd)
 {
 	// "0 + 0 == 0"
-	bytes input(0x20 * 4, 0);
-	bytes expectation(0x20 * 2, 0);
+	bytes input(0x20 * 4, (byte)0);
+	bytes expectation(0x20 * 2, (byte)0);
 	auto result = alt_bn128_G1_add(ref(input));
 	BOOST_CHECK(result.first);
 	BOOST_CHECK(result.second == expectation);
@@ -97,11 +97,11 @@ BOOST_AUTO_TEST_CASE(fieldPointInvalid)
 	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
 	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
 
-	input = bytes(32, 0) + toBigEndian(pMod);
+	input = bytes(32, (byte)0) + toBigEndian(pMod);
 	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
 	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
 
-	input = bytes(32, 0) + toBigEndian(pMod + 1);
+	input = bytes(32, (byte)0) + toBigEndian(pMod + 1);
 	BOOST_CHECK(!alt_bn128_G1_add(ref(input)).first);
 	BOOST_CHECK(!alt_bn128_G1_mul(ref(input)).first);
 }
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(invalid)
 		toBigEndian(u256("6851077925310461602867742977619883934042581405263014789956638244065803308498")) +
 		toBigEndian(u256("10336382210592135525880811046708757754106524561907815205241508542912494488506"));
 	bytes invalid = x;
-	invalid[3] ^= 1;
+	invalid[3] = (byte)(as_unsigned_char(invalid[3]) ^ 1);
 
 	bytes input = x + invalid;
 	// This should fail because the point is not on the curve
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(ecmul_add)
 	BOOST_CHECK(ecadd_helper(x, x).second == ecmul_helper(x, u256(2)).second);
 	// x * -1 + x == 0
 	BOOST_CHECK(ecmul_helper(x, groupOrder - 1).first);
-	BOOST_CHECK(ecadd_helper(ecmul_helper(x, groupOrder - 1).second, x).second == bytes(0x40, 0));
+	BOOST_CHECK(ecadd_helper(ecmul_helper(x, groupOrder - 1).second, x).second == bytes(0x40, (byte)0));
 }
 
 BOOST_AUTO_TEST_CASE(pairing)
@@ -326,11 +326,11 @@ BOOST_AUTO_TEST_CASE(pairingNullInput)
 	auto r = pairingprod_helper({});
 	BOOST_CHECK(r.first);
 
-	r = pairingprod_helper(bytes(2 * 32 + 2 * 64, 0));
+	r = pairingprod_helper(bytes(2 * 32 + 2 * 64, (byte)0));
 	BOOST_CHECK(r.first);
 
 	// Invalid length of input.
-	r = pairingprod_helper(bytes(2 * 32 + 2 * 64 + 1, 0));
+	r = pairingprod_helper(bytes(2 * 32 + 2 * 64 + 1, (byte)0));
 	BOOST_CHECK(!r.first);
 }
 

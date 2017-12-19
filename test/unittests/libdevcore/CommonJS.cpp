@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(test_toJS)
 	h64 a("0xbaadf00ddeadbeef");
 	u64 b("0xffff0000bbbaaaa");
 	uint64_t c = 38990234243;
-	bytes d = {0xff, 0x0, 0xef, 0xbc};
+	bytes d = {(byte)0xff, (byte)0x0, (byte)0xef, (byte)0xbc};
 
 	BOOST_CHECK(toJS(a) == "0xbaadf00ddeadbeef");
 	BOOST_CHECK(toJS(b) == "0xffff0000bbbaaaa");
@@ -45,8 +45,8 @@ BOOST_AUTO_TEST_CASE(test_toJS)
 
 BOOST_AUTO_TEST_CASE(test_jsToBytes)
 {
-	bytes a = {0xff, 0xaa, 0xbb, 0xcc};
-	bytes b = {0x03, 0x89, 0x90, 0x23, 0x42, 0x43};
+	bytes a = {(byte)0xff, (byte)0xaa, (byte)0xbb, (byte)0xcc};
+	bytes b = {(byte)0x03, (byte)0x89, (byte)0x90, (byte)0x23, (byte)0x42, (byte)0x43};
 	BOOST_CHECK(a == jsToBytes("0xffaabbcc"));
 	BOOST_CHECK(b == jsToBytes("38990234243"));
 	BOOST_CHECK(bytes() == jsToBytes(""));
@@ -55,29 +55,29 @@ BOOST_AUTO_TEST_CASE(test_jsToBytes)
 
 BOOST_AUTO_TEST_CASE(test_padded)
 {
-	bytes a = {0xff, 0xaa};
-	BOOST_CHECK(bytes({0x00, 0x00, 0xff, 0xaa}) == padded(a, 4));
+	bytes a = {(byte)0xff, (byte)0xaa};
+	BOOST_CHECK(bytes({(byte)0x00, (byte)0x00, (byte)0xff, (byte)0xaa}) == padded(a, 4));
 	bytes b = {};
-	BOOST_CHECK(bytes({0x00, 0x00, 0x00, 0x00}) == padded(b, 4));
-	bytes c = {0xff, 0xaa, 0xbb, 0xcc};
-	BOOST_CHECK(bytes{0xcc} == padded(c, 1));
+	BOOST_CHECK(bytes({(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00}) == padded(b, 4));
+	bytes c = {(byte)0xff, (byte)0xaa, (byte)0xbb, (byte)0xcc};
+	BOOST_CHECK(bytes{(byte)0xcc} == padded(c, 1));
 }
 
 BOOST_AUTO_TEST_CASE(test_paddedRight)
 {
-	bytes a = {0xff, 0xaa};
-	BOOST_CHECK(bytes({0xff, 0xaa, 0x00, 0x00}) == paddedRight(a, 4));
+	bytes a = {(byte)0xff, (byte)0xaa};
+	BOOST_CHECK(bytes({(byte)0xff, (byte)0xaa, (byte)0x00, (byte)0x00}) == paddedRight(a, 4));
 	bytes b = {};
-	BOOST_CHECK(bytes({0x00, 0x00, 0x00, 0x00}) == paddedRight(b, 4));
-	bytes c = {0xff, 0xaa, 0xbb, 0xcc};
-	BOOST_CHECK(bytes{0xff} == paddedRight(c, 1));
+	BOOST_CHECK(bytes({(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00}) == paddedRight(b, 4));
+	bytes c = {(byte)0xff, (byte)0xaa, (byte)0xbb, (byte)0xcc};
+	BOOST_CHECK(bytes{(byte)0xff} == paddedRight(c, 1));
 }
 
 BOOST_AUTO_TEST_CASE(test_unpadded)
 {
-	bytes a = {0xff, 0xaa, 0x00, 0x00, 0x00};
-	BOOST_CHECK(bytes({0xff, 0xaa}) == unpadded(a));
-	bytes b = {0x00, 0x00};
+	bytes a = {(byte)0xff, (byte)0xaa, (byte)0x00, (byte)0x00, (byte)0x00};
+	BOOST_CHECK(bytes({(byte)0xff, (byte)0xaa}) == unpadded(a));
+	bytes b = {(byte)0x00, (byte)0x00};
 	BOOST_CHECK(bytes() == unpadded(b));
 	bytes c = {};
 	BOOST_CHECK(bytes() == unpadded(c));
@@ -85,9 +85,9 @@ BOOST_AUTO_TEST_CASE(test_unpadded)
 
 BOOST_AUTO_TEST_CASE(test_unpaddedLeft)
 {
-	bytes a = {0x00, 0x00, 0x00, 0xff, 0xaa};
-	BOOST_CHECK(bytes({0xff, 0xaa}) == unpadLeft(a));
-	bytes b = {0x00, 0x00};
+	bytes a = {(byte)0x00, (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xaa};
+	BOOST_CHECK(bytes({(byte)0xff, (byte)0xaa}) == unpadLeft(a));
+	bytes b = {(byte)0x00, (byte)0x00};
 	BOOST_CHECK(bytes() == unpadLeft(b));
 	bytes c = {};
 	BOOST_CHECK(bytes() == unpadLeft(c));

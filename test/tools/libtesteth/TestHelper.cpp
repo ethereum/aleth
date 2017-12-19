@@ -105,6 +105,14 @@ void tryRunSingleTestFile(dev::test::TestSuite const& _suite)
 	}
 }
 
+std::vector<unsigned char> bytes2uca(bytes _bytes)
+{
+	std::vector<unsigned char> ret;
+	for (unsigned i = 0; i < _bytes.size(); i++)
+		ret.push_back(static_cast<unsigned char>(_bytes[i]));
+	return ret;
+}
+
 string netIdToString(eth::Network _netId)
 {
 	switch(_netId)
@@ -220,7 +228,7 @@ byte toByte(json_spirit::mValue const& _v)
 	case json_spirit::real_type: return (byte)_v.get_real();
 	default: cwarn << "Bad type for scalar: " << _v.type();
 	}
-	return 0;
+	return byte(0);
 }
 
 bytes importByteArray(std::string const& _str)
@@ -383,7 +391,7 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o)
 	else if (_o.at("out").type() == json_spirit::array_type)
 		for (auto const& d: _o.at("out").get_array())
 		{
-			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
+			BOOST_CHECK_MESSAGE(as_unsigned_char(_output[j]) == toInt(d), "Output byte [" << j << "] different!");
 			++j;
 		}
 	else if (expectedOutput.find("0x") == 0)

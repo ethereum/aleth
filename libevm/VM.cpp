@@ -57,8 +57,8 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 uint64_t VM::decodeJumpDest(const byte* const _code, uint64_t& _pc)
 {
 	// turn 2 MSB-first bytes in the code into a native-order integer
-	uint64_t dest      = _code[_pc++];
-	dest = (dest << 8) | _code[_pc++];
+	uint64_t dest      = as_unsigned_char(_code[_pc++]);
+	dest = (dest << 8) | as_unsigned_char(_code[_pc++]);
 	return dest;
 }
 
@@ -72,11 +72,11 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 	uint64_t pc = _pc;
 	byte n = _code[++pc];           // byte after opcode is number of jumps
 	if (_voff >= n) _voff = n - 1;  // if offset overflows use default jump
-	pc += _voff * 2;                // adjust inout pc before index destination in table
+	pc += as_unsigned_char(_voff) * 2;                // adjust inout pc before index destination in table
 	
 	uint64_t dest = decodeJumpDest(_code, pc);
 	
-	_pc += 1 + n * 2;               // adust inout _pc to opcode after table 
+	_pc += 1 + as_unsigned_char(n) * 2;               // adust inout _pc to opcode after table 
 	return dest;
 }
 
@@ -359,7 +359,7 @@ void VM::interpretCases()
 			updateMem(toInt63(m_SP[0]) + 1);
 			updateIOGas();
 
-			m_mem[(unsigned)m_SP[0]] = (byte)(m_SP[1] & 0xff);
+			m_mem[(unsigned)m_SP[0]] = static_cast<byte>((unsigned char)(m_SP[1] & 0xff));
 		}
 		NEXT
 
@@ -1176,7 +1176,7 @@ void VM::interpretCases()
 			else
 			{ 	h256 r;
 				for (uint64_t i = (uint64_t)m_SP[0], e = (uint64_t)m_SP[0] + (uint64_t)32, j = 0; i < e; ++i, ++j)
-					r[j] = i < m_ext->data.size() ? m_ext->data[i] : 0;
+					r[j] = i < m_ext->data.size() ? m_ext->data[i] : static_cast<byte>(0);
 				m_SP[0] = (u256)r;
 			};
 		}
@@ -1359,9 +1359,9 @@ void VM::interpretCases()
 			TRACE_OP(2, m_PC, m_OP);
 			unsigned off;
 			++m_PC;
-			off = m_code[m_PC++] << 8;
-			off |= m_code[m_PC++];
-			m_PC += m_code[m_PC];
+			off = as_unsigned_char(m_code[m_PC++]) << 8;
+			off |= as_unsigned_char(m_code[m_PC++]);
+			m_PC += as_unsigned_char(m_code[m_PC]);
 			m_SPP[0] = m_pool[off];
 			TRACE_VAL(2, "Retrieved pooled const", m_SPP[0]);
 #else
@@ -1375,7 +1375,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 			++m_PC;
-			m_SPP[0] = m_code[m_PC];
+			m_SPP[0] = as_unsigned_char(m_code[m_PC]);
 			++m_PC;
 		}
 		CONTINUE
@@ -1421,7 +1421,7 @@ void VM::interpretCases()
 			// This requires the code has been copied and extended by 32 zero
 			// bytes to handle "out of code" push data here.
 			for (++m_PC; numBytes--; ++m_PC)
-				m_SPP[0] = (m_SPP[0] << 8) | m_code[m_PC];
+				m_SPP[0] = (m_SPP[0] << 8) | as_unsigned_char(m_code[m_PC]);
 		}
 		CONTINUE
 

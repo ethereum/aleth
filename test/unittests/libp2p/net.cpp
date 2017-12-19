@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(udpOnce)
 	}
 
 	unsigned short port = 30333;
-	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), port), bytes({65,65,65,65}));
+	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), port), bytes({(byte)65,(byte)65,(byte)65,(byte)65}));
 	TestUDPSocket a{port};
 	a.m_socket->connect();
 	a.start();

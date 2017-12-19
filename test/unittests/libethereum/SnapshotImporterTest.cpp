@@ -54,7 +54,7 @@ namespace
 		std::string lookupCode(h256 const& _hash) const override
 		{ 
 			auto it = std::find_if(importedCodes.begin(), importedCodes.end(), [&_hash](bytes const& _code) { return sha3(_code) == _hash; });
-			return it == importedCodes.end() ? std::string{} : std::string(it->begin(), it->end());
+			return it == importedCodes.end() ? std::string{} : std::string((char const*)it->data(), (char const*)(it->data() + it->size()));
 		}
 
 		std::vector<ImportedAccount> importedAccounts;
@@ -92,7 +92,7 @@ namespace
 		std::string readChunk(h256 const& _chunkHash) const override
 		{ 
 			auto it = chunks.find(_chunkHash);
-			return it == chunks.end() ? std::string{} : std::string(it->second.begin(), it->second.end());
+			return it == chunks.end() ? std::string{} : std::string((char const*)it->second.data(), (char const*)(it->second.data() + it->second.size()));
 		}
 
 		bytes manifest;
@@ -127,7 +127,7 @@ namespace
 	bytes createAccount(u256 const& _nonce, u256 const& _balance, byte _codeFlag, bytes const& _code, std::map<h256, bytes> _storage)
 	{
 		RLPStream s(5);
-		s << _nonce << _balance << _codeFlag << _code;
+		s << _nonce << _balance << as_unsigned_char(_codeFlag) << _code;
 		s.appendList(_storage.size());
 		for (auto& keyValue: _storage)
 		{
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
 	h256 stateChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {stateChunk}, {}, h256{}, 0, h256{});
 
-	bytes account = createAccount(1, 10, 0, {0x80}, {});
+	bytes account = createAccount(1, 10, (byte)0, {(byte)0x80}, {});
 	h256 addressHash = sha3("456");
 	bytes chunkBytes = createStateChunk({{addressHash, account}});
 	snapshotStorage.chunks[stateChunk] = chunkBytes;
@@ -225,15 +225,15 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
 	snapshotStorage.manifest = createManifest(2, {stateChunk1, stateChunk2}, {}, h256{}, 0, h256{});
 
 	h256 addressHash = sha3("456");
-	std::pair<h256, bytes> storagePair1{sha3("111"), {1}};
-	std::pair<h256, bytes> storagePair2{sha3("222"), {2}};
-	bytes accountPart1 = createAccount(2, 10, 0, {0x80}, {storagePair1, storagePair2});
+	std::pair<h256, bytes> storagePair1{sha3("111"), {(byte)1}};
+	std::pair<h256, bytes> storagePair2{sha3("222"), {(byte)2}};
+	bytes accountPart1 = createAccount(2, 10, (byte)0, {(byte)0x80}, {storagePair1, storagePair2});
 	bytes chunk1 = createStateChunk({{addressHash, accountPart1}});
 	snapshotStorage.chunks[stateChunk1] = chunk1;
 
-	std::pair<h256, bytes> storagePair3{sha3("333"),{3}};
-	std::pair<h256, bytes> storagePair4{sha3("444"),{4}};
-	bytes accountPart2 = createAccount(2, 10, 0, {0x80}, {storagePair3, storagePair4});
+	std::pair<h256, bytes> storagePair3{sha3("333"),{(byte)3}};
+	std::pair<h256, bytes> storagePair4{sha3("444"),{(byte)4}};
+	bytes accountPart2 = createAccount(2, 10, (byte)0, {(byte)0x80}, {storagePair3, storagePair4});
 	bytes chunk2 = createStateChunk({{addressHash, accountPart2}});
 	snapshotStorage.chunks[stateChunk2] = chunk2;
 
@@ -255,8 +255,8 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
 	h256 stateChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {stateChunk}, {}, h256{}, 0, h256{});
 
-	bytes code = {1, 2, 3};
-	bytes account = createAccount(1, 10, 1, code, {});
+	bytes code = {(byte)1, (byte)2, (byte)3};
+	bytes account = createAccount(1, 10, (byte)1, code, {});
 	h256 addressHash = sha3("456");
 	bytes chunkBytes = createStateChunk({{addressHash, account}});
 	snapshotStorage.chunks[stateChunk] = chunkBytes;
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
 	bytes const& importedCode = stateImporter.importedCodes.front();
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedCode.begin(), importedCode.end(), code.begin(), code.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(bytes2uca(importedCode).begin(), bytes2uca(importedCode).end(), bytes2uca(code).begin(), bytes2uca(code).end());
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
@@ -278,12 +278,12 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
 	h256 stateChunk = sha3("123");
 	snapshotStorage.manifest = createManifest(2, {stateChunk}, {}, h256{}, 0, h256{});
 
-	bytes code = {1, 2, 3};
-	bytes account1 = createAccount(1, 10, 1, code, {});
+	bytes code = {(byte)1, (byte)2, (byte)3};
+	bytes account1 = createAccount(1, 10, (byte)1, code, {});
 	h256 addressHash1 = sha3("456");
 
 	h256 codeHash = sha3(code);
-	bytes account2 = createAccount(1, 10, 2, codeHash.asBytes(), {});
+	bytes account2 = createAccount(1, 10, (byte)2, codeHash.asBytes(), {});
 	h256 addressHash2 = sha3("789");
 
 	snapshotStorage.chunks[stateChunk] = createStateChunk({{addressHash1, account1}, {addressHash2, account2}});
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedCodes.size(), 1);
 	bytes const& importedCode = stateImporter.importedCodes.front();
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedCode.begin(), importedCode.end(), code.begin(), code.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(bytes2uca(importedCode).begin(), bytes2uca(importedCode).end(), bytes2uca(code).begin(), bytes2uca(code).end());
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
@@ -308,12 +308,12 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
 	snapshotStorage.manifest = createManifest(2, {stateChunk1, stateChunk2}, {}, h256{}, 0, h256{});
 
 	h256 addressHash1 = sha3("456");
-	bytes accountPart1 = createAccount(2, 10, 0, {0x80}, {});
+	bytes accountPart1 = createAccount(2, 10, (byte)0, {(byte)0x80}, {});
 	bytes chunk1 = createStateChunk({{addressHash1, accountPart1}});
 	snapshotStorage.chunks[stateChunk1] = chunk1;
 
 	h256 addressHash2 = sha3("345");
-	bytes accountPart2 = createAccount(2, 10, 0, {0x80}, {});
+	bytes accountPart2 = createAccount(2, 10, (byte)0, {(byte)0x80}, {});
 	bytes chunk2 = createStateChunk({{addressHash2, accountPart2}});
 	snapshotStorage.chunks[stateChunk2] = chunk2;
 
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
 	u256 gasLimit = 555;
 	u256 gasUsed = 666;
 	u256 timestamp = 777;
-	bytes extraData = {8, 8, 8};
+	bytes extraData = {(byte)8, (byte)8, (byte)8};
 	h256 mixHash = sha3("999");
 	Nonce nonce(012);
 	bytes block = createAbridgedBlock(author, stateRoot, logBloom, difficulty, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce, RLPEmptyList, RLPEmptyList);
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
 	BOOST_CHECK_EQUAL(header.gasLimit(), gasLimit);
 	BOOST_CHECK_EQUAL(header.gasUsed(), gasUsed);
 	BOOST_CHECK_EQUAL(header.timestamp(), timestamp);
-	BOOST_CHECK_EQUAL_COLLECTIONS(header.extraData().begin(), header.extraData().end(), extraData.begin(), extraData.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(bytes2uca(header.extraData()).begin(), bytes2uca(header.extraData()).end(), bytes2uca(extraData).begin(), bytes2uca(extraData).end());
 	BOOST_CHECK_EQUAL(Ethash::mixHash(header), mixHash);
 	BOOST_CHECK_EQUAL(Ethash::nonce(header), nonce);
 	BOOST_CHECK_EQUAL(header.number(), parentNumber + 1);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
 
 	bytes transactions = createRlpSingleItemList(123);
 	bytes uncles = createRlpSingleItemList(456);
-	bytes block = createAbridgedBlock(Address("111"), sha3("222"), h2048(333), 444, 555, 666, 777, {8, 8, 8}, sha3("999"), Nonce(012), transactions, uncles);
+	bytes block = createAbridgedBlock(Address("111"), sha3("222"), h2048(333), 444, 555, 666, 777, {(byte)8, (byte)8, (byte)8}, sha3("999"), Nonce(012), transactions, uncles);
 
 	bytes receipts = createRlpSingleItemList(789);
 	bytes chunkBytes = createSingleBlockChunk(345, sha3("678"), 910, block, receipts);
@@ -386,9 +386,9 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
 
 	BOOST_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
 	ImportedBlock const& importedBlock = blockChainImporter.importedBlocks.front();
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.transactions.begin(), importedBlock.transactions.end(), transactions.begin(), transactions.end());
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.uncles.begin(), importedBlock.uncles.end(), uncles.begin(), uncles.end());
-	BOOST_CHECK_EQUAL_COLLECTIONS(importedBlock.receipts.begin(), importedBlock.receipts.end(), receipts.begin(), receipts.end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(bytes2uca(importedBlock.transactions).begin(), bytes2uca(importedBlock.transactions).end(), bytes2uca(transactions).begin(), bytes2uca(transactions).end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(bytes2uca(importedBlock.uncles).begin(), bytes2uca(importedBlock.uncles).end(), bytes2uca(uncles).begin(), bytes2uca(uncles).end());
+	BOOST_CHECK_EQUAL_COLLECTIONS(bytes2uca(importedBlock.receipts).begin(), bytes2uca(importedBlock.receipts).end(), bytes2uca(receipts).begin(), bytes2uca(receipts).end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

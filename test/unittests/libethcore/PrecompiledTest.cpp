@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpZeroBase)
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroBase)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("3b01b01ac41f2d6e917c6d6a221ce793802469026d9ab7578fa2e79e4da6aaab");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpRightPadding)
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(modexpRightPadding)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("3b01b01ac41f2d6e917c6d6a221ce793802469026d9ab7578fa2e79e4da6aaab");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpMissingValues)
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(modexpMissingValues)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpEmptyValue)
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 
 	BOOST_REQUIRE(res.first);
 	bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
-	BOOST_REQUIRE_EQUAL_COLLECTIONS(res.second.begin(), res.second.end(), expected.begin(), expected.end());
+	BOOST_REQUIRE_EQUAL_COLLECTIONS(bytes2uca(res.second).begin(), bytes2uca(res.second).end(), bytes2uca(expected).begin(), bytes2uca(expected).end());
 }
 
 BOOST_AUTO_TEST_CASE(modexpModLengthZero)

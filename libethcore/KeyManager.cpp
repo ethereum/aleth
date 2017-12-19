@@ -231,7 +231,7 @@ Secret KeyManager::brain(string const& _seed)
 		r = sha3(r);
 	Secret ret(r);
 	r.ref().cleanse();
-	while (toAddress(ret)[0])
+	while (as_unsigned_char(toAddress(ret)[0]))
 		ret = sha3(ret);
 	return ret;
 }
@@ -453,7 +453,7 @@ KeyPair KeyManager::newKeyPair(KeyManager::NewKeyType _type)
 			lp = KeyPair::create();
 			auto a = lp.address();
 			if (_type == NewKeyType::NoVanity ||
-				(_type == NewKeyType::DirectICAP && !a[0]) ||
+				(_type == NewKeyType::DirectICAP && !as_unsigned_char(a[0])) ||
 				(_type == NewKeyType::FirstTwo && a[0] == a[1]) ||
 				(_type == NewKeyType::FirstTwoNextTwo && a[0] == a[1] && a[2] == a[3]) ||
 				(_type == NewKeyType::FirstThree && a[0] == a[1] && a[1] == a[2]) ||

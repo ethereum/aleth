@@ -281,7 +281,7 @@ int main(int argc, char** argv)
 
 		if (inputFile == "-")
 			for (int i = cin.get(); i != -1; i = cin.get())
-				code.push_back((char)i);
+				code.push_back((const dev::byte)i);
 		else
 			code = contents(inputFile);
 
@@ -321,14 +321,14 @@ int main(int argc, char** argv)
 	executive.setResultRecipient(res);
 	t.forceSender(sender);
 
-	unordered_map<byte, pair<unsigned, bigint>> counts;
+	unordered_map<unsigned char, pair<unsigned, bigint>> counts;
 	unsigned total = 0;
 	bigint memTotal;
 	auto onOp = [&](uint64_t step, uint64_t PC, Instruction inst, bigint m, bigint gasCost, bigint gas, VM* vm, ExtVMFace const* extVM) {
 		if (mode == Mode::Statistics)
 		{
-			counts[(byte)inst].first++;
-			counts[(byte)inst].second += gasCost;
+			counts[(unsigned char)inst].first++;
+			counts[(unsigned char)inst].second += gasCost;
 			total++;
 			if (m > 0)
 				memTotal = m;
@@ -370,8 +370,8 @@ int main(int argc, char** argv)
 		cout << "Maximum memory usage: " << memTotal * 32 << " bytes\n";
 		cout << "Expensive operations:\n";
 		for (auto const& c: {Instruction::SSTORE, Instruction::SLOAD, Instruction::CALL, Instruction::CREATE, Instruction::CALLCODE, Instruction::DELEGATECALL, Instruction::MSTORE8, Instruction::MSTORE, Instruction::MLOAD, Instruction::SHA3})
-			if (!!counts[(byte)c].first)
-				cout << "  " << instructionInfo(c).name << " x " << counts[(byte)c].first << " (" << counts[(byte)c].second << " gas)\n";
+			if (!!counts[(unsigned char)c].first)
+				cout << "  " << instructionInfo(c).name << " x " << counts[(unsigned char)c].first << " (" << counts[(unsigned char)c].second << " gas)\n";
 	}
 	else if (mode == Mode::Trace)
 		cout << st.json(styledJson);

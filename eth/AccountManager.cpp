@@ -215,7 +215,7 @@ KeyPair AccountManager::makeKey() const
 {
 	bool icap = true;
 	KeyPair k(Secret::random());
-	while (icap && k.address()[0])
+	while (icap && as_unsigned_char(k.address()[0]))
 		k = KeyPair(Secret(sha3(k.secret().ref())));
 	return k;
 }

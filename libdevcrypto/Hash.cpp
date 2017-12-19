@@ -31,9 +31,9 @@ h256 sha256(bytesConstRef _input) noexcept
 {
 	secp256k1_sha256_t ctx;
 	secp256k1_sha256_initialize(&ctx);
-	secp256k1_sha256_write(&ctx, _input.data(), _input.size());
+	secp256k1_sha256_write(&ctx, as_const_data(_input.data(), _input.size()), _input.size());
 	h256 hash;
-	secp256k1_sha256_finalize(&ctx, hash.data());
+	secp256k1_sha256_finalize(&ctx, as_data(hash.data(), 32));
 	return hash;
 }
 
@@ -425,10 +425,10 @@ h160 ripemd160(bytesConstRef _input)
 
 	for (unsigned i = 0; i < RMDsize / 8; i += 4)
 	{
-		hashcode[i] = buffer[i >> 2];				//  implicit cast to byte
-		hashcode[i + 1] = (buffer[i >> 2] >> 8);	//extracts the 8 least
-		hashcode[i + 2] = (buffer[i >> 2] >> 16);	// significant bits.
-		hashcode[i + 3] = (buffer[i >> 2] >> 24);
+		hashcode[i] = static_cast<byte>(buffer[i >> 2]);				//  implicit cast to byte
+		hashcode[i + 1] = static_cast<byte>(buffer[i >> 2] >> 8);	//extracts the 8 least
+		hashcode[i + 2] = static_cast<byte>(buffer[i >> 2] >> 16);	// significant bits.
+		hashcode[i + 3] = static_cast<byte>(buffer[i >> 2] >> 24);
 	}
 
 	return hashcode;

@@ -67,7 +67,7 @@ h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> const& _b)
 	h256 x;
 	for (size_t i = 0; i < N; i++)
 		for (size_t j = 0; j < L; j++)
-			x[i * L + j] = uint8_t(_b.data[N - 1 - i] >> (8 * (L - 1 - j)));
+			x[i * L + j] = static_cast<byte>(_b.data[N - 1 - i] >> (8 * (L - 1 - j)));
 	return x;
 }
 
@@ -97,7 +97,7 @@ libff::alt_bn128_G1 decodePointG1(dev::bytesConstRef _data)
 bytes encodePointG1(libff::alt_bn128_G1 _p)
 {
 	if (_p.is_zero())
-		return bytes(64, 0);
+		return bytes(64, static_cast<byte>(0));
 	_p.to_affine_coordinates();
 	return
 		fromLibsnarkBigint(_p.X.as_bigint()).asBytes() +

@@ -71,7 +71,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 		if (isZeroSignature(r, s))
 		{
 			m_chainId = v;
-			m_vrs = SignatureStruct{r, s, 0};
+			m_vrs = SignatureStruct{r, s, static_cast<byte>(0)};
 		}
 		else
 		{
@@ -172,7 +172,7 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 		else
 		{
 			int const vOffset = m_chainId * 2 + 35;
-			_s << (m_vrs->v + vOffset);
+			_s << as_unsigned_char((m_vrs->v + vOffset));
 		}
 		_s << (u256)m_vrs->r << (u256)m_vrs->s;
 	}
@@ -205,7 +205,7 @@ int64_t TransactionBase::baseGasRequired(bool _contractCreation, bytesConstRef _
 	// No risk of overflow by using int64 until txDataNonZeroGas is quite small
 	// (the value not in billions).
 	for (auto i: _data)
-		g += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
+		g += as_unsigned_char(i) ? _es.txDataNonZeroGas : _es.txDataZeroGas;
 	return g;
 }
 

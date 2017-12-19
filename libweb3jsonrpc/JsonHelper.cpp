@@ -221,7 +221,7 @@ Json::Value toJson(dev::eth::Transaction const& _t)
 	res["sighash"] = toJS(_t.sha3(WithoutSignature));
 	res["r"] = toJS(_t.signature().r);
 	res["s"] = toJS(_t.signature().s);
-	res["v"] = toJS(_t.signature().v);
+	res["v"] = toJS(as_unsigned_char(_t.signature().v));
 	return res;
 }
 

@@ -82,7 +82,7 @@ bool Message::populate(bytes const& _data)
 		return false;
 
 	byte flags = _data[0];
-	if (!!(flags & ContainsSignature) && _data.size() >= sizeof(Signature) + 1)	// has a signature
+	if (!!(as_unsigned_char(flags & ContainsSignature)) && _data.size() >= sizeof(Signature) + 1)	// has a signature
 	{
 		bytesConstRef payload = bytesConstRef(&_data).cropped(1, _data.size() - sizeof(Signature) - 1);
 		h256 h = sha3(payload);
@@ -103,7 +103,7 @@ Envelope Message::seal(Secret const& _from, Topics const& _fullTopics, unsigned 
 	Envelope ret(utcTime() + _ttl, _ttl, topics);
 
 	bytes input(1 + m_payload.size());
-	input[0] = 0;
+	input[0] = (byte)0;
 	memcpy(input.data() + 1, m_payload.data(), m_payload.size());
 
 	if (_from) // needs a signature

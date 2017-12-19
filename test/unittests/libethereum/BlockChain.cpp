@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 	BOOST_REQUIRE(importAttempt.first == ImportResult::AlreadyKnown);
 
 	bytes blockBytes = block.bytes();
-	blockBytes[0] = 0;
+	blockBytes[0] = (byte)0;
 	importAttempt = bcRef.attemptImport(blockBytes, bc.testGenesis().state().db());
 	BOOST_REQUIRE(importAttempt.first == ImportResult::Malformed);
 	BOOST_REQUIRE(onBadwasCalled == true);

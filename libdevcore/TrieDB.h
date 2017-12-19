@@ -139,9 +139,9 @@ public:
 
 			// 255 -> 16 -> 0 -> 1 -> ... -> 15 -> 17
 
-			void setChild(unsigned _i) { child = _i; }
-			void setFirstChild() { child = 16; }
-			void incrementChild() { child = child == 16 ? 0 : child == 15 ? 17 : (child + 1); }
+			void setChild(unsigned _i) { child = (byte)_i; }
+			void setFirstChild() { child = (byte)16; }
+			void incrementChild() { child = child == (byte)16 ? (byte)0 : child == (byte)15 ? (byte)17 : (child + 1); }
 
 			bool operator==(Node const& _c) const { return rlp == _c.rlp && key == _c.key && child == _c.child; }
 			bool operator!=(Node const& _c) const { return !operator==(_c); }
@@ -505,14 +505,14 @@ namespace dev
 template <class DB> GenericTrieDB<DB>::iterator::iterator(GenericTrieDB const* _db)
 {
 	m_that = _db;
-	m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), 255});	// one null byte is the HPE for the empty key.
+	m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), (byte)255});	// one null byte is the HPE for the empty key.
 	next();
 }
 
 template <class DB> GenericTrieDB<DB>::iterator::iterator(GenericTrieDB const* _db, bytesConstRef _fullKey)
 {
 	m_that = _db;
-	m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), 255});	// one null byte is the HPE for the empty key.
+	m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), (byte)255});	// one null byte is the HPE for the empty key.
 	next(_fullKey);
 }
 
@@ -593,7 +593,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next(NibbleSlice _key)
 					// leaf - exit now.
 					if (k.empty())
 					{
-						m_trail.back().child = 0;
+						m_trail.back().child = (byte)0;
 						return;
 					}
 					// Still data in key we're supposed to be looking for when we're at a leaf. Go for next one.
@@ -612,7 +612,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next(NibbleSlice _key)
 				// Already a branch - look for first valid.
 				if (k.size())
 				{
-					m_trail.back().setChild(k[0]);
+					m_trail.back().setChild(as_unsigned_char(k[0]));
 					k = k.mid(1);
 				}
 				else
@@ -643,7 +643,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next(NibbleSlice _key)
 				m_trail.pop_back();
 				break;
 			}
-			else if (!rlp[m_trail.back().child].isEmpty())
+			else if (!rlp[as_unsigned_char(m_trail.back().child)].isEmpty())
 			{
 				if (m_trail.back().child == 16)
 					return;	// have a value at this node - exit now.
@@ -653,9 +653,9 @@ template <class DB> void GenericTrieDB<DB>::iterator::next(NibbleSlice _key)
 					// fixed so that Node passed into push_back is constructed *before* m_trail is potentially resized (which invalidates back and rlp)
 					Node const& back = m_trail.back();
 					m_trail.push_back(Node{
-						m_that->deref(rlp[back.child]),
+						m_that->deref(rlp[as_unsigned_char(back.child)]),
 						 hexPrefixEncode(keyOf(back.key), NibbleSlice(bytesConstRef(&back.child, 1), 1), false),
-						 255
+						 (byte)255
 						});
 					break;
 				}
@@ -707,7 +707,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
 				if (isLeaf(rlp))
 				{
 					// leaf - exit now.
-					m_trail.back().child = 0;
+					m_trail.back().child = static_cast<byte>(0);
 					return;
 				}
 
@@ -744,7 +744,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
 				m_trail.pop_back();
 				break;
 			}
-			else if (!rlp[m_trail.back().child].isEmpty())
+			else if (!rlp[as_unsigned_char(m_trail.back().child)].isEmpty())
 			{
 				if (m_trail.back().child == 16)
 					return;	// have a value at this node - exit now.
@@ -754,9 +754,9 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
 					// fixed so that Node passed into push_back is constructed *before* m_trail is potentially resized (which invalidates back and rlp)
 					Node const& back = m_trail.back();
 					m_trail.push_back(Node{
-						m_that->deref(rlp[back.child]),
+						m_that->deref(rlp[as_unsigned_char(back.child)]),
 						 hexPrefixEncode(keyOf(back.key), NibbleSlice(bytesConstRef(&back.child, 1), 1), false),
-						 255
+						 (byte)255
 						});
 					break;
 				}

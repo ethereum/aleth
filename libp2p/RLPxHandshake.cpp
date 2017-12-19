@@ -44,7 +44,7 @@ void RLPXHandshake::writeAuth()
 	sha3(m_ecdheLocal.pub().ref(), hepubk);
 	m_host->m_alias.pub().ref().copyTo(pubk);
 	m_nonce.ref().copyTo(nonce);
-	m_auth[m_auth.size() - 1] = 0x0;
+	m_auth[m_auth.size() - 1] = static_cast<byte>(0x0);
 	encryptECIES(m_remote, &m_auth, m_authCipher);
 
 	auto self(shared_from_this());
@@ -62,7 +62,7 @@ void RLPXHandshake::writeAck()
 	bytesRef nonce(&m_ack[Public::size], h256::size);
 	m_ecdheLocal.pub().ref().copyTo(epubk);
 	m_nonce.ref().copyTo(nonce);
-	m_ack[m_ack.size() - 1] = 0x0;
+	m_ack[m_ack.size() - 1] = static_cast<byte>(0x0);
 	encryptECIES(m_remote, &m_ack, m_ackCipher);
 
 	auto self(shared_from_this());
@@ -83,7 +83,7 @@ void RLPXHandshake::writeAckEIP8()
 		<< c_rlpxVersion;
 	m_ack = rlp.out();
 	int padAmount(rand()%100 + 100);
-	m_ack.resize(m_ack.size() + padAmount, 0);
+	m_ack.resize(m_ack.size() + padAmount, static_cast<byte>(0));
 
 	bytes prefix(2);
 	toBigEndian<uint16_t>(m_ack.size() + c_eciesOverhead, prefix);
@@ -133,7 +133,7 @@ void RLPXHandshake::readAuth()
 void RLPXHandshake::readAuthEIP8()
 {
 	assert(m_authCipher.size() == 307);
-	uint16_t size(m_authCipher[0]<<8 | m_authCipher[1]);
+	uint16_t size(as_unsigned_char(m_authCipher[0]<<8 | m_authCipher[1]));
 	clog(NetP2PConnect) << "p2p.connect.ingress receiving " << size << "bytes EIP-8 auth from " << m_socket->remoteEndpoint();
 	m_authCipher.resize((size_t)size + 2);
 	auto rest = ba::buffer(ba::buffer(m_authCipher) + 307);
@@ -188,7 +188,7 @@ void RLPXHandshake::readAck()
 void RLPXHandshake::readAckEIP8()
 {
 	assert(m_ackCipher.size() == 210);
-	uint16_t size(m_ackCipher[0]<<8 | m_ackCipher[1]);
+	uint16_t size(as_unsigned_char(m_ackCipher[0]<<8 | m_ackCipher[1]));
 	clog(NetP2PConnect) << "p2p.connect.egress receiving " << size << "bytes EIP-8 ack from " << m_socket->remoteEndpoint();
 	m_ackCipher.resize((size_t)size + 2);
 	auto rest = ba::buffer(ba::buffer(m_ackCipher) + 210);

@@ -138,8 +138,8 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 				storageMap.emplace(keyHash, std::move(value));
 			}
 
-			byte const codeFlag = account[2].toInt<byte>(RLP::VeryStrict);
-			switch (codeFlag)
+			byte const codeFlag = static_cast<byte>(account[2].toInt<unsigned char>(RLP::VeryStrict));
+			switch (as_unsigned_char(codeFlag))
 			{
 			case 0:
 				codeHash = EmptySHA3;

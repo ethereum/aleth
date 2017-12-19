@@ -33,7 +33,7 @@ h256 RLPXDatagramFace::sign(Secret const& _k)
 	
 	RLPStream rlpxstream;
 //	rlpxstream.appendRaw(toPublic(_k).asBytes()); // for mdc-based signature
-	rlpxstream.appendRaw(bytes(1, packetType())); // prefix by 1 byte for type
+	rlpxstream.appendRaw(bytes(1, static_cast<byte>(packetType()))); // prefix by 1 byte for type
 	streamRLP(rlpxstream);
 	bytes rlpxBytes(rlpxstream.out());
 	

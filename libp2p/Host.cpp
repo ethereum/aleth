@@ -921,7 +921,7 @@ void Host::restoreNetwork(bytesConstRef _b)
 			}
 			else if (i.itemCount() == 3 || i.itemCount() == 10)
 			{
-				Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()), i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
+				Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<unsigned char, 4>()), i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
 				if (i.itemCount() == 3 && n.endpoint.isAllowed())
 					addNodeToNodeTable(n);
 				else if (i.itemCount() == 10)

@@ -116,6 +116,9 @@ void tryRunSingleTestFile(dev::test::TestSuite const& _suite);
 bool createRandomTest();	//returns true if succeed, false if there was an error;
 void doRlpTests(json_spirit::mValue const& _input);
 
+// Convert bytes to vector<unsigned char>
+std::vector<unsigned char> bytes2uca(bytes _bytes);
+
 /// Allows observing test execution process.
 /// This class also provides methods for registering and notifying the listener
 class Listener
