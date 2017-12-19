@@ -89,14 +89,14 @@ void getBalance(
 	*o_result = toEvmC(env.balance(fromEvmC(*_addr)));
 }
 
-size_t getCode(byte const** o_code, evm_context* _context, evm_address const* _addr)
+size_t getCode(uint8_t const** o_code, evm_context* _context, evm_address const* _addr)
 {
 	auto& env = static_cast<ExtVMFace&>(*_context);
 	Address addr = fromEvmC(*_addr);
 	if (o_code != nullptr)
 	{
 		auto& code = env.codeAt(addr);
-		*o_code = code.data();
+		*o_code = as_data(code.data(), code.size());
 		return code.size();
 	}
 	return env.codeSizeAt(addr);
@@ -170,7 +170,10 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 		// Use reserved data to store the address.
 		static_assert(sizeof(o_result->reserved.data) >= addr.size,
 					  "Not enough space to store an address");
-		std::copy(addr.begin(), addr.end(), o_result->reserved.data);
+		std::vector<unsigned char> uca;
+		for (unsigned i = 0; i < addr.size; i++)
+			uca.push_back(as_unsigned_char(addr[i]));
+		std::copy(uca.begin(), uca.end(), o_result->reserved.data);
 		o_result->output_data = o_result->reserved.data;
 		o_result->output_size = addr.size;
 	} else
@@ -182,7 +185,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 
 		// First assign reference. References are not invalidated when vector
 		// of bytes is moved. See `.takeBytes()` below.
-		o_result->output_data = output.data();
+		o_result->output_data = as_data(output.data(), output.size());
 		o_result->output_size = output.size();
 
 		// Place a new vector of bytes containing output in result's reserved memory.
@@ -237,7 +240,7 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 
 	// First assign reference. References are not invalidated when vector
 	// of bytes is moved. See `.takeBytes()` below.
-	o_result->output_data = output.data();
+	o_result->output_data = as_data(output.data(), output.size());
 	o_result->output_size = output.size();
 
 	// Place a new vector of bytes containing output in result's reserved memory.
