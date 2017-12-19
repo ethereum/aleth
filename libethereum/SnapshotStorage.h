@@ -45,13 +45,15 @@ public:
 
 	virtual bytes readManifest() const = 0;
 
+	virtual std::string readCompressedChunk(h256 const& _chunkHash) const = 0;
+
 	virtual std::string readChunk(h256 const& _chunkHash) const = 0;
 
 	virtual void copyTo(boost::filesystem::path const& _path) const = 0;
 };
 
 
-std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(std::string const& _snapshotDirPath);
+std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(boost::filesystem::path const& _snapshotDirPath);
 
 }
 }

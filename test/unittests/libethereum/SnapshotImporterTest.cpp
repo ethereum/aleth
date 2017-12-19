@@ -92,6 +92,7 @@ namespace
 	{
 	public:
 		bytes readManifest() const override { return manifest; }
+		std::string readCompressedChunk(h256 const&) const override { return std::string(); }
 		std::string readChunk(h256 const& _chunkHash) const override
 		{ 
 			auto it = chunks.find(_chunkHash);
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importChecksManifestVersion)
 	s << h256{} << 0 << h256{};
 	snapshotStorage.manifest = createManifest(3, {}, {}, h256{}, 0, h256{});
 
-	BOOST_REQUIRE_THROW(snapshotImporter.import(snapshotStorage), UnsupportedSnapshotManifestVersion);
+	BOOST_REQUIRE_THROW(snapshotImporter.import(snapshotStorage, h256{}), UnsupportedSnapshotManifestVersion);
 }
 
 BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importNonsplittedAccount)
 	bytes chunkBytes = createStateChunk({{addressHash, account}});
 	snapshotStorage.chunks[stateChunk] = chunkBytes;
 	
-	snapshotImporter.import(snapshotStorage);
+	snapshotImporter.import(snapshotStorage, h256{});
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
 	h256 const& importedAddress = stateImporter.importedAccounts.begin()->first;
@@ -242,7 +243,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importSplittedAccount)
 	bytes chunk2 = createStateChunk({{addressHash, accountPart2}});
 	snapshotStorage.chunks[stateChunk2] = chunk2;
 
-	snapshotImporter.import(snapshotStorage);
+	snapshotImporter.import(snapshotStorage, h256{});
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
 	h256 const& importedAddress = stateImporter.importedAccounts.begin()->first;
@@ -267,7 +268,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountWithCode)
 	bytes chunkBytes = createStateChunk({{addressHash, account}});
 	snapshotStorage.chunks[stateChunk] = chunkBytes;
 
-	snapshotImporter.import(snapshotStorage);
+	snapshotImporter.import(snapshotStorage, h256{});
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 1);
 	h256 const& importedAddress = stateImporter.importedAccounts.begin()->first;
@@ -295,7 +296,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importAccountsWithEqualCode)
 
 	snapshotStorage.chunks[stateChunk] = createStateChunk({{addressHash1, account1}, {addressHash2, account2}});
 
-	snapshotImporter.import(snapshotStorage);
+	snapshotImporter.import(snapshotStorage, h256{});
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
 	BOOST_CHECK(stateImporter.importedAccounts.count(addressHash1) > 0);
@@ -324,7 +325,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_commitStateOnceEveryChunk)
 	bytes chunk2 = createStateChunk({{addressHash2, accountPart2}});
 	snapshotStorage.chunks[stateChunk2] = chunk2;
 
-	snapshotImporter.import(snapshotStorage);
+	snapshotImporter.import(snapshotStorage, h256{});
 
 	BOOST_REQUIRE_EQUAL(stateImporter.importedAccounts.size(), 2);
 	BOOST_REQUIRE_EQUAL(stateImporter.commitCounter, 2);
@@ -354,7 +355,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importEmptyBlock)
 	bytes chunkBytes = createSingleBlockChunk(parentNumber, parentHash, parentTotalDifficulty, block, RLPEmptyList);
 	snapshotStorage.chunks[blockChunk] = chunkBytes;
 
-	snapshotImporter.import(snapshotStorage);
+	snapshotImporter.import(snapshotStorage, h256{});
 
 	BOOST_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
 	ImportedBlock const& importedBlock = blockChainImporter.importedBlocks.front();
@@ -389,7 +390,7 @@ BOOST_AUTO_TEST_CASE(SnapshotImporterSuite_importBlockWithTransactions)
 	bytes chunkBytes = createSingleBlockChunk(345, sha3("678"), 910, block, receipts);
 	snapshotStorage.chunks[blockChunk] = chunkBytes;
 
-	snapshotImporter.import(snapshotStorage);
+	snapshotImporter.import(snapshotStorage, h256{});
 
 	BOOST_REQUIRE_EQUAL(blockChainImporter.importedBlocks.size(), 1);
 	ImportedBlock const& importedBlock = blockChainImporter.importedBlocks.front();

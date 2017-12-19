@@ -43,7 +43,7 @@ struct SnapshotImportLog: public LogChannel
 
 }
 
-void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage)
+void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 const& _genesisHash)
 {
 	(void)SnapshotImportLog::debug; // override "unused variable" error on macOS
 
@@ -69,7 +69,7 @@ void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage)
 	importBlockChunks(_snapshotStorage, blockChunkHashes);
 
 	clog(SnapshotImportLog) << "Copying snapshot...";
-	_snapshotStorage.copyTo(getDataDir() / "snapshot");
+	_snapshotStorage.copyTo(getDataDir() / toHex(_genesisHash.ref().cropped(0, 4)) / "snapshot");
 }
 
 void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot)

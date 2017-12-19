@@ -36,19 +36,12 @@ class BlockChainImporterFace;
 class SnapshotStorageFace;
 class StateImporterFace;
 
-DEV_SIMPLE_EXCEPTION(UnsupportedSnapshotManifestVersion);
-DEV_SIMPLE_EXCEPTION(InvalidSnapshotManifest);
-DEV_SIMPLE_EXCEPTION(StateTrieReconstructionFailed);
-DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
-DEV_SIMPLE_EXCEPTION(InvalidBlockChunkData);
-DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
-
 class SnapshotImporter
 {
 public:
 	SnapshotImporter(StateImporterFace& _stateImporter, BlockChainImporterFace& _bcImporter): m_stateImporter(_stateImporter), m_blockChainImporter(_bcImporter) {}
 
-	void import(SnapshotStorageFace const& _snapshotStorage);
+	void import(SnapshotStorageFace const& _snapshotStorage, h256 const& _genesisHash);
 
 private:
 	void importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot);

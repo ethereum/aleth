@@ -1025,7 +1025,7 @@ int main(int argc, char** argv)
 			SnapshotImporter importer(*stateImporter, *blockChainImporter);
 
 			auto snapshotStorage(createSnapshotStorage(filename));
-			importer.import(*snapshotStorage);
+			importer.import(*snapshotStorage, web3.ethereum()->blockChain().genesisHash());
 			// continue with regular sync from the snapshot block
 		}
 		catch (...)
@@ -1059,7 +1059,7 @@ int main(int argc, char** argv)
 	if (author)
 		cout << "Mining Beneficiary: " << renderFullAddress(author) << "\n";
 
-	if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet)
+	if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet || !preferredNodes.empty())
 	{
 		web3.startNetwork();
 		cout << "Node ID: " << web3.enode() << "\n";
