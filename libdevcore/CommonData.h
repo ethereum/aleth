@@ -208,9 +208,6 @@ unsigned commonPrefix(T const& _t, _U const& _u)
 	return s;
 }
 
-/// Creates a random, printable, word.
-std::string randomWord();
-
 /// Determine bytes required to encode the given integer value. @returns 0 if @a _i is zero.
 template <class T>
 inline unsigned bytesRequired(T _i)
