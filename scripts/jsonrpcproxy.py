@@ -46,8 +46,8 @@ class UnixSocketConnector(object):
     """Unix Domain Socket connector. Connects to socket lazily."""
 
     def __init__(self, socket_path):
-        self.socket_path = socket_path
-        self.socket = None
+        self._socket_path = socket_path
+        self._socket = None
 
     @staticmethod
     def _get_error_message(os_error_number):
@@ -57,41 +57,41 @@ class UnixSocketConnector(object):
             return "Connection to '{}' refused"
         return "Unknown error when connecting to '{}'"
 
-    def is_connected(self):
-        return self.socket is not None
-
-    def _connect(self):
-        if self.socket is None:
+    def socket(self):
+        """Returns connected socket."""
+        if self._socket is None:
             try:
                 s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                s.connect(self.socket_path)
+                s.connect(self._socket_path)
                 s.settimeout(1)
                 # Assign last, to keep it None in case of exception.
-                self.socket = s
+                self._socket = s
             except OSError as ex:
                 msg = self._get_error_message(ex.errno)
-                err = BackendError(msg.format(self.socket_path))
+                err = BackendError(msg.format(self._socket_path))
                 raise err from ex
+        return self._socket
 
-    def _reconnect(self):
-        self.socket.shutdown(socket.SHUT_RDWR)
-        self.socket.close()
-        self.socket = None
-        self._connect()
+    def close(self):
+        if self._socket is not None:
+            self._socket.shutdown(socket.SHUT_RDWR)
+            self._socket.close()
+            self._socket = None
+
+    def is_connected(self):
+        return self._socket is not None
 
     def recv(self, max_length):
-        self._connect()
-        return self.socket.recv(max_length)
+        return self.socket().recv(max_length)
 
     def sendall(self, data):
-        self._connect()
         try:
-            return self.socket.sendall(data)
+            return self.socket().sendall(data)
         except OSError as ex:
             if ex.errno == errno.EPIPE:
-                # The connection was terminated by the backend.
-                self._reconnect()
-                return self.socket.sendall(data)
+                # The connection was terminated by the backend. Try reconnect.
+                self.close()
+                return self.socket().sendall(data)
             else:
                 raise
 
