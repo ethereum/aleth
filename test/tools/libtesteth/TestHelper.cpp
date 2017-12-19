@@ -26,11 +26,11 @@
 #include <libethashseal/EthashCPUMiner.h>
 #include <libethereum/Client.h>
 
+#include <yaml-cpp/yaml.h>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <set>
 #include <string>
-#include <yaml-cpp/yaml.h>
 
 using namespace std;
 using namespace dev::eth;
@@ -47,7 +47,7 @@ void mine(Client& c, int numBlocks)
 
 	c.startSealing();
 	while(c.blockChain().details().number < startBlock + numBlocks)
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		this_thread::sleep_for(chrono::milliseconds(100));
 	c.stopSealing();
 }
 
@@ -118,7 +118,7 @@ string netIdToString(eth::Network _netId)
 eth::Network stringToNetId(string const& _netname)
 {
 	//Networks that used in .json tests
-	static std::vector<eth::Network> const networks {{
+	static vector<eth::Network> const networks {{
 		eth::Network::FrontierTest,
 		eth::Network::HomesteadTest,
 		eth::Network::EIP150Test,
@@ -164,10 +164,10 @@ bool isDisabledNetwork(eth::Network _net)
 	return false;
 }
 
-std::vector<eth::Network> const& getNetworks()
+vector<eth::Network> const& getNetworks()
 {
 	//Networks for the test case execution when filling the tests
-	static std::vector<eth::Network> const networks {{
+	static vector<eth::Network> const networks {{
 		eth::Network::FrontierTest,
 		eth::Network::HomesteadTest,
 		eth::Network::EIP150Test,
@@ -178,7 +178,7 @@ std::vector<eth::Network> const& getNetworks()
 	return networks;
 }
 
-std::string exportLog(eth::LogEntries const& _logs)
+string exportLog(eth::LogEntries const& _logs)
 {
 	RLPStream s;
 	s.appendList(_logs.size());
@@ -213,7 +213,7 @@ byte toByte(json_spirit::mValue const& _v)
 	return 0;
 }
 
-bytes importByteArray(std::string const& _str)
+bytes importByteArray(string const& _str)
 {
 	checkHexHasEvenLength(_str);
 	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
@@ -244,23 +244,23 @@ void replaceLLLinState(json_spirit::mObject& _o)
 	}
 }
 
-std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<string> const _extentionMask, std::string const& _particularFile)
+vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
 {
-	vector<boost::filesystem::path> files;
+	vector<fs::path> files;
 	for(auto const& ext: _extentionMask)
 	{
 		if (!_particularFile.empty())
 		{
-			boost::filesystem::path file = _dirPath / (_particularFile + ext);
-			if (boost::filesystem::exists(file))
+			fs::path file = _dirPath / (_particularFile + ext);
+			if (fs::exists(file))
 				files.push_back(file);
 		}
 		else
 		{
-			using Bdit = boost::filesystem::directory_iterator;
-			for (Bdit it(_dirPath); it != Bdit(); ++it)
+			using fsIterator = fs::directory_iterator;
+			for (fsIterator it(_dirPath); it != fsIterator(); ++it)
 			{
-				if (boost::filesystem::is_regular_file(it->path()) && it->path().extension() == ext)
+				if (fs::is_regular_file(it->path()) && it->path().extension() == ext)
 					files.push_back(it->path());
 			}
 		}
@@ -271,45 +271,44 @@ std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _di
 json_spirit::mValue convertYamlNodeToJson(YAML::Node _node)
 {
 	if (_node.IsNull())
-		return json_spirit::mObject();
+		return json_spirit::mValue();
 
 	if (_node.IsScalar())
 	{
-		json_spirit::mValue value;
 		if (_node.Tag() == "tag:yaml.org,2002:int")
-			value = _node.as<int>();
+			return _node.as<int>();
 		else
-			value = _node.as<std::string>();
-		return value;
+			return _node.as<string>();
 	}
 
 	if (_node.IsMap())
 	{
 		json_spirit::mObject jObject;
 		for (auto const& i : _node)
-			jObject[i.first.as<std::string>()] = convertYamlNodeToJson(i.second);
+			jObject.emplace(i.first.as<string>(), convertYamlNodeToJson(i.second));
 		return jObject;
 	}
 
 	if (_node.IsSequence())
 	{
 		json_spirit::mArray jArray;
-		for (std::size_t i = 0; i < _node.size(); i++)
-			jArray.push_back(convertYamlNodeToJson(_node[i]));
+		for (size_t i = 0; i < _node.size(); i++)
+			jArray.emplace_back(convertYamlNodeToJson(_node[i]));
 		return jArray;
 	}
 
+	BOOST_ERROR("Error parsing YAML node. Element type note defined!");
 	return json_spirit::mValue();
 }
 
-// this function is here so not to include YAML into other files
-json_spirit::mValue parseYamlToJson(std::string const& _string)
+/// this function is here so not to include YAML into other files
+json_spirit::mValue parseYamlToJson(string const& _string)
 {
 	YAML::Node testFile = YAML::Load(_string);
 	return convertYamlNodeToJson(testFile);
 }
 
-std::string executeCmd(std::string const& _command)
+string executeCmd(string const& _command)
 {
 #if defined(_WIN32)
 	BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -485,8 +484,8 @@ string prepareLLLCVersionString()
 
 void copyFile(fs::path const& _source, fs::path const& _destination)
 {
-	fs::ifstream src(_source, std::ios::binary);
-	fs::ofstream dst(_destination, std::ios::binary);
+	fs::ifstream src(_source, ios::binary);
+	fs::ofstream dst(_destination, ios::binary);
 	dst << src.rdbuf();
 }
 
@@ -575,13 +574,13 @@ void Listener::registerListener(Listener& _listener)
 	g_listener = &_listener;
 }
 
-void Listener::notifySuiteStarted(std::string const& _name)
+void Listener::notifySuiteStarted(string const& _name)
 {
 	if (g_listener)
 		g_listener->suiteStarted(_name);
 }
 
-void Listener::notifyTestStarted(std::string const& _name)
+void Listener::notifyTestStarted(string const& _name)
 {
 	if (g_listener)
 		g_listener->testStarted(_name);
