@@ -41,7 +41,7 @@ class SnapshotImporter
 public:
 	SnapshotImporter(StateImporterFace& _stateImporter, BlockChainImporterFace& _bcImporter): m_stateImporter(_stateImporter), m_blockChainImporter(_bcImporter) {}
 
-	void import(SnapshotStorageFace const& _snapshotStorage, h256 const& _genesisHash);
+    void import(SnapshotStorageFace const& _snapshotStorage, h256 const& _genesisHash);
 
 private:
 	void importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot);

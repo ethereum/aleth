@@ -39,20 +39,18 @@ namespace fs = boost::filesystem;
 
 namespace dev
 {
-
 namespace
 {
-
 void createDirectoryIfNotExistent(boost::filesystem::path const& _path)
 {
-	if (!fs::exists(_path))
-	{
-		fs::create_directories(_path);
-		DEV_IGNORE_EXCEPTIONS(fs::permissions(_path, fs::owner_all));
-	}
+    if (!fs::exists(_path))
+    {
+        fs::create_directories(_path);
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(_path, fs::owner_all));
+    }
 }
 
-}
+}  // namespace
 
 string memDump(bytes const& _bytes, unsigned _width, bool _html)
 {
@@ -135,22 +133,22 @@ void writeFile(boost::filesystem::path const& _file, bytesConstRef _data, bool _
 	}
 	else
 	{
-		createDirectoryIfNotExistent(_file.parent_path());
+        createDirectoryIfNotExistent(_file.parent_path());
 
-		boost::filesystem::ofstream s(_file, ios::trunc | ios::binary);
+        boost::filesystem::ofstream s(_file, ios::trunc | ios::binary);
 		s.write(reinterpret_cast<char const*>(_data.data()), _data.size());
 		if (!s)
 			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file.string()));
-		DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read | fs::owner_write));
-	}
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read | fs::owner_write));
+    }
 }
 
 void copyDirectory(boost::filesystem::path const& _srcDir, boost::filesystem::path const& _dstDir)
 {
-	createDirectoryIfNotExistent(_dstDir);
+    createDirectoryIfNotExistent(_dstDir);
 
-	for (fs::directory_iterator file(_srcDir); file != fs::directory_iterator(); ++file)
-		fs::copy_file(file->path(), _dstDir / file->path().filename());
+    for (fs::directory_iterator file(_srcDir); file != fs::directory_iterator(); ++file)
+        fs::copy_file(file->path(), _dstDir / file->path().filename());
 }
 
 std::string getPassword(std::string const& _prompt)
@@ -202,4 +200,4 @@ std::string getPassword(std::string const& _prompt)
 #endif
 }
 
-}
+}  // namespace dev

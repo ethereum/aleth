@@ -30,7 +30,6 @@ namespace dev
 {
 namespace eth
 {
-
 namespace
 {
 
@@ -68,8 +67,8 @@ void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 
 	h256s const blockChunkHashes = manifest[2].toVector<h256>(RLP::VeryStrict);
 	importBlockChunks(_snapshotStorage, blockChunkHashes);
 
-	clog(SnapshotImportLog) << "Copying snapshot...";
-	_snapshotStorage.copyTo(getDataDir() / toHex(_genesisHash.ref().cropped(0, 4)) / "snapshot");
+    clog(SnapshotImportLog) << "Copying snapshot...";
+    _snapshotStorage.copyTo(getDataDir() / toHex(_genesisHash.ref().cropped(0, 4)) / "snapshot");
 }
 
 void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot)
@@ -241,5 +240,5 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
 	}
 }
 
-}
-}
+}  // namespace eth
+}  // namespace dev

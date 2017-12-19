@@ -93,6 +93,5 @@ DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
 DEV_SIMPLE_EXCEPTION(InvalidBlockChunkData);
 DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
 DEV_SIMPLE_EXCEPTION(InvalidWarpStatusPacket);
-
 }
 }
