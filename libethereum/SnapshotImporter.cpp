@@ -36,7 +36,7 @@ namespace
 struct SnapshotImportLog: public LogChannel
 {
 	static char const* name() { return "SNAP"; }
-	static int const verbosity = 9;
+	static int const verbosity = 8;
 	static const bool debug = false;
 };
 
