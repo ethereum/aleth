@@ -4,7 +4,7 @@
    unless they are labeled with `[in progress]` or have "[WIP]" in title.
 
 2. **Code formatting** rules are described by the [Clang-Format Style Options] file [.clang-format].
-   Please use the [clang-format] tool to format your code _changes_ accordingly.
+   Please use the [clang-format] (version 5.0 or higher recommended) tool to format your code _changes_ accordingly.
    [git-clang-format] tool is useful to limit reformatting to your changes only:
 
        git clang-format          # to reformat the changes in the working directory
