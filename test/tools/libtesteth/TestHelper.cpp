@@ -301,7 +301,7 @@ json_spirit::mValue convertYamlNodeToJson(YAML::Node _node)
 	return json_spirit::mValue();
 }
 
-/// this function is here so not to include YAML into other files
+/// this function is here so not to include <YAML.h> in other .cpp files
 json_spirit::mValue parseYamlToJson(string const& _string)
 {
 	YAML::Node testFile = YAML::Load(_string);
