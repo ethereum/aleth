@@ -151,7 +151,7 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 	for (auto const& file: files)
 	{
 		testOutput.showProgress();
-		testOutput.setCurrentTestFileName(file);
+		testOutput.setCurrentTestFile(file);
 		executeTest(_testFolder, file);
 	}
 	testOutput.finishTest();
@@ -222,7 +222,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			else if (_testFileName.extension() == ".yml")
 				v = test::parseYamlToJson(s);
 			else
-				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFileName().string());
+				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFile().string());
 
 			removeComments(v);
 			json_spirit::mValue output = doTests(v, true);

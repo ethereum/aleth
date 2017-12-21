@@ -45,11 +45,11 @@ public:
 
 	//void setMaxTests(int _count) { m_maxTests = _count; }
 	bool checkTest(std::string const& _testName);
-	void setCurrentTestFileName(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
+	void setCurrentTestFile(boost::filesystem::path const& _name) { m_currentTestFileName = _name; }
 	void setCurrentTestName(std::string const& _name) { m_currentTestName = _name; }
 	std::string const& testName() { return m_currentTestName; }
 	std::string const& caseName() { return m_currentTestCaseName; }
-	boost::filesystem::path const& testFileName() { return m_currentTestFileName; }
+	boost::filesystem::path const& testFile() { return m_currentTestFileName; }
 	void printTestExecStats();
 
 private:
