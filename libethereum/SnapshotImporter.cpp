@@ -19,28 +19,30 @@
 #include "Client.h"
 #include "SnapshotStorage.h"
 
+#include <libdevcore/FileSystem.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieHash.h>
 #include <libethashseal/Ethash.h>
 
 #include <snappy.h>
 
-using namespace dev;
-using namespace eth;
-
+namespace dev
+{
+namespace eth
+{
 namespace
 {
 
 struct SnapshotImportLog: public LogChannel
 {
 	static char const* name() { return "SNAP"; }
-	static int const verbosity = 9;
+	static int const verbosity = 8;
 	static const bool debug = false;
 };
 
 }
 
-void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage)
+void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 const& _genesisHash)
 {
 	(void)SnapshotImportLog::debug; // override "unused variable" error on macOS
 
@@ -64,6 +66,9 @@ void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage)
 
 	h256s const blockChunkHashes = manifest[2].toVector<h256>(RLP::VeryStrict);
 	importBlockChunks(_snapshotStorage, blockChunkHashes);
+
+    clog(SnapshotImportLog) << "Copying snapshot...";
+    _snapshotStorage.copyTo(getDataDir() / toHex(_genesisHash.ref().cropped(0, 4)) / "snapshot");
 }
 
 void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot)
@@ -234,3 +239,6 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
 		}
 	}
 }
+
+}  // namespace eth
+}  // namespace dev

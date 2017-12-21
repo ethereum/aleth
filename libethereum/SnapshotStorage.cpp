@@ -19,7 +19,6 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
 
-#include <boost/filesystem.hpp>
 #include <snappy.h>
 
 namespace dev
@@ -52,9 +51,11 @@ std::string snappyUncompress(std::string const& _compressed)
 class SnapshotStorage: public SnapshotStorageFace
 {
 public:
-	explicit SnapshotStorage(std::string const& _snapshotDir): m_snapshotDir(_snapshotDir) {}
+    explicit SnapshotStorage(boost::filesystem::path const& _snapshotDir)
+      : m_snapshotDir(_snapshotDir)
+    {}
 
-	bytes readManifest() const override
+    bytes readManifest() const override
 	{
 		bytes const manifestBytes = dev::contents((m_snapshotDir / "MANIFEST").string());
 		if (manifestBytes.empty())
@@ -63,13 +64,20 @@ public:
 		return manifestBytes;
 	}
 
-	std::string readChunk(h256 const& _chunkHash) const override
-	{
+    std::string readCompressedChunk(h256 const& _chunkHash) const override
+    {
 		std::string const chunkCompressed = dev::contentsString((m_snapshotDir / toHex(_chunkHash)).string());
 		if (chunkCompressed.empty())
 			BOOST_THROW_EXCEPTION(FailedToReadChunkFile() << errinfo_hash256(_chunkHash));
 
-		h256 const chunkHash = sha3(chunkCompressed);
+        return chunkCompressed;
+    }
+
+    std::string readChunk(h256 const& _chunkHash) const override
+    {
+        std::string const chunkCompressed = readCompressedChunk(_chunkHash);
+
+        h256 const chunkHash = sha3(chunkCompressed);
 		if (chunkHash != _chunkHash)
 			BOOST_THROW_EXCEPTION(ChunkDataCorrupted() << errinfo_hash256(_chunkHash));
 
@@ -79,13 +87,19 @@ public:
 		return chunkUncompressed;
 	}
 
+    void copyTo(boost::filesystem::path const& _path) const override
+    {
+        copyDirectory(m_snapshotDir, _path);
+    }
+
 private:
 	boost::filesystem::path const m_snapshotDir;
 };
 
 }
 
-std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(std::string const& _snapshotDirPath)
+std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(
+    boost::filesystem::path const& _snapshotDirPath)
 {
 	return std::unique_ptr<SnapshotStorageFace>(new SnapshotStorage(_snapshotDirPath));
 }

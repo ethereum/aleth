@@ -86,5 +86,12 @@ DEV_SIMPLE_EXCEPTION(DatabaseAlreadyOpen);
 DEV_SIMPLE_EXCEPTION(DAGCreationFailure);
 DEV_SIMPLE_EXCEPTION(DAGComputeFailure);
 
+DEV_SIMPLE_EXCEPTION(UnsupportedSnapshotManifestVersion);
+DEV_SIMPLE_EXCEPTION(InvalidSnapshotManifest);
+DEV_SIMPLE_EXCEPTION(StateTrieReconstructionFailed);
+DEV_SIMPLE_EXCEPTION(InvalidStateChunkData);
+DEV_SIMPLE_EXCEPTION(InvalidBlockChunkData);
+DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
+DEV_SIMPLE_EXCEPTION(InvalidWarpStatusPacket);
 }
 }
