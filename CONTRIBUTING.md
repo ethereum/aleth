@@ -7,7 +7,8 @@
    Please use the [clang-format] (version 5.0 or higher recommended) tool to format your code _changes_ accordingly.
    [git-clang-format] tool is useful to limit reformatting to your changes only:
 
-       git clang-format          # to reformat the changes in the working directory
+       git clang-format          # to reformat the changes in the staging area and put the result into working directory
+       git clang-format -f       # to reformat the changes in the working directory
        git clang-format <commit> # to reformat commits between specified commit and HEAD
 
 
