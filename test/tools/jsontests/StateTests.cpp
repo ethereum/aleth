@@ -45,23 +45,23 @@ namespace dev {  namespace test {
 json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {
 	BOOST_REQUIRE_MESSAGE(_input.type() == obj_type,
-		TestOutputHelper::get().get().testFileName() + " A GeneralStateTest file should contain an object.");
+		TestOutputHelper::get().get().testFile().string() + " A GeneralStateTest file should contain an object.");
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
-		TestOutputHelper::get().testFileName() + " A GeneralStateTest filler should contain only one test.");
+		TestOutputHelper::get().testFile().string() + " A GeneralStateTest filler should contain only one test.");
 	json_spirit::mValue v = json_spirit::mObject();
 
 	for (auto& i: _input.get_obj())
 	{
 		string const testname = i.first;
 		BOOST_REQUIRE_MESSAGE(i.second.type() == obj_type,
-			TestOutputHelper::get().testFileName() + " should contain an object under a test name.");
+			TestOutputHelper::get().testFile().string() + " should contain an object under a test name.");
 		json_spirit::mObject const& inputTest = i.second.get_obj();
 		v.get_obj()[testname] = json_spirit::mObject();
 		json_spirit::mObject& outputTest = v.get_obj()[testname].get_obj();
 
-		if (_fillin && !TestOutputHelper::get().testFileName().empty())
-			BOOST_REQUIRE_MESSAGE(testname + "Filler.json" == TestOutputHelper::get().testFileName(),
-				TestOutputHelper::get().testFileName() + " contains a test with a different name '" + testname + "'" );
+		if (_fillin && !TestOutputHelper::get().testFile().empty())
+			BOOST_REQUIRE_MESSAGE(testname + "Filler" == TestOutputHelper::get().testFile().stem().string(),
+				TestOutputHelper::get().testFile().string() + " contains a test with a different name '" + testname + "'" );
 
 		if (!TestOutputHelper::get().checkTest(testname))
 			continue;

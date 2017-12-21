@@ -50,9 +50,12 @@ foreach(file ${sources})
 	endforeach(test_raw)
 endforeach(file)
 
+hunter_add_package(yaml-cpp)
+find_package(yaml-cpp CONFIG REQUIRED)
+
 add_executable(testeth ${sources})
 target_include_directories(testeth PRIVATE ${UTILS_INCLUDE_DIR})
-target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore cryptopp-static)
+target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore cryptopp-static yaml-cpp::yaml-cpp)
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)

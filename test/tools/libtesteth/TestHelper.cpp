@@ -26,8 +26,10 @@
 #include <libethashseal/EthashCPUMiner.h>
 #include <libethereum/Client.h>
 
+#include <yaml-cpp/yaml.h>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
+#include <set>
 #include <string>
 
 using namespace std;
@@ -45,7 +47,7 @@ void mine(Client& c, int numBlocks)
 
 	c.startSealing();
 	while(c.blockChain().details().number < startBlock + numBlocks)
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		this_thread::sleep_for(chrono::milliseconds(100));
 	c.stopSealing();
 }
 
@@ -116,7 +118,7 @@ string netIdToString(eth::Network _netId)
 eth::Network stringToNetId(string const& _netname)
 {
 	//Networks that used in .json tests
-	static std::vector<eth::Network> const networks {{
+	static vector<eth::Network> const networks {{
 		eth::Network::FrontierTest,
 		eth::Network::HomesteadTest,
 		eth::Network::EIP150Test,
@@ -162,10 +164,10 @@ bool isDisabledNetwork(eth::Network _net)
 	return false;
 }
 
-std::vector<eth::Network> const& getNetworks()
+vector<eth::Network> const& getNetworks()
 {
 	//Networks for the test case execution when filling the tests
-	static std::vector<eth::Network> const networks {{
+	static vector<eth::Network> const networks {{
 		eth::Network::FrontierTest,
 		eth::Network::HomesteadTest,
 		eth::Network::EIP150Test,
@@ -176,7 +178,7 @@ std::vector<eth::Network> const& getNetworks()
 	return networks;
 }
 
-std::string exportLog(eth::LogEntries const& _logs)
+string exportLog(eth::LogEntries const& _logs)
 {
 	RLPStream s;
 	s.appendList(_logs.size());
@@ -211,7 +213,7 @@ byte toByte(json_spirit::mValue const& _v)
 	return 0;
 }
 
-bytes importByteArray(std::string const& _str)
+bytes importByteArray(string const& _str)
 {
 	checkHexHasEvenLength(_str);
 	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
@@ -242,26 +244,71 @@ void replaceLLLinState(json_spirit::mObject& _o)
 	}
 }
 
-std::vector<boost::filesystem::path> getJsonFiles(boost::filesystem::path const& _dirPath, std::string const& _particularFile)
+vector<fs::path> getFiles(fs::path const& _dirPath, set<string> const _extentionMask, string const& _particularFile)
 {
-	vector<boost::filesystem::path> jsonFiles;
-	if (!_particularFile.empty())
+	vector<fs::path> files;
+	for(auto const& ext: _extentionMask)
 	{
-		boost::filesystem::path file = _dirPath / (_particularFile + ".json");
-		if (boost::filesystem::exists(file))
-			jsonFiles.push_back(file);
+		if (!_particularFile.empty())
+		{
+			fs::path file = _dirPath / (_particularFile + ext);
+			if (fs::exists(file))
+				files.push_back(file);
+		}
+		else
+		{
+			using fsIterator = fs::directory_iterator;
+			for (fsIterator it(_dirPath); it != fsIterator(); ++it)
+			{
+				if (fs::is_regular_file(it->path()) && it->path().extension() == ext)
+					files.push_back(it->path());
+			}
+		}
 	}
-	else
-	{
-		using Bdit = boost::filesystem::directory_iterator;
-		for (Bdit it(_dirPath); it != Bdit(); ++it)
-			if (boost::filesystem::is_regular_file(it->path()) && it->path().extension() == ".json")
-					jsonFiles.push_back(it->path());
-	}
-	return jsonFiles;
+	return files;
 }
 
-std::string executeCmd(std::string const& _command)
+json_spirit::mValue convertYamlNodeToJson(YAML::Node _node)
+{
+	if (_node.IsNull())
+		return json_spirit::mValue();
+
+	if (_node.IsScalar())
+	{
+		if (_node.Tag() == "tag:yaml.org,2002:int")
+			return _node.as<int>();
+		else
+			return _node.as<string>();
+	}
+
+	if (_node.IsMap())
+	{
+		json_spirit::mObject jObject;
+		for (auto const& i : _node)
+			jObject.emplace(i.first.as<string>(), convertYamlNodeToJson(i.second));
+		return jObject;
+	}
+
+	if (_node.IsSequence())
+	{
+		json_spirit::mArray jArray;
+		for (size_t i = 0; i < _node.size(); i++)
+			jArray.emplace_back(convertYamlNodeToJson(_node[i]));
+		return jArray;
+	}
+
+	BOOST_ERROR("Error parsing YAML node. Element type not defined!");
+	return json_spirit::mValue();
+}
+
+/// this function is here so not to include <YAML.h> in other .cpp files
+json_spirit::mValue parseYamlToJson(string const& _string)
+{
+	YAML::Node testFile = YAML::Load(_string);
+	return convertYamlNodeToJson(testFile);
+}
+
+string executeCmd(string const& _command)
 {
 #if defined(_WIN32)
 	BOOST_ERROR("executeCmd() has not been implemented for Windows.");
@@ -437,8 +484,8 @@ string prepareLLLCVersionString()
 
 void copyFile(fs::path const& _source, fs::path const& _destination)
 {
-	fs::ifstream src(_source, std::ios::binary);
-	fs::ofstream dst(_destination, std::ios::binary);
+	fs::ifstream src(_source, ios::binary);
+	fs::ofstream dst(_destination, ios::binary);
 	dst << src.rdbuf();
 }
 
@@ -527,13 +574,13 @@ void Listener::registerListener(Listener& _listener)
 	g_listener = &_listener;
 }
 
-void Listener::notifySuiteStarted(std::string const& _name)
+void Listener::notifySuiteStarted(string const& _name)
 {
 	if (g_listener)
 		g_listener->suiteStarted(_name);
 }
 
-void Listener::notifyTestStarted(std::string const& _name)
+void Listener::notifyTestStarted(string const& _name)
 {
 	if (g_listener)
 		g_listener->testStarted(_name);

@@ -642,7 +642,7 @@ BOOST_AUTO_TEST_CASE(rndStateTest)
 		//Mac os bug is here
 		test::StateTestSuite suite;
 		test::RandomCodeOptions options;
-		test::TestOutputHelper::get().setCurrentTestFileName(std::string());
+		test::TestOutputHelper::get().setCurrentTestFile(std::string());
 		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, options);
 		BOOST_REQUIRE(!test.empty());
 	}

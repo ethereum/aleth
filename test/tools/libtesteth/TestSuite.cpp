@@ -122,33 +122,36 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	// check that destination folder test files has according Filler file in src folder
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName;
-	vector<fs::path> const compiledFiles = test::getJsonFiles(getFullPath(_testFolder), filter);
+	vector<fs::path> const compiledFiles = test::getFiles(getFullPath(_testFolder), {".json", ".yml"} ,filter);
 	for (auto const& file: compiledFiles)
 	{
 		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
+		fs::path const expectedFillerName2 = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".yml");
 		fs::path const expectedCopierName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_copierPostf + ".json");
-		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
-		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedCopierName)), "Src test could either be Filler.json or Copier.json: " + file.filename().string());
+		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
+		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
 		// Check that filled tests created from actual fillers
 		if (Options::get().filltests == false)
 		{
 			if (fs::exists(expectedFillerName))
 				checkFillerHash(file, expectedFillerName);
+			if (fs::exists(expectedFillerName2))
+				checkFillerHash(file, expectedFillerName2);
 			if (fs::exists(expectedCopierName))
 				checkFillerHash(file, expectedCopierName);
 		}
 	}
 
 	// run all tests
-	vector<fs::path> const files = test::getJsonFiles(getFullPathFiller(_testFolder), filter.empty() ? filter : filter + "Filler");
+	vector<fs::path> const files = test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter.empty() ? filter : filter + "Filler");
 
 	auto& testOutput = test::TestOutputHelper::get();
 	testOutput.initTest(files.size());
 	for (auto const& file: files)
 	{
 		testOutput.showProgress();
-		testOutput.setCurrentTestFileName(file.filename().string());
+		testOutput.setCurrentTestFile(file);
 		executeTest(_testFolder, file);
 	}
 	testOutput.finishTest();
@@ -164,10 +167,10 @@ fs::path TestSuite::getFullPath(string const& _testFolder) const
 	return test::getTestPath() / suiteFolder() / _testFolder;
 }
 
-void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFileName) const
+void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFileName) const
 {
-	fs::path const boostRelativeTestPath = fs::relative(_jsonFileName, getTestPath());
-	string testname = _jsonFileName.stem().string();
+	fs::path const boostRelativeTestPath = fs::relative(_testFileName, getTestPath());
+	string testname = _testFileName.stem().string();
 	bool isCopySource = false;
 	if (testname.rfind(c_fillerPostf) != string::npos)
 		testname = testname.substr(0, testname.rfind("Filler"));
@@ -177,7 +180,7 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 		isCopySource = true;
 	}
 	else
-		BOOST_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _jsonFileName.string());
+		BOOST_REQUIRE_MESSAGE(false, "Incorrect file suffix in the filler folder! " + _testFileName.string());
 
 	// Filename of the test that would be generated
 	fs::path const boostTestPath = getFullPath(_testFolder) / fs::path(testname + ".json");
@@ -190,18 +193,18 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 	{
 		if (isCopySource)
 		{
-			clog << "Copying " << _jsonFileName.string() << "\n";
+			clog << "Copying " << _testFileName.string() << "\n";
 			clog << " TO " << boostTestPath.string() << "\n";
-			assert(_jsonFileName.string() != boostTestPath.string());
+			assert(_testFileName.string() != boostTestPath.string());
 			TestOutputHelper::get().showProgress();
-			dev::test::copyFile(_jsonFileName, boostTestPath);
+			dev::test::copyFile(_testFileName, boostTestPath);
 			BOOST_REQUIRE_MESSAGE(boost::filesystem::exists(boostTestPath.string()), "Error when copying the test file!");
 
 			// Update _info and build information of the copied test
 			json_spirit::mValue v;
 			string const s = asString(dev::contents(boostTestPath));
 			json_spirit::read_string(s, v);
-			addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_jsonFileName)));
+			addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_testFileName)));
 			writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));
 		}
 		else
@@ -210,11 +213,17 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _jsonFile
 				cnote << "Populating tests...";
 
 			json_spirit::mValue v;
-			bytes const byteContents = dev::contents(_jsonFileName);
+			bytes const byteContents = dev::contents(_testFileName);
 			string const s = asString(byteContents);
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _jsonFileName.string() + " is empty.");
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
-			json_spirit::read_string(s, v);
+			if (_testFileName.extension() == ".json")
+				json_spirit::read_string(s, v);
+			else if (_testFileName.extension() == ".yml")
+				v = test::parseYamlToJson(s);
+			else
+				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFile().string());
+
 			removeComments(v);
 			json_spirit::mValue output = doTests(v, true);
 			addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
