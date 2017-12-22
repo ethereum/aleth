@@ -33,19 +33,15 @@ void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId
     u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash,
     std::shared_ptr<SnapshotStorageFace const> _snapshot)
 {
-    m_snapshot = _snapshot;
+    assert(_snapshot);
+    m_snapshot = std::move(_snapshot);
 
-    h256 snapshotBlockHash;
-    u256 snapshotBlockNumber;
-    if (m_snapshot)
-    {
-        bytes const snapshotManifest(m_snapshot->readManifest());
-        RLP manifest(snapshotManifest);
-        if (manifest.itemCount() != 6)
-            BOOST_THROW_EXCEPTION(InvalidSnapshotManifest());
-        snapshotBlockNumber = manifest[4].toInt<u256>(RLP::VeryStrict);
-        snapshotBlockHash = manifest[5].toHash<h256>(RLP::VeryStrict);
-    }
+    bytes const snapshotManifest(m_snapshot->readManifest());
+    RLP manifest(snapshotManifest);
+    if (manifest.itemCount() != 6)
+        BOOST_THROW_EXCEPTION(InvalidSnapshotManifest());
+    u256 const snapshotBlockNumber = manifest[4].toInt<u256>(RLP::VeryStrict);
+    h256 const snapshotBlockHash = manifest[5].toHash<h256>(RLP::VeryStrict);
 
     requestStatus(_hostProtocolVersion, _hostNetworkId, _chainTotalDifficulty, _chainCurrentHash,
         _chainGenesisHash, snapshotBlockHash, snapshotBlockNumber);
@@ -53,9 +49,8 @@ void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId
 
 bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
 {
-    if (!m_snapshot)
-        return false;
-
+    assert(m_snapshot);
+    
     try
     {
         switch (_id)

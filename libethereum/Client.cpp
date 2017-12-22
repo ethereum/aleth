@@ -20,17 +20,19 @@
  */
 
 #include "Client.h"
+#include "Block.h"
+#include "Defaults.h"
+#include "EthereumHost.h"
+#include "Executive.h"
+#include "SnapshotStorage.h"
+#include "TransactionQueue.h"
+#include <libdevcore/Log.h>
+#include <libp2p/Host.h>
+#include <boost/filesystem.hpp>
 #include <chrono>
 #include <memory>
 #include <thread>
-#include <boost/filesystem.hpp>
-#include <libdevcore/Log.h>
-#include <libp2p/Host.h>
-#include "Defaults.h"
-#include "Executive.h"
-#include "EthereumHost.h"
-#include "Block.h"
-#include "TransactionQueue.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -87,19 +89,19 @@ Client::~Client()
 
 void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _forceAction, u256 _networkId)
 {
-	DEV_TIMED_FUNCTION_ABOVE(500);
+    DEV_TIMED_FUNCTION_ABOVE(500);
 
-	// Cannot be opened until after blockchain is open, since BlockChain may upgrade the database.
+    // Cannot be opened until after blockchain is open, since BlockChain may upgrade the database.
 	// TODO: consider returning the upgrade mechanism here. will delaying the opening of the blockchain database
 	// until after the construction.
-	m_stateDB = State::openDB(_dbPath, bc().genesisHash(), _forceAction);
+    m_stateDB = State::openDB(_dbPath, bc().genesisHash(), _forceAction);
 	// LAZY. TODO: move genesis state construction/commiting to stateDB openning and have this just take the root from the genesis block.
-	m_preSeal = bc().genesisBlock(m_stateDB);
-	m_postSeal = m_preSeal;
+    m_preSeal = bc().genesisBlock(m_stateDB);
+    m_postSeal = m_preSeal;
 
-	m_bq.setChain(bc());
+    m_bq.setChain(bc());
 
-	m_lastGetWork = std::chrono::system_clock::now() - chrono::seconds(30);
+    m_lastGetWork = std::chrono::system_clock::now() - chrono::seconds(30);
     m_tqReady = m_tq.onReady([=]() {
         this->onTransactionQueueReady();
     });  // TODO: should read m_tq->onReady(thisThread, syncTransactionQueue);
@@ -111,21 +113,26 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, WithExisting _for
     bc().setOnBad([=](Exception& ex) { this->onBadBlock(ex); });
     bc().setOnBlockImport([=](BlockHeader const& _info) {
         if (auto h = m_host.lock())
-			h->onBlockImported(_info);
+            h->onBlockImported(_info);
     });
 
     if (_forceAction == WithExisting::Rescue)
-		bc().rescue(m_stateDB);
+        bc().rescue(m_stateDB);
 
-	m_gp->update(bc());
+    m_gp->update(bc());
 
 	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
-	m_host = host;
+    m_host = host;
 
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
 
-    m_warpHost =
-        _extNet->registerCapability(make_shared<WarpHostCapability>(bc(), _networkId, _dbPath));
+    auto const snapshotPath = importedSnapshotPath(_dbPath, bc().genesisHash());
+    if (fs::exists(snapshotPath))
+    {
+        std::shared_ptr<SnapshotStorageFace> snapshotStorage = createSnapshotStorage(snapshotPath);
+        m_warpHost = _extNet->registerCapability(
+            make_shared<WarpHostCapability>(bc(), _networkId, snapshotStorage));
+    }
 
     if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);

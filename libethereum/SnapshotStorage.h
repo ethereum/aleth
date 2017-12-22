@@ -55,5 +55,8 @@ public:
 
 std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(
     boost::filesystem::path const& _snapshotDirPath);
+
+boost::filesystem::path importedSnapshotPath(
+    boost::filesystem::path const& _dataDir, h256 const& _genesisHash);
 }
 }

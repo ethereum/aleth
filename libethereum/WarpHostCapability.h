@@ -29,7 +29,7 @@ class WarpHostCapability : public p2p::HostCapability<WarpPeerCapability>
 {
 public:
     WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
-        boost::filesystem::path const& _dataDirPath);
+        std::shared_ptr<SnapshotStorageFace> _snapshotStorage);
 
 protected:
     std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s,

@@ -68,7 +68,7 @@ void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 
 	importBlockChunks(_snapshotStorage, blockChunkHashes);
 
     clog(SnapshotImportLog) << "Copying snapshot...";
-    _snapshotStorage.copyTo(getDataDir() / toHex(_genesisHash.ref().cropped(0, 4)) / "snapshot");
+    _snapshotStorage.copyTo(importedSnapshotPath(getDataDir(), _genesisHash));
 }
 
 void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotStorage, h256s const& _stateChunkHashes, h256 const& _stateRoot)

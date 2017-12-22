@@ -24,13 +24,9 @@ namespace dev
 namespace eth
 {
 WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
-    boost::filesystem::path const& _dataDirPath)
-  : m_blockChain(_blockChain), m_networkId(_networkId)
+    std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
+  : m_blockChain(_blockChain), m_networkId(_networkId), m_snapshot(_snapshotStorage)
 {
-    boost::filesystem::path const snapshotPath =
-        _dataDirPath / toHex(m_blockChain.genesisHash().ref().cropped(0, 4)) / "snapshot";
-    if (boost::filesystem::exists(snapshotPath))
-        m_snapshot = createSnapshotStorage(snapshotPath);
 }
 
 std::shared_ptr<p2p::Capability> WarpHostCapability::newPeerCapability(
