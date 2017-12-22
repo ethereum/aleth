@@ -1,41 +1,6 @@
 0. Formatting
 
-GOLDEN RULE: Follow the style of the existing code when you make changes.
-
-a. Use tabs for leading indentation
-- tab stops are every 4 characters.
-- One indentation level -> exactly one byte (i.e. a tab character) in the source file.
-- If you have run-on lines, indent as you would for a block.
-b. Line widths:
-- Don't worry about having lines of code > 80-char wide.
-- Lines of comments should be formatted according to ease of viewing, but simplicity is to be preferred over beauty.
-c. Don't use braces for condition-body one-liners.
-d. Never place condition bodies on same line as condition.
-e. Space between first paren and keyword, but *not* following first paren or preceding final paren.
-f. No spaces when fewer than intra-expression three parens together; when three or more, space according to clarity.
-g. No spaces for subscripting or unary operators.
-h. No space before ':' but one after it, except in the ternary operator: one on both sides.
-i. Space all other operators.
-j. Braces, when used, always have their own lines and are at same indentation level as "parent" scope.
-
-(WRONG)
-if( a==b[ i ] ) { printf ("Hello\n"); }
-foo->bar(someLongVariableName,
-         anotherLongVariableName,
-         anotherLongVariableName,
-         anotherLongVariableName,
-         anotherLongVariableName);
-
-(RIGHT)
-if (a == b[i])
-    printf("Hello\n");	// NOTE spaces used instead of tab here for clarity - first byte should be '\t'.
-foo->bar(
-    someLongVariableName,
-    anotherLongVariableName,
-    anotherLongVariableName,
-    anotherLongVariableName,
-    anotherLongVariableName
-);
+Use clang-format tool to format your changes, see CONTRIBUTING.md for details.
 
 
 
@@ -194,7 +159,7 @@ a. Prefer 'using' to 'typedef'. e.g. using ints = std::vector<int>; rather than 
 b. Generally avoid shortening a standard form that already includes all important information:
 - e.g. stick to shared_ptr<X> rather than shortening to ptr<X>.
 c. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently.
-- e.g. using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it's clear in meaning and used commonly. 
+- e.g. using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it's clear in meaning and used commonly.
 d. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
 
 
@@ -210,24 +175,7 @@ b. Document the interface, not the implementation.
 
 
 
-12. Include Headers
-
-Includes should go in increasing order of generality (libethereum -> libethcore -> libdevcrypto -> libdevcore -> boost -> STL).  For example:
-
-#include <libethereum/Defaults.h>
-#include <libdevcrypto/SHA3.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Common.h>
-#include <boost/filesystem.hpp>
-#include <string>
-
-See http://stackoverflow.com/questions/614302/c-header-order/614333#614333 for the reason: this makes it easier to find missing includes in header files.
-
-
-
-13. Logging
+12. Logging
 
 Logging should be performed at appropriate verbosities depending on the logging message.
 The more likely a message is to repeat (and thus cause noise) the higher in verbosity it should be.
@@ -240,7 +188,7 @@ Some rules to keep in mind:
  - Verbosity >= 4 -> Anything that is low-level (e.g. peer disconnects, timers being cancelled)
 
 
-14. Recommended reading
+13. Recommended reading
 
 Herb Sutter and Bjarne Stroustrup
 - "C++ Core Guidelines" (https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md)
