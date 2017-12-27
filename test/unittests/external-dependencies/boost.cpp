@@ -59,8 +59,9 @@ BOOST_AUTO_TEST_CASE(u256_shift_left)
 	BOOST_CHECK_EQUAL(static_cast<u256>(bigint(u256(3)) << 255), u256(1) << 255);
 }
 
-BOOST_AUTO_TEST_CASE(u256_shift_left_bug, *unit_test::expected_failures(1))
+BOOST_AUTO_TEST_CASE(u256_shift_left_bug)
 {
+	// Bug reported: https://github.com/boostorg/multiprecision/issues/31
 	using uint256 = number<cpp_int_backend<256, 256, unsigned_magnitude, unchecked, void>>;
 	BOOST_CHECK_EQUAL(uint256(3) << 255, uint256(1) << 255);
 }
