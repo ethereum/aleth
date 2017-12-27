@@ -21,6 +21,8 @@
 
 #include <snappy.h>
 
+namespace fs = boost::filesystem;
+
 namespace dev
 {
 namespace eth
@@ -51,9 +53,7 @@ std::string snappyUncompress(std::string const& _compressed)
 class SnapshotStorage: public SnapshotStorageFace
 {
 public:
-    explicit SnapshotStorage(boost::filesystem::path const& _snapshotDir)
-      : m_snapshotDir(_snapshotDir)
-    {}
+    explicit SnapshotStorage(fs::path const& _snapshotDir) : m_snapshotDir(_snapshotDir) {}
 
     bytes readManifest() const override
 	{
@@ -87,22 +87,22 @@ public:
 		return chunkUncompressed;
 	}
 
-    void copyTo(boost::filesystem::path const& _path) const override
-    {
-        copyDirectory(m_snapshotDir, _path);
-    }
+    void copyTo(fs::path const& _path) const override { copyDirectory(m_snapshotDir, _path); }
 
 private:
-	boost::filesystem::path const m_snapshotDir;
+    fs::path const m_snapshotDir;
 };
 
 }
 
-std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(
-    boost::filesystem::path const& _snapshotDirPath)
+std::unique_ptr<SnapshotStorageFace> createSnapshotStorage(fs::path const& _snapshotDirPath)
 {
 	return std::unique_ptr<SnapshotStorageFace>(new SnapshotStorage(_snapshotDirPath));
 }
 
+fs::path importedSnapshotPath(fs::path const& _dataDir, h256 const& _genesisHash)
+{
+    return _dataDir / toHex(_genesisHash.ref().cropped(0, 4)) / "snapshot";
+}
 }
 }
