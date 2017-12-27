@@ -35,21 +35,7 @@ using IntGenerator = std::function<int()>;
 class BoostRandomCode: public RandomCodeBase
 {
 public:
-	BoostRandomCode()
-	{
-		percentDist = IntDistrib (0, 100);
-		opCodeDist = IntDistrib (0, 255);
-		opLengDist = IntDistrib (1, 32);
-		opMemrDist = IntDistrib (0, 10485760);
-		opSmallMemrDist = IntDistrib (0, 1024);
-		uniIntDist = IntDistrib (0, 0x7fffffff);
-
-		randOpCodeGen = std::bind(opCodeDist, gen);
-		randOpLengGen = std::bind(opLengDist, gen);
-		randOpMemrGen = std::bind(opMemrDist, gen);
-		randoOpSmallMemrGen = std::bind(opSmallMemrDist, gen);
-		randUniIntGen = std::bind(uniIntDist, gen);
-	}
+	BoostRandomCode();
 
 	/// Generate random
 	u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
