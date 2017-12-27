@@ -38,32 +38,28 @@ BoostRandomCode::BoostRandomCode()
     randOpMemrGen = std::bind(opMemrDist, gen);
     randoOpSmallMemrGen = std::bind(opSmallMemrDist, gen);
     randUniIntGen = std::bind(uniIntDist, gen);
-}
 
-u256 BoostRandomCode::randomUniInt(u256 const& _minVal, u256 const& _maxVal)
-{
-    assert(_minVal <= _maxVal);
-    refreshSeed();
-    std::uniform_int_distribution<uint64_t> uint64Dist{0, std::numeric_limits<uint64_t>::max()};
-    u256 value = _minVal + (u256)uint64Dist(gen) % (_maxVal - _minVal);
-    return value;
-}
-
-void BoostRandomCode::refreshSeed()
-{
-    if (!Options::get().randomTestSeed.is_initialized())
+    auto const& seedOption = Options::get().randomTestSeed;
+    if (seedOption)
+        gen.seed(*seedOption);
+    else
     {
         auto now = std::chrono::steady_clock::now().time_since_epoch();
         auto timeSinceEpoch = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
         gen.seed(static_cast<unsigned int>(timeSinceEpoch));
     }
-    else
-        gen.seed(Options::get().randomTestSeed.get());
 }
 
-uint8_t BoostRandomCode::weightedOpcode(std::vector<int>& _weights)
+u256 BoostRandomCode::randomUniInt(u256 const& _minVal, u256 const& _maxVal)
 {
-    refreshSeed();
+    assert(_minVal <= _maxVal);
+    std::uniform_int_distribution<uint64_t> uint64Dist{0, std::numeric_limits<uint64_t>::max()};
+    u256 value = _minVal + (u256)uint64Dist(gen) % (_maxVal - _minVal);
+    return value;
+}
+
+uint8_t BoostRandomCode::weightedOpcode(std::vector<int> const& _weights)
+{
     DescreteDistrib opCodeProbability = DescreteDistrib{_weights.begin(), _weights.end()};
     return opCodeProbability(gen);
 }
