@@ -239,13 +239,11 @@ void replaceLLLinState(json_spirit::mObject& _o)
 		{
 			string code = obj["code"].get_str();
 			obj["code"] = compileLLL(code);
-                        if (code.size() > 0)
-                          BOOST_REQUIRE_MESSAGE(
-                              obj["code"].get_str().size() > 0,
-                              "Bytecode is missing! '" + code + "' " +
-                                  TestOutputHelper::get().testName());
-                }
-		account.second = obj;
+            if (code.size() > 0)
+                BOOST_REQUIRE_MESSAGE(obj["code"].get_str().size() > 0,
+                    "Bytecode is missing! '" + code + "' " + TestOutputHelper::get().testName());
+        }
+        account.second = obj;
 	}
 }
 
