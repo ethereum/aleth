@@ -244,8 +244,10 @@ bytes importData(json_spirit::mObject const& _o)
 
 void replaceLLLinState(json_spirit::mObject& _o)
 {
-    for (auto& account : _o.count("alloc") ? _o["alloc"].get_obj() :
-                                             _o.count("accounts") ? _o["accounts"].get_obj() : _o)
+    json_spirit::mObject& accountObj = _o.count("alloc") ?
+                                           _o["alloc"].get_obj() :
+                                           _o.count("accounts") ? _o["accounts"].get_obj() : _o;
+    for (auto& account : accountObj)
     {
         auto obj = account.second.get_obj();
         if (obj.count("code") && obj["code"].type() == json_spirit::str_type)
@@ -369,12 +371,11 @@ string compileLLL(string const& _code)
     BOOST_ERROR("LLL compilation only supported on posix systems.");
     return "";
 #else
-    boost::filesystem::path path(
-        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
+    fs::path path(fs::temp_directory_path() / fs::unique_path());
     string cmd = string("lllc ") + path.string();
     writeFile(path.string(), _code);
     string result = executeCmd(cmd);
-    boost::filesystem::remove(path);
+    fs::remove(path);
     result = "0x" + result;
     checkHexHasEvenLength(result);
     return result;
