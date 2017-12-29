@@ -135,8 +135,8 @@ for newcomers under the tag
 [up-for-grabs](https://github.com/ethereum/cpp-ethereum/labels/up-for-grabs).
 If you have any questions, please just ask.
 
-Please read [CodingStandards.txt](CodingStandards.txt) thoroughly before making
-alterations to the code base.
+Please read [CONTRIBUTING](CONTRIBUTING.md) and [CODING_STYLE](CODING_STYLE.md) 
+thoroughly before making alterations to the code base.
 
 All development goes in develop branch.
 
