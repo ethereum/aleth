@@ -52,9 +52,9 @@ All other entities' first alpha is lower case.
 
 1. Leading underscore `_` to parameter names.
    - Exception: `o_parameterName` when it is used exclusively for output.
-     See also Declarations.6.
+     See also Declarations.5.
    - Exception: `io_parameterName` when it is used for both input and output.
-     See also Declarations.6.
+     See also Declarations.5.
 2. Leading `c_` to const variables (unless part of an external API).
 3. Leading `g_` to global (non-const) variables.
 4. Leading `s_` to static (non-const, non-global) variables.
