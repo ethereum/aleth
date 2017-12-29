@@ -264,7 +264,7 @@ std::string RandomCodeBase::generate(int _maxOpNumber, RandomCodeOptions const& 
 		return code;
 
 	//generate [0 ... _maxOpNumber] opcodes.
-	int size = (int)(test::RandomCode::get().randomPercent() * _maxOpNumber / 100);
+	int size = test::RandomCode::get().randomPercent() * _maxOpNumber / 100;
 	assert(size <= _maxOpNumber);
 
 	for (auto i = 0; i < size; i++)

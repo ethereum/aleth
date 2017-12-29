@@ -111,7 +111,7 @@ public:
 	virtual int randomSmallMemoryLength() = 0;
 	virtual int randomMemoryLength() = 0;
 	virtual uint8_t randomOpcode() = 0;
-	virtual uint8_t weightedOpcode(std::vector<int>& _weights) = 0;
+	virtual uint8_t weightedOpcode(std::vector<int> const& _weights) = 0;
 
 private:
 	std::vector<std::string> getTypes();

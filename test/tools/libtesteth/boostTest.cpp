@@ -141,22 +141,36 @@ int main( int argc, char* argv[] )
 	dev::test::Options const& opt = dev::test::Options::get();
 	if (opt.createRandomTest || opt.singleTestFile.is_initialized())
 	{
-		// Disable initial output as the random test will output valid json to std
-		oldCoutStreamBuf = std::cout.rdbuf();
-		oldCerrStreamBuf = std::cerr.rdbuf();
-		std::cout.rdbuf(strCout.rdbuf());
-		std::cerr.rdbuf(strCout.rdbuf());
-
+		bool testSuiteFound = false;
 		for (int i = 0; i < argc; i++)
 		{
 			// replace test suite to custom tests
 			std::string arg = std::string{argv[i]};
 			if (arg == "-t" && i+1 < argc)
 			{
+				testSuiteFound = true;
 				argv[i + 1] = (char*)dynamicTestSuiteName.c_str();
 				break;
 			}
 		}
+
+		// BOOST ERROR could not be used here because boost main is not initialized
+		if (!testSuiteFound && opt.createRandomTest)
+		{
+			std::cerr << "createRandomTest requires a test suite to be set -t <TestSuite>\n";
+			return -1;
+		}
+		if (!testSuiteFound && opt.singleTestFile.is_initialized())
+		{
+			std::cerr << "singletest <file> <testname>  requires a test suite to be set -t <TestSuite>\n";
+			return -1;
+		}
+
+		// Disable initial output as the random test will output valid json to std
+		oldCoutStreamBuf = std::cout.rdbuf();
+		oldCerrStreamBuf = std::cerr.rdbuf();
+		std::cout.rdbuf(strCout.rdbuf());
+		std::cerr.rdbuf(strCout.rdbuf());
 
 		// add custom test suite
 		test_suite* ts1 = BOOST_TEST_SUITE("customTestSuite");
