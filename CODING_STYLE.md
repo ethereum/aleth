@@ -28,7 +28,7 @@ Use clang-format tool to format your changes, see [CONTRIBUTING](CONTRIBUTING.md
    - Copyright.
    - License.
    
-2. Never use `#ifdef`/`#define`/`#endif` file guards. Prefer #pragma once as first line below file comment.
+2. Never use `#ifdef`/`#define`/`#endif` file guards. Prefer `#pragma` once as first line below file comment.
 3. Prefer static const variable to value macros.
 4. Prefer inline constexpr functions to function macros.
 
@@ -134,7 +134,7 @@ Prefer exception to bool/int return type.
 
 1. Collection conventions:
    - `...s` means `std::vector` e.g. `using MyTypes = std::vector<MyType>`
-   - `-...Set` means `std::set` e.g. `using MyTypeSet = std::set<MyType>`
+   - `...Set` means `std::set` e.g. `using MyTypeSet = std::set<MyType>`
    - `...Hash` means `std::unordered_set` e.g. `using MyTypeHash = std::unordered_set<MyType>`
 2. Class conventions:
    - `...Face` means the interface of some shared concept. (e.g. `FooFace` might be a pure virtual class.)
