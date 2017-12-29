@@ -7,10 +7,11 @@ Use clang-format tool to format your changes, see [CONTRIBUTING](CONTRIBUTING.md
 
 ## Namespaces
 
-1. No "using namespace" declarations in header files.
+1. No `using namespace` declarations in header files.
 2. All symbols should be declared in a namespace except for final applications.
 3. Preprocessor symbols should be prefixed with the namespace in all-caps and an underscore.
 
+```cpp
        // WRONG:
        #include <cassert>
        using namespace std;
@@ -19,7 +20,7 @@ Use clang-format tool to format your changes, see [CONTRIBUTING](CONTRIBUTING.md
        // CORRECT:
        #include <cassert>
        std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
-
+```
 
 ## Preprocessor
 
@@ -27,7 +28,7 @@ Use clang-format tool to format your changes, see [CONTRIBUTING](CONTRIBUTING.md
    - Copyright.
    - License.
    
-2. Never use #ifdef/#define/#endif file guards. Prefer #pragma once as first line below file comment.
+2. Never use `#ifdef`/`#define`/`#endif` file guards. Prefer #pragma once as first line below file comment.
 3. Prefer static const variable to value macros.
 4. Prefer inline constexpr functions to function macros.
 
@@ -82,6 +83,7 @@ Prefer exception to bool/int return type.
 8. Don't pass bools: prefer enumerations instead.
 9. Prefer enum class to straight enum.
 
+```cpp
        // WRONG:
        const double d = 0;
        int i, j;
@@ -103,12 +105,12 @@ Prefer exception to bool/int return type.
        std::tuple<float, float> meanAndSigma(std::vector<float> const& _v, Accuracy _a);
        auto x = dynamic_cast<Derived*>(base);
        for (auto i = x.begin(); i != x.end(); ++i) {}
-
+```
 
 ## Structs & classes
 
 1. Structs to be used when all members public and no virtual functions.
-   - In this case, members should be named naturally and not prefixed with 'm_'
+   - In this case, members should be named naturally and not prefixed with `m_`
 2. Classes to be used in all other circumstances.
 
 
@@ -118,28 +120,28 @@ Prefer exception to bool/int return type.
 1. One member per line only.
 2. Private, non-static, non-const fields prefixed with m_.
 3. Avoid public fields, except in structs.
-4. Use override, final and const as much as possible.
+4. Use `override`, `final` and `const` as much as possible.
 5. No implementations with the class declaration, except:
    - template or force-inline method (though prefer implementation at bottom of header file).
    - one-line implementation (in which case include it in same line as declaration).
-6. For a property 'foo'
-   - Member: m_foo;
-   - Getter: foo(); also: for booleans, isFoo()
-   - Setter: setFoo();
+6. For a property `foo`
+   - Member: `m_foo`;
+   - Getter: `foo()`; also: for booleans, `isFoo()`
+   - Setter: `setFoo()`;
 
 
 ## Naming
 
 1. Collection conventions:
-   - ~s means `std::vector` e.g. `using MyTypes = std::vector<MyType>`
-   - ~Set means `std::set` e.g. `using MyTypeSet = std::set<MyType>`
-   - ~Hash means `std::unordered_set` e.g. `using MyTypeHash = std::unordered_set<MyType>`
+   - `...s` means `std::vector` e.g. `using MyTypes = std::vector<MyType>`
+   - `-...Set` means `std::set` e.g. `using MyTypeSet = std::set<MyType>`
+   - `...Hash` means `std::unordered_set` e.g. `using MyTypeHash = std::unordered_set<MyType>`
 2. Class conventions:
-   - ~Face means the interface of some shared concept. (e.g. FooFace might be a pure virtual class.)
+   - `...Face` means the interface of some shared concept. (e.g. `FooFace` might be a pure virtual class.)
 3. Avoid unpronounceable names:
    - If you need to shorten a name favour a pronouncable slice of the original to a scattered set of consonants.
-   - e.g. Manager shortens to Man rather than Mgr.
-4. Avoid prefixes of initials (e.g. DON'T use IMyInterface, CMyImplementation)
+   - e.g. `Manager` shortens to `Man` rather than `Mgr`.
+4. Avoid prefixes of initials (e.g. DON'T use `IMyInterface`, `CMyImplementation`)
 5. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments.
    - A dictionary and thesaurus are your friends.
    - Spell correctly.
@@ -156,7 +158,10 @@ Prefer exception to bool/int return type.
 2. Generally avoid shortening a standard form that already includes all important information:
    - e.g. stick to `shared_ptr<X>` rather than shortening to `ptr<X>`.
 3. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently.
-   - e.g. `using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it's clear in meaning and used commonly.`
+   - e.g. 
+   ```cpp
+   using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it's clear in meaning and used commonly.
+   ```
 4. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
 
 
