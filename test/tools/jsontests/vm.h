@@ -56,7 +56,7 @@ public:
 	virtual u256 store(u256 _n) override { return std::get<2>(addresses[myAddress])[_n]; }
 	virtual void setStore(u256 _n, u256 _v) override { std::get<2>(addresses[myAddress])[_n] = _v; }
 	virtual bool exists(Address _a) override { return !!addresses.count(_a); }
-	virtual u256 balance(Address _a) override { return std::get<0>(addresses[_a]); }
+	virtual u256 balance(Address _a) override { return exists(_a) ? std::get<0>(addresses[_a]) : u256(); }
 	virtual void suicide(Address _a) override { std::get<0>(addresses[_a]) += std::get<0>(addresses[myAddress]); addresses.erase(myAddress); }
 	virtual bytes const& codeAt(Address _a) override { return std::get<3>(addresses[_a]); }
 	virtual size_t codeSizeAt(Address _a) override { return std::get<3>(addresses[_a]).size(); }
