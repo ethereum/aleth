@@ -573,7 +573,7 @@ TestTransaction TestTransaction::defaultTransaction(
     u256 const& _nonce, u256 const& _gasPrice, u256 const& _gasLimit, bytes const& _data)
 {
     json_spirit::mObject txObj;
-    txObj["data"] = toHex(_data);
+    txObj["data"] = toHexPrefixed(_data);
     txObj["gasLimit"] = toString(_gasLimit);
     txObj["gasPrice"] = toString(_gasPrice);
     txObj["nonce"] = toString(_nonce);
@@ -587,7 +587,7 @@ TestTransaction TestTransaction::defaultTransaction(
 TestTransaction TestTransaction::defaultZeroTransaction(u256 const& _gasLimit, bytes const& _data)
 {
     json_spirit::mObject txObj;
-    txObj["data"] = toHex(_data);
+    txObj["data"] = toHexPrefixed(_data);
     txObj["gasLimit"] = toString(_gasLimit);
     txObj["gasPrice"] = toString(0);
     txObj["nonce"] = toString(0);
