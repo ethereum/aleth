@@ -20,7 +20,7 @@
  * @date 2015
  */
 
-#include "IpcServerBase.h"
+#include "./IpcServerBase.h"
 #include <cstdlib>
 #include <cstdio>
 #include <string>
