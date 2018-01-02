@@ -235,29 +235,33 @@ bytes importData(json_spirit::mObject const& _o)
 {
     bytes data;
     if (_o.at("data").type() == json_spirit::str_type)
-        data = importByteArray(_o.at("data").get_str());
+        data = importByteArray(replaceLLL(_o.at("data").get_str()));
     else
         for (auto const& j : _o.at("data").get_array())
-            data.push_back(toByte(j));
+            data.push_back(toByte(replaceLLL(j.get_str())));
     return data;
+}
+
+string replaceLLL(string const& _code)
+{
+    string compiledCode;
+    compiledCode = compileLLL(_code);
+    if (_code.size() > 0)
+        BOOST_REQUIRE_MESSAGE(compiledCode.size() > 0,
+            "Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());
+    return compiledCode;
 }
 
 void replaceLLLinState(json_spirit::mObject& _o)
 {
-    json_spirit::mObject& accountObj = _o.count("alloc") ?
-                                           _o["alloc"].get_obj() :
-                                           _o.count("accounts") ? _o["accounts"].get_obj() : _o;
-    for (auto& account : accountObj)
+    json_spirit::mObject& fieldsObj = _o.count("alloc") ?
+                                          _o["alloc"].get_obj() :
+                                          _o.count("accounts") ? _o["accounts"].get_obj() : _o;
+    for (auto& account : fieldsObj)
     {
         auto obj = account.second.get_obj();
         if (obj.count("code") && obj["code"].type() == json_spirit::str_type)
-        {
-            string code = obj["code"].get_str();
-            obj["code"] = compileLLL(code);
-            if (code.size() > 0)
-                BOOST_REQUIRE_MESSAGE(obj["code"].get_str().size() > 0,
-                    "Bytecode is missing! '" + code + "' " + TestOutputHelper::get().testName());
-        }
+            obj["code"] = replaceLLL(obj["code"].get_str());
         account.second = obj;
 	}
 }
