@@ -238,14 +238,13 @@ bytes importData(json_spirit::mObject const& _o)
         data = importByteArray(replaceLLL(_o.at("data").get_str()));
     else
         for (auto const& j : _o.at("data").get_array())
-            data.push_back(toByte(replaceLLL(j.get_str())));
+            data.push_back(toByte(j));
     return data;
 }
 
 string replaceLLL(string const& _code)
 {
-    string compiledCode;
-    compiledCode = compileLLL(_code);
+    string compiledCode = compileLLL(_code);
     if (_code.size() > 0)
         BOOST_REQUIRE_MESSAGE(compiledCode.size() > 0,
             "Bytecode is missing! '" + _code + "' " + TestOutputHelper::get().testName());

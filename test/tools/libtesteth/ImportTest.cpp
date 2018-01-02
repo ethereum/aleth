@@ -264,20 +264,14 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
 
 	for (auto const& i: output)
 	{
-		bool isHash = false;
-        bool isData = false;
         std::string key = i.first;
-
         if (key == "extraData")
             continue;
 
-        if (key == "data")
-            isData = true;
+        bool isHash = hashes.count(key);
+        bool isData = (key == "data");
 
-        if (hashes.count(key))
-			isHash = true;
-
-		if (_isHeader && key == "nonce")
+        if (_isHeader && key == "nonce")
 			isHash = true;
 
 		std::string str;
