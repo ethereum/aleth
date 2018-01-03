@@ -53,7 +53,8 @@ public:
 
     virtual void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
 
-    virtual void onPeerRequestTimeout(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
+    virtual void onPeerRequestTimeout(
+        std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
 };
 
 class WarpPeerCapability : public p2p::Capability
@@ -74,7 +75,8 @@ public:
         std::weak_ptr<WarpPeerObserverFace> _observer);
 
     /// Validates whether peer is able to communicate with the host, disables peer if not
-    bool validateStatus(h256 const& _genesisHash, std::vector<unsigned> const& _protocolVersions, u256 const& _networkId);
+    bool validateStatus(h256 const& _genesisHash, std::vector<unsigned> const& _protocolVersions,
+        u256 const& _networkId);
 
     void requestStatus(unsigned _hostProtocolVersion, u256 const& _hostNetworkId,
         u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,
@@ -113,9 +115,9 @@ private:
     std::atomic<time_t> m_lastAsk;
 
     /// These are determined through either a Status message.
-    h256 m_latestHash;                      ///< Peer's latest block's hash.
-    u256 m_totalDifficulty;                 ///< Peer's latest block's total difficulty.
-    h256 m_genesisHash;                     ///< Peer's genesis hash
+    h256 m_latestHash;       ///< Peer's latest block's hash.
+    u256 m_totalDifficulty;  ///< Peer's latest block's total difficulty.
+    h256 m_genesisHash;      ///< Peer's genesis hash
     h256 m_snapshotHash;
     u256 m_snapshotNumber;
 

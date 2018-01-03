@@ -26,13 +26,14 @@ namespace dev
 {
 namespace eth
 {
-
 WarpPeerCapability::WarpPeerCapability(std::shared_ptr<p2p::SessionFace> _s,
     p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& /* _cap */)
   : Capability(_s, _h, _i)
 {}
 
-void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr<SnapshotStorageFace const> _snapshot,
+void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId,
+    u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash,
+    std::shared_ptr<SnapshotStorageFace const> _snapshot,
     std::weak_ptr<WarpPeerObserverFace> _observer)
 {
     assert(_snapshot);
@@ -67,7 +68,8 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
                 BOOST_THROW_EXCEPTION(InvalidWarpStatusPacket());
 
             // Packet layout:
-            // [ version:P, state_hashes : [hash_1:B_32, hash_2 : B_32, ...],  block_hashes : [hash_1:B_32, hash_2 : B_32, ...],
+            // [ version:P, state_hashes : [hash_1:B_32, hash_2 : B_32, ...],  block_hashes :
+            // [hash_1:B_32, hash_2 : B_32, ...],
             //      state_root : B_32, block_number : P, block_hash : B_32 ]
             m_protocolVersion = _r[0].toInt<unsigned>();
             m_networkId = _r[1].toInt<u256>();
@@ -77,16 +79,15 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
             m_snapshotHash = _r[5].toHash<h256>();
             m_snapshotNumber = _r[6].toInt<u256>();
 
-            clog(p2p::NetMessageSummary) << "Status: "
-                << "protocol version " << m_protocolVersion
-                << "networkId " << m_networkId
-                << "genesis hash " << m_genesisHash
-                << "total difficulty " << m_totalDifficulty
-                << "latest hash" << m_latestHash
-                << "snapshot hash" << m_snapshotHash
+            clog(p2p::NetMessageSummary)
+                << "Status: "
+                << "protocol version " << m_protocolVersion << "networkId " << m_networkId
+                << "genesis hash " << m_genesisHash << "total difficulty " << m_totalDifficulty
+                << "latest hash" << m_latestHash << "snapshot hash" << m_snapshotHash
                 << "snapshot number" << m_snapshotNumber;
             setIdle();
-            observer->onPeerStatus(std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()));
+            observer->onPeerStatus(
+                std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()));
             break;
         }
         case GetSnapshotManifest:
@@ -116,13 +117,15 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
         case SnapshotManifest:
         {
             setIdle();
-            observer->onPeerManifest((std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
+            observer->onPeerManifest(
+                (std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
             break;
         }
         case SnapshotData:
         {
             setIdle();
-            observer->onPeerData((std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
+            observer->onPeerData(
+                (std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
             break;
         }
         default:
@@ -131,7 +134,8 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
     }
     catch (Exception const&)
     {
-        clog(p2p::NetWarn) << "Warp Peer causing an Exception:" << boost::current_exception_diagnostic_information() << _r;
+        clog(p2p::NetWarn) << "Warp Peer causing an Exception:"
+                           << boost::current_exception_diagnostic_information() << _r;
     }
     catch (std::exception const& _e)
     {
@@ -142,18 +146,20 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
 }
 
 /// Validates whether peer is able to communicate with the host, disables peer if not
-bool WarpPeerCapability::validateStatus(h256 const& _genesisHash, std::vector<unsigned> const& _protocolVersions, u256 const& _networkId)
+bool WarpPeerCapability::validateStatus(h256 const& _genesisHash,
+    std::vector<unsigned> const& _protocolVersions, u256 const& _networkId)
 {
     std::shared_ptr<p2p::SessionFace> s = session();
     if (!s)
-        return false; // Expired
+        return false;  // Expired
 
     if (m_genesisHash != _genesisHash)
     {
         disable("Invalid genesis hash");
         return false;
     }
-    if (find(_protocolVersions.begin(), _protocolVersions.end(), m_protocolVersion) == _protocolVersions.end())
+    if (find(_protocolVersions.begin(), _protocolVersions.end(), m_protocolVersion) ==
+        _protocolVersions.end())
     {
         disable("Invalid protocol version.");
         return false;
@@ -210,16 +216,17 @@ void WarpPeerCapability::setAsking(Asking _a)
 
 void WarpPeerCapability::tick()
 {
-	auto s = session();
-	time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-	if (s && (now - m_lastAsk > 10 && m_asking != Asking::Nothing))
-	{
-		// timeout
-		if (std::shared_ptr<WarpPeerObserverFace> observer = m_observer.lock())
-			observer->onPeerRequestTimeout(std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()), m_asking);
+    auto s = session();
+    time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    if (s && (now - m_lastAsk > 10 && m_asking != Asking::Nothing))
+    {
+        // timeout
+        if (std::shared_ptr<WarpPeerObserverFace> observer = m_observer.lock())
+            observer->onPeerRequestTimeout(
+                std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()), m_asking);
 
-		s->disconnect(p2p::PingTimeout);
-	}
+        s->disconnect(p2p::PingTimeout);
+    }
 }
 
 }  // namespace eth

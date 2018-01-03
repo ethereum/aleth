@@ -60,19 +60,15 @@ const char* ClientTrace::name() { return EthTeal "⧫" EthGray " ◎"; }
 const char* ClientDetail::name() { return EthTeal "⧫" EthCoal " ●"; }
 #endif
 
-Client::Client(
-    ChainParams const& _params,
-    int _networkID,
-    p2p::Host* _host,
-    std::shared_ptr<GasPricer> _gpForAdoption,
-    fs::path const& _dbPath,
-    fs::path const& _snapshotPath,
-    WithExisting _forceAction,
-    TransactionQueue::Limits const& _l
-):
-    ClientBase(),
+Client::Client(ChainParams const& _params, int _networkID, p2p::Host* _host,
+    std::shared_ptr<GasPricer> _gpForAdoption, fs::path const& _dbPath,
+    fs::path const& _snapshotPath, WithExisting _forceAction, TransactionQueue::Limits const& _l)
+  : ClientBase(),
     Worker("eth", 0),
-    m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
+    m_bc(_params, _dbPath, _forceAction,
+        [](unsigned d, unsigned t) {
+            std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r";
+        }),
     m_tq(_l),
     m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
     m_preSeal(chainParams().accountStartNonce),
@@ -125,19 +121,22 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
     // create Ethereum capability only if we're not downloading the snapshot
     if (_snapshotDownloadPath.empty())
     {
-        auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
+        auto host = _extNet->registerCapability(
+            make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
         m_host = host;
 
-        _extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
+        _extNet->addCapability(host, EthereumHost::staticName(),
+            EthereumHost::c_oldProtocolVersion);  // TODO: remove this once v61+ protocol is common
     }
 
     // create Warp capability if we either download snapshot or can give out snapshot
     auto const importedSnapshot = importedSnapshotPath(_dbPath, bc().genesisHash());
     if (!_snapshotDownloadPath.empty() || fs::exists(importedSnapshot))
     {
-        std::shared_ptr<SnapshotStorageFace> snapshotStorage = createSnapshotStorage(importedSnapshot);
-        m_warpHost = _extNet->registerCapability(
-            make_shared<WarpHostCapability>(bc(), _networkId, _snapshotDownloadPath, snapshotStorage));
+        std::shared_ptr<SnapshotStorageFace> snapshotStorage =
+            createSnapshotStorage(importedSnapshot);
+        m_warpHost = _extNet->registerCapability(make_shared<WarpHostCapability>(
+            bc(), _networkId, _snapshotDownloadPath, snapshotStorage));
     }
 
     if (_dbPath.size())

@@ -216,7 +216,8 @@ public:
 protected:
     /// Perform critical setup functions.
     /// Must be called in the constructor of the finally derived class.
-    void init(p2p::Host* _extNet, boost::filesystem::path const& _dbPath, boost::filesystem::path const& _snapshotPath, WithExisting _forceAction, u256 _networkId);
+    void init(p2p::Host* _extNet, boost::filesystem::path const& _dbPath,
+        boost::filesystem::path const& _snapshotPath, WithExisting _forceAction, u256 _networkId);
 
     /// InterfaceStub methods
     BlockChain& bc() override { return m_bc; }

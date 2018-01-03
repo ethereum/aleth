@@ -856,17 +856,9 @@ int main(int argc, char** argv)
         chainParams.allowFutureBlocks = true;
     }
 
-    dev::WebThreeDirect web3(
-        WebThreeDirect::composeClientVersion("eth"),
-        getDataDir(),
-        snapshotPath,
-        chainParams,
-        withExisting,
-        nodeMode == NodeMode::Full ? caps : set<string>(),
-        netPrefs,
-        &nodesState,
-        testingMode
-    );
+    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(),
+        snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
+        netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
         web3.ethereum()->setExtraData(extraData);

@@ -27,10 +27,9 @@ namespace eth
 {
 namespace
 {
-
 static size_t const c_freePeerBufferSize = 32;
 
-struct SnapshotLog: public LogChannel
+struct SnapshotLog : public LogChannel
 {
     static char const* name() { return "SNAP"; }
     static int const verbosity = 9;
@@ -54,18 +53,17 @@ h256 snapshotBlockHash(RLP const& _manifestRlp)
     return manifest[5].toHash<h256>();
 }
 
-class WarpPeerObserver: public WarpPeerObserverFace
+class WarpPeerObserver : public WarpPeerObserverFace
 {
 public:
-	WarpPeerObserver(WarpHostCapability& _host,
-		BlockChain const& _blockChain,
-		boost::filesystem::path const&  _snapshotPath):
-		m_hostProtocolVersion(_host.protocolVersion()), 
-		m_hostNetworkId(_host.networkId()), 
-		m_hostGenesisHash(_blockChain.genesisHash()), 
-		m_freePeers(c_freePeerBufferSize),
-		m_snapshotDir(_snapshotPath) 
-	{}
+    WarpPeerObserver(WarpHostCapability& _host, BlockChain const& _blockChain,
+        boost::filesystem::path const& _snapshotPath)
+      : m_hostProtocolVersion(_host.protocolVersion()),
+        m_hostNetworkId(_host.networkId()),
+        m_hostGenesisHash(_blockChain.genesisHash()),
+        m_freePeers(c_freePeerBufferSize),
+        m_snapshotDir(_snapshotPath)
+    {}
     ~WarpPeerObserver()
     {
         if (m_downloadFiber)
@@ -82,7 +80,7 @@ public:
         // start the downloading fiber in the thread handling network messages
         if (!m_downloadFiber)
             m_downloadFiber.reset(new boost::fibers::fiber([this]() { downloadChunks(); }));
-        
+
         boost::this_fiber::yield();
     }
 
@@ -127,9 +125,11 @@ public:
         if (hash == askedHash)
         {
             // TODO handle writeFile failure
-            writeFile((boost::filesystem::path(m_snapshotDir) / toHex(hash)).string(), data.toBytesConstRef());
+            writeFile((boost::filesystem::path(m_snapshotDir) / toHex(hash)).string(),
+                data.toBytesConstRef());
 
-            clog(SnapshotLog) << "Saved chunk" << hash << " Chunks left: " << m_neededChunks.size() << " Requested chunks: " << m_requestedChunks.size();
+            clog(SnapshotLog) << "Saved chunk" << hash << " Chunks left: " << m_neededChunks.size()
+                              << " Requested chunks: " << m_requestedChunks.size();
             if (m_neededChunks.empty() && m_requestedChunks.empty())
                 clog(SnapshotLog) << "Snapshot download complete!";
         }
@@ -140,7 +140,8 @@ public:
         boost::this_fiber::yield();
     }
 
-    void onPeerRequestTimeout(std::shared_ptr<WarpPeerCapability> _peer, Asking /*_asking*/) override
+    void onPeerRequestTimeout(
+        std::shared_ptr<WarpPeerCapability> _peer, Asking /*_asking*/) override
     {
         clog(SnapshotLog) << "Peer timed out";
 
@@ -168,10 +169,8 @@ private:
         h256 const blockHash = manifest[5].toHash<h256>();
 
         clog(SnapshotLog) << "MANIFEST: "
-            << "version " << version
-            << "state root " << stateRoot
-            << "block number " << blockNumber
-            << "block hash " << blockHash;
+                          << "version " << version << "state root " << stateRoot << "block number "
+                          << blockNumber << "block hash " << blockHash;
 
         // TODO handle writeFile failure
         writeFile((boost::filesystem::path(m_snapshotDir) / "MANIFEST").string(), manifest.data());
@@ -203,17 +202,22 @@ private:
     std::deque<h256> m_neededChunks;
     boost::fibers::buffered_channel<std::weak_ptr<WarpPeerCapability>> m_freePeers;
     boost::filesystem::path const m_snapshotDir;
-    std::map<std::weak_ptr<WarpPeerCapability>, h256, std::owner_less<std::weak_ptr<WarpPeerCapability>>> m_requestedChunks;
+    std::map<std::weak_ptr<WarpPeerCapability>, h256,
+        std::owner_less<std::weak_ptr<WarpPeerCapability>>>
+        m_requestedChunks;
 
     std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
 };
 
-}
+}  // namespace
 
 
 WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
-    boost::filesystem::path const& _snapshotDownloadPath, std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
-  : m_blockChain(_blockChain), m_networkId(_networkId), m_snapshot(_snapshotStorage), 
+    boost::filesystem::path const& _snapshotDownloadPath,
+    std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
+  : m_blockChain(_blockChain),
+    m_networkId(_networkId),
+    m_snapshot(_snapshotStorage),
     m_peerObserver(std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath)),
     m_lastTick(0)
 {
@@ -231,34 +235,27 @@ std::shared_ptr<p2p::Capability> WarpHostCapability::newPeerCapability(
 
     auto cap = p2p::capabilityFromSession<WarpPeerCapability>(*_s, _cap.second);
     assert(cap);
-    cap->init(
-        c_WarpProtocolVersion,
-        m_networkId,
-        m_blockChain.details().totalDifficulty,
-        m_blockChain.currentHash(),
-        m_blockChain.genesisHash(),
-        m_snapshot,
-        m_peerObserver
-    );
+    cap->init(c_WarpProtocolVersion, m_networkId, m_blockChain.details().totalDifficulty,
+        m_blockChain.currentHash(), m_blockChain.genesisHash(), m_snapshot, m_peerObserver);
 
     return ret;
 }
 
 void WarpHostCapability::doWork()
 {
-	time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-	if (now - m_lastTick >= 1)
-	{
-		m_lastTick = now;
+    time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    if (now - m_lastTick >= 1)
+    {
+        m_lastTick = now;
 
-		auto sessions = peerSessions();
-		for (auto s : sessions)
-		{
-			auto cap = p2p::capabilityFromSession<WarpPeerCapability>(*s.first);
-			assert(cap);
-			cap->tick();
-		}
-	}
+        auto sessions = peerSessions();
+        for (auto s : sessions)
+        {
+            auto cap = p2p::capabilityFromSession<WarpPeerCapability>(*s.first);
+            assert(cap);
+            cap->tick();
+        }
+    }
 }
 
 }  // namespace eth

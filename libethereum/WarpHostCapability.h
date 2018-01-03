@@ -25,12 +25,12 @@ namespace dev
 {
 namespace eth
 {
-
 class WarpHostCapability : public p2p::HostCapability<WarpPeerCapability>, Worker
 {
 public:
     WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
-        boost::filesystem::path const& _snapshotDownloadPath, std::shared_ptr<SnapshotStorageFace> _snapshotStorage);
+        boost::filesystem::path const& _snapshotDownloadPath,
+        std::shared_ptr<SnapshotStorageFace> _snapshotStorage);
     ~WarpHostCapability();
 
     unsigned protocolVersion() const { return c_WarpProtocolVersion; }
@@ -47,8 +47,8 @@ private:
     u256 const m_networkId;
 
     std::shared_ptr<SnapshotStorageFace> m_snapshot;
-	std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
-	time_t m_lastTick;
+    std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
+    time_t m_lastTick;
 };
 
 }  // namespace eth
