@@ -299,7 +299,7 @@ void Ethash::generateSeal(BlockHeader const& _bi)
 		m_farm.setWork(m_sealing);		// TODO: take out one before or one after...
 	}
 	bytes shouldPrecompute = option("precomputeDAG");
-	if (!shouldPrecompute.empty() && shouldPrecompute[0] == 1)
+	if (!shouldPrecompute.empty() && to_integer(shouldPrecompute[0]) == 1)
 		ensurePrecomputed((unsigned)_bi.number());
 }
 

@@ -30,7 +30,7 @@ extern const h256 EmptyTrie;
 
 inline byte nibble(bytesConstRef _data, unsigned _i)
 {
-	return (_i & 1) ? (_data[_i / 2] & 15) : (_data[_i / 2] >> 4);
+	return (_i & 1) ? (_data[_i / 2] & (byte)15) : (_data[_i / 2] >> 4);
 }
 
 /// Interprets @a _first and @a _second as vectors of nibbles and returns the length of the longest common
@@ -98,14 +98,14 @@ inline bool isLeaf(RLP const& _twoItem)
 {
 	assert(_twoItem.isList() && _twoItem.itemCount() == 2);
 	auto pl = _twoItem[0].payload();
-	return as_unsigned_char(pl[0] & 0x20) != 0;
+	return to_integer(pl[0] & (byte)0x20) != 0;
 }
 
 inline NibbleSlice keyOf(bytesConstRef _hpe)
 {
 	if (!_hpe.size())
 		return NibbleSlice(_hpe, 0);
-	if (as_unsigned_char(_hpe[0] & 0x10))
+	if (to_integer(_hpe[0] & (byte)0x10))
 		return NibbleSlice(_hpe, 1);
 	else
 		return NibbleSlice(_hpe, 2);

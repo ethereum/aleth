@@ -80,7 +80,7 @@ void TopicBloomFilterBase<N>::removeRaw(FixedHash<N> const& _h)
 				m_refCounter[i]--;
 
 			if (!m_refCounter[i])
-				(*this)[i / 8] = static_cast<byte>(as_unsigned_char((*this)[i / 8]) & ~c_powerOfTwoBitMmask[i % 8]);
+				(*this)[i / 8] = static_cast<byte>(to_integer((*this)[i / 8]) & ~c_powerOfTwoBitMmask[i % 8]);
 		}
 }
 
@@ -89,7 +89,7 @@ bool TopicBloomFilterBase<N>::isBitSet(FixedHash<N> const& _h, unsigned _index)
 {
 	unsigned iByte = _index / 8;
 	unsigned iBit = _index % 8;
-	return (_h[iByte] & c_powerOfTwoBitMmask[iBit]) != 0;
+	return to_integer(_h[iByte] & (byte)c_powerOfTwoBitMmask[iBit]) != 0;
 }
 
 template <unsigned N>
@@ -97,7 +97,7 @@ void TopicBloomFilterBase<N>::setBit(FixedHash<N>& _h, unsigned _index)
 {
 	unsigned iByte = _index / 8;
 	unsigned iBit = _index % 8;
-	_h[iByte] |= c_powerOfTwoBitMmask[iBit];
+	_h[iByte] |= (byte)c_powerOfTwoBitMmask[iBit];
 }
 
 template <unsigned N>
@@ -114,8 +114,8 @@ FixedHash<N> TopicBloomFilterBase<N>::bloom(AbridgedTopic const& _h)
 	if (TopicBloomFilterSize == N)
 		for (unsigned i = 0; i < BitsPerBloom; ++i)
 		{
-			unsigned x = as_unsigned_char(_h[i]);
-			if (as_unsigned_char(_h[BitsPerBloom] & c_powerOfTwoBitMmask[i]))
+			unsigned x = to_integer(_h[i]);
+			if (to_integer(_h[BitsPerBloom] & (byte)c_powerOfTwoBitMmask[i]))
 				x += 256;
 
 			setBit(ret, x);

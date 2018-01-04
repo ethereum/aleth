@@ -54,8 +54,8 @@ std::string toHex(Iterator _it, Iterator _end, std::string const& _prefix)
 	hex.replace(0, off, _prefix);
 	for (; _it != _end; _it++)
 	{
-		hex[off++] = hexdigits[static_cast<std::underlying_type<byte>::type>((*_it >> 4) & 0x0f)];
-		hex[off++] = hexdigits[static_cast<std::underlying_type<byte>::type>(*_it & 0x0f)];
+		hex[off++] = hexdigits[to_integer((byte)(*_it >> 4) & (byte)0x0f)];
+		hex[off++] = hexdigits[to_integer((byte)*_it & (byte)0x0f)];
 	}
 	return hex;
 }
@@ -163,7 +163,7 @@ inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 }
 inline bytes toCompactBigEndian(byte _val, unsigned _min = 0)
 {
-	return as_unsigned_char(_min || _val) ? bytes{ _val } : bytes{};
+	return _min || to_integer(_val) ? bytes{ _val } : bytes{};
 }
 
 /// Convenience function for toBigEndian.

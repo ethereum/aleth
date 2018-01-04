@@ -35,7 +35,7 @@ using namespace dev;
 using namespace dev::p2p;
 
 RLPXFrameInfo::RLPXFrameInfo(bytesConstRef _header):
-	length(as_unsigned_char((_header[0] * 256 + _header[1]) * 256 + _header[2])),
+	length(to_integer(_header[0]) * 256 + to_integer(_header[1]) * 256 + to_integer(_header[2])),
 	padding((16 - (length % 16)) % 16),
 	data(_header.cropped(3).toBytes()),
 	header(RLP(data, RLP::ThrowOnFail | RLP::FailIfTooSmall)),

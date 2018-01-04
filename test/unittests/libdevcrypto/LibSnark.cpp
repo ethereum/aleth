@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(invalid)
 		toBigEndian(u256("6851077925310461602867742977619883934042581405263014789956638244065803308498")) +
 		toBigEndian(u256("10336382210592135525880811046708757754106524561907815205241508542912494488506"));
 	bytes invalid = x;
-	invalid[3] = (byte)(as_unsigned_char(invalid[3]) ^ 1);
+	invalid[3] = (byte)(to_integer(invalid[3]) ^ 1);
 
 	bytes input = x + invalid;
 	// This should fail because the point is not on the curve

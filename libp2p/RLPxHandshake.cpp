@@ -133,7 +133,7 @@ void RLPXHandshake::readAuth()
 void RLPXHandshake::readAuthEIP8()
 {
 	assert(m_authCipher.size() == 307);
-	uint16_t size(as_unsigned_char(m_authCipher[0]<<8 | m_authCipher[1]));
+	uint16_t size(to_integer(m_authCipher[0]<<8 | m_authCipher[1]));
 	clog(NetP2PConnect) << "p2p.connect.ingress receiving " << size << "bytes EIP-8 auth from " << m_socket->remoteEndpoint();
 	m_authCipher.resize((size_t)size + 2);
 	auto rest = ba::buffer(ba::buffer(m_authCipher) + 307);
@@ -188,7 +188,7 @@ void RLPXHandshake::readAck()
 void RLPXHandshake::readAckEIP8()
 {
 	assert(m_ackCipher.size() == 210);
-	uint16_t size(as_unsigned_char(m_ackCipher[0]<<8 | m_ackCipher[1]));
+	uint16_t size(to_integer(m_ackCipher[0]<<8 | m_ackCipher[1]));
 	clog(NetP2PConnect) << "p2p.connect.egress receiving " << size << "bytes EIP-8 ack from " << m_socket->remoteEndpoint();
 	m_ackCipher.resize((size_t)size + 2);
 	auto rest = ba::buffer(ba::buffer(m_ackCipher) + 210);
@@ -383,7 +383,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 							return;
 						}
 						
-						PacketType packetType = frame[0] == 0x80 ? HelloPacket : (PacketType)frame[0];
+						PacketType packetType = to_integer(frame[0]) == 0x80 ? HelloPacket : (PacketType)frame[0];
 						if (packetType != HelloPacket)
 						{
 							clog(NetTriviaSummary) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: invalid packet type";

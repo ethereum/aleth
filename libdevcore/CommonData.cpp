@@ -126,8 +126,8 @@ bytes dev::asNibbles(bytesConstRef const& _s)
 	ret.reserve(_s.size() * 2);
 	for (auto i: _s)
 	{
-		ret.push_back(i / 16);
-		ret.push_back(i % 16);
+		ret.push_back((byte)(to_integer(i) / 16));
+		ret.push_back((byte)(to_integer(i) % 16));
 	}
 	return ret;
 }

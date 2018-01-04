@@ -198,7 +198,7 @@ void Session::sealAndSend(RLPStream& _s)
 
 bool Session::checkPacket(bytesConstRef _msg)
 {
-	if (_msg[0] > 0x7f || _msg.size() < 2)
+	if (to_integer(_msg[0]) > 0x7f || _msg.size() < 2)
 		return false;
 	if (RLP(_msg.cropped(1)).actualSize() + 1 != _msg.size())
 		return false;

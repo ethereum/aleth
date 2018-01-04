@@ -37,17 +37,17 @@ bytes dev::aesDecrypt(bytesConstRef _ivCipher, std::string const& _password, uns
 		_salt = &pw;
 
 	bytes target(64);
-	CryptoPP::PKCS5_PBKDF2_HMAC<CryptoPP::SHA256>().DeriveKey(as_data(target.data(), target.size()), target.size(), 0, as_data(pw.data(), pw.size()), pw.size(), as_const_data(_salt.data(), _salt.size()), _salt.size(), _rounds);
+	CryptoPP::PKCS5_PBKDF2_HMAC<CryptoPP::SHA256>().DeriveKey(reinterpret_cast<unsigned char *>(target.data()), target.size(), 0, reinterpret_cast<const unsigned char *>(pw.data()), pw.size(), reinterpret_cast<const unsigned char *>(_salt.data()), _salt.size(), _rounds);
 
 	try
 	{
-		CryptoPP::AES::Decryption aesDecryption(as_data(target.data(), target.size()), 16);
+		CryptoPP::AES::Decryption aesDecryption(reinterpret_cast<const unsigned char *>(target.data()), 16);
 		auto cipher = _ivCipher.cropped(16);
 		auto iv = _ivCipher.cropped(0, 16);
-		CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, as_const_data(iv.data(), iv.size()));
+		CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, reinterpret_cast<const unsigned char *>(iv.data()));
 		std::string decrypted;
 		CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink(decrypted));
-		stfDecryptor.Put(as_const_data(cipher.data(), cipher.size()), cipher.size());
+		stfDecryptor.Put(reinterpret_cast<const unsigned char *>(cipher.data()), cipher.size());
 		stfDecryptor.MessageEnd();
 		return asBytes(decrypted);
 	}

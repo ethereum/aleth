@@ -611,7 +611,7 @@ unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint 
 		clog(NodeTableWarn) << "Invalid packet (bad signature) from " << _from.address().to_string() << ":" << _from.port();
 		return decoded;
 	}
-	switch (as_unsigned_char(signedBytes[0]))
+	switch (to_integer(signedBytes[0]))
 	{
 	case PingNode::type:
 		decoded.reset(new PingNode(_from, sourceid, echo));

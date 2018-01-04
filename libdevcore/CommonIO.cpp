@@ -45,13 +45,13 @@ string dev::memDump(bytes const& _bytes, unsigned _width, bool _html)
 		ret << hex << setw(4) << setfill('0') << i << " ";
 		for (unsigned j = i; j < i + _width; ++j)
 			if (j < _bytes.size())
-				if (_bytes[j] >= 32 && _bytes[j] < 127)
-					if ((char)_bytes[j] == '<' && _html)
+				if (to_integer(_bytes[j]) >= 32 && to_integer(_bytes[j]) < 127)
+					if (to_integer(_bytes[j]) == '<' && _html)
 						ret << "&lt;";
-					else if ((char)_bytes[j] == '&' && _html)
+					else if (to_integer(_bytes[j]) == '&' && _html)
 						ret << "&amp;";
 					else
-						ret << (char)_bytes[j];
+						ret << to_integer(_bytes[j]);
 				else
 					ret << '?';
 			else

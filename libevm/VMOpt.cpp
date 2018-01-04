@@ -95,7 +95,7 @@ void VM::optimize()
 			(byte)op <= (byte)Instruction::PUSH32
 		)
 		{
-			pc += as_unsigned_char((byte)op - (byte)Instruction::PUSH1 + 1);
+			pc += (to_integer(op) - to_integer(Instruction::PUSH1) + 1);
 		}
 #if EIP_615
 		else if (
@@ -132,12 +132,12 @@ void VM::optimize()
 
 		if ((byte)Instruction::PUSH1 <= (byte)op && (byte)op <= (byte)Instruction::PUSH32)
 		{
-			byte nPush = (byte)op - (byte)Instruction::PUSH1 + 1;
+			byte nPush = (byte)(to_integer(op) - to_integer(Instruction::PUSH1) + 1);
 
 			// decode pushed bytes to integral value
-			val = as_unsigned_char(m_code[pc+1]);
-			for (uint64_t i = pc+2, n = as_unsigned_char(nPush); --n; ++i) {
-				val = (val << 8) | as_unsigned_char(m_code[i]);
+			val = to_integer(m_code[pc+1]);
+			for (uint64_t i = pc+2, n = to_integer(nPush); --n; ++i) {
+				val = (val << 8) | to_integer(m_code[i]);
 			}
 
 		#if EVM_USE_CONSTANT_POOL
@@ -145,7 +145,7 @@ void VM::optimize()
 			// add value to constant pool and replace PUSHn with PUSHC
 			// place offset in code as 2 bytes MSB-first
 			// followed by one byte count of remaining pushed bytes
-			if (5 < nPush)
+			if (5 < to_integer(nPush))
 			{
 				uint16_t pool_off = m_pool.size();
 				TRACE_VAL(1, "stash", val);
@@ -154,7 +154,7 @@ void VM::optimize()
 
 				TRACE_PRE_OPT(1, pc, op);
 				m_code[pc] = byte(op = Instruction::PUSHC);
-				m_code[pc+3] = nPush - 2;
+				m_code[pc+3] = byte(to_integer(nPush) - 2);
 				m_code[pc+2] = (byte)(pool_off & 0xff);
 				m_code[pc+1] = (byte)(pool_off >> 8);
 				TRACE_POST_OPT(1, pc, op);
@@ -167,7 +167,7 @@ void VM::optimize()
 			// verifyJumpDest is M = log(number of jump destinations)
 			// outer loop is N = number of bytes in code array
 			// so complexity is N log M, worst case is N log N
-			size_t i = as_unsigned_char(pc + nPush + 1);
+			size_t i = pc + to_integer(nPush) + 1;
 			op = Instruction(m_code[i]);
 			if (op == Instruction::JUMP)
 			{
@@ -191,7 +191,7 @@ void VM::optimize()
 			}
 		#endif
 
-			pc += as_unsigned_char(nPush);
+			pc += to_integer(nPush);
 		}
 	}
 	TRACE_STR(1, "Finished optimizations")

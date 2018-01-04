@@ -172,7 +172,7 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 		else
 		{
 			int const vOffset = m_chainId * 2 + 35;
-			_s << as_unsigned_char((m_vrs->v + vOffset));
+			_s << (to_integer(m_vrs->v) + vOffset);
 		}
 		_s << (u256)m_vrs->r << (u256)m_vrs->s;
 	}
@@ -205,7 +205,7 @@ int64_t TransactionBase::baseGasRequired(bool _contractCreation, bytesConstRef _
 	// No risk of overflow by using int64 until txDataNonZeroGas is quite small
 	// (the value not in billions).
 	for (auto i: _data)
-		g += as_unsigned_char(i) ? _es.txDataNonZeroGas : _es.txDataZeroGas;
+		g += to_integer(i) ? _es.txDataNonZeroGas : _es.txDataZeroGas;
 	return g;
 }
 

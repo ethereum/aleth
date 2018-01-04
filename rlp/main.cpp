@@ -288,14 +288,14 @@ int main(int argc, char** argv)
 		{
 			encoding = Encoding::Hex;
 			for (byte b: in)
-				if (b != '\n' && b != ' ' && b != '\t')
+				if (to_integer(b) != '\n' && to_integer(b) != ' ' && to_integer(b) != '\t')
 				{
-					if (encoding == Encoding::Hex && (b < '0' || b > '9' ) && (b < 'a' || b > 'f' ) && (b < 'A' || b > 'F' ))
+					if (encoding == Encoding::Hex && (to_integer(b) < '0' || to_integer(b) > '9' ) && (to_integer(b) < 'a' || to_integer(b) > 'f' ) && (to_integer(b) < 'A' || to_integer(b) > 'F' ))
 					{
 //						cerr << "'" << b << "':" << (int)b << endl;
 						encoding = Encoding::Base64;
 					}
-					if (encoding == Encoding::Base64 && (b < '0' || b > '9' ) && (b < 'a' || b > 'z' ) && (b < 'A' || b > 'Z' ) && b != '+' && b != '/')
+					if (encoding == Encoding::Base64 && (to_integer(b) < '0' || to_integer(b) > '9' ) && (to_integer(b) < 'a' || to_integer(b) > 'z' ) && (to_integer(b) < 'A' || to_integer(b) > 'Z' ) && to_integer(b) != '+' && to_integer(b) != '/')
 					{
 						encoding = Encoding::Binary;
 						break;

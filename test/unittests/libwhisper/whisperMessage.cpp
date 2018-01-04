@@ -60,7 +60,7 @@ void comparePayloads(Message const& m1, Message const& m2)
 	BOOST_REQUIRE_EQUAL(p1.size(), p2.size());
 
 	for (size_t i = 0; i < p1.size(); ++i)
-		BOOST_REQUIRE_EQUAL(as_unsigned_char(p1[i]), as_unsigned_char(p2[i]));
+		BOOST_REQUIRE_EQUAL(to_integer(p1[i]), to_integer(p2[i]));
 }
 
 void sealAndOpenSingleMessage(unsigned int i)

@@ -47,10 +47,10 @@ static const byte c_rlpMaxLengthBytes = (byte)8;
 static const byte c_rlpDataImmLenStart = (byte)0x80;
 static const byte c_rlpListStart = (byte)0xc0;
 
-static const byte c_rlpDataImmLenCount = c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes;
-static const byte c_rlpDataIndLenZero = c_rlpDataImmLenStart + c_rlpDataImmLenCount - 1;
-static const byte c_rlpListImmLenCount = 256 - c_rlpListStart - c_rlpMaxLengthBytes;
-static const byte c_rlpListIndLenZero = c_rlpListStart + c_rlpListImmLenCount - 1;
+static const byte c_rlpDataImmLenCount = (byte)(to_integer(c_rlpListStart) - to_integer(c_rlpDataImmLenStart) - to_integer(c_rlpMaxLengthBytes));
+static const byte c_rlpDataIndLenZero = (byte)(to_integer(c_rlpDataImmLenStart) + to_integer(c_rlpDataImmLenCount) - 1);
+static const byte c_rlpListImmLenCount = (byte)(256 - to_integer(c_rlpListStart) - to_integer(c_rlpMaxLengthBytes));
+static const byte c_rlpListIndLenZero = (byte)(to_integer(c_rlpListStart) + to_integer(c_rlpListImmLenCount) - 1);
 
 template <class T> struct Converter { static T convert(RLP const&, int) { BOOST_THROW_EXCEPTION(BadCast()); } };
 
@@ -334,7 +334,7 @@ private:
 	bool isSingleByte() const { return !isNull() && m_data[0] < c_rlpDataImmLenStart; }
 
 	/// @returns the amount of bytes used to encode the length of the data. Valid for all types.
-	unsigned lengthSize() const { if (isData() && m_data[0] > c_rlpDataIndLenZero) return as_unsigned_char(m_data[0] - c_rlpDataIndLenZero); if (isList() && m_data[0] > c_rlpListIndLenZero) return as_unsigned_char(m_data[0] - c_rlpListIndLenZero); return 0; }
+	unsigned lengthSize() const { if (isData() && to_integer(m_data[0]) > to_integer(c_rlpDataIndLenZero)) return to_integer(m_data[0]) - to_integer(c_rlpDataIndLenZero); if (isList() && m_data[0] > c_rlpListIndLenZero) return to_integer(m_data[0]) - to_integer(c_rlpListIndLenZero); return 0; }
 
 	/// @returns the size in bytes of the payload, as given by the RLP as opposed to as inferred from m_data.
 	size_t length() const;

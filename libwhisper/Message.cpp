@@ -82,7 +82,7 @@ bool Message::populate(bytes const& _data)
 		return false;
 
 	byte flags = _data[0];
-	if (!!(as_unsigned_char(flags & ContainsSignature)) && _data.size() >= sizeof(Signature) + 1)	// has a signature
+	if (!!(to_integer(flags & (byte)ContainsSignature)) && _data.size() >= sizeof(Signature) + 1)	// has a signature
 	{
 		bytesConstRef payload = bytesConstRef(&_data).cropped(1, _data.size() - sizeof(Signature) - 1);
 		h256 h = sha3(payload);
@@ -109,7 +109,7 @@ Envelope Message::seal(Secret const& _from, Topics const& _fullTopics, unsigned 
 	if (_from) // needs a signature
 	{
 		input.resize(1 + m_payload.size() + sizeof(Signature));
-		input[0] |= ContainsSignature;
+		input[0] |= (byte)ContainsSignature;
 		*(Signature*)&(input[1 + m_payload.size()]) = sign(_from, sha3(m_payload));
 		// If this fails, the something is wrong with the sign-recover round-trip.
 		assert(recover(*(Signature*)&(input[1 + m_payload.size()]), sha3(m_payload)) == KeyPair(_from).pub());

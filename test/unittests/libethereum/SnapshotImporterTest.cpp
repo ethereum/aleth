@@ -127,7 +127,7 @@ namespace
 	bytes createAccount(u256 const& _nonce, u256 const& _balance, byte _codeFlag, bytes const& _code, std::map<h256, bytes> _storage)
 	{
 		RLPStream s(5);
-		s << _nonce << _balance << as_unsigned_char(_codeFlag) << _code;
+		s << _nonce << _balance << to_integer(_codeFlag) << _code;
 		s.appendList(_storage.size());
 		for (auto& keyValue: _storage)
 		{

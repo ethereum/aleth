@@ -139,7 +139,7 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
 			}
 
 			byte const codeFlag = static_cast<byte>(account[2].toInt<unsigned char>(RLP::VeryStrict));
-			switch (as_unsigned_char(codeFlag))
+			switch (to_integer(codeFlag))
 			{
 			case 0:
 				codeHash = EmptySHA3;

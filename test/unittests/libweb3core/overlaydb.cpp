@@ -53,18 +53,18 @@ BOOST_AUTO_TEST_CASE(basicUsage)
 	odb.insert(h256(42), &value);
 	BOOST_CHECK(odb.get().size());
 	BOOST_CHECK(odb.exists(h256(42)));
-	BOOST_CHECK_EQUAL(odb.lookup(h256(42)), toString(as_unsigned_char(value[0])));
+	BOOST_CHECK_EQUAL(odb.lookup(h256(42)), toString(to_integer(value[0])));
 
 	odb.commit();
 	BOOST_CHECK(!odb.get().size());
 	BOOST_CHECK(odb.exists(h256(42)));
-	BOOST_CHECK_EQUAL(odb.lookup(h256(42)), toString(as_unsigned_char(value[0])));
+	BOOST_CHECK_EQUAL(odb.lookup(h256(42)), toString(to_integer(value[0])));
 
 	odb.insert(h256(41), &value);
 	odb.commit();
 	BOOST_CHECK(!odb.get().size());
 	BOOST_CHECK(odb.exists(h256(41)));
-	BOOST_CHECK_EQUAL(odb.lookup(h256(41)), toString(as_unsigned_char(value[0])));
+	BOOST_CHECK_EQUAL(odb.lookup(h256(41)), toString(to_integer(value[0])));
 }
 
 BOOST_AUTO_TEST_CASE(auxMem)
@@ -95,13 +95,13 @@ BOOST_AUTO_TEST_CASE(auxMem)
 	BOOST_CHECK(!odb.get().size());
 
 	BOOST_CHECK(odb.exists(h256(42)));
-	BOOST_CHECK_EQUAL(odb.lookup(h256(42)), toString(as_unsigned_char(value[0])));
+	BOOST_CHECK_EQUAL(odb.lookup(h256(42)), toString(to_integer(value[0])));
 
 	BOOST_CHECK(odb.exists(h256(0)));
-	BOOST_CHECK_EQUAL(odb.lookup(h256(0)), toString(as_unsigned_char(value[0])));
+	BOOST_CHECK_EQUAL(odb.lookup(h256(0)), toString(to_integer(value[0])));
 
 	BOOST_CHECK(odb.exists(h256(std::numeric_limits<u256>::max())));
-	BOOST_CHECK_EQUAL(odb.lookup(h256(std::numeric_limits<u256>::max())), toString(as_unsigned_char(value[0])));
+	BOOST_CHECK_EQUAL(odb.lookup(h256(std::numeric_limits<u256>::max())), toString(to_integer(value[0])));
 
 	BOOST_CHECK(odb.lookupAux(h256(42)) == valueAux);
 	BOOST_CHECK(odb.lookupAux(h256(0)) == valueAux);

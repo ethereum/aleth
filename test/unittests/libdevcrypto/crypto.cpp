@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(ecies_standard)
 	
 	s_secp256k1->encryptECIES(k.pub(), b);
 	BOOST_REQUIRE(b != asBytes(original));
-	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
+	BOOST_REQUIRE(b.size() > 0 && to_integer(b[0]) == 0x04);
 	
 	s_secp256k1->decryptECIES(k.secret(), b);
 	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 
 	s_secp256k1->encryptECIES(k.pub(), shared, b);
 	BOOST_REQUIRE(b != original);
-	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
+	BOOST_REQUIRE(b.size() > 0 && to_integer(b[0]) == 0x04);
 
 	BOOST_REQUIRE(!s_secp256k1->decryptECIES(k.secret(), wrongShared, b));
 
@@ -808,7 +808,7 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::label("perf"))
 	for (auto i = 0; i < 1000000; ++i)
 		hash = sha256(hash.ref());
 
-	BOOST_CHECK_EQUAL(as_unsigned_char(hash[0]), 0x2a);
+	BOOST_CHECK_EQUAL(to_integer(hash[0]), 0x2a);
 }
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::label("perf"))
@@ -824,11 +824,11 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::label("perf"))
 	for (auto i = 0; i < 100000; ++i)
 	{
 		auto hash = sha256(&data);
-		auto idx = as_unsigned_char(((hash[1] << 8) | hash[2]) % (dataSize - hash.size));
+		auto idx = to_integer((hash[1] << 8) | hash[2]) % (dataSize - hash.size);
 		std::copy(hash.data(), hash.data() + hash.size, data.begin() + idx);
 	}
 
-	BOOST_CHECK_EQUAL(as_unsigned_char(data[0]), 0x4d);
+	BOOST_CHECK_EQUAL(to_integer(data[0]), 0x4d);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

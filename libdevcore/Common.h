@@ -77,7 +77,7 @@ using bytesConstRef = vector_ref<byte const>;
 
 /// @returns the int value of a byte
 template <typename byte>
-auto as_unsigned_char(byte const value) -> typename std::underlying_type<byte>::type
+auto to_integer(byte const value) -> typename std::underlying_type<byte>::type
 {
 	return static_cast<typename std::underlying_type<byte>::type>(value);
 };
@@ -216,7 +216,7 @@ inline const unsigned char * as_const_data(T _data, unsigned _size)
 	std::vector<unsigned char> ret;
 	for (unsigned i = 0; i < _size; _data++, i++)
 		ret.push_back(static_cast<unsigned char>(*_data));
-	return const_cast<const unsigned char *>(ret.data());	
+	return const_cast<const unsigned char *>(ret.data());
 }
 
 /// FIXME: Convert unsigned char * to const dev::byte *
@@ -277,89 +277,38 @@ inline constexpr byte operator>>(byte b, IntegerType shift) noexcept
     return byte(static_cast<unsigned char>(b) >> shift);
 }
 
-// inline constexpr byte& operator|=(byte& l, byte r) noexcept
-// {
-//     return l = byte(static_cast<unsigned char>(l) | static_cast<unsigned char>(r));
-// }
-//
-// inline constexpr byte operator|(byte l, byte r) noexcept
-// {
-//     return byte(static_cast<unsigned char>(l) | static_cast<unsigned char>(r));
-// }
+inline constexpr byte& operator|=(byte& l, byte r) noexcept
+{
+    return l = byte(static_cast<unsigned char>(l) | static_cast<unsigned char>(r));
+}
 
-// inline constexpr byte& operator&=(byte& l, byte r) noexcept
-// {
-//     return l = byte(static_cast<unsigned char>(l) & static_cast<unsigned char>(r));
-// }
-//
-// inline constexpr byte operator&(byte l, byte r) noexcept
-// {
-//     return byte(static_cast<unsigned char>(l) & static_cast<unsigned char>(r));
-// }
+inline constexpr byte operator|(byte l, byte r) noexcept
+{
+    return byte(static_cast<unsigned char>(l) | static_cast<unsigned char>(r));
+}
 
-inline bool operator ==(byte b1, byte b2) { return as_unsigned_char(b1) == as_unsigned_char(b2); }
-inline bool operator ==(byte b1, unsigned int b2) { return as_unsigned_char(b1) == b2; }
-inline bool operator ==(unsigned int b1, byte b2) { return b1 == as_unsigned_char(b2); }
-inline bool operator !=(byte b1, byte b2) { return as_unsigned_char(b1) != as_unsigned_char(b2); }
-inline bool operator !=(byte b1, unsigned int b2) { return as_unsigned_char(b1) != b2; }
-inline bool operator !=(unsigned int b1, byte b2) { return b1 != as_unsigned_char(b2); }
-inline byte operator +(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) + as_unsigned_char(b2)); }
-inline byte operator +(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) + b2); }
-inline byte operator +(unsigned int b1, byte b2) { return static_cast<byte>(b1 + as_unsigned_char(b2)); }
-inline byte operator -(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) - as_unsigned_char(b2)); }
-inline byte operator -(unsigned int b1, byte b2) { return static_cast<byte>(b1 - as_unsigned_char(b2)); }
-inline byte operator -(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) - b2); }
-inline byte operator *(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) * as_unsigned_char(b2)); }
-inline byte operator *(unsigned int b1, byte b2) { return static_cast<byte>(b1 * as_unsigned_char(b2)); }
-inline byte operator *(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) * b2); }
-inline byte operator /(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) / as_unsigned_char(b2)); }
-inline byte operator /(unsigned int b1, byte b2) { return static_cast<byte>(b1 / as_unsigned_char(b2)); }
-inline byte operator /(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) / b2); }
-inline byte operator %(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) % as_unsigned_char(b2)); }
-inline byte operator %(unsigned int b1, byte b2) { return static_cast<byte>(b1 % as_unsigned_char(b2)); }
-inline byte operator %(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) % b2); }
-inline byte operator |(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) | as_unsigned_char(b2)); }
-inline byte operator |(unsigned int b1, byte b2) { return static_cast<byte>(b1 | as_unsigned_char(b2)); }
-inline byte operator |(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) | b2); }
-inline byte operator |=(byte b1, byte b2) { return b1 = static_cast<byte>(as_unsigned_char(b1) | as_unsigned_char(b2)); }
-// inline byte operator |=(unsigned int b1, byte b2) { return b1 = static_cast<byte>(b1 | as_unsigned_char(b2)); }
-inline byte operator |=(byte b1, unsigned int b2) { return b1 = static_cast<byte>(as_unsigned_char(b1) | b2); }
-inline byte operator |(int b1, byte b2) { return static_cast<byte>(b1 | as_unsigned_char(b2)); }
-inline byte operator |(byte b1, int b2) { return static_cast<byte>(as_unsigned_char(b1) | b2); }
-inline byte operator |(unsigned long b1, byte b2) { return static_cast<byte>(b1 | as_unsigned_char(b2)); }
-inline byte operator |(byte b1, unsigned long b2) { return static_cast<byte>(as_unsigned_char(b1) | b2); }
-inline byte operator ||(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) || as_unsigned_char(b2)); }
-inline byte operator ||(unsigned int b1, byte b2) { return static_cast<byte>(b1 || as_unsigned_char(b2)); }
-inline byte operator ||(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) || b2); }
-// inline byte operator >>(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) >> as_unsigned_char(b2)); }
-// inline byte operator >>(unsigned int b1, byte b2) { return static_cast<byte>(b1 >> as_unsigned_char(b2)); }
-// inline byte operator >>(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) >> b2); }
-// inline byte operator <<(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) << as_unsigned_char(b2)); }
-// inline byte operator <<(unsigned int b1, byte b2) { return static_cast<byte>(b1 << as_unsigned_char(b2)); }
-// inline byte operator <<(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) << b2); }
-// inline byte operator <<(int b1, byte b2) { return static_cast<byte>(b1 << as_unsigned_char(b2)); }
-// inline byte operator <<(byte b1, int b2) { return static_cast<byte>(as_unsigned_char(b1) << b2); }
-// inline byte operator <<(unsigned char b1, byte b2) { return static_cast<byte>(b1 << as_unsigned_char(b2)); }
-// inline byte operator <<(byte b1, unsigned char b2) { return static_cast<byte>(as_unsigned_char(b1) << b2); }
-inline byte operator &(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) & as_unsigned_char(b2)); }
-inline byte operator &(unsigned int b1, byte b2) { return static_cast<byte>(b1 & as_unsigned_char(b2)); }
-inline byte operator &(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) & b2); }
-inline byte operator ~(byte b1) { return static_cast<byte>(~as_unsigned_char(b1)); }
-inline byte operator ^(byte b1, byte b2) { return static_cast<byte>(as_unsigned_char(b1) ^ as_unsigned_char(b2)); }
-inline byte operator ^(unsigned int b1, byte b2) { return static_cast<byte>(b1 ^ as_unsigned_char(b2)); }
-inline byte operator ^(byte b1, unsigned int b2) { return static_cast<byte>(as_unsigned_char(b1) ^ b2); }
-inline bool operator >(byte b1, byte b2) { return as_unsigned_char(b1) > as_unsigned_char(b2); }
-inline bool operator >(byte b1, unsigned int b2) { return as_unsigned_char(b1) > b2; }
-inline bool operator >(unsigned int b1, byte b2) { return b1 > as_unsigned_char(b2); }
-inline bool operator >=(byte b1, byte b2) { return as_unsigned_char(b1) >= as_unsigned_char(b2); }
-inline bool operator >=(byte b1, unsigned int b2) { return as_unsigned_char(b1) >= b2; }
-inline bool operator >=(unsigned int b1, byte b2) { return b1 >= as_unsigned_char(b2); }
-inline bool operator <(byte b1, byte b2) { return as_unsigned_char(b1) < as_unsigned_char(b2); }
-inline bool operator <(byte b1, unsigned int b2) { return as_unsigned_char(b1) < b2; }
-inline bool operator <(unsigned int b1, byte b2) { return b1 < as_unsigned_char(b2); }
-inline bool operator <=(byte b1, byte b2) { return as_unsigned_char(b1) <= as_unsigned_char(b2); }
-inline bool operator <=(byte b1, unsigned int b2) { return as_unsigned_char(b1) <= b2; }
-inline bool operator <=(unsigned int b1, byte b2) { return b1 <= as_unsigned_char(b2); }
+inline constexpr byte& operator&=(byte& l, byte r) noexcept
+{
+    return l = byte(static_cast<unsigned char>(l) & static_cast<unsigned char>(r));
+}
+
+inline constexpr byte operator&(byte l, byte r) noexcept
+{
+    return byte(static_cast<unsigned char>(l) & static_cast<unsigned char>(r));
+}
+
+inline constexpr byte& operator^=(byte& l, byte r) noexcept
+{
+    return l = byte(static_cast<unsigned char>(l) ^ static_cast<unsigned char>(r));
+}
+
+inline constexpr byte operator^(byte l, byte r) noexcept
+{
+    return byte(static_cast<unsigned char>(l) ^ static_cast<unsigned char>(r));
+}
+
+inline constexpr byte operator~(byte b) noexcept { return byte(~static_cast<unsigned char>(b)); }
+
 
 /// RAII utility class whose destructor calls a given function.
 class ScopeGuard

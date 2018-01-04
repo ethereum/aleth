@@ -265,7 +265,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 			/*add the memory*/
 			Array a_mem;
 			for(auto i: vm.memory())
-				a_mem.push_back(as_unsigned_char(i));
+				a_mem.push_back(to_integer(i));
 
 			o_step.push_back(Pair("memory", a_mem));
 

@@ -174,7 +174,7 @@ int RandomCodeBase::recursiveRLP(std::string& _result, int _depth, std::string& 
 			int len = genbug ? randomSmallUniInt() % 255 : randomSmallUniInt() % 55;
 			std::string hex = rndByteSequence(len);
 			if (len == 1)
-			if (genValidRlp && fromHex(hex)[0] < 128)
+			if (genValidRlp && to_integer(fromHex(hex)[0]) < 128)
 				hex = toCompactHex((u64)128);
 
 			_result.insert(0, toCompactHex(128 + len) + emptyZeros + hex);

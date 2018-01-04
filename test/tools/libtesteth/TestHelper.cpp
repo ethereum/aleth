@@ -391,7 +391,7 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o)
 	else if (_o.at("out").type() == json_spirit::array_type)
 		for (auto const& d: _o.at("out").get_array())
 		{
-			BOOST_CHECK_MESSAGE(as_unsigned_char(_output[j]) == toInt(d), "Output byte [" << j << "] different!");
+			BOOST_CHECK_MESSAGE(to_integer(_output[j]) == toInt(d), "Output byte [" << j << "] different!");
 			++j;
 		}
 	else if (expectedOutput.find("0x") == 0)

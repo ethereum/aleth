@@ -270,7 +270,7 @@ public:
 	KeyPair makeKey() const
 	{
 		KeyPair k(Secret::random());
-		while (m_icap && as_unsigned_char(k.address()[0]))
+		while (m_icap && to_integer(k.address()[0]))
 			k = KeyPair(Secret(sha3(k.secret().ref())));
 		return k;
 	}

@@ -172,7 +172,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 					  "Not enough space to store an address");
 		std::vector<unsigned char> uca;
 		for (unsigned i = 0; i < addr.size; i++)
-			uca.push_back(as_unsigned_char(addr[i]));
+			uca.push_back(to_integer(addr[i]));
 		std::copy(uca.begin(), uca.end(), o_result->reserved.data);
 		o_result->output_data = o_result->reserved.data;
 		o_result->output_size = addr.size;

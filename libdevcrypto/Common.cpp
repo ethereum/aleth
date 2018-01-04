@@ -59,7 +59,7 @@ bool dev::SignatureStruct::isValid() const noexcept
 	static const h256 s_max{"0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"};
 	static const h256 s_zero;
 
-	return (v <= 1 && r > s_zero && s > s_zero && r < s_max && s < s_max);
+	return (to_integer(v) <= 1 && r > s_zero && s > s_zero && r < s_max && s < s_max);
 }
 
 Public dev::toPublic(Secret const& _secret)
@@ -77,7 +77,7 @@ Public dev::toPublic(Secret const& _secret)
 	);
 	assert(serializedPubkeySize == serializedPubkey.size());
 	// Expect single byte header of value 0x04 -- uncompressed public key.
-	assert(serializedPubkey[0] == 0x04);
+	assert(to_integer(serializedPubkey[0]) == 0x04);
 	// Create the Public skipping the header.
 	return Public{&serializedPubkey[1], Public::ConstructFromPointer};
 }
@@ -200,7 +200,7 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
 
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
-	int v = as_unsigned_char(_sig[64]);
+	int v = to_integer(_sig[64]);
 	if (v > 3)
 		return {};
 
@@ -221,7 +221,7 @@ Public dev::recover(Signature const& _sig, h256 const& _message)
 	);
 	assert(serializedPubkeySize == serializedPubkey.size());
 	// Expect single byte header of value 0x04 -- uncompressed public key.
-	assert(serializedPubkey[0] == 0x04);
+	assert(to_integer(serializedPubkey[0]) == 0x04);
 	// Create the Public skipping the header.
 	return Public{&serializedPubkey[1], Public::ConstructFromPointer};
 }
@@ -243,7 +243,7 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 	ss.v = static_cast<byte>(v);
 	if (ss.s > c_secp256k1n / 2)
 	{
-		ss.v = static_cast<byte>(ss.v ^ 1);
+		ss.v = ss.v ^ (byte)1;
 		ss.s = h256(c_secp256k1n - u256(ss.s));
 	}
 	assert(ss.s <= c_secp256k1n / 2);
@@ -383,8 +383,8 @@ bytes ecies::kdf(Secret const& _z, bytes const& _s1, unsigned kdByteLen)
 		k.reserve(k.size() + h256::size);
 		move(digest.begin(), digest.end(), back_inserter(k));
 
-		for (string::size_type i = 0; i < ctr.size(); i++) ctr[i] = byte(as_unsigned_char(ctr[i]) + 1);
-		if (as_unsigned_char(ctr[3]) || as_unsigned_char(ctr[2]) || as_unsigned_char(ctr[1]) || as_unsigned_char(ctr[0]))
+		for (string::size_type i = 0; i < ctr.size(); i++) ctr[i] = byte(to_integer(ctr[i]) + 1);
+		if (to_integer(ctr[3]) || to_integer(ctr[2]) || to_integer(ctr[1]) || to_integer(ctr[0]))
 			continue;
 	}
 

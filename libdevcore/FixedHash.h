@@ -95,7 +95,7 @@ public:
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
 
 	/// @returns true iff this is the empty hash.
-	explicit operator bool() const { return std::any_of(m_data.begin(), m_data.end(), [](byte _b) { return _b != 0; }); }
+	explicit operator bool() const { return std::any_of(m_data.begin(), m_data.end(), [](byte _b) { return to_integer(_b) != 0; }); }
 
 	// The obvious comparison operators.
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
@@ -110,12 +110,12 @@ public:
 	FixedHash operator^(FixedHash const& _c) const { return FixedHash(*this) ^= _c; }
 	FixedHash& operator|=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] |= _c.m_data[i]; return *this; }
 	FixedHash operator|(FixedHash const& _c) const { return FixedHash(*this) |= _c; }
-	FixedHash& operator&=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] = static_cast<byte>(as_unsigned_char(m_data[i]) & _c.m_data[i]); return *this; }
+	FixedHash& operator&=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] = m_data[i] & _c.m_data[i]; return *this; }
 	FixedHash operator&(FixedHash const& _c) const { return FixedHash(*this) &= _c; }
 	FixedHash operator~() const { FixedHash ret; for (unsigned i = 0; i < N; ++i) ret[i] = ~m_data[i]; return ret; }
 
 	// Big-endian increment.
-	FixedHash& operator++() { for (unsigned i = size;;) { if (i > 0) { unsigned j = --i; m_data[j] = m_data[j] + 1; if(!as_unsigned_char(m_data[j])) continue; } } return *this; }
+	FixedHash& operator++() { for (unsigned i = size;;) { if (i > 0) { unsigned j = --i; m_data[j] = (byte)(to_integer(m_data[j]) + 1); if(!to_integer(m_data[j])) continue; } } return *this; }
 
 	/// @returns true if all one-bits in @a _c are set in this object.
 	bool contains(FixedHash const& _c) const { return (*this & _c) == _c; }
@@ -203,9 +203,9 @@ public:
 		{
 			unsigned index = 0;
 			for (unsigned j = 0; j < c_bloomBytes; ++j, ++p)
-				index = as_unsigned_char((index << 8) | *p);
+				index = (index << 8) | to_integer(*p);
 			index &= c_mask;
-			ret[M - 1 - index / 8] |= (1 << (index % 8));
+			ret[M - 1 - index / 8] |= (byte)(1 << (index % 8));
 		}
 		return ret;
 	}
@@ -215,9 +215,9 @@ public:
 	{
 		unsigned ret = 0;
 		for (auto d: m_data)
-			if (as_unsigned_char(d))
+			if (to_integer(d))
 				for (;; ++ret, d <<= 1)
-					if (as_unsigned_char(d) & 0x80)
+					if (to_integer(d) & 0x80)
 						return ret;
 					else {}
 			else

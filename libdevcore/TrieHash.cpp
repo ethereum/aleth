@@ -62,7 +62,7 @@ void hash256rlp(HexMap const& _s, HexMap::const_iterator _begin, HexMap::const_i
 			for (auto i = 0; i < 16; ++i)
 			{
 				auto n = b;
-				for (; n != _end && n->first[_preLen] == i; ++n) {}
+				for (; n != _end && to_integer(n->first[_preLen]) == i; ++n) {}
 				if (b == n)
 					_rlp << "";
 				else
