@@ -13,4 +13,8 @@ target_link_libraries(
 
 target_include_directories(eth PRIVATE ../utils)
 
+if(MINIUPNPC)
+    target_compile_definitions(eth PRIVATE ETH_MINIUPNPC)
+endif()
+
 install(TARGETS eth DESTINATION bin)

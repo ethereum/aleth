@@ -280,7 +280,7 @@ int main(int argc, char** argv)
 	bool chainConfigIsSet = false;
 	string configJSON;
 	string genesisJSON;
-	
+
 	po::options_description clientDefaultMode("Client mode (default)", c_lineWidth);
 	clientDefaultMode.add_options()
 		("mainnet", "Use the main network protocol.")
@@ -302,13 +302,13 @@ int main(int argc, char** argv)
 		("import-session-secret,S", po::value<string>()->value_name("<secret>"), "Import a secret session into the key store.")
 		("master", po::value<string>()->value_name("<password>"), "Give the master password for the key store. Use --master \"\" to show a prompt.")
 		("password", po::value<string>()->value_name("<password>"), "Give a password for a private key.\n");
-	
+
 	po::options_description clientTransacting("Client transacting", c_lineWidth);
 	clientTransacting.add_options()
 		("ask", po::value<u256>()->value_name("<wei>"), ("Set the minimum ask gas price under which no transaction will be mined\n(default " + toString(DefaultGasPrice) + ").").c_str())
 		("bid", po::value<u256>()->value_name("<wei>"), ("Set the bid gas price to pay for transactions\n(default " + toString(DefaultGasPrice) + ").").c_str())
 		("unsafe-transactions", "Allow all transactions to proceed without verification. EXTREMELY UNSAFE.\n");
-	
+
 	po::options_description clientMining("Client mining", c_lineWidth);
 	clientMining.add_options()
 		("address,a", po::value<Address>()->value_name("<addr>"), "Set the author (mining payout) address to given address (default: auto).")
@@ -327,13 +327,15 @@ int main(int argc, char** argv)
 		("remote,r", po::value<string>()->value_name("<host>(:<port>)"), "Connect to the given remote host (default: none).")
 		("port", po::value<short>()->value_name("<port>"), "Connect to the given remote port (default: 30303).")
 		("network-id", po::value<unsigned>()->value_name("<n>"), "Only connect to other hosts with this network id.")
+#if ETH_MINIUPNPC
 		("upnp", po::value<string>()->value_name("<on/off>"), "Use UPnP for NAT (default: on).")
+#endif
 		("peerset", po::value<string>()->value_name("<list>"), "Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n        Types:\n        default     Attempt connection when no other peers are available and pinning is disabled.\n        required	    Keep connected at all times.\n")
 		("no-discovery",  "Disable node discovery, implies --no-bootstrap.")
 		("pin",  "Only accept or connect to trusted peers.")
 		("hermit",  "Equivalent to --no-discovery --pin.")
 		("sociable",  "Force discovery and no pinning.\n");
-	
+
 	po::options_description importExportMode("Import/export modes", c_lineWidth);
 	importExportMode.add_options()
 		("import,I", po::value<string>()->value_name("<file>"), "Import blocks from file.")
@@ -344,7 +346,7 @@ int main(int argc, char** argv)
 		("format", po::value<string>()->value_name("<binary/hex/human>"), "Set export format.")
 		("dont-check", "Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.")
 		("import-snapshot", po::value<string>()->value_name("<path>"), "Import blockchain and state data from the Parity Warp Sync snapshot.\n");
-	
+
 	po::options_description generalOptions("General Options", c_lineWidth);
 	generalOptions.add_options()
 		("db-path,d", po::value<string>()->value_name("<path>"), ("Load database from path\n(default: " + getDataDir().string() + ").\n").c_str())
@@ -354,11 +356,11 @@ int main(int argc, char** argv)
 		("verbosity,v", po::value<int>()->value_name("<0 - 9>"), "Set the log verbosity from 0 to 9 (default: 8).")
 		("version,V",  "Show the version and exit.")
 		("help,h",  "Show this help message and exit.\n");
-	
+
 
 	po::options_description allowedOptions("Allowed options");
 	allowedOptions.add(clientDefaultMode).add(clientTransacting).add(clientMining).add(clientNetworking).add(importExportMode).add(generalOptions);
-	
+
 	po::variables_map vm;
 	vector<string> unrecognisedOptions;
 	try
@@ -675,6 +677,7 @@ int main(int argc, char** argv)
 		exportFrom = vm["from"].as<string>();
 	if (vm.count("only"))
 		exportTo = exportFrom = vm["only"].as<string>();
+#if ETH_MINIUPNPC
 	if (vm.count("upnp"))
 	{
 		string m = vm["upnp"].as<string>();
@@ -688,6 +691,7 @@ int main(int argc, char** argv)
 			return -1;
 		}
 	}
+#endif
 	if (vm.count("network-id"))
 		try
 		{
