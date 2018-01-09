@@ -36,15 +36,21 @@ void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId
     std::shared_ptr<SnapshotStorageFace const> _snapshot,
     std::weak_ptr<WarpPeerObserverFace> _observer)
 {
-    assert(_snapshot);
-    m_snapshot = std::move(_snapshot);
+    m_observer = std::move(_observer);
 
-    bytes const snapshotManifest(m_snapshot->readManifest());
-    RLP manifest(snapshotManifest);
-    if (manifest.itemCount() != 6)
-        BOOST_THROW_EXCEPTION(InvalidSnapshotManifest());
-    u256 const snapshotBlockNumber = manifest[4].toInt<u256>(RLP::VeryStrict);
-    h256 const snapshotBlockHash = manifest[5].toHash<h256>(RLP::VeryStrict);
+    u256 snapshotBlockNumber;
+    h256 snapshotBlockHash;
+    if (_snapshot)
+    {
+        m_snapshot = std::move(_snapshot);
+
+        bytes const snapshotManifest(m_snapshot->readManifest());
+        RLP manifest(snapshotManifest);
+        if (manifest.itemCount() != 6)
+            BOOST_THROW_EXCEPTION(InvalidSnapshotManifest());
+        snapshotBlockNumber = manifest[4].toInt<u256>(RLP::VeryStrict);
+        snapshotBlockHash = manifest[5].toHash<h256>(RLP::VeryStrict);
+    }
 
     requestStatus(_hostProtocolVersion, _hostNetworkId, _chainTotalDifficulty, _chainCurrentHash,
         _chainGenesisHash, snapshotBlockHash, snapshotBlockNumber);
@@ -52,7 +58,6 @@ void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId
 
 bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
 {
-    assert(m_snapshot);
     std::shared_ptr<WarpPeerObserverFace> observer(m_observer.lock());
     if (!observer)
         return false;
@@ -92,6 +97,9 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
         }
         case GetSnapshotManifest:
         {
+            if (!m_snapshot)
+                return false;
+
             RLPStream s;
             prep(s, SnapshotManifest, 1).appendRaw(m_snapshot->readManifest());
             sealAndSend(s);
@@ -99,6 +107,9 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
         }
         case GetSnapshotData:
         {
+            if (!m_snapshot)
+                return false;
+
             const h256 chunkHash = _r[0].toHash<h256>(RLP::VeryStrict);
 
             RLPStream s;

@@ -131,10 +131,11 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
 
     // create Warp capability if we either download snapshot or can give out snapshot
     auto const importedSnapshot = importedSnapshotPath(_dbPath, bc().genesisHash());
-    if (!_snapshotDownloadPath.empty() || fs::exists(importedSnapshot))
+    bool const importedSnapshotExists = fs::exists(importedSnapshot);
+    if (!_snapshotDownloadPath.empty() || importedSnapshotExists)
     {
-        std::shared_ptr<SnapshotStorageFace> snapshotStorage =
-            createSnapshotStorage(importedSnapshot);
+        std::shared_ptr<SnapshotStorageFace> snapshotStorage(
+            importedSnapshotExists ? createSnapshotStorage(importedSnapshot) : nullptr);
         m_warpHost = _extNet->registerCapability(make_shared<WarpHostCapability>(
             bc(), _networkId, _snapshotDownloadPath, snapshotStorage));
     }

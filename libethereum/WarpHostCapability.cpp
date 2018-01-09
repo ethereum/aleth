@@ -17,7 +17,6 @@
 
 #include "WarpHostCapability.h"
 #include "BlockChain.h"
-#include "SnapshotStorage.h"
 
 #include <boost/fiber/all.hpp>
 
