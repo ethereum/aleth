@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 	po::options_description vmOptions("VM options", c_lineWidth);
 #if ETH_EVMJIT
 	vmOptions.add_options()
-			("vm", "<vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)");
+		("vm", po::value<string>()->value_name("<vm-kind>")->default_value("interpreter"), "Select VM implementation; options are: interpreter, jit or smart");
 #endif // ETH_EVMJIT
 
 	po::options_description networkOptions("Network options", c_lineWidth);

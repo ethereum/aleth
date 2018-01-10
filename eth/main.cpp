@@ -351,7 +351,7 @@ int main(int argc, char** argv)
 	generalOptions.add_options()
 		("db-path,d", po::value<string>()->value_name("<path>"), ("Load database from path\n(default: " + getDataDir().string() + ").\n").c_str())
 #if ETH_EVMJIT
-		("vm", "<vm-kind>  Select VM; options are: interpreter, jit or smart (default: interpreter)")
+		("vm", po::value<string>()->value_name("<vm-kind>")->default_value("interpreter"), "Select VM implementation; options are: interpreter, jit or smart")
 #endif // ETH_EVMJIT
 		("verbosity,v", po::value<int>()->value_name("<0 - 9>"), "Set the log verbosity from 0 to 9 (default: 8).")
 		("version,V",  "Show the version and exit.")
