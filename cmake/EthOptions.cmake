@@ -39,13 +39,6 @@ macro(configure_project)
 		endif ()
 	endif ()
 
-	# Are we including the JIT EVM module?
-	# That pulls in a quite heavyweight LLVM dependency, which is
-	# not suitable for all platforms.
-	if (EVMJIT)
-		add_definitions(-DETH_EVMJIT)
-	endif ()
-
 	# FATDB is an option to include the reverse hashes for the trie,
 	# i.e. it allows you to iterate over the contents of the state.
 	if (FATDB)
