@@ -141,11 +141,7 @@ int main(int argc, char** argv)
 		("input", po::value<string>(), "<d> Transaction code should be <d>")
 		("code", po::value<string>(), "<d> Contract code <d>. Makes transaction a call to this contract");
 
-	po::options_description vmOptions("VM options", c_lineWidth);
-#if ETH_EVMJIT
-	vmOptions.add_options()
-		("vm", po::value<string>()->value_name("<vm-kind>")->default_value("interpreter"), "Select VM implementation; options are: interpreter, jit or smart");
-#endif // ETH_EVMJIT
+
 
 	po::options_description networkOptions("Network options", c_lineWidth);
 	networkOptions.add_options()
@@ -165,13 +161,20 @@ int main(int argc, char** argv)
 		("number", po::value<u256>(), "<n> Set number")
 		("timestamp", po::value<u256>(), "<n> Set timestamp");
 
-	po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
-	allowedOptions.add(vmOptions).add(networkOptions).add(optionsForTrace).add(generalOptions).add(transactionOptions);
-	po::parsed_options parsed = po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
-	vector<string> unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
-	po::variables_map vm;
-	po::store(parsed, vm);
-	po::notify(vm);
+    po::options_description allowedOptions(
+        "Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
+    allowedOptions.add(getVMOptions(c_lineWidth))
+        .add(networkOptions)
+        .add(optionsForTrace)
+        .add(generalOptions)
+        .add(transactionOptions);
+    po::parsed_options parsed =
+        po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
+    vector<string> unrecognisedOptions =
+        collect_unrecognized(parsed.options, po::include_positional);
+    po::variables_map vm;
+    po::store(parsed, vm);
+    po::notify(vm);
 
 	// handling mode and input file options separately, as they don't have option name
 	for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
@@ -201,23 +204,6 @@ int main(int argc, char** argv)
 	if (vm.count("version"))
 	{
 		version();
-	}
-	if (vm.count("vm"))
-	{
-		string vmKindStr = vm["vm"].as<string>();
-		if (vmKindStr == "interpreter")
-			vmKind = VMKind::Interpreter;
-#if ETH_EVMJIT
-		else if (vmKindStr == "jit")
-			vmKind = VMKind::JIT;
-		else if (vmKindStr == "smart")
-			vmKind = VMKind::Smart;
-#endif
-		else
-		{
-			cerr << "Unknown/unsupported VM kind: " << vmKindStr << "\n";
-			return -1;
-		}
 	}
 	if (vm.count("mnemonics"))
 		st.setShowMnemonics();
@@ -268,9 +254,6 @@ int main(int argc, char** argv)
 		data = fromHex(vm["input"].as<string>());
 	if (vm.count("code"))
 		code = fromHex(vm["code"].as<string>());
-
-
-	VMFactory::setKind(vmKind);
 
 
 	// Read code from input file.

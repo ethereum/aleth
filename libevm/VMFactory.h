@@ -17,6 +17,7 @@
 #pragma once
 
 #include "VMFace.h"
+#include <boost/program_options/options_description.hpp>
 
 namespace dev
 {
@@ -29,6 +30,9 @@ enum class VMKind
 	JIT,
 	Smart
 };
+
+boost::program_options::options_description getVMOptions(
+    unsigned _lineLength = boost::program_options::options_description::m_default_line_length);
 
 class VMFactory
 {

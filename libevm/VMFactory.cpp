@@ -24,43 +24,102 @@
 #include "SmartVM.h"
 #endif
 
+namespace po = boost::program_options;
+
 namespace dev
 {
 namespace eth
 {
 namespace
 {
-	auto g_kind = VMKind::Interpreter;
+auto g_kind = VMKind::Interpreter;
+
+/// A helper type to build the tabled of VM implementations.
+///
+/// More readable than std::tuple.
+/// Fields are not initialized to allow usage of construction with initializer lists {}.
+struct VMKindTableEntry
+{
+    VMKind kind;
+    const char* name;
+};
+
+/// The table of available VM implementations.
+///
+/// We don't use a map to avoid complex dynamic initialization. This list will never be long,
+/// so linear search only to parse command line arguments is not a problem.
+VMKindTableEntry vmKindsTable[] = {
+    {VMKind::Interpreter, "interpreter"},
+#if ETH_EVMJIT
+    {VMKind::JIT, "jit"},
+    {VMKind::Smart, "smart"},
+#endif
+};
 }
+
+void validate(boost::any& v, const std::vector<std::string>& values, VMKind* /* target_type */, int)
+{
+    // Make sure no previous assignment to 'v' was made.
+    po::validators::check_first_occurrence(v);
+
+    // Extract the first string from 'values'. If there is more than
+    // one string, it's an error, and exception will be thrown.
+    const std::string& s = po::validators::get_single_string(values);
+
+    for (auto& entry : vmKindsTable)
+    {
+        // Try to find a match in the table of VMs.
+        if (s == entry.name)
+        {
+            v = entry.kind;
+            return;
+        }
+    }
+
+    throw po::validation_error(po::validation_error::invalid_option_value);
+}
+
+po::options_description getVMOptions(unsigned _lineLength)
+{
+    po::options_description opts("VM Options", _lineLength);
+    opts.add_options()("vm",
+        po::value<VMKind>()
+            ->value_name("<name>")
+            ->default_value(VMKind::Interpreter, "interpreter")
+            ->notifier(VMFactory::setKind),
+        "Select VM implementation; options are: interpreter, jit or smart");
+
+    return opts;
+}
+
 
 void VMFactory::setKind(VMKind _kind)
 {
-	g_kind = _kind;
+    g_kind = _kind;
 }
 
 std::unique_ptr<VMFace> VMFactory::create()
 {
-	return create(g_kind);
+    return create(g_kind);
 }
 
 std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
 {
 #if ETH_EVMJIT
-	switch (_kind)
-	{
-	default:
-	case VMKind::Interpreter:
-		return std::unique_ptr<VMFace>(new VM);
-	case VMKind::JIT:
-		return std::unique_ptr<VMFace>(new JitVM);
-	case VMKind::Smart:
-		return std::unique_ptr<VMFace>(new SmartVM);
-	}
+    switch (_kind)
+    {
+    default:
+    case VMKind::Interpreter:
+        return std::unique_ptr<VMFace>(new VM);
+    case VMKind::JIT:
+        return std::unique_ptr<VMFace>(new JitVM);
+    case VMKind::Smart:
+        return std::unique_ptr<VMFace>(new SmartVM);
+    }
 #else
-	asserts(_kind == VMKind::Interpreter && "JIT disabled in build configuration");
-	return std::unique_ptr<VMFace>(new VM);
+    asserts(_kind == VMKind::Interpreter && "JIT disabled in build configuration");
+    return std::unique_ptr<VMFace>(new VM);
 #endif
 }
-
 }
 }

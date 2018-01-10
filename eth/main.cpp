@@ -350,16 +350,19 @@ int main(int argc, char** argv)
 	po::options_description generalOptions("General Options", c_lineWidth);
 	generalOptions.add_options()
 		("db-path,d", po::value<string>()->value_name("<path>"), ("Load database from path\n(default: " + getDataDir().string() + ").\n").c_str())
-#if ETH_EVMJIT
-		("vm", po::value<string>()->value_name("<vm-kind>")->default_value("interpreter"), "Select VM implementation; options are: interpreter, jit or smart")
-#endif // ETH_EVMJIT
 		("verbosity,v", po::value<int>()->value_name("<0 - 9>"), "Set the log verbosity from 0 to 9 (default: 8).")
 		("version,V",  "Show the version and exit.")
 		("help,h",  "Show this help message and exit.\n");
 
 
-	po::options_description allowedOptions("Allowed options");
-	allowedOptions.add(clientDefaultMode).add(clientTransacting).add(clientMining).add(clientNetworking).add(importExportMode).add(generalOptions);
+    po::options_description allowedOptions("Allowed options");
+    allowedOptions.add(clientDefaultMode)
+        .add(clientTransacting)
+        .add(clientMining)
+        .add(clientNetworking)
+        .add(importExportMode)
+        .add(getVMOptions(c_lineWidth))
+        .add(generalOptions);
 
 	po::variables_map vm;
 	vector<string> unrecognisedOptions;
@@ -382,23 +385,6 @@ int main(int argc, char** argv)
 			return -1;
 		}
 
-#if ETH_EVMJIT
-	if (vm.count("vm"))
-	{
-		string vmKind = vm["vm"].as<string>();
-		if (vmKind == "interpreter")
-			VMFactory::setKind(VMKind::Interpreter);
-		else if (vmKind == "jit")
-			VMFactory::setKind(VMKind::JIT);
-		else if (vmKind == "smart")
-			VMFactory::setKind(VMKind::Smart);
-		else
-		{
-			cerr << "Unknown VM kind: " << vmKind << "\n";
-			return -1;
-		}
-	}
-#endif
 	if (vm.count("import-snapshot"))
 	{
 		mode = OperationMode::ImportSnapshot;
