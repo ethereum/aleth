@@ -57,6 +57,7 @@ namespace
 
 	class JitWorker
 	{
+        JitVM& m_jit;
 		concurrent_queue<JitTask> m_queue;
 		std::thread m_worker; // Worker must be last to initialize
 
@@ -67,17 +68,16 @@ namespace
 			while (!(task = m_queue.pop()).isStopSentinel())
 			{
 				clog(JitInfo) << "Compilation... " << task.codeHash;
-				JitVM::compile(task.mode, task.flags, {task.code.data(), task.code.size()}, task.codeHash);
+				m_jit.compile(task.mode, task.flags, {task.code.data(), task.code.size()}, task.codeHash);
 				clog(JitInfo) << "   ...finished " << task.codeHash;
 			}
 			clog(JitInfo) << "JIT worker finished.";
 		}
 
 	public:
-		JitWorker() noexcept: m_worker([this]{ work(); })
-		{}
+        explicit JitWorker(JitVM& _jit) noexcept : m_jit(_jit), m_worker([this] { work(); }) {}
 
-		~JitWorker()
+        ~JitWorker()
 		{
 			push(JitTask::createStopSentinel());
 			m_worker.join();
@@ -89,33 +89,37 @@ namespace
 
 owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	auto vmKind = VMKind::Interpreter; // default VM
-	auto mode = toRevision(_ext.evmSchedule());
-	uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
-	// Jitted EVM code already in memory?
-	if (JitVM::isCodeReady(mode, flags, _ext.codeHash))
-	{
-		clog(JitInfo) << "JIT:           " << _ext.codeHash;
-		vmKind = VMKind::JIT;
-	}
-	else if (!_ext.code.empty()) // This check is needed for VM tests
-	{
-		static JitWorker s_worker;
+    // Keep the JIT instance.
+    static JitVM jit;
 
-		// Check EVM code hit count
-		static const uint64_t c_hitTreshold = 2;
-		auto& hits = getHitMap()[_ext.codeHash];
-		++hits;
-		if (hits == c_hitTreshold)
-		{
-			clog(JitInfo) << "Schedule:      " << _ext.codeHash;
-			s_worker.push({_ext.code, _ext.codeHash, mode, flags});
-		}
-		clog(JitInfo) << "Interpreter:   " << _ext.codeHash;
-	}
+    auto mode = toRevision(_ext.evmSchedule());
+    uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 
-	return VMFactory::create(vmKind)->exec(io_gas, _ext, _onOp);
+    if (jit.isCodeReady(mode, flags, _ext.codeHash))
+    {
+        // Jitted code already in memory -- execute quicly.
+        clog(JitInfo) << "JIT:           " << _ext.codeHash;
+        return jit.exec(io_gas, _ext, _onOp);
+    }
+
+    if (!_ext.code.empty())  // This check is needed for VM tests
+    {
+        static JitWorker s_worker(jit);
+
+        // Check EVM code hit count
+        static const uint64_t c_hitTreshold = 2;
+        auto& hits = getHitMap()[_ext.codeHash];
+        ++hits;
+        if (hits == c_hitTreshold)
+        {
+            clog(JitInfo) << "Schedule:      " << _ext.codeHash;
+            s_worker.push({_ext.code, _ext.codeHash, mode, flags});
+        }
+    }
+
+
+    clog(JitInfo) << "Interpreter:   " << _ext.codeHash;
+    return VMFactory::create(VMKind::Interpreter)->exec(io_gas, _ext, _onOp);
 }
-
 }
 }
