@@ -90,7 +90,7 @@ namespace
 owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	auto vmKind = VMKind::Interpreter; // default VM
-	auto mode = JitVM::toRevision(_ext.evmSchedule());
+	auto mode = toRevision(_ext.evmSchedule());
 	uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 	// Jitted EVM code already in memory?
 	if (JitVM::isCodeReady(mode, flags, _ext.codeHash))

@@ -75,7 +75,7 @@ public:
 	/// Handy wrapper for evm_execute().
 	Result execute(ExtVMFace& _ext, int64_t gas)
 	{
-		auto mode = JitVM::toRevision(_ext.evmSchedule());
+		auto mode = toRevision(_ext.evmSchedule());
 		uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 		evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
 						   toEvmC(_ext.value), _ext.data.data(),
@@ -143,7 +143,7 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	return output;
 }
 
-evm_revision JitVM::toRevision(EVMSchedule const& _schedule)
+evm_revision toRevision(EVMSchedule const& _schedule)
 {
 	if (_schedule.haveCreate2)
 		return EVM_CONSTANTINOPLE;
