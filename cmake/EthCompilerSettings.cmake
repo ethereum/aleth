@@ -14,19 +14,16 @@
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
-# Use ccache if available
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-	set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-	message("Using ccache")
-endif(CCACHE_FOUND)
+include(EthCheckCXXCompilerFlag)
+
+eth_add_cxx_compiler_flag_if_supported(-fstack-protector-strong have_stack_protector_strong_support)
+if(NOT have_stack_protector_strong_support)
+	eth_add_cxx_compiler_flag_if_supported(-fstack-protector)
+endif()
+
+eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-
-	# Use ISO C++11 standard language.
-	set(CMAKE_CXX_FLAGS -std=c++11)
-
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
 	# enabled by -Wall.   Finally, treat at warnings-as-errors, which forces developers
@@ -35,18 +32,14 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wextra)
 	add_compile_options(-Werror)
 
-	# Disable warnings about unknown pragmas (which is enabled by -Wall).  I assume we have external
-	# dependencies (probably Boost) which have some of these.   Whatever the case, we shouldn't be
-	# disabling these globally.   Instead, we should pragma around just the problem #includes.
-	#
-	# TODO - Track down what breaks if we do NOT do this.
+	# Disable warnings about unknown pragmas (which is enabled by -Wall).
 	add_compile_options(-Wno-unknown-pragmas)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g -DETH_DEBUG")
-	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
-	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -DETH_RELEASE")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DETH_RELEASE")
+	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 	option(USE_LD_GOLD "Use GNU gold linker" ON)
 	if (USE_LD_GOLD)
@@ -57,67 +50,23 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		endif ()
 	endif ()
 
-	# Additional GCC-specific compiler settings.
+	# Check GCC compiler version.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-
-		# Check that we've got GCC 4.7 or newer.
-		execute_process(
-			COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-		if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
-			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
-		endif ()
-
-		# Strong stack protection was only added in GCC 4.9.
-		# Use it if we have the option to do so.
-		# See https://lwn.net/Articles/584225/
-		if (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
-			add_compile_options(-fstack-protector-strong)
-			add_compile_options(-fstack-protector)
+		if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 4.8)
+			message(FATAL_ERROR "This compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not supported. GCC 4.8 or newer is required.")
 		endif()
 
-	# Additional Clang-specific compiler settings.
-	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-
-		add_compile_options(-fstack-protector)
-
-		# Enable strong stack protection only on Mac and only for OS X Yosemite
-		# or newer (AppleClang 7.0+).  We should be able to re-enable this setting
-		# on non-Apple Clang as well, if we can work out what expression to use for
-		# the version detection.
-
-		# The fact that the version-reporting for AppleClang loses the original
-		# Clang versioning is rather annoying.  Ideally we could just have
-		# a single cross-platform "if version >= 3.4.1" check.
-		#
-		# There is debug text in the else clause below, to help us work out what
-		# such an expression should be, if we can get this running on a Trusty box
-		# with Clang.  Greg Colvin previously replicated the issue there too.
-		#
-		# See https://github.com/ethereum/webthree-umbrella/issues/594
-
-		if (APPLE)
-			if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
-				add_compile_options(-fstack-protector-strong)
-			endif()
-		else()
-			message(WARNING "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
-		endif()
-
-		# Some Linux-specific Clang settings.  We don't want these for OS X.
-		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-
-			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
-			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
-
-			# Use fancy colors in the compiler diagnostics
-			add_compile_options(-fcolor-diagnostics)
+	# Stop if buggy clang compiler detected.
+	elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES AppleClang)
+		if("${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS 8.4)
+			message(FATAL_ERROR "This compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} is not able to compile required libff. Install clang 4+ from Homebrew or XCode 9.")
 		endif()
 	endif()
 
 # The major alternative compiler to GCC/Clang is Microsoft's Visual C++ compiler, only available on Windows.
 elseif (MSVC)
 
-    add_compile_options(/MP)						# enable parallel compilation
+	add_compile_options(/MP)						# enable parallel compilation
 	add_compile_options(/EHsc)						# specify Exception Handling Model in msvc
 	add_compile_options(/WX)						# enable warnings-as-errors
 	add_compile_options(/wd4068)					# disable unknown pragma warning (4068)
@@ -168,13 +117,12 @@ if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_C
 	set(CMAKE_C_FLAGS "-g ${CMAKE_C_FLAGS}")
 	add_definitions(-DETH_PROFILING_GPERF)
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lprofiler")
-#	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} -lprofiler")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
 endif ()
 
-if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")))
-        set(CMAKE_CXX_FLAGS "-g --coverage ${CMAKE_CXX_FLAGS}")
-        set(CMAKE_C_FLAGS "-g --coverage ${CMAKE_C_FLAGS}")
-        set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS} -lprofiler")
-        set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
-endif ()
+option(COVERAGE "Build with code coverage support" OFF)
+if(COVERAGE)
+	add_compile_options(-g --coverage)
+	set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
+endif()

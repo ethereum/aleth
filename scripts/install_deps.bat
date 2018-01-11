@@ -56,4 +56,4 @@ REM
 REM Copyright (c) 2016 cpp-ethereum contributors.
 REM ---------------------------------------------------------------------------
 
-cmake -P deps\install_deps.cmake
+cmake -P cmake\scripts\install_deps.cmake

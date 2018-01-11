@@ -34,7 +34,6 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/Worker.h>
 #include <libdevcrypto/Common.h>
-#include <libdevcrypto/ECDHE.h>
 #include "NodeTable.h"
 #include "HostCapability.h"
 #include "Network.h"
@@ -195,7 +194,7 @@ public:
 	std::string listenAddress() const { return m_tcpPublic.address().is_unspecified() ? "0.0.0.0" : m_tcpPublic.address().to_string(); }
 
 	/// Get the port we're listening on currently.
-	unsigned short listenPort() const { return std::max(0, m_listenPort); }
+	unsigned short listenPort() const { return std::max(0, m_listenPort.load()); }
 
 	/// Serialise the set of known peers.
 	bytes saveNetwork() const;
@@ -221,7 +220,7 @@ public:
 	ReputationManager& repMan() { return m_repMan; }
 
 	/// @returns if network is started and interactive.
-	bool haveNetwork() const { Guard l(x_runTimer); return m_run && !!m_nodeTable; }
+	bool haveNetwork() const { Guard l(x_runTimer); Guard ll(x_nodeTable); return m_run && !!m_nodeTable; }
 	
 	/// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
 	void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
@@ -260,7 +259,7 @@ private:
 	void connect(std::shared_ptr<Peer> const& _p);
 
 	/// Returns true if pending and connected peer count is less than maximum
-	bool peerSlotsAvailable(PeerSlotType _type = Ingress) { Guard l(x_pendingNodeConns); return peerCount() + m_pendingPeerConns.size() < peerSlots(_type); }
+	bool peerSlotsAvailable(PeerSlotType _type = Ingress);
 	
 	/// Ping the peers to update the latency information and disconnect peers which have timed out.
 	void keepAlivePeers();
@@ -285,10 +284,16 @@ private:
 	/// Get or create host identifier (KeyPair).
 	static KeyPair networkAlias(bytesConstRef _b);
 
+	/// returns true if a member of m_requiredPeers
+	bool isRequiredPeer(NodeID const&) const;
+
+	bool nodeTableHasNode(Public const& _id) const;
+	Node nodeFromNodeTable(Public const& _id) const;
+	bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
+
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
-	bool m_run = false;													///< Whether network is running.
-	mutable std::mutex x_runTimer;	///< Start/stop mutex.
+	std::atomic<bool> m_run{false};													///< Whether network is running.
 
 	std::string m_clientVersion;											///< Our version string.
 
@@ -297,13 +302,15 @@ private:
 	/// Interface addresses (private, public)
 	std::set<bi::address> m_ifAddresses;								///< Interface addresses.
 
-	int m_listenPort = -1;												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
+	std::atomic<int> m_listenPort{-1};												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
 
 	ba::io_service m_ioService;											///< IOService for network stuff.
 	bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
 	std::unique_ptr<boost::asio::deadline_timer> m_timer;					///< Timer which, when network is running, calls scheduler() every c_timerInterval ms.
+	mutable std::mutex x_runTimer;	///< Start/stop mutex.
 	static const unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
+	std::condition_variable m_timerReset;
 
 	std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
 	Mutex x_pendingNodeConns;
@@ -311,13 +318,15 @@ private:
 	bi::tcp::endpoint m_tcpPublic;											///< Our public listening endpoint.
 	KeyPair m_alias;															///< Alias for network communication. Network address is k*G. k is key material. TODO: Replace KeyPair.
 	std::shared_ptr<NodeTable> m_nodeTable;									///< Node table (uses kademlia-like discovery).
+	mutable std::mutex x_nodeTable;
+	std::shared_ptr<NodeTable> nodeTable() const { Guard l(x_nodeTable); return m_nodeTable; }
 
 	/// Shared storage of Peer objects. Peers are created or destroyed on demand by the Host. Active sessions maintain a shared_ptr to a Peer;
 	std::unordered_map<NodeID, std::shared_ptr<Peer>> m_peers;
 	
 	/// Peers we try to connect regardless of p2p network.
 	std::set<NodeID> m_requiredPeers;
-	Mutex x_requiredPeers;
+	mutable Mutex x_requiredPeers;
 
 	/// The nodes to which we are currently connected. Used by host to service peer requests and keepAlivePeers and for shutdown. (see run())
 	/// Mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.

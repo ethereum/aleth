@@ -37,6 +37,7 @@ class Ethash: public SealEngineBase
 {
 public:
 	Ethash();
+	~Ethash();
 
 	std::string name() const override { return "Ethash"; }
 	unsigned revision() const override { return 1; }
@@ -45,7 +46,7 @@ public:
 
 	StringHashMap jsInfo(BlockHeader const& _bi) const override;
 	void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const override;
-	void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const override;
+	void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _header, u256 const& _startGasUsed) const override;
 	void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const override;
 
 	strings sealers() const override;
@@ -81,6 +82,9 @@ private:
 	eth::GenericFarm<EthashProofOfWork> m_farm;
 	std::string m_sealer = "cpu";
 	BlockHeader m_sealing;
+
+	/// A mutex covering m_sealing
+	Mutex m_submitLock;
 };
 
 }

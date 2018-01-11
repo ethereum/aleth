@@ -28,12 +28,11 @@
 #include "RLPxHandshake.h"
 #include "RLPXPacket.h"
 
-static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
+static_assert(CRYPTOPP_VERSION == 565, "Wrong Crypto++ version");
 
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
-using namespace CryptoPP;
 
 RLPXFrameInfo::RLPXFrameInfo(bytesConstRef _header):
 	length((_header[0] * 256 + _header[1]) * 256 + _header[2]),
@@ -80,23 +79,28 @@ RLPXFrameCoder::~RLPXFrameCoder()
 RLPXFrameCoder::RLPXFrameCoder(RLPXHandshake const& _init):
 	m_impl(new RLPXFrameCoderImpl)
 {
-	setup(_init.m_originated, _init.m_remoteEphemeral, _init.m_remoteNonce, _init.m_ecdhe, _init.m_nonce, &_init.m_ackCipher, &_init.m_authCipher);
+	setup(_init.m_originated, _init.m_ecdheRemote, _init.m_remoteNonce, _init.m_ecdheLocal, _init.m_nonce, &_init.m_ackCipher, &_init.m_authCipher);
 }
 
-RLPXFrameCoder::RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ecdhe, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher):
+RLPXFrameCoder::RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher):
 	m_impl(new RLPXFrameCoderImpl)
 {
-	setup(_originated, _remoteEphemeral, _remoteNonce, _ecdhe, _nonce, _ackCipher, _authCipher);
+	setup(_originated, _remoteEphemeral, _remoteNonce, _ecdheLocal, _nonce, _ackCipher, _authCipher);
 }
 
-void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, crypto::ECDHE const& _ecdhe, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher)
+void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce, KeyPair const& _ecdheLocal, h256 const& _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher)
 {
 	bytes keyMaterialBytes(64);
 	bytesRef keyMaterial(&keyMaterialBytes);
 
 	// shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
 	Secret ephemeralShared;
-	_ecdhe.agree(_remoteEphemeral, ephemeralShared);
+
+	// Try agree ECDHE. This can fail due to invalid remote public key. In this
+	// case throw an exception to be caught RLPXHandshake::transition().
+	if (!crypto::ecdh::agree(_ecdheLocal.secret(), _remoteEphemeral, ephemeralShared))
+		BOOST_THROW_EXCEPTION(ECDHEError{});
+
 	ephemeralShared.ref().copyTo(keyMaterial.cropped(0, h256::size));
 	h512 nonceMaterial;
 	h256 const& leftNonce = _originated ? _remoteNonce : _nonce;
@@ -111,6 +115,7 @@ void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 
 	
 	// aes-secret = sha3(ecdhe-shared-secret || shared-secret)
 	sha3(keyMaterial, outRef); // output aes-secret
+	assert(m_impl->frameEncKey.empty() && "ECDHE aggreed before!");
 	m_impl->frameEncKey.resize(h256::size);
 	memcpy(m_impl->frameEncKey.data(), outRef.data(), h256::size);
 	m_impl->frameDecKey.resize(h256::size);
@@ -230,7 +235,7 @@ bool RLPXFrameCoder::authAndDecryptFrame(bytesRef io)
 
 h128 RLPXFrameCoder::egressDigest()
 {
-	Keccak_256 h(m_impl->egressMac);
+	CryptoPP::Keccak_256 h(m_impl->egressMac);
 	h128 digest;
 	h.TruncatedFinal(digest.data(), h128::size);
 	return digest;
@@ -238,7 +243,7 @@ h128 RLPXFrameCoder::egressDigest()
 
 h128 RLPXFrameCoder::ingressDigest()
 {
-	Keccak_256 h(m_impl->ingressMac);
+	CryptoPP::Keccak_256 h(m_impl->ingressMac);
 	h128 digest;
 	h.TruncatedFinal(digest.data(), h128::size);
 	return digest;
@@ -266,12 +271,12 @@ void RLPXFrameCoder::updateIngressMACWithFrame(bytesConstRef _cipher)
 	m_impl->updateMAC(m_impl->ingressMac);
 }
 
-void RLPXFrameCoderImpl::updateMAC(Keccak_256& _mac, bytesConstRef _seed)
+void RLPXFrameCoderImpl::updateMAC(CryptoPP::Keccak_256& _mac, bytesConstRef _seed)
 {
 	if (_seed.size() && _seed.size() != h128::size)
 		asserts(false);
 
-	Keccak_256 prevDigest(_mac);
+	CryptoPP::Keccak_256 prevDigest(_mac);
 	h128 encDigest(h128::size);
 	prevDigest.TruncatedFinal(encDigest.data(), h128::size);
 	h128 prevDigestOut = encDigest;

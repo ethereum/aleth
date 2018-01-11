@@ -20,6 +20,7 @@
  */
 
 #include "CommonIO.h"
+#include <libdevcore/FileSystem.h>
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
@@ -29,12 +30,29 @@
 #else
 #include <termios.h>
 #endif
-#include <boost/filesystem.hpp>
 #include "Exceptions.h"
+#include <boost/filesystem.hpp>
 using namespace std;
 using namespace dev;
 
-string dev::memDump(bytes const& _bytes, unsigned _width, bool _html)
+namespace fs = boost::filesystem;
+
+namespace dev
+{
+namespace
+{
+void createDirectoryIfNotExistent(boost::filesystem::path const& _path)
+{
+    if (!fs::exists(_path))
+    {
+        fs::create_directories(_path);
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(_path, fs::owner_all));
+    }
+}
+
+}  // namespace
+
+string memDump(bytes const& _bytes, unsigned _width, bool _html)
 {
 	stringstream ret;
 	if (_html)
@@ -66,11 +84,11 @@ string dev::memDump(bytes const& _bytes, unsigned _width, bool _html)
 }
 
 template <typename _T>
-inline _T contentsGeneric(std::string const& _file)
+inline _T contentsGeneric(boost::filesystem::path const& _file)
 {
 	_T ret;
 	size_t const c_elementSize = sizeof(typename _T::value_type);
-	std::ifstream is(_file, std::ifstream::binary);
+	boost::filesystem::ifstream is(_file, std::ifstream::binary);
 	if (!is)
 		return ret;
 
@@ -86,12 +104,12 @@ inline _T contentsGeneric(std::string const& _file)
 	return ret;
 }
 
-bytes dev::contents(string const& _file)
+bytes contents(boost::filesystem::path const& _file)
 {
 	return contentsGeneric<bytes>(_file);
 }
 
-bytesSec dev::contentsSec(string const& _file)
+bytesSec contentsSec(boost::filesystem::path const& _file)
 {
 	bytes b = contentsGeneric<bytes>(_file);
 	bytesSec ret(b);
@@ -99,40 +117,41 @@ bytesSec dev::contentsSec(string const& _file)
 	return ret;
 }
 
-string dev::contentsString(string const& _file)
+string contentsString(boost::filesystem::path const& _file)
 {
 	return contentsGeneric<string>(_file);
 }
 
-void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDeleteRename)
+void writeFile(boost::filesystem::path const& _file, bytesConstRef _data, bool _writeDeleteRename)
 {
-	namespace fs = boost::filesystem;
 	if (_writeDeleteRename)
 	{
-		fs::path tempPath = fs::unique_path(_file + "-%%%%%%");
-		writeFile(tempPath.string(), _data, false);
+		fs::path tempPath = appendToFilename(_file, "-%%%%%%"); // XXX should not convert to string for this
+		writeFile(tempPath, _data, false);
 		// will delete _file if it exists
 		fs::rename(tempPath, _file);
 	}
 	else
 	{
-		// create directory if not existent
-		fs::path p(_file);
-		if (!fs::exists(p.parent_path()))
-		{
-			fs::create_directories(p.parent_path());
-			DEV_IGNORE_EXCEPTIONS(fs::permissions(p.parent_path(), fs::owner_all));
-		}
+        createDirectoryIfNotExistent(_file.parent_path());
 
-		ofstream s(_file, ios::trunc | ios::binary);
+        boost::filesystem::ofstream s(_file, ios::trunc | ios::binary);
 		s.write(reinterpret_cast<char const*>(_data.data()), _data.size());
 		if (!s)
-			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file));
-		DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read|fs::owner_write));
-	}
+			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file.string()));
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read | fs::owner_write));
+    }
 }
 
-std::string dev::getPassword(std::string const& _prompt)
+void copyDirectory(boost::filesystem::path const& _srcDir, boost::filesystem::path const& _dstDir)
+{
+    createDirectoryIfNotExistent(_dstDir);
+
+    for (fs::directory_iterator file(_srcDir); file != fs::directory_iterator(); ++file)
+        fs::copy_file(file->path(), _dstDir / file->path().filename());
+}
+
+std::string getPassword(std::string const& _prompt)
 {
 #if defined(_WIN32)
 	cout << _prompt << flush;
@@ -180,3 +199,5 @@ std::string dev::getPassword(std::string const& _prompt)
 	return password;
 #endif
 }
+
+}  // namespace dev

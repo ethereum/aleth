@@ -21,10 +21,12 @@
 
 #include "EthashClient.h"
 #include "Ethash.h"
+#include <boost/filesystem/path.hpp>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
+namespace fs = boost::filesystem;
 
 EthashClient& dev::eth::asEthashClient(Interface& _c)
 {
@@ -47,7 +49,7 @@ EthashClient::EthashClient(
 	int _networkID,
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
-	std::string const& _dbPath,
+	fs::path const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _limits
 ):
@@ -55,6 +57,11 @@ EthashClient::EthashClient(
 {
 	// will throw if we're not an Ethash seal engine.
 	asEthashClient(*this);
+}
+
+EthashClient::~EthashClient()
+{
+	terminate();
 }
 
 Ethash* EthashClient::ethash() const
@@ -117,14 +124,14 @@ void EthashClient::setShouldPrecomputeDAG(bool _precompute)
 
 void EthashClient::submitExternalHashrate(u256 const& _rate, h256 const& _id)
 {
-	WriteGuard(x_externalRates);
+	WriteGuard writeGuard(x_externalRates);
 	m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
 }
 
 u256 EthashClient::externalHashrate() const
 {
 	u256 ret = 0;
-	WriteGuard(x_externalRates);
+	WriteGuard writeGuard(x_externalRates);
 	for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
 		if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
 			i = m_externalRates.erase(i);

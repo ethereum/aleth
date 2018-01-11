@@ -1,9 +1,11 @@
 
 set(SOURCES
 	ExtVMFace.cpp
+	Instruction.cpp
 	VM.cpp
 	VMOpt.cpp
 	VMCalls.cpp
+	VMSIMD.cpp
 	VMValidate.cpp
 	VMFactory.cpp
 )
@@ -19,13 +21,10 @@ file(GLOB HEADERS "*.h")
 
 add_library(evm ${SOURCES} ${HEADERS})
 
-find_package(Eth)
-
-target_link_libraries(evm ${Eth_ETHCORE_LIBRARIES})
-target_link_libraries(evm ${Eth_EVMCORE_LIBRARIES})
-target_include_directories(evm PRIVATE .. ${JSONCPP_INCLUDE_DIR})
+target_link_libraries(evm PUBLIC ethcore devcore PRIVATE jsoncpp_lib_static Boost::program_options)
+target_include_directories(evm PUBLIC ${CMAKE_SOURCE_DIR}/evmjit/include)
 
 if (EVMJIT)
-	target_include_directories(evm PRIVATE ../evmjit/include)
-	target_link_libraries(evm ${Eth_EVMJIT_LIBRARIES})
+	target_link_libraries(evm PRIVATE evmjit)
+	target_compile_definitions(evm PRIVATE ETH_EVMJIT)
 endif()

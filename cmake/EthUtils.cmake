@@ -62,38 +62,6 @@ macro(eth_add_test NAME)
 
 endmacro()
 
-# Creates C resources file from files
-function(eth_add_resources RESOURCE_FILE OUT_FILE ETH_RES_DIR)
-	include("${RESOURCE_FILE}")
-	set(OUTPUT  "${ETH_RESOURCE_LOCATION}/${ETH_RESOURCE_NAME}.hpp")
-	#message(FATAL_ERROR "res:! ${ETH_RESOURCE_LOCATION}")
-	include_directories("${ETH_RESOURCE_LOCATION}")
-	set(${OUT_FILE} "${OUTPUT}"  PARENT_SCOPE)
-
-	set(filenames "${RESOURCE_FILE}")
-	list(APPEND filenames "${ETH_SCRIPTS_DIR}/resources.cmake")
-	foreach(resource ${ETH_RESOURCES})
-		list(APPEND filenames "${${resource}}")
-	endforeach(resource)
-
-	add_custom_command(OUTPUT ${OUTPUT}
-		COMMAND ${CMAKE_COMMAND} -DETH_RES_FILE="${RESOURCE_FILE}" -DETH_RES_DIR="${ETH_RES_DIR}"  -P "${ETH_SCRIPTS_DIR}/resources.cmake"
-		DEPENDS ${filenames}
-	)
-endfunction()
-
-macro(eth_default_option O DEF)
-	if (DEFINED ${O})
-		if (${${O}})
-			set(${O} ON)
-		else ()
-			set(${O} OFF)
-		endif()
-	else ()
-		set(${O} ${DEF})
-	endif()
-endmacro()
-
 # In Windows split repositories build we need to be checking whether or not
 # Debug/Release or both versions were built for the config phase to run smoothly
 macro(eth_check_library_link L)

@@ -46,7 +46,6 @@ mkdir -p $ZIP_TEMP_DIR
 cp bench/bench                         $ZIP_TEMP_DIR
 cp eth/eth                             $ZIP_TEMP_DIR
 cp ethkey/ethkey                       $ZIP_TEMP_DIR
-cp ethminer/ethminer                   $ZIP_TEMP_DIR
 cp ethvm/ethvm                         $ZIP_TEMP_DIR
 cp rlp/rlp                             $ZIP_TEMP_DIR
 if [[ "$TESTS" == "On" ]]; then
@@ -96,7 +95,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-common.0.dylib  $ZIP_TEMP_DIR
     cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-client.0.dylib  $ZIP_TEMP_DIR
     cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-server.0.dylib  $ZIP_TEMP_DIR
-    cp /usr/local/opt/libmicrohttpd/lib/libmicrohttpd.12.dylib          $ZIP_TEMP_DIR
     cp /usr/local/opt/miniupnpc/lib/libminiupnpc.16.dylib               $ZIP_TEMP_DIR
     cp /usr/local/opt/snappy/lib/libsnappy.1.dylib                      $ZIP_TEMP_DIR
 fi

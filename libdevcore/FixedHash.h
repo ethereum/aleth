@@ -26,8 +26,7 @@
 #include <array>
 #include <cstdint>
 #include <algorithm>
-#include <boost/random/random_device.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
+#include <random>
 #include <boost/functional/hash.hpp>
 #include "CommonData.h"
 
@@ -38,7 +37,7 @@ namespace dev
 template <unsigned N> struct StaticLog2 { enum { result = 1 + StaticLog2<N/2>::result }; };
 template <> struct StaticLog2<1> { enum { result = 0 }; };
 
-extern boost::random_device s_fixedHashEngine;
+extern std::random_device s_fixedHashEngine;
 
 /// Fixed-size raw-byte array container type, with an API optimised for storing hashes.
 /// Transparently converts to/from the corresponding arithmetic type; this will
@@ -141,6 +140,12 @@ public:
 	/// @returns a constant byte pointer to the object's data.
 	byte const* data() const { return m_data.data(); }
 
+	/// @returns begin iterator.
+	auto begin() const -> typename std::array<byte, N>::const_iterator { return m_data.begin(); }
+
+	/// @returns end iterator.
+	auto end() const -> typename std::array<byte, N>::const_iterator { return m_data.end(); }
+
 	/// @returns a copy of the object's data as a byte vector.
 	bytes asBytes() const { return bytes(data(), data() + N); }
 
@@ -155,7 +160,7 @@ public:
 	void randomize(Engine& _eng)
 	{
 		for (auto& i: m_data)
-			i = (uint8_t)boost::random::uniform_int_distribution<uint16_t>(0, 255)(_eng);
+			i = (uint8_t)std::uniform_int_distribution<uint16_t>(0, 255)(_eng);
 	}
 
 	/// @returns a random valued object.
@@ -317,11 +322,17 @@ template<> inline size_t FixedHash<32>::hash::operator()(FixedHash<32> const& va
 template <unsigned N>
 inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 {
-	_out << std::noshowbase << std::hex << std::setfill('0');
-	for (unsigned i = 0; i < N; ++i)
-		_out << std::setw(2) << (int)_h[i];
-	_out << std::dec;
+	_out << toHex(_h);
 	return _out;
+}
+
+template <unsigned N>
+inline std::istream& operator>>(std::istream& _in, FixedHash<N>& o_h)
+{
+	std::string s;
+	_in >> s;
+	o_h = FixedHash<N>(s, FixedHash<N>::FromHex, FixedHash<N>::AlignRight);
+	return _in;
 }
 
 /// Stream I/O for the SecureFixedHash class.
@@ -357,14 +368,6 @@ inline h160 right160(h256 const& _t)
 	return ret;
 }
 
-/// Convert the given value into h160 (160-bit unsigned integer) using the left 20 bytes.
-inline h160 left160(h256 const& _t)
-{
-	h160 ret;
-	memcpy(&ret[0], _t.data(), 20);
-	return ret;
-}
-
 h128 fromUUID(std::string const& _uuid);
 
 std::string toUUID(h128 const& _uuid);
@@ -373,7 +376,7 @@ inline std::string toString(h256s const& _bs)
 {
 	std::ostringstream out;
 	out << "[ ";
-	for (auto i: _bs)
+	for (h256 const& i: _bs)
 		out << i.abridged() << ", ";
 	out << "]";
 	return out.str();

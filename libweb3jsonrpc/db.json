@@ -1,4 +1,0 @@
-[
-{ "name": "db_put", "params": ["", "", ""], "order": [], "returns": true},
-{ "name": "db_get", "params": ["", ""], "order": [], "returns": ""}
-]

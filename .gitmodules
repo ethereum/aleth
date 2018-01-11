@@ -1,8 +1,7 @@
-[submodule "deps"]
-	path = deps
-	url = https://github.com/ethereum/cpp-dependencies
-	branch = master
 [submodule "evmjit"]
 	path = evmjit
 	url = https://github.com/ethereum/evmjit
 	branch = develop
+[submodule "test/tests"]
+	path = test/jsontests
+	url = https://github.com/ethereum/tests.git

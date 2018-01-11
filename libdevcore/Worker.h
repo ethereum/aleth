@@ -91,16 +91,20 @@ protected:
 	/// Blocks caller into worker thread has finished.
 //	void join() const { Guard l(x_work); try { if (m_work) m_work->join(); } catch (...) {} }
 
-private:
 	/// Stop and never start again.
+	/// This has to be called in the destructor of any most derived class.  Otherwise the worker thread will try to lookup vptrs.
+	/// It's OK to call terminate() in destructors of multiple derived classes.
 	void terminate();
+
+private:
 
 	std::string m_name;
 
 	unsigned m_idleWaitMs = 0;
 	
-	mutable Mutex x_work;						///< Lock for the network existance.
+	mutable Mutex x_work;						///< Lock for the network existance and m_state_notifier.
 	std::unique_ptr<std::thread> m_work;		///< The network thread.
+    mutable std::condition_variable m_state_notifier; //< Notification when m_state changes.
 	std::atomic<WorkerState> m_state = {WorkerState::Starting};
 };
 

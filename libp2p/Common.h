@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <string>
 #include <set>
 #include <vector>
@@ -75,7 +76,9 @@ class Session;
 
 struct NetworkStartRequired: virtual dev::Exception {};
 struct InvalidPublicIPAddress: virtual dev::Exception {};
-struct InvalidHostIPAddress: virtual dev::Exception {};
+
+/// The ECDHE agreement failed during RLPx handshake.
+struct ECDHEError: virtual Exception {};
 
 struct NetWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
 struct NetNote: public LogChannel { static const char* name(); static const int verbosity = 2; };
@@ -241,7 +244,8 @@ class Node
 {
 public:
 	Node() = default;
-	Node(Node const&) = default;
+	virtual ~Node() = default;
+	Node(Node const&);
 	Node(Public _publicKey, NodeIPEndpoint const& _ip, PeerType _peerType = PeerType::Optional): id(_publicKey), endpoint(_ip), peerType(_peerType) {}
 	Node(NodeSpec const& _s, PeerType _peerType = PeerType::Optional);
 
@@ -258,7 +262,7 @@ public:
 	NodeIPEndpoint endpoint;
 
 	// TODO: p2p implement
-	PeerType peerType = PeerType::Optional;
+	std::atomic<PeerType> peerType{PeerType::Optional};
 };
 
 class DeadlineOps

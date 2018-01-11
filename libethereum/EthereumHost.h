@@ -34,6 +34,8 @@
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
 #include <libdevcore/OverlayDB.h>
+#include <libethcore/BlockHeader.h>
+#include <libethereum/BlockChainSync.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
 
@@ -70,12 +72,15 @@ public:
 	void setNetworkId(u256 _n) { m_networkId = _n; }
 
 	void reset();
+	/// Don't sync further - used only in test mode
+	void completeSync();
 
 	bool isSyncing() const;
 	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
 	void noteNewTransactions() { m_newTransactions = true; }
 	void noteNewBlocks() { m_newBlocks = true; }
+	void onBlockImported(BlockHeader const& _info) { m_sync->onBlockImported(_info); }
 
 	BlockChain const& chain() const { return m_chain; }
 	OverlayDB const& db() const { return m_db; }
@@ -89,7 +94,7 @@ public:
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
 protected:
-	std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap, uint16_t _capID) override;
+	std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap) override;
 
 private:
 	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
@@ -127,9 +132,8 @@ private:
 	bool m_newTransactions = false;
 	bool m_newBlocks = false;
 
-	mutable RecursiveMutex x_sync;
 	mutable Mutex x_transactions;
-	std::unique_ptr<BlockChainSync> m_sync;
+	std::shared_ptr<BlockChainSync> m_sync;
 	std::atomic<time_t> m_lastTick = { 0 };
 
 	std::shared_ptr<EthereumHostDataFace> m_hostData;

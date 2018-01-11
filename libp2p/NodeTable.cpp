@@ -42,7 +42,7 @@ NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint con
 
 NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled):
 	m_node(Node(_alias.pub(), _endpoint)),
-	m_secret(_alias.sec()),
+	m_secret(_alias.secret()),
 	m_socket(make_shared<NodeSocket>(_io, *reinterpret_cast<UDPSocketEvents*>(this), (bi::udp::endpoint)m_node.endpoint)),
 	m_socketPointer(m_socket.get()),
 	m_timers(_io)
@@ -313,7 +313,8 @@ void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _n
 	unsigned evicts = 0;
 	DEV_GUARDED(x_evictions)
 	{
-		m_evictions.push_back(EvictionTimeout(make_pair(_leastSeen->id,chrono::steady_clock::now()), _new->id));
+		EvictionTimeout evictTimeout{_new->id, chrono::steady_clock::now()};  
+		m_evictions.emplace(_leastSeen->id, evictTimeout);
 		evicts = m_evictions.size();
 	}
 
@@ -413,21 +414,28 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				auto in = dynamic_cast<Pong const&>(*packet);
 				// whenever a pong is received, check if it's in m_evictions
 				bool found = false;
+				NodeID leastSeenID;
 				EvictionTimeout evictionEntry;
 				DEV_GUARDED(x_evictions)
-					for (auto it = m_evictions.begin(); it != m_evictions.end(); ++it)
-						if (it->first.first == in.sourceid && it->first.second > std::chrono::steady_clock::now())
+				{ 
+					auto e = m_evictions.find(in.sourceid);
+					if (e != m_evictions.end())
+					{ 
+						if (e->second.evictedTimePoint > std::chrono::steady_clock::now())
 						{
 							found = true;
-							evictionEntry = *it;
-							m_evictions.erase(it);
-							break;
+							leastSeenID = e->first;
+							evictionEntry = e->second;
+							m_evictions.erase(e);
 						}
+					}
+				}
+
 				if (found)
 				{
-					if (auto n = nodeEntry(evictionEntry.second))
+					if (auto n = nodeEntry(evictionEntry.newNodeID))
 						dropNode(n);
-					if (auto n = nodeEntry(evictionEntry.first.first))
+					if (auto n = nodeEntry(leastSeenID))
 						n->pending = false;
 				}
 				else
@@ -544,9 +552,9 @@ void NodeTable::doCheckEvictions()
 			Guard le(x_evictions);
 			Guard ln(x_nodes);
 			for (auto& e: m_evictions)
-				if (chrono::steady_clock::now() - e.first.second > c_reqTimeout)
-					if (m_nodes.count(e.second))
-						drop.push_back(m_nodes[e.second]);
+				if (chrono::steady_clock::now() - e.second.evictedTimePoint > c_reqTimeout)
+					if (m_nodes.count(e.second.newNodeID))
+						drop.push_back(m_nodes[e.second.newNodeID]);
 			evictionsRemain = (m_evictions.size() - drop.size() > 0);
 		}
 		

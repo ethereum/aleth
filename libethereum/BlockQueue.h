@@ -29,7 +29,6 @@
 #include <libdevcore/Log.h>
 #include <libethcore/Common.h>
 #include <libdevcore/Guards.h>
-#include <libethcore/Common.h>
 #include <libethcore/BlockHeader.h>
 #include "VerifiedBlock.h"
 
@@ -268,8 +267,8 @@ public:
 	/// Get some infomration on the given block's status regarding us.
 	QueueStatus blockStatus(h256 const& _h) const;
 
-	template <class T> Handler<> onReady(T const& _t) { return m_onReady.add(_t); }
-	template <class T> Handler<> onRoomAvailable(T const& _t) { return m_onRoomAvailable.add(_t); }
+	Handler<> onReady(std::function<void(void)> _t) { return m_onReady.add(_t); }
+	Handler<> onRoomAvailable(std::function<void(void)> _t) { return m_onRoomAvailable.add(_t); }
 
 	template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
 

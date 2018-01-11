@@ -1,26 +1,20 @@
-aux_source_directory(. SRC_LIST)
+set(
+    sources
+    AccountManager.cpp AccountManager.h
+    main.cpp
+    MinerAux.h
+)
 
-file(GLOB HEADERS "*.h")
+add_executable(eth ${sources})
+target_link_libraries(
+    eth
+    PRIVATE ethereum ethashseal evm web3jsonrpc webthree devcore Boost::program_options
+)
 
-add_executable(eth ${SRC_LIST} ${HEADERS})
+target_include_directories(eth PRIVATE ../utils)
 
-find_package(Eth)
-find_package(Web3)
-
-target_include_directories(eth PRIVATE ..)
-target_link_libraries(eth ${Eth_EVM_LIBRARIES})
-target_link_libraries(eth ${Web3_WEB3JSONRPC_LIBRARIES})
-target_link_libraries(eth ${Web3_WEBTHREE_LIBRARIES})
-target_link_libraries(eth jsonrpc::client)
-
-if (EVMJIT)
-	# Do we need include paths here?
-	target_link_libraries(eth ${Eth_EVMJIT_LIBRARIES})
-	eth_copy_dlls(eth EVMJIT_DLLS)
-endif()
-
-if (UNIX AND NOT APPLE)
-	target_link_libraries(eth pthread)
+if(MINIUPNPC)
+    target_compile_definitions(eth PRIVATE ETH_MINIUPNPC)
 endif()
 
 install(TARGETS eth DESTINATION bin)

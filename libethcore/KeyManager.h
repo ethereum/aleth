@@ -27,6 +27,8 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcrypto/SecretStore.h>
 
+#include <boost/filesystem.hpp>
+
 namespace dev
 {
 namespace eth
@@ -74,12 +76,12 @@ class KeyManager
 public:
 	enum class NewKeyType { DirectICAP = 0, NoVanity, FirstTwo, FirstTwoNextTwo, FirstThree, FirstFour };
 
-	KeyManager(std::string const& _keysFile = defaultPath(), std::string const& _secretsPath = SecretStore::defaultPath());
+	KeyManager(boost::filesystem::path const& _keysFile = defaultPath(), boost::filesystem::path const& _secretsPath = SecretStore::defaultPath());
 	~KeyManager();
 
-	void setSecretsPath(std::string const& _secretsPath) { m_store.setPath(_secretsPath); }
-	void setKeysFile(std::string const& _keysFile) { m_keysFile = _keysFile; }
-	std::string const& keysFile() const { return m_keysFile; }
+	void setSecretsPath(boost::filesystem::path const& _secretsPath) { m_store.setPath(_secretsPath); }
+	void setKeysFile(boost::filesystem::path const& _keysFile) { m_keysFile = _keysFile; }
+	boost::filesystem::path const& keysFile() const { return m_keysFile; }
 
 	bool exists() const;
 	void create(std::string const& _pass);
@@ -133,7 +135,7 @@ public:
 	void kill(h128 const& _id) { kill(address(_id)); }
 	void kill(Address const& _a);
 
-	static std::string defaultPath() { return getDataDir("ethereum") + "/keys.info"; }
+	static boost::filesystem::path defaultPath() { return getDataDir("ethereum") / boost::filesystem::path("keys.info"); }
 
 	/// Extracts the secret key from the presale wallet.
 	static KeyPair presaleSecret(std::string const& _json, std::function<std::string(bool)> const& _password);
@@ -158,9 +160,9 @@ private:
 	// Only use if previously loaded ok.
 	// @returns false if wasn't previously loaded ok.
 	bool write() const { return write(m_keysFile); }
-	bool write(std::string const& _keysFile) const;
-	void write(std::string const& _pass, std::string const& _keysFile) const;	// TODO: all passwords should be a secure string.
-	void write(SecureFixedHash<16> const& _key, std::string const& _keysFile) const;
+	bool write(boost::filesystem::path const& _keysFile) const;
+	void write(std::string const& _pass, boost::filesystem::path const& _keysFile) const;	// TODO: all passwords should be a secure string.
+	void write(SecureFixedHash<16> const& _key, boost::filesystem::path const& _keysFile) const;
 
 	// Ethereum keys.
 
@@ -183,7 +185,7 @@ private:
 	// we have an upgrade strategy.
 	std::string m_defaultPasswordDeprecated;
 
-	mutable std::string m_keysFile;
+	mutable boost::filesystem::path m_keysFile;
 	mutable SecureFixedHash<16> m_keysFileKey;
 	mutable h256 m_master;
 	SecretStore m_store;

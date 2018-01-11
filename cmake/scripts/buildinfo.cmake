@@ -1,5 +1,5 @@
 # generates BuildInfo.h
-# 
+#
 # this module expects
 # ETH_SOURCE_DIR - main CMAKE_SOURCE_DIR
 # ETH_DST_DIR - main CMAKE_BINARY_DIR
@@ -22,7 +22,7 @@ endif()
 execute_process(
 	COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} rev-parse HEAD
 	OUTPUT_VARIABLE ETH_COMMIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
-) 
+)
 
 if (NOT ETH_COMMIT_HASH)
 	set(ETH_COMMIT_HASH 0)
@@ -46,4 +46,3 @@ configure_file("${ETH_BUILDINFO_IN}" "${TMPFILE}")
 
 include("${ETH_CMAKE_DIR}/EthUtils.cmake")
 replace_if_different("${TMPFILE}" "${OUTFILE}" CREATE)
-

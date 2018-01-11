@@ -28,7 +28,6 @@
 #include <vector>
 #include <map>
 #include <chrono>
-#include <libdevcrypto/Common.h>
 #include <libethcore/CommonJS.h>
 #include <libethereum/Transaction.h>
 
@@ -65,6 +64,7 @@ class AccountHolder
 {
 public:
 	explicit AccountHolder(std::function<Interface*()> const& _client): m_client(_client) {}
+	virtual ~AccountHolder() = default;
 
 	virtual AddressHash realAccounts() const = 0;
 	// use m_web3's submitTransaction

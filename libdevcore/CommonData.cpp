@@ -22,16 +22,8 @@
 #include "CommonData.h"
 #include <random>
 
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable:4724) // potential mod by 0, line 78 of boost/random/uniform_int_distribution.hpp (boost 1.55)
-#endif
-#include <boost/random/uniform_int_distribution.hpp>
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
 #include "Exceptions.h"
-#include "Log.h"
+
 using namespace std;
 using namespace dev;
 
@@ -85,16 +77,6 @@ std::string dev::escaped(std::string const& _s, bool _all)
 	return ret;
 }
 
-std::string dev::randomWord()
-{
-	static std::mt19937_64 s_eng(0);
-	std::string ret(boost::random::uniform_int_distribution<int>(1, 5)(s_eng), ' ');
-	char const n[] = "qwertyuiop";//asdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
-	boost::random::uniform_int_distribution<int> d(0, sizeof(n) - 2);
-	for (char& c: ret)
-		c = n[d(s_eng)];
-	return ret;
-}
 
 bytes dev::fromHex(std::string const& _s, WhenError _throw)
 {

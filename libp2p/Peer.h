@@ -59,6 +59,8 @@ class Peer: public Node
 public:
 	/// Construct Peer from Node.
 	Peer(Node const& _node): Node(_node) {}
+
+	Peer(Peer const&);
 	
 	bool isOffline() const { return !m_session.lock(); }
 
@@ -83,14 +85,14 @@ protected:
 	/// Returns number of seconds to wait until attempting connection, based on attempted connection history.
 	unsigned fallbackSeconds() const;
 
-	int m_score = 0;									///< All time cumulative.
-	int m_rating = 0;									///< Trending.
+	std::atomic<int> m_score{0};									///< All time cumulative.
+	std::atomic<int> m_rating{0};									///< Trending.
 	
 	/// Network Availability
 	
 	std::chrono::system_clock::time_point m_lastConnected;
 	std::chrono::system_clock::time_point m_lastAttempted;
-	unsigned m_failedAttempts = 0;
+	std::atomic<unsigned> m_failedAttempts{0};
 	DisconnectReason m_lastDisconnect = NoDisconnect;	///< Reason for disconnect that happened last.
 
 	/// Used by isOffline() and (todo) for peer to emit session information.

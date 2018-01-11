@@ -21,11 +21,13 @@
 
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
+#include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
+namespace fs = boost::filesystem;
 
 ClientTest& dev::eth::asClientTest(Interface& _c)
 {
@@ -42,12 +44,17 @@ ClientTest::ClientTest(
 	int _networkID,
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
-	std::string const& _dbPath,
+	fs::path const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _limits
 ):
 	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
 {}
+
+ClientTest::~ClientTest()
+{
+	terminate();
+}
 
 void ClientTest::setChainParams(string const& _genesis)
 {
@@ -91,7 +98,8 @@ void ClientTest::modifyTimestamp(u256 const& _timestamp)
 	DEV_WRITE_GUARDED(x_preSeal)
 		m_preSeal = block;
 
-	auto lastHashes = bc().lastHashes();
+	auto& lastHashes = bc().lastBlockHashes();
+	assert(bc().currentHash() == block.info().parentHash());
 	for (auto const& t: transactions)
 		block.execute(lastHashes, t);
 
@@ -115,4 +123,14 @@ void ClientTest::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 
 	if(--m_blocksToMine <= 0)
 		stopSealing();
+}
+
+bool ClientTest::completeSync()
+{
+	auto h = m_host.lock();
+	if (!h)
+		return false;
+
+	h->completeSync();
+	return true;
 }

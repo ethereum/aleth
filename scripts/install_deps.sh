@@ -74,19 +74,20 @@ Darwin)
             ;;
         10.12)
             echo "Installing cpp-ethereum dependencies on macOS 10.12 Sierra."
-            echo ""
-            echo "NOTE - You are in unknown territory with this preview OS."
-            echo "Even Homebrew doesn't have official support yet, and there are"
-            echo "known issues (see https://github.com/ethereum/webthree-umbrella/issues/614)."
-            echo "If you would like to partner with us to work through these issues, that"
-            echo "would be fantastic.  Please just comment on that issue.  Thanks!"
+            ;;
+        10.13)
+            echo "Installing cpp-ethereum dependencies on macOS 10.13 High Sierra."
             ;;
         *)
             echo "Unsupported macOS version."
-            echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on Sierra."
+            echo "We only support Mavericks, Yosemite, El Capitan, Sierra and High Sierra."
             exit 1
             ;;
     esac
+
+    if [ "$TRAVIS" ]; then
+        TRAVIS_PACKAGES="ccache"
+    fi
 
     # Check for Homebrew install and abort if it is not installed.
     brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires a Homebrew install.  See http://brew.sh."; exit 1; }
@@ -94,8 +95,7 @@ Darwin)
     # And finally install all the external dependencies.
     brew install \
         leveldb \
-        libmicrohttpd \
-        miniupnpc
+        $TRAVIS_PACKAGES
 
     ;;
 
@@ -136,9 +136,7 @@ Linux)
             automake \
             gcc \
             libtool \
-            leveldb \
-            libmicrohttpd \
-            miniupnpc
+            leveldb
 
     elif [ -f "/etc/os-release" ]; then
 
@@ -151,11 +149,8 @@ Linux)
             $SUDO apt-get -q update
             $SUDO apt-get -qy install \
                 build-essential \
-                libcurl4-openssl-dev \
                 libgmp-dev \
-                libleveldb-dev \
-                libmicrohttpd-dev \
-                libminiupnpc-dev
+                libleveldb-dev
             ;;
 
         Fedora)
@@ -163,8 +158,6 @@ Linux)
             $SUDO dnf -qy install \
                 gcc-c++ \
                 leveldb-devel \
-                curl-devel \
-                libmicrohttpd-devel \
                 gmp-devel
             ;;
 
@@ -181,27 +174,18 @@ Linux)
 # It would be good to add armel, armhf and arm64.
 # See https://github.com/ethereum/webthree-umbrella/issues/228.
 #------------------------------------------------------------------------------
-        Ubuntu|LinuxMint)
+        Ubuntu|"Linux Mint")
             echo "Installing cpp-ethereum dependencies on Ubuntu."
-            if [ "$TRAVIS" ]; then
-                # Setup prebuilt LLVM on Travis CI:
-                $SUDO apt-get -qy remove llvm  # Remove confilicting package.
-                echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | \
-                    $SUDO tee -a /etc/apt/sources.list > /dev/null
-                LLVM_PACKAGES="llvm-3.9-dev libz-dev"
-            fi
             $SUDO apt-get -q update
             $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
                 build-essential \
-                libcurl4-openssl-dev \
                 libgmp-dev \
                 libleveldb-dev \
-                libmicrohttpd-dev \
-                libminiupnpc-dev \
-                $LLVM_PACKAGES
+                $TRAVIS_PACKAGES
             ;;
 
-        CentOS*|Oracle*)
+
+        CentOS*|Oracle*|"Red Hat Enterprise Linux"*)
             echo "Installing cpp-ethereum dependencies on CentOS."
             # Enable EPEL repo that contains leveldb-devel
             $SUDO yum -y -q install epel-release
@@ -209,8 +193,6 @@ Linux)
                 make \
                 gcc-c++ \
                 leveldb-devel \
-                curl-devel \
-                libmicrohttpd-devel \
                 gmp-devel
             ;;
 
@@ -228,8 +210,6 @@ Linux)
         $SUDO apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
             g++ \
             make \
-            curl-dev \
-            libmicrohttpd-dev \
             leveldb-dev
 
     else

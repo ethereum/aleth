@@ -21,25 +21,26 @@
 
 #pragma once
 
-#include <deque>
+#include "Account.h"
+#include "BlockDetails.h"
+#include "BlockQueue.h"
+#include "ChainParams.h"
+#include "LastBlockHashesFace.h"
+#include "State.h"
+#include "Transaction.h"
+#include "VerifiedBlock.h"
+#include <libdevcore/db.h>
+#include <libdevcore/Exceptions.h>
+#include <libdevcore/Log.h>
+#include <libdevcore/Guards.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/Common.h>
+#include <libethcore/SealEngine.h>
 #include <chrono>
+#include <deque>
 #include <unordered_map>
 #include <unordered_set>
-#include <libdevcore/db.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/Guards.h>
-#include <libethcore/Common.h>
-#include <libethcore/BlockHeader.h>
-#include <libethcore/SealEngine.h>
-#include <libevm/ExtVMFace.h>
-#include "BlockDetails.h"
-#include "Account.h"
-#include "Transaction.h"
-#include "BlockQueue.h"
-#include "VerifiedBlock.h"
-#include "ChainParams.h"
-#include "State.h"
+#include <boost/filesystem/path.hpp>
 
 namespace std
 {
@@ -61,10 +62,13 @@ static const h256s NullH256s;
 
 class State;
 class Block;
+class ImportPerformanceLogger;
 
 DEV_SIMPLE_EXCEPTION(AlreadyHaveBlock);
 DEV_SIMPLE_EXCEPTION(FutureTime);
 DEV_SIMPLE_EXCEPTION(TransientError);
+DEV_SIMPLE_EXCEPTION(FailedToWriteChainStart);
+DEV_SIMPLE_EXCEPTION(UnknownBlockNumber);
 
 struct BlockChainChat: public LogChannel { static const char* name(); static const int verbosity = 5; };
 struct BlockChainNote: public LogChannel { static const char* name(); static const int verbosity = 3; };
@@ -95,7 +99,7 @@ using ProgressCallback = std::function<void(unsigned, unsigned)>;
 class VersionChecker
 {
 public:
-	VersionChecker(std::string const& _dbPath, h256 const& _genesisHash);
+	VersionChecker(boost::filesystem::path const& _dbPath, h256 const& _genesisHash);
 };
 
 /**
@@ -107,7 +111,7 @@ class BlockChain
 public:
 	/// Doesn't open the database - if you want it open it's up to you to subclass this and open it
 	/// in the constructor there.
-	BlockChain(ChainParams const& _p, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
+	BlockChain(ChainParams const& _p, boost::filesystem::path const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
 	~BlockChain();
 
 	/// Reopen everything.
@@ -136,6 +140,8 @@ public:
 	/// block/header and receipts directly into the databases.
 	void insert(bytes const& _block, bytesConstRef _receipts, bool _mustBeNew = true);
 	void insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew = true);
+	/// Insert that doesn't require parent to be imported, useful when we don't have the full blockchain (like restoring from partial snapshot).
+	ImportRoute insertWithoutParent(bytes const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty);
 
 	/// Returns true if the given block is known (though not necessarily a part of the canon chain).
 	bool isKnown(h256 const& _hash, bool _isCurrent = true) const;
@@ -182,9 +188,7 @@ public:
 	/// Get the hash for a given block's number.
 	h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras<BlockHash, uint64_t, ExtraBlockHash>(_i, m_blockHashes, x_blockHashes, NullBlockHash).value; }
 
-	/// Get the last N hashes for a given block. (N is determined by the LastHashes type.)
-	LastHashes lastHashes() const { return lastHashes(m_lastBlockHash); }
-	LastHashes lastHashes(h256 const& _mostRecentHash) const;
+	LastBlockHashesFace const& lastBlockHashes() const { return *m_lastBlockHashes;  }
 
 	/** Get the block blooms for a number of blocks. Thread-safe.
 	 * @returns the object pertaining to the blocks:
@@ -223,7 +227,7 @@ public:
 
 	/// Get a number for the given hash (or the most recent mined if none given). Thread-safe.
 	unsigned number(h256 const& _hash) const { return details(_hash).number; }
-	unsigned number() const { return m_lastBlockNumber; }
+	unsigned number() const { ReadGuard l(x_lastBlockHash); return m_lastBlockNumber; }
 
 	/// Get a given block (RLP format). Thread-safe.
 	h256 currentHash() const { ReadGuard l(x_lastBlockHash); return m_lastBlockHash; }
@@ -238,7 +242,7 @@ public:
 
 	/// Run through database and verify all blocks by reevaluating.
 	/// Will call _progress with the progress in this operation first param done, second total.
-	void rebuild(std::string const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>());
+	void rebuild(boost::filesystem::path const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>());
 
 	/// Alter the head of the chain to some prior block along it.
 	void rewind(unsigned _newHead);
@@ -290,7 +294,10 @@ public:
 	void garbageCollect(bool _force = false);
 
 	/// Change the function that is called with a bad block.
-	template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
+	void setOnBad(std::function<void(Exception&)> _t) { m_onBad = _t; }
+
+	/// Change the function that is called when a new block is imported
+	void setOnBlockImport(std::function<void(BlockHeader const&)> _t) { m_onBlockImport = _t; }
 
 	/// Get a pre-made genesis State object.
 	Block genesisBlock(OverlayDB const& _db) const;
@@ -307,17 +314,26 @@ public:
 
 	BlockHeader const& genesis() const;
 
+	/// @returns first block number of the chain, non-zero when we have partial chain e.g. after snapshot import.
+	unsigned chainStartBlockNumber() const;
+	/// Change the chain start block.
+	void setChainStartBlockNumber(unsigned _number);
+
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 
 	/// Initialise everything and ready for openning the database.
 	void init(ChainParams const& _p);
 	/// Open the database.
-	unsigned open(std::string const& _path, WithExisting _we);
+	unsigned open(boost::filesystem::path const& _path, WithExisting _we);
 	/// Open the database, rebuilding if necessary.
-	void open(std::string const& _path, WithExisting _we, ProgressCallback const& _pc);
+	void open(boost::filesystem::path const& _path, WithExisting _we, ProgressCallback const& _pc);
 	/// Finalise everything and close the database.
 	void close();
+
+	ImportRoute insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger);
+	void checkBlockIsNew(VerifiedBlockRef const& _block) const;
+	void checkBlockTimestamp(BlockHeader const& _header) const;
 
 	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
 	{
@@ -376,9 +392,8 @@ private:
 	void noteUsed(uint64_t const& _h, unsigned _extra = (unsigned)-1) const { (void)_h; (void)_extra; } // don't note non-hash types
 	std::chrono::system_clock::time_point m_lastCollection;
 
-	void noteCanonChanged() const { Guard l(x_lastLastHashes); m_lastLastHashes.clear(); }
-	mutable Mutex x_lastLastHashes;
-	mutable LastHashes m_lastLastHashes;
+	void noteCanonChanged() const { m_lastBlockHashes->clear(); }
+	std::unique_ptr<LastBlockHashesFace> m_lastBlockHashes;
 
 	void updateStats() const;
 	mutable Statistics m_lastStats;
@@ -388,7 +403,7 @@ private:
 	ldb::DB* m_extrasDB;
 
 	/// Hash of the last (valid) block on the longest chain.
-	mutable boost::shared_mutex x_lastBlockHash;
+	mutable boost::shared_mutex x_lastBlockHash; // should protect both m_lastBlockHash and m_lastBlockNumber
 	h256 m_lastBlockHash;
 	unsigned m_lastBlockNumber = 0;
 
@@ -403,8 +418,9 @@ private:
 	mutable h256 m_genesisHash;		// mutable because they're effectively memos.
 
 	std::function<void(Exception&)> m_onBad;									///< Called if we have a block that doesn't verify.
+	std::function<void(BlockHeader const&)> m_onBlockImport;										///< Called if we have imported a new block into the db
 
-	std::string m_dbPath;
+	boost::filesystem::path m_dbPath;
 
 	friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
 };

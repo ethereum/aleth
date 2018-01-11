@@ -24,8 +24,8 @@
 
 #pragma once
 
-#include "Exceptions.h"
-#include "debugbreak.h"
+#include <boost/exception/info.hpp>
+#include <iosfwd>
 
 namespace dev
 {
@@ -43,30 +43,21 @@ namespace dev
 
 inline bool assertAux(bool _a, char const* _aStr, unsigned _line, char const* _file, char const* _func)
 {
-	bool ret = _a;
-	if (!ret)
-	{
+	if (!_a)
 		std::cerr << "Assertion failed:" << _aStr << " [func=" << _func << ", line=" << _line << ", file=" << _file << "]" << std::endl;
-#if ETH_DEBUG
-		debug_break();
-#endif
-	}
-	return !ret;
+	return !_a;
 }
 
 template<class A, class B>
 inline bool assertEqualAux(A const& _a, B const& _b, char const* _aStr, char const* _bStr, unsigned _line, char const* _file, char const* _func)
 {
-	bool ret = _a == _b;
-	if (!ret)
+	bool c = _a == _b;
+	if (!c)
 	{
 		std::cerr << "Assertion failed: " << _aStr << " == " << _bStr << " [func=" << _func << ", line=" << _line << ", file=" << _file << "]" << std::endl;
 		std::cerr << "   Fail equality: " << _a << "==" << _b << std::endl;
-#if ETH_DEBUG
-		debug_break();
-#endif
 	}
-	return !ret;
+	return !c;
 }
 
 /// Assertion that throws an exception containing the given description if it is not met.

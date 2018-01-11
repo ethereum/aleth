@@ -30,7 +30,6 @@
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/ChainOperationParams.h>
-#include <libevm/ExtVMFace.h>
 #include "Account.h"
 #include "Transaction.h"
 #include "TransactionReceipt.h"
@@ -50,6 +49,7 @@ class BlockChain;
 class State;
 class TransactionQueue;
 struct VerifiedBlockRef;
+class LastBlockHashesFace;
 
 struct BlockChat: public LogChannel { static const char* name(); static const int verbosity = 4; };
 struct BlockTrace: public LogChannel { static const char* name(); static const int verbosity = 5; };
@@ -191,21 +191,22 @@ public:
 	h256Hash const& pendingHashes() const { return m_transactionSet; }
 
 	/// Get the transaction receipt for the transaction of the given index.
-	TransactionReceipt const& receipt(unsigned _i) const { return m_receipts[_i]; }
+	TransactionReceipt const& receipt(unsigned _i) const { return m_receipts.at(_i); }
 
 	/// Get the list of pending transactions.
-	LogEntries const& log(unsigned _i) const { return m_receipts[_i].log(); }
+	LogEntries const& log(unsigned _i) const { return receipt(_i).log(); }
 
 	/// Get the bloom filter of all logs that happened in the block.
 	LogBloom logBloom() const;
 
 	/// Get the bloom filter of a particular transaction that happened in the block.
-	LogBloom const& logBloom(unsigned _i) const { return m_receipts[_i].bloom(); }
+	LogBloom const& logBloom(unsigned _i) const { return receipt(_i).bloom(); }
 
-	/// Get the State immediately after the given number of pending transactions have been applied.
+	/// Get the State root hash immediately after all previous transactions before transaction @a _i have been applied.
 	/// If (_i == 0) returns the initial state of the block.
 	/// If (_i == pending().size()) returns the final state of the block, prior to rewards.
-	State fromPending(unsigned _i) const;
+	/// Returns zero hash if intermediate state root is not available in the receipt (the case after EIP98)
+	h256 stateRootBeforeTx(unsigned _i) const;
 
 	// State-change operations
 
@@ -214,7 +215,7 @@ public:
 
 	/// Execute a given transaction.
 	/// This will append @a _t to the transaction list and change the state accordingly.
-	ExecutionResult execute(LastHashes const& _lh, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
+	ExecutionResult execute(LastBlockHashesFace const& _lh, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
 
 	/// Sync our transactions, killing those from the queue that we have and assimilating those that we don't.
 	/// @returns a list of receipts one for each transaction placed from the queue into the state and bool, true iff there are more transactions to be processed.
@@ -232,9 +233,7 @@ public:
 	u256 enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc);
 
 	/// Returns back to a pristine state after having done a playback.
-	/// @arg _fullCommit if true flush everything out to disk. If false, this effectively only validates
-	/// the block since all state changes are ultimately reversed.
-	void cleanup(bool _fullCommit);
+	void cleanup();
 
 	/// Sets m_currentBlock to a clean state, (i.e. no change from m_previousBlock) and
 	/// optionally modifies the timestamp.
@@ -284,15 +283,6 @@ private:
 	/// Undo the changes to the state for committing to mine.
 	void uncommitToSeal();
 
-	/// Retrieve all information about a given address into the cache.
-	/// If _requireMemory is true, grab the full memory should it be a contract item.
-	/// If _forceCreate is true, then insert a default item into the cache, in the case it doesn't
-	/// exist in the DB.
-	void ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const;
-
-	/// Retrieve all information about a given address into a cache.
-	void ensureCached(std::unordered_map<Address, Account>& _cache, Address const& _a, bool _requireCode, bool _forceCreate) const;
-
 	/// Execute the given block, assuming it corresponds to m_currentBlock.
 	/// Throws on failure.
 	u256 enact(VerifiedBlockRef const& _block, BlockChain const& _bc);
@@ -306,8 +296,8 @@ private:
 	/// Performs irregular modifications right after initialization, e.g. to implement a hard fork.
 	void performIrregularModifications();
 
-	/// Provide a standard VM trace for debugging purposes.
-	std::string vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequirements::value _ir);
+	/// Creates and updates the special contract for storing block hashes according to EIP96
+	void updateBlockhashContract();
 
 	State m_state;								///< Our state tree, as an OverlayDB DB.
 	Transactions m_transactions;				///< The current list of transactions that we've included in the state.
@@ -326,11 +316,7 @@ private:
 	Address m_author;							///< Our address (i.e. the address to which fees go).
 
 	SealEngineFace* m_sealEngine = nullptr;		///< The chain's seal engine.
-
-	friend std::ostream& operator<<(std::ostream& _out, Block const& _s);
 };
-
-std::ostream& operator<<(std::ostream& _out, Block const& _s);
 
 
 }

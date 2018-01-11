@@ -24,7 +24,6 @@
 #include <csignal>
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonData.h>
-#include <libevmcore/Instruction.h>
 #include <libethereum/Client.h>
 #include <libethashseal/EthashClient.h>
 #include <libwebthree/WebThree.h>
@@ -32,7 +31,6 @@
 #include <libweb3jsonrpc/JsonHelper.h>
 #include "Eth.h"
 #include "AccountHolder.h"
-#include "JsonHelper.h"
 
 using namespace std;
 using namespace jsonrpc;
@@ -40,13 +38,6 @@ using namespace dev;
 using namespace eth;
 using namespace shh;
 using namespace dev::rpc;
-
-#if ETH_DEBUG
-const unsigned dev::SensibleHttpThreads = 1;
-#else
-const unsigned dev::SensibleHttpThreads = 4;
-#endif
-const unsigned dev::SensibleHttpPort = 8545;
 
 Eth::Eth(eth::Interface& _eth, eth::AccountHolder& _ethAccounts):
 	m_eth(_eth),
@@ -363,7 +354,8 @@ string Eth::eth_estimateGas(Json::Value const& _json)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		return toJS(client()->estimateGas(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, PendingBlock).first);
+		int64_t gas = static_cast<int64_t>(t.gas);
+		return toJS(client()->estimateGas(t.from, t.value, t.to, t.data, gas, t.gasPrice, PendingBlock).first);
 	}
 	catch (...)
 	{

@@ -29,7 +29,6 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/tuple/tuple.hpp>
-#include "CommonData.h"
 #include "FixedHash.h"
 
 namespace dev
@@ -65,9 +64,10 @@ DEV_SIMPLE_EXCEPTION(FileError);
 DEV_SIMPLE_EXCEPTION(Overflow);
 DEV_SIMPLE_EXCEPTION(FailedInvariant);
 DEV_SIMPLE_EXCEPTION(ValueTooLarge);
+DEV_SIMPLE_EXCEPTION(UnknownField);
 
-struct InterfaceNotSupported: virtual Exception { public: InterfaceNotSupported(std::string _f): Exception("Interface " + _f + " not supported.") {} };
-struct ExternalFunctionFailure: virtual Exception { public: ExternalFunctionFailure(std::string _f): Exception("Function " + _f + "() failed.") {} };
+struct InterfaceNotSupported: virtual Exception { public: InterfaceNotSupported(std::string const& _f): Exception("Interface " + _f + " not supported.") {} };
+struct ExternalFunctionFailure: virtual Exception { public: ExternalFunctionFailure(std::string const& _f): Exception("Function " + _f + "() failed.") {} };
 
 // error information to be added to exceptions
 using errinfo_invalidSymbol = boost::error_info<struct tag_invalidSymbol, char>;

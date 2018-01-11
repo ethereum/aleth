@@ -87,7 +87,7 @@ class EthereumPeer: public p2p::Capability
 
 public:
 	/// Basic constructor.
-	EthereumPeer(std::shared_ptr<p2p::SessionFace> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap, uint16_t _capID);
+	EthereumPeer(std::shared_ptr<p2p::SessionFace> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap);
 
 	/// Basic destructor.
 	virtual ~EthereumPeer();
@@ -192,8 +192,8 @@ private:
 	unsigned m_unknownNewBlocks = 0;		///< Number of unknown NewBlocks received from this peer
 	unsigned m_lastAskedHeaders = 0;		///< Number of hashes asked
 
-	std::shared_ptr<EthereumPeerObserverFace> m_observer;
-	std::shared_ptr<EthereumHostDataFace> m_hostData;
+	std::weak_ptr<EthereumPeerObserverFace> m_observer;
+	std::weak_ptr<EthereumHostDataFace> m_hostData;
 };
 
 }

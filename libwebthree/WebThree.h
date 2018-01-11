@@ -32,7 +32,6 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/Exceptions.h>
 #include <libp2p/Host.h>
-#include <libwhisper/WhisperHost.h>
 #include <libethereum/Client.h>
 #include <libethereum/ChainParams.h>
 
@@ -123,7 +122,7 @@ public:
 	/// ethereum() may be safely static_cast()ed to a eth::Client*.
 	WebThreeDirect(
 		std::string const& _clientVersion,
-		std::string const& _dbPath,
+		boost::filesystem::path const& _dbPath,
 		eth::ChainParams const& _params,
 		WithExisting _we = WithExisting::Trust,
 		std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
@@ -138,7 +137,6 @@ public:
 	// The mainline interfaces:
 
 	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
-	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
 
 	// Misc stuff:
 
@@ -215,97 +213,7 @@ private:
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 
 	std::unique_ptr<eth::Client> m_ethereum;		///< Client for Ethereum ("eth") protocol.
-	std::weak_ptr<shh::WhisperHost> m_whisper;		///< Client for Whisper ("shh") protocol.
 };
 
-// TODO, probably move into libdevrpc:
-
-class RPCSlave {};
-class RPCMaster {};
-
-// TODO, probably move into eth:
-
-class EthereumSlave: public eth::Interface
-{
-public:
-	EthereumSlave(RPCSlave*) {}
-
-	// TODO: implement all of the virtuals with the RLPClient link.
-};
-
-class EthereumMaster
-{
-public:
-	EthereumMaster(RPCMaster*) {}
-
-	// TODO: implement the master-end of whatever the RLPClient link will send over.
-};
-
-// TODO, probably move into shh:
-
-class WhisperSlave: public shh::Interface
-{
-public:
-	WhisperSlave(RPCSlave*) {}
-
-	// TODO: implement all of the virtuals with the RLPClient link.
-};
-
-class WhisperMaster
-{
-public:
-	WhisperMaster(RPCMaster*) {}
-
-	// TODO: implement the master-end of whatever the RLPClient link will send over.
-};
-
-/**
- * @brief Main API hub for interfacing with Web 3 components.
- *
- * This does transparent local multiplexing, so you can have as many running on the
- * same machine all working from a single DB path.
- */
-class WebThree
-{
-public:
-	/// Constructor for public instance. This will be shared across the local machine.
-	WebThree();
-
-	/// Destructor.
-	~WebThree();
-
-	// The mainline interfaces.
-
-	eth::Interface* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum; }
-	shh::Interface* whisper() const { if (!m_whisper) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return m_whisper; }
-	bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz")); }
-
-	// Peer network stuff - forward through RPCSlave, probably with P2PNetworkSlave/Master classes like Whisper & Ethereum.
-
-	/// Get information on the current peer set.
-	std::vector<p2p::PeerSessionInfo> peers();
-
-	/// Same as peers().size(), but more efficient.
-	size_t peerCount() const;
-
-	/// Connect to a particular peer.
-	void connect(std::string const& _seedHost, unsigned short _port = 30303);
-
-	/// Is the network subsystem up?
-	bool haveNetwork();
-
-	/// Save peers
-	dev::bytes savePeers();
-
-	/// Restore peers
-	void restorePeers(bytesConstRef _saved);
-
-private:
-	EthereumSlave* m_ethereum = nullptr;
-	WhisperSlave* m_whisper = nullptr;
-
-	// TODO:
-	RPCSlave m_rpcSlave;
-};
 
 }

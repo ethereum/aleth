@@ -23,7 +23,7 @@
 
 #pragma once
 
-// way to many unsigned to size_t warnings in 32 bit build
+// way too many unsigned to size_t warnings in 32 bit build
 #ifdef _M_IX86
 #pragma warning(disable:4244)
 #endif
@@ -69,7 +69,7 @@ namespace dev
 
 extern char const* Version;
 
-static const std::string EmptyString;
+extern std::string const EmptyString;
 
 // Binary data types.
 using bytes = std::vector<byte>;
@@ -82,8 +82,8 @@ class secure_vector
 public:
 	secure_vector() {}
 	secure_vector(secure_vector<T> const& /*_c*/) = default;  // See https://github.com/ethereum/libweb3core/pull/44
-	explicit secure_vector(unsigned _size): m_data(_size) {}
-	explicit secure_vector(unsigned _size, T _item): m_data(_size, _item) {}
+	explicit secure_vector(size_t _size): m_data(_size) {}
+	explicit secure_vector(size_t _size, T _item): m_data(_size, _item) {}
 	explicit secure_vector(std::vector<T> const& _c): m_data(_c) {}
 	explicit secure_vector(vector_ref<T> _c): m_data(_c.data(), _c.data() + _c.size()) {}
 	explicit secure_vector(vector_ref<const T> _c): m_data(_c.data(), _c.data() + _c.size()) {}
@@ -147,12 +147,10 @@ using strings = std::vector<std::string>;
 
 // Fixed-length string types.
 using string32 = std::array<char, 32>;
-static const string32 ZeroString32 = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }};
 
 // Null/Invalid values for convenience.
-static const bytes NullBytes;
-static const std::map<u256, u256> EmptyMapU256U256;
-extern const u256 Invalid256;
+extern bytes const NullBytes;
+extern u256 const Invalid256;
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
@@ -305,25 +303,5 @@ enum class WithExisting: int
 
 /// Get the current time in seconds since the epoch in UTC
 uint64_t utcTime();
-
-}
-
-namespace std
-{
-
-inline dev::WithExisting max(dev::WithExisting _a, dev::WithExisting _b)
-{
-	return static_cast<dev::WithExisting>(max(static_cast<int>(_a), static_cast<int>(_b)));
-}
-
-template <> struct hash<dev::u256>
-{
-	size_t operator()(dev::u256 const& _a) const
-	{
-		unsigned size = _a.backend().size();
-		auto limbs = _a.backend().limbs();
-		return boost::hash_range(limbs, limbs + size);
-	}
-};
 
 }

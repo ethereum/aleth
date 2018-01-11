@@ -45,9 +45,9 @@ template <class S> IpcServerBase<S>::IpcServerBase(string const& _path):
 
 template <class S> bool IpcServerBase<S>::StartListening()
 {
-	if (!m_running)
+	bool wasRunning = m_running.exchange(true);
+	if (!wasRunning)
 	{
-		m_running = true;
 		m_listeningThread = std::thread([this](){ Listen(); });
 		return true;
 	}
@@ -56,9 +56,9 @@ template <class S> bool IpcServerBase<S>::StartListening()
 
 template <class S> bool IpcServerBase<S>::StopListening()
 {
-	if (m_running)
+	bool wasRunning = m_running.exchange(false);
+	if (wasRunning)
 	{
-		m_running = false;
 		DEV_GUARDED(x_sockets)
 		{
 			for (S s : m_sockets)

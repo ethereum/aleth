@@ -22,8 +22,10 @@
 #pragma once
 
 #include <libdevcore/Common.h>
+#include <libethcore/Precompiled.h>
+
 #include "Common.h"
-#include <libevmcore/EVMSchedule.h>
+#include "EVMSchedule.h"
 
 namespace dev
 {
@@ -34,18 +36,31 @@ class PrecompiledContract
 {
 public:
 	PrecompiledContract() = default;
-	PrecompiledContract(std::function<bigint(size_t)> const& _cost, std::function<bytes(bytesConstRef)> const& _exec):
+	PrecompiledContract(
+		PrecompiledPricer const& _cost,
+		PrecompiledExecutor const& _exec,
+		u256 const& _startingBlock = 0
+	):
 		m_cost(_cost),
-		m_execute(_exec)
+		m_execute(_exec),
+		m_startingBlock(_startingBlock)
 	{}
-	PrecompiledContract(unsigned _base, unsigned _word, std::function<bytes(bytesConstRef)> const& _exec);
+	PrecompiledContract(
+		unsigned _base,
+		unsigned _word,
+		PrecompiledExecutor const& _exec,
+		u256 const& _startingBlock = 0
+	);
 
-	bigint cost(bytesConstRef _in) const { return m_cost(_in.size()); }
-	bytes execute(bytesConstRef _in) const { return m_execute(_in); }
+	bigint cost(bytesConstRef _in) const { return m_cost(_in); }
+	std::pair<bool, bytes> execute(bytesConstRef _in) const { return m_execute(_in); }
+
+	u256 const& startingBlock() const { return m_startingBlock; }
 
 private:
-	std::function<bigint(size_t)> m_cost;
-	std::function<bytes(bytesConstRef)> m_execute;
+	PrecompiledPricer m_cost;
+	PrecompiledExecutor m_execute;
+	u256 m_startingBlock = 0;
 };
 
 struct ChainOperationParams
@@ -58,29 +73,35 @@ struct ChainOperationParams
 	std::string sealEngineName = "NoProof";
 
 	/// General chain params.
-	u256 blockReward = 0;
+private:
+	u256 m_blockReward;
+public:
+	EVMSchedule const& scheduleForBlockNumber(u256 const& _blockNumber) const;
+	u256 blockReward(EVMSchedule const& _schedule) const;
+	void setBlockReward(u256 const& _newBlockReward);
 	u256 maximumExtraDataSize = 1024;
 	u256 accountStartNonce = 0;
 	bool tieBreakingGas = true;
+	u256 minGasLimit;
+	u256 maxGasLimit;
+	u256 gasLimitBoundDivisor;
+	u256 homesteadForkBlock;
+	u256 EIP150ForkBlock;
+	u256 EIP158ForkBlock;
+	u256 byzantiumForkBlock;
+	u256 constantinopleForkBlock;
+	u256 daoHardforkBlock;
+	int chainID = 0; // Distinguishes different chains (mainnet, Ropsten, etc).
+	int networkID = 0; // Distinguishes different sub protocols.
+
+	u256 minimumDifficulty;
+	u256 difficultyBoundDivisor;
+	u256 durationLimit;
+	bool allowFutureBlocks = false;
+	u256 registrar;
 
 	/// Precompiled contracts as specified in the chain params.
 	std::unordered_map<Address, PrecompiledContract> precompiled;
-
-	/**
-	 * @brief Additional parameters.
-	 *
-	 * e.g. Ethash specific:
-	 * - minGasLimit
-	 * - maxGasLimit
-	 * - gasLimitBoundDivisor
-	 * - minimumDifficulty
-	 * - difficultyBoundDivisor
-	 * - durationLimit
-	 */
-	std::unordered_map<std::string, std::string> otherParams;
-
-	/// Convenience method to get an otherParam as a u256 int.
-	u256 u256Param(std::string const& _name) const;
 };
 
 }

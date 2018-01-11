@@ -26,38 +26,59 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-PrecompiledContract::PrecompiledContract(unsigned _base, unsigned _word, std::function<bytes(bytesConstRef)> const& _exec):
-	PrecompiledContract([=](unsigned size) -> bigint
+PrecompiledContract::PrecompiledContract(
+	unsigned _base,
+	unsigned _word,
+	PrecompiledExecutor const& _exec,
+	u256 const& _startingBlock
+):
+	PrecompiledContract([=](bytesConstRef _in) -> bigint
 	{
-		bigint s = size;
+		bigint s = _in.size();
 		bigint b = _base;
 		bigint w = _word;
 		return b + (s + 31) / 32 * w;
-	}, _exec)
+	}, _exec, _startingBlock)
 {}
 
-ChainOperationParams::ChainOperationParams()
+ChainOperationParams::ChainOperationParams():
+	m_blockReward("0x4563918244F40000"),
+	minGasLimit(0x1388),
+	maxGasLimit("0x7fffffffffffffff"),
+	gasLimitBoundDivisor(0x0400),
+	networkID(0x0),
+	minimumDifficulty(0x020000),
+	difficultyBoundDivisor(0x0800),
+	durationLimit(0x0d),
+	registrar("0x5e70c0bbcd5636e0f9f9316e9f8633feb64d4050")
 {
-	otherParams = std::unordered_map<std::string, std::string>{
-		{"minGasLimit", "0x1388"},
-		{"maxGasLimit", "0x7fffffffffffffff"},
-		{"gasLimitBoundDivisor", "0x0400"},
-		{"minimumDifficulty", "0x020000"},
-		{"difficultyBoundDivisor", "0x0800"},
-		{"durationLimit", "0x0d"},
-		{"registrar", "5e70c0bbcd5636e0f9f9316e9f8633feb64d4050"},
-		{"networkID", "0x0"}
-	};
-	blockReward = u256("0x4563918244F40000");
 }
 
-u256 ChainOperationParams::u256Param(string const& _name) const
+EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blockNumber) const
 {
-	std::string at("");
+	if (_blockNumber >= constantinopleForkBlock)
+		return ConstantinopleSchedule;
+	else if (_blockNumber >= byzantiumForkBlock)
+		return ByzantiumSchedule;
+	else if (_blockNumber >= EIP158ForkBlock)
+		return EIP158Schedule;
+	else if (_blockNumber >= EIP150ForkBlock)
+		return EIP150Schedule;
+	else if (_blockNumber >= homesteadForkBlock)
+		return HomesteadSchedule;
+	else
+		return FrontierSchedule;
+}
 
-	auto it = otherParams.find(_name);
-	if (it != otherParams.end())
-		at = it->second;
+u256 ChainOperationParams::blockReward(EVMSchedule const& _schedule) const
+{
+	if (_schedule.blockRewardOverwrite)
+		return *_schedule.blockRewardOverwrite;
+	else
+		return m_blockReward;
+}
 
-	return u256(fromBigEndian<u256>(fromHex(at)));
+void ChainOperationParams::setBlockReward(u256 const& _newBlockReward)
+{
+	m_blockReward = _newBlockReward;
 }

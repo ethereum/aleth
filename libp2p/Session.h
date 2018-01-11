@@ -35,8 +35,6 @@
 #include "RLPXFrameCoder.h"
 #include "RLPXSocket.h"
 #include "Common.h"
-#include "RLPXFrameWriter.h"
-#include "RLPXFrameReader.h"
 
 namespace dev
 {
@@ -61,7 +59,7 @@ public:
 
 	virtual NodeID id() const = 0;
 
-	virtual void sealAndSend(RLPStream& _s, uint16_t _protocolID) = 0;
+	virtual void sealAndSend(RLPStream& _s) = 0;
 
 	virtual int rating() const = 0;
 	virtual void addRating(int _r) = 0;
@@ -72,7 +70,6 @@ public:
 	virtual std::chrono::steady_clock::time_point connectionTime() = 0;
 
 	virtual void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p) = 0;
-	virtual void registerFraming(uint16_t _id) = 0;
 
 	virtual std::map<CapDesc, std::shared_ptr<Capability>> const&  capabilities() const = 0;
 
@@ -90,8 +87,6 @@ public:
 class Session: public SessionFace, public std::enable_shared_from_this<SessionFace>
 {
 public:
-	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
-
 	Session(Host* _server, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
 	virtual ~Session();
 
@@ -104,7 +99,7 @@ public:
 
 	NodeID id() const override;
 
-	void sealAndSend(RLPStream& _s, uint16_t _protocolID) override;
+	void sealAndSend(RLPStream& _s) override;
 
 	int rating() const override;
 	void addRating(int _r) override;
@@ -115,7 +110,6 @@ public:
 	std::chrono::steady_clock::time_point connectionTime() override { return m_connect; }
 
 	void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p) override;
-	void registerFraming(uint16_t _id) override;
 
 	std::map<CapDesc, std::shared_ptr<Capability>> const& capabilities() const override { return m_capabilities; }
 
@@ -128,21 +122,19 @@ public:
 private:
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
 
-	void send(bytes&& _msg, uint16_t _protocolID);
+	void send(bytes&& _msg);
 
 	/// Drop the connection for the reason @a _r.
 	void drop(DisconnectReason _r);
 
 	/// Perform a read on the socket.
 	void doRead();
-	void doReadFrames();
 	
 	/// Check error code after reading and drop peer if error code.
 	bool checkRead(std::size_t _expected, boost::system::error_code _ec, std::size_t _length);
 
 	/// Perform a single round of the write operation. This could end up calling itself asynchronously.
 	void write();
-	void writeFrames();
 
 	/// Deliver RLPX packet to Session or Capability for interpretation.
 	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
@@ -173,23 +165,6 @@ private:
 	std::chrono::steady_clock::time_point m_lastReceived;	///< Time point of last message.
 
 	std::map<CapDesc, std::shared_ptr<Capability>> m_capabilities;	///< The peer's capability set.
-
-	// framing-related stuff (protected by x_writeQueue mutex)
-	struct Framing
-	{
-		Framing() = delete;
-		Framing(uint16_t _protocolID): writer(_protocolID), reader(_protocolID) {}
-		RLPXFrameWriter writer;
-		RLPXFrameReader reader;
-	};
-
-	std::map<uint16_t, std::shared_ptr<Framing> > m_framing;
-	std::deque<bytes> m_encFrames;
-
-	bool isFramingEnabled() const { return isFramingAllowedForVersion(m_info.protocolVersion); }
-	unsigned maxFrameSize() const { return 1024; }
-	std::shared_ptr<Framing> getFraming(uint16_t _protocolID);
-	void multiplexAll();
 };
 
 template <class PeerCap>

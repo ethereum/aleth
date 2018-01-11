@@ -15,7 +15,7 @@ Debug::Debug(eth::Client const& _eth):
 	m_eth(_eth)
 {}
 
-StandardTrace::DebugOptions debugOptions(Json::Value const& _json)
+StandardTrace::DebugOptions dev::eth::debugOptions(Json::Value const& _json)
 {
 	StandardTrace::DebugOptions op;
 	if (!_json.isObject() || _json.empty())
@@ -61,13 +61,19 @@ Json::Value Debug::traceTransaction(Executive& _e, Transaction const& _t, Json::
 
 Json::Value Debug::traceBlock(Block const& _block, Json::Value const& _json)
 {
+	State s(_block.state());
+	s.setRoot(_block.stateRootBeforeTx(0));
+
 	Json::Value traces(Json::arrayValue);
 	for (unsigned k = 0; k < _block.pending().size(); k++)
 	{
 		Transaction t = _block.pending()[k];
-		State s(State::Null);
+
+		u256 const gasUsed = k ? _block.receipt(k - 1).gasUsed() : 0;
+		EnvInfo envInfo(_block.info(), m_eth.blockChain().lastBlockHashes(), gasUsed);
+		Executive e(s, envInfo, *m_eth.blockChain().sealEngine());
+
 		eth::ExecutionResult er;
-		Executive e(s, _block, k, m_eth.blockChain());
 		e.setResultRecipient(er);
 		traces.append(traceTransaction(e, t, _json));
 	}
@@ -86,8 +92,8 @@ Json::Value Debug::debug_traceTransaction(string const& _txHash, Json::Value con
 		Executive e(s, block, t.transactionIndex(), m_eth.blockChain());
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, t, _json);
-		ret["gas"] = toHex(t.gas(), HexPrefix::Add);
-		ret["return"] = toHex(er.output, 2, HexPrefix::Add);
+		ret["gas"] = toJS(t.gas());
+		ret["return"] = toHexPrefixed(er.output);
 		ret["structLogs"] = trace;
 	}
 	catch(Exception const& _e)
@@ -124,7 +130,7 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 {
 	Json::Value ret(Json::objectValue);
 	ret["complete"] = true;
-	ret["storage"] = Json::Value(Json::arrayValue);
+	ret["storage"] = Json::Value(Json::objectValue);
 
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
@@ -136,27 +142,27 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		Block block = m_eth.block(blockHash(_blockHashOrNumber));
 
 		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
-		State state = block.fromPending(i);
+		State state(State::Null);
+		createIntermediateState(state, block, i, m_eth.blockChain());
 
 		map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 
 		// begin is inclusive
 		auto itBegin = storage.lower_bound(h256fromHex(_begin));
-
 		for (auto it = itBegin; it != storage.end(); ++it)
 		{
 			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
 			{
-				ret["complete"] = false;
+				ret["nextKey"] = toCompactHexPrefixed(it->first, 1);
 				break;
 			}
 
 			Json::Value keyValue(Json::objectValue);
-			keyValue["hashedKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
-			keyValue["key"] = toCompactHex(it->second.first, HexPrefix::Add, 1);
-			keyValue["value"] = toCompactHex(it->second.second, HexPrefix::Add, 1);
+			std::string hashedKey = toCompactHexPrefixed(it->first, 1);
+			keyValue["key"] = toCompactHexPrefixed(it->second.first, 1);
+			keyValue["value"] = toCompactHexPrefixed(it->second.second, 1);
 
-			ret["storage"].append(keyValue);
+			ret["storage"][hashedKey] = keyValue;
 		}
 	}
 	catch (Exception const& _e)
@@ -173,7 +179,7 @@ std::string Debug::debug_preimage(std::string const& _hashedKey)
 	h256 const hashedKey(h256fromHex(_hashedKey));
 	bytes const key = m_eth.stateDB().lookupAux(hashedKey);
 
-	return key.empty() ? std::string() : toCompactHex(u256(h256(key)), HexPrefix::Add, 1);
+	return key.empty() ? std::string() : toHexPrefixed(key);
 }
 
 Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options)
@@ -193,11 +199,11 @@ Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& 
 		Transaction transaction(ts.value, gasPrice, gas, ts.to, ts.data, nonce);
 		transaction.forceSender(ts.from);
 		eth::ExecutionResult er;
-		Executive e(temp);
+		Executive e(temp, m_eth.blockChain().lastBlockHashes());
 		e.setResultRecipient(er);
 		Json::Value trace = traceTransaction(e, transaction, _options);
-		ret["gas"] = toHex(transaction.gas(), HexPrefix::Add);
-		ret["return"] = toHex(er.output, 2, HexPrefix::Add);
+		ret["gas"] = toJS(transaction.gas());
+		ret["return"] = toHexPrefixed(er.output);
 		ret["structLogs"] = trace;
 	}
 	catch(Exception const& _e)

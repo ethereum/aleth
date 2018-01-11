@@ -26,33 +26,13 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <random>
-#if ETH_CPUID
-#define HAVE_STDINT_H
-#include <libcpuid/libcpuid.h>
-#endif // ETH_CPUID
+
 using namespace std;
 using namespace dev;
 using namespace eth;
 
 unsigned EthashCPUMiner::s_numInstances = 0;
 
-#if ETH_CPUID
-static string jsonEncode(map<string, string> const& _m)
-{
-	string ret = "{";
-
-	for (auto const& i: _m)
-	{
-		string k = boost::replace_all_copy(boost::replace_all_copy(i.first, "\\", "\\\\"), "'", "\\'");
-		string v = boost::replace_all_copy(boost::replace_all_copy(i.second, "\\", "\\\\"), "'", "\\'");
-		if (ret.size() > 1)
-			ret += ", ";
-		ret += "\"" + k + "\":\"" + v + "\"";
-	}
-
-	return ret + "}";
-}
-#endif // ETH_CPUID
 
 EthashCPUMiner::EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci):
 	GenericMiner<EthashProofOfWork>(_ci), Worker("miner" + toString(index()))
@@ -61,6 +41,7 @@ EthashCPUMiner::EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo
 
 EthashCPUMiner::~EthashCPUMiner()
 {
+	terminate();
 }
 
 void EthashCPUMiner::kickOff()
@@ -96,7 +77,7 @@ void EthashCPUMiner::workLoop()
 	unsigned hashCount = 1;
 	for (; !shouldStop(); tryNonce++, hashCount++)
 	{
-		ethashReturn = ethash_full_compute(dag->full, *(ethash_h256_t*)w.headerHash.data(), tryNonce);
+		ethashReturn = ethash_full_compute(dag->full, *(ethash_h256_t*)w.headerHash().data(), tryNonce);
 		h256 value = h256((uint8_t*)&ethashReturn.result, h256::ConstructFromPointer);
 		if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce, h256((uint8_t*)&ethashReturn.mix_hash, h256::ConstructFromPointer)}))
 			break;
@@ -108,36 +89,5 @@ void EthashCPUMiner::workLoop()
 std::string EthashCPUMiner::platformInfo()
 {
 	string baseline = toString(std::thread::hardware_concurrency()) + "-thread CPU";
-
-#if ETH_CPUID
-	if (!cpuid_present())
-		return baseline;
-	struct cpu_raw_data_t raw;
-	struct cpu_id_t data;
-	if (cpuid_get_raw_data(&raw) < 0)
-		return baseline;
-	if (cpu_identify(&raw, &data) < 0)
-		return baseline;
-	map<string, string> m;
-	m["vendor"] = data.vendor_str;
-	m["codename"] = data.cpu_codename;
-	m["brand"] = data.brand_str;
-	m["L1 cache"] = toString(data.l1_data_cache);
-	m["L2 cache"] = toString(data.l2_cache);
-	m["L3 cache"] = toString(data.l3_cache);
-	m["cores"] = toString(data.num_cores);
-	m["threads"] = toString(data.num_logical_cpus);
-	m["clocknominal"] = toString(cpu_clock_by_os());
-	m["clocktested"] = toString(cpu_clock_measure(200, 0));
-	/*
-	printf("  MMX         : %s\n", data.flags[CPU_FEATURE_MMX] ? "present" : "absent");
-	printf("  MMX-extended: %s\n", data.flags[CPU_FEATURE_MMXEXT] ? "present" : "absent");
-	printf("  SSE         : %s\n", data.flags[CPU_FEATURE_SSE] ? "present" : "absent");
-	printf("  SSE2        : %s\n", data.flags[CPU_FEATURE_SSE2] ? "present" : "absent");
-	printf("  3DNow!      : %s\n", data.flags[CPU_FEATURE_3DNOW] ? "present" : "absent");
-	*/
-	return jsonEncode(m);
-#else
 	return baseline;
-#endif // ETH_CPUID
 }

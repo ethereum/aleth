@@ -26,6 +26,7 @@
 
 #include <libdevcore/Guards.h>
 #include <libethcore/Common.h>
+#include <libethcore/BlockHeader.h>
 #include <libp2p/Common.h>
 #include "CommonNet.h"
 
@@ -45,7 +46,7 @@ class EthereumPeer;
  * @brief Base BlockChain synchronization strategy class.
  * Syncs to peers and keeps up to date. Base class handles blocks downloading but does not contain any details on state transfer logic.
  */
-class BlockChainSync: public HasInvariants
+class BlockChainSync final: public HasInvariants
 {
 public:
 	BlockChainSync(EthereumHost& _host);
@@ -57,6 +58,10 @@ public:
 
 	/// Restart sync
 	void restartSync();
+
+	/// Called after all blocks have been downloaded
+	/// Public only for test mode
+	void completeSync();
 
 	/// Called by peer to report status
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
@@ -75,6 +80,9 @@ public:
 	/// Called by peer when it is disconnecting
 	void onPeerAborting();
 
+	/// Called when a blockchain has imported a new block onto the DB
+	void onBlockImported(BlockHeader const& _info);
+
 	/// @returns Synchonization status
 	SyncStatus status() const;
 
@@ -83,9 +91,6 @@ public:
 private:
 	/// Resume downloading after witing state
 	void continueSync();
-
-	/// Called after all blocks have been donloaded
-	void completeSync();
 
 	/// Enter waiting state
 	void pauseSync();
@@ -99,6 +104,8 @@ private:
 	void clearPeerDownload(std::shared_ptr<EthereumPeer> _peer);
 	void clearPeerDownload();
 	void collectBlocks();
+	bool requestDaoForkBlockHeader(std::shared_ptr<EthereumPeer> _peer);
+	bool verifyDaoChallengeResponse(RLP const& _r);
 
 private:
 	struct Header
@@ -135,8 +142,10 @@ private:
 	EthereumHost& m_host;
 	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
 	mutable RecursiveMutex x_sync;
-	SyncState m_state = SyncState::Idle;		///< Current sync state
+	std::set<std::weak_ptr<EthereumPeer>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_daoChallengedPeers; ///> Peers to which we've sent DAO challenge request
+	std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state
 	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
+	unsigned m_chainStartBlock = 0;
 	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
 	unsigned m_highestBlock = 0;       	     	///< Highest block number seen
 	std::unordered_set<unsigned> m_downloadingHeaders;		///< Set of block body numbers being downloaded
@@ -148,7 +157,7 @@ private:
 	std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
 	bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
 	unsigned m_lastImportedBlock = 0; 			///< Last imported block number
-	h256 m_lastImportedBlockHash; 			///< Last imported block hash
+	h256 m_lastImportedBlockHash;				///< Last imported block hash
 	u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
 private:

@@ -14,28 +14,21 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file OverlayDB.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
-#if !defined(ETH_EMSCRIPTEN)
 
 #include <thread>
 #include <libdevcore/db.h>
 #include <libdevcore/Common.h>
+#include "SHA3.h"
 #include "OverlayDB.h"
-using namespace std;
-using namespace dev;
+#include "TrieDB.h"
 
 namespace dev
 {
 
-h256 const EmptyTrie = sha3(rlp(""));
-
 OverlayDB::~OverlayDB()
 {
 	if (m_db.use_count() == 1 && m_db.get())
-		ctrace << "Closing state DB";
+		clog(DBDetail) << "Closing state DB";
 }
 
 class WriteBatchNoter: public ldb::WriteBatch::Handler
@@ -83,7 +76,7 @@ void OverlayDB::commit()
 			WriteBatchNoter n;
 			batch.Iterate(&n);
 			cwarn << "Sleeping for" << (i + 1) << "seconds, then retrying.";
-			this_thread::sleep_for(chrono::seconds(i + 1));
+			std::this_thread::sleep_for(std::chrono::seconds(i + 1));
 		}
 #if DEV_GUARDED_DB
 		DEV_WRITE_GUARDED(x_this)
@@ -155,19 +148,5 @@ void OverlayDB::kill(h256 const& _h)
 #endif
 }
 
-bool OverlayDB::deepkill(h256 const& _h)
-{
-	// kill in memoryDB
-	kill(_h);
-
-	//kill in overlayDB
-	ldb::Status s = m_db->Delete(m_writeOptions, ldb::Slice((char const*)_h.data(), 32));
-	if (s.ok())
-		return true;
-	else
-		return false;
 }
 
-}
-
-#endif // ETH_EMSCRIPTEN

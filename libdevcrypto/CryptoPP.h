@@ -41,8 +41,6 @@ class Secp256k1PP
 public:
 	static Secp256k1PP* get();
 
-	void toPublic(Secret const& _s, Public& o_public);
-
 	/// Encrypts text (replace input). (ECIES w/XOR-SHA1)
 	void encrypt(Public const& _k, bytes& io_cipher);
 	
@@ -60,29 +58,6 @@ public:
 	
 	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytes& io_text);
-	
-	/// Key derivation function used by encryptECIES and decryptECIES.
-	bytes eciesKDF(Secret const& _z, bytes _s1, unsigned kdBitLen = 256);
-	
-	/// @returns siganture of message.
-	Signature sign(Secret const& _k, bytesConstRef _message);
-	
-	/// @returns compact siganture of provided hash.
-	Signature sign(Secret const& _k, h256 const& _hash);
-	
-	/// Verify compact signature (public key is extracted from signature).
-	bool verify(Signature const& _signature, bytesConstRef _message);
-	
-	/// Verify signature.
-	bool verify(Public const& _p, Signature const& _sig, bytesConstRef _message, bool _hashed = false);
-	
-	/// Recovers public key from compact signature. Uses libsecp256k1.
-	Public recover(Signature _signature, bytesConstRef _message);
-	
-	/// Verifies _s is a valid secret key and returns corresponding public key in o_p.
-	bool verifySecret(Secret const& _s, Public& o_p);
-	
-	void agree(Secret const& _s, Public const& _r, Secret& o_s);
 
 private:
 	Secp256k1PP() = default;

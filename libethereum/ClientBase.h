@@ -76,27 +76,13 @@ struct WorkChannel: public LogChannel { static const char* name(); static const 
 class ClientBase: public Interface
 {
 public:
-	ClientBase(TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}): m_tq(_l) {}
+	ClientBase() {}
 	virtual ~ClientBase() {}
-
-	/// Submits the given transaction.
-	/// @returns the new transaction's hash.
-	virtual std::pair<h256, Address> submitTransaction(TransactionSkeleton const& _t, Secret const& _secret) override;
-	using Interface::submitTransaction;
-
-	/// Makes the given call. Nothing is recorded into the state.
-	virtual ExecutionResult call(Address const& _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) override;
-	using Interface::call;
-
-	/// Makes the given create. Nothing is recorded into the state.
-	virtual ExecutionResult create(Address const& _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) override;
 
 	/// Estimate gas usage for call/create.
 	/// @param _maxGas An upper bound value for estimation, if not provided default value of c_maxGasEstimate will be used.
 	/// @param _callback Optional callback function for progress reporting
-	virtual std::pair<u256, ExecutionResult> estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, u256 _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback) override;
-
-	using Interface::create;
+	virtual std::pair<u256, ExecutionResult> estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, int64_t _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback) override;
 
 	using Interface::balanceAt;
 	using Interface::countAt;
@@ -148,9 +134,8 @@ public:
 	virtual BlockHeader pendingInfo() const override;
 	virtual BlockDetails pendingDetails() const override;
 
-	virtual EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(EnvInfo(pendingInfo())); }
+	virtual EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(pendingInfo().number()); }
 
-	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }
 	virtual ImportResult injectBlock(bytes const& _block) override;
 
 	using Interface::addresses;
@@ -184,8 +169,6 @@ protected:
 	virtual Block postSeal() const = 0;
 	virtual void prepareForTransaction() = 0;
 	/// }
-
-	TransactionQueue m_tq;							///< Maintains a list of incoming transactions not yet in a block on the blockchain.
 
 	// filters
 	mutable Mutex x_filtersWatches;							///< Our lock.

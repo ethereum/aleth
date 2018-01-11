@@ -24,6 +24,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include "WinPipeServer.h"
 #include <windows.h>
 #include <libdevcore/Guards.h>
+#include <libdevcore/FileSystem.h>
 
 using namespace std;
 using namespace jsonrpc;
@@ -32,7 +33,7 @@ using namespace dev;
 int const c_bufferSize = 1024;
 
 WindowsPipeServer::WindowsPipeServer(string const& _appId):
-	IpcServerBase("\\\\.\\pipe\\" + _appId + ".ipc")
+	IpcServerBase("\\\\.\\pipe\\" + getIpcPath().string() + "\\" + _appId + ".ipc")
 {
 }
 

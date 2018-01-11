@@ -35,79 +35,16 @@ const char* WorkInChannel::name() { return EthOrange "⚒" EthGreen "▬▶"; }
 const char* WorkOutChannel::name() { return EthOrange "⚒" EthNavy "◀▬"; }
 const char* WorkChannel::name() { return EthOrange "⚒" EthWhite "  "; }
 
-namespace dev { namespace eth { const u256 c_maxGasEstimate = 50000000; } }
+static const int64_t c_maxGasEstimate = 50000000;
 
-pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
-{
-	prepareForTransaction();
-	
-	TransactionSkeleton ts(_t);
-	ts.from = toAddress(_secret);
-	if (_t.nonce == Invalid256)
-		ts.nonce = max<u256>(postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
-	if (ts.gasPrice == Invalid256)
-		ts.gasPrice = gasBidPrice();
-	if (ts.gas == Invalid256)
-		ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
-
-	Transaction t(ts, _secret);
-	m_tq.import(t.rlp());
-	
-	return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));
-}
-
-// TODO: remove try/catch, allow exceptions
-ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff)
-{
-	ExecutionResult ret;
-	try
-	{
-		Block temp = block(_blockNumber);
-		u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
-		u256 gas = _gas == Invalid256 ? gasLimitRemaining() : _gas;
-		u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
-		Transaction t(_value, gasPrice, gas, _dest, _data, nonce);
-		t.forceSender(_from);
-		if (_ff == FudgeFactor::Lenient)
-			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
-		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return ret;
-}
-
-ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff)
-{
-	ExecutionResult ret;
-	try
-	{
-		Block temp = block(_blockNumber);
-		u256 n = temp.transactionsFrom(_from);
-		//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preSeal.transactionsFrom(toAddress(_secret)) << " post:" << m_postSeal.transactionsFrom(toAddress(_secret));
-		Transaction t(_value, _gasPrice, _gas, _data, n);
-		t.forceSender(_from);
-		if (_ff == FudgeFactor::Lenient)
-			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
-		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return ret;
-}
-
-std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, u256 _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback)
+std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, int64_t _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback)
 {
 	try
 	{
-		u256 upperBound = _maxGas;
+		int64_t upperBound = _maxGas;
 		if (upperBound == Invalid256 || upperBound > c_maxGasEstimate)
 			upperBound = c_maxGasEstimate;
-		u256 lowerBound = (u256)Transaction::gasRequired(!_dest, &_data, EVMSchedule(), 0);
+		int64_t lowerBound = Transaction::baseGasRequired(!_dest, &_data, EVMSchedule());
 		Block bk = block(_blockNumber);
 		u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
 		ExecutionResult er;
@@ -115,7 +52,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 		bool good = false;
 		while (upperBound != lowerBound)
 		{
-			u256 mid = (lowerBound + upperBound) / 2;
+			int64_t mid = (lowerBound + upperBound) / 2;
 			u256 n = bk.transactionsFrom(_from);
 			Transaction t;
 			if (_dest)
@@ -123,8 +60,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 			else
 				t = Transaction(_value, gasPrice, mid, _data, n);
 			t.forceSender(_from);
-			EnvInfo env(bk.info(), bc().lastHashes(), 0);
-			env.setGasLimit(mid.convert_to<int64_t>());
+			EnvInfo const env(bk.info(), bc().lastBlockHashes(), 0, mid);
 			State tempState(bk.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 			er = tempState.execute(env, *bc().sealEngine(), t, Permanence::Reverted).first;

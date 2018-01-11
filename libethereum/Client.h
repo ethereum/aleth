@@ -21,25 +21,29 @@
 
 #pragma once
 
-#include <thread>
-#include <condition_variable>
-#include <mutex>
-#include <list>
-#include <queue>
-#include <atomic>
-#include <string>
-#include <array>
+#include "Block.h"
+#include "BlockChain.h"
+#include "BlockChainImporter.h"
+#include "ClientBase.h"
+#include "CommonNet.h"
+#include "StateImporter.h"
+#include "WarpHostCapability.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/Worker.h>
 #include <libethcore/SealEngine.h>
-#include <libethcore/ABI.h>
 #include <libp2p/Common.h>
-#include "BlockChain.h"
-#include "Block.h"
-#include "CommonNet.h"
-#include "ClientBase.h"
+#include <array>
+#include <atomic>
+#include <condition_variable>
+#include <list>
+#include <mutex>
+#include <queue>
+#include <string>
+#include <thread>
+
+#include <boost/filesystem/path.hpp>
 
 namespace dev
 {
@@ -80,7 +84,7 @@ public:
 		int _networkID,
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
-		std::string const& _dbPath = std::string(),
+		boost::filesystem::path const& _dbPath = boost::filesystem::path(),
 		WithExisting _forceAction = WithExisting::Trust,
 		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
@@ -90,19 +94,24 @@ public:
 	/// Get information on this chain.
 	ChainParams const& chainParams() const { return bc().chainParams(); }
 
+	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }
+
 	/// Resets the gas pricer to some other object.
 	void setGasPricer(std::shared_ptr<GasPricer> _gp) { m_gp = _gp; }
 	std::shared_ptr<GasPricer> gasPricer() const { return m_gp; }
+
+	/// Submits the given transaction.
+	/// @returns the new transaction's hash.
+	virtual std::pair<h256, Address> submitTransaction(TransactionSkeleton const& _t, Secret const& _secret) override;
+
+	/// Makes the given call. Nothing is recorded into the state.
+	virtual ExecutionResult call(Address const& _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) override;
 
 	/// Blocks until all pending transactions have been processed.
 	virtual void flushTransactions() override;
 
 	/// Queues a block for import.
 	ImportResult queueBlock(bytes const& _block, bool _isSafe = false);
-
-	using Interface::call; // to remove warning about hiding virtual function
-	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
-	ExecutionResult call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether, Address const& _from = Address());
 
 	/// Get the remaining gas limit in this block.
 	virtual u256 gasLimitRemaining() const override { return m_postSeal.gasLimitRemaining(); }
@@ -112,12 +121,6 @@ public:
 	// [PRIVATE API - only relevant for base clients, not available in general]
 	/// Get the block.
 	dev::eth::Block block(h256 const& _blockHash, PopulationStatistics* o_stats) const;
-	/// Get the state of the given block part way through execution, immediately before transaction
-	/// index @a _txi.
-	dev::eth::State state(unsigned _txi, h256 const& _block) const;
-	/// Get the state of the currently pending block part way through execution, immediately before
-	/// transaction index @a _txi.
-	dev::eth::State state(unsigned _txi) const;
 
 	/// Get the object representing the current state of Ethereum.
 	dev::eth::Block postState() const { ReadGuard l(x_postSeal); return m_postSeal; }
@@ -196,16 +199,22 @@ public:
 	/// Rescue the chain.
 	void rescue() { bc().rescue(m_stateDB); }
 
+	std::unique_ptr<StateImporterFace> createStateImporter() { return dev::eth::createStateImporter(m_stateDB); }
+	std::unique_ptr<BlockChainImporterFace> createBlockChainImporter() { return dev::eth::createBlockChainImporter(m_bc); }
+
 	/// Queues a function to be executed in the main thread (that owns the blockchain, etc).
 	void executeInMainThread(std::function<void()> const& _function);
 
 	virtual Block block(h256 const& _block) const override;
 	using ClientBase::block;
 
+	/// should be called after the constructor of the most derived class finishes.
+	void startWorking() { Worker::startWorking(); };
+
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.
-	void init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId);
+	void init(p2p::Host* _extNet, boost::filesystem::path const& _dbPath, WithExisting _forceAction, u256 _networkId);
 
 	/// InterfaceStub methods
 	BlockChain& bc() override { return m_bc; }
@@ -293,6 +302,8 @@ protected:
 
 	BlockChain m_bc;						///< Maintains block database and owns the seal engine.
 	BlockQueue m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
+	TransactionQueue m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
+
 	std::shared_ptr<GasPricer> m_gp;		///< The gas pricer.
 
 	OverlayDB m_stateDB;					///< Acts as the central point for the state database, so multiple States can share it.
@@ -309,6 +320,10 @@ protected:
 	std::chrono::system_clock::time_point m_lastGetWork;	///< Is there an active and valid remote worker?
 
 	std::weak_ptr<EthereumHost> m_host;		///< Our Ethereum Host. Don't do anything if we can't lock.
+    std::weak_ptr<WarpHostCapability> m_warpHost;
+
+    std::condition_variable m_signalled;
+	Mutex x_signalled;
 
 	Handler<> m_tqReady;
 	Handler<h256 const&> m_tqReplaced;
@@ -329,8 +344,6 @@ protected:
 	SharedMutex x_functionQueue;
 	std::queue<std::function<void()>> m_functionQueue;	///< Functions waiting to be executed in the main thread.
 
-	std::condition_variable m_signalled;
-	Mutex x_signalled;
 	std::atomic<bool> m_syncTransactionQueue = {false};
 	std::atomic<bool> m_syncBlockQueue = {false};
 
