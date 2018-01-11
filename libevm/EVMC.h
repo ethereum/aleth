@@ -16,7 +16,7 @@ class EVM;
 evm_revision toRevision(EVMSchedule const& _schedule);
 
 template<evm_create_fn createFn>
-class JitVM : public VMFace
+class EVMC : public VMFace
 {
 public:
     owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
@@ -28,6 +28,6 @@ private:
     static EVM& instance();
 };
 
-using EVMJIT = JitVM<evmjit_create>;
+using EVMJIT = EVMC<evmjit_create>;
 }
 }

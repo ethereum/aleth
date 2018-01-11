@@ -20,7 +20,7 @@
 #include <libdevcore/concurrent_queue.h>
 #include <libdevcore/Log.h>
 #include "VMFactory.h"
-#include "JitVM.h"
+#include "EVMC.h"
 
 namespace dev
 {

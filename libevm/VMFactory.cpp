@@ -20,7 +20,7 @@
 #include "VM.h"
 
 #if ETH_EVMJIT
-#include "JitVM.h"
+#include "EVMC.h"
 #include "SmartVM.h"
 #endif
 

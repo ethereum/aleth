@@ -1,4 +1,4 @@
-#include "JitVM.h"
+#include "EVMC.h"
 
 #include <libdevcore/Log.h>
 #include <libevm/VM.h>
@@ -98,14 +98,14 @@ private:
 
 
 template<evm_create_fn createFn>
-EVM& JitVM<createFn>::instance()
+EVM& EVMC<createFn>::instance()
 {
     static EVM evm{createFn};
     return evm;
 }
 
 template<evm_create_fn createFn>
-owning_bytes_ref JitVM<createFn>::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref EVMC<createFn>::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	bool rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
@@ -152,13 +152,13 @@ evm_revision toRevision(EVMSchedule const& _schedule)
 }
 
 template<evm_create_fn createFn>
-bool JitVM<createFn>::isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
+bool EVMC<createFn>::isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
 {
     return instance().isCodeReady(_mode, _flags, _codeHash);
 }
 
 template<evm_create_fn createFn>
-void JitVM<createFn>::compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
+void EVMC<createFn>::compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
 {
     instance().compile(_mode, _flags, _code, _codeHash);
 }
@@ -166,7 +166,7 @@ void JitVM<createFn>::compile(evm_revision _mode, uint32_t _flags, bytesConstRef
 #if ETH_EVMJIT
 // Make an explicit instance, because SmartVM expects it.
 // FIXME: This must be fixed, probably we should not overuse static methods.
-template class JitVM<evmjit_create>;
+template class EVMC<evmjit_create>;
 #endif
 
 }
