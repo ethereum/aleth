@@ -81,13 +81,26 @@ void validate(boost::any& v, const std::vector<std::string>& values, VMKind* /* 
 
 po::options_description getVMOptions(unsigned _lineLength)
 {
+    // It must be a static object because boost expects const char*.
+    static const std::string description = [] {
+        std::string names;
+        for (auto& entry : vmKindsTable)
+        {
+            if (!names.empty())
+                names += ", ";
+            names += entry.name;
+        }
+
+        return "Select VM implementation. Available options are: " + names + ".";
+    }();
+
     po::options_description opts("VM Options", _lineLength);
     opts.add_options()("vm",
         po::value<VMKind>()
             ->value_name("<name>")
             ->default_value(VMKind::Interpreter, "interpreter")
             ->notifier(VMFactory::setKind),
-        "Select VM implementation; options are: interpreter, jit or smart");
+        description.data());
 
     return opts;
 }
