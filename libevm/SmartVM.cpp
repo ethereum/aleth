@@ -19,7 +19,6 @@
 #include <thread>
 #include <libdevcore/concurrent_queue.h>
 #include <libdevcore/Log.h>
-#include <libdevcore/Guards.h>
 #include "VMFactory.h"
 #include "JitVM.h"
 
@@ -57,7 +56,7 @@ namespace
 
 	class JitWorker
 	{
-        JitVM& m_jit;
+		EVMJIT& m_jit;
 		concurrent_queue<JitTask> m_queue;
 		std::thread m_worker; // Worker must be last to initialize
 
@@ -75,7 +74,7 @@ namespace
 		}
 
 	public:
-        explicit JitWorker(JitVM& _jit) noexcept : m_jit(_jit), m_worker([this] { work(); }) {}
+        explicit JitWorker(EVMJIT& _jit) noexcept : m_jit(_jit), m_worker([this] { work(); }) {}
 
         ~JitWorker()
 		{
@@ -90,7 +89,7 @@ namespace
 owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
     // Keep the JIT instance.
-    static JitVM jit;
+    static EVMJIT jit;
 
     auto mode = toRevision(_ext.evmSchedule());
     uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
