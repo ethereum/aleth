@@ -12,7 +12,7 @@ set(SOURCES
 
 if (EVMJIT)
 	list(APPEND SOURCES
-		JitVM.cpp
+        EVMC.cpp
 		SmartVM.cpp
 	)
 endif()

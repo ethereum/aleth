@@ -1,4 +1,4 @@
-#include "JitVM.h"
+#include "EVMC.h"
 
 #include <libdevcore/Log.h>
 #include <libevm/VM.h>
@@ -9,26 +9,19 @@ namespace dev
 namespace eth
 {
 
-namespace
-{
-
-/// RAII wrapper for an evm instance.
+/// The RAII wrapper for an EVM-C instance.
 class EVM
 {
 public:
-	EVM():
-		m_instance(evmjit_create())
-	{
-		assert(m_instance->abi_version == EVM_ABI_VERSION);
-	}
+    explicit EVM(evm_create_fn _createFn) : m_instance(_createFn())
+    {
+        assert(m_instance->abi_version == EVM_ABI_VERSION);
+    }
 
-	~EVM()
-	{
-		m_instance->destroy(m_instance);
-	}
+    ~EVM() { m_instance->destroy(m_instance); }
 
-	EVM(EVM const&) = delete;
-	EVM& operator=(EVM) = delete;
+    EVM(EVM const&) = delete;
+    EVM& operator=(EVM) = delete;
 
 	class Result
 	{
@@ -75,7 +68,7 @@ public:
 	/// Handy wrapper for evm_execute().
 	Result execute(ExtVMFace& _ext, int64_t gas)
 	{
-		auto mode = JitVM::toRevision(_ext.evmSchedule());
+		auto mode = toRevision(_ext.evmSchedule());
 		uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
 		evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
 						   toEvmC(_ext.value), _ext.data.data(),
@@ -103,16 +96,16 @@ private:
 	evm_instance* m_instance = nullptr;
 };
 
-EVM& getJit()
+
+template<evm_create_fn createFn>
+EVM& EVMC<createFn>::instance()
 {
-	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit;
-	return jit;
+    static EVM evm{createFn};
+    return evm;
 }
 
-}  // End of anonymous namespace.
-
-owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+template<evm_create_fn createFn>
+owning_bytes_ref EVMC<createFn>::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	bool rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
@@ -127,7 +120,7 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	}
 
 	auto gas = static_cast<int64_t>(io_gas);
-	auto r = getJit().execute(_ext, gas);
+	auto r = instance().execute(_ext, gas);
 
 	// TODO: Add EVM-C result codes mapping with exception types.
 	if (r.status() == EVM_FAILURE)
@@ -143,7 +136,7 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	return output;
 }
 
-evm_revision JitVM::toRevision(EVMSchedule const& _schedule)
+evm_revision toRevision(EVMSchedule const& _schedule)
 {
 	if (_schedule.haveCreate2)
 		return EVM_CONSTANTINOPLE;
@@ -158,15 +151,23 @@ evm_revision JitVM::toRevision(EVMSchedule const& _schedule)
 	return EVM_FRONTIER;
 }
 
-bool JitVM::isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
+template<evm_create_fn createFn>
+bool EVMC<createFn>::isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
 {
-	return getJit().isCodeReady(_mode, _flags, _codeHash);
+    return instance().isCodeReady(_mode, _flags, _codeHash);
 }
 
-void JitVM::compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
+template<evm_create_fn createFn>
+void EVMC<createFn>::compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
 {
-	getJit().compile(_mode, _flags, _code, _codeHash);
+    instance().compile(_mode, _flags, _code, _codeHash);
 }
+
+#if ETH_EVMJIT
+// Make an explicit instance, because SmartVM expects it.
+// FIXME: This must be fixed, probably we should not overuse static methods.
+template class EVMC<evmjit_create>;
+#endif
 
 }
 }
