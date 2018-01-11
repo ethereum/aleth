@@ -163,7 +163,7 @@ int main(int argc, char** argv)
 
     po::options_description allowedOptions(
         "Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
-    allowedOptions.add(getVMOptions(c_lineWidth))
+    allowedOptions.add(vmProgramOptions(c_lineWidth))
         .add(networkOptions)
         .add(optionsForTrace)
         .add(generalOptions)

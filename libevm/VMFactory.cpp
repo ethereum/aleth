@@ -79,7 +79,7 @@ void validate(boost::any& v, const std::vector<std::string>& values, VMKind* /* 
     throw po::validation_error(po::validation_error::invalid_option_value);
 }
 
-po::options_description getVMOptions(unsigned _lineLength)
+po::options_description vmProgramOptions(unsigned _lineLength)
 {
     // It must be a static object because boost expects const char*.
     static const std::string description = [] {

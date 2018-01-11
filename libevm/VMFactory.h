@@ -35,7 +35,7 @@ enum class VMKind
 ///
 /// @param _lineLength  The line length for description text wrapping, the same as in
 ///                     boost::program_options::options_description::options_description().
-boost::program_options::options_description getVMOptions(
+boost::program_options::options_description vmProgramOptions(
     unsigned _lineLength = boost::program_options::options_description::m_default_line_length);
 
 class VMFactory

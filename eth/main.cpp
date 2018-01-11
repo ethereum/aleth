@@ -361,7 +361,7 @@ int main(int argc, char** argv)
         .add(clientMining)
         .add(clientNetworking)
         .add(importExportMode)
-        .add(getVMOptions(c_lineWidth))
+        .add(vmProgramOptions(c_lineWidth))
         .add(generalOptions);
 
 	po::variables_map vm;
