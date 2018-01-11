@@ -121,6 +121,9 @@ find_package(libjson-rpc-cpp CONFIG REQUIRED)
 include(ProjectSecp256k1)
 include(ProjectLibFF)
 
+# Import binaryen library before hera to make it available also to testeth.
+include(hera/cmake/ProjectBinaryen.cmake)
+
 find_package(Threads)
 
 if(MINIUPNPC)
