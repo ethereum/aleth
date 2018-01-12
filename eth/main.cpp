@@ -225,7 +225,6 @@ int main(int argc, char** argv)
 	std::map<NodeID, pair<NodeIPEndpoint,bool>> preferredNodes;
 	bool bootstrap = true;
 	bool disableDiscovery = false;
-	bool pinning = false;
 	bool enableDiscovery = false;
 	static const unsigned NoNetworkID = (unsigned)-1;
 	unsigned networkID = NoNetworkID;
@@ -509,8 +508,6 @@ int main(int argc, char** argv)
 		disableDiscovery = true;
 		bootstrap = false;
 	}
-	if (vm.count("pin"))
-		pinning = true;
 	if (vm.count("unsafe-transactions"))
 		alwaysConfirm = false;
 	if (vm.count("db-path"))
@@ -842,7 +839,7 @@ int main(int argc, char** argv)
 
 	auto netPrefs = publicIP.empty() ? NetworkPreferences(listenIP, listenPort, upnp) : NetworkPreferences(publicIP, listenIP ,listenPort, upnp);
 	netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
-	netPrefs.pin = (pinning || !privateChain.empty());
+	netPrefs.pin = vm.count("pin") != 0;
 
 	auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
 	auto caps = set<string>{"eth"};
