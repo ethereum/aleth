@@ -227,7 +227,6 @@ int main(int argc, char** argv)
 	bool disableDiscovery = false;
 	bool pinning = false;
 	bool enableDiscovery = false;
-	bool noPinning = false;
 	static const unsigned NoNetworkID = (unsigned)-1;
 	unsigned networkID = NoNetworkID;
 
@@ -398,7 +397,6 @@ int main(int argc, char** argv)
 		testingMode = true;
 		enableDiscovery = false;
 		disableDiscovery = true;
-		noPinning = true;
 		bootstrap = false;
 	}
 	if (vm.count("verbosity"))
@@ -844,7 +842,7 @@ int main(int argc, char** argv)
 
 	auto netPrefs = publicIP.empty() ? NetworkPreferences(listenIP, listenPort, upnp) : NetworkPreferences(publicIP, listenIP ,listenPort, upnp);
 	netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
-	netPrefs.pin = (pinning || !privateChain.empty()) && !noPinning;
+	netPrefs.pin = (pinning || !privateChain.empty());
 
 	auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
 	auto caps = set<string>{"eth"};
