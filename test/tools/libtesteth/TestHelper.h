@@ -78,6 +78,7 @@ bool isDisabledNetwork(eth::Network _net);
 std::vector<eth::Network> const& getNetworks();
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
+std::string replaceLLL(std::string const& _code);
 void replaceLLLinState(json_spirit::mObject& _o);
 std::string compileLLL(std::string const& _code);
 std::string executeCmd(std::string const& _command);

@@ -264,16 +264,14 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
 
 	for (auto const& i: output)
 	{
-		bool isHash = false;
-		std::string key = i.first;
+        std::string key = i.first;
+        if (key == "extraData")
+            continue;
 
-		if (key == "data" || key == "extraData")
-			continue;
+        bool isHash = hashes.count(key);
+        bool isData = (key == "data");
 
-		if (hashes.count(key))
-			isHash = true;
-
-		if (_isHeader && key == "nonce")
+        if (_isHeader && key == "nonce")
 			isHash = true;
 
 		std::string str;
@@ -282,14 +280,14 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
 		if (value.type() == json_spirit::int_type)
 			str = toString(value.get_int());
 		else if (value.type() == json_spirit::str_type)
-			str = value.get_str();
-		else if (value.type() == json_spirit::array_type)
+            str = isData ? replaceLLL(value.get_str()) : value.get_str();
+        else if (value.type() == json_spirit::array_type)
 		{
 			json_spirit::mArray arr;
 			for (auto const& j: value.get_array())
 			{
-				str = j.get_str();
-				arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
+                str = isData ? replaceLLL(j.get_str()) : j.get_str();
+                arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
 			}
 			output[key] = arr;
 			continue;
