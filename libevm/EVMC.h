@@ -100,10 +100,10 @@ private:
 
 
 /// The wrapper implementing the VMFace interface with a EVM-C VM as a backend.
-class JitVM : public EVM, public VMFace
+class EVMC : public EVM, public VMFace
 {
 public:
-    explicit JitVM(evm_instance* _instance) : EVM(_instance) {}
+    explicit EVMC(evm_instance* _instance) : EVM(_instance) {}
 
     owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
 };

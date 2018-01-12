@@ -1,4 +1,4 @@
-#include "JitVM.h"
+#include "EVMC.h"
 
 #include <libdevcore/Log.h>
 #include <libevm/VM.h>
@@ -9,7 +9,7 @@ namespace dev
 namespace eth
 {
 
-owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	bool rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
