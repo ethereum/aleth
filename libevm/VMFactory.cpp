@@ -125,7 +125,7 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
     case VMKind::Interpreter:
         return std::unique_ptr<VMFace>(new VM);
     case VMKind::JIT:
-        return std::unique_ptr<VMFace>(new JitVM);
+        return std::unique_ptr<VMFace>(new JitVM{evmjit_create()});
     case VMKind::Smart:
         return std::unique_ptr<VMFace>(new SmartVM);
     }

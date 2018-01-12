@@ -9,20 +9,6 @@ namespace dev
 namespace eth
 {
 
-namespace
-{
-
-
-
-EVM& getJit()
-{
-	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit;
-	return jit;
-}
-
-}  // End of anonymous namespace.
-
 owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	bool rejected = false;
@@ -38,7 +24,7 @@ owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	}
 
 	auto gas = static_cast<int64_t>(io_gas);
-	auto r = getJit().execute(_ext, gas);
+	auto r = execute(_ext, gas);
 
 	// TODO: Add EVM-C result codes mapping with exception types.
 	if (r.status() == EVM_FAILURE)
@@ -67,16 +53,6 @@ evm_revision toRevision(EVMSchedule const& _schedule)
 	if (_schedule.haveDelegateCall)
 		return EVM_HOMESTEAD;
 	return EVM_FRONTIER;
-}
-
-bool JitVM::isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
-{
-	return getJit().isCodeReady(_mode, _flags, _codeHash);
-}
-
-void JitVM::compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
-{
-	getJit().compile(_mode, _flags, _code, _codeHash);
 }
 
 }

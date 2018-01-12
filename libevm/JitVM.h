@@ -14,9 +14,9 @@ evm_revision toRevision(EVMSchedule const& _schedule);
 class EVM
 {
 public:
-    EVM():
-        m_instance(evmjit_create())
+    explicit EVM(evm_instance* _instance) : m_instance(_instance)
     {
+        assert(m_instance != nullptr);
         assert(m_instance->abi_version == EVM_ABI_VERSION);
     }
 
@@ -100,13 +100,12 @@ private:
 
 
 /// The wrapper implementing the VMFace interface with a EVM-C VM as a backend.
-class JitVM : public VMFace
+class JitVM : public EVM, public VMFace
 {
 public:
-    owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
+    explicit JitVM(evm_instance* _instance) : EVM(_instance) {}
 
-    bool isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash);
-    void compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash);
+    owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
 };
 }
 }

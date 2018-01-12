@@ -19,7 +19,6 @@
 #include <thread>
 #include <libdevcore/concurrent_queue.h>
 #include <libdevcore/Log.h>
-#include <libdevcore/Guards.h>
 #include "VMFactory.h"
 #include "JitVM.h"
 
@@ -90,7 +89,7 @@ namespace
 owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
     // Keep the JIT instance.
-    static JitVM jit;
+    static JitVM jit{evmjit_create()};
 
     auto mode = toRevision(_ext.evmSchedule());
     uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
