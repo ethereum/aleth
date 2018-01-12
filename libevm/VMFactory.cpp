@@ -20,6 +20,7 @@
 #include "SmartVM.h"
 #include "VM.h"
 #include <libdevcore/Assertions.h>
+#include <evmjit.h>
 
 namespace po = boost::program_options;
 

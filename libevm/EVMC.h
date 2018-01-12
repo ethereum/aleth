@@ -1,6 +1,6 @@
 #pragma once
 
-#include <evmjit.h>
+#include <evm.h>
 #include <libevm/VMFace.h>
 
 namespace dev

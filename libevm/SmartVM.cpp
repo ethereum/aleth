@@ -20,6 +20,7 @@
 #include "VMFactory.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/concurrent_queue.h>
+#include <evmjit.h>
 #include <thread>
 
 namespace dev
