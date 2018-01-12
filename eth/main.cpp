@@ -332,9 +332,7 @@ int main(int argc, char** argv)
 #endif
 		("peerset", po::value<string>()->value_name("<list>"), "Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n        Types:\n        default     Attempt connection when no other peers are available and pinning is disabled.\n        required	    Keep connected at all times.\n")
 		("no-discovery",  "Disable node discovery, implies --no-bootstrap.")
-		("pin",  "Only accept or connect to trusted peers.")
-		("hermit",  "Equivalent to --no-discovery --pin.")
-		("sociable",  "Force discovery and no pinning.\n");
+		("pin",  "Only accept or connect to trusted peers.");
 
 	po::options_description importExportMode("Import/export modes", c_lineWidth);
 	importExportMode.add_options()
@@ -515,10 +513,6 @@ int main(int argc, char** argv)
 	}
 	if (vm.count("pin"))
 		pinning = true;
-	if (vm.count("hermit"))
-		pinning = disableDiscovery = true;
-	if (vm.count("sociable"))
-		noPinning = enableDiscovery = true;
 	if (vm.count("unsafe-transactions"))
 		alwaysConfirm = false;
 	if (vm.count("db-path"))
