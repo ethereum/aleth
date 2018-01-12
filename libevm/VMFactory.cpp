@@ -16,13 +16,11 @@
 */
 
 #include "VMFactory.h"
-#include <libdevcore/Assertions.h>
-#include "VM.h"
-
-#if ETH_EVMJIT
-#include "JitVM.h"
+#include "EVMC.h"
 #include "SmartVM.h"
-#endif
+#include "VM.h"
+#include <libdevcore/Assertions.h>
+#include <evmjit.h>
 
 namespace po = boost::program_options;
 
@@ -125,7 +123,7 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
     case VMKind::Interpreter:
         return std::unique_ptr<VMFace>(new VM);
     case VMKind::JIT:
-        return std::unique_ptr<VMFace>(new JitVM);
+        return std::unique_ptr<VMFace>(new EVMC{evmjit_create()});
     case VMKind::Smart:
         return std::unique_ptr<VMFace>(new SmartVM);
     }
