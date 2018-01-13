@@ -128,6 +128,10 @@ set(UTILS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/utils")
 
 configure_project()
 
+if (HERA)
+    add_subdirectory(hera)
+endif()
+
 #Global include path for all libs.
 include_directories("${CMAKE_SOURCE_DIR}")
 

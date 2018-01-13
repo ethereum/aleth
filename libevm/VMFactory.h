@@ -23,12 +23,12 @@ namespace dev
 {
 namespace eth
 {
-
 enum class VMKind
 {
-	Interpreter,
-	JIT,
-	Smart
+    Interpreter,
+    JIT,
+    Smart,
+    Hera
 };
 
 /// Provide a set of program options related to VMs.
