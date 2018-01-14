@@ -28,7 +28,8 @@ enum class VMKind
     Interpreter,
     JIT,
     Smart,
-    Hera
+    Hera,
+    HeraPlus
 };
 
 /// Provide a set of program options related to VMs.

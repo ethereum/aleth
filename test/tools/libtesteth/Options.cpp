@@ -120,6 +120,8 @@ Options::Options(int argc, char** argv)
 				VMFactory::setKind(VMKind::Smart);
 			else if (vmKind == "hera")
 				VMFactory::setKind(VMKind::Hera);
+			else if (vmKind == "heraplus")
+				VMFactory::setKind(VMKind::HeraPlus);
 			else
 				cerr << "Unknown VM kind: " << vmKind << "\n";
 		}
