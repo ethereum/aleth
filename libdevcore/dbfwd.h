@@ -24,7 +24,7 @@ namespace dev
 namespace db
 {
 using Slice = vector_ref<char const>;
-class Transaction;
-class DB;
+class WriteBatchFace;
+class DatabaseFace;
 }
 }

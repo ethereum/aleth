@@ -31,7 +31,7 @@ void OverlayDB::commit()
 {
 	if (m_db)
 	{
-		auto transaction = m_db->begin();
+		auto writeBatch = m_db->createWriteBatch();
 //		cnote << "Committing nodes to disk DB:";
 #if DEV_GUARDED_DB
 		DEV_READ_GUARDED(x_this)
@@ -40,7 +40,7 @@ void OverlayDB::commit()
 			for (auto const& i: m_main)
 			{
 				if (i.second.second)
-					transaction->insert(db::Slice(reinterpret_cast<char const*>(i.first.data()), i.first.size), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
+					writeBatch->insert(db::Slice(reinterpret_cast<char const*>(i.first.data()), i.first.size), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
 //				cnote << i.first << "#" << m_main[i.first].second;
 			}
 			for (auto const& i: m_aux)
@@ -48,7 +48,7 @@ void OverlayDB::commit()
 				{
 					bytes b = i.first.asBytes();
 					b.push_back(255);	// for aux
-					transaction->insert(db::Slice(reinterpret_cast<char const*>(&b[0]), b.size()), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
+					writeBatch->insert(db::Slice(reinterpret_cast<char const*>(&b[0]), b.size()), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
 				}
 		}
 
@@ -56,7 +56,7 @@ void OverlayDB::commit()
 		{
 			try
 			{
-				transaction->commit();
+				m_db->commit(std::move(writeBatch));
 				break;
 			}
 			catch (const db::FailedCommitInDB& ex)
@@ -93,7 +93,7 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
 	{
 		v = m_db->lookup(db::Slice(reinterpret_cast<char const*>(&b[0]), b.size()));
 	}
-	catch (const db::FailedLookupInDB& ex)
+	catch (const db::FailedLookupInDB&)
 	{
 		cwarn << "Aux not found: " << _h;
 	}
@@ -135,7 +135,7 @@ void OverlayDB::kill(h256 const& _h)
 			{
 				ret = m_db->lookup(db::Slice(reinterpret_cast<char const*>(_h.data()), 32));
 			}
-			catch (const db::FailedLookupInDB& ex)
+			catch (const db::FailedLookupInDB&)
 			{
 				// No point node ref decreasing for EmptyTrie since we never bother incrementing it in the first place for
 				// empty storage tries.

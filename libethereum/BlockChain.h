@@ -335,7 +335,7 @@ private:
 	void checkBlockIsNew(VerifiedBlockRef const& _block) const;
 	void checkBlockTimestamp(BlockHeader const& _header) const;
 
-	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, db::DB* _extrasDB = nullptr) const
+	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, db::DatabaseFace* _extrasDB = nullptr) const
 	{
 		{
 			ReadGuard l(_x);
@@ -361,7 +361,7 @@ private:
 		return ret.first->second;
 	}
 
-	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, db::DB* _extrasDB = nullptr) const
+	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, db::DatabaseFace* _extrasDB = nullptr) const
 	{
 		return queryExtras<T, h256, N>(_h, _m, _x, _n, _extrasDB);
 	}
@@ -404,8 +404,8 @@ private:
 	mutable Statistics m_lastStats;
 
 	/// The disk DBs. Thread-safe, so no need for locks.
-	std::unique_ptr<db::DB> m_blocksDB;
-	std::unique_ptr<db::DB> m_extrasDB;
+	std::unique_ptr<db::DatabaseFace> m_blocksDB;
+	std::unique_ptr<db::DatabaseFace> m_extrasDB;
 
 	/// Hash of the last (valid) block on the longest chain.
 	mutable boost::shared_mutex x_lastBlockHash; // should protect both m_lastBlockHash and m_lastBlockNumber

@@ -362,7 +362,7 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 	// Keep extras DB around, but under a temp name
 	m_extrasDB.reset();
 	fs::rename(extrasPath / fs::path("extras"), extrasPath / fs::path("extras.old"));
-	std::unique_ptr<db::DB> oldExtrasDB(new db::DBImpl((extrasPath / fs::path("extras.old")).string()));
+	std::unique_ptr<db::DatabaseFace> oldExtrasDB(new db::DBImpl((extrasPath / fs::path("extras.old")).string()));
 	m_extrasDB.reset(new db::DBImpl((extrasPath / fs::path("extras")).string()));
 
 	// Open a fresh state DB
@@ -580,8 +580,8 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
 
 	// OK - we're happy. Insert into database.
-	std::unique_ptr<db::Transaction> blocksTransaction = m_blocksDB->begin();
-	std::unique_ptr<db::Transaction> extrasTransaction = m_extrasDB->begin();
+	std::unique_ptr<db::WriteBatchFace> blocksWriteBatch = m_blocksDB->createWriteBatch();
+	std::unique_ptr<db::WriteBatchFace> extrasWriteBatch = m_extrasDB->createWriteBatch();
 
 	BlockLogBlooms blb;
 	for (auto i: RLP(_receipts))
@@ -599,18 +599,18 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 			m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
 	}
 
-	blocksTransaction->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
+	blocksWriteBatch->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
 	DEV_READ_GUARDED(x_details)
-		extrasTransaction->insert(toSlice(_block.info.parentHash(), ExtraDetails), (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
+		extrasWriteBatch->insert(toSlice(_block.info.parentHash(), ExtraDetails), (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
 	BlockDetails bd((unsigned)pd.number + 1, pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {});
-	extrasTransaction->insert(toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(bd.rlp()));
-	extrasTransaction->insert(toSlice(_block.info.hash(), ExtraLogBlooms), (db::Slice)dev::ref(blb.rlp()));
-	extrasTransaction->insert(toSlice(_block.info.hash(), ExtraReceipts), (db::Slice)_receipts);
+	extrasWriteBatch->insert(toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(bd.rlp()));
+	extrasWriteBatch->insert(toSlice(_block.info.hash(), ExtraLogBlooms), (db::Slice)dev::ref(blb.rlp()));
+	extrasWriteBatch->insert(toSlice(_block.info.hash(), ExtraReceipts), (db::Slice)_receipts);
 
 	try
 	{
-		blocksTransaction->commit();
+		m_blocksDB->commit(std::move(blocksWriteBatch));
 	}
 	catch (const db::FailedCommitInDB& ex)
 	{
@@ -621,7 +621,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 
 	try
 	{
-		extrasTransaction->commit();
+		m_extrasDB->commit(std::move(extrasWriteBatch));
 	}
 	catch (const db::FailedCommitInDB& ex)
 	{
@@ -747,8 +747,8 @@ void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
 
 ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, bytesConstRef _receipts, u256 const& _totalDifficulty, ImportPerformanceLogger& _performanceLogger)
 {
-	std::unique_ptr<db::Transaction> blocksTransaction = m_blocksDB->begin();
-	std::unique_ptr<db::Transaction> extrasTransaction = m_extrasDB->begin();
+	std::unique_ptr<db::WriteBatchFace> blocksWriteBatch = m_blocksDB->createWriteBatch();
+	std::unique_ptr<db::WriteBatchFace> extrasWriteBatch = m_extrasDB->createWriteBatch();
 	h256 newLastBlockHash = currentHash();
 	unsigned newLastBlockNumber = number();
 
@@ -765,19 +765,19 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 		_performanceLogger.onStageFinished("collation");
 
-		blocksTransaction->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
+		blocksWriteBatch->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
 		DEV_READ_GUARDED(x_details)
-			extrasTransaction->insert(toSlice(_block.info.parentHash(), ExtraDetails), (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
+			extrasWriteBatch->insert(toSlice(_block.info.parentHash(), ExtraDetails), (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
 		BlockDetails const details((unsigned)_block.info.number(), _totalDifficulty, _block.info.parentHash(), {});
-		extrasTransaction->insert(toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(details.rlp()));
+		extrasWriteBatch->insert(toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(details.rlp()));
 
 		BlockLogBlooms blb;
 		for (auto i: RLP(_receipts))
 			blb.blooms.push_back(TransactionReceipt(i.data()).bloom());
-		extrasTransaction->insert(toSlice(_block.info.hash(), ExtraLogBlooms), (db::Slice)dev::ref(blb.rlp()));
+		extrasWriteBatch->insert(toSlice(_block.info.hash(), ExtraLogBlooms), (db::Slice)dev::ref(blb.rlp()));
 
-		extrasTransaction->insert(toSlice(_block.info.hash(), ExtraReceipts), (db::Slice)_receipts);
+		extrasWriteBatch->insert(toSlice(_block.info.hash(), ExtraReceipts), (db::Slice)_receipts);
 
 		_performanceLogger.onStageFinished("writing");
 	}
@@ -843,14 +843,14 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 				TransactionAddress ta;
 				ta.blockHash = tbi.hash();
 				for (ta.index = 0; ta.index < blockRLP[1].itemCount(); ++ta.index)
-					extrasTransaction->insert(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (db::Slice)dev::ref(ta.rlp()));
+					extrasWriteBatch->insert(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (db::Slice)dev::ref(ta.rlp()));
 			}
 
 			// Update database with them.
 			ReadGuard l1(x_blocksBlooms);
 			for (auto const& h: alteredBlooms)
-				extrasTransaction->insert(toSlice(h, ExtraBlocksBlooms), (db::Slice)dev::ref(m_blocksBlooms[h].rlp()));
-			extrasTransaction->insert(toSlice(h256(tbi.number()), ExtraBlockHash), (db::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
+				extrasWriteBatch->insert(toSlice(h, ExtraBlocksBlooms), (db::Slice)dev::ref(m_blocksBlooms[h].rlp()));
+			extrasWriteBatch->insert(toSlice(h256(tbi.number()), ExtraBlockHash), (db::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));
 		}
 
 		// FINALLY! change our best hash.
@@ -869,7 +869,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 	try
 	{
-		blocksTransaction->commit();
+		m_blocksDB->commit(std::move(blocksWriteBatch));
 	}
 	catch (const db::FailedCommitInDB& ex)
 	{
@@ -880,7 +880,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
 	try
 	{
-		extrasTransaction->commit();
+		m_extrasDB->commit(std::move(extrasWriteBatch));
 	}
 	catch (const db::FailedCommitInDB& ex)
 	{

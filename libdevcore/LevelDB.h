@@ -14,10 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file LevelDB.h
- * @author Isaac Hier <isaachier@gmail.com>
- * @date 2017
- */
 
 #pragma once
 
@@ -31,7 +27,7 @@ namespace dev
 namespace db
 {
 
-class LevelDB: public DB
+class LevelDB: public DatabaseFace
 {
 public:
 	static leveldb::ReadOptions defaultReadOptions();
@@ -45,17 +41,20 @@ public:
 		leveldb::Options _dbOptions = defaultDBOptions()
 	);
 
-	std::string lookup(Slice const& _key) const override;
-	bool exists(Slice const& _key) const override;
-	void insert(Slice const& _key, Slice const& _value) override;
-	void kill(Slice const& _key) override;
-	std::unique_ptr<Transaction> begin() override;
-	void forEach(std::function<bool(Slice const&, Slice const&)> f) const override;
+	std::string lookup(Slice _key) const override;
+	bool exists(Slice _key) const override;
+	void insert(Slice _key, Slice _value) override;
+	void kill(Slice _key) override;
+
+    std::unique_ptr<WriteBatchFace> createWriteBatch() const override;
+    void commit(std::unique_ptr<WriteBatchFace>&& _batch) override;
+
+	void forEach(std::function<bool(Slice, Slice)> f) const override;
 
 private:
 	std::unique_ptr<leveldb::DB> m_db;
-	leveldb::ReadOptions m_readOptions;
-	leveldb::WriteOptions m_writeOptions;
+	const leveldb::ReadOptions m_readOptions;
+	const leveldb::WriteOptions m_writeOptions;
 };
 
 }

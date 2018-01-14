@@ -14,10 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file LevelDB.cpp
- * @author Isaac Hier <isaachier@gmail.com>
- * @date 2017
- */
 
 #include "LevelDB.h"
 #include "Assertions.h"
@@ -29,69 +25,37 @@ namespace db
 namespace
 {
 
-class LevelDBTransaction: public Transaction
+inline leveldb::Slice toLDBSlice(Slice _slice)
+{
+    return leveldb::Slice(_slice.data(), _slice.size());
+}
+
+class LevelDBWriteBatch: public WriteBatchFace
 {
 public:
-	LevelDBTransaction(leveldb::DB* _db, leveldb::WriteOptions _writeOptions): m_db(_db), m_writeOptions(std::move(_writeOptions))
+	explicit LevelDBWriteBatch(leveldb::WriteOptions _writeOptions): m_writeOptions(std::move(_writeOptions))
 	{
 	}
 
-	~LevelDBTransaction();
+	void insert(Slice _key, Slice _value) override;
+	void kill(Slice _key) override;
 
-	void insert(Slice const& _key, Slice const& _value) override;
-	void kill(Slice const& _key) override;
-	void commit() override;
-	void rollback() override;
+	const leveldb::WriteBatch& writeBatch() const { return m_writeBatch; }
+	leveldb::WriteBatch& writeBatch() { return m_writeBatch; }
 
 private:
-	leveldb::DB* m_db;
-	leveldb::WriteOptions m_writeOptions;
+	const leveldb::WriteOptions m_writeOptions;
 	leveldb::WriteBatch m_writeBatch;
 };
 
-LevelDBTransaction::~LevelDBTransaction()
+void LevelDBWriteBatch::insert(Slice _key, Slice _value)
 {
-	if (m_db) {
-		DEV_IGNORE_EXCEPTIONS(rollback());
-	}
+	m_writeBatch.Put(toLDBSlice(_key), toLDBSlice(_value));
 }
 
-void LevelDBTransaction::insert(Slice const& _key, Slice const& _value)
+void LevelDBWriteBatch::kill(Slice _key)
 {
-	m_writeBatch.Put(
-		leveldb::Slice(_key.data(), _key.size()),
-		leveldb::Slice(_value.data(), _value.size())
-	);
-}
-
-void LevelDBTransaction::kill(Slice const& _key)
-{
-	m_writeBatch.Delete(leveldb::Slice(_key.data(), _key.size()));
-}
-
-void LevelDBTransaction::commit()
-{
-	assertThrow(
-		m_db != nullptr,
-		FailedCommitInDB,
-		"cannot commit, transaction already committed or rolled back"
-	);
-	const auto status = m_db->Write(m_writeOptions, &m_writeBatch);
-	if (!status.ok()) {
-		BOOST_THROW_EXCEPTION(FailedCommitInDB(status.ToString()));
-	}
-	m_db = nullptr;
-}
-
-void LevelDBTransaction::rollback()
-{
-	assertThrow(
-		m_db != nullptr,
-		FailedRollbackInDB,
-		"cannot rollback, transaction already committed or rolled back"
-	);
-	m_writeBatch.Clear();
-	m_db = nullptr;
+	m_writeBatch.Delete(toLDBSlice(_key));
 }
 
 }
@@ -134,7 +98,7 @@ LevelDB::LevelDB(
 	m_db.reset(db);
 }
 
-std::string LevelDB::lookup(Slice const& _key) const
+std::string LevelDB::lookup(Slice _key) const
 {
 	const leveldb::Slice key(_key.data(), _key.size());
 	std::string value;
@@ -145,7 +109,7 @@ std::string LevelDB::lookup(Slice const& _key) const
 	return value;
 }
 
-bool LevelDB::exists(Slice const& _key) const
+bool LevelDB::exists(Slice _key) const
 {
 	std::string value;
 	const leveldb::Slice key(_key.data(), _key.size());
@@ -153,7 +117,7 @@ bool LevelDB::exists(Slice const& _key) const
 	return status.ok();
 }
 
-void LevelDB::insert(Slice const& _key, Slice const& _value)
+void LevelDB::insert(Slice _key, Slice _value)
 {
 	const leveldb::Slice key(_key.data(), _key.size());
 	const leveldb::Slice value(_value.data(), _value.size());
@@ -163,7 +127,7 @@ void LevelDB::insert(Slice const& _key, Slice const& _value)
 	}
 }
 
-void LevelDB::kill(Slice const& _key)
+void LevelDB::kill(Slice _key)
 {
 	const leveldb::Slice key(_key.data(), _key.size());
 	const auto status = m_db->Delete(m_writeOptions, key);
@@ -172,12 +136,20 @@ void LevelDB::kill(Slice const& _key)
 	}
 }
 
-std::unique_ptr<Transaction> LevelDB::begin()
+std::unique_ptr<WriteBatchFace> LevelDB::createWriteBatch() const
 {
-	return std::unique_ptr<Transaction>(new LevelDBTransaction(m_db.get(), m_writeOptions));
+	return std::unique_ptr<WriteBatchFace>(new LevelDBWriteBatch(m_writeOptions));
 }
 
-void LevelDB::forEach(std::function<bool(Slice const&, Slice const&)> f) const
+void LevelDB::commit(std::unique_ptr<WriteBatchFace>&& _batch)
+{
+	const auto status = m_db->Write(m_writeOptions, &static_cast<LevelDBWriteBatch*>(_batch.get())->writeBatch());
+	if (!status.ok()) {
+		BOOST_THROW_EXCEPTION(FailedCommitInDB(status.ToString()));
+	}
+}
+
+void LevelDB::forEach(std::function<bool(Slice, Slice)> f) const
 {
 	std::unique_ptr<leveldb::Iterator> itr(m_db->NewIterator(m_readOptions));
 	if (itr == nullptr) {

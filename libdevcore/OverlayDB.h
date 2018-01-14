@@ -35,7 +35,7 @@ struct DBDetail: public LogChannel { static const char* name() { return "DBDetai
 class OverlayDB: public MemoryDB
 {
 public:
-	explicit OverlayDB(db::DB* _db = nullptr): m_db(_db, [](db::DB* db) {
+	explicit OverlayDB(db::DatabaseFace* _db = nullptr): m_db(_db, [](db::DatabaseFace* db) {
 		clog(DBDetail) << "Closing state DB";
 		delete db;
 	})
@@ -55,7 +55,7 @@ public:
 private:
 	using MemoryDB::clear;
 
-	std::shared_ptr<db::DB> m_db;
+	std::shared_ptr<db::DatabaseFace> m_db;
 };
 
 }

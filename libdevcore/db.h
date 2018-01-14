@@ -32,61 +32,44 @@ namespace dev
 namespace db
 {
 
-// Transaction implements database transaction for a specific concrete database
-// implementation. The transaction implementation must call rollback in its
-// destructor if commit has not yet been called (making sure to catch any
-// exceptions).
-class Transaction
+// WriteBatchFace implements database write batch for a specific concrete
+// database implementation.
+class WriteBatchFace
 {
 public:
-	virtual ~Transaction() = default;
+	virtual ~WriteBatchFace() = default;
 
-	virtual void insert(Slice const& _key, Slice const& _value) = 0;
-	virtual void kill(Slice const& _key) = 0;
-
-	virtual void commit() = 0;
-	virtual void rollback() = 0;
+	virtual void insert(Slice _key, Slice _value) = 0;
+	virtual void kill(Slice _key) = 0;
 
 protected:
-	Transaction() = default;
+	WriteBatchFace() = default;
 	// Noncopyable
-	Transaction(const Transaction&) = delete;
-	Transaction& operator=(const Transaction&) = delete;
+	WriteBatchFace(const WriteBatchFace&) = delete;
+	WriteBatchFace& operator=(const WriteBatchFace&) = delete;
 	// Movable
-	Transaction(Transaction&&) = default;
-	Transaction& operator=(Transaction&&) = default;
+	WriteBatchFace(WriteBatchFace&&) = default;
+	WriteBatchFace& operator=(WriteBatchFace&&) = default;
 };
 
-class DB
+class DatabaseFace
 {
 public:
-	virtual ~DB() = default;
-	virtual std::string lookup(Slice const& _key) const = 0;
-	virtual bool exists(Slice const& _key) const = 0;
-	virtual void insert(Slice const& _key, Slice const& _value) = 0;
-	virtual void kill(Slice const& _key) = 0;
-	virtual std::unique_ptr<Transaction> begin() = 0;
+	virtual ~DatabaseFace() = default;
+	virtual std::string lookup(Slice _key) const = 0;
+	virtual bool exists(Slice _key) const = 0;
+	virtual void insert(Slice _key, Slice _value) = 0;
+	virtual void kill(Slice _key) = 0;
+
+	virtual std::unique_ptr<WriteBatchFace> createWriteBatch() const = 0;
+	virtual void commit(std::unique_ptr<WriteBatchFace>&& _batch) = 0;
 
 	// A database must implement the `forEach` method that allows the caller
 	// to pass in a function `f`, which will be called with the key and value
 	// of each record in the database. If `f` returns false, the `forEach`
 	// method must return immediately.
-	virtual void forEach(std::function<bool(Slice const&, Slice const&)> f) const = 0;
-
-	virtual void print(std::ostream& out) const
-	{
-		forEach([&out](Slice const& key, Slice const& value) {
-			out << toHex(key) << " => " << toHex(value) << '\n';
-			return static_cast<bool>(out);
-		});
-	}
+	virtual void forEach(std::function<bool(Slice, Slice)> f) const = 0;
 };
-
-inline std::ostream& operator<<(std::ostream& out, const DB& database)
-{
-	database.print(out);
-	return out;
-}
 
 struct FailedToOpenDB: virtual Exception { using Exception::Exception; };
 struct FailedInsertInDB: virtual Exception { using Exception::Exception; };
