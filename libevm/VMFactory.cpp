@@ -109,6 +109,11 @@ void parseEvmcOptions(const std::vector<std::string>& _opts)
 }
 }
 
+std::vector<std::pair<std::string, std::string>>& evmcOptions() noexcept
+{
+    return s_evmcOptions;
+};
+
 po::options_description vmProgramOptions(unsigned _lineLength)
 {
     // It must be a static object because boost expects const char*.

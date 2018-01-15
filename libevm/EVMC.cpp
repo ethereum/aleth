@@ -15,6 +15,10 @@ EVM::EVM(evm_instance* _instance) noexcept : m_instance(_instance)
 {
     assert(m_instance != nullptr);
     assert(m_instance->abi_version == EVM_ABI_VERSION);
+
+    // Set the options.
+    for (auto& pair : evmcOptions())
+        m_instance->set_option(m_instance, pair.first.c_str(), pair.second.c_str());
 }
 
 owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
