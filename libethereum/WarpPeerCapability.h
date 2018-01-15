@@ -51,10 +51,11 @@ public:
 
     virtual void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
 
+    virtual void onPeerBlockHeaders(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
+
     virtual void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
 
-    virtual void onPeerRequestTimeout(
-        std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
+    virtual void onPeerDisconnect(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
 };
 
 class WarpPeerCapability : public p2p::Capability
@@ -82,6 +83,7 @@ public:
         u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,
         h256 const& _chainGenesisHash, h256 const& _snapshotBlockHash,
         u256 const& _snapshotBlockNumber);
+    void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
     void requestManifest();
     void requestData(h256 const& _chunkHash);
 
@@ -96,6 +98,8 @@ private:
     using p2p::Capability::sealAndSend;
 
     bool interpret(unsigned _id, RLP const& _r) override;
+
+    void onDisconnect() override;
 
     void setAsking(Asking _a);
 

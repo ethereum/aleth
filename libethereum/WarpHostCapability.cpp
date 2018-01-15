@@ -60,6 +60,7 @@ public:
       : m_hostProtocolVersion(_host.protocolVersion()),
         m_hostNetworkId(_host.networkId()),
         m_hostGenesisHash(_blockChain.genesisHash()),
+        m_daoForkBlock(_blockChain.sealEngine()->chainParams().daoHardforkBlock),
         m_freePeers(c_freePeerBufferSize),
         m_snapshotDir(_snapshotPath)
     {}
@@ -69,39 +70,29 @@ public:
             m_downloadFiber->join();
     }
 
-    // TODO somehow handle peer disconnecting
-
     void onPeerStatus(std::shared_ptr<WarpPeerCapability> _peer) override
     {
-        if (_peer->validateStatus(m_hostGenesisHash, {m_hostProtocolVersion}, m_hostNetworkId))
-            _peer->requestManifest();
+        boost::fibers::fiber checkPeerFiber(
+            &WarpPeerObserver::validatePeer, this, std::move(_peer));
+        checkPeerFiber.detach();
 
         // start the downloading fiber in the thread handling network messages
         if (!m_downloadFiber)
-            m_downloadFiber.reset(new boost::fibers::fiber([this]() { downloadChunks(); }));
+            m_downloadFiber.reset(
+                new boost::fibers::fiber(&WarpPeerObserver::downloadChunks, this));
 
         boost::this_fiber::yield();
     }
 
     void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
     {
-        if (validateManifest(_r))
-        {
-            u256 const snapshotHash = snapshotBlockHash(_r);
-            if (!m_syncingSnapshotHash)
-            {
-                m_syncingSnapshotHash = snapshotHash;
-                m_manifest.set_value(_r.data().toBytes());
-            }
+        m_manifests[_peer].set_value(_r.data().toBytes());
+        boost::this_fiber::yield();
+    }
 
-            if (snapshotHash == m_syncingSnapshotHash)
-                m_freePeers.push(_peer);
-            else
-                _peer->disable("Another snapshot.");
-        }
-        else
-            _peer->disable("Invalid snapshot manifest.");
-
+    void onPeerBlockHeaders(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
+    {
+        m_daoForkHeaders[_peer].set_value(_r.data().toBytes());
         boost::this_fiber::yield();
     }
 
@@ -139,20 +130,124 @@ public:
         boost::this_fiber::yield();
     }
 
-    void onPeerRequestTimeout(
-        std::shared_ptr<WarpPeerCapability> _peer, Asking /*_asking*/) override
+    void onPeerDisconnect(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking)
     {
-        clog(SnapshotLog) << "Peer timed out";
-
-        auto it = m_requestedChunks.find(_peer);
-        if (it == m_requestedChunks.end())
-            return;
-
-        m_neededChunks.push_back(it->second);
-        m_requestedChunks.erase(it);
+        if (_asking == Asking::WarpManifest)
+        {
+            auto it = m_manifests.find(_peer);
+            if (it != m_manifests.end())
+                it->second.set_exception(std::make_exception_ptr(FailedToDownloadManifest()));
+        }
+        else if (_asking == Asking::BlockHeaders)
+        {
+            auto it = m_daoForkHeaders.find(_peer);
+            if (it != m_daoForkHeaders.end())
+                it->second.set_exception(
+                    std::make_exception_ptr(FailedToDownloadDaoForkBlockHeader()));
+        }
+        else if (_asking == Asking::WarpData)
+        {
+            auto it = m_requestedChunks.find(_peer);
+            if (it != m_requestedChunks.end())
+            {
+                m_neededChunks.push_back(it->second);
+                m_requestedChunks.erase(it);
+            }
+        }
+        boost::this_fiber::yield();
     }
 
 private:
+    void validatePeer(std::shared_ptr<WarpPeerCapability> _peer)
+    {
+        if (!_peer->validateStatus(m_hostGenesisHash, {m_hostProtocolVersion}, m_hostNetworkId))
+            return;
+
+        _peer->requestManifest();
+
+        bytes const manifestBytes = waitForManifestResponse(_peer);
+        if (manifestBytes.empty())
+            return;
+
+        RLP manifestRlp(manifestBytes);
+        if (!validateManifest(manifestRlp))
+        {
+            _peer->disable("Invalid snapshot manifest.");
+            return;
+        }
+
+        u256 const snapshotHash = snapshotBlockHash(manifestRlp);
+        if (m_syncingSnapshotHash)
+        {
+            if (snapshotHash == m_syncingSnapshotHash)
+                m_freePeers.push(_peer);
+            else
+                _peer->disable("Another snapshot.");
+        }
+        else
+        {
+            if (m_daoForkBlock)
+            {
+                _peer->requestBlockHeaders(m_daoForkBlock, 1, 0, false);
+
+                bytes const headerBytes = waitForDaoForkBlockResponse(_peer);
+                if (headerBytes.empty())
+                    return;
+
+                RLP headerRlp(headerBytes);
+                if (!verifyDaoChallengeResponse(headerRlp))
+                {
+                    _peer->disable("Peer from another fork.");
+                    return;
+                }
+            }
+
+            m_syncingSnapshotHash = snapshotHash;
+            m_manifest.set_value(manifestBytes);
+            m_freePeers.push(_peer);
+        }
+    }
+
+    bytes waitForManifestResponse(std::weak_ptr<WarpPeerCapability> _peer)
+    {
+        try
+        {
+            bytes const result = m_manifests[_peer].get_future().get();
+            m_manifests.erase(_peer);
+            return result;
+        }
+        catch (Exception const&)
+        {
+            m_manifests.erase(_peer);
+        }
+        return bytes{};
+    }
+
+    bytes waitForDaoForkBlockResponse(std::weak_ptr<WarpPeerCapability> _peer)
+    {
+        try
+        {
+            bytes const result = m_daoForkHeaders[_peer].get_future().get();
+            m_daoForkHeaders.erase(_peer);
+            return result;
+        }
+        catch (Exception const&)
+        {
+            m_daoForkHeaders.erase(_peer);
+        }
+        return bytes{};
+    }
+
+    bool verifyDaoChallengeResponse(RLP const& _r)
+    {
+        if (_r.itemCount() != 1)
+            return false;
+
+        BlockHeader info(_r[0].data(), HeaderData);
+        return info.number() == m_daoForkBlock &&
+               info.extraData() == fromHex("0x64616f2d686172642d666f726b");
+    }
+
     void downloadChunks()
     {
         bytes const manifestBytes = m_manifest.get_future().get();
@@ -196,11 +291,18 @@ private:
     unsigned const m_hostProtocolVersion;
     u256 const m_hostNetworkId;
     h256 const m_hostGenesisHash;
+    unsigned const m_daoForkBlock;
     boost::fibers::promise<bytes> m_manifest;
     h256 m_syncingSnapshotHash;
     std::deque<h256> m_neededChunks;
     boost::fibers::buffered_channel<std::weak_ptr<WarpPeerCapability>> m_freePeers;
     boost::filesystem::path const m_snapshotDir;
+    std::map<std::weak_ptr<WarpPeerCapability>, boost::fibers::promise<bytes>,
+        std::owner_less<std::weak_ptr<WarpPeerCapability>>>
+        m_manifests;
+    std::map<std::weak_ptr<WarpPeerCapability>, boost::fibers::promise<bytes>,
+        std::owner_less<std::weak_ptr<WarpPeerCapability>>>
+        m_daoForkHeaders;
     std::map<std::weak_ptr<WarpPeerCapability>, h256,
         std::owner_less<std::weak_ptr<WarpPeerCapability>>>
         m_requestedChunks;

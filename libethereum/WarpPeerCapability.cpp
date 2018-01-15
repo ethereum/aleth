@@ -125,6 +125,13 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
             sealAndSend(s);
             break;
         }
+        case BlockHeadersPacket:
+        {
+            setIdle();
+            observer->onPeerBlockHeaders(
+                (std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
+            break;
+        }
         case SnapshotManifest:
         {
             setIdle();
@@ -154,6 +161,13 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
     }
 
     return true;
+}
+
+void WarpPeerCapability::onDisconnect()
+{
+    if (std::shared_ptr<WarpPeerObserverFace> observer = m_observer.lock())
+        observer->onPeerDisconnect(
+            std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()), m_asking);
 }
 
 /// Validates whether peer is able to communicate with the host, disables peer if not
@@ -201,6 +215,16 @@ void WarpPeerCapability::requestStatus(unsigned _hostProtocolVersion, u256 const
 }
 
 
+void WarpPeerCapability::requestBlockHeaders(
+    unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse)
+{
+    assert(m_asking == Asking::Nothing);
+    setAsking(Asking::BlockHeaders);
+    RLPStream s;
+    prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
+    sealAndSend(s);
+}
+
 void WarpPeerCapability::requestManifest()
 {
     assert(m_asking == Asking::Nothing);
@@ -232,10 +256,6 @@ void WarpPeerCapability::tick()
     if (s && (now - m_lastAsk > 10 && m_asking != Asking::Nothing))
     {
         // timeout
-        if (std::shared_ptr<WarpPeerObserverFace> observer = m_observer.lock())
-            observer->onPeerRequestTimeout(
-                std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()), m_asking);
-
         s->disconnect(p2p::PingTimeout);
     }
 }
