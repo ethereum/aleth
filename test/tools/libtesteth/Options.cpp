@@ -22,6 +22,7 @@
 #include <libweb3jsonrpc/Debug.h>
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
+#include <boost/program_options.hpp>
 
 using namespace std;
 using namespace dev::test;
@@ -72,8 +73,29 @@ void printVersion()
 	cout << prepareVersionString() << "\n";
 }
 
-Options::Options(int argc, char** argv)
+Options::Options(int argc, const char** argv)
 {
+    {
+        namespace po = boost::program_options;
+
+        // For some reason boost is confused by -- separator. This extra parser "skips" the --.
+        auto skipDoubleDash = [](const std::string& s) -> std::pair<std::string, std::string> {
+            if (s == "--")
+                return {"--", {}};
+            return {};
+        };
+
+        auto vmOpts = vmProgramOptions();
+        po::parsed_options parsed = po::command_line_parser(argc, argv)
+                                        .options(vmOpts)
+                                        .extra_parser(skipDoubleDash)
+                                        .allow_unregistered()
+                                        .run();
+        po::variables_map vm;
+        po::store(parsed, vm);
+        po::notify(vm);
+    }
+
 	trDataIndex = -1;
 	trGasIndex = -1;
 	trValueIndex = -1;
@@ -108,25 +130,12 @@ Options::Options(int argc, char** argv)
 			printVersion();
 			exit(0);
 		}
-		else if (arg == "--vm")
+		else if (arg == "--vm" || arg == "--evmc")
 		{
+			// Skip VM options because they are handled by vmProgramOptions().
 			throwIfNoArgumentFollows();
-			string vmKind = argv[++i];
-			if (vmKind == "interpreter")
-				VMFactory::setKind(VMKind::Interpreter);
-			else if (vmKind == "jit")
-				VMFactory::setKind(VMKind::JIT);
-			else if (vmKind == "smart")
-				VMFactory::setKind(VMKind::Smart);
-			else if (vmKind == "hera")
-				VMFactory::setKind(VMKind::Hera);
-			else if (vmKind == "heraplus")
-				VMFactory::setKind(VMKind::HeraPlus);
-			else
-				cerr << "Unknown VM kind: " << vmKind << "\n";
+			++i;
 		}
-		else if (arg == "--jit") // TODO: Remove deprecated option "--jit"
-			VMFactory::setKind(VMKind::JIT);
 		else if (arg == "--vmtrace")
 		{
 #if ETH_VMTRACE
@@ -321,7 +330,7 @@ Options::Options(int argc, char** argv)
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
-Options const& Options::get(int argc, char** argv)
+Options const& Options::get(int argc, const char** argv)
 {
 	static Options instance(argc, argv);
 	return instance;

@@ -76,10 +76,10 @@ public:
 
 	/// Get reference to options
 	/// The first time used, options are parsed with argc, argv
-	static Options const& get(int argc = 0, char** argv = 0);
+	static Options const& get(int argc = 0, const char** argv = 0);
 
 private:
-	Options(int argc = 0, char** argv = 0);
+	Options(int argc = 0, const char** argv = 0);
 	Options(Options const&) = delete;
 };
 
