@@ -82,6 +82,33 @@ void validate(boost::any& v, const std::vector<std::string>& values, VMKind* /* 
     throw po::validation_error(po::validation_error::invalid_option_value);
 }
 
+namespace
+{
+/// The name of the program option --evmc. The boost will trim the tailing
+/// space and we can reuse this variable in exception message.
+const char c_evmcPrefix[] = "evmc ";
+
+/// The list of EVM-C options stored as pairs of (name, value).
+std::vector<std::pair<std::string, std::string>> s_evmcOptions;
+
+/// The additional parser for EVM-C options. The options should look like
+/// `--evmc name=value` or `--evmc=name=value`. The boost pass the strings
+/// of `name=value` here. This function splits the name and value or reports
+/// the syntax error if the `=` character is missing.
+void parseEvmcOptions(const std::vector<std::string>& _opts)
+{
+    for (auto& s : _opts)
+    {
+        auto separatorPos = s.find('=');
+        if (separatorPos == s.npos)
+            throw po::invalid_syntax{po::invalid_syntax::missing_parameter, c_evmcPrefix + s};
+        auto name = s.substr(0, separatorPos);
+        auto value = s.substr(separatorPos + 1);
+        s_evmcOptions.emplace_back(std::move(name), std::move(value));
+    }
+}
+}
+
 po::options_description vmProgramOptions(unsigned _lineLength)
 {
     // It must be a static object because boost expects const char*.
@@ -98,12 +125,22 @@ po::options_description vmProgramOptions(unsigned _lineLength)
     }();
 
     po::options_description opts("VM Options", _lineLength);
-    opts.add_options()("vm",
+    auto add = [&opts](const char* name, const po::value_semantic* value, const char* description) {
+        opts.add(boost::make_shared<po::option_description>(name, value, description));
+    };
+
+    add("vm",
         po::value<VMKind>()
             ->value_name("<name>")
             ->default_value(VMKind::Interpreter, "interpreter")
             ->notifier(VMFactory::setKind),
         description.data());
+
+    add(c_evmcPrefix,
+        po::value<std::vector<std::string>>()
+            ->value_name("<option>=<value>")
+            ->notifier(parseEvmcOptions),
+        "EVM-C option");
 
     return opts;
 }
