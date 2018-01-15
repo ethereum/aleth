@@ -225,9 +225,7 @@ int main(int argc, char** argv)
 	std::map<NodeID, pair<NodeIPEndpoint,bool>> preferredNodes;
 	bool bootstrap = true;
 	bool disableDiscovery = false;
-	bool pinning = false;
 	bool enableDiscovery = false;
-	bool noPinning = false;
 	static const unsigned NoNetworkID = (unsigned)-1;
 	unsigned networkID = NoNetworkID;
 
@@ -332,9 +330,7 @@ int main(int argc, char** argv)
 #endif
 		("peerset", po::value<string>()->value_name("<list>"), "Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n        Types:\n        default     Attempt connection when no other peers are available and pinning is disabled.\n        required	    Keep connected at all times.\n")
 		("no-discovery",  "Disable node discovery, implies --no-bootstrap.")
-		("pin",  "Only accept or connect to trusted peers.")
-		("hermit",  "Equivalent to --no-discovery --pin.")
-		("sociable",  "Force discovery and no pinning.\n");
+		("pin",  "Only accept or connect to trusted peers.");
 
 	po::options_description importExportMode("Import/export modes", c_lineWidth);
 	importExportMode.add_options()
@@ -400,7 +396,6 @@ int main(int argc, char** argv)
 		testingMode = true;
 		enableDiscovery = false;
 		disableDiscovery = true;
-		noPinning = true;
 		bootstrap = false;
 	}
 	if (vm.count("verbosity"))
@@ -513,12 +508,6 @@ int main(int argc, char** argv)
 		disableDiscovery = true;
 		bootstrap = false;
 	}
-	if (vm.count("pin"))
-		pinning = true;
-	if (vm.count("hermit"))
-		pinning = disableDiscovery = true;
-	if (vm.count("sociable"))
-		noPinning = enableDiscovery = true;
 	if (vm.count("unsafe-transactions"))
 		alwaysConfirm = false;
 	if (vm.count("db-path"))
@@ -850,7 +839,7 @@ int main(int argc, char** argv)
 
 	auto netPrefs = publicIP.empty() ? NetworkPreferences(listenIP, listenPort, upnp) : NetworkPreferences(publicIP, listenIP ,listenPort, upnp);
 	netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
-	netPrefs.pin = (pinning || !privateChain.empty()) && !noPinning;
+	netPrefs.pin = vm.count("pin") != 0;
 
 	auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
 	auto caps = set<string>{"eth"};
