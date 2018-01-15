@@ -1,3 +1,6 @@
+// Copyright 2018 cpp-ethereum Authors.
+// Licensed under the GNU General Public License v3. See the LICENSE file.
+
 #include "EVMC.h"
 
 #include <libdevcore/Log.h>
@@ -8,6 +11,11 @@ namespace dev
 {
 namespace eth
 {
+EVM::EVM(evm_instance* _instance) noexcept : m_instance(_instance)
+{
+    assert(m_instance != nullptr);
+    assert(m_instance->abi_version == EVM_ABI_VERSION);
+}
 
 owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
