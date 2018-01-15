@@ -47,9 +47,9 @@ protected:
 	// Noncopyable
 	WriteBatchFace(const WriteBatchFace&) = delete;
 	WriteBatchFace& operator=(const WriteBatchFace&) = delete;
-	// Movable
-	WriteBatchFace(WriteBatchFace&&) = default;
-	WriteBatchFace& operator=(WriteBatchFace&&) = default;
+	// Nonmovable
+	WriteBatchFace(WriteBatchFace&&) = delete;
+	WriteBatchFace& operator=(WriteBatchFace&&) = delete;
 };
 
 class DatabaseFace
