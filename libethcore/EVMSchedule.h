@@ -116,6 +116,13 @@ static const EVMSchedule ByzantiumSchedule = []
 	return schedule;
 }();
 
+static const EVMSchedule EWASMSchedule = []
+{
+    EVMSchedule schedule = ByzantiumSchedule;
+    schedule.maxCodeSize = std::numeric_limits<unsigned>::max();
+    return schedule;
+}();
+
 static const EVMSchedule ConstantinopleSchedule = []
 {
 	EVMSchedule schedule = ByzantiumSchedule;

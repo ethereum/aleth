@@ -70,6 +70,7 @@ string const c_daoHardforkBlock = "daoHardforkBlock";
 string const c_EIP150ForkBlock = "EIP150ForkBlock";
 string const c_EIP158ForkBlock = "EIP158ForkBlock";
 string const c_byzantiumForkBlock = "byzantiumForkBlock";
+string const c_eWASMForkBlock = "eWASMForkBlock";
 string const c_constantinopleForkBlock = "constantinopleForkBlock";
 string const c_accountStartNonce = "accountStartNonce";
 string const c_maximumExtraDataSize = "maximumExtraDataSize";
@@ -122,6 +123,7 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	setOptionalU256Parameter(cp.EIP150ForkBlock, c_EIP150ForkBlock);
 	setOptionalU256Parameter(cp.EIP158ForkBlock, c_EIP158ForkBlock);
 	setOptionalU256Parameter(cp.byzantiumForkBlock, c_byzantiumForkBlock);
+	setOptionalU256Parameter(cp.byzantiumForkBlock, c_eWASMForkBlock);
 	setOptionalU256Parameter(cp.constantinopleForkBlock, c_constantinopleForkBlock);
 	setOptionalU256Parameter(cp.daoHardforkBlock, c_daoHardforkBlock);
 	setOptionalU256Parameter(cp.minimumDifficulty, c_minimumDifficulty);

@@ -89,6 +89,7 @@ public:
 	u256 EIP150ForkBlock;
 	u256 EIP158ForkBlock;
 	u256 byzantiumForkBlock;
+	u256 eWASMForkBlock;
 	u256 constantinopleForkBlock;
 	u256 daoHardforkBlock;
 	int chainID = 0; // Distinguishes different chains (mainnet, Ropsten, etc).
