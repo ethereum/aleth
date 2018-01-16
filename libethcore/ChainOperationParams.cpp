@@ -58,6 +58,8 @@ EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blo
 {
 	if (_blockNumber >= constantinopleForkBlock)
 		return ConstantinopleSchedule;
+	else if (_blockNumber >= eWASMForkBlock)
+		return EWASMSchedule;
 	else if (_blockNumber >= byzantiumForkBlock)
 		return ByzantiumSchedule;
 	else if (_blockNumber >= EIP158ForkBlock)

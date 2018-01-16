@@ -27,7 +27,6 @@ R"E(
 		"EIP158ForkBlock": "0x0a",
 		"daoHardforkBlock": "0x00",
 		"byzantiumForkBlock": "0x19f0a0",
-		"constantinopleForkBlock": "0xfffffffffffffff",
 		"chainID": "0x03",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,

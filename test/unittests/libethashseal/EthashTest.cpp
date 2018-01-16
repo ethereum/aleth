@@ -29,9 +29,13 @@ using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(EthashTests, TestOutputHelperFixture)
 
+// FIXME: Add a helper function here, because the test cases are almost identical.
+// TODO: Add tests for Homestead difficulty change.
+
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 {
 	ChainOperationParams params;
+	params.homesteadForkBlock = 0;
 	params.byzantiumForkBlock = u256(0x1000);
 
 	Ethash ethash;
@@ -48,12 +52,13 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 	header.setNumber(0x2001);
 	header.setTimestamp(130);
 
-	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999024);
+	BOOST_CHECK_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999024);
 }
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 {
 	ChainOperationParams params;
+	params.homesteadForkBlock = 0;
 	params.byzantiumForkBlock = u256(0x1000);
 
 	Ethash ethash;
@@ -71,12 +76,13 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
 	header.setNumber(0x2001);
 	header.setTimestamp(130);
 
-	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999512);
+	BOOST_CHECK_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999512);
 }
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
 {
 	ChainOperationParams params;
+	params.homesteadForkBlock = 0;
 	params.byzantiumForkBlock = u256(0x1000);
 
 	Ethash ethash;
@@ -93,7 +99,7 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
 	header.setNumber(0x2001);
 	header.setTimestamp(1100);
 
-	BOOST_REQUIRE_EQUAL(ethash.calculateDifficulty(header, parentHeader), 951688);
+	BOOST_CHECK_EQUAL(ethash.calculateDifficulty(header, parentHeader), 951688);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
