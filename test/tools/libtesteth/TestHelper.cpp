@@ -231,15 +231,27 @@ bytes importByteArray(string const& _str)
     return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
+bytes processDataOrCode(json_spirit::mObject const& _o, string const& nodeName)
+{
+    bytes ret;
+    if (_o.count(nodeName) == 0)
+        return bytes();
+    if (_o.at(nodeName).type() == json_spirit::str_type)
+        if (_o.at(nodeName).get_str().find("0x") != 0)
+            ret = fromHex(replaceLLL(_o.at(nodeName).get_str()));
+        else
+            ret = importByteArray(_o.at(nodeName).get_str());
+    else if (_o.at(nodeName).type() == json_spirit::array_type)
+    {
+        for (auto const& j : _o.at(nodeName).get_array())
+            ret.push_back(toByte(j));
+    }
+    return ret;
+}
+
 bytes importData(json_spirit::mObject const& _o)
 {
-    bytes data;
-    if (_o.at("data").type() == json_spirit::str_type)
-        data = importByteArray(replaceLLL(_o.at("data").get_str()));
-    else
-        for (auto const& j : _o.at("data").get_array())
-            data.push_back(toByte(j));
-    return data;
+    return processDataOrCode(_o, "data");
 }
 
 string replaceLLL(string const& _code)
@@ -394,21 +406,7 @@ void checkHexHasEvenLength(string const& _str)
 
 bytes importCode(json_spirit::mObject const& _o)
 {
-    bytes code;
-    if (_o.count("code") == 0)
-        return code;
-    if (_o.at("code").type() == json_spirit::str_type)
-        if (_o.at("code").get_str().find("0x") != 0)
-            code = fromHex(compileLLL(_o.at("code").get_str()));
-        else
-            code = importByteArray(_o.at("code").get_str());
-    else if (_o.at("code").type() == json_spirit::array_type)
-    {
-        code.clear();
-        for (auto const& j : _o.at("code").get_array())
-            code.push_back(toByte(j));
-    }
-    return code;
+    return processDataOrCode(_o, "code");
 }
 
 LogEntries importLog(json_spirit::mArray const& _a)
