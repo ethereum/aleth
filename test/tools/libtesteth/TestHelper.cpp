@@ -256,6 +256,14 @@ bytes importData(json_spirit::mObject const& _o)
 
 string replaceCode(string const& _code)
 {
+    if (_code == "")
+        return "0x";
+    if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
+    {
+        checkHexHasEvenLength(_code);
+        return _code;
+    }
+
     string compiledCode = compileLLL(_code);
     if (_code.size() > 0)
         BOOST_REQUIRE_MESSAGE(compiledCode.size() > 0,
@@ -374,14 +382,6 @@ string executeCmd(string const& _command)
 
 string compileLLL(string const& _code)
 {
-    if (_code == "")
-        return "0x";
-    if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
-    {
-        checkHexHasEvenLength(_code);
-        return _code;
-    }
-
 #if defined(_WIN32)
     BOOST_ERROR("LLL compilation only supported on posix systems.");
     return "";
