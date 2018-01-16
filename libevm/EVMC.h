@@ -1,3 +1,6 @@
+// Copyright 2018 cpp-ethereum Authors.
+// Licensed under the GNU General Public License v3. See the LICENSE file.
+
 #pragma once
 
 #include <evm.h>
@@ -14,11 +17,7 @@ evm_revision toRevision(EVMSchedule const& _schedule);
 class EVM
 {
 public:
-    explicit EVM(evm_instance* _instance) : m_instance(_instance)
-    {
-        assert(m_instance != nullptr);
-        assert(m_instance->abi_version == EVM_ABI_VERSION);
-    }
+    explicit EVM(evm_instance* _instance) noexcept;
 
     ~EVM() { m_instance->destroy(m_instance); }
 

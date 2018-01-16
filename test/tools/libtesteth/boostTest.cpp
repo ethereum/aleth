@@ -123,7 +123,7 @@ void setDefaultOrCLocale()
 }
 
 // Custom Boost Unit Test Main
-int main(int argc, char* argv[])
+int main(int argc, const char* argv[])
 {
     std::string const dynamicTestSuiteName = "customTestSuite";
     setDefaultOrCLocale();
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
     if (opt.jsontrace || opt.vmtrace || opt.statediff)
     {
         // Do not use travis '.' output thread if debug is defined
-        result = unit_test_main(fakeInit, argc, argv);
+        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
         dev::test::TestOutputHelper::get().printTestExecStats();
         return result;
     }
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
         // Initialize travis '.' output thread for log activity
         std::atomic_bool stopTravisOut{false};
         std::thread outputThread(travisOut, &stopTravisOut);
-        result = unit_test_main(fakeInit, argc, argv);
+        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
         stopTravisOut = true;
         outputThread.join();
         dev::test::TestOutputHelper::get().printTestExecStats();
