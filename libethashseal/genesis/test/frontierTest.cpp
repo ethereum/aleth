@@ -23,12 +23,6 @@ R"E(
 	"sealEngine": "Ethash",
 	"params":{
 		"accountStartNonce": "0x00",
-		"homesteadForkBlock": "0xffffffffffffffff",
-		"daoHardforkBlock": "0xfffffffffffffff",
-		"EIP150ForkBlock": "0xfffffffffffffff",
-		"EIP158ForkBlock": "0xfffffffffffffff",
-		"byzantiumForkBlock": "0xfffffffffffffff",
-		"constantinopleForkBlock": "0xfffffffffffffff",
 		"networkID" : "0x01",
 		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",
