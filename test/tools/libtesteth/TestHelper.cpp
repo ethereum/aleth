@@ -231,19 +231,39 @@ bytes importByteArray(string const& _str)
     return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
-bytes importData(json_spirit::mObject const& _o)
+bytes processDataOrCode(json_spirit::mObject const& _o, string const& nodeName)
 {
-    bytes data;
-    if (_o.at("data").type() == json_spirit::str_type)
-        data = importByteArray(replaceLLL(_o.at("data").get_str()));
-    else
-        for (auto const& j : _o.at("data").get_array())
-            data.push_back(toByte(j));
-    return data;
+    bytes ret;
+    if (_o.count(nodeName) == 0)
+        return bytes();
+    if (_o.at(nodeName).type() == json_spirit::str_type)
+        if (_o.at(nodeName).get_str().find("0x") != 0)
+            ret = fromHex(replaceCode(_o.at(nodeName).get_str()));
+        else
+            ret = importByteArray(_o.at(nodeName).get_str());
+    else if (_o.at(nodeName).type() == json_spirit::array_type)
+    {
+        for (auto const& j : _o.at(nodeName).get_array())
+            ret.push_back(toByte(j));
+    }
+    return ret;
 }
 
-string replaceLLL(string const& _code)
+bytes importData(json_spirit::mObject const& _o)
 {
+    return processDataOrCode(_o, "data");
+}
+
+string replaceCode(string const& _code)
+{
+    if (_code == "")
+        return "0x";
+    if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
+    {
+        checkHexHasEvenLength(_code);
+        return _code;
+    }
+
     string compiledCode = compileLLL(_code);
     if (_code.size() > 0)
         BOOST_REQUIRE_MESSAGE(compiledCode.size() > 0,
@@ -251,7 +271,7 @@ string replaceLLL(string const& _code)
     return compiledCode;
 }
 
-void replaceLLLinState(json_spirit::mObject& _o)
+void replaceCodeInState(json_spirit::mObject& _o)
 {
     json_spirit::mObject& fieldsObj = _o.count("alloc") ?
                                           _o["alloc"].get_obj() :
@@ -260,9 +280,9 @@ void replaceLLLinState(json_spirit::mObject& _o)
     {
         auto obj = account.second.get_obj();
         if (obj.count("code") && obj["code"].type() == json_spirit::str_type)
-            obj["code"] = replaceLLL(obj["code"].get_str());
+            obj["code"] = replaceCode(obj["code"].get_str());
         account.second = obj;
-	}
+    }
 }
 
 vector<fs::path> getFiles(
@@ -362,14 +382,6 @@ string executeCmd(string const& _command)
 
 string compileLLL(string const& _code)
 {
-    if (_code == "")
-        return "0x";
-    if (_code.substr(0, 2) == "0x" && _code.size() >= 2)
-    {
-        checkHexHasEvenLength(_code);
-        return _code;
-    }
-
 #if defined(_WIN32)
     BOOST_ERROR("LLL compilation only supported on posix systems.");
     return "";
@@ -394,21 +406,7 @@ void checkHexHasEvenLength(string const& _str)
 
 bytes importCode(json_spirit::mObject const& _o)
 {
-    bytes code;
-    if (_o.count("code") == 0)
-        return code;
-    if (_o.at("code").type() == json_spirit::str_type)
-        if (_o.at("code").get_str().find("0x") != 0)
-            code = fromHex(compileLLL(_o.at("code").get_str()));
-        else
-            code = importByteArray(_o.at("code").get_str());
-    else if (_o.at("code").type() == json_spirit::array_type)
-    {
-        code.clear();
-        for (auto const& j : _o.at("code").get_array())
-            code.push_back(toByte(j));
-    }
-    return code;
+    return processDataOrCode(_o, "code");
 }
 
 LogEntries importLog(json_spirit::mArray const& _a)

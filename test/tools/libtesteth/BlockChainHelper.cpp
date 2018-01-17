@@ -105,7 +105,7 @@ void TestBlock::initBlockFromJsonHeader(mObject const& _blockHeader, mObject con
     m_state.get()->commit(State::CommitBehaviour::KeepEmptyAccounts);
 
     json_spirit::mObject state = _stateObj;
-    dev::test::replaceLLLinState(state);
+    dev::test::replaceCodeInState(state);
     m_accountMap = jsonToAccountMap(json_spirit::write_string(json_spirit::mValue(state), false));
 
     m_blockHeader =

@@ -280,13 +280,13 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
 		if (value.type() == json_spirit::int_type)
 			str = toString(value.get_int());
 		else if (value.type() == json_spirit::str_type)
-            str = isData ? replaceLLL(value.get_str()) : value.get_str();
+            str = isData ? replaceCode(value.get_str()) : value.get_str();
         else if (value.type() == json_spirit::array_type)
 		{
 			json_spirit::mArray arr;
 			for (auto const& j: value.get_array())
 			{
-                str = isData ? replaceLLL(j.get_str()) : j.get_str();
+                str = isData ? replaceCode(j.get_str()) : j.get_str();
                 arr.push_back((str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
 			}
 			output[key] = arr;
@@ -327,7 +327,7 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state, Acco
 {
 	//Compile LLL code of the test Fillers using external call to lllc
 	json_spirit::mObject o = _o;
-	replaceLLLinState(o);
+	replaceCodeInState(o);
 	std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);
 	_state.populateFrom(jsonToAccountMap(jsondata, 0, &o_mask));
 }
