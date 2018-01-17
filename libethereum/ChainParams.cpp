@@ -84,13 +84,11 @@ string const c_networkID = "networkID";
 string const c_allowFutureBlocks = "allowFutureBlocks";
 string const c_registrar = "registrar";
 
-set<string> const c_knownParamNames = {
-	c_minGasLimit, c_maxGasLimit, c_gasLimitBoundDivisor, c_homesteadForkBlock,
-	c_EIP150ForkBlock, c_EIP158ForkBlock, c_accountStartNonce, c_maximumExtraDataSize,
-	c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_constantinopleForkBlock,
-	c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor, c_durationLimit,
-	c_chainID, c_networkID, c_allowFutureBlocks, c_registrar
-};
+set<string> const c_knownParamNames = {c_minGasLimit, c_maxGasLimit, c_gasLimitBoundDivisor,
+    c_homesteadForkBlock, c_EIP150ForkBlock, c_EIP158ForkBlock, c_accountStartNonce,
+    c_maximumExtraDataSize, c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_eWASMForkBlock,
+    c_constantinopleForkBlock, c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor,
+    c_durationLimit, c_chainID, c_networkID, c_allowFutureBlocks, c_registrar};
 } // anonymous namespace
 
 ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
