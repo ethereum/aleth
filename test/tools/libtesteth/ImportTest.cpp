@@ -60,7 +60,7 @@ void ImportTest::makeBlockchainTestFromStateTest(vector<eth::Network> const& _ne
 {
     // Generate blockchain test filler
     string testnameOrig = TestOutputHelper::get().testName();
-    for (auto& tr : m_transactions)
+    for (auto const& tr : m_transactions)
     {
         json_spirit::mObject json;
         json_spirit::mObject testObj;
@@ -69,7 +69,7 @@ void ImportTest::makeBlockchainTestFromStateTest(vector<eth::Network> const& _ne
         string postfix = "_d" + toString(tr.dataInd);
         postfix += "g" + toString(tr.gasInd);
         postfix += "v" + toString(tr.valInd);
-        string testname = testnameOrig + postfix;
+        string const testname = testnameOrig + postfix;
 
         // basic genesis
         json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
@@ -83,9 +83,9 @@ void ImportTest::makeBlockchainTestFromStateTest(vector<eth::Network> const& _ne
         if (m_testInputObject.count("expect"))
         {
             State s = State(0, OverlayDB(), eth::BaseState::Empty);
-            AccountMaskMap m = std::unordered_map<Address, AccountMask>();
+            AccountMaskMap m;
             StateAndMap smap{s, m};
-            vector<size_t> stateIndexesToPrint;  // not used
+            vector<size_t> stateIndexesToPrint;
             json_spirit::mArray expetSectionArray;
 
             for (auto const& net : _networks)
@@ -108,16 +108,13 @@ void ImportTest::makeBlockchainTestFromStateTest(vector<eth::Network> const& _ne
                             fillJsonWithState(search2->second.first, search2->second.second);
                         for (auto& adr : obj)
                         {
-                            if (adr.first == toHexPrefixed(m_envInfo->author()))
+                            if (adr.first == toHexPrefixed(m_envInfo->author()) &&
+                                adr.second.get_obj().count("balance"))
                             {
-                                if (adr.second.get_obj().count("balance"))
-                                {
-                                    u256 expectCoinbaseBalance =
-                                        toInt(adr.second.get_obj()["balance"]);
-                                    expectCoinbaseBalance += blockReward;
-                                    adr.second.get_obj()["balance"] =
-                                        toCompactHexPrefixed(expectCoinbaseBalance);
-                                }
+                                u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
+                                expectCoinbaseBalance += blockReward;
+                                adr.second.get_obj()["balance"] =
+                                    toCompactHexPrefixed(expectCoinbaseBalance);
                             }
                         }
 
