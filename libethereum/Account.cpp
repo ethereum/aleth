@@ -104,7 +104,8 @@ namespace
 			validateFieldNames(field.second.get_obj(), c_knownAccountFields);
 	}
 }
-AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
+AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce,
+    AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled, const fs::path& _configPath)
 {
 	auto u256Safe = [](std::string const& s) -> u256 {
 		bigint ret(s);
@@ -169,6 +170,8 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
                 if (codePathObj.type() == json_spirit::str_type)
                 {
                     fs::path codePath{codePathObj.get_str()};
+                    if (codePath.is_relative())  // Append config dir if code file path is relative.
+                        codePath = _configPath.parent_path() / codePath;
                     bytes code = contents(codePath);
                     if (code.empty())
                         cerr << "Error importing code of account " << a << "! Code file "
