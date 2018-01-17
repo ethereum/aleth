@@ -69,7 +69,6 @@ struct ChainParams: public ChainOperationParams
     ChainParams loadGenesis(std::string const& _json, h256 const& _stateRoot = {}) const;
 
 private:
-    ChainParams loadGenesisState(std::string const& _json, h256 const& _stateRoot, const boost::filesystem::path& _configPath) const;
     void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);
 };
 

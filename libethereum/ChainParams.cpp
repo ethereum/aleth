@@ -141,17 +141,11 @@ ChainParams ChainParams::loadConfig(
 	cp = cp.loadGenesis(genesisStr, _stateRoot);
 	// genesis state
 	string genesisStateStr = json_spirit::write_string(obj[c_accounts], false);
-	cp = cp.loadGenesisState(genesisStateStr, _stateRoot, _configPath);
-	return cp;
-}
 
-ChainParams ChainParams::loadGenesisState(
-    string const& _json, h256 const& _stateRoot, const boost::filesystem::path& _configPath) const
-{
-    ChainParams cp(*this);
-    cp.genesisState =
-        jsonToAccountMap(_json, cp.accountStartNonce, nullptr, &cp.precompiled, _configPath);
+    cp.genesisState = jsonToAccountMap(
+        genesisStateStr, cp.accountStartNonce, nullptr, &cp.precompiled, _configPath);
     cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot(true);
+
     return cp;
 }
 
