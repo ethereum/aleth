@@ -84,8 +84,9 @@ private:
 	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;
 	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
 	bool checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
+    void makeBlockchainTestFromStateTest(std::vector<eth::Network> const& _networks) const;
 
-	json_spirit::mObject const& m_testInputObject;
+    json_spirit::mObject const& m_testInputObject;
 	json_spirit::mObject& m_testOutputObject;
 };
 
