@@ -53,8 +53,8 @@ set(HUNTER_JOBS_NUMBER 4)
 set(HUNTER_CACHE_SERVERS "https://github.com/ethereum/hunter-cache")
 include(HunterGate)
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.19.173.tar.gz"
-    SHA1 "750fb1d621af971fad6f303356b13017ad9f5e15"
+    URL "https://github.com/ruslo/hunter/archive/v0.19.232.tar.gz"
+    SHA1 "a412c45fe4c5a72fed386f62dd8d753bd4fd3d11"
     LOCAL
 )
 
@@ -103,8 +103,8 @@ include(EthUtils)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-hunter_add_package(Boost COMPONENTS program_options filesystem system thread)
-find_package(Boost CONFIG REQUIRED program_options filesystem system thread)
+hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber)
+find_package(Boost CONFIG REQUIRED program_options filesystem system thread context fiber)
 
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
