@@ -251,8 +251,15 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 		fs::remove_all(extrasPath / fs::path("extras"));
 	}
 
-	m_blocksDB.reset(new db::DBImpl((chainPath / fs::path("blocks")).string()));
-	m_extrasDB.reset(new db::DBImpl((extrasPath / fs::path("extras")).string()));
+	try
+	{
+		m_blocksDB.reset(new db::DBImpl((chainPath / fs::path("blocks")).string()));
+		m_extrasDB.reset(new db::DBImpl((extrasPath / fs::path("extras")).string()));
+	}
+	catch (db::FailedToOpenDB const&)
+	{
+		// Do nothing, handled below
+	}
 
 
 	if (!m_blocksDB || !m_extrasDB)
