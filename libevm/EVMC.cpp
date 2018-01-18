@@ -21,7 +21,7 @@ EVM::EVM(evm_instance* _instance) noexcept : m_instance(_instance)
         m_instance->set_option(m_instance, pair.first.c_str(), pair.second.c_str());
 }
 
-owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const&)
+owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp)
 {
     constexpr int64_t int64max = std::numeric_limits<int64_t>::max();
 
@@ -37,11 +37,18 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const&)
     auto gas = static_cast<int64_t>(io_gas);
     EVM::Result r = execute(_ext, gas);
 
+    if (r.status() == EVM_REJECTED)
+    {
+        cwarn << "Execution rejected by EVM-C, executing with interpreter";
+        return VMFactory::create(VMKind::Interpreter)->exec(io_gas, _ext, _onOp);
+    }
+
     // TODO: Add EVM-C result codes mapping with exception types.
     if (r.status() == EVM_FAILURE)
         BOOST_THROW_EXCEPTION(OutOfGas());
 
     io_gas = r.gasLeft();
+
     // FIXME: Copy the output for now, but copyless version possible.
     owning_bytes_ref output{r.output().toVector(), 0, r.output().size()};
 

@@ -18,7 +18,7 @@ owning_bytes_ref HeraPlusVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const&
     auto gas = static_cast<int64_t>(io_gas);
     auto r = execute(_ext, gas);
 
-    if (r.status() == EVM_UNSUPPORTED_CODE_TYPE)
+    if (r.status() == EVM_REJECTED)
         return VM{}.exec(io_gas, _ext, _onOp);
 
     // TODO: Add EVM-C result codes mapping with exception types.
