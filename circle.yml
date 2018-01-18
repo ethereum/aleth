@@ -68,6 +68,9 @@ defaults:
     store_artifacts:
       path: ~/build/test/testeth
       destination: testeth
+    store_artifacts:
+      path: ~/build/test/randomStateTest.json
+      destination: randomStateTest.json
 
   save-deps-cache: &save-deps-cache
     cache-save:
