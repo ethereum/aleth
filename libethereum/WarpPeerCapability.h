@@ -105,8 +105,6 @@ private:
 
     void setIdle() { setAsking(Asking::Nothing); }
 
-    unsigned m_hostProtocolVersion = 0;
-
     /// Peer's protocol version.
     unsigned m_protocolVersion = 0;
 

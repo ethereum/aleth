@@ -130,7 +130,7 @@ public:
         boost::this_fiber::yield();
     }
 
-    void onPeerDisconnect(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking)
+    void onPeerDisconnect(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) override
     {
         if (_asking == Asking::WarpManifest)
         {
@@ -172,6 +172,7 @@ private:
         RLP manifestRlp(manifestBytes);
         if (!validateManifest(manifestRlp))
         {
+            // TODO try disconnecting instead of disabling; disabled peer still occupies the peer slot
             _peer->disable("Invalid snapshot manifest.");
             return;
         }
@@ -322,6 +323,7 @@ WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const
     m_peerObserver(std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath)),
     m_lastTick(0)
 {
+    (void)SnapshotLog::debug; // override "unused variable" error on macOS
 }
 
 WarpHostCapability::~WarpHostCapability()
