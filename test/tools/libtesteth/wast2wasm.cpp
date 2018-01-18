@@ -4,9 +4,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+// Disable MSVC warning "unary minus operator applied to unsigned type".
+#pragma warning(push)
+#pragma warning(disable: 4146)
 #include <wasm-binary.h>
 #include <wasm-s-parser.h>
 #include <wasm-validator.h>
+#pragma warning(pop)
 
 using namespace std;
 
