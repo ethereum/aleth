@@ -16,7 +16,6 @@ if(EVMJIT OR HERA)
     list(APPEND sources
         EVMC.cpp EVMC.h
         HeraPlusVM.cpp HeraPlusVM.h
-        SmartVM.cpp SmartVM.h
     )
 endif()
 
