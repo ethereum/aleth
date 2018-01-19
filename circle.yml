@@ -54,7 +54,7 @@ defaults:
           test/testeth -t BlockChainSuite/updateStats
         fi
 
-        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
+        ctest -V -j $TEST_PARALLEL_JOBS
 
   store-eth: &store-eth
     store_artifacts:
