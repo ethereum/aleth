@@ -624,7 +624,8 @@ BOOST_AUTO_TEST_CASE(rndCode)
 {
 	try
 	{
-		for (uint i = 0; i < 50000; i++)
+		uint iStart = 50000;
+		for (uint i = iStart; i < iStart + 50000; i++)
 		{
 			std::cerr << i << " ";
 			Options newOpt = Options::get();
