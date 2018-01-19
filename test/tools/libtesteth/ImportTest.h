@@ -85,7 +85,11 @@ private:
 	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
 	bool checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
 
-	json_spirit::mObject const& m_testInputObject;
+    /// Create blockchain test fillers for specified _networks and test information (env, pre, txs)
+    /// of Importtest then fill blockchain fillers into tests.
+    void makeBlockchainTestFromStateTest(std::vector<eth::Network> const& _networks) const;
+
+    json_spirit::mObject const& m_testInputObject;
 	json_spirit::mObject& m_testOutputObject;
 };
 

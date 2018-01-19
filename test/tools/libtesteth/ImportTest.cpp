@@ -56,6 +56,111 @@ ImportTest::ImportTest(json_spirit::mObject const& _input, json_spirit::mObject&
 	importState(_input.at("pre").get_obj(), m_statePre);
 }
 
+void ImportTest::makeBlockchainTestFromStateTest(vector<eth::Network> const& _networks) const
+{
+    // Generate blockchain test filler
+    string testnameOrig = TestOutputHelper::get().testName();
+    for (auto const& tr : m_transactions)
+    {
+        json_spirit::mObject json;
+        json_spirit::mObject testObj;
+
+        // generate the test name with transaction detail
+        string postfix = "_d" + toString(tr.dataInd);
+        postfix += "g" + toString(tr.gasInd);
+        postfix += "v" + toString(tr.valInd);
+        string const testname = testnameOrig + postfix;
+
+        // basic genesis
+        json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
+        genesisObj["coinbase"] = toString(m_envInfo->author());
+        genesisObj["gasLimit"] = toCompactHexPrefixed(m_envInfo->gasLimit());
+        genesisObj["timestamp"] = toCompactHexPrefixed(m_envInfo->timestamp() - 50);
+        testObj["genesisBlockHeader"] = genesisObj;
+        testObj["pre"] = fillJsonWithState(m_statePre);
+
+        // generate expect sections for this transaction
+        if (m_testInputObject.count("expect"))
+        {
+            State s = State(0, OverlayDB(), eth::BaseState::Empty);
+            AccountMaskMap m;
+            StateAndMap smap{s, m};
+            vector<size_t> stateIndexesToPrint;
+            json_spirit::mArray expetSectionArray;
+
+            for (auto const& net : _networks)
+            {
+                // Calculate the block reward
+                ChainParams const chainParams{genesisInfo(net)};
+                EVMSchedule const schedule = chainParams.scheduleForBlockNumber(1);
+                u256 const blockReward = chainParams.blockReward(schedule);
+
+                TrExpectSection search{tr, smap};
+                for (auto const& exp : m_testInputObject.at("expect").get_array())
+                {
+                    TrExpectSection* search2 = &search;
+                    checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
+                    if (search.second.first.addresses().size() !=
+                        0)  // if match in the expect sections for this tr found
+                    {
+                        // replace expected mining reward (in state tests it is 0)
+                        json_spirit::mObject obj =
+                            fillJsonWithState(search2->second.first, search2->second.second);
+                        for (auto& adr : obj)
+                        {
+                            if (adr.first == toHexPrefixed(m_envInfo->author()) &&
+                                adr.second.get_obj().count("balance"))
+                            {
+                                u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
+                                expectCoinbaseBalance += blockReward;
+                                adr.second.get_obj()["balance"] =
+                                    toCompactHexPrefixed(expectCoinbaseBalance);
+                            }
+                        }
+
+                        json_spirit::mObject expetSectionObj;
+                        expetSectionObj["network"] = test::netIdToString(net);
+                        expetSectionObj["result"] = obj;
+                        expetSectionArray.push_back(expetSectionObj);
+                        break;
+                    }
+                }  // for exp
+            }      // for net
+
+            testObj["expect"] = expetSectionArray;
+        }  // expect
+
+        // rewrite header section for a block by the statetest parameters
+        json_spirit::mObject rewriteHeader;
+        rewriteHeader["gasLimit"] = toCompactHexPrefixed(m_envInfo->gasLimit());
+        rewriteHeader["difficulty"] = toCompactHexPrefixed(m_envInfo->difficulty());
+        rewriteHeader["timestamp"] = toCompactHexPrefixed(m_envInfo->timestamp());
+        rewriteHeader["updatePoW"] = "1";
+
+        json_spirit::mArray blocksArr;
+        json_spirit::mArray transcArr;
+        transcArr.push_back(fillJsonWithTransaction(tr.transaction));
+        json_spirit::mObject blocksObj;
+        blocksObj["blockHeaderPremine"] = rewriteHeader;
+        blocksObj["transactions"] = transcArr;
+        blocksObj["uncleHeaders"] = json_spirit::mArray();
+        blocksArr.push_back(blocksObj);
+        testObj["blocks"] = blocksArr;
+        json[testname] = testObj;
+
+        // Write a filler file to the filler folder
+        BCGeneralStateTestsSuite genSuite;
+        fs::path const testFillerFile =
+            genSuite.getFullPathFiller(TestOutputHelper::get().caseName()) /
+            fs::path(testname + "Filler.json");
+        writeFile(testFillerFile, asBytes(json_spirit::write_string((mValue)json, true)));
+
+        // Execute test filling for this file
+        genSuite.executeTest(TestOutputHelper::get().caseName(), testFillerFile);
+
+    }  // transactions
+}
+
 bytes ImportTest::executeTest()
 {
 	assert(m_envInfo);
@@ -89,113 +194,11 @@ bytes ImportTest::executeTest()
 		}
 	}
 
-	//Generate blockchain test filler
 	if (Options::get().fillchain)
-	{
-		string testnameOrig = TestOutputHelper::get().testName();
-		for (auto& tr : m_transactions)
-		{
-			json_spirit::mObject json;
-			json_spirit::mObject testObj;
+        makeBlockchainTestFromStateTest(networks);
 
-			//generate the test name with transaction detail
-			string postfix = "_d" + toString(tr.dataInd);
-			postfix += "g" + toString(tr.gasInd);
-			postfix += "v" + toString(tr.valInd);
-			string testname = testnameOrig + postfix;
-
-			//basic genesis
-			json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
-			genesisObj["coinbase"] = toString(m_envInfo->author());
-			genesisObj["gasLimit"] = toCompactHexPrefixed(m_envInfo->gasLimit());
-			genesisObj["timestamp"] = toCompactHexPrefixed(m_envInfo->timestamp() - 50);
-			testObj["genesisBlockHeader"] = genesisObj;
-			testObj["pre"] = fillJsonWithState(m_statePre);
-
-			//generate expect sections for this transaction
-			if (m_testInputObject.count("expect"))
-			{
-				State s = State (0, OverlayDB(), eth::BaseState::Empty);
-				AccountMaskMap m = std::unordered_map<Address, AccountMask>();
-				StateAndMap smap {s, m};
-				vector<size_t> stateIndexesToPrint; //not used
-				json_spirit::mArray expetSectionArray;
-
-				for (auto const& net : networks)
-				{
-					tr.netId = net;
-
-					// Calculate the block reward
-					ChainParams const chainParams{genesisInfo(net)};
-					EVMSchedule const schedule = chainParams.scheduleForBlockNumber(1);
-					u256 const blockReward = chainParams.blockReward(schedule);
-
-					TrExpectSection search {tr, smap};
-					for (auto const& exp: m_testInputObject.at("expect").get_array())
-					{
-						TrExpectSection* search2 = &search;
-						checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
-						if (search.second.first.addresses().size() != 0) //if match in the expect sections for this tr found
-						{
-							//replace expected mining reward (in state tests it is 0)
-							json_spirit::mObject obj = fillJsonWithState(search2->second.first, search2->second.second);
-							for (auto& adr: obj)
-							{
-								if (adr.first == toHexPrefixed(m_envInfo->author()))
-								{
-									if (adr.second.get_obj().count("balance"))
-									{
-										u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
-										expectCoinbaseBalance += blockReward;
-										adr.second.get_obj()["balance"] = toCompactHexPrefixed(expectCoinbaseBalance);
-									}
-								}
-							}
-
-							json_spirit::mObject expetSectionObj;
-							expetSectionObj["network"] = test::netIdToString(net);
-							expetSectionObj["result"] = obj;
-							expetSectionArray.push_back(expetSectionObj);
-							break;
-						}
-					}//for exp
-				}// for net
-
-				testObj["expect"] = expetSectionArray;
-			}//expect
-
-			//rewrite header section for a block by the statetest parameters
-			json_spirit::mObject rewriteHeader;
-			rewriteHeader["gasLimit"] = toCompactHexPrefixed(m_envInfo->gasLimit());
-			rewriteHeader["difficulty"] = toCompactHexPrefixed(m_envInfo->difficulty());
-			rewriteHeader["timestamp"] = toCompactHexPrefixed(m_envInfo->timestamp());
-			rewriteHeader["updatePoW"] = "1";
-
-			json_spirit::mArray blocksArr;
-			json_spirit::mArray transcArr;
-			transcArr.push_back(fillJsonWithTransaction(tr.transaction));
-			json_spirit::mObject blocksObj;
-			blocksObj["blockHeaderPremine"] = rewriteHeader;
-			blocksObj["transactions"] = transcArr;
-			blocksObj["uncleHeaders"] = json_spirit::mArray();
-			blocksArr.push_back(blocksObj);
-			testObj["blocks"] = blocksArr;
-			json[testname] = testObj;
-
-			// Write a filler file to the filler folder
-			BCGeneralStateTestsSuite genSuite;
-			fs::path const testFillerFile = genSuite.getFullPathFiller(TestOutputHelper::get().caseName()) / fs::path(testname + "Filler.json");
-			writeFile(testFillerFile, asBytes(json_spirit::write_string((mValue)json, true)));
-
-			// Execute test filling for this file
-			genSuite.executeTest(TestOutputHelper::get().caseName(), testFillerFile);
-
-		} //transactions
-	}//fillchain
-
-	m_transactions.clear();
-	m_transactions = transactionResults;
-	return bytes();
+    m_transactions = transactionResults;  // update transactions with execution results.
+    return bytes();
 }
 
 void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward)
