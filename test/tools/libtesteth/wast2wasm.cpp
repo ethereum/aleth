@@ -26,7 +26,10 @@ string wast2wasm(string const& input, bool debug)
     wasm::Module module;
 
     try {
-        wasm::SExpressionParser parser(const_cast<char*>(input.c_str()));
+        // FIXME: binaryen 1.37.28 actually modifies the input...
+        //        as a workaround make a copy here
+        string tmp = input;
+        wasm::SExpressionParser parser(const_cast<char*>(tmp.c_str()));
         wasm::Element& root = *parser.root;
         wasm::SExpressionWasmBuilder builder(module, *root[0]);
     } catch (wasm::ParseException& p) {
