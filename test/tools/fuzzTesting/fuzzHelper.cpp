@@ -640,11 +640,14 @@ BOOST_AUTO_TEST_CASE(rndStateTest)
 	try
 	{
 		//Mac os bug is here
+		int currVerbosity = g_logVerbosity;
+		g_logVerbosity = 10;
 		test::StateTestSuite suite;
 		test::RandomCodeOptions options;
 		test::TestOutputHelper::get().setCurrentTestFile(std::string());
 		std::string test = test::RandomCode::get().fillRandomTest(suite, c_testExampleStateTest, options);
 		BOOST_REQUIRE(!test.empty());
+		g_logVerbosity = currVerbosity;
 	}
 	catch(dev::Exception const& _e)
 	{
