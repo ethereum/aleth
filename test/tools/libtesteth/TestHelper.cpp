@@ -21,6 +21,7 @@
 #include "TestHelper.h"
 #include "Options.h"
 #include "TestOutputHelper.h"
+#include "wast2wasm.h"
 
 #include <BuildInfo.h>
 #include <libethashseal/EthashCPUMiner.h>
@@ -263,6 +264,8 @@ string replaceCode(string const& _code)
         checkHexHasEvenLength(_code);
         return _code;
     }
+    if (_code.find("(module") == 0)
+        return wast2wasm(_code);
 
     string compiledCode = compileLLL(_code);
     if (_code.size() > 0)
