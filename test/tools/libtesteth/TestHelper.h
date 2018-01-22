@@ -60,6 +60,7 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 struct MissingFields : virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
+typedef json_spirit::Value_type jsonVType;
 
 class ZeroGasPricer: public eth::GasPricer
 {
@@ -87,6 +88,8 @@ json_spirit::mValue parseYamlToJson(std::string const& _string);
 bytes importCode(json_spirit::mObject const& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
+void requireJsonFields(json_spirit::mObject const& _o, std::string const& _section,
+    std::map<std::string, json_spirit::Value_type> const& _validationMap);
 void checkHexHasEvenLength(std::string const&);
 void copyFile(boost::filesystem::path const& _source, boost::filesystem::path const& _destination);
 eth::LogEntries importLog(json_spirit::mArray const& _o);
