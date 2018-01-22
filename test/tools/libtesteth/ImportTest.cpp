@@ -307,12 +307,11 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
 
 void ImportTest::importEnv(json_spirit::mObject const& _o)
 {
-	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
-	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
-	BOOST_REQUIRE(_o.count("currentNumber") > 0);
-	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
-	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-	auto gasLimit = toInt(_o.at("currentGasLimit"));
+    requireJsonFields(_o, "env",
+        {{"currentCoinbase", jsonVType::str_type}, {"currentDifficulty", jsonVType::str_type},
+            {"currentGasLimit", jsonVType::str_type}, {"currentNumber", jsonVType::str_type},
+            {"currentTimestamp", jsonVType::str_type}, {"previousHash", jsonVType::str_type}});
+    auto gasLimit = toInt(_o.at("currentGasLimit"));
 	BOOST_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
 	BlockHeader header;
 	header.setGasLimit(gasLimit.convert_to<int64_t>());
@@ -328,35 +327,39 @@ void ImportTest::importEnv(json_spirit::mObject const& _o)
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
 void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
 {
-	//Compile LLL code of the test Fillers using external call to lllc
 	json_spirit::mObject o = _o;
-	replaceCodeInState(o);
-	std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);
+    replaceCodeInState(
+        o);  // Compile LLL and other src code of the test Fillers using external call to lllc
+    std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);
 	_state.populateFrom(jsonToAccountMap(jsondata, 0, &o_mask));
 }
 
 void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
 {
-	AccountMaskMap mask;
+    for (auto const& account : _o)
+    {
+        BOOST_REQUIRE_MESSAGE(account.second.type() == jsonVType::obj_type,
+            "State account is required to be json Object!");
+        requireJsonFields(account.second.get_obj(), account.first,
+            {{"balance", jsonVType::str_type}, {"code", jsonVType::str_type},
+                {"nonce", jsonVType::str_type}, {"storage", jsonVType::obj_type}});
+    }
+
+    AccountMaskMap mask;
 	importState(_o, _state, mask);
-	//check that every parameter was declared in state object
-	for (auto const& i: mask)
-		if (!i.second.allSet())
-			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
 }
 
 void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr)
 {
 	if (_o.count("secretKey") > 0)
 	{
-		BOOST_REQUIRE(_o.count("nonce") > 0);
-		BOOST_REQUIRE(_o.count("gasPrice") > 0);
-		BOOST_REQUIRE(_o.count("gasLimit") > 0);
-		BOOST_REQUIRE(_o.count("to") > 0);
-		BOOST_REQUIRE(_o.count("value") > 0);
-		BOOST_REQUIRE(_o.count("data") > 0);
+        requireJsonFields(_o, "transaction",
+            {{"data", jsonVType::str_type}, {"gasLimit", jsonVType::str_type},
+                {"gasPrice", jsonVType::str_type}, {"nonce", jsonVType::str_type},
+                {"secretKey", jsonVType::str_type}, {"to", jsonVType::str_type},
+                {"value", jsonVType::str_type}});
 
-		if (bigint(_o.at("nonce").get_str()) >= c_max256plus1)
+        if (bigint(_o.at("nonce").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
 		if (bigint(_o.at("gasPrice").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
@@ -371,17 +374,13 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 	}
 	else
 	{
-		BOOST_REQUIRE(_o.count("nonce"));
-		BOOST_REQUIRE(_o.count("gasPrice"));
-		BOOST_REQUIRE(_o.count("gasLimit"));
-		BOOST_REQUIRE(_o.count("to"));
-		BOOST_REQUIRE(_o.count("value"));
-		BOOST_REQUIRE(_o.count("data"));
-		BOOST_REQUIRE(_o.count("v"));
-		BOOST_REQUIRE(_o.count("r"));
-		BOOST_REQUIRE(_o.count("s"));
+        requireJsonFields(_o, "transaction",
+            {{"data", jsonVType::str_type}, {"gasLimit", jsonVType::str_type},
+                {"gasPrice", jsonVType::str_type}, {"nonce", jsonVType::str_type},
+                {"v", jsonVType::str_type}, {"r", jsonVType::str_type}, {"s", jsonVType::str_type},
+                {"to", jsonVType::str_type}, {"value", jsonVType::str_type}});
 
-		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
+        RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
 		RLP transactionRLP(transactionRLPStream.out());
 		try
 		{
@@ -403,8 +402,20 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 
 void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 {
-	//Parse extended transaction
-	BOOST_REQUIRE(o_tr.count("gasLimit") > 0);
+    if (o_tr.count("secretKey"))
+        requireJsonFields(o_tr, "transaction",
+            {{"data", jsonVType::array_type}, {"gasLimit", jsonVType::array_type},
+                {"gasPrice", jsonVType::str_type}, {"nonce", jsonVType::str_type},
+                {"secretKey", jsonVType::str_type}, {"to", jsonVType::str_type},
+                {"value", jsonVType::array_type}});
+    else
+        requireJsonFields(o_tr, "transaction",
+            {{"data", jsonVType::array_type}, {"gasLimit", jsonVType::array_type},
+                {"gasPrice", jsonVType::str_type}, {"nonce", jsonVType::str_type},
+                {"v", jsonVType::str_type}, {"r", jsonVType::str_type}, {"s", jsonVType::str_type},
+                {"to", jsonVType::str_type}, {"value", jsonVType::array_type}});
+
+    //Parse extended transaction
 	size_t dataVectorSize = o_tr.at("data").get_array().size();
 	size_t gasVectorSize = o_tr.at("gasLimit").get_array().size();
 	size_t valueVectorSize = o_tr.at("value").get_array().size();
@@ -559,7 +570,21 @@ bool ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 
 bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network, TrExpectSection* _search) const
 {
-	vector<int> d;
+    if (_expects.count("result"))
+    {
+        requireJsonFields(_expects, "expect",
+            {{"indexes", jsonVType::obj_type}, {"network", jsonVType::array_type},
+                {"result", jsonVType::obj_type}});
+    }
+    else
+    {
+        // Expect section in filled test
+        requireJsonFields(_expects, "expect",
+            {{"indexes", jsonVType::obj_type}, {"hash", jsonVType::str_type},
+                {"logs", jsonVType::str_type}});
+    }
+
+    vector<int> d;
 	vector<int> g;
 	vector<int> v;
 	vector<string> network;
@@ -580,7 +605,9 @@ bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 
 	if (_expects.count("indexes"))
 	{
-		json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
+        BOOST_REQUIRE_MESSAGE(_expects.at("indexes").type() == jsonVType::obj_type,
+            "indexes field expected to be json Object!");
+        json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
 		parseJsonIntValueIntoVector(indexes.at("data"), d);
 		parseJsonIntValueIntoVector(indexes.at("gas"), g);
 		parseJsonIntValueIntoVector(indexes.at("value"), v);
@@ -695,9 +722,15 @@ int ImportTest::exportTest()
 	vector<size_t> stateIndexesToPrint;
 	if (m_testInputObject.count("expect") > 0)
 	{
-		for (auto const& exp: m_testInputObject.at("expect").get_array())
-			checkGeneralTestSection(exp.get_obj(), stateIndexesToPrint);
-	}
+        BOOST_REQUIRE_MESSAGE(m_testInputObject.at("expect").type() == jsonVType::array_type,
+            "expect section is required to be json Array!");
+        for (auto const& exp: m_testInputObject.at("expect").get_array())
+        {
+            BOOST_REQUIRE_MESSAGE(exp.type() == jsonVType::obj_type,
+                "expect section element is required to be json Object!");
+            checkGeneralTestSection(exp.get_obj(), stateIndexesToPrint);
+        }
+    }
 
 	std::map<string, json_spirit::mArray> postState;
 	for(size_t i = 0; i < m_transactions.size(); i++)

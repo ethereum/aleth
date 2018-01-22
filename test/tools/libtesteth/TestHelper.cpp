@@ -492,6 +492,48 @@ void checkCallCreates(
     }
 }
 
+string jsonTypeAsString(json_spirit::Value_type _type)
+{
+    switch (_type)
+    {
+    case json_spirit::obj_type:
+        return "json Object";
+    case json_spirit::array_type:
+        return "json Array";
+    case json_spirit::str_type:
+        return "json String";
+    case json_spirit::bool_type:
+        return "json Bool";
+    case json_spirit::int_type:
+        return "json Int";
+    case json_spirit::real_type:
+        return "json Real";
+    case json_spirit::null_type:
+        return "json Null";
+    default:
+        return "json n/a";
+    }
+}
+
+void requireJsonFields(json_spirit::mObject const& _o, string const& _section,
+    map<string, json_spirit::Value_type> const& _validationMap)
+{
+    // check for unexpected fiedls
+    for (auto const field : _o)
+        BOOST_REQUIRE_MESSAGE(_validationMap.count(field.first),
+            field.first + " should not be declared in " + _section + " section!");
+
+    // check field types with validation map
+    for (auto const vmap : _validationMap)
+    {
+        BOOST_REQUIRE_MESSAGE(
+            _o.count(vmap.first) > 0, vmap.first + " not found in " + _section + " section!");
+        BOOST_REQUIRE_MESSAGE(_o.at(vmap.first).type() == vmap.second,
+            _section + " " + vmap.first + " expected to be " + jsonTypeAsString(vmap.second) +
+                ", but set to " + jsonTypeAsString(_o.at(vmap.first).type()));
+    }
+}
+
 string prepareVersionString()
 {
     // cpp-1.3.0+commit.6be76b64.Linux.g++
