@@ -58,7 +58,7 @@ TimerHelper::~TimerHelper()
 		clog(TimerChannel) << m_id << chrono::duration_cast<chrono::milliseconds>(e).count() << "ms";
 }
 
-uint64_t utcTime()
+int64_t utcTime()
 {
 	// TODO: Fix if possible to not use time(0) and merge only after testing in all platforms
 	// time_t t = time(0);

@@ -51,21 +51,23 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 	finalTest << "{\n";
 	test::TestOutputHelper::get().initTest(900);
 
-	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
+	for (int stampDelta = 0; stampDelta < 45; stampDelta += 2)
 	{
 		for (int pUncles = 0; pUncles < 2; pUncles++)
 		{
-			for (u256 blockNumber = 100000; blockNumber < 5000000; blockNumber += 100000)
+			for (int blockNumber = 100000; blockNumber < 5000000; blockNumber += 100000)
 			{
 				testN++;
 				string testName = "DifficultyTest"+toString(testN);
 				if (!test::TestOutputHelper::get().checkTest(testName))
 					continue;
 
-				u256 pStamp = test::RandomCode::get().randomUniInt();
+				// A random timestamp up to year 3048.
+				auto pStamp =
+					static_cast<int64_t>(test::RandomCode::get().randomUniInt(1, 34020247236));
 				u256 pDiff = test::RandomCode::get().randomUniInt();
-				u256 cStamp = pStamp + stampDelta;
-				u256 cNum = blockNumber;
+				int64_t cStamp = pStamp + stampDelta;
+				int cNum = blockNumber;
 
 				BlockHeader parent;
 				parent.setTimestamp(pStamp);
@@ -125,13 +127,13 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		BOOST_REQUIRE_MESSAGE(o.count("currentDifficulty") > 0, testname + " missing currentDifficulty field");
 
 		BlockHeader parent;
-		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
+		parent.setTimestamp(test::toInt64(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
 		parent.setNumber(test::toInt(o["currentBlockNumber"]) - 1);
 		parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
 
 		BlockHeader current;
-		current.setTimestamp(test::toInt(o["currentTimestamp"]));
+		current.setTimestamp(test::toInt64(o["currentTimestamp"]));
 		current.setNumber(test::toInt(o["currentBlockNumber"]));
 
 		u256 difficulty = _sealEngine.calculateDifficulty(current, parent);
@@ -234,8 +236,8 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						u256 blockNumber = blockNumberVector.at(bN);
 						u256 pDiff = parentDifficultyVector.at(pdN);
 
-						u256 pStamp = test::RandomCode::get().randomUniInt();
-						u256 cStamp = pStamp + stampDelta;
+						auto pStamp = static_cast<int64_t>(test::RandomCode::get().randomUniInt());
+						int64_t cStamp = pStamp + stampDelta;
 						u256 cNum = blockNumber;
 
 						BlockHeader parent;

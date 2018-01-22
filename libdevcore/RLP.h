@@ -294,6 +294,14 @@ public:
 		return fromBigEndian<_T>(p);
 	}
 
+	int64_t toPositiveInt64(int _flags = Strict) const
+	{
+		int64_t i = toInt<int64_t>(_flags);
+		if ((_flags & ThrowOnFail) && i < 0)
+			BOOST_THROW_EXCEPTION(BadCast());
+		return i;
+	}
+
 	template <class _N> _N toHash(int _flags = Strict) const
 	{
 		requireGood();

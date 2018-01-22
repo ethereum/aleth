@@ -84,7 +84,7 @@ bool ClientTest::addBlock(string const& _rlp)
 	return (m_bq.import(blockRLP.data(), true) == ImportResult::Success);
 }
 
-void ClientTest::modifyTimestamp(u256 const& _timestamp)
+void ClientTest::modifyTimestamp(int64_t _timestamp)
 {
 	Block block(chainParams().accountStartNonce);
 	DEV_READ_GUARDED(x_preSeal)

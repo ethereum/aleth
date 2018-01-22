@@ -639,7 +639,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		if (ho.count("RelTimestamp"))
 		{
 			BlockHeader parentHeader = importedBlocks.at(importedBlocks.size() - 1).blockHeader();
-			tmp.setTimestamp(toInt(ho["RelTimestamp"]) + parentHeader.timestamp());
+			tmp.setTimestamp(toInt64(ho["RelTimestamp"]) + parentHeader.timestamp());
 			tmp.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(tmp, parentHeader));
 		}
 
@@ -736,7 +736,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 	BlockHeader uncleHeader;
 	if (uncleHeaderObj.count("populateFromBlock"))
 	{
-		uncleHeader.setTimestamp((u256)time(0));
+		uncleHeader.setTimestamp(time(0));
 		size_t number = (size_t)toInt(uncleHeaderObj.at("populateFromBlock"));
 		uncleHeaderObj.erase("populateFromBlock");
 		if (number < importedBlocks.size())
@@ -753,7 +753,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 			if (uncleHeaderObj.count("RelTimestamp"))
 			{
 				BlockHeader parentHeader = importedBlocks.at(number).blockHeader();
-				uncleHeader.setTimestamp(toInt(uncleHeaderObj["RelTimestamp"]) + parentHeader.timestamp());
+				uncleHeader.setTimestamp(toInt64(uncleHeaderObj["RelTimestamp"]) + parentHeader.timestamp());
 				uncleHeader.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(uncleHeader, parentHeader));
 				uncleHeaderObj.erase("RelTimestamp");
 			}

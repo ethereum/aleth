@@ -104,7 +104,7 @@ EnvInfo FakeExtVM::importEnv(mObject const& _o, LastBlockHashesFace const& _last
 	BlockHeader blockHeader;
 	blockHeader.setGasLimit(gasLimit.convert_to<int64_t>());
 	blockHeader.setDifficulty(toInt(_o.at("currentDifficulty")));
-	blockHeader.setTimestamp(toInt(_o.at("currentTimestamp")));
+	blockHeader.setTimestamp(toInt64(_o.at("currentTimestamp")));
 	blockHeader.setAuthor(Address(_o.at("currentCoinbase").get_str()));
 	blockHeader.setNumber(toInt(_o.at("currentNumber")));
 	return EnvInfo(blockHeader, _lastBlockHashes, 0);
