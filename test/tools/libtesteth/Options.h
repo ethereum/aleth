@@ -77,10 +77,13 @@ public:
 	/// Get reference to options
 	/// The first time used, options are parsed with argc, argv
 	static Options const& get(int argc = 0, const char** argv = 0);
+	static void set(Options const& _opt);
+
 
 private:
+	static Options _instance;
 	Options(int argc = 0, const char** argv = 0);
-	Options(Options const&) = delete;
+	//Options(Options const&) = delete;
 };
 
 } //namespace test

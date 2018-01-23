@@ -330,9 +330,16 @@ Options::Options(int argc, const char** argv)
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
+Options Options::_instance = Options(0,0);
 Options const& Options::get(int argc, const char** argv)
 {
-	static Options instance(argc, argv);
-	return instance;
+	if (argc != 0 && argv != 0)
+		_instance = Options(argc, argv);
+	return _instance;
+}
+
+void Options::set(Options const& _opt)
+{
+	_instance = _opt;
 }
 

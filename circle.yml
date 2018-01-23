@@ -54,7 +54,7 @@ defaults:
           test/testeth -t BlockChainSuite/updateStats
         fi
 
-        ctest --output-on-failure -j $TEST_PARALLEL_JOBS
+        ctest -V -j $TEST_PARALLEL_JOBS
 
   store-eth: &store-eth
     store_artifacts:
@@ -68,6 +68,11 @@ defaults:
     store_artifacts:
       path: ~/build/test/testeth
       destination: testeth
+
+  save-random-test: &save-random-test
+    store_artifacts:
+      path: ~/build/test/randomStateTest.json
+      destination: randomStateTest.json
 
   save-deps-cache: &save-deps-cache
     cache-save:
@@ -115,6 +120,7 @@ defaults:
     - *restore-ethash-dag
     - *test
     - *save-ethash-dag
+    - *save-random-test
     - *upload-coverage-data
 
 
@@ -178,6 +184,7 @@ jobs:
       - *restore-ethash-dag
       - *test
       - *save-ethash-dag
+      - *save-random-test
       - *upload-coverage-data
 
 # TODO: Run GCC6 build only in develop branch.

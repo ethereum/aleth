@@ -67,7 +67,13 @@ std::string test::RandomCodeBase::fillRandomTest(dev::test::TestSuite const& _te
 		std::map<std::string, std::string> nullReplaceMap;
 		parseTestWithTypes(newTest, nullReplaceMap, _options);
 		json_spirit::read_string(newTest, v);
-		v = _testSuite.doTests(v, true); //filltests
+
+        // Save random state test for debug on macOS
+        boost::filesystem::path full_path(boost::filesystem::current_path());
+        full_path /= "randomStateTest.json";
+        writeFile(full_path, asBytes(json_spirit::write_string(v, true)));
+
+        v = _testSuite.doTests(v, true); //filltests
 		_testSuite.doTests(v, false); //checktest
 	}
 	catch (dev::Exception const& _e)
