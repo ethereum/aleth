@@ -154,7 +154,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 {
 	u256 gas = _msg->gas;
 	u256 value = fromEvmC(_msg->value);
-	bytesConstRef init = {_msg->input, _msg->input_size};
+	bytesConstRef init = {_msg->input_data, _msg->input_size};
 	// ExtVM::create takes the sender address from .myAddress.
 	assert(fromEvmC(_msg->sender) == _env.myAddress);
 
@@ -215,10 +215,10 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 	params.valueTransfer =
 		_msg->kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = fromEvmC(_msg->sender);
-	params.codeAddress = fromEvmC(_msg->address);
+	params.codeAddress = fromEvmC(_msg->destination);
 	params.receiveAddress =
 		_msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
-	params.data = {_msg->input, _msg->input_size};
+	params.data = {_msg->input_data, _msg->input_size};
 	params.staticCall = (_msg->flags & EVM_STATIC) != 0;
 	params.onOp = {};
 
