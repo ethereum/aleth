@@ -90,12 +90,15 @@ void ImportTest::makeBlockchainTestFromStateTest(vector<eth::Network> const& _ne
 
             for (auto const& net : _networks)
             {
+                auto trDup = tr;
+                trDup.netId = net;
+
                 // Calculate the block reward
                 ChainParams const chainParams{genesisInfo(net)};
                 EVMSchedule const schedule = chainParams.scheduleForBlockNumber(1);
                 u256 const blockReward = chainParams.blockReward(schedule);
 
-                TrExpectSection search{tr, smap};
+                TrExpectSection search{trDup, smap};
                 for (auto const& exp : m_testInputObject.at("expect").get_array())
                 {
                     TrExpectSection* search2 = &search;
