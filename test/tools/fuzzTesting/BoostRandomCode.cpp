@@ -46,7 +46,12 @@ BoostRandomCode::BoostRandomCode()
     {
         auto now = std::chrono::steady_clock::now().time_since_epoch();
         auto timeSinceEpoch = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-        gen.seed(static_cast<unsigned int>(timeSinceEpoch));
+        unsigned int time = static_cast<unsigned int>(timeSinceEpoch);
+        gen.seed(time);
+
+        boost::filesystem::path debugFile(boost::filesystem::current_path());
+        debugFile /= "randomCodeSeed.txt";
+        writeFile(debugFile, asBytes(toString(time)));
     }
 }
 
