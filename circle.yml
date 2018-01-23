@@ -69,6 +69,11 @@ defaults:
       path: ~/build/test/testeth
       destination: testeth
 
+  store-randomcode-seed: &store-randomcode-seed
+    store_artifacts:
+      path: ~/build/test/randomCodeSeed.txt
+      destination: randomCodeSeed.txt
+
   save-deps-cache: &save-deps-cache
     cache-save:
       name: "Save dependencies cache"
@@ -177,6 +182,7 @@ jobs:
       - *store-testeth
       - *restore-ethash-dag
       - *test
+      - *store-randomcode-seed
       - *save-ethash-dag
       - *upload-coverage-data
 
