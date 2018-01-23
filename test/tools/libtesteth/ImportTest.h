@@ -41,12 +41,13 @@ public:
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject makeAllFieldsHex(json_spirit::mObject const& _o, bool _isHeader = false);
-	static void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, std::vector<std::string>& _out);
+    static void parseJsonStrValueIntoSet(
+        json_spirit::mValue const& _json, std::set<std::string>& _out);
 
-	//check functions
+    //check functions
 	//check that networks in the vector are allowed
-	static void checkAllowedNetwork(std::vector<std::string> const& _networks);
-	static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
+    static void checkAllowedNetwork(std::set<std::string> const& _networks);
+    static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
 
 	bytes executeTest();
 	int exportTest();
@@ -87,7 +88,7 @@ private:
 
     /// Create blockchain test fillers for specified _networks and test information (env, pre, txs)
     /// of Importtest then fill blockchain fillers into tests.
-    void makeBlockchainTestFromStateTest(std::vector<eth::Network> const& _networks) const;
+    void makeBlockchainTestFromStateTest(std::set<eth::Network> const& _networks) const;
 
     json_spirit::mObject const& m_testInputObject;
 	json_spirit::mObject& m_testOutputObject;

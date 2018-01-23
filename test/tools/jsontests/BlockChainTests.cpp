@@ -87,13 +87,12 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 
 					for (auto& expect : expects)
 					{
-						vector<string> netlist;
-						json_spirit::mObject const& expectObj = expect.get_obj();
-						ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
+                        set<string> netlist;
+                        json_spirit::mObject const& expectObj = expect.get_obj();
+                        ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
 
-						if (std::find(netlist.begin(), netlist.end(), test::netIdToString(network)) != netlist.end() ||
-							std::find(netlist.begin(), netlist.end(), "ALL") != netlist.end())
-						{
+                        if (netlist.count(test::netIdToString(network)) || netlist.count("ALL"))
+                        {
 							jObjOutput["expect"] = expectObj.at("result");
 							found = true;
 							break;
@@ -221,12 +220,12 @@ void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects)
 {
 	for (auto& expect: _expects)
 	{
-		vector<string> netlist;
-		json_spirit::mObject const& expectObj = expect.get_obj();
-			ImportTest::parseJsonStrValueIntoVector(expectObj.at("network"), netlist);
-			for (string const& networkName: netlist)
-				if (networkName != "ALL") // "ALL" is allowed as a wildcard.
-					(void)stringToNetId(networkName);
+        set<string> netlist;
+        json_spirit::mObject const& expectObj = expect.get_obj();
+        ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
+        for (string const& networkName : netlist)
+            if (networkName != "ALL")  // "ALL" is allowed as a wildcard.
+                (void)stringToNetId(networkName);
 	}
 }
 

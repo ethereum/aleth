@@ -172,10 +172,10 @@ bool isDisabledNetwork(eth::Network _net)
     return false;
 }
 
-vector<eth::Network> const& getNetworks()
+set<eth::Network> const& getNetworks()
 {
     // Networks for the test case execution when filling the tests
-    static vector<eth::Network> const networks{{eth::Network::FrontierTest,
+    static set<eth::Network> const networks{{eth::Network::FrontierTest,
         eth::Network::HomesteadTest, eth::Network::EIP150Test, eth::Network::EIP158Test,
         eth::Network::ByzantiumTest, eth::Network::ConstantinopleTest}};
     return networks;

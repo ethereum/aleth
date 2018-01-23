@@ -56,7 +56,7 @@ ImportTest::ImportTest(json_spirit::mObject const& _input, json_spirit::mObject&
 	importState(_input.at("pre").get_obj(), m_statePre);
 }
 
-void ImportTest::makeBlockchainTestFromStateTest(vector<eth::Network> const& _networks) const
+void ImportTest::makeBlockchainTestFromStateTest(set<eth::Network> const& _networks) const
 {
     // Generate blockchain test filler
     string testnameOrig = TestOutputHelper::get().testName();
@@ -165,10 +165,10 @@ bytes ImportTest::executeTest()
 {
 	assert(m_envInfo);
 
-	vector<eth::Network> networks;
-	if (!Options::get().singleTestNet.empty())
-		networks.push_back(stringToNetId(Options::get().singleTestNet));
-	else
+    set<eth::Network> networks;
+    if (!Options::get().singleTestNet.empty())
+        networks.emplace(stringToNetId(Options::get().singleTestNet));
+    else
 		networks = test::getNetworks();
 
 	vector<transactionToExecute> transactionResults;
@@ -522,15 +522,15 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 	return wasError;
 }
 
-void ImportTest::parseJsonStrValueIntoVector(json_spirit::mValue const& _json, vector<string>& _out)
+void ImportTest::parseJsonStrValueIntoSet(json_spirit::mValue const& _json, set<string>& _out)
 {
 	if (_json.type() == json_spirit::array_type)
 	{
 		for (auto const& val: _json.get_array())
-			_out.push_back(val.get_str());
-	}
+            _out.emplace(val.get_str());
+    }
 	else
-		_out.push_back(_json.get_str());
+        _out.emplace(_json.get_str());
 }
 
 void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& _out)
@@ -544,18 +544,18 @@ void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& 
 		_out.push_back(_json.get_int());
 }
 
-void ImportTest::checkAllowedNetwork(std::vector<std::string> const& _networks)
+void ImportTest::checkAllowedNetwork(std::set<std::string> const& _networks)
 {
-	vector<eth::Network> const& allnetworks = test::getNetworks();
-	vector<string> allowedNetowks;
-	allowedNetowks.push_back("ALL");
-	for (auto const& net : allnetworks)
-		allowedNetowks.push_back(test::netIdToString(net));
+    set<eth::Network> const& allnetworks = test::getNetworks();
+    set<string> allowedNetowks;
+    allowedNetowks.emplace("ALL");
+    for (auto const& net : allnetworks)
+        allowedNetowks.emplace(test::netIdToString(net));
 
-	for (auto const& net: _networks)
+    for (auto const& net: _networks)
 	{
-		if (!inArray(allowedNetowks, net))
-		{
+        if (!allowedNetowks.count(net))
+        {
 			//Can't use boost at this point
 			std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: " << net << "\n";
 			exit(1);
@@ -587,20 +587,20 @@ bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
     vector<int> d;
 	vector<int> g;
 	vector<int> v;
-	vector<string> network;
-	if (_network.empty())
-		parseJsonStrValueIntoVector(_expects.at("network"), network);
-	else
-		network.push_back(_network);
+    set<string> network;
+    if (_network.empty())
+        parseJsonStrValueIntoSet(_expects.at("network"), network);
+    else
+        network.emplace(_network);
 
-	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
+    BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
 	checkAllowedNetwork(network);
 
 	if (!Options::get().singleTestNet.empty())
 	{
 		//skip this check if we execute transactions only on another specified network
-		if (!inArray(network, Options::get().singleTestNet) && !inArray(network, string{"ALL"}))
-			return false;
+        if (!network.count(Options::get().singleTestNet) && !network.count(string{"ALL"}))
+            return false;
 	}
 
 	if (_expects.count("indexes"))
@@ -634,57 +634,71 @@ bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 	for(size_t i = 0; i < lookTransactions.size(); i++)
 	{
 		transactionToExecute const& tr = lookTransactions[i];
-		if (inArray(network, netIdToString(tr.netId)) || network[0] == "ALL")
-		if ((inArray(d, tr.dataInd) || d[0] == -1) && (inArray(g, tr.gasInd) || g[0] == -1) && (inArray(v, tr.valInd) || v[0] == -1))
-		{
-			string trInfo = netIdToString(tr.netId) + " data: " + toString(tr.dataInd) + " gas: " + toString(tr.gasInd) + " val: " + toString(tr.valInd);
-			if (_expects.count("result"))
-			{
-				Options const& opt = Options::get();
-				//filter transactions if a specific index set in options
-				if ((opt.trDataIndex != -1 && opt.trDataIndex != tr.dataInd) ||
-					(opt.trGasIndex != -1 && opt.trGasIndex != tr.gasInd) ||
-					(opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd))
-					continue;
+        if (network.count(netIdToString(tr.netId)) || network.count("ALL"))
+            if ((inArray(d, tr.dataInd) || d[0] == -1) && (inArray(g, tr.gasInd) || g[0] == -1) &&
+                (inArray(v, tr.valInd) || v[0] == -1))
+            {
+                string trInfo = netIdToString(tr.netId) + " data: " + toString(tr.dataInd) +
+                                " gas: " + toString(tr.gasInd) + " val: " + toString(tr.valInd);
+                if (_expects.count("result"))
+                {
+                    Options const& opt = Options::get();
+                    // filter transactions if a specific index set in options
+                    if ((opt.trDataIndex != -1 && opt.trDataIndex != tr.dataInd) ||
+                        (opt.trGasIndex != -1 && opt.trGasIndex != tr.gasInd) ||
+                        (opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd))
+                        continue;
 
-				State postState = tr.postState;
-				eth::AccountMaskMap stateMap;
-				State expectState(0, OverlayDB(), eth::BaseState::Empty);
-				importState(_expects.at("result").get_obj(), expectState, stateMap);
-				if (_search)
-				{
-					_search->second.first = expectState;
-					_search->second.second = stateMap;
-					return true;
-				}
-				int errcode = compareStates(expectState, postState, stateMap, WhenError::Throw);
-				if (errcode > 0)
-				{
-					cerr << trInfo << "\n";
-					_errorTransactions.push_back(i);
-				}
-			}
-			else if (_expects.count("hash"))
-			{
-				//checking filled state test against client
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHexPrefixed(tr.postState.rootHash().asBytes()),
-									TestOutputHelper::get().testName() + " on " + test::netIdToString(tr.netId) + ": Expected another postState hash! expected: " + _expects.at("hash").get_str() + " actual: " + toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
-				if (_expects.count("logs"))
-					BOOST_CHECK_MESSAGE(_expects.at("logs").get_str() == exportLog(tr.output.second.log()),
-									TestOutputHelper::get().testName() + " on " + test::netIdToString(tr.netId) + " Transaction log mismatch! expected: " + _expects.at("logs").get_str() + " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
-				else
-					BOOST_ERROR(TestOutputHelper::get().testName() + "PostState missing logs field!");
-			}
-			else
-				BOOST_ERROR(TestOutputHelper::get().testName() + " Expect section or postState missing some fields!");
+                    State postState = tr.postState;
+                    eth::AccountMaskMap stateMap;
+                    State expectState(0, OverlayDB(), eth::BaseState::Empty);
+                    importState(_expects.at("result").get_obj(), expectState, stateMap);
+                    if (_search)
+                    {
+                        _search->second.first = expectState;
+                        _search->second.second = stateMap;
+                        return true;
+                    }
+                    int errcode = compareStates(expectState, postState, stateMap, WhenError::Throw);
+                    if (errcode > 0)
+                    {
+                        cerr << trInfo << "\n";
+                        _errorTransactions.push_back(i);
+                    }
+                }
+                else if (_expects.count("hash"))
+                {
+                    // checking filled state test against client
+                    BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() ==
+                                            toHexPrefixed(tr.postState.rootHash().asBytes()),
+                        TestOutputHelper::get().testName() + " on " +
+                            test::netIdToString(tr.netId) +
+                            ": Expected another postState hash! expected: " +
+                            _expects.at("hash").get_str() + " actual: " +
+                            toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
+                    if (_expects.count("logs"))
+                        BOOST_CHECK_MESSAGE(
+                            _expects.at("logs").get_str() == exportLog(tr.output.second.log()),
+                            TestOutputHelper::get().testName() + " on " +
+                                test::netIdToString(tr.netId) +
+                                " Transaction log mismatch! expected: " +
+                                _expects.at("logs").get_str() +
+                                " actual: " + exportLog(tr.output.second.log()) + " in " + trInfo);
+                    else
+                        BOOST_ERROR(
+                            TestOutputHelper::get().testName() + "PostState missing logs field!");
+                }
+                else
+                    BOOST_ERROR(TestOutputHelper::get().testName() +
+                                " Expect section or postState missing some fields!");
 
-			foundResults = true;
+                foundResults = true;
 
-			//if a single transaction check then stop once found
-			if (network[0] != "ALL" && d[0] != -1 && g[0] != -1 && v[0] != -1)
-			if (network.size() == 1 && d.size() == 1 && g.size() == 1 && v.size() == 1)
-				break;
-		}
+                // if a single transaction check then stop once found
+                if (!network.count("ALL") && d[0] != -1 && g[0] != -1 && v[0] != -1)
+                    if (network.size() == 1 && d.size() == 1 && g.size() == 1 && v.size() == 1)
+                        break;
+            }
 	}
 	if (!_search) //if search for a single transaction in one of the expect sections then don't need this output.
 		BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::get().testName() + " Expect results was not found in test execution!");
