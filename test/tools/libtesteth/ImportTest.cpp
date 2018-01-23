@@ -596,6 +596,9 @@ bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
     else
         network.emplace(_network);
 
+    // replace ">Homestead" with "Homestead, EIP150, ..."
+    network = test::translateNetworks(network);
+
     BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
 	checkAllowedNetwork(network);
 

@@ -77,6 +77,7 @@ std::string netIdToString(eth::Network _netId);
 eth::Network stringToNetId(std::string const& _netname);
 bool isDisabledNetwork(eth::Network _net);
 std::set<eth::Network> const& getNetworks();
+std::set<std::string> translateNetworks(std::set<std::string> const& _networks);
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
 bytes processDataOrCode(json_spirit::mObject const& _o, std::string const& nodeName);

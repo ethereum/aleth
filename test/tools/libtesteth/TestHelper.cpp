@@ -181,6 +181,55 @@ set<eth::Network> const& getNetworks()
     return networks;
 }
 
+/// translate network names in expect section field
+/// >Homestead to EIP150, EIP158, Byzantium, ...
+/// <=Homestead to Frontier, Homestead
+set<string> translateNetworks(set<string> const& _networks)
+{
+    // construct vector with test network names in a right order (from Frontier to Homestead ... to
+    // Constantinople)
+    vector<string> forks;
+    for (auto const& net : getNetworks())
+        forks.push_back(test::netIdToString(net));
+
+    set<string> out;
+    for (auto const& net : _networks)
+    {
+        size_t sizeStart = out.size();
+        string possibleNet = net.substr(1, net.length() - 1);
+        vector<string>::iterator it = std::find(forks.begin(), forks.end(), possibleNet);
+        if (net[0] == '>' && it != forks.end())
+        {
+            while (++it != forks.end())
+                out.emplace(*it);
+        }
+        else if (net[0] == '<' && it != forks.end())
+        {
+            while (it != forks.begin())
+                out.emplace(*(--it));
+        }
+
+        possibleNet = net.substr(2, net.length() - 2);
+        it = std::find(forks.begin(), forks.end(), possibleNet);
+        if (net[0] == '>' && net[1] == '=' && it != forks.end())
+        {
+            while (it != forks.end())
+                out.emplace(*(it++));
+        }
+        else if (net[0] == '<' && net[1] == '=' && it != forks.end())
+        {
+            out.emplace(*it);
+            while (it != forks.begin())
+                out.emplace(*(--it));
+        }
+
+        // if nothing has been inserted, just push the untranslated network as is
+        if (out.size() == sizeStart)
+            out.emplace(net);
+    }
+    return out;
+}
+
 string exportLog(eth::LogEntries const& _logs)
 {
     RLPStream s;
