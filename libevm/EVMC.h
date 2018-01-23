@@ -80,18 +80,6 @@ public:
         )};
     }
 
-    bool isCodeReady(evm_revision _mode, uint32_t _flags, h256 _codeHash)
-    {
-        return m_instance->get_code_status(m_instance, _mode, _flags, toEvmC(_codeHash)) == EVM_READY;
-    }
-
-    void compile(evm_revision _mode, uint32_t _flags, bytesConstRef _code, h256 _codeHash)
-    {
-        m_instance->prepare_code(
-            m_instance, _mode, _flags, toEvmC(_codeHash), _code.data(), _code.size()
-        );
-    }
-
 private:
     /// The VM instance created with EVM-C <prefix>_create() function.
     evm_instance* m_instance = nullptr;
