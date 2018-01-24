@@ -276,6 +276,7 @@ int main(int argc, char** argv)
 
     bool listenSet = false;
     bool chainConfigIsSet = false;
+    fs::path configPath;
     string configJSON;
     string genesisJSON;
 
@@ -530,7 +531,8 @@ int main(int argc, char** argv)
     {
         try
         {
-            configJSON = contentsString(vm["config"].as<string>());
+            configPath = vm["config"].as<string>();
+            configJSON = contentsString(configPath.string());
         }
         catch (...)
         {
@@ -737,7 +739,7 @@ int main(int argc, char** argv)
     {
         try
         {
-            chainParams = chainParams.loadConfig(configJSON);
+            chainParams = chainParams.loadConfig(configJSON, {}, configPath);
             chainConfigIsSet = true;
         }
         catch (...)

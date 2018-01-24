@@ -91,7 +91,8 @@ set<string> const c_knownParamNames = {c_minGasLimit, c_maxGasLimit, c_gasLimitB
     c_durationLimit, c_chainID, c_networkID, c_allowFutureBlocks, c_registrar};
 } // anonymous namespace
 
-ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
+ChainParams ChainParams::loadConfig(
+    string const& _json, h256 const& _stateRoot, const boost::filesystem::path& _configPath) const
 {
 	ChainParams cp(*this);
 	js::mValue val;
@@ -140,16 +141,12 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	cp = cp.loadGenesis(genesisStr, _stateRoot);
 	// genesis state
 	string genesisStateStr = json_spirit::write_string(obj[c_accounts], false);
-	cp = cp.loadGenesisState(genesisStateStr, _stateRoot);
-	return cp;
-}
 
-ChainParams ChainParams::loadGenesisState(string const& _json, h256 const& _stateRoot) const
-{
-	ChainParams cp(*this);
-	cp.genesisState = jsonToAccountMap(_json, cp.accountStartNonce, nullptr, &cp.precompiled);
-	cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot(true);
-	return cp;
+    cp.genesisState = jsonToAccountMap(
+        genesisStateStr, cp.accountStartNonce, nullptr, &cp.precompiled, _configPath);
+    cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot(true);
+
+    return cp;
 }
 
 namespace

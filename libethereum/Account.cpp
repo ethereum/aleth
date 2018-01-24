@@ -28,6 +28,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+namespace fs = boost::filesystem;
+
 void Account::setCode(bytes&& _code)
 {
 	m_codeCache = std::move(_code);
@@ -88,11 +90,12 @@ namespace
 	string const c_balance = "balance";
 	string const c_nonce = "nonce";
 	string const c_code = "code";
+	string const c_codeFromFile = "codeFromFile";  ///< A file containg a code as bytes.
 	string const c_storage = "storage";
 	string const c_shouldnotexist = "shouldnotexist";
 	string const c_precompiled = "precompiled";
 	std::set<string> const c_knownAccountFields = {
-		c_wei, c_finney, c_balance, c_nonce, c_code, c_storage, c_shouldnotexist,
+		c_wei, c_finney, c_balance, c_nonce, c_code, c_codeFromFile, c_storage, c_shouldnotexist,
 		c_code, c_precompiled
 	};
 	void validateAccountMapObj(js::mObject const& _o)
@@ -101,7 +104,8 @@ namespace
 			validateFieldNames(field.second.get_obj(), c_knownAccountFields);
 	}
 }
-AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
+AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce,
+    AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled, const fs::path& _configPath)
 {
 	auto u256Safe = [](std::string const& s) -> u256 {
 		bigint ret(s);
@@ -119,11 +123,12 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 	for (auto const& account: o)
 	{
 		Address a(fromHex(account.first));
+		// FIXME: Do not copy every account object.
 		auto o = account.second.get_obj();
 
 		bool haveBalance = (o.count(c_wei) || o.count(c_finney) || o.count(c_balance));
 		bool haveNonce = o.count(c_nonce);
-		bool haveCode = o.count(c_code);
+		bool haveCode = o.count(c_code) || o.count(c_codeFromFile);
 		bool haveStorage = o.count(c_storage);
 		bool shouldNotExists = o.count(c_shouldnotexist);
 
@@ -139,21 +144,45 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 
 			u256 nonce = haveNonce ? u256Safe(o[c_nonce].get_str()) : _defaultNonce;
 
-			if (haveCode)
-			{
-				ret[a] = Account(nonce, balance);
-				if (o[c_code].type() == json_spirit::str_type)
-				{
-					if (o[c_code].get_str().find("0x") != 0 && !o[c_code].get_str().empty())
-						cerr << "Error importing code of account " << a << "! Code needs to be hex bytecode prefixed by \"0x\".";
-					else
-						ret[a].setCode(fromHex(o[c_code].get_str()));
-				}
-				else
-					cerr << "Error importing code of account " << a << "! Code field needs to be a string";
-			}
-			else
-				ret[a] = Account(nonce, balance);
+            ret[a] = Account(nonce, balance);
+            auto codeIt = o.find(c_code);
+            if (codeIt != o.end())
+            {
+                auto& codeObj = codeIt->second;
+                if (codeObj.type() == json_spirit::str_type)
+                {
+                    auto& codeStr = codeObj.get_str();
+                    if (codeStr.find("0x") != 0 && !codeStr.empty())
+                        cerr << "Error importing code of account " << a
+                             << "! Code needs to be hex bytecode prefixed by \"0x\".";
+                    else
+                        ret[a].setCode(fromHex(codeStr));
+                }
+                else
+                    cerr << "Error importing code of account " << a
+                         << "! Code field needs to be a string";
+            }
+
+            auto codePathIt = o.find(c_codeFromFile);
+            if (codePathIt != o.end())
+            {
+                auto& codePathObj = codePathIt->second;
+                if (codePathObj.type() == json_spirit::str_type)
+                {
+                    fs::path codePath{codePathObj.get_str()};
+                    if (codePath.is_relative())  // Append config dir if code file path is relative.
+                        codePath = _configPath.parent_path() / codePath;
+                    bytes code = contents(codePath);
+                    if (code.empty())
+                        cerr << "Error importing code of account " << a << "! Code file "
+                             << codePath << " empty or does not exist.\n";
+                    ret[a].setCode(std::move(code));
+                }
+                else
+                    cerr << "Error importing code of account " << a
+                         << "! Code file path must be a string\n";
+            }
+
 
 			if (haveStorage)
 				for (pair<string, js::mValue> const& j: o[c_storage].get_obj())
