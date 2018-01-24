@@ -38,7 +38,8 @@ BoostRandomCode::BoostRandomCode()
     randOpMemrGen = std::bind(opMemrDist, gen);
     randoOpSmallMemrGen = std::bind(opSmallMemrDist, gen);
     randUniIntGen = std::bind(uniIntDist, gen);
-
+	gen.seed(2430836024);
+/*
     auto const& seedOption = Options::get().randomTestSeed;
     if (seedOption)
         gen.seed(*seedOption);
@@ -48,6 +49,7 @@ BoostRandomCode::BoostRandomCode()
         auto timeSinceEpoch = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
         gen.seed(static_cast<unsigned int>(timeSinceEpoch));
     }
+	*/
 }
 
 u256 BoostRandomCode::randomUniInt(u256 const& _minVal, u256 const& _maxVal)

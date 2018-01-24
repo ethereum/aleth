@@ -624,18 +624,10 @@ BOOST_AUTO_TEST_CASE(rndCode)
 {
 	try
 	{
-		for (uint i = 0; i < 50000; i++)
-		{
-			std::cerr << i << " ";
-			Options newOpt = Options::get();
-			newOpt.randomTestSeed = i;
-			Options::set(newOpt);
-
-			test::RandomCodeOptions options;
-			options.emptyCodeProbability = 0;
-			std::string code = test::RandomCode::get().generate(1000, options);
-			BOOST_REQUIRE(!code.empty());
-		}
+		test::RandomCodeOptions options;
+		options.emptyCodeProbability = 0;
+		std::string code = test::RandomCode::get().generate(1000, options);
+		BOOST_REQUIRE(!code.empty());
 	}
 	catch(dev::Exception const& _e)
 	{
