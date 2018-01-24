@@ -547,23 +547,34 @@ void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& 
 		_out.push_back(_json.get_int());
 }
 
+set<string> const& getAllowedNetworks()
+{
+    static set<string> allowedNetowks;
+    if (allowedNetowks.empty())
+    {
+        allowedNetowks.emplace("ALL");
+        for (auto const& net : test::getNetworks())
+            allowedNetowks.emplace(test::netIdToString(net));
+    }
+    return allowedNetowks;
+}
+
+void ImportTest::checkAllowedNetwork(string const& _network)
+{
+    set<string> const& allowedNetowks = getAllowedNetworks();
+    if (!allowedNetowks.count(_network))
+    {
+        // Can't use boost at this point
+        std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: "
+                  << _network << "\n";
+        exit(1);
+    }
+}
+
 void ImportTest::checkAllowedNetwork(std::set<std::string> const& _networks)
 {
-    set<eth::Network> const& allnetworks = test::getNetworks();
-    set<string> allowedNetowks;
-    allowedNetowks.emplace("ALL");
-    for (auto const& net : allnetworks)
-        allowedNetowks.emplace(test::netIdToString(net));
-
     for (auto const& net: _networks)
-	{
-        if (!allowedNetowks.count(net))
-        {
-			//Can't use boost at this point
-			std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: " << net << "\n";
-			exit(1);
-		}
-	}
+        ImportTest::checkAllowedNetwork(net);
 }
 
 bool ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
@@ -596,11 +607,9 @@ bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
     else
         network.emplace(_network);
 
-    // replace ">Homestead" with "Homestead, EIP150, ..."
+    // replace ">=Homestead" with "Homestead, EIP150, ..."
     network = test::translateNetworks(network);
-
     BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
-	checkAllowedNetwork(network);
 
 	if (!Options::get().singleTestNet.empty())
 	{

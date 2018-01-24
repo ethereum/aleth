@@ -198,35 +198,46 @@ set<string> translateNetworks(set<string> const& _networks)
         size_t sizeStart = out.size();
         string possibleNet = net.substr(1, net.length() - 1);
         vector<string>::iterator it = std::find(forks.begin(), forks.end(), possibleNet);
-        if (net[0] == '>' && it != forks.end())
+
+        if (it != forks.end() && net.size() > 1)
         {
-            while (++it != forks.end())
-                out.emplace(*it);
-        }
-        else if (net[0] == '<' && it != forks.end())
-        {
-            while (it != forks.begin())
-                out.emplace(*(--it));
+            if (net[0] == '>')
+            {
+                while (++it != forks.end())
+                    out.emplace(*it);
+            }
+            else if (net[0] == '<')
+            {
+                while (it != forks.begin())
+                    out.emplace(*(--it));
+            }
         }
 
         possibleNet = net.substr(2, net.length() - 2);
         it = std::find(forks.begin(), forks.end(), possibleNet);
-        if (net[0] == '>' && net[1] == '=' && it != forks.end())
+        if (it != forks.end() && net.size() > 2)
         {
-            while (it != forks.end())
-                out.emplace(*(it++));
-        }
-        else if (net[0] == '<' && net[1] == '=' && it != forks.end())
-        {
-            out.emplace(*it);
-            while (it != forks.begin())
-                out.emplace(*(--it));
+            if (net[0] == '>' && net[1] == '=')
+            {
+                while (it != forks.end())
+                    out.emplace(*(it++));
+            }
+            else if (net[0] == '<' && net[1] == '=')
+            {
+                out.emplace(*it);
+                while (it != forks.begin())
+                    out.emplace(*(--it));
+            }
         }
 
         // if nothing has been inserted, just push the untranslated network as is
         if (out.size() == sizeStart)
+        {
+            ImportTest::checkAllowedNetwork(net);
             out.emplace(net);
+        }
     }
+
     return out;
 }
 

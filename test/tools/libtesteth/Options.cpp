@@ -195,10 +195,10 @@ Options::Options(int argc, const char** argv)
 		{
 			throwIfNoArgumentFollows();
 			singleTestNet = std::string{argv[++i]};
-			ImportTest::checkAllowedNetwork({singleTestNet});
-		}
-		else if (arg == "--fulloutput")
-			fulloutput = true;
+            ImportTest::checkAllowedNetwork(singleTestNet);
+        }
+        else if (arg == "--fulloutput")
+            fulloutput = true;
 		else if (arg == "--verbosity")
 		{
 			throwIfNoArgumentFollows();

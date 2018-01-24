@@ -46,6 +46,7 @@ public:
 
     //check functions
 	//check that networks in the vector are allowed
+    static void checkAllowedNetwork(std::string const& _network);
     static void checkAllowedNetwork(std::set<std::string> const& _networks);
     static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
 
