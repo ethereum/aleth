@@ -61,6 +61,17 @@ BOOST_AUTO_TEST_CASE(translateNetworks_ltHomestead)
     }
 }
 
+BOOST_AUTO_TEST_CASE(translateNetworks_ltTest)
+{
+    set<string> networks = {"<=EIP150", "<EIP158"};
+    networks = test::translateNetworks(networks);
+    BOOST_REQUIRE(networks.count("Frontier") > 0);
+    BOOST_REQUIRE(networks.count("Homestead") > 0);
+    BOOST_REQUIRE(networks.count("EIP150") > 0);
+    BOOST_REQUIRE(networks.count("EIP158") == 0);
+    BOOST_REQUIRE(networks.count("Byzantium") == 0);
+}
+
 BOOST_AUTO_TEST_CASE(translateNetworks_leHomestead)
 {
     set<string> networks = {"<=Homestead"};

@@ -195,7 +195,7 @@ set<string> translateNetworks(set<string> const& _networks)
     set<string> out;
     for (auto const& net : _networks)
     {
-        size_t sizeStart = out.size();
+        bool isNetworkTranslated = false;
         string possibleNet = net.substr(1, net.length() - 1);
         vector<string>::iterator it = std::find(forks.begin(), forks.end(), possibleNet);
 
@@ -204,12 +204,18 @@ set<string> translateNetworks(set<string> const& _networks)
             if (net[0] == '>')
             {
                 while (++it != forks.end())
+                {
                     out.emplace(*it);
+                    isNetworkTranslated = true;
+                }
             }
             else if (net[0] == '<')
             {
                 while (it != forks.begin())
+                {
                     out.emplace(*(--it));
+                    isNetworkTranslated = true;
+                }
             }
         }
 
@@ -220,24 +226,29 @@ set<string> translateNetworks(set<string> const& _networks)
             if (net[0] == '>' && net[1] == '=')
             {
                 while (it != forks.end())
+                {
                     out.emplace(*(it++));
+                    isNetworkTranslated = true;
+                }
             }
             else if (net[0] == '<' && net[1] == '=')
             {
                 out.emplace(*it);
                 while (it != forks.begin())
+                {
                     out.emplace(*(--it));
+                    isNetworkTranslated = true;
+                }
             }
         }
 
         // if nothing has been inserted, just push the untranslated network as is
-        if (out.size() == sizeStart)
+        if (!isNetworkTranslated)
         {
             ImportTest::checkAllowedNetwork(net);
             out.emplace(net);
         }
     }
-
     return out;
 }
 
