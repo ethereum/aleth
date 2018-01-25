@@ -259,7 +259,7 @@ uint8_t makeOpcodeDefined(uint8_t _opcode)
 //generate smart random code
 std::string RandomCodeBase::generate(int _maxOpNumber, RandomCodeOptions const& _options)
 {
-	std::string code;
+	std::string code = "0x";
 	if (test::RandomCode::get().randomPercent() < _options.emptyCodeProbability)
 		return code;
 
@@ -293,7 +293,7 @@ std::string RandomCodeBase::generate(int _maxOpNumber, RandomCodeOptions const& 
 		}
 	}
 
-	return "0x" + code;
+	return code;
 }
 
 std::string RandomCodeBase::randomUniIntHex(u256 const& _minVal, u256 const& _maxVal)

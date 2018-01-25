@@ -232,19 +232,19 @@ bytes importByteArray(string const& _str)
     return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
-bytes processDataOrCode(json_spirit::mObject const& _o, string const& nodeName)
+bytes processDataOrCode(json_spirit::mObject const& _o, string const& _nodeName)
 {
     bytes ret;
-    if (_o.count(nodeName) == 0)
+	if (_o.count(_nodeName) == 0)
         return bytes();
-    if (_o.at(nodeName).type() == json_spirit::str_type)
-        if (_o.at(nodeName).get_str().find("0x") != 0)
-            ret = fromHex(replaceCode(_o.at(nodeName).get_str()));
-        else
-            ret = importByteArray(_o.at(nodeName).get_str());
-    else if (_o.at(nodeName).type() == json_spirit::array_type)
+	if (_o.at(_nodeName).type() == json_spirit::str_type)
+	{
+		BOOST_REQUIRE_MESSAGE(_o.at(_nodeName).get_str().find("0x") != string::npos, "Tying to import code without 0x prefix in test: " + TestOutputHelper::get().testName() + " code: " + _o.at(_nodeName).get_str());
+		ret = fromHex(replaceCode(_o.at(_nodeName).get_str()));
+	}
+	else if (_o.at(_nodeName).type() == json_spirit::array_type)
     {
-        for (auto const& j : _o.at(nodeName).get_array())
+		for (auto const& j : _o.at(_nodeName).get_array())
             ret.push_back(toByte(j));
     }
     return ret;
