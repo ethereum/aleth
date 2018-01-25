@@ -16,3 +16,5 @@ hunter_config(
     HTTP_SERVER=NO
     HTTP_CLIENT=NO
 )
+
+hunter_config(Boost VERSION 1.65.1)
