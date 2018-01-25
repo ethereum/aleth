@@ -181,6 +181,75 @@ set<eth::Network> const& getNetworks()
     return networks;
 }
 
+/// translate network names in expect section field
+/// >Homestead to EIP150, EIP158, Byzantium, ...
+/// <=Homestead to Frontier, Homestead
+set<string> translateNetworks(set<string> const& _networks)
+{
+    // construct vector with test network names in a right order (from Frontier to Homestead ... to
+    // Constantinople)
+    vector<string> forks;
+    for (auto const& net : getNetworks())
+        forks.push_back(test::netIdToString(net));
+
+    set<string> out;
+    for (auto const& net : _networks)
+    {
+        bool isNetworkTranslated = false;
+        string possibleNet = net.substr(1, net.length() - 1);
+        vector<string>::iterator it = std::find(forks.begin(), forks.end(), possibleNet);
+
+        if (it != forks.end() && net.size() > 1)
+        {
+            if (net[0] == '>')
+            {
+                while (++it != forks.end())
+                {
+                    out.emplace(*it);
+                    isNetworkTranslated = true;
+                }
+            }
+            else if (net[0] == '<')
+            {
+                while (it != forks.begin())
+                {
+                    out.emplace(*(--it));
+                    isNetworkTranslated = true;
+                }
+            }
+        }
+
+        possibleNet = net.substr(2, net.length() - 2);
+        it = std::find(forks.begin(), forks.end(), possibleNet);
+        if (it != forks.end() && net.size() > 2)
+        {
+            if (net[0] == '>' && net[1] == '=')
+            {
+                while (it != forks.end())
+                {
+                    out.emplace(*(it++));
+                    isNetworkTranslated = true;
+                }
+            }
+            else if (net[0] == '<' && net[1] == '=')
+            {
+                out.emplace(*it);
+                isNetworkTranslated = true;
+                while (it != forks.begin())
+                    out.emplace(*(--it));
+            }
+        }
+
+        // if nothing has been inserted, just push the untranslated network as is
+        if (!isNetworkTranslated)
+        {
+            ImportTest::checkAllowedNetwork(net);
+            out.emplace(net);
+        }
+    }
+    return out;
+}
+
 string exportLog(eth::LogEntries const& _logs)
 {
     RLPStream s;
