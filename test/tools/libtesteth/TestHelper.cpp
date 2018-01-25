@@ -234,11 +234,9 @@ set<string> translateNetworks(set<string> const& _networks)
             else if (net[0] == '<' && net[1] == '=')
             {
                 out.emplace(*it);
+                isNetworkTranslated = true;
                 while (it != forks.begin())
-                {
                     out.emplace(*(--it));
-                    isNetworkTranslated = true;
-                }
             }
         }
 

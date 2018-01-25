@@ -85,4 +85,16 @@ BOOST_AUTO_TEST_CASE(translateNetworks_leHomestead)
     }
 }
 
+BOOST_AUTO_TEST_CASE(translateNetworks_leFrontier)
+{
+    set<string> networks = {"<=Frontier"};
+    networks = test::translateNetworks(networks);
+    BOOST_REQUIRE(networks.count("Frontier") > 0);
+    for (auto const& net : test::getNetworks())
+    {
+        if (net != eth::Network::FrontierTest)
+            BOOST_REQUIRE(networks.count(test::netIdToString(net)) == 0);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
