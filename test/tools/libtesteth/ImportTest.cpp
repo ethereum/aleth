@@ -184,10 +184,20 @@ bytes ImportTest::executeTest(bool _isFilling)
     if (!Options::get().singleTestNet.empty())
         networks.emplace(stringToNetId(Options::get().singleTestNet));
     else
-        networks =
-            (Options::get().filltests && m_testInputObject.count("expect")) ?
-                getAllNetworksFromExpectSections(m_testInputObject.at("expect").get_array()) :
-                getNetworks();
+    {
+        if (_isFilling)
+        {
+            // Run tests only on networks from expect sections
+            BOOST_REQUIRE(m_testInputObject.count("expect") > 0);
+            networks = getAllNetworksFromExpectSections(m_testInputObject.at("expect").get_array());
+        }
+        else
+        {
+            // Run tests only on networks that are in post state of the filled test
+            for (auto const& post : m_testInputObject.at("post").get_obj())
+                networks.emplace(test::stringToNetId(post.first));
+        }
+    }
 
     vector<transactionToExecute> transactionResults;
 	for (auto const& net : networks)
