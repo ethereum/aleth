@@ -27,24 +27,19 @@ namespace
 
 inline leveldb::Slice toLDBSlice(Slice _slice)
 {
-    return leveldb::Slice(_slice.data(), _slice.size());
+	return leveldb::Slice(_slice.data(), _slice.size());
 }
 
 class LevelDBWriteBatch: public WriteBatchFace
 {
 public:
-	explicit LevelDBWriteBatch(leveldb::WriteOptions _writeOptions): m_writeOptions(std::move(_writeOptions))
-	{
-	}
-
 	void insert(Slice _key, Slice _value) override;
 	void kill(Slice _key) override;
 
-	const leveldb::WriteBatch& writeBatch() const { return m_writeBatch; }
+	leveldb::WriteBatch const& writeBatch() const { return m_writeBatch; }
 	leveldb::WriteBatch& writeBatch() { return m_writeBatch; }
 
 private:
-	const leveldb::WriteOptions m_writeOptions;
 	leveldb::WriteBatch m_writeBatch;
 };
 
@@ -88,7 +83,7 @@ LevelDB::LevelDB(
 ): m_db(nullptr), m_readOptions(std::move(_readOptions)), m_writeOptions(std::move(_writeOptions))
 {
 	auto db = static_cast<leveldb::DB*>(nullptr);
-	const auto status = leveldb::DB::Open(_dbOptions, _path, &db);
+	auto const status = leveldb::DB::Open(_dbOptions, _path, &db);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedToOpenDB(status.ToString()));
 	}
@@ -102,7 +97,7 @@ std::string LevelDB::lookup(Slice _key) const
 {
 	const leveldb::Slice key(_key.data(), _key.size());
 	std::string value;
-	const auto status = m_db->Get(m_readOptions, key, &value);
+	auto const status = m_db->Get(m_readOptions, key, &value);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedLookupInDB(status.ToString()));
 	}
@@ -113,7 +108,7 @@ bool LevelDB::exists(Slice _key) const
 {
 	std::string value;
 	const leveldb::Slice key(_key.data(), _key.size());
-	const auto status = m_db->Get(m_readOptions, key, &value);
+	auto const status = m_db->Get(m_readOptions, key, &value);
 	return status.ok();
 }
 
@@ -121,7 +116,7 @@ void LevelDB::insert(Slice _key, Slice _value)
 {
 	const leveldb::Slice key(_key.data(), _key.size());
 	const leveldb::Slice value(_value.data(), _value.size());
-	const auto status = m_db->Put(m_writeOptions, key, value);
+	auto const status = m_db->Put(m_writeOptions, key, value);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedInsertInDB(status.ToString()));
 	}
@@ -130,7 +125,7 @@ void LevelDB::insert(Slice _key, Slice _value)
 void LevelDB::kill(Slice _key)
 {
 	const leveldb::Slice key(_key.data(), _key.size());
-	const auto status = m_db->Delete(m_writeOptions, key);
+	auto const status = m_db->Delete(m_writeOptions, key);
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedDeleteInDB(status.ToString()));
 	}
@@ -138,12 +133,20 @@ void LevelDB::kill(Slice _key)
 
 std::unique_ptr<WriteBatchFace> LevelDB::createWriteBatch() const
 {
-	return std::unique_ptr<WriteBatchFace>(new LevelDBWriteBatch(m_writeOptions));
+	return std::unique_ptr<WriteBatchFace>(new LevelDBWriteBatch());
 }
 
 void LevelDB::commit(std::unique_ptr<WriteBatchFace>&& _batch)
 {
-	const auto status = m_db->Write(m_writeOptions, &static_cast<LevelDBWriteBatch*>(_batch.get())->writeBatch());
+	if (!_batch) {
+		BOOST_THROW_EXCEPTION(FailedCommitInDB("Cannot commit null batch"));
+	}
+	auto* batchPtr = dynamic_cast<LevelDBWriteBatch*>(_batch.get());
+	if (!batchPtr) {
+		BOOST_THROW_EXCEPTION(FailedCommitInDB(
+			"Invalid batch type passed to LevelDB::commit"));
+	}
+	auto const status = m_db->Write(m_writeOptions, &batchPtr->writeBatch());
 	if (!status.ok()) {
 		BOOST_THROW_EXCEPTION(FailedCommitInDB(status.ToString()));
 	}
@@ -157,10 +160,10 @@ void LevelDB::forEach(std::function<bool(Slice, Slice)> f) const
 	}
 	auto keepIterating = true;
 	for (itr->SeekToFirst(); keepIterating && itr->Valid(); itr->Next()) {
-		const auto dbKey = itr->key();
-		const auto dbValue = itr->value();
-		const Slice key(dbKey.data(), dbKey.size());
-		const Slice value(dbValue.data(), dbValue.size());
+		auto const dbKey = itr->key();
+		auto const dbValue = itr->value();
+		Slice const key(dbKey.data(), dbKey.size());
+		Slice const value(dbValue.data(), dbValue.size());
 		keepIterating = f(key, value);
 	}
 }

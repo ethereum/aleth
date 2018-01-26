@@ -43,6 +43,10 @@ public:
 
 	~OverlayDB();
 
+	// Copyable
+	OverlayDB(OverlayDB const&) = default;
+	OverlayDB& operator=(OverlayDB const&) = default;
+
 	void commit();
 	void rollback();
 

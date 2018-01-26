@@ -24,6 +24,25 @@
 
 namespace dev
 {
+namespace
+{
+
+inline db::Slice toSlice(h256 const& _h)
+{
+	return db::Slice(reinterpret_cast<char const*>(_h.data()), _h.size);
+}
+
+inline db::Slice toSlice(std::string const& _str)
+{
+	return db::Slice(_str.data(), _str.size());
+}
+
+inline db::Slice toSlice(bytes const& _b)
+{
+	return db::Slice(reinterpret_cast<char const*>(&_b[0]), _b.size());
+}
+
+}
 
 OverlayDB::~OverlayDB() = default;
 
@@ -40,7 +59,7 @@ void OverlayDB::commit()
 			for (auto const& i: m_main)
 			{
 				if (i.second.second)
-					writeBatch->insert(db::Slice(reinterpret_cast<char const*>(i.first.data()), i.first.size), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
+					writeBatch->insert(toSlice(i.first), toSlice(i.second.first));
 //				cnote << i.first << "#" << m_main[i.first].second;
 			}
 			for (auto const& i: m_aux)
@@ -48,7 +67,7 @@ void OverlayDB::commit()
 				{
 					bytes b = i.first.asBytes();
 					b.push_back(255);	// for aux
-					writeBatch->insert(db::Slice(reinterpret_cast<char const*>(&b[0]), b.size()), db::Slice(reinterpret_cast<char const*>(i.second.first.data()), i.second.first.size()));
+					writeBatch->insert(toSlice(b), toSlice(i.second.first));
 				}
 		}
 
@@ -91,7 +110,7 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
 	b.push_back(255);	// for aux
 	try
 	{
-		v = m_db->lookup(db::Slice(reinterpret_cast<char const*>(&b[0]), b.size()));
+		v = m_db->lookup(toSlice(b));
 	}
 	catch (const db::FailedLookupInDB&)
 	{
@@ -112,7 +131,7 @@ std::string OverlayDB::lookup(h256 const& _h) const
 {
 	std::string ret = MemoryDB::lookup(_h);
 	if (ret.empty() && m_db)
-		DEV_IGNORE_EXCEPTIONS(ret = m_db->lookup(db::Slice(reinterpret_cast<char const*>(_h.data()), 32)));
+		DEV_IGNORE_EXCEPTIONS(ret = m_db->lookup(toSlice(_h)));
 	return ret;
 }
 
@@ -120,7 +139,7 @@ bool OverlayDB::exists(h256 const& _h) const
 {
 	if (MemoryDB::exists(_h))
 		return true;
-	return m_db && m_db->exists(db::Slice(reinterpret_cast<char const*>(_h.data()), 32));
+	return m_db && m_db->exists(toSlice(_h));
 }
 
 void OverlayDB::kill(h256 const& _h)
@@ -128,14 +147,9 @@ void OverlayDB::kill(h256 const& _h)
 #if ETH_PARANOIA || 1
 	if (!MemoryDB::kill(_h))
 	{
-		std::string ret;
 		if (m_db)
 		{
-			try
-			{
-				ret = m_db->lookup(db::Slice(reinterpret_cast<char const*>(_h.data()), 32));
-			}
-			catch (const db::FailedLookupInDB&)
+			if (!m_db->exists(toSlice(_h)))
 			{
 				// No point node ref decreasing for EmptyTrie since we never bother incrementing it in the first place for
 				// empty storage tries.
