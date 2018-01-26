@@ -168,7 +168,12 @@ set<eth::Network> ImportTest::getAllNetworksFromExpectSections(json_spirit::mArr
 {
     set<string> allNetworks;
     for (auto const& exp : _expects)
+    {
+        requireJsonFields(exp.get_obj(), "expect",
+            {{"indexes", jsonVType::obj_type}, {"network", jsonVType::array_type},
+                {"result", jsonVType::obj_type}});
         ImportTest::parseJsonStrValueIntoSet(exp.get_obj().at("network"), allNetworks);
+    }
 
     allNetworks = test::translateNetworks(allNetworks);
     set<eth::Network> networkSet;
