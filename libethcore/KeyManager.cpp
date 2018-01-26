@@ -71,20 +71,6 @@ bool KeyManager::recode(Address const& _address, string const& _newPass, string 
 	return true;
 }
 
-bool KeyManager::recode(Address const& _address, SemanticPassword _newPass, function<string()> const& _pass, KDF _kdf)
-{
-	h128 u = uuid(_address);
-	string p;
-	if (_newPass == SemanticPassword::Existing)
-		p = getPassword(u, _pass);
-	else if (_newPass == SemanticPassword::Master)
-		p = defaultPassword();
-	else
-		return false;
-
-	return recode(_address, p, string(), _pass, _kdf);
-}
-
 bool KeyManager::load(string const& _pass)
 {
 	try
@@ -221,16 +207,6 @@ h128 KeyManager::import(Secret const& _s, string const& _accountName, string con
 	return uuid;
 }
 
-Secret KeyManager::subkey(Secret const& _s, unsigned _index)
-{
-	RLPStream out(2);
-	out << _s.ref();
-	out << _index;
-	bytesSec r;
-	out.swapOut(r.writable());
-	return sha3(r);
-}
-
 void KeyManager::importExisting(h128 const& _uuid, string const& _info, string const& _pass, string const& _passwordHint)
 {
 	bytesSec key = m_store.secret(_uuid, [&](){ return _pass; });
@@ -326,16 +302,6 @@ string const& KeyManager::accountName(Address const& _address) const
 	catch (...)
 	{
 		return EmptyString;
-	}
-}
-
-void KeyManager::changeName(Address const& _address, std::string const& _name)
-{
-	auto it = m_keyInfo.find(_address);
-	if (it != m_keyInfo.end())
-	{
-		it->second.accountName = _name;
-		write(m_keysFile);
 	}
 }
 
