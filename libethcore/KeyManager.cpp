@@ -71,20 +71,6 @@ bool KeyManager::recode(Address const& _address, string const& _newPass, string 
 	return true;
 }
 
-bool KeyManager::recode(Address const& _address, SemanticPassword _newPass, function<string()> const& _pass, KDF _kdf)
-{
-	h128 u = uuid(_address);
-	string p;
-	if (_newPass == SemanticPassword::Existing)
-		p = getPassword(u, _pass);
-	else if (_newPass == SemanticPassword::Master)
-		p = defaultPassword();
-	else
-		return false;
-
-	return recode(_address, p, string(), _pass, _kdf);
-}
-
 bool KeyManager::load(string const& _pass)
 {
 	try
@@ -118,10 +104,7 @@ bool KeyManager::load(string const& _pass)
 						cwarn << "Missing key:" << uuid << addr;
 				}
 				else
-				{
-					// TODO: brain wallet.
 					m_keyInfo[addr] = KeyInfo(h256(i[2]), string(i[3]), i.itemCount() > 4 ? string(i[4]) : "");
-				}
 //				cdebug << toString(addr) << toString(uuid) << toString((h256)i[2]) << (string)i[3];
 			}
 			if (saveRequired)
@@ -148,10 +131,7 @@ bool KeyManager::load(string const& _pass)
 
 Secret KeyManager::secret(Address const& _address, function<string()> const& _pass, bool _usePasswordCache) const
 {
-	if (m_addrLookup.count(_address))
-		return secret(m_addrLookup.at(_address), _pass, _usePasswordCache);
-	else
-		return brain(_pass());
+	return secret(m_addrLookup.at(_address), _pass, _usePasswordCache);
 }
 
 Secret KeyManager::secret(h128 const& _uuid, function<string()> const& _pass, bool _usePasswordCache) const
@@ -222,44 +202,6 @@ h128 KeyManager::import(Secret const& _s, string const& _accountName, string con
 	m_uuidLookup[uuid] = addr;
 	write(m_keysFile);
 	return uuid;
-}
-
-Secret KeyManager::brain(string const& _seed)
-{
-	h256 r = sha3(_seed);
-	for (auto i = 0; i < 16384; ++i)
-		r = sha3(r);
-	Secret ret(r);
-	r.ref().cleanse();
-	while (toAddress(ret)[0])
-		ret = sha3(ret);
-	return ret;
-}
-
-Secret KeyManager::subkey(Secret const& _s, unsigned _index)
-{
-	RLPStream out(2);
-	out << _s.ref();
-	out << _index;
-	bytesSec r;
-	out.swapOut(r.writable());
-	return sha3(r);
-}
-
-Address KeyManager::importBrain(string const& _seed, string const& _accountName, string const& _passwordHint)
-{
-	Address addr = toAddress(brain(_seed));
-	m_keyInfo[addr].accountName = _accountName;
-	m_keyInfo[addr].passwordHint = _passwordHint;
-	write();
-	return addr;
-}
-
-void KeyManager::importExistingBrain(Address const& _a, string const& _accountName, string const& _passwordHint)
-{
-	m_keyInfo[_a].accountName = _accountName;
-	m_keyInfo[_a].passwordHint = _passwordHint;
-	write();
 }
 
 void KeyManager::importExisting(h128 const& _uuid, string const& _info, string const& _pass, string const& _passwordHint)
@@ -357,16 +299,6 @@ string const& KeyManager::accountName(Address const& _address) const
 	catch (...)
 	{
 		return EmptyString;
-	}
-}
-
-void KeyManager::changeName(Address const& _address, std::string const& _name)
-{
-	auto it = m_keyInfo.find(_address);
-	if (it != m_keyInfo.end())
-	{
-		it->second.accountName = _name;
-		write(m_keysFile);
 	}
 }
 

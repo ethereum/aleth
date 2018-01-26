@@ -79,7 +79,6 @@ public:
 	KeyManager(boost::filesystem::path const& _keysFile = defaultPath(), boost::filesystem::path const& _secretsPath = SecretStore::defaultPath());
 	~KeyManager();
 
-	void setSecretsPath(boost::filesystem::path const& _secretsPath) { m_store.setPath(_secretsPath); }
 	void setKeysFile(boost::filesystem::path const& _keysFile) { m_keysFile = _keysFile; }
 	boost::filesystem::path const& keysFile() const { return m_keysFile; }
 
@@ -101,12 +100,7 @@ public:
 	std::string const& accountName(Address const& _address) const;
 	/// @returns the password hint for the account for the given address;
 	std::string const& passwordHint(Address const& _address) const;
-	/// Should be called to change password
-	void changeName(Address const& _address, std::string const& _name);
 
-	/// @returns true if the given address has a key (UUID) associated with it. Equivalent to !!uuid(_a)
-	/// If the address has no key, it could be a brain wallet.
-	bool haveKey(Address const& _a) const { return m_addrLookup.count(_a); }
 	/// @returns the uuid of the key for the address @a _a or the empty hash on error.
 	h128 uuid(Address const& _a) const;
 	/// @returns the address corresponding to the key with uuid @a _uuid or the zero address on error.
@@ -114,12 +108,9 @@ public:
 
 	h128 import(Secret const& _s, std::string const& _accountName, std::string const& _pass, std::string const& _passwordHint);
 	h128 import(Secret const& _s, std::string const& _accountName) { return import(_s, _accountName, defaultPassword(), std::string()); }
-	Address importBrain(std::string const& _seed, std::string const& _accountName, std::string const& _seedHint);
-	void importExistingBrain(Address const& _a, std::string const& _accountName, std::string const& _seedHint);
 
 	SecretStore& store() { return m_store; }
 	void importExisting(h128 const& _uuid, std::string const& _accountName, std::string const& _pass, std::string const& _passwordHint);
-	void importExisting(h128 const& _uuid, std::string const& _accountName) { importExisting(_uuid, _accountName, defaultPassword(), std::string()); }
 	void importExisting(h128 const& _uuid, std::string const& _accountName, Address const& _addr, h256 const& _passHash = h256(), std::string const& _passwordHint = std::string());
 
 	/// @returns the secret key associated with an address provided the password query
@@ -129,7 +120,6 @@ public:
 	/// function @a _pass or the zero-secret key on error.
 	Secret secret(h128 const& _uuid, std::function<std::string()> const& _pass = DontKnowThrow, bool _usePasswordCache = true) const;
 
-	bool recode(Address const& _address, SemanticPassword _newPass, std::function<std::string()> const& _pass = DontKnowThrow, KDF _kdf = KDF::Scrypt);
 	bool recode(Address const& _address, std::string const& _newPass, std::string const& _hint, std::function<std::string()> const& _pass = DontKnowThrow, KDF _kdf = KDF::Scrypt);
 
 	void kill(h128 const& _id) { kill(address(_id)); }
@@ -139,12 +129,6 @@ public:
 
 	/// Extracts the secret key from the presale wallet.
 	static KeyPair presaleSecret(std::string const& _json, std::function<std::string(bool)> const& _password);
-
-	/// @returns the brainwallet secret for the given seed.
-	static Secret brain(std::string const& _seed);
-
-	/// @returns the HD subkey for a given key.
-	static Secret subkey(Secret const& _s, unsigned _index);
 
 	/// @returns new random keypair with given vanity
 	static  KeyPair newKeyPair(NewKeyType _type);
