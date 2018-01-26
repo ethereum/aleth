@@ -43,6 +43,8 @@ public:
 	static json_spirit::mObject makeAllFieldsHex(json_spirit::mObject const& _o, bool _isHeader = false);
     static void parseJsonStrValueIntoSet(
         json_spirit::mValue const& _json, std::set<std::string>& _out);
+    static std::set<eth::Network> getAllNetworksFromExpectSections(
+        json_spirit::mArray const& _expects);
 
     //check functions
 	//check that networks in the vector are allowed
@@ -50,8 +52,8 @@ public:
     static void checkAllowedNetwork(std::set<std::string> const& _networks);
     static void checkBalance(eth::State const& _pre, eth::State const& _post, bigint _miningReward = 0);
 
-	bytes executeTest();
-	int exportTest();
+    bytes executeTest(bool _isFilling);
+    int exportTest();
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 	bool checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
 	void traceStateDiff();

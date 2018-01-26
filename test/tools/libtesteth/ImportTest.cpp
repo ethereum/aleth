@@ -80,58 +80,57 @@ void ImportTest::makeBlockchainTestFromStateTest(set<eth::Network> const& _netwo
         testObj["pre"] = fillJsonWithState(m_statePre);
 
         // generate expect sections for this transaction
-        if (m_testInputObject.count("expect"))
+        BOOST_REQUIRE(m_testInputObject.count("expect") > 0);
+
+        State s = State(0, OverlayDB(), eth::BaseState::Empty);
+        AccountMaskMap m;
+        StateAndMap smap{s, m};
+        vector<size_t> stateIndexesToPrint;
+        json_spirit::mArray expetSectionArray;
+
+        for (auto const& net : _networks)
         {
-            State s = State(0, OverlayDB(), eth::BaseState::Empty);
-            AccountMaskMap m;
-            StateAndMap smap{s, m};
-            vector<size_t> stateIndexesToPrint;
-            json_spirit::mArray expetSectionArray;
+            auto trDup = tr;
+            trDup.netId = net;
 
-            for (auto const& net : _networks)
+            // Calculate the block reward
+            ChainParams const chainParams{genesisInfo(net)};
+            EVMSchedule const schedule = chainParams.scheduleForBlockNumber(1);
+            u256 const blockReward = chainParams.blockReward(schedule);
+
+            TrExpectSection search{trDup, smap};
+            for (auto const& exp : m_testInputObject.at("expect").get_array())
             {
-                auto trDup = tr;
-                trDup.netId = net;
-
-                // Calculate the block reward
-                ChainParams const chainParams{genesisInfo(net)};
-                EVMSchedule const schedule = chainParams.scheduleForBlockNumber(1);
-                u256 const blockReward = chainParams.blockReward(schedule);
-
-                TrExpectSection search{trDup, smap};
-                for (auto const& exp : m_testInputObject.at("expect").get_array())
+                TrExpectSection* search2 = &search;
+                checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
+                if (search.second.first.addresses().size() !=
+                    0)  // if match in the expect sections for this tr found
                 {
-                    TrExpectSection* search2 = &search;
-                    checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
-                    if (search.second.first.addresses().size() !=
-                        0)  // if match in the expect sections for this tr found
+                    // replace expected mining reward (in state tests it is 0)
+                    json_spirit::mObject obj =
+                        fillJsonWithState(search2->second.first, search2->second.second);
+                    for (auto& adr : obj)
                     {
-                        // replace expected mining reward (in state tests it is 0)
-                        json_spirit::mObject obj =
-                            fillJsonWithState(search2->second.first, search2->second.second);
-                        for (auto& adr : obj)
+                        if (adr.first == toHexPrefixed(m_envInfo->author()) &&
+                            adr.second.get_obj().count("balance"))
                         {
-                            if (adr.first == toHexPrefixed(m_envInfo->author()) &&
-                                adr.second.get_obj().count("balance"))
-                            {
-                                u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
-                                expectCoinbaseBalance += blockReward;
-                                adr.second.get_obj()["balance"] =
-                                    toCompactHexPrefixed(expectCoinbaseBalance);
-                            }
+                            u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
+                            expectCoinbaseBalance += blockReward;
+                            adr.second.get_obj()["balance"] =
+                                toCompactHexPrefixed(expectCoinbaseBalance);
                         }
-
-                        json_spirit::mObject expetSectionObj;
-                        expetSectionObj["network"] = test::netIdToString(net);
-                        expetSectionObj["result"] = obj;
-                        expetSectionArray.push_back(expetSectionObj);
-                        break;
                     }
-                }  // for exp
-            }      // for net
 
-            testObj["expect"] = expetSectionArray;
-        }  // expect
+                    json_spirit::mObject expetSectionObj;
+                    expetSectionObj["network"] = test::netIdToString(net);
+                    expetSectionObj["result"] = obj;
+                    expetSectionArray.push_back(expetSectionObj);
+                    break;
+                }
+            }  // for exp
+        }      // for net
+
+        testObj["expect"] = expetSectionArray;
 
         // rewrite header section for a block by the statetest parameters
         json_spirit::mObject rewriteHeader;
@@ -164,17 +163,33 @@ void ImportTest::makeBlockchainTestFromStateTest(set<eth::Network> const& _netwo
     }  // transactions
 }
 
-bytes ImportTest::executeTest()
+/// returns all networks that are defined in all expect sections
+set<eth::Network> ImportTest::getAllNetworksFromExpectSections(json_spirit::mArray const& _expects)
 {
-	assert(m_envInfo);
+    set<string> allNetworks;
+    for (auto const& exp : _expects)
+        ImportTest::parseJsonStrValueIntoSet(exp.get_obj().at("network"), allNetworks);
 
+    allNetworks = test::translateNetworks(allNetworks);
+    set<eth::Network> networkSet;
+    for (auto const& net : allNetworks)
+        networkSet.emplace(test::stringToNetId(net));
+    return networkSet;
+}
+
+bytes ImportTest::executeTest(bool _isFilling)
+{
+    assert(m_envInfo);
     set<eth::Network> networks;
     if (!Options::get().singleTestNet.empty())
         networks.emplace(stringToNetId(Options::get().singleTestNet));
     else
-		networks = test::getNetworks();
+        networks =
+            (Options::get().filltests && m_testInputObject.count("expect")) ?
+                getAllNetworksFromExpectSections(m_testInputObject.at("expect").get_array()) :
+                getNetworks();
 
-	vector<transactionToExecute> transactionResults;
+    vector<transactionToExecute> transactionResults;
 	for (auto const& net : networks)
 	{
 		if (isDisabledNetwork(net))
@@ -197,7 +212,7 @@ bytes ImportTest::executeTest()
 		}
 	}
 
-	if (Options::get().fillchain)
+    if (Options::get().fillchain && _isFilling)
         makeBlockchainTestFromStateTest(networks);
 
     m_transactions = transactionResults;  // update transactions with execution results.

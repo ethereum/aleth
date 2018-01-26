@@ -69,9 +69,13 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 
 		if (_fillin)
 		{
-			//create a blockchain test for each network
-			for (auto& network : test::getNetworks())
-			{
+            BOOST_REQUIRE(inputTest.count("expect") > 0);
+            set<eth::Network> allnetworks =
+                ImportTest::getAllNetworksFromExpectSections(inputTest.at("expect").get_array());
+
+            //create a blockchain test for each network
+            for (auto& network : allnetworks)
+            {
 				if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
 					continue;
 
@@ -79,29 +83,27 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 				string newtestname = testname + "_" + test::netIdToString(network);
 
 				json_spirit::mObject jObjOutput = inputTest;
-				if (inputTest.count("expect"))
-				{
-					//prepare the corresponding expect section for the test
-					json_spirit::mArray const& expects = inputTest.at("expect").get_array();
-					bool found = false;
+                // prepare the corresponding expect section for the test
+                json_spirit::mArray const& expects = inputTest.at("expect").get_array();
+                bool found = false;
 
-					for (auto& expect : expects)
-					{
-                        set<string> netlist;
-                        json_spirit::mObject const& expectObj = expect.get_obj();
-                        ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
+                for (auto& expect : expects)
+                {
+                    set<string> netlist;
+                    json_spirit::mObject const& expectObj = expect.get_obj();
+                    ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
 
-                        if (netlist.count(test::netIdToString(network)) || netlist.count("ALL"))
-                        {
-							jObjOutput["expect"] = expectObj.at("result");
-							found = true;
-							break;
-						}
-					}
-					if (!found)
-						jObjOutput.erase(jObjOutput.find("expect"));
+                    if (netlist.count(test::netIdToString(network)) || netlist.count("ALL"))
+                    {
+                        jObjOutput["expect"] = expectObj.at("result");
+                        found = true;
+                        break;
+                    }
 				}
-				TestOutputHelper::get().setCurrentTestName(newtestname);
+                if (!found)
+                    jObjOutput.erase(jObjOutput.find("expect"));
+
+                TestOutputHelper::get().setCurrentTestName(newtestname);
 				jObjOutput = fillBCTest(jObjOutput);
 				jObjOutput["network"] = test::netIdToString(network);
 				if (inputTest.count("_info"))
