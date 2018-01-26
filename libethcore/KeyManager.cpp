@@ -148,10 +148,7 @@ bool KeyManager::load(string const& _pass)
 
 Secret KeyManager::secret(Address const& _address, function<string()> const& _pass, bool _usePasswordCache) const
 {
-	if (m_addrLookup.count(_address))
-		return secret(m_addrLookup.at(_address), _pass, _usePasswordCache);
-	else
-		return brain(_pass());
+	return secret(m_addrLookup.at(_address), _pass, _usePasswordCache);
 }
 
 Secret KeyManager::secret(h128 const& _uuid, function<string()> const& _pass, bool _usePasswordCache) const
@@ -224,18 +221,6 @@ h128 KeyManager::import(Secret const& _s, string const& _accountName, string con
 	return uuid;
 }
 
-Secret KeyManager::brain(string const& _seed)
-{
-	h256 r = sha3(_seed);
-	for (auto i = 0; i < 16384; ++i)
-		r = sha3(r);
-	Secret ret(r);
-	r.ref().cleanse();
-	while (toAddress(ret)[0])
-		ret = sha3(ret);
-	return ret;
-}
-
 Secret KeyManager::subkey(Secret const& _s, unsigned _index)
 {
 	RLPStream out(2);
@@ -244,22 +229,6 @@ Secret KeyManager::subkey(Secret const& _s, unsigned _index)
 	bytesSec r;
 	out.swapOut(r.writable());
 	return sha3(r);
-}
-
-Address KeyManager::importBrain(string const& _seed, string const& _accountName, string const& _passwordHint)
-{
-	Address addr = toAddress(brain(_seed));
-	m_keyInfo[addr].accountName = _accountName;
-	m_keyInfo[addr].passwordHint = _passwordHint;
-	write();
-	return addr;
-}
-
-void KeyManager::importExistingBrain(Address const& _a, string const& _accountName, string const& _passwordHint)
-{
-	m_keyInfo[_a].accountName = _accountName;
-	m_keyInfo[_a].passwordHint = _passwordHint;
-	write();
 }
 
 void KeyManager::importExisting(h128 const& _uuid, string const& _info, string const& _pass, string const& _passwordHint)

@@ -114,12 +114,9 @@ public:
 
 	h128 import(Secret const& _s, std::string const& _accountName, std::string const& _pass, std::string const& _passwordHint);
 	h128 import(Secret const& _s, std::string const& _accountName) { return import(_s, _accountName, defaultPassword(), std::string()); }
-	Address importBrain(std::string const& _seed, std::string const& _accountName, std::string const& _seedHint);
-	void importExistingBrain(Address const& _a, std::string const& _accountName, std::string const& _seedHint);
 
 	SecretStore& store() { return m_store; }
 	void importExisting(h128 const& _uuid, std::string const& _accountName, std::string const& _pass, std::string const& _passwordHint);
-	void importExisting(h128 const& _uuid, std::string const& _accountName) { importExisting(_uuid, _accountName, defaultPassword(), std::string()); }
 	void importExisting(h128 const& _uuid, std::string const& _accountName, Address const& _addr, h256 const& _passHash = h256(), std::string const& _passwordHint = std::string());
 
 	/// @returns the secret key associated with an address provided the password query
@@ -139,9 +136,6 @@ public:
 
 	/// Extracts the secret key from the presale wallet.
 	static KeyPair presaleSecret(std::string const& _json, std::function<std::string(bool)> const& _password);
-
-	/// @returns the brainwallet secret for the given seed.
-	static Secret brain(std::string const& _seed);
 
 	/// @returns the HD subkey for a given key.
 	static Secret subkey(Secret const& _s, unsigned _index);

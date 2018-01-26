@@ -285,12 +285,6 @@ public:
 		{
 			if (h128 u = fromUUID(_signKey))
 				return Secret(secretStore().secret(u, [&](){ return getPassword("Enter passphrase for key: "); }));
-			if (_signKey.substr(0, 6) == "brain#" && _signKey.find(":") != string::npos)
-				return KeyManager::subkey(KeyManager::brain(_signKey.substr(_signKey.find(":"))), stoul(_signKey.substr(6, _signKey.find(":") - 7)));
-			if (_signKey.substr(0, 6) == "brain:")
-				return KeyManager::brain(_signKey.substr(6));
-			if (_signKey == "brain")
-				return KeyManager::brain(getPassword("Enter brain wallet phrase: "));
 			Address a;
 			try
 			{
@@ -410,8 +404,6 @@ public:
 		case OperationMode::Inspect:
 		{
 			keyManager(true);
-			if (m_inputs.empty())
-				m_inputs.push_back(toAddress(KeyManager::brain(getPassword("Enter brain wallet key phrase: "))).hex());
 			for (auto i: m_inputs)
 			{
 				Address a = userToAddress(i);
