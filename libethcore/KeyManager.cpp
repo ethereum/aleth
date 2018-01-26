@@ -104,10 +104,7 @@ bool KeyManager::load(string const& _pass)
 						cwarn << "Missing key:" << uuid << addr;
 				}
 				else
-				{
-					// TODO: brain wallet.
 					m_keyInfo[addr] = KeyInfo(h256(i[2]), string(i[3]), i.itemCount() > 4 ? string(i[4]) : "");
-				}
 //				cdebug << toString(addr) << toString(uuid) << toString((h256)i[2]) << (string)i[3];
 			}
 			if (saveRequired)
