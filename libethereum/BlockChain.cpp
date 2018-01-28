@@ -299,14 +299,13 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 	try
 	{
 		auto const l = m_extrasDB->lookup(db::Slice("best"));
-		m_lastBlockHash = *(h256*)l.data();
-		m_lastBlockNumber = number(m_lastBlockHash);
+		m_lastBlockHash = h256(l);
 	}
-	catch (const db::FailedLookupInDB& /* ex */)
+	catch (db::FailedLookupInDB const& /* ex */)
 	{
 		m_lastBlockHash = m_genesisHash;
-		m_lastBlockNumber = number(m_lastBlockHash);
 	}
+	m_lastBlockNumber = number(m_lastBlockHash);
 
 	ctrace << "Opened blockchain DB. Latest: " << currentHash() << (lastMinor == c_minorProtocolVersion ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
 	return lastMinor;
@@ -432,8 +431,13 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 
 string BlockChain::dumpDatabase() const
 {
-	// TODO
-	return "";
+	ostringstream oss;
+	oss << m_lastBlockHash << '\n';
+	m_extrasDB->forEach([&oss](db::Slice key, db::Slice value) {
+		oss << toHex(key) << "/" << toHex(value) << '\n';
+		return true;
+	});
+	return oss.str();
 }
 
 tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
@@ -1377,28 +1381,14 @@ bool BlockChain::isKnown(h256 const& _hash, bool _isCurrent) const
 		return true;
 
 	DEV_READ_GUARDED(x_blocks)
-		if (!m_blocks.count(_hash))
+		if (!m_blocks.count(_hash) && !m_blocksDB->exists(toSlice(_hash)))
 		{
-			try
-			{
-				m_blocksDB->lookup(toSlice(_hash));
-			}
-			catch (const db::FailedLookupInDB& /* ex */)
-			{
-				return false;
-			}
+			return false;
 		}
 	DEV_READ_GUARDED(x_details)
-		if (!m_details.count(_hash))
+		if (!m_details.count(_hash) && !m_extrasDB->exists(toSlice(_hash, ExtraDetails)))
 		{
-			try
-			{
-				m_extrasDB->lookup(toSlice(_hash, ExtraDetails));
-			}
-			catch (const db::FailedLookupInDB& /* ex */)
-			{
-				return false;
-			}
+			return false;
 		}
 //	return true;
 	return !_isCurrent || details(_hash).number <= m_lastBlockNumber;		// to allow rewind functionality.
