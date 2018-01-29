@@ -50,8 +50,8 @@ public:
 
 private:
     std::unique_ptr<leveldb::DB> m_db;
-    const leveldb::ReadOptions m_readOptions;
-    const leveldb::WriteOptions m_writeOptions;
+    leveldb::ReadOptions const m_readOptions;
+    leveldb::WriteOptions const m_writeOptions;
 };
 
 }  // namespace db

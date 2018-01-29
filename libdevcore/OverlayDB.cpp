@@ -77,7 +77,7 @@ void OverlayDB::commit()
                 m_db->commit(std::move(writeBatch));
                 break;
             }
-            catch (const db::FailedCommitInDB& ex)
+            catch (db::FailedCommitInDB const& ex)
             {
                 if (i == 9)
                 {
@@ -111,7 +111,7 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
     {
         v = m_db->lookup(toSlice(b));
     }
-    catch (const db::FailedLookupInDB&)
+    catch (db::FailedLookupInDB const&)
     {
         cwarn << "Aux not found: " << _h;
     }

@@ -44,8 +44,8 @@ public:
 protected:
     WriteBatchFace() = default;
     // Noncopyable
-    WriteBatchFace(const WriteBatchFace&) = delete;
-    WriteBatchFace& operator=(const WriteBatchFace&) = delete;
+    WriteBatchFace(WriteBatchFace const&) = delete;
+    WriteBatchFace& operator=(WriteBatchFace const&) = delete;
     // Nonmovable
     WriteBatchFace(WriteBatchFace&&) = delete;
     WriteBatchFace& operator=(WriteBatchFace&&) = delete;

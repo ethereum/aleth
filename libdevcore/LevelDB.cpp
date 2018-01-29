@@ -91,7 +91,7 @@ LevelDB::LevelDB(std::string const& _path, leveldb::ReadOptions _readOptions,
 
 std::string LevelDB::lookup(Slice _key) const
 {
-    const leveldb::Slice key(_key.data(), _key.size());
+    leveldb::Slice const key(_key.data(), _key.size());
     std::string value;
     auto const status = m_db->Get(m_readOptions, key, &value);
     if (!status.ok())
@@ -104,15 +104,15 @@ std::string LevelDB::lookup(Slice _key) const
 bool LevelDB::exists(Slice _key) const
 {
     std::string value;
-    const leveldb::Slice key(_key.data(), _key.size());
+    leveldb::Slice const key(_key.data(), _key.size());
     auto const status = m_db->Get(m_readOptions, key, &value);
     return status.ok();
 }
 
 void LevelDB::insert(Slice _key, Slice _value)
 {
-    const leveldb::Slice key(_key.data(), _key.size());
-    const leveldb::Slice value(_value.data(), _value.size());
+    leveldb::Slice const key(_key.data(), _key.size());
+    leveldb::Slice const value(_value.data(), _value.size());
     auto const status = m_db->Put(m_writeOptions, key, value);
     if (!status.ok())
     {
@@ -122,7 +122,7 @@ void LevelDB::insert(Slice _key, Slice _value)
 
 void LevelDB::kill(Slice _key)
 {
-    const leveldb::Slice key(_key.data(), _key.size());
+    leveldb::Slice const key(_key.data(), _key.size());
     auto const status = m_db->Delete(m_writeOptions, key);
     if (!status.ok())
     {

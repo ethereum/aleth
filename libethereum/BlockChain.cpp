@@ -632,7 +632,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     {
         m_blocksDB->commit(std::move(blocksWriteBatch));
     }
-    catch (const db::FailedCommitInDB& ex)
+    catch (db::FailedCommitInDB const& ex)
     {
         cwarn << "Error writing to blockchain database: " << ex.what();
         cwarn << "Fail writing to blockchain database. Bombing out.";
@@ -643,7 +643,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     {
         m_extrasDB->commit(std::move(extrasWriteBatch));
     }
-    catch (const db::FailedCommitInDB& ex)
+    catch (db::FailedCommitInDB const& ex)
     {
         cwarn << "Error writing to extras database: " << ex.what();
         cwarn << "Fail writing to extras database. Bombing out.";
@@ -898,7 +898,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
     {
         m_blocksDB->commit(std::move(blocksWriteBatch));
     }
-    catch (const db::FailedCommitInDB& ex)
+    catch (db::FailedCommitInDB const& ex)
     {
         cwarn << "Error writing to blockchain database: " << ex.what();
         cwarn << "Fail writing to blockchain database. Bombing out.";
@@ -909,7 +909,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
     {
         m_extrasDB->commit(std::move(extrasWriteBatch));
     }
-    catch (const db::FailedCommitInDB& ex)
+    catch (db::FailedCommitInDB const& ex)
     {
         cwarn << "Error writing to extras database: " << ex.what();
         cwarn << "Fail writing to extras database. Bombing out.";
@@ -948,7 +948,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
             {
                 m_extrasDB->insert(db::Slice("best"), db::Slice((char const*)&m_lastBlockHash, 32));
             }
-            catch (const db::FailedInsertInDB& ex)
+            catch (db::FailedInsertInDB const& ex)
             {
                 cwarn << "Error writing to extras database: " << ex.what();
                 cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
@@ -1097,7 +1097,7 @@ void BlockChain::rewind(unsigned _newHead)
         {
             m_extrasDB->insert(db::Slice("best"), db::Slice((char const*)&m_lastBlockHash, 32));
         }
-        catch (const db::FailedInsertInDB& ex)
+        catch (db::FailedInsertInDB const& ex)
         {
             cwarn << "Error writing to extras database: " << ex.what();
             cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
@@ -1433,7 +1433,7 @@ bytes BlockChain::block(h256 const& _hash) const
     {
         d = m_blocksDB->lookup(toSlice(_hash));
     }
-    catch (const db::FailedLookupInDB& /* ex */)
+    catch (db::FailedLookupInDB const& /* ex */)
     {
         cwarn << "Couldn't find requested block:" << _hash;
         return bytes();
@@ -1465,7 +1465,7 @@ bytes BlockChain::headerData(h256 const& _hash) const
     {
         d = m_blocksDB->lookup(toSlice(_hash));
     }
-    catch (const db::FailedLookupInDB& /* ex */)
+    catch (db::FailedLookupInDB const& /* ex */)
     {
         cwarn << "Couldn't find requested block:" << _hash;
         return bytes();
@@ -1599,7 +1599,7 @@ void BlockChain::setChainStartBlockNumber(unsigned _number)
         m_extrasDB->insert(
             c_sliceChainStart, db::Slice(reinterpret_cast<char const*>(hash.data()), h256::size));
     }
-    catch (const db::FailedInsertInDB& /* ex */)
+    catch (db::FailedInsertInDB const& /* ex */)
     {
         BOOST_THROW_EXCEPTION(FailedToWriteChainStart() << errinfo_hash256(hash));
     }
@@ -1612,7 +1612,7 @@ unsigned BlockChain::chainStartBlockNumber() const
         auto const value = m_extrasDB->lookup(c_sliceChainStart);
         return number(h256(value, h256::FromBinary));
     }
-    catch (const db::FailedLookupInDB& /* ex */)
+    catch (db::FailedLookupInDB const& /* ex */)
     {
         return 0;
     }
