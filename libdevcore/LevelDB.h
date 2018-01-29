@@ -45,7 +45,7 @@ public:
     void kill(Slice _key) override;
 
     std::unique_ptr<WriteBatchFace> createWriteBatch() const override;
-    void commit(std::unique_ptr<WriteBatchFace>&& _batch) override;
+    void commit(std::unique_ptr<WriteBatchFace> _batch) override;
 
     void forEach(std::function<bool(Slice, Slice)> f) const override;
 

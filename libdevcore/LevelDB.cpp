@@ -135,7 +135,7 @@ std::unique_ptr<WriteBatchFace> LevelDB::createWriteBatch() const
     return std::unique_ptr<WriteBatchFace>(new LevelDBWriteBatch());
 }
 
-void LevelDB::commit(std::unique_ptr<WriteBatchFace>&& _batch)
+void LevelDB::commit(std::unique_ptr<WriteBatchFace> _batch)
 {
     if (!_batch)
     {

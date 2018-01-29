@@ -61,7 +61,7 @@ public:
     virtual void kill(Slice _key) = 0;
 
     virtual std::unique_ptr<WriteBatchFace> createWriteBatch() const = 0;
-    virtual void commit(std::unique_ptr<WriteBatchFace>&& _batch) = 0;
+    virtual void commit(std::unique_ptr<WriteBatchFace> _batch) = 0;
 
     // A database must implement the `forEach` method that allows the caller
     // to pass in a function `f`, which will be called with the key and value
