@@ -57,9 +57,7 @@ void LevelDBWriteBatch::kill(Slice _key)
 
 leveldb::ReadOptions LevelDB::defaultReadOptions()
 {
-	leveldb::ReadOptions readOptions;
-	readOptions.verify_checksums = true;
-	return readOptions;
+	return leveldb::ReadOptions();
 }
 
 leveldb::WriteOptions LevelDB::defaultWriteOptions()

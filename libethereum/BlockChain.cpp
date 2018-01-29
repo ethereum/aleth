@@ -299,7 +299,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 	try
 	{
 		auto const l = m_extrasDB->lookup(db::Slice("best"));
-		m_lastBlockHash = h256(l);
+		m_lastBlockHash = h256(l, h256::FromBinary);
 	}
 	catch (db::FailedLookupInDB const& /* ex */)
 	{

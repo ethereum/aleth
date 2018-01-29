@@ -46,6 +46,9 @@ public:
 	// Copyable
 	OverlayDB(OverlayDB const&) = default;
 	OverlayDB& operator=(OverlayDB const&) = default;
+    // Movable
+    OverlayDB(OverlayDB&&) = default;
+    OverlayDB& operator=(OverlayDB&&) = default;
 
 	void commit();
 	void rollback();
