@@ -35,8 +35,8 @@ struct DBDetail: public LogChannel { static const char* name() { return "DBDetai
 class OverlayDB: public MemoryDB
 {
 public:
-    explicit OverlayDB(db::DatabaseFace* _db = nullptr)
-      : m_db(_db, [](db::DatabaseFace* db) {
+    explicit OverlayDB(std::unique_ptr<db::DatabaseFace>&& _db = nullptr)
+      : m_db(_db.release(), [](db::DatabaseFace* db) {
             clog(DBDetail) << "Closing state DB";
             delete db;
         })

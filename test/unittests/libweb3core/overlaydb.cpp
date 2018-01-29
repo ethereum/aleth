@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(basicUsage)
     std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
     BOOST_REQUIRE(db);
 
-    OverlayDB odb(db.release());
+    OverlayDB odb(std::move(db));
     BOOST_CHECK(!odb.get().size());
 
     // commit nothing
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(auxMem)
     std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
     BOOST_REQUIRE(db);
 
-    OverlayDB odb(db.release());
+    OverlayDB odb(std::move(db));
 
     bytes value = fromHex("43");
     bytes valueAux = fromHex("44");
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(rollback)
     std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
     BOOST_REQUIRE(db);
 
-    OverlayDB odb(db.release());
+    OverlayDB odb(std::move(db));
     bytes value = fromHex("42");
 
     odb.insert(h256(43), &value);

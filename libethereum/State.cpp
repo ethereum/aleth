@@ -96,7 +96,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
     {
         std::unique_ptr<db::DatabaseFace> db(new db::DBImpl((path / fs::path("state")).string()));
         clog(StateDetail) << "Opened state DB.";
-        return OverlayDB(db.release());
+        return OverlayDB(std::move(db));
     }
     catch (db::FailedToOpenDB const& ex)
     {
