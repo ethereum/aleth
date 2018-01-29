@@ -589,7 +589,7 @@ void requireJsonFields(json_spirit::mObject const& _o, string const& _section,
 {
     // check for unexpected fiedls
     for (auto const field : _o)
-        BOOST_REQUIRE_MESSAGE(_validationMap.count(field.first),
+        BOOST_CHECK_MESSAGE(_validationMap.count(field.first),
             field.first + " should not be declared in " + _section + " section!");
 
     // check field types with validation map
