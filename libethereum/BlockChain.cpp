@@ -1272,29 +1272,29 @@ void BlockChain::garbageCollect(bool _force)
 
 void BlockChain::checkConsistency()
 {
-    DEV_WRITE_GUARDED(x_details)
-        m_details.clear();
-        m_blocksDB->forEach([this](db::Slice const& _key, db::Slice const& /* _value */) {
-            if (_key.size() == 32)
+    DEV_WRITE_GUARDED(x_details) { m_details.clear(); }
+
+    m_blocksDB->forEach([this](db::Slice const& _key, db::Slice const& /* _value */) {
+        if (_key.size() == 32)
+        {
+            h256 h((byte const*)_key.data(), h256::ConstructFromPointer);
+            auto dh = details(h);
+            auto p = dh.parent;
+            if (p != h256() && p != m_genesisHash)  // TODO: for some reason the genesis details
+                                                    // with the children get squished. not sure
+                                                    // why.
             {
-                h256 h((byte const*)_key.data(), h256::ConstructFromPointer);
-                auto dh = details(h);
-                auto p = dh.parent;
-                if (p != h256() && p != m_genesisHash)  // TODO: for some reason the genesis details
-                                                        // with the children get squished. not sure
-                                                        // why.
-                {
-                    auto dp = details(p);
-                    if (asserts(contains(dp.children, h)))
-                        cnote << "Apparently the database is corrupt. Not much we can do at this "
-                                 "stage...";
-                    if (assertsEqual(dp.number, dh.number - 1))
-                        cnote << "Apparently the database is corrupt. Not much we can do at this "
-                                 "stage...";
-                }
+                auto dp = details(p);
+                if (asserts(contains(dp.children, h)))
+                    cnote << "Apparently the database is corrupt. Not much we can do at this "
+                             "stage...";
+                if (assertsEqual(dp.number, dh.number - 1))
+                    cnote << "Apparently the database is corrupt. Not much we can do at this "
+                             "stage...";
             }
-            return true;
-        });
+        }
+        return true;
+    });
 }
 
 void BlockChain::clearCachesDuringChainReversion(unsigned _firstInvalid)
