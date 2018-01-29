@@ -72,12 +72,12 @@ leveldb::Options LevelDB::defaultDBOptions()
     return options;
 }
 
-LevelDB::LevelDB(std::string const& _path, leveldb::ReadOptions _readOptions,
+LevelDB::LevelDB(boost::filesystem::path const& _path, leveldb::ReadOptions _readOptions,
     leveldb::WriteOptions _writeOptions, leveldb::Options _dbOptions)
   : m_db(nullptr), m_readOptions(std::move(_readOptions)), m_writeOptions(std::move(_writeOptions))
 {
     auto db = static_cast<leveldb::DB*>(nullptr);
-    auto const status = leveldb::DB::Open(_dbOptions, _path, &db);
+    auto const status = leveldb::DB::Open(_dbOptions, _path.string(), &db);
     if (!status.ok())
     {
         BOOST_THROW_EXCEPTION(FailedToOpenDB(status.ToString()));

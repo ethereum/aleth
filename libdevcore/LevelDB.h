@@ -19,6 +19,7 @@
 
 #include "db.h"
 
+#include <boost/filesystem.hpp>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 
@@ -33,7 +34,7 @@ public:
     static leveldb::WriteOptions defaultWriteOptions();
     static leveldb::Options defaultDBOptions();
 
-    explicit LevelDB(std::string const& _path,
+    explicit LevelDB(boost::filesystem::path const& _path,
         leveldb::ReadOptions _readOptions = defaultReadOptions(),
         leveldb::WriteOptions _writeOptions = defaultWriteOptions(),
         leveldb::Options _dbOptions = defaultDBOptions());

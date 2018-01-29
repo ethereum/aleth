@@ -255,8 +255,8 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 
     try
     {
-        m_blocksDB.reset(new db::DBImpl((chainPath / fs::path("blocks")).string()));
-        m_extrasDB.reset(new db::DBImpl((extrasPath / fs::path("extras")).string()));
+        m_blocksDB.reset(new db::DBImpl(chainPath / fs::path("blocks")));
+        m_extrasDB.reset(new db::DBImpl(extrasPath / fs::path("extras")));
     }
     catch (db::FailedToOpenDB const&)
     {
@@ -371,8 +371,8 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
     m_extrasDB.reset();
     fs::rename(extrasPath / fs::path("extras"), extrasPath / fs::path("extras.old"));
     std::unique_ptr<db::DatabaseFace> oldExtrasDB(
-        new db::DBImpl((extrasPath / fs::path("extras.old")).string()));
-    m_extrasDB.reset(new db::DBImpl((extrasPath / fs::path("extras")).string()));
+        new db::DBImpl(extrasPath / fs::path("extras.old")));
+    m_extrasDB.reset(new db::DBImpl(extrasPath / fs::path("extras")));
 
     // Open a fresh state DB
     Block s = genesisBlock(State::openDB(path.string(), m_genesisHash, WithExisting::Kill));
