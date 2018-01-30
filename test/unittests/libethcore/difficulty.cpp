@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						u256 blockNumber = blockNumberVector.at(bN);
 						u256 pDiff = parentDifficultyVector.at(pdN);
 
-						auto pStamp = static_cast<int64_t>(test::RandomCode::get().randomUniInt());
-						int64_t cStamp = pStamp + stampDelta;
+						auto cStamp = static_cast<int64_t>(test::RandomCode::get().randomUniInt(timestampDeltaVector.back()));
+						int64_t pStamp = cStamp - stampDelta;
 						u256 cNum = blockNumber;
 
 						BlockHeader parent;
