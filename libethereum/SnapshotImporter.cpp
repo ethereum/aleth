@@ -217,7 +217,7 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
 			header.setNumber(number);
 			header.setGasLimit(abridgedBlock[4].toInt<u256>(RLP::VeryStrict));
 			header.setGasUsed(abridgedBlock[5].toInt<u256>(RLP::VeryStrict));
-			header.setTimestamp(abridgedBlock[6].toInt<u256>(RLP::VeryStrict));
+			header.setTimestamp(abridgedBlock[6].toPositiveInt64(RLP::VeryStrict));
 			header.setExtraData(abridgedBlock[7].toBytes(RLP::VeryStrict));
 
 			Ethash::setMixHash(header, abridgedBlock[10].toHash<h256>(RLP::VeryStrict));

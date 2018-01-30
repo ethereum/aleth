@@ -50,7 +50,7 @@ public:
 
 	void setChainParams(std::string const& _genesis);
 	void mineBlocks(unsigned _count);
-	void modifyTimestamp(u256 const& _timestamp);
+	void modifyTimestamp(int64_t _timestamp);
 	void rewindToBlock(unsigned _number);
 	bool addBlock(std::string const& _rlp);
 	bool completeSync();

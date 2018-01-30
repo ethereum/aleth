@@ -277,6 +277,20 @@ u256 toInt(json_spirit::mValue const& _v)
     return 0;
 }
 
+int64_t toInt64(const json_spirit::mValue& _v)
+{
+    switch (_v.type())
+    {
+    case json_spirit::str_type:
+        return std::stoll(_v.get_str(), nullptr, 0);
+    case json_spirit::int_type:
+        return _v.get_int64();
+    default:
+        cwarn << "Bad type for scalar: " << _v.type();
+    }
+    return 0;
+}
+
 byte toByte(json_spirit::mValue const& _v)
 {
     switch (_v.type())

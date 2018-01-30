@@ -159,7 +159,8 @@ int main(int argc, char** argv)
 		("author", po::value<Address>(), "<a> Set author")
 		("difficulty", po::value<u256>(), "<n> Set difficulty")
 		("number", po::value<u256>(), "<n> Set number")
-		("timestamp", po::value<u256>(), "<n> Set timestamp");
+		("timestamp", po::value<int64_t>()->default_value(0)->value_name("<timestamp>")
+			->notifier([&](int64_t _t){ blockHeader.setTimestamp(_t); }), "Set timestamp");
 
     po::options_description allowedOptions(
         "Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
@@ -223,8 +224,6 @@ int main(int argc, char** argv)
 		blockHeader.setNumber(vm["number"].as<u256>());
 	if (vm.count("difficulty"))
 		blockHeader.setDifficulty(vm["difficulty"].as<u256>());
-	if (vm.count("timestamp"))
-		blockHeader.setTimestamp(vm["timestamp"].as<u256>());
 	if (vm.count("gas-limit"))
 		blockHeader.setGasLimit((vm["gas-limit"].as<u256>()).convert_to<int64_t>());
 	if (vm.count("value"))

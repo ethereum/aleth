@@ -121,7 +121,7 @@ Block& Block::operator=(Block const& _s)
 	return *this;
 }
 
-void Block::resetCurrent(u256 const& _timestamp)
+void Block::resetCurrent(int64_t _timestamp)
 {
 	m_transactions.clear();
 	m_receipts.clear();
