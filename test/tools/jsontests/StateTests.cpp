@@ -72,9 +72,9 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 
 		ImportTest importer(inputTest, outputTest);
 		Listener::ExecTimeGuard guard{i.first};
-		importer.executeTest();
+        importer.executeTest(_fillin);
 
-		if (_fillin)
+        if (_fillin)
 		{
 #if ETH_FATDB
 			if (inputTest.count("_info"))
