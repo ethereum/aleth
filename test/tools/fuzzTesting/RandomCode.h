@@ -103,8 +103,8 @@ public:
 	std::string rndRLPSequence(int _depth, std::string& _debug);
 
 	/// Generate random
-	std::string randomUniIntHex(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max());
-	virtual u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<uint64_t>::max()) = 0;
+	std::string randomUniIntHex(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<int64_t>::max());
+	virtual u256 randomUniInt(u256 const& _minVal = 0, u256 const& _maxVal = std::numeric_limits<int64_t>::max()) = 0;
 	virtual int randomPercent() = 0;
 	virtual int randomSmallUniInt() = 0;
 	virtual int randomLength32() = 0;

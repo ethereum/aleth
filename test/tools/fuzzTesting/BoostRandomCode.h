@@ -35,7 +35,7 @@ public:
 
     /// Generate random
     u256 randomUniInt(u256 const& _minVal = 0,
-        u256 const& _maxVal = std::numeric_limits<uint64_t>::max()) override;
+        u256 const& _maxVal = std::numeric_limits<int64_t>::max()) override;
     int randomPercent() override { return percentDist(gen); }
     int randomSmallUniInt() override { return opMemrDist(gen); }
     int randomLength32() override { return randOpLengGen(); }
