@@ -37,6 +37,7 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 				],
 				"expect" : [
 					{
+						"indexes" : { "dataind": -1, "gasind": -1, "valueind": -1 },
 						"network" : ["Frontier", "Homestead"],
 						"result" : {
 							"0x1000000000000000000000000000000000000000" : {
@@ -99,6 +100,7 @@ BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
 				],
 				"expect" : [
 					{
+						"indexes" : { "dataind": -1, "gasind": -1, "valueind": -1 },
 						"network" : ["Frontier", "Homestead"],
 						"result" : {
 							"0x1000000000000000000000000000000000000000" : {
