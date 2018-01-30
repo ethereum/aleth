@@ -188,20 +188,17 @@ bytes ImportTest::executeTest(bool _isFilling)
     set<eth::Network> networks;
     if (!Options::get().singleTestNet.empty())
         networks.emplace(stringToNetId(Options::get().singleTestNet));
+    else if (_isFilling)
+    {
+        // Run tests only on networks from expect sections
+        BOOST_REQUIRE(m_testInputObject.count("expect") > 0);
+        networks = getAllNetworksFromExpectSections(m_testInputObject.at("expect").get_array());
+    }
     else
     {
-        if (_isFilling)
-        {
-            // Run tests only on networks from expect sections
-            BOOST_REQUIRE(m_testInputObject.count("expect") > 0);
-            networks = getAllNetworksFromExpectSections(m_testInputObject.at("expect").get_array());
-        }
-        else
-        {
-            // Run tests only on networks that are in post state of the filled test
-            for (auto const& post : m_testInputObject.at("post").get_obj())
-                networks.emplace(test::stringToNetId(post.first));
-        }
+        // Run tests only on networks that are in post state of the filled test
+        for (auto const& post : m_testInputObject.at("post").get_obj())
+            networks.emplace(test::stringToNetId(post.first));
     }
 
     vector<transactionToExecute> transactionResults;
