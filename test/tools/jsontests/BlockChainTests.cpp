@@ -70,13 +70,15 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 		if (_fillin)
 		{
             BOOST_REQUIRE(inputTest.count("expect") > 0);
-            set<eth::Network> allnetworks =
-                ImportTest::getAllNetworksFromExpectSections(inputTest.at("expect").get_array());
+            set<eth::Network> allnetworks = ImportTest::getAllNetworksFromExpectSections(
+                inputTest.at("expect").get_array(), ImportTest::testType::BlockchainTest);
 
             //create a blockchain test for each network
             for (auto& network : allnetworks)
             {
-				if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
+                if (test::isDisabledNetwork(network))
+                    continue;
+                if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
 					continue;
 
 				dev::test::TestBlockChain::s_sealEngineNetwork = network;
