@@ -43,8 +43,15 @@ public:
 	static json_spirit::mObject makeAllFieldsHex(json_spirit::mObject const& _o, bool _isHeader = false);
     static void parseJsonStrValueIntoSet(
         json_spirit::mValue const& _json, std::set<std::string>& _out);
+
+    enum testType
+    {
+        StateTest,
+        BlockchainTest
+    };
     static std::set<eth::Network> getAllNetworksFromExpectSections(
-        json_spirit::mArray const& _expects);
+        json_spirit::mArray const& _expects, testType _testType);
+
 
     //check functions
 	//check that networks in the vector are allowed

@@ -164,14 +164,19 @@ void ImportTest::makeBlockchainTestFromStateTest(set<eth::Network> const& _netwo
 }
 
 /// returns all networks that are defined in all expect sections
-set<eth::Network> ImportTest::getAllNetworksFromExpectSections(json_spirit::mArray const& _expects)
+set<eth::Network> ImportTest::getAllNetworksFromExpectSections(
+    json_spirit::mArray const& _expects, testType _testType)
 {
     set<string> allNetworks;
     for (auto const& exp : _expects)
     {
-        requireJsonFields(exp.get_obj(), "expect",
-            {{"indexes", jsonVType::obj_type}, {"network", jsonVType::array_type},
-                {"result", jsonVType::obj_type}});
+        if (_testType == testType::BlockchainTest)
+            requireJsonFields(exp.get_obj(), "expect",
+                {{"network", jsonVType::str_type}, {"result", jsonVType::obj_type}});
+        else if (_testType == testType::StateTest)
+            requireJsonFields(exp.get_obj(), "expect",
+                {{"indexes", jsonVType::obj_type}, {"network", jsonVType::array_type},
+                    {"result", jsonVType::obj_type}});
         ImportTest::parseJsonStrValueIntoSet(exp.get_obj().at("network"), allNetworks);
     }
 
@@ -192,7 +197,8 @@ bytes ImportTest::executeTest(bool _isFilling)
     {
         // Run tests only on networks from expect sections
         BOOST_REQUIRE(m_testInputObject.count("expect") > 0);
-        networks = getAllNetworksFromExpectSections(m_testInputObject.at("expect").get_array());
+        networks = getAllNetworksFromExpectSections(
+            m_testInputObject.at("expect").get_array(), testType::StateTest);
     }
     else
     {
