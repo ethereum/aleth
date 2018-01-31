@@ -32,13 +32,12 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 {
     std::string const s = R"(
 		{
-			"FilltestUnitTest" : {
+			"fillingExpectationOnMultipleNetworks" : {
 				"blocks" : [
 				],
 				"expect" : [
 					{
-						"indexes" : { "dataind": -1, "gasind": -1, "valueind": -1 },
-						"network" : ["Frontier", "Homestead"],
+						"network" : ["EIP150", "EIP158"],
 						"result" : {
 							"0x1000000000000000000000000000000000000000" : {
 								"balance" : "0x00"
@@ -90,18 +89,79 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
     BOOST_CHECK_MESSAGE(output.get_obj().size() == 2, "A wrong number of tests were generated.");
 }
 
+BOOST_AUTO_TEST_CASE(fillingExpectationOnSingleNetwork)
+{
+    std::string const s = R"(
+		{
+			"fillingExpectationOnSingleNetwork" : {
+				"blocks" : [
+				],
+				"expect" : [
+					{
+						"network" : "EIP150",
+						"result" : {
+							"0x1000000000000000000000000000000000000000" : {
+								"balance" : "0x00"
+							},
+							"0x1000000000000000000000000000000000000001" : {
+								"balance" : "0x00"
+							}
+						}
+					}
+				],
+				"genesisBlockHeader" : {
+					"bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+					"coinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+					"difficulty" : "131072",
+					"extraData" : "0x42",
+					"gasLimit" : "0x7fffffffffffffff",
+					"gasUsed" : "0",
+					"mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+					"nonce" : "0x0102030405060708",
+					"number" : "0",
+					"parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+					"receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+					"stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+					"timestamp" : "0x03b6",
+					"transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+					"uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+				},
+				"pre" : {
+					"0x1000000000000000000000000000000000000000" : {
+						"balance" : "0x00",
+						"code" : "0x60004060005563ffffffff4060015567ffffffffffffffff406002556fffffffffffffffffffffffffffffffff406003557fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff40600455",
+						"nonce" : "0x00",
+						"storage" : {
+						}
+					},
+				"0x1000000000000000000000000000000000000001" : {
+					"balance" : "0x00",
+					"code" : "0x60004060005563ffffffff4060015567ffffffffffffffff406002556fffffffffffffffffffffffffffffffff406003557fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff40600455",
+					"nonce" : "0x00",
+					"storage" : {
+					}
+				}
+		}
+	)";
+    json_spirit::mValue input;
+    json_spirit::read_string(s, input);
+    BlockchainTestSuite suite;
+    json_spirit::mValue output = suite.doTests(input, true);
+    BOOST_CHECK_MESSAGE(output.get_obj().size() == 1, "A wrong number of tests were generated.");
+}
+
+
 BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(fillingWithWrongExpectation, 2)
 BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
 {
     std::string const s = R"(
 		{
-			"WrongExpectSectionUnitTest" : {
+			"fillingWithWrongExpectation" : {
 				"blocks" : [
 				],
 				"expect" : [
 					{
-						"indexes" : { "dataind": -1, "gasind": -1, "valueind": -1 },
-						"network" : ["Frontier", "Homestead"],
+						"network" : ["EIP150"],
 						"result" : {
 							"0x1000000000000000000000000000000000000000" : {
 								"balance" : "0x01"
@@ -150,7 +210,8 @@ BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
 	json_spirit::read_string(s, input);
 
 	BlockchainTestSuite suite;
-	suite.doTests(input, true);
+    json_spirit::mValue output = suite.doTests(input, true);
+    BOOST_CHECK_MESSAGE(output.get_obj().size() == 1, "A wrong number of tests were generated.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

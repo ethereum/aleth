@@ -171,8 +171,15 @@ set<eth::Network> ImportTest::getAllNetworksFromExpectSections(
     for (auto const& exp : _expects)
     {
         if (_testType == testType::BlockchainTest)
-            requireJsonFields(exp.get_obj(), "expect",
-                {{"network", jsonVType::str_type}, {"result", jsonVType::obj_type}});
+        {
+            BOOST_REQUIRE(exp.get_obj().count("network") > 0);
+            if (exp.get_obj().at("network").type() == json_spirit::str_type)
+                requireJsonFields(exp.get_obj(), "expect",
+                    {{"network", jsonVType::str_type}, {"result", jsonVType::obj_type}});
+            else
+                requireJsonFields(exp.get_obj(), "expect",
+                    {{"network", jsonVType::array_type}, {"result", jsonVType::obj_type}});
+        }
         else if (_testType == testType::StateTest)
             requireJsonFields(exp.get_obj(), "expect",
                 {{"indexes", jsonVType::obj_type}, {"network", jsonVType::array_type},
