@@ -333,6 +333,7 @@ int main(int argc, char** argv)
         ("no-discovery",  "Disable node discovery, implies --no-bootstrap.")
         ("pin",  "Only accept or connect to trusted peers.");
 
+    std::string snapshotPath;
     po::options_description importExportMode("Import/export modes", c_lineWidth);
     importExportMode.add_options()
         ("import,I", po::value<string>()->value_name("<file>"), "Import blocks from file.")
@@ -342,6 +343,7 @@ int main(int argc, char** argv)
         ("only", po::value<string>()->value_name("<n>"), "Equivalent to --export-from n --export-to n.")
         ("format", po::value<string>()->value_name("<binary/hex/human>"), "Set export format.")
         ("dont-check", "Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid.")
+        ("download-snapshot", po::value<string>(&snapshotPath)->value_name("<path>"), "Download Parity Warp Sync snapshot data to the specified path.")
         ("import-snapshot", po::value<string>()->value_name("<path>"), "Import blockchain and state data from the Parity Warp Sync snapshot.\n");
 
     po::options_description generalOptions("General Options", c_lineWidth);
@@ -852,16 +854,9 @@ int main(int argc, char** argv)
         chainParams.allowFutureBlocks = true;
     }
 
-    dev::WebThreeDirect web3(
-        WebThreeDirect::composeClientVersion("eth"),
-        getDataDir(),
-        chainParams,
-        withExisting,
-        nodeMode == NodeMode::Full ? caps : set<string>(),
-        netPrefs,
-        &nodesState,
-        testingMode
-    );
+    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(),
+        snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
+        netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
         web3.ethereum()->setExtraData(extraData);
