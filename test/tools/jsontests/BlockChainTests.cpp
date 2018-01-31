@@ -641,7 +641,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		if (ho.count("RelTimestamp"))
 		{
 			BlockHeader parentHeader = importedBlocks.at(importedBlocks.size() - 1).blockHeader();
-			tmp.setTimestamp(toInt64(ho["RelTimestamp"]) + parentHeader.timestamp());
+			tmp.setTimestamp(toPositiveInt64(ho["RelTimestamp"]) + parentHeader.timestamp());
 			tmp.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(tmp, parentHeader));
 		}
 
@@ -755,7 +755,8 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 			if (uncleHeaderObj.count("RelTimestamp"))
 			{
 				BlockHeader parentHeader = importedBlocks.at(number).blockHeader();
-				uncleHeader.setTimestamp(toInt64(uncleHeaderObj["RelTimestamp"]) + parentHeader.timestamp());
+				uncleHeader.setTimestamp(
+                    toPositiveInt64(uncleHeaderObj["RelTimestamp"]) + parentHeader.timestamp());
 				uncleHeader.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(uncleHeader, parentHeader));
 				uncleHeaderObj.erase("RelTimestamp");
 			}

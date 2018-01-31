@@ -158,9 +158,10 @@ int main(int argc, char** argv)
 		("help,h", "Show this help message and exit.")
 		("author", po::value<Address>(), "<a> Set author")
 		("difficulty", po::value<u256>(), "<n> Set difficulty")
-		("number", po::value<u256>(), "<n> Set number")
+		("number", po::value<int64_t>()->default_value(0)->value_name("<number>")
+			->notifier([&](int64_t _n) { blockHeader.setNumber(_n); }), "Set the block number")
 		("timestamp", po::value<int64_t>()->default_value(0)->value_name("<timestamp>")
-			->notifier([&](int64_t _t){ blockHeader.setTimestamp(_t); }), "Set timestamp");
+			->notifier([&](int64_t _t){ blockHeader.setTimestamp(_t); }), "Set the block timestamp");
 
     po::options_description allowedOptions(
         "Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
@@ -220,8 +221,6 @@ int main(int argc, char** argv)
 		gasPrice = vm["gas-price"].as<u256>();
 	if (vm.count("author"))
 		blockHeader.setAuthor(vm["author"].as<Address>());
-	if (vm.count("number"))
-		blockHeader.setNumber(vm["number"].as<u256>());
 	if (vm.count("difficulty"))
 		blockHeader.setDifficulty(vm["difficulty"].as<u256>());
 	if (vm.count("gas-limit"))

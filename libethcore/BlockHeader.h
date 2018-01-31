@@ -146,7 +146,7 @@ public:
 	void setAuthor(Address const& _v) { m_author = _v; noteDirty(); }
 	void setRoots(h256 const& _t, h256 const& _r, h256 const& _u, h256 const& _s) { m_transactionsRoot = _t; m_receiptsRoot = _r; m_stateRoot = _s; m_sha3Uncles = _u; noteDirty(); }
 	void setGasUsed(u256 const& _v) { m_gasUsed = _v; noteDirty(); }
-	void setNumber(u256 const& _v) { m_number = _v; noteDirty(); }
+	void setNumber(int64_t _v) { m_number = _v; noteDirty(); }
 	void setGasLimit(u256 const& _v) { m_gasLimit = _v; noteDirty(); }
 	void setExtraData(bytes const& _v) { m_extraData = _v; noteDirty(); }
 	void setLogBloom(LogBloom const& _v) { m_logBloom = _v; noteDirty(); }
@@ -163,7 +163,7 @@ public:
 	h256 const& transactionsRoot() const { return m_transactionsRoot; }
 	h256 const& receiptsRoot() const { return m_receiptsRoot; }
 	u256 const& gasUsed() const { return m_gasUsed; }
-	u256 const& number() const { return m_number; }
+	int64_t number() const { return m_number; }
 	u256 const& gasLimit() const { return m_gasLimit; }
 	bytes const& extraData() const { return m_extraData; }
 	LogBloom const& logBloom() const { return m_logBloom; }
@@ -195,7 +195,7 @@ private:
 	h256 m_transactionsRoot;
 	h256 m_receiptsRoot;
 	LogBloom m_logBloom;
-	u256 m_number;
+	int64_t m_number = 0;
 	u256 m_gasLimit;
 	u256 m_gasUsed;
 	bytes m_extraData;

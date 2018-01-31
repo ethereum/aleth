@@ -23,14 +23,15 @@ EVM::EVM(evm_instance* _instance) noexcept : m_instance(_instance)
 
 owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp)
 {
+    assert(_ext.envInfo().number() >= 0);
+    assert(_ext.envInfo().timestamp() >= 0);
+
     constexpr int64_t int64max = std::numeric_limits<int64_t>::max();
 
     // TODO: The following checks should be removed by changing the types
     //       used for gas, block number and timestamp.
     (void)int64max;
     assert(io_gas <= int64max);
-    assert(_ext.envInfo().number() <= int64max);
-    assert(_ext.envInfo().timestamp() <= int64max);
     assert(_ext.envInfo().gasLimit() <= int64max);
     assert(_ext.depth <= std::numeric_limits<int32_t>::max());
 
