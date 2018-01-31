@@ -127,14 +127,14 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		BOOST_REQUIRE_MESSAGE(o.count("currentDifficulty") > 0, testname + " missing currentDifficulty field");
 
 		BlockHeader parent;
-		parent.setTimestamp(test::toInt64(o["parentTimestamp"]));
+		parent.setTimestamp(test::toPositiveInt64(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
-		parent.setNumber(test::toInt64(o["currentBlockNumber"]) - 1);
+		parent.setNumber(test::toPositiveInt64(o["currentBlockNumber"]) - 1);
 		parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
 
 		BlockHeader current;
-		current.setTimestamp(test::toInt64(o["currentTimestamp"]));
-		current.setNumber(test::toInt64(o["currentBlockNumber"]));
+		current.setTimestamp(test::toPositiveInt64(o["currentTimestamp"]));
+		current.setNumber(test::toPositiveInt64(o["currentBlockNumber"]));
 
 		u256 difficulty = _sealEngine.calculateDifficulty(current, parent);
 		BOOST_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));

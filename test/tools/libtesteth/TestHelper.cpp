@@ -277,18 +277,25 @@ u256 toInt(json_spirit::mValue const& _v)
     return 0;
 }
 
-int64_t toInt64(const json_spirit::mValue& _v)
+int64_t toPositiveInt64(const json_spirit::mValue& _v)
 {
+    int64_t n = 0;
     switch (_v.type())
     {
     case json_spirit::str_type:
-        return std::stoll(_v.get_str(), nullptr, 0);
+        n = std::stoll(_v.get_str(), nullptr, 0);
+        break;
     case json_spirit::int_type:
-        return _v.get_int64();
+        n = _v.get_int64();
+        break;
     default:
         cwarn << "Bad type for scalar: " << _v.type();
     }
-    return 0;
+
+    if (n < 0)
+        throw std::out_of_range{"unexpected negative value: " + std::to_string(n)};
+
+    return n;
 }
 
 byte toByte(json_spirit::mValue const& _v)
