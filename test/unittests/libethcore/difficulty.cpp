@@ -129,12 +129,12 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		BlockHeader parent;
 		parent.setTimestamp(test::toInt64(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
-		parent.setNumber(test::toInt(o["currentBlockNumber"]) - 1);
+		parent.setNumber(test::toInt64(o["currentBlockNumber"]) - 1);
 		parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
 
 		BlockHeader current;
 		current.setTimestamp(test::toInt64(o["currentTimestamp"]));
-		current.setNumber(test::toInt(o["currentBlockNumber"]));
+		current.setNumber(test::toInt64(o["currentBlockNumber"]));
 
 		u256 difficulty = _sealEngine.calculateDifficulty(current, parent);
 		BOOST_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));
@@ -217,8 +217,8 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 
 	if (dev::test::Options::get().filltests)
 	{
-		u256 byzantiumBlockNumber = 4370000;
-		std::vector<u256> blockNumberVector = {byzantiumBlockNumber - 100000, byzantiumBlockNumber, byzantiumBlockNumber + 100000};
+		int64_t byzantiumBlockNumber = 4370000;
+		std::vector<int64_t> blockNumberVector = {byzantiumBlockNumber - 100000, byzantiumBlockNumber, byzantiumBlockNumber + 100000};
 		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
 		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
 
@@ -233,12 +233,12 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 					{
 						testN++;
 						int stampDelta = timestampDeltaVector.at(tsN);
-						u256 blockNumber = blockNumberVector.at(bN);
+						int64_t blockNumber = blockNumberVector.at(bN);
 						u256 pDiff = parentDifficultyVector.at(pdN);
 
 						auto cStamp = static_cast<int64_t>(test::RandomCode::get().randomUniInt(timestampDeltaVector.back()));
 						int64_t pStamp = cStamp - stampDelta;
-						u256 cNum = blockNumber;
+                        int64_t cNum = blockNumber;
 
 						BlockHeader parent;
 						parent.setTimestamp(pStamp);

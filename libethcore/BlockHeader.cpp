@@ -181,7 +181,7 @@ void BlockHeader::populate(RLP const& _header)
 		m_receiptsRoot = _header[field = 5].toHash<h256>(RLP::VeryStrict);
 		m_logBloom = _header[field = 6].toHash<LogBloom>(RLP::VeryStrict);
 		m_difficulty = _header[field = 7].toInt<u256>();
-		m_number = _header[field = 8].toInt<u256>();
+		m_number = _header[field = 8].toPositiveInt64();
 		m_gasLimit = _header[field = 9].toInt<u256>();
 		m_gasUsed = _header[field = 10].toInt<u256>();
 		m_timestamp = _header[field = 11].toPositiveInt64();

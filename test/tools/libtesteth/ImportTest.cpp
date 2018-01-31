@@ -347,7 +347,7 @@ void ImportTest::importEnv(json_spirit::mObject const& _o)
 	BlockHeader header;
 	header.setGasLimit(gasLimit.convert_to<int64_t>());
 	header.setDifficulty(toInt(_o.at("currentDifficulty")));
-	header.setNumber(toInt(_o.at("currentNumber")));
+	header.setNumber(toInt64(_o.at("currentNumber")));
 	header.setTimestamp(toInt64(_o.at("currentTimestamp")));
 	header.setAuthor(Address(_o.at("currentCoinbase").get_str()));
 
