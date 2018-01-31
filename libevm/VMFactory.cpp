@@ -126,9 +126,7 @@ po::options_description vmProgramOptions(unsigned _lineLength)
     }();
 
     po::options_description opts("VM Options", _lineLength);
-    auto add = [&opts](const char* name, const po::value_semantic* value, const char* description) {
-        opts.add(boost::make_shared<po::option_description>(name, value, description));
-    };
+    auto add = opts.add_options();
 
     add("vm",
         po::value<VMKind>()
