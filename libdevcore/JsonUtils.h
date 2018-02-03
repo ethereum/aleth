@@ -17,6 +17,7 @@
 
 #include <libdevcore/Exceptions.h>
 #include <json_spirit/JsonSpiritHeaders.h>
+#include <json/json.h>
 #include <set>
 #include <string>
 
@@ -24,4 +25,7 @@ namespace dev
 {
 // Throws UnknownField() if _obj contains field names not listed in _allowedFields.
 void validateFieldNames(json_spirit::mObject const& _obj, std::set<std::string> const& _allowedFields);
+
+// Throws UnknownField() if _obj contains field names not listed in _allowedFields.
+void validateFieldNames(Json::Value const& _obj, std::set<std::string> const& _allowedFields);
 }
