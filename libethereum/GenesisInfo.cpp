@@ -40,7 +40,6 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
 		"networkID" : "0x1"
 	},
 	"genesis": {
