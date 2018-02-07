@@ -68,15 +68,15 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 	//     byte opcode
 	//     byte n_jumps
 	//     byte table[n_jumps][2]
-	//	
+	//
 	uint64_t pc = _pc;
 	byte n = _code[++pc];           // byte after opcode is number of jumps
 	if (_voff >= n) _voff = n - 1;  // if offset overflows use default jump
 	pc += _voff * 2;                // adjust inout pc before index destination in table
-	
+
 	uint64_t dest = decodeJumpDest(_code, pc);
-	
-	_pc += 1 + n * 2;               // adust inout _pc to opcode after table 
+
+	_pc += 1 + n * 2;               // adust inout _pc to opcode after table
 	return dest;
 }
 
@@ -206,7 +206,7 @@ owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 		do
 			(this->*m_bounce)();
 		while (m_bounce);
-		
+
 	}
 	catch (...)
 	{
@@ -225,7 +225,7 @@ void VM::interpretCases()
 {
 	INIT_CASES
 	DO_CASES
-	{	
+	{
 		//
 		// Call-related instructions
 		//
@@ -239,7 +239,7 @@ void VM::interpretCases()
 			m_bounce = &VM::caseCreate;
 		}
 		BREAK
-		
+
 		CASE(CREATE)
 		{
 			ON_OP();
@@ -296,7 +296,7 @@ void VM::interpretCases()
 			owning_bytes_ref output{move(m_mem), b, s};
 			throwRevertInstruction(move(output));
 		}
-		BREAK; 
+		BREAK;
 
 		CASE(SUICIDE)
 		{
@@ -327,12 +327,12 @@ void VM::interpretCases()
 			m_bounce = 0;
 		}
 		BREAK
-			
-			
+
+
 		//
 		// instructions potentially expanding memory
 		//
-		
+
 		CASE(MLOAD)
 		{
 			ON_OP();
@@ -439,7 +439,7 @@ void VM::interpretCases()
 
 			m_ext->log({m_SP[2], m_SP[3], m_SP[4], m_SP[5]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
 		}
-		NEXT	
+		NEXT
 
 		CASE(EXP)
 		{
@@ -626,9 +626,12 @@ void VM::interpretCases()
 		}
 		NEXT
 
-#if EIP_145
 		CASE(SHL)
 		{
+			// Pre-constantinople
+			if (!m_schedule->haveBitwiseShifting)
+				throwBadInstruction();
+
 			ON_OP();
 			updateIOGas();
 
@@ -641,6 +644,10 @@ void VM::interpretCases()
 
 		CASE(SHR)
 		{
+			// Pre-constantinople
+			if (!m_schedule->haveBitwiseShifting)
+				throwBadInstruction();
+
 			ON_OP();
 			updateIOGas();
 
@@ -653,6 +660,10 @@ void VM::interpretCases()
 
 		CASE(SAR)
 		{
+			// Pre-constantinople
+			if (!m_schedule->haveBitwiseShifting)
+				throwBadInstruction();
+
 			ON_OP();
 			updateIOGas();
 
@@ -677,14 +688,6 @@ void VM::interpretCases()
 			}
 		}
 		NEXT
-#else
-		CASE(SHL)
-		CASE(SHR)
-		CASE(SAR)
-		{
-			throwBadInstruction();
-		}
-#endif
 
 		CASE(ADDMOD)
 		{
@@ -720,14 +723,14 @@ void VM::interpretCases()
 					number &= mask;
 			}
 		}
-		NEXT		
+		NEXT
 
 #if EIP_615
 		CASE(JUMPTO)
 		{
 			ON_OP();
 			updateIOGas();
-			
+
 			m_PC = decodeJumpDest(m_code.data(), m_PC);
 		}
 		CONTINUE
@@ -736,7 +739,7 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			
+
 			if (m_SP[0])
 				m_PC = decodeJumpDest(m_code.data(), m_PC);
 			else
@@ -774,7 +777,7 @@ void VM::interpretCases()
 		{
 			ON_OP();
 			updateIOGas();
-			
+
 			m_PC = *m_RP--;
 		}
 		NEXT
@@ -785,7 +788,7 @@ void VM::interpretCases()
 			updateIOGas();
 		}
 		NEXT
-		
+
 
 		CASE(BEGINDATA)
 		{
@@ -826,7 +829,7 @@ void VM::interpretCases()
 #endif
 
 #if EIP_616
-		
+
 		CASE(XADD)
 		{
 			ON_OP();
@@ -835,7 +838,7 @@ void VM::interpretCases()
 			xadd(simdType());
 		}
 		CONTINUE
-	         
+
 		CASE(XMUL)
 		{
 			ON_OP();
@@ -844,7 +847,7 @@ void VM::interpretCases()
 			xmul(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XSUB)
 		{
 			ON_OP();
@@ -853,7 +856,7 @@ void VM::interpretCases()
 			xsub(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XDIV)
 		{
 			ON_OP();
@@ -862,7 +865,7 @@ void VM::interpretCases()
 			xdiv(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XSDIV)
 		{
 			ON_OP();
@@ -871,7 +874,7 @@ void VM::interpretCases()
 			xsdiv(simdType());
 		}
 		CONTINUE
-        
+
 		CASE(XMOD)
 		{
 			ON_OP();
@@ -880,7 +883,7 @@ void VM::interpretCases()
 			xmod(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XSMOD)
 		{
 			ON_OP();
@@ -889,7 +892,7 @@ void VM::interpretCases()
 			xsmod(simdType());
 		}
 		CONTINUE
-        
+
 		CASE(XLT)
 		{
 			ON_OP();
@@ -898,7 +901,7 @@ void VM::interpretCases()
 			xlt(simdType());
 		}
 		CONTINUE
-          
+
 		CASE(XGT)
 		{
 			ON_OP();
@@ -907,7 +910,7 @@ void VM::interpretCases()
 			xgt(simdType());
 		}
 		CONTINUE
-          
+
 		CASE(XSLT)
 		{
 			ON_OP();
@@ -916,7 +919,7 @@ void VM::interpretCases()
 			xslt(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XSGT)
 		{
 			ON_OP();
@@ -925,7 +928,7 @@ void VM::interpretCases()
 			xsgt(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XEQ)
 		{
 			ON_OP();
@@ -934,7 +937,7 @@ void VM::interpretCases()
 			xeq(simdType());
 		}
 		CONTINUE
-          
+
 		CASE(XISZERO)
 		{
 			ON_OP();
@@ -943,7 +946,7 @@ void VM::interpretCases()
 			xzero(simdType());
 		}
 		CONTINUE
-      
+
 		CASE(XAND)
 		{
 			ON_OP();
@@ -952,7 +955,7 @@ void VM::interpretCases()
 			xand(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XOOR)
 		{
 			ON_OP();
@@ -961,7 +964,7 @@ void VM::interpretCases()
 			xoor(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XXOR)
 		{
 			ON_OP();
@@ -970,7 +973,7 @@ void VM::interpretCases()
 			xxor(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XNOT)
 		{
 			ON_OP();
@@ -979,7 +982,7 @@ void VM::interpretCases()
 			xnot(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XSHL)
 		{
 			ON_OP();
@@ -988,7 +991,7 @@ void VM::interpretCases()
 			xshl(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XSHR)
 		{
 			ON_OP();
@@ -997,7 +1000,7 @@ void VM::interpretCases()
 			xshr(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XSAR)
 		{
 			ON_OP();
@@ -1006,7 +1009,7 @@ void VM::interpretCases()
 			xsar(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XROL)
 		{
 			ON_OP();
@@ -1015,7 +1018,7 @@ void VM::interpretCases()
 			xrol(simdType());
 		}
 		CONTINUE
-         
+
 		CASE(XROR)
 		{
 			ON_OP();
@@ -1063,7 +1066,7 @@ void VM::interpretCases()
 			updateSSGas();
 			ON_OP();
 			updateIOGas();
-	
+
 			xsstore(simdType());
 		}
 		CONTINUE
@@ -1606,10 +1609,10 @@ void VM::interpretCases()
 			ON_OP();
 			if (m_ext->staticCall)
 				throwDisallowedStateChange();
-				
+
 			updateSSGas();
 			updateIOGas();
-	
+
 			m_ext->setStore(m_SP[0], m_SP[1]);
 		}
 		NEXT
@@ -1654,6 +1657,6 @@ void VM::interpretCases()
 		{
 			throwBadInstruction();
 		}
-	}	
+	}
 	WHILE_CASES
 }
