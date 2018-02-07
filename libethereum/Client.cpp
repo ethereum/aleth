@@ -836,11 +836,11 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
 
     TransactionSkeleton ts(_t);
     ts.from = toAddress(_secret);
-    if (_t.nonce == Invalid256)
+    if (_t.nonce == invalid256())
         ts.nonce = max<u256>(postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
-    if (ts.gasPrice == Invalid256)
+    if (ts.gasPrice == invalid256())
         ts.gasPrice = gasBidPrice();
-    if (ts.gas == Invalid256)
+    if (ts.gas == invalid256())
         ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
 
     Transaction t(ts, _secret);
@@ -857,8 +857,8 @@ ExecutionResult Client::call(Address const& _from, u256 _value, Address _dest, b
     {
         Block temp = block(_blockNumber);
         u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
-        u256 gas = _gas == Invalid256 ? gasLimitRemaining() : _gas;
-        u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
+        u256 gas = _gas == invalid256() ? gasLimitRemaining() : _gas;
+        u256 gasPrice = _gasPrice == invalid256() ? gasBidPrice() : _gasPrice;
         Transaction t(_value, gasPrice, gas, _dest, _data, nonce);
         t.forceSender(_from);
         if (_ff == FudgeFactor::Lenient)
