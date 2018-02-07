@@ -439,8 +439,17 @@ json_spirit::mValue convertYamlNodeToJson(YAML::Node _node)
 /// this function is here so not to include <YAML.h> in other .cpp files
 json_spirit::mValue parseYamlToJson(string const& _string)
 {
-    YAML::Node testFile = YAML::Load(_string);
-    return convertYamlNodeToJson(testFile);
+    try
+    {
+        YAML::Node testFile = YAML::Load(_string);
+        return convertYamlNodeToJson(testFile);
+    }
+    catch (YAML::Exception _ex)
+    {
+        BOOST_ERROR("Error when parsing YAML in test: " + TestOutputHelper::get().testName());
+        BOOST_ERROR(_ex.msg);
+    }
+    return json_spirit::mValue();
 }
 
 string executeCmd(string const& _command)
@@ -616,11 +625,13 @@ void requireJsonFields(json_spirit::mObject const& _o, string const& _section,
     // check field types with validation map
     for (auto const vmap : _validationMap)
     {
-        BOOST_REQUIRE_MESSAGE(
-            _o.count(vmap.first) > 0, vmap.first + " not found in " + _section + " section!");
+        BOOST_REQUIRE_MESSAGE(_o.count(vmap.first) > 0, vmap.first + " not found in " + _section +
+                                                            " section! " +
+                                                            TestOutputHelper::get().testName());
         BOOST_REQUIRE_MESSAGE(_o.at(vmap.first).type() == vmap.second,
             _section + " " + vmap.first + " expected to be " + jsonTypeAsString(vmap.second) +
-                ", but set to " + jsonTypeAsString(_o.at(vmap.first).type()));
+                ", but set to " + jsonTypeAsString(_o.at(vmap.first).type()) + " in " +
+                TestOutputHelper::get().testName());
     }
 }
 
