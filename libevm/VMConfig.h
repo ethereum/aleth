@@ -25,8 +25,6 @@ namespace eth
 //
 // interpreter configuration macros for development, optimizations and tracing
 //
-// EIP_145                - bitwise shifting
-//
 // EIP_615                - subroutines and static jumps
 // EIP_616                - SIMD
 //
@@ -40,10 +38,6 @@ namespace eth
 // EVM_REPLACE_CONST_JUMP - pre-verified jumps to save runtime lookup
 //
 // EVM_TRACE              - provides various levels of tracing
-
-#ifndef EIP_145
-	#define EIP_145 false
-#endif
 
 #ifndef EIP_615
 	#define EIP_615 false
