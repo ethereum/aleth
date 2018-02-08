@@ -55,7 +55,7 @@ h256 snapshotBlockHash(RLP const& _manifestRlp)
 class WarpPeerObserver : public WarpPeerObserverFace
 {
 public:
-    WarpPeerObserver(WarpHostCapability& _host, BlockChain const& _blockChain,
+    WarpPeerObserver(WarpHostCapability const& _host, BlockChain const& _blockChain,
         boost::filesystem::path const& _snapshotPath)
       : m_hostProtocolVersion(_host.protocolVersion()),
         m_hostNetworkId(_host.networkId()),
@@ -320,7 +320,9 @@ WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const
   : m_blockChain(_blockChain),
     m_networkId(_networkId),
     m_snapshot(_snapshotStorage),
-    m_peerObserver(std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath)),
+    // observer needed only in case we download snapshot
+    m_peerObserver(
+        _snapshotDownloadPath.empty() ? nullptr : createPeerObserver(_snapshotDownloadPath)),
     m_lastTick(0)
 {
     (void)SnapshotLog::debug; // override "unused variable" error on macOS
@@ -329,6 +331,12 @@ WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const
 WarpHostCapability::~WarpHostCapability()
 {
     terminate();
+}
+
+std::shared_ptr<WarpPeerObserverFace> WarpHostCapability::createPeerObserver(
+    boost::filesystem::path const& _snapshotDownloadPath) const
+{
+    return std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
 }
 
 std::shared_ptr<p2p::Capability> WarpHostCapability::newPeerCapability(

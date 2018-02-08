@@ -41,6 +41,9 @@ protected:
         unsigned _idOffset, p2p::CapDesc const& _cap) override;
 
 private:
+    std::shared_ptr<WarpPeerObserverFace> createPeerObserver(
+        boost::filesystem::path const& _snapshotDownloadPath) const;
+
     void doWork() override;
 
     BlockChain const& m_blockChain;
