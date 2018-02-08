@@ -42,7 +42,7 @@ struct SnapshotImportLog: public LogChannel
 
 }
 
-void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 const& _genesisHash)
+void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 const& /*_genesisHash*/)
 {
     (void)SnapshotImportLog::debug;  // override "unused variable" error on macOS
 
