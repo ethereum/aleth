@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import sys
 
 if len(sys.argv) < 3:
-    print("USAGE: plot_sync_perf.py.py gas_per_sec|avg_gas_per_sec|sync_time LOG_FILE")
+    print("USAGE: plot_sync_perf.py.py gas_per_sec|avg_gas_per_sec|avg_gas_per_sec_1000blocks|sync_time LOG_FILE")
     sys.exit(-1)
 
 mode = sys.argv[1]
@@ -24,18 +24,15 @@ for line in log_file:
     perf_records.append(j)
 
 block_numbers = [r["blockNumber"] for r in perf_records]
+gas_per_second = [r["gasPerSecond"] for r in perf_records]
 
 print("plotting...")
 if mode == "gas_per_sec":
-    gas_per_second = [r["gasPerSecond"] for r in perf_records]
-
     plt.plot(block_numbers, gas_per_second, ".")
     plt.xlabel("blockNumber")
     plt.ylabel("gasPerSecond")
 
 elif mode == "avg_gas_per_sec":
-    gas_per_second = [r["gasPerSecond"] for r in perf_records]
-
     sum = 0
     avg_gps = []
     for i in range(0, len(gas_per_second)):
@@ -45,6 +42,21 @@ elif mode == "avg_gas_per_sec":
     plt.plot(block_numbers, avg_gps)
     plt.xlabel("blockNumber")
     plt.ylabel("avg gasPerSecond")
+
+elif mode == "avg_gas_per_sec_1000blocks":
+    avg_gps = []
+    sum1000 = 0
+    for i in range(min(1000, len(gas_per_second))):
+        sum1000 += gas_per_second[i]
+        avg_gps.append(sum1000 / (i + 1))
+        
+    for i in range(1000, len(gas_per_second)):
+        sum1000 += gas_per_second[i] - gas_per_second[i - 1000]
+        avg_gps.append(sum1000 / 1000)
+
+    plt.plot(block_numbers, avg_gps)
+    plt.xlabel("blockNumber")
+    plt.ylabel("avg 1000 blocks gasPerSecond")
 
 elif mode == "sync_time":
     time = [r["total"] for r in perf_records]
