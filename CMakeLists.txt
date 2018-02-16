@@ -87,8 +87,8 @@ include(EthUtils)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber)
-find_package(Boost CONFIG REQUIRED program_options filesystem system thread context fiber)
+hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber log)
+find_package(Boost CONFIG REQUIRED program_options filesystem system thread context fiber log)
 
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
