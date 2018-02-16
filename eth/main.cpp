@@ -829,6 +829,7 @@ int main(int argc, char** argv)
         }
     }
 
+    setupLogging(g_logVerbosity);
 
     if (!privateChain.empty())
     {

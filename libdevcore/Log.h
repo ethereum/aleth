@@ -30,6 +30,8 @@
 #include "FixedHash.h"
 #include "Terminal.h"
 
+#include <boost/log/common.hpp>
+
 namespace dev
 {
 
@@ -118,8 +120,7 @@ struct LeftChannel: public LogChannel { static const char* name(); };
 struct RightChannel: public LogChannel { static const char* name(); };
 struct WarnChannel: public LogChannel { static const char* name(); static const int verbosity = 0; static const bool debug = false; };
 struct NoteChannel: public LogChannel { static const char* name(); static const bool debug = false; };
-struct DebugChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
-struct TraceChannel: public LogChannel { static const char* name(); static const int verbosity = 4; static const bool debug = true; };
+struct DebugChannel : public LogChannel { static const char* name(); static const int verbosity = 0; };
 
 enum class LogTag
 {
@@ -237,7 +238,7 @@ public:
 protected:
     bool m_autospacing = false;
     unsigned m_verbosity = 0;
-    std::stringstream m_sstr;	///< The accrued log entry.
+    std::stringstream m_sstr;   ///< The accrued log entry.
     LogTag m_logTag = LogTag::None;
 };
 
@@ -272,22 +273,36 @@ public:
 // Kill all logs when when NLOG is defined.
 #if NLOG
 #define clog(X) nlog(X)
-#define cslog(X) nslog(X)
 #else
 #if NDEBUG
 #define clog(X) DEV_STATEMENT_IF(!(X::debug)) dev::LogOutputStream<X, true>()
-#define cslog(X) DEV_STATEMENT_IF(!(X::debug)) dev::LogOutputStream<X, false>()
 #else
 #define clog(X) dev::LogOutputStream<X, true>()
-#define cslog(X) dev::LogOutputStream<X, false>()
 #endif
 #endif
 
 // Simple cout-like stream objects for accessing common log channels.
 // Dirties the global namespace, but oh so convenient...
-#define cdebug clog(dev::DebugChannel)
-#define cnote clog(dev::NoteChannel)
-#define cwarn clog(dev::WarnChannel)
-#define ctrace clog(dev::TraceChannel)
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_debugLogger,
+    boost::log::sources::severity_channel_logger_mt<>,
+    (boost::log::keywords::severity = 0)(boost::log::keywords::channel = EthWhite "debug" EthReset))
+#define cdebug BOOST_LOG(dev::g_debugLogger::get())
 
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_noteLogger,
+    boost::log::sources::severity_channel_logger_mt<>,
+    (boost::log::keywords::severity = 1)(boost::log::keywords::channel = EthBlue "note" EthReset))
+#define cnote BOOST_LOG(dev::g_noteLogger::get())
+
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_warnLogger,
+    boost::log::sources::severity_channel_logger_mt<>,
+    (boost::log::keywords::severity = 0)(
+        boost::log::keywords::channel = EthOnRed EthBlackBold "warn" EthReset))
+#define cwarn BOOST_LOG(dev::g_warnLogger::get())
+
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
+    boost::log::sources::severity_channel_logger_mt<>,
+    (boost::log::keywords::severity = 4)(boost::log::keywords::channel = EthGray "trace" EthReset))
+#define ctrace BOOST_LOG(dev::g_traceLogger::get())
+
+void setupLogging(int _verbosity);
 }
