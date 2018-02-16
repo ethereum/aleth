@@ -28,13 +28,25 @@
 #include <pthread.h>
 #endif
 #include "Guards.h"
+
+#include <boost/core/null_deleter.hpp>
+#include <boost/log/attributes/clock.hpp>
+#include <boost/log/attributes/function.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks/async_frontend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/sources/global_logger_storage.hpp>
+#include <boost/log/sources/severity_channel_logger.hpp>
+#include <boost/log/support/date_time.hpp>
+
 using namespace std;
-using namespace dev;
 
 //⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙
 
+namespace dev
+{
 // Logging
-int dev::g_logVerbosity = 5;
+int g_logVerbosity = 5;
 mutex x_logOverride;
 
 /// Map of Log Channel types to bool, false forces the channel to be disabled, true forces it to be enabled.
@@ -42,7 +54,7 @@ mutex x_logOverride;
 /// or equal to the currently output verbosity (g_logVerbosity).
 static map<type_info const*, bool> s_logOverride;
 
-bool dev::isChannelVisible(std::type_info const* _ch, bool _default)
+bool isChannelVisible(std::type_info const* _ch, bool _default)
 {
     Guard l(x_logOverride);
     if (s_logOverride.count(_ch))
@@ -74,7 +86,7 @@ const char* RightChannel::name() { return EthGreen "-->"; }
 const char* WarnChannel::name() { return EthOnRed EthBlackBold "  X"; }
 const char* NoteChannel::name() { return EthBlue "  i"; }
 const char* DebugChannel::name() { return EthWhite "  D"; }
-const char* TraceChannel::name() { return EthGray "..."; }
+
 #else
 const char* LogChannel::name() { return EthGray "···"; }
 const char* LeftChannel::name() { return EthNavy "◀▬▬"; }
@@ -82,7 +94,6 @@ const char* RightChannel::name() { return EthGreen "▬▬▶"; }
 const char* WarnChannel::name() { return EthOnRed EthBlackBold "  ✘"; }
 const char* NoteChannel::name() { return EthBlue "  ℹ"; }
 const char* DebugChannel::name() { return EthWhite "  ◇"; }
-const char* TraceChannel::name() { return EthGray "..."; }
 #endif
 
 LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* _info, unsigned _v, bool _autospacing):
@@ -147,22 +158,22 @@ ThreadLocalLogContext g_logThreadContext;
 
 ThreadLocalLogName g_logThreadName("main");
 
-void dev::ThreadContext::push(string const& _n)
+void ThreadContext::push(string const& _n)
 {
     g_logThreadContext.push(_n);
 }
 
-void dev::ThreadContext::pop()
+void ThreadContext::pop()
 {
     g_logThreadContext.pop();
 }
 
-string dev::ThreadContext::join(string const& _prior)
+string ThreadContext::join(string const& _prior)
 {
     return g_logThreadContext.join(_prior);
 }
 
-string dev::getThreadName()
+string getThreadName()
 {
 #if defined(__GLIBC__) || defined(__APPLE__)
     char buffer[128];
@@ -174,7 +185,7 @@ string dev::getThreadName()
 #endif
 }
 
-void dev::setThreadName(string const& _n)
+void setThreadName(string const& _n)
 {
 #if defined(__GLIBC__)
     pthread_setname_np(pthread_self(), _n.c_str());
@@ -185,7 +196,38 @@ void dev::setThreadName(string const& _n)
 #endif
 }
 
-void dev::debugOut(std::string const& _s)
+void debugOut(std::string const& _s)
 {
     cerr << _s << '\n';
 }
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(threadName, "ThreadName", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
+
+void setupLogging(int _verbosity)
+{
+    auto sink = boost::make_shared<
+        boost::log::sinks::asynchronous_sink<boost::log::sinks::text_ostream_backend>>();
+
+    boost::shared_ptr<std::ostream> stream{&std::cout, boost::null_deleter{}};
+    sink->locked_backend()->add_stream(stream);
+    sink->set_filter([_verbosity](boost::log::attribute_value_set const& _set) {
+        return _set["Severity"].extract<int>() <= _verbosity;
+    });
+
+    namespace expr = boost::log::expressions;
+    sink->set_formatter(expr::stream
+                        << EthViolet << expr::format_date_time(timestamp, "%Y-%m-%d %H:%M:%S")
+                        << EthReset " " EthNavy << threadName << EthReset " " << channel << " "
+                        << expr::smessage);
+
+    boost::log::core::get()->add_sink(sink);
+    boost::log::core::get()->add_global_attribute(
+        "ThreadName", boost::log::attributes::make_function(&getThreadName));
+
+    boost::log::core::get()->add_global_attribute(
+        "TimeStamp", boost::log::attributes::local_clock());
+}
+
+}  // namespace dev
