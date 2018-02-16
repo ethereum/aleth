@@ -118,6 +118,16 @@ After configuration is completed the `cpp-ethereum.sln` can be found in the
 cmake .. -G "Visual Studio 14 2015 Win64"
 ```
 
+If the cmake fails for any reason, you must clean the `cpp-ethereum\build` and `cpp-ethereum\deps` directories before attempting to run the cmake command again.
+
+The executable will be located  in `cpp-ethereum\build\eth\Debug`
+
+## Frequent Issues
+
+### Unknown cmake identification
+
+Open Visual Studio and create a new C++ project. This should download all necessary cmake tools and save them in the proper locations.
+
 ## Contributing
 
 [![Contributors](https://img.shields.io/github/contributors/ethereum/cpp-ethereum.svg)](https://github.com/ethereum/cpp-ethereum/graphs/contributors)
