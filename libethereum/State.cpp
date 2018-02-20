@@ -125,14 +125,14 @@ void State::populateFrom(AccountMap const& _map)
 
 u256 const& State::requireAccountStartNonce() const
 {
-    if (m_accountStartNonce == Invalid256)
+    if (m_accountStartNonce == invalid256())
         BOOST_THROW_EXCEPTION(InvalidAccountStartNonceInState());
     return m_accountStartNonce;
 }
 
 void State::noteAccountStartNonce(u256 const& _actual)
 {
-    if (m_accountStartNonce == Invalid256)
+    if (m_accountStartNonce == invalid256())
         m_accountStartNonce = _actual;
     else if (m_accountStartNonce != _actual)
         BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState());
