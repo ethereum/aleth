@@ -264,14 +264,16 @@ namespace
 {
     void halveAtomicInt(atomic<int>& i)
     {
+        // atomic<int> doesn't have /= operator, so we do it manually
         int oldInt = 0;
         int newInt = 0;
         do
         {
             oldInt = i;
             newInt = oldInt / 2;
-        }
-        while (i.atomic::compare_exchange_weak(oldInt, newInt));
+            // Current value could already change when we get to exchange,
+            // we'll need to retry in the loop in this case
+        } while (!i.atomic::compare_exchange_weak(oldInt, newInt));
     }
 }
 
