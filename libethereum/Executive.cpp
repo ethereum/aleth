@@ -32,8 +32,31 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-const char* VMTraceChannel::name() { return "EVM"; }
-const char* ExecutiveWarnChannel::name() { return WarnChannel::name(); }
+namespace
+{
+std::string dumpStackAndMemory(LegacyVM const& _vm)
+{
+    ostringstream o;
+    o << "\n    STACK\n";
+    for (auto i : _vm.stack())
+        o << (h256)i << "\n";
+    o << "    MEMORY\n"
+      << ((_vm.memory().size() > 1000) ? " mem size greater than 1000 bytes " :
+                                         memDump(_vm.memory()));
+    return o.str();
+};
+
+std::string dumpStorage(ExtVM const& _ext)
+{
+    ostringstream o;
+    o << "    STORAGE\n";
+    for (auto const& i : _ext.state().storage(_ext.myAddress))
+        o << showbase << hex << i.second.first << ": " << i.second.second << "\n";
+    return o.str();
+};
+
+
+}  // namespace
 
 StandardTrace::StandardTrace():
     m_trace(Json::arrayValue)
@@ -202,13 +225,15 @@ void Executive::initialize(Transaction const& _transaction)
         }
         catch (InvalidSignature const&)
         {
-            clog(ExecutiveWarnChannel) << "Invalid Signature";
+            BOOST_LOG(m_execLogger) << "Invalid Signature";
             m_excepted = TransactionException::InvalidSignature;
             throw;
         }
         if (m_t.nonce() != nonceReq)
         {
-            clog(ExecutiveWarnChannel) << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require" << nonceReq << " Got" << m_t.nonce();
+            BOOST_LOG(m_execLogger)
+                << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require " << nonceReq
+                << " Got" << m_t.nonce();
             m_excepted = TransactionException::InvalidNonce;
             BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
         }
@@ -218,7 +243,10 @@ void Executive::initialize(Transaction const& _transaction)
         bigint totalCost = m_t.value() + gasCost;
         if (m_s.balance(m_t.sender()) < totalCost)
         {
-            clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
+            BOOST_LOG(m_execLogger) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas()
+                                    << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got"
+                                    << m_s.balance(m_t.sender()) << " for sender: " << m_t.sender();
+            m_excepted = TransactionException::NotEnoughCash;
             m_excepted = TransactionException::NotEnoughCash;
             BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().hex()));
         }
@@ -374,30 +402,22 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 
 OnOpFunc Executive::simpleTrace()
 {
-    return [](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost,
-               bigint gas, VMFace const* _vm, ExtVMFace const* voidExt) {
+    Logger& traceLogger = m_vmTraceLogger;
+
+    return [&traceLogger](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize,
+               bigint gasCost, bigint gas, VMFace const* _vm, ExtVMFace const* voidExt) {
         ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
         auto vm = dynamic_cast<LegacyVM const*>(_vm);
 
         ostringstream o;
         if (vm)
-        {
-            o << endl << "    STACK" << endl;
-            for (auto i : vm->stack())
-                o << (h256)i << endl;
-            o << "    MEMORY" << endl
-              << ((vm->memory().size() > 1000) ? " mem size greater than 1000 bytes " :
-                                                 memDump(vm->memory()));
-        }
-        o << "    STORAGE" << endl;
-        for (auto const& i: ext.state().storage(ext.myAddress))
-            o << showbase << hex << i.second.first << ": " << i.second.second << endl;
-        dev::LogOutputStream<VMTraceChannel, false>() << o.str();
-        dev::LogOutputStream<VMTraceChannel, false>()
-            << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps << " : "
-            << hex << setw(4) << setfill('0') << PC << " : " << instructionInfo(inst).name << " : "
-            << dec << gas << " : -" << dec << gasCost << " : " << newMemSize << "x32"
-            << " >";
+            BOOST_LOG(traceLogger) << dumpStackAndMemory(*vm);
+        BOOST_LOG(traceLogger) << dumpStorage(ext);
+        BOOST_LOG(traceLogger) << " < " << dec << ext.depth << " : " << ext.myAddress << " : #"
+                               << steps << " : " << hex << setw(4) << setfill('0') << PC << " : "
+                               << instructionInfo(inst).name << " : " << dec << gas << " : -" << dec
+                               << gasCost << " : " << newMemSize << "x32"
+                               << " >";
     };
 }
 
