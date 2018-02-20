@@ -62,23 +62,6 @@ bool isChannelVisible(std::type_info const* _ch, bool _default)
     return _default;
 }
 
-LogOverrideAux::LogOverrideAux(std::type_info const* _ch, bool _value):
-    m_ch(_ch)
-{
-    Guard l(x_logOverride);
-    m_old = s_logOverride.count(_ch) ? (int)s_logOverride[_ch] : c_null;
-    s_logOverride[m_ch] = _value;
-}
-
-LogOverrideAux::~LogOverrideAux()
-{
-    Guard l(x_logOverride);
-    if (m_old == c_null)
-        s_logOverride.erase(m_ch);
-    else
-        s_logOverride[m_ch] = (bool)m_old;
-}
-
 #if defined(_WIN32)
 const char* LogChannel::name() { return EthGray "..."; }
 const char* LeftChannel::name() { return EthNavy "<--"; }
