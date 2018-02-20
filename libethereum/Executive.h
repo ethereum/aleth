@@ -43,9 +43,6 @@ class ExtVM;
 class SealEngineFace;
 struct Manifest;
 
-struct VMTraceChannel: public LogChannel { static const char* name(); static const int verbosity = 11; };
-struct ExecutiveWarnChannel: public LogChannel { static const char* name(); static const int verbosity = 1; };
-
 class StandardTrace
 {
 public:
@@ -170,7 +167,7 @@ public:
     bool go(OnOpFunc const& _onOp = OnOpFunc());
 
     /// Operation function for providing a simple trace of the VM execution.
-    static OnOpFunc simpleTrace();
+    OnOpFunc simpleTrace();
 
     /// @returns gas remaining after the transaction/operation. Valid after the transaction has been executed.
     u256 gas() const { return m_gas; }
@@ -212,6 +209,9 @@ private:
     bool m_isCreation = false;
     Address m_newAddress;
     size_t m_savepoint = 0;
+
+    Logger m_execLogger{createLogger(1, "exec")};
+    Logger m_vmTraceLogger{createLogger(11, "vmtrace")};
 };
 
 }

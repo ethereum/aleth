@@ -36,6 +36,15 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace fs = boost::filesystem;
 
+namespace
+{
+struct VMTraceChannel : public LogChannel
+{
+    static const char* name() { return "EVM"; }
+    static const int verbosity = 11;
+};
+}  // namespace
+
 FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
     ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, false, _depth)
 {}
@@ -247,11 +256,16 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
         for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
             o << std::showbase << std::hex << i.first << ": " << i.second << "\n";
 
-        dev::LogOutputStream<eth::VMTraceChannel, false>() << o.str();
-        dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << pc << " : " << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
+        dev::LogOutputStream<VMTraceChannel, false>() << o.str();
+        dev::LogOutputStream<VMTraceChannel, false>()
+            << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | "
+            << std::hex << std::setw(4) << std::setfill('0') << pc << " : "
+            << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec
+            << gasCost << " | " << newMemSize << "x32"
+            << " ]";
 
         /*creates json stack trace*/
-        if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
+        if (VMTraceChannel::verbosity <= g_logVerbosity)
         {
             Object o_step;
 
