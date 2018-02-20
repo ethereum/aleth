@@ -51,7 +51,8 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-db::Slice const c_sliceChainStart{"chainStart"};
+std::string const c_chainStart{"chainStart"};
+db::Slice const c_sliceChainStart{c_chainStart};
 }
 
 #if defined(_WIN32)
@@ -1590,7 +1591,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 
 void BlockChain::setChainStartBlockNumber(unsigned _number)
 {
-    h256 const& hash = numberHash(_number);
+    h256 const hash = numberHash(_number);
     if (!hash)
         BOOST_THROW_EXCEPTION(UnknownBlockNumber());
 
