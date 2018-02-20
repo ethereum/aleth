@@ -49,8 +49,7 @@ ChainOperationParams::ChainOperationParams():
 	networkID(0x0),
 	minimumDifficulty(0x020000),
 	difficultyBoundDivisor(0x0800),
-	durationLimit(0x0d),
-	registrar("0x5e70c0bbcd5636e0f9f9316e9f8633feb64d4050")
+	durationLimit(0x0d)
 {
 }
 

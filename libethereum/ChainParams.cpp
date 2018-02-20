@@ -82,13 +82,12 @@ string const c_durationLimit = "durationLimit";
 string const c_chainID = "chainID";
 string const c_networkID = "networkID";
 string const c_allowFutureBlocks = "allowFutureBlocks";
-string const c_registrar = "registrar";
 
 set<string> const c_knownParamNames = {c_minGasLimit, c_maxGasLimit, c_gasLimitBoundDivisor,
     c_homesteadForkBlock, c_EIP150ForkBlock, c_EIP158ForkBlock, c_accountStartNonce,
     c_maximumExtraDataSize, c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_eWASMForkBlock,
     c_constantinopleForkBlock, c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor,
-    c_durationLimit, c_chainID, c_networkID, c_allowFutureBlocks, c_registrar};
+    c_durationLimit, c_chainID, c_networkID, c_allowFutureBlocks};
 } // anonymous namespace
 
 ChainParams ChainParams::loadConfig(
@@ -128,7 +127,6 @@ ChainParams ChainParams::loadConfig(
 	setOptionalU256Parameter(cp.minimumDifficulty, c_minimumDifficulty);
 	setOptionalU256Parameter(cp.difficultyBoundDivisor, c_difficultyBoundDivisor);
 	setOptionalU256Parameter(cp.durationLimit, c_durationLimit);
-	setOptionalU256Parameter(cp.registrar, c_registrar);
 
 	if (params.count(c_chainID))
 		cp.chainID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_chainID).get_str()))));

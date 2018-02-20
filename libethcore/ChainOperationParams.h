@@ -101,7 +101,6 @@ public:
 	u256 difficultyBoundDivisor;
 	u256 durationLimit;
 	bool allowFutureBlocks = false;
-	u256 registrar;
 
 	/// Precompiled contracts as specified in the chain params.
 	std::unordered_map<Address, PrecompiledContract> precompiled;
