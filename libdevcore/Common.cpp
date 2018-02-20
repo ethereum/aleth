@@ -42,19 +42,15 @@ void InvariantChecker::checkInvariants(HasInvariants const* _this, char const* _
     }
 }
 
-struct TimerChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
-
-#if defined(_WIN32)
-const char* TimerChannel::name() { return EthRed " ! "; }
-#else
-const char* TimerChannel::name() { return EthRed " ⚡ "; }
-#endif
-
 TimerHelper::~TimerHelper()
 {
     auto e = std::chrono::high_resolution_clock::now() - m_t;
     if (!m_ms || e > chrono::milliseconds(m_ms))
-        clog(TimerChannel) << m_id << chrono::duration_cast<chrono::milliseconds>(e).count() << "ms";
+    {
+        Logger logger{createLogger(0, "timer")};
+        BOOST_LOG(logger) << m_id << chrono::duration_cast<chrono::milliseconds>(e).count()
+                          << " ms";
+    }
 }
 
 int64_t utcTime()
