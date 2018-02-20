@@ -489,7 +489,6 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
         {
             try
             {
-                LogOverride<ExecutiveWarnChannel> o(false);
 //				cnote << "Enacting transaction: " << tr.nonce() << tr.from() << state().transactionsFrom(tr.from()) << tr.value();
                 execute(_bc.lastBlockHashes(), tr);
 //				cnote << "Now: " << tr.from() << state().transactionsFrom(tr.from());
