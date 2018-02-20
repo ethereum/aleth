@@ -41,25 +41,6 @@ void debugOut(std::string const& _s);
 /// The logging system's current verbosity.
 extern int g_logVerbosity;
 
-class LogOverrideAux
-{
-protected:
-    LogOverrideAux(std::type_info const* _ch, bool _value);
-    ~LogOverrideAux();
-
-private:
-    std::type_info const* m_ch;
-    static const int c_null = -1;
-    int m_old;
-};
-
-template <class Channel>
-class LogOverride: LogOverrideAux
-{
-public:
-    LogOverride(bool _value): LogOverrideAux(&typeid(Channel), _value) {}
-};
-
 bool isChannelVisible(std::type_info const* _ch, bool _default);
 template <class Channel> bool isChannelVisible() { return isChannelVisible(&typeid(Channel), Channel::verbosity <= g_logVerbosity); }
 
@@ -270,15 +251,11 @@ public:
 /// We need such a thing due to the dangling else problem and the need
 /// for the logging macros to end with the stream object and not a closing brace '}'
 #define DEV_STATEMENT_SKIP() while (/*CONSTCOND*/ false) /*NOTREACHED*/
-// Kill all logs when when NLOG is defined.
-#if NLOG
-#define clog(X) nlog(X)
-#else
+
 #if NDEBUG
-#define clog(X) DEV_STATEMENT_IF(!(X::debug)) dev::LogOutputStream<X, true>()
+#define clog(X) DEV_STATEMENT_IF(!(X::debug)) dev::LogOutputStream<X>()
 #else
-#define clog(X) dev::LogOutputStream<X, true>()
-#endif
+#define clog(X) dev::LogOutputStream<X>()
 #endif
 
 // Simple cout-like stream objects for accessing common log channels.
@@ -305,4 +282,11 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
 #define ctrace BOOST_LOG(dev::g_traceLogger::get())
 
 void setupLogging(int _verbosity);
+
+using Logger = boost::log::sources::severity_channel_logger<>;
+inline Logger createLogger(int _severity, std::string const& _channel)
+{
+    return Logger(
+        boost::log::keywords::severity = _severity, boost::log::keywords::channel = _channel);
+}
 }

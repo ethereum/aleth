@@ -555,17 +555,16 @@ void State::rollback(size_t _savepoint)
 
 std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
-    auto onOp = _onOp;
-#if ETH_VMTRACE
-    if (isChannelVisible<VMTraceChannel>())
-        onOp = Executive::simpleTrace(); // override tracer
-#endif
-
     // Create and initialize the executive. This will throw fairly cheaply and quickly if the
     // transaction is bad in any way.
     Executive e(*this, _envInfo, _sealEngine);
     ExecutionResult res;
     e.setResultRecipient(res);
+
+    auto onOp = _onOp;
+#if ETH_VMTRACE
+    onOp = e.simpleTrace();  // override tracer
+#endif
 
     u256 const startGasUsed = _envInfo.gasUsed();
     bool const statusCode = executeTransaction(e, _t, onOp);
