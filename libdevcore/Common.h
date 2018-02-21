@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file Common.h
  * @author Gav Wood <i@gavwood.com>
@@ -66,6 +66,7 @@ using byte = uint8_t;
 
 namespace dev
 {
+using namespace boost::multiprecision::literals;
 
 extern char const* Version;
 
@@ -80,39 +81,39 @@ template <class T>
 class secure_vector
 {
 public:
-	secure_vector() {}
-	secure_vector(secure_vector<T> const& /*_c*/) = default;  // See https://github.com/ethereum/libweb3core/pull/44
-	explicit secure_vector(size_t _size): m_data(_size) {}
-	explicit secure_vector(size_t _size, T _item): m_data(_size, _item) {}
-	explicit secure_vector(std::vector<T> const& _c): m_data(_c) {}
-	explicit secure_vector(vector_ref<T> _c): m_data(_c.data(), _c.data() + _c.size()) {}
-	explicit secure_vector(vector_ref<const T> _c): m_data(_c.data(), _c.data() + _c.size()) {}
-	~secure_vector() { ref().cleanse(); }
+    secure_vector() {}
+    secure_vector(secure_vector<T> const& /*_c*/) = default;  // See https://github.com/ethereum/libweb3core/pull/44
+    explicit secure_vector(size_t _size): m_data(_size) {}
+    explicit secure_vector(size_t _size, T _item): m_data(_size, _item) {}
+    explicit secure_vector(std::vector<T> const& _c): m_data(_c) {}
+    explicit secure_vector(vector_ref<T> _c): m_data(_c.data(), _c.data() + _c.size()) {}
+    explicit secure_vector(vector_ref<const T> _c): m_data(_c.data(), _c.data() + _c.size()) {}
+    ~secure_vector() { ref().cleanse(); }
 
-	secure_vector<T>& operator=(secure_vector<T> const& _c)
-	{
-		if (&_c == this)
-			return *this;
+    secure_vector<T>& operator=(secure_vector<T> const& _c)
+    {
+        if (&_c == this)
+            return *this;
 
-		ref().cleanse();
-		m_data = _c.m_data;
-		return *this;
-	}
-	std::vector<T>& writable() { clear(); return m_data; }
-	std::vector<T> const& makeInsecure() const { return m_data; }
+        ref().cleanse();
+        m_data = _c.m_data;
+        return *this;
+    }
+    std::vector<T>& writable() { clear(); return m_data; }
+    std::vector<T> const& makeInsecure() const { return m_data; }
 
-	void clear() { ref().cleanse(); }
+    void clear() { ref().cleanse(); }
 
-	vector_ref<T> ref() { return vector_ref<T>(&m_data); }
-	vector_ref<T const> ref() const { return vector_ref<T const>(&m_data); }
+    vector_ref<T> ref() { return vector_ref<T>(&m_data); }
+    vector_ref<T const> ref() const { return vector_ref<T const>(&m_data); }
 
-	size_t size() const { return m_data.size(); }
-	bool empty() const { return m_data.empty(); }
+    size_t size() const { return m_data.size(); }
+    bool empty() const { return m_data.empty(); }
 
-	void swap(secure_vector<T>& io_other) { m_data.swap(io_other.m_data); }
+    void swap(secure_vector<T>& io_other) { m_data.swap(io_other.m_data); }
 
 private:
-	std::vector<T> m_data;
+    std::vector<T> m_data;
 };
 
 using bytesSec = secure_vector<byte>;
@@ -150,26 +151,27 @@ using string32 = std::array<char, 32>;
 
 // Null/Invalid values for convenience.
 extern bytes const NullBytes;
-extern u256 const Invalid256;
+u256 constexpr Invalid256 =
+    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff_cppui256;
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
 {
-	static const bigint c_end = bigint(1) << 256;
-	if (boost::multiprecision::bit_test(_u, 255))
-		return s256(-(c_end - _u));
-	else
-		return s256(_u);
+    static const bigint c_end = bigint(1) << 256;
+    if (boost::multiprecision::bit_test(_u, 255))
+        return s256(-(c_end - _u));
+    else
+        return s256(_u);
 }
 
 /// @returns the two's complement signed representation of the signed number _u.
 inline u256 s2u(s256 _u)
 {
-	static const bigint c_end = bigint(1) << 256;
+    static const bigint c_end = bigint(1) << 256;
     if (_u >= 0)
-		return u256(_u);
+        return u256(_u);
     else
-		return u256(c_end + _u);
+        return u256(c_end + _u);
 }
 
 /// Converts given int to a string and appends one of a series of units according to its size.
@@ -178,61 +180,61 @@ std::string inUnits(bigint const& _b, strings const& _units);
 /// @returns the smallest n >= 0 such that (1 << n) >= _x
 inline unsigned int toLog2(u256 _x)
 {
-	unsigned ret;
-	for (ret = 0; _x >>= 1; ++ret) {}
-	return ret;
+    unsigned ret;
+    for (ret = 0; _x >>= 1; ++ret) {}
+    return ret;
 }
 
 template <size_t n> inline u256 exp10()
 {
-	return exp10<n - 1>() * u256(10);
+    return exp10<n - 1>() * u256(10);
 }
 
 template <> inline u256 exp10<0>()
 {
-	return u256(1);
+    return u256(1);
 }
 
 /// @returns the absolute distance between _a and _b.
 template <class N>
 inline N diff(N const& _a, N const& _b)
 {
-	return std::max(_a, _b) - std::min(_a, _b);
+    return std::max(_a, _b) - std::min(_a, _b);
 }
 
 /// RAII utility class whose destructor calls a given function.
 class ScopeGuard
 {
 public:
-	ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
-	~ScopeGuard() { m_f(); }
+    ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
+    ~ScopeGuard() { m_f(); }
 
 private:
-	std::function<void(void)> m_f;
+    std::function<void(void)> m_f;
 };
 
 /// Inheritable for classes that have invariants.
 class HasInvariants
 {
 public:
-	/// Reimplement to specify the invariants.
-	virtual bool invariants() const = 0;
+    /// Reimplement to specify the invariants.
+    virtual bool invariants() const = 0;
 };
 
 /// RAII checker for invariant assertions.
 class InvariantChecker
 {
 public:
-	InvariantChecker(HasInvariants* _this, char const* _fn, char const* _file, int _line): m_this(_this), m_function(_fn), m_file(_file), m_line(_line) { checkInvariants(_this, _fn , _file, _line, true); }
-	~InvariantChecker() { checkInvariants(m_this, m_function, m_file, m_line, false); }
-	/// Check invariants are met, throw if not.
-	static void checkInvariants(HasInvariants const* _this, char const* _fn, char const* _file, int line, bool _pre);
+    InvariantChecker(HasInvariants* _this, char const* _fn, char const* _file, int _line): m_this(_this), m_function(_fn), m_file(_file), m_line(_line) { checkInvariants(_this, _fn , _file, _line, true); }
+    ~InvariantChecker() { checkInvariants(m_this, m_function, m_file, m_line, false); }
+    /// Check invariants are met, throw if not.
+    static void checkInvariants(HasInvariants const* _this, char const* _fn, char const* _file, int line, bool _pre);
 
 private:
-	HasInvariants const* m_this;
-	char const* m_function;
-	char const* m_file;
-	int m_line;
+    HasInvariants const* m_this;
+    char const* m_function;
+    char const* m_file;
+    int m_line;
 };
 
 /// Scope guard for invariant check in a class derived from HasInvariants.
@@ -248,26 +250,26 @@ private:
 class TimerHelper
 {
 public:
-	TimerHelper(std::string const& _id, unsigned _msReportWhenGreater = 0): m_t(std::chrono::high_resolution_clock::now()), m_id(_id), m_ms(_msReportWhenGreater) {}
-	~TimerHelper();
+    TimerHelper(std::string const& _id, unsigned _msReportWhenGreater = 0): m_t(std::chrono::high_resolution_clock::now()), m_id(_id), m_ms(_msReportWhenGreater) {}
+    ~TimerHelper();
 
 private:
-	std::chrono::high_resolution_clock::time_point m_t;
-	std::string m_id;
-	unsigned m_ms;
+    std::chrono::high_resolution_clock::time_point m_t;
+    std::string m_id;
+    unsigned m_ms;
 };
 
 class Timer
 {
 public:
-	Timer() { restart(); }
+    Timer() { restart(); }
 
-	std::chrono::high_resolution_clock::duration duration() const { return std::chrono::high_resolution_clock::now() - m_t; }
-	double elapsed() const { return std::chrono::duration_cast<std::chrono::microseconds>(duration()).count() / 1000000.0; }
-	void restart() { m_t = std::chrono::high_resolution_clock::now(); }
+    std::chrono::high_resolution_clock::duration duration() const { return std::chrono::high_resolution_clock::now() - m_t; }
+    double elapsed() const { return std::chrono::duration_cast<std::chrono::microseconds>(duration()).count() / 1000000.0; }
+    void restart() { m_t = std::chrono::high_resolution_clock::now(); }
 
 private:
-	std::chrono::high_resolution_clock::time_point m_t;
+    std::chrono::high_resolution_clock::time_point m_t;
 };
 
 #define DEV_TIMED(S) for (::std::pair<::dev::TimerHelper, bool> __eth_t(S, true); __eth_t.second; __eth_t.second = false)
@@ -295,10 +297,10 @@ private:
 
 enum class WithExisting: int
 {
-	Trust = 0,
-	Verify,
-	Rescue,
-	Kill
+    Trust = 0,
+    Verify,
+    Rescue,
+    Kill
 };
 
 /// Get the current time in seconds since the epoch in UTC
