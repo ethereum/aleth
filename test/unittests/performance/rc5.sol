@@ -3,25 +3,15 @@ pragma solidity ^0.4.0;
 // https://people.csail.mit.edu/rivest/Rivest-rc5rev.pdf
 
 contract rc5 {
-
-	// don't I wish we had opcodes and operators for these
-	
-	function shift_left(uint32 v, uint32 n) internal returns (uint32) {
-		return v *= uint32(2)**n;
-	}
-
-	function shift_right(uint32 v, uint32 n) internal returns (uint32) {
-		return v *= uint32(2)**n;
-	}
 	
 	function rotate_left(uint32 v, uint32 n) internal returns (uint32) {
 		n &= 0x1f;
-		return shift_left(v, n) | shift_right(v, 32 - n);
+		return v << n | v >> (32 - n);
 	}
 	
 	function rotate_right(uint32 v, uint32 n) internal returns (uint32) {
 		n &= 0x1f;
-		return shift_right(v, n) | shift_left(v, 32 - n);
+		return v >> n | v << (32 - n);
 	}
 
 	function encrypt(uint32[26] S, uint32[4] inout) {

@@ -50,8 +50,11 @@ enum class Instruction: uint8_t
 	AND,                ///< bitwise AND operation
 	OR,                 ///< bitwise OR operation
 	XOR,                ///< bitwise XOR operation
-	NOT,                ///< bitwise NOT opertation
+	NOT,                ///< bitwise NOT operation
 	BYTE,               ///< retrieve single byte from word
+	SHL,                ///< logical shift left operation
+	SHR,                ///< logical shift right operation
+	SAR,                ///< arithmetic shift right operation
 
 	SHA3 = 0x20,        ///< compute SHA3-256 hash
 

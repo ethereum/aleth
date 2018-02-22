@@ -33,6 +33,7 @@ struct EVMSchedule
 	bool haveDelegateCall = true;
 	bool eip150Mode = false;
 	bool eip158Mode = false;
+	bool haveBitwiseShifting = false;
 	bool haveRevert = false;
 	bool haveReturnData = false;
 	bool haveStaticCall = false;
@@ -130,6 +131,7 @@ static const EVMSchedule ConstantinopleSchedule = []
 	EVMSchedule schedule = ByzantiumSchedule;
 	schedule.blockhashGas = 800;
 	schedule.haveCreate2 = true;
+	schedule.haveBitwiseShifting = true;
 	return schedule;
 }();
 

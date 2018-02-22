@@ -28,6 +28,8 @@ namespace eth
 // EIP_615                - subroutines and static jumps
 // EIP_616                - SIMD
 //
+// EVM_OPTIMIZE           - all optimizations off when false (TO DO - MAKE DYNAMIC)
+//
 // EVM_SWITCH_DISPATCH    - dispatch via loop and switch
 // EVM_JUMP_DISPATCH      - dispatch via a jump table - available only on GCC
 //
@@ -185,9 +187,9 @@ namespace eth
 			&&XOR,  \
 			&&NOT,  \
 			&&BYTE,  \
-			&&INVALID,  \
-			&&INVALID,  \
-			&&INVALID,  \
+			&&SHL,  \
+			&&SHR,  \
+			&&SAR,  \
 			&&INVALID,  \
 			&&INVALID,  \
 			&&SHA3,        /* 20, */  \
