@@ -706,14 +706,15 @@ void Host::run(boost::system::error_code const&)
     
     if (!m_netPrefs.pin)
     {
-        int openSlots = m_idealPeerCount - peerCount() - m_pendingPeerConns.size() + reqConn;
+        unsigned const maxSlots = m_idealPeerCount + reqConn;
+        unsigned occupiedSlots = peerCount() + m_pendingPeerConns.size();
         for (auto peerToConnect = toConnect.cbegin();
-             openSlots > 0 && peerToConnect != toConnect.cend(); ++peerToConnect)
+             occupiedSlots <= maxSlots && peerToConnect != toConnect.cend(); ++peerToConnect)
         {
             if ((*peerToConnect)->peerType == PeerType::Optional)
             {
                 connect(*peerToConnect);
-                openSlots--;
+                ++occupiedSlots;
             }
         }
     }
