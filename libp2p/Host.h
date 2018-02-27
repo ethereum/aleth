@@ -313,7 +313,6 @@ private:
 	std::condition_variable m_timerReset;
 
 	std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
-	Mutex x_pendingNodeConns;
 
 	bi::tcp::endpoint m_tcpPublic;											///< Our public listening endpoint.
 	KeyPair m_alias;															///< Alias for network communication. Network address is k*G. k is key material. TODO: Replace KeyPair.

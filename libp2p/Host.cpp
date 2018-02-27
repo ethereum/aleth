@@ -583,12 +583,9 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
 
     // prevent concurrently connecting to a node
     Peer *nptr = _p.get();
-    {
-        Guard l(x_pendingNodeConns);
-        if (m_pendingPeerConns.count(nptr))
-            return;
-        m_pendingPeerConns.insert(nptr);
-    }
+    if (m_pendingPeerConns.count(nptr))
+        return;
+    m_pendingPeerConns.insert(nptr);
 
     _p->m_lastAttempted = std::chrono::system_clock::now();
     
@@ -618,7 +615,6 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
             handshake->start();
         }
         
-        Guard l(x_pendingNodeConns);
         m_pendingPeerConns.erase(nptr);
     });
 }
@@ -710,10 +706,7 @@ void Host::run(boost::system::error_code const&)
     
     if (!m_netPrefs.pin)
     {
-        unsigned pendingCount = 0;
-        DEV_GUARDED(x_pendingNodeConns)
-            pendingCount = m_pendingPeerConns.size();
-        int openSlots = m_idealPeerCount - peerCount() - pendingCount + reqConn;
+        int openSlots = m_idealPeerCount - peerCount() - m_pendingPeerConns.size() + reqConn;
         for (auto peerToConnect = toConnect.cbegin();
              openSlots > 0 && peerToConnect != toConnect.cend(); ++peerToConnect)
         {
@@ -957,12 +950,7 @@ void Host::restoreNetwork(bytesConstRef _b)
 
 bool Host::peerSlotsAvailable(Host::PeerSlotType _type /*= Ingress*/)
 {
-    size_t peerNodeConns = 0;
-    {
-        Guard l(x_pendingNodeConns);
-        peerNodeConns = m_pendingPeerConns.size();
-    }
-    return peerCount() + peerNodeConns < peerSlots(_type);
+    return peerCount() + m_pendingPeerConns.size() < peerSlots(_type);
 }
 
 KeyPair Host::networkAlias(bytesConstRef _b)
