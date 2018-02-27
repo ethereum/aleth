@@ -24,16 +24,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-//
-// turn these on to emulate minimal interpreter overhead and native 64-bit int
-//
-#define EVM_HACK_ON_OPERATION 0
-#define EVM_HACK_STACK 0
-#define EVM_HACK_UPDATE_IO_GAS 0
-#define EVM_HACK_MUL_64 0
-#define EVM_HACK_DUP_64 0
-
-
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
 	return toInt63(_size ? u512(_offset) + _size : u512(0));
@@ -91,9 +81,6 @@ void VM::onOperation()
 			m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
 			m_runGas, m_io_gas, this, m_ext);
 }
-#if EVM_HACK_ON_OPERATION
-	#define onOperation()
-#endif
 
 //
 // set current SP to SP', adjust SP' per _removed and _added items
@@ -101,10 +88,7 @@ void VM::onOperation()
 void VM::adjustStack(unsigned _removed, unsigned _added)
 {
 	m_SP = m_SPP;
-#if EVM_HACK_STACK
-	m_SPP += _removed;
-	m_SPP -= _added;
-#else
+
 	// adjust stack and check bounds
 	m_SPP += _removed;
 	if (m_stackEnd < m_SPP)
@@ -112,7 +96,6 @@ void VM::adjustStack(unsigned _removed, unsigned _added)
 	m_SPP -= _added;
 	if (m_SPP < m_stack)
 		throwBadStack(_removed, _added);
-#endif
 }
 
 void VM::updateSSGas()
@@ -178,12 +161,6 @@ void VM::fetchInstruction()
 	m_copyMemSize = 0;
 }
 
-#if EVM_HACK_ON_OPERATION
-	#define onOperation()
-#endif
-#if EVM_HACK_UPDATE_IO_GAS
-	#define updateIOGas()
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -472,12 +449,8 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-#if EVM_HACK_MUL_64
-			*(uint64_t*)&m_SP[1] *= *(uint64_t*)&m_SP[0];
-#else
 			//pops two items and pushes their product mod 2^256.
 			m_SPP[0] = m_SP[0] * m_SP[1];
-#endif
 		}
 		NEXT
 
@@ -1557,13 +1530,11 @@ void VM::interpretCases()
 			updateIOGas();
 
 			unsigned n = (unsigned)m_OP - (unsigned)Instruction::DUP1;
-#if EVM_HACK_DUP_64
 			*(uint64_t*)m_SPP = *(uint64_t*)(m_SP + n);
-#else
+
 			// the stack slot being copied into may no longer hold a u256
 			// so we construct a new one in the memory, rather than assign
 			new(m_SPP) u256(m_SP[n]);
-#endif
 		}
 		NEXT
 
