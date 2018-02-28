@@ -157,13 +157,13 @@ inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
 	int i = 0;
 	for (T v = _val; v; ++i, v >>= 8) {}
-	bytes ret(std::max<unsigned>(_min, i));
+	bytes ret(std::max<unsigned>(_min, i), (byte)0);
 	toBigEndian(_val, ret);
 	return ret;
 }
 inline bytes toCompactBigEndian(byte _val, unsigned _min = 0)
 {
-	return _min || to_integer(_val) ? bytes{ _val } : bytes{};
+	return (_min || to_integer(_val)) ? bytes{ _val } : bytes{};
 }
 
 /// Convenience function for toBigEndian.

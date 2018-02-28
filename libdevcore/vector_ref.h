@@ -16,7 +16,6 @@
 namespace dev
 {
 
-// Binary data types.
 enum class byte : unsigned char {};
 
 /**

@@ -707,7 +707,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
 				if (isLeaf(rlp))
 				{
 					// leaf - exit now.
-					m_trail.back().child = static_cast<byte>(0);
+					m_trail.back().child = (byte)0;
 					return;
 				}
 

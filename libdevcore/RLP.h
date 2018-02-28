@@ -450,7 +450,7 @@ private:
 		m_out.resize(m_out.size() + _br);
 		byte* b = &m_out.back();
 		for (; _i; _i >>= 8)
-			*(b--) = (byte)(unsigned)_i;
+			*(b--) = (byte)(uint8_t)_i;
 	}
 
 	/// Our output byte stream.

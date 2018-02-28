@@ -48,7 +48,7 @@ bytes createRandomPayload(unsigned int i)
 	srand(i);
 	int const sz = rand() % 1024;
 	for (int j = 0; j < sz; ++j)
-		ret.push_back(static_cast<const byte>((unsigned)rand() % 256));
+		ret.push_back(static_cast<const byte>(rand() % 256));
 
 	return ret;
 }

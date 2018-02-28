@@ -96,7 +96,7 @@ size_t getCode(uint8_t const** o_code, evm_context* _context, evm_address const*
 	if (o_code != nullptr)
 	{
 		auto& code = env.codeAt(addr);
-		*o_code = as_data(code.data(), code.size());
+		*o_code = reinterpret_cast<const unsigned char *>(code.data());
 		return code.size();
 	}
 	return env.codeSizeAt(addr);
@@ -129,7 +129,7 @@ void log(
 	assert(fromEvmC(*_addr) == env.myAddress);
 	h256 const* pTopics = reinterpret_cast<h256 const*>(_topics);
 	env.log(h256s{pTopics, pTopics + _numTopics},
-			bytesConstRef{as_const_data_bytes(_data, _dataSize), _dataSize});
+			bytesConstRef{reinterpret_cast<const byte *>(_data), _dataSize});
 }
 
 void getTxContext(evm_tx_context* result, evm_context* _context) noexcept
@@ -154,7 +154,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 {
 	u256 gas = _msg->gas;
 	u256 value = fromEvmC(_msg->value);
-	bytesConstRef init = {as_const_data_bytes(_msg->input, _msg->input_size), _msg->input_size};
+	bytesConstRef init = {reinterpret_cast<const byte *>(_msg->input), _msg->input_size};
 	// ExtVM::create takes the sender address from .myAddress.
 	assert(fromEvmC(_msg->sender) == _env.myAddress);
 
@@ -185,7 +185,7 @@ void create(evm_result* o_result, ExtVMFace& _env, evm_message const* _msg) noex
 
 		// First assign reference. References are not invalidated when vector
 		// of bytes is moved. See `.takeBytes()` below.
-		o_result->output_data = as_data(output.data(), output.size());
+		o_result->output_data = reinterpret_cast<const unsigned char *>(output.data());
 		o_result->output_size = output.size();
 
 		// Place a new vector of bytes containing output in result's reserved memory.
@@ -221,7 +221,7 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 	params.codeAddress = fromEvmC(_msg->address);
 	params.receiveAddress =
 		_msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
-	params.data = {as_const_data_bytes(_msg->input, _msg->input_size), _msg->input_size};
+	params.data = {reinterpret_cast<const byte *>(_msg->input), _msg->input_size};
 	params.staticCall = (_msg->flags & EVM_STATIC) != 0;
 	params.onOp = {};
 
@@ -240,7 +240,7 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 
 	// First assign reference. References are not invalidated when vector
 	// of bytes is moved. See `.takeBytes()` below.
-	o_result->output_data = as_data(output.data(), output.size());
+	o_result->output_data = reinterpret_cast<const unsigned char *>(output.data());
 	o_result->output_size = output.size();
 
 	// Place a new vector of bytes containing output in result's reserved memory.

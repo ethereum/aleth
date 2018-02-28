@@ -157,9 +157,9 @@ void NodeIPEndpoint::streamRLP(RLPStream& _s, RLPAppend _append) const
 	if (_append == StreamList)
 		_s.appendList(3);
 	if (address.is_v4())
-		_s << bytesConstRef(as_data_bytes(&address.to_v4().to_bytes()[0], 4), 4);
+		_s << bytesConstRef(reinterpret_cast<const byte *>(&address.to_v4().to_bytes()[0]), 4);
 	else if (address.is_v6())
-		_s << bytesConstRef(as_data_bytes(&address.to_v6().to_bytes()[0], 16), 16);
+		_s << bytesConstRef(reinterpret_cast<const byte *>(&address.to_v6().to_bytes()[0]), 16);
 	else
 		_s << bytes();
 	_s << udpPort << tcpPort;

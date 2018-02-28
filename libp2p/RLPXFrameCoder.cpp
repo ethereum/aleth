@@ -121,8 +121,8 @@ void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 
 	m_impl->frameDecKey.resize(h256::size);
 	memcpy(m_impl->frameDecKey.data(), outRef.data(), h256::size);
 	h128 iv;
-	m_impl->frameEnc.SetKeyWithIV(m_impl->frameEncKey, h256::size, as_const_data(iv.data(), 16));
-	m_impl->frameDec.SetKeyWithIV(m_impl->frameDecKey, h256::size, as_const_data(iv.data(), 16));
+	m_impl->frameEnc.SetKeyWithIV(m_impl->frameEncKey, h256::size, reinterpret_cast<const unsigned char *>(iv.data()));
+	m_impl->frameDec.SetKeyWithIV(m_impl->frameDecKey, h256::size, reinterpret_cast<const unsigned char *>(iv.data()));
 
 	// mac-secret = sha3(ecdhe-shared-secret || aes-secret)
 	sha3(keyMaterial, outRef); // output mac-secret
@@ -140,7 +140,7 @@ void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 
 	keyMaterialBytes.resize(h256::size + egressCipher.size());
 	keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
 	egressCipher.copyTo(keyMaterial.cropped(h256::size, egressCipher.size()));
-	m_impl->egressMac.Update(as_const_data(keyMaterial.data()), keyMaterial.size());
+	m_impl->egressMac.Update(reinterpret_cast<const unsigned char *>(keyMaterial.data()), keyMaterial.size());
 
 	// recover mac-secret by re-xoring remoteNonce
 	(*(h256*)keyMaterial.data() ^ _remoteNonce ^ _nonce).ref().copyTo(keyMaterial);
@@ -148,7 +148,7 @@ void RLPXFrameCoder::setup(bool _originated, h512 const& _remoteEphemeral, h256 
 	keyMaterialBytes.resize(h256::size + ingressCipher.size());
 	keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
 	ingressCipher.copyTo(keyMaterial.cropped(h256::size, ingressCipher.size()));
-	m_impl->ingressMac.Update(as_const_data(keyMaterial.data(), keyMaterial.size()), keyMaterial.size());
+	m_impl->ingressMac.Update(reinterpret_cast<const unsigned char *>(keyMaterial.data()), keyMaterial.size());
 }
 
 void RLPXFrameCoder::writeFrame(uint16_t _protocolType, bytesConstRef _payload, bytes& o_bytes)
@@ -183,7 +183,7 @@ void RLPXFrameCoder::writeFrame(RLPStream const& _header, bytesConstRef _payload
 	// TODO: SECURITY check header values && header <= 16 bytes
 	bytes headerWithMac(h256::size);
 	bytesConstRef(&_header.out()).copyTo(bytesRef(&headerWithMac));
-	m_impl->frameEnc.ProcessData(as_data(headerWithMac.data(), 32), as_data(headerWithMac.data(), 32), 16);
+	m_impl->frameEnc.ProcessData(reinterpret_cast<unsigned char *>(headerWithMac.data()), reinterpret_cast<const unsigned char *>(headerWithMac.data()), 16);
 	updateEgressMACWithHeader(bytesConstRef(&headerWithMac).cropped(0, 16));
 	egressDigest().ref().copyTo(bytesRef(&headerWithMac).cropped(h128::size,h128::size));
 
@@ -191,10 +191,10 @@ void RLPXFrameCoder::writeFrame(RLPStream const& _header, bytesConstRef _payload
 	o_bytes.swap(headerWithMac);
 	o_bytes.resize(32 + _payload.size() + padding + h128::size);
 	bytesRef packetRef(o_bytes.data() + 32, _payload.size());
-	m_impl->frameEnc.ProcessData(as_data(packetRef.data()), as_const_data(_payload.data(), _payload.size()), _payload.size());
+	m_impl->frameEnc.ProcessData(reinterpret_cast<unsigned char *>(packetRef.data()), reinterpret_cast<const unsigned char *>(_payload.data()), _payload.size());
 	bytesRef paddingRef(o_bytes.data() + 32 + _payload.size(), padding);
 	if (padding)
-		m_impl->frameEnc.ProcessData(as_data(paddingRef.data()), as_const_data(paddingRef.data(), paddingRef.size()), padding);
+		m_impl->frameEnc.ProcessData(reinterpret_cast<unsigned char *>(paddingRef.data()), reinterpret_cast<const unsigned char *>(paddingRef.data()), padding);
 	bytesRef packetWithPaddingRef(o_bytes.data() + 32, _payload.size() + padding);
 	updateEgressMACWithFrame(packetWithPaddingRef);
 	bytesRef macRef(o_bytes.data() + 32 + _payload.size() + padding, h128::size);
@@ -218,7 +218,7 @@ bool RLPXFrameCoder::authAndDecryptHeader(bytesRef io)
 	h128 expected = ingressDigest();
 	if (*(h128*)macRef.data() != expected)
 		return false;
-	m_impl->frameDec.ProcessData(as_data(io.data(), 32), as_data(io.data(), 32), h128::size);
+	m_impl->frameDec.ProcessData(reinterpret_cast<unsigned char *>(io.data()), reinterpret_cast<const unsigned char *>(io.data()), h128::size);
 	return true;
 }
 
@@ -229,7 +229,7 @@ bool RLPXFrameCoder::authAndDecryptFrame(bytesRef io)
 	bytesConstRef frameMac(io.data() + io.size() - h128::size, h128::size);
 	if (*(h128*)frameMac.data() != ingressDigest())
 		return false;
-	m_impl->frameDec.ProcessData(as_data(io.data(), io.size()), as_data(io.data(), io.size()), io.size() - h128::size);
+	m_impl->frameDec.ProcessData(reinterpret_cast<unsigned char *>(io.data()), reinterpret_cast<const unsigned char *>(io.data()), io.size() - h128::size);
 	return true;
 }
 
@@ -237,7 +237,7 @@ h128 RLPXFrameCoder::egressDigest()
 {
 	CryptoPP::Keccak_256 h(m_impl->egressMac);
 	h128 digest;
-	h.TruncatedFinal(as_data(digest.data(), 16), h128::size);
+	h.TruncatedFinal(reinterpret_cast<unsigned char *>(digest.data()), h128::size);
 	return digest;
 }
 
@@ -245,7 +245,7 @@ h128 RLPXFrameCoder::ingressDigest()
 {
 	CryptoPP::Keccak_256 h(m_impl->ingressMac);
 	h128 digest;
-	h.TruncatedFinal(as_data(digest.data(), 16), h128::size);
+	h.TruncatedFinal(reinterpret_cast<unsigned char *>(digest.data()), h128::size);
 	return digest;
 }
 
@@ -256,7 +256,7 @@ void RLPXFrameCoder::updateEgressMACWithHeader(bytesConstRef _headerCipher)
 
 void RLPXFrameCoder::updateEgressMACWithFrame(bytesConstRef _cipher)
 {
-	m_impl->egressMac.Update(as_const_data(_cipher.data(), _cipher.size()), _cipher.size());
+	m_impl->egressMac.Update(reinterpret_cast<const unsigned char *>(_cipher.data()), _cipher.size());
 	m_impl->updateMAC(m_impl->egressMac);
 }
 
@@ -267,7 +267,7 @@ void RLPXFrameCoder::updateIngressMACWithHeader(bytesConstRef _headerCipher)
 
 void RLPXFrameCoder::updateIngressMACWithFrame(bytesConstRef _cipher)
 {
-	m_impl->ingressMac.Update(as_const_data(_cipher.data(), _cipher.size()), _cipher.size());
+	m_impl->ingressMac.Update(reinterpret_cast<const unsigned char *>(_cipher.data()), _cipher.size());
 	m_impl->updateMAC(m_impl->ingressMac);
 }
 
@@ -278,12 +278,12 @@ void RLPXFrameCoderImpl::updateMAC(CryptoPP::Keccak_256& _mac, bytesConstRef _se
 
 	CryptoPP::Keccak_256 prevDigest(_mac);
 	h128 encDigest(h128::size);
-	prevDigest.TruncatedFinal(as_data(encDigest.data(), 16), h128::size);
+	prevDigest.TruncatedFinal(reinterpret_cast<unsigned char *>(encDigest.data()), h128::size);
 	h128 prevDigestOut = encDigest;
 
 	{
 		Guard l(x_macEnc);
-		macEnc.ProcessData(as_data(encDigest.data(), 16), as_data(encDigest.data(), 16), 16);
+		macEnc.ProcessData(reinterpret_cast<unsigned char *>(encDigest.data()), reinterpret_cast<const unsigned char *>(encDigest.data()), 16);
 	}
 	if (_seed.size())
 		encDigest ^= *(h128*)_seed.data();
@@ -291,5 +291,5 @@ void RLPXFrameCoderImpl::updateMAC(CryptoPP::Keccak_256& _mac, bytesConstRef _se
 		encDigest ^= *(h128*)prevDigestOut.data();
 
 	// update mac for final digest
-	_mac.Update(as_data(encDigest.data(), 16), h128::size);
+	_mac.Update(reinterpret_cast<const unsigned char *>(encDigest.data()), h128::size);
 }

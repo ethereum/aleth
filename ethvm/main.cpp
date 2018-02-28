@@ -281,7 +281,7 @@ int main(int argc, char** argv)
 
 		if (inputFile == "-")
 			for (int i = cin.get(); i != -1; i = cin.get())
-				code.push_back((const dev::byte)i);
+				code.push_back((dev::byte)i);
 		else
 			code = contents(inputFile);
 

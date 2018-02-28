@@ -67,9 +67,9 @@ private:
 	{}
 };
 
-inline CryptoPP::ECP::Point publicToPoint(Public const& _p) { CryptoPP::Integer x(as_const_data(_p.data()), 32); CryptoPP::Integer y(as_const_data(_p.data()) + 32, 32); return CryptoPP::ECP::Point(x,y); }
+inline CryptoPP::ECP::Point publicToPoint(Public const& _p) { CryptoPP::Integer x(reinterpret_cast<const unsigned char *>(_p.data()), 32); CryptoPP::Integer y(reinterpret_cast<const unsigned char *>(_p.data()) + 32, 32); return CryptoPP::ECP::Point(x,y); }
 
-inline CryptoPP::Integer secretToExponent(Secret const& _s) { return CryptoPP::Integer(as_const_data(_s.data()), Secret::size); }
+inline CryptoPP::Integer secretToExponent(Secret const& _s) { return CryptoPP::Integer(reinterpret_cast<const unsigned char *>(_s.data()), Secret::size); }
 
 }
 
@@ -94,9 +94,9 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 	bytesConstRef eKey = bytesConstRef(&key).cropped(0, 16);
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
 	CryptoPP::SHA256 ctx;
-	ctx.Update(as_const_data(mKeyMaterial.data()), mKeyMaterial.size());
+	ctx.Update(reinterpret_cast<const unsigned char *>(mKeyMaterial.data()), mKeyMaterial.size());
 	bytes mKey(32);
-	ctx.Final(as_data(mKey.data()));
+	ctx.Final(reinterpret_cast<unsigned char *>(mKey.data()));
 
 	auto iv = h128::random();
 	bytes cipherText = encryptSymNoAuth(SecureFixedHash<16>(eKey), iv, bytesConstRef(&io_cipher));
@@ -104,18 +104,18 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 		return;
 
 	bytes msg(1 + Public::size + h128::size + cipherText.size() + 32);
-	msg[0] = static_cast<byte>(0x04);
+	msg[0] = (byte)0x04;
 	r.pub().ref().copyTo(bytesRef(&msg).cropped(1, Public::size));
 	iv.ref().copyTo(bytesRef(&msg).cropped(1 + Public::size, h128::size));
 	bytesRef msgCipherRef = bytesRef(&msg).cropped(1 + Public::size + h128::size, cipherText.size());
 	bytesConstRef(&cipherText).copyTo(msgCipherRef);
 	
 	// tag message
-	CryptoPP::HMAC<CryptoPP::SHA256> hmacctx(as_data(mKey.data()), mKey.size());
+	CryptoPP::HMAC<CryptoPP::SHA256> hmacctx(reinterpret_cast<const unsigned char *>(mKey.data()), mKey.size());
 	bytesConstRef cipherWithIV = bytesRef(&msg).cropped(1 + Public::size, h128::size + cipherText.size());
-	hmacctx.Update(as_const_data(cipherWithIV.data()), cipherWithIV.size());
-	hmacctx.Update(as_const_data(_sharedMacData.data()), _sharedMacData.size());
-	hmacctx.Final(as_data(msg.data()) + 1 + Public::size + cipherWithIV.size());
+	hmacctx.Update(reinterpret_cast<const unsigned char *>(cipherWithIV.data()), cipherWithIV.size());
+	hmacctx.Update(reinterpret_cast<const unsigned char *>(_sharedMacData.data()), _sharedMacData.size());
+	hmacctx.Final(reinterpret_cast<unsigned char *>(msg.data()) + 1 + Public::size + cipherWithIV.size());
 	
 	io_cipher.resize(msg.size());
 	io_cipher.swap(msg);
@@ -148,8 +148,8 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 	bytesRef mKeyMaterial = bytesRef(&key).cropped(16, 16);
 	bytes mKey(32);
 	CryptoPP::SHA256 ctx;
-	ctx.Update(as_const_data(mKeyMaterial.data()), mKeyMaterial.size());
-	ctx.Final(as_data(mKey.data()));
+	ctx.Update(reinterpret_cast<const unsigned char *>(mKeyMaterial.data()), mKeyMaterial.size());
+	ctx.Final(reinterpret_cast<unsigned char *>(mKey.data()));
 	
 	bytes plain;
 	size_t cipherLen = io_text.size() - 1 - Public::size - h128::size - h256::size;
@@ -160,11 +160,11 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 	h128 iv(cipherIV.toBytes());
 	
 	// verify tag
-	CryptoPP::HMAC<CryptoPP::SHA256> hmacctx(as_const_data(mKey.data()), mKey.size());
-	hmacctx.Update(as_const_data(cipherWithIV.data()), cipherWithIV.size());
-	hmacctx.Update(as_const_data(_sharedMacData.data()), _sharedMacData.size());
+	CryptoPP::HMAC<CryptoPP::SHA256> hmacctx(reinterpret_cast<const unsigned char *>(mKey.data()), mKey.size());
+	hmacctx.Update(reinterpret_cast<const unsigned char *>(cipherWithIV.data()), cipherWithIV.size());
+	hmacctx.Update(reinterpret_cast<const unsigned char *>(_sharedMacData.data()), _sharedMacData.size());
 	h256 mac;
-	hmacctx.Final(as_data(mac.data()));
+	hmacctx.Final(reinterpret_cast<unsigned char *>(mac.data()));
 	for (unsigned i = 0; i < h256::size; i++)
 		if (mac[i] != msgMac[i])
 			return false;
@@ -200,7 +200,7 @@ void Secp256k1PP::encrypt(Public const& _k, bytes& io_cipher)
 	
 	{
 		Guard l(ctx.x_rng);
-		e.Encrypt(ctx.m_rng, as_const_data(io_cipher.data()), plen, as_data(ciphertext.data()));
+		e.Encrypt(ctx.m_rng, reinterpret_cast<const unsigned char *>(io_cipher.data()), plen, reinterpret_cast<unsigned char *>(ciphertext.data()));
 	}
 	
 	memset(io_cipher.data(), 0, io_cipher.size());
@@ -227,7 +227,7 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	if (!io_text.size())
 	{
 		io_text.resize(1);
-		io_text[0] = static_cast<byte>(0);
+		io_text[0] = (byte)0;
 	}
 	
 	size_t clen = io_text.size();
@@ -237,7 +237,7 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	CryptoPP::DecodingResult r;
 	{
 		Guard l(ctx.x_rng);
-		r = d.Decrypt(ctx.m_rng, as_const_data(io_text.data()), clen, as_data(plain.data()));
+		r = d.Decrypt(ctx.m_rng, reinterpret_cast<const unsigned char *>(io_text.data()), clen, reinterpret_cast<unsigned char *>(plain.data()));
 	}
 	
 	if (!r.isValidCoding)

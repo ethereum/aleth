@@ -76,7 +76,7 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 	
 	uint64_t dest = decodeJumpDest(_code, pc);
 	
-	_pc += 1 + to_integer(n) * 2;               // adust inout _pc to opcode after table 
+	_pc += 1 + to_integer(n) * 2;               // adust inout _pc to opcode after table
 	return dest;
 }
 

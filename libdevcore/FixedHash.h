@@ -62,16 +62,10 @@ public:
 	enum ConstructFromHashType { AlignLeft, AlignRight, FailIfDifferent };
 
 	/// Construct an empty hash.
-	FixedHash() { m_data.fill(static_cast<byte>(0)); }
+	FixedHash() { m_data.fill((byte)0); }
 
 	/// Construct from another hash, filling with zeroes or cropping as necessary.
-	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) 
-	{ 
-		m_data.fill(static_cast<byte>(0)); 
-		unsigned c = std::min(M, N); 
-		for (unsigned i = 0; i < c; ++i) 
-			m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; 
-	}
+	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) { m_data.fill((byte)0); unsigned c = std::min(M, N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; }
 
 	/// Convert from the corresponding arithmetic type.
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
@@ -80,10 +74,10 @@ public:
 	explicit FixedHash(unsigned _u) { toBigEndian(_u, m_data); }
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(static_cast<byte>(0)); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill((byte)0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(static_cast<byte>(0)); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill((byte)0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
 
 	/// Explicitly construct, copying from a bytes in memory with given pointer.
 	explicit FixedHash(byte const* _bs, ConstructFromPointerType) { memcpy(m_data.data(), _bs, N); }
@@ -106,16 +100,26 @@ public:
 	bool operator>(FixedHash const& _c) const { return !operator<=(_c); }
 
 	// The obvious binary operators.
-	FixedHash& operator^=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] = m_data[i] ^ _c.m_data[i]; return *this; }
+	FixedHash& operator^=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] ^= _c.m_data[i]; return *this; }
 	FixedHash operator^(FixedHash const& _c) const { return FixedHash(*this) ^= _c; }
 	FixedHash& operator|=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] |= _c.m_data[i]; return *this; }
 	FixedHash operator|(FixedHash const& _c) const { return FixedHash(*this) |= _c; }
-	FixedHash& operator&=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] = m_data[i] & _c.m_data[i]; return *this; }
+	FixedHash& operator&=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] &= _c.m_data[i]; return *this; }
 	FixedHash operator&(FixedHash const& _c) const { return FixedHash(*this) &= _c; }
 	FixedHash operator~() const { FixedHash ret; for (unsigned i = 0; i < N; ++i) ret[i] = ~m_data[i]; return ret; }
 
 	// Big-endian increment.
-	FixedHash& operator++() { for (unsigned i = size;;) { if (i > 0) { unsigned j = --i; m_data[j] = (byte)(to_integer(m_data[j]) + 1); if(!to_integer(m_data[j])) continue; } } return *this; }
+	FixedHash& operator++()
+	{
+		for (unsigned i = size; i > 0;)
+		{
+			unsigned j = --i;
+			m_data[j] = (byte)(to_integer(m_data[j]) + 1);
+			if(!to_integer(m_data[j])) continue;
+			else break;
+		}
+		return *this;
+	}
 
 	/// @returns true if all one-bits in @a _c are set in this object.
 	bool contains(FixedHash const& _c) const { return (*this & _c) == _c; }

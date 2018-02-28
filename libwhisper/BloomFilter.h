@@ -80,7 +80,7 @@ void TopicBloomFilterBase<N>::removeRaw(FixedHash<N> const& _h)
 				m_refCounter[i]--;
 
 			if (!m_refCounter[i])
-				(*this)[i / 8] = static_cast<byte>(to_integer((*this)[i / 8]) & ~c_powerOfTwoBitMmask[i % 8]);
+				(*this)[i / 8] &= (byte)(~c_powerOfTwoBitMmask[i % 8]);
 		}
 }
 

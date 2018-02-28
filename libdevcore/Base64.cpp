@@ -110,7 +110,7 @@ bytes dev::fromBase64(string const& encoded_string)
 
 	while (in_len-- && encoded_string[in_] != '=' && is_base64((byte)encoded_string[in_]))
 	{
-		char_array_4[i++] = static_cast<byte>(encoded_string[in_]); in_++;
+		char_array_4[i++] = (byte)(encoded_string[in_]); in_++;
 		if (i == 4)
 		{
 			for (i = 0; i < 4; i++)
@@ -128,7 +128,7 @@ bytes dev::fromBase64(string const& encoded_string)
 	if (i)
 	{
 		for (j = i; j < 4; j++)
-			char_array_4[j] = static_cast<byte>(0);
+			char_array_4[j] = (byte)0;
 
 		for (j = 0; j < 4; j++)
 		char_array_4[j] = find_base64_char_index(char_array_4[j]);

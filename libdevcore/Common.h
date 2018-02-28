@@ -53,7 +53,6 @@
 #pragma GCC diagnostic pop
 #include "vector_ref.h"
 
-// CryptoPP defines byte in the global namespace, so must we.
 
 // Quote a given token stream to turn it into a string.
 #define DEV_QUOTED_HELPER(s) #s
@@ -74,13 +73,6 @@ extern std::string const EmptyString;
 using bytes = std::vector<byte>;
 using bytesRef = vector_ref<byte>;
 using bytesConstRef = vector_ref<byte const>;
-
-/// @returns the int value of a byte
-template <typename byte>
-auto to_integer(byte const value) -> typename std::underlying_type<byte>::type
-{
-	return static_cast<typename std::underlying_type<byte>::type>(value);
-};
 
 template <class T>
 class secure_vector
@@ -199,44 +191,6 @@ template <> inline u256 exp10<0>()
 	return u256(1);
 }
 
-/// FIXME: Converts given bytes into unsigned char *
-template<typename T>
-inline unsigned char * as_data(T _data, unsigned _size)
-{
-	std::vector<unsigned char> ret;
-	for (unsigned i = 0; i < _size; _data++, i++)
-		ret.push_back(static_cast<unsigned char>(*_data));
-	return ret.data();
-}
-
-/// FIXME: Converts given const bytes into const unsigned char *
-template<typename T>
-inline const unsigned char * as_const_data(T _data, unsigned _size)
-{
-	std::vector<unsigned char> ret;
-	for (unsigned i = 0; i < _size; _data++, i++)
-		ret.push_back(static_cast<unsigned char>(*_data));
-	return const_cast<const unsigned char *>(ret.data());
-}
-
-/// FIXME: Convert unsigned char * to const dev::byte *
-inline const dev::byte * as_data_bytes(unsigned char * _data, unsigned _size)
-{
-	std::vector<dev::byte> ret;
-	for (unsigned i = 0; i < _size; _data++, i++)
-		ret.push_back(static_cast<byte>(*_data));
-	return const_cast<const byte *>(ret.data());
-}
-
-/// FIXME: Convert unsigned char * to const dev::byte *
-inline const dev::byte * as_const_data_bytes(const unsigned char * _data, unsigned _size)
-{
-	std::vector<dev::byte> ret;
-	for (unsigned i = 0; i < _size; _data++, i++)
-		ret.push_back(static_cast<byte>(*_data));
-	return const_cast<const byte *>(ret.data());
-}
-
 /// @returns the absolute distance between _a and _b.
 template <class N>
 inline N diff(N const& _a, N const& _b)
@@ -244,13 +198,10 @@ inline N diff(N const& _a, N const& _b)
 	return std::max(_a, _b) - std::min(_a, _b);
 }
 
-template<class A>
-A foo(A bar) { return bar; }
-
-template <class IntegerType, class = std::enable_if<std::is_integral<IntegerType>::value>>
-inline constexpr IntegerType to_integer(byte b) noexcept
+// template <class IntegerType, class = std::enable_if<std::is_integral<IntegerType>::value>>
+inline constexpr uint8_t to_integer(byte b) noexcept
 {
-    return static_cast<IntegerType>(b);
+    return static_cast<uint8_t>(b);
 }
 
 template <class IntegerType, class = std::enable_if<std::is_integral<IntegerType>::value>>

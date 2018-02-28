@@ -97,10 +97,10 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
 
 		CryptoPP::Keccak_256 ctx;
-		ctx.Update(as_const_data(leftNonce.data()), h256::size);
-		ctx.Update(as_const_data(rightNonce.data()), h256::size);
+		ctx.Update(reinterpret_cast<const unsigned char *>(leftNonce.data()), h256::size);
+		ctx.Update(reinterpret_cast<const unsigned char *>(rightNonce.data()), h256::size);
 		bytes expected(32);
-		ctx.Final(as_data(expected.data()));
+		ctx.Final(reinterpret_cast<unsigned char *>(expected.data()));
 		bytes given(32);
 		outRef.copyTo(&given);
 		BOOST_REQUIRE(expected == given);
@@ -119,9 +119,9 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
 
 		CryptoPP::Keccak_256 ctx;
-		ctx.Update(as_const_data(preImage.data()), preImage.size());
+		ctx.Update(reinterpret_cast<const unsigned char *>(preImage.data()), preImage.size());
 		bytes expected(32);
-		ctx.Final(as_data(expected.data()));
+		ctx.Final(reinterpret_cast<unsigned char *>(expected.data()));
 		bytes test(32);
 		outRef.copyTo(&test);
 		BOOST_REQUIRE(expected == test);
@@ -137,15 +137,15 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	bytes aesSecret(32);
 	outRef.copyTo(&aesSecret);
 	BOOST_REQUIRE(aesSecret == fromHex("12347b4784bcb4e74b84637940482852fe25d78e328cf5c6f7a396bf96cc20bb"));
-	m_frameEnc.SetKeyWithIV(as_const_data(const_cast<const dev::byte *>(outRef.data())), h128::size, as_const_data(const_cast<const dev::byte *>(h128().data())));
-	m_frameDec.SetKeyWithIV(as_const_data(const_cast<const dev::byte *>(outRef.data())), h128::size, as_const_data(const_cast<const dev::byte *>(h128().data())));
+	m_frameEnc.SetKeyWithIV(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(outRef.data())), h128::size, reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(h128().data())));
+	m_frameDec.SetKeyWithIV(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(outRef.data())), h128::size, reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(h128().data())));
 	
 	// mac-secret = sha3(ecdhe-shared-secret || aes-secret)
 	sha3(keyMaterial, outRef); // output mac-secret
 	bytes macSecret(32);
 	outRef.copyTo(&macSecret);
 	BOOST_REQUIRE(macSecret == fromHex("2ec149072353d54437422837c886b0538a9206e6c559f6b4a55f65a866867723"));
-	m_macEnc.SetKey(as_const_data(const_cast<const dev::byte *>(outRef.data())), h128::size);
+	m_macEnc.SetKey(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(outRef.data())), h128::size);
 	
 	// Initiator egress-mac: sha3(mac-secret^recipient-nonce || auth-sent-init)
 	//           ingress-mac: sha3(mac-secret^initiator-nonce || auth-recvd-ack)
@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	keyMaterialBytes.resize(h256::size + egressCipher.size());
 	keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
 	bytesConstRef(&egressCipher).copyTo(keyMaterial.cropped(h256::size, egressCipher.size()));
-	m_egressMac.Update(as_const_data(const_cast<const dev::byte *>(keyMaterial.data())), keyMaterial.size());
+	m_egressMac.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(keyMaterial.data())), keyMaterial.size());
 	
 	{
 		bytes egressMac;
 		CryptoPP::Keccak_256 h(m_egressMac);
 		bytes digest(16);
-		h.TruncatedFinal(as_data(digest.data()), 16);
+		h.TruncatedFinal(reinterpret_cast<unsigned char *>(digest.data()), 16);
 		BOOST_REQUIRE(digest == fromHex("23e5e8efb6e3765ecae1fca9160b18df"));
 	}
 	
@@ -173,13 +173,13 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	keyMaterialBytes.resize(h256::size + ingressCipher.size());
 	keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
 	bytesConstRef(&ingressCipher).copyTo(keyMaterial.cropped(h256::size, ingressCipher.size()));
-	m_ingressMac.Update(as_const_data(const_cast<const dev::byte *>(keyMaterial.data())), keyMaterial.size());
+	m_ingressMac.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(keyMaterial.data())), keyMaterial.size());
 	
 	{
 		bytes ingressMac;
 		CryptoPP::Keccak_256 h(m_ingressMac);
 		bytes digest(16);
-		h.TruncatedFinal(as_data(digest.data()), 16);
+		h.TruncatedFinal(reinterpret_cast<unsigned char *>(digest.data()), 16);
 		BOOST_REQUIRE(digest == fromHex("ceed64135852064cbdde86e7ea05e8f5"));
 	}
 }
@@ -240,10 +240,10 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
 		
 		CryptoPP::Keccak_256 ctx;
-		ctx.Update(as_const_data(leftNonce.data()), h256::size);
-		ctx.Update(as_const_data(rightNonce.data()), h256::size);
+		ctx.Update(reinterpret_cast<const unsigned char *>(leftNonce.data()), h256::size);
+		ctx.Update(reinterpret_cast<const unsigned char *>(rightNonce.data()), h256::size);
 		bytes expected(32);
-		ctx.Final(as_data(expected.data()));
+		ctx.Final(reinterpret_cast<unsigned char *>(expected.data()));
 		bytes given(32);
 		outRef.copyTo(&given);
 		BOOST_REQUIRE(expected == given);
@@ -259,9 +259,9 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
 		
 		CryptoPP::Keccak_256 ctx;
-		ctx.Update(as_data(preImage.data()), preImage.size());
+		ctx.Update(reinterpret_cast<const unsigned char *>(preImage.data()), preImage.size());
 		bytes expected(32);
-		ctx.Final(as_data(expected.data()));
+		ctx.Final(reinterpret_cast<unsigned char *>(expected.data()));
 		bytes test(32);
 		outRef.copyTo(&test);
 		BOOST_REQUIRE(expected == test);
@@ -277,15 +277,15 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	bytes aesSecret(32);
 	outRef.copyTo(&aesSecret);
 	BOOST_REQUIRE(aesSecret == fromHex("0xc0458fa97a5230830e05f4f20b7c755c1d4e54b1ce5cf43260bb191eef4e418d"));
-	m_frameEnc.SetKeyWithIV(as_const_data(const_cast<const dev::byte *>(outRef.data())), h128::size, as_const_data(const_cast<const dev::byte *>(h128().data())));
-	m_frameDec.SetKeyWithIV(as_const_data(const_cast<const dev::byte *>(outRef.data())), h128::size, as_const_data(const_cast<const dev::byte *>(h128().data())));
+	m_frameEnc.SetKeyWithIV(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(outRef.data())), h128::size, reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(h128().data())));
+	m_frameDec.SetKeyWithIV(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(outRef.data())), h128::size, reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(h128().data())));
 	
 	// mac-secret = sha3(ecdhe-shared-secret || aes-secret)
 	sha3(keyMaterial, outRef); // output mac-secret
 	bytes macSecret(32);
 	outRef.copyTo(&macSecret);
 	BOOST_REQUIRE(macSecret == fromHex("0x48c938884d5067a1598272fcddaa4b833cd5e7d92e8228c0ecdfabbe68aef7f1"));
-	m_macEnc.SetKey(as_const_data(const_cast<const dev::byte *>(outRef.data())), h256::size);
+	m_macEnc.SetKey(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(outRef.data())), h256::size);
 	
 	// Initiator egress-mac: sha3(mac-secret^recipient-nonce || auth-sent-init)
 	//           ingress-mac: sha3(mac-secret^initiator-nonce || auth-recvd-ack)
@@ -297,13 +297,13 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	keyMaterialBytes.resize(h256::size + egressCipher.size());
 	keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
 	bytesConstRef(&egressCipher).copyTo(keyMaterial.cropped(h256::size, egressCipher.size()));
-	m_egressMac.Update(as_const_data(const_cast<const dev::byte *>(keyMaterialBytes.data())), keyMaterialBytes.size());
+	m_egressMac.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(keyMaterialBytes.data())), keyMaterialBytes.size());
 	
 	{
 		bytes egressMac;
 		CryptoPP::Keccak_256 h(m_egressMac);
 		bytes digest(32);
-		h.Final(as_data(digest.data()));
+		h.Final(reinterpret_cast<unsigned char *>(digest.data()));
 		BOOST_REQUIRE(digest == fromHex("0x09771e93b1a6109e97074cbe2d2b0cf3d3878efafe68f53c41bb60c0ec49097e"));
 	}
 	
@@ -317,13 +317,13 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	keyMaterialBytes.resize(h256::size + ingressCipher.size());
 	keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
 	bytesConstRef(&ingressCipher).copyTo(keyMaterial.cropped(h256::size, ingressCipher.size()));
-	m_ingressMac.Update(as_const_data(keyMaterial.data()), keyMaterial.size());
+	m_ingressMac.Update(reinterpret_cast<const unsigned char *>(keyMaterial.data()), keyMaterial.size());
 
 	{
 		bytes ingressMac;
 		CryptoPP::Keccak_256 h(m_ingressMac);
 		bytes digest(32);
-		h.Final(as_data(digest.data()));
+		h.Final(reinterpret_cast<unsigned char *>(digest.data()));
 		BOOST_CHECK(digest == fromHex("0x75823d96e23136c89666ee025fb21a432be906512b3dd4a3049e898adb433847"));
 	}
 	
@@ -336,12 +336,12 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 		CryptoPP::Keccak_256 egressmac(m_egressMac);
 		CryptoPP::Keccak_256 prevDigest(egressmac);
 		h128 prevDigestOut;
-		prevDigest.TruncatedFinal(as_data(prevDigestOut.data()), h128::size);
+		prevDigest.TruncatedFinal(reinterpret_cast<unsigned char *>(prevDigestOut.data()), h128::size);
 		h128 encDigest;
-		m_macEnc.ProcessData(as_data(encDigest.data()), as_data(prevDigestOut.data()), h128::size);
+		m_macEnc.ProcessData(reinterpret_cast<unsigned char *>(encDigest.data()), reinterpret_cast<const unsigned char *>(prevDigestOut.data()), h128::size);
 		encDigest ^= *(h128*)initHello.data();
-		egressmac.Update(as_data(encDigest.data()), h128::size);
-		egressmac.TruncatedFinal(as_data(encDigest.data()), h128::size);
+		egressmac.Update(reinterpret_cast<const unsigned char *>(encDigest.data()), h128::size);
+		egressmac.TruncatedFinal(reinterpret_cast<unsigned char *>(encDigest.data()), h128::size);
 		
 		bytes provided(16);
 		bytesConstRef(&initHello).cropped(16, 16).copyTo(bytesRef(&provided));
@@ -352,12 +352,12 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 		CryptoPP::Keccak_256 ingressmac(m_ingressMac);
 		CryptoPP::Keccak_256 prevDigest(ingressmac);
 		h128 prevDigestOut;
-		prevDigest.TruncatedFinal(as_data(prevDigestOut.data()), h128::size);
+		prevDigest.TruncatedFinal(reinterpret_cast<unsigned char *>(prevDigestOut.data()), h128::size);
 		h128 encDigest;
-		m_macEnc.ProcessData(as_data(encDigest.data()), as_data(prevDigestOut.data()), h128::size);
+		m_macEnc.ProcessData(reinterpret_cast<unsigned char *>(encDigest.data()), reinterpret_cast<const unsigned char *>(prevDigestOut.data()), h128::size);
 		encDigest ^= *(h128*)recvHello.data();
-		ingressmac.Update(as_const_data(const_cast<const dev::byte *>(encDigest.data())), h128::size);
-		ingressmac.TruncatedFinal(as_data(encDigest.data()), h128::size);
+		ingressmac.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(encDigest.data())), h128::size);
+		ingressmac.TruncatedFinal(reinterpret_cast<unsigned char *>(encDigest.data()), h128::size);
 		
 		bytes provided(16);
 		bytesConstRef(&recvHello).cropped(16, 16).copyTo(bytesRef(&provided));
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	
 	// test decrypt of frame headers for recvHello
 	bytes plaintext(16);
-	m_frameDec.ProcessData(as_data(plaintext.data()), as_data(recvHello.data()), h128::size);
+	m_frameDec.ProcessData(reinterpret_cast<unsigned char *>(plaintext.data()), reinterpret_cast<const unsigned char *>(recvHello.data()), h128::size);
 	
 }
 
@@ -379,35 +379,35 @@ BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
 	CryptoPP::SHA256 sha256ctx;
 	bytes emptyExpected(fromHex("0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
 	bytes empty;
-	sha256ctx.Update(as_const_data(const_cast<const dev::byte *>(empty.data())), 0);
+	sha256ctx.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(empty.data())), 0);
 	bytes emptyTestOut(32);
-	sha256ctx.Final(as_data(emptyTestOut.data()));
+	sha256ctx.Final(reinterpret_cast<unsigned char *>(emptyTestOut.data()));
 	BOOST_REQUIRE(emptyExpected == emptyTestOut);
 	
 	bytes hash1Expected(fromHex("0x8949b278bbafb8da1aaa18cb724175c5952280f74be5d29ab4b37d1b45c84b08"));
 	bytes hash1input(fromHex("0x55a53b55afb12affff3c"));
-	sha256ctx.Update(as_const_data(const_cast<const dev::byte *>(hash1input.data())), hash1input.size());
+	sha256ctx.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(hash1input.data())), hash1input.size());
 	bytes hash1Out(32);
-	sha256ctx.Final(as_data(hash1Out.data()));
+	sha256ctx.Final(reinterpret_cast<unsigned char *>(hash1Out.data()));
 	BOOST_REQUIRE(hash1Out == hash1Expected);
 	
 	h128 hmack(fromHex("0x07a4b6dfa06369a570f2dcba2f11a18f"));
-	CryptoPP::HMAC<CryptoPP::SHA256> hmacctx(as_const_data(const_cast<const dev::byte *>(hmack.data())), h128::size);
+	CryptoPP::HMAC<CryptoPP::SHA256> hmacctx(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(hmack.data())), h128::size);
 	bytes input(fromHex("0x4dcb92ed4fc67fe86832"));
-	hmacctx.Update(as_const_data(const_cast<const dev::byte *>(input.data())), input.size());
+	hmacctx.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(input.data())), input.size());
 	bytes hmacExpected(fromHex("0xc90b62b1a673b47df8e395e671a68bfa68070d6e2ef039598bb829398b89b9a9"));
 	bytes hmacOut(hmacExpected.size());
-	hmacctx.Final(as_data(hmacOut.data()));
+	hmacctx.Final(reinterpret_cast<unsigned char *>(hmacOut.data()));
 	BOOST_REQUIRE(hmacExpected == hmacOut);
 	
 	// go messageTag
 	bytes tagSecret(fromHex("0xaf6623e52208c596e17c72cea6f1cb09"));
 	bytes tagInput(fromHex("0x3461282bcedace970df2"));
 	bytes tagExpected(fromHex("0xb3ce623bce08d5793677ba9441b22bb34d3e8a7de964206d26589df3e8eb5183"));
-	CryptoPP::HMAC<CryptoPP::SHA256> hmactagctx(as_const_data(const_cast<const dev::byte *>(tagSecret.data())), tagSecret.size());
-	hmactagctx.Update(as_const_data(const_cast<const dev::byte *>(tagInput.data())), tagInput.size());
+	CryptoPP::HMAC<CryptoPP::SHA256> hmactagctx(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(tagSecret.data())), tagSecret.size());
+	hmactagctx.Update(reinterpret_cast<const unsigned char *>(const_cast<const dev::byte *>(tagInput.data())), tagInput.size());
 	h256 mac;
-	hmactagctx.Final(as_data(mac.data()));
+	hmactagctx.Final(reinterpret_cast<unsigned char *>(mac.data()));
 	BOOST_REQUIRE(mac.asBytes() == tagExpected);
 	
 	Secret input1(fromHex("0x0de72f1223915fa8b8bf45dffef67aef8d89792d116eb61c9a1eb02c422a4663"));

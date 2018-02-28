@@ -67,12 +67,12 @@ Public dev::toPublic(Secret const& _secret)
 	auto* ctx = getCtx();
 	secp256k1_pubkey rawPubkey;
 	// Creation will fail if the secret key is invalid.
-	if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, as_const_data(_secret.data(), 32)))
+	if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, reinterpret_cast<const unsigned char *>(_secret.data())))
 		return {};
 	std::array<byte, 65> serializedPubkey;
 	size_t serializedPubkeySize = serializedPubkey.size();
 	secp256k1_ec_pubkey_serialize(
-			ctx, as_data(serializedPubkey.data(), serializedPubkeySize), &serializedPubkeySize,
+			ctx, reinterpret_cast<unsigned char *>(serializedPubkey.data()), &serializedPubkeySize,
 			&rawPubkey, SECP256K1_EC_UNCOMPRESSED
 	);
 	assert(serializedPubkeySize == serializedPubkey.size());
@@ -162,13 +162,13 @@ bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _pl
 {
 	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
 		return bytes();
-	CryptoPP::SecByteBlock key(as_const_data(_k.data(), _k.size()), _k.size());
+	CryptoPP::SecByteBlock key(reinterpret_cast<const unsigned char *>(_k.data()), _k.size());
 	try
 	{
 		CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption e;
-		e.SetKeyWithIV(key, key.size(), as_const_data(_iv.data(), 16));
+		e.SetKeyWithIV(key, key.size(), reinterpret_cast<const unsigned char *>(_iv.data()));
 		bytes ret(_plain.size());
-		e.ProcessData(as_data(ret.data(), ret.size()), as_const_data(_plain.data(), _plain.size()), _plain.size());
+		e.ProcessData(reinterpret_cast<unsigned char *>(ret.data()), reinterpret_cast<const unsigned char *>(_plain.data()), _plain.size());
 		return ret;
 	}
 	catch (CryptoPP::Exception& _e)
@@ -182,13 +182,13 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
 {
 	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
 		return bytesSec();
-	CryptoPP::SecByteBlock key(as_const_data(_k.data(), _k.size()), _k.size());
+	CryptoPP::SecByteBlock key(reinterpret_cast<const unsigned char *>(_k.data()), _k.size());
 	try
 	{
 		CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d;
-		d.SetKeyWithIV(key, key.size(), as_const_data(_iv.data(), 16));
+		d.SetKeyWithIV(key, key.size(), reinterpret_cast<const unsigned char *>(_iv.data()));
 		bytesSec ret(_cipher.size());
-		d.ProcessData(as_data(ret.writable().data(), ret.writable().size()), as_const_data(_cipher.data(), _cipher.size()), _cipher.size());
+		d.ProcessData(reinterpret_cast<unsigned char *>(ret.writable().data()), reinterpret_cast<const unsigned char *>(_cipher.data()), _cipher.size());
 		return ret;
 	}
 	catch (CryptoPP::Exception& _e)
@@ -206,17 +206,17 @@ Public dev::recover(Signature const& _sig, h256 const& _message)
 
 	auto* ctx = getCtx();
 	secp256k1_ecdsa_recoverable_signature rawSig;
-	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, as_const_data(_sig.data(), 65), v))
+	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rawSig, reinterpret_cast<const unsigned char *>(_sig.data()), v))
 		return {};
 
 	secp256k1_pubkey rawPubkey;
-	if (!secp256k1_ecdsa_recover(ctx, &rawPubkey, &rawSig, as_const_data(_message.data(), 32)))
+	if (!secp256k1_ecdsa_recover(ctx, &rawPubkey, &rawSig, reinterpret_cast<const unsigned char *>(_message.data())))
 		return {};
 
 	std::array<byte, 65> serializedPubkey;
 	size_t serializedPubkeySize = serializedPubkey.size();
 	secp256k1_ec_pubkey_serialize(
-			ctx, as_data(serializedPubkey.data(), serializedPubkeySize), &serializedPubkeySize,
+			ctx, reinterpret_cast<unsigned char *>(serializedPubkey.data()), &serializedPubkeySize,
 			&rawPubkey, SECP256K1_EC_UNCOMPRESSED
 	);
 	assert(serializedPubkeySize == serializedPubkey.size());
@@ -232,12 +232,12 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
 	auto* ctx = getCtx();
 	secp256k1_ecdsa_recoverable_signature rawSig;
-	if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, as_const_data(_hash.data(), 32), as_const_data(_k.data(), 32), nullptr, nullptr))
+	if (!secp256k1_ecdsa_sign_recoverable(ctx, &rawSig, reinterpret_cast<const unsigned char *>(_hash.data()), reinterpret_cast<const unsigned char *>(_k.data()), nullptr, nullptr))
 		return {};
 
 	Signature s;
 	int v = 0;
-	secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, as_data(s.data(), 65), &v, &rawSig);
+	secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, reinterpret_cast<unsigned char *>(s.data()), &v, &rawSig);
 
 	SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
 	ss.v = static_cast<byte>(v);
@@ -262,12 +262,12 @@ bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iteratio
 {
 	bytesSec ret(_dkLen);
 	if (CryptoPP::PKCS5_PBKDF2_HMAC<CryptoPP::SHA256>().DeriveKey(
-		as_data(ret.writable().data(), ret.writable().size()),
+		reinterpret_cast<unsigned char *>(ret.writable().data()),
 		_dkLen,
 		0,
-		as_const_data(_pass.data(), _pass.size()),
+		reinterpret_cast<const unsigned char *>(_pass.data()),
 		_pass.size(),
-		as_const_data(_salt.data(), _salt.size()),
+		reinterpret_cast<const unsigned char *>(_salt.data()),
 		_salt.size(),
 		_iterations
 	) != _iterations)
@@ -279,14 +279,14 @@ bytesSec dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, 
 {
 	bytesSec ret(_dkLen);
 	if (libscrypt_scrypt(
-		as_const_data(_pass.data(), _pass.size()),
+		reinterpret_cast<const unsigned char *>(_pass.data()),
 		_pass.size(),
-		as_const_data(_salt.data(), _salt.size()),
+		reinterpret_cast<const unsigned char *>(_salt.data()),
 		_salt.size(),
 		_n,
 		_r,
 		_p,
-		as_data(ret.writable().data(), ret.writable().size()),
+		reinterpret_cast<unsigned char *>(ret.writable().data()),
 		_dkLen
 	) != 0)
 		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
@@ -350,12 +350,12 @@ bool ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s) noexcept
 	secp256k1_pubkey rawPubkey;
 	std::array<byte, 65> serializedPubKey{{static_cast<byte>(0x04)}};
 	std::copy(_r.asArray().begin(), _r.asArray().end(), serializedPubKey.begin() + 1);
-	if (!secp256k1_ec_pubkey_parse(ctx, &rawPubkey, as_const_data(serializedPubKey.data(), serializedPubKey.size()), serializedPubKey.size()))
+	if (!secp256k1_ec_pubkey_parse(ctx, &rawPubkey, reinterpret_cast<const unsigned char *>(serializedPubKey.data()), serializedPubKey.size()))
 		return false;  // Invalid public key.
 	// FIXME: We should verify the public key when constructed, maybe even keep
 	//        secp256k1_pubkey as the internal data of Public.
 	std::array<byte, 33> compressedPoint;
-	if (!secp256k1_ecdh_raw(ctx, as_data(compressedPoint.data(), compressedPoint.size()), &rawPubkey, as_const_data(_s.data(), 32)))
+	if (!secp256k1_ecdh_raw(ctx, reinterpret_cast<unsigned char *>(compressedPoint.data()), &rawPubkey, reinterpret_cast<const unsigned char *>(_s.data())))
 		return false;  // Invalid secret key.
 	std::copy(compressedPoint.begin() + 1, compressedPoint.end(), o_s.writable().data());
 	return true;
@@ -367,18 +367,18 @@ bytes ecies::kdf(Secret const& _z, bytes const& _s1, unsigned kdByteLen)
 	// SEC/ISO/Shoup specify counter size SHOULD be equivalent
 	// to size of hash output, however, it also notes that
 	// the 4 bytes is okay. NIST specifies 4 bytes.
-	std::array<byte, 4> ctr{{static_cast<byte>(0), static_cast<byte>(0), static_cast<byte>(0), static_cast<byte>(1)}};
+	std::array<byte, 4> ctr{{(byte)0, (byte)0, (byte)0, (byte)1}};
 	bytes k;
 	secp256k1_sha256_t ctx;
 	for (unsigned i = 0; i <= reps; i++)
 	{
 		secp256k1_sha256_initialize(&ctx);
-		secp256k1_sha256_write(&ctx, as_const_data(ctr.data(), ctr.size()), ctr.size());
-		secp256k1_sha256_write(&ctx, as_const_data(_z.data(), 32), Secret::size);
-		secp256k1_sha256_write(&ctx, as_const_data(_s1.data(), _s1.size()), _s1.size());
+		secp256k1_sha256_write(&ctx, reinterpret_cast<const unsigned char *>(ctr.data()), ctr.size());
+		secp256k1_sha256_write(&ctx, reinterpret_cast<const unsigned char *>(_z.data()), Secret::size);
+		secp256k1_sha256_write(&ctx, reinterpret_cast<const unsigned char *>(_s1.data()), _s1.size());
 		// append hash to k
 		std::array<byte, 32> digest;
-		secp256k1_sha256_finalize(&ctx, as_data(digest.data(), digest.size()));
+		secp256k1_sha256_finalize(&ctx, reinterpret_cast<unsigned char *>(digest.data()));
 
 		k.reserve(k.size() + h256::size);
 		move(digest.begin(), digest.end(), back_inserter(k));

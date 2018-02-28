@@ -54,7 +54,7 @@ namespace
 		std::string lookupCode(h256 const& _hash) const override
 		{ 
 			auto it = std::find_if(importedCodes.begin(), importedCodes.end(), [&_hash](bytes const& _code) { return sha3(_code) == _hash; });
-			return it == importedCodes.end() ? std::string{} : std::string((char const*)it->data(), (char const*)(it->data() + it->size()));
+			return it == importedCodes.end() ? std::string{} : std::string((char const*)it->data());
 		}
 
 		std::vector<ImportedAccount> importedAccounts;
@@ -92,7 +92,7 @@ namespace
 		std::string readChunk(h256 const& _chunkHash) const override
 		{ 
 			auto it = chunks.find(_chunkHash);
-			return it == chunks.end() ? std::string{} : std::string((char const*)it->second.data(), (char const*)(it->second.data() + it->second.size()));
+			return it == chunks.end() ? std::string{} : std::string((char const*)it->second.data());
 		}
 
 		bytes manifest;

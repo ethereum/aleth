@@ -52,11 +52,11 @@ std::string hexPrefixEncode(bytes const& _hexVector, bool _leaf, int _begin, int
 	std::string ret(1, ((_leaf ? 2 : 0) | (odd ? 1 : 0)) * 16);
 	if (odd)
 	{
-		ret[0] = ret[0] | to_integer(_hexVector[begin]);
+		ret[0] |= (char)_hexVector[begin];
 		++begin;
 	}
 	for (unsigned i = begin; i < end; i += 2)
-		ret = ret + (char)(to_integer(_hexVector[i]) * 16 + to_integer(_hexVector[i + 1]));
+		ret += char((int)_hexVector[i] * 16 + (int)_hexVector[i + 1]);
 	return ret;
 }
 
@@ -74,9 +74,9 @@ std::string hexPrefixEncode(bytesConstRef _data, bool _leaf, int _beginNibble, i
 	{
 		byte n = nibble(_data, i);
 		if (d & 1)	// odd
-			ret.back() = to_integer(n) | ret.back();	// or the nibble onto the back
+			ret.back() |= (uint8_t)n; 	// or the nibble onto the back
 		else
-			ret.push_back(to_integer(n << 4));	// push the nibble on to the back << 4
+			ret.push_back(uint8_t(n << 4));	// push the nibble on to the back << 4
 	}
 	return ret;
 }
@@ -98,7 +98,7 @@ std::string hexPrefixEncode(bytesConstRef _d1, unsigned _o1, bytesConstRef _d2, 
 	{
 		byte n = nibble(_d1, i);
 		if (d & 1)	// odd
-			ret.back() = ret.back() | to_integer(n);		// or the nibble onto the back
+			ret.back() |= to_integer(n);		// or the nibble onto the back
 		else
 			ret.push_back(to_integer(n << 4));	// push the nibble on to the back << 4
 	}
@@ -106,7 +106,7 @@ std::string hexPrefixEncode(bytesConstRef _d1, unsigned _o1, bytesConstRef _d2, 
 	{
 		byte n = nibble(_d2, i);
 		if (d & 1)	// odd
-			ret.back() = ret.back() | to_integer(n);		// or the nibble onto the back
+			ret.back() |= to_integer(n);		// or the nibble onto the back
 		else
 			ret.push_back(to_integer(n << 4));	// push the nibble on to the back << 4
 	}

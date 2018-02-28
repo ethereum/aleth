@@ -31,9 +31,9 @@ h256 sha256(bytesConstRef _input) noexcept
 {
 	secp256k1_sha256_t ctx;
 	secp256k1_sha256_initialize(&ctx);
-	secp256k1_sha256_write(&ctx, as_const_data(_input.data(), _input.size()), _input.size());
+	secp256k1_sha256_write(&ctx, reinterpret_cast<const unsigned char *>(_input.data(), _input.size()), _input.size());
 	h256 hash;
-	secp256k1_sha256_finalize(&ctx, as_data(hash.data(), 32));
+	secp256k1_sha256_finalize(&ctx, reinterpret_cast<unsigned char *>(hash.data()));
 	return hash;
 }
 

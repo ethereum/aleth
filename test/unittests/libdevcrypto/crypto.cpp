@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(KeyPairVerifySecret)
 {
 	auto keyPair = KeyPair::create();
 	auto* ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
-	BOOST_CHECK(secp256k1_ec_seckey_verify(ctx, as_const_data(keyPair.secret().data())));
+	BOOST_CHECK(secp256k1_ec_seckey_verify(ctx, reinterpret_cast<const unsigned char *>(keyPair.secret().data())));
 	secp256k1_context_destroy(ctx);
 }
 
@@ -198,30 +198,30 @@ BOOST_AUTO_TEST_CASE(sha3_norestart)
 {
 	CryptoPP::Keccak_256 ctx;
 	bytes input(asBytes("test"));
-	ctx.Update(as_const_data(input.data()), 4);
+	ctx.Update(reinterpret_cast<const unsigned char *>(input.data()), 4);
 	CryptoPP::Keccak_256 ctxCopy(ctx);
 	bytes interimDigest(32);
-	ctx.Final(as_data(interimDigest.data()));
-	ctx.Update(as_const_data(input.data()), 4);
+	ctx.Final(reinterpret_cast<unsigned char *>(interimDigest.data()));
+	ctx.Update(reinterpret_cast<const unsigned char *>(input.data()), 4);
 	bytes firstDigest(32);
-	ctx.Final(as_data(firstDigest.data()));
+	ctx.Final(reinterpret_cast<unsigned char *>(firstDigest.data()));
 	BOOST_REQUIRE(interimDigest == firstDigest);
 	
-	ctxCopy.Update(as_const_data(input.data()), 4);
+	ctxCopy.Update(reinterpret_cast<const unsigned char *>(input.data()), 4);
 	bytes finalDigest(32);
-	ctxCopy.Final(as_data(interimDigest.data()));
+	ctxCopy.Final(reinterpret_cast<unsigned char *>(interimDigest.data()));
 	BOOST_REQUIRE(interimDigest != finalDigest);
 	
 	// we can do this another way -- copy the context for final
-	ctxCopy.Update(as_const_data(input.data()), 4);
-	ctxCopy.Update(as_const_data(input.data()), 4);
+	ctxCopy.Update(reinterpret_cast<const unsigned char *>(input.data()), 4);
+	ctxCopy.Update(reinterpret_cast<const unsigned char *>(input.data()), 4);
 	CryptoPP::Keccak_256 finalCtx(ctxCopy);
 	bytes finalDigest2(32);
-	finalCtx.Final(as_data(finalDigest2.data()));
+	finalCtx.Final(reinterpret_cast<unsigned char *>(finalDigest2.data()));
 	BOOST_REQUIRE(finalDigest2 == interimDigest);
-	ctxCopy.Update(as_const_data(input.data()), 4);
+	ctxCopy.Update(reinterpret_cast<const unsigned char *>(input.data()), 4);
 	bytes finalDigest3(32);
-	finalCtx.Final(as_data(finalDigest3.data()));
+	finalCtx.Final(reinterpret_cast<unsigned char *>(finalDigest3.data()));
 	BOOST_REQUIRE(finalDigest2 != finalDigest3);
 }
 
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(ecdhCryptopp)
 
 	CryptoPP::ECDH<CryptoPP::ECP>::Domain dhA(curveOID());
 	Secret shared;
-	BOOST_REQUIRE(dhA.Agree(as_data(shared.writable().data()), as_const_data(a.secret().data()), as_data(pubb)));
+	BOOST_REQUIRE(dhA.Agree(reinterpret_cast<unsigned char *>(shared.writable().data()), reinterpret_cast<const unsigned char *>(a.secret().data()), reinterpret_cast<const unsigned char *>(pubb)));
 	BOOST_REQUIRE(shared);
 }
 
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	
 	// cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
 	FixedHash<CryptoPP::AES::BLOCKSIZE> ctr;
-	rng.GenerateBlock(as_data(ctr.data()), sizeof(ctr));
+	rng.GenerateBlock(reinterpret_cast<unsigned char *>(ctr.data()), sizeof(ctr));
 
 	// used for decrypt
 	FixedHash<CryptoPP::AES::BLOCKSIZE> ctrcopy(ctr);
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	try
 	{
 		CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption e;
-		e.SetKeyWithIV(key, key.size(), as_const_data(ctr.data()));
+		e.SetKeyWithIV(key, key.size(), reinterpret_cast<const unsigned char *>(ctr.data()));
 		
 		// 68 % 255 should be difference of counter
 		e.ProcessData(out, in, text.size());
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	try
 	{
 		CryptoPP::CTR_Mode<CryptoPP::AES>::Decryption d;
-		d.SetKeyWithIV(key, key.size(), as_const_data(ctrcopy.data()));
+		d.SetKeyWithIV(key, key.size(), reinterpret_cast<const unsigned char *>(ctrcopy.data()));
 		d.ProcessData(out, in, text.size());
 		BOOST_REQUIRE(text == original);
 	}
@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		out = (unsigned char*)&cipherCopy[0];
 
 		CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption e;
-		e.SetKeyWithIV(key, key.size(), as_const_data(ctrcopy.data()));
+		e.SetKeyWithIV(key, key.size(), reinterpret_cast<const unsigned char *>(ctrcopy.data()));
 		e.ProcessData(out, in, text.size());
 		
 		// yep, ctr mode.
@@ -717,17 +717,17 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	
 	// Generate random IV
 	dev::byte iv[CryptoPP::AES::BLOCKSIZE];
-	rng.GenerateBlock(as_data(iv), CryptoPP::AES::BLOCKSIZE);
+	rng.GenerateBlock(reinterpret_cast<unsigned char *>(iv), CryptoPP::AES::BLOCKSIZE);
 	
 	string string128("AAAAAAAAAAAAAAAA");
 	string plainOriginal = string128;
 	
-	CryptoPP::CBC_Mode<CryptoPP::Rijndael>::Encryption cbcEncryption(key, key.size(), as_const_data(iv));
-	cbcEncryption.ProcessData(as_data((dev::byte*)&string128[0]), as_const_data((dev::byte*)&string128[0]), string128.size());
+	CryptoPP::CBC_Mode<CryptoPP::Rijndael>::Encryption cbcEncryption(key, key.size(), reinterpret_cast<const unsigned char *>(iv));
+	cbcEncryption.ProcessData(reinterpret_cast<unsigned char *>((dev::byte*)&string128[0]), reinterpret_cast<const unsigned char *>((dev::byte*)&string128[0]), string128.size());
 	BOOST_REQUIRE(string128 != plainOriginal);
 
-	CryptoPP::CBC_Mode<CryptoPP::Rijndael>::Decryption cbcDecryption(key, key.size(), as_const_data(iv));
-	cbcDecryption.ProcessData(as_data((dev::byte*)&string128[0]), as_const_data((dev::byte*)&string128[0]), string128.size());
+	CryptoPP::CBC_Mode<CryptoPP::Rijndael>::Decryption cbcDecryption(key, key.size(), reinterpret_cast<const unsigned char *>(iv));
+	cbcDecryption.ProcessData(reinterpret_cast<unsigned char *>((dev::byte*)&string128[0]), reinterpret_cast<const unsigned char *>((dev::byte*)&string128[0]), string128.size());
 	BOOST_REQUIRE(plainOriginal == string128);
 	
 	
@@ -742,7 +742,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 
 	dev::byte* pOut = reinterpret_cast<dev::byte*>(&string192[0]);
 	dev::byte const* pIn = reinterpret_cast<dev::byte const*>(cipher.data());
-	cbcDecryption.ProcessData(as_data(pOut), as_const_data(pIn), cipher.size());
+	cbcDecryption.ProcessData(reinterpret_cast<unsigned char *>(pOut), reinterpret_cast<const unsigned char *>(pIn), cipher.size());
 	BOOST_REQUIRE(string192 == plainOriginal);
 }
 
@@ -762,12 +762,12 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	{
 		KeyPair key(secret);
 		Public pkey = key.pub();
-		signer.AccessKey().Initialize(params(), CryptoPP::Integer(as_const_data(secret.data()), Secret::size));
+		signer.AccessKey().Initialize(params(), CryptoPP::Integer(reinterpret_cast<const unsigned char *>(secret.data()), Secret::size));
 
 		h256 he(sha3(e));
-		CryptoPP::Integer heInt(as_data(he.asBytes().data()), 32);
+		CryptoPP::Integer heInt(reinterpret_cast<const unsigned char *>(he.asBytes().data()), 32);
 		h256 k(crypto::kdf(secret, he));
-		CryptoPP::Integer kInt(as_data(k.asBytes().data()), 32);
+		CryptoPP::Integer kInt(reinterpret_cast<const unsigned char *>(k.asBytes().data()), 32);
 		kInt %= params().GetSubgroupOrder()-1;
 
 		CryptoPP::ECP::Point rp = params().ExponentiateBase(kInt);
@@ -775,7 +775,7 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 		CryptoPP::Integer r = params().ConvertElementToInteger(rp);
 
 		CryptoPP::Integer kInv = kInt.InverseMod(q);
-		CryptoPP::Integer s = (kInv * (CryptoPP::Integer(as_const_data(secret.data()), 32) * r + heInt)) % q;
+		CryptoPP::Integer s = (kInv * (CryptoPP::Integer(reinterpret_cast<const unsigned char *>(secret.data()), 32) * r + heInt)) % q;
 		BOOST_REQUIRE(!!r && !!s);
 
 		//try recover function on diffrent v values (should be invalid)
@@ -783,8 +783,8 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 		{
 			Signature sig;
 			sig[64] = (dev::byte)i;
-			r.Encode(as_data(sig.data()), 32);
-			s.Encode(as_data(sig.data() + 32), 32);
+			r.Encode(reinterpret_cast<unsigned char *>(sig.data()), 32);
+			s.Encode(reinterpret_cast<unsigned char *>(sig.data() + 32), 32);
 
 			Public p = dev::recover(sig, he);
 			size_t expectI = rp.y.IsOdd() ? 1 : 0;

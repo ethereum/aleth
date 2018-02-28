@@ -95,7 +95,7 @@ void VM::optimize()
 			(byte)op <= (byte)Instruction::PUSH32
 		)
 		{
-			pc += (to_integer(op) - to_integer(Instruction::PUSH1) + 1);
+			pc += (static_cast<unsigned>(op) - static_cast<unsigned>(Instruction::PUSH1) + 1);
 		}
 #if EIP_615
 		else if (
@@ -132,7 +132,7 @@ void VM::optimize()
 
 		if ((byte)Instruction::PUSH1 <= (byte)op && (byte)op <= (byte)Instruction::PUSH32)
 		{
-			byte nPush = (byte)(to_integer(op) - to_integer(Instruction::PUSH1) + 1);
+			byte nPush = (byte)(static_cast<unsigned>(op) - static_cast<unsigned>(Instruction::PUSH1) + 1);
 
 			// decode pushed bytes to integral value
 			val = to_integer(m_code[pc+1]);
