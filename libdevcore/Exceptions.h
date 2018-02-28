@@ -33,15 +33,26 @@
 
 namespace dev
 {
+// error information to be added to exceptions
+using errinfo_invalidSymbol = boost::error_info<struct tag_invalidSymbol, char>;
+using errinfo_wrongAddress = boost::error_info<struct tag_address, std::string>;
+using errinfo_comment = boost::error_info<struct tag_comment, std::string>;
+using errinfo_required = boost::error_info<struct tag_required, bigint>;
+using errinfo_got = boost::error_info<struct tag_got, bigint>;
+using errinfo_min = boost::error_info<struct tag_min, bigint>;
+using errinfo_max = boost::error_info<struct tag_max, bigint>;
+using RequirementError = boost::tuple<errinfo_required, errinfo_got>;
+using errinfo_hash256 = boost::error_info<struct tag_hash, h256>;
+using errinfo_required_h256 = boost::error_info<struct tag_required_h256, h256>;
+using errinfo_got_h256 = boost::error_info<struct tag_get_h256, h256>;
+using Hash256RequirementError = boost::tuple<errinfo_required_h256, errinfo_got_h256>;
+using errinfo_extraData = boost::error_info<struct tag_extraData, bytes>;
 
 /// Base class for all exceptions.
 struct Exception: virtual std::exception, virtual boost::exception
 {
-	Exception(std::string _message = std::string()): m_message(std::move(_message)) {}
-	const char* what() const noexcept override { return m_message.empty() ? std::exception::what() : m_message.c_str(); }
-
-private:
-	std::string m_message;
+    Exception() {}
+    Exception(std::string _message) { *this << errinfo_comment(_message); }
 };
 
 #define DEV_SIMPLE_EXCEPTION(X) struct X: virtual Exception { const char* what() const noexcept override { return #X; } }
@@ -68,20 +79,5 @@ DEV_SIMPLE_EXCEPTION(UnknownField);
 
 struct InterfaceNotSupported: virtual Exception { public: InterfaceNotSupported(std::string const& _f): Exception("Interface " + _f + " not supported.") {} };
 struct ExternalFunctionFailure: virtual Exception { public: ExternalFunctionFailure(std::string const& _f): Exception("Function " + _f + "() failed.") {} };
-
-// error information to be added to exceptions
-using errinfo_invalidSymbol = boost::error_info<struct tag_invalidSymbol, char>;
-using errinfo_wrongAddress = boost::error_info<struct tag_address, std::string>;
-using errinfo_comment = boost::error_info<struct tag_comment, std::string>;
-using errinfo_required = boost::error_info<struct tag_required, bigint>;
-using errinfo_got = boost::error_info<struct tag_got, bigint>;
-using errinfo_min = boost::error_info<struct tag_min, bigint>;
-using errinfo_max = boost::error_info<struct tag_max, bigint>;
-using RequirementError = boost::tuple<errinfo_required, errinfo_got>;
-using errinfo_hash256 = boost::error_info<struct tag_hash, h256>;
-using errinfo_required_h256 = boost::error_info<struct tag_required_h256, h256>;
-using errinfo_got_h256 = boost::error_info<struct tag_get_h256, h256>;
-using Hash256RequirementError = boost::tuple<errinfo_required_h256, errinfo_got_h256>;
-using errinfo_extraData = boost::error_info<struct tag_extraData, bytes>;
 
 }
