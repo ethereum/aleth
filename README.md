@@ -1,3 +1,9 @@
+# WARNING: Repo not maintained any longer!
+Please go to https://github.com/ethereum-mining/ethminer for an improved anw well maintained fork of this ethminer
+
+Cheers,
+Genoil
+
 ## ethminer-genoil
 
 What is ethminer-0.9.41-genoil-1.x.x? 
