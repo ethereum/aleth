@@ -1,5 +1,5 @@
 # WARNING: Repo not maintained any longer!
-Please go to https://github.com/ethereum-mining/ethminer for an improved anw well maintained fork of this ethminer
+Please go to https://github.com/ethereum-mining/ethminer for an improved and well maintained fork of this ethminer
 
 Cheers,
 Genoil
