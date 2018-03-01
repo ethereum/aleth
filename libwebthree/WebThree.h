@@ -132,7 +132,12 @@ public:
 
     // The mainline interfaces:
 
-    eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
+    eth::Client* ethereum() const
+    {
+        if (!m_ethereum)
+            BOOST_THROW_EXCEPTION(InterfaceNotSupported() << errinfo_interface("eth"));
+        return m_ethereum.get();
+    }
 
     // Misc stuff:
 
