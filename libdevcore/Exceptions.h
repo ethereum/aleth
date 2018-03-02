@@ -37,15 +37,22 @@ namespace dev
 /// Base class for all exceptions.
 struct Exception : virtual std::exception, virtual boost::exception
 {
+    const char* what() const noexcept override { return boost::diagnostic_information_what(*this); }
 };
 
-#define DEV_SIMPLE_EXCEPTION(X) struct X: virtual Exception { const char* what() const noexcept override { return #X; } }
+#define DEV_SIMPLE_EXCEPTION(X)  \
+    struct X : virtual Exception \
+    {                            \
+    }
 
 /// Base class for all RLP exceptions.
 struct RLPException : virtual Exception
 {
 };
-#define DEV_SIMPLE_EXCEPTION_RLP(X) struct X: virtual RLPException { const char* what() const noexcept override { return #X; } }
+#define DEV_SIMPLE_EXCEPTION_RLP(X) \
+    struct X : virtual RLPException \
+    {                               \
+    }
 
 DEV_SIMPLE_EXCEPTION_RLP(BadCast);
 DEV_SIMPLE_EXCEPTION_RLP(BadRLP);
