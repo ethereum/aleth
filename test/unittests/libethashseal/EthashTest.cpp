@@ -165,4 +165,45 @@ BOOST_AUTO_TEST_CASE(ethash_light_cache)
     }
 }
 
+BOOST_AUTO_TEST_CASE(ethash_dag_items)
+{
+    // clang-format off
+    std::pair<uint32_t, const char*> testCases[] = {
+        {0,          "4764f1f61f71532de83e1231658fce600c5bec86ab02815caaf08f51d7217262af084f8708dcec54388404d47d88626b7d3e565efa043ac5a2bd18aeab2dd118"},
+        {1,          "a629c1513c01cd6eba6db3c3f836ea94c5905615c8d3d2a608105b38affe78b39059efca6ac97e98eb2a05106fe488ea0ba7eb18e1b1ebc5c43d11241010d8e0"},
+        {13,         "efce2a208a0beb57fb1789a9158da9a4eafbb5a50aa17c8ef352cf339ae1db0ddeed32e41d7a74a7a870d255714d93f906c5a6a8ff3129931d47e04ce2da5a32"},
+        {171,        "973cdf0cbb58c21352d9aaf384141af3946f17016ad5b02bc1ab581e262534dc1bad6bebf91cf874733b798b3d2098dafeeb55629a6bc93cc1ec25fa6ca78927"},
+        {571,        "9d9688735fb83b4f1efec9a2863bcd494f97c337b72cbbb35a86484ff3013417751547cdbc641851a02240745f671aae943654d5b54aafb258cb440fea107aa5"},
+        {620,        "cf121f8cdc19828904c0ff761ee1515cc231f250dfff206b25067f597418921f1b63455376121171fb657ad21a8135d8da26ee7baf5bfc302a77e89b57e3a56a"},
+        {514079,     "38f5350e9b28531f80355e47260c09bfc3f6d6da07050343fed9c08902e2347065584dc30a08228b0d2f780e4c157fffbf0b2177c546192f824ca3531632a4b7"},
+        {852881,     "992879fea4525e8c44b1c2eb6a885b32a24efd4eacf6353604d4c688ba56d15c5b50c04672d583f35ac24a8509b8f925a96f5078d41e3675149742da2e992dee"},
+        {6133492,    "713275b1fa7dc300093efa48b8a6047776832ee747cb80784669157d8b35d52665f28eb57f3148e9b6e46b60e47eb587d4495febf4734e6ae8387aa3e80db94e"},
+        {6133493,    "009b0b6154046fc82c78d3e712924227415b0663e9c5fbb5310e3580e36861cc381dd135b24b8e746018fc9a4dcc2962fb432bbe2f5abfabc09b182f15df6b50"},
+        {211322105,  "95aee5086722951be65ae6440aaebd0dda6d17cdb3057cdb99f917cfae36c6fba7be47084d90224239cce7c763196eec27dfda31bb786e284b07e540ae3f4162"},
+        {740620450,  "cc65a8f1ad9d6ca3c8df787a2ff0191e05b1307fc2dbe5aff7ec2d2549ba0d4f5416f82fccb005245fef876643c840f66d9df7d596826bd22a2dc7c4952901c2"},
+        {4294967295, "b47377a0c48b74caad00ea4c7e486cab7e0ffc5b7e08b67f61e93b68f3907b8a8e09b3ff57c1f7a0dc886ebb32a868926e0a066c44a53be707affaeddf7f039d"},
+    };
+    // clang-format on
+
+    // Create fake light cache.
+    // Number of items: 6133493 what is a prime number bigger than 4454399
+    // (the num of items for 2047th light cache.
+    static constexpr size_t n = 6133493;
+    static constexpr size_t size = n * sizeof(h512);
+
+    std::vector<h512> data(n);
+    std::memset(data.data(), 0b1010101, size);
+    ethash_light cache{data.data(), size, 0};
+
+    for (const auto& t : testCases)
+    {
+        uint32_t i = t.first;
+        BOOST_TEST_INFO(i);
+
+        h512 h;
+        ethash_calculate_dag_item(reinterpret_cast<node*>(&h), i, &cache);
+        BOOST_CHECK_EQUAL(toHex(h), t.second);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
