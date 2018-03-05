@@ -27,8 +27,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     cmake \
     make \
     ninja-build \
-    python-pip \
-    python-requests \
+    python3-pip \
+    python3-requests \
     # Compilers
     g++ \
     g++-4.8 \
@@ -44,7 +44,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-5.0 1 \
   && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-5.0 1 \
   && update-alternatives --install /usr/bin/gcov gcov /usr/bin/llvm-cov-5.0 1 \
-  && pip install codecov
+  && pip3 install codecov
 
 RUN adduser --disabled-password --gecos '' builder && adduser builder sudo && printf 'builder\tALL=NOPASSWD: ALL\n' >> /etc/sudoers
 
