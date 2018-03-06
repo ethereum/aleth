@@ -65,6 +65,8 @@ cache:
 install: |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       ./scripts/install_cmake.sh && ./scripts/install_solc_lllc.sh;
+      pyenv local 3.6
+      pip install --user requests
     fi
     export HOMEBREW_NO_AUTO_UPDATE=1
     ./scripts/install_deps.sh
@@ -77,13 +79,6 @@ script:
 after_success:
     - pip install --user codecov
     - codecov
-after_script: |
-    # Hunter: upload cache to the cache server.
-    if [[ "$TRAVIS_EVENT_TYPE" != "pull_request" ]]; then
-      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo pip install --upgrade requests pyopenssl; fi
-      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip install requests; fi
-      make -C $TRAVIS_BUILD_DIR/build hunter_upload_cache
-    fi
 deploy:
     # This is the deploy target for the native build (Linux and macOS)
     # which generates ZIPs per commit.  We are in agreement that

@@ -39,6 +39,11 @@ cache:
   - build/deps -> cmake/ProjectLibFF.cmake
 install:
   - git submodule update --init --recursive
+
+  # Python 3
+  - set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+  - pip install requests
+
   - scripts/install_deps.bat
   - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps
 before_build: |
@@ -49,12 +54,6 @@ build_script:
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\release.bat %CONFIGURATION% %ETHEREUM_DEPS_PATH% %TESTS%
-after_build:
-  ps: |
-    if (-not $env:appveyor_pull_request_number) {
-      pip install --user requests
-      cmake --build build --target hunter_upload_cache
-    }
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\tests.bat %TESTS% %CONFIGURATION% %APPVEYOR_BUILD_FOLDER% %ETHEREUM_DEPS_PATH%

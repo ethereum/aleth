@@ -6,15 +6,6 @@ defaults:
       command: |
         git submodule update --init
 
-  upload-hunter-cache: &upload-hunter-cache
-    run:
-      name: "Upload Hunter cache"
-      working_directory: ~/build
-      command: |  # Upload Hunter cache if not PR build.
-        if [ ! "$CIRCLE_PR_NUMBER" ]; then
-          cmake --build . --target hunter_upload_cache
-        fi
-
   environment-info: &environment-info
     run:
       name: "Environment info"
@@ -112,7 +103,6 @@ defaults:
     - *environment-info
     - *restore-deps-cache
     - *configure
-    - *upload-hunter-cache
     - *build
     - *save-deps-cache
     - *store-eth
@@ -169,13 +159,12 @@ jobs:
       - *environment-info
       - run:
           name: "Install macOS dependencies"
+          # Python3 and requests are needed for Hunter upload.
           command: |
-            pip install -q requests codecov &
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja leveldb &
-            wait
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja python3 leveldb
+            pip3 install -q requests codecov
       - *restore-deps-cache
       - *configure
-      - *upload-hunter-cache
       - *build
       - *save-deps-cache
       - *store-eth
