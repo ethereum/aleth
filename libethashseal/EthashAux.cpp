@@ -130,7 +130,7 @@ EthashAux::LightAllocation::LightAllocation(h256 const& _seedHash)
 	uint64_t blockNumber = EthashAux::number(_seedHash);
 	light = ethash_light_new(blockNumber);
 	if (!light)
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("ethash_light_new()"));
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure() << errinfo_externalFunction("ethash_light_new()"));
 	size = ethash_get_cachesize(blockNumber);
 }
 
@@ -152,7 +152,7 @@ EthashAux::FullAllocation::FullAllocation(ethash_light_t _light, ethash_callback
 	if (!full)
 	{
 		clog(DAGChannel) << "DAG Generation Failure. Reason: "  << strerror(errno);
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("ethash_full_new"));
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure() << errinfo_externalFunction("ethash_full_new"));
 	}
 }
 

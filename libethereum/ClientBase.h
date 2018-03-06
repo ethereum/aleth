@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @file ClientBase.h
  * @author Gav Wood <i@gavwood.com>
@@ -37,11 +37,11 @@ namespace eth
 
 struct InstalledFilter
 {
-	InstalledFilter(LogFilter const& _f): filter(_f) {}
+    InstalledFilter(LogFilter const& _f): filter(_f) {}
 
-	LogFilter filter;
-	unsigned refCount = 1;
-	LocalisedLogEntries changes;
+    LogFilter filter;
+    unsigned refCount = 1;
+    LocalisedLogEntries changes;
 };
 
 static const h256 PendingChangedFilter = u256(0);
@@ -52,16 +52,16 @@ static const LocalisedLogEntry InitialChange(SpecialLogEntry);
 
 struct ClientWatch
 {
-	ClientWatch(): lastPoll(std::chrono::system_clock::now()) {}
-	explicit ClientWatch(h256 _id, Reaping _r): id(_id), lastPoll(_r == Reaping::Automatic ? std::chrono::system_clock::now() : std::chrono::system_clock::time_point::max()) {}
+    ClientWatch(): lastPoll(std::chrono::system_clock::now()) {}
+    explicit ClientWatch(h256 _id, Reaping _r): id(_id), lastPoll(_r == Reaping::Automatic ? std::chrono::system_clock::now() : std::chrono::system_clock::time_point::max()) {}
 
-	h256 id;
+    h256 id;
 #if INITIAL_STATE_AS_CHANGES
-	LocalisedLogEntries changes = LocalisedLogEntries{ InitialChange };
+    LocalisedLogEntries changes = LocalisedLogEntries{ InitialChange };
 #else
-	LocalisedLogEntries changes;
+    LocalisedLogEntries changes;
 #endif
-	mutable std::chrono::system_clock::time_point lastPoll = std::chrono::system_clock::now();
+    mutable std::chrono::system_clock::time_point lastPoll = std::chrono::system_clock::now();
 };
 
 struct WatchChannel: public LogChannel { static const char* name(); static const int verbosity = 7; };
@@ -76,106 +76,122 @@ struct WorkChannel: public LogChannel { static const char* name(); static const 
 class ClientBase: public Interface
 {
 public:
-	ClientBase() {}
-	virtual ~ClientBase() {}
+    ClientBase() {}
+    virtual ~ClientBase() {}
 
-	/// Estimate gas usage for call/create.
-	/// @param _maxGas An upper bound value for estimation, if not provided default value of c_maxGasEstimate will be used.
-	/// @param _callback Optional callback function for progress reporting
-	virtual std::pair<u256, ExecutionResult> estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, int64_t _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback) override;
+    /// Estimate gas usage for call/create.
+    /// @param _maxGas An upper bound value for estimation, if not provided default value of c_maxGasEstimate will be used.
+    /// @param _callback Optional callback function for progress reporting
+    virtual std::pair<u256, ExecutionResult> estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, int64_t _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback) override;
 
-	using Interface::balanceAt;
-	using Interface::countAt;
-	using Interface::stateAt;
-	using Interface::codeAt;
-	using Interface::codeHashAt;
-	using Interface::storageAt;
+    using Interface::balanceAt;
+    using Interface::countAt;
+    using Interface::stateAt;
+    using Interface::codeAt;
+    using Interface::codeHashAt;
+    using Interface::storageAt;
 
-	virtual u256 balanceAt(Address _a, BlockNumber _block) const override;
-	virtual u256 countAt(Address _a, BlockNumber _block) const override;
-	virtual u256 stateAt(Address _a, u256 _l, BlockNumber _block) const override;
-	virtual h256 stateRootAt(Address _a, BlockNumber _block) const override;
-	virtual bytes codeAt(Address _a, BlockNumber _block) const override;
-	virtual h256 codeHashAt(Address _a, BlockNumber _block) const override;
-	virtual std::map<h256, std::pair<u256, u256>> storageAt(Address _a, BlockNumber _block) const override;
+    virtual u256 balanceAt(Address _a, BlockNumber _block) const override;
+    virtual u256 countAt(Address _a, BlockNumber _block) const override;
+    virtual u256 stateAt(Address _a, u256 _l, BlockNumber _block) const override;
+    virtual h256 stateRootAt(Address _a, BlockNumber _block) const override;
+    virtual bytes codeAt(Address _a, BlockNumber _block) const override;
+    virtual h256 codeHashAt(Address _a, BlockNumber _block) const override;
+    virtual std::map<h256, std::pair<u256, u256>> storageAt(Address _a, BlockNumber _block) const override;
 
-	virtual LocalisedLogEntries logs(unsigned _watchId) const override;
-	virtual LocalisedLogEntries logs(LogFilter const& _filter) const override;
-	virtual void prependLogsFromBlock(LogFilter const& _filter, h256 const& _blockHash, BlockPolarity _polarity, LocalisedLogEntries& io_logs) const;
+    virtual LocalisedLogEntries logs(unsigned _watchId) const override;
+    virtual LocalisedLogEntries logs(LogFilter const& _filter) const override;
+    virtual void prependLogsFromBlock(LogFilter const& _filter, h256 const& _blockHash, BlockPolarity _polarity, LocalisedLogEntries& io_logs) const;
 
-	/// Install, uninstall and query watches.
-	virtual unsigned installWatch(LogFilter const& _filter, Reaping _r = Reaping::Automatic) override;
-	virtual unsigned installWatch(h256 _filterId, Reaping _r = Reaping::Automatic) override;
-	virtual bool uninstallWatch(unsigned _watchId) override;
-	virtual LocalisedLogEntries peekWatch(unsigned _watchId) const override;
-	virtual LocalisedLogEntries checkWatch(unsigned _watchId) override;
+    /// Install, uninstall and query watches.
+    virtual unsigned installWatch(LogFilter const& _filter, Reaping _r = Reaping::Automatic) override;
+    virtual unsigned installWatch(h256 _filterId, Reaping _r = Reaping::Automatic) override;
+    virtual bool uninstallWatch(unsigned _watchId) override;
+    virtual LocalisedLogEntries peekWatch(unsigned _watchId) const override;
+    virtual LocalisedLogEntries checkWatch(unsigned _watchId) override;
 
-	virtual h256 hashFromNumber(BlockNumber _number) const override;
-	virtual BlockNumber numberFromHash(h256 _blockHash) const override;
-	virtual int compareBlockHashes(h256 _h1, h256 _h2) const override;
-	virtual BlockHeader blockInfo(h256 _hash) const override;
-	virtual BlockDetails blockDetails(h256 _hash) const override;
-	virtual Transaction transaction(h256 _transactionHash) const override;
-	virtual LocalisedTransaction localisedTransaction(h256 const& _transactionHash) const override;
-	virtual Transaction transaction(h256 _blockHash, unsigned _i) const override;
-	virtual LocalisedTransaction localisedTransaction(h256 const& _blockHash, unsigned _i) const override;
-	virtual TransactionReceipt transactionReceipt(h256 const& _transactionHash) const override;
-	virtual LocalisedTransactionReceipt localisedTransactionReceipt(h256 const& _transactionHash) const override;
-	virtual std::pair<h256, unsigned> transactionLocation(h256 const& _transactionHash) const override;
-	virtual Transactions transactions(h256 _blockHash) const override;
-	virtual TransactionHashes transactionHashes(h256 _blockHash) const override;
-	virtual BlockHeader uncle(h256 _blockHash, unsigned _i) const override;
-	virtual UncleHashes uncleHashes(h256 _blockHash) const override;
-	virtual unsigned transactionCount(h256 _blockHash) const override;
-	virtual unsigned uncleCount(h256 _blockHash) const override;
-	virtual unsigned number() const override;
-	virtual Transactions pending() const override;
-	virtual h256s pendingHashes() const override;
-	virtual BlockHeader pendingInfo() const override;
-	virtual BlockDetails pendingDetails() const override;
+    virtual h256 hashFromNumber(BlockNumber _number) const override;
+    virtual BlockNumber numberFromHash(h256 _blockHash) const override;
+    virtual int compareBlockHashes(h256 _h1, h256 _h2) const override;
+    virtual BlockHeader blockInfo(h256 _hash) const override;
+    virtual BlockDetails blockDetails(h256 _hash) const override;
+    virtual Transaction transaction(h256 _transactionHash) const override;
+    virtual LocalisedTransaction localisedTransaction(h256 const& _transactionHash) const override;
+    virtual Transaction transaction(h256 _blockHash, unsigned _i) const override;
+    virtual LocalisedTransaction localisedTransaction(h256 const& _blockHash, unsigned _i) const override;
+    virtual TransactionReceipt transactionReceipt(h256 const& _transactionHash) const override;
+    virtual LocalisedTransactionReceipt localisedTransactionReceipt(h256 const& _transactionHash) const override;
+    virtual std::pair<h256, unsigned> transactionLocation(h256 const& _transactionHash) const override;
+    virtual Transactions transactions(h256 _blockHash) const override;
+    virtual TransactionHashes transactionHashes(h256 _blockHash) const override;
+    virtual BlockHeader uncle(h256 _blockHash, unsigned _i) const override;
+    virtual UncleHashes uncleHashes(h256 _blockHash) const override;
+    virtual unsigned transactionCount(h256 _blockHash) const override;
+    virtual unsigned uncleCount(h256 _blockHash) const override;
+    virtual unsigned number() const override;
+    virtual Transactions pending() const override;
+    virtual h256s pendingHashes() const override;
+    virtual BlockHeader pendingInfo() const override;
+    virtual BlockDetails pendingDetails() const override;
 
-	virtual EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(pendingInfo().number()); }
+    virtual EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(pendingInfo().number()); }
 
-	virtual ImportResult injectBlock(bytes const& _block) override;
+    virtual ImportResult injectBlock(bytes const& _block) override;
 
-	using Interface::addresses;
-	virtual Addresses addresses(BlockNumber _block) const override;
-	virtual u256 gasLimitRemaining() const override;
-	virtual u256 gasBidPrice() const override { return DefaultGasPrice; }
+    using Interface::addresses;
+    virtual Addresses addresses(BlockNumber _block) const override;
+    virtual u256 gasLimitRemaining() const override;
+    virtual u256 gasBidPrice() const override { return DefaultGasPrice; }
 
-	/// Get the block author
-	virtual Address author() const override;
+    /// Get the block author
+    virtual Address author() const override;
 
-	virtual bool isKnown(h256 const& _hash) const override;
-	virtual bool isKnown(BlockNumber _block) const override;
-	virtual bool isKnownTransaction(h256 const& _transactionHash) const override;
-	virtual bool isKnownTransaction(h256 const& _blockHash, unsigned _i) const override;
+    virtual bool isKnown(h256 const& _hash) const override;
+    virtual bool isKnown(BlockNumber _block) const override;
+    virtual bool isKnownTransaction(h256 const& _transactionHash) const override;
+    virtual bool isKnownTransaction(h256 const& _blockHash, unsigned _i) const override;
 
-	virtual void startSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::startSealing")); }
-	virtual void stopSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::stopSealing")); }
-	virtual bool wouldSeal() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::wouldSeal")); }
+    virtual void startSealing() override
+    {
+        BOOST_THROW_EXCEPTION(
+            InterfaceNotSupported() << errinfo_interface("ClientBase::startSealing"));
+    }
+    virtual void stopSealing() override
+    {
+        BOOST_THROW_EXCEPTION(
+            InterfaceNotSupported() << errinfo_interface("ClientBase::stopSealing"));
+    }
+    virtual bool wouldSeal() const override
+    {
+        BOOST_THROW_EXCEPTION(
+            InterfaceNotSupported() << errinfo_interface("ClientBase::wouldSeal"));
+    }
 
-	virtual SyncStatus syncStatus() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::syncStatus")); }
+    virtual SyncStatus syncStatus() const override
+    {
+        BOOST_THROW_EXCEPTION(
+            InterfaceNotSupported() << errinfo_interface("ClientBase::syncStatus"));
+    }
 
-	Block block(BlockNumber _h) const;
+    Block block(BlockNumber _h) const;
 
 protected:
-	/// The interface that must be implemented in any class deriving this.
-	/// {
-	virtual BlockChain& bc() = 0;
-	virtual BlockChain const& bc() const = 0;
-	virtual Block block(h256 const& _h) const = 0;
-	virtual Block preSeal() const = 0;
-	virtual Block postSeal() const = 0;
-	virtual void prepareForTransaction() = 0;
-	/// }
+    /// The interface that must be implemented in any class deriving this.
+    /// {
+    virtual BlockChain& bc() = 0;
+    virtual BlockChain const& bc() const = 0;
+    virtual Block block(h256 const& _h) const = 0;
+    virtual Block preSeal() const = 0;
+    virtual Block postSeal() const = 0;
+    virtual void prepareForTransaction() = 0;
+    /// }
 
-	// filters
-	mutable Mutex x_filtersWatches;							///< Our lock.
-	std::unordered_map<h256, InstalledFilter> m_filters;	///< The dictionary of filters that are active.
-	std::unordered_map<h256, h256s> m_specialFilters = std::unordered_map<h256, std::vector<h256>>{{PendingChangedFilter, {}}, {ChainChangedFilter, {}}};
-															///< The dictionary of special filters and their additional data
-	std::map<unsigned, ClientWatch> m_watches;				///< Each and every watch - these reference a filter.
+    // filters
+    mutable Mutex x_filtersWatches;							///< Our lock.
+    std::unordered_map<h256, InstalledFilter> m_filters;	///< The dictionary of filters that are active.
+    std::unordered_map<h256, h256s> m_specialFilters = std::unordered_map<h256, std::vector<h256>>{{PendingChangedFilter, {}}, {ChainChangedFilter, {}}};
+                                                            ///< The dictionary of special filters and their additional data
+    std::map<unsigned, ClientWatch> m_watches;				///< Each and every watch - these reference a filter.
 };
 
 }}

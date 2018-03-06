@@ -133,9 +133,9 @@ int main(int argc, const char* argv[])
     {
         dev::test::Options::get(argc, argv);
     }
-    catch (dev::test::Options::InvalidOption const& e)
+    catch (dev::test::InvalidOption const& e)
     {
-        std::cerr << e.what() << "\n";
+        std::cerr << *boost::get_error_info<errinfo_comment>(e) << "\n";
         exit(1);
     }
 
