@@ -121,7 +121,7 @@ ChainParams ChainParams::loadConfig(
 	setOptionalU256Parameter(cp.EIP150ForkBlock, c_EIP150ForkBlock);
 	setOptionalU256Parameter(cp.EIP158ForkBlock, c_EIP158ForkBlock);
 	setOptionalU256Parameter(cp.byzantiumForkBlock, c_byzantiumForkBlock);
-	setOptionalU256Parameter(cp.byzantiumForkBlock, c_eWASMForkBlock);
+	setOptionalU256Parameter(cp.eWASMForkBlock, c_eWASMForkBlock);
 	setOptionalU256Parameter(cp.constantinopleForkBlock, c_constantinopleForkBlock);
 	setOptionalU256Parameter(cp.daoHardforkBlock, c_daoHardforkBlock);
 	setOptionalU256Parameter(cp.minimumDifficulty, c_minimumDifficulty);
