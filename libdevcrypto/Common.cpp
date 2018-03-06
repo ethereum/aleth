@@ -30,7 +30,7 @@
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/modes.h>
-#include <libscrypt/libscrypt.h>
+#include <libscrypt.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 #include "AES.h"

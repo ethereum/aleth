@@ -102,6 +102,9 @@ find_package(cryptopp CONFIG REQUIRED)
 hunter_add_package(libjson-rpc-cpp)
 find_package(libjson-rpc-cpp CONFIG REQUIRED)
 
+hunter_add_package(libscrypt)
+find_package(libscrypt CONFIG REQUIRED)
+
 include(ProjectSecp256k1)
 include(ProjectLibFF)
 
@@ -155,6 +158,3 @@ if (TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()
-
-# TODO: Split out json_spirit, libscrypt and sec256k1.
-add_subdirectory(utils)
