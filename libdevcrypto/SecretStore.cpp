@@ -104,18 +104,22 @@ void SecretStore::setPath(fs::path const& _path)
 
 bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass, bool _useCache) const
 {
-	auto rit = m_cached.find(_uuid);
-	if (_useCache && rit != m_cached.end())
-		return rit->second;
-	auto it = m_keys.find(_uuid);
-	bytesSec key;
-	if (it != m_keys.end())
-	{
-		key = bytesSec(decrypt(it->second.encryptedKey, _pass()));
-		if (!key.empty())
-			m_cached[_uuid] = key;
-	}
-	return key;
+    auto rit = m_cached.find(_uuid);
+    if (_useCache && rit != m_cached.end())
+        return rit->second;
+    auto it = m_keys.find(_uuid);
+    bytesSec key;
+    if (it != m_keys.end())
+    {
+        key = bytesSec(decrypt(it->second.encryptedKey, _pass()));
+        if (!key.empty())
+        {
+            m_cached[_uuid] = key;
+            // TODO: Fix constness.
+            const_cast<SecretStore*>(this)->noteAddress(_uuid, toAddress(Secret{key}));
+        }
+    }
+    return key;
 }
 
 bytesSec SecretStore::secret(Address const& _address, function<string()> const& _pass) const
@@ -200,12 +204,13 @@ void SecretStore::save(fs::path const& _keysPath)
 
 bool SecretStore::noteAddress(h128 const& _uuid, Address const& _address)
 {
-	if (m_keys.find(_uuid) != m_keys.end() && m_keys[_uuid].address == ZeroAddress)
-	{
-		m_keys[_uuid].address =	_address;
-		return true;
-	}
-	return false;
+    auto it = m_keys.find(_uuid);
+    if (it != m_keys.end() && it->second.address == ZeroAddress)
+    {
+        it->second.address = _address;
+        return true;
+    }
+    return false;
 }
 
 void SecretStore::load(fs::path const& _keysPath)
