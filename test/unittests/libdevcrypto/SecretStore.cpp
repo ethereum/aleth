@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(recode)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(keyImport_PBKDF2SHA256, *utf::expected_failures(1))
+BOOST_AUTO_TEST_CASE(keyImport_PBKDF2SHA256)
 {
 	// Imports a key from an external file. Tests that the imported key is there
 	// and that the external file is not deleted.
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(keyImport_PBKDF2SHA256, *utf::expected_failures(1))
 	fs::remove(importFile);
 }
 
-BOOST_AUTO_TEST_CASE(keyImport_Scrypt, *utf::expected_failures(1))
+BOOST_AUTO_TEST_CASE(keyImport_Scrypt)
 {
 	// Imports a key from an external file. Tests that the imported key is there
 	// and that the external file is not deleted.
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(keyImport_Scrypt, *utf::expected_failures(1))
 	fs::remove(importFile);
 }
 
-BOOST_AUTO_TEST_CASE(keyImport__ScryptV2, *utf::expected_failures(2))
+BOOST_AUTO_TEST_CASE(keyImport__ScryptV2, *utf::expected_failures(2) *utf::disabled())
 {
 	// Imports a key from an external file. Tests that the imported key is there
 	// and that the external file is not deleted.
