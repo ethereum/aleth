@@ -70,34 +70,16 @@ public:
     virtual void forEach(std::function<bool(Slice, Slice)> f) const = 0;
 };
 
-struct FailedToOpenDB : virtual Exception
-{
-    using Exception::Exception;
-};
-struct FailedInsertInDB : virtual Exception
-{
-    using Exception::Exception;
-};
-struct FailedLookupInDB : virtual Exception
-{
-    using Exception::Exception;
-};
-struct FailedDeleteInDB : virtual Exception
-{
-    using Exception::Exception;
-};
-struct FailedCommitInDB : virtual Exception
-{
-    using Exception::Exception;
-};
-struct FailedRollbackInDB : virtual Exception
-{
-    using Exception::Exception;
-};
-struct FailedIterateDB : virtual Exception
-{
-    using Exception::Exception;
-};
+DEV_SIMPLE_EXCEPTION(FailedToOpenDB);
+DEV_SIMPLE_EXCEPTION(FailedInsertInDB);
+DEV_SIMPLE_EXCEPTION(FailedLookupInDB);
+DEV_SIMPLE_EXCEPTION(FailedDeleteInDB);
+DEV_SIMPLE_EXCEPTION(FailedCommitInDB);
+DEV_SIMPLE_EXCEPTION(FailedIterateDB);
+DEV_SIMPLE_EXCEPTION(DBCorruption);
+DEV_SIMPLE_EXCEPTION(DBIOError);
+
+using errinfo_db = boost::error_info<struct tag_db, std::string>;
 
 }  // namespace db
 }  // namespace dev

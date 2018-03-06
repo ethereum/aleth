@@ -76,16 +76,21 @@ LevelDB::LevelDB(boost::filesystem::path const& _path, leveldb::ReadOptions _rea
     leveldb::WriteOptions _writeOptions, leveldb::Options _dbOptions)
   : m_db(nullptr), m_readOptions(std::move(_readOptions)), m_writeOptions(std::move(_writeOptions))
 {
+    std::string const path = _path.string();
     auto db = static_cast<leveldb::DB*>(nullptr);
-    auto const status = leveldb::DB::Open(_dbOptions, _path.string(), &db);
+    auto const status = leveldb::DB::Open(_dbOptions, path, &db);
     if (!status.ok())
     {
-        BOOST_THROW_EXCEPTION(FailedToOpenDB() << errinfo_comment(status.ToString()));
+        std::string const statusStr = status.ToString();
+
+        if (status.IsCorruption())
+            BOOST_THROW_EXCEPTION(DBCorruption() << errinfo_db(statusStr) << errinfo_path(path));
+        else if (status.IsIOError())
+            BOOST_THROW_EXCEPTION(DBIOError() << errinfo_db(statusStr) << errinfo_path(path));
+        else
+            BOOST_THROW_EXCEPTION(FailedToOpenDB() << errinfo_db(statusStr) << errinfo_path(path));
     }
-    if (!db)
-    {
-        BOOST_THROW_EXCEPTION(FailedToOpenDB() << errinfo_comment("null database pointer"));
-    }
+    assert(db);
     m_db.reset(db);
 }
 
@@ -96,7 +101,7 @@ std::string LevelDB::lookup(Slice _key) const
     auto const status = m_db->Get(m_readOptions, key, &value);
     if (!status.ok())
     {
-        BOOST_THROW_EXCEPTION(FailedLookupInDB() << errinfo_comment(status.ToString()));
+        BOOST_THROW_EXCEPTION(FailedLookupInDB() << errinfo_db(status.ToString()));
     }
     return value;
 }
@@ -116,7 +121,7 @@ void LevelDB::insert(Slice _key, Slice _value)
     auto const status = m_db->Put(m_writeOptions, key, value);
     if (!status.ok())
     {
-        BOOST_THROW_EXCEPTION(FailedInsertInDB() << errinfo_comment(status.ToString()));
+        BOOST_THROW_EXCEPTION(FailedInsertInDB() << errinfo_db(status.ToString()));
     }
 }
 
@@ -126,7 +131,7 @@ void LevelDB::kill(Slice _key)
     auto const status = m_db->Delete(m_writeOptions, key);
     if (!status.ok())
     {
-        BOOST_THROW_EXCEPTION(FailedDeleteInDB() << errinfo_comment(status.ToString()));
+        BOOST_THROW_EXCEPTION(FailedDeleteInDB() << errinfo_db(status.ToString()));
     }
 }
 
@@ -150,7 +155,7 @@ void LevelDB::commit(std::unique_ptr<WriteBatchFace> _batch)
     auto const status = m_db->Write(m_writeOptions, &batchPtr->writeBatch());
     if (!status.ok())
     {
-        BOOST_THROW_EXCEPTION(FailedCommitInDB() << errinfo_comment(status.ToString()));
+        BOOST_THROW_EXCEPTION(FailedCommitInDB() << errinfo_db(status.ToString()));
     }
 }
 

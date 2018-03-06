@@ -259,13 +259,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         m_blocksDB.reset(new db::DBImpl(chainPath / fs::path("blocks")));
         m_extrasDB.reset(new db::DBImpl(extrasPath / fs::path("extras")));
     }
-    catch (db::FailedToOpenDB const&)
-    {
-        // Do nothing, handled below
-    }
-
-
-    if (!m_blocksDB || !m_extrasDB)
+    catch (db::DBIOError const&)
     {
         if (fs::space(chainPath / fs::path("blocks")).available < 1024)
         {
