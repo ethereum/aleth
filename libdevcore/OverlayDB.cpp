@@ -77,14 +77,14 @@ void OverlayDB::commit()
                 m_db->commit(std::move(writeBatch));
                 break;
             }
-            catch (db::FailedCommitInDB const& ex)
+            catch (boost::exception const& ex)
             {
                 if (i == 9)
                 {
                     cwarn << "Fail writing to state database. Bombing out.";
                     exit(-1);
                 }
-                cwarn << "Error writing to state database: " << ex.what();
+                cwarn << "Error writing to state database: " << boost::diagnostic_information(ex);
                 cwarn << "Sleeping for" << (i + 1) << "seconds, then retrying.";
                 std::this_thread::sleep_for(std::chrono::seconds(i + 1));
             }
@@ -111,7 +111,7 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
     {
         v = m_db->lookup(toSlice(b));
     }
-    catch (db::FailedLookupInDB const&)
+    catch (db::NotFound const&)
     {
         cwarn << "Aux not found: " << _h;
     }
@@ -129,8 +129,16 @@ void OverlayDB::rollback()
 std::string OverlayDB::lookup(h256 const& _h) const
 {
     std::string ret = MemoryDB::lookup(_h);
-    if (ret.empty() && m_db)
-        DEV_IGNORE_EXCEPTIONS(ret = m_db->lookup(toSlice(_h)));
+    if (!ret.empty() || !m_db)
+        return ret;
+
+    try
+    {
+        ret = m_db->lookup(toSlice(_h));
+    }
+    catch (db::NotFound const&)
+    {
+    }
     return ret;
 }
 

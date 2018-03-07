@@ -351,7 +351,7 @@ private:
         {
             s = (_extrasDB ? _extrasDB : m_extrasDB.get())->lookup(toSlice(_h, N));
         }
-        catch (const db::FailedLookupInDB& /* ex */)
+        catch (db::NotFound& /* ex */)
         {
             return _n;
         }
