@@ -58,14 +58,21 @@ public:
     };
 
     StandardTrace();
-    void operator()(uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM);
+    void operator()(uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize,
+        bigint _gasCost, bigint _gas, VMFace const* _vm, ExtVMFace const* _extVM);
 
     void setShowMnemonics() { m_showMnemonics = true; }
     void setOptions(DebugOptions _options) { m_options = _options; }
 
     std::string json(bool _styled = false) const;
 
-    OnOpFunc onOp() { return [=](uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM) { (*this)(_steps, _PC, _inst, _newMemSize, _gasCost, _gas, _vm, _extVM); }; }
+    OnOpFunc onOp()
+    {
+        return [=](uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize,
+                   bigint _gasCost, bigint _gas, VMFace const* _vm, ExtVMFace const* _extVM) {
+            (*this)(_steps, _PC, _inst, _newMemSize, _gasCost, _gas, _vm, _extVM);
+        };
+    }
 
 private:
     bool m_showMnemonics = false;
@@ -164,9 +171,6 @@ public:
 
     /// Operation function for providing a simple trace of the VM execution.
     static OnOpFunc simpleTrace();
-
-    /// Operation function for providing a simple trace of the VM execution.
-    static OnOpFunc standardTrace(std::ostream& o_output);
 
     /// @returns gas remaining after the transaction/operation. Valid after the transaction has been executed.
     u256 gas() const { return m_gas; }

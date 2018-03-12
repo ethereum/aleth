@@ -316,7 +316,8 @@ int main(int argc, char** argv)
     unordered_map<byte, pair<unsigned, bigint>> counts;
     unsigned total = 0;
     bigint memTotal;
-    auto onOp = [&](uint64_t step, uint64_t PC, Instruction inst, bigint m, bigint gasCost, bigint gas, VM* vm, ExtVMFace const* extVM) {
+    auto onOp = [&](uint64_t step, uint64_t PC, Instruction inst, bigint m, bigint gasCost,
+                    bigint gas, VMFace const* _vm, ExtVMFace const* extVM) {
         if (mode == Mode::Statistics)
         {
             counts[(byte)inst].first++;
@@ -326,7 +327,7 @@ int main(int argc, char** argv)
                 memTotal = m;
         }
         else if (mode == Mode::Trace)
-            st(step, PC, inst, m, gasCost, gas, vm, extVM);
+            st(step, PC, inst, m, gasCost, gas, _vm, extVM);
     };
 
     executive.initialize(t);
