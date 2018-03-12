@@ -28,6 +28,7 @@ enum class VMKind
     Interpreter,
     JIT,
     Hera,
+    Legacy,
 };
 
 /// Returns the EVM-C options parsed from command line.

@@ -41,7 +41,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     if (r.status() == EVM_REJECTED)
     {
         cwarn << "Execution rejected by EVM-C, executing with interpreter";
-        return VMFactory::create(VMKind::Interpreter)->exec(io_gas, _ext, _onOp);
+        return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
     }
 
     // TODO: Add EVM-C result codes mapping with exception types.
