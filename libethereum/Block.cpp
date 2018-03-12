@@ -781,13 +781,6 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
         transactionsMap.insert(std::make_pair(k.out(), txrlp.out()));
 
         txs.appendRaw(txrlp.out());
-
-//#if ETH_PARANOIA
-/*		if (fromPending(i).transactionsFrom(m_transactions[i].from()) != m_transactions[i].nonce())
-        {
-            cwarn << "GAAA Something went wrong! " << fromPending(i).transactionsFrom(m_transactions[i].from()) << "!=" << m_transactions[i].nonce();
-        }*/
-//#endif
     }
 
     txs.swapOut(m_currentTxs);

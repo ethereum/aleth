@@ -63,7 +63,7 @@ namespace eth
 #endif
 
 #ifndef EVM_OPTIMIZE
-	#define EVM_OPTIMIZE true
+	#define EVM_OPTIMIZE false
 #endif
 #if EVM_OPTIMIZE
 	#define EVM_REPLACE_CONST_JUMP true
