@@ -14,18 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file VM.h
- */
 
 #pragma once
 
-#include <unordered_map>
-#include <libdevcore/Exceptions.h>
-#include <libethcore/Common.h>
-#include <libdevcore/SHA3.h>
-#include <libethcore/BlockHeader.h>
-#include "VMFace.h"
 #include "Instruction.h"
+#include "VMConfig.h"
+#include "VMFace.h"
 
 namespace dev
 {
@@ -154,13 +148,9 @@ private:
 	void throwDisallowedStateChange();
 	void throwBufferOverrun(bigint const& _enfOfAccess);
 
-	void reportStackUse();
-
 	std::vector<uint64_t> m_beginSubs;
 	std::vector<uint64_t> m_jumpDests;
 	int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
-
-	int poolConstant(const u256&);
 
 	void onOperation();
 	void adjustStack(unsigned _removed, unsigned _added);

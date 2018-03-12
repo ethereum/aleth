@@ -14,9 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <libethereum/ExtVM.h>
-#include "VMConfig.h"
+
 #include "VM.h"
+
 #if EIP_616
 
 namespace dev
@@ -462,6 +462,7 @@ void VM::xget(uint8_t _srcType, uint8_t _idxType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	case Bits16:
 
@@ -486,6 +487,7 @@ void VM::xget(uint8_t _srcType, uint8_t _idxType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	case Bits32:
 
@@ -510,6 +512,7 @@ void VM::xget(uint8_t _srcType, uint8_t _idxType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	case Bits64:
 
@@ -534,6 +537,7 @@ void VM::xget(uint8_t _srcType, uint8_t _idxType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	default:
 		throwBadInstruction();
@@ -573,6 +577,7 @@ void VM::xput(uint8_t _srcType, uint8_t _dstType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	case Bits16:
 
@@ -597,6 +602,7 @@ void VM::xput(uint8_t _srcType, uint8_t _dstType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	case Bits32:
 
@@ -621,6 +627,7 @@ void VM::xput(uint8_t _srcType, uint8_t _dstType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	case Bits64:
 
@@ -645,6 +652,7 @@ void VM::xput(uint8_t _srcType, uint8_t _dstType)
 		default:
 			throwBadInstruction();
 		}
+		break;
 
 	default:
 		throwBadInstruction();
