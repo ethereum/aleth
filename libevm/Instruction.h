@@ -252,6 +252,13 @@ struct InstructionInfo
 	Tier gasPriceTier;   ///< Tier for gas pricing.
 };
 
+struct InstructionMetric
+{
+	Tier gasPriceTier;
+	int args;
+	int ret;
+};
+
 /// Information on all the instructions.
 InstructionInfo instructionInfo(Instruction _inst);
 
