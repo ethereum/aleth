@@ -206,4 +206,32 @@ BOOST_AUTO_TEST_CASE(ethash_dag_items)
     }
 }
 
+BOOST_AUTO_TEST_CASE(ethash_single_hash)
+{
+    const uint64_t n = 2683077;
+    const h256 headerHash{"0313d03c5ed78694c90ecb3d04190b82d5b222c75ba4cab83383dde4d11ed512"};
+    const uint64_t nonce = 0x8c5eaec000788d41;
+
+    auto cache = ethash_light_new(n);
+
+
+    auto r = ethash_light_compute(cache, *(ethash_h256*)&headerHash, nonce);
+    auto mixHash = *(h256*)&r.mix_hash;
+    auto resultHash = *(h256*)&r.result;
+
+    BOOST_CHECK_EQUAL(mixHash.hex(), "93e85c97b34ccd8091e09ddb513fdc9e680fa8898d4a0737205e60af710a3dcb");
+    BOOST_CHECK_EQUAL(resultHash.hex(), "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e");
+}
+
+BOOST_AUTO_TEST_CASE(etash_seed_2048)
+{
+    constexpr uint64_t epoch = 2048;
+    constexpr uint64_t blockNumber = epoch * 30000 + 1;
+    const h256 expectedSeed{"20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920"};
+
+    const auto seed = ethash_get_seedhash(blockNumber);
+
+    BOOST_CHECK(std::equal(expectedSeed.begin(), expectedSeed.end(), seed.b));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
