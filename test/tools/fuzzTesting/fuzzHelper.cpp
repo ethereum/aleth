@@ -620,21 +620,6 @@ int RandomCodeOptions::getWeightedRandomOpcode() const
 
 BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelperFixture)
 
-BOOST_AUTO_TEST_CASE(rndCode)
-{
-	try
-	{
-		test::RandomCodeOptions options;
-		options.emptyCodeProbability = 0;
-		std::string code = test::RandomCode::get().generate(1000, options);
-		BOOST_REQUIRE(!code.empty());
-	}
-	catch(dev::Exception const& _e)
-	{
-		BOOST_ERROR("Exception thrown when generating random code! " + diagnostic_information(_e));
-	}
-}
-
 BOOST_AUTO_TEST_CASE(rndStateTest)
 {
 	try
