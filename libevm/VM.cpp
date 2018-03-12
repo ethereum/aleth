@@ -33,6 +33,18 @@ void destroy(evm_instance* _instance)
 {
     delete static_cast<VM*>(_instance);
 }
+
+evm_result execute(evm_instance* _instance, evm_context* _context, evm_revision _rev,
+    const evm_message* _msg, uint8_t const* _code, size_t _codeSize)
+{
+    auto vm = static_cast<VM*>(_instance);
+    u256 gas = _msg->gas;
+    (void)_rev;
+    (void)_code;
+    (void)_codeSize;
+    vm->exec(gas, *(ExtVMFace*)(_context));
+    return {};
+}
 }
 
 
@@ -40,8 +52,7 @@ namespace dev
 {
 namespace eth
 {
-VM::VM() : evm_instance{EVM_ABI_VERSION, ::destroy, nullptr, nullptr}
-{}
+VM::VM() : evm_instance{EVM_ABI_VERSION, ::destroy, ::execute, nullptr} {}
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
