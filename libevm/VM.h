@@ -27,12 +27,12 @@ namespace dev
 namespace eth
 {
 
-class VM: public VMFace, public evm_instance
+class VM: public evm_instance
 {
 public:
     VM();
 
-    owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
+    owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp);
 
 #if EIP_615
     // invalid code will throw an exeption
@@ -132,7 +132,7 @@ private:
     std::vector<uint64_t> m_jumpDests;
     int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
 
-    void onOperation();
+    void onOperation() {}
     void adjustStack(unsigned _removed, unsigned _added);
     uint64_t gasForMem(u512 _size);
     void updateSSGas();

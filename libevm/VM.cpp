@@ -91,17 +91,6 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 
 
 //
-// for tracing, checking, metering, measuring ...
-//
-void VM::onOperation()
-{
-    if (m_onOp)
-        (m_onOp)(++m_nSteps, m_PC, m_OP,
-            m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
-            m_runGas, m_io_gas, this, m_ext);
-}
-
-//
 // set current SP to SP', adjust SP' per _removed and _added items
 //
 void VM::adjustStack(unsigned _removed, unsigned _added)
@@ -192,7 +181,7 @@ owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
     m_ext = &_ext;
     m_schedule = &m_ext->evmSchedule();
     m_onOp = _onOp;
-    m_onFail = &VM::onOperation; // this results in operations that fail being logged twice in the trace
+    m_onFail = nullptr;  // TODO: Check if ever used.
     m_PC = 0;
 
     try
