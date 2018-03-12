@@ -160,7 +160,7 @@ void VM::caseCreate()
 
         h160 addr;
         owning_bytes_ref output;
-        std::tie(addr, output) = m_ext->create(endowment, gas, initCode, m_OP, salt, m_onOp);
+        std::tie(addr, output) = m_ext->create(endowment, gas, initCode, m_OP, salt, {});
         m_SPP[0] = (u160)addr;  // Convert address to integer.
         m_returnData = output.toBytes();
 
@@ -276,7 +276,7 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 
     if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
     {
-        callParams->onOp = m_onOp;
+        callParams->onOp = {};
         callParams->senderAddress = m_OP == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
         callParams->receiveAddress = (m_OP == Instruction::CALL || m_OP == Instruction::STATICCALL) ? callParams->codeAddress : m_ext->myAddress;
         callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);

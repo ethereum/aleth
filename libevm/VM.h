@@ -32,7 +32,7 @@ class VM: public evm_instance
 public:
     VM();
 
-    owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp);
+    owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext);
 
 #if EIP_615
     // invalid code will throw an exeption
@@ -48,18 +48,18 @@ public:
     };
 
 private:
+
     u256* m_io_gas_p = 0;
     uint64_t m_io_gas = 0;
     ExtVMFace* m_ext = 0;
-    OnOpFunc m_onOp;
 
     static std::array<InstructionMetric, 256> c_metrics;
     static void initMetrics();
     static u256 exp256(u256 _base, u256 _exponent);
     void copyCode(int);
     typedef void (VM::*MemFnPtr)();
-    MemFnPtr m_bounce = nullptr;
-    MemFnPtr m_onFail = nullptr;
+    MemFnPtr m_bounce = 0;
+    MemFnPtr m_onFail = 0;
     uint64_t m_nSteps = 0;
     EVMSchedule const* m_schedule = nullptr;
 

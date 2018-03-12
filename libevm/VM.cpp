@@ -174,13 +174,12 @@ void VM::fetchInstruction()
 //
 // interpreter entry point
 
-owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext)
 {
     m_io_gas_p = &_io_gas;
     m_io_gas = uint64_t(_io_gas);
     m_ext = &_ext;
     m_schedule = &m_ext->evmSchedule();
-    m_onOp = _onOp;
     m_onFail = nullptr;  // TODO: Check if ever used.
     m_PC = 0;
 
