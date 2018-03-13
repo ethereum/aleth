@@ -44,6 +44,7 @@ class VMFactory
 {
 public:
 	VMFactory() = delete;
+	~VMFactory() = delete;
 
 	/// Creates a VM instance of global kind (controlled by setKind() function).
 	static std::unique_ptr<VMFace> create();
