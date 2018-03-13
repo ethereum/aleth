@@ -177,7 +177,7 @@ public:
     /// Full constructor.
     ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin,
         u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash,
-        unsigned _depth, bool _staticCall);
+        unsigned _depth, bool _isCreate, bool _staticCall);
 
     virtual ~ExtVMFace() = default;
 
@@ -239,6 +239,7 @@ public:
     h256 codeHash;            ///< SHA3 hash of the executing code
     SubState sub;             ///< Sub-band VM state (suicides, refund counter, logs).
     unsigned depth = 0;       ///< Depth of the present call.
+    bool isCreate = false;    ///< Is this a CREATE call?
     bool staticCall = false;  ///< Throw on state changing.
 };
 
