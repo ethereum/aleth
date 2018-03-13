@@ -70,14 +70,14 @@ public:
     Result execute(ExtVMFace& _ext, int64_t gas)
     {
         auto mode = toRevision(_ext.evmSchedule());
+        evm_call_kind kind = _ext.isCreate ? EVM_CREATE : EVM_CALL;
         uint32_t flags = _ext.staticCall ? EVM_STATIC : 0;
-        evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
-                           toEvmC(_ext.value), _ext.data.data(),
-                           _ext.data.size(), toEvmC(_ext.codeHash), gas,
-                           static_cast<int32_t>(_ext.depth), EVM_CALL, flags};
-        return Result{m_instance->execute(
-            m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size()
-        )};
+        assert(flags != EVM_STATIC || kind == EVM_CALL);  // STATIC implies a CALL.
+        evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller), toEvmC(_ext.value),
+            _ext.data.data(), _ext.data.size(), toEvmC(_ext.codeHash), gas,
+            static_cast<int32_t>(_ext.depth), kind, flags};
+        return Result{
+            m_instance->execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
     }
 
 private:
