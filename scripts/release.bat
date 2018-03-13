@@ -24,8 +24,6 @@ REM Copyright (c) 2016 cpp-ethereum contributors.
 REM ---------------------------------------------------------------------------
 
 set CONFIGURATION=%1
-set ETHEREUM_DEPS_PATH=%2
-set TESTS=%3
 
 7z a cpp-ethereum-windows.zip ^
     .\build\eth\%CONFIGURATION%\eth.exe ^

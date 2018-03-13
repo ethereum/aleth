@@ -32,7 +32,6 @@ os: Visual Studio 2015
 configuration:
   - RelWithDebInfo
 environment:
-  TESTS: On
   GITHUB_USER_PASSWORD:
     secure: 7TuNppxpvI3M/IF1PfvzZ8LluCeCQAsdFoJY+KhNv/pe/rAw5HEsTjqdbyM1mEtd
 cache:
@@ -45,18 +44,17 @@ install:
   - pip install requests
 
   - scripts/install_deps.bat
-  - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps
 before_build: |
   if not exist build mkdir build
   cd build
-  cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=%TESTS% -DEVMJIT=OFF
-build_script:
-    - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - scripts\release.bat %CONFIGURATION% %ETHEREUM_DEPS_PATH% %TESTS%
-test_script:
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - scripts\tests.bat %TESTS% %CONFIGURATION% %APPVEYOR_BUILD_FOLDER% %ETHEREUM_DEPS_PATH%
+  cmake -G "Visual Studio 14 2015 Win64" .. -DCMAKE_SUPPRESS_REGENERATION=ON
+build_script: |
+  msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:4 /v:minimal
+  cd %APPVEYOR_BUILD_FOLDER%
+  scripts\release.bat %CONFIGURATION%
+test_script: |
+  cd build
+  ctest --build-config %CONFIGURATION% --output-on-failure -j4
 artifacts:
     - path: cpp-ethereum-windows.zip
       name: cpp-ethereum-windows-zip
@@ -82,11 +80,3 @@ deploy:
     artifact: cpp-ethereum-windows-zip
     on:
         branch: release
-
-# Disable slightly annoying AppVeyorBot.  The comments it adds onto Github issues are
-# redundant with the "Checks Passed/Failure" detail which is already on the issues.
-notifications:
-    - provider: GitHubPullRequest
-      on_build_success: false
-      on_build_failure: false
-      on_build_status_changed: false
