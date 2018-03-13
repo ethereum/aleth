@@ -21,6 +21,11 @@
 #include <evmjit.h>
 #include <hera.h>
 
+#include <boost/dll/import.hpp>
+#include <boost/dll/shared_library.hpp>
+#include <boost/function.hpp>
+
+namespace dll = boost::dll;
 namespace po = boost::program_options;
 
 namespace dev
@@ -141,10 +146,16 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
     case VMKind::JIT:
         return std::unique_ptr<VMFace>(new EVMC{evmjit_create()});
 #endif
-#ifdef ETH_HERA
     case VMKind::Hera:
-        return std::unique_ptr<VMFace>(new EVMC{hera_create()});
-#endif
+    {
+        boost::function<struct evm_instance*()> create_vm =
+            dll::import<struct evm_instance*()>(
+                "hera",
+                "hera_create",
+                dll::load_mode::search_system_folders | dll::load_mode::append_decorations
+            );
+        return std::unique_ptr<VMFace>(new EVMC{create_vm()});
+    }
     case VMKind::Interpreter:
     default:
         return std::unique_ptr<VMFace>(new VM);
@@ -156,9 +167,21 @@ VMFactory::StaticData::StaticData() {
 #if ETH_EVMJIT
     vmKindsTable[VMKind::JIT] = "jit";
 #endif
-#ifdef ETH_HERA
-    vmKindsTable[VMKind::Hera] = "hera";
-#endif
+    try {
+        dll::shared_library lib(
+            "hera",
+            dll::load_mode::append_decorations
+        );
+        if(lib.has("hera_create")) {
+            vmKindsTable[VMKind::Hera] = "hera";
+        }
+    } catch( const boost::system::system_error& ex ) {
+        if(ex.code() == boost::system::errc::bad_file_descriptor) {
+            // We couldn't find the plugin, that's ok
+        } else {
+            throw;
+        }
+    }
 }
 }
 }

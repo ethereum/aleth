@@ -20,7 +20,7 @@ endif()
 
 add_library(evm ${sources})
 
-target_link_libraries(evm PUBLIC ethcore devcore PRIVATE jsoncpp_lib_static Boost::program_options)
+target_link_libraries(evm PUBLIC ethcore devcore PRIVATE jsoncpp_lib_static Boost::program_options ${CMAKE_DL_LIBS})
 target_include_directories(evm PUBLIC ${CMAKE_SOURCE_DIR}/evmjit/include)
 target_include_directories(evm PUBLIC ${CMAKE_SOURCE_DIR}/hera/src)
 
@@ -31,9 +31,4 @@ endif()
 if(EVMJIT)
     target_link_libraries(evm PRIVATE evmjit)
     target_compile_definitions(evm PRIVATE ETH_EVMJIT)
-endif()
-
-if(HERA)
-    target_link_libraries(evm PRIVATE hera)
-    target_compile_definitions(evm PRIVATE ETH_HERA)
 endif()
