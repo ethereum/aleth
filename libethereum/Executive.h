@@ -11,19 +11,17 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Executive.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
-#include <functional>
-#include <json/json.h>
+#include "Transaction.h"
+
 #include <libdevcore/Log.h>
 #include <libethcore/Common.h>
 #include <libevm/VMFace.h>
-#include "Transaction.h"
+
+#include <json/json.h>
+#include <functional>
 
 namespace Json
 {
@@ -72,7 +70,6 @@ public:
 private:
     bool m_showMnemonics = false;
     std::vector<Instruction> m_lastInst;
-    bytes m_lastCallData;
     Json::Value m_trace;
     DebugOptions m_options;
 };
