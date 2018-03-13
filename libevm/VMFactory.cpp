@@ -27,33 +27,11 @@ namespace dev
 {
 namespace eth
 {
+VMFactory::StaticData VMFactory::staticData;
+
 namespace
 {
 auto g_kind = VMKind::Interpreter;
-
-/// A helper type to build the tabled of VM implementations.
-///
-/// More readable than std::tuple.
-/// Fields are not initialized to allow usage of construction with initializer lists {}.
-struct VMKindTableEntry
-{
-    VMKind kind;
-    const char* name;
-};
-
-/// The table of available VM implementations.
-///
-/// We don't use a map to avoid complex dynamic initialization. This list will never be long,
-/// so linear search only to parse command line arguments is not a problem.
-VMKindTableEntry vmKindsTable[] = {
-    {VMKind::Interpreter, "interpreter"},
-#if ETH_EVMJIT
-    {VMKind::JIT, "jit"},
-#endif
-#if ETH_HERA
-    {VMKind::Hera, "hera"},
-#endif
-};
 }
 
 void validate(boost::any& v, const std::vector<std::string>& values, VMKind* /* target_type */, int)
@@ -65,12 +43,12 @@ void validate(boost::any& v, const std::vector<std::string>& values, VMKind* /* 
     // one string, it's an error, and exception will be thrown.
     const std::string& s = po::validators::get_single_string(values);
 
-    for (auto& entry : vmKindsTable)
+    for (auto& entry : VMFactory::staticData.vmKindsTable)
     {
         // Try to find a match in the table of VMs.
-        if (s == entry.name)
+        if (s == entry.second)
         {
-            v = entry.kind;
+            v = entry.first;
             return;
         }
     }
@@ -115,11 +93,11 @@ po::options_description vmProgramOptions(unsigned _lineLength)
     // It must be a static object because boost expects const char*.
     static const std::string description = [] {
         std::string names;
-        for (auto& entry : vmKindsTable)
+        for (auto& entry : VMFactory::staticData.vmKindsTable)
         {
             if (!names.empty())
                 names += ", ";
-            names += entry.name;
+            names += entry.second;
         }
 
         return "Select VM implementation. Available options are: " + names + ".";
@@ -171,6 +149,16 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
     default:
         return std::unique_ptr<VMFace>(new VM);
     }
+}
+
+VMFactory::StaticData::StaticData() {
+    vmKindsTable[VMKind::Interpreter] = "interpreter";
+#if ETH_EVMJIT
+    vmKindsTable[VMKind::JIT] = "jit";
+#endif
+#ifdef ETH_HERA
+    vmKindsTable[VMKind::Hera] = "hera";
+#endif
 }
 }
 }

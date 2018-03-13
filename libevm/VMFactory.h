@@ -42,9 +42,24 @@ boost::program_options::options_description vmProgramOptions(
 
 class VMFactory
 {
+	class StaticData
+	{
+		friend class VMFactory;
+
+	public:
+		/// The table of available VM implementations.
+		std::map<VMKind, const char*> vmKindsTable;
+
+		StaticData();
+	};
+
 public:
 	VMFactory() = delete;
 	~VMFactory() = delete;
+
+	/// Does any static initialization that VMFactory needs, such as retrieving the list of
+	/// available VM implementations at runtime.
+	static StaticData staticData;
 
 	/// Creates a VM instance of global kind (controlled by setKind() function).
 	static std::unique_ptr<VMFace> create();
