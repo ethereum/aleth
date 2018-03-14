@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "VM.h"
@@ -28,7 +28,7 @@ namespace eth
 // a dirty trick but it keeps the SIMD types from polluting the rest of the VM
 // so at least assert there's room for the trick, and use wrappers for some safety
 static_assert(sizeof(uint64_t[4]) <= sizeof(u256), "stack slot too narrow for SIMD");
-using a64x4  = uint64_t[4];		
+using a64x4  = uint64_t[4];        
 using a32x8  = uint32_t[8];
 using a16x16 = uint16_t[16];
 using a8x32  = uint8_t [32];
@@ -49,28 +49,28 @@ enum { Bits8, Bits16, Bits32, Bits64 };
 #define EVALXOPU(OP, _type) EVALXOP(OP, uint8_t, uint16_t, uint32_t, uint64_t, _type)
 #define EVALXOP(OP, T8, T16, T32, T64, _type) \
 { \
-	uint8_t const t = (_type) & 0xf; \
-	m_SPP[0] = 0; \
-	switch (t) \
-	{ \
-	case Bits8: \
-		for (int i = 0; i < 32; ++i) \
-			v8x32(m_SPP[0])[i]  = (uint8_t) OP((T8) v8x32(m_SP[0])[i],  (T8) v8x32(m_SP[1])[i]); \
-		break; \
-	case Bits16: \
-		for (int i = 0; i < 16; ++i) \
-			v16x16(m_SPP[0])[i] = (uint16_t)OP((T16)v16x16(m_SP[0])[i], (T16)v16x16(m_SP[1])[i]); \
-		break; \
-	case Bits32: \
-		for (int i = 0; i < 8; ++i) \
-			v32x8(m_SPP[0])[i]  = (uint32_t)OP((T32)v32x8(m_SP[0])[i],  (T32)v32x8(m_SP[1])[i]); \
-		break; \
-	case Bits64: \
-		for (int i = 0; i < 4; ++i) \
-			v64x4(m_SPP[0])[i]  = (uint64_t)OP((T64)v64x4(m_SP[0])[i],  (T64)v64x4(m_SP[1])[i]); \
-		break; \
-	default: throwBadInstruction(); \
-	} \
+    uint8_t const t = (_type) & 0xf; \
+    m_SPP[0] = 0; \
+    switch (t) \
+    { \
+    case Bits8: \
+        for (int i = 0; i < 32; ++i) \
+            v8x32(m_SPP[0])[i]  = (uint8_t) OP((T8) v8x32(m_SP[0])[i],  (T8) v8x32(m_SP[1])[i]); \
+        break; \
+    case Bits16: \
+        for (int i = 0; i < 16; ++i) \
+            v16x16(m_SPP[0])[i] = (uint16_t)OP((T16)v16x16(m_SP[0])[i], (T16)v16x16(m_SP[1])[i]); \
+        break; \
+    case Bits32: \
+        for (int i = 0; i < 8; ++i) \
+            v32x8(m_SPP[0])[i]  = (uint32_t)OP((T32)v32x8(m_SP[0])[i],  (T32)v32x8(m_SP[1])[i]); \
+        break; \
+    case Bits64: \
+        for (int i = 0; i < 4; ++i) \
+            v64x4(m_SPP[0])[i]  = (uint64_t)OP((T64)v64x4(m_SP[0])[i],  (T64)v64x4(m_SP[1])[i]); \
+        break; \
+    default: throwBadInstruction(); \
+    } \
 }
 #define ADD( x1, x2) ((x1) + (x2))
 #define MUL( x1, x2) ((x1) * (x2))
@@ -117,619 +117,619 @@ void VM::xror (uint8_t _type) { EVALXOPU(ROR, _type); }
 //
 inline uint8_t pow2N(uint8_t _n)
 {
-	static uint8_t exp[6] = { 1, 2, 4, 8, 16, 32 };
-	return exp[_n];
+    static uint8_t exp[6] = { 1, 2, 4, 8, 16, 32 };
+    return exp[_n];
 }
 
 inline uint8_t laneCount(uint8_t _type)
 {
-	return pow2N(_type & 0xf);
+    return pow2N(_type & 0xf);
 }
 
 inline uint8_t laneWidth(uint8_t _type)
 {
-	return pow2N(_type >> 4);
+    return pow2N(_type >> 4);
 }
 
 // in must be by reference because it is really just memory for a vector
 u256 VM::vtow(uint8_t _type, const u256& _in)
 {
-	u256 out;
-	uint8_t const count = laneCount(_type);
-	uint8_t const width = laneWidth(_type);
-	switch (width)
-	{
-	case Bits8:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			out << 8;
-			out |= v8x32(_in) [i];
-		}
-		break;
-	case Bits16:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			out << 16;
-			out |= v16x16(_in)[i];
-		}
-		break;
-	case Bits32:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			out << 32;
-			out |= v32x8(_in) [i];
-		}
-		break;
-	case Bits64:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			out << 64;
-			out |= v64x4(_in) [i];
-		}
-		break;
-	default:
-		throwBadInstruction();
-	}
-	return out;
+    u256 out;
+    uint8_t const count = laneCount(_type);
+    uint8_t const width = laneWidth(_type);
+    switch (width)
+    {
+    case Bits8:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            out << 8;
+            out |= v8x32(_in) [i];
+        }
+        break;
+    case Bits16:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            out << 16;
+            out |= v16x16(_in)[i];
+        }
+        break;
+    case Bits32:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            out << 32;
+            out |= v32x8(_in) [i];
+        }
+        break;
+    case Bits64:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            out << 64;
+            out |= v64x4(_in) [i];
+        }
+        break;
+    default:
+        throwBadInstruction();
+    }
+    return out;
 }
 
 // out must be by reference because it is really just memory for a vector
 void VM::wtov(uint8_t _type, u256 _in, u256& o_out)
 {
-	uint8_t const count = laneCount(_type);
-	uint8_t const width = laneWidth(_type);
-	switch (width)
-	{
-	case Bits8:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			v8x32(o_out) [i] = (uint8_t )(_in & 0xff);
-			_in >>= 8;
-		}
-		break;
-	case Bits16:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			v16x16(o_out)[i] = (uint16_t)(_in & 0xffff);
-			_in >>= 16;
-		}
-		break;
-	case Bits32:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			v32x8(o_out) [i] = (uint32_t)(_in & 0xffffff);
-			_in >>= 32;
-		}
-		break;
-	case Bits64:
-		for (int i = count - 1; 0 <= i; --i)
-		{ 
-			v64x4(o_out) [i] = (uint64_t)(_in & 0xffffffff);
-			_in >>= 64;
-		}
-		break;
-	default:
-		throwBadInstruction();
-	}
+    uint8_t const count = laneCount(_type);
+    uint8_t const width = laneWidth(_type);
+    switch (width)
+    {
+    case Bits8:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            v8x32(o_out) [i] = (uint8_t )(_in & 0xff);
+            _in >>= 8;
+        }
+        break;
+    case Bits16:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            v16x16(o_out)[i] = (uint16_t)(_in & 0xffff);
+            _in >>= 16;
+        }
+        break;
+    case Bits32:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            v32x8(o_out) [i] = (uint32_t)(_in & 0xffffff);
+            _in >>= 32;
+        }
+        break;
+    case Bits64:
+        for (int i = count - 1; 0 <= i; --i)
+        { 
+            v64x4(o_out) [i] = (uint64_t)(_in & 0xffffffff);
+            _in >>= 64;
+        }
+        break;
+    default:
+        throwBadInstruction();
+    }
 }
 
 void VM::xmload (uint8_t _type)
 {
-	// goes onto stack element by element, LSB first
-	uint8_t const* vecData = m_mem.data() + toInt15(m_SP[0]);
-	uint8_t const count = laneCount(_type);
-	uint8_t const width = laneWidth(_type);
+    // goes onto stack element by element, LSB first
+    uint8_t const* vecData = m_mem.data() + toInt15(m_SP[0]);
+    uint8_t const count = laneCount(_type);
+    uint8_t const width = laneWidth(_type);
 
-	switch (width)
-	{
-	case Bits8:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 0;
-			v |= vecData[--j];
-			v8x32(m_SPP[0])[i] = v;
-		}
-		break;
-	case Bits16:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 0;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v16x16(m_SPP[0])[i] = v;
-		}
-		break;
-	case Bits32:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 0;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v32x8(m_SPP[0])[i] = v;
-		}
-		break;
-	case Bits64:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 0;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v <<= 8;
-			v |= vecData[--j];
-			v64x4(m_SPP[0])[i] = v;
-		}
-		break;
-	default:
-		throwBadInstruction();
-	}
+    switch (width)
+    {
+    case Bits8:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 0;
+            v |= vecData[--j];
+            v8x32(m_SPP[0])[i] = v;
+        }
+        break;
+    case Bits16:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 0;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v16x16(m_SPP[0])[i] = v;
+        }
+        break;
+    case Bits32:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 0;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v32x8(m_SPP[0])[i] = v;
+        }
+        break;
+    case Bits64:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 0;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v <<= 8;
+            v |= vecData[--j];
+            v64x4(m_SPP[0])[i] = v;
+        }
+        break;
+    default:
+        throwBadInstruction();
+    }
 }
    
 void VM::xmstore(uint8_t _type)
 {
-	// n bytes of type t elements in stack vector
-	// goes onto memory by element, LSB first
-	uint8_t* vecData = m_mem.data() + toInt15(m_SP[0]);
-	uint8_t const count = laneCount(_type);
-	uint8_t const width = laneWidth(_type);
+    // n bytes of type t elements in stack vector
+    // goes onto memory by element, LSB first
+    uint8_t* vecData = m_mem.data() + toInt15(m_SP[0]);
+    uint8_t const count = laneCount(_type);
+    uint8_t const width = laneWidth(_type);
 
-	switch (width)
-	{
-	case Bits8:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 0;
-			v = v8x32(m_SPP[0])[i];
-			vecData[--j] = (uint8_t)v;
-		}
-		break;
-	case Bits16:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 2;
-			v = v16x16(m_SPP[0])[i];
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-		}
-		break;
-	case Bits32:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 4;
-			v = v32x8(m_SPP[0])[i];
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-		}
-		break;
-	case Bits64:
-		for (int j = count,  i = count - 1; 0 <= i; --i)
-		{
-			int v = 0;
-			v = v64x4(m_SPP[0])[i];
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-			v >>= 8;
-			vecData[--j] = (uint8_t)v;
-		}
-		break;
-	default:
-		throwBadInstruction();
-	}
+    switch (width)
+    {
+    case Bits8:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 0;
+            v = v8x32(m_SPP[0])[i];
+            vecData[--j] = (uint8_t)v;
+        }
+        break;
+    case Bits16:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 2;
+            v = v16x16(m_SPP[0])[i];
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+        }
+        break;
+    case Bits32:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 4;
+            v = v32x8(m_SPP[0])[i];
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+        }
+        break;
+    case Bits64:
+        for (int j = count,  i = count - 1; 0 <= i; --i)
+        {
+            int v = 0;
+            v = v64x4(m_SPP[0])[i];
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+            v >>= 8;
+            vecData[--j] = (uint8_t)v;
+        }
+        break;
+    default:
+        throwBadInstruction();
+    }
 }
 
 void VM::xsload(uint8_t _type)
 {
-	u256 w = m_ext->store(m_SP[0]);
-	wtov(_type, w, m_SPP[0]);
+    u256 w = m_ext->store(m_SP[0]);
+    wtov(_type, w, m_SPP[0]);
 }
 
 void VM::xsstore(uint8_t _type)
 {
-	u256 w = vtow(_type, m_SP[1]);
-	m_ext->setStore(m_SP[0], w);
+    u256 w = vtow(_type, m_SP[1]);
+    m_ext->setStore(m_SP[0], w);
 }
 
 void VM::xvtowide(uint8_t _type)
 {
-	m_SPP[0] = vtow(_type, m_SP[0]);
+    m_SPP[0] = vtow(_type, m_SP[0]);
 }
 
 void VM::xwidetov(uint8_t _type)
 {
-	wtov(_type, m_SP[0], m_SPP[0]);
+    wtov(_type, m_SP[0], m_SPP[0]);
 }
 
 void VM::xpush(uint8_t _type)
 {
-	uint8_t const count = laneCount(_type);
-	uint8_t const width = laneWidth(_type);
-	
-	// Construct a vector out of n bytes following XPUSH.
-	// This requires the code has been copied and extended by 32 zero
-	// bytes to handle "out of code" push data here.
+    uint8_t const count = laneCount(_type);
+    uint8_t const width = laneWidth(_type);
+    
+    // Construct a vector out of n bytes following XPUSH.
+    // This requires the code has been copied and extended by 32 zero
+    // bytes to handle "out of code" push data here.
 
-	// given the type of the vector
-	// mask and shift in the inline bytes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-	m_SPP[0] = 0;
-	switch (width)
-	{
-	case Bits8:
-		for (int i = 0; i < count ; ++i)
-		{
-			v8x32(m_SPP[0])[i] = m_code[++m_PC];
-		}
-		break;
-	case Bits16:
-		for (int i = 0; i < count; ++i)
-		{
-			uint16_t v = m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v16x16(m_SPP[0])[i] = v;
-		}
-		break;
-	case Bits32:
-		for (int i = 0; i < count; ++i)
-		{
-			uint32_t v = m_code[m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v32x8(m_SPP[0])[i] = v;
-		}
-		break;
-	case Bits64:
-		for (int i = 0; i < count; ++i)
-		{
-			uint64_t v = m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v = (v << 8) | m_code[++m_PC];
-			v64x4(m_SPP[0])[i] = v;
-		}
-		break;
-	default:
-		throwBadInstruction();
-	}
+    // given the type of the vector
+    // mask and shift in the inline bytes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    m_SPP[0] = 0;
+    switch (width)
+    {
+    case Bits8:
+        for (int i = 0; i < count ; ++i)
+        {
+            v8x32(m_SPP[0])[i] = m_code[++m_PC];
+        }
+        break;
+    case Bits16:
+        for (int i = 0; i < count; ++i)
+        {
+            uint16_t v = m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v16x16(m_SPP[0])[i] = v;
+        }
+        break;
+    case Bits32:
+        for (int i = 0; i < count; ++i)
+        {
+            uint32_t v = m_code[m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v32x8(m_SPP[0])[i] = v;
+        }
+        break;
+    case Bits64:
+        for (int i = 0; i < count; ++i)
+        {
+            uint64_t v = m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v = (v << 8) | m_code[++m_PC];
+            v64x4(m_SPP[0])[i] = v;
+        }
+        break;
+    default:
+        throwBadInstruction();
+    }
 }
 
 void VM::xget(uint8_t _srcType, uint8_t _idxType)
 {
-	uint8_t const srcWidth = laneWidth(_srcType);
-	uint8_t const idxCount = laneCount(_idxType);
-	uint8_t const idxWidth = laneWidth(_idxType);
-	
-	// given the type of the source and index
-	// for every element of the index get the indexed element from the source
-	switch (srcWidth)
-	{
-	case Bits8:
+    uint8_t const srcWidth = laneWidth(_srcType);
+    uint8_t const idxCount = laneCount(_idxType);
+    uint8_t const idxWidth = laneWidth(_idxType);
+    
+    // given the type of the source and index
+    // for every element of the index get the indexed element from the source
+    switch (srcWidth)
+    {
+    case Bits8:
 
-		switch (idxWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < idxCount; ++i)
-				v8x32 (m_SPP[1])[i] = v8x32(m_SP[0])[v8x32 (m_SP[1])[i] % idxCount];
-			break;
-		case Bits16:
-			for (int i = 0; i< idxCount; ++i)
-				v16x16(m_SPP[1])[i] = v8x32(m_SP[0])[v16x16(m_SP[1])[i] % idxCount];
-			break;
-		case Bits32:
-			for (int i = 0; i< idxCount; ++i)
-				v32x8 (m_SPP[1])[i] = v8x32(m_SP[0])[v32x8 (m_SP[1])[i] % idxCount];
-			break;
-		case Bits64:
-			for (int i = 0; i< idxCount; ++i)
-				v64x4 (m_SPP[1])[i] = v8x32(m_SP[0])[v64x4 (m_SP[1])[i] % idxCount];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (idxWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < idxCount; ++i)
+                v8x32 (m_SPP[1])[i] = v8x32(m_SP[0])[v8x32 (m_SP[1])[i] % idxCount];
+            break;
+        case Bits16:
+            for (int i = 0; i< idxCount; ++i)
+                v16x16(m_SPP[1])[i] = v8x32(m_SP[0])[v16x16(m_SP[1])[i] % idxCount];
+            break;
+        case Bits32:
+            for (int i = 0; i< idxCount; ++i)
+                v32x8 (m_SPP[1])[i] = v8x32(m_SP[0])[v32x8 (m_SP[1])[i] % idxCount];
+            break;
+        case Bits64:
+            for (int i = 0; i< idxCount; ++i)
+                v64x4 (m_SPP[1])[i] = v8x32(m_SP[0])[v64x4 (m_SP[1])[i] % idxCount];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	case Bits16:
+    case Bits16:
 
-		switch (idxWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < idxCount; ++i)
-				v8x32 (m_SPP[0])[i] = v16x16(m_SP[1])[v8x32 (m_SP[0])[i] % idxCount];
-			break;
-		case Bits16:
-			for (int i = 0; i < idxCount; ++i)
-				v16x16(m_SPP[0])[i] = v16x16(m_SP[1])[v16x16(m_SP[0])[i] % idxCount];
-			break;
-		case Bits32:
-			for (int i = 0; i < idxCount; ++i)
-				v32x8 (m_SPP[0])[i] = v16x16(m_SP[1])[v32x8 (m_SP[0])[i] % idxCount];
-			break;
-		case Bits64:
-			for (int i = 0; i < idxCount; ++i)
-				v64x4 (m_SPP[0])[i] = v16x16(m_SP[1])[v64x4 (m_SP[0])[i] % idxCount];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (idxWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < idxCount; ++i)
+                v8x32 (m_SPP[0])[i] = v16x16(m_SP[1])[v8x32 (m_SP[0])[i] % idxCount];
+            break;
+        case Bits16:
+            for (int i = 0; i < idxCount; ++i)
+                v16x16(m_SPP[0])[i] = v16x16(m_SP[1])[v16x16(m_SP[0])[i] % idxCount];
+            break;
+        case Bits32:
+            for (int i = 0; i < idxCount; ++i)
+                v32x8 (m_SPP[0])[i] = v16x16(m_SP[1])[v32x8 (m_SP[0])[i] % idxCount];
+            break;
+        case Bits64:
+            for (int i = 0; i < idxCount; ++i)
+                v64x4 (m_SPP[0])[i] = v16x16(m_SP[1])[v64x4 (m_SP[0])[i] % idxCount];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	case Bits32:
+    case Bits32:
 
-		switch (idxWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < idxCount; ++i)
-				v8x32 (m_SPP[0])[i] = v32x8(m_SP[1])[v8x32 (m_SP[0])[i] % idxCount];
-			break;
-		case Bits16:
-			for (int i = 0; i < idxCount; ++i)
-				v16x16(m_SPP[0])[i] = v32x8(m_SP[1])[v16x16(m_SP[0])[i] % idxCount];
-			break;
-		case Bits32:
-			for (int i = 0; i < idxCount; ++i)
-				v32x8 (m_SPP[0])[i] = v32x8(m_SP[1])[v32x8 (m_SP[0])[i] % idxCount];
-			break;
-		case Bits64:
-			for (int i = 0; i < idxCount; ++i)
-				v64x4 (m_SPP[0])[i] = v32x8(m_SP[1])[v64x4 (m_SP[0])[i] % idxCount];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (idxWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < idxCount; ++i)
+                v8x32 (m_SPP[0])[i] = v32x8(m_SP[1])[v8x32 (m_SP[0])[i] % idxCount];
+            break;
+        case Bits16:
+            for (int i = 0; i < idxCount; ++i)
+                v16x16(m_SPP[0])[i] = v32x8(m_SP[1])[v16x16(m_SP[0])[i] % idxCount];
+            break;
+        case Bits32:
+            for (int i = 0; i < idxCount; ++i)
+                v32x8 (m_SPP[0])[i] = v32x8(m_SP[1])[v32x8 (m_SP[0])[i] % idxCount];
+            break;
+        case Bits64:
+            for (int i = 0; i < idxCount; ++i)
+                v64x4 (m_SPP[0])[i] = v32x8(m_SP[1])[v64x4 (m_SP[0])[i] % idxCount];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	case Bits64:
+    case Bits64:
 
-		switch (idxWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < idxCount; ++i)
-				v8x32 (m_SPP[0])[i] = v64x4(m_SP[1])[v8x32 (m_SP[0])[i] % idxCount];
-			break;
-		case Bits16:
-			for (int i = 0; i < idxCount; ++i)
-				v16x16(m_SPP[0])[i] = v64x4(m_SP[1])[v16x16(m_SP[0])[i] % idxCount];
-			break;
-		case Bits32:
-			for (int i = 0; i < idxCount; ++i)
-				v32x8 (m_SPP[0])[i] = v64x4(m_SP[1])[v32x8 (m_SP[0])[i] % idxCount];
-			break;
-		case Bits64:
-			for (int i = 0; i < idxCount; ++i)
-				v64x4 (m_SPP[0])[i] = v64x4(m_SP[1])[v64x4 (m_SP[0])[i] % idxCount];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (idxWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < idxCount; ++i)
+                v8x32 (m_SPP[0])[i] = v64x4(m_SP[1])[v8x32 (m_SP[0])[i] % idxCount];
+            break;
+        case Bits16:
+            for (int i = 0; i < idxCount; ++i)
+                v16x16(m_SPP[0])[i] = v64x4(m_SP[1])[v16x16(m_SP[0])[i] % idxCount];
+            break;
+        case Bits32:
+            for (int i = 0; i < idxCount; ++i)
+                v32x8 (m_SPP[0])[i] = v64x4(m_SP[1])[v32x8 (m_SP[0])[i] % idxCount];
+            break;
+        case Bits64:
+            for (int i = 0; i < idxCount; ++i)
+                v64x4 (m_SPP[0])[i] = v64x4(m_SP[1])[v64x4 (m_SP[0])[i] % idxCount];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	default:
-		throwBadInstruction();
-	}
+    default:
+        throwBadInstruction();
+    }
 }
 
 void VM::xput(uint8_t _srcType, uint8_t _dstType)
 {
-	uint8_t const srcWidth = laneWidth(_srcType);
-	uint8_t const dstCount = laneCount(_dstType);
-	uint8_t const dstWidth = laneWidth(_dstType);
+    uint8_t const srcWidth = laneWidth(_srcType);
+    uint8_t const dstCount = laneCount(_dstType);
+    uint8_t const dstWidth = laneWidth(_dstType);
 
-	// given the type of the source, destination and index
-	// for every element of the index put the indexed replacement in the destination                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-	switch (srcWidth)
-	{
-	case Bits8:
+    // given the type of the source, destination and index
+    // for every element of the index put the indexed replacement in the destination                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    switch (srcWidth)
+    {
+    case Bits8:
 
-		switch (dstWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < dstCount; ++i)
-				v8x32 (m_SPP[0])[v8x32(m_SP[1])[i] % 32] = v8x32(m_SP[0])[i];
-			break;
-		case Bits16:
-			for (int i = 0; i < dstCount; ++i)
-				v16x16(m_SPP[0])[v8x32(m_SP[1])[i] % 16] = v8x32(m_SP[0])[i];
-			break;
-		case Bits32:
-			for (int i = 0; i < dstCount; ++i)
-				v32x8 (m_SPP[0])[v8x32(m_SP[1])[i] %  8] = v8x32(m_SP[0])[i];
-			break;
-		case Bits64:
-			for (int i = 0; i < dstCount; ++i)
-				v64x4 (m_SPP[0])[v8x32(m_SP[1])[i] %  4] = v8x32(m_SP[0])[i];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (dstWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < dstCount; ++i)
+                v8x32 (m_SPP[0])[v8x32(m_SP[1])[i] % 32] = v8x32(m_SP[0])[i];
+            break;
+        case Bits16:
+            for (int i = 0; i < dstCount; ++i)
+                v16x16(m_SPP[0])[v8x32(m_SP[1])[i] % 16] = v8x32(m_SP[0])[i];
+            break;
+        case Bits32:
+            for (int i = 0; i < dstCount; ++i)
+                v32x8 (m_SPP[0])[v8x32(m_SP[1])[i] %  8] = v8x32(m_SP[0])[i];
+            break;
+        case Bits64:
+            for (int i = 0; i < dstCount; ++i)
+                v64x4 (m_SPP[0])[v8x32(m_SP[1])[i] %  4] = v8x32(m_SP[0])[i];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	case Bits16:
+    case Bits16:
 
-		switch (dstWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < dstCount; ++i)
-				v8x32 (m_SPP[0])[v16x16(m_SP[1])[i] % 32] = v16x16(m_SP[0])[i];
-			break;
-		case Bits16:
-			for (int i = 0; i < dstCount; ++i)
-				v16x16(m_SPP[0])[v16x16(m_SP[1])[i] % 16] = v16x16(m_SP[0])[i];
-			break;
-		case Bits32:
-			for (int i = 0; i < dstCount; ++i)
-				v32x8(m_SPP[0])[v16x16(m_SP[1])[i] %  8] = v16x16(m_SP[0])[i];
-			break;
-		case Bits64:
-			for (int i = 0; i < dstCount; ++i)
-				v64x4(m_SPP[0])[v16x16(m_SP[1])[i] %  4] = v16x16(m_SP[0])[i];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (dstWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < dstCount; ++i)
+                v8x32 (m_SPP[0])[v16x16(m_SP[1])[i] % 32] = v16x16(m_SP[0])[i];
+            break;
+        case Bits16:
+            for (int i = 0; i < dstCount; ++i)
+                v16x16(m_SPP[0])[v16x16(m_SP[1])[i] % 16] = v16x16(m_SP[0])[i];
+            break;
+        case Bits32:
+            for (int i = 0; i < dstCount; ++i)
+                v32x8(m_SPP[0])[v16x16(m_SP[1])[i] %  8] = v16x16(m_SP[0])[i];
+            break;
+        case Bits64:
+            for (int i = 0; i < dstCount; ++i)
+                v64x4(m_SPP[0])[v16x16(m_SP[1])[i] %  4] = v16x16(m_SP[0])[i];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	case Bits32:
+    case Bits32:
 
-		switch (dstWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < dstCount; ++i)
-				v8x32 (m_SPP[0])[v32x8(m_SP[1])[i] % 32] = v32x8(m_SP[0])[i];
-			break;
-		case Bits16:
-			for (int i = 0; i < dstCount; ++i)
-				v16x16(m_SPP[0])[v32x8(m_SP[1])[i] % 16] = v32x8(m_SP[0])[i];
-			break;
-		case Bits32:
-			for (int i = 0; i < dstCount; ++i)
-				v32x8 (m_SPP[0])[v32x8(m_SP[1])[i] %  8] = v32x8(m_SP[0])[i];
-			break;
-		case Bits64:
-			for (int i = 0; i < dstCount; ++i)
-				v64x4 (m_SPP[0])[v32x8(m_SP[1])[i] %  4] = v32x8(m_SP[0])[i];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (dstWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < dstCount; ++i)
+                v8x32 (m_SPP[0])[v32x8(m_SP[1])[i] % 32] = v32x8(m_SP[0])[i];
+            break;
+        case Bits16:
+            for (int i = 0; i < dstCount; ++i)
+                v16x16(m_SPP[0])[v32x8(m_SP[1])[i] % 16] = v32x8(m_SP[0])[i];
+            break;
+        case Bits32:
+            for (int i = 0; i < dstCount; ++i)
+                v32x8 (m_SPP[0])[v32x8(m_SP[1])[i] %  8] = v32x8(m_SP[0])[i];
+            break;
+        case Bits64:
+            for (int i = 0; i < dstCount; ++i)
+                v64x4 (m_SPP[0])[v32x8(m_SP[1])[i] %  4] = v32x8(m_SP[0])[i];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	case Bits64:
+    case Bits64:
 
-		switch (dstWidth)
-		{
-		case Bits8:
-			for (int i = 0; i < dstCount; ++i)
-				v8x32 (m_SPP[0])[v64x4(m_SP[1])[i] % 32] = v64x4(m_SP[0])[i];
-			break;
-		case Bits16:
-			for (int i = 0; i < dstCount; ++i)
-				v16x16(m_SPP[0])[v64x4(m_SP[1])[i] % 16] = v64x4(m_SP[0])[i];
-			break;
-		case Bits32:
-			for (int i = 0; i < dstCount; ++i)
-				v32x8 (m_SPP[0])[v64x4(m_SP[1])[i] %  8] = v64x4(m_SP[0])[i];
-			break;
-		case Bits64:
-			for (int i = 0; i < dstCount; ++i)
-				v64x4 (m_SPP[0])[v64x4(m_SP[1])[i] %  4] = v64x4(m_SP[0])[i];
-			break;
-		default:
-			throwBadInstruction();
-		}
-		break;
+        switch (dstWidth)
+        {
+        case Bits8:
+            for (int i = 0; i < dstCount; ++i)
+                v8x32 (m_SPP[0])[v64x4(m_SP[1])[i] % 32] = v64x4(m_SP[0])[i];
+            break;
+        case Bits16:
+            for (int i = 0; i < dstCount; ++i)
+                v16x16(m_SPP[0])[v64x4(m_SP[1])[i] % 16] = v64x4(m_SP[0])[i];
+            break;
+        case Bits32:
+            for (int i = 0; i < dstCount; ++i)
+                v32x8 (m_SPP[0])[v64x4(m_SP[1])[i] %  8] = v64x4(m_SP[0])[i];
+            break;
+        case Bits64:
+            for (int i = 0; i < dstCount; ++i)
+                v64x4 (m_SPP[0])[v64x4(m_SP[1])[i] %  4] = v64x4(m_SP[0])[i];
+            break;
+        default:
+            throwBadInstruction();
+        }
+        break;
 
-	default:
-		throwBadInstruction();
-	}
+    default:
+        throwBadInstruction();
+    }
 }
 
 void VM::xswizzle(uint8_t _type)
 {
-	uint8_t const count = laneCount(_type);
-	uint8_t const width = laneWidth(_type);
+    uint8_t const count = laneCount(_type);
+    uint8_t const width = laneWidth(_type);
 
-	// given the type of the source and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-	// for every index in the mask copy out the indexed value in the source
-	switch (width)
-	{
-	case Bits8:
-		for (int i = 0; i < count; ++i)
-			v8x32 (m_SPP[0])[i] = v8x32(m_SP[1]) [v8x32 (m_SP[0])[i] % count];
-		break;
-	case Bits16:
-		for (int i = 0; i < count; ++i)
-			v16x16(m_SPP[0])[i] = v16x16(m_SP[1])[v16x16(m_SP[0])[i] % count];
-		break;
-	case Bits32:
-		for (int i = 0; i < count; ++i)
-			v32x8 (m_SPP[0])[i] = v32x8(m_SP[1]) [v32x8 (m_SP[0])[i] % count];
-		break;
-	case Bits64:
-		for (int i = 0; i < count; ++i)
-			v64x4 (m_SPP[0])[i] = v64x4(m_SP[1]) [v64x4 (m_SP[0])[i] % count];
-		break;
-	default:
-		throwBadInstruction();
-	}
+    // given the type of the source and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    // for every index in the mask copy out the indexed value in the source
+    switch (width)
+    {
+    case Bits8:
+        for (int i = 0; i < count; ++i)
+            v8x32 (m_SPP[0])[i] = v8x32(m_SP[1]) [v8x32 (m_SP[0])[i] % count];
+        break;
+    case Bits16:
+        for (int i = 0; i < count; ++i)
+            v16x16(m_SPP[0])[i] = v16x16(m_SP[1])[v16x16(m_SP[0])[i] % count];
+        break;
+    case Bits32:
+        for (int i = 0; i < count; ++i)
+            v32x8 (m_SPP[0])[i] = v32x8(m_SP[1]) [v32x8 (m_SP[0])[i] % count];
+        break;
+    case Bits64:
+        for (int i = 0; i < count; ++i)
+            v64x4 (m_SPP[0])[i] = v64x4(m_SP[1]) [v64x4 (m_SP[0])[i] % count];
+        break;
+    default:
+        throwBadInstruction();
+    }
 }
 
 void VM::xshuffle(uint8_t _type)
 {
-	// n type t elements in source and mask vectors
-	uint8_t const count = laneCount(_type);
-	uint8_t const width = laneWidth(_type);
+    // n type t elements in source and mask vectors
+    uint8_t const count = laneCount(_type);
+    uint8_t const width = laneWidth(_type);
 
-	// given the type of the sources and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-	// for every index in the mask copy out the indexed value in one of the sources
-	switch (width)
-	{
-	case Bits8:
-		for (int i = 0; i < count; ++i)
-		{
-			int j = v8x32(m_SP[0]) [i];
-			v8x32 (m_SPP[0])[i] = j < count ? v8x32(m_SP[1]) [j] : v8x32 (m_SP[2])[(j - count) % count];
-		}
-		break;
-	case Bits16:
-		for (int i = 0; i < count; ++i)
-		{
-			int j = v16x16(m_SP[0])[i];
-			v16x16(m_SPP[0])[i] = j < count ? v16x16(m_SP[1])[j] : v16x16(m_SP[2])[(j - count) % count];
-		}
-		break;
-	case Bits32:
-		for (int i = 0; i < count; ++i)
-		{
-			int j = v32x8(m_SP[0]) [i];
-			v32x8 (m_SPP[0])[i] = j < count ? v32x8(m_SP[1]) [j] : v32x8 (m_SP[2])[(j - count) % count];
-		}
-		break;
-	case Bits64:
-		for (int i = 0; i < count; ++i)
-		{
-			int j = v64x4(m_SP[0]) [i];
-			v64x4 (m_SPP[0])[i] = j < count ? v64x4(m_SP[1]) [j] : v64x4 (m_SP[2])[(j - count) % count];
-		}
-		break;
-	default:
-		throwBadInstruction();
-	}
+    // given the type of the sources and mask                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    // for every index in the mask copy out the indexed value in one of the sources
+    switch (width)
+    {
+    case Bits8:
+        for (int i = 0; i < count; ++i)
+        {
+            int j = v8x32(m_SP[0]) [i];
+            v8x32 (m_SPP[0])[i] = j < count ? v8x32(m_SP[1]) [j] : v8x32 (m_SP[2])[(j - count) % count];
+        }
+        break;
+    case Bits16:
+        for (int i = 0; i < count; ++i)
+        {
+            int j = v16x16(m_SP[0])[i];
+            v16x16(m_SPP[0])[i] = j < count ? v16x16(m_SP[1])[j] : v16x16(m_SP[2])[(j - count) % count];
+        }
+        break;
+    case Bits32:
+        for (int i = 0; i < count; ++i)
+        {
+            int j = v32x8(m_SP[0]) [i];
+            v32x8 (m_SPP[0])[i] = j < count ? v32x8(m_SP[1]) [j] : v32x8 (m_SP[2])[(j - count) % count];
+        }
+        break;
+    case Bits64:
+        for (int i = 0; i < count; ++i)
+        {
+            int j = v64x4(m_SP[0]) [i];
+            v64x4 (m_SPP[0])[i] = j < count ? v64x4(m_SP[1]) [j] : v64x4 (m_SP[2])[(j - count) % count];
+        }
+        break;
+    default:
+        throwBadInstruction();
+    }
 }
 
 }}
