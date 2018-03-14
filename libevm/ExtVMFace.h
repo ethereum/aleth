@@ -253,5 +253,14 @@ inline evm_uint256be toEvmC(h256 const& _h)
     return reinterpret_cast<evm_uint256be const&>(_h);
 }
 
+inline u256 fromEvmC(evm_uint256be const& _n)
+{
+    return fromBigEndian<u256>(_n.bytes);
+}
+
+inline Address fromEvmC(evm_address const& _addr)
+{
+    return reinterpret_cast<Address const&>(_addr);
+}
 }
 }
