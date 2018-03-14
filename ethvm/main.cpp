@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     setDefaultOrCLocale();
     string inputFile;
     Mode mode = Mode::Statistics;
-    VMKind vmKind = VMKind::Interpreter;
+    VMKind vmKind = VMKind::Legacy;
     State state(0);
     Address sender = Address(69);
     Address origin = Address(69);
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
         executive.create(sender, value, gasPrice, gas, &data, origin);
 
     Timer timer;
-    if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Interpreter)
+    if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Legacy)
         // If we use onOp, the factory falls back to "interpreter"
         executive.go(onOp);
     else

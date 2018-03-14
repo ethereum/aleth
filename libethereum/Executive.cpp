@@ -411,7 +411,7 @@ bool Executive::go(OnOpFunc const& _onOp)
         try
         {
             // Create VM instance. Force Interpreter if tracing requested.
-            auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
+            auto vm = _onOp ? VMFactory::create(VMKind::Legacy) : VMFactory::create();
             if (m_isCreation)
             {
                 m_s.clearStorage(m_ext->myAddress);

@@ -26,10 +26,10 @@ namespace dev
 namespace eth
 {
 
-class VM: public VMFace
+class LegacyVM: public VMFace
 {
 public:
-	owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
+	virtual owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 #if EIP_615
 	// invalid code will throw an exeption
@@ -55,7 +55,7 @@ private:
 	static void initMetrics();
 	static u256 exp256(u256 _base, u256 _exponent);
 	void copyCode(int);
-	typedef void (VM::*MemFnPtr)();
+	typedef void (LegacyVM::*MemFnPtr)();
 	MemFnPtr m_bounce = 0;
 	MemFnPtr m_onFail = 0;
 	uint64_t m_nSteps = 0;
