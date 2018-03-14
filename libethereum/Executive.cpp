@@ -61,19 +61,21 @@ bool changesStorage(Instruction _inst)
     return _inst == Instruction::SSTORE;
 }
 
-void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, VM* voidVM, ExtVMFace const* voidExt)
+void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, bigint newMemSize,
+    bigint gasCost, bigint gas, VMFace const* _vm, ExtVMFace const* voidExt)
 {
     (void)_steps;
 
     ExtVM const& ext = dynamic_cast<ExtVM const&>(*voidExt);
-    VM& vm = *voidVM;
+    auto vm = dynamic_cast<VM const*>(_vm);
 
     Json::Value r(Json::objectValue);
 
     Json::Value stack(Json::arrayValue);
-    if (!m_options.disableStack)
+    if (vm && !m_options.disableStack)
     {
-        for (auto const& i: vm.stack())
+        // Try extracting information about the stack from the VM is supported.
+        for (auto const& i : vm->stack())
             stack.append(toCompactHexPrefixed(i, 1));
         r["stack"] = stack;
     }
@@ -107,11 +109,11 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
     }
 
     Json::Value memJson(Json::arrayValue);
-    if (!m_options.disableMemory && (changesMemory(lastInst) || newContext))
+    if (vm && !m_options.disableMemory && (changesMemory(lastInst) || newContext))
     {
-        for (unsigned i = 0; i < vm.memory().size(); i += 32)
+        for (unsigned i = 0; i < vm->memory().size(); i += 32)
         {
-            bytesConstRef memRef(vm.memory().data() + i, 32);
+            bytesConstRef memRef(vm->memory().data() + i, 32);
             memJson.append(toHex(memRef));
         }
         r["memory"] = memJson;
@@ -372,21 +374,30 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
 
 OnOpFunc Executive::simpleTrace()
 {
-    return [](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, VM* voidVM, ExtVMFace const* voidExt)
-    {
+    return [](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost,
+               bigint gas, VMFace const* _vm, ExtVMFace const* voidExt) {
         ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
-        VM& vm = *voidVM;
+        auto vm = dynamic_cast<VM const*>(_vm);
 
         ostringstream o;
-        o << endl << "    STACK" << endl;
-        for (auto i: vm.stack())
-            o << (h256)i << endl;
-        o << "    MEMORY" << endl << ((vm.memory().size() > 1000) ? " mem size greater than 1000 bytes " : memDump(vm.memory()));
+        if (vm)
+        {
+            o << endl << "    STACK" << endl;
+            for (auto i : vm->stack())
+                o << (h256)i << endl;
+            o << "    MEMORY" << endl
+              << ((vm->memory().size() > 1000) ? " mem size greater than 1000 bytes " :
+                                                 memDump(vm->memory()));
+        }
         o << "    STORAGE" << endl;
         for (auto const& i: ext.state().storage(ext.myAddress))
             o << showbase << hex << i.second.first << ": " << i.second.second << endl;
         dev::LogOutputStream<VMTraceChannel, false>() << o.str();
-        dev::LogOutputStream<VMTraceChannel, false>() << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps << " : " << hex << setw(4) << setfill('0') << PC << " : " << instructionInfo(inst).name << " : " << dec << gas << " : -" << dec << gasCost << " : " << newMemSize << "x32" << " >";
+        dev::LogOutputStream<VMTraceChannel, false>()
+            << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps << " : "
+            << hex << setw(4) << setfill('0') << PC << " : " << instructionInfo(inst).name << " : "
+            << dec << gas << " : -" << dec << gasCost << " : " << newMemSize << "x32"
+            << " >";
     };
 }
 

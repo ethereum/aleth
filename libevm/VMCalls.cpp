@@ -15,14 +15,11 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <libethereum/ExtVM.h>
-#include "VMConfig.h"
 #include "VM.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
 
 
 void VM::copyDataToMemory(bytesConstRef _data, u256*_sp)
@@ -45,33 +42,21 @@ void VM::copyDataToMemory(bytesConstRef _data, u256*_sp)
 
 void VM::throwOutOfGas()
 {
-	// disabled to prevent duplicate steps in vmtrace log
-	//if (m_onFail)
-	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(OutOfGas());
 }
 
 void VM::throwBadInstruction()
 {
-	// disabled to prevent duplicate steps in vmtrace log
-	//if (m_onFail)
-	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(BadInstruction());
 }
 
 void VM::throwBadJumpDestination()
 {
-	// disabled to prevent duplicate steps in vmtrace log
-	//if (m_onFail)
-	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(BadJumpDestination());
 }
 
 void VM::throwDisallowedStateChange()
 {
-	// disabled to prevent duplicate steps in vmtrace log
-	//if (m_onFail)
-	//	(this->*m_onFail)();
 	BOOST_THROW_EXCEPTION(DisallowedStateChange());
 }
 
@@ -300,4 +285,3 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 	}
 	return false;
 }
-

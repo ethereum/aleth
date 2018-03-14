@@ -16,9 +16,9 @@
 */
 #pragma once
 
-#include <memory>
-#include <libdevcore/Exceptions.h>
 #include "ExtVMFace.h"
+#include <libdevcore/Exceptions.h>
+#include <memory>
 
 namespace dev
 {

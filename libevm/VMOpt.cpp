@@ -15,22 +15,11 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <libethereum/ExtVM.h>
-#include "VMConfig.h"
 #include "VM.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
-void VM::reportStackUse()
-{
-	static intptr_t p = 0;
-	intptr_t q = intptr_t(&q);
-	if (p)
-		cerr << "STACK: " << p << " - " << q << " = " << (p - q) << endl;
-	p = q;
-}
 
 std::array<InstructionMetric, 256> VM::c_metrics;
 void VM::initMetrics()

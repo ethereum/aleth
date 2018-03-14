@@ -14,18 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file
- */
 
 #if EIP_615
 
-#include <libethereum/ExtVM.h>
-
 // validator is not a full interpreter, canot support optimized dispatch
 #define EVM_JUMP_DISPATCH false
-#include "VMConfig.h"
 
 #include "VM.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
