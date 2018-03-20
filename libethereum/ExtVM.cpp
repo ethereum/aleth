@@ -141,8 +141,7 @@ void ExtVM::suicide(Address _a)
     // witnessing the current consensus
     // 'GeneralStateTests/stSystemOperationsTest/suicideSendEtherPostDeath.json'.
     m_s.addBalance(_a, m_s.balance(myAddress));
-    // Below sets the balance to zero even when _a == myAddress.
-    m_s.subBalance(myAddress, m_s.balance(myAddress));
+    m_s.setBalance(myAddress, 0);
     ExtVMFace::suicide(_a);
 }
 

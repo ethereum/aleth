@@ -243,7 +243,11 @@ public:
 	/// amount to be subtrackted (also in case the account does not exist).
 	void subBalance(Address const& _addr, u256 const& _value);
 
-	/**
+    /// Set the balance of @p _addr to @p _value.
+    /// Will instantiate the address if it has never been used.
+    void setBalance(Address const& _addr, u256 const& _value);
+
+    /**
 	 * @brief Transfers "the balance @a _value between two accounts.
 	 * @param _from Account from which @a _value will be deducted.
 	 * @param _to Account to which @a _value will be added.
