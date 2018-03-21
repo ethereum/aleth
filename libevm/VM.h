@@ -20,15 +20,18 @@
 #include "Instruction.h"
 #include "VMConfig.h"
 #include "VMFace.h"
+#include <evm.h>
 
 namespace dev
 {
 namespace eth
 {
 
-class VM: public VMFace
+class VM: public VMFace, public evm_instance
 {
 public:
+    VM();
+
     owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
 
 #if EIP_615

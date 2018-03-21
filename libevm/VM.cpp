@@ -15,11 +15,33 @@
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "interpreter.h"
 #include "VM.h"
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+
+extern "C" evm_instance* interpreter_create() noexcept
+{
+    return new (std::nothrow) VM;
+}
+
+namespace
+{
+void destroy(evm_instance* _instance)
+{
+    delete static_cast<VM*>(_instance);
+}
+}
+
+
+namespace dev
+{
+namespace eth
+{
+VM::VM() : evm_instance{EVM_ABI_VERSION, ::destroy, nullptr, nullptr}
+{}
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
@@ -1627,4 +1649,6 @@ void VM::interpretCases()
         }
     }
     WHILE_CASES
+}
+}
 }

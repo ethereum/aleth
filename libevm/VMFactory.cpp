@@ -18,7 +18,7 @@
 #include "VMFactory.h"
 #include "EVMC.h"
 #include "LegacyVM.h"
-#include "VM.h"
+#include "interpreter.h"
 #include <evmjit.h>
 #include <hera.h>
 
@@ -170,7 +170,7 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
         return std::unique_ptr<VMFace>(new EVMC{hera_create()});
 #endif
     case VMKind::Interpreter:
-        return std::unique_ptr<VMFace>(new VM);
+        return std::unique_ptr<VMFace>(new EVMC{interpreter_create()});
     case VMKind::Legacy:
     default:
         return std::unique_ptr<VMFace>(new LegacyVM);
