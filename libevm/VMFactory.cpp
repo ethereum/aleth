@@ -133,7 +133,7 @@ po::options_description vmProgramOptions(unsigned _lineLength)
     add("vm",
         po::value<VMKind>()
             ->value_name("<name>")
-            ->default_value(VMKind::Interpreter, "interpreter")
+            ->default_value(VMKind::Legacy, "legacy")
             ->notifier(VMFactory::setKind),
         description.data());
 
