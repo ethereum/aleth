@@ -11,24 +11,23 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Executive.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "Executive.h"
 
-#include <boost/timer.hpp>
-#include <json/json.h>
-#include <libdevcore/CommonIO.h>
-#include <libevm/VMFactory.h>
-#include <libevm/VM.h>
-#include <libethcore/CommonJS.h>
+#include "Block.h"
+#include "BlockChain.h"
+#include "ExtVM.h"
 #include "Interface.h"
 #include "State.h"
-#include "ExtVM.h"
-#include "BlockChain.h"
-#include "Block.h"
+
+#include <libdevcore/CommonIO.h>
+#include <libethcore/CommonJS.h>
+#include <libevm/LegacyVM.h>
+#include <libevm/VMFactory.h>
+
+#include <json/json.h>
+#include <boost/timer.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -67,7 +66,7 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
     (void)_steps;
 
     ExtVM const& ext = dynamic_cast<ExtVM const&>(*voidExt);
-    auto vm = dynamic_cast<VM const*>(_vm);
+    auto vm = dynamic_cast<LegacyVM const*>(_vm);
 
     Json::Value r(Json::objectValue);
 
@@ -377,7 +376,7 @@ OnOpFunc Executive::simpleTrace()
     return [](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost,
                bigint gas, VMFace const* _vm, ExtVMFace const* voidExt) {
         ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
-        auto vm = dynamic_cast<VM const*>(_vm);
+        auto vm = dynamic_cast<LegacyVM const*>(_vm);
 
         ostringstream o;
         if (vm)

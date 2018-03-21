@@ -26,19 +26,8 @@ namespace
 
 static_assert(sizeof(Address) == sizeof(evm_address), "Address types size mismatch");
 static_assert(alignof(Address) == alignof(evm_address), "Address types alignment mismatch");
-
-inline Address fromEvmC(evm_address const& _addr)
-{
-	return reinterpret_cast<Address const&>(_addr);
-}
-
 static_assert(sizeof(h256) == sizeof(evm_uint256be), "Hash types size mismatch");
 static_assert(alignof(h256) == alignof(evm_uint256be), "Hash types alignment mismatch");
-
-inline u256 fromEvmC(evm_uint256be const& _n)
-{
-	return fromBigEndian<u256>(_n.bytes);
-}
 
 int accountExists(evm_context* _context, evm_address const* _addr) noexcept
 {
