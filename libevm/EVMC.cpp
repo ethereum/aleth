@@ -38,25 +38,45 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     auto gas = static_cast<int64_t>(io_gas);
     EVM::Result r = execute(_ext, gas);
 
-    if (r.status() == EVM_REJECTED)
+    switch (r.status())
     {
-        cwarn << "Execution rejected by EVM-C, executing with interpreter";
-        return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
-    }
+    case EVM_SUCCESS:
+        io_gas = r.gasLeft();
+        // FIXME: Copy the output for now, but copyless version possible.
+        return {r.output().toVector(), 0, r.output().size()};
 
-    // TODO: Add EVM-C result codes mapping with exception types.
-    if (r.status() == EVM_FAILURE)
+    case EVM_REVERT:
+        io_gas = r.gasLeft();
+        // FIXME: Copy the output for now, but copyless version possible.
+        throw RevertInstruction{{r.output().toVector(), 0, r.output().size()}};
+
+    case EVM_OUT_OF_GAS:
+    case EVM_FAILURE:
         BOOST_THROW_EXCEPTION(OutOfGas());
 
-    io_gas = r.gasLeft();
+    case EVM_BAD_INSTRUCTION:
+        BOOST_THROW_EXCEPTION(BadInstruction());
 
-    // FIXME: Copy the output for now, but copyless version possible.
-    owning_bytes_ref output{r.output().toVector(), 0, r.output().size()};
+    case EVM_BAD_JUMP_DESTINATION:
+        BOOST_THROW_EXCEPTION(BadJumpDestination());
 
-    if (r.status() == EVM_REVERT)
-        throw RevertInstruction(std::move(output));
+    case EVM_STACK_OVERFLOW:
+        BOOST_THROW_EXCEPTION(OutOfStack());
 
-    return output;
+    case EVM_STACK_UNDERFLOW:
+        BOOST_THROW_EXCEPTION(StackUnderflow());
+
+    case EVM_STATIC_MODE_ERROR:
+        BOOST_THROW_EXCEPTION(DisallowedStateChange());
+
+    case EVM_REJECTED:
+        cwarn << "Execution rejected by EVM-C, executing with default VM implementation";
+        return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
+
+    default:
+        assert(r.status() >= 0);  // Do not allow internal errors to pass through.
+        BOOST_THROW_EXCEPTION(OutOfGas());
+    }
 }
 
 evm_revision toRevision(EVMSchedule const& _schedule)
