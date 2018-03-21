@@ -330,7 +330,7 @@ int main(int argc, char** argv)
             counts[(byte)inst].first++;
             counts[(byte)inst].second += gasCost;
             total++;
-            if (m > 0)
+            if (m > memTotal)
                 memTotal = m;
         };
     }
