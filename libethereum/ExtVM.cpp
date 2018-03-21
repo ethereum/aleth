@@ -136,10 +136,13 @@ std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, b
 
 void ExtVM::suicide(Address _a)
 {
-	// TODO: Why transfer is no used here?
-	m_s.addBalance(_a, m_s.balance(myAddress));
-	m_s.subBalance(myAddress, m_s.balance(myAddress));
-	ExtVMFace::suicide(_a);
+    // Why transfer is not used here? That caused a consensus issue before (see Quirk #2 in
+    // http://martin.swende.se/blog/Ethereum_quirks_and_vulns.html). There is one test case
+    // witnessing the current consensus
+    // 'GeneralStateTests/stSystemOperationsTest/suicideSendEtherPostDeath.json'.
+    m_s.addBalance(_a, m_s.balance(myAddress));
+    m_s.setBalance(myAddress, 0);
+    ExtVMFace::suicide(_a);
 }
 
 h256 ExtVM::blockHash(u256 _number)

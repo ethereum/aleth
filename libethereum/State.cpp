@@ -342,6 +342,15 @@ void State::subBalance(Address const& _addr, u256 const& _value)
     addBalance(_addr, 0 - _value);
 }
 
+void State::setBalance(Address const& _addr, u256 const& _value)
+{
+    Account* a = account(_addr);
+    u256 original = a ? a->balance() : 0;
+
+    // Fall back to addBalance().
+    addBalance(_addr, _value - original);
+}
+
 void State::createContract(Address const& _address)
 {
     createAccount(_address, {requireAccountStartNonce(), 0});
