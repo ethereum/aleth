@@ -110,7 +110,6 @@ int main(int argc, char** argv)
     setDefaultOrCLocale();
     string inputFile;
     Mode mode = Mode::Statistics;
-    VMKind vmKind = VMKind::Legacy;
     State state(0);
     Address sender = Address(69);
     Address origin = Address(69);
@@ -316,19 +315,6 @@ int main(int argc, char** argv)
     unordered_map<byte, pair<unsigned, bigint>> counts;
     unsigned total = 0;
     bigint memTotal;
-    auto onOp = [&](uint64_t step, uint64_t PC, Instruction inst, bigint m, bigint gasCost,
-                    bigint gas, VMFace const* _vm, ExtVMFace const* extVM) {
-        if (mode == Mode::Statistics)
-        {
-            counts[(byte)inst].first++;
-            counts[(byte)inst].second += gasCost;
-            total++;
-            if (m > 0)
-                memTotal = m;
-        }
-        else if (mode == Mode::Trace)
-            st(step, PC, inst, m, gasCost, gas, _vm, extVM);
-    };
 
     executive.initialize(t);
     if (!code.empty())
@@ -336,12 +322,23 @@ int main(int argc, char** argv)
     else
         executive.create(sender, value, gasPrice, gas, &data, origin);
 
+    OnOpFunc onOp;
+    if (mode == Mode::Statistics)
+    {
+        onOp = [&](uint64_t, uint64_t, Instruction inst, bigint m, bigint gasCost, bigint,
+                   VMFace const*, ExtVMFace const*) {
+            counts[(byte)inst].first++;
+            counts[(byte)inst].second += gasCost;
+            total++;
+            if (m > 0)
+                memTotal = m;
+        };
+    }
+    else if (mode == Mode::Trace)
+        onOp = st;
+
     Timer timer;
-    if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Legacy)
-        // If we use onOp, the factory falls back to "interpreter"
-        executive.go(onOp);
-    else
-        executive.go();
+    executive.go(onOp);
     double execTime = timer.elapsed();
     executive.finalize();
     bytes output = std::move(res.output);
