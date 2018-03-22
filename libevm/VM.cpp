@@ -18,20 +18,16 @@
 #include "interpreter.h"
 #include "VM.h"
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-
 extern "C" evm_instance* interpreter_create() noexcept
 {
-    return new (std::nothrow) VM;
+    return new (std::nothrow) dev::eth::VM;
 }
 
 namespace
 {
 void destroy(evm_instance* _instance)
 {
-    delete static_cast<VM*>(_instance);
+    delete static_cast<dev::eth::VM*>(_instance);
 }
 
 void delete_output(const evm_result* result)
@@ -42,7 +38,7 @@ void delete_output(const evm_result* result)
 evm_result execute(evm_instance* _instance, evm_context* _context, evm_revision _rev,
     const evm_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
 {
-    auto vm = static_cast<VM*>(_instance);
+    auto vm = static_cast<dev::eth::VM*>(_instance);
     evm_result result = {};
     dev::eth::owning_bytes_ref output;
 
@@ -52,13 +48,13 @@ evm_result execute(evm_instance* _instance, evm_context* _context, evm_revision 
         result.status_code = EVM_SUCCESS;
         result.gas_left = vm->m_io_gas;
     }
-    catch (RevertInstruction& ex)
+    catch (dev::eth::RevertInstruction& ex)
     {
         result.status_code = EVM_REVERT;
         result.gas_left = vm->m_io_gas;
         output = ex.output();  // This moves the output from the exception!
     }
-    catch (VMException const&)
+    catch (dev::eth::VMException const&)
     {
         result.status_code = EVM_FAILURE;
     }
@@ -326,8 +322,8 @@ void VM::interpretCases()
 
             uint64_t b = (uint64_t)m_SP[0];
             uint64_t s = (uint64_t)m_SP[1];
-            owning_bytes_ref output{move(m_mem), b, s};
-            throwRevertInstruction(move(output));
+            owning_bytes_ref output{std::move(m_mem), b, s};
+            throwRevertInstruction(std::move(output));
         }
         BREAK;
 

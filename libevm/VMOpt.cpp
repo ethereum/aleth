@@ -17,16 +17,14 @@
 
 #include "VM.h"
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-
+namespace dev
+{
+namespace eth
+{
 std::array<InstructionMetric, 256> VM::c_metrics;
 void VM::initMetrics()
 {
-    static bool done =
-    []()
-    {
+    static bool done = []() {
         for (unsigned i = 0; i < 256; ++i)
         {
             InstructionInfo op = instructionInfo((Instruction)i);
@@ -35,7 +33,7 @@ void VM::initMetrics()
             c_metrics[i].ret = op.ret;
         }
         return true;
-    } ();
+    }();
     (void)done;
 }
 
@@ -217,4 +215,6 @@ u256 VM::exp256(u256 _base, u256 _exponent)
         _exponent >>= 1;
     }
     return result;
+}
+}
 }

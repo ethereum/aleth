@@ -17,11 +17,10 @@
 
 #include "VM.h"
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-
-
+namespace dev
+{
+namespace eth
+{
 void VM::copyDataToMemory(bytesConstRef _data, u256*_sp)
 {
     auto offset = static_cast<size_t>(_sp[0]);
@@ -74,8 +73,9 @@ void VM::throwBadStack(unsigned _removed, unsigned _added)
 
 void VM::throwRevertInstruction(owning_bytes_ref&& _output)
 {
-    // We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and RevertInstruction has no copy constructor 
-    throw RevertInstruction(move(_output));
+    // We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and
+    // RevertInstruction has no copy constructor
+    throw RevertInstruction(std::move(_output));
 }
 
 void VM::throwBufferOverrun(bigint const& _endOfAccess)
@@ -301,4 +301,6 @@ bool VM::caseCallSetup(evm_message& o_msg, bytesRef& o_output)
         return true;
     }
     return false;
+}
+}
 }
