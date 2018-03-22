@@ -49,8 +49,6 @@ void checkStatus(leveldb::Status const& _status, boost::filesystem::path const& 
         throwDatabaseError<DBCorruption>(_status, _path);
     else if (_status.IsIOError())
         throwDatabaseError<IOError>(_status, _path);
-    else if (_status.IsNotFound())
-        throwDatabaseError<NotFound>(_status, _path);
     else
         throwDatabaseError<DatabaseError>(_status, _path);
 }
@@ -115,6 +113,9 @@ std::string LevelDB::lookup(Slice _key) const
     leveldb::Slice const key(_key.data(), _key.size());
     std::string value;
     auto const status = m_db->Get(m_readOptions, key, &value);
+    if (status.IsNotFound())
+        return std::string();
+
     checkStatus(status);
     return value;
 }

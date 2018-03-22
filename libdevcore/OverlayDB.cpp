@@ -104,17 +104,13 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
     bytes ret = MemoryDB::lookupAux(_h);
     if (!ret.empty() || !m_db)
         return ret;
-    std::string v;
+
     bytes b = _h.asBytes();
     b.push_back(255);   // for aux
-    try
-    {
-        v = m_db->lookup(toSlice(b));
-    }
-    catch (db::NotFound const&)
-    {
+    std::string const v = m_db->lookup(toSlice(b));
+    if (v.empty())
         cwarn << "Aux not found: " << _h;
-    }
+
     return asBytes(v);
 }
 
@@ -132,14 +128,7 @@ std::string OverlayDB::lookup(h256 const& _h) const
     if (!ret.empty() || !m_db)
         return ret;
 
-    try
-    {
-        ret = m_db->lookup(toSlice(_h));
-    }
-    catch (db::NotFound const&)
-    {
-    }
-    return ret;
+    return m_db->lookup(toSlice(_h));
 }
 
 bool OverlayDB::exists(h256 const& _h) const

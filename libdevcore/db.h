@@ -77,9 +77,6 @@ struct DBCorruption : virtual DatabaseError
 struct IOError : virtual DatabaseError
 {
 };
-struct NotFound : virtual DatabaseError
-{
-};
 
 using errinfo_db = boost::error_info<struct tag_db, std::string>;
 
