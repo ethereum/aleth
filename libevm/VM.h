@@ -30,7 +30,35 @@ namespace dev
 namespace eth
 {
 
-class VM: public evm_instance
+struct VMSchedule
+{
+    static constexpr int64_t stackLimit = 1024;
+    static constexpr int64_t stepGas0 = 0;
+    static constexpr int64_t stepGas1 = 2;
+    static constexpr int64_t stepGas2 = 3;
+    static constexpr int64_t stepGas3 = 5;
+    static constexpr int64_t stepGas4 = 8;
+    static constexpr int64_t stepGas5 = 10;
+    static constexpr int64_t stepGas6 = 20;
+    static constexpr int64_t sha3Gas = 30;
+    static constexpr int64_t sha3WordGas = 6;
+    static constexpr int64_t sloadGas = 50;
+    static constexpr int64_t sstoreSetGas = 20000;
+    static constexpr int64_t sstoreResetGas = 5000;
+    static constexpr int64_t jumpdestGas = 1;
+    static constexpr int64_t logGas = 375;
+    static constexpr int64_t logDataGas = 8;
+    static constexpr int64_t logTopicGas = 375;
+    static constexpr int64_t createGas = 32000;
+    static constexpr int64_t memoryGas = 3;
+    static constexpr int64_t quadCoeffDiv = 512;
+    static constexpr int64_t copyGas = 3;
+    static constexpr int64_t valueTransferGas = 9000;
+    static constexpr int64_t callStipend = 2300;
+    static constexpr int64_t callNewAccount = 25000;
+};
+
+class VM : public evm_instance
 {
 public:
     VM();
@@ -63,7 +91,7 @@ private:
     static u256 exp256(u256 _base, u256 _exponent);
     void copyCode(int);
     typedef void (VM::*MemFnPtr)();
-    MemFnPtr m_bounce = 0;
+    MemFnPtr m_bounce = nullptr;
     uint64_t m_nSteps = 0;
 
     // return bytes
@@ -81,8 +109,8 @@ private:
     bytes m_returnData;
 
     // space for data stack, grows towards smaller addresses from the end
-    u256 m_stack[1024];
-    u256 *m_stackEnd = &m_stack[1024];
+    u256 m_stack[VMSchedule::stackLimit];
+    u256 *m_stackEnd = &m_stack[VMSchedule::stackLimit];
     size_t stackSize() { return m_stackEnd - m_SP; }
     
 #if EIP_615
@@ -222,35 +250,6 @@ private:
     }
 
 #endif
-};
-
-struct VMSchedule
-{
-    static constexpr int64_t stackLimit = 1024;
-    static constexpr int64_t stepGas0 = 0;
-    static constexpr int64_t stepGas1 = 2;
-    static constexpr int64_t stepGas2 = 3;
-    static constexpr int64_t stepGas3 = 5;
-    static constexpr int64_t stepGas4 = 8;
-    static constexpr int64_t stepGas5 = 10;
-    static constexpr int64_t stepGas6 = 20;
-    static constexpr int64_t sha3Gas = 30;
-    static constexpr int64_t sha3WordGas = 6;
-    static constexpr int64_t sloadGas = 50;
-    static constexpr int64_t sstoreSetGas = 20000;
-    static constexpr int64_t sstoreResetGas = 5000;
-    static constexpr int64_t sstoreClearGas = 5000;
-    static constexpr int64_t jumpdestGas = 1;
-    static constexpr int64_t logGas = 375;
-    static constexpr int64_t logDataGas = 8;
-    static constexpr int64_t logTopicGas = 375;
-    static constexpr int64_t createGas = 32000;
-    static constexpr int64_t memoryGas = 3;
-    static constexpr int64_t quadCoeffDiv = 512;
-    static constexpr int64_t copyGas = 3;
-    static constexpr int64_t valueTransferGas = 9000;
-    static constexpr int64_t callStipend = 2300;
-    static constexpr int64_t callNewAccount = 25000;
 };
 
 }

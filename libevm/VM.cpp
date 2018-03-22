@@ -157,16 +157,15 @@ void VM::updateSSGas()
     evm_uint256be rawValue;
     m_context->fn_table->get_storage(&rawValue, m_context, &m_message->destination, &key);
     u256 value = fromEvmC(rawValue);
-    if (!value && m_SP[1])
-        m_runGas = VMSchedule::sstoreSetGas;
-    else
-        m_runGas = toInt63(VMSchedule::sstoreResetGas);
+    m_runGas = (!value && m_SP[1]) ? VMSchedule::sstoreSetGas : VMSchedule::sstoreResetGas;
 }
 
 uint64_t VM::gasForMem(u512 _size)
 {
+    constexpr int64_t memoryGas = VMSchedule::memoryGas;
+    constexpr int64_t quadCoeffDiv = VMSchedule::quadCoeffDiv;
     u512 s = _size / 32;
-    return toInt63((u512) VMSchedule::memoryGas * s + s * s / VMSchedule::quadCoeffDiv);
+    return toInt63(memoryGas * s + s * s / quadCoeffDiv);
 }
 
 void VM::updateIOGas()
@@ -196,8 +195,9 @@ void VM::updateMem(uint64_t _newMem)
 void VM::logGasMem()
 {
     unsigned n = (unsigned) m_OP - (unsigned) Instruction::LOG0;
+    constexpr int64_t logDataGas = VMSchedule::logDataGas;
     m_runGas = toInt63(
-        VMSchedule::logGas + VMSchedule::logTopicGas * n + u512(VMSchedule::logDataGas) * m_SP[1]);
+        VMSchedule::logGas + VMSchedule::logTopicGas * n + logDataGas * u512(m_SP[1]));
     updateMem(memNeed(m_SP[0], m_SP[1]));
 }
 
@@ -208,7 +208,9 @@ void VM::fetchInstruction()
     adjustStack(metric.args, metric.ret);
 
     // FEES...
-    std::array<int64_t, 9> tierStepGas{{0, 2, 3, 5, 8, 10, 20, 0, 0}};
+    std::array<int64_t, 9> tierStepGas{
+        {VMSchedule::stepGas0, VMSchedule::stepGas1, VMSchedule::stepGas2, VMSchedule::stepGas3,
+            VMSchedule::stepGas4, VMSchedule::stepGas5, VMSchedule::stepGas6, 0, 0}};
     m_runGas = tierStepGas[static_cast<unsigned>(metric.gasPriceTier)];
     m_newMemSize = m_mem.size();
     m_copyMemSize = 0;
@@ -404,7 +406,9 @@ void VM::interpretCases()
         CASE(SHA3)
         {
             ON_OP();
-            m_runGas = toInt63(VMSchedule::sha3Gas + (u512(m_SP[1]) + 31) / 32 * VMSchedule::sha3WordGas);
+            constexpr int64_t sha3Gas = VMSchedule::sha3Gas;
+            constexpr int64_t sha3WordGas = VMSchedule::sha3WordGas;
+            m_runGas = toInt63(sha3Gas + (u512(m_SP[1]) + 31) / 32 * sha3WordGas);
             updateMem(memNeed(m_SP[0], m_SP[1]));
             updateIOGas();
 
@@ -1738,7 +1742,7 @@ void VM::interpretCases()
 
         CASE(JUMPDEST)
         {
-            m_runGas = 1;
+            m_runGas = VMSchedule::jumpdestGas;
             ON_OP();
             updateIOGas();
         }
