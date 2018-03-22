@@ -67,17 +67,9 @@ void VM::throwBadStack(unsigned _removed, unsigned _added)
 {
     bigint size = m_stackEnd - m_SPP;
     if (size < _removed)
-    {
-        if (m_onFail)
-            (this->*m_onFail)();
         BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, size));
-    }
     else
-    {
-        if (m_onFail)
-            (this->*m_onFail)();
         BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), size));
-    }
 }
 
 void VM::throwRevertInstruction(owning_bytes_ref&& _output)
@@ -88,9 +80,6 @@ void VM::throwRevertInstruction(owning_bytes_ref&& _output)
 
 void VM::throwBufferOverrun(bigint const& _endOfAccess)
 {
-    // todo: disable this m_onFail, may result in duplicate log step in the trace
-    if (m_onFail)
-        (this->*m_onFail)();
     BOOST_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
 }
 
@@ -118,7 +107,7 @@ int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 void VM::caseCreate()
 {
     m_bounce = &VM::interpretCases;
-    m_runGas = toInt63(m_schedule->createGas);
+    m_runGas = VMSchedule::createGas;
 
     // Collect arguments.
     u256 endowment = m_SP[0];
@@ -144,28 +133,40 @@ void VM::caseCreate()
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
-    if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
+    evm_uint256be rawBalance;
+    m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
+    u256 balance = fromEvmC(rawBalance);
+    if (balance >= endowment && m_message->depth < 1024)
     {
-        *m_io_gas_p = m_io_gas;
-        u256 createGas = *m_io_gas_p;
-        if (!m_schedule->staticCallDepthLimit())
-            createGas -= createGas / 64;
-        u256 gas = createGas;
+        evm_message msg = {};
+        msg.gas = m_io_gas;
+        if (m_rev >= EVM_TANGERINE_WHISTLE)
+            msg.gas -= msg.gas / 64;
 
         // Get init code. Casts are safe because the memory cost has been paid.
         auto off = static_cast<size_t>(initOff);
         auto size = static_cast<size_t>(initSize);
-        bytesConstRef initCode{m_mem.data() + off, size};
 
+        msg.input_data = &m_mem[off];
+        msg.input_size = size;
+        msg.sender = m_message->destination;
+        msg.depth = m_message->depth + 1;
+        msg.kind = EVM_CREATE;  // FIXME: In EVM-C move the kind to the top.
+        msg.value = toEvmC(endowment);
 
-        h160 addr;
-        owning_bytes_ref output;
-        std::tie(addr, output) = m_ext->create(endowment, gas, initCode, m_OP, salt, {});
-        m_SPP[0] = (u160)addr;  // Convert address to integer.
-        m_returnData = output.toBytes();
+        evm_result result;
+        m_context->fn_table->call(&result, m_context, &msg);
 
-        *m_io_gas_p -= (createGas - gas);
-        m_io_gas = uint64_t(*m_io_gas_p);
+        if (result.status_code == EVM_SUCCESS)
+            m_SPP[0] = fromAddress(fromEvmC(result.create_address));
+        else
+            m_SPP[0] = 0;
+        m_returnData.assign(result.output_data, result.output_data + result.output_size);
+
+        m_io_gas -= (msg.gas - result.gas_left);
+
+        if (result.release)
+            result.release(&result);
     }
     else
         m_SPP[0] = 0;
@@ -176,56 +177,69 @@ void VM::caseCall()
 {
     m_bounce = &VM::interpretCases;
 
-    // TODO: Please check if that does not actually increases the stack size.
-    //       That was the case before.
-    unique_ptr<CallParameters> callParams(new CallParameters());
+    evm_message msg = {};
 
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
     bytesRef output;
-    if (caseCallSetup(callParams.get(), output))
+    if (caseCallSetup(msg, output))
     {
-        bool success = false;
-        owning_bytes_ref outputRef;
-        std::tie(success, outputRef) = m_ext->call(*callParams);
-        outputRef.copyTo(output);
+        evm_result result;
+        m_context->fn_table->call(&result, m_context, &msg);
 
-        // Here we have 2 options:
-        // 1. Keep the whole returned memory buffer (owning_bytes_ref):
-        //    higher memory footprint, no memory copy.
-        // 2. Copy only the return data from the returned memory buffer:
-        //    minimal memory footprint, additional memory copy.
-        // Option 2 used:
-        m_returnData = outputRef.toBytes();
+        m_returnData.assign(result.output_data, result.output_data + result.output_size);
+        bytesConstRef{&m_returnData}.copyTo(output);
 
-        m_SPP[0] = success ? 1 : 0;
+        m_SPP[0] = result.status_code == EVM_SUCCESS ? 1 : 0;
+        m_io_gas += result.gas_left;
+
+        if (result.release)
+            result.release(&result);
     }
     else
+    {
         m_SPP[0] = 0;
-    m_io_gas += uint64_t(callParams->gas);
+        m_io_gas += msg.gas;
+    }
     ++m_PC;
 }
 
-bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
+bool VM::caseCallSetup(evm_message& o_msg, bytesRef& o_output)
 {
-    // Make sure the params were properly initialized.
-    assert(callParams->valueTransfer == 0);
-    assert(callParams->apparentValue == 0);
+    m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 700 : 40;
 
-    m_runGas = toInt63(m_schedule->callGas);
+    switch (m_OP)
+    {
+    case Instruction::CALL:
+    case Instruction::STATICCALL:
+    default:
+        o_msg.kind = EVM_CALL;
+        break;
+    case Instruction::CALLCODE:
+        o_msg.kind = EVM_CALLCODE;
+        break;
+    case Instruction::DELEGATECALL:
+        o_msg.kind = EVM_DELEGATECALL;
+        break;
+    }
 
-    callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
+    if (m_OP == Instruction::STATICCALL || m_message->flags & EVM_STATIC)
+        o_msg.flags = EVM_STATIC;
 
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
-    Address destinationAddr = asAddress(m_SP[1]);
-    if (m_OP == Instruction::CALL && !m_ext->exists(destinationAddr))
-        if (m_SP[2] > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
-            m_runGas += toInt63(m_schedule->callNewAccountGas);
+    evm_address destination = toEvmC(asAddress(m_SP[1]));
+    int destinationExists = m_context->fn_table->account_exists(m_context, &destination);
+
+    if (m_OP == Instruction::CALL && !destinationExists)
+    {
+        if (m_SP[2] > 0 || m_rev < EVM_SPURIOUS_DRAGON)
+            m_runGas += VMSchedule::callNewAccount;
+    }
 
     if (haveValueArg && m_SP[2] > 0)
-        m_runGas += toInt63(m_schedule->callValueTransferGas);
+        m_runGas += VMSchedule::valueTransferGas;
 
     size_t const sizesOffset = haveValueArg ? 3 : 2;
     u256 inputOffset  = m_SP[sizesOffset];
@@ -240,46 +254,49 @@ bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
     updateIOGas();
 
     // "Static" costs already applied. Calculate call gas.
-    if (m_schedule->staticCallDepthLimit())
-    {
-        // With static call depth limit we just charge the provided gas amount.
-        callParams->gas = m_SP[0];
-    }
-    else
+    u256 callGas = m_SP[0];
+    if (m_rev >= EVM_TANGERINE_WHISTLE)
     {
         // Apply "all but one 64th" rule.
         u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
-        callParams->gas = std::min(m_SP[0], maxAllowedCallGas);
+        callGas = std::min(callGas, maxAllowedCallGas);
     }
 
-    m_runGas = toInt63(callParams->gas);
+    o_msg.gas = toInt63(callGas);
+    m_runGas = o_msg.gas;
     updateIOGas();
 
-    if (haveValueArg && m_SP[2] > 0)
-        callParams->gas += m_schedule->callStipend;
+    o_msg.destination = destination;
+    o_msg.sender = m_message->destination;
+    o_msg.input_data = m_mem.data() + size_t(inputOffset);
+    o_msg.input_size = size_t(inputSize);
 
-    callParams->codeAddress = destinationAddr;
-
+    bool balanceOk = true;
     if (haveValueArg)
     {
-        callParams->valueTransfer = m_SP[2];
-        callParams->apparentValue = m_SP[2];
+        u256 value = m_SP[2];
+        if (value > 0)
+        {
+            o_msg.value = toEvmC(m_SP[2]);
+            o_msg.gas += VMSchedule::callStipend;
+            {
+                evm_uint256be rawBalance;
+                m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
+                u256 balance = fromEvmC(rawBalance);
+                balanceOk = balance >= value;
+            }
+        }
     }
     else if (m_OP == Instruction::DELEGATECALL)
-        // Forward VALUE.
-        callParams->apparentValue = m_ext->value;
-
-    uint64_t inOff = (uint64_t)inputOffset;
-    uint64_t inSize = (uint64_t)inputSize;
-    uint64_t outOff = (uint64_t)outputOffset;
-    uint64_t outSize = (uint64_t)outputSize;
-
-    if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
     {
-        callParams->onOp = {};
-        callParams->senderAddress = m_OP == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
-        callParams->receiveAddress = (m_OP == Instruction::CALL || m_OP == Instruction::STATICCALL) ? callParams->codeAddress : m_ext->myAddress;
-        callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);
+        o_msg.sender = m_message->sender;
+        o_msg.value = m_message->value;
+    }
+
+    if (balanceOk && m_message->depth < 1024)
+    {
+        size_t outOff = size_t(outputOffset);
+        size_t outSize = size_t(outputSize);
         o_output = bytesRef(m_mem.data() + outOff, outSize);
         return true;
     }
