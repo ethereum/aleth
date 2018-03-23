@@ -1,7 +1,9 @@
 
 set(sources
+    EVMC.cpp EVMC.h
     ExtVMFace.cpp ExtVMFace.h
     Instruction.cpp Instruction.h
+    interpreter.h
     LegacyVM.cpp LegacyVM.h
     LegacyVMCalls.cpp
     LegacyVMOpt.cpp
@@ -14,12 +16,6 @@ set(sources
     VMValidate.cpp
     VMFactory.cpp VMFactory.h
 )
-
-if(EVMJIT OR HERA)
-    list(APPEND sources
-        EVMC.cpp EVMC.h
-    )
-endif()
 
 add_library(evm ${sources})
 

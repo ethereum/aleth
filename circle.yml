@@ -109,6 +109,12 @@ defaults:
     - *store-testeth
     - *restore-ethash-dag
     - *test
+    - run:
+        name: "Test EVM-C Interpreter"
+        working_directory: ~/build
+        command: |
+          ETHEREUM_TEST_PATH=~/project/test/jsontests \
+          test/testeth -t GeneralStateTests -- --vm interpreter
     - *save-ethash-dag
     - *upload-coverage-data
 
