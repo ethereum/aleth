@@ -1358,7 +1358,7 @@ void VM::interpretCases()
 
             evm_address address = toEvmC(asAddress(m_SP[0]));
 
-            m_SPP[0] = m_context->fn_table->get_code(nullptr, m_context, &address);
+            m_SPP[0] = m_context->fn_table->get_code_size(m_context, &address);
         }
         NEXT
 
