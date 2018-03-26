@@ -29,15 +29,18 @@ inline leveldb::Slice toLDBSlice(Slice _slice)
     return leveldb::Slice(_slice.data(), _slice.size());
 }
 
-template <class _T>
-void throwDatabaseError(leveldb::Status const& _status, boost::filesystem::path const& _path)
+DatabaseStatus toDatabaseStatus(leveldb::Status const& _status)
 {
-    _T ex;
-    ex << errinfo_db(_status.ToString());
-    if (!_path.empty())
-        ex << errinfo_path(_path.string());
-
-    BOOST_THROW_EXCEPTION(ex);
+    if (_status.ok())
+        return DatabaseStatus::Ok;
+    else if (_status.IsIOError())
+        return DatabaseStatus::IOError;
+    else if (_status.IsCorruption())
+        return DatabaseStatus::Corruption;
+    else if (_status.IsNotFound())
+        return DatabaseStatus::NotFound;
+    else
+        return DatabaseStatus::Unknown;
 }
 
 void checkStatus(leveldb::Status const& _status, boost::filesystem::path const& _path = {})
@@ -45,12 +48,13 @@ void checkStatus(leveldb::Status const& _status, boost::filesystem::path const& 
     if (_status.ok())
         return;
 
-    if (_status.IsCorruption())
-        throwDatabaseError<DBCorruption>(_status, _path);
-    else if (_status.IsIOError())
-        throwDatabaseError<IOError>(_status, _path);
-    else
-        throwDatabaseError<DatabaseError>(_status, _path);
+    DatabaseError ex;
+    ex << errinfo_dbStatusCode(toDatabaseStatus(_status))
+       << errinfo_dbStatusString(_status.ToString());
+    if (!_path.empty())
+        ex << errinfo_path(_path.string());
+
+    BOOST_THROW_EXCEPTION(ex);
 }
 
 class LevelDBWriteBatch : public WriteBatchFace

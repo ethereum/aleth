@@ -256,8 +256,12 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         m_blocksDB.reset(new db::DBImpl(chainPath / fs::path("blocks")));
         m_extrasDB.reset(new db::DBImpl(extrasPath / fs::path("extras")));
     }
-    catch (db::IOError const&)
+    catch (db::DatabaseError const& ex)
     {
+        // Check the exact reason of errror, in case of IOError we can display user-friendly message
+        if (*boost::get_error_info<db::errinfo_dbStatusCode>(ex) != db::DatabaseStatus::IOError)
+            throw;
+
         if (fs::space(chainPath / fs::path("blocks")).available < 1024)
         {
             cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";

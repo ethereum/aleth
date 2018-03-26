@@ -71,14 +71,20 @@ public:
 };
 
 DEV_SIMPLE_EXCEPTION(DatabaseError);
-struct DBCorruption : virtual DatabaseError
+
+enum class DatabaseStatus
 {
-};
-struct IOError : virtual DatabaseError
-{
+    Ok,
+    NotFound,
+    Corruption,
+    NotSupported,
+    InvalidArgument,
+    IOError,
+    Unknown
 };
 
-using errinfo_db = boost::error_info<struct tag_db, std::string>;
+using errinfo_dbStatusCode = boost::error_info<struct tag_dbStatusCode, DatabaseStatus>;
+using errinfo_dbStatusString = boost::error_info<struct tag_dbStatusString, std::string>;
 
 }  // namespace db
 }  // namespace dev
