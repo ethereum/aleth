@@ -98,9 +98,9 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
         clog(StateDetail) << "Opened state DB.";
         return OverlayDB(std::move(db));
     }
-    catch (db::FailedToOpenDB const& ex)
+    catch (boost::exception const& ex)
     {
-        cwarn << ex.what() << '\n';
+        cwarn << boost::diagnostic_information(ex) << '\n';
         if (fs::space(path / fs::path("state")).available < 1024)
         {
             cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";

@@ -346,15 +346,9 @@ private:
                 return it->second;
         }
 
-        std::string s;
-        try
-        {
-            s = (_extrasDB ? _extrasDB : m_extrasDB.get())->lookup(toSlice(_h, N));
-        }
-        catch (const db::FailedLookupInDB& /* ex */)
-        {
+        std::string const s = (_extrasDB ? _extrasDB : m_extrasDB.get())->lookup(toSlice(_h, N));
+        if (s.empty())
             return _n;
-        }
 
         noteUsed(_h, N);
 

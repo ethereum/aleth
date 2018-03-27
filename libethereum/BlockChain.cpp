@@ -36,6 +36,7 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Exceptions.h>
 
+#include <boost/exception/errinfo_nested_exception.hpp>
 #include <boost/filesystem.hpp>
 
 using namespace std;
@@ -255,8 +256,12 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         m_blocksDB.reset(new db::DBImpl(chainPath / fs::path("blocks")));
         m_extrasDB.reset(new db::DBImpl(extrasPath / fs::path("extras")));
     }
-    catch (db::DBIOError const&)
+    catch (db::DatabaseError const& ex)
     {
+        // Check the exact reason of errror, in case of IOError we can display user-friendly message
+        if (*boost::get_error_info<db::errinfo_dbStatusCode>(ex) != db::DatabaseStatus::IOError)
+            throw;
+
         if (fs::space(chainPath / fs::path("blocks")).available < 1024)
         {
             cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
@@ -289,15 +294,9 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 #endif
 
     // TODO: Implement ability to rebuild details map from DB.
-    try
-    {
-        auto const l = m_extrasDB->lookup(db::Slice("best"));
-        m_lastBlockHash = h256(l, h256::FromBinary);
-    }
-    catch (db::FailedLookupInDB const& /* ex */)
-    {
-        m_lastBlockHash = m_genesisHash;
-    }
+    auto const l = m_extrasDB->lookup(db::Slice("best"));
+    m_lastBlockHash = l.empty() ? m_genesisHash : h256(l, h256::FromBinary);
+
     m_lastBlockNumber = number(m_lastBlockHash);
 
     ctrace << "Opened blockchain DB. Latest: " << currentHash() << (lastMinor == c_minorProtocolVersion ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
@@ -615,9 +614,9 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     {
         m_blocksDB->commit(std::move(blocksWriteBatch));
     }
-    catch (db::FailedCommitInDB const& ex)
+    catch (boost::exception const& ex)
     {
-        cwarn << "Error writing to blockchain database: " << ex.what();
+        cwarn << "Error writing to blockchain database: " << boost::diagnostic_information(ex);
         cwarn << "Fail writing to blockchain database. Bombing out.";
         exit(-1);
     }
@@ -626,9 +625,9 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     {
         m_extrasDB->commit(std::move(extrasWriteBatch));
     }
-    catch (db::FailedCommitInDB const& ex)
+    catch (boost::exception const& ex)
     {
-        cwarn << "Error writing to extras database: " << ex.what();
+        cwarn << "Error writing to extras database: " << boost::diagnostic_information(ex);
         cwarn << "Fail writing to extras database. Bombing out.";
         exit(-1);
     }
@@ -882,9 +881,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
     {
         m_blocksDB->commit(std::move(blocksWriteBatch));
     }
-    catch (db::FailedCommitInDB const& ex)
+    catch (boost::exception& ex)
     {
-        cwarn << "Error writing to blockchain database: " << ex.what();
+        cwarn << "Error writing to blockchain database: " << boost::diagnostic_information(ex);
         cwarn << "Fail writing to blockchain database. Bombing out.";
         exit(-1);
     }
@@ -893,9 +892,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
     {
         m_extrasDB->commit(std::move(extrasWriteBatch));
     }
-    catch (db::FailedCommitInDB const& ex)
+    catch (boost::exception& ex)
     {
-        cwarn << "Error writing to extras database: " << ex.what();
+        cwarn << "Error writing to extras database: " << boost::diagnostic_information(ex);
         cwarn << "Fail writing to extras database. Bombing out.";
         exit(-1);
     }
@@ -932,9 +931,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
             {
                 m_extrasDB->insert(db::Slice("best"), db::Slice((char const*)&m_lastBlockHash, 32));
             }
-            catch (db::FailedInsertInDB const& ex)
+            catch (boost::exception const& ex)
             {
-                cwarn << "Error writing to extras database: " << ex.what();
+                cwarn << "Error writing to extras database: " << boost::diagnostic_information(ex);
                 cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
                      << toHex(bytesConstRef(db::Slice((char const*)&m_lastBlockHash, 32)));
                 cwarn << "Fail writing to extras database. Bombing out.";
@@ -1081,9 +1080,9 @@ void BlockChain::rewind(unsigned _newHead)
         {
             m_extrasDB->insert(db::Slice("best"), db::Slice((char const*)&m_lastBlockHash, 32));
         }
-        catch (db::FailedInsertInDB const& ex)
+        catch (boost::exception const& ex)
         {
-            cwarn << "Error writing to extras database: " << ex.what();
+            cwarn << "Error writing to extras database: " << boost::diagnostic_information(ex);
             cout << "Put" << toHex(bytesConstRef(db::Slice("best"))) << "=>"
                  << toHex(bytesConstRef(db::Slice((char const*)&m_lastBlockHash, 32)));
             cwarn << "Fail writing to extras database. Bombing out.";
@@ -1412,12 +1411,8 @@ bytes BlockChain::block(h256 const& _hash) const
             return it->second;
     }
 
-    string d;
-    try
-    {
-        d = m_blocksDB->lookup(toSlice(_hash));
-    }
-    catch (db::FailedLookupInDB const& /* ex */)
+    string const d = m_blocksDB->lookup(toSlice(_hash));
+    if (d.empty())
     {
         cwarn << "Couldn't find requested block:" << _hash;
         return bytes();
@@ -1444,12 +1439,8 @@ bytes BlockChain::headerData(h256 const& _hash) const
             return BlockHeader::extractHeader(&it->second).data().toBytes();
     }
 
-    string d;
-    try
-    {
-        d = m_blocksDB->lookup(toSlice(_hash));
-    }
-    catch (db::FailedLookupInDB const& /* ex */)
+    string const d = m_blocksDB->lookup(toSlice(_hash));
+    if (d.empty())
     {
         cwarn << "Couldn't find requested block:" << _hash;
         return bytes();
@@ -1583,21 +1574,16 @@ void BlockChain::setChainStartBlockNumber(unsigned _number)
         m_extrasDB->insert(
             c_sliceChainStart, db::Slice(reinterpret_cast<char const*>(hash.data()), h256::size));
     }
-    catch (db::FailedInsertInDB const& /* ex */)
+    catch (boost::exception const& ex)
     {
-        BOOST_THROW_EXCEPTION(FailedToWriteChainStart() << errinfo_hash256(hash));
+        BOOST_THROW_EXCEPTION(FailedToWriteChainStart()
+                              << errinfo_hash256(hash)
+                              << boost::errinfo_nested_exception(boost::copy_exception(ex)));
     }
 }
 
 unsigned BlockChain::chainStartBlockNumber() const
 {
-    try
-    {
-        auto const value = m_extrasDB->lookup(c_sliceChainStart);
-        return number(h256(value, h256::FromBinary));
-    }
-    catch (db::FailedLookupInDB const& /* ex */)
-    {
-        return 0;
-    }
+    auto const value = m_extrasDB->lookup(c_sliceChainStart);
+    return value.empty() ? 0 : number(h256(value, h256::FromBinary));
 }
