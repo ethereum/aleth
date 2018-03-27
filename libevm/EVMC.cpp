@@ -54,7 +54,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     case EVM_FAILURE:
         BOOST_THROW_EXCEPTION(OutOfGas());
 
-    case EVM_BAD_INSTRUCTION:
+    case EVM_UNDEFINED_INSTRUCTION:
         BOOST_THROW_EXCEPTION(BadInstruction());
 
     case EVM_BAD_JUMP_DESTINATION:
