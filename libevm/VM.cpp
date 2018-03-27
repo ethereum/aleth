@@ -1406,14 +1406,23 @@ void VM::interpretCases()
         {
             ON_OP();
             m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 700 : 20;
-            m_copyMemSize = toInt63(m_SP[3]);
+            uint64_t copyMemSize = toInt63(m_SP[3]);
+            m_copyMemSize = copyMemSize;
             updateMem(memNeed(m_SP[1], m_SP[3]));
             updateIOGas();
 
             evm_address address = toEvmC(asAddress(m_SP[0]));
-            uint8_t const* pCode = nullptr;
-            size_t codeSize = m_context->fn_table->get_code(&pCode, m_context, &address);
-            copyDataToMemory({pCode, codeSize}, m_SP + 1);
+
+            size_t memoryOffset = static_cast<size_t>(m_SP[1]);
+            constexpr size_t codeOffsetMax = std::numeric_limits<size_t>::max();
+            size_t codeOffset =
+                m_SP[2] > codeOffsetMax ? codeOffsetMax : static_cast<size_t>(m_SP[2]);
+            size_t size = static_cast<size_t>(copyMemSize);
+
+            size_t numCopied = m_context->fn_table->copy_code(
+                m_context, &address, codeOffset, &m_mem[memoryOffset], size);
+
+            std::fill_n(&m_mem[memoryOffset + numCopied], size - numCopied, 0);
         }
         NEXT
 

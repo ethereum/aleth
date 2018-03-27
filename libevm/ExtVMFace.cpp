@@ -84,14 +84,21 @@ size_t getCodeSize(evm_context* _context, evm_address const* _addr)
     return env.codeSizeAt(fromEvmC(*_addr));
 }
 
-size_t getCode(byte const** o_code, evm_context* _context, evm_address const* _addr)
+size_t copyCode(evm_context* _context, evm_address const* _addr, size_t _codeOffset,
+    byte* _bufferData, size_t _bufferSize)
 {
-    assert(o_code != nullptr);  // Use get_code_size() to get code size.
     auto& env = static_cast<ExtVMFace&>(*_context);
     Address addr = fromEvmC(*_addr);
-    auto& code = env.codeAt(addr);
-    *o_code = code.data();
-    return code.size();
+    bytes const& code = env.codeAt(addr);
+
+    // Handle "big offset" edge case.
+    if (_codeOffset >= code.size())
+        return 0;
+
+    size_t maxToCopy = code.size() - _codeOffset;
+    size_t numToCopy = std::min(maxToCopy, _bufferSize);
+    std::copy_n(&code[_codeOffset], numToCopy, _bufferData);
+    return numToCopy;
 }
 
 void selfdestruct(
@@ -256,7 +263,7 @@ evm_context_fn_table const fnTable = {
     setStorage,
     getBalance,
     getCodeSize,
-    getCode,
+    copyCode,
     selfdestruct,
     eth::call,
     getTxContext,
