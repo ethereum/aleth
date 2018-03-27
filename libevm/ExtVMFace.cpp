@@ -78,17 +78,20 @@ void getBalance(
 	*o_result = toEvmC(env.balance(fromEvmC(*_addr)));
 }
 
+size_t getCodeSize(evm_context* _context, evm_address const* _addr)
+{
+    auto& env = static_cast<ExtVMFace&>(*_context);
+    return env.codeSizeAt(fromEvmC(*_addr));
+}
+
 size_t getCode(byte const** o_code, evm_context* _context, evm_address const* _addr)
 {
-	auto& env = static_cast<ExtVMFace&>(*_context);
-	Address addr = fromEvmC(*_addr);
-	if (o_code != nullptr)
-	{
-		auto& code = env.codeAt(addr);
-		*o_code = code.data();
-		return code.size();
-	}
-	return env.codeSizeAt(addr);
+    assert(o_code != nullptr);  // Use get_code_size() to get code size.
+    auto& env = static_cast<ExtVMFace&>(*_context);
+    Address addr = fromEvmC(*_addr);
+    auto& code = env.codeAt(addr);
+    *o_code = code.data();
+    return code.size();
 }
 
 void selfdestruct(
@@ -248,18 +251,18 @@ void call(evm_result* o_result, evm_context* _context, evm_message const* _msg) 
 }
 
 evm_context_fn_table const fnTable = {
-	accountExists,
-	getStorage,
-	setStorage,
-	getBalance,
-	getCode,
-	selfdestruct,
-	eth::call,
-	getTxContext,
-	getBlockHash,
-	eth::log
+    accountExists,
+    getStorage,
+    setStorage,
+    getBalance,
+    getCodeSize,
+    getCode,
+    selfdestruct,
+    eth::call,
+    getTxContext,
+    getBlockHash,
+    eth::log,
 };
-
 }
 
 ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin,
