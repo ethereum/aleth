@@ -517,7 +517,7 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				addNode(Node(in.sourceid, in.source));
 				
 				Pong p(in.source);
-				p.echo = sha3(in.echo);
+				p.echo = in.echo;
 				p.sign(m_secret);
 				m_socketPointer->send(p);
 				break;
