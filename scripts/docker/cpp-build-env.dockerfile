@@ -29,6 +29,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     ninja-build \
     python3-pip \
     python3-requests \
+    doxygen \
     # Compilers
     g++ \
     g++-4.8 \
