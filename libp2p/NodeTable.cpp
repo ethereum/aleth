@@ -21,8 +21,16 @@
 
 #include "NodeTable.h"
 using namespace std;
-using namespace dev;
-using namespace dev::p2p;
+
+namespace dev
+{
+namespace p2p
+{
+inline bool operator==(
+    std::weak_ptr<NodeEntry> const& _weak, std::shared_ptr<NodeEntry> const& _shared)
+{
+    return !_weak.owner_before(_shared) && !_shared.owner_before(_weak);
+}
 
 const char* NodeTableWarn::name() { return "!P!"; }
 const char* NodeTableNote::name() { return "*P*"; }
@@ -222,62 +230,41 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
     unsigned tail = head == 0 ? lastBin : (head - 1) % s_bins;
     
     map<unsigned, list<shared_ptr<NodeEntry>>> found;
-    unsigned count = 0;
     
     // if d is 0, then we roll look forward, if last, we reverse, else, spread from d
     if (head > 1 && tail != lastBin)
-        while (head != tail && head < s_bins && count < s_bucketSize)
+        while (head != tail && head < s_bins)
         {
             Guard l(x_state);
             for (auto const& n: m_state[head].nodes)
                 if (auto p = n.lock())
-                {
-                    if (count < s_bucketSize)
-                        found[distance(_target, p->id)].push_back(p);
-                    else
-                        break;
-                }
-            
-            if (count < s_bucketSize && tail)
+                    found[distance(_target, p->id)].push_back(p);
+
+            if (tail)
                 for (auto const& n: m_state[tail].nodes)
                     if (auto p = n.lock())
-                    {
-                        if (count < s_bucketSize)
-                            found[distance(_target, p->id)].push_back(p);
-                        else
-                            break;
-                    }
+                        found[distance(_target, p->id)].push_back(p);
 
             head++;
             if (tail)
                 tail--;
         }
     else if (head < 2)
-        while (head < s_bins && count < s_bucketSize)
+        while (head < s_bins)
         {
             Guard l(x_state);
             for (auto const& n: m_state[head].nodes)
                 if (auto p = n.lock())
-                {
-                    if (count < s_bucketSize)
-                        found[distance(_target, p->id)].push_back(p);
-                    else
-                        break;
-                }
+                    found[distance(_target, p->id)].push_back(p);
             head++;
         }
     else
-        while (tail > 0 && count < s_bucketSize)
+        while (tail > 0)
         {
             Guard l(x_state);
             for (auto const& n: m_state[tail].nodes)
                 if (auto p = n.lock())
-                {
-                    if (count < s_bucketSize)
-                        found[distance(_target, p->id)].push_back(p);
-                    else
-                        break;
-                }
+                    found[distance(_target, p->id)].push_back(p);
             tail--;
         }
     
@@ -328,50 +315,56 @@ void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _en
     if (_pubk == m_node.address() || !NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).isAllowed())
         return;
 
-    shared_ptr<NodeEntry> node = nodeEntry(_pubk);
-    if (!!node && !node->pending)
+    shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
+    if (newNode && !newNode->pending)
     {
         clog(NodeTableConnect) << "Noting active node:" << _pubk << _endpoint.address().to_string() << ":" << _endpoint.port();
-        node->endpoint.address = _endpoint.address();
-        node->endpoint.udpPort = _endpoint.port();
-        
-        shared_ptr<NodeEntry> contested;
+        newNode->endpoint.address = _endpoint.address();
+        newNode->endpoint.udpPort = _endpoint.port();
+
+        shared_ptr<NodeEntry> nodeToEvict;
         {
             Guard l(x_state);
-            NodeBucket& s = bucket_UNSAFE(node.get());
-            bool removed = false;
-            s.nodes.remove_if([&node, &removed](weak_ptr<NodeEntry> const& n)
+            // Find a bucket to put a node to
+            NodeBucket& s = bucket_UNSAFE(newNode.get());
+            auto& nodes = s.nodes;
+
+            // check if the node is already in the bucket
+            auto it = std::find(nodes.begin(), nodes.end(), newNode);
+            if (it != nodes.end())
             {
-                if (n.lock() == node)
-                    removed = true;
-                return removed;
-            });
-            
-            if (s.nodes.size() >= s_bucketSize)
-            {
-                if (removed)
-                    clog(NodeTableWarn) << "DANGER: Bucket overflow when swapping node position.";
-                
-                // It's only contested iff nodeentry exists
-                contested = s.nodes.front().lock();
-                if (!contested)
-                {
-                    s.nodes.pop_front();
-                    s.nodes.push_back(node);
-                    if (!removed && m_nodeEventHandler)
-                        m_nodeEventHandler->appendEvent(node->id, NodeEntryAdded);
-                }
+                // if it was in the bucket, move it to the last position
+                nodes.splice(nodes.end(), nodes, it);
             }
             else
             {
-                s.nodes.push_back(node);
-                if (!removed && m_nodeEventHandler)
-                    m_nodeEventHandler->appendEvent(node->id, NodeEntryAdded);
+                if (nodes.size() < s_bucketSize)
+                {
+                    // if it was not there, just add it as a most recently seen node
+                    // (i.e. to the end of the list)
+                    nodes.push_back(newNode);
+                    if (m_nodeEventHandler)
+                        m_nodeEventHandler->appendEvent(newNode->id, NodeEntryAdded);
+                }
+                else
+                {
+                    // if bucket is full, start eviction process for the least recently seen node
+                    nodeToEvict = nodes.front().lock();
+                    // It could have been replaced in addNode(), then weak_ptr is expired.
+                    // If so, just add a new one instead of expired
+                    if (!nodeToEvict)
+                    {
+                        nodes.pop_front();
+                        nodes.push_back(newNode);
+                        if (m_nodeEventHandler)
+                            m_nodeEventHandler->appendEvent(newNode->id, NodeEntryAdded);
+                    }
+                }
             }
         }
-        
-        if (contested)
-            evict(contested, node);
+
+        if (nodeToEvict)
+            evict(nodeToEvict, newNode);
     }
 }
 
@@ -381,7 +374,7 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
     {
         Guard l(x_state);
         NodeBucket& s = bucket_UNSAFE(_n.get());
-        s.nodes.remove_if([&_n](weak_ptr<NodeEntry> n) { return n.lock() == _n; });
+        s.nodes.remove_if([&_n](weak_ptr<NodeEntry> _bucketEntry) { return _bucketEntry == _n; });
     }
     
     // notify host
@@ -632,3 +625,6 @@ unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint 
     decoded->interpretRLP(bodyBytes);
     return decoded;
 }
+
+}  // namespace p2p
+}  // namespace dev
