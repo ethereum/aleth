@@ -360,8 +360,8 @@ TransactionSkeleton toTransactionSkeleton(Json::Value const& _json)
 
 	if (!_json["from"].empty())
 		ret.from = jsToAddress(_json["from"].asString());
-	if (!_json["to"].empty() && _json["to"].asString() != "0x")
-		ret.to = jsToAddress(_json["to"].asString());
+    if (!_json["to"].empty() && _json["to"].asString() != "0x" && !_json["to"].asString().empty())
+        ret.to = jsToAddress(_json["to"].asString());
 	else
 		ret.creation = true;
 
