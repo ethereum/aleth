@@ -136,12 +136,12 @@ jobs:
 
   Linux-GCC6-Debug:
     environment:
-      - BUILD_TYPE: Debug
+      - BUILD_TYPE: RelWithDebInfo
       - CXX: g++-6
       - CC:  gcc-6
       - GCOV: gcov-6
       - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 4
+      - BUILD_PARALLEL_JOBS: 3
       - TEST_PARALLEL_JOBS: 4
       # TODO: Fix memory leaks reported in leveldb.
       # - CMAKE_OPTIONS: -DSANITIZE=address
