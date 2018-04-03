@@ -72,4 +72,21 @@ BOOST_AUTO_TEST_CASE(isHex)
 	BOOST_CHECK(dev::isHex("003"));
 }
 
+BOOST_AUTO_TEST_CASE(integerToHex)
+{
+	using dev::toHex;
+	using dev::toCompactHex;
+	using dev::u256;
+	const auto n = u256{std::numeric_limits<int32_t>::max()};
+
+	// FIXME: Make it work for types other than u256.
+	BOOST_CHECK_EQUAL(toHex(u256{0x0}), "0");
+	BOOST_CHECK_EQUAL(toHex(u256{0x1}), "1");
+	BOOST_CHECK_EQUAL(toHex(u256{0xa}), "a");
+	BOOST_CHECK_EQUAL(toHex(u256{0xa}), "a");
+	BOOST_CHECK_EQUAL(toHex(n), "7fffffff");
+
+	BOOST_CHECK_EQUAL(toCompactHex(0x0), "0");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
