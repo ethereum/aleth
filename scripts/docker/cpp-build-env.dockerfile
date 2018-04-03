@@ -34,6 +34,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     g++ \
     g++-4.8 \
     # g++-7 \
+    clang-3.8 \
     clang-5.0 \
     llvm-5.0 \
     llvm-5.0-dev \
