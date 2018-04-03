@@ -275,7 +275,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 			cout << st.json();
 		}
 		else
-			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+			out = initialState.execute(_env, *se.get(), _tr, Permanence::Committed);
 
     cout << "{\"stateRoot\": \"" << initialState.rootHash().hex() << "\"}\n";
 
