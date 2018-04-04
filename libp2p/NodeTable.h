@@ -40,7 +40,7 @@ namespace p2p
 struct NodeEntry: public Node
 {
     NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw);
-    unsigned const distance;	///< Node's distance (xor of _src as integer).
+    int const distance;	///< Node's distance (xor of _src as integer).
     bool pending = true;		///< Node will be ignored until Pong is received
 };
 
@@ -146,7 +146,7 @@ public:
     ~NodeTable();
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
-    static unsigned distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
+    static int distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
 
     /// Set event handler for NodeEntryAdded and NodeEntryDropped events.
     void setEventHandler(NodeTableEventHandler* _handler) { m_nodeEventHandler.reset(_handler); }
