@@ -233,12 +233,6 @@ BOOST_AUTO_TEST_CASE(isIPAddressType)
 
 BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 {
-    if (test::Options::get().nonetwork)
-    {
-        clog << "Skipping test network/net/neighboursPacketLength. --nonetwork flag is set.\n";
-        return;
-    }
-
     KeyPair k = KeyPair::create();
     std::vector<std::pair<Public, unsigned>> testNodes(TestNodeTable::createTestNodes(16));
     bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
@@ -267,12 +261,6 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 
 BOOST_AUTO_TEST_CASE(neighboursPacket)
 {
-    if (test::Options::get().nonetwork)
-    {
-        clog << "Skipping test network/net/neighboursPacket. --nonetwork flag is set.\n";
-        return;
-    }
-
     KeyPair k = KeyPair::create();
     std::vector<std::pair<Public, unsigned>> testNodes(TestNodeTable::createTestNodes(16));
     bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
@@ -308,12 +296,6 @@ BOOST_AUTO_TEST_CASE(test_findnode_neighbours)
 
 BOOST_AUTO_TEST_CASE(kademlia)
 {
-    if (test::Options::get().nonetwork)
-    {
-        clog << "Skipping test network/net/kademlia. --nonetwork flag is set.\n";
-        return;
-    }
-
     TestNodeTableHost node(8);
     node.start();
     node.populate();
@@ -327,12 +309,6 @@ BOOST_AUTO_TEST_CASE(kademlia)
 
 BOOST_AUTO_TEST_CASE(udpOnce)
 {
-    if (test::Options::get().nonetwork)
-    {
-        clog << "Skipping test network/net/udpOnce. --nonetwork flag is set.\n";
-        return;
-    }
-
     unsigned short port = 30333;
     UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), port), bytes({65,65,65,65}));
     TestUDPSocketHost a{port};
@@ -454,9 +430,6 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
 
 (deadlineTimer)
 {
-    if (test::Options::get().nonetwork)
-        return;
-
     ba::io_service io;
     ba::deadline_timer t(io);
     bool start = false;
@@ -479,12 +452,6 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(unspecifiedNode)
 {
-    if (test::Options::get().nonetwork)
-    {
-        clog << "Skipping test network/net/unspecifiedNode. --nonetwork flag is set.\n";
-        return;
-    }
-
     Node n = UnspecifiedNode;
     BOOST_REQUIRE(!n);
 
@@ -498,9 +465,6 @@ BOOST_AUTO_TEST_CASE(unspecifiedNode)
 
 BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
 {
-    if (test::Options::get().nonetwork)
-        return;
-
     ba::io_service io;
     NodeTable t(io, KeyPair::create(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30303, 30303));
     if (Node n = t.node(NodeID()))
