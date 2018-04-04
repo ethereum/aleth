@@ -18,49 +18,49 @@
 #include "interpreter.h"
 #include "VM.h"
 
-extern "C" evm_instance* interpreter_create() noexcept
+extern "C" evmc_instance* evmc_create_interpreter() noexcept
 {
     return new (std::nothrow) dev::eth::VM;
 }
 
 namespace
 {
-void destroy(evm_instance* _instance)
+void destroy(evmc_instance* _instance)
 {
     delete static_cast<dev::eth::VM*>(_instance);
 }
 
-void delete_output(const evm_result* result)
+void delete_output(const evmc_result* result)
 {
     delete[] result->output_data;
 }
 
-evm_result execute(evm_instance* _instance, evm_context* _context, evm_revision _rev,
-    const evm_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
+evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
+    const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
 {
     auto vm = static_cast<dev::eth::VM*>(_instance);
-    evm_result result = {};
+    evmc_result result = {};
     dev::eth::owning_bytes_ref output;
 
     try
     {
         output = vm->exec(_context, _rev, _msg, _code, _codeSize);
-        result.status_code = EVM_SUCCESS;
+        result.status_code = EVMC_SUCCESS;
         result.gas_left = vm->m_io_gas;
     }
     catch (dev::eth::RevertInstruction& ex)
     {
-        result.status_code = EVM_REVERT;
+        result.status_code = EVMC_REVERT;
         result.gas_left = vm->m_io_gas;
         output = ex.output();  // This moves the output from the exception!
     }
     catch (dev::eth::VMException const&)
     {
-        result.status_code = EVM_FAILURE;
+        result.status_code = EVMC_FAILURE;
     }
     catch (...)
     {
-        result.status_code = EVM_INTERNAL_ERROR;
+        result.status_code = EVMC_INTERNAL_ERROR;
     }
 
     if (!output.empty())
@@ -82,7 +82,7 @@ namespace dev
 {
 namespace eth
 {
-VM::VM() : evm_instance{EVM_ABI_VERSION, ::destroy, ::execute, nullptr} {}
+VM::VM() : evmc_instance{EVMC_ABI_VERSION, ::destroy, ::execute, nullptr} {}
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
@@ -149,8 +149,8 @@ void VM::adjustStack(unsigned _removed, unsigned _added)
 
 void VM::updateSSGas()
 {
-    evm_uint256be key = toEvmC(m_SP[0]);
-    evm_uint256be rawValue;
+    evmc_uint256be key = toEvmC(m_SP[0]);
+    evmc_uint256be rawValue;
     m_context->fn_table->get_storage(&rawValue, m_context, &m_message->destination, &key);
     u256 value = fromEvmC(rawValue);
     m_runGas = (!value && m_SP[1]) ? VMSchedule::sstoreSetGas : VMSchedule::sstoreResetGas;
@@ -212,7 +212,7 @@ void VM::fetchInstruction()
     m_copyMemSize = 0;
 }
 
-evm_tx_context const& VM::getTxContext()
+evmc_tx_context const& VM::getTxContext()
 {
     if (!m_tx_context)
     {
@@ -227,7 +227,7 @@ evm_tx_context const& VM::getTxContext()
 //
 // interpreter entry point
 
-owning_bytes_ref VM::exec(evm_context* _context, evm_revision _rev, const evm_message* _msg,
+owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
     uint8_t const* _code, size_t _codeSize)
 {
     m_context = _context;
@@ -272,7 +272,7 @@ void VM::interpretCases()
         CASE(CREATE)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             m_bounce = &VM::caseCreate;
@@ -285,11 +285,11 @@ void VM::interpretCases()
         CASE(CALLCODE)
         {
             ON_OP();
-            if (m_OP == Instruction::DELEGATECALL && m_rev < EVM_HOMESTEAD)
+            if (m_OP == Instruction::DELEGATECALL && m_rev < EVMC_HOMESTEAD)
                 throwBadInstruction();
-            if (m_OP == Instruction::STATICCALL && m_rev < EVM_BYZANTIUM)
+            if (m_OP == Instruction::STATICCALL && m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
-            if (m_OP == Instruction::CALL && m_message->flags & EVM_STATIC && m_SP[2] != 0)
+            if (m_OP == Instruction::CALL && m_message->flags & EVMC_STATIC && m_SP[2] != 0)
                 throwDisallowedStateChange();
             m_bounce = &VM::caseCall;
         }
@@ -312,7 +312,7 @@ void VM::interpretCases()
         CASE(REVERT)
         {
             // Pre-byzantium
-            if (m_rev < EVM_BYZANTIUM)
+            if (m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
 
             ON_OP();
@@ -330,23 +330,23 @@ void VM::interpretCases()
         CASE(SUICIDE)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 5000 : 0;
-            evm_address destination = toEvmC(asAddress(m_SP[0]));
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 5000 : 0;
+            evmc_address destination = toEvmC(asAddress(m_SP[0]));
 
             // After EIP158 zero-value suicides do not have to pay account creation gas.
-            evm_uint256be rawBalance;
+            evmc_uint256be rawBalance;
             m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
             u256 balance = fromEvmC(rawBalance);
-            if (balance > 0 || m_rev < EVM_SPURIOUS_DRAGON)
+            if (balance > 0 || m_rev < EVMC_SPURIOUS_DRAGON)
             {
                 // After EIP150 hard fork charge additional cost of sending
                 // ethers to non-existing account.
                 int destinationExists =
                     m_context->fn_table->account_exists(m_context, &destination);
-                if (m_rev >= EVM_TANGERINE_WHISTLE && !destinationExists)
+                if (m_rev >= EVMC_TANGERINE_WHISTLE && !destinationExists)
                     m_runGas += VMSchedule::callNewAccount;
             }
 
@@ -417,7 +417,7 @@ void VM::interpretCases()
         CASE(LOG0)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
@@ -434,7 +434,7 @@ void VM::interpretCases()
         CASE(LOG1)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
@@ -443,7 +443,7 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            evm_uint256be topics[] = {toEvmC(m_SP[2])};
+            evmc_uint256be topics[] = {toEvmC(m_SP[2])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
             m_context->fn_table->emit_log(
@@ -454,7 +454,7 @@ void VM::interpretCases()
         CASE(LOG2)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
@@ -463,7 +463,7 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            evm_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3])};
+            evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
             m_context->fn_table->emit_log(
@@ -474,7 +474,7 @@ void VM::interpretCases()
         CASE(LOG3)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
@@ -483,7 +483,7 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            evm_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4])};
+            evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
             m_context->fn_table->emit_log(
@@ -494,7 +494,7 @@ void VM::interpretCases()
         CASE(LOG4)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
@@ -503,7 +503,7 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            evm_uint256be topics[] = {
+            evmc_uint256be topics[] = {
                 toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4]), toEvmC(m_SP[5])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
@@ -515,7 +515,7 @@ void VM::interpretCases()
         CASE(EXP)
         {
             u256 expon = m_SP[1];
-            const int64_t byteCost = m_rev >= EVM_SPURIOUS_DRAGON ? 50 : 10;
+            const int64_t byteCost = m_rev >= EVMC_SPURIOUS_DRAGON ? 50 : 10;
             m_runGas = toInt63(VMSchedule::stepGas5 + byteCost * (32 - (h256(expon).firstBitSet() / 8)));
             ON_OP();
             updateIOGas();
@@ -697,7 +697,7 @@ void VM::interpretCases()
         CASE(SHL)
         {
             // Pre-constantinople
-            if (m_rev < EVM_CONSTANTINOPLE)
+            if (m_rev < EVMC_CONSTANTINOPLE)
                 throwBadInstruction();
 
             ON_OP();
@@ -713,7 +713,7 @@ void VM::interpretCases()
         CASE(SHR)
         {
             // Pre-constantinople
-            if (m_rev < EVM_CONSTANTINOPLE)
+            if (m_rev < EVMC_CONSTANTINOPLE)
                 throwBadInstruction();
 
             ON_OP();
@@ -729,7 +729,7 @@ void VM::interpretCases()
         CASE(SAR)
         {
             // Pre-constantinople
-            if (m_rev < EVM_CONSTANTINOPLE)
+            if (m_rev < EVMC_CONSTANTINOPLE)
                 throwBadInstruction();
 
             ON_OP();
@@ -1128,7 +1128,7 @@ void VM::interpretCases()
 
         CASE(XSSTORE)
         {
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             updateSSGas();
@@ -1267,12 +1267,12 @@ void VM::interpretCases()
 
         CASE(BALANCE)
         {
-            m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 400 : 20;
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 400 : 20;
             ON_OP();
             updateIOGas();
 
-            evm_address address = toEvmC(asAddress(m_SP[0]));
-            evm_uint256be rawBalance;
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
+            evmc_uint256be rawBalance;
             m_context->fn_table->get_balance(&rawBalance, m_context, &address);
             m_SPP[0] = fromEvmC(rawBalance);
         }
@@ -1331,7 +1331,7 @@ void VM::interpretCases()
 
         CASE(RETURNDATASIZE)
         {
-            if (m_rev < EVM_BYZANTIUM)
+            if (m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
 
             ON_OP();
@@ -1352,11 +1352,11 @@ void VM::interpretCases()
 
         CASE(EXTCODESIZE)
         {
-            m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 700 : 20;
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 20;
             ON_OP();
             updateIOGas();
 
-            evm_address address = toEvmC(asAddress(m_SP[0]));
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
 
             m_SPP[0] = m_context->fn_table->get_code_size(m_context, &address);
         }
@@ -1377,7 +1377,7 @@ void VM::interpretCases()
         CASE(RETURNDATACOPY)
         {
             ON_OP();
-            if (m_rev < EVM_BYZANTIUM)
+            if (m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
             bigint const endOfAccess = bigint(m_SP[1]) + bigint(m_SP[2]);
             if (m_returnData.size() < endOfAccess)
@@ -1405,13 +1405,13 @@ void VM::interpretCases()
         CASE(EXTCODECOPY)
         {
             ON_OP();
-            m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 700 : 20;
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 20;
             uint64_t copyMemSize = toInt63(m_SP[3]);
             m_copyMemSize = copyMemSize;
             updateMem(memNeed(m_SP[1], m_SP[3]));
             updateIOGas();
 
-            evm_address address = toEvmC(asAddress(m_SP[0]));
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
 
             size_t memoryOffset = static_cast<size_t>(m_SP[1]);
             constexpr size_t codeOffsetMax = std::numeric_limits<size_t>::max();
@@ -1447,7 +1447,7 @@ void VM::interpretCases()
 
             if (number < blockNumber && number >= std::max(int64_t(256), blockNumber) - 256)
             {
-                evm_uint256be hash;
+                evmc_uint256be hash;
                 m_context->fn_table->get_block_hash(&hash, m_context, int64_t(number));
                 m_SPP[0] = fromEvmC(hash);
             }
@@ -1692,12 +1692,12 @@ void VM::interpretCases()
 
         CASE(SLOAD)
         {
-            m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 200 : 50;
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 200 : 50;
             ON_OP();
             updateIOGas();
 
-            evm_uint256be key = toEvmC(m_SP[0]);
-            evm_uint256be value;
+            evmc_uint256be key = toEvmC(m_SP[0]);
+            evmc_uint256be value;
             m_context->fn_table->get_storage(&value, m_context, &m_message->destination, &key);
             m_SPP[0] = fromEvmC(value);
         }
@@ -1706,14 +1706,14 @@ void VM::interpretCases()
         CASE(SSTORE)
         {
             ON_OP();
-            if (m_message->flags & EVM_STATIC)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             updateSSGas();
             updateIOGas();
 
-            evm_uint256be key = toEvmC(m_SP[0]);
-            evm_uint256be value = toEvmC(m_SP[1]);
+            evmc_uint256be key = toEvmC(m_SP[0]);
+            evmc_uint256be value = toEvmC(m_SP[1]);
             m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
         }
         NEXT

@@ -19,8 +19,14 @@
 #include "EVMC.h"
 #include "LegacyVM.h"
 #include "interpreter.h"
+
+#if ETH_EVMJIT
 #include <evmjit.h>
+#endif
+
+#if ETH_HERA
 #include <hera.h>
+#endif
 
 namespace po = boost::program_options;
 
@@ -170,7 +176,7 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
         return std::unique_ptr<VMFace>(new EVMC{hera_create()});
 #endif
     case VMKind::Interpreter:
-        return std::unique_ptr<VMFace>(new EVMC{interpreter_create()});
+        return std::unique_ptr<VMFace>(new EVMC{evmc_create_interpreter()});
     case VMKind::Legacy:
     default:
         return std::unique_ptr<VMFace>(new LegacyVM);

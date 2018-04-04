@@ -133,14 +133,14 @@ void VM::caseCreate()
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
-    evm_uint256be rawBalance;
+    evmc_uint256be rawBalance;
     m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
     u256 balance = fromEvmC(rawBalance);
     if (balance >= endowment && m_message->depth < 1024)
     {
-        evm_message msg = {};
+        evmc_message msg = {};
         msg.gas = m_io_gas;
-        if (m_rev >= EVM_TANGERINE_WHISTLE)
+        if (m_rev >= EVMC_TANGERINE_WHISTLE)
             msg.gas -= msg.gas / 64;
 
         // Get init code. Casts are safe because the memory cost has been paid.
@@ -151,13 +151,13 @@ void VM::caseCreate()
         msg.input_size = size;
         msg.sender = m_message->destination;
         msg.depth = m_message->depth + 1;
-        msg.kind = EVM_CREATE;  // FIXME: In EVM-C move the kind to the top.
+        msg.kind = EVMC_CREATE;  // FIXME: In EVM-C move the kind to the top.
         msg.value = toEvmC(endowment);
 
-        evm_result result;
+        evmc_result result;
         m_context->fn_table->call(&result, m_context, &msg);
 
-        if (result.status_code == EVM_SUCCESS)
+        if (result.status_code == EVMC_SUCCESS)
             m_SPP[0] = fromAddress(fromEvmC(result.create_address));
         else
             m_SPP[0] = 0;
@@ -177,7 +177,7 @@ void VM::caseCall()
 {
     m_bounce = &VM::interpretCases;
 
-    evm_message msg = {};
+    evmc_message msg = {};
 
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
@@ -185,13 +185,13 @@ void VM::caseCall()
     bytesRef output;
     if (caseCallSetup(msg, output))
     {
-        evm_result result;
+        evmc_result result;
         m_context->fn_table->call(&result, m_context, &msg);
 
         m_returnData.assign(result.output_data, result.output_data + result.output_size);
         bytesConstRef{&m_returnData}.copyTo(output);
 
-        m_SPP[0] = result.status_code == EVM_SUCCESS ? 1 : 0;
+        m_SPP[0] = result.status_code == EVMC_SUCCESS ? 1 : 0;
         m_io_gas += result.gas_left;
 
         if (result.release)
@@ -205,36 +205,36 @@ void VM::caseCall()
     ++m_PC;
 }
 
-bool VM::caseCallSetup(evm_message& o_msg, bytesRef& o_output)
+bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
 {
-    m_runGas = m_rev >= EVM_TANGERINE_WHISTLE ? 700 : 40;
+    m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 40;
 
     switch (m_OP)
     {
     case Instruction::CALL:
     case Instruction::STATICCALL:
     default:
-        o_msg.kind = EVM_CALL;
+        o_msg.kind = EVMC_CALL;
         break;
     case Instruction::CALLCODE:
-        o_msg.kind = EVM_CALLCODE;
+        o_msg.kind = EVMC_CALLCODE;
         break;
     case Instruction::DELEGATECALL:
-        o_msg.kind = EVM_DELEGATECALL;
+        o_msg.kind = EVMC_DELEGATECALL;
         break;
     }
 
-    if (m_OP == Instruction::STATICCALL || m_message->flags & EVM_STATIC)
-        o_msg.flags = EVM_STATIC;
+    if (m_OP == Instruction::STATICCALL || m_message->flags & EVMC_STATIC)
+        o_msg.flags = EVMC_STATIC;
 
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
-    evm_address destination = toEvmC(asAddress(m_SP[1]));
+    evmc_address destination = toEvmC(asAddress(m_SP[1]));
     int destinationExists = m_context->fn_table->account_exists(m_context, &destination);
 
     if (m_OP == Instruction::CALL && !destinationExists)
     {
-        if (m_SP[2] > 0 || m_rev < EVM_SPURIOUS_DRAGON)
+        if (m_SP[2] > 0 || m_rev < EVMC_SPURIOUS_DRAGON)
             m_runGas += VMSchedule::callNewAccount;
     }
 
@@ -255,7 +255,7 @@ bool VM::caseCallSetup(evm_message& o_msg, bytesRef& o_output)
 
     // "Static" costs already applied. Calculate call gas.
     u256 callGas = m_SP[0];
-    if (m_rev >= EVM_TANGERINE_WHISTLE)
+    if (m_rev >= EVMC_TANGERINE_WHISTLE)
     {
         // Apply "all but one 64th" rule.
         u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
@@ -280,7 +280,7 @@ bool VM::caseCallSetup(evm_message& o_msg, bytesRef& o_output)
             o_msg.value = toEvmC(m_SP[2]);
             o_msg.gas += VMSchedule::callStipend;
             {
-                evm_uint256be rawBalance;
+                evmc_uint256be rawBalance;
                 m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
                 u256 balance = fromEvmC(rawBalance);
                 balanceOk = balance >= value;

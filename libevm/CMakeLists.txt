@@ -19,9 +19,7 @@ set(sources
 
 add_library(evm ${sources})
 
-target_link_libraries(evm PUBLIC ethcore devcore PRIVATE jsoncpp_lib_static Boost::program_options)
-target_include_directories(evm PUBLIC ${CMAKE_SOURCE_DIR}/evmjit/include)
-target_include_directories(evm PUBLIC ${CMAKE_SOURCE_DIR}/hera/src)
+target_link_libraries(evm PUBLIC ethcore devcore evmc PRIVATE jsoncpp_lib_static Boost::program_options)
 
 if(EVM_OPTIMIZE)
     target_compile_definitions(evm PRIVATE EVM_OPTIMIZE)
