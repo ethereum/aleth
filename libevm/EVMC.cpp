@@ -11,10 +11,10 @@ namespace dev
 {
 namespace eth
 {
-EVM::EVM(evm_instance* _instance) noexcept : m_instance(_instance)
+EVM::EVM(evmc_instance* _instance) noexcept : m_instance(_instance)
 {
     assert(m_instance != nullptr);
-    assert(m_instance->abi_version == EVM_ABI_VERSION);
+    assert(m_instance->abi_version == EVMC_ABI_VERSION);
 
     // Set the options.
     for (auto& pair : evmcOptions())
@@ -40,36 +40,36 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
     switch (r.status())
     {
-    case EVM_SUCCESS:
+    case EVMC_SUCCESS:
         io_gas = r.gasLeft();
         // FIXME: Copy the output for now, but copyless version possible.
         return {r.output().toVector(), 0, r.output().size()};
 
-    case EVM_REVERT:
+    case EVMC_REVERT:
         io_gas = r.gasLeft();
         // FIXME: Copy the output for now, but copyless version possible.
         throw RevertInstruction{{r.output().toVector(), 0, r.output().size()}};
 
-    case EVM_OUT_OF_GAS:
-    case EVM_FAILURE:
+    case EVMC_OUT_OF_GAS:
+    case EVMC_FAILURE:
         BOOST_THROW_EXCEPTION(OutOfGas());
 
-    case EVM_UNDEFINED_INSTRUCTION:
+    case EVMC_UNDEFINED_INSTRUCTION:
         BOOST_THROW_EXCEPTION(BadInstruction());
 
-    case EVM_BAD_JUMP_DESTINATION:
+    case EVMC_BAD_JUMP_DESTINATION:
         BOOST_THROW_EXCEPTION(BadJumpDestination());
 
-    case EVM_STACK_OVERFLOW:
+    case EVMC_STACK_OVERFLOW:
         BOOST_THROW_EXCEPTION(OutOfStack());
 
-    case EVM_STACK_UNDERFLOW:
+    case EVMC_STACK_UNDERFLOW:
         BOOST_THROW_EXCEPTION(StackUnderflow());
 
-    case EVM_STATIC_MODE_ERROR:
+    case EVMC_STATIC_MODE_ERROR:
         BOOST_THROW_EXCEPTION(DisallowedStateChange());
 
-    case EVM_REJECTED:
+    case EVMC_REJECTED:
         cwarn << "Execution rejected by EVM-C, executing with default VM implementation";
         return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
 
@@ -79,19 +79,19 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     }
 }
 
-evm_revision toRevision(EVMSchedule const& _schedule)
+evmc_revision toRevision(EVMSchedule const& _schedule)
 {
 	if (_schedule.haveCreate2)
-		return EVM_CONSTANTINOPLE;
+		return EVMC_CONSTANTINOPLE;
 	if (_schedule.haveRevert)
-		return EVM_BYZANTIUM;
+		return EVMC_BYZANTIUM;
 	if (_schedule.eip158Mode)
-		return EVM_SPURIOUS_DRAGON;
+		return EVMC_SPURIOUS_DRAGON;
 	if (_schedule.eip150Mode)
-		return EVM_TANGERINE_WHISTLE;
+		return EVMC_TANGERINE_WHISTLE;
 	if (_schedule.haveDelegateCall)
-		return EVM_HOMESTEAD;
-	return EVM_FRONTIER;
+		return EVMC_HOMESTEAD;
+	return EVMC_FRONTIER;
 }
 
 }

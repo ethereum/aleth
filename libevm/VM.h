@@ -21,7 +21,7 @@
 #include "VMConfig.h"
 #include "VMFace.h"
 
-#include <evm.h>
+#include <evmc.h>
 
 #include <boost/optional.hpp>
 
@@ -58,12 +58,12 @@ struct VMSchedule
     static constexpr int64_t callNewAccount = 25000;
 };
 
-class VM : public evm_instance
+class VM : public evmc_instance
 {
 public:
     VM();
 
-    owning_bytes_ref exec(evm_context* _context, evm_revision _rev, const evm_message* _msg,
+    owning_bytes_ref exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
         uint8_t const* _code, size_t _codeSize);
 
 #if EIP_615
@@ -81,10 +81,10 @@ public:
 
     uint64_t m_io_gas = 0;
 private:
-    evm_context* m_context = nullptr;
-    evm_revision m_rev = EVM_FRONTIER;
-    evm_message const* m_message = nullptr;
-    boost::optional<evm_tx_context> m_tx_context;
+    evmc_context* m_context = nullptr;
+    evmc_revision m_rev = EVMC_FRONTIER;
+    evmc_message const* m_message = nullptr;
+    boost::optional<evmc_tx_context> m_tx_context;
 
     static std::array<InstructionMetric, 256> c_metrics;
     static void initMetrics();
@@ -147,13 +147,13 @@ private:
 
     // interpreter cases that call out
     void caseCreate();
-    bool caseCallSetup(evm_message& _msg, bytesRef& o_output);
+    bool caseCallSetup(evmc_message& _msg, bytesRef& o_output);
     void caseCall();
 
     void copyDataToMemory(bytesConstRef _data, u256*_sp);
     uint64_t memNeed(u256 _offset, u256 _size);
 
-    const evm_tx_context& getTxContext();
+    const evmc_tx_context& getTxContext();
 
     void throwOutOfGas();
     void throwBadInstruction();

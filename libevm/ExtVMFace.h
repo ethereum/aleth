@@ -27,7 +27,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/SHA3.h>
 
-#include <evm.h>
+#include <evmc.h>
 #include <boost/optional.hpp>
 #include <functional>
 #include <set>
@@ -171,7 +171,7 @@ private:
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
  */
-class ExtVMFace: public evm_context
+class ExtVMFace: public evmc_context
 {
 public:
     /// Full constructor.
@@ -243,22 +243,22 @@ public:
     bool staticCall = false;  ///< Throw on state changing.
 };
 
-inline evm_address toEvmC(Address const& _addr)
+inline evmc_address toEvmC(Address const& _addr)
 {
-    return reinterpret_cast<evm_address const&>(_addr);
+    return reinterpret_cast<evmc_address const&>(_addr);
 }
 
-inline evm_uint256be toEvmC(h256 const& _h)
+inline evmc_uint256be toEvmC(h256 const& _h)
 {
-    return reinterpret_cast<evm_uint256be const&>(_h);
+    return reinterpret_cast<evmc_uint256be const&>(_h);
 }
 
-inline u256 fromEvmC(evm_uint256be const& _n)
+inline u256 fromEvmC(evmc_uint256be const& _n)
 {
     return fromBigEndian<u256>(_n.bytes);
 }
 
-inline Address fromEvmC(evm_address const& _addr)
+inline Address fromEvmC(evmc_address const& _addr)
 {
     return reinterpret_cast<Address const&>(_addr);
 }
