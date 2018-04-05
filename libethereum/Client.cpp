@@ -695,7 +695,7 @@ void Client::doWork(bool _doWait)
     if (!m_syncBlockQueue && !m_syncTransactionQueue && (_doWait || isSealed))
     {
         std::unique_lock<std::mutex> l(x_signalled);
-        m_signalled.wait_for(l, chrono::seconds(1));
+        m_signalled.wait_for(l, chrono::milliseconds(30));
     }
 }
 
