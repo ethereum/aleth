@@ -25,6 +25,7 @@
 #include <jsonrpccpp/common/exception.h>
 #include <libethereum/ClientTest.h>
 #include <libethereum/ChainParams.h>
+#include <libweb3jsonrpc/JsonHelper.h>
 
 using namespace std;
 using namespace dev;
@@ -32,6 +33,21 @@ using namespace dev::rpc;
 using namespace jsonrpc;
 
 Test::Test(eth::Client& _eth): m_eth(_eth) {}
+
+string Test::test_addTransaction(Json::Value const& param1)
+{
+    try
+    {
+        eth::TransactionSkeleton tr = eth::toTransactionSkeleton(param1);
+        m_eth.submitTransaction(tr, Secret(param1["secretKey"].asString()));
+    }
+    catch (...)
+    {
+        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+    }
+
+    return "";
+}
 
 bool Test::test_setChainParams(Json::Value const& param1)
 {
