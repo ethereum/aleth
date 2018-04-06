@@ -302,7 +302,7 @@ void Client::executeInMainThread(function<void ()> const& _function)
 {
     DEV_WRITE_GUARDED(x_functionQueue)
         m_functionQueue.push(_function);
-    m_signalled.notify_all();
+    m_state_notifier.notify_all();
 }
 
 void Client::clearPending()
@@ -575,7 +575,7 @@ bool Client::remoteActive() const
 void Client::onPostStateChanged()
 {
     clog(ClientTrace) << "Post state changed.";
-    m_signalled.notify_all();
+    m_state_notifier.notify_all();
     m_remoteWorking = false;
 }
 
@@ -587,7 +587,7 @@ void Client::startSealing()
     if (author())
     {
         m_wouldSeal = true;
-        m_signalled.notify_all();
+        m_state_notifier.notify_all();
     }
     else
         clog(ClientNote) << "You need to set an author in order to seal!";
@@ -694,8 +694,8 @@ void Client::doWork(bool _doWait)
     // (which only signals as wanting to be synced if it is ready).
     if (!m_syncBlockQueue && !m_syncTransactionQueue && (_doWait || isSealed))
     {
-        std::unique_lock<std::mutex> l(x_signalled);
-        m_signalled.wait_for(l, chrono::milliseconds(30));
+        std::unique_lock<std::mutex> l(x_work);
+        m_state_notifier.wait_for(l, chrono::seconds(1));
     }
 }
 

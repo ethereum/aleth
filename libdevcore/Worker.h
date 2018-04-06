@@ -96,15 +96,15 @@ protected:
 	/// It's OK to call terminate() in destructors of multiple derived classes.
 	void terminate();
 
+protected:
+    mutable Mutex x_work;  ///< Lock for the network existance and m_state_notifier.
+    mutable std::condition_variable m_state_notifier;  //< Notification when m_state changes.
+
 private:
-
-	std::string m_name;
-
+    std::string m_name;
 	unsigned m_idleWaitMs = 0;
-	
-	mutable Mutex x_work;						///< Lock for the network existance and m_state_notifier.
-	std::unique_ptr<std::thread> m_work;		///< The network thread.
-    mutable std::condition_variable m_state_notifier; //< Notification when m_state changes.
+
+    std::unique_ptr<std::thread> m_work;		///< The network thread.
 	std::atomic<WorkerState> m_state = {WorkerState::Starting};
 };
 
