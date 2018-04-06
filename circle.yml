@@ -51,9 +51,6 @@ defaults:
     store_artifacts:
       path: ~/build/eth/eth
       destination: eth
-    store_artifacts:
-      path: ~/build/test/testeth
-      destination: testeth
 
   store-testeth: &store-testeth
     store_artifacts:
@@ -122,7 +119,7 @@ defaults:
 version: 2
 jobs:
 
-  Linux-Clang5:
+  linux-clang5:
     environment:
       - CXX: clang++-5.0
       - CC:  clang-5.0
@@ -134,7 +131,7 @@ jobs:
       - image: ethereum/cpp-build-env
     steps: *linux-steps
 
-  Linux-GCC6-Debug:
+  linux-gcc6:
     environment:
       - BUILD_TYPE: RelWithDebInfo
       - CXX: g++-6
@@ -150,7 +147,7 @@ jobs:
       - image: ethereum/cpp-build-env
     steps: *linux-steps
 
-  macOS-XCode9:
+  macos-xcode90:
     environment:
       - CXX: clang++
       - GCOV: gcov
@@ -188,6 +185,6 @@ workflows:
   version: 2
   cpp-ethereum:
     jobs:
-      - macOS-XCode9
-      - Linux-Clang5
-      - Linux-GCC6-Debug
+      - macos-xcode90
+      - linux-clang5
+      - linux-gcc6
