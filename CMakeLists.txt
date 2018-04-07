@@ -150,6 +150,7 @@ if (EVMJIT)
 endif()
 
 add_subdirectory(eth)
+add_subdirectory(tweetnacl)
 
 if (TOOLS)
     add_subdirectory(ethkey)
