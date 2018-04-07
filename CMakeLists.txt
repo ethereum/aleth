@@ -131,6 +131,9 @@ endif()
 #Global include path for all libs.
 include_directories("${CMAKE_SOURCE_DIR}")
 
+add_subdirectory(tweetnacl)
+add_subdirectory(hacl)
+
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
 add_subdirectory(libp2p)
@@ -150,7 +153,6 @@ if (EVMJIT)
 endif()
 
 add_subdirectory(eth)
-add_subdirectory(tweetnacl)
 
 if (TOOLS)
     add_subdirectory(ethkey)
