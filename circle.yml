@@ -119,11 +119,11 @@ defaults:
 version: 2
 jobs:
 
-  linux-clang5:
+  linux-clang6:
     environment:
-      - CXX: clang++-5.0
-      - CC:  clang-5.0
-      - GCOV: llvm-cov-5.0 gcov
+      - CXX: clang++-6.0
+      - CC:  clang-6.0
+      - GCOV: llvm-cov-6.0 gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
@@ -186,5 +186,5 @@ workflows:
   cpp-ethereum:
     jobs:
       - macos-xcode90
-      - linux-clang5
+      - linux-clang6
       - linux-gcc6
