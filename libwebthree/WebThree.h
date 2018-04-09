@@ -49,11 +49,11 @@ namespace eth { class Interface; }
 namespace shh { class Interface; }
 namespace bzz { class Interface; class Client; }
 
-class Support;
-
 class NetworkFace
 {
 public:
+    virtual ~NetworkFace() = default;
+
     /// Get information concerning this node.
     virtual p2p::NodeInfo nodeInfo() const = 0;
 
@@ -128,7 +128,7 @@ public:
         bytesConstRef _network = bytesConstRef(), bool _testing = false);
 
     /// Destructor.
-    ~WebThreeDirect();
+    ~WebThreeDirect() override;
 
     // The mainline interfaces:
 
