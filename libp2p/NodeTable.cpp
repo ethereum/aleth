@@ -374,7 +374,8 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
     {
         Guard l(x_state);
         NodeBucket& s = bucket_UNSAFE(_n.get());
-        s.nodes.remove_if([&_n](weak_ptr<NodeEntry> _bucketEntry) { return _bucketEntry == _n; });
+        s.nodes.remove_if(
+            [_n](weak_ptr<NodeEntry> const& _bucketEntry) { return _bucketEntry == _n; });
     }
     
     // notify host
