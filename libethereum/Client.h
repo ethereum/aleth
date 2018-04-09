@@ -281,10 +281,18 @@ protected:
     void syncTransactionQueue();
 
     /// Magically called when m_tq needs syncing. Be nice and don't block.
-    void onTransactionQueueReady() { m_syncTransactionQueue = true; m_signalled.notify_all(); }
+    void onTransactionQueueReady()
+    {
+        m_syncTransactionQueue = true;
+        m_state_notifier.notify_all();
+    }
 
     /// Magically called when m_bq needs syncing. Be nice and don't block.
-    void onBlockQueueReady() { m_syncBlockQueue = true; m_signalled.notify_all(); }
+    void onBlockQueueReady()
+    {
+        m_syncBlockQueue = true;
+        m_state_notifier.notify_all();
+    }
 
     /// Called when the post state has changed (i.e. when more transactions are in it or we're sealing on a new block).
     /// This updates m_sealingInfo.
@@ -324,9 +332,6 @@ protected:
 
     std::weak_ptr<EthereumHost> m_host;     ///< Our Ethereum Host. Don't do anything if we can't lock.
     std::weak_ptr<WarpHostCapability> m_warpHost;
-
-    std::condition_variable m_signalled;
-    Mutex x_signalled;
 
     Handler<> m_tqReady;
     Handler<h256 const&> m_tqReplaced;
