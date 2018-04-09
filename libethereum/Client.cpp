@@ -80,6 +80,7 @@ Client::Client(ChainParams const& _params, int _networkID, p2p::Host* _host,
 
 Client::~Client()
 {
+    m_signalled.notify_all(); // to wake up the thread from Client::doWork()
     stopWorking();
     terminate();
 }
