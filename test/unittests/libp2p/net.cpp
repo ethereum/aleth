@@ -53,10 +53,10 @@ class TestHost: public Worker
 {
 public:
     TestHost(): Worker("test",0), m_io() {};
-    virtual ~TestHost() { m_io.stop(); stopWorking(); }
+    ~TestHost() override { m_io.stop(); terminate(); }
     void start() { startWorking(); }
-    void doWork() { m_io.run(); }
-    void doneWorking() { m_io.reset(); m_io.poll(); m_io.reset(); }
+    void doWork() override { m_io.run(); }
+    void doneWorking() override { m_io.reset(); m_io.poll(); m_io.reset(); }
 
 protected:
     ba::io_service m_io;
