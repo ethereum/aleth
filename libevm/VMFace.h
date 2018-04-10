@@ -35,6 +35,16 @@ ETH_SIMPLE_EXCEPTION_VM(StackUnderflow);
 ETH_SIMPLE_EXCEPTION_VM(DisallowedStateChange);
 ETH_SIMPLE_EXCEPTION_VM(BufferOverrun);
 
+/// Reports VM internal error. This is not based on VMException because it must be handled
+/// differently than defined consensus exceptions.
+struct InternalVMError : Exception
+{
+    /// The internal error code reported by a VM.
+    const evmc_status_code errorCode;
+
+    explicit InternalVMError(evmc_status_code errorCode) : errorCode(errorCode){};
+};
+
 struct RevertInstruction: VMException
 {
 	explicit RevertInstruction(owning_bytes_ref&& _output) : m_output(std::move(_output)) {}

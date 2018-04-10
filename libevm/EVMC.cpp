@@ -74,8 +74,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
         return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
 
     default:
-        assert(r.status() >= 0);  // Do not allow internal errors to pass through.
-        BOOST_THROW_EXCEPTION(OutOfGas());
+        BOOST_THROW_EXCEPTION(InternalVMError{r.status()});
     }
 }
 
