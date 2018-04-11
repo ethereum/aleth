@@ -74,7 +74,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
         return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
 
     default:
-        BOOST_THROW_EXCEPTION(InternalVMError{r.status()});
+        BOOST_THROW_EXCEPTION(InternalVMError{} << errinfo_evmcStatusCode(r.status()));
     }
 }
 

@@ -37,13 +37,10 @@ ETH_SIMPLE_EXCEPTION_VM(BufferOverrun);
 
 /// Reports VM internal error. This is not based on VMException because it must be handled
 /// differently than defined consensus exceptions.
-struct InternalVMError : Exception
-{
-    /// The internal error code reported by a VM.
-    const evmc_status_code errorCode;
+struct InternalVMError : Exception {};
 
-    explicit InternalVMError(evmc_status_code errorCode) : errorCode(errorCode){};
-};
+/// Error info for EVMC status code.
+using errinfo_evmcStatusCode = boost::error_info<struct tag_evmcStatusCode, evmc_status_code>;
 
 struct RevertInstruction: VMException
 {
