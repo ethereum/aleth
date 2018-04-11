@@ -200,10 +200,15 @@ Json::Value toJson(dev::eth::LocalisedTransactionReceipt const& _t)
     res["transactionIndex"] = _t.transactionIndex();
     res["blockHash"] = toJS(_t.blockHash());
     res["blockNumber"] = _t.blockNumber();
-    res["cumulativeGasUsed"] = toJS(_t.gasUsed()); // TODO: check if this is fine
+    res["cumulativeGasUsed"] = toJS(_t.gasUsed());
     res["gasUsed"] = toJS(_t.gasUsed());
     res["contractAddress"] = toJS(_t.contractAddress());
     res["logs"] = dev::toJson(_t.localisedLogs());
+    res["logsBloom"] = dev::toJson(_t.log());
+    if (_t.hasStatusCode())
+        res["status"] = toJS(_t.statusCode());
+    else
+        res["stateRoot"] = toJS(_t.stateRoot());
     return res;
 }
 
