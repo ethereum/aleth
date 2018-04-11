@@ -184,7 +184,7 @@ Json::Value toJson(dev::eth::TransactionReceipt const& _t)
 {
     Json::Value res;
     if (_t.hasStatusCode())
-        res["statusCode"] = toJS(_t.statusCode());
+        res["status"] = toJS(_t.statusCode());
     else
         res["stateRoot"] = toJS(_t.stateRoot());
     res["gasUsed"] = toJS(_t.gasUsed());
