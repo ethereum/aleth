@@ -43,7 +43,8 @@ public:
 		return RPCModules{RPCModule{"test", "1.0"}};
 	}
 
-	virtual bool test_setChainParams(const Json::Value &param1) override;
+    virtual bool test_closeClient() override;
+    virtual bool test_setChainParams(const Json::Value &param1) override;
 	virtual bool test_mineBlocks(int _number) override;
 	virtual bool test_modifyTimestamp(int _timestamp) override;
 	virtual bool test_addBlock(std::string const& _rlp) override;
