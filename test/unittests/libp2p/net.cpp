@@ -194,7 +194,7 @@ public:
 
     shared_ptr<UDPSocket<TestUDPSocketHost, 1024>> m_socket;
 
-    bool success = false;
+    std::atomic<bool> success{false};
 };
 
 BOOST_AUTO_TEST_CASE(isIPAddressType)
