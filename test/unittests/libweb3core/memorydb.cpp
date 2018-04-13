@@ -52,19 +52,19 @@ BOOST_AUTO_TEST_CASE(purgeMainMem)
 {
 	MemoryDB myDB;
 	BOOST_CHECK(myDB.get().empty());
-	bytes value = fromHex("43");
+	string const value = "\x43";
 
 	myDB.insert(h256(42), &value);
 	MemoryDB copy;
 	copy = myDB;
 	BOOST_CHECK(myDB.exists(h256(42)));
-	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), toString(value[0]));
+	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
 	BOOST_CHECK_EQUAL(myDB.get().size(), 1);
 	BOOST_CHECK(myDB.kill(h256(42)));
 
 	BOOST_CHECK(myDB.get() == copy.get());
 	BOOST_CHECK(myDB.exists(h256(42)));
-	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), toString(value[0]));
+	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
 
 	BOOST_CHECK_EQUAL(myDB.get().size(), 1);
 	myDB.purge();
@@ -82,13 +82,13 @@ BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
 		EnforceRefs enforceRefs(myDB, true);
 
 		BOOST_CHECK(myDB.get().empty());
-		bytes value = fromHex("43");
+        string const value = "\x43";
 
 		myDB.insert(h256(42), &value);
 		MemoryDB copy;
 		copy = myDB;
 		BOOST_CHECK(myDB.exists(h256(42)));
-		BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), toString(value[0]));
+		BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
 		BOOST_CHECK_EQUAL(myDB.get().size(), 1);
 		BOOST_CHECK(myDB.kill(h256(42)));
 
@@ -108,19 +108,19 @@ BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
 
 	// do same tests again without EnforceRefs
 	BOOST_CHECK(myDB.get().empty());
-	bytes value = fromHex("43");
+    string const value = "\x43";
 
 	myDB.insert(h256(42), &value);
 	MemoryDB copy;
 	copy = myDB;
 	BOOST_CHECK(myDB.exists(h256(42)));
-	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), toString(value[0]));
+	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
 	BOOST_CHECK_EQUAL(myDB.get().size(), 1);
 	BOOST_CHECK(myDB.kill(h256(42)));
 
 	BOOST_CHECK(myDB.get() == copy.get());
 	BOOST_CHECK(myDB.exists(h256(42)));
-	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), toString(value[0]));
+	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
 
 	BOOST_CHECK_EQUAL(myDB.get().size(), 1);
 	myDB.purge();
@@ -181,20 +181,20 @@ BOOST_AUTO_TEST_CASE(lookUp)
 {
 	MemoryDB myDB;
 	BOOST_CHECK(myDB.get().empty());
-	bytes value = fromHex("43");
+    string const value = "\x43";
 
 	myDB.insert(h256(42), &value);
 	BOOST_CHECK(myDB.exists(h256(42)));
-	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), toString(value[0]));
+	BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
 	BOOST_CHECK_EQUAL(myDB.get().size(), 1);
 
 	myDB.insert(h256(0), &value);
 	BOOST_CHECK(myDB.exists(h256(0)));
-	BOOST_CHECK_EQUAL(myDB.lookup(h256(0)), toString(value[0]));
+	BOOST_CHECK_EQUAL(myDB.lookup(h256(0)), value);
 
 	myDB.insert(h256(std::numeric_limits<u256>::max()), &value);
 	BOOST_CHECK(myDB.exists(h256(std::numeric_limits<u256>::max())));
-	BOOST_CHECK_EQUAL(myDB.lookup(h256(std::numeric_limits<u256>::max())), toString(value[0]));
+	BOOST_CHECK_EQUAL(myDB.lookup(h256(std::numeric_limits<u256>::max())), value);
 
 	BOOST_CHECK_EQUAL(myDB.get().size(), 3);
 }
