@@ -140,6 +140,11 @@ class NoProof: public eth::SealEngineBase
 public:
 	std::string name() const override { return "NoProof"; }
 	static void init();
+    void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const override
+    {
+        SealEngineFace::populateFromParent(_bi, _parent);
+        _bi.setDifficulty(chainParams().minimumDifficulty);
+    }
 };
 
 }
