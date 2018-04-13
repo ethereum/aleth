@@ -178,4 +178,12 @@ inline std::string toString<std::string>(std::string const& _s)
 	return _s;
 }
 
+template <>
+inline std::string toString<uint8_t>(uint8_t const& _u)
+{
+    std::ostringstream o;
+    o << static_cast<uint16_t>(_u);
+    return o.str();
+}
+
 }
