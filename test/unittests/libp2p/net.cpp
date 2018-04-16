@@ -158,6 +158,7 @@ struct TestNodeTable: public NodeTable
 
     using NodeTable::m_evictions;
     using NodeTable::m_nodes;
+    using NodeTable::m_socket;
     using NodeTable::m_state;
     using NodeTable::noteActiveNode;
 };
@@ -167,7 +168,18 @@ struct TestNodeTable: public NodeTable
  */
 struct TestNodeTableHost: public TestHost
 {
-    TestNodeTableHost(unsigned _count = 8): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"))), testNodes(TestNodeTable::createTestNodes(_count)) {};
+    TestNodeTableHost(unsigned _count = 8)
+      : m_alias(KeyPair::create()), testNodes(TestNodeTable::createTestNodes(_count))
+    {
+        uint16_t port = 30310;
+        // find free port
+        do
+        {
+            ++port;
+            nodeTable.reset(
+                new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"), port));
+        } while (!nodeTable->m_socket->isOpen());
+    }
     ~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 
     void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
