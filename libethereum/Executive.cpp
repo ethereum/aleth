@@ -459,6 +459,12 @@ bool Executive::go(OnOpFunc const& _onOp)
             m_excepted = toTransactionException(_e);
             revert();
         }
+        catch (InternalVMError const& _e)
+        {
+            cwarn << "Internal VM Error (" << *boost::get_error_info<errinfo_evmcStatusCode>(_e) << ")\n"
+                  << diagnostic_information(_e);
+            throw;
+        }
         catch (Exception const& _e)
         {
             // TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
