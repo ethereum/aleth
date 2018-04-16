@@ -25,6 +25,46 @@ namespace db
 namespace
 {
 
+using errinfo_rocksdbStatusCode = boost::error_info<struct tag_rocksdbStatusCode, rocksdb::Status::Code>;
+using errinfo_rocksdbStatusSubCode = boost::error_info<struct tag_rocksdbStatusSubCode, rocksdb::Status::SubCode>;
+
+DatabaseStatus toDatabaseStatus(rocksdb::Status const& _status)
+{
+    switch (_status.code())
+    {
+        case rocksdb::Status::kOk:
+            return DatabaseStatus::Ok;
+        case rocksdb::Status::kNotFound:
+            return DatabaseStatus::NotFound;
+        case rocksdb::Status::kCorruption:
+            return DatabaseStatus::Corruption;
+        case rocksdb::Status::kNotSupported:
+            return DatabaseStatus::NotSupported;
+        case rocksdb::Status::kInvalidArgument:
+            return DatabaseStatus::InvalidArgument;
+        case rocksdb::Status::kIOError:
+            return DatabaseStatus::IOError;
+        default:
+            return DatabaseStatus::Unknown;
+    }
+}
+
+void checkStatus(rocksdb::Status const& _status, boost::filesystem::path const& _path = {})
+{
+    if (_status.ok())
+        return;
+
+    DatabaseError ex;
+    ex << errinfo_dbStatusCode(toDatabaseStatus(_status))
+       << errinfo_rocksdbStatusCode(_status.code())
+       << errinfo_rocksdbStatusSubCode(_status.subcode())
+       << errinfo_dbStatusString(_status.ToString());
+    if (!_path.empty())
+        ex << errinfo_path(_path.string());
+
+    BOOST_THROW_EXCEPTION(ex);
+}
+
 class RocksDBWriteBatch : public WriteBatchFace
 {
 public:
@@ -44,15 +84,13 @@ void RocksDBWriteBatch::insert(Slice _key, Slice _value)
         rocksdb::Slice(_key.data(), _key.size()),
         rocksdb::Slice(_value.data(), _value.size())
     );
-    if (!status.ok())
-        BOOST_THROW_EXCEPTION(FailedInsertInDB(status.ToString()));
+    checkStatus(status);
 }
 
 void RocksDBWriteBatch::kill(Slice _key)
 {
     auto const status = m_writeBatch.Delete(rocksdb::Slice(_key.data(), _key.size()));
-    if (!status.ok())
-        BOOST_THROW_EXCEPTION(FailedDeleteInDB(status.ToString()));
+    checkStatus(status);
 }
 
 }  // namespace
@@ -81,11 +119,9 @@ RocksDB::RocksDB(boost::filesystem::path const& _path, rocksdb::ReadOptions _rea
 {
     auto db = static_cast<rocksdb::DB*>(nullptr);
     auto const status = rocksdb::DB::Open(_dbOptions, _path.string(), &db);
-    if (!status.ok())
-        BOOST_THROW_EXCEPTION(FailedToOpenDB(status.ToString()));
-    if (!db)
-        BOOST_THROW_EXCEPTION(FailedToOpenDB("null database pointer"));
+    checkStatus(status, _path);
 
+    assert(db);
     m_db.reset(db);
 }
 
@@ -94,9 +130,10 @@ std::string RocksDB::lookup(Slice _key) const
     rocksdb::Slice const key(_key.data(), _key.size());
     std::string value;
     auto const status = m_db->Get(m_readOptions, key, &value);
-    if (!status.ok())
-        BOOST_THROW_EXCEPTION(FailedLookupInDB(status.ToString()));
+    if (status.IsNotFound())
+        return std::string();
 
+    checkStatus(status);
     return value;
 }
 
@@ -108,7 +145,11 @@ bool RocksDB::exists(Slice _key) const
         return false;
 
     auto const status = m_db->Get(m_readOptions, key, &value);
-    return status.ok();
+    if (status.IsNotFound())
+        return false;
+
+    checkStatus(status);
+    return true;
 }
 
 void RocksDB::insert(Slice _key, Slice _value)
@@ -116,16 +157,14 @@ void RocksDB::insert(Slice _key, Slice _value)
     rocksdb::Slice const key(_key.data(), _key.size());
     rocksdb::Slice const value(_value.data(), _value.size());
     auto const status = m_db->Put(m_writeOptions, key, value);
-    if (!status.ok())
-        BOOST_THROW_EXCEPTION(FailedInsertInDB(status.ToString()));
+    checkStatus(status);
 }
 
 void RocksDB::kill(Slice _key)
 {
     rocksdb::Slice const key(_key.data(), _key.size());
     auto const status = m_db->Delete(m_writeOptions, key);
-    if (!status.ok())
-        BOOST_THROW_EXCEPTION(FailedDeleteInDB(status.ToString()));
+    checkStatus(status);
 }
 
 std::unique_ptr<WriteBatchFace> RocksDB::createWriteBatch() const
@@ -136,22 +175,21 @@ std::unique_ptr<WriteBatchFace> RocksDB::createWriteBatch() const
 void RocksDB::commit(std::unique_ptr<WriteBatchFace> _batch)
 {
     if (!_batch)
-        BOOST_THROW_EXCEPTION(FailedCommitInDB("Cannot commit null batch"));
+        BOOST_THROW_EXCEPTION(DatabaseError() << errinfo_comment("Cannot commit null batch"));
 
     auto* batchPtr = dynamic_cast<RocksDBWriteBatch*>(_batch.get());
     if (!batchPtr)
-        BOOST_THROW_EXCEPTION(FailedCommitInDB("Invalid batch type passed to rocksdb::commit"));
+        BOOST_THROW_EXCEPTION(DatabaseError() << errinfo_comment("Invalid batch type passed to rocksdb::commit"));
 
     auto const status = m_db->Write(m_writeOptions, &batchPtr->writeBatch());
-    if (!status.ok())
-        BOOST_THROW_EXCEPTION(FailedCommitInDB(status.ToString()));
+    checkStatus(status);
 }
 
 void RocksDB::forEach(std::function<bool(Slice, Slice)> f) const
 {
     std::unique_ptr<rocksdb::Iterator> itr(m_db->NewIterator(m_readOptions));
     if (itr == nullptr)
-        BOOST_THROW_EXCEPTION(FailedIterateDB("null iterator"));
+        BOOST_THROW_EXCEPTION(DatabaseError() << errinfo_comment("null iterator"));
 
     auto keepIterating = true;
     for (itr->SeekToFirst(); keepIterating && itr->Valid(); itr->Next())
