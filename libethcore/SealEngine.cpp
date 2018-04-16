@@ -60,7 +60,7 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
     eth::EVMSchedule const& schedule = evmSchedule(_header.number());
 
     // Pre calculate the gas needed for execution
-    if (_t.baseGasRequired(schedule) > _t.gas())
+    if ((_ir & ImportRequirements::TransactionBasic) && _t.baseGasRequired(schedule) > _t.gas())
         BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError(
                                   (bigint)(_t.baseGasRequired(schedule)), (bigint)_t.gas()));
 
