@@ -40,8 +40,6 @@ namespace fs = boost::filesystem;
 
 const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
 const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
-const char* StateTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
-const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 
 namespace
 {

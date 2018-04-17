@@ -164,7 +164,8 @@ json_spirit::mObject fillJsonWithStateChange(
             log << (*it).second.str();
     }
 
-    dev::LogOutputStream<eth::StateTrace, false>() << log.str();
+    Logger logger{createLogger(5, "state")};
+    BOOST_LOG(logger) << log.str();
     return oState;
 }
 
