@@ -54,14 +54,6 @@ mutex x_logOverride;
 /// or equal to the currently output verbosity (g_logVerbosity).
 static map<type_info const*, bool> s_logOverride;
 
-bool isChannelVisible(std::type_info const* _ch, bool _default)
-{
-    Guard l(x_logOverride);
-    if (s_logOverride.count(_ch))
-        return s_logOverride[_ch];
-    return _default;
-}
-
 #if defined(_WIN32)
 const char* LogChannel::name() { return EthGray "..."; }
 #else
