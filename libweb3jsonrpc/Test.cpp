@@ -104,3 +104,9 @@ bool Test::test_rewindToBlock(int _number)
     }
     return true;
 }
+
+bool Test::test_closeClient()
+{
+    std::raise(SIGTERM);
+    return true;
+}
