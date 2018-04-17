@@ -51,11 +51,6 @@ class TransactionQueue;
 struct VerifiedBlockRef;
 class LastBlockHashesFace;
 
-struct BlockChat: public LogChannel { static const char* name(); static const int verbosity = 4; };
-struct BlockTrace: public LogChannel { static const char* name(); static const int verbosity = 5; };
-struct BlockDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
-struct BlockSafeExceptions: public LogChannel { static const char* name(); static const int verbosity = 21; };
-
 struct PopulationStatistics
 {
 	double verify;
@@ -316,6 +311,9 @@ private:
 	Address m_author;							///< Our address (i.e. the address to which fees go).
 
 	SealEngineFace* m_sealEngine = nullptr;		///< The chain's seal engine.
+
+    Logger m_logger{createLogger(5, "block")};
+    Logger m_loggerDetailed{createLogger(14, "block")};
 };
 
 
