@@ -41,9 +41,6 @@ void debugOut(std::string const& _s);
 /// The logging system's current verbosity.
 extern int g_logVerbosity;
 
-bool isChannelVisible(std::type_info const* _ch, bool _default);
-template <class Channel> bool isChannelVisible() { return isChannelVisible(&typeid(Channel), Channel::verbosity <= g_logVerbosity); }
-
 /// Temporary changes system's verbosity for specific function. Restores the old verbosity when function returns.
 /// Not thread-safe, use with caution!
 struct VerbosityHolder
@@ -52,8 +49,6 @@ struct VerbosityHolder
     ~VerbosityHolder() { g_logVerbosity = oldLogVerbosity; }
     int oldLogVerbosity;
 };
-
-#define ETH_THREAD_CONTEXT(name) for (std::pair<dev::ThreadContext, bool> __eth_thread_context(name, true); p.second; p.second = false)
 
 class ThreadContext
 {
@@ -238,20 +233,7 @@ public:
     template <class T> LogOutputStream& operator<<(T const& _t) { if (Id::verbosity <= g_logVerbosity) { if (_AutoSpacing && m_sstr.str().size() && m_sstr.str().back() != ' ') m_sstr << " "; append(_t); } return *this; }
 };
 
-/// A "hacky" way to execute the next statement on COND.
-/// We need such a thing due to the dangling else problem and the need
-/// for the logging macros to end with the stream object and not a closing brace '}'
-#define DEV_STATEMENT_IF(COND) for (bool i_eth_if_ = (COND); i_eth_if_; i_eth_if_ = false)
-/// A "hacky" way to skip the next statement.
-/// We need such a thing due to the dangling else problem and the need
-/// for the logging macros to end with the stream object and not a closing brace '}'
-#define DEV_STATEMENT_SKIP() while (/*CONSTCOND*/ false) /*NOTREACHED*/
-
-#if NDEBUG
-#define clog(X) DEV_STATEMENT_IF(!(X::debug)) dev::LogOutputStream<X>()
-#else
 #define clog(X) dev::LogOutputStream<X>()
-#endif
 
 // Simple cout-like stream objects for accessing common log channels.
 // Dirties the global namespace, but oh so convenient...
