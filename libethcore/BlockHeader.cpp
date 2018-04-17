@@ -205,8 +205,8 @@ void BlockHeader::populateFromParent(BlockHeader const& _parent)
 	m_number = _parent.m_number + 1;
 	m_parentHash = _parent.m_hash;
 	m_gasLimit = _parent.m_gasLimit;
-	m_difficulty = 1;
-	m_gasUsed = 0;
+    m_difficulty = _parent.m_difficulty;
+    m_gasUsed = 0;
 }
 
 void BlockHeader::verify(Strictness _s, BlockHeader const& _parent, bytesConstRef _block) const
