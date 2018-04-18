@@ -258,7 +258,8 @@ bool Executive::execute()
     // Entry point for a user-executed transaction.
 
     // Pay...
-    clog(StateDetail) << "Paying " << formatBalance(m_gasCost) << " from sender for gas (" << m_t.gas() << " gas at " << formatBalance(m_t.gasPrice()) << ")";
+    LOG(m_detailsLogger) << "Paying " << formatBalance(m_gasCost) << " from sender for gas ("
+                         << m_t.gas() << " gas at " << formatBalance(m_t.gasPrice()) << ")";
     m_s.subBalance(m_t.sender(), m_gasCost);
 
     assert(m_t.gas() >= (u256)m_baseGasRequired);
@@ -374,7 +375,7 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
     bool accountAlreadyExist = (m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) > 0);
     if (accountAlreadyExist)
     {
-        clog(StateSafeExceptions) << "Address already used: " << m_newAddress;
+        LOG(m_detailsLogger) << "Address already used: " << m_newAddress;
         m_gas = 0;
         m_excepted = TransactionException::AddressAlreadyUsed;
         revert();
@@ -474,7 +475,7 @@ bool Executive::go(OnOpFunc const& _onOp)
         }
         catch (VMException const& _e)
         {
-            clog(StateSafeExceptions) << "Safe VM Exception. " << diagnostic_information(_e);
+            LOG(m_detailsLogger) << "Safe VM Exception. " << diagnostic_information(_e);
             m_gas = 0;
             m_excepted = toTransactionException(_e);
             revert();
