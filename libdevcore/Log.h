@@ -238,7 +238,7 @@ public:
 #define LOG BOOST_LOG
 
 // Simple cout-like stream objects for accessing common log channels.
-// Dirties the global namespace, but oh so convenient...
+// Thread-safe
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_debugLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(boost::log::keywords::channel = EthWhite "debug" EthReset))
@@ -260,8 +260,19 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
     (boost::log::keywords::severity = 4)(boost::log::keywords::channel = EthGray "trace" EthReset))
 #define ctrace LOG(dev::g_traceLogger::get())
 
+// Simple macro to log to any channel a message without creating a logger object
+// e.g. clog(0, "channel") << "message";
+// Thread-safe
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(
+    g_clogLogger, boost::log::sources::severity_channel_logger_mt<>);
+#define clogSimple(SEVERITY, CHANNEL)                      \
+    BOOST_LOG_STREAM_WITH_PARAMS(dev::g_clogLogger::get(), \
+        (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = CHANNEL))
+
+// Should be called in every executable
 void setupLogging(int _verbosity);
 
+// Simple non-thread-safe logger with fixed severity and channel for each message
 using Logger = boost::log::sources::severity_channel_logger<>;
 inline Logger createLogger(int _severity, std::string const& _channel)
 {
