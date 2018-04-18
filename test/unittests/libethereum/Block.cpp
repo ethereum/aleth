@@ -33,21 +33,6 @@ using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(BlockSuite, TestOutputHelperFixture)
 
-#if !defined(_WIN32)
-BOOST_AUTO_TEST_CASE(bStructures)
-{
-	BlockChat chat;
-	BlockTrace trace;
-	BlockDetail details;
-	BlockSafeExceptions exeptions;
-
-	BOOST_REQUIRE(string(chat.name()).find("◌") != string::npos);
-	BOOST_REQUIRE(string(trace.name()).find("◎") != string::npos);
-	BOOST_REQUIRE(string(details.name()).find("◌") != string::npos);
-	BOOST_REQUIRE(string(exeptions.name()).find("ℹ") != string::npos);
-}
-#endif
-
 BOOST_FIXTURE_TEST_SUITE(FrontierBlockSuite, FrontierNoProofTestFixture)
 
 BOOST_AUTO_TEST_CASE(bStates)
