@@ -339,7 +339,8 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
                     }
                     else if (t.gasPrice() < _gp.ask(*this) * 9 / 10)
                     {
-                        BOOST_LOG(m_logger) << t.sha3() << " Dropping El Cheapo transaction (<90% of ask price)";
+                        LOG(m_logger)
+                            << t.sha3() << " Dropping El Cheapo transaction (<90% of ask price)";
                         _tq.drop(t.sha3());
                     }
                 }
@@ -351,13 +352,14 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
                     if (req > got)
                     {
                         // too old
-                        BOOST_LOG(m_logger) << t.sha3() << " Dropping old transaction (nonce too low)";
+                        LOG(m_logger) << t.sha3() << " Dropping old transaction (nonce too low)";
                         _tq.drop(t.sha3());
                     }
                     else if (got > req + _tq.waiting(t.sender()))
                     {
                         // too new
-                        BOOST_LOG(m_logger) << t.sha3() << " Dropping new transaction (too many nonces ahead)";
+                        LOG(m_logger)
+                            << t.sha3() << " Dropping new transaction (too many nonces ahead)";
                         _tq.drop(t.sha3());
                     }
                     else
@@ -368,13 +370,18 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
                     bigint const& got = *boost::get_error_info<errinfo_got>(e);
                     if (got > m_currentBlock.gasLimit())
                     {
-                        BOOST_LOG(m_logger) << t.sha3() << " Dropping over-gassy transaction (gas > block's gas limit)";
-                        BOOST_LOG(m_logger) << "got: " << got << " required: " << m_currentBlock.gasLimit();
+                        LOG(m_logger)
+                            << t.sha3()
+                            << " Dropping over-gassy transaction (gas > block's gas limit)";
+                        LOG(m_logger)
+                            << "got: " << got << " required: " << m_currentBlock.gasLimit();
                         _tq.drop(t.sha3());
                     }
                     else
                     {
-                        BOOST_LOG(m_logger) << t.sha3() << " Temporarily no gas left in current block (txs gas > block's gas limit)";
+                        LOG(m_logger) << t.sha3()
+                                      << " Temporarily no gas left in current block (txs gas > "
+                                         "block's gas limit)";
                         //_tq.drop(t.sha3());
                         // Temporarily no gas left in current block.
                         // OPTIMISE: could note this and then we don't evaluate until a block that does have the gas left.
@@ -384,7 +391,8 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
                 catch (Exception const& _e)
                 {
                     // Something else went wrong - drop it.
-                    BOOST_LOG(m_logger) << t.sha3() << " Dropping invalid transaction: " << diagnostic_information(_e);
+                    LOG(m_logger) << t.sha3() << " Dropping invalid transaction: "
+                                  << diagnostic_information(_e);
                     _tq.drop(t.sha3());
                 }
                 catch (std::exception const&)
@@ -447,7 +455,8 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 #if ETH_TIMED_ENACTMENTS
     enactment = t.elapsed();
     if (populateVerify + populateGrand + syncReset + enactment > 0.5)
-        BOOST_LOG(m_logger) << "popVer/popGrand/syncReset/enactment = " << populateVerify << " / " << populateGrand << " / " << syncReset << " / " << enactment;
+        LOG(m_logger) << "popVer/popGrand/syncReset/enactment = " << populateVerify << " / "
+                      << populateGrand << " / " << syncReset << " / " << enactment;
 #endif
     return ret;
 }
@@ -735,7 +744,8 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
     if (m_previousBlock.number() != 0)
     {
         // Find great-uncles (or second-cousins or whatever they are) - children of great-grandparents, great-great-grandparents... that were not already uncles in previous generations.
-        BOOST_LOG(m_loggerDetailed) << "Checking " << m_previousBlock.hash() << ", parent = " << m_previousBlock.parentHash();
+        LOG(m_loggerDetailed) << "Checking " << m_previousBlock.hash()
+                              << ", parent = " << m_previousBlock.parentHash();
         h256Hash excluded = _bc.allKinFrom(m_currentBlock.parentHash(), 6);
         auto p = m_previousBlock.parentHash();
         for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2; ++gen, p = _bc.details(p).parent)
@@ -790,20 +800,21 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
     DEV_TIMED_ABOVE("commit", 500)
         m_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
-    BOOST_LOG(m_loggerDetailed) << "Post-reward stateRoot: " << m_state.rootHash();
-    BOOST_LOG(m_loggerDetailed) << m_state;
+        LOG(m_loggerDetailed) << "Post-reward stateRoot: " << m_state.rootHash();
+        LOG(m_loggerDetailed) << m_state;
 
-    m_currentBlock.setLogBloom(logBloom());
-    m_currentBlock.setGasUsed(gasUsed());
-    m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap), sha3(m_currentUncles), m_state.rootHash());
+        m_currentBlock.setLogBloom(logBloom());
+        m_currentBlock.setGasUsed(gasUsed());
+        m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap),
+            sha3(m_currentUncles), m_state.rootHash());
 
-    m_currentBlock.setParentHash(m_previousBlock.hash());
-    m_currentBlock.setExtraData(_extraData);
-    if (m_currentBlock.extraData().size() > 32)
-    {
-        auto ed = m_currentBlock.extraData();
-        ed.resize(32);
-        m_currentBlock.setExtraData(ed);
+        m_currentBlock.setParentHash(m_previousBlock.hash());
+        m_currentBlock.setExtraData(_extraData);
+        if (m_currentBlock.extraData().size() > 32)
+        {
+            auto ed = m_currentBlock.extraData();
+            ed.resize(32);
+            m_currentBlock.setExtraData(ed);
     }
 
     m_committedToSeal = true;
@@ -826,7 +837,7 @@ bool Block::sealBlock(bytesConstRef _header)
     if (BlockHeader(_header, HeaderData).hash(WithoutSeal) != m_currentBlock.hash(WithoutSeal))
         return false;
 
-    BOOST_LOG(m_loggerDetailed) << "Sealing block!";
+    LOG(m_loggerDetailed) << "Sealing block!";
 
     // Compile block:
     RLPStream ret;
@@ -870,7 +881,8 @@ LogBloom Block::logBloom() const
 void Block::cleanup()
 {
     // Commit the new trie to disk.
-    BOOST_LOG(m_logger) << "Committing to disk: stateRoot " << m_currentBlock.stateRoot() << " = " << rootHash() << " = " << toHex(asBytes(db().lookup(rootHash())));
+    LOG(m_logger) << "Committing to disk: stateRoot " << m_currentBlock.stateRoot() << " = "
+                  << rootHash() << " = " << toHex(asBytes(db().lookup(rootHash())));
 
     try
     {
@@ -885,12 +897,14 @@ void Block::cleanup()
 
     m_state.db().commit();	// TODO: State API for this?
 
-    BOOST_LOG(m_logger) << "Committed: stateRoot " << m_currentBlock.stateRoot() << " = " << rootHash() << " = " << toHex(asBytes(db().lookup(rootHash())));
+    LOG(m_logger) << "Committed: stateRoot " << m_currentBlock.stateRoot() << " = " << rootHash()
+                  << " = " << toHex(asBytes(db().lookup(rootHash())));
 
     m_previousBlock = m_currentBlock;
     sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
 
-    BOOST_LOG(m_logger) << "finalising enactment. current -> previous, hash is " << m_previousBlock.hash();
+    LOG(m_logger) << "finalising enactment. current -> previous, hash is "
+                  << m_previousBlock.hash();
 
     resetCurrent();
 }
