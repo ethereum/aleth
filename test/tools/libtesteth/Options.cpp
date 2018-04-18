@@ -33,7 +33,7 @@ void printHelp()
     cout << "Usage: \n";
     cout << std::left;
     cout << "\nSetting test suite\n";
-    cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations\n";
+    cout << setw(30) << "-t <TestSuite>" << setw(25) << "Execute test operations\n";
     cout << setw(30) << "-t <TestSuite>/<TestCase>\n";
     cout << setw(30) << "--testpath <PathToTheTestRepo>\n";
 
@@ -335,7 +335,9 @@ Options::Options(int argc, const char** argv)
 
     //Default option
     if (logVerbosity == Verbosity::NiceReport)
-        g_logVerbosity = -1;	//disable cnote but leave cerr and cout
+        g_logVerbosity = -1;    //disable cnote but leave cerr and cout
+
+    setupLogging(g_logVerbosity);
 }
 
 Options const& Options::get(int argc, const char** argv)
