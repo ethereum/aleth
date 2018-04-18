@@ -63,9 +63,6 @@ class State;
 class TransactionQueue;
 struct VerifiedBlockRef;
 
-struct StateDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
-struct StateSafeExceptions: public LogChannel { static const char* name(); static const int verbosity = 21; };
-
 enum class BaseState
 {
     PreExisting,
