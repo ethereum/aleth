@@ -165,7 +165,7 @@ json_spirit::mObject fillJsonWithStateChange(
     }
 
     Logger logger{createLogger(5, "state")};
-    BOOST_LOG(logger) << log.str();
+    LOG(logger) << log.str();
     return oState;
 }
 

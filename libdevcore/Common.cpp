@@ -48,8 +48,8 @@ TimerHelper::~TimerHelper()
     if (!m_ms || e > chrono::milliseconds(m_ms))
     {
         Logger logger{createLogger(0, "timer")};
-        BOOST_LOG(logger) << m_id << " " << chrono::duration_cast<chrono::milliseconds>(e).count()
-                          << " ms";
+        LOG(logger) << m_id << " " << chrono::duration_cast<chrono::milliseconds>(e).count()
+                    << " ms";
     }
 }
 

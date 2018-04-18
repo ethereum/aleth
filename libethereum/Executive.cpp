@@ -225,15 +225,14 @@ void Executive::initialize(Transaction const& _transaction)
         }
         catch (InvalidSignature const&)
         {
-            BOOST_LOG(m_execLogger) << "Invalid Signature";
+            LOG(m_execLogger) << "Invalid Signature";
             m_excepted = TransactionException::InvalidSignature;
             throw;
         }
         if (m_t.nonce() != nonceReq)
         {
-            BOOST_LOG(m_execLogger)
-                << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require " << nonceReq
-                << " Got " << m_t.nonce();
+            LOG(m_execLogger) << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require "
+                              << nonceReq << " Got " << m_t.nonce();
             m_excepted = TransactionException::InvalidNonce;
             BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
         }
@@ -243,9 +242,9 @@ void Executive::initialize(Transaction const& _transaction)
         bigint totalCost = m_t.value() + gasCost;
         if (m_s.balance(m_t.sender()) < totalCost)
         {
-            BOOST_LOG(m_execLogger) << "Not enough cash: Require > " << totalCost << " = " << m_t.gas()
-                                    << " * " << m_t.gasPrice() << " + " << m_t.value() << " Got"
-                                    << m_s.balance(m_t.sender()) << " for sender: " << m_t.sender();
+            LOG(m_execLogger) << "Not enough cash: Require > " << totalCost << " = " << m_t.gas()
+                              << " * " << m_t.gasPrice() << " + " << m_t.value() << " Got"
+                              << m_s.balance(m_t.sender()) << " for sender: " << m_t.sender();
             m_excepted = TransactionException::NotEnoughCash;
             m_excepted = TransactionException::NotEnoughCash;
             BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().hex()));
@@ -410,13 +409,13 @@ OnOpFunc Executive::simpleTrace()
 
         ostringstream o;
         if (vm)
-            BOOST_LOG(traceLogger) << dumpStackAndMemory(*vm);
-        BOOST_LOG(traceLogger) << dumpStorage(ext);
-        BOOST_LOG(traceLogger) << " < " << dec << ext.depth << " : " << ext.myAddress << " : #"
-                               << steps << " : " << hex << setw(4) << setfill('0') << PC << " : "
-                               << instructionInfo(inst).name << " : " << dec << gas << " : -" << dec
-                               << gasCost << " : " << newMemSize << "x32"
-                               << " >";
+            LOG(traceLogger) << dumpStackAndMemory(*vm);
+        LOG(traceLogger) << dumpStorage(ext);
+        LOG(traceLogger) << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps
+                         << " : " << hex << setw(4) << setfill('0') << PC << " : "
+                         << instructionInfo(inst).name << " : " << dec << gas << " : -" << dec
+                         << gasCost << " : " << newMemSize << "x32"
+                         << " >";
     };
 }
 
