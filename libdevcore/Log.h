@@ -235,28 +235,30 @@ public:
 
 #define clog(X) dev::LogOutputStream<X>()
 
+#define LOG BOOST_LOG
+
 // Simple cout-like stream objects for accessing common log channels.
 // Dirties the global namespace, but oh so convenient...
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_debugLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(boost::log::keywords::channel = EthWhite "debug" EthReset))
-#define cdebug BOOST_LOG(dev::g_debugLogger::get())
+#define cdebug LOG(dev::g_debugLogger::get())
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_noteLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 1)(boost::log::keywords::channel = EthBlue "note" EthReset))
-#define cnote BOOST_LOG(dev::g_noteLogger::get())
+#define cnote LOG(dev::g_noteLogger::get())
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_warnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(
         boost::log::keywords::channel = EthOnRed EthBlackBold "warn" EthReset))
-#define cwarn BOOST_LOG(dev::g_warnLogger::get())
+#define cwarn LOG(dev::g_warnLogger::get())
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 4)(boost::log::keywords::channel = EthGray "trace" EthReset))
-#define ctrace BOOST_LOG(dev::g_traceLogger::get())
+#define ctrace LOG(dev::g_traceLogger::get())
 
 void setupLogging(int _verbosity);
 
