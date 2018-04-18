@@ -233,7 +233,7 @@ void Executive::initialize(Transaction const& _transaction)
         {
             BOOST_LOG(m_execLogger)
                 << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Require " << nonceReq
-                << " Got" << m_t.nonce();
+                << " Got " << m_t.nonce();
             m_excepted = TransactionException::InvalidNonce;
             BOOST_THROW_EXCEPTION(InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
         }
@@ -243,8 +243,8 @@ void Executive::initialize(Transaction const& _transaction)
         bigint totalCost = m_t.value() + gasCost;
         if (m_s.balance(m_t.sender()) < totalCost)
         {
-            BOOST_LOG(m_execLogger) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas()
-                                    << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got"
+            BOOST_LOG(m_execLogger) << "Not enough cash: Require > " << totalCost << " = " << m_t.gas()
+                                    << " * " << m_t.gasPrice() << " + " << m_t.value() << " Got"
                                     << m_s.balance(m_t.sender()) << " for sender: " << m_t.sender();
             m_excepted = TransactionException::NotEnoughCash;
             m_excepted = TransactionException::NotEnoughCash;
@@ -259,7 +259,7 @@ bool Executive::execute()
     // Entry point for a user-executed transaction.
 
     // Pay...
-    clog(StateDetail) << "Paying" << formatBalance(m_gasCost) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
+    clog(StateDetail) << "Paying " << formatBalance(m_gasCost) << " from sender for gas (" << m_t.gas() << " gas at " << formatBalance(m_t.gasPrice()) << ")";
     m_s.subBalance(m_t.sender(), m_gasCost);
 
     assert(m_t.gas() >= (u256)m_baseGasRequired);
