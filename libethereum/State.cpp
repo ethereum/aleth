@@ -38,9 +38,6 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
-const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
-
 namespace
 {
 
@@ -82,7 +79,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 
     if (_we == WithExisting::Kill)
     {
-        clog(StateDetail) << "Killing state database (WithExisting::Kill).";
+        clogSimple(14, "statedb") << "Killing state database (WithExisting::Kill).";
         fs::remove_all(path / fs::path("state"));
     }
 
@@ -93,7 +90,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
     try
     {
         std::unique_ptr<db::DatabaseFace> db(new db::DBImpl(path / fs::path("state")));
-        clog(StateDetail) << "Opened state DB.";
+        clogSimple(14, "statedb") << "Opened state DB.";
         return OverlayDB(std::move(db));
     }
     catch (boost::exception const& ex)
