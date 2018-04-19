@@ -65,7 +65,7 @@ EthereumPeer::~EthereumPeer()
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetAllDetail) << "Peer aborting while being asked for " << ::toString(m_asking);
+        cnetdetails << "Peer aborting while being asked for " << ::toString(m_asking);
         setRude();
     }
     abortSync();
@@ -284,7 +284,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
         if (skip > std::numeric_limits<unsigned>::max() - 1)
         {
-            clog(NetAllDetail) << "Requested block skip is too big: " << skip;
+            cnetdetails << "Requested block skip is too big: " << skip;
             break;
         }
 
