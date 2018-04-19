@@ -343,16 +343,19 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     transition();
                     return;
                 }
-                
-                clog(NetP2PNote) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "recvd hello header";
-                
+
+                clog(NetP2PNote) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
+                                 << " recvd hello header";
+
                 /// check frame size
                 bytes& header = m_handshakeInBuffer;
                 uint32_t frameSize = (uint32_t)(header[2]) | (uint32_t)(header[1])<<8 | (uint32_t)(header[0])<<16;
                 if (frameSize > 1024)
                 {
                     // all future frames: 16777216
-                    clog(NetP2PWarn) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame is too large" << frameSize;
+                    clog(NetP2PWarn)
+                        << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
+                        << " hello frame is too large " << frameSize;
                     m_nextState = Error;
                     transition();
                     return;
@@ -383,7 +386,9 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         bytesRef frame(&m_handshakeInBuffer);
                         if (!m_io->authAndDecryptFrame(frame))
                         {
-                            clog(NetTriviaSummary) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: decrypt failed";
+                            clog(NetTriviaSummary)
+                                << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
+                                << " hello frame: decrypt failed";
                             m_nextState = Error;
                             transition();
                             return;
@@ -392,13 +397,17 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         PacketType packetType = frame[0] == 0x80 ? HelloPacket : (PacketType)frame[0];
                         if (packetType != HelloPacket)
                         {
-                            clog(NetTriviaSummary) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: invalid packet type";
+                            clog(NetTriviaSummary)
+                                << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
+                                << " hello frame: invalid packet type";
                             m_nextState = Error;
                             transition();
                             return;
                         }
 
-                        clog(NetTriviaSummary) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: success. starting session.";
+                        clog(NetTriviaSummary)
+                            << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
+                            << " hello frame: success. starting session.";
                         try
                         {
                             RLP rlp(frame.cropped(1), RLP::ThrowOnFail | RLP::FailIfTooSmall);
@@ -406,7 +415,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         }
                         catch (std::exception const& _e)
                         {
-                            clog(NetWarn) << "Handshake causing an exception:" << _e.what();
+                            cnetwarn << "Handshake causing an exception: " << _e.what();
                             m_nextState = Error;
                             transition();
                         }
