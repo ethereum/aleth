@@ -38,18 +38,12 @@ bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 
 #if defined(_WIN32)
 const char* NetConnect::name() { return EthYellow "N" EthYellow " C"; }
-const char* NetMessageDetail::name() { return EthYellow "N" EthGray " o"; }
 const char* NetTriviaSummary::name() { return EthYellow "N" EthGray " O"; }
 const char* NetAllDetail::name() { return EthYellow "N" EthCoal " A"; }
-const char* NetRight::name() { return EthYellow "N" EthGreen "->"; }
-const char* NetLeft::name() { return EthYellow "N" EthNavy "<-"; }
 #else
 const char* NetConnect::name() { return EthYellow "⧎" EthYellow " ▢"; }
-const char* NetMessageDetail::name() { return EthYellow "⧎" EthGray " ○"; }
 const char* NetTriviaSummary::name() { return EthYellow "⧎" EthGray " ◎"; }
 const char* NetAllDetail::name() { return EthYellow "⧎" EthCoal " ●"; }
-const char* NetRight::name() { return EthYellow "⧎" EthGreen "▬▶"; }
-const char* NetLeft::name() { return EthYellow "⧎" EthNavy "◀▬"; }
 #endif
 
 bool p2p::isPublicAddress(std::string const& _addressToCheck)
