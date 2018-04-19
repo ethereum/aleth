@@ -178,7 +178,7 @@ public:
         if (_blockId.size() == 32) // block id is a hash
         {
             blockHash = _blockId.toHash<h256>();
-            clog(NetMessageSummary) << "GetBlockHeaders (block (hash): " << blockHash
+            cnetmessage << "GetBlockHeaders (block (hash): " << blockHash
                 << ", maxHeaders: " << _maxHeaders
                 << ", skip: " << _skip << ", reverse: " << _reverse << ")";
 
@@ -208,9 +208,9 @@ public:
         else // block id is a number
         {
             auto n = _blockId.toInt<bigint>();
-            clog(NetMessageSummary) << "GetBlockHeaders (" << n
-            << "max: " << _maxHeaders
-            << "skip: " << _skip << (_reverse ? "reverse" : "") << ")";
+            cnetmessage << "GetBlockHeaders (" << n
+            << " max: " << _maxHeaders
+            << " skip: " << _skip << (_reverse ? " reverse" : "") << ")";
 
             if (!_reverse)
             {
@@ -310,9 +310,9 @@ public:
         if (count > 20 && n == 0)
             cnetwarn << "all " << count << " unknown blocks requested; peer on different chain?";
         else
-            clog(NetMessageSummary)
-                << n << "blocks known and returned;" << (numBodiesToSend - n) << "blocks unknown;"
-                << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
+            cnetmessage
+                << n << " blocks known and returned; " << (numBodiesToSend - n) << " blocks unknown; "
+                << (count > c_maxBlocks ? count - c_maxBlocks : 0) << " blocks ignored";
 
         return make_pair(rlp, n);
     }
@@ -334,7 +334,7 @@ public:
                 data.push_back(move(node));
             }
         }
-        clog(NetMessageSummary) << data.size() << " nodes known and returned;" << (numItemsToSend - data.size()) << " unknown;" << (count > c_maxNodes ? count - c_maxNodes : 0) << " ignored";
+        cnetmessage << data.size() << " nodes known and returned; " << (numItemsToSend - data.size()) << " unknown; " << (count > c_maxNodes ? count - c_maxNodes : 0) << " ignored";
 
         return data;
     }
@@ -357,7 +357,7 @@ public:
                 ++n;
             }
         }
-        clog(NetMessageSummary) << n << " receipt lists known and returned;" << (numItemsToSend - n) << " unknown;" << (count > c_maxReceipts ? count - c_maxReceipts : 0) << " ignored";
+        cnetmessage << n << " receipt lists known and returned; " << (numItemsToSend - n) << " unknown; " << (count > c_maxReceipts ? count - c_maxReceipts : 0) << " ignored";
 
         return make_pair(rlp, n);
     }
