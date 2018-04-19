@@ -339,14 +339,14 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         m_sessions[_id] = ps;
     }
     
-    clog(NetP2PNote) << "p2p.host.peer.register" << _id;
+    LOG(m_logger) << "p2p.host.peer.register " << _id;
 }
 
 void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
 {
     if (_e == NodeEntryAdded)
     {
-        clog(NetP2PNote) << "p2p.host.nodeTable.events.nodeEntryAdded " << _n;
+        LOG(m_logger) << "p2p.host.nodeTable.events.nodeEntryAdded " << _n;
         if (Node n = nodeFromNodeTable(_n))
         {
             shared_ptr<Peer> p;
@@ -361,7 +361,7 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
                 {
                     p = make_shared<Peer>(n);
                     m_peers[_n] = p;
-                    clog(NetP2PNote) << "p2p.host.peers.events.peerAdded " << _n << p->endpoint;
+                    LOG(m_logger) << "p2p.host.peers.events.peerAdded " << _n << " " << p->endpoint;
                 }
             }
             if (peerSlotsAvailable(Egress))
@@ -370,7 +370,7 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
     }
     else if (_e == NodeEntryDropped)
     {
-        clog(NetP2PNote) << "p2p.host.nodeTable.events.NodeEntryDropped " << _n;
+        LOG(m_logger) << "p2p.host.nodeTable.events.NodeEntryDropped " << _n;
         RecursiveGuard l(x_sessions);
         if (m_peers.count(_n) && m_peers[_n]->peerType == PeerType::Optional)
             m_peers.erase(_n);
@@ -753,7 +753,7 @@ void Host::startedWorking()
         runAcceptor();
     }
     else
-        clog(NetP2PNote) << "p2p.start.notice id:" << id() << "TCP Listen port is invalid or unavailable.";
+        LOG(m_logger) << "p2p.start.notice id: " << id() << " TCP Listen port is invalid or unavailable.";
 
     auto nodeTable = make_shared<NodeTable>(
         m_ioService,
@@ -766,7 +766,7 @@ void Host::startedWorking()
         m_nodeTable = nodeTable;
     restoreNetwork(&m_restoreNetwork);
 
-    clog(NetP2PNote) << "p2p.started id:" << id();
+    LOG(m_logger) << "p2p.started id: " << id();
 
     run(boost::system::error_code());
 }
@@ -780,8 +780,8 @@ void Host::doWork()
     }
     catch (std::exception const& _e)
     {
-        clog(NetP2PWarn) << "Exception in Network Thread:" << _e.what();
-        clog(NetP2PWarn) << "Network Restart is Recommended.";
+        cwarn << "Exception in Network Thread: " << _e.what();
+        cwarn << "Network Restart is Recommended.";
     }
 }
 

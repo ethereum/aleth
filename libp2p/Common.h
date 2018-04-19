@@ -98,8 +98,6 @@ struct NetTriviaSummary: public LogChannel { static const char* name(); static c
 struct NetAllDetail: public LogChannel { static const char* name(); static const int verbosity = 13; };
 struct NetRight: public LogChannel { static const char* name(); static const int verbosity = 14; };
 struct NetLeft: public LogChannel { static const char* name(); static const int verbosity = 15; };
-struct NetP2PWarn: public LogChannel { static const char* name(); static const int verbosity = 2; };
-struct NetP2PNote: public LogChannel { static const char* name(); static const int verbosity = 6; };
 
 enum PacketType
 {
