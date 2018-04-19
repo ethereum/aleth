@@ -80,7 +80,14 @@ struct InvalidPublicIPAddress: virtual dev::Exception {};
 /// The ECDHE agreement failed during RLPx handshake.
 struct ECDHEError: virtual Exception {};
 
-struct NetWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
+#define NET_GLOBAL_LOGGER(NAME, SEVERITY)                      \
+    BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_##NAME##Logger, \
+        boost::log::sources::severity_channel_logger_mt<>,     \
+        (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = "net"))
+
+NET_GLOBAL_LOGGER(netwarn, 0)
+#define cnetwarn LOG(dev::p2p::g_netwarnLogger::get())
+
 struct NetNote: public LogChannel { static const char* name(); static const int verbosity = 2; };
 struct NetImpolite: public LogChannel { static const char* name(); static const int verbosity = 3; };
 struct NetMessageSummary: public LogChannel { static const char* name(); static const int verbosity = 4; };

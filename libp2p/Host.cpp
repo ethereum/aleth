@@ -133,7 +133,7 @@ void Host::start()
     if (isWorking())
         return;
 
-    clog(NetWarn) << "Network start failed!";
+    cnetwarn << "Network start failed!";
     doneWorking();
 }
 
@@ -309,7 +309,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
                 if(s->isConnected())
                 {
                     // Already connected.
-                    clog(NetWarn) << "Session already exists for peer with id" << _id;
+                    cnetwarn << "Session already exists for peer with id " << _id;
                     ps->disconnect(DuplicatePeer);
                     return;
                 }
@@ -408,12 +408,14 @@ void Host::determinePublic()
         
         if (lset && natIFAddr != laddr)
             // if listen address is set, Host will use it, even if upnp returns different
-            clog(NetWarn) << "Listen address" << laddr << "differs from local address" << natIFAddr << "returned by UPnP!";
-        
+            cnetwarn << "Listen address " << laddr << " differs from local address " << natIFAddr
+                     << " returned by UPnP!";
+
         if (pset && ep.address() != paddr)
         {
             // if public address is set, Host will advertise it, even if upnp returns different
-            clog(NetWarn) << "Specified public address" << paddr << "differs from external address" << ep.address() << "returned by UPnP!";
+            cnetwarn << "Specified public address " << paddr << " differs from external address "
+                     << ep.address() << " returned by UPnP!";
             ep.address(paddr);
         }
     }
@@ -461,11 +463,11 @@ void Host::runAcceptor()
             }
             catch (Exception const& _e)
             {
-                clog(NetWarn) << "ERROR: " << diagnostic_information(_e);
+                cnetwarn << "ERROR: " << diagnostic_information(_e);
             }
             catch (std::exception const& _e)
             {
-                clog(NetWarn) << "ERROR: " << _e.what();
+                cnetwarn << "ERROR: " << _e.what();
             }
 
             if (!success)
