@@ -43,8 +43,6 @@ const char* NetTriviaSummary::name() { return EthYellow "N" EthGray " O"; }
 const char* NetAllDetail::name() { return EthYellow "N" EthCoal " A"; }
 const char* NetRight::name() { return EthYellow "N" EthGreen "->"; }
 const char* NetLeft::name() { return EthYellow "N" EthNavy "<-"; }
-const char* NetP2PWarn::name() { return EthYellow "N" EthRed " X"; }
-const char* NetP2PNote::name() { return EthYellow "N" EthBlue " i"; }
 #else
 const char* NetConnect::name() { return EthYellow "⧎" EthYellow " ▢"; }
 const char* NetMessageDetail::name() { return EthYellow "⧎" EthGray " ○"; }
@@ -52,8 +50,6 @@ const char* NetTriviaSummary::name() { return EthYellow "⧎" EthGray " ◎"; }
 const char* NetAllDetail::name() { return EthYellow "⧎" EthCoal " ●"; }
 const char* NetRight::name() { return EthYellow "⧎" EthGreen "▬▶"; }
 const char* NetLeft::name() { return EthYellow "⧎" EthNavy "◀▬"; }
-const char* NetP2PWarn::name() { return EthYellow "⧎" EthRed " ✘"; }
-const char* NetP2PNote::name() { return EthYellow "⧎" EthBlue " ℹ"; }
 #endif
 
 bool p2p::isPublicAddress(std::string const& _addressToCheck)

@@ -330,7 +330,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
             {
                 if (!m_io)
                 {
-                    clog(NetP2PWarn) << "Internal error in handshake: RLPXFrameCoder disappeared.";
+                    LOG(m_logger) << "Internal error in handshake: RLPXFrameCoder disappeared.";
                     m_nextState = Error;
                     transition();
                     return;
@@ -344,7 +344,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     return;
                 }
 
-                clog(NetP2PNote) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
+                LOG(m_logger) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
                                  << " recvd hello header";
 
                 /// check frame size
@@ -353,7 +353,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                 if (frameSize > 1024)
                 {
                     // all future frames: 16777216
-                    clog(NetP2PWarn)
+                    LOG(m_logger)
                         << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
                         << " hello frame is too large " << frameSize;
                     m_nextState = Error;
@@ -377,7 +377,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     {
                         if (!m_io)
                         {
-                            clog(NetP2PWarn) << "Internal error in handshake: RLPXFrameCoder disappeared.";
+                            LOG(m_logger) << "Internal error in handshake: RLPXFrameCoder disappeared.";
                             m_nextState = Error;
                             transition();
                             return;
