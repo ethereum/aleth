@@ -316,8 +316,8 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         
         if (!peerSlotsAvailable())
         {
-            clog(NetAllDetail) << "Too many peers, can't connect. peer count: " << peerCount()
-                                << " pending peers: " << m_pendingPeerConns.size();
+            cnetdetails << "Too many peers, can't connect. peer count: " << peerCount()
+                        << " pending peers: " << m_pendingPeerConns.size();
             ps->disconnect(TooManyPeers);
             return;
         }

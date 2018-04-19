@@ -95,8 +95,6 @@ NET_GLOBAL_LOGGER(netmessage, 4)
 NET_GLOBAL_LOGGER(netdetails, 10)
 #define cnetdetails LOG(dev::p2p::g_netdetailsLogger::get())
 
-struct NetAllDetail: public LogChannel { static const char* name(); static const int verbosity = 13; };
-
 enum PacketType
 {
     HelloPacket = 0,
