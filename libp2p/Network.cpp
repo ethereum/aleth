@@ -201,8 +201,8 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
         bi::address eIPAddr(bi::address::from_string(eIP));
         if (extPort && eIP != string("0.0.0.0") && !isPrivateAddress(eIPAddr))
         {
-            clog(NetNote) << "Punched through NAT and mapped local port" << _listenPort << "onto external port" << extPort << ".";
-            clog(NetNote) << "External addr:" << eIP;
+            cnetnote << "Punched through NAT and mapped local port " << _listenPort << " onto external port " << extPort << ".";
+            cnetnote << "External addr: " << eIP;
             o_upnpInterfaceAddr = pAddr;
             upnpEP = bi::tcp::endpoint(eIPAddr, (unsigned short)extPort);
         }
