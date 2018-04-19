@@ -280,7 +280,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
     for (auto cap: caps)
         capslog << "(" << cap.first << "," << dec << cap.second << ")";
 
-    clog(NetMessageSummary) << "Hello: " << clientVersion << "V[" << protocolVersion << "]" << _id << showbase << capslog.str() << dec << listenPort;
+    cnetmessage << "Hello: " << clientVersion << " V[" << protocolVersion << "]" << " " << _id << " " << showbase << capslog.str() << " " << dec << listenPort;
     
     // create session so disconnects are managed
     shared_ptr<SessionFace> ps = make_shared<Session>(this, move(_io), _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion}));

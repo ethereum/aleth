@@ -85,12 +85,12 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
             m_snapshotHash = _r[5].toHash<h256>();
             m_snapshotNumber = _r[6].toInt<u256>();
 
-            clog(p2p::NetMessageSummary)
+            cnetmessage
                 << "Status: "
-                << "protocol version " << m_protocolVersion << "networkId " << m_networkId
-                << "genesis hash " << m_genesisHash << "total difficulty " << m_totalDifficulty
-                << "latest hash" << m_latestHash << "snapshot hash" << m_snapshotHash
-                << "snapshot number" << m_snapshotNumber;
+                << " protocol version " << m_protocolVersion << " networkId " << m_networkId
+                << " genesis hash " << m_genesisHash << " total difficulty " << m_totalDifficulty
+                << " latest hash " << m_latestHash << " snapshot hash " << m_snapshotHash
+                << " snapshot number " << m_snapshotNumber;
             setIdle();
             observer->onPeerStatus(
                 std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()));
