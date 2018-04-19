@@ -261,7 +261,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
         if (m_peerCapabilityVersion == m_hostProtocolVersion)
             m_protocolVersion = m_hostProtocolVersion;
 
-        clog(NetMessageSummary) << "Status:" << m_protocolVersion << "/" << m_networkId << "/" << m_genesisHash << ", TD:" << m_totalDifficulty << "=" << m_latestHash;
+        cnetmessage << "Status: " << m_protocolVersion << " / " << m_networkId << " / " << m_genesisHash << ", TD: " << m_totalDifficulty << " = " << m_latestHash;
         setIdle();
         observer->onPeerStatus(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())));
         break;
@@ -310,7 +310,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case GetBlockBodiesPacket:
     {
         unsigned count = static_cast<unsigned>(_r.itemCount());
-        clog(NetMessageSummary) << "GetBlockBodies (" << dec << count << "entries)";
+        cnetmessage << "GetBlockBodies (" << dec << count << " entries)";
 
         if (!count)
         {
@@ -347,7 +347,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     {
         unsigned itemCount = _r.itemCount();
 
-        clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
+        cnetmessage << "BlockHashes (" << dec << itemCount << " entries) " << (itemCount ? "" : " : NoMoreHashes");
 
         if (itemCount > c_maxIncomingNewHashes)
         {
@@ -371,7 +371,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
             addRating(-10);
             break;
         }
-        clog(NetMessageSummary) << "GetNodeData (" << dec << count << " entries)";
+        cnetmessage << "GetNodeData (" << dec << count << " entries)";
 
         strings const data = hostData->nodeData(_r);
 
@@ -392,7 +392,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
             addRating(-10);
             break;
         }
-        clog(NetMessageSummary) << "GetReceipts (" << dec << count << " entries)";
+        cnetmessage << "GetReceipts (" << dec << count << " entries)";
 
         pair<bytes, unsigned> const rlpAndItemCount = hostData->receipts(_r);
 

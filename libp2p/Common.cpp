@@ -38,7 +38,6 @@ bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 
 #if defined(_WIN32)
 const char* NetConnect::name() { return EthYellow "N" EthYellow " C"; }
-const char* NetMessageSummary::name() { return EthYellow "N" EthWhite " ."; }
 const char* NetMessageDetail::name() { return EthYellow "N" EthGray " o"; }
 const char* NetTriviaSummary::name() { return EthYellow "N" EthGray " O"; }
 const char* NetAllDetail::name() { return EthYellow "N" EthCoal " A"; }
@@ -48,7 +47,6 @@ const char* NetP2PWarn::name() { return EthYellow "N" EthRed " X"; }
 const char* NetP2PNote::name() { return EthYellow "N" EthBlue " i"; }
 #else
 const char* NetConnect::name() { return EthYellow "⧎" EthYellow " ▢"; }
-const char* NetMessageSummary::name() { return EthYellow "⧎" EthWhite " ◌"; }
 const char* NetMessageDetail::name() { return EthYellow "⧎" EthGray " ○"; }
 const char* NetTriviaSummary::name() { return EthYellow "⧎" EthGray " ◎"; }
 const char* NetAllDetail::name() { return EthYellow "⧎" EthCoal " ●"; }
