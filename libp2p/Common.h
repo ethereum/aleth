@@ -89,9 +89,8 @@ NET_GLOBAL_LOGGER(netwarn, 0)
 #define cnetwarn LOG(dev::p2p::g_netwarnLogger::get())
 NET_GLOBAL_LOGGER(netnote, 2)
 #define cnetnote LOG(dev::p2p::g_netnoteLogger::get())
-NET_GLOBAL_LOGGER(netmessage, 4)
-// TODO rename to cnetlog
-#define cnetmessage LOG(dev::p2p::g_netmessageLogger::get())
+NET_GLOBAL_LOGGER(netlog, 4)
+#define cnetlog LOG(dev::p2p::g_netlogLogger::get())
 NET_GLOBAL_LOGGER(netdetails, 10)
 #define cnetdetails LOG(dev::p2p::g_netdetailsLogger::get())
 
