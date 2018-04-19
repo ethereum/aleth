@@ -50,7 +50,7 @@ Session::~Session()
 {
     ThreadContext tc(info().id.abridged());
     ThreadContext tc2(info().clientVersion);
-    clog(NetMessageSummary) << "Closing peer session :-(";
+    cnetmessage << "Closing peer session :-(";
     m_peer->m_lastConnected = m_peer->m_lastAttempted - chrono::seconds(1);
 
     // Read-chain finished for one reason or another.
@@ -153,7 +153,7 @@ bool Session::interpret(PacketType _t, RLP const& _r)
         else
         {
             reason = reasonOf(r);
-            clog(NetMessageSummary) << "Disconnect (reason: " << reason << ")";
+            cnetmessage << "Disconnect (reason: " << reason << ")";
             drop(DisconnectRequested);
         }
         break;
