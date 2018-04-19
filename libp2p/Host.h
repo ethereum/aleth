@@ -349,6 +349,8 @@ private:
 	bool m_dropPeers = false;
 
 	ReputationManager m_repMan;
+
+    Logger m_logger{createLogger(6, "net")};
 };
 
 }
