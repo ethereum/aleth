@@ -92,7 +92,6 @@ struct NetRight: public LogChannel { static const char* name(); static const int
 struct NetLeft: public LogChannel { static const char* name(); static const int verbosity = 15; };
 struct NetP2PWarn: public LogChannel { static const char* name(); static const int verbosity = 2; };
 struct NetP2PNote: public LogChannel { static const char* name(); static const int verbosity = 6; };
-struct NetP2PConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
 
 enum PacketType
 {
