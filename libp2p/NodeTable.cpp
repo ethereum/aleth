@@ -68,8 +68,8 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     }
     catch (std::exception const& _e)
     {
-        clog(NetWarn) << "Exception connecting NodeTable socket: " << _e.what();
-        clog(NetWarn) << "Discovery disabled.";
+        cnetwarn << "Exception connecting NodeTable socket: " << _e.what();
+        cnetwarn << "Discovery disabled.";
     }
 }
     
@@ -497,7 +497,7 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
                     Neighbours out(_from, nearest, offset, nlimit);
                     out.sign(m_secret);
                     if (out.data.size() > 1280)
-                        clog(NetWarn) << "Sending truncated datagram, size: " << out.data.size();
+                        cnetwarn << "Sending truncated datagram, size: " << out.data.size();
                     m_socketPointer->send(out);
                 }
                 break;

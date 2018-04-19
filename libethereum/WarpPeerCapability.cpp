@@ -153,12 +153,12 @@ bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
     }
     catch (Exception const&)
     {
-        clog(p2p::NetWarn) << "Warp Peer causing an Exception:"
-                           << boost::current_exception_diagnostic_information() << _r;
+        cnetwarn << "Warp Peer causing an Exception: "
+                 << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        clog(p2p::NetWarn) << "Warp Peer causing an exception:" << _e.what() << _r;
+        cnetwarn << "Warp Peer causing an exception: " << _e.what() << " " << _r;
     }
 
     return true;
