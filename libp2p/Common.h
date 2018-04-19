@@ -90,10 +90,11 @@ NET_GLOBAL_LOGGER(netwarn, 0)
 NET_GLOBAL_LOGGER(netnote, 2)
 #define cnetnote LOG(dev::p2p::g_netnoteLogger::get())
 NET_GLOBAL_LOGGER(netmessage, 4)
+// TODO rename to cnetlog
 #define cnetmessage LOG(dev::p2p::g_netmessageLogger::get())
+NET_GLOBAL_LOGGER(netdetails, 10)
+#define cnetdetails LOG(dev::p2p::g_netdetailsLogger::get())
 
-struct NetConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
-struct NetTriviaSummary: public LogChannel { static const char* name(); static const int verbosity = 10; };
 struct NetAllDetail: public LogChannel { static const char* name(); static const int verbosity = 13; };
 
 enum PacketType

@@ -160,7 +160,7 @@ bool Session::interpret(PacketType _t, RLP const& _r)
     }
     case PingPacket:
     {
-        clog(NetTriviaSummary) << "Ping" << m_info.id;
+        cnetdetails << "Ping " << m_info.id;
         RLPStream s;
         sealAndSend(prep(s, PongPacket));
         break;
@@ -169,7 +169,9 @@ bool Session::interpret(PacketType _t, RLP const& _r)
         DEV_GUARDED(x_info)
         {
             m_info.lastPing = std::chrono::steady_clock::now() - m_ping;
-            clog(NetTriviaSummary) << "Latency: " << chrono::duration_cast<chrono::milliseconds>(m_info.lastPing).count() << " ms";
+            cnetdetails << "Latency: "
+                        << chrono::duration_cast<chrono::milliseconds>(m_info.lastPing).count()
+                        << " ms";
         }
         break;
     case GetPeersPacket:
@@ -287,7 +289,8 @@ void Session::drop(DisconnectReason _reason)
         try
         {
             boost::system::error_code ec;
-            clog(NetConnect) << "Closing " << socket.remote_endpoint(ec) << "(" << reasonOf(_reason) << ")";
+            cnetdetails << "Closing " << socket.remote_endpoint(ec) << " (" << reasonOf(_reason)
+                        << ")";
             socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
             socket.close();
         }
@@ -304,7 +307,7 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
-    clog(NetConnect) << "Disconnecting (our reason:" << reasonOf(_reason) << ")";
+    cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ")";
 
     if (m_socket->ref().is_open())
     {
@@ -401,7 +404,7 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
 {
     if (_ec && _ec.category() != boost::asio::error::get_misc_category() && _ec.value() != boost::asio::error::eof)
     {
-        clog(NetConnect) << "Error reading: " << _ec.message();
+        cnetdetails << "Error reading: " << _ec.message();
         drop(TCPError);
         return false;
     }

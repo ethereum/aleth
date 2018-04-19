@@ -478,7 +478,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
                     });
                 if (!expected)
                 {
-                    clog(NetConnect) << "Dropping unsolicited neighbours packet from " << _from.address();
+                    cnetdetails << "Dropping unsolicited neighbours packet from "
+                                << _from.address();
                     break;
                 }
 
