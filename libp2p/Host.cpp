@@ -431,7 +431,8 @@ void Host::runAcceptor()
 
     if (m_run && !m_accepting)
     {
-        clog(NetConnect) << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic << ")";
+        cnetdetails << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic
+                    << ")";
         m_accepting = true;
 
         auto socket = make_shared<RLPXSocket>(m_ioService);
@@ -445,7 +446,8 @@ void Host::runAcceptor()
             }
             if (peerCount() > peerSlots(Ingress))
             {
-                clog(NetConnect) << "Dropping incoming connect due to maximum peer count (" << Ingress << " * ideal peer count): " << socket->remoteEndpoint();
+                cnetdetails << "Dropping incoming connect due to maximum peer count (" << Ingress
+                            << " * ideal peer count): " << socket->remoteEndpoint();
                 socket->close();
                 if (ec.value() < 1)
                     runAcceptor();
@@ -510,7 +512,7 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
             return;
 
     if (_endpoint.tcpPort < 30300 || _endpoint.tcpPort > 30305)
-        clog(NetConnect) << "Non-standard port being recorded: " << _endpoint.tcpPort;
+        cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort;
 
     addNodeToNodeTable(Node(_node, _endpoint));
 }
@@ -576,7 +578,7 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
     
     if (havePeerSession(_p->id))
     {
-        clog(NetConnect) << "Aborted connect. Node already connected.";
+        cnetdetails << "Aborted connect. Node already connected.";
         return;
     }
 
@@ -592,7 +594,7 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
     _p->m_lastAttempted = std::chrono::system_clock::now();
     
     bi::tcp::endpoint ep(_p->endpoint);
-    clog(NetConnect) << "Attempting connection to node" << _p->id << "@" << ep << "from" << id();
+    cnetdetails << "Attempting connection to node " << _p->id << "@" << ep << " from " << id();
     auto socket = make_shared<RLPXSocket>(m_ioService);
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
@@ -601,13 +603,14 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
         
         if (ec)
         {
-            clog(NetConnect) << "Connection refused to node" << _p->id << "@" << ep << "(" << ec.message() << ")";
+            cnetdetails << "Connection refused to node " << _p->id << "@" << ep << " ("
+                        << ec.message() << ")";
             // Manually set error (session not present)
             _p->m_lastDisconnect = TCPError;
         }
         else
         {
-            clog(NetConnect) << "Connecting to" << _p->id << "@" << ep;
+            cnetdetails << "Connecting to " << _p->id << "@" << ep;
             auto handshake = make_shared<RLPXHandshake>(this, socket, _p->id);
             {
                 Guard l(x_connecting);
