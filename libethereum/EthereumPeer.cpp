@@ -152,7 +152,8 @@ void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, u
     setAsking(Asking::BlockHeaders);
     RLPStream s;
     prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
-    cnetmessage << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "");
+    cnetlog << "Requesting " << _count << " block headers starting from " << _startNumber
+            << (_reverse ? " in reverse" : "");
     m_lastAskedHeaders = _count;
     sealAndSend(s);
 }
@@ -166,7 +167,8 @@ void EthereumPeer::requestBlockHeaders(h256 const& _startHash, unsigned _count, 
     setAsking(Asking::BlockHeaders);
     RLPStream s;
     prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
-    cnetmessage << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
+    cnetlog << "Requesting " << _count << " block headers starting from " << _startHash
+            << (_reverse ? " in reverse" : "");
     m_lastAskedHeaders = _count;
     sealAndSend(s);
 }
@@ -261,7 +263,8 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
         if (m_peerCapabilityVersion == m_hostProtocolVersion)
             m_protocolVersion = m_hostProtocolVersion;
 
-        cnetmessage << "Status: " << m_protocolVersion << " / " << m_networkId << " / " << m_genesisHash << ", TD: " << m_totalDifficulty << " = " << m_latestHash;
+        cnetlog << "Status: " << m_protocolVersion << " / " << m_networkId << " / " << m_genesisHash
+                << ", TD: " << m_totalDifficulty << " = " << m_latestHash;
         setIdle();
         observer->onPeerStatus(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())));
         break;
@@ -310,7 +313,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case GetBlockBodiesPacket:
     {
         unsigned count = static_cast<unsigned>(_r.itemCount());
-        cnetmessage << "GetBlockBodies (" << dec << count << " entries)";
+        cnetlog << "GetBlockBodies (" << dec << count << " entries)";
 
         if (!count)
         {
@@ -347,7 +350,8 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     {
         unsigned itemCount = _r.itemCount();
 
-        cnetmessage << "BlockHashes (" << dec << itemCount << " entries) " << (itemCount ? "" : " : NoMoreHashes");
+        cnetlog << "BlockHashes (" << dec << itemCount << " entries) "
+                << (itemCount ? "" : " : NoMoreHashes");
 
         if (itemCount > c_maxIncomingNewHashes)
         {
@@ -371,7 +375,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
             addRating(-10);
             break;
         }
-        cnetmessage << "GetNodeData (" << dec << count << " entries)";
+        cnetlog << "GetNodeData (" << dec << count << " entries)";
 
         strings const data = hostData->nodeData(_r);
 
@@ -392,7 +396,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
             addRating(-10);
             break;
         }
-        cnetmessage << "GetReceipts (" << dec << count << " entries)";
+        cnetlog << "GetReceipts (" << dec << count << " entries)";
 
         pair<bytes, unsigned> const rlpAndItemCount = hostData->receipts(_r);
 
