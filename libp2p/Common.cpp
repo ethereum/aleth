@@ -37,7 +37,6 @@ bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 //⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙━┅┉▬
 
 #if defined(_WIN32)
-const char* NetImpolite::name() { return EthYellow "N" EthRed " !"; }
 const char* NetConnect::name() { return EthYellow "N" EthYellow " C"; }
 const char* NetMessageSummary::name() { return EthYellow "N" EthWhite " ."; }
 const char* NetMessageDetail::name() { return EthYellow "N" EthGray " o"; }
@@ -48,7 +47,6 @@ const char* NetLeft::name() { return EthYellow "N" EthNavy "<-"; }
 const char* NetP2PWarn::name() { return EthYellow "N" EthRed " X"; }
 const char* NetP2PNote::name() { return EthYellow "N" EthBlue " i"; }
 #else
-const char* NetImpolite::name() { return EthYellow "⧎" EthRed " !"; }
 const char* NetConnect::name() { return EthYellow "⧎" EthYellow " ▢"; }
 const char* NetMessageSummary::name() { return EthYellow "⧎" EthWhite " ◌"; }
 const char* NetMessageDetail::name() { return EthYellow "⧎" EthGray " ○"; }

@@ -299,7 +299,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case BlockHeadersPacket:
     {
         if (m_asking != Asking::BlockHeaders)
-            clog(NetImpolite) << "Peer giving us block headers when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us block headers when we didn't ask for them.";
         else
         {
             setIdle();
@@ -314,7 +314,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
         if (!count)
         {
-            clog(NetImpolite) << "Zero-entry GetBlockBodies: Not replying.";
+            LOG(m_loggerImpolite) << "Zero-entry GetBlockBodies: Not replying.";
             addRating(-10);
             break;
         }
@@ -330,7 +330,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case BlockBodiesPacket:
     {
         if (m_asking != Asking::BlockBodies)
-            clog(NetImpolite) << "Peer giving us block bodies when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us block bodies when we didn't ask for them.";
         else
         {
             setIdle();
@@ -367,7 +367,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
         unsigned count = static_cast<unsigned>(_r.itemCount());
         if (!count)
         {
-            clog(NetImpolite) << "Zero-entry GetNodeData: Not replying.";
+            LOG(m_loggerImpolite) << "Zero-entry GetNodeData: Not replying.";
             addRating(-10);
             break;
         }
@@ -388,7 +388,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
         unsigned count = static_cast<unsigned>(_r.itemCount());
         if (!count)
         {
-            clog(NetImpolite) << "Zero-entry GetReceipts: Not replying.";
+            LOG(m_loggerImpolite) << "Zero-entry GetReceipts: Not replying.";
             addRating(-10);
             break;
         }
@@ -405,7 +405,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case NodeDataPacket:
     {
         if (m_asking != Asking::NodeData)
-            clog(NetImpolite) << "Peer giving us node data when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us node data when we didn't ask for them.";
         else
         {
             setIdle();
@@ -416,7 +416,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case ReceiptsPacket:
     {
         if (m_asking != Asking::Receipts)
-            clog(NetImpolite) << "Peer giving us receipts when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us receipts when we didn't ask for them.";
         else
         {
             setIdle();
