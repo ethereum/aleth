@@ -93,11 +93,8 @@ NET_GLOBAL_LOGGER(netmessage, 4)
 #define cnetmessage LOG(dev::p2p::g_netmessageLogger::get())
 
 struct NetConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
-struct NetMessageDetail: public LogChannel { static const char* name(); static const int verbosity = 5; };
 struct NetTriviaSummary: public LogChannel { static const char* name(); static const int verbosity = 10; };
 struct NetAllDetail: public LogChannel { static const char* name(); static const int verbosity = 13; };
-struct NetRight: public LogChannel { static const char* name(); static const int verbosity = 14; };
-struct NetLeft: public LogChannel { static const char* name(); static const int verbosity = 15; };
 
 enum PacketType
 {
