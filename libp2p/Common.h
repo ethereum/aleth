@@ -90,7 +90,6 @@ NET_GLOBAL_LOGGER(netwarn, 0)
 NET_GLOBAL_LOGGER(netnote, 2)
 #define cnetnote LOG(dev::p2p::g_netnoteLogger::get())
 
-struct NetImpolite: public LogChannel { static const char* name(); static const int verbosity = 3; };
 struct NetMessageSummary: public LogChannel { static const char* name(); static const int verbosity = 4; };
 struct NetConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
 struct NetMessageDetail: public LogChannel { static const char* name(); static const int verbosity = 5; };
