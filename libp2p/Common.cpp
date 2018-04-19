@@ -34,14 +34,6 @@ const dev::p2p::Node dev::p2p::UnspecifiedNode = dev::p2p::Node(NodeID(), Unspec
 
 bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 
-//⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙━┅┉▬
-
-#if defined(_WIN32)
-const char* NetAllDetail::name() { return EthYellow "N" EthCoal " A"; }
-#else
-const char* NetAllDetail::name() { return EthYellow "⧎" EthCoal " ●"; }
-#endif
-
 bool p2p::isPublicAddress(std::string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false : isPublicAddress(bi::address::from_string(_addressToCheck));
