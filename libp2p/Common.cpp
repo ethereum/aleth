@@ -37,12 +37,8 @@ bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 //⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙━┅┉▬
 
 #if defined(_WIN32)
-const char* NetConnect::name() { return EthYellow "N" EthYellow " C"; }
-const char* NetTriviaSummary::name() { return EthYellow "N" EthGray " O"; }
 const char* NetAllDetail::name() { return EthYellow "N" EthCoal " A"; }
 #else
-const char* NetConnect::name() { return EthYellow "⧎" EthYellow " ▢"; }
-const char* NetTriviaSummary::name() { return EthYellow "⧎" EthGray " ◎"; }
 const char* NetAllDetail::name() { return EthYellow "⧎" EthCoal " ●"; }
 #endif
 
