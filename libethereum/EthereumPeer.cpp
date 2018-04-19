@@ -147,7 +147,7 @@ void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, u
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetWarn) << "Asking headers while requesting " << ::toString(m_asking);
+        cnetwarn << "Asking headers while requesting " << ::toString(m_asking);
     }
     setAsking(Asking::BlockHeaders);
     RLPStream s;
@@ -161,7 +161,7 @@ void EthereumPeer::requestBlockHeaders(h256 const& _startHash, unsigned _count, 
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetWarn) << "Asking headers while requesting " << ::toString(m_asking);
+        cnetwarn << "Asking headers while requesting " << ::toString(m_asking);
     }
     setAsking(Asking::BlockHeaders);
     RLPStream s;
@@ -191,7 +191,8 @@ void EthereumPeer::requestByHashes(h256s const& _hashes, Asking _asking, Subprot
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetWarn) << "Asking "<< ::toString(_asking) << " while requesting " << ::toString(m_asking);
+        cnetwarn << "Asking " << ::toString(_asking) << " while requesting "
+                 << ::toString(m_asking);
     }
     setAsking(_asking);
     if (_hashes.size())
@@ -429,11 +430,12 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     }
     catch (Exception const&)
     {
-        clog(NetWarn) << "Peer causing an Exception:" << boost::current_exception_diagnostic_information() << _r;
+        cnetwarn << "Peer causing an Exception: "
+                 << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        clog(NetWarn) << "Peer causing an exception:" << _e.what() << _r;
+        cnetwarn << "Peer causing an exception: " << _e.what() << " " << _r;
     }
 
     return true;
