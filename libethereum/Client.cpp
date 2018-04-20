@@ -260,6 +260,7 @@ void Client::reopenChain(WithExisting _we)
 
 void Client::reopenChain(ChainParams const& _p, WithExisting _we)
 {
+    m_signalled.notify_all(); // to wake up the thread from Client::doWork()
     bool wasSealing = wouldSeal();
     if (wasSealing)
         stopSealing();
