@@ -127,12 +127,12 @@ Options::Options(int argc, const char** argv)
         if (arg == "--help")
         {
             printHelp();
-            exit(0);
+			return;
         }
         else if (arg == "--version")
         {
             printVersion();
-            exit(0);
+			return;
         }
         else if (arg == "--vm" || arg == "--evmc")
         {
@@ -147,7 +147,7 @@ Options::Options(int argc, const char** argv)
             g_logVerbosity = 13;
 #else
             cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
-            exit(1);
+			return;
 #endif
         }
         else if (arg == "--jsontrace")
@@ -232,7 +232,7 @@ Options::Options(int argc, const char** argv)
             else
             {
                 std::cerr << "Options file not found! Default options at: tests/src/randomCodeOptions.json\n";
-                exit(0);
+                return;
             }
         }
         else if (arg == "-t")
@@ -272,11 +272,11 @@ Options::Options(int argc, const char** argv)
             if (maxCodes > 1000 || maxCodes <= 0)
             {
                 cerr << "Argument for the option is invalid! (use range: 1...1000)\n";
-                exit(1);
+                return;
             }
             test::RandomCodeOptions options;
             cout << test::RandomCode::get().generate(maxCodes, options) << "\n";
-            exit(0);
+            return;
         }
         else if (arg == "--createRandomTest")
         {
@@ -309,7 +309,7 @@ Options::Options(int argc, const char** argv)
         else if (seenSeparator)
         {
             cerr << "Unknown option: " + arg << "\n";
-            exit(1);
+            return;
         }
     }
 
@@ -322,7 +322,7 @@ Options::Options(int argc, const char** argv)
             cerr << "--createRandomTest cannot be used with any of the options: " <<
                     "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
                     "stats, filltests, fillchain \n";
-            exit(1);
+            return;
         }
     }
     else
