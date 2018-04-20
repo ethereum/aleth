@@ -77,10 +77,13 @@ struct ChainOperationParams
 	/// General chain params.
 private:
 	u256 m_blockReward;
+	bool m_allowRewardOverwrite; //allow overwrite of the block reward that is set in genesis.json
+
 public:
 	EVMSchedule const& scheduleForBlockNumber(u256 const& _blockNumber) const;
 	u256 blockReward(EVMSchedule const& _schedule) const;
 	void setBlockReward(u256 const& _newBlockReward);
+	void setBlockRewardOvewrite(bool _ovewrite) { m_allowRewardOverwrite = _ovewrite; }
 	u256 maximumExtraDataSize = 1024;
 	u256 accountStartNonce = 0;
 	bool tieBreakingGas = true;
