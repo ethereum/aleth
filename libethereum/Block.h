@@ -291,7 +291,7 @@ private:
 	void applyRewards(std::vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward);
 
 	/// @returns gas used by transactions thus far executed.
-	u256 gasUsed() const { return m_receipts.size() ? m_receipts.back().gasUsed() : 0; }
+	u256 gasUsed() const { return m_receipts.size() ? m_receipts.back().cumulativeGasUsed() : 0; }
 
 	/// Performs irregular modifications right after initialization, e.g. to implement a hard fork.
 	void performIrregularModifications();

@@ -105,7 +105,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, TransactionReceipt const&
 		_out << "Status: " << _r.statusCode() << std::endl;
 	else
 		_out << "Root: " << _r.stateRoot() << std::endl;
-	_out << "Gas used: " << _r.gasUsed() << std::endl;
+	_out << "Gas used: " << _r.cumulativeGasUsed() << std::endl;
 	_out << "Logs: " << _r.log().size() << " entries:" << std::endl;
 	for (LogEntry const& i: _r.log())
 	{
