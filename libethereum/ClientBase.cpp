@@ -358,9 +358,7 @@ LocalisedTransactionReceipt ClientBase::localisedTransactionReceipt(h256 const& 
 	TransactionReceipt tr = bc().transactionReceipt(tl.first, tl.second);
 	u256 gasUsed = tr.cumulativeGasUsed();
 	if (tl.second > 0)
-	{
 		gasUsed -= bc().transactionReceipt(tl.first, tl.second - 1).cumulativeGasUsed();
-	}
 	return LocalisedTransactionReceipt(
 		tr,
 		t.sha3(),
