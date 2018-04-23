@@ -356,12 +356,16 @@ LocalisedTransactionReceipt ClientBase::localisedTransactionReceipt(h256 const& 
 	std::pair<h256, unsigned> tl = bc().transactionLocation(_transactionHash);
 	Transaction t = Transaction(bc().transaction(tl.first, tl.second), CheckTransaction::Cheap);
 	TransactionReceipt tr = bc().transactionReceipt(tl.first, tl.second);
+	u256 gasUsed = tr.cumulativeGasUsed();
+	if (tl.second > 0)
+		gasUsed -= bc().transactionReceipt(tl.first, tl.second - 1).cumulativeGasUsed();
 	return LocalisedTransactionReceipt(
 		tr,
 		t.sha3(),
 		tl.first,
 		numberFromHash(tl.first),
 		tl.second,
+		gasUsed,
 		toAddress(t.from(), t.nonce()));
 }
 

@@ -187,7 +187,7 @@ Json::Value toJson(dev::eth::TransactionReceipt const& _t)
         res["status"] = toString(_t.statusCode());
     else
         res["stateRoot"] = toJS(_t.stateRoot());
-    res["gasUsed"] = toJS(_t.gasUsed());
+    res["gasUsed"] = toJS(_t.cumulativeGasUsed());
     res["bloom"] = toJS(_t.bloom());
     res["log"] = dev::toJson(_t.log());
     return res;
@@ -200,7 +200,7 @@ Json::Value toJson(dev::eth::LocalisedTransactionReceipt const& _t)
     res["transactionIndex"] = _t.transactionIndex();
     res["blockHash"] = toJS(_t.blockHash());
     res["blockNumber"] = _t.blockNumber();
-    res["cumulativeGasUsed"] = toJS(_t.gasUsed());
+    res["cumulativeGasUsed"] = toJS(_t.cumulativeGasUsed());
     res["gasUsed"] = toJS(_t.gasUsed());
     res["contractAddress"] = toJS(_t.contractAddress());
     res["logs"] = dev::toJson(_t.localisedLogs());
