@@ -79,7 +79,6 @@ WebThreeDirect::~WebThreeDirect()
     // the guarantee is that m_ethereum is only reset *after* all sessions have ended (sessions are allowed to
     // use bits of data owned by m_ethereum).
     m_net.stop();
-    m_ethereum.reset();
 }
 
 std::string WebThreeDirect::composeClientVersion(std::string const& _client)

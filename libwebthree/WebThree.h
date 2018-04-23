@@ -211,9 +211,9 @@ public:
 private:
     std::string m_clientVersion;                    ///< Our end-application client's name/version.
 
-    p2p::Host m_net;                                ///< Should run in background and send us events when blocks found and allow us to send blocks as required.
-
     std::unique_ptr<eth::Client> m_ethereum;        ///< Client for Ethereum ("eth") protocol.
+
+    p2p::Host m_net;                                ///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 };
 
 
