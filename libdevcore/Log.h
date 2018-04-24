@@ -282,132 +282,120 @@ inline Logger createLogger(int _severity, std::string const& _channel)
 
 
 // Log stream output operators to apply special formatting to the values sent to log
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, unsigned long _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, unsigned long _value)
 {
     _strm.stream() << EthBlue << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, long _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, long _value)
 {
     _strm.stream() << EthBlue << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, unsigned int _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, unsigned int _value)
 {
     _strm.stream() << EthBlue << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, int _value)
+inline boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& _strm, int _value)
 {
     _strm.stream() << EthBlue << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, double _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, double _value)
 {
     _strm.stream() << EthBlue << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, bigint const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, bigint const& _value)
 {
     _strm.stream() << EthNavy << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, u256 const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, u256 const& _value)
 {
     _strm.stream() << EthNavy << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, u160 const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, u160 const& _value)
 {
     _strm.stream() << EthNavy << _value << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT, unsigned HashSize>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    FixedHash<HashSize> const& _value)
+template <unsigned N>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, FixedHash<N> const& _value)
 {
     _strm.stream() << EthTeal "#" << _value.abridged() << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, h160 const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, h160 const& _value)
 {
     _strm.stream() << EthRed "@" << _value.abridged() << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, h256 const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, h256 const& _value)
 {
     _strm.stream() << EthCyan "#" << _value.abridged() << EthReset;
     return _strm;
 }
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, h256& _value)
+{
+    _strm << const_cast<h256 const&>(_value);
+    return _strm;
+}
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, h512 const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, h512 const& _value)
 {
     _strm.stream() << EthTeal "##" << _value.abridged() << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    std::string const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::string const& _value)
 {
     _strm.stream() << EthGreen "\"" + _value + "\"" EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, bytes const& _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, bytes const& _value)
 {
     _strm.stream() << EthYellow "%" << toHex(_value) << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm, bytesConstRef _value)
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, bytesConstRef _value)
 {
     _strm.stream() << EthYellow "%" << toHex(_value) << EthReset;
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT, typename T>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    std::vector<T> const& _value)
+template <typename T>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::vector<T> const& _value)
 {
     _strm.stream() << EthWhite "[" EthReset;
     int n = 0;
@@ -420,10 +408,9 @@ inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operato
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT, typename T>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    std::set<T> const& _value)
+template <typename T>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::set<T> const& _value)
 {
     _strm.stream() << EthYellow "{" EthReset;
     int n = 0;
@@ -436,10 +423,9 @@ inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operato
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT, typename T>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    std::unordered_set<T> const& _value)
+template <typename T>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::unordered_set<T> const& _value)
 {
     _strm.stream() << EthYellow "{" EthReset;
     int n = 0;
@@ -452,10 +438,9 @@ inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operato
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT, typename T, typename U>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    std::map<T, U> const& _value)
+template <typename T, typename U>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::map<T, U> const& _value)
 {
     _strm.stream() << EthLime "{" EthReset;
     int n = 0;
@@ -470,10 +455,9 @@ inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operato
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT, typename T, typename U>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    std::unordered_map<T, U> const& _value)
+template <typename T, typename U>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::unordered_map<T, U> const& _value)
 {
     _strm << EthLime "{" EthReset;
     int n = 0;
@@ -488,10 +472,9 @@ inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operato
     return _strm;
 }
 
-template <typename CharT, typename TraitsT, typename AllocatorT, typename T, typename U>
-inline boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& operator<<(
-    boost::log::basic_formatting_ostream<CharT, TraitsT, AllocatorT>& _strm,
-    std::pair<T, U> const& _value)
+template <typename T, typename U>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::pair<T, U> const& _value)
 {
     _strm.stream() << EthPurple "(" EthReset;
     _strm << _value.first;
