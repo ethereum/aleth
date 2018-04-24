@@ -276,6 +276,9 @@ private:
     NodeSocket* m_socketPointer;									///< Set to m_socket.get(). Socket is created in constructor and disconnected in destructor to ensure access to pointer is safe.
 
     DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
+
+    Logger m_logger{createLogger(10, "discov")};
+    Logger m_loggerWarn{createLogger(0, "discov")};
 };
 
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
@@ -455,20 +458,6 @@ struct Neighbours: DiscoveryDatagram
         ts = r[1].toInt<uint32_t>();
     }
 };
-
-struct NodeTableWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
-struct NodeTableNote: public LogChannel { static const char* name(); static const int verbosity = 1; };
-struct NodeTableMessageSummary: public LogChannel { static const char* name(); static const int verbosity = 2; };
-struct NodeTableMessageDetail: public LogChannel { static const char* name(); static const int verbosity = 5; };
-struct NodeTableConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
-struct NodeTableEvent: public LogChannel { static const char* name(); static const int verbosity = 10; };
-struct NodeTableTimer: public LogChannel { static const char* name(); static const int verbosity = 10; };
-struct NodeTableUpdate: public LogChannel { static const char* name(); static const int verbosity = 10; };
-struct NodeTableTriviaSummary: public LogChannel { static const char* name(); static const int verbosity = 10; };
-struct NodeTableTriviaDetail: public LogChannel { static const char* name(); static const int verbosity = 11; };
-struct NodeTableAllDetail: public LogChannel { static const char* name(); static const int verbosity = 13; };
-struct NodeTableEgress: public LogChannel { static const char* name(); static const int verbosity = 14; };
-struct NodeTableIngress: public LogChannel { static const char* name(); static const int verbosity = 15; };
 
 }
 }
