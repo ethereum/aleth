@@ -157,37 +157,31 @@ void create(evmc_result* o_result, ExtVMFace& _env, evmc_message const* _msg) no
 	// ExtVM::create takes the sender address from .myAddress.
 	assert(fromEvmC(_msg->sender) == _env.myAddress);
 
-	h160 addr;
-	owning_bytes_ref output;
-	std::tie(addr, output) = _env.create(
-		value, gas, init, Instruction::CREATE, u256(0), {}
-	);
+	CreateResult result = _env.create(value, gas, init, Instruction::CREATE, u256(0), {});
+	o_result->status_code = result.status;
 	o_result->gas_left = static_cast<int64_t>(gas);
 	o_result->release = nullptr;
-	if (addr)
+
+	if (result.status == EVMC_SUCCESS)
 	{
-		o_result->status_code = EVMC_SUCCESS;
-		o_result->create_address = toEvmC(addr);
+		o_result->create_address = toEvmC(result.address);
 		o_result->output_data = nullptr;
 		o_result->output_size = 0;
 	}
 	else
 	{
-		// FIXME: detect and support revert properly
-		o_result->status_code = EVMC_FAILURE;
-
 		// Pass the output to the EVM without a copy. The EVM will delete it
 		// when finished with it.
 
 		// First assign reference. References are not invalidated when vector
 		// of bytes is moved. See `.takeBytes()` below.
-		o_result->output_data = output.data();
-		o_result->output_size = output.size();
+		o_result->output_data = result.output.data();
+		o_result->output_size = result.output.size();
 
 		// Place a new vector of bytes containing output in result's reserved memory.
 		auto* data = evmc_get_optional_data(o_result);
 		static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
-		new(data) bytes(output.takeBytes());
+		new(data) bytes(result.output.takeBytes());
 		// Set the destructor to delete the vector.
 		o_result->release = [](evmc_result const* _result)
 		{

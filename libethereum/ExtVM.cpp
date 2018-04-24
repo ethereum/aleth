@@ -90,6 +90,36 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 		_e.go(_onOp);
 }
 
+evmc_status_code transactionExceptionToEvmcStatusCode(TransactionException ex) noexcept
+{
+    switch (ex)
+    {
+    case TransactionException::None:
+        return EVMC_SUCCESS;
+
+    case TransactionException::RevertInstruction:
+        return EVMC_REVERT;
+
+    case TransactionException::OutOfGas:
+        return EVMC_OUT_OF_GAS;
+
+    case TransactionException::BadInstruction:
+        return EVMC_UNDEFINED_INSTRUCTION;
+
+    case TransactionException::OutOfStack:
+        return EVMC_STACK_OVERFLOW;
+
+    case TransactionException::StackUnderflow:
+        return EVMC_STACK_UNDERFLOW;
+
+    case TransactionException ::BadJumpDestination:
+        return EVMC_BAD_JUMP_DESTINATION;
+
+    default:
+        return EVMC_FAILURE;
+    }
+}
+
 } // anonymous namespace
 
 
@@ -103,43 +133,7 @@ CallResult ExtVM::call(CallParameters& _p)
     }
     _p.gas = e.gas();
 
-    evmc_status_code status;
-    switch (e.getException())
-    {
-    case TransactionException::None:
-        status = EVMC_SUCCESS;
-        break;
-
-    case TransactionException::RevertInstruction:
-        status = EVMC_REVERT;
-        break;
-
-    case TransactionException::OutOfGas:
-        status = EVMC_OUT_OF_GAS;
-        break;
-
-    case TransactionException::BadInstruction:
-        status = EVMC_UNDEFINED_INSTRUCTION;
-        break;
-
-    case TransactionException::OutOfStack:
-        status = EVMC_STACK_OVERFLOW;
-        break;
-
-    case TransactionException::StackUnderflow:
-        status = EVMC_STACK_UNDERFLOW;
-        break;
-
-    case TransactionException ::BadJumpDestination:
-        status = EVMC_BAD_JUMP_DESTINATION;
-        break;
-
-    default:
-        status = EVMC_FAILURE;
-        break;
-    }
-
-    return CallResult{status, e.takeOutput()};
+    return {transactionExceptionToEvmcStatusCode(e.getException()), e.takeOutput()};
 }
 
 size_t ExtVM::codeSizeAt(dev::Address _a)
@@ -152,7 +146,7 @@ void ExtVM::setStore(u256 _n, u256 _v)
 	m_s.setStorage(myAddress, _n, _v);
 }
 
-std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp)
+CreateResult ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp)
 {
 	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
 	bool result = false;
@@ -167,7 +161,7 @@ std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, b
 		e.accrueSubState(sub);
 	}
 	io_gas = e.gas();
-	return {e.newAddress(), e.takeOutput()};
+	return {transactionExceptionToEvmcStatusCode(e.getException()), e.takeOutput(), e.newAddress()};
 }
 
 void ExtVM::suicide(Address _a)
