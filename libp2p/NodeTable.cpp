@@ -26,25 +26,19 @@ namespace dev
 {
 namespace p2p
 {
+namespace
+{
+// global thread-safe logger for static methods
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_discoveryWarnLogger,
+    boost::log::sources::severity_channel_logger_mt<>,
+    (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "discov"))
+}  // namespace
+
 inline bool operator==(
     std::weak_ptr<NodeEntry> const& _weak, std::shared_ptr<NodeEntry> const& _shared)
 {
     return !_weak.owner_before(_shared) && !_shared.owner_before(_weak);
 }
-
-const char* NodeTableWarn::name() { return "!P!"; }
-const char* NodeTableNote::name() { return "*P*"; }
-const char* NodeTableMessageSummary::name() { return "-P-"; }
-const char* NodeTableMessageDetail::name() { return "=P="; }
-const char* NodeTableConnect::name() { return "+P+"; }
-const char* NodeTableEvent::name() { return "+P+"; }
-const char* NodeTableTimer::name() { return "+P+"; }
-const char* NodeTableUpdate::name() { return "+P+"; }
-const char* NodeTableTriviaSummary::name() { return "-P-"; }
-const char* NodeTableTriviaDetail::name() { return "=P="; }
-const char* NodeTableAllDetail::name() { return "=P="; }
-const char* NodeTableEgress::name() { return ">>P"; }
-const char* NodeTableIngress::name() { return "<<P"; }
 
 NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw): Node(_pubk, _gw), distance(NodeTable::distance(_src, _pubk)) {}
 
@@ -104,7 +98,9 @@ shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relati
     if (!_node.id)
     {
         DEV_GUARDED(x_nodes)
-            clog(NodeTableConnect) << "Sending public key discovery Ping to" << (bi::udp::endpoint)_node.endpoint << "(Advertising:" << (bi::udp::endpoint)m_node.endpoint << ")";
+        LOG(m_logger) << "Sending public key discovery Ping to "
+                      << (bi::udp::endpoint)_node.endpoint
+                      << " (Advertising: " << (bi::udp::endpoint)m_node.endpoint << ")";
         DEV_GUARDED(x_pubkDiscoverPings)
             m_pubkDiscoverPings[_node.endpoint.address] = std::chrono::steady_clock::now();
         ping(_node.endpoint);
@@ -118,9 +114,9 @@ shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relati
     auto ret = make_shared<NodeEntry>(m_node.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes)
         m_nodes[_node.id] = ret;
-    clog(NodeTableConnect) << "addNode pending for" << _node.endpoint;
-    ping(_node.endpoint);
-    return ret;
+        LOG(m_logger) << "addNode pending for " << _node.endpoint;
+        ping(_node.endpoint);
+        return ret;
 }
 
 list<NodeID> NodeTable::nodes() const
@@ -169,7 +165,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
     
     if (_round == s_maxSteps)
     {
-        clog(NodeTableEvent) << "Terminating discover after " << _round << " rounds.";
+        LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
         doDiscovery();
         return;
     }
@@ -193,7 +189,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
     
     if (tried.empty())
     {
-        clog(NodeTableEvent) << "Terminating discover after " << _round << " rounds.";
+        LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
         doDiscovery();
         return;
     }
@@ -207,7 +203,8 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
     m_timers.schedule(c_reqTimeout.count() * 2, [this, _node, _round, _tried](boost::system::error_code const& _ec)
     {
         if (_ec)
-            clog(NodeTableMessageDetail) << "Discovery timer was probably cancelled: " << _ec.value() << _ec.message();
+            LOG(m_logger) << "Discovery timer was probably cancelled: " << _ec.value() << " "
+                          << _ec.message();
 
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
@@ -318,7 +315,8 @@ void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _en
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
     if (newNode && !newNode->pending)
     {
-        clog(NodeTableConnect) << "Noting active node:" << _pubk << _endpoint.address().to_string() << ":" << _endpoint.port();
+        LOG(m_logger) << "Noting active node: " << _pubk << " " << _endpoint.address().to_string()
+                      << ":" << _endpoint.port();
         newNode->endpoint.address = _endpoint.address();
         newNode->endpoint.udpPort = _endpoint.port();
 
@@ -379,7 +377,7 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
     }
     
     // notify host
-    clog(NodeTableUpdate) << "p2p.nodes.drop " << _n->id;
+    LOG(m_logger) << "p2p.nodes.drop " << _n->id;
     if (m_nodeEventHandler)
         m_nodeEventHandler->appendEvent(_n->id, NodeEntryDropped);
 }
@@ -397,7 +395,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
             return;
         if (packet->isExpired())
         {
-            clog(NodeTableWarn) << "Invalid packet (timestamp in the past) from " << _from.address().to_string() << ":" << _from.port();
+            LOG(m_loggerWarn) << "Invalid packet (timestamp in the past) from "
+                              << _from.address().to_string() << ":" << _from.port();
             return;
         }
 
@@ -457,8 +456,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
                         m_node.endpoint.address = in.destination.address;
                     m_node.endpoint.udpPort = in.destination.udpPort;
                 }
-                
-                clog(NodeTableConnect) << "PONG from " << in.sourceid << _from;
+
+                LOG(m_logger) << "PONG from " << in.sourceid << " " << _from;
                 break;
             }
                 
@@ -523,11 +522,13 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
     }
     catch (std::exception const& _e)
     {
-        clog(NodeTableWarn) << "Exception processing message from " << _from.address().to_string() << ":" << _from.port() << ": " << _e.what();
+        LOG(m_loggerWarn) << "Exception processing message from " << _from.address().to_string()
+                          << ":" << _from.port() << ": " << _e.what();
     }
     catch (...)
     {
-        clog(NodeTableWarn) << "Exception processing message from " << _from.address().to_string() << ":" << _from.port();
+        LOG(m_loggerWarn) << "Exception processing message from " << _from.address().to_string()
+                          << ":" << _from.port();
     }
 }
 
@@ -536,7 +537,8 @@ void NodeTable::doCheckEvictions()
     m_timers.schedule(c_evictionCheckInterval.count(), [this](boost::system::error_code const& _ec)
     {
         if (_ec)
-            clog(NodeTableMessageDetail) << "Check Evictions timer was probably cancelled: " << _ec.value() << _ec.message();
+            LOG(m_logger) << "Check Evictions timer was probably cancelled: " << _ec.value() << " "
+                          << _ec.message();
 
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
@@ -567,12 +569,13 @@ void NodeTable::doDiscovery()
     m_timers.schedule(c_bucketRefresh.count(), [this](boost::system::error_code const& _ec)
     {
         if (_ec)
-            clog(NodeTableMessageDetail) << "Discovery timer was probably cancelled: " << _ec.value() << _ec.message();
+            LOG(m_logger) << "Discovery timer was probably cancelled: " << _ec.value() << " "
+                          << _ec.message();
 
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
-        
-        clog(NodeTableEvent) << "performing random discovery";
+
+        LOG(m_logger) << "performing random discovery";
         NodeID randNodeId;
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));
@@ -586,7 +589,8 @@ unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint 
     // h256 + Signature + type + RLP (smallest possible packet is empty neighbours packet which is 3 bytes)
     if (_packet.size() < h256::size + Signature::size + 1 + 3)
     {
-        clog(NodeTableWarn) << "Invalid packet (too small) from " << _from.address().to_string() << ":" << _from.port();
+        LOG(g_discoveryWarnLogger::get()) << "Invalid packet (too small) from "
+                                          << _from.address().to_string() << ":" << _from.port();
         return decoded;
     }
     bytesConstRef hashedBytes(_packet.cropped(h256::size, _packet.size() - h256::size));
@@ -597,13 +601,15 @@ unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint 
     h256 echo(sha3(hashedBytes));
     if (!_packet.cropped(0, h256::size).contentsEqual(echo.asBytes()))
     {
-        clog(NodeTableWarn) << "Invalid packet (bad hash) from " << _from.address().to_string() << ":" << _from.port();
+        LOG(g_discoveryWarnLogger::get()) << "Invalid packet (bad hash) from "
+                                          << _from.address().to_string() << ":" << _from.port();
         return decoded;
     }
     Public sourceid(dev::recover(*(Signature const*)signatureBytes.data(), sha3(signedBytes)));
     if (!sourceid)
     {
-        clog(NodeTableWarn) << "Invalid packet (bad signature) from " << _from.address().to_string() << ":" << _from.port();
+        LOG(g_discoveryWarnLogger::get()) << "Invalid packet (bad signature) from "
+                                          << _from.address().to_string() << ":" << _from.port();
         return decoded;
     }
     switch (signedBytes[0])
@@ -621,7 +627,8 @@ unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint 
         decoded.reset(new Neighbours(_from, sourceid, echo));
         break;
     default:
-        clog(NodeTableWarn) << "Invalid packet (unknown packet type) from " << _from.address().to_string() << ":" << _from.port();
+        LOG(g_discoveryWarnLogger::get()) << "Invalid packet (unknown packet type) from "
+                                          << _from.address().to_string() << ":" << _from.port();
         return decoded;
     }
     decoded->interpretRLP(bodyBytes);
