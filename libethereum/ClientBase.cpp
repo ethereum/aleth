@@ -528,3 +528,8 @@ Block ClientBase::block(BlockNumber _h) const
 		return preSeal();
 	return block(bc().numberHash(_h));
 }
+
+int ClientBase::chainId() const
+{
+	return bc().chainParams().chainID;
+}
