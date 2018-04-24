@@ -70,11 +70,6 @@ DEV_SIMPLE_EXCEPTION(TransientError);
 DEV_SIMPLE_EXCEPTION(FailedToWriteChainStart);
 DEV_SIMPLE_EXCEPTION(UnknownBlockNumber);
 
-struct BlockChainChat: public LogChannel { static const char* name(); static const int verbosity = 5; };
-struct BlockChainNote: public LogChannel { static const char* name(); static const int verbosity = 3; };
-struct BlockChainWarn: public LogChannel { static const char* name(); static const int verbosity = 1; };
-struct BlockChainDebug: public LogChannel { static const char* name(); static const int verbosity = 0; };
-
 // TODO: Move all this Genesis stuff into Genesis.h/.cpp
 std::unordered_map<Address, Account> const& genesisState();
 
@@ -421,6 +416,10 @@ private:
     std::function<void(BlockHeader const&)> m_onBlockImport;                                        ///< Called if we have imported a new block into the db
 
     boost::filesystem::path m_dbPath;
+
+    mutable Logger m_logger{createLogger(3, "chain")};
+    mutable Logger m_loggerDetail{createLogger(5, "chain")};
+    mutable Logger m_loggerDebug{createLogger(0, "chain")};
 
     friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
 };

@@ -37,11 +37,6 @@ BOOST_FIXTURE_TEST_SUITE(BlockChainFrontierSuite, FrontierNoProofTestFixture)
 
 BOOST_AUTO_TEST_CASE(output)
 {
-    BOOST_WARN(string(BlockChainDebug::name()) == string(EthBlue "☍" EthWhite " ◇"));
-    BOOST_WARN(string(BlockChainWarn::name()) == string(EthBlue "☍" EthOnRed EthBlackBold " ✘"));
-    BOOST_WARN(string(BlockChainNote::name()) == string(EthBlue "☍" EthBlue " ℹ"));
-    BOOST_WARN(string(BlockChainChat::name()) == string(EthBlue "☍" EthWhite " ◌"));
-
     TestBlock genesis = TestBlockChain::defaultGenesisBlock();
     TestBlockChain bc(genesis);
 
