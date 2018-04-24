@@ -380,16 +380,30 @@ inline boost::log::formatting_ostream& operator<<(
 }
 
 inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, bytes const& _value)
+    boost::log::formatting_ostream& _strm, bytesConstRef _value)
 {
     _strm.stream() << EthYellow "%" << toHex(_value) << EthReset;
     return _strm;
 }
+}  // namespace dev
 
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, bytesConstRef _value)
+// Overloads for types of std namespace can't be defined in dev namespace, because they won't be
+// found due to Argument-Dependent Lookup Placing anything into std is not allowed, but we can put
+// them into boost::log
+namespace boost
 {
-    _strm.stream() << EthYellow "%" << toHex(_value) << EthReset;
+namespace log
+{
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, dev::bytes const& _value)
+{
+    _strm.stream() << EthYellow "%" << dev::toHex(_value) << EthReset;
+    return _strm;
+}
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, dev::bytes& _value)
+{
+    _strm << const_cast<dev::bytes const&>(_value);
     return _strm;
 }
 
@@ -407,6 +421,13 @@ inline boost::log::formatting_ostream& operator<<(
     _strm.stream() << EthWhite "]" EthReset;
     return _strm;
 }
+template <typename T>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::vector<T>& _value)
+{
+    _strm << const_cast<std::vector<T> const&>(_value);
+    return _strm;
+}
 
 template <typename T>
 inline boost::log::formatting_ostream& operator<<(
@@ -422,6 +443,13 @@ inline boost::log::formatting_ostream& operator<<(
     _strm.stream() << EthYellow "}" EthReset;
     return _strm;
 }
+template <typename T>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::set<T>& _value)
+{
+    _strm << const_cast<std::set<T> const&>(_value);
+    return _strm;
+}
 
 template <typename T>
 inline boost::log::formatting_ostream& operator<<(
@@ -435,6 +463,13 @@ inline boost::log::formatting_ostream& operator<<(
         _strm << i;
     }
     _strm.stream() << EthYellow "}" EthReset;
+    return _strm;
+}
+template <typename T>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::unordered_set<T>& _value)
+{
+    _strm << const_cast<std::unordered_set<T> const&>(_value);
     return _strm;
 }
 
@@ -454,6 +489,13 @@ inline boost::log::formatting_ostream& operator<<(
     _strm.stream() << EthLime "}" EthReset;
     return _strm;
 }
+template <typename T, typename U>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::map<T, U>& _value)
+{
+    _strm << const_cast<std::map<T, U> const&>(_value);
+    return _strm;
+}
 
 template <typename T, typename U>
 inline boost::log::formatting_ostream& operator<<(
@@ -471,6 +513,13 @@ inline boost::log::formatting_ostream& operator<<(
     _strm << EthLime "}" EthReset;
     return _strm;
 }
+template <typename T, typename U>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::unordered_map<T, U>& _value)
+{
+    _strm << const_cast<std::unordered_map<T, U> const&>(_value);
+    return _strm;
+}
 
 template <typename T, typename U>
 inline boost::log::formatting_ostream& operator<<(
@@ -483,4 +532,12 @@ inline boost::log::formatting_ostream& operator<<(
     _strm.stream() << EthPurple ")" EthReset;
     return _strm;
 }
+template <typename T, typename U>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, std::pair<T, U>& _value)
+{
+    _strm << const_cast<std::pair<T, U> const&>(_value);
+    return _strm;
 }
+}
+}  // namespace boost
