@@ -316,10 +316,19 @@ inline boost::log::formatting_ostream& operator<<(
     return _strm;
 }
 
+// Below overloads for both const and non-const references are needed, because without overload for
+// non-const reference generic operator<<(formatting_ostream& _strm, T& _value) will be preferred by
+// overload resolution.
 inline boost::log::formatting_ostream& operator<<(
     boost::log::formatting_ostream& _strm, bigint const& _value)
 {
     _strm.stream() << EthNavy << _value << EthReset;
+    return _strm;
+}
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, bigint& _value)
+{
+    _strm << const_cast<bigint const&>(_value);
     return _strm;
 }
 
@@ -329,11 +338,23 @@ inline boost::log::formatting_ostream& operator<<(
     _strm.stream() << EthNavy << _value << EthReset;
     return _strm;
 }
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, u256& _value)
+{
+    _strm << const_cast<u256 const&>(_value);
+    return _strm;
+}
 
 inline boost::log::formatting_ostream& operator<<(
     boost::log::formatting_ostream& _strm, u160 const& _value)
 {
     _strm.stream() << EthNavy << _value << EthReset;
+    return _strm;
+}
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, u160& _value)
+{
+    _strm << const_cast<u160 const&>(_value);
     return _strm;
 }
 
@@ -344,11 +365,24 @@ inline boost::log::formatting_ostream& operator<<(
     _strm.stream() << EthTeal "#" << _value.abridged() << EthReset;
     return _strm;
 }
+template <unsigned N>
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, FixedHash<N>& _value)
+{
+    _strm << const_cast<FixedHash<N> const&>(_value);
+    return _strm;
+}
 
 inline boost::log::formatting_ostream& operator<<(
     boost::log::formatting_ostream& _strm, h160 const& _value)
 {
     _strm.stream() << EthRed "@" << _value.abridged() << EthReset;
+    return _strm;
+}
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, h160& _value)
+{
+    _strm << const_cast<h160 const&>(_value);
     return _strm;
 }
 
@@ -369,6 +403,12 @@ inline boost::log::formatting_ostream& operator<<(
     boost::log::formatting_ostream& _strm, h512 const& _value)
 {
     _strm.stream() << EthTeal "##" << _value.abridged() << EthReset;
+    return _strm;
+}
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, h512& _value)
+{
+    _strm << const_cast<h512 const&>(_value);
     return _strm;
 }
 
