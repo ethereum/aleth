@@ -48,11 +48,11 @@ std::pair<h160, eth::owning_bytes_ref> FakeExtVM::create(u256 _endowment, u256& 
     return {na, eth::owning_bytes_ref{}};
 }
 
-std::pair<bool, eth::owning_bytes_ref> FakeExtVM::call(CallParameters& _p)
+CallResult FakeExtVM::call(CallParameters& _p)
 {
     Transaction t(_p.valueTransfer, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
     callcreates.push_back(t);
-    return {true, eth::owning_bytes_ref{}};  // Return empty output.
+    return {EVMC_SUCCESS, {}};  // Return empty output.
 }
 
 h256 FakeExtVM::blockHash(u256 _number)

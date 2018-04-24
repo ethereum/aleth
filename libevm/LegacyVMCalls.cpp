@@ -186,10 +186,8 @@ void LegacyVM::caseCall()
 	bytesRef output;
 	if (caseCallSetup(callParams.get(), output))
 	{
-		bool success = false;
-		owning_bytes_ref outputRef;
-		std::tie(success, outputRef) = m_ext->call(*callParams);
-		outputRef.copyTo(output);
+		CallResult result = m_ext->call(*callParams);
+		result.output.copyTo(output);
 
 		// Here we have 2 options:
 		// 1. Keep the whole returned memory buffer (owning_bytes_ref):
@@ -197,9 +195,9 @@ void LegacyVM::caseCall()
 		// 2. Copy only the return data from the returned memory buffer:
 		//    minimal memory footprint, additional memory copy.
 		// Option 2 used:
-		m_returnData = outputRef.toBytes();
+		m_returnData = result.output.toBytes();
 
-		m_SPP[0] = success ? 1 : 0;
+		m_SPP[0] = result.status == EVMC_SUCCESS ? 1 : 0;
 	}
 	else
 		m_SPP[0] = 0;

@@ -177,8 +177,9 @@ public:
 
     /// @returns the new address for the created contract in the CREATE operation.
     Address newAddress() const { return m_newAddress; }
-    /// @returns true iff the operation ended with a VM exception.
-    bool excepted() const { return m_excepted != TransactionException::None; }
+
+    /// @returns The exception that has happened during the execution if any.
+    TransactionException getException() const noexcept { return m_excepted; }
 
     /// Collect execution results in the result storage provided.
     void setResultRecipient(ExecutionResult& _res) { m_res = &_res; }

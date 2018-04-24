@@ -93,17 +93,53 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 } // anonymous namespace
 
 
-std::pair<bool, owning_bytes_ref> ExtVM::call(CallParameters& _p)
+CallResult ExtVM::call(CallParameters& _p)
 {
-	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
-	if (!e.call(_p, gasPrice, origin))
-	{
-		go(depth, e, _p.onOp);
-		e.accrueSubState(sub);
-	}
-	_p.gas = e.gas();
-	
-	return {!e.excepted(), e.takeOutput()};
+    Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
+    if (!e.call(_p, gasPrice, origin))
+    {
+        go(depth, e, _p.onOp);
+        e.accrueSubState(sub);
+    }
+    _p.gas = e.gas();
+
+    evmc_status_code status;
+    switch (e.getException())
+    {
+    case TransactionException::None:
+        status = EVMC_SUCCESS;
+        break;
+
+    case TransactionException::RevertInstruction:
+        status = EVMC_REVERT;
+        break;
+
+    case TransactionException::OutOfGas:
+        status = EVMC_OUT_OF_GAS;
+        break;
+
+    case TransactionException::BadInstruction:
+        status = EVMC_UNDEFINED_INSTRUCTION;
+        break;
+
+    case TransactionException::OutOfStack:
+        status = EVMC_STACK_OVERFLOW;
+        break;
+
+    case TransactionException::StackUnderflow:
+        status = EVMC_STACK_UNDERFLOW;
+        break;
+
+    case TransactionException ::BadJumpDestination:
+        status = EVMC_BAD_JUMP_DESTINATION;
+        break;
+
+    default:
+        status = EVMC_FAILURE;
+        break;
+    }
+
+    return CallResult{status, e.takeOutput()};
 }
 
 size_t ExtVM::codeSizeAt(dev::Address _a)

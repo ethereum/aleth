@@ -222,16 +222,8 @@ void call(evmc_result* o_result, evmc_context* _context, evmc_message const* _ms
 	params.staticCall = (_msg->flags & EVMC_STATIC) != 0;
 	params.onOp = {};
 
-	bool success = false;
-	owning_bytes_ref output;
-	std::tie(success, output) = env.call(params);
-	// FIXME: We have a mess here. It is hard to distinguish reverts from failures.
-	// In first case we want to keep the output, in the second one the output
-	// is optional and should not be passed to the contract, but can be useful
-	// for EVM in general.
-	//
-	// FIXME: detect and support revert properly
-	o_result->status_code = success ? EVMC_SUCCESS : EVMC_FAILURE;
+	CallResult result = env.call(params);
+	o_result->status_code = result.status;
 	o_result->gas_left = static_cast<int64_t>(params.gas);
 
 	// Pass the output to the EVM without a copy. The EVM will delete it
@@ -239,13 +231,13 @@ void call(evmc_result* o_result, evmc_context* _context, evmc_message const* _ms
 
 	// First assign reference. References are not invalidated when vector
 	// of bytes is moved. See `.takeBytes()` below.
-	o_result->output_data = output.data();
-	o_result->output_size = output.size();
+	o_result->output_data = result.output.data();
+	o_result->output_size = result.output.size();
 
 	// Place a new vector of bytes containing output in result's reserved memory.
 	auto* data = evmc_get_optional_data(o_result);
 	static_assert(sizeof(bytes) <= sizeof(*data), "Vector is too big");
-	new(data) bytes(output.takeBytes());
+	new(data) bytes(result.output.takeBytes());
 	// Set the destructor to delete the vector.
 	o_result->release = [](evmc_result const* _result)
 	{
