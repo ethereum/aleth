@@ -173,7 +173,7 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
 #endif
 #ifdef ETH_HERA
     case VMKind::Hera:
-        return std::unique_ptr<VMFace>(new EVMC{hera_create()});
+        return std::unique_ptr<VMFace>(new EVMC{evmc_create_hera()});
 #endif
     case VMKind::Interpreter:
         return std::unique_ptr<VMFace>(new EVMC{evmc_create_interpreter()});

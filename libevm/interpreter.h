@@ -1,6 +1,6 @@
 
 #pragma once
 
-#include <evmc.h>
+#include <evmc/evmc.h>
 
 extern "C" evmc_instance* evmc_create_interpreter() noexcept;

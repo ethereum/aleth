@@ -21,7 +21,7 @@
 #include "VMConfig.h"
 #include "VMFace.h"
 
-#include <evmc.h>
+#include <evmc/evmc.h>
 
 #include <boost/optional.hpp>
 

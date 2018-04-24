@@ -121,7 +121,6 @@ set(UTILS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/utils")
 
 configure_project()
 
-option(EVMC_BUILD_EXAMPLES "Build EVMC examples" OFF)
 add_subdirectory(evmc)
 
 if (HERA)

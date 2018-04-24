@@ -66,11 +66,11 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     case EVMC_STACK_UNDERFLOW:
         BOOST_THROW_EXCEPTION(StackUnderflow());
 
-    case EVMC_STATIC_MODE_ERROR:
+    case EVMC_STATIC_MODE_VIOLATION:
         BOOST_THROW_EXCEPTION(DisallowedStateChange());
 
     case EVMC_REJECTED:
-        cwarn << "Execution rejected by EVM-C, executing with default VM implementation";
+        cwarn << "Execution rejected by EVMC, executing with default VM implementation";
         return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
 
     default:
@@ -80,18 +80,17 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
 evmc_revision toRevision(EVMSchedule const& _schedule)
 {
-	if (_schedule.haveCreate2)
-		return EVMC_CONSTANTINOPLE;
-	if (_schedule.haveRevert)
-		return EVMC_BYZANTIUM;
-	if (_schedule.eip158Mode)
-		return EVMC_SPURIOUS_DRAGON;
-	if (_schedule.eip150Mode)
-		return EVMC_TANGERINE_WHISTLE;
-	if (_schedule.haveDelegateCall)
-		return EVMC_HOMESTEAD;
-	return EVMC_FRONTIER;
+    if (_schedule.haveCreate2)
+        return EVMC_CONSTANTINOPLE;
+    if (_schedule.haveRevert)
+        return EVMC_BYZANTIUM;
+    if (_schedule.eip158Mode)
+        return EVMC_SPURIOUS_DRAGON;
+    if (_schedule.eip150Mode)
+        return EVMC_TANGERINE_WHISTLE;
+    if (_schedule.haveDelegateCall)
+        return EVMC_HOMESTEAD;
+    return EVMC_FRONTIER;
 }
-
-}
-}
+}  // namespace eth
+}  // namespace dev
