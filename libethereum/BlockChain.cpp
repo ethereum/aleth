@@ -52,18 +52,6 @@ std::string const c_chainStart{"chainStart"};
 db::Slice const c_sliceChainStart{c_chainStart};
 }
 
-#if defined(_WIN32)
-const char* BlockChainDebug::name() { return EthBlue "8" EthWhite " <>"; }
-const char* BlockChainWarn::name() { return EthBlue "8" EthOnRed EthBlackBold " X"; }
-const char* BlockChainNote::name() { return EthBlue "8" EthBlue " i"; }
-const char* BlockChainChat::name() { return EthBlue "8" EthWhite " o"; }
-#else
-const char* BlockChainDebug::name() { return EthBlue "☍" EthWhite " ◇"; }
-const char* BlockChainWarn::name() { return EthBlue "☍" EthOnRed EthBlackBold " ✘"; }
-const char* BlockChainNote::name() { return EthBlue "☍" EthBlue " ℹ"; }
-const char* BlockChainChat::name() { return EthBlue "☍" EthWhite " ◌"; }
-#endif
-
 std::ostream& dev::eth::operator<<(std::ostream& _out, BlockChain const& _bc)
 {
     string cmp = toBigEndianString(_bc.currentHash());
@@ -541,7 +529,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     // Work out its number as the parent's number + 1
     if (!isKnown(_block.info.parentHash(), false))
     {
-        clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
+        LOG(m_logger) << _block.info.hash() << " : Unknown parent " << _block.info.parentHash();
         // We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
         BOOST_THROW_EXCEPTION(UnknownParent());
     }
@@ -553,7 +541,8 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     h256 receiptsRoot = orderedTrieRoot(receipts);
     if (_block.info.receiptsRoot() != receiptsRoot)
     {
-        clog(BlockChainNote) << _block.info.hash() << ": Invalid receipts root " << _block.info.receiptsRoot() << " not " << receiptsRoot;
+        LOG(m_logger) << _block.info.hash() << " : Invalid receipts root "
+                      << _block.info.receiptsRoot() << " not " << receiptsRoot;
         // We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
         BOOST_THROW_EXCEPTION(InvalidReceiptsStateRoot());
     }
@@ -562,13 +551,14 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     if (!pd)
     {
         auto pdata = pd.rlp();
-        clog(BlockChainDebug) << "Details is returning false despite block known:" << RLP(pdata);
+        LOG(m_loggerDebug) << "Details is returning false despite block known: " << RLP(pdata);
         auto parentBlock = block(_block.info.parentHash());
-        clog(BlockChainDebug) << "isKnown:" << isKnown(_block.info.parentHash());
-        clog(BlockChainDebug) << "last/number:" << m_lastBlockNumber << m_lastBlockHash << _block.info.number();
-        clog(BlockChainDebug) << "Block:" << BlockHeader(&parentBlock);
-        clog(BlockChainDebug) << "RLP:" << RLP(parentBlock);
-        clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerDebug) << "isKnown: " << isKnown(_block.info.parentHash());
+        LOG(m_loggerDebug) << "last/number: " << m_lastBlockNumber << " " << m_lastBlockHash << " "
+                           << _block.info.number();
+        LOG(m_loggerDebug) << "Block: " << BlockHeader(&parentBlock);
+        LOG(m_loggerDebug) << "RLP: " << RLP(parentBlock);
+        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 
@@ -646,7 +636,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
     // Work out its number as the parent's number + 1
     if (!isKnown(_block.info.parentHash(), false))  // doesn't have to be current.
     {
-        clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
+        LOG(m_logger) << _block.info.hash() << " : Unknown parent " << _block.info.parentHash();
         // We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
         BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(_block.info.parentHash()));
     }
@@ -655,13 +645,14 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
     if (!pd)
     {
         auto pdata = pd.rlp();
-        clog(BlockChainDebug) << "Details is returning false despite block known:" << RLP(pdata);
+        LOG(m_loggerDebug) << "Details is returning false despite block known: " << RLP(pdata);
         auto parentBlock = block(_block.info.parentHash());
-        clog(BlockChainDebug) << "isKnown:" << isKnown(_block.info.parentHash());
-        clog(BlockChainDebug) << "last/number:" << m_lastBlockNumber << m_lastBlockHash << _block.info.number();
-        clog(BlockChainDebug) << "Block:" << BlockHeader(&parentBlock);
-        clog(BlockChainDebug) << "RLP:" << RLP(parentBlock);
-        clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerDebug) << "isKnown: " << isKnown(_block.info.parentHash());
+        LOG(m_loggerDebug) << "last/number: " << m_lastBlockNumber << " " << m_lastBlockHash << " "
+                           << _block.info.number();
+        LOG(m_loggerDebug) << "Block: " << BlockHeader(&parentBlock);
+        LOG(m_loggerDebug) << "RLP: " << RLP(parentBlock);
+        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 
@@ -670,7 +661,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
     // Verify parent-critical parts
     verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
 
-    clog(BlockChainChat) << "Attempting import of " << _block.info.hash() << "...";
+    LOG(m_loggerDetail) << "Attempting import of " << _block.info.hash() << " ...";
 
     performanceLogger.onStageFinished("preliminaryChecks");
 
@@ -732,7 +723,7 @@ void BlockChain::checkBlockIsNew(VerifiedBlockRef const& _block) const
 {
     if (isKnown(_block.info.hash()))
     {
-        clog(BlockChainNote) << _block.info.hash() << ": Not new.";
+        LOG(m_logger) << _block.info.hash() << " : Not new.";
         BOOST_THROW_EXCEPTION(AlreadyHaveBlock() << errinfo_block(_block.block.toBytes()));
     }
 }
@@ -742,7 +733,8 @@ void BlockChain::checkBlockTimestamp(BlockHeader const& _header) const
     // Check it's not crazy
     if (_header.timestamp() > utcTime() && !m_params.allowFutureBlocks)
     {
-        clog(BlockChainChat) << _header.hash() << ": Future time " << _header.timestamp() << " (now at " << utcTime() << ")";
+        LOG(m_loggerDetail) << _header.hash() << " : Future time " << _header.timestamp()
+                            << " (now at " << utcTime() << ")";
         // Block has a timestamp in the future. This is no good.
         BOOST_THROW_EXCEPTION(FutureTime());
     }
@@ -870,11 +862,16 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
             isImportedAndBest = true;
         }
 
-        clog(BlockChainNote) << "   Imported and best" << _totalDifficulty << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
+        LOG(m_logger) << "   Imported and best " << _totalDifficulty << " (#"
+                      << _block.info.number() << "). Has "
+                      << (details(_block.info.parentHash()).children.size() - 1)
+                      << " siblings. Route: " << route;
     }
     else
     {
-        clog(BlockChainChat) << "   Imported but not best (oTD:" << details(last).totalDifficulty << " > TD:" << _totalDifficulty << "; " << details(last).number << ".." << _block.info.number() << ")";
+        LOG(m_loggerDetail) << "   Imported but not best (oTD: " << details(last).totalDifficulty
+                            << " > TD: " << _totalDifficulty << "; " << details(last).number << ".."
+                            << _block.info.number() << ")";
     }
 
     try
@@ -902,9 +899,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 #if ETH_PARANOIA
     if (isKnown(_block.info.hash()) && !details(_block.info.hash()))
     {
-        clog(BlockChainDebug) << "Known block just inserted has no details.";
-        clog(BlockChainDebug) << "Block:" << _block.info;
-        clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerDebug) << "Known block just inserted has no details.";
+        LOG(m_loggerDebug) << "Block: " << _block.info;
+        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 
@@ -915,9 +912,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
     }
     catch (...)
     {
-        clog(BlockChainDebug) << "Failed to initialise State object form imported block.";
-        clog(BlockChainDebug) << "Block:" << _block.info;
-        clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerDebug) << "Failed to initialise State object form imported block.";
+        LOG(m_loggerDebug) << "Block: " << _block.info;
+        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 #endif // ETH_PARANOIA
