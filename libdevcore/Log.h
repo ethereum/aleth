@@ -279,43 +279,10 @@ inline Logger createLogger(int _severity, std::string const& _channel)
     return Logger(
         boost::log::keywords::severity = _severity, boost::log::keywords::channel = _channel);
 }
-
-
-// Log stream output operators to apply special formatting to the values sent to log
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, unsigned long _value)
-{
-    _strm.stream() << EthBlue << _value << EthReset;
-    return _strm;
 }
 
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, long _value)
+namespace dev
 {
-    _strm.stream() << EthBlue << _value << EthReset;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, unsigned int _value)
-{
-    _strm.stream() << EthBlue << _value << EthReset;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& _strm, int _value)
-{
-    _strm.stream() << EthBlue << _value << EthReset;
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, double _value)
-{
-    _strm.stream() << EthBlue << _value << EthReset;
-    return _strm;
-}
-
 // Below overloads for both const and non-const references are needed, because without overload for
 // non-const reference generic operator<<(formatting_ostream& _strm, T& _value) will be preferred by
 // overload resolution.
@@ -409,13 +376,6 @@ inline boost::log::formatting_ostream& operator<<(
     boost::log::formatting_ostream& _strm, h512& _value)
 {
     _strm << const_cast<h512 const&>(_value);
-    return _strm;
-}
-
-inline boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& _strm, std::string const& _value)
-{
-    _strm.stream() << EthGreen "\"" + _value + "\"" EthReset;
     return _strm;
 }
 
