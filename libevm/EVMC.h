@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <evmc.h>
 #include <libevm/VMFace.h>
+
+#include <evmc/evmc.h>
 
 namespace dev
 {
