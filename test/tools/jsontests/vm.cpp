@@ -40,19 +40,19 @@ FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX:
     ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, false, _depth)
 {}
 
-std::pair<h160, eth::owning_bytes_ref> FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, Instruction , u256, OnOpFunc const&)
+CreateResult FakeExtVM::create(
+    u256 _endowment, u256& io_gas, bytesConstRef _init, Instruction, u256, OnOpFunc const&)
 {
-    Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
-    Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
-    callcreates.push_back(t);
-    return {na, eth::owning_bytes_ref{}};
+    Address address = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
+    callcreates.emplace_back(_endowment, gasPrice, io_gas, _init.toBytes());
+    return {EVMC_SUCCESS, {}, address};
 }
 
-std::pair<bool, eth::owning_bytes_ref> FakeExtVM::call(CallParameters& _p)
+CallResult FakeExtVM::call(CallParameters& _p)
 {
     Transaction t(_p.valueTransfer, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
     callcreates.push_back(t);
-    return {true, eth::owning_bytes_ref{}};  // Return empty output.
+    return {EVMC_SUCCESS, {}};  // Return empty output.
 }
 
 h256 FakeExtVM::blockHash(u256 _number)

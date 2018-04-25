@@ -169,6 +169,33 @@ private:
     u256 m_gasUsed;
 };
 
+/// Represents a call result.
+///
+/// @todo: Replace with evmc_result in future.
+struct CallResult
+{
+    evmc_status_code status;
+    owning_bytes_ref output;
+
+    CallResult(evmc_status_code status, owning_bytes_ref&& output)
+      : status{status}, output{std::move(output)}
+    {}
+};
+
+/// Represents a CREATE result.
+///
+/// @todo: Replace with evmc_result in future.
+struct CreateResult
+{
+    evmc_status_code status;
+    owning_bytes_ref output;
+    h160 address;
+
+    CreateResult(evmc_status_code status, owning_bytes_ref&& output, h160 const& address)
+        : status{status}, output{std::move(output)}, address{address}
+    {}
+};
+
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
  */
@@ -207,11 +234,10 @@ public:
     virtual void suicide(Address) { sub.suicides.insert(myAddress); }
 
     /// Create a new (contract) account.
-    virtual std::pair<h160, owning_bytes_ref> create(u256, u256&, bytesConstRef, Instruction, u256, OnOpFunc const&) = 0;
+    virtual CreateResult create(u256, u256&, bytesConstRef, Instruction, u256, OnOpFunc const&) = 0;
 
     /// Make a new message call.
-    /// @returns success flag and output data, if any.
-    virtual std::pair<bool, owning_bytes_ref> call(CallParameters&) = 0;
+    virtual CallResult call(CallParameters&) = 0;
 
     /// Revert any changes made (by any of the other calls).
     virtual void log(h256s&& _topics, bytesConstRef _data) { sub.logs.push_back(LogEntry(myAddress, std::move(_topics), _data.toBytes())); }

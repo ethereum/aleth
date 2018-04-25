@@ -90,20 +90,50 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 		_e.go(_onOp);
 }
 
+evmc_status_code transactionExceptionToEvmcStatusCode(TransactionException ex) noexcept
+{
+    switch (ex)
+    {
+    case TransactionException::None:
+        return EVMC_SUCCESS;
+
+    case TransactionException::RevertInstruction:
+        return EVMC_REVERT;
+
+    case TransactionException::OutOfGas:
+        return EVMC_OUT_OF_GAS;
+
+    case TransactionException::BadInstruction:
+        return EVMC_UNDEFINED_INSTRUCTION;
+
+    case TransactionException::OutOfStack:
+        return EVMC_STACK_OVERFLOW;
+
+    case TransactionException::StackUnderflow:
+        return EVMC_STACK_UNDERFLOW;
+
+    case TransactionException ::BadJumpDestination:
+        return EVMC_BAD_JUMP_DESTINATION;
+
+    default:
+        return EVMC_FAILURE;
+    }
+}
+
 } // anonymous namespace
 
 
-std::pair<bool, owning_bytes_ref> ExtVM::call(CallParameters& _p)
+CallResult ExtVM::call(CallParameters& _p)
 {
-	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
-	if (!e.call(_p, gasPrice, origin))
-	{
-		go(depth, e, _p.onOp);
-		e.accrueSubState(sub);
-	}
-	_p.gas = e.gas();
-	
-	return {!e.excepted(), e.takeOutput()};
+    Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
+    if (!e.call(_p, gasPrice, origin))
+    {
+        go(depth, e, _p.onOp);
+        e.accrueSubState(sub);
+    }
+    _p.gas = e.gas();
+
+    return {transactionExceptionToEvmcStatusCode(e.getException()), e.takeOutput()};
 }
 
 size_t ExtVM::codeSizeAt(dev::Address _a)
@@ -116,7 +146,7 @@ void ExtVM::setStore(u256 _n, u256 _v)
 	m_s.setStorage(myAddress, _n, _v);
 }
 
-std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp)
+CreateResult ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp)
 {
 	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
 	bool result = false;
@@ -131,7 +161,7 @@ std::pair<h160, owning_bytes_ref> ExtVM::create(u256 _endowment, u256& io_gas, b
 		e.accrueSubState(sub);
 	}
 	io_gas = e.gas();
-	return {e.newAddress(), e.takeOutput()};
+	return {transactionExceptionToEvmcStatusCode(e.getException()), e.takeOutput(), e.newAddress()};
 }
 
 void ExtVM::suicide(Address _a)
