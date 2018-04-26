@@ -41,9 +41,6 @@ namespace dev
 namespace p2p
 {
 
-struct RLPXWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
-struct RLPXNote: public LogChannel { static const char* name(); static const int verbosity = 1; };
-
 /**
  * UDP Datagram
  * @todo make data protected/functional
