@@ -47,40 +47,6 @@ namespace dev
 {
 // Logging
 int g_logVerbosity = 5;
-mutex x_logOverride;
-
-/// Map of Log Channel types to bool, false forces the channel to be disabled, true forces it to be enabled.
-/// If a channel has no entry, then it will output as long as its verbosity (LogChannel::verbosity) is less than
-/// or equal to the currently output verbosity (g_logVerbosity).
-static map<type_info const*, bool> s_logOverride;
-
-#if defined(_WIN32)
-const char* LogChannel::name() { return EthGray "..."; }
-#else
-const char* LogChannel::name() { return EthGray "···"; }
-#endif
-
-LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* _info, unsigned _v, bool _autospacing):
-    m_autospacing(_autospacing),
-    m_verbosity(_v)
-{
-    Guard l(x_logOverride);
-    auto it = s_logOverride.find(_info);
-    if ((it != s_logOverride.end() && it->second == true) || (it == s_logOverride.end() && (int)_v <= g_logVerbosity))
-    {
-        time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        unsigned ms = chrono::duration_cast<chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
-        char buf[24];
-        if (strftime(buf, 24, "%X", localtime(&rawTime)) == 0)
-            buf[0] = '\0'; // empty if case strftime fails
-        static char const* c_begin = "  " EthViolet;
-        static char const* c_sep1 = EthReset EthBlack "|" EthNavy;
-        static char const* c_sep2 = EthReset EthBlack "|" EthTeal;
-        static char const* c_end = EthReset "  ";
-        m_sstr << _id << c_begin << buf << "." << setw(3) << setfill('0') << ms;
-        m_sstr << c_sep1 << getThreadName() << ThreadContext::join(c_sep2) << c_end;
-    }
-}
 
 /// Associate a name with each thread for nice logging.
 struct ThreadLocalLogName
@@ -158,11 +124,6 @@ void setThreadName(string const& _n)
 #else
     g_logThreadName.m_name.reset(new std::string(_n));
 #endif
-}
-
-void debugOut(std::string const& _s)
-{
-    cerr << _s << '\n';
 }
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
