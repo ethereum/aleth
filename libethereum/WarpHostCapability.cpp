@@ -28,13 +28,6 @@ namespace
 {
 static size_t const c_freePeerBufferSize = 32;
 
-struct SnapshotLog : public LogChannel
-{
-    static char const* name() { return "SNAP"; }
-    static int const verbosity = 9;
-    static const bool debug = false;
-};
-
 bool validateManifest(RLP const& _manifestRlp)
 {
     if (!_manifestRlp.isList() || _manifestRlp.itemCount() != 1)
@@ -118,10 +111,10 @@ public:
             writeFile((boost::filesystem::path(m_snapshotDir) / toHex(hash)).string(),
                 data.toBytesConstRef());
 
-            clog(SnapshotLog) << "Saved chunk" << hash << " Chunks left: " << m_neededChunks.size()
-                              << " Requested chunks: " << m_requestedChunks.size();
+            LOG(m_logger) << "Saved chunk " << hash << " Chunks left: " << m_neededChunks.size()
+                          << " Requested chunks: " << m_requestedChunks.size();
             if (m_neededChunks.empty() && m_requestedChunks.empty())
-                clog(SnapshotLog) << "Snapshot download complete!";
+                LOG(m_logger) << "Snapshot download complete!";
         }
         else
             m_neededChunks.push_back(askedHash);
@@ -263,9 +256,9 @@ private:
         u256 const blockNumber = manifest[4].toInt<u256>();
         h256 const blockHash = manifest[5].toHash<h256>();
 
-        clog(SnapshotLog) << "MANIFEST: "
-                          << "version " << version << "state root " << stateRoot << "block number "
-                          << blockNumber << "block hash " << blockHash;
+        LOG(m_logger) << "MANIFEST: "
+                      << "version " << version << " state root " << stateRoot << " block number "
+                      << blockNumber << " block hash " << blockHash;
 
         // TODO handle writeFile failure
         writeFile((boost::filesystem::path(m_snapshotDir) / "MANIFEST").string(), manifest.data());
@@ -281,7 +274,7 @@ private:
             while (!peer)
                 peer = m_freePeers.value_pop().lock();
 
-            clog(SnapshotLog) << "Requesting chunk " << chunkHash;
+            LOG(m_logger) << "Requesting chunk " << chunkHash;
             peer->requestData(chunkHash);
 
             m_requestedChunks[peer] = chunkHash;
@@ -309,6 +302,8 @@ private:
         m_requestedChunks;
 
     std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
+
+    Logger m_logger{createLogger(1, "snap")};
 };
 
 }  // namespace
@@ -325,7 +320,6 @@ WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const
         _snapshotDownloadPath.empty() ? nullptr : createPeerObserver(_snapshotDownloadPath)),
     m_lastTick(0)
 {
-    (void)SnapshotLog::debug; // override "unused variable" error on macOS
 }
 
 WarpHostCapability::~WarpHostCapability()
