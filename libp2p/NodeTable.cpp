@@ -569,8 +569,8 @@ void NodeTable::doDiscovery()
     m_timers.schedule(c_bucketRefresh.count(), [this](boost::system::error_code const& _ec)
     {
         if (_ec)
-            LOG(m_logger) << "Discovery timer was probably cancelled: " << _ec.value() << " "
-                          << _ec.message();
+            clogSimple(10, "discov") << "Discovery timer was probably cancelled: " << _ec.value()
+                                     << " " << _ec.message();
 
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
