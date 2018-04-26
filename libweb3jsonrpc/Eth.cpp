@@ -656,6 +656,11 @@ Json::Value Eth::eth_syncing()
 	return info;
 }
 
+string Eth::eth_chainId()
+{
+	return toJS(client()->chainId());
+}
+
 bool Eth::eth_submitWork(string const& _nonce, string const&, string const& _mixHash)
 {
 	try
