@@ -51,8 +51,6 @@ class TransactionQueue;
 class BlockQueue;
 class BlockChainSync;
 
-struct EthereumHostTrace: public LogChannel { static const char* name(); static const int verbosity = 6; };
-
 /**
  * @brief The EthereumHost class
  * @warning None of this is thread-safe. You have been warned.
@@ -138,6 +136,8 @@ private:
 
     std::shared_ptr<EthereumHostDataFace> m_hostData;
     std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
+
+    Logger m_logger{createLogger(6, "host")};
 };
 
 }
