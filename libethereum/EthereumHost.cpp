@@ -43,12 +43,6 @@ static unsigned const c_maxSendTransactions = 256;
 
 char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State"};
 
-#if defined(_WIN32)
-const char* EthereumHostTrace::name() { return EthPurple "^" EthGray "  "; }
-#else
-const char* EthereumHostTrace::name() { return EthPurple "⧫" EthGray " "; }
-#endif
-
 namespace
 {
 class EthereumPeerObserver: public EthereumPeerObserverFace
@@ -73,7 +67,7 @@ public:
     void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        clog(EthereumHostTrace) << "Transactions (" << dec << itemCount << "entries)";
+        LOG(m_logger) << "Transactions (" << dec << itemCount << " entries)";
         m_tq.enqueue(_r, _peer->id());
     }
 
@@ -148,18 +142,20 @@ public:
     void onPeerNodeData(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        clog(EthereumHostTrace) << "Node Data (" << dec << itemCount << "entries)";
+        LOG(m_logger) << "Node Data (" << dec << itemCount << " entries)";
     }
 
     void onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
-        clog(EthereumHostTrace) << "Receipts (" << dec << itemCount << "entries)";
+        LOG(m_logger) << "Receipts (" << dec << itemCount << " entries)";
     }
 
 private:
     shared_ptr<BlockChainSync> m_sync;
     TransactionQueue& m_tq;
+
+    Logger m_logger{createLogger(6, "host")};
 };
 
 class EthereumHostData: public EthereumHostDataFace
@@ -400,7 +396,7 @@ bool EthereumHost::ensureInitialised()
     {
         // First time - just initialise.
         m_latestBlockSent = m_chain.currentHash();
-        clog(EthereumHostTrace) << "Initialising: latest=" << m_latestBlockSent;
+        LOG(m_logger) << "Initialising: latest=" << m_latestBlockSent;
 
         Guard l(x_transactions);
         m_transactionsSent = m_tq.knownTransactions();
@@ -490,7 +486,8 @@ void EthereumHost::maintainTransactions()
             RLPStream ts;
             _p->prep(ts, TransactionsPacket, n).appendRaw(b, n);
             _p->sealAndSend(ts);
-            clog(EthereumHostTrace) << "Sent" << n << "transactions to " << _p->session()->info().clientVersion;
+            LOG(m_logger) << "Sent " << n << " transactions to "
+                          << _p->session()->info().clientVersion;
         }
         _p->m_requireTransactions = false;
         return true;
@@ -555,7 +552,8 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
         if (diff(detailsFrom.number, detailsTo.number) < 20)
         {
             // don't be sending more than 20 "new" blocks. if there are any more we were probably waaaay behind.
-            clog(EthereumHostTrace) << "Sending a new block (current is" << _currentHash << ", was" << m_latestBlockSent << ")";
+            LOG(m_logger) << "Sending a new block (current is " << _currentHash << ", was "
+                          << m_latestBlockSent << ")";
 
             h256s blocks = get<0>(m_chain.treeRoute(m_latestBlockSent, _currentHash, false, false, true));
 
