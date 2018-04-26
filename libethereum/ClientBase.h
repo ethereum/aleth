@@ -64,15 +64,6 @@ struct ClientWatch
     mutable std::chrono::system_clock::time_point lastPoll = std::chrono::system_clock::now();
 };
 
-struct WatchChannel: public LogChannel { static const char* name(); static const int verbosity = 7; };
-#define cwatch LogOutputStream<WatchChannel, true>()
-struct WorkInChannel: public LogChannel { static const char* name(); static const int verbosity = 16; };
-struct WorkOutChannel: public LogChannel { static const char* name(); static const int verbosity = 16; };
-struct WorkChannel: public LogChannel { static const char* name(); static const int verbosity = 21; };
-#define cwork LogOutputStream<WorkChannel, true>()
-#define cworkin LogOutputStream<WorkInChannel, true>()
-#define cworkout LogOutputStream<WorkOutChannel, true>()
-
 class ClientBase: public Interface
 {
 public:
@@ -194,6 +185,8 @@ protected:
     std::unordered_map<h256, h256s> m_specialFilters = std::unordered_map<h256, std::vector<h256>>{{PendingChangedFilter, {}}, {ChainChangedFilter, {}}};
                                                             ///< The dictionary of special filters and their additional data
     std::map<unsigned, ClientWatch> m_watches;				///< Each and every watch - these reference a filter.
+
+    Logger m_loggerWatch{createLogger(7, "watch")};
 };
 
 }}
