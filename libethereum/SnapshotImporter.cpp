@@ -30,22 +30,9 @@ namespace dev
 {
 namespace eth
 {
-namespace
-{
-
-struct SnapshotImportLog: public LogChannel
-{
-    static char const* name() { return "SNAP"; }
-    static int const verbosity = 8;
-    static const bool debug = false;
-};
-
-}
 
 void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 const& /*_genesisHash*/)
 {
-    (void)SnapshotImportLog::debug;  // override "unused variable" error on macOS
-
     bytes const manifestBytes = _snapshotStorage.readManifest();
     RLP manifest(manifestBytes);
 
@@ -58,8 +45,7 @@ void SnapshotImporter::import(SnapshotStorageFace const& _snapshotStorage, h256 
 
     u256 const blockNumber = manifest[4].toInt<u256>(RLP::VeryStrict);
     h256 const blockHash = manifest[5].toHash<h256>(RLP::VeryStrict);
-    clog(SnapshotImportLog) << "Importing snapshot for block " << blockNumber << " block hash "
-                            << blockHash;
+    LOG(m_logger) << "Importing snapshot for block " << blockNumber << " block hash " << blockHash;
 
     h256s const stateChunkHashes = manifest[1].toVector<h256>(RLP::VeryStrict);
     h256 const stateRoot = manifest[3].toHash<h256>(RLP::VeryStrict);
@@ -147,15 +133,16 @@ void SnapshotImporter::importStateChunks(SnapshotStorageFace const& _snapshotSto
         m_stateImporter.commitStateDatabase();
 
         ++chunksImported;
-        clog(SnapshotImportLog) << "Imported chunk " << chunksImported << " (" << accounts.itemCount() << " account records) Total account records imported: " << accountsImported;
-        clog(SnapshotImportLog) << stateChunkCount - chunksImported << " chunks left to import";
+        LOG(m_logger) << "Imported chunk " << chunksImported << " (" << accounts.itemCount()
+                      << " account records) Total account records imported: " << accountsImported;
+        LOG(m_logger) << stateChunkCount - chunksImported << " chunks left to import";
     }
 
     // check root
-    clog(SnapshotImportLog) << "Chunks imported: " << chunksImported;
-    clog(SnapshotImportLog) << "Account records imported: " << accountsImported;
-    clog(SnapshotImportLog) << "Reconstructed state root: " << m_stateImporter.stateRoot();
-    clog(SnapshotImportLog) << "Manifest state root:      " << _stateRoot;
+    LOG(m_logger) << "Chunks imported: " << chunksImported;
+    LOG(m_logger) << "Account records imported: " << accountsImported;
+    LOG(m_logger) << "Reconstructed state root: " << m_stateImporter.stateRoot();
+    LOG(m_logger) << "Manifest state root:      " << _stateRoot;
     if (m_stateImporter.stateRoot() != _stateRoot)
         BOOST_THROW_EXCEPTION(StateTrieReconstructionFailed());
 }
@@ -179,7 +166,8 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
         if (!firstBlockNumber || !firstBlockHash || !firstBlockDifficulty)
             BOOST_THROW_EXCEPTION(InvalidBlockChunkData());
 
-        clog(SnapshotImportLog) << "chunk first block " << firstBlockNumber << " first block hash " << firstBlockHash << " difficulty " << firstBlockDifficulty;
+        LOG(m_logger) << "chunk first block " << firstBlockNumber << " first block hash "
+                      << firstBlockHash << " difficulty " << firstBlockDifficulty;
 
         size_t const itemCount = blockChunk.itemCount();
         h256 parentHash = firstBlockHash;
@@ -227,12 +215,12 @@ void SnapshotImporter::importBlockChunks(SnapshotStorageFace const& _snapshotSto
             parentHash = header.hash();
         }
 
-        clog(SnapshotImportLog) << "Imported chunk " << *chunk << " (" << itemCount - 3 << " blocks)";
-        clog(SnapshotImportLog) << blockChunkCount - (++blockChunksImported) << " chunks left to import";
+        LOG(m_logger) << "Imported chunk " << *chunk << " (" << itemCount - 3 << " blocks)";
+        LOG(m_logger) << blockChunkCount - (++blockChunksImported) << " chunks left to import";
 
         if (chunk == _blockChunkHashes.rbegin())
         {
-            clog(SnapshotImportLog) << "Setting chain start block: " << firstBlockNumber + 1;
+            LOG(m_logger) << "Setting chain start block: " << firstBlockNumber + 1;
             m_blockChainImporter.setChainStartBlockNumber(firstBlockNumber + 1);
         }
     }
