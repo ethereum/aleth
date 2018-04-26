@@ -36,15 +36,6 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace fs = boost::filesystem;
 
-namespace
-{
-struct VMTraceChannel : public LogChannel
-{
-    static const char* name() { return "EVM"; }
-    static const int verbosity = 11;
-};
-}  // namespace
-
 FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
     ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, false, _depth)
 {}
@@ -256,53 +247,49 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
         for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
             o << std::showbase << std::hex << i.first << ": " << i.second << "\n";
 
-        dev::LogOutputStream<VMTraceChannel, false>() << o.str();
-        dev::LogOutputStream<VMTraceChannel, false>()
-            << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | "
-            << std::hex << std::setw(4) << std::setfill('0') << pc << " : "
-            << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec
-            << gasCost << " | " << newMemSize << "x32"
-            << " ]";
+        LOG(ext.m_logger) << o.str();
+        LOG(ext.m_logger) << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #"
+                          << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << pc
+                          << " : " << instructionInfo(inst).name << " | " << std::dec << gas
+                          << " | -" << std::dec << gasCost << " | " << newMemSize << "x32"
+                          << " ]";
 
         /*creates json stack trace*/
-        if (VMTraceChannel::verbosity <= g_logVerbosity)
-        {
-            Object o_step;
+        Object o_step;
 
-            /*add the stack*/
-            Array a_stack;
-            for (auto i: vm.stack())
-                a_stack.push_back((string)i);
+        /*add the stack*/
+        Array a_stack;
+        for (auto i : vm.stack())
+            a_stack.push_back((string)i);
 
-            o_step.push_back(Pair( "stack", a_stack ));
+        o_step.push_back(Pair("stack", a_stack));
 
-            /*add the memory*/
-            Array a_mem;
-            for(auto i: vm.memory())
-                a_mem.push_back(i);
+        /*add the memory*/
+        Array a_mem;
+        for (auto i : vm.memory())
+            a_mem.push_back(i);
 
-            o_step.push_back(Pair("memory", a_mem));
+        o_step.push_back(Pair("memory", a_mem));
 
-            /*add the storage*/
-            Object storage;
-            for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
-                storage.push_back(Pair( (string)i.first , (string)i.second));
+        /*add the storage*/
+        Object storage;
+        for (auto const& i : std::get<2>(ext.addresses.find(ext.myAddress)->second))
+            storage.push_back(Pair((string)i.first, (string)i.second));
 
-            /*add all the other details*/
-            o_step.push_back(Pair("storage", storage));
-            o_step.push_back(Pair("depth", to_string(ext.depth)));
-            o_step.push_back(Pair("gas", (string)gas));
-            o_step.push_back(Pair("address", toString(ext.myAddress )));
-            o_step.push_back(Pair("step", steps ));
-            o_step.push_back(Pair("pc", pc));
-            o_step.push_back(Pair("opcode", instructionInfo(inst).name ));
+        /*add all the other details*/
+        o_step.push_back(Pair("storage", storage));
+        o_step.push_back(Pair("depth", to_string(ext.depth)));
+        o_step.push_back(Pair("gas", (string)gas));
+        o_step.push_back(Pair("address", toString(ext.myAddress)));
+        o_step.push_back(Pair("step", steps));
+        o_step.push_back(Pair("pc", pc));
+        o_step.push_back(Pair("opcode", instructionInfo(inst).name));
 
-            /*append the JSON object to the log file*/
-            Value v(o_step);
-            ofstream os( "./stackTrace.json", ofstream::app);
-            os << write_string(v, true) << ",";
-            os.close();
-        }
+        /*append the JSON object to the log file*/
+        Value v(o_step);
+        ofstream os("./stackTrace.json", ofstream::app);
+        os << write_string(v, true) << ",";
+        os.close();
     };
 }
 
