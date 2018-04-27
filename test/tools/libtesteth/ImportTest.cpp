@@ -280,7 +280,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 		else {
 			if(true) {
 				initialStateCopy.execute(_env, *se.get(), _tr, Permanence::Committed);
-				cout << "{\"stateRoot\": \"" << initialStateCopy.rootHash().hex() << "\"}";
+				cout << "{\"stateRoot\": \"" << initialStateCopy.rootHash().hex() << "\"}\n";
 			}
 			out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
 		}
