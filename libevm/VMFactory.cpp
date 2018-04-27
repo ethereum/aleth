@@ -62,28 +62,22 @@ VMKindTableEntry vmKindsTable[] = {
     {VMKind::Hera, "hera"},
 #endif
 };
-}
 
-void validate(boost::any& v, const std::vector<std::string>& values, VMKind* /* target_type */, int)
+void setVMKind(const std::string& name)
 {
-    // Make sure no previous assignment to 'v' was made.
-    po::validators::check_first_occurrence(v);
-
-    // Extract the first string from 'values'. If there is more than
-    // one string, it's an error, and exception will be thrown.
-    const std::string& s = po::validators::get_single_string(values);
-
     for (auto& entry : vmKindsTable)
     {
         // Try to find a match in the table of VMs.
-        if (s == entry.name)
+        if (name == entry.name)
         {
-            v = entry.kind;
+            g_kind = entry.kind;
             return;
         }
     }
 
-    throw po::validation_error(po::validation_error::invalid_option_value);
+    BOOST_THROW_EXCEPTION(
+        po::validation_error(po::validation_error::invalid_option_value, "vm", name, 1));
+}
 }
 
 namespace
@@ -137,10 +131,10 @@ po::options_description vmProgramOptions(unsigned _lineLength)
     auto add = opts.add_options();
 
     add("vm",
-        po::value<VMKind>()
+        po::value<std::string>()
             ->value_name("<name>")
-            ->default_value(VMKind::Legacy, "legacy")
-            ->notifier(VMFactory::setKind),
+            ->default_value("legacy")
+            ->notifier(setVMKind),
         description.data());
 
     add(c_evmcPrefix,
