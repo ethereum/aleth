@@ -126,6 +126,38 @@ Json::Value Debug::debug_traceBlockByNumber(int _blockNumber, Json::Value const&
 	return ret;
 }
 
+Json::Value Debug::debug_accountRangeAt(string const& _blockHashOrNumber, int _txIndex, string const& _address, int _maxResults)
+{
+	Json::Value ret(Json::arrayValue);
+
+	if (_txIndex < 0)
+		throw jsonrpc::JsonRpcException("Negative index");
+	if (_maxResults <= 0)
+		throw jsonrpc::JsonRpcException("Nonpositive maxResults");
+
+	try
+	{
+		Block block = m_eth.block(blockHash(_blockHashOrNumber));
+
+		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
+		State state(State::Null);
+		createIntermediateState(state, block, i, m_eth.blockChain());
+		Address from(_address);
+		for (auto const& addr : state.addresses())
+		{
+			if (addr.first >= from)
+				ret.append(toHexPrefixed(addr.first));
+		}
+	}
+	catch (Exception const& _e)
+	{
+		cwarn << diagnostic_information(_e);
+		throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_RPC_INVALID_PARAMS);
+	}
+
+	return ret;
+}
+
 Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, int _maxResults)
 {
 	Json::Value ret(Json::objectValue);
