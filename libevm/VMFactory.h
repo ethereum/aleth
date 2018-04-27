@@ -29,6 +29,7 @@ enum class VMKind
     JIT,
     Hera,
     Legacy,
+    DLL
 };
 
 /// Returns the EVM-C options parsed from command line.
