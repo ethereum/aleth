@@ -23,7 +23,7 @@ namespace dev
 {
 po::options_description createLoggingProgramOptions(unsigned _lineLength, LoggingOptions& _options)
 {
-    po::options_description optionsDescr("Logging Options", _lineLength);
+    po::options_description optionsDescr("LOGGING OPTIONS", _lineLength);
     auto addLoggingOption = optionsDescr.add_options();
     addLoggingOption("log-verbosity,v", po::value<int>(&_options.verbosity)->value_name("<0 - 4>"),
         "Set the log verbosity from 0 to 4 (default: 2).");

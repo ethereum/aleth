@@ -30,17 +30,16 @@ using namespace dev::eth;
 
 void AccountManager::streamAccountHelp(ostream& _out)
 {
-	_out
-		<< "    account list  List all keys available in wallet.\n"
-		<< "    account new	Create a new key and add it to the wallet.\n"
-		<< "    account update [<uuid>|<address> , ... ]  Decrypt and re-encrypt given keys.\n"
-		<< "    account import [<uuid>|<file>|<secret-hex>]	Import keys from given source and place in wallet.\n";
+    _out << "   account list                                List all keys available in wallet\n"
+         << "   account new                                 Create a new key and add it to wallet\n"
+         << "   account update [<uuid>|<address> , ... ]    Decrypt and re-encrypt keys\n"
+         << "   account import [<uuid>|<file>|<secret-hex>] Import keys from given source and "
+            "place in wallet\n";
 }
 
 void AccountManager::streamWalletHelp(ostream& _out)
 {
-	_out
-		<< "    wallet import <file>	Import a presale wallet.\n";
+    _out << "   wallet import <file>                        Import a presale wallet\n\n";
 }
 
 bool AccountManager::execute(int argc, char** argv)
