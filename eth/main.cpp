@@ -279,128 +279,128 @@ int main(int argc, char** argv)
     string configJSON;
     string genesisJSON;
 
-    po::options_description clientDefaultMode("Client mode (default)", c_lineWidth);
+    po::options_description clientDefaultMode("CLIENT MODE (default)", c_lineWidth);
     auto addClientOption = clientDefaultMode.add_options();
-    addClientOption("mainnet", "Use the main network protocol.");
-    addClientOption("ropsten", "Use the Ropsten testnet.");
-    addClientOption("private", po::value<string>()->value_name("<name>"), "Use a private chain.");
-    addClientOption("test", "Testing mode: Disable PoW and provide test rpc interface.");
+    addClientOption("mainnet", "Use the main network protocol");
+    addClientOption("ropsten", "Use the Ropsten testnet");
+    addClientOption("private", po::value<string>()->value_name("<name>"), "Use a private chain");
+    addClientOption("test", "Testing mode; disable PoW and provide test rpc interface");
     addClientOption("config", po::value<string>()->value_name("<file>"),
-        "Configure specialised blockchain using given JSON information.\n");
-    addClientOption("genesis", po::value<string>()->value_name("<file>"), "Set genesis JSON file.");
+        "Configure specialised blockchain using given JSON information\n");
+    addClientOption("genesis", po::value<string>()->value_name("<file>"), "Set genesis JSON file");
     addClientOption("mode,o", po::value<string>()->value_name("<full/peer>"),
-        "Start a full node or a peer node (default: full).\n");
-    addClientOption("ipc", "Enable IPC server (default: on).");
+        "Start a full node or a peer node (default: full)\n");
+    addClientOption("ipc", "Enable IPC server (default: on)");
     addClientOption("ipcpath", po::value<string>()->value_name("<path>"),
         "Set .ipc socket path (default: data directory)");
-    addClientOption("no-ipc", "Disable IPC server.");
+    addClientOption("no-ipc", "Disable IPC server");
     addClientOption("admin", po::value<string>()->value_name("<password>"),
         "Specify admin session key for JSON-RPC (default: auto-generated and printed at "
-        "start-up).");
-    addClientOption("kill,K", "Kill the blockchain first.");
-    addClientOption("rebuild,R", "Rebuild the blockchain from the existing database.");
-    addClientOption("rescue", "Attempt to rescue a corrupt database.\n");
+        "start-up)");
+    addClientOption("kill,K", "Kill the blockchain first");
+    addClientOption("rebuild,R", "Rebuild the blockchain from the existing database");
+    addClientOption("rescue", "Attempt to rescue a corrupt database\n");
     addClientOption("import-presale", po::value<string>()->value_name("<file>"),
-        "Import a pre-sale key; you'll need to specify the password to this key.");
+        "Import a pre-sale key; you'll need to specify the password to this key");
     addClientOption("import-secret,s", po::value<string>()->value_name("<secret>"),
-        "Import a secret key into the key store.");
+        "Import a secret key into the key store");
     addClientOption("import-session-secret,S", po::value<string>()->value_name("<secret>"),
-        "Import a secret session into the key store.");
+        "Import a secret session into the key store");
     addClientOption("master", po::value<string>()->value_name("<password>"),
-        "Give the master password for the key store. Use --master \"\" to show a prompt.");
+        "Give the master password for the key store; use --master \"\" to show a prompt");
     addClientOption("password", po::value<string>()->value_name("<password>"),
-        "Give a password for a private key.\n");
+        "Give a password for a private key\n");
 
-    po::options_description clientTransacting("Client transacting", c_lineWidth);
+    po::options_description clientTransacting("CLIENT TRANSACTING", c_lineWidth);
     auto addTransactingOption = clientTransacting.add_options();
     addTransactingOption("ask", po::value<u256>()->value_name("<wei>"),
-        ("Set the minimum ask gas price under which no transaction will be mined\n(default " +
-            toString(DefaultGasPrice) + ").")
+        ("Set the minimum ask gas price under which no transaction will be mined (default: " +
+            toString(DefaultGasPrice) + ")")
             .c_str());
     addTransactingOption("bid", po::value<u256>()->value_name("<wei>"),
-        ("Set the bid gas price to pay for transactions\n(default " + toString(DefaultGasPrice) +
-            ").")
+        ("Set the bid gas price to pay for transactions (default: " + toString(DefaultGasPrice) +
+            ")")
             .c_str());
     addTransactingOption("unsafe-transactions",
-        "Allow all transactions to proceed without verification. EXTREMELY UNSAFE.\n");
+        "Allow all transactions to proceed without verification; EXTREMELY UNSAFE\n");
 
-    po::options_description clientMining("Client mining", c_lineWidth);
+    po::options_description clientMining("CLIENT MINING", c_lineWidth);
     auto addMininigOption = clientMining.add_options();
     addMininigOption("address,a", po::value<Address>()->value_name("<addr>"),
-        "Set the author (mining payout) address to given address (default: auto).");
+        "Set the author (mining payout) address (default: auto)");
     addMininigOption("mining,m", po::value<string>()->value_name("<on/off/number>"),
-        "Enable mining, optionally for a specified number of blocks (default: off).");
-    addMininigOption("extra-data", po::value<string>(), "Set extra data for the sealed blocks.\n");
+        "Enable mining; optionally for a specified number of blocks (default: off)");
+    addMininigOption("extra-data", po::value<string>(), "Set extra data for the sealed blocks\n");
 
-    po::options_description clientNetworking("Client networking", c_lineWidth);
+    po::options_description clientNetworking("CLIENT NETWORKING", c_lineWidth);
     auto addNetworkingOption = clientNetworking.add_options();
     addNetworkingOption("bootstrap,b",
-        "Connect to the default Ethereum peer servers (default unless --no-discovery used).");
+        "Connect to the default Ethereum peer servers (default unless --no-discovery used)");
     addNetworkingOption("no-bootstrap",
         "Do not connect to the default Ethereum peer servers (default only when --no-discovery is "
-        "used).");
+        "used)");
     addNetworkingOption("peers,x", po::value<int>()->value_name("<number>"),
-        "Attempt to connect to a given number of peers (default: 11).");
+        "Attempt to connect to a given number of peers (default: 11)");
     addNetworkingOption("peer-stretch", po::value<int>()->value_name("<number>"),
-        "Give the accepted connection multiplier (default: 7).");
+        "Give the accepted connection multiplier (default: 7)");
     addNetworkingOption("public-ip", po::value<string>()->value_name("<ip>"),
-        "Force advertised public IP to the given IP (default: auto).");
+        "Force advertised public IP to the given IP (default: auto)");
     addNetworkingOption("listen-ip", po::value<string>()->value_name("<ip>(:<port>)"),
-        "Listen on the given IP for incoming connections (default: 0.0.0.0).");
+        "Listen on the given IP for incoming connections (default: 0.0.0.0)");
     addNetworkingOption("listen", po::value<unsigned short>()->value_name("<port>"),
-        "Listen on the given port for incoming connections (default: 30303).");
+        "Listen on the given port for incoming connections (default: 30303)");
     addNetworkingOption("remote,r", po::value<string>()->value_name("<host>(:<port>)"),
-        "Connect to the given remote host (default: none).");
+        "Connect to the given remote host (default: none)");
     addNetworkingOption("port", po::value<short>()->value_name("<port>"),
-        "Connect to the given remote port (default: 30303).");
+        "Connect to the given remote port (default: 30303)");
     addNetworkingOption("network-id", po::value<unsigned>()->value_name("<n>"),
-        "Only connect to other hosts with this network id.");
+        "Only connect to other hosts with this network id");
 #if ETH_MINIUPNPC
     addNetworkingOption(
-        "upnp", po::value<string>()->value_name("<on/off>"), "Use UPnP for NAT (default: on).");
+        "upnp", po::value<string>()->value_name("<on/off>"), "Use UPnP for NAT (default: on)");
 #endif
     addNetworkingOption("peerset", po::value<string>()->value_name("<list>"),
-        "Space delimited list of peers; element format: type:publickey@ipAddress[:port].\n        "
+        "Space delimited list of peers; element format: type:publickey@ipAddress[:port]\n        "
         "Types:\n        default     Attempt connection when no other peers are available and "
-        "pinning is disabled.\n        required    Keep connected at all times.\n");
-    addNetworkingOption("no-discovery", "Disable node discovery, implies --no-bootstrap.");
-    addNetworkingOption("pin", "Only accept or connect to trusted peers.");
+        "pinning is disabled\n        required    Keep connected at all times\n");
+    addNetworkingOption("no-discovery", "Disable node discovery; implies --no-bootstrap");
+    addNetworkingOption("pin", "Only accept or connect to trusted peers\n");
 
     std::string snapshotPath;
-    po::options_description importExportMode("Import/export modes", c_lineWidth);
+    po::options_description importExportMode("IMPORT/EXPORT MODES", c_lineWidth);
     auto addImportExportOption = importExportMode.add_options();
     addImportExportOption(
-        "import,I", po::value<string>()->value_name("<file>"), "Import blocks from file.");
+        "import,I", po::value<string>()->value_name("<file>"), "Import blocks from file");
     addImportExportOption(
-        "export,E", po::value<string>()->value_name("<file>"), "Export blocks to file.");
+        "export,E", po::value<string>()->value_name("<file>"), "Export blocks to file");
     addImportExportOption("from", po::value<string>()->value_name("<n>"),
-        "Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'.");
+        "Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'");
     addImportExportOption("to", po::value<string>()->value_name("<n>"),
         "Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or "
-        "'latest'.");
+        "'latest'");
     addImportExportOption("only", po::value<string>()->value_name("<n>"),
-        "Equivalent to --export-from n --export-to n.");
+        "Equivalent to --export-from n --export-to n");
     addImportExportOption(
-        "format", po::value<string>()->value_name("<binary/hex/human>"), "Set export format.");
+        "format", po::value<string>()->value_name("<binary/hex/human>"), "Set export format");
     addImportExportOption("dont-check",
         "Prevent checking some block aspects. Faster importing, but to apply only when the data is "
-        "known to be valid.");
+        "known to be valid");
     addImportExportOption("download-snapshot",
         po::value<string>(&snapshotPath)->value_name("<path>"),
-        "Download Parity Warp Sync snapshot data to the specified path.");
+        "Download Parity Warp Sync snapshot data to the specified path");
     addImportExportOption("import-snapshot", po::value<string>()->value_name("<path>"),
-        "Import blockchain and state data from the Parity Warp Sync snapshot.\n");
+        "Import blockchain and state data from the Parity Warp Sync snapshot\n");
 
     LoggingOptions loggingOptions;
     po::options_description loggingProgramOptions(
         createLoggingProgramOptions(c_lineWidth, loggingOptions));
 
-    po::options_description generalOptions("General Options", c_lineWidth);
+    po::options_description generalOptions("GENERAL OPTIONS", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("db-path,d", po::value<string>()->value_name("<path>"),
-        ("Load database from path\n(default: " + getDataDir().string() + ").\n").c_str());
-    addGeneralOption("version,V", "Show the version and exit.");
-    addGeneralOption("help,h", "Show this help message and exit.\n");
+        ("Load database from path (default: " + getDataDir().string() + ")").c_str());
+    addGeneralOption("version,V", "Show the version and exit");
+    addGeneralOption("help,h", "Show this help message and exit\n");
 
     po::options_description vmOptions = vmProgramOptions(c_lineWidth);
 
@@ -774,10 +774,11 @@ int main(int argc, char** argv)
     }
     if (vm.count("help"))
     {
-        cout
-                << "Usage eth [OPTIONS]\n"
-                << "Options:\n\n"
-                << "Wallet usage:\n";
+        cout << "NAME:\n"
+             << credits() << '\n'
+             << "USAGE:\n"
+             << "   eth [options]\n\n"
+             << "WALLET USAGE:\n";
         AccountManager::streamAccountHelp(cout);
         AccountManager::streamWalletHelp(cout);
         cout << clientDefaultMode << clientTransacting << clientMining << clientNetworking;

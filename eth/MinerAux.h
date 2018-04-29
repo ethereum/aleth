@@ -68,10 +68,9 @@ bool isFalse(std::string const& _m)
 inline std::string credits()
 {
     std::ostringstream out;
-    out
-        << "cpp-ethereum " << dev::Version << endl
-        << "  By cpp-ethereum contributors, (c) 2013-2018." << endl
-        << "  See the README for contributors and credits." << endl;
+    out << "cpp-ethereum " << dev::Version << endl
+        << "   By cpp-ethereum contributors, (c) 2013-2018." << endl
+        << "   See the README for contributors and credits." << endl;
     return out.str();
 }
 
@@ -215,24 +214,33 @@ public:
 
     static void streamHelp(ostream& _out)
     {
-        _out
-            << "Work farming mode:" << endl
-            << "    --no-precompute  Don't precompute the next epoch's DAG." << endl
-            << "Ethash verify mode:" << endl
-            << "    -w,--check-pow <headerHash> <seedHash> <difficulty> <nonce>  Check PoW credentials for validity." << endl
-            << endl
-            << "Benchmarking mode:" << endl
-            << "    -M,--benchmark  Benchmark for mining and exit; use with --cpu and --opencl." << endl
-            << "    --benchmark-warmup <seconds>  Set the duration of warmup for the benchmark tests (default: 3)." << endl
-            << "    --benchmark-trial <seconds>  Set the duration for each trial for the benchmark tests (default: 3)." << endl
-            << "    --benchmark-trials <n>  Set the number of trials for the benchmark tests (default: 5)." << endl
-            << "DAG creation mode:" << endl
-            << "    -D,--create-dag <number>  Create the DAG in preparation for mining on given block and exit." << endl
-            << "Mining configuration:" << endl
-            << "    -C,--cpu  When mining, use the CPU." << endl
-            << "    -t, --mining-threads <n> Limit number of CPU/GPU miners to n (default: use everything available on selected platform)" << endl
-            << "    --current-block Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory." << endl
-            << "    --disable-submit-hashrate  When mining, don't submit hashrate to node." << endl;
+        _out << "WORK FARMING MODE:\n"
+             << "  --no-precompute  Don't precompute the next epoch's DAG\n\n"
+
+             << "ETHASH VERIFY MODE:\n"
+             << "  -w,--check-pow <headerHash> <seedHash> <difficulty> <nonce> Check PoW "
+                "credentials for validity\n\n"
+
+             << "BENCHMARKING MODE:\n"
+             << "  -M,--benchmark               Benchmark for mining and exit\n"
+             << "  --benchmark-warmup <seconds> Set the duration of warmup for the benchmark tests "
+                "(default: 3)\n"
+             << "  --benchmark-trial <seconds>  Set the duration for each trial for the benchmark "
+                "tests (default: 3)\n"
+             << "  --benchmark-trials <n>       Set the number of trials for the benchmark tests "
+                "(default: 5)\n\n"
+
+             << "DAG CREATION MODE:\n"
+             << "  -D,--create-dag <number> Create the DAG in preparation for mining on given "
+                "block and exit\n\n"
+
+             << "MINING CONFIGURATION:\n"
+             << "  -C,--cpu                   When mining, use the CPU\n"
+             << "  -t, --mining-threads <n>   Limit number of CPU/GPU miners to n (default: use "
+                "everything available on selected platform)\n"
+             << "  --current-block            Let the miner know the current block number at "
+                "configuration time. Will help determine DAG size and required GPU memory\n"
+             << "  --disable-submit-hashrate  When mining, don't submit hashrate to node\n\n";
     }
 
     std::string minerType() const { return m_minerType; }
