@@ -1,22 +1,23 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
 #include "VMFace.h"
+
 #include <boost/program_options/options_description.hpp>
 
 namespace dev
@@ -29,6 +30,7 @@ enum class VMKind
     JIT,
     Hera,
     Legacy,
+    DLL
 };
 
 /// Returns the EVM-C options parsed from command line.
@@ -44,18 +46,14 @@ boost::program_options::options_description vmProgramOptions(
 class VMFactory
 {
 public:
-	VMFactory() = delete;
-	~VMFactory() = delete;
+    VMFactory() = delete;
+    ~VMFactory() = delete;
 
-	/// Creates a VM instance of global kind (controlled by setKind() function).
-	static std::unique_ptr<VMFace> create();
+    /// Creates a VM instance of the global kind (controlled by the --vm command line option).
+    static std::unique_ptr<VMFace> create();
 
-	/// Creates a VM instance of kind provided.
-	static std::unique_ptr<VMFace> create(VMKind _kind);
-
-	/// Set global VM kind
-	static void setKind(VMKind _kind);
+    /// Creates a VM instance of the kind provided.
+    static std::unique_ptr<VMFace> create(VMKind _kind);
 };
-
-}
-}
+}  // namespace eth
+}  // namespace dev
