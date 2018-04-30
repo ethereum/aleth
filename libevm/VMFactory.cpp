@@ -196,11 +196,6 @@ po::options_description vmProgramOptions(unsigned _lineLength)
 }
 
 
-void VMFactory::setKind(VMKind _kind)
-{
-    g_kind = _kind;
-}
-
 std::unique_ptr<VMFace> VMFactory::create()
 {
     return create(g_kind);
