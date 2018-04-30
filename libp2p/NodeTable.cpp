@@ -203,8 +203,9 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
     m_timers.schedule(c_reqTimeout.count() * 2, [this, _node, _round, _tried](boost::system::error_code const& _ec)
     {
         if (_ec)
-            LOG(m_logger) << "Discovery timer was probably cancelled: " << _ec.value() << " "
-                          << _ec.message();
+            // we can't use m_logger here, because captured this might be already destroyed
+            clogSimple(10, "discov") << "Discovery timer was probably cancelled: " << _ec.value()
+                                     << " " << _ec.message();
 
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
@@ -537,8 +538,10 @@ void NodeTable::doCheckEvictions()
     m_timers.schedule(c_evictionCheckInterval.count(), [this](boost::system::error_code const& _ec)
     {
         if (_ec)
-            LOG(m_logger) << "Check Evictions timer was probably cancelled: " << _ec.value() << " "
-                          << _ec.message();
+            // we can't use m_logger here, because captured this might be already destroyed
+            clogSimple(10, "discov")
+                << "Check Evictions timer was probably cancelled: " << _ec.value() << " "
+                << _ec.message();
 
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
@@ -569,6 +572,7 @@ void NodeTable::doDiscovery()
     m_timers.schedule(c_bucketRefresh.count(), [this](boost::system::error_code const& _ec)
     {
         if (_ec)
+            // we can't use m_logger here, because captured this might be already destroyed
             clogSimple(10, "discov") << "Discovery timer was probably cancelled: " << _ec.value()
                                      << " " << _ec.message();
 
