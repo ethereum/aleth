@@ -23,13 +23,14 @@
 
 #pragma once
 
-#include <ctime>
 #include <string>
 #include "CommonIO.h"
 #include "FixedHash.h"
 #include "Terminal.h"
 
-#include <boost/log/common.hpp>
+#include <boost/log/sources/global_logger_storage.hpp>
+#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/sources/severity_channel_logger.hpp>
 
 namespace dev
 {
