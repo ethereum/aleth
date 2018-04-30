@@ -28,7 +28,6 @@
 #include <signal.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/trim_all.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -67,7 +66,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
-using namespace boost::algorithm;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
