@@ -28,6 +28,7 @@
 #include "FixedHash.h"
 #include "Terminal.h"
 
+#include <boost/log/attributes/constant.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
@@ -45,17 +46,6 @@ struct VerbosityHolder
     VerbosityHolder(int _temporaryValue, bool _force = false): oldLogVerbosity(g_logVerbosity) { if (g_logVerbosity >= 0 || _force) g_logVerbosity = _temporaryValue; }
     ~VerbosityHolder() { g_logVerbosity = oldLogVerbosity; }
     int oldLogVerbosity;
-};
-
-class ThreadContext
-{
-public:
-    ThreadContext(std::string const& _info) { push(_info); }
-    ~ThreadContext() { pop(); }
-
-    static void push(std::string const& _n);
-    static void pop();
-    static std::string join(std::string const& _prior);
 };
 
 /// Set the current thread's log name.
@@ -130,10 +120,17 @@ inline Logger createLogger(int _severity, std::string const& _channel)
     return Logger(
         boost::log::keywords::severity = _severity, boost::log::keywords::channel = _channel);
 }
+
+// Non-thread-safe logger with fixed severity and channel and additional Context string added to
+// each message
+inline Logger createContextLogger(int _severity, std::string const& _channel, std::string _context)
+{
+    Logger logger(createLogger(_severity, _channel));
+    logger.add_attribute("Context", boost::log::attributes::constant<std::string>(_context));
+    return logger;
 }
 
-namespace dev
-{
+
 // Below overloads for both const and non-const references are needed, because without overload for
 // non-const reference generic operator<<(formatting_ostream& _strm, T& _value) will be preferred by
 // overload resolution.
