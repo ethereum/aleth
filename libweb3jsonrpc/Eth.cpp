@@ -131,7 +131,7 @@ string Eth::eth_getStorageRoot(string const& _address, string const& _blockNumbe
 	}
 }
 
-string Eth::eth_pendingTransactions()
+Json::Value Eth::eth_pendingTransactions()
 {
 	//Return list of transaction that being sent by local accounts
 	Transactions ours;
@@ -147,7 +147,7 @@ string Eth::eth_pendingTransactions()
 		}
 	}
 
-	return toJS(ours);
+	return toJson(ours);
 }
 
 string Eth::eth_getTransactionCount(string const& _address, string const& _blockNumber)
