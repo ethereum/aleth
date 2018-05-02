@@ -353,24 +353,19 @@ BOOST_AUTO_TEST_CASE(rescue, *utf::expected_failures(1))
     BOOST_CHECK_EQUAL(bcRef.number(), 3);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelperFixture)
-
 BOOST_AUTO_TEST_CASE(updateStats)
 {
     TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
     BlockChain& bcRef = bc.interfaceUnsafe();
 
     BlockChain::Statistics stat = bcRef.usage();
-    //Absolutely random values here!
-    //BOOST_REQUIRE(stat.memBlockHashes == 0);
-    //BOOST_REQUIRE(stat.memBlocks == 1); //incorrect value here
-    //BOOST_REQUIRE(stat.memDetails == 0);
-    //BOOST_REQUIRE(stat.memLogBlooms == 0);
-    //BOOST_REQUIRE(stat.memReceipts == 0);
-    //BOOST_REQUIRE(stat.memTotal() == 0);
-    //BOOST_REQUIRE(stat.memTransactionAddresses == 0); //incorrect value here
+    BOOST_CHECK_EQUAL(stat.memBlockHashes, 0);
+    BOOST_CHECK_EQUAL(stat.memBlocks, 0);
+    BOOST_CHECK_EQUAL(stat.memDetails, 0);
+    BOOST_CHECK_EQUAL(stat.memLogBlooms, 0);
+    BOOST_CHECK_EQUAL(stat.memReceipts, 0);
+    BOOST_CHECK_EQUAL(stat.memTotal(), 0);
+    BOOST_CHECK_EQUAL(stat.memTransactionAddresses, 0);
 
     TestTransaction tr = TestTransaction::defaultTransaction();
     TestBlock block;
@@ -379,13 +374,25 @@ BOOST_AUTO_TEST_CASE(updateStats)
     bc.addBlock(block);
 
     stat = bcRef.usage(true);
-    BOOST_REQUIRE_EQUAL(stat.memBlockHashes, 0);
-    BOOST_REQUIRE_EQUAL(stat.memBlocks, 675);
-    BOOST_REQUIRE_EQUAL(stat.memDetails, 138);
-    BOOST_REQUIRE_EQUAL(stat.memLogBlooms, 8422);
-    BOOST_REQUIRE_EQUAL(stat.memReceipts, 0);
-    BOOST_REQUIRE_EQUAL(stat.memTotal(), 9235);
-    BOOST_REQUIRE_EQUAL(stat.memTransactionAddresses, 0);
+    BOOST_CHECK_EQUAL(stat.memBlockHashes, 0);
+
+    unsigned const memBlocksExpected = block.bytes().size() + 64;
+    BOOST_CHECK_EQUAL(stat.memBlocks, memBlocksExpected);
+    unsigned totalExpected = memBlocksExpected;
+
+    h256 const genesisHash = bc.testGenesis().blockHeader().hash();
+    unsigned const memDetailsExpected = bcRef.details(genesisHash).size + 64;
+    BOOST_CHECK_EQUAL(stat.memDetails, memDetailsExpected);
+    totalExpected += memDetailsExpected;
+
+    unsigned const memLogBloomsExpected =
+        bcRef.blocksBlooms(0, 0).size + 64 + bcRef.blocksBlooms(1, 0).size + 64;
+    BOOST_CHECK_EQUAL(stat.memLogBlooms, memLogBloomsExpected);
+    totalExpected += memLogBloomsExpected;
+
+    BOOST_CHECK_EQUAL(stat.memReceipts, 0);
+    BOOST_CHECK_EQUAL(stat.memTotal(), totalExpected);
+    BOOST_CHECK_EQUAL(stat.memTransactionAddresses, 0);
 
     //memchache size 33554432 - 3500 blocks before cache to be cleared
     bcRef.garbageCollect(true);
