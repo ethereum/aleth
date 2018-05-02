@@ -149,7 +149,7 @@ EthashAux::FullAllocation::FullAllocation(ethash_light_t _light, ethash_callback
 //	cdebug << "Called OK.";
     if (!full)
     {
-        clogSimple(1, "DAG") << "DAG Generation Failure. Reason: " << strerror(errno);
+        clog(1, "DAG") << "DAG Generation Failure. Reason: " << strerror(errno);
         BOOST_THROW_EXCEPTION(ExternalFunctionFailure() << errinfo_externalFunction("ethash_full_new"));
     }
 }
@@ -167,7 +167,7 @@ bytesConstRef EthashAux::FullAllocation::data() const
 static std::function<int(unsigned)> s_dagCallback;
 static int dagCallbackShim(unsigned _p)
 {
-    clogSimple(1, "DAG") << "Generating DAG file. Progress: " << toString(_p) << "%";
+    clog(1, "DAG") << "Generating DAG file. Progress: " << toString(_p) << "%";
     return s_dagCallback ? s_dagCallback(_p) : 0;
 }
 
