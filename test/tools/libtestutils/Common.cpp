@@ -42,7 +42,7 @@ boost::filesystem::path dev::test::getTestPath()
 
     if (ptestPath == nullptr)
     {
-        clogSimple(1, "test") << " could not find environment variable ETHEREUM_TEST_PATH \n";
+        clog(1, "test") << " could not find environment variable ETHEREUM_TEST_PATH \n";
         testPath = "../../test/jsontests";
     }
     else
@@ -64,11 +64,11 @@ Json::Value dev::test::loadJsonFromFile(fs::path const& _path)
     Json::Value result;
     string s = dev::contentsString(_path);
     if (!s.length())
-        clogSimple(1, "test") << "Contents of " << _path.string()
-                              << " is empty. Have you cloned the 'tests' repo branch develop and "
-                                 "set ETHEREUM_TEST_PATH to its path?";
+        clog(1, "test") << "Contents of " << _path.string()
+                        << " is empty. Have you cloned the 'tests' repo branch develop and "
+                           "set ETHEREUM_TEST_PATH to its path?";
     else
-        clogSimple(1, "test") << "FIXTURE: loaded test from file: " << _path.string();
+        clog(1, "test") << "FIXTURE: loaded test from file: " << _path.string();
 
     reader.parse(s, result);
     return result;

@@ -115,7 +115,7 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
 // Thread-safe
 BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(
     g_clogLogger, boost::log::sources::severity_channel_logger_mt<>);
-#define clogSimple(SEVERITY, CHANNEL)                      \
+#define clog(SEVERITY, CHANNEL)                            \
     BOOST_LOG_STREAM_WITH_PARAMS(dev::g_clogLogger::get(), \
         (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = CHANNEL))
 
