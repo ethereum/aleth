@@ -273,12 +273,12 @@ public:
 
     struct Statistics
     {
-        unsigned memBlocks;
-        unsigned memDetails;
-        unsigned memLogBlooms;
-        unsigned memReceipts;
-        unsigned memTransactionAddresses;
-        unsigned memBlockHashes;
+        unsigned memBlocks = 0;
+        unsigned memDetails = 0;
+        unsigned memLogBlooms = 0;
+        unsigned memReceipts = 0;
+        unsigned memTransactionAddresses = 0;
+        unsigned memBlockHashes = 0;
         unsigned memTotal() const { return memBlocks + memDetails + memLogBlooms + memReceipts + memTransactionAddresses + memBlockHashes; }
     };
 
