@@ -10,7 +10,7 @@
 { "name": "eth_getStorageAt", "params": ["", "", ""], "order": [], "returns": ""},
 { "name": "eth_getStorageRoot", "params": ["", ""], "order": [], "returns": ""},
 { "name": "eth_getTransactionCount", "params": ["", ""], "order": [], "returns" : ""},
-{ "name": "eth_pendingTransactions", "params": [], "order": [], "returns" : ""},
+{ "name": "eth_pendingTransactions", "params": [], "order": [], "returns" : [] },
 { "name": "eth_getBlockTransactionCountByHash", "params": [""], "order": [], "returns" : {}},
 { "name": "eth_getBlockTransactionCountByNumber", "params": [""], "order": [], "returns" : {}},
 { "name": "eth_getUncleCountByBlockHash", "params": [""], "order": [], "returns" : {}},
