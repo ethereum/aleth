@@ -165,6 +165,8 @@ private:
 	std::chrono::steady_clock::time_point m_lastReceived;	///< Time point of last message.
 
 	std::map<CapDesc, std::shared_ptr<Capability>> m_capabilities;	///< The peer's capability set.
+
+    std::string const m_logContext;
 };
 
 template <class PeerCap>
