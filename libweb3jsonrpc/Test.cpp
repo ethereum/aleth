@@ -23,15 +23,51 @@
 #include "Test.h"
 #include <jsonrpccpp/common/errors.h>
 #include <jsonrpccpp/common/exception.h>
-#include <libethereum/ClientTest.h>
+#include <libdevcore/CommonJS.h>
 #include <libethereum/ChainParams.h>
+#include <libethereum/ClientTest.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::eth;
 using namespace dev::rpc;
 using namespace jsonrpc;
 
 Test::Test(eth::Client& _eth): m_eth(_eth) {}
+
+namespace
+{
+string logEntriesToLogHash(eth::LogEntries const& _logs)
+{
+    RLPStream s;
+    s.appendList(_logs.size());
+    for (eth::LogEntry const& l : _logs)
+        l.streamRLP(s);
+    return toHexPrefixed(sha3(s.out()));
+}
+}
+
+string Test::test_getLogHash(string const& _txHash)
+{
+    h256 txHash;
+    try
+    {
+        txHash = h256(_txHash);
+    }
+    catch (...)
+    {
+        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+    }
+
+    if (m_eth.blockChain().isKnownTransaction(txHash))
+    {
+        LocalisedTransaction t = m_eth.localisedTransaction(txHash);
+        BlockReceipts const& blockReceipts = m_eth.blockChain().receipts(t.blockHash());
+        if (blockReceipts.receipts.size() != 0)
+            return logEntriesToLogHash(blockReceipts.receipts[t.transactionIndex()].log());
+    }
+    return toJS(dev::EmptyListSHA3);
+}
 
 bool Test::test_setChainParams(Json::Value const& param1)
 {
