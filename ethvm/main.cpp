@@ -131,6 +131,8 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
 
+    setupLogging(g_logVerbosity);
+
     po::options_description transactionOptions("Transaction options", c_lineWidth);
     string const gasLimitDescription =
         "<n> Block gas limit (default: " + to_string(maxBlockGasLimit()) + ").";
