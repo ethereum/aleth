@@ -185,7 +185,7 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
 
-    g_logVerbosity = 1;
+    int logVerbosity = 1;
 
     /// Operating mode.
     OperationMode mode = OperationMode::Node;
@@ -394,8 +394,8 @@ int main(int argc, char** argv)
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("db-path,d", po::value<string>()->value_name("<path>"),
         ("Load database from path\n(default: " + getDataDir().string() + ").\n").c_str());
-    addGeneralOption("verbosity,v", po::value<int>()->value_name("<0 - 9>"),
-        "Set the log verbosity from 0 to 9 (default: 8).");
+    addGeneralOption("verbosity,v", po::value<int>(&logVerbosity)->value_name("<0 - 15>"),
+        "Set the log verbosity from 0 to 15 (default: 1).");
     addGeneralOption("version,V", "Show the version and exit.");
     addGeneralOption("help,h", "Show this help message and exit.\n");
 
@@ -447,8 +447,6 @@ int main(int argc, char** argv)
         disableDiscovery = true;
         bootstrap = false;
     }
-    if (vm.count("verbosity"))
-        g_logVerbosity = vm["verbosity"].as<int>();
     if (vm.count("peers"))
         peers = vm["peers"].as<int>();
     if (vm.count("peer-stretch"))
@@ -827,7 +825,7 @@ int main(int argc, char** argv)
         }
     }
 
-    setupLogging(g_logVerbosity);
+    setupLogging(logVerbosity);
 
     if (!privateChain.empty())
     {
@@ -840,7 +838,7 @@ int main(int argc, char** argv)
         // default to mainnet if not already set with any of `--mainnet`, `--ropsten`, `--genesis`, `--config`
         chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 
-    if (g_logVerbosity > 0)
+    if (logVerbosity > 0)
         cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << "\n";
 
     m.execute();

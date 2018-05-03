@@ -100,6 +100,7 @@ Options::Options(int argc, const char** argv)
     trGasIndex = -1;
     trValueIndex = -1;
     bool seenSeparator = false; // true if "--" has been seen.
+    int verbosity = 5;
     for (auto i = 0; i < argc; ++i)
     {
         auto arg = std::string{argv[i]};
@@ -144,7 +145,7 @@ Options::Options(int argc, const char** argv)
         {
 #if ETH_VMTRACE
             vmtrace = true;
-            g_logVerbosity = 13;
+            verbosity = 13;
 #else
             cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
             exit(1);
@@ -220,8 +221,8 @@ Options::Options(int argc, const char** argv)
                 logVerbosity = Verbosity::Full;
 
             int indentLevelInt = atoi(argv[i]);
-            if (indentLevelInt > g_logVerbosity)
-                g_logVerbosity = indentLevelInt;
+            if (indentLevelInt > verbosity)
+                verbosity = indentLevelInt;
         }
         else if (arg == "--options")
         {
@@ -333,9 +334,9 @@ Options::Options(int argc, const char** argv)
 
     //Default option
     if (logVerbosity == Verbosity::NiceReport)
-        g_logVerbosity = -1;    //disable cnote but leave cerr and cout
+        verbosity = -1;  // disable cnote but leave cerr and cout
 
-    setupLogging(g_logVerbosity);
+    setupLogging(verbosity);
 }
 
 Options const& Options::get(int argc, const char** argv)
