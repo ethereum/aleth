@@ -113,6 +113,8 @@ int main(int argc, char** argv)
     if (vm.count("verbosity"))
         g_logVerbosity = vm["verbosity"].as<int>();
 
+    setupLogging(g_logVerbosity);
+
     m.execute();
 
     return 0;
