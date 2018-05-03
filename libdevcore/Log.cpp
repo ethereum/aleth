@@ -21,13 +21,11 @@
 
 #include "Log.h"
 
-#include <string>
 #include <iostream>
 #include <thread>
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
-#include "Guards.h"
 
 #include <boost/core/null_deleter.hpp>
 #include <boost/log/attributes/clock.hpp>
@@ -45,9 +43,6 @@ using namespace std;
 
 namespace dev
 {
-// Logging
-int g_logVerbosity = 5;
-
 /// Associate a name with each thread for nice logging.
 struct ThreadLocalLogName
 {

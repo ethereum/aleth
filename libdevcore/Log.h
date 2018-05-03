@@ -36,10 +36,6 @@
 namespace dev
 {
 
-/// The logging system's current verbosity.
-extern int g_logVerbosity;
-
-
 /// Set the current thread's log name.
 ///
 /// It appears that there is not currently any cross-platform way of setting
