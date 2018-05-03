@@ -241,8 +241,6 @@ Options::Options(int argc, const char** argv)
             throwIfNoArgumentFollows();
             rCurrentTestSuite = std::string{argv[++i]};
         }
-        else if (arg == "--nonetwork")
-            nonetwork = true;
         else if (arg == "-d")
         {
             throwIfNoArgumentFollows();
@@ -316,11 +314,11 @@ Options::Options(int argc, const char** argv)
     //check restrickted options
     if (createRandomTest)
     {
-        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-            || all || stats || filltests || fillchain)
+        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || singleTest || all ||
+            stats || filltests || fillchain)
         {
             cerr << "--createRandomTest cannot be used with any of the options: " <<
-                    "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
+                    "trValueIndex, trGasIndex, trDataIndex, singleTest, all, " <<
                     "stats, filltests, fillchain \n";
             exit(1);
         }
