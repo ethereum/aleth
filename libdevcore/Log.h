@@ -28,6 +28,7 @@
 #include "FixedHash.h"
 #include "Terminal.h"
 
+#include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
@@ -45,17 +46,6 @@ struct VerbosityHolder
     VerbosityHolder(int _temporaryValue, bool _force = false): oldLogVerbosity(g_logVerbosity) { if (g_logVerbosity >= 0 || _force) g_logVerbosity = _temporaryValue; }
     ~VerbosityHolder() { g_logVerbosity = oldLogVerbosity; }
     int oldLogVerbosity;
-};
-
-class ThreadContext
-{
-public:
-    ThreadContext(std::string const& _info) { push(_info); }
-    ~ThreadContext() { pop(); }
-
-    static void push(std::string const& _n);
-    static void pop();
-    static std::string join(std::string const& _prior);
 };
 
 /// Set the current thread's log name.
@@ -131,6 +121,10 @@ inline Logger createLogger(int _severity, std::string const& _channel)
         boost::log::keywords::severity = _severity, boost::log::keywords::channel = _channel);
 }
 }
+
+// Adds the context string to all log messages in the scope
+#define LOG_SCOPED_CONTEXT(context) \
+    BOOST_LOG_SCOPED_THREAD_ATTR("Context", boost::log::attributes::constant<std::string>(context));
 
 namespace dev
 {
