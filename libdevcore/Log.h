@@ -39,14 +39,6 @@ namespace dev
 /// The logging system's current verbosity.
 extern int g_logVerbosity;
 
-/// Temporary changes system's verbosity for specific function. Restores the old verbosity when function returns.
-/// Not thread-safe, use with caution!
-struct VerbosityHolder
-{
-    VerbosityHolder(int _temporaryValue, bool _force = false): oldLogVerbosity(g_logVerbosity) { if (g_logVerbosity >= 0 || _force) g_logVerbosity = _temporaryValue; }
-    ~VerbosityHolder() { g_logVerbosity = oldLogVerbosity; }
-    int oldLogVerbosity;
-};
 
 /// Set the current thread's log name.
 ///
@@ -120,14 +112,12 @@ inline Logger createLogger(int _severity, std::string const& _channel)
     return Logger(
         boost::log::keywords::severity = _severity, boost::log::keywords::channel = _channel);
 }
-}
 
 // Adds the context string to all log messages in the scope
 #define LOG_SCOPED_CONTEXT(context) \
     BOOST_LOG_SCOPED_THREAD_ATTR("Context", boost::log::attributes::constant<std::string>(context));
 
-namespace dev
-{
+
 // Below overloads for both const and non-const references are needed, because without overload for
 // non-const reference generic operator<<(formatting_ostream& _strm, T& _value) will be preferred by
 // overload resolution.
