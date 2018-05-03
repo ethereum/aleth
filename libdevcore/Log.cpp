@@ -55,53 +55,7 @@ struct ThreadLocalLogName
     boost::thread_specific_ptr<std::string> m_name;
 };
 
-/// Associate a name with each thread for nice logging.
-struct ThreadLocalLogContext
-{
-    ThreadLocalLogContext() = default;
-
-    void push(std::string const& _name)
-    {
-        if (!m_contexts.get())
-            m_contexts.reset(new vector<string>);
-        m_contexts->push_back(_name);
-    }
-
-    void pop()
-    {
-        m_contexts->pop_back();
-    }
-
-    string join(string const& _prior)
-    {
-        string ret;
-        if (m_contexts.get())
-            for (auto const& i: *m_contexts)
-                ret += _prior + i;
-        return ret;
-    }
-
-    boost::thread_specific_ptr<std::vector<std::string>> m_contexts;
-};
-
-ThreadLocalLogContext g_logThreadContext;
-
 ThreadLocalLogName g_logThreadName("main");
-
-void ThreadContext::push(string const& _n)
-{
-    g_logThreadContext.push(_n);
-}
-
-void ThreadContext::pop()
-{
-    g_logThreadContext.pop();
-}
-
-string ThreadContext::join(string const& _prior)
-{
-    return g_logThreadContext.join(_prior);
-}
 
 string getThreadName()
 {
@@ -127,6 +81,7 @@ void setThreadName(string const& _n)
 }
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(context, "Context", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(threadName, "ThreadName", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
 
@@ -144,13 +99,15 @@ void setupLogging(int _verbosity)
     namespace expr = boost::log::expressions;
     sink->set_formatter(expr::stream
                         << EthViolet << expr::format_date_time(timestamp, "%Y-%m-%d %H:%M:%S")
-                        << EthReset " " EthNavy << threadName << EthReset " " << channel << " "
-                        << expr::smessage);
+                        << EthReset " " EthNavy << threadName << EthReset " " << channel
+                        << expr::if_(expr::has_attr(
+                               context))[expr::stream << " " EthNavy << context << EthReset]
+                        << " " << expr::smessage);
 
     boost::log::core::get()->add_sink(sink);
+
     boost::log::core::get()->add_global_attribute(
         "ThreadName", boost::log::attributes::make_function(&getThreadName));
-
     boost::log::core::get()->add_global_attribute(
         "TimeStamp", boost::log::attributes::local_clock());
 }
