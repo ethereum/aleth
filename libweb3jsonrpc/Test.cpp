@@ -49,32 +49,32 @@ string logEntriesToLogHash(eth::LogEntries const& _logs)
 
 string Test::test_getLogHash(string const& _txHash)
 {
-    h256 txHash;
     try
     {
-        txHash = h256(_txHash);
-    }
-    catch (...)
-    {
-        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
-    }
+        h256 txHash;
+        try
+        {
+            txHash = h256(_txHash);
+        }
+        catch (BadHexCharacter const&)
+        {
+            throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
+        }
 
-    try
-    {
         if (m_eth.blockChain().isKnownTransaction(txHash))
         {
-                LocalisedTransaction t = m_eth.localisedTransaction(txHash);
-                BlockReceipts const& blockReceipts = m_eth.blockChain().receipts(t.blockHash());
-                if (blockReceipts.receipts.size() != 0)
-                    return logEntriesToLogHash(blockReceipts.receipts[t.transactionIndex()].log());
+            LocalisedTransaction t = m_eth.localisedTransaction(txHash);
+            BlockReceipts const& blockReceipts = m_eth.blockChain().receipts(t.blockHash());
+            if (blockReceipts.receipts.size() != 0)
+                return logEntriesToLogHash(blockReceipts.receipts[t.transactionIndex()].log());
         }
+        return toJS(dev::EmptyListSHA3);
     }
-    catch(...)
+    catch (std::exception const& ex)
     {
-        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+        cwarn << ex.what();
+        throw JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR);
     }
-
-    return toJS(dev::EmptyListSHA3);
 }
 
 bool Test::test_setChainParams(Json::Value const& param1)
