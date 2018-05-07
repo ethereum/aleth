@@ -23,10 +23,11 @@
 
 #pragma once
 
-#include <string>
 #include "CommonIO.h"
 #include "FixedHash.h"
 #include "Terminal.h"
+#include <string>
+#include <vector>
 
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
@@ -99,7 +100,8 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(
 
 
 // Should be called in every executable
-void setupLogging(int _verbosity);
+void setupLogging(int _verbosity, std::vector<std::string> const& _includeChannels = {},
+    std::vector<std::string> const& _excludeChannels = {});
 
 // Simple non-thread-safe logger with fixed severity and channel for each message
 using Logger = boost::log::sources::severity_channel_logger<>;
