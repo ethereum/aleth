@@ -185,8 +185,6 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
 
-    int logVerbosity = 1;
-
     /// Operating mode.
     OperationMode mode = OperationMode::Node;
 
@@ -390,12 +388,28 @@ int main(int argc, char** argv)
     addImportExportOption("import-snapshot", po::value<string>()->value_name("<path>"),
         "Import blockchain and state data from the Parity Warp Sync snapshot.\n");
 
+    int logVerbosity = 1;
+    std::vector<std::string> includeLogChannels;
+    std::vector<std::string> excludeLogChannels;
+    po::options_description loggingOptions("Logging Options", c_lineWidth);
+    auto addLoggingOption = loggingOptions.add_options();
+    addLoggingOption("log-verbosity,v", po::value<int>(&logVerbosity)->value_name("<0 - 15>"),
+        "Set the log verbosity from 0 to 15 (default: 1).");
+    addLoggingOption("log-channels",
+        po::value<std::vector<std::string>>(&includeLogChannels)
+            ->value_name("<channel_list>")
+            ->multitoken(),
+        "Space-separated list of the log channels to show (default: show all channels).");
+    addLoggingOption("log-exclude-channels",
+        po::value<std::vector<std::string>>(&excludeLogChannels)
+            ->value_name("<channel_list>")
+            ->multitoken(),
+        "Space-separated list of the log channels to hide.\n");
+
     po::options_description generalOptions("General Options", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("db-path,d", po::value<string>()->value_name("<path>"),
         ("Load database from path\n(default: " + getDataDir().string() + ").\n").c_str());
-    addGeneralOption("verbosity,v", po::value<int>(&logVerbosity)->value_name("<0 - 15>"),
-        "Set the log verbosity from 0 to 15 (default: 1).");
     addGeneralOption("version,V", "Show the version and exit.");
     addGeneralOption("help,h", "Show this help message and exit.\n");
 
@@ -407,6 +421,7 @@ int main(int argc, char** argv)
         .add(clientNetworking)
         .add(importExportMode)
         .add(vmProgramOptions(c_lineWidth))
+        .add(loggingOptions)
         .add(generalOptions);
 
     po::variables_map vm;
@@ -776,7 +791,7 @@ int main(int argc, char** argv)
         AccountManager::streamWalletHelp(cout);
         cout << clientDefaultMode << clientTransacting << clientMining << clientNetworking;
         MinerCLI::streamHelp(cout);
-        cout << importExportMode << generalOptions;
+        cout << importExportMode << loggingOptions << generalOptions;
         return 0;
     }
 
@@ -825,7 +840,7 @@ int main(int argc, char** argv)
         }
     }
 
-    setupLogging(logVerbosity);
+    setupLogging(logVerbosity, includeLogChannels, excludeLogChannels);
 
     if (!privateChain.empty())
     {
