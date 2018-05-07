@@ -43,7 +43,7 @@ string logEntriesToLogHash(eth::LogEntries const& _logs)
     s.appendList(_logs.size());
     for (eth::LogEntry const& l : _logs)
         l.streamRLP(s);
-    return toHexPrefixed(sha3(s.out()));
+    return toJS(sha3(s.out()));
 }
 }
 
@@ -59,13 +59,21 @@ string Test::test_getLogHash(string const& _txHash)
         BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
     }
 
-    if (m_eth.blockChain().isKnownTransaction(txHash))
+    try
     {
-        LocalisedTransaction t = m_eth.localisedTransaction(txHash);
-        BlockReceipts const& blockReceipts = m_eth.blockChain().receipts(t.blockHash());
-        if (blockReceipts.receipts.size() != 0)
-            return logEntriesToLogHash(blockReceipts.receipts[t.transactionIndex()].log());
+        if (m_eth.blockChain().isKnownTransaction(txHash))
+        {
+                LocalisedTransaction t = m_eth.localisedTransaction(txHash);
+                BlockReceipts const& blockReceipts = m_eth.blockChain().receipts(t.blockHash());
+                if (blockReceipts.receipts.size() != 0)
+                    return logEntriesToLogHash(blockReceipts.receipts[t.transactionIndex()].log());
+        }
     }
+    catch(...)
+    {
+        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+    }
+
     return toJS(dev::EmptyListSHA3);
 }
 
