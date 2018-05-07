@@ -21,8 +21,6 @@
 
 #include "Log.h"
 
-#include <iostream>
-#include <thread>
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
@@ -36,23 +34,23 @@
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/support/date_time.hpp>
-
-using namespace std;
-
-//⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙
+#include <boost/log/utility/exception_handler.hpp>
 
 namespace dev
+{
+namespace
 {
 /// Associate a name with each thread for nice logging.
 struct ThreadLocalLogName
 {
-    ThreadLocalLogName(std::string const& _name) { m_name.reset(new string(_name)); }
+    ThreadLocalLogName(std::string const& _name) { m_name.reset(new std::string(_name)); }
     boost::thread_specific_ptr<std::string> m_name;
 };
 
 ThreadLocalLogName g_logThreadName("main");
+}  // namespace
 
-string getThreadName()
+std::string getThreadName()
 {
 #if defined(__GLIBC__) || defined(__APPLE__)
     char buffer[128];
@@ -64,7 +62,7 @@ string getThreadName()
 #endif
 }
 
-void setThreadName(string const& _n)
+void setThreadName(std::string const& _n)
 {
 #if defined(__GLIBC__)
     pthread_setname_np(pthread_self(), _n.c_str());
@@ -105,6 +103,11 @@ void setupLogging(int _verbosity)
         "ThreadName", boost::log::attributes::make_function(&getThreadName));
     boost::log::core::get()->add_global_attribute(
         "TimeStamp", boost::log::attributes::local_clock());
+
+    boost::log::core::get()->set_exception_handler(
+        boost::log::make_exception_handler<std::exception>([](std::exception const& _ex) {
+        std::cerr << "Exception from the logging library: " << _ex.what() << '\n';
+    }));
 }
 
 }  // namespace dev
