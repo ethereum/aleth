@@ -503,6 +503,43 @@ BOOST_AUTO_TEST_CASE(trieLowerBound)
     }
 }
 
+BOOST_AUTO_TEST_CASE(hashedLowerBound)
+{
+    // get some random keys and their hashes
+    std::map<h256, std::string> hashToKey;
+    for (int i = 0; i < 10; ++i)
+    {
+        std::string key = toString(i);
+        hashToKey[sha3(key)] = key;
+    }
+
+    // insert keys into trie
+    MemoryDB memdb;
+    FatGenericTrieDB<MemoryDB> trie(&memdb);
+    trie.init();
+
+    for (auto const& hashAndKey : hashToKey)
+        trie.insert(hashAndKey.second, std::string("value doesn't matter"));
+
+
+    // Trie should have the same order of hashed keys as the map.
+    // Get some random hashed key to start iteration
+    auto itHashToKey = hashToKey.begin();
+    ++itHashToKey;
+    ++itHashToKey;
+
+    // check trie iteration against map iteration
+    for (auto itTrie = trie.hashedLowerBound(itHashToKey->first); itTrie != trie.hashedEnd(); ++itTrie, ++itHashToKey)
+    {
+        // check hashed key
+        BOOST_CHECK((*itTrie).first.toBytes() == itHashToKey->first.asBytes());
+        // check key
+        BOOST_CHECK(itTrie.key() == bytes(itHashToKey->second.begin(), itHashToKey->second.end()));
+    }
+
+    BOOST_CHECK(itHashToKey == hashToKey.end());
+}
+
 BOOST_AUTO_TEST_CASE(trieStess)
 {
     cnote << "Stress-testing Trie...";
