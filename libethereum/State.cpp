@@ -38,11 +38,6 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
-const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
-const char* StateTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
-const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
-
 namespace
 {
 
@@ -84,7 +79,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 
     if (_we == WithExisting::Kill)
     {
-        clog(StateDetail) << "Killing state database (WithExisting::Kill).";
+        clog(14, "statedb") << "Killing state database (WithExisting::Kill).";
         fs::remove_all(path / fs::path("state"));
     }
 
@@ -95,12 +90,12 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
     try
     {
         std::unique_ptr<db::DatabaseFace> db(new db::DBImpl(path / fs::path("state")));
-        clog(StateDetail) << "Opened state DB.";
+        clog(14, "statedb") << "Opened state DB.";
         return OverlayDB(std::move(db));
     }
-    catch (db::FailedToOpenDB const& ex)
+    catch (boost::exception const& ex)
     {
-        cwarn << ex.what() << '\n';
+        cwarn << boost::diagnostic_information(ex) << '\n';
         if (fs::space(path / fs::path("state")).available < 1024)
         {
             cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
@@ -342,6 +337,15 @@ void State::subBalance(Address const& _addr, u256 const& _value)
     addBalance(_addr, 0 - _value);
 }
 
+void State::setBalance(Address const& _addr, u256 const& _value)
+{
+    Account* a = account(_addr);
+    u256 original = a ? a->balance() : 0;
+
+    // Fall back to addBalance().
+    addBalance(_addr, _value - original);
+}
+
 void State::createContract(Address const& _address)
 {
     createAccount(_address, {requireAccountStartNonce(), 0});
@@ -546,17 +550,16 @@ void State::rollback(size_t _savepoint)
 
 std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
-    auto onOp = _onOp;
-#if ETH_VMTRACE
-    if (isChannelVisible<VMTraceChannel>())
-        onOp = Executive::simpleTrace(); // override tracer
-#endif
-
     // Create and initialize the executive. This will throw fairly cheaply and quickly if the
     // transaction is bad in any way.
     Executive e(*this, _envInfo, _sealEngine);
     ExecutionResult res;
     e.setResultRecipient(res);
+
+    auto onOp = _onOp;
+#if ETH_VMTRACE
+    onOp = e.simpleTrace();  // override tracer
+#endif
 
     u256 const startGasUsed = _envInfo.gasUsed();
     bool const statusCode = executeTransaction(e, _t, onOp);

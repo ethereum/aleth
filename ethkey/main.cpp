@@ -69,10 +69,10 @@ int main(int argc, char** argv)
 {
     setDefaultOrCLocale();
     KeyCLI m(KeyCLI::OperationMode::ListBare);
-    g_logVerbosity = 0;
+    int logVerbosity = 0;
     po::options_description generalOptions("General Options");
     auto addOption = generalOptions.add_options();
-    addOption("verbosity,v", po::value<int>()->value_name("<0 - 9>"),
+    addOption("verbosity,v", po::value<int>(&logVerbosity)->value_name("<0 - 9>"),
         "Set the log verbosity from 0 to 9 (default: 8).");
     addOption("version,V", "Show the version and exit.");
     addOption("help,h", "Show this help message and exit.");
@@ -110,8 +110,8 @@ int main(int argc, char** argv)
     }
     if (vm.count("version"))
         version();
-    if (vm.count("verbosity"))
-        g_logVerbosity = vm["verbosity"].as<int>();
+
+    setupLogging(logVerbosity);
 
     m.execute();
 

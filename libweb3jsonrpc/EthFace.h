@@ -25,7 +25,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getStorageAt", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING,"param3",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getStorageAtI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getStorageRoot", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getStorageRootI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getTransactionCount", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getTransactionCountI);
-                    this->bindAndAddMethod(jsonrpc::Procedure("eth_pendingTransactions", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &dev::rpc::EthFace::eth_pendingTransactionsI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("eth_pendingTransactions", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_ARRAY,  NULL), &dev::rpc::EthFace::eth_pendingTransactionsI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getBlockTransactionCountByHash", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getBlockTransactionCountByHashI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getBlockTransactionCountByNumber", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getBlockTransactionCountByNumberI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getUncleCountByBlockHash", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getUncleCountByBlockHashI);
@@ -65,6 +65,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_notePassword", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_notePasswordI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_syncing", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &dev::rpc::EthFace::eth_syncingI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_estimateGas", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_estimateGasI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("eth_chainId", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &dev::rpc::EthFace::eth_chainIdI);
                 }
 
                 inline virtual void eth_protocolVersionI(const Json::Value &request, Json::Value &response)
@@ -284,6 +285,11 @@ namespace dev {
                 {
                     response = this->eth_estimateGas(request[0u]);
                 }
+                inline virtual void eth_chainIdI(const Json::Value &request, Json::Value &response)
+                {
+                    (void)request;
+                    response = this->eth_chainId();
+                }
                 virtual std::string eth_protocolVersion() = 0;
                 virtual std::string eth_hashrate() = 0;
                 virtual std::string eth_coinbase() = 0;
@@ -295,7 +301,7 @@ namespace dev {
                 virtual std::string eth_getStorageAt(const std::string& param1, const std::string& param2, const std::string& param3) = 0;
                 virtual std::string eth_getStorageRoot(const std::string& param1, const std::string& param2) = 0;
                 virtual std::string eth_getTransactionCount(const std::string& param1, const std::string& param2) = 0;
-                virtual std::string eth_pendingTransactions() = 0;
+                virtual Json::Value eth_pendingTransactions() = 0;
                 virtual Json::Value eth_getBlockTransactionCountByHash(const std::string& param1) = 0;
                 virtual Json::Value eth_getBlockTransactionCountByNumber(const std::string& param1) = 0;
                 virtual Json::Value eth_getUncleCountByBlockHash(const std::string& param1) = 0;
@@ -335,6 +341,7 @@ namespace dev {
                 virtual bool eth_notePassword(const std::string& param1) = 0;
                 virtual Json::Value eth_syncing() = 0;
                 virtual std::string eth_estimateGas(const Json::Value& param1) = 0;
+                virtual std::string eth_chainId() = 0;
         };
 
     }

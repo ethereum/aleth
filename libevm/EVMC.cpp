@@ -11,10 +11,10 @@ namespace dev
 {
 namespace eth
 {
-EVM::EVM(evm_instance* _instance) noexcept : m_instance(_instance)
+EVM::EVM(evmc_instance* _instance) noexcept : m_instance(_instance)
 {
     assert(m_instance != nullptr);
-    assert(m_instance->abi_version == EVM_ABI_VERSION);
+    assert(m_instance->abi_version == EVMC_ABI_VERSION);
 
     // Set the options.
     for (auto& pair : evmcOptions())
@@ -33,46 +33,64 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     (void)int64max;
     assert(io_gas <= int64max);
     assert(_ext.envInfo().gasLimit() <= int64max);
-    assert(_ext.depth <= std::numeric_limits<int32_t>::max());
+    assert(_ext.depth <= static_cast<size_t>(std::numeric_limits<int32_t>::max()));
 
     auto gas = static_cast<int64_t>(io_gas);
     EVM::Result r = execute(_ext, gas);
 
-    if (r.status() == EVM_REJECTED)
+    switch (r.status())
     {
-        cwarn << "Execution rejected by EVM-C, executing with interpreter";
-        return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
-    }
+    case EVMC_SUCCESS:
+        io_gas = r.gasLeft();
+        // FIXME: Copy the output for now, but copyless version possible.
+        return {r.output().toVector(), 0, r.output().size()};
 
-    // TODO: Add EVM-C result codes mapping with exception types.
-    if (r.status() == EVM_FAILURE)
+    case EVMC_REVERT:
+        io_gas = r.gasLeft();
+        // FIXME: Copy the output for now, but copyless version possible.
+        throw RevertInstruction{{r.output().toVector(), 0, r.output().size()}};
+
+    case EVMC_OUT_OF_GAS:
+    case EVMC_FAILURE:
         BOOST_THROW_EXCEPTION(OutOfGas());
 
-    io_gas = r.gasLeft();
+    case EVMC_UNDEFINED_INSTRUCTION:
+        BOOST_THROW_EXCEPTION(BadInstruction());
 
-    // FIXME: Copy the output for now, but copyless version possible.
-    owning_bytes_ref output{r.output().toVector(), 0, r.output().size()};
+    case EVMC_BAD_JUMP_DESTINATION:
+        BOOST_THROW_EXCEPTION(BadJumpDestination());
 
-    if (r.status() == EVM_REVERT)
-        throw RevertInstruction(std::move(output));
+    case EVMC_STACK_OVERFLOW:
+        BOOST_THROW_EXCEPTION(OutOfStack());
 
-    return output;
+    case EVMC_STACK_UNDERFLOW:
+        BOOST_THROW_EXCEPTION(StackUnderflow());
+
+    case EVMC_STATIC_MODE_VIOLATION:
+        BOOST_THROW_EXCEPTION(DisallowedStateChange());
+
+    case EVMC_REJECTED:
+        cwarn << "Execution rejected by EVMC, executing with default VM implementation";
+        return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
+
+    default:
+        BOOST_THROW_EXCEPTION(InternalVMError{} << errinfo_evmcStatusCode(r.status()));
+    }
 }
 
-evm_revision toRevision(EVMSchedule const& _schedule)
+evmc_revision toRevision(EVMSchedule const& _schedule)
 {
-	if (_schedule.haveCreate2)
-		return EVM_CONSTANTINOPLE;
-	if (_schedule.haveRevert)
-		return EVM_BYZANTIUM;
-	if (_schedule.eip158Mode)
-		return EVM_SPURIOUS_DRAGON;
-	if (_schedule.eip150Mode)
-		return EVM_TANGERINE_WHISTLE;
-	if (_schedule.haveDelegateCall)
-		return EVM_HOMESTEAD;
-	return EVM_FRONTIER;
+    if (_schedule.haveCreate2)
+        return EVMC_CONSTANTINOPLE;
+    if (_schedule.haveRevert)
+        return EVMC_BYZANTIUM;
+    if (_schedule.eip158Mode)
+        return EVMC_SPURIOUS_DRAGON;
+    if (_schedule.eip150Mode)
+        return EVMC_TANGERINE_WHISTLE;
+    if (_schedule.haveDelegateCall)
+        return EVMC_HOMESTEAD;
+    return EVMC_FRONTIER;
 }
-
-}
-}
+}  // namespace eth
+}  // namespace dev

@@ -49,11 +49,11 @@ namespace eth { class Interface; }
 namespace shh { class Interface; }
 namespace bzz { class Interface; class Client; }
 
-class Support;
-
 class NetworkFace
 {
 public:
+    virtual ~NetworkFace() = default;
+
     /// Get information concerning this node.
     virtual p2p::NodeInfo nodeInfo() const = 0;
 
@@ -128,7 +128,7 @@ public:
         bytesConstRef _network = bytesConstRef(), bool _testing = false);
 
     /// Destructor.
-    ~WebThreeDirect();
+    ~WebThreeDirect() override;
 
     // The mainline interfaces:
 
@@ -211,9 +211,9 @@ public:
 private:
     std::string m_clientVersion;                    ///< Our end-application client's name/version.
 
-    p2p::Host m_net;                                ///< Should run in background and send us events when blocks found and allow us to send blocks as required.
-
     std::unique_ptr<eth::Client> m_ethereum;        ///< Client for Ethereum ("eth") protocol.
+
+    p2p::Host m_net;                                ///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 };
 
 

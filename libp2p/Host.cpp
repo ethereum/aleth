@@ -107,7 +107,7 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkPreferenc
     m_alias(_alias),
     m_lastPing(chrono::steady_clock::time_point::min())
 {
-    clog(NetNote) << "Id:" << id();
+    cnetnote << "Id: " << id();
 }
 
 Host::Host(string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork):
@@ -133,7 +133,7 @@ void Host::start()
     if (isWorking())
         return;
 
-    clog(NetWarn) << "Network start failed!";
+    cnetwarn << "Network start failed!";
     doneWorking();
 }
 
@@ -280,8 +280,9 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
     for (auto cap: caps)
         capslog << "(" << cap.first << "," << dec << cap.second << ")";
 
-    clog(NetMessageSummary) << "Hello: " << clientVersion << "V[" << protocolVersion << "]" << _id << showbase << capslog.str() << dec << listenPort;
-    
+    cnetlog << "Hello: " << clientVersion << " V[" << protocolVersion << "]"
+            << " " << _id << " " << showbase << capslog.str() << " " << dec << listenPort;
+
     // create session so disconnects are managed
     shared_ptr<SessionFace> ps = make_shared<Session>(this, move(_io), _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion}));
     if (protocolVersion < dev::p2p::c_protocolVersion - 1)
@@ -309,15 +310,15 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
                 if(s->isConnected())
                 {
                     // Already connected.
-                    clog(NetWarn) << "Session already exists for peer with id" << _id;
+                    cnetwarn << "Session already exists for peer with id " << _id;
                     ps->disconnect(DuplicatePeer);
                     return;
                 }
         
         if (!peerSlotsAvailable())
         {
-            clog(NetAllDetail) << "Too many peers, can't connect. peer count: " << peerCount()
-                                << " pending peers: " << m_pendingPeerConns.size();
+            cnetdetails << "Too many peers, can't connect. peer count: " << peerCount()
+                        << " pending peers: " << m_pendingPeerConns.size();
             ps->disconnect(TooManyPeers);
             return;
         }
@@ -339,14 +340,14 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         m_sessions[_id] = ps;
     }
     
-    clog(NetP2PNote) << "p2p.host.peer.register" << _id;
+    LOG(m_logger) << "p2p.host.peer.register " << _id;
 }
 
 void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
 {
     if (_e == NodeEntryAdded)
     {
-        clog(NetP2PNote) << "p2p.host.nodeTable.events.nodeEntryAdded " << _n;
+        LOG(m_logger) << "p2p.host.nodeTable.events.nodeEntryAdded " << _n;
         if (Node n = nodeFromNodeTable(_n))
         {
             shared_ptr<Peer> p;
@@ -361,7 +362,7 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
                 {
                     p = make_shared<Peer>(n);
                     m_peers[_n] = p;
-                    clog(NetP2PNote) << "p2p.host.peers.events.peerAdded " << _n << p->endpoint;
+                    LOG(m_logger) << "p2p.host.peers.events.peerAdded " << _n << " " << p->endpoint;
                 }
             }
             if (peerSlotsAvailable(Egress))
@@ -370,7 +371,7 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
     }
     else if (_e == NodeEntryDropped)
     {
-        clog(NetP2PNote) << "p2p.host.nodeTable.events.NodeEntryDropped " << _n;
+        LOG(m_logger) << "p2p.host.nodeTable.events.NodeEntryDropped " << _n;
         RecursiveGuard l(x_sessions);
         if (m_peers.count(_n) && m_peers[_n]->peerType == PeerType::Optional)
             m_peers.erase(_n);
@@ -393,12 +394,12 @@ void Host::determinePublic()
     bi::tcp::endpoint ep(bi::address(), m_listenPort);
     if (m_netPrefs.traverseNAT && listenIsPublic)
     {
-        clog(NetNote) << "Listen address set to Public address:" << laddr << ". UPnP disabled.";
+        cnetnote << "Listen address set to Public address: " << laddr << ". UPnP disabled.";
         ep.address(laddr);
     }
     else if (m_netPrefs.traverseNAT && publicIsHost)
     {
-        clog(NetNote) << "Public address set to Host configured address:" << paddr << ". UPnP disabled.";
+        cnetnote << "Public address set to Host configured address: " << paddr << ". UPnP disabled.";
         ep.address(paddr);
     }
     else if (m_netPrefs.traverseNAT)
@@ -408,12 +409,14 @@ void Host::determinePublic()
         
         if (lset && natIFAddr != laddr)
             // if listen address is set, Host will use it, even if upnp returns different
-            clog(NetWarn) << "Listen address" << laddr << "differs from local address" << natIFAddr << "returned by UPnP!";
-        
+            cnetwarn << "Listen address " << laddr << " differs from local address " << natIFAddr
+                     << " returned by UPnP!";
+
         if (pset && ep.address() != paddr)
         {
             // if public address is set, Host will advertise it, even if upnp returns different
-            clog(NetWarn) << "Specified public address" << paddr << "differs from external address" << ep.address() << "returned by UPnP!";
+            cnetwarn << "Specified public address " << paddr << " differs from external address "
+                     << ep.address() << " returned by UPnP!";
             ep.address(paddr);
         }
     }
@@ -429,7 +432,8 @@ void Host::runAcceptor()
 
     if (m_run && !m_accepting)
     {
-        clog(NetConnect) << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic << ")";
+        cnetdetails << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic
+                    << ")";
         m_accepting = true;
 
         auto socket = make_shared<RLPXSocket>(m_ioService);
@@ -443,7 +447,8 @@ void Host::runAcceptor()
             }
             if (peerCount() > peerSlots(Ingress))
             {
-                clog(NetConnect) << "Dropping incoming connect due to maximum peer count (" << Ingress << " * ideal peer count): " << socket->remoteEndpoint();
+                cnetdetails << "Dropping incoming connect due to maximum peer count (" << Ingress
+                            << " * ideal peer count): " << socket->remoteEndpoint();
                 socket->close();
                 if (ec.value() < 1)
                     runAcceptor();
@@ -461,11 +466,11 @@ void Host::runAcceptor()
             }
             catch (Exception const& _e)
             {
-                clog(NetWarn) << "ERROR: " << diagnostic_information(_e);
+                cnetwarn << "ERROR: " << diagnostic_information(_e);
             }
             catch (std::exception const& _e)
             {
-                clog(NetWarn) << "ERROR: " << _e.what();
+                cnetwarn << "ERROR: " << _e.what();
             }
 
             if (!success)
@@ -508,7 +513,7 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
             return;
 
     if (_endpoint.tcpPort < 30300 || _endpoint.tcpPort > 30305)
-        clog(NetConnect) << "Non-standard port being recorded: " << _endpoint.tcpPort;
+        cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort;
 
     addNodeToNodeTable(Node(_node, _endpoint));
 }
@@ -574,7 +579,7 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
     
     if (havePeerSession(_p->id))
     {
-        clog(NetConnect) << "Aborted connect. Node already connected.";
+        cnetdetails << "Aborted connect. Node already connected.";
         return;
     }
 
@@ -590,7 +595,7 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
     _p->m_lastAttempted = std::chrono::system_clock::now();
     
     bi::tcp::endpoint ep(_p->endpoint);
-    clog(NetConnect) << "Attempting connection to node" << _p->id << "@" << ep << "from" << id();
+    cnetdetails << "Attempting connection to node " << _p->id << "@" << ep << " from " << id();
     auto socket = make_shared<RLPXSocket>(m_ioService);
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
@@ -599,13 +604,14 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
         
         if (ec)
         {
-            clog(NetConnect) << "Connection refused to node" << _p->id << "@" << ep << "(" << ec.message() << ")";
+            cnetdetails << "Connection refused to node " << _p->id << "@" << ep << " ("
+                        << ec.message() << ")";
             // Manually set error (session not present)
             _p->m_lastDisconnect = TCPError;
         }
         else
         {
-            clog(NetConnect) << "Connecting to" << _p->id << "@" << ep;
+            cnetdetails << "Connecting to " << _p->id << "@" << ep;
             auto handshake = make_shared<RLPXHandshake>(this, socket, _p->id);
             {
                 Guard l(x_connecting);
@@ -751,7 +757,7 @@ void Host::startedWorking()
         runAcceptor();
     }
     else
-        clog(NetP2PNote) << "p2p.start.notice id:" << id() << "TCP Listen port is invalid or unavailable.";
+        LOG(m_logger) << "p2p.start.notice id: " << id() << " TCP Listen port is invalid or unavailable.";
 
     auto nodeTable = make_shared<NodeTable>(
         m_ioService,
@@ -764,7 +770,7 @@ void Host::startedWorking()
         m_nodeTable = nodeTable;
     restoreNetwork(&m_restoreNetwork);
 
-    clog(NetP2PNote) << "p2p.started id:" << id();
+    LOG(m_logger) << "p2p.started id: " << id();
 
     run(boost::system::error_code());
 }
@@ -778,8 +784,8 @@ void Host::doWork()
     }
     catch (std::exception const& _e)
     {
-        clog(NetP2PWarn) << "Exception in Network Thread:" << _e.what();
-        clog(NetP2PWarn) << "Network Restart is Recommended.";
+        cwarn << "Exception in Network Thread: " << _e.what();
+        cwarn << "Network Restart is Recommended.";
     }
 }
 

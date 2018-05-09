@@ -40,9 +40,11 @@ BOOST_AUTO_TEST_CASE(UnsignedTransactionIsValidBeforeConstantinople)
 	BlockHeader header;
 	header.clear();
 	header.setNumber(1);
+    header.setGasLimit(22000);
 
-	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
-	ethash.SealEngineFace::verifyTransaction(ImportRequirements::TransactionSignatures, tx, header, 0); // check that it doesn't throw
+    Transaction tx(0, 0, 21000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+    ethash.SealEngineFace::verifyTransaction(
+        ImportRequirements::TransactionSignatures, tx, header, 0);  // check that it doesn't throw
 }
 
 BOOST_AUTO_TEST_SUITE_END()

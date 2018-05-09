@@ -30,14 +30,12 @@
 namespace dev
 {
 
-struct DBDetail: public LogChannel { static const char* name() { return "DBDetail"; } static const int verbosity = 14; };
-
 class OverlayDB: public MemoryDB
 {
 public:
     explicit OverlayDB(std::unique_ptr<db::DatabaseFace> _db = nullptr)
       : m_db(_db.release(), [](db::DatabaseFace* db) {
-            clog(DBDetail) << "Closing state DB";
+            clog(14, "overlaydb") << "Closing state DB";
             delete db;
         })
     {}

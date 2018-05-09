@@ -77,14 +77,14 @@ void OverlayDB::commit()
                 m_db->commit(std::move(writeBatch));
                 break;
             }
-            catch (db::FailedCommitInDB const& ex)
+            catch (boost::exception const& ex)
             {
                 if (i == 9)
                 {
                     cwarn << "Fail writing to state database. Bombing out.";
                     exit(-1);
                 }
-                cwarn << "Error writing to state database: " << ex.what();
+                cwarn << "Error writing to state database: " << boost::diagnostic_information(ex);
                 cwarn << "Sleeping for" << (i + 1) << "seconds, then retrying.";
                 std::this_thread::sleep_for(std::chrono::seconds(i + 1));
             }
@@ -104,17 +104,13 @@ bytes OverlayDB::lookupAux(h256 const& _h) const
     bytes ret = MemoryDB::lookupAux(_h);
     if (!ret.empty() || !m_db)
         return ret;
-    std::string v;
+
     bytes b = _h.asBytes();
     b.push_back(255);   // for aux
-    try
-    {
-        v = m_db->lookup(toSlice(b));
-    }
-    catch (db::FailedLookupInDB const&)
-    {
+    std::string const v = m_db->lookup(toSlice(b));
+    if (v.empty())
         cwarn << "Aux not found: " << _h;
-    }
+
     return asBytes(v);
 }
 
@@ -129,9 +125,10 @@ void OverlayDB::rollback()
 std::string OverlayDB::lookup(h256 const& _h) const
 {
     std::string ret = MemoryDB::lookup(_h);
-    if (ret.empty() && m_db)
-        DEV_IGNORE_EXCEPTIONS(ret = m_db->lookup(toSlice(_h)));
-    return ret;
+    if (!ret.empty() || !m_db)
+        return ret;
+
+    return m_db->lookup(toSlice(_h));
 }
 
 bool OverlayDB::exists(h256 const& _h) const

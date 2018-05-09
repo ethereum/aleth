@@ -15,11 +15,79 @@
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "interpreter.h"
 #include "VM.h"
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
+#include "BuildInfo.h"
+
+extern "C" evmc_instance* evmc_create_interpreter() noexcept
+{
+    return new (std::nothrow) dev::eth::VM;
+}
+
+namespace
+{
+void destroy(evmc_instance* _instance)
+{
+    delete static_cast<dev::eth::VM*>(_instance);
+}
+
+void delete_output(const evmc_result* result)
+{
+    delete[] result->output_data;
+}
+
+evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
+    const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
+{
+    auto vm = static_cast<dev::eth::VM*>(_instance);
+    evmc_result result = {};
+    dev::eth::owning_bytes_ref output;
+
+    try
+    {
+        output = vm->exec(_context, _rev, _msg, _code, _codeSize);
+        result.status_code = EVMC_SUCCESS;
+        result.gas_left = vm->m_io_gas;
+    }
+    catch (dev::eth::RevertInstruction& ex)
+    {
+        result.status_code = EVMC_REVERT;
+        result.gas_left = vm->m_io_gas;
+        output = ex.output();  // This moves the output from the exception!
+    }
+    catch (dev::eth::VMException const&)
+    {
+        result.status_code = EVMC_FAILURE;
+    }
+    catch (...)
+    {
+        result.status_code = EVMC_INTERNAL_ERROR;
+    }
+
+    if (!output.empty())
+    {
+        // Make a copy of the output.
+        auto outputData = new uint8_t[output.size()];
+        std::memcpy(outputData, output.data(), output.size());
+        result.output_data = outputData;
+        result.output_size = output.size();
+        result.release = delete_output;
+    }
+
+    return result;
+}
+}
+
+
+namespace dev
+{
+namespace eth
+{
+VM::VM()
+  : evmc_instance{
+        EVMC_ABI_VERSION, "interpreter", ETH_PROJECT_VERSION, ::destroy, ::execute, nullptr}
+{}
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
@@ -69,17 +137,6 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 
 
 //
-// for tracing, checking, metering, measuring ...
-//
-void VM::onOperation()
-{
-    if (m_onOp)
-        (m_onOp)(++m_nSteps, m_PC, m_OP,
-            m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
-            m_runGas, m_io_gas, this, m_ext);
-}
-
-//
 // set current SP to SP', adjust SP' per _removed and _added items
 //
 void VM::adjustStack(unsigned _removed, unsigned _added)
@@ -97,22 +154,19 @@ void VM::adjustStack(unsigned _removed, unsigned _added)
 
 void VM::updateSSGas()
 {
-    if (!m_ext->store(m_SP[0]) && m_SP[1])
-        m_runGas = toInt63(m_schedule->sstoreSetGas);
-    else if (m_ext->store(m_SP[0]) && !m_SP[1])
-    {
-        m_runGas = toInt63(m_schedule->sstoreResetGas);
-        m_ext->sub.refunds += m_schedule->sstoreRefundGas;
-    }
-    else
-        m_runGas = toInt63(m_schedule->sstoreResetGas);
+    evmc_uint256be key = toEvmC(m_SP[0]);
+    evmc_uint256be rawValue;
+    m_context->fn_table->get_storage(&rawValue, m_context, &m_message->destination, &key);
+    u256 value = fromEvmC(rawValue);
+    m_runGas = (!value && m_SP[1]) ? VMSchedule::sstoreSetGas : VMSchedule::sstoreResetGas;
 }
-
 
 uint64_t VM::gasForMem(u512 _size)
 {
+    constexpr int64_t memoryGas = VMSchedule::memoryGas;
+    constexpr int64_t quadCoeffDiv = VMSchedule::quadCoeffDiv;
     u512 s = _size / 32;
-    return toInt63((u512)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv);
+    return toInt63(memoryGas * s + s * s / quadCoeffDiv);
 }
 
 void VM::updateIOGas()
@@ -126,7 +180,7 @@ void VM::updateGas()
 {
     if (m_newMemSize > m_mem.size())
         m_runGas += toInt63(gasForMem(m_newMemSize) - gasForMem(m_mem.size()));
-    m_runGas += (m_schedule->copyGas * ((m_copyMemSize + 31) / 32));
+    m_runGas += (VMSchedule::copyGas * ((m_copyMemSize + 31) / 32));
     if (m_io_gas < m_runGas)
         throwOutOfGas();
 }
@@ -141,8 +195,10 @@ void VM::updateMem(uint64_t _newMem)
 
 void VM::logGasMem()
 {
-    unsigned n = (unsigned)m_OP - (unsigned)Instruction::LOG0;
-    m_runGas = toInt63(m_schedule->logGas + m_schedule->logTopicGas * n + u512(m_schedule->logDataGas) * m_SP[1]);
+    unsigned n = (unsigned) m_OP - (unsigned) Instruction::LOG0;
+    constexpr int64_t logDataGas = VMSchedule::logDataGas;
+    m_runGas = toInt63(
+        VMSchedule::logGas + VMSchedule::logTopicGas * n + logDataGas * u512(m_SP[1]));
     updateMem(memNeed(m_SP[0], m_SP[1]));
 }
 
@@ -153,9 +209,22 @@ void VM::fetchInstruction()
     adjustStack(metric.args, metric.ret);
 
     // FEES...
-    m_runGas = toInt63(m_schedule->tierStepGas[static_cast<unsigned>(metric.gasPriceTier)]);
+    std::array<int64_t, 9> tierStepGas{
+        {VMSchedule::stepGas0, VMSchedule::stepGas1, VMSchedule::stepGas2, VMSchedule::stepGas3,
+            VMSchedule::stepGas4, VMSchedule::stepGas5, VMSchedule::stepGas6, 0, 0}};
+    m_runGas = tierStepGas[static_cast<unsigned>(metric.gasPriceTier)];
     m_newMemSize = m_mem.size();
     m_copyMemSize = 0;
+}
+
+evmc_tx_context const& VM::getTxContext()
+{
+    if (!m_tx_context)
+    {
+        m_tx_context.emplace();
+        m_context->fn_table->get_tx_context(&m_tx_context.value(), m_context);
+    }
+    return m_tx_context.value();
 }
 
 
@@ -163,32 +232,23 @@ void VM::fetchInstruction()
 //
 // interpreter entry point
 
-owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
+    uint8_t const* _code, size_t _codeSize)
 {
-    m_io_gas_p = &_io_gas;
-    m_io_gas = uint64_t(_io_gas);
-    m_ext = &_ext;
-    m_schedule = &m_ext->evmSchedule();
-    m_onOp = _onOp;
-    m_onFail = &VM::onOperation; // this results in operations that fail being logged twice in the trace
+    m_context = _context;
+    m_rev = _rev;
+    m_message = _msg;
+    m_io_gas = uint64_t(_msg->gas);
     m_PC = 0;
+    m_pCode = _code;
+    m_codeSize = _codeSize;
 
-    try
-    {
-        // trampoline to minimize depth of call stack when calling out
-        m_bounce = &VM::initEntry;
-        do
-            (this->*m_bounce)();
-        while (m_bounce);
+    // trampoline to minimize depth of call stack when calling out
+    m_bounce = &VM::initEntry;
+    do
+        (this->*m_bounce)();
+    while (m_bounce);
 
-    }
-    catch (...)
-    {
-        *m_io_gas_p = m_io_gas;
-        throw;
-    }
-
-    *m_io_gas_p = m_io_gas;
     return std::move(m_output);
 }
 
@@ -207,8 +267,8 @@ void VM::interpretCases()
         CASE(CREATE2)
         {
             ON_OP();
-            if (!m_schedule->haveCreate2)
-                throwBadInstruction();
+            // TODO: Bring back support for CREATE2.
+            throwBadInstruction();
 
             m_bounce = &VM::caseCreate;
         }
@@ -217,7 +277,7 @@ void VM::interpretCases()
         CASE(CREATE)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             m_bounce = &VM::caseCreate;
@@ -230,11 +290,11 @@ void VM::interpretCases()
         CASE(CALLCODE)
         {
             ON_OP();
-            if (m_OP == Instruction::DELEGATECALL && !m_schedule->haveDelegateCall)
+            if (m_OP == Instruction::DELEGATECALL && m_rev < EVMC_HOMESTEAD)
                 throwBadInstruction();
-            if (m_OP == Instruction::STATICCALL && !m_schedule->haveStaticCall)
+            if (m_OP == Instruction::STATICCALL && m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
-            if (m_OP == Instruction::CALL && m_ext->staticCall && m_SP[2] != 0)
+            if (m_OP == Instruction::CALL && m_message->flags & EVMC_STATIC && m_SP[2] != 0)
                 throwDisallowedStateChange();
             m_bounce = &VM::caseCall;
         }
@@ -257,7 +317,7 @@ void VM::interpretCases()
         CASE(REVERT)
         {
             // Pre-byzantium
-            if (!m_schedule->haveRevert)
+            if (m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
 
             ON_OP();
@@ -267,30 +327,37 @@ void VM::interpretCases()
 
             uint64_t b = (uint64_t)m_SP[0];
             uint64_t s = (uint64_t)m_SP[1];
-            owning_bytes_ref output{move(m_mem), b, s};
-            throwRevertInstruction(move(output));
+            owning_bytes_ref output{std::move(m_mem), b, s};
+            throwRevertInstruction(std::move(output));
         }
         BREAK;
 
         CASE(SUICIDE)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            m_runGas = toInt63(m_schedule->suicideGas);
-            Address dest = asAddress(m_SP[0]);
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 5000 : 0;
+            evmc_address destination = toEvmC(asAddress(m_SP[0]));
 
             // After EIP158 zero-value suicides do not have to pay account creation gas.
-            if (m_ext->balance(m_ext->myAddress) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
+            evmc_uint256be rawBalance;
+            m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
+            u256 balance = fromEvmC(rawBalance);
+            if (balance > 0 || m_rev < EVMC_SPURIOUS_DRAGON)
+            {
                 // After EIP150 hard fork charge additional cost of sending
                 // ethers to non-existing account.
-                if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
-                    m_runGas += m_schedule->callNewAccountGas;
+                int destinationExists =
+                    m_context->fn_table->account_exists(m_context, &destination);
+                if (m_rev >= EVMC_TANGERINE_WHISTLE && !destinationExists)
+                    m_runGas += VMSchedule::callNewAccount;
+            }
 
             updateIOGas();
-            m_ext->suicide(dest);
-            m_bounce = 0;
+            m_context->fn_table->selfdestruct(m_context, &m_message->destination, &destination);
+            m_bounce = nullptr;
         }
         BREAK
 
@@ -340,7 +407,9 @@ void VM::interpretCases()
         CASE(SHA3)
         {
             ON_OP();
-            m_runGas = toInt63(m_schedule->sha3Gas + (u512(m_SP[1]) + 31) / 32 * m_schedule->sha3WordGas);
+            constexpr int64_t sha3Gas = VMSchedule::sha3Gas;
+            constexpr int64_t sha3WordGas = VMSchedule::sha3WordGas;
+            m_runGas = toInt63(sha3Gas + (u512(m_SP[1]) + 31) / 32 * sha3WordGas);
             updateMem(memNeed(m_SP[0], m_SP[1]));
             updateIOGas();
 
@@ -353,72 +422,106 @@ void VM::interpretCases()
         CASE(LOG0)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
             updateIOGas();
 
-            m_ext->log({}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
+            uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
+            size_t dataSize = size_t(m_SP[1]);
+
+            m_context->fn_table->emit_log(
+                m_context, &m_message->destination, data, dataSize, nullptr, 0);
         }
         NEXT
 
         CASE(LOG1)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
             updateIOGas();
 
-            m_ext->log({m_SP[2]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
+            uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
+            size_t dataSize = size_t(m_SP[1]);
+
+            evmc_uint256be topics[] = {toEvmC(m_SP[2])};
+            size_t numTopics = sizeof(topics) / sizeof(topics[0]);
+
+            m_context->fn_table->emit_log(
+                m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
         CASE(LOG2)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
             updateIOGas();
 
-            m_ext->log({m_SP[2], m_SP[3]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
+            uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
+            size_t dataSize = size_t(m_SP[1]);
+
+            evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3])};
+            size_t numTopics = sizeof(topics) / sizeof(topics[0]);
+
+            m_context->fn_table->emit_log(
+                m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
         CASE(LOG3)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
             updateIOGas();
 
-            m_ext->log({m_SP[2], m_SP[3], m_SP[4]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
+            uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
+            size_t dataSize = size_t(m_SP[1]);
+
+            evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4])};
+            size_t numTopics = sizeof(topics) / sizeof(topics[0]);
+
+            m_context->fn_table->emit_log(
+                m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
         CASE(LOG4)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             logGasMem();
             updateIOGas();
 
-            m_ext->log({m_SP[2], m_SP[3], m_SP[4], m_SP[5]}, bytesConstRef(m_mem.data() + (uint64_t)m_SP[0], (uint64_t)m_SP[1]));
+            uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
+            size_t dataSize = size_t(m_SP[1]);
+
+            evmc_uint256be topics[] = {
+                toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4]), toEvmC(m_SP[5])};
+            size_t numTopics = sizeof(topics) / sizeof(topics[0]);
+
+            m_context->fn_table->emit_log(
+                m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
         CASE(EXP)
         {
             u256 expon = m_SP[1];
-            m_runGas = toInt63(m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8)));
+            const int64_t byteCost = m_rev >= EVMC_SPURIOUS_DRAGON ? 50 : 10;
+            m_runGas = toInt63(VMSchedule::stepGas5 + byteCost * (32 - (h256(expon).firstBitSet() / 8)));
             ON_OP();
             updateIOGas();
 
@@ -599,7 +702,7 @@ void VM::interpretCases()
         CASE(SHL)
         {
             // Pre-constantinople
-            if (!m_schedule->haveBitwiseShifting)
+            if (m_rev < EVMC_CONSTANTINOPLE)
                 throwBadInstruction();
 
             ON_OP();
@@ -615,7 +718,7 @@ void VM::interpretCases()
         CASE(SHR)
         {
             // Pre-constantinople
-            if (!m_schedule->haveBitwiseShifting)
+            if (m_rev < EVMC_CONSTANTINOPLE)
                 throwBadInstruction();
 
             ON_OP();
@@ -631,7 +734,7 @@ void VM::interpretCases()
         CASE(SAR)
         {
             // Pre-constantinople
-            if (!m_schedule->haveBitwiseShifting)
+            if (m_rev < EVMC_CONSTANTINOPLE)
                 throwBadInstruction();
 
             ON_OP();
@@ -1030,7 +1133,7 @@ void VM::interpretCases()
 
         CASE(XSSTORE)
         {
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             updateSSGas();
@@ -1154,7 +1257,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = fromAddress(m_ext->myAddress);
+            m_SPP[0] = fromAddress(fromEvmC(m_message->destination));
         }
         NEXT
 
@@ -1163,17 +1266,20 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = fromAddress(m_ext->origin);
+            m_SPP[0] = fromAddress(fromEvmC(getTxContext().tx_origin));
         }
         NEXT
 
         CASE(BALANCE)
         {
-            m_runGas = toInt63(m_schedule->balanceGas);
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 400 : 20;
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->balance(asAddress(m_SP[0]));
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
+            evmc_uint256be rawBalance;
+            m_context->fn_table->get_balance(&rawBalance, m_context, &address);
+            m_SPP[0] = fromEvmC(rawBalance);
         }
         NEXT
 
@@ -1183,7 +1289,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = fromAddress(m_ext->caller);
+            m_SPP[0] = fromAddress(fromEvmC(m_message->sender));
         }
         NEXT
 
@@ -1192,7 +1298,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->value;
+            m_SPP[0] = fromEvmC(m_message->value);
         }
         NEXT
 
@@ -1202,14 +1308,17 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            if (u512(m_SP[0]) + 31 < m_ext->data.size())
-                m_SP[0] = (u256)*(h256 const*)(m_ext->data.data() + (size_t)m_SP[0]);
-            else if (m_SP[0] >= m_ext->data.size())
+            size_t const dataSize = m_message->input_size;
+            uint8_t const* const data = m_message->input_data;
+
+            if (u512(m_SP[0]) + 31 < dataSize)
+                m_SP[0] = (u256)*(h256 const*)(data + (size_t)m_SP[0]);
+            else if (m_SP[0] >= dataSize)
                 m_SP[0] = u256(0);
             else
             {     h256 r;
                 for (uint64_t i = (uint64_t)m_SP[0], e = (uint64_t)m_SP[0] + (uint64_t)32, j = 0; i < e; ++i, ++j)
-                    r[j] = i < m_ext->data.size() ? m_ext->data[i] : 0;
+                    r[j] = i < dataSize ? data[i] : 0;
                 m_SP[0] = (u256)r;
             };
         }
@@ -1221,13 +1330,13 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->data.size();
+            m_SPP[0] = m_message->input_size;
         }
         NEXT
 
         CASE(RETURNDATASIZE)
         {
-            if (!m_schedule->haveReturnData)
+            if (m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
 
             ON_OP();
@@ -1242,17 +1351,19 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->code.size();
+            m_SPP[0] = m_codeSize;
         }
         NEXT
 
         CASE(EXTCODESIZE)
         {
-            m_runGas = toInt63(m_schedule->extcodesizeGas);
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 20;
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->codeSizeAt(asAddress(m_SP[0]));
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
+
+            m_SPP[0] = m_context->fn_table->get_code_size(m_context, &address);
         }
         NEXT
 
@@ -1263,14 +1374,15 @@ void VM::interpretCases()
             updateMem(memNeed(m_SP[0], m_SP[2]));
             updateIOGas();
 
-            copyDataToMemory(m_ext->data, m_SP);
+            bytesConstRef data{m_message->input_data, m_message->input_size};
+            copyDataToMemory(data, m_SP);
         }
         NEXT
 
         CASE(RETURNDATACOPY)
         {
             ON_OP();
-            if (!m_schedule->haveReturnData)
+            if (m_rev < EVMC_BYZANTIUM)
                 throwBadInstruction();
             bigint const endOfAccess = bigint(m_SP[1]) + bigint(m_SP[2]);
             if (m_returnData.size() < endOfAccess)
@@ -1291,20 +1403,31 @@ void VM::interpretCases()
             updateMem(memNeed(m_SP[0], m_SP[2]));
             updateIOGas();
 
-            copyDataToMemory(&m_ext->code, m_SP);
+            copyDataToMemory({m_pCode, m_codeSize}, m_SP);
         }
         NEXT
 
         CASE(EXTCODECOPY)
         {
             ON_OP();
-            m_runGas = toInt63(m_schedule->extcodecopyGas);
-            m_copyMemSize = toInt63(m_SP[3]);
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 20;
+            uint64_t copyMemSize = toInt63(m_SP[3]);
+            m_copyMemSize = copyMemSize;
             updateMem(memNeed(m_SP[1], m_SP[3]));
             updateIOGas();
 
-            Address a = asAddress(m_SP[0]);
-            copyDataToMemory(&m_ext->codeAt(a), m_SP + 1);
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
+
+            size_t memoryOffset = static_cast<size_t>(m_SP[1]);
+            constexpr size_t codeOffsetMax = std::numeric_limits<size_t>::max();
+            size_t codeOffset =
+                m_SP[2] > codeOffsetMax ? codeOffsetMax : static_cast<size_t>(m_SP[2]);
+            size_t size = static_cast<size_t>(copyMemSize);
+
+            size_t numCopied = m_context->fn_table->copy_code(
+                m_context, &address, codeOffset, &m_mem[memoryOffset], size);
+
+            std::fill_n(&m_mem[memoryOffset + numCopied], size - numCopied, 0);
         }
         NEXT
 
@@ -1314,17 +1437,27 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->gasPrice;
+            m_SPP[0] = fromEvmC(getTxContext().tx_gas_price);
         }
         NEXT
 
         CASE(BLOCKHASH)
         {
             ON_OP();
-            m_runGas = toInt63(m_schedule->blockhashGas);
+            m_runGas = VMSchedule::stepGas6;
             updateIOGas();
 
-            m_SPP[0] = (u256)m_ext->blockHash(m_SP[0]);
+            const int64_t blockNumber = getTxContext().block_number;
+            u256 number = m_SP[0];
+
+            if (number < blockNumber && number >= std::max(int64_t(256), blockNumber) - 256)
+            {
+                evmc_uint256be hash;
+                m_context->fn_table->get_block_hash(&hash, m_context, int64_t(number));
+                m_SPP[0] = fromEvmC(hash);
+            }
+            else
+                m_SPP[0] = 0;
         }
         NEXT
 
@@ -1333,7 +1466,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = (u160)m_ext->envInfo().author();
+            m_SPP[0] = fromAddress(fromEvmC(getTxContext().block_coinbase));
         }
         NEXT
 
@@ -1342,7 +1475,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->envInfo().timestamp();
+            m_SPP[0] = getTxContext().block_timestamp;
         }
         NEXT
 
@@ -1351,7 +1484,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->envInfo().number();
+            m_SPP[0] = getTxContext().block_number;
         }
         NEXT
 
@@ -1360,7 +1493,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->envInfo().difficulty();
+            m_SPP[0] = fromEvmC(getTxContext().block_difficulty);
         }
         NEXT
 
@@ -1369,7 +1502,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->envInfo().gasLimit();
+            m_SPP[0] = getTxContext().block_gas_limit;
         }
         NEXT
 
@@ -1564,24 +1697,29 @@ void VM::interpretCases()
 
         CASE(SLOAD)
         {
-            m_runGas = toInt63(m_schedule->sloadGas);
+            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 200 : 50;
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->store(m_SP[0]);
+            evmc_uint256be key = toEvmC(m_SP[0]);
+            evmc_uint256be value;
+            m_context->fn_table->get_storage(&value, m_context, &m_message->destination, &key);
+            m_SPP[0] = fromEvmC(value);
         }
         NEXT
 
         CASE(SSTORE)
         {
             ON_OP();
-            if (m_ext->staticCall)
+            if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
             updateSSGas();
             updateIOGas();
 
-            m_ext->setStore(m_SP[0], m_SP[1]);
+            evmc_uint256be key = toEvmC(m_SP[0]);
+            evmc_uint256be value = toEvmC(m_SP[1]);
+            m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
         }
         NEXT
 
@@ -1614,7 +1752,7 @@ void VM::interpretCases()
 
         CASE(JUMPDEST)
         {
-            m_runGas = 1;
+            m_runGas = VMSchedule::jumpdestGas;
             ON_OP();
             updateIOGas();
         }
@@ -1627,4 +1765,6 @@ void VM::interpretCases()
         }
     }
     WHILE_CASES
+}
+}
 }

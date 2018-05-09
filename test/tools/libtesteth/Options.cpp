@@ -33,7 +33,7 @@ void printHelp()
     cout << "Usage: \n";
     cout << std::left;
     cout << "\nSetting test suite\n";
-    cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations\n";
+    cout << setw(30) << "-t <TestSuite>" << setw(25) << "Execute test operations\n";
     cout << setw(30) << "-t <TestSuite>/<TestCase>\n";
     cout << setw(30) << "--testpath <PathToTheTestRepo>\n";
 
@@ -100,6 +100,7 @@ Options::Options(int argc, const char** argv)
     trGasIndex = -1;
     trValueIndex = -1;
     bool seenSeparator = false; // true if "--" has been seen.
+    int verbosity = 5;
     for (auto i = 0; i < argc; ++i)
     {
         auto arg = std::string{argv[i]};
@@ -144,7 +145,7 @@ Options::Options(int argc, const char** argv)
         {
 #if ETH_VMTRACE
             vmtrace = true;
-            g_logVerbosity = 13;
+            verbosity = 13;
 #else
             cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
             exit(1);
@@ -220,8 +221,8 @@ Options::Options(int argc, const char** argv)
                 logVerbosity = Verbosity::Full;
 
             int indentLevelInt = atoi(argv[i]);
-            if (indentLevelInt > g_logVerbosity)
-                g_logVerbosity = indentLevelInt;
+            if (indentLevelInt > verbosity)
+                verbosity = indentLevelInt;
         }
         else if (arg == "--options")
         {
@@ -241,8 +242,6 @@ Options::Options(int argc, const char** argv)
             throwIfNoArgumentFollows();
             rCurrentTestSuite = std::string{argv[++i]};
         }
-        else if (arg == "--nonetwork")
-            nonetwork = true;
         else if (arg == "-d")
         {
             throwIfNoArgumentFollows();
@@ -316,11 +315,11 @@ Options::Options(int argc, const char** argv)
     //check restrickted options
     if (createRandomTest)
     {
-        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || nonetwork || singleTest
-            || all || stats || filltests || fillchain)
+        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || singleTest || all ||
+            stats || filltests || fillchain)
         {
             cerr << "--createRandomTest cannot be used with any of the options: " <<
-                    "trValueIndex, trGasIndex, trDataIndex, nonetwork, singleTest, all, " <<
+                    "trValueIndex, trGasIndex, trDataIndex, singleTest, all, " <<
                     "stats, filltests, fillchain \n";
             exit(1);
         }
@@ -335,7 +334,9 @@ Options::Options(int argc, const char** argv)
 
     //Default option
     if (logVerbosity == Verbosity::NiceReport)
-        g_logVerbosity = -1;	//disable cnote but leave cerr and cout
+        verbosity = -1;  // disable cnote but leave cerr and cout
+
+    setupLogging(verbosity);
 }
 
 Options const& Options::get(int argc, const char** argv)

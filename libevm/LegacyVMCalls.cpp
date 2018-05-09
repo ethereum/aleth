@@ -158,11 +158,9 @@ void LegacyVM::caseCreate()
 		bytesConstRef initCode{m_mem.data() + off, size};
 
 
-		h160 addr;
-		owning_bytes_ref output;
-		std::tie(addr, output) = m_ext->create(endowment, gas, initCode, m_OP, salt, m_onOp);
-		m_SPP[0] = (u160)addr;  // Convert address to integer.
-		m_returnData = output.toBytes();
+		CreateResult result = m_ext->create(endowment, gas, initCode, m_OP, salt, m_onOp);
+		m_SPP[0] = (u160)result.address;  // Convert address to integer.
+		m_returnData = result.output.toBytes();
 
 		*m_io_gas_p -= (createGas - gas);
 		m_io_gas = uint64_t(*m_io_gas_p);
@@ -186,10 +184,8 @@ void LegacyVM::caseCall()
 	bytesRef output;
 	if (caseCallSetup(callParams.get(), output))
 	{
-		bool success = false;
-		owning_bytes_ref outputRef;
-		std::tie(success, outputRef) = m_ext->call(*callParams);
-		outputRef.copyTo(output);
+		CallResult result = m_ext->call(*callParams);
+		result.output.copyTo(output);
 
 		// Here we have 2 options:
 		// 1. Keep the whole returned memory buffer (owning_bytes_ref):
@@ -197,9 +193,9 @@ void LegacyVM::caseCall()
 		// 2. Copy only the return data from the returned memory buffer:
 		//    minimal memory footprint, additional memory copy.
 		// Option 2 used:
-		m_returnData = outputRef.toBytes();
+		m_returnData = result.output.toBytes();
 
-		m_SPP[0] = success ? 1 : 0;
+		m_SPP[0] = result.status == EVMC_SUCCESS ? 1 : 0;
 	}
 	else
 		m_SPP[0] = 0;

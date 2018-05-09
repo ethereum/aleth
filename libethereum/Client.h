@@ -61,11 +61,6 @@ enum ClientWorkState
     Deleted
 };
 
-struct ClientNote: public LogChannel { static const char* name(); static const int verbosity = 2; };
-struct ClientChat: public LogChannel { static const char* name(); static const int verbosity = 4; };
-struct ClientTrace: public LogChannel { static const char* name(); static const int verbosity = 7; };
-struct ClientDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
-
 struct ActivityReport
 {
     unsigned ticks = 0;
@@ -351,6 +346,9 @@ protected:
     std::atomic<bool> m_syncBlockQueue = {false};
 
     bytes m_extraData;
+
+    Logger m_logger{createLogger(2, "client")};
+    Logger m_loggerDetail{createLogger(7, "client")};
 };
 
 }

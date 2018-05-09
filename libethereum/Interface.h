@@ -230,6 +230,9 @@ public:
 	/// Sets the network id.
 	virtual void setNetworkId(u256 const&) {}
 
+	/// Gets the chain id
+	virtual int chainId() const { return 0; }
+
 	/// Get the seal engine.
 	virtual SealEngineFace* sealEngine() const { return nullptr; }
 

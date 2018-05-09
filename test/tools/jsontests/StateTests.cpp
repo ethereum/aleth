@@ -203,6 +203,9 @@ BOOST_AUTO_TEST_CASE(stZeroKnowledge2){}
 BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 BOOST_AUTO_TEST_CASE(stBugs){}
 
+//Constantinople Tests
+BOOST_AUTO_TEST_CASE(stShift){}
+
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}
 BOOST_AUTO_TEST_CASE(stMemoryStressTest){}

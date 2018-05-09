@@ -194,6 +194,9 @@ private:
 
 	std::weak_ptr<EthereumPeerObserverFace> m_observer;
 	std::weak_ptr<EthereumHostDataFace> m_hostData;
+
+    /// Logger for messages about impolite behaivour of peers.
+    Logger m_loggerImpolite{createLogger(3, "impolite")};
 };
 
 }

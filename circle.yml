@@ -51,9 +51,6 @@ defaults:
     store_artifacts:
       path: ~/build/eth/eth
       destination: eth
-    store_artifacts:
-      path: ~/build/test/testeth
-      destination: testeth
 
   store-testeth: &store-testeth
     store_artifacts:
@@ -109,6 +106,12 @@ defaults:
     - *store-testeth
     - *restore-ethash-dag
     - *test
+    - run:
+        name: "Test EVM-C Interpreter"
+        working_directory: ~/build
+        command: |
+          ETHEREUM_TEST_PATH=~/project/test/jsontests \
+          test/testeth -t GeneralStateTests -- --vm interpreter
     - *save-ethash-dag
     - *upload-coverage-data
 
@@ -116,11 +119,11 @@ defaults:
 version: 2
 jobs:
 
-  Linux-Clang5:
+  linux-clang6:
     environment:
-      - CXX: clang++-5.0
-      - CC:  clang-5.0
-      - GCOV: llvm-cov-5.0 gcov
+      - CXX: clang++-6.0
+      - CC:  clang-6.0
+      - GCOV: llvm-cov-6.0 gcov
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
@@ -128,14 +131,14 @@ jobs:
       - image: ethereum/cpp-build-env
     steps: *linux-steps
 
-  Linux-GCC6-Debug:
+  linux-gcc6:
     environment:
-      - BUILD_TYPE: Debug
+      - BUILD_TYPE: RelWithDebInfo
       - CXX: g++-6
       - CC:  gcc-6
       - GCOV: gcov-6
       - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 4
+      - BUILD_PARALLEL_JOBS: 3
       - TEST_PARALLEL_JOBS: 4
       # TODO: Fix memory leaks reported in leveldb.
       # - CMAKE_OPTIONS: -DSANITIZE=address
@@ -144,7 +147,7 @@ jobs:
       - image: ethereum/cpp-build-env
     steps: *linux-steps
 
-  macOS-XCode9:
+  macos-xcode90:
     environment:
       - CXX: clang++
       - GCOV: gcov
@@ -182,6 +185,6 @@ workflows:
   version: 2
   cpp-ethereum:
     jobs:
-      - macOS-XCode9
-      - Linux-Clang5
-      - Linux-GCC6-Debug
+      - macos-xcode90
+      - linux-clang6
+      - linux-gcc6

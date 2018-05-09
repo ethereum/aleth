@@ -17,16 +17,14 @@
 
 #include "VM.h"
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-
+namespace dev
+{
+namespace eth
+{
 std::array<InstructionMetric, 256> VM::c_metrics;
 void VM::initMetrics()
 {
-    static bool done =
-    []()
-    {
+    static bool done = []() {
         for (unsigned i = 0; i < 256; ++i)
         {
             InstructionInfo op = instructionInfo((Instruction)i);
@@ -35,7 +33,7 @@ void VM::initMetrics()
             c_metrics[i].ret = op.ret;
         }
         return true;
-    } ();
+    }();
     (void)done;
 }
 
@@ -44,9 +42,9 @@ void VM::copyCode(int _extraBytes)
     // Copy code so that it can be safely modified and extend code by
     // _extraBytes zero bytes to allow reading virtual data at the end
     // of the code without bounds checks.
-    auto extendedSize = m_ext->code.size() + _extraBytes;
+    auto extendedSize = m_codeSize + _extraBytes;
     m_code.reserve(extendedSize);
-    m_code = m_ext->code;
+    m_code.assign(m_pCode, m_pCode + m_codeSize);
     m_code.resize(extendedSize);
 }
 
@@ -54,7 +52,7 @@ void VM::optimize()
 {
     copyCode(33);
 
-    size_t const nBytes = m_ext->code.size();
+    size_t const nBytes = m_codeSize;
 
     // build a table of jump destinations for use in verifyJumpDest
     
@@ -217,4 +215,6 @@ u256 VM::exp256(u256 _base, u256 _exponent)
         _exponent >>= 1;
     }
     return result;
+}
+}
 }

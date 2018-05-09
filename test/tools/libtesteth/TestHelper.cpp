@@ -153,8 +153,6 @@ bool isDisabledNetwork(eth::Network _net)
     Options const& opt = Options::get();
     if (opt.all || opt.filltests || opt.createRandomTest || !opt.singleTestNet.empty())
     {
-        if (_net == eth::Network::ConstantinopleTest)
-            return true;
         return false;
     }
     switch (_net)

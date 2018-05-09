@@ -48,6 +48,7 @@ ClientTest::ClientTest(ChainParams const& _params, int _networkID, p2p::Host* _h
 
 ClientTest::~ClientTest()
 {
+    m_signalled.notify_all(); // to wake up the thread from Client::doWork()
     terminate();
 }
 
@@ -61,7 +62,6 @@ void ClientTest::setChainParams(string const& _genesis)
             BOOST_THROW_EXCEPTION(ChainParamsNotNoProof() << errinfo_comment("Provided configuration is not well formatted."));
 
         reopenChain(params, WithExisting::Kill);
-        setAuthor(params.author); //for some reason author is not being set
     }
     catch (...)
     {

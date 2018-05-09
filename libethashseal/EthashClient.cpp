@@ -57,6 +57,7 @@ EthashClient::EthashClient(ChainParams const& _params, int _networkID, p2p::Host
 
 EthashClient::~EthashClient()
 {
+    m_signalled.notify_all(); // to wake up the thread from Client::doWork()
     terminate();
 }
 

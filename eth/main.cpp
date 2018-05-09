@@ -28,7 +28,6 @@
 #include <signal.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/trim_all.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -67,7 +66,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
-using namespace boost::algorithm;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
@@ -187,7 +185,7 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
 
-    g_logVerbosity = 1;
+    int logVerbosity = 1;
 
     /// Operating mode.
     OperationMode mode = OperationMode::Node;
@@ -239,7 +237,7 @@ int main(int argc, char** argv)
 //  TransactionPriority priority = TransactionPriority::Medium;
 //  double etherPrice = 30.679;
 //  double blockFees = 15.0;
-    u256 askPrice = DefaultGasPrice;
+    u256 askPrice = 0;
     u256 bidPrice = DefaultGasPrice;
     bool alwaysConfirm = true;
 
@@ -396,8 +394,8 @@ int main(int argc, char** argv)
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("db-path,d", po::value<string>()->value_name("<path>"),
         ("Load database from path\n(default: " + getDataDir().string() + ").\n").c_str());
-    addGeneralOption("verbosity,v", po::value<int>()->value_name("<0 - 9>"),
-        "Set the log verbosity from 0 to 9 (default: 8).");
+    addGeneralOption("verbosity,v", po::value<int>(&logVerbosity)->value_name("<0 - 15>"),
+        "Set the log verbosity from 0 to 15 (default: 1).");
     addGeneralOption("version,V", "Show the version and exit.");
     addGeneralOption("help,h", "Show this help message and exit.\n");
 
@@ -449,8 +447,6 @@ int main(int argc, char** argv)
         disableDiscovery = true;
         bootstrap = false;
     }
-    if (vm.count("verbosity"))
-        g_logVerbosity = vm["verbosity"].as<int>();
     if (vm.count("peers"))
         peers = vm["peers"].as<int>();
     if (vm.count("peer-stretch"))
@@ -829,6 +825,7 @@ int main(int argc, char** argv)
         }
     }
 
+    setupLogging(logVerbosity);
 
     if (!privateChain.empty())
     {
@@ -841,7 +838,7 @@ int main(int argc, char** argv)
         // default to mainnet if not already set with any of `--mainnet`, `--ropsten`, `--genesis`, `--config`
         chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 
-    if (g_logVerbosity > 0)
+    if (logVerbosity > 0)
         cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << "\n";
 
     m.execute();
@@ -1062,8 +1059,8 @@ int main(int argc, char** argv)
 
     web3.setIdealPeerCount(peers);
     web3.setPeerStretch(peerStretch);
-//  std::shared_ptr<eth::BasicGasPricer> gasPricer = make_shared<eth::BasicGasPricer>(u256(double(ether / 1000) / etherPrice), u256(blockFees * 1000));
-    std::shared_ptr<eth::TrivialGasPricer> gasPricer = make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
+    std::shared_ptr<eth::TrivialGasPricer> gasPricer =
+        make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
     eth::Client* c = nodeMode == NodeMode::Full ? web3.ethereum() : nullptr;
     if (c)
     {

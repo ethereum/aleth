@@ -14,29 +14,29 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file main.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * EVM Execution tool.
- */
+
+/// @file
+/// EVM Execution tool.
 
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/SHA3.h>
+#include <libethashseal/Ethash.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/Block.h>
-#include <libethereum/Executive.h>
 #include <libethereum/ChainParams.h>
+#include <libethereum/Executive.h>
 #include <libethereum/LastBlockHashesFace.h>
-#include <libethashseal/GenesisInfo.h>
-#include <libethashseal/Ethash.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-#include <boost/program_options/options_description.hpp>
+
+#include <ctime>
 #include <fstream>
 #include <iostream>
-#include <ctime>
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -44,12 +44,12 @@ namespace po = boost::program_options;
 
 namespace
 {
-
 unsigned const c_lineWidth = 160;
 
 int64_t maxBlockGasLimit()
 {
-    static int64_t limit = ChainParams(genesisInfo(Network::MainNetwork)).maxGasLimit.convert_to<int64_t>();
+    static int64_t limit =
+        ChainParams(genesisInfo(Network::MainNetwork)).maxGasLimit.convert_to<int64_t>();
     return limit;
 }
 
@@ -57,7 +57,8 @@ void version()
 {
     cout << "ethvm version " << dev::Version << "\n";
     cout << "By Gav Wood, 2015.\n";
-    cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << "\n";
+    cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE)
+         << "\n";
     exit(0);
 }
 
@@ -95,13 +96,15 @@ enum class Mode
     /// performance.
     Test
 };
-
 }
 
-class LastBlockHashes: public eth::LastBlockHashesFace
+class LastBlockHashes : public eth::LastBlockHashesFace
 {
 public:
-    h256s precedingHashes(h256 const& /* _mostRecentHash */) const override { return h256s(256, h256()); }
+    h256s precedingHashes(h256 const& /* _mostRecentHash */) const override
+    {
+        return h256s(256, h256());
+    }
     void clear() override {}
 };
 
@@ -110,7 +113,6 @@ int main(int argc, char** argv)
     setDefaultOrCLocale();
     string inputFile;
     Mode mode = Mode::Statistics;
-    VMKind vmKind = VMKind::Legacy;
     State state(0);
     Address sender = Address(69);
     Address origin = Address(69);
@@ -120,7 +122,7 @@ int main(int argc, char** argv)
     bool styledJson = true;
     StandardTrace st;
     Network networkName = Network::MainNetworkTest;
-    BlockHeader blockHeader; // fake block to be executed in
+    BlockHeader blockHeader;  // fake block to be executed in
     blockHeader.setGasLimit(maxBlockGasLimit());
     blockHeader.setTimestamp(0);
     bytes data;
@@ -129,8 +131,11 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
 
+    setupLogging(5);
+
     po::options_description transactionOptions("Transaction options", c_lineWidth);
-    string const gasLimitDescription = "<n> Block gas limit (default: " + to_string(maxBlockGasLimit()) + ").";
+    string const gasLimitDescription =
+        "<n> Block gas limit (default: " + to_string(maxBlockGasLimit()) + ").";
     auto addTransactionOption = transactionOptions.add_options();
     addTransactionOption(
         "value", po::value<u256>(), "<n> Transaction should transfer the <n> wei (default: 0).");
@@ -148,8 +153,8 @@ int main(int argc, char** argv)
         "<d> Contract code <d>. Makes transaction a call to this contract");
 
     po::options_description networkOptions("Network options", c_lineWidth);
-    networkOptions.add_options()
-        ("network",  po::value<string>(), "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
+    networkOptions.add_options()("network", po::value<string>(),
+        "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
 
     po::options_description optionsForTrace("Options for trace", c_lineWidth);
     auto addTraceOption = optionsForTrace.add_options();
@@ -190,9 +195,8 @@ int main(int argc, char** argv)
     po::notify(vm);
 
     // handling mode and input file options separately, as they don't have option name
-    for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
+    for (auto const& arg : unrecognisedOptions)
     {
-        string arg = unrecognisedOptions[i];
         if (arg == "stats")
             mode = Mode::Statistics;
         else if (arg == "output")
@@ -212,7 +216,7 @@ int main(int argc, char** argv)
     if (vm.count("help"))
     {
         cout << allowedOptions;
-        exit(0);
+        return 0;
     }
     if (vm.count("version"))
     {
@@ -273,7 +277,7 @@ int main(int argc, char** argv)
 
         if (inputFile == "-")
             for (int i = cin.get(); i != -1; i = cin.get())
-                code.push_back((char)i);
+                code.push_back(static_cast<byte>(i));
         else
             code = contents(inputFile);
 
@@ -283,7 +287,9 @@ int main(int argc, char** argv)
             strCode.erase(strCode.find_last_not_of(" \t\n\r") + 1);  // Right trim.
             code = fromHex(strCode, WhenError::Throw);
         }
-        catch (BadHexCharacter const&) {}  // Ignore decoding errors.
+        catch (BadHexCharacter const&)
+        {
+        }  // Ignore decoding errors.
     }
 
     Transaction t;
@@ -316,19 +322,6 @@ int main(int argc, char** argv)
     unordered_map<byte, pair<unsigned, bigint>> counts;
     unsigned total = 0;
     bigint memTotal;
-    auto onOp = [&](uint64_t step, uint64_t PC, Instruction inst, bigint m, bigint gasCost,
-                    bigint gas, VMFace const* _vm, ExtVMFace const* extVM) {
-        if (mode == Mode::Statistics)
-        {
-            counts[(byte)inst].first++;
-            counts[(byte)inst].second += gasCost;
-            total++;
-            if (m > 0)
-                memTotal = m;
-        }
-        else if (mode == Mode::Trace)
-            st(step, PC, inst, m, gasCost, gas, _vm, extVM);
-    };
 
     executive.initialize(t);
     if (!code.empty())
@@ -336,35 +329,55 @@ int main(int argc, char** argv)
     else
         executive.create(sender, value, gasPrice, gas, &data, origin);
 
+    OnOpFunc onOp;
+    if (mode == Mode::Statistics)
+    {
+        onOp = [&](uint64_t, uint64_t, Instruction inst, bigint m, bigint gasCost, bigint,
+                   VMFace const*, ExtVMFace const*) {
+            byte b = static_cast<byte>(inst);
+            counts[b].first++;
+            counts[b].second += gasCost;
+            total++;
+            if (m > memTotal)
+                memTotal = m;
+        };
+    }
+    else if (mode == Mode::Trace)
+        onOp = st;
+
     Timer timer;
-    if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Legacy)
-        // If we use onOp, the factory falls back to "interpreter"
-        executive.go(onOp);
-    else
-        executive.go();
+    executive.go(onOp);
     double execTime = timer.elapsed();
     executive.finalize();
     bytes output = std::move(res.output);
 
     if (mode == Mode::Statistics)
     {
-        cout << "Gas used: " << res.gasUsed << " (+" << t.baseGasRequired(se->evmSchedule(envInfo.number())) << " for transaction, -" << res.gasRefunded << " refunded)\n";
+        cout << "Gas used: " << res.gasUsed << " (+"
+             << t.baseGasRequired(se->evmSchedule(envInfo.number())) << " for transaction, -"
+             << res.gasRefunded << " refunded)\n";
         cout << "Output: " << toHex(output) << "\n";
         LogEntries logs = executive.logs();
         cout << logs.size() << " logs" << (logs.empty() ? "." : ":") << "\n";
-        for (LogEntry const& l: logs)
+        for (LogEntry const& l : logs)
         {
             cout << "  " << l.address.hex() << ": " << toHex(t.data()) << "\n";
-            for (h256 const& t: l.topics)
-                cout << "    " << t.hex() << "\n";
+            for (h256 const& topic : l.topics)
+                cout << "    " << topic.hex() << "\n";
         }
 
         cout << total << " operations in " << execTime << " seconds.\n";
         cout << "Maximum memory usage: " << memTotal * 32 << " bytes\n";
         cout << "Expensive operations:\n";
-        for (auto const& c: {Instruction::SSTORE, Instruction::SLOAD, Instruction::CALL, Instruction::CREATE, Instruction::CALLCODE, Instruction::DELEGATECALL, Instruction::MSTORE8, Instruction::MSTORE, Instruction::MLOAD, Instruction::SHA3})
-            if (!!counts[(byte)c].first)
-                cout << "  " << instructionInfo(c).name << " x " << counts[(byte)c].first << " (" << counts[(byte)c].second << " gas)\n";
+        for (auto const inst : {Instruction::SSTORE, Instruction::SLOAD, Instruction::CALL,
+                 Instruction::CREATE, Instruction::CALLCODE, Instruction::DELEGATECALL,
+                 Instruction::MSTORE8, Instruction::MSTORE, Instruction::MLOAD, Instruction::SHA3})
+        {
+            auto const& count = counts[static_cast<byte>(inst)];
+            if (count.first != 0)
+                cout << "  " << instructionInfo(inst).name << " x " << count.first << " ("
+                     << count.second << " gas)\n";
+        }
     }
     else if (mode == Mode::Trace)
         cout << st.json(styledJson);
@@ -378,7 +391,8 @@ int main(int argc, char** argv)
         cout << "output: '" << toHex(output) << "'\n";
         cout << "exception: " << boolalpha << exception << '\n';
         cout << "gas used: " << res.gasUsed << '\n';
-        cout << "gas/sec: " << scientific << setprecision(3) << uint64_t(res.gasUsed)/execTime << '\n';
+        cout << "gas/sec: " << scientific << setprecision(3) << uint64_t(res.gasUsed) / execTime
+             << '\n';
         cout << "exec time: " << fixed << setprecision(6) << execTime << '\n';
     }
     return 0;

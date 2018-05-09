@@ -65,7 +65,7 @@ EthereumPeer::~EthereumPeer()
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetAllDetail) << "Peer aborting while being asked for " << ::toString(m_asking);
+        cnetdetails << "Peer aborting while being asked for " << ::toString(m_asking);
         setRude();
     }
     abortSync();
@@ -147,12 +147,13 @@ void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, u
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetWarn) << "Asking headers while requesting " << ::toString(m_asking);
+        cnetwarn << "Asking headers while requesting " << ::toString(m_asking);
     }
     setAsking(Asking::BlockHeaders);
     RLPStream s;
     prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
-    clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "");
+    cnetlog << "Requesting " << _count << " block headers starting from " << _startNumber
+            << (_reverse ? " in reverse" : "");
     m_lastAskedHeaders = _count;
     sealAndSend(s);
 }
@@ -161,12 +162,13 @@ void EthereumPeer::requestBlockHeaders(h256 const& _startHash, unsigned _count, 
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetWarn) << "Asking headers while requesting " << ::toString(m_asking);
+        cnetwarn << "Asking headers while requesting " << ::toString(m_asking);
     }
     setAsking(Asking::BlockHeaders);
     RLPStream s;
     prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
-    clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
+    cnetlog << "Requesting " << _count << " block headers starting from " << _startHash
+            << (_reverse ? " in reverse" : "");
     m_lastAskedHeaders = _count;
     sealAndSend(s);
 }
@@ -191,7 +193,8 @@ void EthereumPeer::requestByHashes(h256s const& _hashes, Asking _asking, Subprot
 {
     if (m_asking != Asking::Nothing)
     {
-        clog(NetWarn) << "Asking "<< ::toString(_asking) << " while requesting " << ::toString(m_asking);
+        cnetwarn << "Asking " << ::toString(_asking) << " while requesting "
+                 << ::toString(m_asking);
     }
     setAsking(_asking);
     if (_hashes.size())
@@ -260,7 +263,8 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
         if (m_peerCapabilityVersion == m_hostProtocolVersion)
             m_protocolVersion = m_hostProtocolVersion;
 
-        clog(NetMessageSummary) << "Status:" << m_protocolVersion << "/" << m_networkId << "/" << m_genesisHash << ", TD:" << m_totalDifficulty << "=" << m_latestHash;
+        cnetlog << "Status: " << m_protocolVersion << " / " << m_networkId << " / " << m_genesisHash
+                << ", TD: " << m_totalDifficulty << " = " << m_latestHash;
         setIdle();
         observer->onPeerStatus(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())));
         break;
@@ -283,7 +287,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
         if (skip > std::numeric_limits<unsigned>::max() - 1)
         {
-            clog(NetAllDetail) << "Requested block skip is too big: " << skip;
+            cnetdetails << "Requested block skip is too big: " << skip;
             break;
         }
 
@@ -298,7 +302,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case BlockHeadersPacket:
     {
         if (m_asking != Asking::BlockHeaders)
-            clog(NetImpolite) << "Peer giving us block headers when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us block headers when we didn't ask for them.";
         else
         {
             setIdle();
@@ -309,11 +313,11 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case GetBlockBodiesPacket:
     {
         unsigned count = static_cast<unsigned>(_r.itemCount());
-        clog(NetMessageSummary) << "GetBlockBodies (" << dec << count << "entries)";
+        cnetlog << "GetBlockBodies (" << dec << count << " entries)";
 
         if (!count)
         {
-            clog(NetImpolite) << "Zero-entry GetBlockBodies: Not replying.";
+            LOG(m_loggerImpolite) << "Zero-entry GetBlockBodies: Not replying.";
             addRating(-10);
             break;
         }
@@ -329,7 +333,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case BlockBodiesPacket:
     {
         if (m_asking != Asking::BlockBodies)
-            clog(NetImpolite) << "Peer giving us block bodies when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us block bodies when we didn't ask for them.";
         else
         {
             setIdle();
@@ -346,7 +350,8 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     {
         unsigned itemCount = _r.itemCount();
 
-        clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
+        cnetlog << "BlockHashes (" << dec << itemCount << " entries) "
+                << (itemCount ? "" : " : NoMoreHashes");
 
         if (itemCount > c_maxIncomingNewHashes)
         {
@@ -366,11 +371,11 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
         unsigned count = static_cast<unsigned>(_r.itemCount());
         if (!count)
         {
-            clog(NetImpolite) << "Zero-entry GetNodeData: Not replying.";
+            LOG(m_loggerImpolite) << "Zero-entry GetNodeData: Not replying.";
             addRating(-10);
             break;
         }
-        clog(NetMessageSummary) << "GetNodeData (" << dec << count << " entries)";
+        cnetlog << "GetNodeData (" << dec << count << " entries)";
 
         strings const data = hostData->nodeData(_r);
 
@@ -387,11 +392,11 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
         unsigned count = static_cast<unsigned>(_r.itemCount());
         if (!count)
         {
-            clog(NetImpolite) << "Zero-entry GetReceipts: Not replying.";
+            LOG(m_loggerImpolite) << "Zero-entry GetReceipts: Not replying.";
             addRating(-10);
             break;
         }
-        clog(NetMessageSummary) << "GetReceipts (" << dec << count << " entries)";
+        cnetlog << "GetReceipts (" << dec << count << " entries)";
 
         pair<bytes, unsigned> const rlpAndItemCount = hostData->receipts(_r);
 
@@ -404,7 +409,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case NodeDataPacket:
     {
         if (m_asking != Asking::NodeData)
-            clog(NetImpolite) << "Peer giving us node data when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us node data when we didn't ask for them.";
         else
         {
             setIdle();
@@ -415,7 +420,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     case ReceiptsPacket:
     {
         if (m_asking != Asking::Receipts)
-            clog(NetImpolite) << "Peer giving us receipts when we didn't ask for them.";
+            LOG(m_loggerImpolite) << "Peer giving us receipts when we didn't ask for them.";
         else
         {
             setIdle();
@@ -429,11 +434,12 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
     }
     catch (Exception const&)
     {
-        clog(NetWarn) << "Peer causing an Exception:" << boost::current_exception_diagnostic_information() << _r;
+        cnetwarn << "Peer causing an Exception: "
+                 << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        clog(NetWarn) << "Peer causing an exception:" << _e.what() << _r;
+        cnetwarn << "Peer causing an exception: " << _e.what() << " " << _r;
     }
 
     return true;

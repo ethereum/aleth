@@ -67,11 +67,10 @@ public:
 	virtual size_t codeSizeAt(Address _a) override final;
 
 	/// Create a new contract.
-	virtual std::pair<h160, owning_bytes_ref> create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp = {}) override final;
+	CreateResult create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp = {}) final;
 
-	/// Create a new message call. Leave _myAddressOverride as the default to use the present address as caller.
-	/// @returns success flag and output data, if any.
-	virtual std::pair<bool, owning_bytes_ref> call(CallParameters& _params) override final;
+	/// Create a new message call.
+	CallResult call(CallParameters& _params) final;
 
 	/// Read address's balance.
 	virtual u256 balance(Address _a) override final { return m_s.balance(_a); }

@@ -51,7 +51,7 @@ public:
 	/// @returns the status code.
 	/// @throw TransactionReceiptVersionError when the receipt has a state root instead of a status code.
 	uint8_t statusCode() const;
-	u256 const& gasUsed() const { return m_gasUsed; }
+	u256 const& cumulativeGasUsed() const { return m_gasUsed; }
 	LogBloom const& bloom() const { return m_bloom; }
 	LogEntries const& log() const { return m_log; }
 
@@ -79,6 +79,7 @@ public:
 		h256 const& _blockHash,
 		BlockNumber _blockNumber,
 		unsigned _transactionIndex,
+		u256 const& _gasUsed,
 		Address const& _contractAddress = Address()
 	):
 		TransactionReceipt(_t),
@@ -86,6 +87,7 @@ public:
 		m_blockHash(_blockHash),
 		m_blockNumber(_blockNumber),
 		m_transactionIndex(_transactionIndex),
+		m_gasUsed(_gasUsed),
 		m_contractAddress(_contractAddress)
 	{
 		LogEntries entries = log();
@@ -104,6 +106,7 @@ public:
 	h256 const& blockHash() const { return m_blockHash; }
 	BlockNumber blockNumber() const { return m_blockNumber; }
 	unsigned transactionIndex() const { return m_transactionIndex; }
+	u256 const& gasUsed() const { return m_gasUsed; }
 	Address const& contractAddress() const { return m_contractAddress; }
 	LocalisedLogEntries const& localisedLogs() const { return m_localisedLogs; };
 
@@ -112,6 +115,7 @@ private:
 	h256 m_blockHash;
 	BlockNumber m_blockNumber;
 	unsigned m_transactionIndex = 0;
+	u256 m_gasUsed;
 	Address m_contractAddress;
 	LocalisedLogEntries m_localisedLogs;
 };

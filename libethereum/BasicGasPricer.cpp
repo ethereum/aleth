@@ -53,7 +53,7 @@ void BasicGasPricer::update(BlockChain const& _bc)
 			for (auto const& tr: r[1])
 			{
 				Transaction tx(tr.data(), CheckTransaction::None);
-				u256 gu = brs.receipts[i].gasUsed();
+				u256 gu = brs.receipts[i].cumulativeGasUsed();
 				dist[tx.gasPrice()] += gu;
 				total += gu;
 				i++;
