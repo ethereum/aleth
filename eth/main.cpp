@@ -33,15 +33,16 @@
 #include <boost/program_options/options_description.hpp>
 
 #include <libdevcore/FileSystem.h>
+#include <libdevcore/LoggingProgramOptions.h>
 #include <libethashseal/EthashAux.h>
-#include <libevm/VM.h>
-#include <libevm/VMFactory.h>
+#include <libethashseal/EthashClient.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libethcore/KeyManager.h>
 #include <libethereum/Defaults.h>
 #include <libethereum/SnapshotImporter.h>
 #include <libethereum/SnapshotStorage.h>
-#include <libethashseal/EthashClient.h>
-#include <libethashseal/GenesisInfo.h>
+#include <libevm/VM.h>
+#include <libevm/VMFactory.h>
 #include <libwebthree/WebThree.h>
 
 #include <libdevcrypto/LibSnark.h>
@@ -388,23 +389,9 @@ int main(int argc, char** argv)
     addImportExportOption("import-snapshot", po::value<string>()->value_name("<path>"),
         "Import blockchain and state data from the Parity Warp Sync snapshot.\n");
 
-    int logVerbosity = 1;
-    std::vector<std::string> includeLogChannels;
-    std::vector<std::string> excludeLogChannels;
-    po::options_description loggingOptions("Logging Options", c_lineWidth);
-    auto addLoggingOption = loggingOptions.add_options();
-    addLoggingOption("log-verbosity,v", po::value<int>(&logVerbosity)->value_name("<0 - 15>"),
-        "Set the log verbosity from 0 to 15 (default: 1).");
-    addLoggingOption("log-channels",
-        po::value<std::vector<std::string>>(&includeLogChannels)
-            ->value_name("<channel_list>")
-            ->multitoken(),
-        "Space-separated list of the log channels to show (default: show all channels).");
-    addLoggingOption("log-exclude-channels",
-        po::value<std::vector<std::string>>(&excludeLogChannels)
-            ->value_name("<channel_list>")
-            ->multitoken(),
-        "Space-separated list of the log channels to hide.\n");
+    LoggingOptions loggingOptions;
+    po::options_description loggingProgramOptions(
+        createLoggingProgramOptions(c_lineWidth, loggingOptions));
 
     po::options_description generalOptions("General Options", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
@@ -421,7 +408,7 @@ int main(int argc, char** argv)
         .add(clientNetworking)
         .add(importExportMode)
         .add(vmProgramOptions(c_lineWidth))
-        .add(loggingOptions)
+        .add(loggingProgramOptions)
         .add(generalOptions);
 
     po::variables_map vm;
@@ -791,7 +778,7 @@ int main(int argc, char** argv)
         AccountManager::streamWalletHelp(cout);
         cout << clientDefaultMode << clientTransacting << clientMining << clientNetworking;
         MinerCLI::streamHelp(cout);
-        cout << importExportMode << loggingOptions << generalOptions;
+        cout << importExportMode << loggingProgramOptions << generalOptions;
         return 0;
     }
 
@@ -840,7 +827,7 @@ int main(int argc, char** argv)
         }
     }
 
-    setupLogging(logVerbosity, includeLogChannels, excludeLogChannels);
+    setupLogging(loggingOptions);
 
     if (!privateChain.empty())
     {
@@ -853,7 +840,7 @@ int main(int argc, char** argv)
         // default to mainnet if not already set with any of `--mainnet`, `--ropsten`, `--genesis`, `--config`
         chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 
-    if (logVerbosity > 0)
+    if (loggingOptions.verbosity > 0)
         cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << "\n";
 
     m.execute();

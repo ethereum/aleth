@@ -19,6 +19,7 @@
 /// EVM Execution tool.
 
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/LoggingProgramOptions.h>
 #include <libdevcore/SHA3.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
@@ -131,8 +132,6 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
 
-    setupLogging(5);
-
     po::options_description transactionOptions("Transaction options", c_lineWidth);
     string const gasLimitDescription =
         "<n> Block gas limit (default: " + to_string(maxBlockGasLimit()) + ").";
@@ -161,6 +160,10 @@ int main(int argc, char** argv)
     addTraceOption("flat", "Minimal whitespace in the JSON.");
     addTraceOption("mnemonics", "Show instruction mnemonics in the trace (non-standard).\n");
 
+    LoggingOptions loggingOptions;
+    po::options_description loggingProgramOptions(
+        createLoggingProgramOptions(c_lineWidth, loggingOptions));
+
     po::options_description generalOptions("General options", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("version,v", "Show the version and exit.");
@@ -184,6 +187,7 @@ int main(int argc, char** argv)
     allowedOptions.add(vmProgramOptions(c_lineWidth))
         .add(networkOptions)
         .add(optionsForTrace)
+        .add(loggingProgramOptions)
         .add(generalOptions)
         .add(transactionOptions);
     po::parsed_options parsed =
@@ -193,6 +197,8 @@ int main(int argc, char** argv)
     po::variables_map vm;
     po::store(parsed, vm);
     po::notify(vm);
+
+    setupLogging(loggingOptions);
 
     // handling mode and input file options separately, as they don't have option name
     for (auto const& arg : unrecognisedOptions)
@@ -267,7 +273,6 @@ int main(int argc, char** argv)
         data = fromHex(vm["input"].as<string>());
     if (vm.count("code"))
         code = fromHex(vm["code"].as<string>());
-
 
     // Read code from input file.
     if (!inputFile.empty())

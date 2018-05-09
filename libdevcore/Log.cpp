@@ -78,22 +78,21 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(context, "Context", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(threadName, "ThreadName", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
 
-void setupLogging(int _verbosity, std::vector<std::string> const& _includeChannels /*= {}*/,
-    std::vector<std::string> const& _excludeChannels /*= {}*/)
+void setupLogging(LoggingOptions const& _options)
 {
     auto sink = boost::make_shared<
         boost::log::sinks::asynchronous_sink<boost::log::sinks::text_ostream_backend>>();
 
     boost::shared_ptr<std::ostream> stream{&std::cout, boost::null_deleter{}};
     sink->locked_backend()->add_stream(stream);
-    sink->set_filter([_verbosity, _includeChannels, _excludeChannels](
-                         boost::log::attribute_value_set const& _set) {
-        if (_set["Severity"].extract<int>() > _verbosity)
+    sink->set_filter([_options](boost::log::attribute_value_set const& _set) {
+        if (_set["Severity"].extract<int>() > _options.verbosity)
             return false;
 
         auto const messageChannel = _set[channel];
-        return (_includeChannels.empty() || contains(_includeChannels, messageChannel)) &&
-               !contains(_excludeChannels, messageChannel);
+        return (_options.includeChannels.empty() ||
+                   contains(_options.includeChannels, messageChannel)) &&
+               !contains(_options.excludeChannels, messageChannel);
     });
 
     namespace expr = boost::log::expressions;
