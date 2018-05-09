@@ -22,16 +22,17 @@
  * CLI module for key management.
  */
 
-#include <thread>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/FileSystem.h>
+#include <libdevcore/SHA3.h>
+#include <libethcore/KeyManager.h>
+#include <libethcore/TransactionBase.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim_all.hpp>
 #include <chrono>
 #include <fstream>
 #include <iosfwd>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/trim_all.hpp>
-#include <libdevcore/SHA3.h>
-#include <libdevcore/FileSystem.h>
-#include <libethcore/KeyManager.h>
-#include <libethcore/TransactionBase.h>
+#include <thread>
 
 using namespace std;
 using namespace dev;

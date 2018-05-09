@@ -19,16 +19,16 @@
  * Ethereum client.
  */
 
-#include <thread>
-#include <fstream>
-#include <iostream>
+#include "BuildInfo.h"
+#include "KeyAux.h"
 #include <libdevcore/FileSystem.h>
-#include <libdevcore/Log.h>
+#include <libdevcore/LoggingProgramOptions.h>
 #include <libethcore/KeyManager.h>
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
-#include "BuildInfo.h"
-#include "KeyAux.h"
+#include <fstream>
+#include <iostream>
+#include <thread>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -69,19 +69,25 @@ int main(int argc, char** argv)
 {
     setDefaultOrCLocale();
     KeyCLI m(KeyCLI::OperationMode::ListBare);
-    int logVerbosity = 0;
+
+    LoggingOptions loggingOptions;
+    po::options_description loggingProgramOptions(createLoggingProgramOptions(
+        po::options_description::m_default_line_length, loggingOptions));
+
     po::options_description generalOptions("General Options");
     auto addOption = generalOptions.add_options();
-    addOption("verbosity,v", po::value<int>(&logVerbosity)->value_name("<0 - 9>"),
-        "Set the log verbosity from 0 to 9 (default: 8).");
     addOption("version,V", "Show the version and exit.");
     addOption("help,h", "Show this help message and exit.");
+
+    po::options_description allowedOptions("Allowed options");
+    allowedOptions.add(loggingProgramOptions).add(generalOptions);
 
     po::variables_map vm;
     vector<string> unrecognisedOptions;
     try
     {
-        po::parsed_options parsed = po::command_line_parser(argc, argv).options(generalOptions).allow_unregistered().run();
+        po::parsed_options parsed =
+            po::command_line_parser(argc, argv).options(allowedOptions).allow_unregistered().run();
         unrecognisedOptions = collect_unrecognized(parsed.options, po::include_positional);
         po::store(parsed, vm);
         po::notify(vm);
@@ -105,13 +111,13 @@ int main(int argc, char** argv)
             << "Usage ethkey [OPTIONS]" << endl
             << "Options:" << endl << endl;
         KeyCLI::streamHelp(cout);
-        cout << generalOptions;
+        cout << allowedOptions;
         return 0;
     }
     if (vm.count("version"))
         version();
 
-    setupLogging(logVerbosity);
+    setupLogging(loggingOptions);
 
     m.execute();
 

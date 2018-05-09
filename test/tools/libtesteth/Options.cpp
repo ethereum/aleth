@@ -336,7 +336,9 @@ Options::Options(int argc, const char** argv)
     if (logVerbosity == Verbosity::NiceReport)
         verbosity = -1;  // disable cnote but leave cerr and cout
 
-    setupLogging(verbosity);
+    LoggingOptions logginOptions;
+    logginOptions.verbosity = verbosity;
+    setupLogging(logginOptions);
 }
 
 Options const& Options::get(int argc, const char** argv)

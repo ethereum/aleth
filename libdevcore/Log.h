@@ -99,9 +99,15 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(
         (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = CHANNEL))
 
 
+struct LoggingOptions
+{
+    int verbosity = 0;
+    strings includeChannels;
+    strings excludeChannels;
+};
+
 // Should be called in every executable
-void setupLogging(int _verbosity, std::vector<std::string> const& _includeChannels = {},
-    std::vector<std::string> const& _excludeChannels = {});
+void setupLogging(LoggingOptions const& _options);
 
 // Simple non-thread-safe logger with fixed severity and channel for each message
 using Logger = boost::log::sources::severity_channel_logger<>;
