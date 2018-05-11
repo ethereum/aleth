@@ -28,6 +28,7 @@ include(evmc/cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
 include(CableBuildType)
 include(CableToolchains)
+include(GNUInstallDirs)
 
 cable_configure_toolchain(DEFAULT cxx11)
 

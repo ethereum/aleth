@@ -56,6 +56,8 @@ find_package(yaml-cpp CONFIG REQUIRED)
 add_executable(testeth ${sources})
 target_include_directories(testeth PRIVATE ${UTILS_INCLUDE_DIR})
 target_link_libraries(testeth PRIVATE ethereum ethashseal web3jsonrpc devcrypto devcore eth-buildinfo cryptopp-static yaml-cpp::yaml-cpp binaryen::binaryen)
+install(TARGETS testeth DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
