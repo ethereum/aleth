@@ -19,9 +19,6 @@ macro (eth_policy)
 		# ignore COMPILE_DEFINITIONS_<Config> properties
 		cmake_policy(SET CMP0043 OLD)
 
-		# allow VERSION argument in project()
-		cmake_policy(SET CMP0048 NEW)
-
 	endif()
 
 	if (POLICY CMP0054)
