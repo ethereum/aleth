@@ -29,18 +29,12 @@ namespace dev
 namespace test
 {
 
-enum class Verbosity
-{
-    None,
-    NiceReport,
-    Full
-};
-
 DEV_SIMPLE_EXCEPTION(InvalidOption);
 
 class Options
 {
 public:
+    int verbosity = -1;     ///< Verbosity level
     bool vmtrace = false;	///< Create EVM execution tracer
     bool filltests = false; ///< Create JSON test files from execution results
     bool fillchain = false; ///< Fill tests as a blockchain tests if possible
@@ -55,7 +49,6 @@ public:
     bool jsontrace = false; ///< Vmtrace to stdout in json format
     eth::StandardTrace::DebugOptions jsontraceOptions; ///< output config for jsontrace
     std::string testpath;	///< Custom test folder path
-    Verbosity logVerbosity = Verbosity::NiceReport;
     boost::optional<boost::filesystem::path> randomCodeOptionsPath; ///< Options for random code generation in fuzz tests
 
     /// Test selection
@@ -77,6 +70,7 @@ public:
 private:
     Options(int argc = 0, const char** argv = 0);
     Options(Options const&) = delete;
+    void setVerbosity(int _level);
 };
 
 } //namespace test

@@ -52,7 +52,6 @@ bool TestOutputHelper::checkTest(std::string const& _testName)
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
 		return false;
 
-	cnote << _testName;
 	m_currentTestName = _testName;
 	return true;
 }
