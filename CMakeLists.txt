@@ -25,6 +25,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 include(evmc/cmake/cable/bootstrap.cmake)
+include(CableBuildInfo)
 include(CableBuildType)
 include(CableToolchains)
 
@@ -72,6 +73,8 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmjit/.git)
 endif()
 
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
+
+cable_add_buildinfo_library(PREFIX eth)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY On)
 
