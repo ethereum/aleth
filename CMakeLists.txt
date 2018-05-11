@@ -24,6 +24,8 @@
 
 cmake_minimum_required(VERSION 3.5.1)
 
+include(evmc/cmake/cable/bootstrap.cmake)
+
 if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     # The default toolchain file configures compilers and build environment.
     # This configuration is also used by hunter to build dependencies.
