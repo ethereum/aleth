@@ -102,6 +102,9 @@ find_package(libjson-rpc-cpp CONFIG REQUIRED)
 hunter_add_package(libscrypt)
 find_package(libscrypt CONFIG REQUIRED)
 
+hunter_add_package(ethash)
+find_package(ethash CONFIG REQUIRED)
+
 include(ProjectSecp256k1)
 include(ProjectLibFF)
 
