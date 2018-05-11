@@ -23,9 +23,10 @@
 #include "TestOutputHelper.h"
 #include "wast2wasm.h"
 
-#include <BuildInfo.h>
 #include <libethashseal/EthashCPUMiner.h>
 #include <libethereum/Client.h>
+
+#include <eth-buildinfo.h>
 
 #include <yaml-cpp/yaml.h>
 #include <boost/algorithm/string/trim.hpp>
@@ -624,13 +625,7 @@ void requireJsonFields(json_spirit::mObject const& _o, string const& _section,
 
 string prepareVersionString()
 {
-    // cpp-1.3.0+commit.6be76b64.Linux.g++
-    string commit(DEV_QUOTED(ETH_COMMIT_HASH));
-    string version = "cpp-" + string(ETH_PROJECT_VERSION);
-    version += "+commit." + commit.substr(0, 8);
-    version +=
-        "." + string(DEV_QUOTED(ETH_BUILD_OS)) + "." + string(DEV_QUOTED(ETH_BUILD_COMPILER));
-    return version;
+    return string{"testeth "} + eth_get_buildinfo()->project_version;
 }
 
 string prepareLLLCVersionString()
