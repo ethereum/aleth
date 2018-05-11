@@ -18,7 +18,7 @@
 #include "interpreter.h"
 #include "VM.h"
 
-#include "BuildInfo.h"
+#include <eth-buildinfo.h>
 
 extern "C" evmc_instance* evmc_create_interpreter() noexcept
 {
@@ -86,7 +86,13 @@ namespace eth
 {
 VM::VM()
   : evmc_instance{
-        EVMC_ABI_VERSION, "interpreter", ETH_PROJECT_VERSION, ::destroy, ::execute, nullptr}
+        EVMC_ABI_VERSION,
+        "interpreter",
+        eth_get_buildinfo()->project_version,
+        ::destroy,
+        ::execute,
+        nullptr,
+    }
 {}
 
 uint64_t VM::memNeed(u256 _offset, u256 _size)

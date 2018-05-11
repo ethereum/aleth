@@ -60,8 +60,9 @@
 #include <libweb3jsonrpc/Test.h>
 
 #include "MinerAux.h"
-#include "BuildInfo.h"
 #include "AccountManager.h"
+
+#include <eth-buildinfo.h>
 
 using namespace std;
 using namespace dev;
@@ -87,10 +88,11 @@ string ethCredits(bool _interactive = false)
 
 void version()
 {
-    cout << "eth version " << dev::Version << "\n";
+    const auto* buildinfo = eth_get_buildinfo();
+    cout << "eth " << buildinfo->project_version << "\n";
     cout << "eth network protocol version: " << dev::eth::c_protocolVersion << "\n";
     cout << "Client database version: " << dev::eth::c_databaseVersion << "\n";
-    cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << "\n";
+    cout << "Build: " << buildinfo->system_name << "/" << buildinfo->build_type << "\n";
 }
 
 /*

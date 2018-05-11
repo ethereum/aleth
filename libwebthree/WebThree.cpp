@@ -14,20 +14,20 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file WebThree.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "WebThree.h"
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
+
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
 #include <libethashseal/EthashClient.h>
-#include "BuildInfo.h"
 #include <libethashseal/Ethash.h>
+
+#include <eth-buildinfo.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -56,13 +56,12 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
             m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
         m_ethereum->startWorking();
 
-        string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
-        vector<string> bps;
-        boost::split(bps, bp, boost::is_any_of("/"));
-        bps[0] = bps[0].substr(0, 5);
-        bps[1] = bps[1].substr(0, 3);
-        bps.back() = bps.back().substr(0, 3);
-        m_ethereum->setExtraData(rlpList(0, string(dev::Version) + "++" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 4) + (ETH_CLEAN_REPO ? "-" : "*") + string(DEV_QUOTED(ETH_BUILD_TYPE)).substr(0, 1) + boost::join(bps, "/")));
+        const auto* buildinfo = eth_get_buildinfo();
+        m_ethereum->setExtraData(rlpList(0, string{buildinfo->project_version}.substr(0, 5) + "++" +
+                                                string{buildinfo->git_commit_hash}.substr(0, 4) +
+                                                string{buildinfo->build_type}.substr(0, 1) +
+                                                string{buildinfo->system_name}.substr(0, 5) +
+                                                string{buildinfo->compiler_id}.substr(0, 3)));
     }
 }
 
@@ -83,14 +82,9 @@ WebThreeDirect::~WebThreeDirect()
 
 std::string WebThreeDirect::composeClientVersion(std::string const& _client)
 {
-    return _client + "/" + \
-        "v" + dev::Version + "/" + \
-        DEV_QUOTED(ETH_BUILD_OS) + "/" + \
-        DEV_QUOTED(ETH_BUILD_COMPILER) + "/" + \
-        DEV_QUOTED(ETH_BUILD_JIT_MODE) + "/" + \
-        DEV_QUOTED(ETH_BUILD_TYPE) + "/" + \
-        string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) + \
-        (ETH_CLEAN_REPO ? "" : "*") + "/";
+    const auto* buildinfo = eth_get_buildinfo();
+    return _client + "/" + buildinfo->project_version + "/" + buildinfo->system_name + "/" +
+           buildinfo->compiler_id + buildinfo->compiler_version + "/" + buildinfo->build_type;
 }
 
 p2p::NetworkPreferences const& WebThreeDirect::networkPreferences() const
