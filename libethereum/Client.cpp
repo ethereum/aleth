@@ -783,6 +783,11 @@ void Client::flushTransactions()
     doWork();
 }
 
+Transactions Client::pending() const
+{
+    return m_tq.topTransactions(m_tq.status().current);
+}
+
 SyncStatus Client::syncStatus() const
 {
     auto h = m_host.lock();
