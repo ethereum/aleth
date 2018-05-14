@@ -509,7 +509,8 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
             {
                 // Start of the header chain in m_headers doesn't match our known chain,
                 // probably we've downloaded other fork
-                clog(0, "sync") << "Unknown parent of the downloaded headers, restarting sync";
+                clog(VerbosityWarning, "sync")
+                    << "Unknown parent of the downloaded headers, restarting sync";
                 restartSync();
                 return;
             }
@@ -526,8 +527,8 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
                 if ((prevBlock && prevBlock->hash != info.parentHash()) || (blockNumber == m_lastImportedBlock + 1 && info.parentHash() != m_lastImportedBlockHash))
                 {
                     // mismatching parent id, delete the previous block and don't add this one
-                    clog(0, "sync") << "Unknown block header " << blockNumber << " " << info.hash()
-                                    << " (Restart syncing)";
+                    clog(VerbosityWarning, "sync") << "Unknown block header " << blockNumber << " "
+                                                   << info.hash() << " (Restart syncing)";
                     _peer->addRating(-1);
                     restartSync();
                     return ;
@@ -696,7 +697,7 @@ void BlockChainSync::collectBlocks()
 
     if (host().bq().unknownFull())
     {
-        clog(0, "sync") << "Too many unknown blocks, restarting sync";
+        clog(VerbosityWarning, "sync") << "Too many unknown blocks, restarting sync";
         restartSync();
         return;
     }

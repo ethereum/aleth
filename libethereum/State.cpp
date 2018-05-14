@@ -79,7 +79,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 
     if (_we == WithExisting::Kill)
     {
-        clog(14, "statedb") << "Killing state database (WithExisting::Kill).";
+        clog(VerbosityDebug, "statedb") << "Killing state database (WithExisting::Kill).";
         fs::remove_all(path / fs::path("state"));
     }
 
@@ -90,7 +90,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
     try
     {
         std::unique_ptr<db::DatabaseFace> db(new db::DBImpl(path / fs::path("state")));
-        clog(14, "statedb") << "Opened state DB.";
+        clog(VerbosityTrace, "statedb") << "Opened state DB.";
         return OverlayDB(std::move(db));
     }
     catch (boost::exception const& ex)
