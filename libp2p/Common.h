@@ -85,13 +85,13 @@ struct ECDHEError: virtual Exception {};
         boost::log::sources::severity_channel_logger_mt<>,     \
         (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = "net"))
 
-NET_GLOBAL_LOGGER(netwarn, 0)
+NET_GLOBAL_LOGGER(netwarn, VerbosityWarning)
 #define cnetwarn LOG(dev::p2p::g_netwarnLogger::get())
-NET_GLOBAL_LOGGER(netnote, 2)
+NET_GLOBAL_LOGGER(netnote, VerbosityInfo)
 #define cnetnote LOG(dev::p2p::g_netnoteLogger::get())
-NET_GLOBAL_LOGGER(netlog, 4)
+NET_GLOBAL_LOGGER(netlog, VerbosityDebug)
 #define cnetlog LOG(dev::p2p::g_netlogLogger::get())
-NET_GLOBAL_LOGGER(netdetails, 10)
+NET_GLOBAL_LOGGER(netdetails, VerbosityTrace)
 #define cnetdetails LOG(dev::p2p::g_netdetailsLogger::get())
 
 enum PacketType
