@@ -14,22 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Common.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "Common.h"
 #include "Exceptions.h"
 #include "Log.h"
-#include "BuildInfo.h"
+
+#include <eth-buildinfo.h>
 
 using namespace std;
 
 namespace dev
 {
 
-char const* Version = ETH_PROJECT_VERSION;
+char const* Version = eth_get_buildinfo()->project_version;
 bytes const NullBytes;
 std::string const EmptyString;
 

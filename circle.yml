@@ -27,7 +27,7 @@ defaults:
     run:
       name: "Build"
       working_directory: ~/build
-      command: cmake --build . -- -j $BUILD_PARALLEL_JOBS
+      command: cmake --build . --target package -- -j $BUILD_PARALLEL_JOBS
 
   test: &test
     run:
@@ -47,15 +47,10 @@ defaults:
 
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
-  store-eth: &store-eth
+  store-package: &store-package
     store_artifacts:
-      path: ~/build/eth/eth
-      destination: eth
-
-  store-testeth: &store-testeth
-    store_artifacts:
-      path: ~/build/test/testeth
-      destination: testeth
+      path: ~/build/cpp-ethereum.tar.gz
+      destination: cpp-ethereum.tar.gz
 
   store-randomcode-seed: &store-randomcode-seed
     store_artifacts:
@@ -102,8 +97,7 @@ defaults:
     - *configure
     - *build
     - *save-deps-cache
-    - *store-eth
-    - *store-testeth
+    - *store-package
     - *restore-ethash-dag
     - *test
     - run:
@@ -170,8 +164,7 @@ jobs:
       - *configure
       - *build
       - *save-deps-cache
-      - *store-eth
-      - *store-testeth
+      - *store-package
       - *restore-ethash-dag
       - *test
       - *store-randomcode-seed

@@ -68,8 +68,6 @@ macro(configure_project)
         set(VERSION_SUFFIX "")
     endif()
 
-    include(EthBuildInfo)
-    create_build_info()
     print_config()
 endmacro()
 

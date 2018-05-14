@@ -50,16 +50,14 @@ before_build: |
   if not exist build mkdir build
   cd build
   cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=%TESTS% -DEVMJIT=OFF
-build_script:
-    - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - scripts\release.bat %CONFIGURATION% %ETHEREUM_DEPS_PATH% %TESTS%
+build_script: |
+  cmake --build . --config %CONFIGURATION% --target package
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\tests.bat %TESTS% %CONFIGURATION% %APPVEYOR_BUILD_FOLDER% %ETHEREUM_DEPS_PATH%
 artifacts:
-    - path: cpp-ethereum-windows.zip
-      name: cpp-ethereum-windows-zip
+  - path: build\cpp-ethereum.zip
+    name: cpp-ethereum-windows.zip
 
 # This is the deploy target for Windows which generates ZIPs per commit.
 # We are in agreement that generating ZIPs per commit for the develop
@@ -79,14 +77,6 @@ deploy:
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
-    artifact: cpp-ethereum-windows-zip
+    artifact: cpp-ethereum-windows.zip
     on:
         branch: release
-
-# Disable slightly annoying AppVeyorBot.  The comments it adds onto Github issues are
-# redundant with the "Checks Passed/Failure" detail which is already on the issues.
-notifications:
-    - provider: GitHubPullRequest
-      on_build_success: false
-      on_build_failure: false
-      on_build_status_changed: false

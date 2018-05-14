@@ -13,22 +13,22 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file main.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * Ethereum client.
- */
 
-#include "BuildInfo.h"
 #include "KeyAux.h"
+
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
 #include <libethcore/KeyManager.h>
+
+#include <eth-buildinfo.h>
+
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <thread>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -37,8 +37,9 @@ namespace po = boost::program_options;
 
 void version()
 {
-    cout << "ethkey version " << dev::Version << endl;
-    cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
+    const auto* buildinfo = eth_get_buildinfo();
+    cout << "ethkey " << buildinfo->project_version << "\nBuild: " << buildinfo->system_name << "/"
+         << buildinfo->build_type << endl;
     exit(0);
 }
 
