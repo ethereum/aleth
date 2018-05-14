@@ -85,7 +85,7 @@ template <class S> bool IpcServerBase<S>::SendResponse(string const& _response, 
         else
             fullyWritten = true;
     } while (!fullyWritten && !errorOccured);
-    clog(10, "rpc") << _response;
+    clog(VerbosityTrace, "rpc") << _response;
     return fullyWritten && !errorOccured;
 }
 
@@ -136,7 +136,7 @@ template <class S> void IpcServerBase<S>::GenerateResponse(S _connection)
                 {
                     std::string r = request.substr(0, i + 1);
                     request.erase(0, i + 1);
-                    clog(10, "rpc") << r;
+                    clog(VerbosityTrace, "rpc") << r;
                     OnRequest(r, reinterpret_cast<void*>((intptr_t)_connection));
                     i = 0;
                     continue;
