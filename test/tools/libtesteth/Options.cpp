@@ -20,14 +20,18 @@
 
 #include <libevm/VMFactory.h>
 #include <libweb3jsonrpc/Debug.h>
-#include <test/tools/libtesteth/Options.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
+#include <test/tools/libtesteth/Options.h>
+#include <boost/iostreams/device/null.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/program_options.hpp>
 
 using namespace std;
 using namespace dev::test;
 using namespace dev::eth;
 
+namespace
+{
 void printHelp()
 {
     cout << "Usage: \n";
@@ -72,6 +76,25 @@ void printVersion()
 {
     cout << prepareVersionString() << "\n";
 }
+}
+
+void Options::setVerbosity(int _level)
+{
+    static boost::iostreams::stream<boost::iostreams::null_sink> nullOstream(
+        (boost::iostreams::null_sink()));
+    dev::LoggingOptions logOptions;
+    verbosity = _level;
+    logOptions.verbosity = verbosity;
+    if (_level <= 0)
+    {
+        logOptions.verbosity = -1;
+        std::cout.rdbuf(nullOstream.rdbuf());
+        std::cerr.rdbuf(nullOstream.rdbuf());
+    }
+    else if (_level == 1 || _level == 2)
+        logOptions.verbosity = -1;
+    dev::setupLogging(logOptions);
+}
 
 Options::Options(int argc, const char** argv)
 {
@@ -100,7 +123,6 @@ Options::Options(int argc, const char** argv)
     trGasIndex = -1;
     trValueIndex = -1;
     bool seenSeparator = false; // true if "--" has been seen.
-    int verbosity = 5;
     for (auto i = 0; i < argc; ++i)
     {
         auto arg = std::string{argv[i]};
@@ -145,7 +167,7 @@ Options::Options(int argc, const char** argv)
         {
 #if ETH_VMTRACE
             vmtrace = true;
-            verbosity = 13;
+            verbosity = std::max(verbosity, 13);
 #else
             cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
             exit(1);
@@ -207,22 +229,7 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--verbosity")
         {
             throwIfNoArgumentFollows();
-            static std::ostringstream strCout; //static string to redirect logs to
-            std::string indentLevel = std::string{argv[++i]};
-            if (indentLevel == "0")
-            {
-                logVerbosity = Verbosity::None;
-                std::cout.rdbuf(strCout.rdbuf());
-                std::cerr.rdbuf(strCout.rdbuf());
-            }
-            else if (indentLevel == "1")
-                logVerbosity = Verbosity::NiceReport;
-            else
-                logVerbosity = Verbosity::Full;
-
-            int indentLevelInt = atoi(argv[i]);
-            if (indentLevelInt > verbosity)
-                verbosity = indentLevelInt;
+            verbosity = std::max(verbosity, atoi(argv[++i]));
         }
         else if (arg == "--options")
         {
@@ -263,7 +270,10 @@ Options::Options(int argc, const char** argv)
             testpath = std::string{argv[++i]};
         }
         else if (arg == "--statediff")
+        {
             statediff = true;
+            verbosity = std::max(verbosity, 5);
+        }
         else if (arg == "--randomcode")
         {
             throwIfNoArgumentFollows();
@@ -332,13 +342,8 @@ Options::Options(int argc, const char** argv)
                     "--seed <uint> could be used only with --createRandomTest \n"));
     }
 
-    //Default option
-    if (logVerbosity == Verbosity::NiceReport)
-        verbosity = -1;  // disable cnote but leave cerr and cout
-
-    LoggingOptions logginOptions;
-    logginOptions.verbosity = verbosity;
-    setupLogging(logginOptions);
+    // If no verbosity is set. use default
+    setVerbosity(verbosity == -1 ? 1 : verbosity);
 }
 
 Options const& Options::get(int argc, const char** argv)

@@ -232,11 +232,11 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 	}
 
 	// Test is generated. Now run it and check that there should be no errors
-	if ((Options::get().singleTest && Options::get().singleTestName == testname) || !Options::get().singleTest)
-		cnote << "TEST " << testname << ":";
+    if (Options::get().verbosity > 1)
+        std::cout << "TEST " << testname << ":\n";
 
-	Listener::notifySuiteStarted(testname);	// Outdated logging
-	executeFile(boostTestPath);
+    Listener::notifySuiteStarted(testname);  // Outdated logging
+    executeFile(boostTestPath);
 }
 
 void TestSuite::executeFile(boost::filesystem::path const& _file) const
