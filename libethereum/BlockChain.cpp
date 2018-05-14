@@ -551,14 +551,14 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     if (!pd)
     {
         auto pdata = pd.rlp();
-        LOG(m_loggerDebug) << "Details is returning false despite block known: " << RLP(pdata);
+        LOG(m_loggerError) << "Details is returning false despite block known: " << RLP(pdata);
         auto parentBlock = block(_block.info.parentHash());
-        LOG(m_loggerDebug) << "isKnown: " << isKnown(_block.info.parentHash());
-        LOG(m_loggerDebug) << "last/number: " << m_lastBlockNumber << " " << m_lastBlockHash << " "
+        LOG(m_loggerError) << "isKnown: " << isKnown(_block.info.parentHash());
+        LOG(m_loggerError) << "last/number: " << m_lastBlockNumber << " " << m_lastBlockHash << " "
                            << _block.info.number();
-        LOG(m_loggerDebug) << "Block: " << BlockHeader(&parentBlock);
-        LOG(m_loggerDebug) << "RLP: " << RLP(parentBlock);
-        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerError) << "Block: " << BlockHeader(&parentBlock);
+        LOG(m_loggerError) << "RLP: " << RLP(parentBlock);
+        LOG(m_loggerError) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 
@@ -645,14 +645,14 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
     if (!pd)
     {
         auto pdata = pd.rlp();
-        LOG(m_loggerDebug) << "Details is returning false despite block known: " << RLP(pdata);
+        LOG(m_loggerError) << "Details is returning false despite block known: " << RLP(pdata);
         auto parentBlock = block(_block.info.parentHash());
-        LOG(m_loggerDebug) << "isKnown: " << isKnown(_block.info.parentHash());
-        LOG(m_loggerDebug) << "last/number: " << m_lastBlockNumber << " " << m_lastBlockHash << " "
+        LOG(m_loggerError) << "isKnown: " << isKnown(_block.info.parentHash());
+        LOG(m_loggerError) << "last/number: " << m_lastBlockNumber << " " << m_lastBlockHash << " "
                            << _block.info.number();
-        LOG(m_loggerDebug) << "Block: " << BlockHeader(&parentBlock);
-        LOG(m_loggerDebug) << "RLP: " << RLP(parentBlock);
-        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerError) << "Block: " << BlockHeader(&parentBlock);
+        LOG(m_loggerError) << "RLP: " << RLP(parentBlock);
+        LOG(m_loggerError) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 
@@ -899,9 +899,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 #if ETH_PARANOIA
     if (isKnown(_block.info.hash()) && !details(_block.info.hash()))
     {
-        LOG(m_loggerDebug) << "Known block just inserted has no details.";
-        LOG(m_loggerDebug) << "Block: " << _block.info;
-        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerError) << "Known block just inserted has no details.";
+        LOG(m_loggerError) << "Block: " << _block.info;
+        LOG(m_loggerError) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 
@@ -912,9 +912,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
     }
     catch (...)
     {
-        LOG(m_loggerDebug) << "Failed to initialise State object form imported block.";
-        LOG(m_loggerDebug) << "Block: " << _block.info;
-        LOG(m_loggerDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+        LOG(m_loggerError) << "Failed to initialise State object form imported block.";
+        LOG(m_loggerError) << "Block: " << _block.info;
+        LOG(m_loggerError) << "DATABASE CORRUPTION: CRITICAL FAILURE";
         exit(-1);
     }
 #endif // ETH_PARANOIA

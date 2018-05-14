@@ -143,7 +143,7 @@ protected:
     std::shared_ptr<RLPXSocket> m_socket;		///< Socket.
     boost::asio::deadline_timer m_idleTimer;	///< Timer which enforces c_timeout.
 
-    Logger m_logger{createLogger(10, "net")};
+    Logger m_logger{createLogger(VerbosityTrace, "net")};
 };
     
 }

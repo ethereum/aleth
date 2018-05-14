@@ -320,8 +320,8 @@ private:
     u256 m_difficulty;													///< Total difficulty of blocks in the queue
     u256 m_drainingDifficulty;											///< Total difficulty of blocks in draining
 
-    Logger m_logger{createLogger(4, "bq")};
-    Logger m_loggerDetail{createLogger(7, "bq")};
+    Logger m_logger{createLogger(VerbosityDebug, "bq")};
+    Logger m_loggerDetail{createLogger(VerbosityTrace, "bq")};
 };
 
 std::ostream& operator<<(std::ostream& _out, BlockQueueStatus const& _s);

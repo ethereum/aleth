@@ -160,9 +160,8 @@ private:
     h256 m_lastImportedBlockHash;				///< Last imported block hash
     u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
-    Logger m_logger{createLogger(4, "sync")};
-    Logger m_loggerDetail{createLogger(5, "sync")};
-    Logger m_loggerVerbose{createLogger(13, "sync")};
+    Logger m_logger{createLogger(VerbosityDebug, "sync")};
+    Logger m_loggerDetail{createLogger(VerbosityTrace, "sync")};
 
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];

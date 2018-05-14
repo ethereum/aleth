@@ -347,8 +347,8 @@ protected:
 
     bytes m_extraData;
 
-    Logger m_logger{createLogger(2, "client")};
-    Logger m_loggerDetail{createLogger(7, "client")};
+    Logger m_logger{createLogger(VerbosityInfo, "client")};
+    Logger m_loggerDetail{createLogger(VerbosityDebug, "client")};
 };
 
 }

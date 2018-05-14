@@ -186,7 +186,7 @@ protected:
                                                             ///< The dictionary of special filters and their additional data
     std::map<unsigned, ClientWatch> m_watches;				///< Each and every watch - these reference a filter.
 
-    Logger m_loggerWatch{createLogger(7, "watch")};
+    Logger m_loggerWatch{createLogger(VerbosityDebug, "watch")};
 };
 
 }}

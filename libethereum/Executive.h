@@ -211,9 +211,9 @@ private:
     Address m_newAddress;
     size_t m_savepoint = 0;
 
-    Logger m_execLogger{createLogger(1, "exec")};
-    Logger m_detailsLogger{createLogger(14, "exec")};
-    Logger m_vmTraceLogger{createLogger(11, "vmtrace")};
+    Logger m_execLogger{createLogger(VerbosityDebug, "exec")};
+    Logger m_detailsLogger{createLogger(VerbosityTrace, "exec")};
+    Logger m_vmTraceLogger{createLogger(VerbosityTrace, "vmtrace")};
 };
 
 }

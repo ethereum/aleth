@@ -137,7 +137,7 @@ private:
     std::shared_ptr<EthereumHostDataFace> m_hostData;
     std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
 
-    Logger m_logger{createLogger(6, "host")};
+    Logger m_logger{createLogger(VerbosityDebug, "host")};
 };
 
 }

@@ -164,8 +164,7 @@ json_spirit::mObject fillJsonWithStateChange(
             log << (*it).second.str();
     }
 
-    Logger logger{createLogger(5, "state")};
-    LOG(logger) << log.str();
+    clog(VerbosityInfo, "state") << log.str();
     return oState;
 }
 
