@@ -14,12 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Log.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- *
- * The logging subsystem.
- */
 
 #pragma once
 
@@ -67,30 +61,44 @@ std::string getThreadName();
 
 #define LOG BOOST_LOG
 
+enum Verbosity
+{
+    VerbosityError = 0,
+    VerbosityWarning = 1,
+    VerbosityInfo = 2,
+    VerbosityDebug = 3,
+    VerbosityTrace = 4,
+};
+
 // Simple cout-like stream objects for accessing common log channels.
 // Thread-safe
-BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_debugLogger,
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_errorLogger,
     boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "debug"))
-#define cdebug LOG(dev::g_debugLogger::get())
-
-BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_noteLogger,
-    boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = 1)(boost::log::keywords::channel = "note"))
-#define cnote LOG(dev::g_noteLogger::get())
+    (boost::log::keywords::severity = VerbosityError)(boost::log::keywords::channel = "error"))
+#define cerror LOG(dev::g_errorLogger::get())
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_warnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "warn"))
+    (boost::log::keywords::severity = VerbosityWarning)(boost::log::keywords::channel = "warn"))
 #define cwarn LOG(dev::g_warnLogger::get())
+
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_noteLogger,
+    boost::log::sources::severity_channel_logger_mt<>,
+    (boost::log::keywords::severity = VerbosityInfo)(boost::log::keywords::channel = "info"))
+#define cnote LOG(dev::g_noteLogger::get())
+
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_debugLogger,
+    boost::log::sources::severity_channel_logger_mt<>,
+    (boost::log::keywords::severity = VerbosityDebug)(boost::log::keywords::channel = "debug"))
+#define cdebug LOG(dev::g_debugLogger::get())
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
     boost::log::sources::severity_channel_logger_mt<>,
-    (boost::log::keywords::severity = 4)(boost::log::keywords::channel = "trace"))
+    (boost::log::keywords::severity = VerbosityTrace)(boost::log::keywords::channel = "trace"))
 #define ctrace LOG(dev::g_traceLogger::get())
 
 // Simple macro to log to any channel a message without creating a logger object
-// e.g. clog(0, "channel") << "message";
+// e.g. clog(VerbosityInfo, "channel") << "message";
 // Thread-safe
 BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(
     g_clogLogger, boost::log::sources::severity_channel_logger_mt<>);
