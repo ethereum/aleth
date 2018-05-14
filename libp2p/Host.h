@@ -350,7 +350,7 @@ private:
 
 	ReputationManager m_repMan;
 
-    Logger m_logger{createLogger(6, "net")};
+    Logger m_logger{createLogger(VerbosityDebug, "net")};
 };
 
 }

@@ -212,7 +212,7 @@ private:
     mutable h256 m_hashWithout;		///< (Memoised) SHA3 hash of the block header without seal.
     mutable Mutex m_hashLock;		///< A lock for both m_hash and m_hashWithout.
 
-    mutable Logger m_logger{createLogger(9, "blockhdr")};
+    mutable Logger m_logger{createLogger(VerbosityDebug, "blockhdr")};
 };
 
 inline std::ostream& operator<<(std::ostream& _out, BlockHeader const& _bi)

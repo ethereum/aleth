@@ -417,9 +417,9 @@ private:
 
     boost::filesystem::path m_dbPath;
 
-    mutable Logger m_logger{createLogger(3, "chain")};
-    mutable Logger m_loggerDetail{createLogger(5, "chain")};
-    mutable Logger m_loggerDebug{createLogger(0, "chain")};
+    mutable Logger m_logger{createLogger(VerbosityDebug, "chain")};
+    mutable Logger m_loggerDetail{createLogger(VerbosityTrace, "chain")};
+    mutable Logger m_loggerError{createLogger(VerbosityError, "chain")};
 
     friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
 };

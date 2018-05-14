@@ -155,7 +155,7 @@ private:
     shared_ptr<BlockChainSync> m_sync;
     TransactionQueue& m_tq;
 
-    Logger m_logger{createLogger(6, "host")};
+    Logger m_logger{createLogger(VerbosityDebug, "host")};
 };
 
 class EthereumHostData: public EthereumHostDataFace

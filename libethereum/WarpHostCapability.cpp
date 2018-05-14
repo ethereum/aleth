@@ -303,7 +303,7 @@ private:
 
     std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
 
-    Logger m_logger{createLogger(1, "snap")};
+    Logger m_logger{createLogger(VerbosityInfo, "snap")};
 };
 
 }  // namespace

@@ -397,8 +397,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
             return;
         if (packet->isExpired())
         {
-            LOG(m_loggerWarn) << "Invalid packet (timestamp in the past) from "
-                              << _from.address().to_string() << ":" << _from.port();
+            LOG(m_logger) << "Invalid packet (timestamp in the past) from "
+                          << _from.address().to_string() << ":" << _from.port();
             return;
         }
 
@@ -524,13 +524,13 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
     }
     catch (std::exception const& _e)
     {
-        LOG(m_loggerWarn) << "Exception processing message from " << _from.address().to_string()
-                          << ":" << _from.port() << ": " << _e.what();
+        LOG(m_logger) << "Exception processing message from " << _from.address().to_string() << ":"
+                      << _from.port() << ": " << _e.what();
     }
     catch (...)
     {
-        LOG(m_loggerWarn) << "Exception processing message from " << _from.address().to_string()
-                          << ":" << _from.port();
+        LOG(m_logger) << "Exception processing message from " << _from.address().to_string() << ":"
+                      << _from.port();
     }
 }
 

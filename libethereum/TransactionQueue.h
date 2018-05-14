@@ -209,8 +209,8 @@ private:
     mutable Mutex x_queue;                           ///< Verification queue mutex
     std::atomic<bool> m_aborting = {false};          ///< Exit condition for verifier.
 
-    Logger m_logger{createLogger(4, "tq")};
-    Logger m_loggerDetail{createLogger(7, "tq")};
+    Logger m_logger{createLogger(VerbosityInfo, "tq")};
+    Logger m_loggerDetail{createLogger(VerbosityDebug, "tq")};
 };
 
 }

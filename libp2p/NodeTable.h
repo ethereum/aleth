@@ -275,8 +275,7 @@ private:
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
     NodeSocket* m_socketPointer;									///< Set to m_socket.get(). Socket is created in constructor and disconnected in destructor to ensure access to pointer is safe.
 
-    Logger m_logger{createLogger(10, "discov")};
-    Logger m_loggerWarn{createLogger(0, "discov")};
+    Logger m_logger{createLogger(VerbosityDebug, "discov")};
 
     DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
 };
