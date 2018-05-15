@@ -26,6 +26,7 @@ branches:
   only:
     - master
     - develop
+    - /v\d+\..+/
     - appveyor
     - hunter
 os: Visual Studio 2015
