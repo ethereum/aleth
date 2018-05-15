@@ -133,7 +133,7 @@ void Host::start()
     if (isWorking())
         return;
 
-    cnetwarn << "Network start failed!";
+    cwarn << "Network start failed!";
     doneWorking();
 }
 
@@ -310,7 +310,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
                 if(s->isConnected())
                 {
                     // Already connected.
-                    cnetwarn << "Session already exists for peer with id " << _id;
+                    cnetlog << "Session already exists for peer with id " << _id;
                     ps->disconnect(DuplicatePeer);
                     return;
                 }
@@ -409,14 +409,14 @@ void Host::determinePublic()
         
         if (lset && natIFAddr != laddr)
             // if listen address is set, Host will use it, even if upnp returns different
-            cnetwarn << "Listen address " << laddr << " differs from local address " << natIFAddr
-                     << " returned by UPnP!";
+            cwarn << "Listen address " << laddr << " differs from local address " << natIFAddr
+                  << " returned by UPnP!";
 
         if (pset && ep.address() != paddr)
         {
             // if public address is set, Host will advertise it, even if upnp returns different
-            cnetwarn << "Specified public address " << paddr << " differs from external address "
-                     << ep.address() << " returned by UPnP!";
+            cwarn << "Specified public address " << paddr << " differs from external address "
+                  << ep.address() << " returned by UPnP!";
             ep.address(paddr);
         }
     }
@@ -466,11 +466,11 @@ void Host::runAcceptor()
             }
             catch (Exception const& _e)
             {
-                cnetwarn << "ERROR: " << diagnostic_information(_e);
+                cwarn << "ERROR: " << diagnostic_information(_e);
             }
             catch (std::exception const& _e)
             {
-                cnetwarn << "ERROR: " << _e.what();
+                cwarn << "ERROR: " << _e.what();
             }
 
             if (!success)

@@ -85,8 +85,6 @@ struct ECDHEError: virtual Exception {};
         boost::log::sources::severity_channel_logger_mt<>,     \
         (boost::log::keywords::severity = SEVERITY)(boost::log::keywords::channel = "net"))
 
-NET_GLOBAL_LOGGER(netwarn, VerbosityWarning)
-#define cnetwarn LOG(dev::p2p::g_netwarnLogger::get())
 NET_GLOBAL_LOGGER(netnote, VerbosityInfo)
 #define cnetnote LOG(dev::p2p::g_netnoteLogger::get())
 NET_GLOBAL_LOGGER(netlog, VerbosityDebug)

@@ -135,8 +135,8 @@ bool Session::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
     }
     catch (std::exception const& _e)
     {
-        cnetwarn << "Exception caught in p2p::Session::interpret(): " << _e.what()
-                 << ". PacketType: " << _t << ". RLP: " << _r;
+        cnetlog << "Exception caught in p2p::Session::interpret(): " << _e.what()
+                << ". PacketType: " << _t << ". RLP: " << _r;
         disconnect(BadProtocol);
         return true;
     }
@@ -219,7 +219,7 @@ void Session::send(bytes&& _msg)
     bytesConstRef msg(&_msg);
     clog(VerbosityTrace, "net") << "<- " << RLP(msg.cropped(1));
     if (!checkPacket(msg))
-        cnetwarn << "INVALID PACKET CONSTRUCTED!";
+        cnetlog << "INVALID PACKET CONSTRUCTED!";
 
     if (!m_socket->ref().is_open())
         return;
@@ -251,7 +251,7 @@ void Session::write()
             // must check queue, as write callback can occur following dropped()
             if (ec)
             {
-                cnetwarn << "Error sending: " << ec.message();
+                cnetlog << "Error sending: " << ec.message();
                 drop(TCPError);
                 return;
             }
@@ -343,7 +343,7 @@ void Session::doRead()
                 return;
             else if (!m_io->authAndDecryptHeader(bytesRef(m_data.data(), length)))
             {
-                cnetwarn << "header decrypt failed";
+                cnetlog << "header decrypt failed";
                 drop(BadProtocol);  // todo: better error
                 return;
             }
@@ -360,8 +360,8 @@ void Session::doRead()
             }
             catch (std::exception const& _e)
             {
-                cnetwarn << "Exception decoding frame header RLP: " << _e.what() << " "
-                         << bytesConstRef(m_data.data(), h128::size).cropped(3);
+                cnetlog << "Exception decoding frame header RLP: " << _e.what() << " "
+                        << bytesConstRef(m_data.data(), h128::size).cropped(3);
                 drop(BadProtocol);
                 return;
             }
@@ -378,7 +378,7 @@ void Session::doRead()
                         return;
                     else if (!m_io->authAndDecryptFrame(bytesRef(m_data.data(), tlen)))
                     {
-                        cnetwarn << "frame decrypt failed";
+                        cnetlog << "frame decrypt failed";
                         drop(BadProtocol);  // todo: better error
                         return;
                     }
@@ -387,7 +387,7 @@ void Session::doRead()
                     if (!checkPacket(frame))
                     {
                         cerr << "Received " << frame.size() << ": " << toHex(frame) << endl;
-                        cnetwarn << "INVALID MESSAGE RECEIVED";
+                        cnetlog << "INVALID MESSAGE RECEIVED";
                         disconnect(BadProtocol);
                         return;
                     }
@@ -397,7 +397,7 @@ void Session::doRead()
                         RLP r(frame.cropped(1));
                         bool ok = readPacket(hProtocolId, packetType, r);
                         if (!ok)
-                            cnetwarn << "Couldn't interpret packet. " << RLP(r);
+                            cnetlog << "Couldn't interpret packet. " << RLP(r);
                     }
                     doRead();
                 });
@@ -414,7 +414,7 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
     }
     else if (_ec && _length < _expected)
     {
-        cnetwarn << "Error reading - Abrupt peer disconnect: " << _ec.message();
+        cnetlog << "Error reading - Abrupt peer disconnect: " << _ec.message();
         repMan().noteRude(*this);
         drop(TCPError);
         return false;
@@ -423,7 +423,7 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
     {
         // with static m_data-sized buffer this shouldn't happen unless there's a regression
         // sec recommends checking anyways (instead of assert)
-        cnetwarn << "Error reading - TCP read buffer length differs from expected frame size.";
+        cnetlog << "Error reading - TCP read buffer length differs from expected frame size.";
         disconnect(UserReason);
         return false;
     }

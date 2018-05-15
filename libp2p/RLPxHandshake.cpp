@@ -414,7 +414,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         }
                         catch (std::exception const& _e)
                         {
-                            cnetwarn << "Handshake causing an exception: " << _e.what();
+                            cnetlog << "Handshake causing an exception: " << _e.what();
                             m_nextState = Error;
                             transition();
                         }
