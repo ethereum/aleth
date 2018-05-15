@@ -109,7 +109,7 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(
 
 struct LoggingOptions
 {
-    int verbosity = 0;
+    int verbosity = VerbosityInfo;
     strings includeChannels;
     strings excludeChannels;
 };
