@@ -176,7 +176,7 @@ po::options_description vmProgramOptions(unsigned _lineLength)
         return "Select VM implementation. Available options are: " + names + ".";
     }();
 
-    po::options_description opts("VM Options", _lineLength);
+    po::options_description opts("VM OPTIONS", _lineLength);
     auto add = opts.add_options();
 
     add("vm",
@@ -190,7 +190,7 @@ po::options_description vmProgramOptions(unsigned _lineLength)
         po::value<std::vector<std::string>>()
             ->value_name("<option>=<value>")
             ->notifier(parseEvmcOptions),
-        "EVM-C option");
+        "EVM-C option\n");
 
     return opts;
 }
