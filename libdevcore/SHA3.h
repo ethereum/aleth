@@ -23,9 +23,12 @@
 
 #pragma once
 
-#include <string>
 #include "FixedHash.h"
 #include "vector_ref.h"
+
+#include <ethash/keccak.hpp>
+
+#include <string>
 
 namespace dev
 {
@@ -53,6 +56,13 @@ inline SecureFixedHash<32> sha3Secure(bytes const& _input) { return sha3Secure(b
 /// Calculate SHA3-256 hash of the given input (presented as a binary-filled string), returning as a 256-bit hash.
 inline h256 sha3(std::string const& _input) { return sha3(bytesConstRef(_input)); }
 inline SecureFixedHash<32> sha3Secure(std::string const& _input) { return sha3Secure(bytesConstRef(_input)); }
+
+/// Keccak hash variant optimized for hashing 256-bit hashes.
+inline h256 sha3(h256 const& _input) noexcept
+{
+    ethash::hash256 hash = ethash::keccak256_32(_input.data());
+    return h256{hash.bytes, h256::ConstructFromPointer};
+}
 
 /// Calculate SHA3-256 hash of the given input (presented as a FixedHash), returns a 256-bit hash.
 template<unsigned N> inline h256 sha3(FixedHash<N> const& _input) { return sha3(_input.ref()); }
