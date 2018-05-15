@@ -59,7 +59,7 @@ public:
         catch (FailedInvariant const&)
         {
             // "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-            cnetwarn << "Failed invariant during sync, restarting sync";
+            cwarn << "Failed invariant during sync, restarting sync";
             m_sync->restartSync();
         }
     }
@@ -92,7 +92,7 @@ public:
         catch (FailedInvariant const&)
         {
             // "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-            cnetwarn << "Failed invariant during sync, restarting sync";
+            cwarn << "Failed invariant during sync, restarting sync";
             m_sync->restartSync();
         }
     }
@@ -106,7 +106,7 @@ public:
         catch (FailedInvariant const&)
         {
             // "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-            cnetwarn << "Failed invariant during sync, restarting sync";
+            cwarn << "Failed invariant during sync, restarting sync";
             m_sync->restartSync();
         }
     }
@@ -120,7 +120,7 @@ public:
         catch (FailedInvariant const&)
         {
             // "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-            cnetwarn << "Failed invariant during sync, restarting sync";
+            cwarn << "Failed invariant during sync, restarting sync";
             m_sync->restartSync();
         }
     }
@@ -134,7 +134,7 @@ public:
         catch (FailedInvariant const&)
         {
             // "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-            cnetwarn << "Failed invariant during sync, restarting sync";
+            cwarn << "Failed invariant during sync, restarting sync";
             m_sync->restartSync();
         }
     }
@@ -303,7 +303,7 @@ public:
             }
         }
         if (count > 20 && n == 0)
-            cnetwarn << "all " << count << " unknown blocks requested; peer on different chain?";
+            cnetlog << "all " << count << " unknown blocks requested; peer on different chain?";
         else
             cnetlog << n << " blocks known and returned; " << (numBodiesToSend - n)
                     << " blocks unknown; " << (count > c_maxBlocks ? count - c_maxBlocks : 0)

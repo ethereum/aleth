@@ -55,7 +55,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
     char ac[80];
     if (gethostname(ac, sizeof(ac)) == SOCKET_ERROR)
     {
-        cnetwarn << "Error " << WSAGetLastError() << " when getting local host name.";
+        cnetlog << "Error " << WSAGetLastError() << " when getting local host name.";
         WSACleanup();
         BOOST_THROW_EXCEPTION(NoNetworking());
     }
@@ -63,7 +63,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
     struct hostent* phe = gethostbyname(ac);
     if (phe == 0)
     {
-        cnetwarn << "Bad host lookup.";
+        cnetlog << "Bad host lookup.";
         WSACleanup();
         BOOST_THROW_EXCEPTION(NoNetworking());
     }
@@ -207,7 +207,7 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
             upnpEP = bi::tcp::endpoint(eIPAddr, (unsigned short)extPort);
         }
         else
-            cnetwarn << "Couldn't punch through NAT (or no NAT in place).";
+            cnetlog << "Couldn't punch through NAT (or no NAT in place).";
     }
 
     return upnpEP;
@@ -241,7 +241,7 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
         auto it = r.resolve({bi::tcp::v4(), split[0], toString(port)}, ec);
         if (ec)
         {
-            cnetwarn << "Error resolving host address... " << _addr << " : " << ec.message();
+            cnetlog << "Error resolving host address... " << _addr << " : " << ec.message();
             return bi::tcp::endpoint();
         }
         else
