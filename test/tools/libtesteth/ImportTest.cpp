@@ -266,6 +266,10 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
     try
     {
         unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
+        bool removeEmptyAccounts = m_envInfo->number() >= se->chainParams().EIP158ForkBlock;
+        if (!removeEmptyAccounts)
+            initialState.addBalance(_env.author(), 0);  // touch coinbase no matter what
+
         if (Options::get().jsontrace)
         {
             StandardTrace st;
@@ -283,8 +287,15 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
         ImportTest::checkBalance(_preState, initialState);
 
         //Finalize the state manually (clear logs)
-        bool removeEmptyAccounts = m_envInfo->number() >= se->chainParams().EIP158ForkBlock;
         initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
+
+        if (!removeEmptyAccounts)
+        {
+            // Touch here bacuse coinbase might be suicided above
+            initialState.addBalance(_env.author(), 0);  // touch coinbase no matter what
+            initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts :
+                                                      State::CommitBehaviour::KeepEmptyAccounts);
+        }
         return std::make_tuple(initialState, out, changeLog);
     }
     catch (Exception const& _e)
