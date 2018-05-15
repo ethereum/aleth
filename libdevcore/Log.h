@@ -63,6 +63,7 @@ std::string getThreadName();
 
 enum Verbosity
 {
+    VerbositySilent = -1,
     VerbosityError = 0,
     VerbosityWarning = 1,
     VerbosityInfo = 2,

@@ -87,12 +87,12 @@ void Options::setVerbosity(int _level)
     logOptions.verbosity = verbosity;
     if (_level <= 0)
     {
-        logOptions.verbosity = -1;
+        logOptions.verbosity = VerbositySilent;
         std::cout.rdbuf(nullOstream.rdbuf());
         std::cerr.rdbuf(nullOstream.rdbuf());
     }
     else if (_level == 1 || _level == 2)
-        logOptions.verbosity = -1;
+        logOptions.verbosity = VerbositySilent;
     dev::setupLogging(logOptions);
 }
 
@@ -167,7 +167,7 @@ Options::Options(int argc, const char** argv)
         {
 #if ETH_VMTRACE
             vmtrace = true;
-            verbosity = std::max(verbosity, 13);
+            verbosity = VerbosityTrace;
 #else
             cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
             exit(1);
@@ -272,7 +272,7 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--statediff")
         {
             statediff = true;
-            verbosity = std::max(verbosity, 5);
+            verbosity = VerbosityTrace;
         }
         else if (arg == "--randomcode")
         {
