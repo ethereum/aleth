@@ -114,8 +114,13 @@ void validateConfigJson(js::mObject const& _obj)
         }
         else
         {
-            requireJsonFields(account, "ChainParams::loadConfig",
-                {{"balance", {json_spirit::str_type}}}, {"code", "nonce", "storage"});
+            if (account.count("wei"))
+                requireJsonFields(account, "ChainParams::loadConfig", {{"wei", {json_spirit::str_type}}});
+            else
+            {
+                requireJsonFields(account, "ChainParams::loadConfig",
+                    {{"balance", {json_spirit::str_type}}}, {"code", "nonce", "storage"});
+            }
         }
     }
 }
