@@ -420,11 +420,6 @@ unsigned ClientBase::number() const
     return bc().number();
 }
 
-Transactions ClientBase::pending() const
-{
-    return postSeal().pending();
-}
-
 h256s ClientBase::pendingHashes() const
 {
     return h256s() + postSeal().pendingHashes();

@@ -114,13 +114,14 @@ public:
     LocalisedTransactionReceipt localisedTransactionReceipt(h256 const& _transactionHash) const override;
     std::pair<h256, unsigned> transactionLocation(h256 const& _transactionHash) const override;
     Transactions transactions(h256 _blockHash) const override;
+    Transactions transactions(BlockNumber _block) const override { if (_block == PendingBlock) return postSeal().pending(); return transactions(hashFromNumber(_block)); }
     TransactionHashes transactionHashes(h256 _blockHash) const override;
     BlockHeader uncle(h256 _blockHash, unsigned _i) const override;
     UncleHashes uncleHashes(h256 _blockHash) const override;
     unsigned transactionCount(h256 _blockHash) const override;
+    unsigned transactionCount(BlockNumber _block) const override { if (_block == PendingBlock) { auto p = postSeal().pending(); return p.size(); } return transactionCount(hashFromNumber(_block)); }
     unsigned uncleCount(h256 _blockHash) const override;
     unsigned number() const override;
-    Transactions pending() const override;
     h256s pendingHashes() const override;
     BlockHeader pendingInfo() const override;
     BlockDetails pendingDetails() const override;

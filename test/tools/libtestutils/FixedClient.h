@@ -38,9 +38,10 @@ class FixedClient: public dev::eth::ClientBase
 {
 public:
     FixedClient(eth::BlockChain const& _bc, eth::Block const& _block) :  m_bc(_bc), m_block(_block) {}
-
+    
     // stub
     void flushTransactions() override {}
+    eth::Transactions pending() const override { eth::Transactions res; return res; }
     eth::BlockChain& bc() override
     {
         BOOST_THROW_EXCEPTION(InterfaceNotSupported() << errinfo_interface("FixedClient::bc()"));
