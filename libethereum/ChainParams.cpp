@@ -27,6 +27,7 @@
 #include <libethcore/SealEngine.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Precompiled.h>
+#include <libethashseal/GenesisInfo.h>
 #include "GenesisInfo.h"
 #include "State.h"
 #include "Account.h"
@@ -90,6 +91,9 @@ set<string> const c_knownParamNames = {c_minGasLimit, c_maxGasLimit, c_gasLimitB
     c_durationLimit, c_chainID, c_networkID, c_allowFutureBlocks};
 } // anonymous namespace
 
+/// parse simple genesis format into cpp genesis format
+js::mObject prepareFromGeneralConfig(js::mObject const& _config);
+
 ChainParams ChainParams::loadConfig(
     string const& _json, h256 const& _stateRoot, const boost::filesystem::path& _configPath) const
 {
@@ -97,6 +101,13 @@ ChainParams ChainParams::loadConfig(
 	js::mValue val;
 	json_spirit::read_string_or_throw(_json, val);
 	js::mObject obj = val.get_obj();
+
+	if (obj.count("version") && u256(obj.at("version").get_str()) == 1)
+	{
+		obj = prepareFromGeneralConfig(obj);
+		cp.setBlockRewardOvewrite(
+			false);  // do not allow hardcode block reward overwrite (Byzantium)
+	}
 
 	validateFieldNames(obj, c_knownChainConfigFields);
 
@@ -280,4 +291,62 @@ bytes ChainParams::genesisBlock() const
 	block.appendRaw(RLPEmptyList);
 	block.appendRaw(RLPEmptyList);
 	return block.out();
+}
+
+void checkFieldExist(js::mObject const& _config, string const& _field)
+{
+    if (!_config.count(_field))
+        BOOST_THROW_EXCEPTION(
+            MissingField() << errinfo_comment("Missing field '" + _field + "' in genesis config"));
+}
+
+js::mObject prepareFromGeneralConfig(js::mObject const& _config)
+{
+    checkFieldExist(_config, c_params);
+    checkFieldExist(_config, "state");
+    checkFieldExist(_config, c_genesis);
+    js::mObject params = _config.at(c_params).get_obj();
+    checkFieldExist(params, "forkRules");
+    string forkRules = params.at("forkRules").get_str();
+    Network rules;
+    if (forkRules == "Frontier")
+        rules = Network::FrontierTest;
+    else if (forkRules == "Homestead")
+        rules = Network::HomesteadTest;
+    else if (forkRules == "EIP150")
+        rules = Network::EIP150Test;
+    else if (forkRules == "EIP158")
+        rules = Network::EIP158Test;
+    else if (forkRules == "Byzantium")
+        rules = Network::ByzantiumTest;
+    else if (forkRules == "Constantinople")
+        rules = Network::ConstantinopleTest;
+    else
+        BOOST_THROW_EXCEPTION(
+            UnknownConfig() << errinfo_comment("Unrecognized network config: '" + forkRules + "'"));
+    js::mValue v;
+    js::read_string(genesisInfo(rules), v);
+    js::mObject& obj = v.get_obj();
+
+    checkFieldExist(params, c_blockReward);
+    js::mObject& originalParams = obj[c_params].get_obj();
+    originalParams[c_blockReward] = params[c_blockReward];
+
+    // overwrite with general config
+    obj[c_sealEngine] = params.at("miningMethod");
+
+    // copy account configuration
+    for (auto const account : _config.at("state").get_obj())
+        obj[c_accounts].get_obj().emplace(account);
+
+    // overwrite genesis configuration
+    js::mObject& cppGenesis = obj[c_genesis].get_obj();
+    js::mObject const& genGenesis = _config.at(c_genesis).get_obj();
+
+    // Overwrite genesis fields
+    // Minimum fields from state tests
+    cppGenesis[c_author] = genGenesis.at("coinbase");
+    cppGenesis[c_gasLimit] = genGenesis.at(c_gasLimit);
+    cppGenesis[c_timestamp] = genGenesis.at(c_timestamp);
+    return v.get_obj();
 }

@@ -80,6 +80,8 @@ DEV_SIMPLE_EXCEPTION(InvalidTransactionReceiptFormat);
 DEV_SIMPLE_EXCEPTION(TransactionReceiptVersionError);
 DEV_SIMPLE_EXCEPTION(BlockNotFound);
 DEV_SIMPLE_EXCEPTION(UnknownParent);
+DEV_SIMPLE_EXCEPTION(MissingField);
+DEV_SIMPLE_EXCEPTION(UnknownConfig);
 DEV_SIMPLE_EXCEPTION(AddressAlreadyUsed);
 
 DEV_SIMPLE_EXCEPTION(DatabaseAlreadyOpen);
