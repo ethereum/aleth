@@ -277,7 +277,6 @@ int main(int argc, char** argv)
     bool chainConfigIsSet = false;
     fs::path configPath;
     string configJSON;
-    string genesisJSON;
 
     po::options_description clientDefaultMode("CLIENT MODE (default)", c_lineWidth);
     auto addClientOption = clientDefaultMode.add_options();
@@ -287,7 +286,6 @@ int main(int argc, char** argv)
     addClientOption("test", "Testing mode; disable PoW and provide test rpc interface");
     addClientOption("config", po::value<string>()->value_name("<file>"),
         "Configure specialised blockchain using given JSON information\n");
-    addClientOption("genesis", po::value<string>()->value_name("<file>"), "Set genesis JSON file");
     addClientOption("mode,o", po::value<string>()->value_name("<full/peer>"),
         "Start a full node or a peer node (default: full)\n");
     addClientOption("ipc", "Enable IPC server (default: on)");
@@ -567,18 +565,6 @@ int main(int argc, char** argv)
         setDataDir(vm["db-path"].as<string>());
     if (vm.count("ipcpath"))
         setIpcPath(vm["ipcpath"].as<string>());
-    if (vm.count("genesis"))
-    {
-        try
-        {
-            genesisJSON = contentsString(vm["genesis"].as<string>());
-        }
-        catch (...)
-        {
-            cerr << "Bad --genesis option: " << vm["genesis"].as<string>() << "\n";
-            return -1;
-        }
-    }
     if (vm.count("config"))
     {
         try
@@ -799,35 +785,6 @@ int main(int argc, char** argv)
         {
             cerr << "provided configuration is not well formatted\n";
             cerr << "sample: \n" << genesisInfo(eth::Network::MainNetworkTest) << "\n";
-            return 0;
-        }
-    }
-
-
-    if (!genesisJSON.empty())
-    {
-        try
-        {
-            chainParams = chainParams.loadGenesis(genesisJSON);
-            chainConfigIsSet = true;
-        }
-        catch (...)
-        {
-            cerr << "provided genesis block description is not well formatted\n";
-            string genesisSample =
-            R"E(
-            {
-                "nonce": "0x0000000000000042",
-                "difficulty": "0x400000000",
-                "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-                "author": "0x0000000000000000000000000000000000000000",
-                "timestamp": "0x00",
-                "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-                "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
-                "gasLimit": "0x1388"
-            }
-            )E";
-            cerr << "sample: \n" << genesisSample << "\n";
             return 0;
         }
     }
