@@ -14,21 +14,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file IpcServer.h
-* @authors:
-*   Arkadiy Paronyan <arkadiy@ethdev.com>
-* @date 2015
-*/
 #pragma once
 
-#include "UnixSocketServer.h"
+#if _WIN32
 #include "WinPipeServer.h"
+#else
+#include "UnixSocketServer.h"
+#endif
 
 namespace dev
 {
-#if defined(_WIN32)
-	using IpcServer = WindowsPipeServer;
+#if _WIN32
+using IpcServer = WindowsPipeServer;
 #else
-	using IpcServer = UnixDomainSocketServer;
+using IpcServer = UnixDomainSocketServer;
 #endif
-} // namespace dev
+}  // namespace dev
