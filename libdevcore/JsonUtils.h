@@ -24,4 +24,14 @@ namespace dev
 {
 // Throws UnknownField() if _obj contains field names not listed in _allowedFields.
 void validateFieldNames(json_spirit::mObject const& _obj, std::set<std::string> const& _allowedFields);
+
+// Converts json value type to string
+std::string jsonTypeAsString(json_spirit::Value_type _type);
+
+// Check json _o with validation map that reuires certain field of certain type to be present in
+// json
+typedef std::set<json_spirit::Value_type> possibleJsonType;
+void requireJsonFields(json_spirit::mObject const& _o, std::string const& _config,
+    std::map<std::string, possibleJsonType> const& _validationMap,
+    std::set<std::string> const& _ignoreFields = {});
 }
