@@ -135,7 +135,7 @@ Json::Value Eth::eth_pendingTransactions()
 {
 	//Return list of transaction that being sent by local accounts
 	Transactions ours;
-	for (Transaction const& pending:dynamic_cast<Client*>(client())->pending())
+	for (Transaction const& pending:client()->pending())
 	{
 		for (Address const& account:m_ethAccounts.allAccounts())
 		{

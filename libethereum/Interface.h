@@ -162,8 +162,10 @@ public:
 	virtual BlockHeader uncle(h256 _blockHash, unsigned _i) const = 0;
 	virtual UncleHashes uncleHashes(h256 _blockHash) const = 0;
 	virtual unsigned transactionCount(h256 _blockHash) const = 0;
+	virtual unsigned transactionCount(BlockNumber _block) const = 0;
 	virtual unsigned uncleCount(h256 _blockHash) const = 0;
 	virtual Transactions transactions(h256 _blockHash) const = 0;
+	virtual Transactions transactions(BlockNumber _block) const = 0;
 	virtual TransactionHashes transactionHashes(h256 _blockHash) const = 0;
 
 	virtual BlockHeader pendingInfo() const { return BlockHeader(); }
@@ -174,8 +176,6 @@ public:
 	BlockHeader blockInfo(BlockNumber _block) const;
 	BlockDetails blockDetails(BlockNumber _block) const;
 	Transaction transaction(BlockNumber _block, unsigned _i) const { auto p = transactions(_block); return _i < p.size() ? p[_i] : Transaction(); }
-	unsigned transactionCount(BlockNumber _block) const { if (_block == PendingBlock) { auto p = pending(); return p.size(); } return transactionCount(hashFromNumber(_block)); }
-	Transactions transactions(BlockNumber _block) const { if (_block == PendingBlock) return pending(); return transactions(hashFromNumber(_block)); }
 	TransactionHashes transactionHashes(BlockNumber _block) const { if (_block == PendingBlock) return pendingHashes(); return transactionHashes(hashFromNumber(_block)); }
 	BlockHeader uncle(BlockNumber _block, unsigned _i) const { return uncle(hashFromNumber(_block), _i); }
 	UncleHashes uncleHashes(BlockNumber _block) const { return uncleHashes(hashFromNumber(_block)); }
@@ -186,7 +186,7 @@ public:
 	/// @returns The height of the chain.
 	virtual unsigned number() const = 0;
 
-	/// Get a map containing each of the pending transactions.
+	/// Get a map containing each of the pending transactions (transactions from accounts managed by this node which have not yet made it into a mined block)
 	/// @TODO: Remove in favour of transactions().
 	virtual Transactions pending() const = 0;
 	virtual h256s pendingHashes() const = 0;
