@@ -50,7 +50,7 @@ install:
 before_build: |
   if not exist build mkdir build
   cd build
-  cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=%TESTS% -DEVMJIT=OFF
+  cmake .. -DTESTS=%TESTS% -DEVMJIT=OFF
 build_script: |
   cmake --build . --config %CONFIGURATION% --target package
 test_script:

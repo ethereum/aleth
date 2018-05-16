@@ -31,6 +31,10 @@ include(CableToolchains)
 include(GNUInstallDirs)
 
 cable_configure_toolchain(DEFAULT cxx11)
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio" AND NOT CMAKE_GENERATOR_PLATFORM)
+    # Select x64 platform for Visual Studio if not specified.
+    set(CMAKE_GENERATOR_PLATFORM x64 CACHE INTERNAL "Name of generator platform.")
+endif()
 
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})

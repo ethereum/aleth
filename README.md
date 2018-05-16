@@ -108,9 +108,7 @@ cmake ..               # Configure the project.
 cmake --build .        # Build all default targets.
 ```
 
-On **Windows** Visual Studio 2015 is required. You should generate Visual Studio 
-solution file (.sln) for 64-bit architecture by adding 
-`-G "Visual Studio 14 2015 Win64"` argument to the CMake configure command.
+On **Windows** Visual Studio 2015 is required. 
 After configuration is completed, the `cpp-ethereum.sln` can be found in the
 `build` directory.
 
