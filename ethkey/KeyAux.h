@@ -106,9 +106,9 @@ public:
 		DecodeTx,
 	};
 
-	KeyCLI(OperationMode _mode = OperationMode::None): m_mode(_mode) {}
+    KeyCLI(OperationMode _mode = OperationMode::None) : m_mode(_mode) { m_toSign.creation = true; }
 
-	bool interpretOption(size_t& i, vector<string> const& argv)
+    bool interpretOption(size_t& i, vector<string> const& argv)
 	{
 		size_t argc = argv.size();
 		string arg = argv[i];
