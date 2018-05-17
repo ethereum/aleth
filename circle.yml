@@ -21,7 +21,7 @@ defaults:
       # (ninja is using relative paths otherwise).
       working_directory: ~/build
       command: |
-        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCOVERAGE=ON $CMAKE_OPTIONS
+        cmake ../project -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE $CMAKE_OPTIONS
 
   build: &build
     run:
@@ -46,6 +46,14 @@ defaults:
         fi
 
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
+
+  test-evmc-interpreter: &test-evmc-interpreter
+    run:
+      name: "Test EVMC Interpreter"
+      working_directory: ~/build
+      command: |
+        ETHEREUM_TEST_PATH=~/project/test/jsontests \
+        test/testeth -t GeneralStateTests -- --vm interpreter
 
   store-package: &store-package
     store_artifacts:
@@ -121,36 +129,12 @@ defaults:
         ccache --show-stats
 
 
-  linux-steps: &linux-steps
-    - checkout
-    - *update-submodules
-    - *environment-info
-    - *restore-deps-cache
-    - *restore-ccache
-    - *setup-ccache
-    - *configure
-    - *build
-    - *stat-ccache
-    - *save-ccache
-    - *save-deps-cache
-    - *store-package
-    - *restore-ethash-dag
-    - *test
-    - run:
-        name: "Test EVM-C Interpreter"
-        working_directory: ~/build
-        command: |
-          ETHEREUM_TEST_PATH=~/project/test/jsontests \
-          test/testeth -t GeneralStateTests -- --vm interpreter
-    - *save-ethash-dag
-    - *upload-coverage-data
-
-
 version: 2
 jobs:
 
   linux-clang6:
     environment:
+      - BUILD_TYPE: Release
       - CXX: clang++-6.0
       - CC:  clang-6.0
       - GCOV: llvm-cov-6.0 gcov
@@ -159,7 +143,23 @@ jobs:
       - TEST_PARALLEL_JOBS: 8
     docker:
       - image: ethereum/cpp-build-env:1
-    steps: *linux-steps
+    steps:
+      - checkout
+      - *update-submodules
+      - *environment-info
+      - *restore-deps-cache
+      - *restore-ccache
+      - *setup-ccache
+      - *configure
+      - *build
+      - *stat-ccache
+      - *save-ccache
+      - *save-deps-cache
+      - *store-package
+      - *restore-ethash-dag
+      - *test
+      - *test-evmc-interpreter
+      - *save-ethash-dag
 
   linux-gcc6:
     environment:
@@ -170,12 +170,30 @@ jobs:
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 3
       - TEST_PARALLEL_JOBS: 4
+      - CMAKE_OPTIONS: -DCOVERAGE=ON
       # TODO: Fix memory leaks reported in leveldb.
       # - CMAKE_OPTIONS: -DSANITIZE=address
       # - ASAN_OPTIONS: detect_leaks=0
     docker:
       - image: ethereum/cpp-build-env:1
-    steps: *linux-steps
+    steps:
+      - checkout
+      - *update-submodules
+      - *environment-info
+      - *restore-deps-cache
+      - *restore-ccache
+      - *setup-ccache
+      - *configure
+      - *build
+      - *stat-ccache
+      - *save-ccache
+      - *save-deps-cache
+      - *store-package
+      - *restore-ethash-dag
+      - *test
+      - *test-evmc-interpreter
+      - *save-ethash-dag
+      - *upload-coverage-data
 
   macos-xcode90:
     environment:
@@ -195,7 +213,7 @@ jobs:
           # Python3 and requests are needed for Hunter upload.
           command: |
             HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja python3 leveldb
-            pip3 install -q requests codecov
+            pip3 install -q requests
       - *restore-deps-cache
       - *configure
       - *build
@@ -205,7 +223,6 @@ jobs:
       - *test
       - *store-randomcode-seed
       - *save-ethash-dag
-      - *upload-coverage-data
 
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
