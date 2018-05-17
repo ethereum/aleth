@@ -60,9 +60,9 @@ defaults:
   save-deps-cache: &save-deps-cache
     cache-save:
       name: "Save dependencies cache"
-      key: &deps-cache-key deps-2-{{arch}}-{{checksum "compiler.version"}}-{{checksum "cmake/ProjectLibFF.cmake"}}
+      key: &deps-cache-key deps-4-{{arch}}-{{checksum "compiler.version"}}-{{checksum "cmake/ProjectLibFF.cmake"}}
       paths:
-        - build/deps
+        - ~/build/deps
 
   restore-deps-cache: &restore-deps-cache
     cache-restore:
@@ -89,13 +89,49 @@ defaults:
         $GCOV --version
         codecov --required --gcov-exec "$GCOV" --gcov-root ~/build
 
+  save-ccache: &save-ccache
+    save_cache:
+      name: "Save ccache"
+      key: ccache-1-{{arch}}-{{checksum "compiler.version"}}-{{.Branch}}-{{epoch}}
+      paths:
+        - ~/.ccache
+
+  restore-ccache: &restore-ccache
+    restore_cache:
+      name: "Restore ccache"
+      keys:
+        - ccache-1-{{arch}}-{{checksum "compiler.version"}}-{{.Branch}}
+        - ccache-1-{{arch}}-{{checksum "compiler.version"}}
+      paths:
+        - ~/.ccache
+
+  setup-ccache: &setup-ccache
+    run:
+      name: "Setup ccache"
+      command: |
+        ccache --version
+        ccache --show-stats
+        ccache --zero-stats
+        ccache --max-size=3G
+
+  stat-ccache: &stat-ccache
+    run:
+      name: "Show ccache stats"
+      command: |
+        ccache --show-stats
+
+
   linux-steps: &linux-steps
     - checkout
     - *update-submodules
     - *environment-info
     - *restore-deps-cache
+    - *restore-ccache
+    - *setup-ccache
     - *configure
     - *build
+    - *stat-ccache
+    - *save-ccache
     - *save-deps-cache
     - *store-package
     - *restore-ethash-dag
@@ -122,7 +158,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
     docker:
-      - image: ethereum/cpp-build-env
+      - image: ethereum/cpp-build-env:1
     steps: *linux-steps
 
   linux-gcc6:
@@ -138,7 +174,7 @@ jobs:
       # - CMAKE_OPTIONS: -DSANITIZE=address
       # - ASAN_OPTIONS: detect_leaks=0
     docker:
-      - image: ethereum/cpp-build-env
+      - image: ethereum/cpp-build-env:1
     steps: *linux-steps
 
   macos-xcode90:
