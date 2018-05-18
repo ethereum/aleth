@@ -234,6 +234,28 @@ unordered_map<Address, u256> State::addresses() const
 #endif
 }
 
+std::pair<State::addressMap, h256> State::addresses(h256 const& _begin, size_t _maxResults) const
+{
+    map<h256, Address> ret;
+    h256 nextKey;
+
+    for (auto it = m_state.hashedLowerBound(_begin); it != m_state.hashedEnd(); ++it)
+    {
+        if (ret.size() == _maxResults)
+        {
+            nextKey = h256((*it).first);
+            break;
+        }
+
+        h256 const hashedAddress((*it).first);
+        Address const address = Address(it.key());
+        // maybe here check in m_cache whether account is still alive
+        ret[hashedAddress] = address;
+    }
+
+    return {ret, nextKey};
+}
+
 void State::setRoot(h256 const& _r)
 {
     m_cache.clear();

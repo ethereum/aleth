@@ -27,8 +27,9 @@ public:
 		return RPCModules{RPCModule{"debug", "1.0"}};
 	}
 
-	virtual Json::Value debug_accountRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, int _maxResults) override;
-	virtual Json::Value debug_traceTransaction(std::string const& _txHash, Json::Value const& _json) override;
+    virtual Json::Value debug_accountRangeAt(std::string const& _blockHashOrNumber, int _txIndex,
+        std::string const& _addressHash, int _maxResults) override;
+    virtual Json::Value debug_traceTransaction(std::string const& _txHash, Json::Value const& _json) override;
 	virtual Json::Value debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options) override;
 	virtual Json::Value debug_traceBlockByNumber(int _blockNumber, Json::Value const& _json) override;
 	virtual Json::Value debug_traceBlockByHash(std::string const& _blockHash, Json::Value const& _json) override;
