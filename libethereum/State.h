@@ -207,6 +207,11 @@ public:
     /// @throws InterfaceNotSupported if compiled without ETH_FATDB.
     std::unordered_map<Address, u256> addresses() const;
 
+    /// @returns the map with maximum _maxResults elements containing hash->addresses and the next
+    /// address hash. This method faster then addresses() const;
+    typedef std::map<h256, Address> addressMap;
+    std::pair<addressMap, h256> addresses(h256 const& _begin, size_t _maxResults) const;
+
     /// Execute a given transaction.
     /// This will change the state accordingly.
     std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
