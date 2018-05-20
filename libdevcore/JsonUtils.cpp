@@ -17,6 +17,7 @@
 
 #include <libdevcore/JsonUtils.h>
 #include <json_spirit/JsonSpiritHeaders.h>
+#include <json/json.h>
 #include <set>
 #include <string>
 #include <ostream>
@@ -27,6 +28,17 @@ void dev::validateFieldNames(json_spirit::mObject const& _obj, std::set<std::str
 		if (_allowedFields.find(elm.first) == _allowedFields.end())
 		{
 			std::string const comment = "Unknown field in config: " + elm.first;
+			std::cerr << comment << "\n";
+			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
+		}
+}
+
+void dev::validateFieldNames(Json::Value const& _obj, std::set<std::string> const& _allowedFields)
+{
+	for (auto const& item: _obj.getMemberNames())
+		if (_allowedFields.find(item) == _allowedFields.end())
+		{
+			std::string const comment = "Unknown field in config: " + item;
 			std::cerr << comment << "\n";
 			BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
 		}
