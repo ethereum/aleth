@@ -176,6 +176,8 @@ public:
         RemoveEmptyAccounts
     };
 
+    using AddressMap = std::map<h256, Address>;
+
     /// Default constructor; creates with a blank database prepopulated with the genesis block.
     explicit State(u256 const& _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}
 
@@ -209,8 +211,7 @@ public:
 
     /// @returns the map with maximum _maxResults elements containing hash->addresses and the next
     /// address hash. This method faster then addresses() const;
-    typedef std::map<h256, Address> addressMap;
-    std::pair<addressMap, h256> addresses(h256 const& _begin, size_t _maxResults) const;
+    std::pair<AddressMap, h256> addresses(h256 const& _begin, size_t _maxResults) const;
 
     /// Execute a given transaction.
     /// This will change the state accordingly.
