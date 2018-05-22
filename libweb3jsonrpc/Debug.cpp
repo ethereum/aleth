@@ -141,10 +141,8 @@ Json::Value Debug::debug_accountRangeAt(
         Block block = m_eth.block(blockHash(_blockHashOrNumber));
         size_t const i = std::min(static_cast<size_t>(_txIndex), block.pending().size());
         State state(State::Null);
-        if (block.info().number() >= m_eth.chainParams().byzantiumForkBlock)
-            state = block.state();
-        else
-            createIntermediateState(state, block, i, m_eth.blockChain());
+        createIntermediateState(state, block, i, m_eth.blockChain());
+       
         auto const addressMap = state.addresses(h256(_addressHash), _maxResults);
 
         Json::Value addressList(Json::objectValue);
