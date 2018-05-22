@@ -271,7 +271,7 @@ int main(int argc, char** argv)
     }
 
 
-    MinerCLI m(MinerCLI::OperationMode::None);
+    MinerCLI minerCLI(MinerCLI::OperationMode::None);
 
     bool listenSet = false;
     bool chainConfigIsSet = false;
@@ -288,6 +288,7 @@ int main(int argc, char** argv)
         "Configure specialised blockchain using given JSON information\n");
     addClientOption("mode,o", po::value<string>()->value_name("<full/peer>"),
         "Start a full node or a peer node (default: full)\n");
+    addClientOption("download-state", "(experimental) Download state trie, part of fast-sync\n");
     addClientOption("ipc", "Enable IPC server (default: on)");
     addClientOption("ipcpath", po::value<string>()->value_name("<path>"),
         "Set .ipc socket path (default: data directory)");
@@ -428,7 +429,7 @@ int main(int argc, char** argv)
         return -1;
     }
     for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
-        if (!m.interpretOption(i, unrecognisedOptions))
+        if (!minerCLI.interpretOption(i, unrecognisedOptions))
         {
             cerr << "Invalid argument: " << unrecognisedOptions[i] << "\n";
             return -1;
@@ -805,7 +806,7 @@ int main(int argc, char** argv)
     if (loggingOptions.verbosity > 0)
         cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << "\n";
 
-    m.execute();
+    minerCLI.execute();
 
     fs::path secretsPath;
     if (testingMode)
@@ -863,8 +864,11 @@ int main(int argc, char** argv)
         chainParams.allowFutureBlocks = true;
     }
 
+    SyncMode const syncMode =
+        vm.count("download-state") ? SyncMode::StateTrieDownload : SyncMode::FullSync;
+
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(),
-        snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
+        snapshotPath, syncMode, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
         netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
@@ -1029,8 +1033,8 @@ int main(int argc, char** argv)
     if (c)
     {
         c->setGasPricer(gasPricer);
-        DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
-        c->setSealer(m.minerType());
+        DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(minerCLI.shouldPrecompute()));
+        c->setSealer(minerCLI.minerType());
         c->setAuthor(author);
         if (networkID != NoNetworkID)
             c->setNetworkId(networkID);

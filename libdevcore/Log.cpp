@@ -30,6 +30,7 @@
 #include <boost/log/attributes/function.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
@@ -80,8 +81,10 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
 
 void setupLogging(LoggingOptions const& _options)
 {
+/*    auto sink = boost::make_shared<
+        boost::log::sinks::asynchronous_sink<boost::log::sinks::text_ostream_backend>>();*/
     auto sink = boost::make_shared<
-        boost::log::sinks::asynchronous_sink<boost::log::sinks::text_ostream_backend>>();
+        boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>>();
 
     boost::shared_ptr<std::ostream> stream{&std::cout, boost::null_deleter{}};
     sink->locked_backend()->add_stream(stream);

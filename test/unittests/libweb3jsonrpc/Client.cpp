@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(Personal)
     KeyManager keyManager(tempDir.path(), tempDir.path() + "/keys");
     setDataDir(tempDir.path());
 
-    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(), string(),
+    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(), string(), SyncMode::FullSync,
         ChainParams(), WithExisting::Kill, set<string>{"eth"}, p2p::NetworkPreferences(0));
     web3.stopNetwork();
     web3.ethereum()->stopSealing();

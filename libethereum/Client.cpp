@@ -72,7 +72,8 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 
 Client::Client(ChainParams const& _params, int _networkID, p2p::Host* _host,
     std::shared_ptr<GasPricer> _gpForAdoption, fs::path const& _dbPath,
-    fs::path const& _snapshotPath, WithExisting _forceAction, TransactionQueue::Limits const& _l)
+    fs::path const& _snapshotPath, SyncMode _syncMode, WithExisting _forceAction,
+    TransactionQueue::Limits const& _l)
   : ClientBase(),
     Worker("eth", 0),
     m_bc(_params, _dbPath, _forceAction,
@@ -85,7 +86,7 @@ Client::Client(ChainParams const& _params, int _networkID, p2p::Host* _host,
     m_postSeal(chainParams().accountStartNonce),
     m_working(chainParams().accountStartNonce)
 {
-    init(_host, _dbPath, _snapshotPath, _forceAction, _networkID);
+    init(_host, _dbPath, _snapshotPath, _syncMode, _forceAction, _networkID);
 }
 
 Client::~Client()
@@ -95,7 +96,9 @@ Client::~Client()
     terminate();
 }
 
-void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _snapshotDownloadPath, WithExisting _forceAction, u256 _networkId)
+void Client::init(p2p::Host* _extNet, fs::path const& _dbPath,
+    fs::path const& _snapshotDownloadPath, SyncMode _syncMode, WithExisting _forceAction,
+    u256 _networkId)
 {
     DEV_TIMED_FUNCTION_ABOVE(500);
 
@@ -133,7 +136,7 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
     if (_snapshotDownloadPath.empty())
     {
         auto host = _extNet->registerCapability(
-            make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
+            make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId, _syncMode));
         m_host = host;
 
         _extNet->addCapability(host, EthereumHost::staticName(),

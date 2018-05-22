@@ -50,7 +50,7 @@ public:
 
         auto nodesState = contents(dir / fs::path("network.rlp"));
         bool testingMode = true;
-        m_web3.reset(new dev::WebThreeDirect(WebThreeDirect::composeClientVersion("eth"), dir, dir,
+        m_web3.reset(new dev::WebThreeDirect(WebThreeDirect::composeClientVersion("eth"), dir, dir, SyncMode::FullSync,
             chainParams, WithExisting::Kill, {"eth"}, netPrefs, &nodesState, testingMode));
     }
 

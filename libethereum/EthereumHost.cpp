@@ -21,17 +21,18 @@
 
 #include "EthereumHost.h"
 
-#include <chrono>
-#include <thread>
-#include <libdevcore/Common.h>
-#include <libp2p/Host.h>
-#include <libp2p/Session.h>
-#include <libethcore/Exceptions.h>
 #include "BlockChain.h"
-#include "TransactionQueue.h"
+#include "BlockChainSync.h"
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
-#include "BlockChainSync.h"
+#include "FastSync.h"
+#include "TransactionQueue.h"
+#include <libdevcore/Common.h>
+#include <libethcore/Exceptions.h>
+#include <libp2p/Host.h>
+#include <libp2p/Session.h>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 using namespace dev;
@@ -48,7 +49,10 @@ namespace
 class EthereumPeerObserver: public EthereumPeerObserverFace
 {
 public:
-    EthereumPeerObserver(shared_ptr<BlockChainSync> _sync, TransactionQueue& _tq): m_sync(_sync), m_tq(_tq) {}
+    EthereumPeerObserver(
+        shared_ptr<BlockChainSync> _sync, shared_ptr<FastSync> _fastSync, TransactionQueue& _tq)
+      : m_sync(move(_sync)), m_fastSync(move(_fastSync)), m_tq(_tq)
+    {}
 
     void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) override
     {
@@ -62,6 +66,9 @@ public:
             cwarn << "Failed invariant during sync, restarting sync";
             m_sync->restartSync();
         }
+
+        if (m_fastSync)
+            m_fastSync->onPeerStatus(_peer);
     }
 
     void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
@@ -95,6 +102,9 @@ public:
             cwarn << "Failed invariant during sync, restarting sync";
             m_sync->restartSync();
         }
+
+        if (m_fastSync)
+            m_fastSync->onPeerStatus(_peer);
     }
 
     void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
@@ -151,8 +161,15 @@ public:
         LOG(m_logger) << "Receipts (" << dec << itemCount << " entries)";
     }
 
+    void onPeerDisconnect(std::shared_ptr<EthereumPeer> _peer, Asking _asking) override
+    {
+        if (m_fastSync)
+            m_fastSync->onPeerDisconnect(_peer, _asking);
+    }
+
 private:
     shared_ptr<BlockChainSync> m_sync;
+    shared_ptr<FastSync> m_fastSync;
     TransactionQueue& m_tq;
 
     Logger m_logger{createLogger(VerbosityDebug, "host")};
@@ -367,21 +384,27 @@ private:
 
 }
 
-EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
-    HostCapability<EthereumPeer>(),
-    Worker		("ethsync"),
-    m_chain		(_ch),
+EthereumHost::EthereumHost(BlockChain const& _chain, OverlayDB const& _db, TransactionQueue& _tq,
+    BlockQueue& _bq, u256 _networkId, SyncMode _syncMode)
+  : HostCapability<EthereumPeer>(),
+    Worker("ethsync"),
+    m_chain(_chain),
     m_db(_db),
-    m_tq		(_tq),
-    m_bq		(_bq),
-    m_networkId	(_networkId),
+    m_tq(_tq),
+    m_bq(_bq),
+    m_networkId(_networkId),
     m_hostData(make_shared<EthereumHostData>(m_chain, m_db))
 {
-    // TODO: Composition would be better. Left like that to avoid initialization
-    //       issues as BlockChainSync accesses other EthereumHost members.
-    m_sync.reset(new BlockChainSync(*this));
-    m_peerObserver = make_shared<EthereumPeerObserver>(m_sync, m_tq);
-    m_latestBlockSent = _ch.currentHash();
+    // create BlockChainSync in Waiting state if it's not full sync
+    SyncState const initialFullSyncState =
+        _syncMode == SyncMode::FullSync ? SyncState::Idle : SyncState::Waiting;
+    m_sync.reset(new BlockChainSync(*this, initialFullSyncState));
+
+    if (_syncMode == SyncMode::StateTrieDownload)
+        m_fastSync = std::make_shared<FastSync>(*this, _chain);
+
+    m_peerObserver = make_shared<EthereumPeerObserver>(m_sync, m_fastSync, m_tq);
+    m_latestBlockSent = _chain.currentHash();
     m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
 }
 

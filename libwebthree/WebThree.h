@@ -34,6 +34,7 @@
 #include <libp2p/Host.h>
 #include <libethereum/Client.h>
 #include <libethereum/ChainParams.h>
+//#include <libethereum/CommonNet.h>
 
 namespace dev
 {
@@ -121,8 +122,8 @@ public:
     /// Constructor for private instance. If there is already another process on the machine using @a _dbPath, then this will throw an exception.
     /// ethereum() may be safely static_cast()ed to a eth::Client*.
     WebThreeDirect(std::string const& _clientVersion, boost::filesystem::path const& _dbPath,
-        boost::filesystem::path const& _snapshotPath, eth::ChainParams const& _params,
-        WithExisting _we = WithExisting::Trust,
+        boost::filesystem::path const& _snapshotPath, eth::SyncMode _syncMode,
+        eth::ChainParams const& _params, WithExisting _we = WithExisting::Trust,
         std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
         p2p::NetworkPreferences const& _n = p2p::NetworkPreferences(),
         bytesConstRef _network = bytesConstRef(), bool _testing = false);

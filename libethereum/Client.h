@@ -75,16 +75,12 @@ std::ostream& operator<<(std::ostream& _out, ActivityReport const& _r);
 class Client: public ClientBase, protected Worker
 {
 public:
-    Client(
-        ChainParams const& _params,
-        int _networkID,
-        p2p::Host* _host,
+    Client(ChainParams const& _params, int _networkID, p2p::Host* _host,
         std::shared_ptr<GasPricer> _gpForAdoption,
         boost::filesystem::path const& _dbPath = boost::filesystem::path(),
         boost::filesystem::path const& _snapshotPath = boost::filesystem::path(),
-        WithExisting _forceAction = WithExisting::Trust,
-        TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
-    );
+        SyncMode _syncMode = SyncMode::FullSync, WithExisting _forceAction = WithExisting::Trust,
+        TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024});
     /// Destructor.
     virtual ~Client();
 
@@ -215,7 +211,8 @@ protected:
     /// Perform critical setup functions.
     /// Must be called in the constructor of the finally derived class.
     void init(p2p::Host* _extNet, boost::filesystem::path const& _dbPath,
-        boost::filesystem::path const& _snapshotPath, WithExisting _forceAction, u256 _networkId);
+        boost::filesystem::path const& _snapshotPath, SyncMode _syncMode, WithExisting _forceAction,
+        u256 _networkId);
 
     /// InterfaceStub methods
     BlockChain& bc() override { return m_bc; }

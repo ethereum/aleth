@@ -49,7 +49,7 @@ class EthereumPeer;
 class BlockChainSync final: public HasInvariants
 {
 public:
-    BlockChainSync(EthereumHost& _host);
+    BlockChainSync(EthereumHost& _host, SyncState _initialState = SyncState::Idle);
     ~BlockChainSync();
     void abortSync(); ///< Abort all sync activity
 
