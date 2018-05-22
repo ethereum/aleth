@@ -292,8 +292,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
         {
             // Touch here bacuse coinbase might be suicided above
             initialState.addBalance(_env.author(), 0);  // imitate mining reward
-            initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts :
-                                                      State::CommitBehaviour::KeepEmptyAccounts);
+            initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
         }
         return std::make_tuple(initialState, out, changeLog);
     }
