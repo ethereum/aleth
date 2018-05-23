@@ -89,7 +89,7 @@ string ethCredits(bool _interactive = false)
 void version()
 {
     const auto* buildinfo = aleth_get_buildinfo();
-    cout << "eth " << buildinfo->project_version << "\n";
+    cout << "aleth " << buildinfo->project_version << "\n";
     cout << "eth network protocol version: " << dev::eth::c_protocolVersion << "\n";
     cout << "Client database version: " << dev::eth::c_databaseVersion << "\n";
     cout << "Build: " << buildinfo->system_name << "/" << buildinfo->build_type << "\n";
@@ -763,7 +763,7 @@ int main(int argc, char** argv)
         cout << "NAME:\n"
              << credits() << '\n'
              << "USAGE:\n"
-             << "   eth [options]\n\n"
+             << "   aleth [options]\n\n"
              << "WALLET USAGE:\n";
         AccountManager::streamAccountHelp(cout);
         AccountManager::streamWalletHelp(cout);
@@ -863,7 +863,7 @@ int main(int argc, char** argv)
         chainParams.allowFutureBlocks = true;
     }
 
-    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(),
+    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), getDataDir(),
         snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
         netPrefs, &nodesState, testingMode);
 
