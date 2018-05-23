@@ -23,7 +23,7 @@
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/Ethash.h>
 
-#include <eth-buildinfo.h>
+#include <aleth-buildinfo.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -56,7 +56,7 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
             m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
         m_ethereum->startWorking();
 
-        const auto* buildinfo = eth_get_buildinfo();
+        const auto* buildinfo = aleth_get_buildinfo();
         m_ethereum->setExtraData(rlpList(0, string{buildinfo->project_version}.substr(0, 5) + "++" +
                                                 string{buildinfo->git_commit_hash}.substr(0, 4) +
                                                 string{buildinfo->build_type}.substr(0, 1) +
@@ -82,7 +82,7 @@ WebThreeDirect::~WebThreeDirect()
 
 std::string WebThreeDirect::composeClientVersion(std::string const& _client)
 {
-    const auto* buildinfo = eth_get_buildinfo();
+    const auto* buildinfo = aleth_get_buildinfo();
     return _client + "/" + buildinfo->project_version + "/" + buildinfo->system_name + "/" +
            buildinfo->compiler_id + buildinfo->compiler_version + "/" + buildinfo->build_type;
 }
