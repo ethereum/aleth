@@ -20,14 +20,12 @@
  * CORE test functions.
  */
 
-#include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
 
-using namespace dev::test;
+#include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(CoreLibTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(CoreLibTests)
 
 BOOST_AUTO_TEST_CASE(toHex)
 {

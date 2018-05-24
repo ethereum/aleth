@@ -20,15 +20,15 @@
  * Tests for functions in CommonJS.h
  */
 
-#include <boost/test/unit_test.hpp>
+
 #include <libdevcore/CommonJS.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace dev;
 using namespace std;
-using namespace test;
 
-BOOST_FIXTURE_TEST_SUITE(CommonJSTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(CommonJSTests)
 
 BOOST_AUTO_TEST_CASE(test_toJS)
 {

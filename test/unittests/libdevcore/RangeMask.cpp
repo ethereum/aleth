@@ -14,25 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file RangeMask.cpp
- * @author Christian <c@ethdev.com>
- * @date 2015
- */
 
 #include <libdevcore/RangeMask.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
+
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace boost::unit_test;
 
-namespace dev
-{
-namespace test
-{
 
-BOOST_FIXTURE_TEST_SUITE(RangeMaskTest, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(RangeMaskTest)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
@@ -145,6 +137,3 @@ BOOST_AUTO_TEST_CASE(iterator)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-}
-}

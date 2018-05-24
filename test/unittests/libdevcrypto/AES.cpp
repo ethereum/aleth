@@ -15,21 +15,18 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/test/unit_test.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcrypto/Common.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Log.h>
 #include <libdevcrypto/AES.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
-using namespace dev::test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
-
-BOOST_FIXTURE_TEST_SUITE(AES, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(AesDecrypt)
 {
@@ -75,7 +72,5 @@ BOOST_AUTO_TEST_CASE(AesDecryptFailInvalidSeed2)
 	bytes seed = fromHex("000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f");
 	BOOST_CHECK(bytes() == aesDecrypt(&seed, "test"));
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

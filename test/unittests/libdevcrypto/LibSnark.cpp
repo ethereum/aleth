@@ -19,6 +19,7 @@
 
 #include <libdevcrypto/LibSnark.h>
 #include <libdevcore/CommonIO.h>
+
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
