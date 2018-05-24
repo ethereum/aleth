@@ -43,7 +43,7 @@ install:
 
   # Python 3
   - set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
-  - pip install requests
+  - pip install requests gitpython
 
   - scripts/install_deps.bat
   - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps

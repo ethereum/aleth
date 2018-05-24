@@ -142,7 +142,7 @@ jobs:
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
     docker:
-      - image: ethereum/cpp-build-env:1
+      - image: ethereum/cpp-build-env:2
     steps:
       - checkout
       - *update-submodules
@@ -175,7 +175,7 @@ jobs:
       # - CMAKE_OPTIONS: -DSANITIZE=address
       # - ASAN_OPTIONS: detect_leaks=0
     docker:
-      - image: ethereum/cpp-build-env:1
+      - image: ethereum/cpp-build-env:2
     steps:
       - checkout
       - *update-submodules
@@ -213,7 +213,7 @@ jobs:
           # Python3 and requests are needed for Hunter upload.
           command: |
             HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja python3 leveldb
-            pip3 install -q requests
+            pip3 install -q requests gitpython
       - *restore-deps-cache
       - *configure
       - *build
