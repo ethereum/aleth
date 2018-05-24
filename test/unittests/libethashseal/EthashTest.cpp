@@ -20,20 +20,12 @@
 
 #include <libethashseal/Ethash.h>
 
-#include <test/tools/libtesteth/TestOutputHelper.h>
-
-#include <ethash/ethash.hpp>
-
 #include <boost/test/unit_test.hpp>
 
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(EthashTests, TestOutputHelperFixture)
-
-// FIXME: Add a helper function here, because the test cases are almost identical.
-// TODO: Add tests for Homestead difficulty change.
+BOOST_AUTO_TEST_SUITE(EthashTests)
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
 {

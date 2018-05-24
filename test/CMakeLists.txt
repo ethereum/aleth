@@ -1,3 +1,5 @@
+add_subdirectory(unittests)
+
 file(GLOB_RECURSE sources "tools/*.cpp" "tools/*.h" "*.sol")
 
 # search for test names and create ctest tests
