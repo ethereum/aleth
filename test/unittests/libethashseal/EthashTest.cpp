@@ -234,4 +234,19 @@ BOOST_AUTO_TEST_CASE(etash_seed_2048)
     BOOST_CHECK(std::equal(expectedSeed.begin(), expectedSeed.end(), seed.b));
 }
 
+BOOST_AUTO_TEST_CASE(etashQuickVerify)
+{
+    BlockHeader header;
+    header.setParentHash(h256{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"});
+    header.setDifficulty(h256{"0000000000000000000000000000000000000000000000000000000000ffffff"});
+    header.setGasLimit(1000000);
+    Ethash::setMixHash(header, {});
+
+    Ethash etash;
+    Ethash::setNonce(header, Nonce{3272400});
+    etash.verify(QuickNonce, header, {}, {});
+    Ethash::setNonce(header, Nonce{3272401});
+    BOOST_CHECK_THROW(etash.verify(QuickNonce, header, {}, {}), InvalidBlockNonce);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
