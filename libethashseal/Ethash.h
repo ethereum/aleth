@@ -73,7 +73,7 @@ public:
     static void init();
 
 private:
-    bool verifySeal(BlockHeader const& _bi) const;
+    bool verifySeal(BlockHeader const& _blockHeader) const;
     bool quickVerifySeal(BlockHeader const& _blockHeader) const;
 
     eth::GenericFarm<EthashProofOfWork> m_farm;

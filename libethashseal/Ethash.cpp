@@ -131,12 +131,18 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
     // check it hashes according to proof of work or that it's the genesis block.
     if (_s == CheckEverything && _bi.parentHash() && !verifySeal(_bi))
     {
+        ethash::result result = ethash::hash(
+            ethash::get_global_epoch_context(ethash::get_epoch_number(_bi.number())),
+            ethash::hash256_from_bytes(_bi.hash(WithoutSeal).data()), (uint64_t)(u64)nonce(_bi));
+
+        h256 mix{result.mix_hash.bytes, h256::ConstructFromPointer};
+        h256 final{result.final_hash.bytes, h256::ConstructFromPointer};
+
         InvalidBlockNonce ex;
         ex << errinfo_nonce(nonce(_bi));
         ex << errinfo_mixHash(mixHash(_bi));
         ex << errinfo_seedHash(seedHash(_bi));
-        EthashProofOfWork::Result er = EthashAux::eval(seedHash(_bi), _bi.hash(WithoutSeal), nonce(_bi));
-        ex << errinfo_ethashResult(make_tuple(er.value, er.mixHash));
+        ex << errinfo_ethashResult(make_tuple(final, mix));
         ex << errinfo_hash256(_bi.hash(WithoutSeal));
         ex << errinfo_difficulty(_bi.difficulty());
         ex << errinfo_target(boundary(_bi));
@@ -246,35 +252,17 @@ bool Ethash::quickVerifySeal(BlockHeader const& _blockHeader) const
         ethash::hash256_from_bytes(m.data()), n, ethash::hash256_from_bytes(b.data()));
 }
 
-bool Ethash::verifySeal(BlockHeader const& _bi) const
+bool Ethash::verifySeal(BlockHeader const& _blockHeader) const
 {
-    bool pre = quickVerifySeal(_bi);
-#if !ETH_DEBUG
-    if (!pre)
-    {
-        cwarn << "Fail on preVerify";
-        return false;
-    }
-#endif
+    h256 const h = _blockHeader.hash(WithoutSeal);
+    h256 const b = boundary(_blockHeader);
+    uint64_t const n = (uint64_t)(u64)nonce(_blockHeader);
+    h256 const m = mixHash(_blockHeader);
 
-    auto result = EthashAux::eval(seedHash(_bi), _bi.hash(WithoutSeal), nonce(_bi));
-    bool slow = result.value <= boundary(_bi) && result.mixHash == mixHash(_bi);
-
-#if ETH_DEBUG
-    if (!pre && slow)
-    {
-        cwarn << "WARNING: evaluated result gives true whereas ethash_quick_check_difficulty gives false.";
-        cwarn << "headerHash:" << _bi.hash(WithoutSeal);
-        cwarn << "nonce:" << nonce(_bi);
-        cwarn << "mixHash:" << mixHash(_bi);
-        cwarn << "difficulty:" << _bi.difficulty();
-        cwarn << "boundary:" << boundary(_bi);
-        cwarn << "result.value:" << result.value;
-        cwarn << "result.mixHash:" << result.mixHash;
-    }
-#endif // ETH_DEBUG
-
-    return slow;
+    auto& context =
+        ethash::get_global_epoch_context(ethash::get_epoch_number(_blockHeader.number()));
+    return ethash::verify(context, ethash::hash256_from_bytes(h.data()),
+        ethash::hash256_from_bytes(m.data()), n, ethash::hash256_from_bytes(b.data()));
 }
 
 void Ethash::generateSeal(BlockHeader const& _bi)
