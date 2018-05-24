@@ -249,4 +249,63 @@ BOOST_AUTO_TEST_CASE(etashQuickVerify)
     BOOST_CHECK_THROW(etash.verify(QuickNonce, header, {}, {}), InvalidBlockNonce);
 }
 
+BOOST_AUTO_TEST_CASE(etashVerify)
+{
+    BlockHeader header;
+    header.setParentHash(h256{"aff00eb20f8a48450b9ea5307e2737287854f357c9022280772e995cc22affd3"});
+    header.setAuthor(Address{"8888f1f195afa192cfee860698584c030f4c9db1"});
+    header.setRoots(h256{"fcfe9f2203bd98342867117fa3de299a09578371efd04fc9e76a46f7f1fda4bb"},
+        h256{"1751f772ba1fdb3ad31fa04c39144ea3b523f10604a5a09a19cb4c1d0b56992c"},
+        h256{"1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"},
+        h256{"1cd69d76c84ea914e746833b7a31d9bfe210f75929893f1da0748efaeb31fe27"});
+    header.setLogBloom({});
+    header.setDifficulty(h256{131072});
+    header.setNumber(1);
+    header.setGasLimit(3141562);
+    header.setGasUsed(55179);
+    header.setTimestamp(1507291743);
+
+    BOOST_CHECK_EQUAL(header.hash(WithoutSeal),
+        h256{"57c5cfb8fe8a70a24ea81f12398e8a074ac25dd32b6dba8cd1f2bf85680fbfce"});
+
+    Ethash::setMixHash(
+        header, h256{"d8ada7ff7720ebc9700c170c046352b8ee6fb4630cf6a285489896daac7a40eb"});
+
+    Ethash etash;
+    Ethash::setNonce(header, Nonce{"81c3f9bfae230a8e"});
+    etash.verify(CheckEverything, header, {}, {});
+
+    // Break nonce.
+    Ethash::setNonce(header, Nonce{"71c3f9bfae230a8e"});
+    try
+    {
+        etash.verify(CheckEverything, header, {}, {});
+        BOOST_CHECK(false);
+    }
+    catch (InvalidBlockNonce const& ex)
+    {
+        std::tuple<h256, h256> ethashResult = *boost::get_error_info<errinfo_ethashResult>(ex);
+        BOOST_CHECK_EQUAL(std::get<0>(ethashResult),
+            h256{"07a4017237d933aa1ff4f62650f68ea2118c8bd741575e97c2867fb41d5b832d"});
+        BOOST_CHECK_EQUAL(std::get<1>(ethashResult),
+            h256{"a842d613f0b8ad1266e507bb1845b2db75673caf593596d1de4951ecd9620a93"});
+    }
+    Ethash::setNonce(header, Nonce{"81c3f9bfae230a8e"});
+
+    // Break mix hash.
+    Ethash::setMixHash(
+        header, h256{"e8ada7ff7720ebc9700c170c046352b8ee6fb4630cf6a285489896daac7a40eb"});
+    BOOST_CHECK_THROW(etash.verify(CheckEverything, header, {}, {}), InvalidBlockNonce);
+
+    // Break nonce & mix hash.
+    Ethash::setNonce(header, Nonce{"71c3f9bfae230a8e"});
+    BOOST_CHECK_THROW(etash.verify(CheckEverything, header, {}, {}), InvalidBlockNonce);
+    Ethash::setNonce(header, Nonce{"81c3f9bfae230a8e"});
+    Ethash::setMixHash(
+        header, h256{"d8ada7ff7720ebc9700c170c046352b8ee6fb4630cf6a285489896daac7a40eb"});
+
+    // Recheck the valid header.
+    etash.verify(CheckEverything, header, {}, {});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
