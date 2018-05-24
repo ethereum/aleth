@@ -20,9 +20,10 @@
 
 #include <libethash/internal.h>
 #include <libethashseal/Ethash.h>
-#include <libethashseal/EthashAux.h>
 
 #include <test/tools/libtesteth/TestOutputHelper.h>
+
+#include <ethash/ethash.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -386,14 +387,15 @@ BOOST_AUTO_TEST_CASE(ethashEvalHeader)
         BOOST_REQUIRE_EQUAL(headerHash, header.hash(WithoutSeal));
         BOOST_REQUIRE_EQUAL(nonce, Ethash::nonce(header));
 
-        BOOST_REQUIRE_EQUAL(EthashAux::get()->light(Ethash::seedHash(header))->size, t.cacheSize);
-        BOOST_REQUIRE_EQUAL(
-            sha3(EthashAux::get()->light(Ethash::seedHash(header))->data()), h256{t.cacheHash});
+        ethash::result result = ethash::hash(
+            ethash::get_global_epoch_context(ethash::get_epoch_number(header.number())),
+            ethash::hash256_from_bytes(header.hash(WithoutSeal).data()), (uint64_t)(u64)nonce);
 
-        EthashProofOfWork::Result r = EthashAux::eval(
-            Ethash::seedHash(header), header.hash(WithoutSeal), Ethash::nonce(header));
-        BOOST_REQUIRE_EQUAL(r.value, h256{t.result});
-        BOOST_REQUIRE_EQUAL(r.mixHash, Ethash::mixHash(header));
+        h256 mix{result.mix_hash.bytes, h256::ConstructFromPointer};
+        h256 final{result.final_hash.bytes, h256::ConstructFromPointer};
+
+        BOOST_REQUIRE_EQUAL(final, h256{t.result});
+        BOOST_REQUIRE_EQUAL(mix, Ethash::mixHash(header));
     }
 }
 
