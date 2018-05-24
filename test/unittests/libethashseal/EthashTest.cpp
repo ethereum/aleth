@@ -379,6 +379,8 @@ EthashTestCase ethashTestCases[] = {
 
 BOOST_AUTO_TEST_CASE(ethashEvalHeader)
 {
+    // FIXME: Drop this test as ethash library has this test cases in its test suite.
+
     for (auto& t : ethashTestCases)
     {
         BlockHeader header{fromHex(t.header), HeaderData};

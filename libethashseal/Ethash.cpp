@@ -30,6 +30,19 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
+namespace
+{
+inline ethash::hash256 toEthash(h256 const& hash) noexcept
+{
+    return ethash::hash256_from_bytes(hash.data());
+}
+
+inline uint64_t toEthash(Nonce const& nonce) noexcept
+{
+    return static_cast<uint64_t>(static_cast<u64>(nonce));
+}
+}  // namespace
+
 void Ethash::init()
 {
     ETH_REGISTER_SEAL_ENGINE(Ethash);
@@ -131,9 +144,9 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
     // check it hashes according to proof of work or that it's the genesis block.
     if (_s == CheckEverything && _bi.parentHash() && !verifySeal(_bi))
     {
-        ethash::result result = ethash::hash(
-            ethash::get_global_epoch_context(ethash::get_epoch_number(_bi.number())),
-            ethash::hash256_from_bytes(_bi.hash(WithoutSeal).data()), (uint64_t)(u64)nonce(_bi));
+        ethash::result result =
+            ethash::hash(ethash::get_global_epoch_context(ethash::get_epoch_number(_bi.number())),
+                toEthash(_bi.hash(WithoutSeal)), toEthash(nonce(_bi)));
 
         h256 mix{result.mix_hash.bytes, h256::ConstructFromPointer};
         h256 final{result.final_hash.bytes, h256::ConstructFromPointer};
@@ -245,24 +258,22 @@ bool Ethash::quickVerifySeal(BlockHeader const& _blockHeader) const
 {
     h256 const h = _blockHeader.hash(WithoutSeal);
     h256 const b = boundary(_blockHeader);
-    uint64_t const n = (uint64_t)(u64)nonce(_blockHeader);
+    Nonce const n = nonce(_blockHeader);
     h256 const m = mixHash(_blockHeader);
 
-    return ethash::verify_final_hash(ethash::hash256_from_bytes(h.data()),
-        ethash::hash256_from_bytes(m.data()), n, ethash::hash256_from_bytes(b.data()));
+    return ethash::verify_final_hash(toEthash(h), toEthash(m), toEthash(n), toEthash(b));
 }
 
 bool Ethash::verifySeal(BlockHeader const& _blockHeader) const
 {
     h256 const h = _blockHeader.hash(WithoutSeal);
     h256 const b = boundary(_blockHeader);
-    uint64_t const n = (uint64_t)(u64)nonce(_blockHeader);
+    Nonce const n = nonce(_blockHeader);
     h256 const m = mixHash(_blockHeader);
 
     auto& context =
         ethash::get_global_epoch_context(ethash::get_epoch_number(_blockHeader.number()));
-    return ethash::verify(context, ethash::hash256_from_bytes(h.data()),
-        ethash::hash256_from_bytes(m.data()), n, ethash::hash256_from_bytes(b.data()));
+    return ethash::verify(context, toEthash(h), toEthash(m), toEthash(n), toEthash(b));
 }
 
 void Ethash::generateSeal(BlockHeader const& _bi)
