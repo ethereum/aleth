@@ -24,6 +24,8 @@
 #include <libethcore/CommonJS.h>
 #include <libethereum/Interface.h>
 
+#include <ethash/ethash.hpp>
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -233,21 +235,15 @@ void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) co
     _bi.setGasLimit(childGasLimit(_parent));
 }
 
-bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
+bool Ethash::quickVerifySeal(BlockHeader const& _blockHeader) const
 {
-    if (_bi.number() >= ETHASH_EPOCH_LENGTH * 2048)
-        return false;
+    h256 const h = _blockHeader.hash(WithoutSeal);
+    h256 const b = boundary(_blockHeader);
+    uint64_t const n = (uint64_t)(u64)nonce(_blockHeader);
+    h256 const m = mixHash(_blockHeader);
 
-    auto h = _bi.hash(WithoutSeal);
-    auto m = mixHash(_bi);
-    auto n = nonce(_bi);
-    auto b = boundary(_bi);
-    bool ret = !!ethash_quick_check_difficulty(
-        (ethash_h256_t const*)h.data(),
-        (uint64_t)(u64)n,
-        (ethash_h256_t const*)m.data(),
-        (ethash_h256_t const*)b.data());
-    return ret;
+    return ethash::verify_final_hash(ethash::hash256_from_bytes(h.data()),
+        ethash::hash256_from_bytes(m.data()), n, ethash::hash256_from_bytes(b.data()));
 }
 
 bool Ethash::verifySeal(BlockHeader const& _bi) const

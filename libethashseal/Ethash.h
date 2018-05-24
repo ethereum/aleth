@@ -74,7 +74,7 @@ public:
 
 private:
     bool verifySeal(BlockHeader const& _bi) const;
-    bool quickVerifySeal(BlockHeader const& _bi) const;
+    bool quickVerifySeal(BlockHeader const& _blockHeader) const;
 
     eth::GenericFarm<EthashProofOfWork> m_farm;
     std::string m_sealer = "cpu";
