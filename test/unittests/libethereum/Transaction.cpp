@@ -149,24 +149,6 @@ BOOST_AUTO_TEST_CASE(toTransactionExceptionConvert)
     BOOST_CHECK_MESSAGE(toTransactionException(notEx) == TransactionException::Unknown, "Unexpected should be TransactionException::Unknown");
 }
 
-BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
-{
-    TestBlockChain::s_sealEngineNetwork = eth::Network::ByzantiumTest;
-    TestBlock genesis = TestBlockChain::defaultGenesisBlock();
-    TestBlockChain bc(genesis);
-
-    TestTransaction tr = TestTransaction::defaultZeroTransaction();
-    TestBlock block;
-    block.addTransaction(tr);
-    block.mine(bc);
-    bc.addBlock(block);
-    BOOST_CHECK_MESSAGE(bc.getInterface().info().number() == 1, "Mining Block with zero transaction failed!");
-
-    //Transaction should be able to mine on BYZANTIUM
-    //Not implemented yet
-    //BOOST_CHECK_MESSAGE(bc.interface().transactions().size() == 1, "Failed importing zero transaction to block!");
-}
-
 BOOST_AUTO_TEST_CASE(GettingSenderForUnsignedTransactionThrows)
 {
     Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
