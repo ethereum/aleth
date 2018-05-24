@@ -14,19 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file EthashAux.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
-#include <condition_variable>
-#include <libethash/ethash.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/Worker.h>
-#include "EthashProofOfWork.h"
 #include "Ethash.h"
+#include "EthashProofOfWork.h"
+
+#include <libethash/ethash.h>
 
 namespace dev
 {
@@ -47,7 +41,6 @@ public:
         LightAllocation(h256 const& _seedHash);
         ~LightAllocation();
         bytesConstRef data() const;
-        EthashProofOfWork::Result compute(h256 const& _headerHash, Nonce const& _nonce) const;
         ethash_light_t light;
         uint64_t size;
     };
@@ -56,7 +49,6 @@ public:
     {
         FullAllocation(ethash_light_t _light, ethash_callback_t _cb);
         ~FullAllocation();
-        EthashProofOfWork::Result compute(h256 const& _headerHash, Nonce const& _nonce) const;
         bytesConstRef data() const;
         uint64_t size() const { return ethash_full_dag_size(full); }
         ethash_full_t full;
@@ -67,7 +59,6 @@ public:
 
     static h256 seedHash(unsigned _number);
     static uint64_t number(h256 const& _seedHash);
-    static uint64_t cacheSize(BlockHeader const& _header);
     static uint64_t dataSize(uint64_t _blockNumber);
 
     static LightType light(h256 const& _seedHash);
@@ -80,14 +71,8 @@ public:
     /// Kicks off generation of DAG for @a _blocknumber and blocks until ready; @returns result or empty pointer if not existing and _createIfMissing is false.
     static FullType full(h256 const& _seedHash, bool _createIfMissing = false, std::function<int(unsigned)> const& _f = std::function<int(unsigned)>());
 
-    static EthashProofOfWork::Result eval(h256 const& _seedHash, h256 const& _headerHash, Nonce const& _nonce);
-
 private:
     EthashAux() {}
-
-    /// Kicks off generation of DAG for @a _blocknumber and blocks until ready; @returns result.
-
-    void killCache(h256 const& _s);
 
     static EthashAux* s_this;
 
@@ -95,7 +80,6 @@ private:
     std::unordered_map<h256, std::shared_ptr<LightAllocation>> m_lights;
 
     Mutex x_fulls;
-    std::condition_variable m_fullsChanged;
     std::unordered_map<h256, std::weak_ptr<FullAllocation>> m_fulls;
     FullType m_lastUsedFull;
     std::unique_ptr<std::thread> m_fullGenerator;
