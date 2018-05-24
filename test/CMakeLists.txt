@@ -1,4 +1,4 @@
-file(GLOB_RECURSE sources "*.cpp" "*.h" "*.sol")
+file(GLOB_RECURSE sources "tools/*.cpp" "tools/*.h" "*.sol")
 
 # search for test names and create ctest tests
 set(excludeSuites jsonrpc \"customTestSuite\" BlockQueueSuite)
