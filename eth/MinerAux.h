@@ -147,43 +147,6 @@ public:
                 BOOST_THROW_EXCEPTION(BadArgument());
             }
         }
-        else if ((arg == "-w" || arg == "--check-pow") && i + 4 < argc)
-        {
-            string m;
-            try
-            {
-                BlockHeader bi;
-                m = boost::to_lower_copy(string(argv[++i]));
-                h256 powHash(m);
-                m = boost::to_lower_copy(string(argv[++i]));
-                h256 seedHash;
-                if (m.size() == 64 || m.size() == 66)
-                    seedHash = h256(m);
-                else
-                    seedHash = EthashAux::seedHash(stol(m));
-                m = boost::to_lower_copy(string(argv[++i]));
-                bi.setDifficulty(u256(m));
-                auto boundary = Ethash::boundary(bi);
-                m = boost::to_lower_copy(string(argv[++i]));
-                Ethash::setNonce(bi, h64(m));
-                auto r = EthashAux::eval(seedHash, powHash, h64(m));
-                bool valid = r.value < boundary;
-                cout << (valid ? "VALID :-)" : "INVALID :-(") << endl;
-                cout << r.value << (valid ? " < " : " >= ") << boundary << endl;
-                cout << "  where " << boundary << " = 2^256 / " << bi.difficulty() << endl;
-                cout << "  and " << r.value << " = ethash(" << powHash << ", " << h64(m) << ")" << endl;
-                cout << "  with seed as " << seedHash << endl;
-                if (valid)
-                    cout << "(mixHash = " << r.mixHash << ")" << endl;
-                cout << "SHA3( light(seed) ) = " << sha3(EthashAux::light(Ethash::seedHash(bi))->data()) << endl;
-                exit(0);
-            }
-            catch (...)
-            {
-                cerr << "Bad " << arg << " option: " << m << endl;
-                BOOST_THROW_EXCEPTION(BadArgument());
-            }
-        }
         else if (arg == "-M" || arg == "--benchmark")
             mode = OperationMode::Benchmark;
         else if ((arg == "-t" || arg == "--mining-threads") && i + 1 < argc)
