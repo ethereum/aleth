@@ -28,6 +28,8 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Exceptions.h>
 
+#include <ethash/ethash.hpp>
+
 #include <boost/detail/endian.hpp>
 #include <boost/filesystem.hpp>
 
