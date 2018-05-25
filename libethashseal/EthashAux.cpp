@@ -84,25 +84,10 @@ h256 EthashAux::seedHash(unsigned _number)
     return get()->m_seedHashes[epoch];
 }
 
-uint64_t EthashAux::number(h256 const& _seedHash)
+static uint64_t number(h256 const& _seedHash)
 {
-    Guard l(get()->x_epochs);
-    unsigned epoch = 0;
-    auto epochIter = get()->m_epochs.find(_seedHash);
-    if (epochIter == get()->m_epochs.end())
-    {
-        //		cdebug << "Searching for seedHash " << _seedHash;
-        for (h256 h; h != _seedHash && epoch < 2048; ++epoch, h = sha3(h), get()->m_epochs[h] = epoch) {}
-        if (epoch == 2048)
-        {
-            std::ostringstream error;
-            error << "apparent block number for " << _seedHash << " is too high; max is " << (ETHASH_EPOCH_LENGTH * 2048);
-            throw std::invalid_argument(error.str());
-        }
-    }
-    else
-        epoch = epochIter->second;
-    return epoch * ETHASH_EPOCH_LENGTH;
+    int epoch = ethash::find_epoch_number(ethash::hash256_from_bytes(_seedHash.data()));
+    return static_cast<uint64_t>(epoch) * ethash::epoch_length;
 }
 
 EthashAux::LightType EthashAux::light(h256 const& _seedHash)
@@ -116,7 +101,7 @@ EthashAux::LightType EthashAux::light(h256 const& _seedHash)
 
 EthashAux::LightAllocation::LightAllocation(h256 const& _seedHash)
 {
-    uint64_t blockNumber = EthashAux::number(_seedHash);
+    uint64_t blockNumber = number(_seedHash);
     light = ethash_light_new(blockNumber);
     if (!light)
         BOOST_THROW_EXCEPTION(ExternalFunctionFailure() << errinfo_externalFunction("ethash_light_new()"));
@@ -191,12 +176,7 @@ EthashAux::FullType EthashAux::full(h256 const& _seedHash, bool _createIfMissing
 unsigned EthashAux::computeFull(h256 const& _seedHash, bool _createIfMissing)
 {
     Guard l(get()->x_fulls);
-    uint64_t blockNumber;
-
-    DEV_IF_THROWS(blockNumber = EthashAux::number(_seedHash))
-    {
-        return 0;
-    }
+    uint64_t blockNumber = number(_seedHash);
 
     if (FullType ret = get()->m_fulls[_seedHash].lock())
     {
