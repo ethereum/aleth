@@ -55,35 +55,6 @@ EthashAux* EthashAux::get()
     return s_this;
 }
 
-uint64_t EthashAux::dataSize(uint64_t _blockNumber)
-{
-    return ethash_get_datasize(_blockNumber);
-}
-
-h256 EthashAux::seedHash(unsigned _number)
-{
-    unsigned epoch = _number / ETHASH_EPOCH_LENGTH;
-    Guard l(get()->x_epochs);
-    if (epoch >= get()->m_seedHashes.size())
-    {
-        h256 ret;
-        unsigned n = 0;
-        if (!get()->m_seedHashes.empty())
-        {
-            ret = get()->m_seedHashes.back();
-            n = get()->m_seedHashes.size() - 1;
-        }
-        get()->m_seedHashes.resize(epoch + 1);
-//		cdebug << "Searching for seedHash of epoch " << epoch;
-        for (; n <= epoch; ++n, ret = sha3(ret))
-        {
-            get()->m_seedHashes[n] = ret;
-//			cdebug << "Epoch" << n << "is" << ret;
-        }
-    }
-    return get()->m_seedHashes[epoch];
-}
-
 static uint64_t number(h256 const& _seedHash)
 {
     int epoch = ethash::find_epoch_number(ethash::hash256_from_bytes(_seedHash.data()));

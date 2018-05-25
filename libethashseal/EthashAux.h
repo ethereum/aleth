@@ -57,9 +57,6 @@ public:
     using LightType = std::shared_ptr<LightAllocation>;
     using FullType = std::shared_ptr<FullAllocation>;
 
-    static h256 seedHash(unsigned _number);
-    static uint64_t dataSize(uint64_t _blockNumber);
-
     static LightType light(h256 const& _seedHash);
 
     static const uint64_t NotGenerating = (uint64_t)-1;
@@ -84,10 +81,6 @@ private:
     std::unique_ptr<std::thread> m_fullGenerator;
     uint64_t m_generatingFullNumber = NotGenerating;
     unsigned m_fullProgress;
-
-    Mutex x_epochs;
-    std::unordered_map<h256, unsigned> m_epochs;
-    h256s m_seedHashes;
 };
 
 }

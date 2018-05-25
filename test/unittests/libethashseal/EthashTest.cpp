@@ -229,15 +229,22 @@ BOOST_AUTO_TEST_CASE(ethash_single_hash)
         resultHash.hex(), "00000000000204882a6213f68fe89bc368df25c1ad999f82532a7433e99bc48e");
 }
 
-BOOST_AUTO_TEST_CASE(etash_seed_2048)
+BOOST_AUTO_TEST_CASE(epochSeed)
 {
-    constexpr uint64_t epoch = 2048;
-    constexpr uint64_t blockNumber = epoch * 30000 + 1;
-    const h256 expectedSeed{"20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920"};
+    BlockHeader header;
+    header.setNumber(0);
+    h256 seed = Ethash::seedHash(header);
+    BOOST_CHECK_EQUAL(seed, h256{});
 
-    const auto seed = ethash_get_seedhash(blockNumber);
+    header.setNumber(30000);
+    seed = Ethash::seedHash(header);
+    BOOST_CHECK_EQUAL(
+        seed, h256{"290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"});
 
-    BOOST_CHECK(std::equal(expectedSeed.begin(), expectedSeed.end(), seed.b));
+    header.setNumber(2048 * 30000);
+    seed = Ethash::seedHash(header);
+    BOOST_CHECK_EQUAL(
+        seed, h256{"20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920"});
 }
 
 BOOST_AUTO_TEST_CASE(etashQuickVerify)
