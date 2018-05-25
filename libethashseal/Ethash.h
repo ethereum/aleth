@@ -69,7 +69,6 @@ public:
     void manuallySetWork(BlockHeader const& _work) { m_sealing = _work; }
     void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);
 
-    static void ensurePrecomputed(unsigned _number);
     static void init();
 
 private:

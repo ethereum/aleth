@@ -128,10 +128,6 @@ public:
             m_minerType = "cpu";
         else if (arg == "--current-block" && i + 1 < argc)
             m_currentBlock = stol(argv[++i]);
-        else if (arg == "--no-precompute")
-        {
-            m_precompute = false;
-        }
         else if (arg == "-M" || arg == "--benchmark")
             mode = OperationMode::Benchmark;
         else if ((arg == "-t" || arg == "--mining-threads") && i + 1 < argc)
@@ -160,14 +156,7 @@ public:
 
     static void streamHelp(ostream& _out)
     {
-        _out << "WORK FARMING MODE:\n"
-             << "  --no-precompute  Don't precompute the next epoch's DAG\n\n"
-
-             << "ETHASH VERIFY MODE:\n"
-             << "  -w,--check-pow <headerHash> <seedHash> <difficulty> <nonce> Check PoW "
-                "credentials for validity\n\n"
-
-             << "BENCHMARKING MODE:\n"
+        _out << "BENCHMARKING MODE:\n"
              << "  -M,--benchmark               Benchmark for mining and exit\n"
              << "  --benchmark-warmup <seconds> Set the duration of warmup for the benchmark tests "
                 "(default: 3)\n"
@@ -175,10 +164,6 @@ public:
                 "tests (default: 3)\n"
              << "  --benchmark-trials <n>       Set the number of trials for the benchmark tests "
                 "(default: 5)\n\n"
-
-             << "DAG CREATION MODE:\n"
-             << "  -D,--create-dag <number> Create the DAG in preparation for mining on given "
-                "block and exit\n\n"
 
              << "MINING CONFIGURATION:\n"
              << "  -C,--cpu                   When mining, use the CPU\n"
@@ -190,7 +175,6 @@ public:
     }
 
     std::string minerType() const { return m_minerType; }
-    bool shouldPrecompute() const { return m_precompute; }
 
 private:
     void doBenchmark(std::string const& _m, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
@@ -207,9 +191,6 @@ private:
 
         string platformInfo = EthashCPUMiner::platformInfo();
         cout << "Benchmarking on platform: " << platformInfo << endl;
-
-        cout << "Preparing DAG..." << endl;
-        Ethash::ensurePrecomputed(0);
 
         genesis.setDifficulty(u256(1) << 63);
         f.setWork(genesis);
@@ -262,6 +243,4 @@ private:
     unsigned m_benchmarkWarmup = 3;
     unsigned m_benchmarkTrial = 3;
     unsigned m_benchmarkTrials = 5;
-
-    bool m_precompute = true;
 };

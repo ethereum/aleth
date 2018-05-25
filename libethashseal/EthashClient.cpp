@@ -112,13 +112,6 @@ bool EthashClient::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
     return true;
 }
 
-void EthashClient::setShouldPrecomputeDAG(bool _precompute)
-{
-    bytes trueBytes {1};
-    bytes falseBytes {0};
-    sealEngine()->setOption("precomputeDAG", _precompute ? trueBytes: falseBytes);
-}
-
 void EthashClient::submitExternalHashrate(u256 const& _rate, h256 const& _id)
 {
     WriteGuard writeGuard(x_externalRates);
