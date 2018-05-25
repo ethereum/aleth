@@ -82,7 +82,6 @@ public:
     enum class OperationMode
     {
         None,
-        DAGInit,
         Benchmark
     };
 
@@ -133,20 +132,6 @@ public:
         {
             m_precompute = false;
         }
-        else if ((arg == "-D" || arg == "--create-dag") && i + 1 < argc)
-        {
-            string m = boost::to_lower_copy(string(argv[++i]));
-            mode = OperationMode::DAGInit;
-            try
-            {
-                m_initDAG = stol(m);
-            }
-            catch (...)
-            {
-                cerr << "Bad " << arg << " option: " << m << endl;
-                BOOST_THROW_EXCEPTION(BadArgument());
-            }
-        }
         else if (arg == "-M" || arg == "--benchmark")
             mode = OperationMode::Benchmark;
         else if ((arg == "-t" || arg == "--mining-threads") && i + 1 < argc)
@@ -169,8 +154,6 @@ public:
     {
         if (m_minerType == "cpu")
             EthashCPUMiner::setNumInstances(m_miningThreads);
-        if (mode == OperationMode::DAGInit)
-            doInitDAG(m_initDAG);
         else if (mode == OperationMode::Benchmark)
             doBenchmark(m_minerType, m_benchmarkWarmup, m_benchmarkTrial, m_benchmarkTrials);
     }
@@ -210,14 +193,6 @@ public:
     bool shouldPrecompute() const { return m_precompute; }
 
 private:
-    void doInitDAG(unsigned _n)
-    {
-        h256 seedHash = EthashAux::seedHash(_n);
-        cout << "Initializing DAG for epoch beginning #" << (_n / 30000 * 30000) << " (seedhash " << seedHash.abridged() << "). This will take a while." << endl;
-        EthashAux::full(seedHash, true);
-        exit(0);
-    }
-
     void doBenchmark(std::string const& _m, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
     {
         BlockHeader genesis;
