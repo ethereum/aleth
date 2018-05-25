@@ -1,5 +1,4 @@
 #pragma once
-#include "compiler.h"
 #include "endian.h"
 #include "ethash.h"
 #include <stdio.h>

@@ -24,7 +24,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stddef.h>
-#include "compiler.h"
 
 #define ETHASH_REVISION 23
 #define ETHASH_MIX_BYTES 128
