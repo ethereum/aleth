@@ -261,10 +261,16 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 
     if (_force || _peer->m_totalDifficulty > syncingDifficulty)
     {
+        if (_peer->m_totalDifficulty > syncingDifficulty)
+            LOG(m_logger) << "Discovered new highest difficulty";
+
         // start sync
         m_syncingTotalDifficulty = _peer->m_totalDifficulty;
         if (m_state == SyncState::Idle || m_state == SyncState::NotSynced)
+        {
+            LOG(m_loggerInfo) << "Starting full sync";
             m_state = SyncState::Blocks;
+        }
         _peer->requestBlockHeaders(_peer->m_latestHash, 1, 0, false);
         _peer->m_requireTransactions = true;
         return;
