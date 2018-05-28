@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file EthashCPUMiner.cpp
  * @author Gav Wood <i@gavwood.com>
@@ -34,60 +34,82 @@ using namespace eth;
 unsigned EthashCPUMiner::s_numInstances = 0;
 
 
-EthashCPUMiner::EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci):
-	GenericMiner<EthashProofOfWork>(_ci), Worker("miner" + toString(index()))
+EthashCPUMiner::EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci)
+  : GenericMiner<EthashProofOfWork>(_ci)
 {
 }
 
 EthashCPUMiner::~EthashCPUMiner()
 {
-	terminate();
+    stopWorking();
 }
 
 void EthashCPUMiner::kickOff()
 {
-	stopWorking();
-	startWorking();
+    stopWorking();
+    startWorking();
 }
 
 void EthashCPUMiner::pause()
 {
-	stopWorking();
+    stopWorking();
 }
 
-void EthashCPUMiner::workLoop()
+void EthashCPUMiner::startWorking()
 {
-	auto tid = std::this_thread::get_id();
-	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+    if (!m_thread)
+    {
+        m_shouldStop = false;
+        m_thread.reset(new thread(&EthashCPUMiner::minerBody, this));
+    }
+}
 
-	uint64_t tryNonce = s_eng();
-	ethash_return_value ethashReturn;
+void EthashCPUMiner::stopWorking()
+{
+    if (m_thread)
+    {
+        m_shouldStop = true;
+        m_thread->join();
+        m_thread.reset();
+    }
+}
 
-	WorkPackage w = work();
 
-	EthashAux::FullType dag;
-	while (!shouldStop() && !dag)
-	{
-		while (!shouldStop() && EthashAux::computeFull(w.seedHash, true) != 100)
-			this_thread::sleep_for(chrono::milliseconds(500));
-		dag = EthashAux::full(w.seedHash, false);
-	}
+void EthashCPUMiner::minerBody()
+{
+    setThreadName("miner" + toString(index()));
 
-	h256 boundary = w.boundary;
-	unsigned hashCount = 1;
-	for (; !shouldStop(); tryNonce++, hashCount++)
-	{
-		ethashReturn = ethash_full_compute(dag->full, *(ethash_h256_t*)w.headerHash().data(), tryNonce);
-		h256 value = h256((uint8_t*)&ethashReturn.result, h256::ConstructFromPointer);
-		if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce, h256((uint8_t*)&ethashReturn.mix_hash, h256::ConstructFromPointer)}))
-			break;
-		if (!(hashCount % 100))
-			accumulateHashes(100);
-	}
+    auto tid = std::this_thread::get_id();
+    static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
+
+    uint64_t tryNonce = s_eng();
+    ethash_return_value ethashReturn;
+
+    WorkPackage w = work();
+
+    EthashAux::FullType dag;
+    while (!m_shouldStop && !dag)
+    {
+        while (!m_shouldStop && EthashAux::computeFull(w.seedHash, true) != 100)
+            this_thread::sleep_for(chrono::milliseconds(500));
+        dag = EthashAux::full(w.seedHash, false);
+    }
+
+    h256 boundary = w.boundary;
+    unsigned hashCount = 1;
+    for (; !m_shouldStop; tryNonce++, hashCount++)
+    {
+        ethashReturn = ethash_full_compute(dag->full, *(ethash_h256_t*)w.headerHash().data(), tryNonce);
+        h256 value = h256((uint8_t*)&ethashReturn.result, h256::ConstructFromPointer);
+        if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce, h256((uint8_t*)&ethashReturn.mix_hash, h256::ConstructFromPointer)}))
+            break;
+        if (!(hashCount % 100))
+            accumulateHashes(100);
+    }
 }
 
 std::string EthashCPUMiner::platformInfo()
 {
-	string baseline = toString(std::thread::hardware_concurrency()) + "-thread CPU";
-	return baseline;
+    string baseline = toString(std::thread::hardware_concurrency()) + "-thread CPU";
+    return baseline;
 }
