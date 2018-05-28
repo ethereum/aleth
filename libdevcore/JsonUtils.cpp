@@ -56,13 +56,12 @@ std::string dev::jsonTypeAsString(json_spirit::Value_type _type)
 }
 
 void dev::requireJsonFields(json_spirit::mObject const& _o, std::string const& _config,
-    std::map<std::string, possibleJsonType> const& _validationMap,
-    std::set<std::string> const& _ignoreFields)
+    std::map<std::string, jsonType> const& _validationMap)
 {
     // check for unexpected fiedls
     for (auto const& field : _o)
     {
-        if (!_validationMap.count(field.first) && !_ignoreFields.count(field.first))
+        if (!_validationMap.count(field.first))
         {
             std::string const comment =
                 "Unexpected field '" + field.first + "' in config: " + _config;
@@ -75,27 +74,37 @@ void dev::requireJsonFields(json_spirit::mObject const& _o, std::string const& _
     // check field types with validation map
     for (auto const vmap : _validationMap)
     {
+        // check that all required fields are in the object
         if (!_o.count(vmap.first))
         {
-            std::string const comment =
-                "Expected field '" + vmap.first + "' not found in config: " + _config;
-            std::cerr << comment << "\n"
-                      << json_spirit::write_string((json_spirit::mValue)_o, true) << "\n";
-            BOOST_THROW_EXCEPTION(MissingField() << errinfo_comment(comment));
+            if (vmap.second.second == jsonField::Required)
+            {
+                std::string const comment =
+                    "Expected field '" + vmap.first + "' not found in config: " + _config;
+                std::cerr << comment << "\n"
+                          << json_spirit::write_string((json_spirit::mValue)_o, true) << "\n";
+                BOOST_THROW_EXCEPTION(MissingField() << errinfo_comment(comment));
+            }
+            else if (vmap.second.second == jsonField::Optional)
+                continue;
         }
 
+        // check that field type is one of allowed field types
         bool matched = false;
-        std::string sTypes;
-        for (auto const& type : vmap.second)
+        for (auto const& type : vmap.second.first)
         {
-            if (sTypes.size())
-                sTypes += ", or ";
-            sTypes += jsonTypeAsString(type);
             if (_o.at(vmap.first).type() == type)
                 matched = true;
         }
         if (matched == false)
         {
+            std::string sTypes;
+            for (auto const& type : vmap.second.first)
+            {
+                if (sTypes.size())
+                    sTypes += ", or ";
+                sTypes += jsonTypeAsString(type);
+            }
             std::string const comment =
                 "Field '" + vmap.first + "' expected to be " + sTypes + ", but set to " +
                 jsonTypeAsString(_o.at(vmap.first).type()) + " in " + _config;

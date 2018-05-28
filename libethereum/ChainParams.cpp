@@ -27,14 +27,15 @@
 #include <libethcore/SealEngine.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Precompiled.h>
+#include "ValidationSchemes.h"
 #include "GenesisInfo.h"
 #include "State.h"
 #include "Account.h"
 using namespace std;
 using namespace dev;
 using namespace eth;
+using namespace eth::validation;
 namespace js = json_spirit;
-
 
 ChainParams::ChainParams()
 {
@@ -52,79 +53,6 @@ ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
 	*this = loadConfig(_json, _stateRoot);
 }
 
-namespace
-{
-string const c_sealEngine = "sealEngine";
-string const c_params = "params";
-string const c_genesis = "genesis";
-string const c_accounts = "accounts";
-
-set<string> const c_knownChainConfigFields =
-	{c_sealEngine, c_params, c_genesis, c_accounts};
-
-string const c_minGasLimit = "minGasLimit";
-string const c_maxGasLimit = "maxGasLimit";
-string const c_gasLimitBoundDivisor = "gasLimitBoundDivisor";
-string const c_homesteadForkBlock = "homesteadForkBlock";
-string const c_daoHardforkBlock = "daoHardforkBlock";
-string const c_EIP150ForkBlock = "EIP150ForkBlock";
-string const c_EIP158ForkBlock = "EIP158ForkBlock";
-string const c_byzantiumForkBlock = "byzantiumForkBlock";
-string const c_eWASMForkBlock = "eWASMForkBlock";
-string const c_constantinopleForkBlock = "constantinopleForkBlock";
-string const c_accountStartNonce = "accountStartNonce";
-string const c_maximumExtraDataSize = "maximumExtraDataSize";
-string const c_tieBreakingGas = "tieBreakingGas";
-string const c_blockReward = "blockReward";
-string const c_difficultyBoundDivisor = "difficultyBoundDivisor";
-string const c_minimumDifficulty = "minimumDifficulty";
-string const c_durationLimit = "durationLimit";
-string const c_chainID = "chainID";
-string const c_networkID = "networkID";
-string const c_allowFutureBlocks = "allowFutureBlocks";
-
-set<string> const c_knownParamNames = {c_minGasLimit, c_maxGasLimit, c_gasLimitBoundDivisor,
-    c_homesteadForkBlock, c_EIP150ForkBlock, c_EIP158ForkBlock, c_accountStartNonce,
-    c_maximumExtraDataSize, c_tieBreakingGas, c_blockReward, c_byzantiumForkBlock, c_eWASMForkBlock,
-    c_constantinopleForkBlock, c_daoHardforkBlock, c_minimumDifficulty, c_difficultyBoundDivisor,
-    c_durationLimit, c_chainID, c_networkID, c_allowFutureBlocks};
-} // anonymous namespace
-
-void validateConfigJson(js::mObject const& _obj)
-{
-    requireJsonFields(_obj, "ChainParams::loadConfig",
-        {{"sealEngine", {json_spirit::str_type}}, {"params", {json_spirit::obj_type}},
-            {"genesis", {json_spirit::obj_type}}, {"accounts", {json_spirit::obj_type}}});
-
-    requireJsonFields(_obj.at("genesis").get_obj(), "ChainParams::loadConfig",
-        {{"author", {json_spirit::str_type}}, {"nonce", {json_spirit::str_type}},
-            {"author", {json_spirit::str_type}}, {"gasLimit", {json_spirit::str_type}},
-            {"timestamp", {json_spirit::str_type}}, {"difficulty", {json_spirit::str_type}},
-            {"extraData", {json_spirit::str_type}}},
-        {"mixHash", "parentHash"});
-
-    js::mObject const& accounts = _obj.at("accounts").get_obj();
-    for (auto const& acc : accounts)
-    {
-        js::mObject const& account = acc.second.get_obj();
-        if (account.count("precompiled"))
-        {
-            requireJsonFields(account, "ChainParams::loadConfig",
-                {{"precompiled", {json_spirit::obj_type}}}, {"wei"});
-        }
-        else
-        {
-            if (account.count("wei"))
-                requireJsonFields(account, "ChainParams::loadConfig", {{"wei", {json_spirit::str_type}}});
-            else
-            {
-                requireJsonFields(account, "ChainParams::loadConfig",
-                    {{"balance", {json_spirit::str_type}}}, {"code", "nonce", "storage"});
-            }
-        }
-    }
-}
-
 ChainParams ChainParams::loadConfig(
     string const& _json, h256 const& _stateRoot, const boost::filesystem::path& _configPath) const
 {
@@ -134,13 +62,10 @@ ChainParams ChainParams::loadConfig(
 	js::mObject obj = val.get_obj();
 
     validateConfigJson(obj);
-    validateFieldNames(obj, c_knownChainConfigFields);
-
 	cp.sealEngineName = obj[c_sealEngine].get_str();
 	// params
 	js::mObject params = obj[c_params].get_obj();
-	validateFieldNames(params, c_knownParamNames);
-	cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params[c_accountStartNonce].get_str())));
+    cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params[c_accountStartNonce].get_str())));
 	cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params[c_maximumExtraDataSize].get_str())));
 	cp.tieBreakingGas = params.count(c_tieBreakingGas) ? params[c_tieBreakingGas].get_bool() : true;
 	cp.setBlockReward(u256(fromBigEndian<u256>(fromHex(params[c_blockReward].get_str()))));
@@ -178,28 +103,15 @@ ChainParams ChainParams::loadConfig(
 
     cp.genesisState = jsonToAccountMap(
         genesisStateStr, cp.accountStartNonce, nullptr, &cp.precompiled, _configPath);
+
+    // Strict account check
+    json_spirit::read_string_or_throw(genesisStateStr, val);
+    for (auto const& account: val.get_obj())
+        validateAccountObj(account.second.get_obj());
+
     cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot(true);
 
     return cp;
-}
-
-namespace
-{
-string const c_parentHash = "parentHash";
-string const c_coinbase = "coinbase";
-string const c_author = "author";
-string const c_difficulty = "difficulty";
-string const c_gasLimit = "gasLimit";
-string const c_gasUsed = "gasUsed";
-string const c_timestamp = "timestamp";
-string const c_extraData = "extraData";
-string const c_mixHash = "mixHash";
-string const c_nonce = "nonce";
-
-set<string> const c_knownGenesisFields = {
-	c_parentHash, c_coinbase, c_author, c_difficulty, c_gasLimit, c_gasUsed, c_timestamp,
-	c_extraData, c_mixHash, c_nonce
-};
 }
 
 ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot) const
@@ -210,9 +122,7 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 	json_spirit::read_string(_json, val);
 	js::mObject genesis = val.get_obj();
 
-	validateFieldNames(genesis, c_knownGenesisFields);
-
-	cp.parentHash = h256(genesis[c_parentHash].get_str());
+    cp.parentHash = h256(0); // required by the YP
 	cp.author = genesis.count(c_coinbase) ? h160(genesis[c_coinbase].get_str()) : h160(genesis[c_author].get_str());
 	cp.difficulty = genesis.count(c_difficulty) ? u256(fromBigEndian<u256>(fromHex(genesis[c_difficulty].get_str()))) : 0;
 	cp.gasLimit = u256(fromBigEndian<u256>(fromHex(genesis[c_gasLimit].get_str())));

@@ -20,6 +20,7 @@
  */
 
 #include "Account.h"
+#include "ValidationSchemes.h"
 #include <libdevcore/JsonUtils.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/Precompiled.h>
@@ -27,6 +28,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::eth::validation;
 
 namespace fs = boost::filesystem;
 
@@ -81,29 +83,8 @@ PrecompiledContract createPrecompiledContract(js::mObject& _precompiled)
 		throw;
 	}
 }
+}
 
-}
-namespace
-{
-	string const c_wei = "wei";
-	string const c_finney = "finney";
-	string const c_balance = "balance";
-	string const c_nonce = "nonce";
-	string const c_code = "code";
-	string const c_codeFromFile = "codeFromFile";  ///< A file containg a code as bytes.
-	string const c_storage = "storage";
-	string const c_shouldnotexist = "shouldnotexist";
-	string const c_precompiled = "precompiled";
-	std::set<string> const c_knownAccountFields = {
-		c_wei, c_finney, c_balance, c_nonce, c_code, c_codeFromFile, c_storage, c_shouldnotexist,
-		c_code, c_precompiled
-	};
-	void validateAccountMapObj(js::mObject const& _o)
-	{
-		for (auto const& field: _o)
-			validateFieldNames(field.second.get_obj(), c_knownAccountFields);
-	}
-}
 AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce,
     AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled, const fs::path& _configPath)
 {
@@ -119,12 +100,12 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 	js::mValue val;
 	json_spirit::read_string_or_throw(_json, val);
 	js::mObject o = val.get_obj();
-	validateAccountMapObj(o);
-	for (auto const& account: o)
+    for (auto const& account: o)
 	{
-		Address a(fromHex(account.first));
+        Address a(fromHex(account.first));
 		// FIXME: Do not copy every account object.
 		auto o = account.second.get_obj();
+        validateAccountMapObj(o);
 
 		bool haveBalance = (o.count(c_wei) || o.count(c_finney) || o.count(c_balance));
 		bool haveNonce = o.count(c_nonce);
