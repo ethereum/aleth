@@ -87,7 +87,7 @@ string ethCredits(bool _interactive = false)
 
 void version()
 {
-    const auto* buildinfo = aleth_get_buildinfo();
+    auto const* const buildinfo = aleth_get_buildinfo();
     cout << "aleth " << buildinfo->project_version << "\n";
     cout << "eth network protocol version: " << dev::eth::c_protocolVersion << "\n";
     cout << "Client database version: " << dev::eth::c_databaseVersion << "\n";
