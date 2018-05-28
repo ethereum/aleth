@@ -50,6 +50,7 @@ namespace eth
 class TransactionQueue;
 class BlockQueue;
 class BlockChainSync;
+class FastSync;
 
 /**
  * @brief The EthereumHost class
@@ -60,7 +61,8 @@ class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
 public:
     /// Start server, but don't listen.
-    EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
+    EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq,
+        BlockQueue& _bq, u256 _networkId, SyncMode _syncMode);
 
     /// Will block on network process events.
     virtual ~EthereumHost();
@@ -132,6 +134,7 @@ private:
 
     mutable Mutex x_transactions;
     std::shared_ptr<BlockChainSync> m_sync;
+    std::shared_ptr<FastSync> m_fastSync;
     std::atomic<time_t> m_lastTick = { 0 };
 
     std::shared_ptr<EthereumHostDataFace> m_hostData;

@@ -157,8 +157,9 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 
 }  // Anonymous namespace -- helper functions.
 
-BlockChainSync::BlockChainSync(EthereumHost& _host):
-    m_host(_host),
+BlockChainSync::BlockChainSync(EthereumHost& _host, SyncState _initialState /*= SyncState::Idle*/)
+  : m_host(_host),
+    m_state(_initialState),
     m_chainStartBlock(_host.chain().chainStartBlockNumber()),
     m_startingBlock(_host.chain().number()),
     m_lastImportedBlock(m_startingBlock),
@@ -206,6 +207,10 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
+
+    if (m_state == SyncState::Waiting)
+        return;
+
     std::shared_ptr<SessionFace> session = _peer->session();
     if (!session)
         return; // Expired
