@@ -38,13 +38,6 @@ defaults:
           export TMPDIR=/dev/shm
         fi
         export ETHEREUM_TEST_PATH=~/project/test/jsontests
-
-        # If the DAG file does not exist, we have to run a single test with mining
-        # to create it before we can run tests in parallel.
-        if [ ! -f ~/.ethash/full-R23-0000000000000000 ]; then
-          test/testeth -t BlockChainSuite/updateStats
-        fi
-
         ctest --output-on-failure -j $TEST_PARALLEL_JOBS
 
   test-evmc-interpreter: &test-evmc-interpreter
@@ -76,18 +69,6 @@ defaults:
     cache-restore:
       name: "Restore dependencies cache"
       key: *deps-cache-key
-
-  save-ethash-dag: &save-ethash-dag
-    cache-save:
-      name: "Save Ethash DAG file"
-      key: &ethash-dag-key ethash-dag0-{{arch}}
-      paths:
-        - ~/.ethash/full-R23-0000000000000000
-
-  restore-ethash-dag: &restore-ethash-dag
-    cache-restore:
-      name: "Restore Ethash DAG file"
-      key: *ethash-dag-key
 
   upload-coverage-data: &upload-coverage-data
     run:
@@ -156,10 +137,8 @@ jobs:
       - *save-ccache
       - *save-deps-cache
       - *store-package
-      - *restore-ethash-dag
       - *test
       - *test-evmc-interpreter
-      - *save-ethash-dag
 
   linux-gcc6:
     environment:
@@ -189,10 +168,8 @@ jobs:
       - *save-ccache
       - *save-deps-cache
       - *store-package
-      - *restore-ethash-dag
       - *test
       - *test-evmc-interpreter
-      - *save-ethash-dag
       - *upload-coverage-data
 
   macos-xcode90:
@@ -219,10 +196,8 @@ jobs:
       - *build
       - *save-deps-cache
       - *store-package
-      - *restore-ethash-dag
       - *test
       - *store-randomcode-seed
-      - *save-ethash-dag
 
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
