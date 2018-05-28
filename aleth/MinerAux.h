@@ -237,9 +237,6 @@ private:
     unsigned m_miningThreads = UINT_MAX;
     uint64_t m_currentBlock = 0;
 
-    /// DAG initialisation param.
-    unsigned m_initDAG = 0;
-
     /// Benchmarking params
     unsigned m_benchmarkWarmup = 3;
     unsigned m_benchmarkTrial = 3;
