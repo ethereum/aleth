@@ -26,6 +26,7 @@
 #include <libdevcore/CommonJS.h>
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/Exceptions.h>
+#include <libethashseal/Ethash.h>
 #include <libethashseal/EthashCPUMiner.h>
 
 // TODO - having using derivatives in header files is very poor style, and we need to fix these up.
