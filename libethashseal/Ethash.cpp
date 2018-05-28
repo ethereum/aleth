@@ -274,7 +274,7 @@ void Ethash::generateSeal(BlockHeader const& _bi)
     m_sealing = _bi;
     m_farm.setWork(m_sealing);
     m_farm.start(m_sealer);
-    m_farm.setWork(m_sealing);  // TODO: take out one before or one after...
+    m_farm.setWork(m_sealing);
 }
 
 bool Ethash::shouldSeal(Interface*)
