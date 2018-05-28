@@ -165,8 +165,8 @@ public:
             InterfaceNotSupported() << errinfo_interface("ClientBase::syncStatus"));
     }
 
-    Block block(BlockNumber _h) const;
-    
+    Block blockByNumber(BlockNumber _h) const;
+
     int chainId() const override;
     
 protected:
