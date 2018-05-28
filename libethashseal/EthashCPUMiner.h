@@ -14,18 +14,15 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file EthashCPUMiner.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- *
+/** @file
  * Determines the PoW algorithm.
  */
 
 #pragma once
 
-#include "libdevcore/Worker.h"
+#include "EthashProofOfWork.h"
+
 #include <libethereum/GenericMiner.h>
-#include "EthashAux.h"
 
 namespace dev
 {
@@ -34,12 +31,18 @@ namespace eth
 class EthashCPUMiner : public GenericMiner<EthashProofOfWork>
 {
 public:
-    EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci);
-    ~EthashCPUMiner();
+    explicit EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci);
+    ~EthashCPUMiner() override;
 
-    static unsigned instances() { return s_numInstances > 0 ? s_numInstances : std::thread::hardware_concurrency(); }
+    static unsigned instances()
+    {
+        return s_numInstances > 0 ? s_numInstances : std::thread::hardware_concurrency();
+    }
     static std::string platformInfo();
-    static void setNumInstances(unsigned _instances) { s_numInstances = std::min<unsigned>(_instances, std::thread::hardware_concurrency()); }
+    static void setNumInstances(unsigned _instances)
+    {
+        s_numInstances = std::min<unsigned>(_instances, std::thread::hardware_concurrency());
+    }
 
 protected:
     void kickOff() override;
@@ -55,6 +58,5 @@ private:
     std::unique_ptr<std::thread> m_thread;
     std::atomic<bool> m_shouldStop;
 };
-
-}
-}
+}  // namespace eth
+}  // namespace dev

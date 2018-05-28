@@ -24,11 +24,22 @@
 #include <libethereum/GenericFarm.h>
 #include "EthashProofOfWork.h"
 
+#include <ethash/ethash.hpp>
+
 namespace dev
 {
 
 namespace eth
 {
+inline ethash::hash256 toEthash(h256 const& hash) noexcept
+{
+    return ethash::hash256_from_bytes(hash.data());
+}
+
+inline uint64_t toEthash(Nonce const& nonce) noexcept
+{
+    return static_cast<uint64_t>(static_cast<u64>(nonce));
+}
 
 class Ethash: public SealEngineBase
 {
