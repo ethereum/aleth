@@ -14,27 +14,29 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file EthashAux.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "EthashAux.h"
-#include <boost/detail/endian.hpp>
-#include <boost/filesystem.hpp>
-#include <chrono>
-#include <array>
-#include <thread>
-#include <libethash/internal.h>
+#include "Ethash.h"
+
 #include <libdevcore/Common.h>
+#include <libdevcore/FileSystem.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/Log.h>
-#include <libdevcrypto/CryptoPP.h>
 #include <libdevcore/SHA3.h>
-#include <libdevcore/FileSystem.h>
-#include <libethcore/Exceptions.h>
+#include <libdevcrypto/CryptoPP.h>
+#include <libethash/internal.h>
 #include <libethcore/BlockHeader.h>
-#include "Ethash.h"
+#include <libethcore/Exceptions.h>
+
+#include <ethash/ethash.hpp>
+
+#include <boost/detail/endian.hpp>
+#include <boost/filesystem.hpp>
+
+#include <array>
+#include <chrono>
+#include <thread>
+
 using namespace std;
 using namespace chrono;
 using namespace dev;
@@ -51,11 +53,6 @@ EthashAux* EthashAux::get()
     static std::once_flag flag;
     std::call_once(flag, []{s_this = new EthashAux();});
     return s_this;
-}
-
-uint64_t EthashAux::cacheSize(BlockHeader const& _header)
-{
-    return ethash_get_cachesize((uint64_t)_header.number());
 }
 
 uint64_t EthashAux::dataSize(uint64_t _blockNumber)
@@ -106,12 +103,6 @@ uint64_t EthashAux::number(h256 const& _seedHash)
     else
         epoch = epochIter->second;
     return epoch * ETHASH_EPOCH_LENGTH;
-}
-
-void EthashAux::killCache(h256 const& _s)
-{
-    WriteGuard l(x_lights);
-    m_lights.erase(_s);
 }
 
 EthashAux::LightType EthashAux::light(h256 const& _seedHash)
@@ -227,31 +218,4 @@ unsigned EthashAux::computeFull(h256 const& _seedHash, bool _createIfMissing)
     }
 
     return (get()->m_generatingFullNumber == blockNumber) ? get()->m_fullProgress : 0;
-}
-
-EthashProofOfWork::Result EthashAux::FullAllocation::compute(h256 const& _headerHash, Nonce const& _nonce) const
-{
-    ethash_return_value_t r = ethash_full_compute(full, *(ethash_h256_t*)_headerHash.data(), (uint64_t)(u64)_nonce);
-    if (!r.success)
-        BOOST_THROW_EXCEPTION(DAGCreationFailure());
-    return EthashProofOfWork::Result{h256((uint8_t*)&r.result, h256::ConstructFromPointer), h256((uint8_t*)&r.mix_hash, h256::ConstructFromPointer)};
-}
-
-EthashProofOfWork::Result EthashAux::LightAllocation::compute(h256 const& _headerHash, Nonce const& _nonce) const
-{
-    ethash_return_value r = ethash_light_compute(light, *(ethash_h256_t*)_headerHash.data(), (uint64_t)(u64)_nonce);
-    if (!r.success)
-        BOOST_THROW_EXCEPTION(DAGCreationFailure());
-    return EthashProofOfWork::Result{h256((uint8_t*)&r.result, h256::ConstructFromPointer), h256((uint8_t*)&r.mix_hash, h256::ConstructFromPointer)};
-}
-
-EthashProofOfWork::Result EthashAux::eval(h256 const& _seedHash, h256 const& _headerHash, Nonce const& _nonce)
-{
-    DEV_GUARDED(get()->x_fulls)
-        if (FullType dag = get()->m_fulls[_seedHash].lock())
-            return dag->compute(_headerHash, _nonce);
-    DEV_IF_THROWS(return EthashAux::get()->light(_seedHash)->compute(_headerHash, _nonce))
-    {
-        return EthashProofOfWork::Result{ ~h256(), h256() };
-    }
 }

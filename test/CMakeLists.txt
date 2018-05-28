@@ -78,3 +78,4 @@ eth_add_test(ClientBase
 #	ARGS --eth_testfile=BlockTests/bcJS_API_Test
 #	ARGS --eth_testfile=BlockTests/bcValidBlockTest
 #)
+

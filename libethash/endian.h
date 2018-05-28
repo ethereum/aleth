@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include "compiler.h"
 
 #if defined(__MINGW32__) || defined(_WIN32)
   # define LITTLE_ENDIAN 1234

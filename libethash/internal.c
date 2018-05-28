@@ -14,11 +14,6 @@
   You should have received a copy of the GNU General Public License
   along with cpp-ethereum.	If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file internal.c
-* @author Tim Hughes <tim@twistedfury.com>
-* @author Matthew Wampler-Doty
-* @date 2015
-*/
 
 #include <assert.h>
 #include <inttypes.h>
@@ -40,6 +35,8 @@
 #else
 #include "sha3.h"
 #endif // WITH_CRYPTOPP
+
+#define ETHASH_EPOCH_LENGTH 30000U
 
 uint64_t ethash_get_datasize(uint64_t const block_number)
 {
@@ -293,22 +290,6 @@ static bool ethash_hash(
 	return true;
 }
 
-void ethash_quick_hash(
-	ethash_h256_t* return_hash,
-	ethash_h256_t const* header_hash,
-	uint64_t const nonce,
-	ethash_h256_t const* mix_hash
-)
-{
-	uint8_t buf[64 + 32];
-	memcpy(buf, header_hash, 32);
-	fix_endian64_same(nonce);
-	memcpy(&(buf[32]), &nonce, 8);
-	SHA3_512(buf, buf, 40);
-	memcpy(&(buf[64]), mix_hash, 32);
-	SHA3_256(return_hash, buf, 64 + 32);
-}
-
 ethash_h256_t ethash_get_seedhash(uint64_t block_number)
 {
 	ethash_h256_t ret;
@@ -317,19 +298,6 @@ ethash_h256_t ethash_get_seedhash(uint64_t block_number)
 	for (uint32_t i = 0; i < epochs; ++i)
 		SHA3_256(&ret, (uint8_t*)&ret, 32);
 	return ret;
-}
-
-bool ethash_quick_check_difficulty(
-	ethash_h256_t const* header_hash,
-	uint64_t const nonce,
-	ethash_h256_t const* mix_hash,
-	ethash_h256_t const* boundary
-)
-{
-
-	ethash_h256_t return_hash;
-	ethash_quick_hash(&return_hash, header_hash, nonce, mix_hash);
-	return ethash_check_difficulty(&return_hash, boundary);
 }
 
 ethash_light_t ethash_light_new_internal(uint64_t cache_size, ethash_h256_t const* seed)
