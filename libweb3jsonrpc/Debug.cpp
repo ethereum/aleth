@@ -31,18 +31,12 @@ StandardTrace::DebugOptions dev::eth::debugOptions(Json::Value const& _json)
     return op;
 }
 
-h256 Debug::blockHash(string const& _blockNumberOrHash) const
+Block Debug::blockByNumberOrHash(string const& _blockNumberOrHash) const
 {
     if (isHash<h256>(_blockNumberOrHash))
-        return h256(_blockNumberOrHash.substr(_blockNumberOrHash.size() - 64, 64));
-    try
-    {
-        return m_eth.blockChain().numberHash(stoul(_blockNumberOrHash));
-    }
-    catch (...)
-    {
-        throw jsonrpc::JsonRpcException("Invalid argument");
-    }
+        return m_eth.block(h256(_blockNumberOrHash.substr(_blockNumberOrHash.size() - 64, 64)));
+
+    return m_eth.blockByNumber(jsToBlockNumber(_blockNumberOrHash));
 }
 
 Json::Value Debug::traceTransaction(Executive& _e, Transaction const& _t, Json::Value const& _json)
@@ -121,7 +115,7 @@ Json::Value Debug::debug_traceBlockByHash(string const& _blockHash, Json::Value 
 Json::Value Debug::debug_traceBlockByNumber(int _blockNumber, Json::Value const& _json)
 {
     Json::Value ret;
-    Block block = m_eth.block(blockHash(std::to_string(_blockNumber)));
+    Block block = m_eth.blockByNumber(jsToBlockNumber(std::to_string(_blockNumber)));
     ret["structLogs"] = traceBlock(block, _json);
     return ret;
 }
@@ -138,7 +132,7 @@ Json::Value Debug::debug_accountRangeAt(
 
     try
     {
-        Block block = m_eth.block(blockHash(_blockHashOrNumber));
+        Block block = blockByNumberOrHash(_blockHashOrNumber);
         size_t const i = std::min(static_cast<size_t>(_txIndex), block.pending().size());
         State state(State::Null);
         createIntermediateState(state, block, i, m_eth.blockChain());
@@ -174,7 +168,7 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 
     try
     {
-        Block block = m_eth.block(blockHash(_blockHashOrNumber));
+        Block block = blockByNumberOrHash(_blockHashOrNumber);
 
         unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
         State state(State::Null);
