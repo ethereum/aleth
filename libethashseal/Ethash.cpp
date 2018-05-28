@@ -18,7 +18,6 @@
 #include "Ethash.h"
 #include "EthashCPUMiner.h"
 
-#include <libethash/ethash.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/CommonJS.h>
 #include <libethereum/Interface.h>
