@@ -396,7 +396,7 @@ void Client::syncBlockQueue()
     if (count)
     {
         LOG(m_logger) << count << " blocks imported in " << unsigned(elapsed * 1000) << " ms ("
-                      << (count / elapsed) << "blocks/s) in #" << bc().number();
+                      << (count / elapsed) << " blocks/s) in #" << bc().number();
     }
 
     if (elapsed > c_targetDuration * 1.1 && count > c_syncMin)

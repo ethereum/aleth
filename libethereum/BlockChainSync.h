@@ -161,6 +161,7 @@ private:
     u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
     Logger m_logger{createLogger(VerbosityDebug, "sync")};
+    Logger m_loggerInfo{createLogger(VerbosityInfo, "sync")};
     Logger m_loggerDetail{createLogger(VerbosityTrace, "sync")};
 
 private:
