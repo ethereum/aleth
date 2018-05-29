@@ -26,7 +26,7 @@
 #include <libethashseal/EthashCPUMiner.h>
 #include <libethereum/Client.h>
 
-#include <eth-buildinfo.h>
+#include <aleth-buildinfo.h>
 
 #include <yaml-cpp/yaml.h>
 #include <boost/algorithm/string/trim.hpp>
@@ -625,7 +625,7 @@ void requireJsonFields(json_spirit::mObject const& _o, string const& _section,
 
 string prepareVersionString()
 {
-    return string{"testeth "} + eth_get_buildinfo()->project_version;
+    return string{"testeth "} + aleth_get_buildinfo()->project_version;
 }
 
 string prepareLLLCVersionString()

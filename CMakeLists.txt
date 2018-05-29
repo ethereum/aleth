@@ -71,7 +71,7 @@ endif()
 
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
-cable_add_buildinfo_library(PREFIX eth)
+cable_add_buildinfo_library(PREFIX aleth)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY On)
 
@@ -148,7 +148,7 @@ if (EVMJIT)
     add_subdirectory(evmjit)
 endif()
 
-add_subdirectory(eth)
+add_subdirectory(aleth)
 
 if (TOOLS)
     add_subdirectory(ethkey)
