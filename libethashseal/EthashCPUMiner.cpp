@@ -22,9 +22,12 @@
  */
 
 #include "EthashCPUMiner.h"
+#include "Ethash.h"
+
+#include <ethash/ethash.hpp>
+
 #include <thread>
 #include <chrono>
-#include <boost/algorithm/string.hpp>
 #include <random>
 
 using namespace std;
@@ -83,25 +86,20 @@ void EthashCPUMiner::minerBody()
     static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
 
     uint64_t tryNonce = s_eng();
-    ethash_return_value ethashReturn;
 
+    // FIXME: Use epoch number, not seed hash in the work package.
     WorkPackage w = work();
 
-    EthashAux::FullType dag;
-    while (!m_shouldStop && !dag)
-    {
-        while (!m_shouldStop && EthashAux::computeFull(w.seedHash, true) != 100)
-            this_thread::sleep_for(chrono::milliseconds(500));
-        dag = EthashAux::full(w.seedHash, false);
-    }
+    int epoch = ethash::find_epoch_number(toEthash(w.seedHash));
+    auto& ethashContext = ethash::get_global_epoch_context_full(epoch);
 
     h256 boundary = w.boundary;
-    unsigned hashCount = 1;
-    for (; !m_shouldStop; tryNonce++, hashCount++)
+    for (unsigned hashCount = 1; !m_shouldStop; tryNonce++, hashCount++)
     {
-        ethashReturn = ethash_full_compute(dag->full, *(ethash_h256_t*)w.headerHash().data(), tryNonce);
-        h256 value = h256((uint8_t*)&ethashReturn.result, h256::ConstructFromPointer);
-        if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce, h256((uint8_t*)&ethashReturn.mix_hash, h256::ConstructFromPointer)}))
+        auto result = ethash::hash(ethashContext, toEthash(w.headerHash()), tryNonce);
+        h256 value = h256(result.final_hash.bytes, h256::ConstructFromPointer);
+        if (value <= boundary && submitProof(EthashProofOfWork::Solution{(h64)(u64)tryNonce,
+                                     h256(result.mix_hash.bytes, h256::ConstructFromPointer)}))
             break;
         if (!(hashCount % 100))
             accumulateHashes(100);

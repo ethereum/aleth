@@ -134,8 +134,6 @@ add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
 add_subdirectory(libp2p)
 
-add_subdirectory(libethash)
-
 add_subdirectory(libethcore)
 add_subdirectory(libevm)
 add_subdirectory(libethereum)

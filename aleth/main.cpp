@@ -34,7 +34,6 @@
 
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
-#include <libethashseal/EthashAux.h>
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethcore/KeyManager.h>
@@ -1029,7 +1028,6 @@ int main(int argc, char** argv)
     if (c)
     {
         c->setGasPricer(gasPricer);
-        DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
         c->setSealer(m.minerType());
         c->setAuthor(author);
         if (networkID != NoNetworkID)

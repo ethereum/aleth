@@ -26,6 +26,7 @@
 #include <libdevcore/CommonJS.h>
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/Exceptions.h>
+#include <libethashseal/Ethash.h>
 #include <libethashseal/EthashCPUMiner.h>
 
 // TODO - having using derivatives in header files is very poor style, and we need to fix these up.
@@ -82,7 +83,6 @@ public:
     enum class OperationMode
     {
         None,
-        DAGInit,
         Benchmark
     };
 
@@ -129,24 +129,6 @@ public:
             m_minerType = "cpu";
         else if (arg == "--current-block" && i + 1 < argc)
             m_currentBlock = stol(argv[++i]);
-        else if (arg == "--no-precompute")
-        {
-            m_precompute = false;
-        }
-        else if ((arg == "-D" || arg == "--create-dag") && i + 1 < argc)
-        {
-            string m = boost::to_lower_copy(string(argv[++i]));
-            mode = OperationMode::DAGInit;
-            try
-            {
-                m_initDAG = stol(m);
-            }
-            catch (...)
-            {
-                cerr << "Bad " << arg << " option: " << m << endl;
-                BOOST_THROW_EXCEPTION(BadArgument());
-            }
-        }
         else if (arg == "-M" || arg == "--benchmark")
             mode = OperationMode::Benchmark;
         else if ((arg == "-t" || arg == "--mining-threads") && i + 1 < argc)
@@ -169,22 +151,13 @@ public:
     {
         if (m_minerType == "cpu")
             EthashCPUMiner::setNumInstances(m_miningThreads);
-        if (mode == OperationMode::DAGInit)
-            doInitDAG(m_initDAG);
         else if (mode == OperationMode::Benchmark)
             doBenchmark(m_minerType, m_benchmarkWarmup, m_benchmarkTrial, m_benchmarkTrials);
     }
 
     static void streamHelp(ostream& _out)
     {
-        _out << "WORK FARMING MODE:\n"
-             << "  --no-precompute  Don't precompute the next epoch's DAG\n\n"
-
-             << "ETHASH VERIFY MODE:\n"
-             << "  -w,--check-pow <headerHash> <seedHash> <difficulty> <nonce> Check PoW "
-                "credentials for validity\n\n"
-
-             << "BENCHMARKING MODE:\n"
+        _out << "BENCHMARKING MODE:\n"
              << "  -M,--benchmark               Benchmark for mining and exit\n"
              << "  --benchmark-warmup <seconds> Set the duration of warmup for the benchmark tests "
                 "(default: 3)\n"
@@ -192,10 +165,6 @@ public:
                 "tests (default: 3)\n"
              << "  --benchmark-trials <n>       Set the number of trials for the benchmark tests "
                 "(default: 5)\n\n"
-
-             << "DAG CREATION MODE:\n"
-             << "  -D,--create-dag <number> Create the DAG in preparation for mining on given "
-                "block and exit\n\n"
 
              << "MINING CONFIGURATION:\n"
              << "  -C,--cpu                   When mining, use the CPU\n"
@@ -207,17 +176,8 @@ public:
     }
 
     std::string minerType() const { return m_minerType; }
-    bool shouldPrecompute() const { return m_precompute; }
 
 private:
-    void doInitDAG(unsigned _n)
-    {
-        h256 seedHash = EthashAux::seedHash(_n);
-        cout << "Initializing DAG for epoch beginning #" << (_n / 30000 * 30000) << " (seedhash " << seedHash.abridged() << "). This will take a while." << endl;
-        EthashAux::full(seedHash, true);
-        exit(0);
-    }
-
     void doBenchmark(std::string const& _m, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
     {
         BlockHeader genesis;
@@ -232,9 +192,6 @@ private:
 
         string platformInfo = EthashCPUMiner::platformInfo();
         cout << "Benchmarking on platform: " << platformInfo << endl;
-
-        cout << "Preparing DAG..." << endl;
-        Ethash::ensurePrecomputed(0);
 
         genesis.setDifficulty(u256(1) << 63);
         f.setWork(genesis);
@@ -280,13 +237,8 @@ private:
     unsigned m_miningThreads = UINT_MAX;
     uint64_t m_currentBlock = 0;
 
-    /// DAG initialisation param.
-    unsigned m_initDAG = 0;
-
     /// Benchmarking params
     unsigned m_benchmarkWarmup = 3;
     unsigned m_benchmarkTrial = 3;
     unsigned m_benchmarkTrials = 5;
-
-    bool m_precompute = true;
 };
