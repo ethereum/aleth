@@ -851,7 +851,7 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
     if (ts.gasPrice == Invalid256)
         ts.gasPrice = gasBidPrice();
     if (ts.gas == Invalid256)
-        ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
+        ts.gas = min<u256>(gasLimitRemaining() / 5, ts.gasPrice > 0 ? balanceAt(ts.from) / ts.gasPrice : balanceAt(ts.from) / gasBidPrice());
 
     Transaction t(ts, _secret);
     m_tq.import(t.rlp());
