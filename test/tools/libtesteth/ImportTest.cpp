@@ -440,7 +440,7 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
         {
             o_tr = Transaction(transactionRLP.data(), CheckTransaction::Everything);
         }
-        catch (InvalidSignature)
+        catch (InvalidSignature const&)
         {
             // create unsigned transaction
             o_tr = _o.at("to").get_str().empty() ?
