@@ -28,6 +28,8 @@
 #include <json/json.h>
 #include <boost/timer.hpp>
 
+#include <numeric>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
