@@ -513,7 +513,7 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
             m_blockChain.get()->import(_block.bytes(), m_genesisBlock.state().db());
             break;
         }
-        catch (FutureTime)
+        catch (FutureTime const&)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             break;
