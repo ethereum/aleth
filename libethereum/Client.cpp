@@ -854,7 +854,28 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
         ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
 
     Transaction t(ts, _secret);
-    m_tq.import(t.rlp());
+
+    // Use the Executive to perform basic validation of the transaction
+    // (e.g. transaction signature, account balance). This can throw but
+    // we'll catch the exception at the RPC level.
+    Executive e(preSeal(), bc());
+    e.initialize(t);
+    ImportResult res = m_tq.import(t.rlp());
+    switch (res)
+    {
+        case ImportResult::Success:
+            break;
+        case ImportResult::ZeroSignature:
+            BOOST_THROW_EXCEPTION(ZeroSignatureTransaction());
+        case ImportResult::OverbidGasPrice:
+            BOOST_THROW_EXCEPTION(GasPriceTooLow());
+        case ImportResult::AlreadyKnown:
+            BOOST_THROW_EXCEPTION(PendingTransactionAlreadyExists());
+        case ImportResult::AlreadyInChain:
+            BOOST_THROW_EXCEPTION(TransactionAlreadyInChain());
+        default:
+            BOOST_THROW_EXCEPTION(UnknownError());
+    }
 
     return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));
 }
