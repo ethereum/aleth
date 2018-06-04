@@ -26,6 +26,11 @@
 #include <libdevcrypto/Common.h>
 #include <libdevcrypto/LibSnark.h>
 #include <libethcore/Common.h>
+
+extern "C" {
+#include <hacl/Hacl_Ed25519.h>
+}
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -202,6 +207,36 @@ ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
 ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
 {
 	return 100000 + (_in.size() / 192) * 80000;
+}
+
+ETH_REGISTER_PRECOMPILED(ed25519_verify)(bytesConstRef _in)
+{
+	if (_in.size() != 128) {
+		// Invalid length.
+		return {false, bytes{}};
+	}
+
+	// 1. **message**: the 32-octet message that was signed
+	// 2. **public key**: the 32-octet Ed25519 public key of the signer
+	// 3. **signature**: the 64-octet Ed25519 signature
+
+	struct
+	{
+		uint8_t msg[32];
+		uint8_t pubkey[32];
+		uint8_t sig[64];
+	} in;
+
+	memcpy(&in, _in.data(), min(_in.size(), sizeof(in)));
+
+	// bool Hacl_Ed25519_verify(uint8_t *public, uint8_t *msg, uint32_t len1, uint8_t *signature);
+	bool result = Hacl_Ed25519_verify(in.pubkey, in.msg, 32, in.sig);
+
+	if (result) {
+		return {true, bytes{0, 0, 0, 0}};
+	} else {
+		return {false, bytes{0, 0, 0, 1}};
+	}
 }
 
 }
