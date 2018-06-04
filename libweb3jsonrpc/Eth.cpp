@@ -271,6 +271,42 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	{
 		throw;
 	}
+	catch (ZeroSignatureTransaction&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Zero signature transaction."));
+	}
+	catch (InvalidTransactionFormat&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction format is invalid."));
+	}
+	catch (GasPriceTooLow&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Pending transaction with same nonce but higher gas price exists."));
+	}
+	catch (BlockGasLimitReached&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Block gas limit reached."));
+	}
+	catch (OutOfGasIntrinsic&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction gas amount is less than the base gas amount for this transaction type."));
+	}
+	catch (InvalidNonce&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Invalid transaction nonce."));
+	}
+	catch (PendingTransactionAlreadyExists&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Same transaction already exists in the pending transaction queue."));
+	}
+	catch (TransactionAlreadyInChain&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction is already in the blockchain."));
+	}
+	catch (NotEnoughCash&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException("Account balance is too low (balance < value + gas * gas price)."));
+	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
