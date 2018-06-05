@@ -22,6 +22,9 @@
 
 namespace
 {
+evmc_trace_callback g_traceCallback = nullptr;
+evmc_tracer_context* g_traceContext = nullptr;
+
 void destroy(evmc_instance* _instance)
 {
     (void)_instance;
@@ -39,7 +42,7 @@ void delete_output(const evmc_result* result)
 }
 
 evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
-    const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
+    evmc_message const* _msg, uint8_t const* _code, size_t _codeSize) noexcept
 {
     (void)_instance;
     std::unique_ptr<dev::eth::VM> vm{new dev::eth::VM};
@@ -108,6 +111,13 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
 
     return result;
 }
+
+void setTracer(evmc_instance* /*_instance*/, evmc_trace_callback _callback,
+    evmc_tracer_context* _context) noexcept
+{
+    g_traceCallback = _callback;
+    g_traceContext = _context;
+}
 }  // namespace
 
 extern "C" evmc_instance* evmc_create_interpreter() noexcept
@@ -120,17 +130,33 @@ extern "C" evmc_instance* evmc_create_interpreter() noexcept
         ::destroy,
         ::execute,
         getCapabilities,
-        nullptr,  // set_tracer
+        ::setTracer,
         nullptr,  // set_option
     };
     return &s_instance;
 }
 
-
 namespace dev
 {
 namespace eth
 {
+void VM::trace() noexcept
+{
+    if (g_traceCallback)
+    {
+        auto const& metrics = c_metrics[static_cast<size_t>(m_OP)];
+        evmc_uint256be topStackItem;
+        evmc_uint256be const* pushedStackItem = nullptr;
+        if (metrics.num_stack_returned_items == 1)
+        {
+            topStackItem = toEvmC(m_SPP[0]);
+            pushedStackItem = &topStackItem;
+        }
+        g_traceCallback(g_traceContext, m_PC, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
+            pushedStackItem, m_mem.size(), 0, 0, nullptr);
+    }
+}
+
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
     return toInt63(_size ? u512(_offset) + _size : u512(0));
@@ -411,6 +437,7 @@ void VM::interpretCases()
             updateIOGas();
 
             m_SPP[0] = (u256)*(h256 const*)(m_mem.data() + (unsigned)m_SP[0]);
+            trace();
         }
         NEXT
 
@@ -421,6 +448,7 @@ void VM::interpretCases()
             updateIOGas();
 
             *(h256*)&m_mem[(unsigned)m_SP[0]] = (h256)m_SP[1];
+            trace();
         }
         NEXT
 
@@ -1162,11 +1190,14 @@ void VM::interpretCases()
             // get val at two-byte offset into const pool and advance pc by one-byte remainder
             TRACE_OP(2, m_PC, m_OP);
             unsigned off;
-            ++m_PC;
-            off = m_code[m_PC++] << 8;
-            off |= m_code[m_PC++];
-            m_PC += m_code[m_PC];
+            uint64_t pc = m_PC;
+            ++pc;
+            off = m_code[pc++] << 8;
+            off |= m_code[pc++];
+            pc += m_code[pc];
             m_SPP[0] = m_pool[off];
+            trace();
+            m_PC = pc;
             TRACE_VAL(2, "Retrieved pooled const", m_SPP[0]);
 #else
             throwBadInstruction();
@@ -1178,9 +1209,9 @@ void VM::interpretCases()
         {
             ON_OP();
             updateIOGas();
-            ++m_PC;
-            m_SPP[0] = m_code[m_PC];
-            ++m_PC;
+            m_SPP[0] = m_code[m_PC + 1];
+            trace();
+            m_PC += 2;
         }
         CONTINUE
 
@@ -1226,6 +1257,8 @@ void VM::interpretCases()
             // bytes to handle "out of code" push data here.
             for (++m_PC; numBytes--; ++m_PC)
                 m_SPP[0] = (m_SPP[0] << 8) | m_code[m_PC];
+
+            trace();
         }
         CONTINUE
 
@@ -1370,6 +1403,7 @@ void VM::interpretCases()
             }
 
             updateIOGas();
+            trace();
         }
         NEXT
 

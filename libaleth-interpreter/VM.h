@@ -81,7 +81,6 @@ private:
     void copyCode(int);
     typedef void (VM::*MemFnPtr)();
     MemFnPtr m_bounce = nullptr;
-    uint64_t m_nSteps = 0;
 
     // return bytes
     owning_bytes_ref m_output;
@@ -115,6 +114,8 @@ private:
     uint64_t m_runGas = 0;
     uint64_t m_newMemSize = 0;
     uint64_t m_copyMemSize = 0;
+
+    void trace() noexcept;
 
     // initialize interpreter
     void initEntry();

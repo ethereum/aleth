@@ -86,9 +86,14 @@ private:
 class EVMC : public EVM, public VMFace
 {
 public:
-    explicit EVMC(evmc_instance* _instance) : EVM(_instance) {}
+    explicit EVMC(evmc_instance* _instance);
 
     owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
+
+private:
+    bytesConstRef m_code;
+    int m_step = 0;
+    char const* const* m_instructionNames = nullptr;
 };
 }
 }
