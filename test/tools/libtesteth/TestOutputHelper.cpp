@@ -19,10 +19,12 @@
  */
 
 #include <boost/test/unit_test.hpp>
+#include <boost/io/ios_state.hpp>
 #include <libethashseal/Ethash.h>
 #include <libethcore/BasicAuthority.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
+#include <numeric>
 
 using namespace std;
 using namespace dev;
@@ -37,9 +39,7 @@ void TestOutputHelper::initTest(size_t _maxTests)
 	BasicAuthority::init();
 	m_currentTestName = "n/a";
 	m_currentTestFileName = string();
-	m_execTimeResults = std::vector<execTimeName>();
-	m_timer = Timer();
-	m_timer.restart();
+    m_timer = Timer();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	if (!Options::get().createRandomTest)
 		std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
@@ -84,11 +84,19 @@ void TestOutputHelper::finishTest()
 
 void TestOutputHelper::printTestExecStats()
 {
-	if (Options::get().exectimelog)
-	{
-		std::cout << std::left;
-		std::sort(m_execTimeResults.begin(), m_execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
-		for (size_t i = 0; i < m_execTimeResults.size(); i++)
-			std::cout << setw(45) << m_execTimeResults[i].second << setw(25) << " time: " + toString(m_execTimeResults[i].first) << "\n";
-	}
+    if (Options::get().exectimelog)
+    {
+        boost::io::ios_flags_saver saver(cout);
+        std::cout << std::left;
+        std::sort(m_execTimeResults.begin(), m_execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first < _a.first); });
+        int totalTime = std::accumulate(m_execTimeResults.begin(), m_execTimeResults.end(), 0,
+                            [](int a, execTimeName const& b)
+                            {
+                                return a + b.first;
+                            });
+        std::cout << setw(45) << "Total Time: " << setw(25) << "     : " + toString(totalTime) << "\n";
+        for (auto const& t: m_execTimeResults)
+            std::cout << setw(45) << t.second << setw(25) << " time: " + toString(t.first) << "\n";
+        saver.restore();
+    }
 }
