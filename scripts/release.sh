@@ -45,7 +45,7 @@ mkdir -p $ZIP_TEMP_DIR
 
 cp bench/bench                         $ZIP_TEMP_DIR
 cp eth/eth                             $ZIP_TEMP_DIR
-cp ethkey/ethkey                       $ZIP_TEMP_DIR
+cp aleth-key/aleth-key                 $ZIP_TEMP_DIR
 cp ethvm/ethvm                         $ZIP_TEMP_DIR
 cp rlp/rlp                             $ZIP_TEMP_DIR
 if [[ "$TESTS" == "On" ]]; then
