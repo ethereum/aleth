@@ -46,8 +46,7 @@ BOOST_AUTO_TEST_CASE(toCompactHex)
 }
 
 BOOST_AUTO_TEST_CASE(byteRef)
-{	
-	cnote << "bytesRef copyTo and toString...";
+{
 	dev::bytes originalSequence = dev::fromHex("0102030405060708091011121314151617181920212223242526272829303132");
 	dev::bytesRef out(&originalSequence.at(0), 32);
 	dev::h256 hash32("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
