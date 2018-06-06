@@ -9,6 +9,9 @@ list(APPEND sources unittests/libdevcrypto/MemTrie.h)
 list(APPEND sources unittests/libdevcrypto/SecretStore.cpp)
 list(APPEND sources unittests/libdevcrypto/trie.cpp)
 list(APPEND sources unittests/libethcore/difficulty.cpp)
+list(APPEND sources unittests/libethereum/Block.cpp)
+list(APPEND sources unittests/libethereum/BlockChain.cpp)
+list(APPEND sources unittests/libethereum/BlockQueue.cpp)
 
 # search for test names and create ctest tests
 set(excludeSuites jsonrpc \"customTestSuite\" BlockQueueSuite)

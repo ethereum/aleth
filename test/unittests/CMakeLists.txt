@@ -29,10 +29,17 @@ set(sources
     libethcore/keymanager.cpp
     libethcore/PrecompiledTest.cpp
     libethcore/SealEngineTest.cpp
+
+    # FIXME: libethereum/Block.cpp
+    # FIXME: libethereum/BlockChain.cpp
+    libethereum/BlockChainInsert.cpp
+    # FIXME: libethereum/BlockQueue.cpp
+    libethereum/ClientBase.cpp
 )
 
 add_executable(aleth-test ${sources})
 target_link_libraries(aleth-test PRIVATE ethashseal)
+target_include_directories(aleth-test PRIVATE ${PROJECT_SOURCE_DIR}/utils)
 
 set_target_properties(aleth-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
 

@@ -61,18 +61,6 @@ struct ClientBaseFixture: public BlockChainFixture
 	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const;
 };
 
-// important BOOST TEST do have problems with thread safety!!!
-// BOOST_CHECK is not thread safe
-// BOOST_MESSAGE is not thread safe
-// http://boost.2283326.n4.nabble.com/Is-boost-test-thread-safe-td3471644.html
-// http://lists.boost.org/boost-users/2010/03/57691.php
-// worth reading
-// https://codecrafter.wordpress.com/2012/11/01/c-unit-test-framework-adapter-part-3/
-struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixture, public TestOutputHelperFixture
-{
-	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const;
-};
-
 struct JsonRpcFixture: public ClientBaseFixture
 {
 	
