@@ -35,3 +35,20 @@ add_executable(aleth-test ${sources})
 target_link_libraries(aleth-test PRIVATE ethashseal)
 
 set_target_properties(aleth-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
+
+# Register unit test suites in ctest
+set(suites "")
+foreach(file ${sources})
+    set(regex "BOOST_.+_TEST_SUITE\\(([a-zA-Z0-9]+)\\)")
+    file(STRINGS ${file} suite_lines REGEX ${regex})
+    foreach(line ${suite_lines})
+        string(REGEX MATCH ${regex} _ ${line})
+        list(APPEND suites ${CMAKE_MATCH_1})
+        break()  # Only register the top suite.
+    endforeach()
+endforeach()
+
+list(REMOVE_DUPLICATES suites)
+foreach(suite ${suites})
+    add_test(NAME aleth-test/${suite} COMMAND aleth-test -t ${suite}:!@bench)
+endforeach()
