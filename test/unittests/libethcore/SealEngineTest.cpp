@@ -14,32 +14,29 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file SealEngineTest.cpp
- * SealEngineFace class testing.
- */
+
+#include <libethashseal/Ethash.h>
+#include <libethereum/Transaction.h>
 
 #include <boost/test/unit_test.hpp>
-#include <test/tools/libtesteth/TestHelper.h>
-#include <libethashseal/Ethash.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(SealEngineTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(SealEngineTest)
 
 BOOST_AUTO_TEST_CASE(UnsignedTransactionIsValidBeforeConstantinople)
 {
-	ChainOperationParams params;
-	params.constantinopleForkBlock = u256(0x1000);
+    ChainOperationParams params;
+    params.constantinopleForkBlock = u256(0x1000);
 
-	Ethash ethash;
-	ethash.setChainParams(params);
+    Ethash ethash;
+    ethash.setChainParams(params);
 
-	BlockHeader header;
-	header.clear();
-	header.setNumber(1);
+    BlockHeader header;
+    header.clear();
+    header.setNumber(1);
     header.setGasLimit(22000);
 
     Transaction tx(0, 0, 21000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);

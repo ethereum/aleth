@@ -23,6 +23,12 @@ set(sources
     # FIXME: libdevcrypto/trie.cpp
 
     libethashseal/EthashTest.cpp
+
+    libethcore/commonjs.cpp
+    # FIXME: libethcore/difficulty.cpp
+    libethcore/keymanager.cpp
+    libethcore/PrecompiledTest.cpp
+    libethcore/SealEngineTest.cpp
 )
 
 add_executable(aleth-test ${sources})

@@ -20,19 +20,18 @@
  * Keymanager test functions.
  */
 
-#include <test/tools/libtesteth/TestHelper.h>
 #include <libdevcore/TransientDirectory.h>
 #include <libethcore/KeyManager.h>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem/path.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
 namespace fs = boost::filesystem;
 
-BOOST_FIXTURE_TEST_SUITE(KeyManagerTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(keymanager)
 
 BOOST_AUTO_TEST_CASE(KeyInfoDefaultConstructor)
 {

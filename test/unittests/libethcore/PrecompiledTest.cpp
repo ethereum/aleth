@@ -14,21 +14,21 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file PrecompiledTest.cpp
+/** @file
  * Preompiled contract implemetations testing.
  */
 
-#include <boost/test/unit_test.hpp>
-#include <test/tools/libtesteth/TestHelper.h>
 #include <libethcore/Precompiled.h>
+#include <libdevcore/CommonIO.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
 namespace ut = boost::unit_test;
 
-BOOST_FIXTURE_TEST_SUITE(PrecompiledTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(PrecompiledTest)
 
 BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 {
@@ -656,12 +656,6 @@ namespace
 {
 void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> tests, int n)
 {
-	if (!Options::get().all)
-	{
-		std::cout << "Skipping benchmark test because --all option is not specified.\n";
-		return;
-	}
-
 	PrecompiledExecutor exec = PrecompiledRegistrar::executor(name);
 	Timer timer;
 
