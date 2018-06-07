@@ -18,7 +18,6 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 
 namespace dev
 {
@@ -245,11 +244,10 @@ enum class Tier : unsigned
 /// Information structure for a particular instruction.
 struct InstructionInfo
 {
-	std::string name;   ///< The name of the instruction.
-	int additional;     ///< Additional items required in memory for this instructions (only for PUSH).
-	int args;           ///< Number of items required on the stack for this instruction (and, for the purposes of ret, the number taken from the stack).
-	int ret;            ///< Number of items placed (back) on the stack by this instruction, assuming args items were removed.
-	Tier gasPriceTier;   ///< Tier for gas pricing.
+	char const* const name;   ///< The name of the instruction.
+	int const args;           ///< Number of items required on the stack for this instruction (and, for the purposes of ret, the number taken from the stack).
+	int const ret;            ///< Number of items placed (back) on the stack by this instruction, assuming args items were removed.
+	Tier const gasPriceTier;  ///< Tier for gas pricing.
 };
 
 struct InstructionMetric
