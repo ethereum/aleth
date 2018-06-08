@@ -22,6 +22,7 @@
 #include "VMFace.h"
 
 #include <evmc/evmc.h>
+#include <evmc/instructions.h>
 
 #include <boost/optional.hpp>
 
@@ -86,7 +87,7 @@ private:
     evmc_message const* m_message = nullptr;
     boost::optional<evmc_tx_context> m_tx_context;
 
-    static std::array<InstructionMetric, 256> c_metrics;
+    static std::array<evmc_instruction_metrics, 256> c_metrics;
     static void initMetrics();
     static u256 exp256(u256 _base, u256 _exponent);
     void copyCode(int);
@@ -158,7 +159,7 @@ private:
     void throwOutOfGas();
     void throwBadInstruction();
     void throwBadJumpDestination();
-    void throwBadStack(unsigned _removed, unsigned _added);
+    void throwBadStack(int _removed, int _added);
     void throwRevertInstruction(owning_bytes_ref&& _output);
     void throwDisallowedStateChange();
     void throwBufferOverrun(bigint const& _enfOfAccess);
@@ -168,7 +169,7 @@ private:
     int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
 
     void onOperation() {}
-    void adjustStack(unsigned _removed, unsigned _added);
+    void adjustStack(int _removed, int _added);
     uint64_t gasForMem(u512 _size);
     void updateSSGas();
     void updateIOGas();
