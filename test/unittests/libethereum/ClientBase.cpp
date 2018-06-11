@@ -19,17 +19,204 @@
  * @date 2015
  */
 
-#include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
+#include <libdevcore/TransientDirectory.h>
 #include <libethashseal/Ethash.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <test/tools/libtesteth/TestUtils.h>
-#include <test/tools/libtestutils/FixedClient.h>
+#include <libethashseal/GenesisInfo.h>
+#include <libethereum/BlockChain.h>
+#include <libethereum/ClientBase.h>
+
+#include <boost/test/unit_test.hpp>
+
+#include <json/json.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
+
+namespace
+{
+
+
+// should be used for multithread tests
+static SharedMutex x_boostTest;
+#define ETH_CHECK_EQUAL(x, y) { dev::WriteGuard wg(x_boostTest); BOOST_CHECK_EQUAL(x, y); }
+#define ETH_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye) { dev::WriteGuard wg(x_boostTest); BOOST_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye); }
+#define ETH_REQUIRE(x) { dev::WriteGuard wg(x_boostTest); BOOST_REQUIRE(x); }
+
+struct LoadTestFileFixture
+{
+	LoadTestFileFixture();
+
+protected:
+	Json::Value m_json;
+};
+
+struct ParallelFixture
+{
+	void enumerateThreads(std::function<void()> callback) const;
+};
+
+struct BlockChainFixture: public LoadTestFileFixture
+{
+	void enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain const&, dev::eth::State state)> callback) const;
+};
+
+struct ClientBaseFixture: public BlockChainFixture
+{
+	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const;
+};
+
+struct JsonRpcFixture: public ClientBaseFixture
+{
+
+};
+// important BOOST TEST do have problems with thread safety!!!
+// BOOST_CHECK is not thread safe
+// BOOST_MESSAGE is not thread safe
+// http://boost.2283326.n4.nabble.com/Is-boost-test-thread-safe-td3471644.html
+// http://lists.boost.org/boost-users/2010/03/57691.php
+// worth reading
+// https://codecrafter.wordpress.com/2012/11/01/c-unit-test-framework-adapter-part-3/
+struct ParallelClientBaseFixture : public ClientBaseFixture, public ParallelFixture
+{
+	void enumerateClients(
+		std::function<void(Json::Value const &, dev::eth::ClientBase &)> callback) const;
+};
+
+class BlockChainLoader
+{
+public:
+	explicit BlockChainLoader(Json::Value const& _json, eth::Network _sealEngineNetwork = eth::Network::TransitionnetTest);
+	eth::BlockChain const& bc() const { return *m_bc; }
+	eth::State const& state() const { return m_block.state(); }	// TODO remove?
+	eth::Block const& block() const { return m_block; }
+
+private:
+	TransientDirectory m_dir;
+	std::unique_ptr<eth::BlockChain> m_bc;
+	eth::Block m_block;
+};
+
+
+BlockChainLoader::BlockChainLoader(Json::Value const& _json, eth::Network _sealEngineNetwork):
+	m_block(Block::Null)
+{
+	// load genesisBlock
+	bytes genesisBlock = fromHex(_json["genesisRLP"].asString());
+
+	Json::FastWriter a;
+	m_bc.reset(new BlockChain(ChainParams(genesisInfo(_sealEngineNetwork), genesisBlock, jsonToAccountMap(a.write(_json["pre"]))), m_dir.path(), WithExisting::Kill));
+
+	// load pre state
+	m_block = m_bc->genesisBlock(State::openDB(m_dir.path(), m_bc->genesisHash(), WithExisting::Kill));
+
+	assert(m_block.rootHash() == m_bc->info().stateRoot());
+
+	// load blocks
+	for (auto const& block: _json["blocks"])
+	{
+		bytes rlp = fromHex(block["rlp"].asString());
+		m_bc->import(rlp, state().db());
+	}
+
+	// sync state
+	m_block.sync(*m_bc);
+}
+
+
+bool getCommandLineOption(string const& _name)
+{
+	auto argc = boost::unit_test::framework::master_test_suite().argc;
+	auto argv = boost::unit_test::framework::master_test_suite().argv;
+	bool result = false;
+	for (auto i = 0; !result && i < argc; ++i)
+		result = _name == argv[i];
+	return result;
+}
+
+std::string getCommandLineArgument(string const& _name)
+{
+	auto argc = boost::unit_test::framework::master_test_suite().argc;
+	auto argv = boost::unit_test::framework::master_test_suite().argv;
+	for (auto i = 1; i < argc; ++i)
+	{
+		string str = argv[i];
+		if (_name == str.substr(0, _name.size()))
+			return str.substr(str.find("=") + 1);
+	}
+	return "";
+}
+
+Json::Value loadJsonFromFile(fs::path const& _path)
+{
+	Json::Reader reader;
+	Json::Value result;
+	string s = dev::contentsString(_path);
+	if (!s.length())
+		clog(VerbosityWarning, "test")
+			<< "Contents of " << _path.string()
+			<< " is empty. Have you cloned the 'tests' repo branch develop and "
+			   "set ETHEREUM_TEST_PATH to its path?";
+	else
+		clog(VerbosityWarning, "test") << "FIXTURE: loaded test from file: " << _path.string();
+
+	reader.parse(s, result);
+	return result;
+}
+
+LoadTestFileFixture::LoadTestFileFixture()
+{
+	m_json = loadJsonFromFile(getCommandLineArgument("--eth_testfile"));
+}
+
+void ParallelFixture::enumerateThreads(std::function<void()> callback) const
+{
+	size_t threadsCount = std::stoul(getCommandLineArgument("--eth_threads"), nullptr, 10);
+
+	std::vector<std::thread> workers;
+	for (size_t i = 0; i < threadsCount; i++)
+		workers.emplace_back(callback);
+
+	for (std::thread& t : workers)
+		t.join();
+}
+
+void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain const&, State state)> callback) const
+{
+	for (string const& name: m_json.getMemberNames())
+	{
+		BlockChainLoader bcl(m_json[name]);
+		callback(m_json[name], bcl.bc(), bcl.state());
+	}
+}
+
+void ClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const
+{
+	enumerateBlockchains([&callback](Json::Value const& _json, BlockChain const& _bc, State _state) -> void
+						 {
+							 cerr << "void ClientBaseFixture::enumerateClients. FixedClient now accepts block not sate!" << endl;
+							 _state.commit(State::CommitBehaviour::KeepEmptyAccounts); //unused variable. remove this line
+							 eth::Block b(Block::Null);
+							 b.noteChain(_bc);
+							 FixedClient client(_bc, b);
+							 callback(_json, client);
+						 });
+}
+
+void ParallelClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const
+{
+	ClientBaseFixture::enumerateClients([this, &callback](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
+										{
+											// json is being copied here
+											enumerateThreads([callback, _json, &_client]() -> void
+															 {
+																 callback(_json, _client);
+															 });
+										});
+}
+
+}
 
 BOOST_FIXTURE_TEST_SUITE(ClientBase, ParallelClientBaseFixture)
 

@@ -1,4 +1,17 @@
-file(GLOB_RECURSE sources "*.cpp" "*.h" "*.sol")
+add_subdirectory(unittests)
+
+file(GLOB_RECURSE sources "tools/*.cpp" "tools/*.h" "*.sol")
+
+list(APPEND sources unittests/libdevcore/rlp.cpp)
+list(APPEND sources unittests/libdevcrypto/hexPrefix.cpp)
+list(APPEND sources unittests/libdevcrypto/MemTrie.cpp)
+list(APPEND sources unittests/libdevcrypto/MemTrie.h)
+list(APPEND sources unittests/libdevcrypto/SecretStore.cpp)
+list(APPEND sources unittests/libdevcrypto/trie.cpp)
+list(APPEND sources unittests/libethcore/difficulty.cpp)
+list(APPEND sources unittests/libethereum/Block.cpp)
+list(APPEND sources unittests/libethereum/BlockChain.cpp)
+list(APPEND sources unittests/libethereum/BlockQueue.cpp)
 
 # search for test names and create ctest tests
 set(excludeSuites jsonrpc \"customTestSuite\" BlockQueueSuite)

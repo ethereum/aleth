@@ -14,22 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file commonjs.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
- */
+
+#include <libethcore/CommonJS.h>
+#include <libdevcore/Log.h>
 
 #include <boost/test/unit_test.hpp>
-#include <libdevcore/Log.h>
-#include <libethcore/CommonJS.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(commonjs, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(commonjs)
 
 BOOST_AUTO_TEST_CASE(jsToPublic)
 {

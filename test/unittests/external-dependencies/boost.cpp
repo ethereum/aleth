@@ -17,16 +17,15 @@
 /// @file
 /// Unit tests for boost libraries.
 
-#include <boost/test/unit_test.hpp>
 #include <libdevcore/Common.h>
-#include <test/tools/libtesteth/TestHelper.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace dev;
-using namespace dev::test;
 using namespace boost;
 using namespace boost::multiprecision;
 
-BOOST_FIXTURE_TEST_SUITE(boostTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(boostTests)
 
 // test that reproduces issue https://github.com/ethereum/cpp-ethereum/issues/1977
 BOOST_AUTO_TEST_CASE(u256_overflow_test)

@@ -39,22 +39,20 @@
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <libethereum/Transaction.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <test/tools/libtesteth/Options.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::test;
 using namespace dev::crypto;
 
 namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Crypto)
 
-struct DevcryptoTestFixture: public TestOutputHelperFixture {
-	DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
+struct DevcryptoTestFixture
+{
+    DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
 
-	Secp256k1PP* s_secp256k1;
+    Secp256k1PP* s_secp256k1;
 };
 BOOST_FIXTURE_TEST_SUITE(devcrypto, DevcryptoTestFixture)
 
@@ -798,12 +796,6 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::label("perf"))
 {
-	if (!test::Options::get().all)
-	{
-		std::cout << "Skipping test Crypto/devcrypto/PerfSHA256_32. Use --all to run it.\n";
-		return;
-	}
-
 	h256 hash;
 	for (auto i = 0; i < 1000000; ++i)
 		hash = sha256(hash.ref());
@@ -813,12 +805,6 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_32, *utf::label("perf"))
 
 BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::label("perf"))
 {
-	if (!test::Options::get().all)
-	{
-		std::cout << "Skipping test Crypto/devcrypto/PerfSHA256_4000. Use --all to run it.\n";
-		return;
-	}
-
 	static const size_t dataSize = 4097;
 	bytes data(dataSize);
 	for (auto i = 0; i < 100000; ++i)
@@ -833,4 +819,3 @@ BOOST_AUTO_TEST_CASE(PerfSHA256_4000, *utf::label("perf"))
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
-

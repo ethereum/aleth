@@ -19,20 +19,15 @@
  * @date 2015
  */
 
-#include <boost/test/unit_test.hpp>
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/SHA3.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
 
-namespace dev
-{
-namespace test
-{
-
-BOOST_FIXTURE_TEST_SUITE(FixedHashTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(FixedHashTests)
 
 BOOST_AUTO_TEST_CASE(FixedHashComparisons)
 {
@@ -143,6 +138,3 @@ BOOST_AUTO_TEST_CASE(FixedHashIncrement)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-}
-}

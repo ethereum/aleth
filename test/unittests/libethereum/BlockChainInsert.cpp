@@ -20,18 +20,17 @@
  * BlockChain test functions.
  */
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/BasicAuthority.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/Block.h>
 #include <libethereum/GenesisInfo.h>
-#include <test/tools/libtesteth/TestHelper.h>
-#include <test/tools/libtesteth/BlockChainHelper.h>
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
+
 using namespace std;
-using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
 
@@ -39,7 +38,7 @@ namespace dev {
 
 namespace test {
 
-BOOST_FIXTURE_TEST_SUITE(BlockChainInsertTests, TestOutputHelperFixture)
+BOOST_AUTO_TEST_SUITE(BlockChainInsertTests)
 
 class TestClient
 {

@@ -37,7 +37,7 @@ namespace po = boost::program_options;
 
 void version()
 {
-    const auto* buildinfo = aleth_get_buildinfo();
+    auto const* const buildinfo = aleth_get_buildinfo();
     cout << "ethkey " << buildinfo->project_version << "\nBuild: " << buildinfo->system_name << "/"
          << buildinfo->build_type << endl;
     exit(0);
