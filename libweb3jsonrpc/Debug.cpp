@@ -45,6 +45,26 @@ h256 Debug::blockHash(string const& _blockNumberOrHash) const
     }
 }
 
+State Debug::stateAt(std::string const& _blockHashOrNumber, int _txIndex) const
+{
+    if (_txIndex < 0)
+        throw jsonrpc::JsonRpcException("Negative index");
+
+    Block block = m_eth.block(blockHash(_blockHashOrNumber));
+    auto const txCount = block.pending().size();
+
+    State state(State::Null);
+    if (static_cast<size_t>(_txIndex) < txCount)
+        createIntermediateState(state, block, _txIndex, m_eth.blockChain());
+    else if (static_cast<size_t>(_txIndex) == txCount)
+        // the final state of block (after applying rewards)
+        state = block.state();
+    else
+        throw jsonrpc::JsonRpcException("Transaction index " + toString(_txIndex) + " out of range for block " + _blockHashOrNumber);
+
+    return state;
+}
+
 Json::Value Debug::traceTransaction(Executive& _e, Transaction const& _t, Json::Value const& _json)
 {
     Json::Value trace;
@@ -131,18 +151,13 @@ Json::Value Debug::debug_accountRangeAt(
 {
     Json::Value ret(Json::objectValue);
 
-    if (_txIndex < 0)
-        throw jsonrpc::JsonRpcException("Negative index");
     if (_maxResults <= 0)
         throw jsonrpc::JsonRpcException("Nonpositive maxResults");
 
     try
     {
-        Block block = m_eth.block(blockHash(_blockHashOrNumber));
-        size_t const i = std::min(static_cast<size_t>(_txIndex), block.pending().size());
-        State state(State::Null);
-        createIntermediateState(state, block, i, m_eth.blockChain());
-       
+        State const state = stateAt(_blockHashOrNumber, _txIndex);
+
         auto const addressMap = state.addresses(h256(_addressHash), _maxResults);
 
         Json::Value addressList(Json::objectValue);
@@ -167,18 +182,12 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
     ret["complete"] = true;
     ret["storage"] = Json::Value(Json::objectValue);
 
-    if (_txIndex < 0)
-        throw jsonrpc::JsonRpcException("Negative index");
     if (_maxResults <= 0)
         throw jsonrpc::JsonRpcException("Nonpositive maxResults");
 
     try
     {
-        Block block = m_eth.block(blockHash(_blockHashOrNumber));
-
-        unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
-        State state(State::Null);
-        createIntermediateState(state, block, i, m_eth.blockChain());
+        State const state = stateAt(_blockHashOrNumber, _txIndex);
 
         map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 
