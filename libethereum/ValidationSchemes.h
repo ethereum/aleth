@@ -14,17 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file ValidationSchemes.h
- * @date 2018
- */
 
-#include <string>
 #include <json_spirit/JsonSpiritHeaders.h>
+#include <string>
 
-namespace dev {
-namespace eth {
-namespace validation {
-
+namespace dev
+{
+namespace eth
+{
+namespace validation
+{
 extern std::string const c_sealEngine;
 extern std::string const c_params;
 extern std::string const c_genesis;
@@ -75,8 +74,8 @@ void validateConfigJson(json_spirit::mObject const& _obj);
 // Validate account json object
 void validateAccountObj(json_spirit::mObject const& _o);
 
-// Validate account Map json object. Map indicates which fields are set
-void validateAccountMapObj(json_spirit::mObject const& _o);
-
-
-}}}
+// Validate accountMask json object. Mask indicates which fields are set
+void validateAccountMaskObj(json_spirit::mObject const& _o);
+}
+}
+}

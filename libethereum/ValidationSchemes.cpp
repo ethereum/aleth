@@ -14,18 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <string>
-#include <libdevcore/JsonUtils.h>
 #include "ValidationSchemes.h"
+#include <libdevcore/JsonUtils.h>
+#include <string>
 
 using namespace std;
-using namespace dev;
 namespace js = json_spirit;
 
-namespace dev {
-namespace eth {
-namespace validation {
-
+namespace dev
+{
+namespace eth
+{
+namespace validation
+{
 string const c_sealEngine = "sealEngine";
 string const c_params = "params";
 string const c_genesis = "genesis";
@@ -73,37 +74,37 @@ string const c_allowFutureBlocks = "allowFutureBlocks";
 void validateConfigJson(js::mObject const& _obj)
 {
     requireJsonFields(_obj, "ChainParams::loadConfig",
-        {{c_sealEngine, {{json_spirit::str_type}, jsonField::Required}},
-            {c_params, {{json_spirit::obj_type}, jsonField::Required}},
-            {c_genesis, {{json_spirit::obj_type}, jsonField::Required}},
-            {c_accounts, {{json_spirit::obj_type}, jsonField::Required}}});
+        {{c_sealEngine, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_params, {{js::obj_type}, JsonFieldPresence::Required}},
+            {c_genesis, {{js::obj_type}, JsonFieldPresence::Required}},
+            {c_accounts, {{js::obj_type}, JsonFieldPresence::Required}}});
 
     requireJsonFields(_obj.at(c_genesis).get_obj(), "ChainParams::loadConfig::genesis",
-        {{c_author, {{json_spirit::str_type}, jsonField::Required}},
-            {c_nonce, {{json_spirit::str_type}, jsonField::Required}},
-            {c_gasLimit, {{json_spirit::str_type}, jsonField::Required}},
-            {c_timestamp, {{json_spirit::str_type}, jsonField::Required}},
-            {c_difficulty, {{json_spirit::str_type}, jsonField::Required}},
-            {c_extraData, {{json_spirit::str_type}, jsonField::Required}},
-            {c_mixHash, {{json_spirit::str_type}, jsonField::Required}},
-            {c_parentHash, {{json_spirit::str_type}, jsonField::Optional}}});
+        {{c_author, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_nonce, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_gasLimit, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_timestamp, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_difficulty, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_extraData, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_mixHash, {{js::str_type}, JsonFieldPresence::Required}},
+            {c_parentHash, {{js::str_type}, JsonFieldPresence::Optional}}});
 
     js::mObject const& accounts = _obj.at(c_accounts).get_obj();
     for (auto const& acc : accounts)
         validateAccountObj(acc.second.get_obj());
 }
 
-void validateAccountMapObj(js::mObject const& _obj)
+void validateAccountMaskObj(js::mObject const& _obj)
 {
     // A map object with possibly defined fields
-    requireJsonFields(_obj, "validateAccountMapObj",
-        {{c_storage, {{json_spirit::obj_type}, jsonField::Optional}},
-            {c_balance, {{json_spirit::str_type}, jsonField::Optional}},
-            {c_nonce, {{json_spirit::str_type}, jsonField::Optional}},
-            {c_code, {{json_spirit::str_type}, jsonField::Optional}},
-            {c_precompiled, {{json_spirit::obj_type}, jsonField::Optional}},
-            {c_shouldnotexist, {{json_spirit::str_type}, jsonField::Optional}},
-            {c_wei, {{json_spirit::str_type}, jsonField::Optional}}});
+    requireJsonFields(_obj, "validateAccountMaskObj",
+        {{c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
+            {c_balance, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_code, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_precompiled, {{js::obj_type}, JsonFieldPresence::Optional}},
+            {c_shouldnotexist, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_wei, {{js::str_type}, JsonFieldPresence::Optional}}});
 }
 
 void validateAccountObj(js::mObject const& _obj)
@@ -112,28 +113,29 @@ void validateAccountObj(js::mObject const& _obj)
     {
         // A precompiled contract
         requireJsonFields(_obj, "validateAccountObj",
-            {{c_precompiled, {{json_spirit::obj_type}, jsonField::Required}},
-                {c_wei, {{json_spirit::str_type}, jsonField::Optional}}});
+            {{c_precompiled, {{js::obj_type}, JsonFieldPresence::Required}},
+                {c_wei, {{js::str_type}, JsonFieldPresence::Optional}}});
     }
     else if (_obj.size() == 1)
     {
         // A genesis account with only balance set
         if (_obj.count(c_balance))
             requireJsonFields(_obj, "validateAccountObj",
-                {{c_balance, {{json_spirit::str_type}, jsonField::Required}}});
+                {{c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
         else
             requireJsonFields(_obj, "validateAccountObj",
-                {{c_wei, {{json_spirit::str_type}, jsonField::Required}}});
+                {{c_wei, {{js::str_type}, JsonFieldPresence::Required}}});
     }
     else
     {
         // A standart account with all fields
         requireJsonFields(_obj, "validateAccountObj",
-            {{c_code, {{json_spirit::str_type}, jsonField::Required}},
-                {c_nonce, {{json_spirit::str_type}, jsonField::Required}},
-                {c_storage, {{json_spirit::obj_type}, jsonField::Required}},
-                {c_balance, {{json_spirit::str_type}, jsonField::Required}}});
+            {{c_code, {{js::str_type}, JsonFieldPresence::Required}},
+                {c_nonce, {{js::str_type}, JsonFieldPresence::Required}},
+                {c_storage, {{js::obj_type}, JsonFieldPresence::Required}},
+                {c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
     }
 }
-
-}}}
+}
+}
+}

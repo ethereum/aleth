@@ -20,17 +20,18 @@
  */
 
 #include "ChainParams.h"
-#include <json_spirit/JsonSpiritHeaders.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/TrieDB.h>
-#include <libdevcore/JsonUtils.h>
-#include <libethcore/SealEngine.h>
-#include <libethcore/BlockHeader.h>
-#include <libethcore/Precompiled.h>
-#include "ValidationSchemes.h"
+#include "Account.h"
 #include "GenesisInfo.h"
 #include "State.h"
-#include "Account.h"
+#include "ValidationSchemes.h"
+#include <json_spirit/JsonSpiritHeaders.h>
+#include <libdevcore/JsonUtils.h>
+#include <libdevcore/Log.h>
+#include <libdevcore/TrieDB.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/Precompiled.h>
+#include <libethcore/SealEngine.h>
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -58,8 +59,8 @@ ChainParams ChainParams::loadConfig(
 {
 	ChainParams cp(*this);
 	js::mValue val;
-	json_spirit::read_string_or_throw(_json, val);
-	js::mObject obj = val.get_obj();
+    js::read_string_or_throw(_json, val);
+    js::mObject obj = val.get_obj();
 
     validateConfigJson(obj);
 	cp.sealEngineName = obj[c_sealEngine].get_str();
@@ -96,21 +97,15 @@ ChainParams ChainParams::loadConfig(
 	cp.allowFutureBlocks = params.count(c_allowFutureBlocks);
 
 	// genesis
-	string genesisStr = json_spirit::write_string(obj[c_genesis], false);
-	cp = cp.loadGenesis(genesisStr, _stateRoot);
+    string genesisStr = js::write_string(obj[c_genesis], false);
+    cp = cp.loadGenesis(genesisStr, _stateRoot);
 	// genesis state
-	string genesisStateStr = json_spirit::write_string(obj[c_accounts], false);
+    string genesisStateStr = js::write_string(obj[c_accounts], false);
 
     cp.genesisState = jsonToAccountMap(
         genesisStateStr, cp.accountStartNonce, nullptr, &cp.precompiled, _configPath);
 
-    // Strict account check
-    json_spirit::read_string_or_throw(genesisStateStr, val);
-    for (auto const& account: val.get_obj())
-        validateAccountObj(account.second.get_obj());
-
     cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot(true);
-
     return cp;
 }
 
@@ -119,8 +114,8 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 	ChainParams cp(*this);
 
 	js::mValue val;
-	json_spirit::read_string(_json, val);
-	js::mObject genesis = val.get_obj();
+    js::read_string(_json, val);
+    js::mObject genesis = val.get_obj();
 
     cp.parentHash = h256(0); // required by the YP
 	cp.author = genesis.count(c_coinbase) ? h160(genesis[c_coinbase].get_str()) : h160(genesis[c_author].get_str());
