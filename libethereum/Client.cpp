@@ -871,7 +871,7 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
     // Use the Executive to perform basic validation of the transaction
     // (e.g. transaction signature, account balance). This can throw but
     // we'll catch the exception at the RPC level.
-    Executive e(preSeal(), bc());
+    Executive e(m_preSeal, bc());
     e.initialize(t);
     ImportResult res = m_tq.import(t.rlp());
     switch (res)
