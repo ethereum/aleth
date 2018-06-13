@@ -844,6 +844,10 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
 {
     prepareForTransaction();
 
+    // Default gas value meets the intrinsic gas requirements of both
+    // send value and create contract transactions and is the same default
+    // value used by geth and testrpc.
+    const u256 defaultTransactionGas = 90000;
     TransactionSkeleton ts(_t);
     ts.from = toAddress(_secret);
     if (_t.nonce == Invalid256)
@@ -851,7 +855,7 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
     if (ts.gasPrice == Invalid256)
         ts.gasPrice = gasBidPrice();
     if (ts.gas == Invalid256)
-        ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
+        ts.gas = defaultTransactionGas;
 
     Transaction t(ts, _secret);
 

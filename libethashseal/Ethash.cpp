@@ -18,8 +18,6 @@
 #include "Ethash.h"
 #include "EthashCPUMiner.h"
 
-#include <libethash/ethash.h>
-#include <libethash/internal.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/CommonJS.h>
 #include <libethereum/Interface.h>
@@ -29,19 +27,6 @@
 using namespace std;
 using namespace dev;
 using namespace eth;
-
-namespace
-{
-inline ethash::hash256 toEthash(h256 const& hash) noexcept
-{
-    return ethash::hash256_from_bytes(hash.data());
-}
-
-inline uint64_t toEthash(Nonce const& nonce) noexcept
-{
-    return static_cast<uint64_t>(static_cast<u64>(nonce));
-}
-}  // namespace
 
 void Ethash::init()
 {
@@ -86,7 +71,14 @@ strings Ethash::sealers() const
 
 h256 Ethash::seedHash(BlockHeader const& _bi)
 {
-    return EthashAux::seedHash((unsigned)_bi.number());
+    // FIXME: Use ethash lib for this (function not exposed in 0.3).
+
+    unsigned epoch = static_cast<unsigned>(_bi.number()) / ETHASH_EPOCH_LENGTH;
+
+    h256 seed;
+    for (unsigned n = 0; n < epoch; ++n)
+        seed = sha3(seed);
+    return seed;
 }
 
 StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
@@ -278,26 +270,14 @@ bool Ethash::verifySeal(BlockHeader const& _blockHeader) const
 
 void Ethash::generateSeal(BlockHeader const& _bi)
 {
-    {
-        Guard l(m_submitLock);
-        m_sealing = _bi;
-        m_farm.setWork(m_sealing);
-        m_farm.start(m_sealer);
-        m_farm.setWork(m_sealing);        // TODO: take out one before or one after...
-    }
-    bytes shouldPrecompute = option("precomputeDAG");
-    if (!shouldPrecompute.empty() && shouldPrecompute[0] == 1)
-        ensurePrecomputed((unsigned)_bi.number());
+    Guard l(m_submitLock);
+    m_sealing = _bi;
+    m_farm.setWork(m_sealing);
+    m_farm.start(m_sealer);
+    m_farm.setWork(m_sealing);
 }
 
 bool Ethash::shouldSeal(Interface*)
 {
     return true;
-}
-
-void Ethash::ensurePrecomputed(unsigned _number)
-{
-    if (_number % ETHASH_EPOCH_LENGTH > ETHASH_EPOCH_LENGTH * 9 / 10)
-        // 90% of the way to the new epoch
-        EthashAux::computeFull(EthashAux::seedHash(_number + ETHASH_EPOCH_LENGTH), true);
 }

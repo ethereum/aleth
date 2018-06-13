@@ -34,7 +34,6 @@
 
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
-#include <libethashseal/EthashAux.h>
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethcore/KeyManager.h>
@@ -62,7 +61,7 @@
 #include "MinerAux.h"
 #include "AccountManager.h"
 
-#include <eth-buildinfo.h>
+#include <aleth-buildinfo.h>
 
 using namespace std;
 using namespace dev;
@@ -88,8 +87,8 @@ string ethCredits(bool _interactive = false)
 
 void version()
 {
-    const auto* buildinfo = eth_get_buildinfo();
-    cout << "eth " << buildinfo->project_version << "\n";
+    const auto* buildinfo = aleth_get_buildinfo();
+    cout << "aleth " << buildinfo->project_version << "\n";
     cout << "eth network protocol version: " << dev::eth::c_protocolVersion << "\n";
     cout << "Client database version: " << dev::eth::c_databaseVersion << "\n";
     cout << "Build: " << buildinfo->system_name << "/" << buildinfo->build_type << "\n";
@@ -763,7 +762,7 @@ int main(int argc, char** argv)
         cout << "NAME:\n"
              << credits() << '\n'
              << "USAGE:\n"
-             << "   eth [options]\n\n"
+             << "   aleth [options]\n\n"
              << "WALLET USAGE:\n";
         AccountManager::streamAccountHelp(cout);
         AccountManager::streamWalletHelp(cout);
@@ -863,7 +862,7 @@ int main(int argc, char** argv)
         chainParams.allowFutureBlocks = true;
     }
 
-    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(),
+    dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), getDataDir(),
         snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
         netPrefs, &nodesState, testingMode);
 
@@ -1029,7 +1028,6 @@ int main(int argc, char** argv)
     if (c)
     {
         c->setGasPricer(gasPricer);
-        DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
         c->setSealer(m.minerType());
         c->setAuthor(author);
         if (networkID != NoNetworkID)

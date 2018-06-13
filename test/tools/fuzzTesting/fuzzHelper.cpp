@@ -245,7 +245,7 @@ bool isOpcodeDefined(uint8_t _opcode)
 {
 	eth::Instruction inst = (eth::Instruction) _opcode;
 	eth::InstructionInfo info = eth::instructionInfo(inst);
-	return (info.gasPriceTier != dev::eth::Tier::Invalid && !info.name.empty()
+	return (info.gasPriceTier != dev::eth::Tier::Invalid && info.name != nullptr
 		&& std::find(invalidOpcodes.begin(), invalidOpcodes.end(), inst) == invalidOpcodes.end());
 }
 
@@ -280,7 +280,7 @@ std::string RandomCodeBase::generate(int _maxOpNumber, RandomCodeOptions const& 
 			opcode = makeOpcodeDefined(opcode);
 			eth::Instruction inst = (eth::Instruction) opcode;
 			eth::InstructionInfo info = eth::instructionInfo(inst);
-			if (info.name.find("PUSH") != std::string::npos)
+			if (std::string{info.name}.find("PUSH") != std::string::npos)
 			{
 				code += toCompactHex(opcode);
 				code += fillArguments(inst, _options);

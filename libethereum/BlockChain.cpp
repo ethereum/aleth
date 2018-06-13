@@ -448,20 +448,20 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
                 cwarn << "ODD: Import queue contains already imported block";
                 continue;
             }
-            catch (dev::eth::UnknownParent)
+            catch (dev::eth::UnknownParent const&)
             {
                 cwarn << "ODD: Import queue contains block with unknown parent.";// << LogTag::Error << boost::current_exception_diagnostic_information();
                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
                 // Can't continue - chain bad.
                 badBlocks.push_back(block.verified.info.hash());
             }
-            catch (dev::eth::FutureTime)
+            catch (dev::eth::FutureTime const&)
             {
                 cwarn << "ODD: Import queue contains a block with future time.";
                 this_thread::sleep_for(chrono::seconds(1));
                 continue;
             }
-            catch (dev::eth::TransientError)
+            catch (dev::eth::TransientError const&)
             {
                 this_thread::sleep_for(chrono::milliseconds(100));
                 continue;

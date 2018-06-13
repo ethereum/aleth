@@ -5,16 +5,16 @@ set(
     MinerAux.h
 )
 
-add_executable(eth ${sources})
+add_executable(aleth ${sources})
 target_link_libraries(
-    eth
+    aleth
     PRIVATE ethereum ethashseal evm web3jsonrpc webthree devcore Boost::program_options
 )
 
-target_include_directories(eth PRIVATE ../utils)
+target_include_directories(aleth PRIVATE ../utils)
 
 if(MINIUPNPC)
-    target_compile_definitions(eth PRIVATE ETH_MINIUPNPC)
+    target_compile_definitions(aleth PRIVATE ETH_MINIUPNPC)
 endif()
 
-install(TARGETS eth DESTINATION bin)
+install(TARGETS aleth DESTINATION bin)

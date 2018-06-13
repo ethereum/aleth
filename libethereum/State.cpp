@@ -611,7 +611,13 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 
     auto onOp = _onOp;
 #if ETH_VMTRACE
-    onOp = e.simpleTrace();  // override tracer
+	// Run the existing onOp function and the tracer
+	onOp = [&_onOp, &e](uint64_t _steps, uint64_t PC, Instruction inst, bigint
+			newMemSize, bigint gasCost, bigint gas, VMFace const* _vm,
+			ExtVMFace const* voidExt) {
+		_onOp(_steps, PC, inst, newMemSize, gasCost, gas, _vm, voidExt);
+		e.simpleTrace();
+	};
 #endif
 
     u256 const startGasUsed = _envInfo.gasUsed();

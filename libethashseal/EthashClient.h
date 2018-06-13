@@ -47,9 +47,6 @@ public:
 
     Ethash* ethash() const;
 
-    /// Enable/disable precomputing of the DAG for next epoch
-    void setShouldPrecomputeDAG(bool _precompute);
-
     /// Are we mining now?
     bool isMining() const;
 
