@@ -85,6 +85,7 @@ PrecompiledContract createPrecompiledContract(js::mObject const& _precompiled)
 }
 }
 
+// TODO move AccountMaskObj to libtesteth (it is used only in test logic)
 AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce,
     AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled, const fs::path& _configPath)
 {
@@ -105,7 +106,6 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
     {
         Address a(fromHex(account.first));
         auto const& accountMaskJson = account.second.get_obj();
-        validateAccountMaskObj(accountMaskJson);
 
         bool haveBalance = (accountMaskJson.count(c_wei) || accountMaskJson.count(c_finney) ||
                             accountMaskJson.count(c_balance));

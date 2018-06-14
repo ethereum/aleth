@@ -74,6 +74,7 @@ void validateConfigJson(json_spirit::mObject const& _obj);
 // Validate account json object
 void validateAccountObj(json_spirit::mObject const& _o);
 
+// TODO move AccountMaskObj to libtesteth (it is used only in test logic)
 // Validate accountMask json object. Mask indicates which fields are set
 void validateAccountMaskObj(json_spirit::mObject const& _o);
 }
