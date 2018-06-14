@@ -149,8 +149,8 @@ endif()
 add_subdirectory(aleth)
 
 if (TOOLS)
-    add_subdirectory(ethkey)
-    add_subdirectory(ethvm)
+    add_subdirectory(aleth-key)
+    add_subdirectory(aleth-vm)
     add_subdirectory(rlp)
 endif()
 

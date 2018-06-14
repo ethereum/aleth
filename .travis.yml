@@ -71,7 +71,6 @@ install: |
     export HOMEBREW_NO_AUTO_UPDATE=1
     ./scripts/install_deps.sh
 before_script:
-    - ./scripts/prepare_ccache.sh
     - travis_wait 150 ./scripts/build.sh $TRAVIS_BUILD_TYPE
     - ./scripts/cleanup_ccache.sh
 script:
