@@ -77,6 +77,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         dev::p2p::NetworkPreferences nprefs("30303", std::string(), false);
         ChainParams chainParams;
         chainParams.sealEngineName = "NoProof";
+        chainParams.allowFutureBlocks = true;
         web3.reset(new WebThreeDirect(
             "eth tests", "", "", chainParams, WithExisting::Kill, {"eth"}, nprefs));
 
@@ -216,13 +217,13 @@ BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
     string stateAt = rpcClient->eth_getStorageAt(toJS(address), "0", "latest");
     BOOST_CHECK_EQUAL(web3->ethereum()->stateAt(address, 0, 0), jsToU256(stateAt));
 }
-/*
-Doesn't mine further than 1st block, "tried to seal sealed block" error
+
 BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 {
     string coinbase = rpcClient->eth_coinbase();
     BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->author());
-    
+
+
     dev::KeyPair key = KeyPair::create();
     auto address = key.address();
     auto receiver = KeyPair::create();
@@ -241,17 +242,20 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
     BOOST_CHECK_EQUAL(countAt, 0);
     BOOST_CHECK_EQUAL(toJS(balance), balanceString);
     BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "0");
-    
+
+
     dev::eth::mine(*(web3->ethereum()), 1);
     balance = web3->ethereum()->balanceAt(address, LatestBlock);
     balanceString = rpcClient->eth_getBalance(toJS(address), "latest");
 
     BOOST_CHECK_EQUAL(toJS(balance), balanceString);
-    
+
+
     auto txAmount = balance / 2u;
     auto gasPrice = 10 * dev::eth::szabo;
     auto gas = EVMSchedule().txGas;
-    
+
+
     Json::Value t;
     t["from"] = toJS(address);
     t["value"] = jsToDecimal(toJS(txAmount));
@@ -272,11 +276,11 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
     BOOST_CHECK_EQUAL(countAt, web3->ethereum()->countAt(address));
     BOOST_CHECK_EQUAL(countAt, 1);
     BOOST_CHECK_EQUAL(toJS(balance2), balanceString2);
-    BOOST_CHECK_EQUAL(jsToDecimal(balanceString2), "750000000000000000");
+    BOOST_CHECK_EQUAL(jsToU256(balanceString2), txAmount);
     BOOST_CHECK_EQUAL(txAmount, balance2);
 }
-*/
-/*
+
+
 BOOST_AUTO_TEST_CASE(simple_contract)
 {
     KeyPair kp = KeyPair::create();
@@ -284,7 +288,6 @@ BOOST_AUTO_TEST_CASE(simple_contract)
     accountHolder->setAccounts({kp});
 
     dev::eth::mine(*(web3->ethereum()), 1);
-    
 
 
     //char const* sourceCode = "contract test {\n"
@@ -298,7 +301,6 @@ BOOST_AUTO_TEST_CASE(simple_contract)
     create["code"] = compiled;
     string contractAddress = rpcClient->eth_sendTransaction(create);
     dev::eth::mine(*(web3->ethereum()), 1);
-    
 
 
     Json::Value call;
@@ -315,7 +317,6 @@ BOOST_AUTO_TEST_CASE(contract_storage)
     accountHolder->setAccounts({kp});
 
     dev::eth::mine(*(web3->ethereum()), 1);
-    
 
 
  //   char const* sourceCode = R"(
@@ -331,7 +332,6 @@ BOOST_AUTO_TEST_CASE(contract_storage)
  //           }
  //       }
     //)";
-    
 
 
     string compiled =
@@ -341,7 +341,6 @@ BOOST_AUTO_TEST_CASE(contract_storage)
     create["code"] = compiled;
     string contractAddress = rpcClient->eth_sendTransaction(create);
     dev::eth::mine(*(web3->ethereum()), 1);
-    
 
 
     Json::Value transact;
@@ -349,13 +348,12 @@ BOOST_AUTO_TEST_CASE(contract_storage)
     transact["data"] = "0x00000000000000000000000000000000000000000000000000000000000000003";
     rpcClient->eth_sendTransaction(transact);
     dev::eth::mine(*(web3->ethereum()), 1);
-    
 
 
     string storage = rpcClient->eth_getStorageAt(contractAddress, "0", "latest");
     BOOST_CHECK_EQUAL(storage, "0x03");
 }
-*/
+
 BOOST_AUTO_TEST_CASE(sha3)
 {
     string testString = "multiply(uint256)";
