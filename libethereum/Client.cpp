@@ -869,9 +869,11 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
     Transaction t(ts, _secret);
 
     // Use the Executive to perform basic validation of the transaction
-    // (e.g. transaction signature, account balance). This can throw but
+    // (e.g. transaction signature, account balance) using the state of
+    // the latest block in the client's blockchain. This can throw but
     // we'll catch the exception at the RPC level.
-    Executive e(m_preSeal, bc());
+    Block currentBlock = block(bc().currentHash());
+    Executive e(currentBlock, bc());
     e.initialize(t);
     ImportResult res = m_tq.import(t.rlp());
     switch (res)

@@ -289,7 +289,7 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	}
 	catch (OutOfGasIntrinsic&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction gas amount is less than the base gas amount for this transaction type."));
+		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction gas amount is less than the intrinsic gas amount for this transaction type."));
 	}
 	catch (InvalidNonce&)
 	{
