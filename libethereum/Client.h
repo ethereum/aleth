@@ -132,7 +132,7 @@ public:
     SyncStatus syncStatus() const override;
     /// Get the block queue.
     BlockQueue const& blockQueue() const { return m_bq; }
-    /// Get the block queue.
+    /// Get the state database.
     OverlayDB const& stateDB() const { return m_stateDB; }
     /// Get some information on the transaction queue.
     TransactionQueue::Status transactionQueueStatus() const { return m_tq.status(); }
