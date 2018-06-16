@@ -145,7 +145,7 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 //
 // set current SP to SP', adjust SP' per _removed and _added items
 //
-void VM::adjustStack(unsigned _removed, unsigned _added)
+void VM::adjustStack(int _removed, int _added)
 {
     m_SP = m_SPP;
 
@@ -211,14 +211,11 @@ void VM::logGasMem()
 void VM::fetchInstruction()
 {
     m_OP = Instruction(m_code[m_PC]);
-    const InstructionMetric& metric = c_metrics[static_cast<size_t>(m_OP)];
-    adjustStack(metric.args, metric.ret);
+    auto const metric = c_metrics[static_cast<size_t>(m_OP)];
+    adjustStack(metric.num_stack_arguments, metric.num_stack_returned_items);
 
     // FEES...
-    std::array<int64_t, 9> tierStepGas{
-        {VMSchedule::stepGas0, VMSchedule::stepGas1, VMSchedule::stepGas2, VMSchedule::stepGas3,
-            VMSchedule::stepGas4, VMSchedule::stepGas5, VMSchedule::stepGas6, 0, 0}};
-    m_runGas = tierStepGas[static_cast<unsigned>(metric.gasPriceTier)];
+    m_runGas = metric.gas_cost;
     m_newMemSize = m_mem.size();
     m_copyMemSize = 0;
 }

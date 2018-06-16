@@ -62,7 +62,7 @@ void VM::throwDisallowedStateChange()
 // throwBadStack is called from fetchInstruction() -> adjustStack()
 // its the only exception that can happen before ON_OP() log is done for an opcode case in VM.cpp
 // so the call to m_onFail is needed here
-void VM::throwBadStack(unsigned _removed, unsigned _added)
+void VM::throwBadStack(int _removed, int _added)
 {
     bigint size = m_stackEnd - m_SPP;
     if (size < _removed)
