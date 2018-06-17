@@ -165,6 +165,9 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 
 string StandardTrace::json(bool _styled) const
 {
+	if (m_trace.empty())
+		return string();
+
 	if (_styled)
 		return Json::StyledWriter().write(m_trace);
 
