@@ -66,15 +66,6 @@ bool isFalse(std::string const& _m)
     return _m == "off" || _m == "no" || _m == "false" || _m == "0";
 }
 
-inline std::string credits()
-{
-    std::ostringstream out;
-    out << "cpp-ethereum " << dev::Version << endl
-        << "   By cpp-ethereum contributors, (c) 2013-2018." << endl
-        << "   See the README for contributors and credits." << endl;
-    return out.str();
-}
-
 class BadArgument: public Exception {};
 
 class MinerCLI
