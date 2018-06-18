@@ -1,8 +1,3 @@
-#------------------------------------------------------------------------------
-# Appveyor configuration file for cpp-ethereum.
-#
-# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
-#
 # ------------------------------------------------------------------------------
 # This file is part of cpp-ethereum.
 #
@@ -57,8 +52,8 @@ test_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\tests.bat %TESTS% %CONFIGURATION% %APPVEYOR_BUILD_FOLDER% %ETHEREUM_DEPS_PATH%
 artifacts:
-  - path: build\cpp-ethereum.zip
-    name: cpp-ethereum-windows.zip
+  - path: build\aleth.zip
+    name: aleth-windows.zip
 
 # This is the deploy target for Windows which generates ZIPs per commit.
 # We are in agreement that generating ZIPs per commit for the develop
@@ -78,6 +73,6 @@ deploy:
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
-    artifact: cpp-ethereum-windows.zip
+    artifact: aleth-windows.zip
     on:
         branch: release
