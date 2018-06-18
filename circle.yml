@@ -50,8 +50,8 @@ defaults:
 
   store-package: &store-package
     store_artifacts:
-      path: ~/build/cpp-ethereum.tar.gz
-      destination: cpp-ethereum.tar.gz
+      path: ~/build/aleth.tar.gz
+      destination: aleth.tar.gz
 
   store-randomcode-seed: &store-randomcode-seed
     store_artifacts:
@@ -204,7 +204,7 @@ jobs:
 # TODO: Separate builds from testing jobs.
 workflows:
   version: 2
-  cpp-ethereum:
+  aleth:
     jobs:
       - macos-xcode90
       - linux-clang6

@@ -55,7 +55,7 @@ HunterGate(
     LOCAL
 )
 
-project(cpp-ethereum)
+project(aleth)
 set(PROJECT_VERSION 1.4.0.dev1)
 
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmjit/.git)
