@@ -1,8 +1,3 @@
-#------------------------------------------------------------------------------
-# Top-level CMake file for cpp-ethereum.
-#
-# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
-#
 # ------------------------------------------------------------------------------
 # This file is part of cpp-ethereum.
 #
@@ -34,8 +29,6 @@ cable_configure_toolchain(DEFAULT cxx11)
 
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
-
-set(CPP_ETHEREUM_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "Path to the root directory for cpp-ethereum")
 
 # Map current configuration to configurations of imported targets.
 set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release)
