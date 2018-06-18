@@ -290,9 +290,9 @@ BOOST_AUTO_TEST_CASE(simple_contract)
     dev::eth::mine(*(web3->ethereum()), 1);
 
 
-    //char const* sourceCode = "contract test {\n"
-    //"  function f(uint a) returns(uint d) { return a * 7; }\n"
-    //"}\n";
+    // contract test {
+    //  function f(uint a) returns(uint d) { return a * 7; }
+    // }
 
     string compiled =
         "6080604052341561000f57600080fd5b60b98061001d6000396000f300"
@@ -330,39 +330,45 @@ BOOST_AUTO_TEST_CASE(contract_storage)
     dev::eth::mine(*(web3->ethereum()), 1);
 
 
- //   char const* sourceCode = R"(
- //       pragma solidity ^0.4.22;
-
- //       contract test
- //       {
- //           uint hello;
- //           function writeHello(uint value) returns(bool d)
- //           {
- //           hello = value;
- //           return true;
- //           }
- //       }
-    //)";
+     // pragma solidity ^0.4.22;
+        
+     // contract test
+     // {
+     //     uint hello;
+     //     function writeHello(uint value) returns(bool d)
+     //     {
+     //       hello = value;
+     //       return true;
+     //     }
+     // }
 
 
     string compiled =
-"6080604052341561000f57600080fd5b60c28061001d6000396000f300608060405260043610603f576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806315b2eec3146044575b600080fd5b3415604e57600080fd5b606a600480360381019080803590602001909291905050506084565b604051808215151515815260200191505060405180910390f35b600081600081905550600190509190505600a165627a7a72305820d8407d9cdaaf82966f3fa7a3e665b8cf4e65ee8909b83094a3f856b9051274500029";
+        "6080604052341561000f57600080fd5b60c28061001d6000396000f3006"
+        "08060405260043610603f576000357c0100000000000000000000000000"
+        "000000000000000000000000000000900463ffffffff16806315b2eec31"
+        "46044575b600080fd5b3415604e57600080fd5b606a6004803603810190"
+        "80803590602001909291905050506084565b60405180821515151581526"
+        "0200191505060405180910390f35b600081600081905550600190509190"
+        "505600a165627a7a72305820d8407d9cdaaf82966f3fa7a3e665b8cf4e6"
+        "5ee8909b83094a3f856b9051274500029";
 
     Json::Value create;
     create["code"] = compiled;
-    string contractAddress = rpcClient->eth_sendTransaction(create);
+    string txHash = rpcClient->eth_sendTransaction(create);
     dev::eth::mine(*(web3->ethereum()), 1);
 
-
+    Json::Value receipt = rpcClient->eth_getTransactionReceipt(txHash);
+    string contractAddress = receipt["contractAddress"].asString();
+    
     Json::Value transact;
     transact["to"] = contractAddress;
-    transact["data"] = "0x00000000000000000000000000000000000000000000000000000000000000003";
+    transact["data"] = "0x15b2eec30000000000000000000000000000000000000000000000000000000000000003";
     rpcClient->eth_sendTransaction(transact);
     dev::eth::mine(*(web3->ethereum()), 1);
 
-
     string storage = rpcClient->eth_getStorageAt(contractAddress, "0", "latest");
-    BOOST_CHECK_EQUAL(storage, "0x03");
+    BOOST_CHECK_EQUAL(storage, "0x0000000000000000000000000000000000000000000000000000000000000003");
 }
 
 BOOST_AUTO_TEST_CASE(sha3)
