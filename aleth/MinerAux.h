@@ -16,9 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file MinerAux.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
+/** @file
  * CLI module for mining.
  */
 
@@ -28,29 +26,6 @@
 #include <libethcore/Exceptions.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/EthashCPUMiner.h>
-
-// TODO - having using derivatives in header files is very poor style, and we need to fix these up.
-//
-// http://stackoverflow.com/questions/4872373/why-is-including-using-namespace-into-a-header-file-a-bad-idea-in-c
-// 
-// "However you'll virtually never see a using directive in a header file (at least not outside of scope).
-// The reason is that using directive eliminate the protection of that particular namespace, and the effect last
-// until the end of current compilation unit. If you put a using directive (outside of a scope) in a header file,
-// it means that this loss of "namespace protection" will occur within any file that include this header,
-// which often mean other header files."
-//
-// Bob has already done just that in https://github.com/bobsummerwill/cpp-ethereum/commits/cmake_fixes/ethminer,
-// and we should apply those changes back to 'develop'.  It is probably best to defer that cleanup
-// until after attempting to backport the Genoil ethminer changes, because they are fairly extensive
-// in terms of lines of change, though all the changes are just adding explicit namespace prefixes.
-// So let's start with just the subset of changes which minimizes the #include dependencies.
-//
-// See https://github.com/bobsummerwill/cpp-ethereum/commit/53af845268b91bc6aa1dab53a6eac675157a072b
-// See https://github.com/bobsummerwill/cpp-ethereum/commit/3b9e581d7c04c637ebda18d3d86b5a24d29226f4
-//
-// More generally, the fact that nearly all of the code for ethminer is actually in the 'MinerAux.h'
-// header file, rather than in a source file, is also poor style and should probably be addressed.
-// Perhaps there is some historical reason for this which I am unaware of?
 
 using namespace std;
 using namespace dev;
