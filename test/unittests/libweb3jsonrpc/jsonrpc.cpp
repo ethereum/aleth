@@ -30,6 +30,7 @@
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/Net.h>
+#include <libweb3jsonrpc/Web3.h>
 #include <libwebthree/WebThree.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
@@ -86,8 +87,8 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         dev::KeyPair coinbase = KeyPair::create();
         web3->ethereum()->setAuthor(coinbase.address());
 
-        using FullServer =
-            ModularServer<rpc::EthFace, rpc::NetFace, rpc::AdminEthFace, rpc::AdminNetFace>;
+        using FullServer = ModularServer<rpc::EthFace, rpc::NetFace, rpc::Web3Face,
+            rpc::AdminEthFace, rpc::AdminNetFace>;
 
         accountHolder.reset(new FixedAccountHolder([&]() { return web3->ethereum(); }, {}));
         sessionManager.reset(new rpc::SessionManager());
@@ -97,9 +98,10 @@ struct JsonRpcFixture : public TestOutputHelperFixture
 
         gasPricer = make_shared<eth::TrivialGasPricer>(0, DefaultGasPrice);
 
-        rpcServer.reset(new FullServer(ethFace, new rpc::Net(*web3),
-            new rpc::AdminEth(*web3->ethereum(), *gasPricer, keyManager, *sessionManager.get()),
-            new rpc::AdminNet(*web3, *sessionManager)));
+        rpcServer.reset(
+            new FullServer(ethFace, new rpc::Net(*web3), new rpc::Web3(web3->clientVersion()),
+                new rpc::AdminEth(*web3->ethereum(), *gasPricer, keyManager, *sessionManager.get()),
+                new rpc::AdminNet(*web3, *sessionManager)));
         auto ipcServer = new TestIpcServer;
         rpcServer->addConnector(ipcServer);
         ipcServer->StartListening();
