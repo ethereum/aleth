@@ -165,16 +165,15 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 
 string StandardTrace::json(bool _styled) const
 {
-	if (m_trace.empty())
-		return string();
+    if (m_trace.empty())
+        return {};
 
-	if (_styled)
-		return Json::StyledWriter().write(m_trace);
+    if (_styled)
+        return Json::StyledWriter().write(m_trace);
 
-	return std::accumulate(std::next(m_trace.begin()), m_trace.end(), Json::FastWriter().write(m_trace[0]),
-			[](std::string a, Json::Value b) {
-			return a + Json::FastWriter().write(b);
-			});
+    return std::accumulate(std::next(m_trace.begin()), m_trace.end(),
+        Json::FastWriter().write(m_trace[0]),
+        [](std::string a, Json::Value b) { return a + Json::FastWriter().write(b); });
 }
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
