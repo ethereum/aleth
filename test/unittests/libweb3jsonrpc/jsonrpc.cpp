@@ -75,7 +75,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
 {
     JsonRpcFixture()
     {
-        dev::p2p::NetworkPreferences nprefs("30303", std::string(), false);
+        dev::p2p::NetworkPreferences nprefs;
         ChainParams chainParams;
         chainParams.sealEngineName = "NoProof";
         chainParams.allowFutureBlocks = true;
@@ -146,20 +146,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isListening)
     bool listeningOff = rpcClient->net_listening();
     BOOST_CHECK_EQUAL(listeningOff, web3->isNetworkStarted());
 }
-
-/*
-// Requires Ethash chain
-BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
-{
-    web3->ethereum()->startSealing();
-    bool miningOn = rpcClient->eth_mining();
-    BOOST_CHECK_EQUAL(miningOn, web3->ethereum()->wouldSeal());
-
-    web3->ethereum()->stopSealing();
-    bool miningOff = rpcClient->eth_mining();
-    BOOST_CHECK_EQUAL(miningOff, web3->ethereum()->wouldSeal());
-}
-*/
 
 BOOST_AUTO_TEST_CASE(jsonrpc_accounts)
 {
