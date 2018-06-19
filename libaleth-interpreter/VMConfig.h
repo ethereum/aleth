@@ -24,9 +24,6 @@ namespace eth
 //
 // interpreter configuration macros for development, optimizations and tracing
 //
-// EIP_615                - subroutines and static jumps
-// EIP_616                - SIMD
-//
 // EVM_OPTIMIZE           - all optimizations off when false (TO DO - MAKE DYNAMIC)
 //
 // EVM_SWITCH_DISPATCH    - dispatch via loop and switch
@@ -37,14 +34,6 @@ namespace eth
 // EVM_REPLACE_CONST_JUMP - pre-verified jumps to save runtime lookup
 //
 // EVM_TRACE              - provides various levels of tracing
-
-#ifndef EIP_615
-#define EIP_615 false
-#endif
-
-#ifndef EIP_616
-#define EIP_616 false
-#endif
 
 #ifndef EVM_JUMP_DISPATCH
 #ifdef __GNUC__
