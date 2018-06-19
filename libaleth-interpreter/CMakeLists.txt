@@ -2,8 +2,15 @@
 # Copyright 2018 Aleth Autors.
 # Licensed under the GNU General Public License, Version 3. See the LICENSE file.
 
+if(ALETH_INTERPRETER_SHARED)
+    set(library_type SHARED)
+else()
+    set(library_type STATIC)
+endif()
+
 add_library(
     aleth-interpreter
+    ${library_type}
     interpreter.h
     VM.cpp
     VM.h
