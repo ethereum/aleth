@@ -79,6 +79,10 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         ChainParams chainParams;
         chainParams.sealEngineName = "NoProof";
         chainParams.allowFutureBlocks = true;
+        // add random extra data to randomize genesis hash and get random DB path,
+        // so that tests can be run in parallel
+        // TODO: better make it use ethemeral in-memory databases
+        chainParams.extraData = h256::random().asBytes();
         web3.reset(new WebThreeDirect(
             "eth tests", "", "", chainParams, WithExisting::Kill, {"eth"}, nprefs));
 
