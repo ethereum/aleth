@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include "Instruction.h"
 #include "VMConfig.h"
-#include "VMFace.h"
+
+#include <libevm/VMFace.h>
+#include <libevm/Instruction.h>
 
 #include <evmc/evmc.h>
 #include <evmc/instructions.h>

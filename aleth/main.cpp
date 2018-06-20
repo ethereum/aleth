@@ -40,7 +40,6 @@
 #include <libethereum/Defaults.h>
 #include <libethereum/SnapshotImporter.h>
 #include <libethereum/SnapshotStorage.h>
-#include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 #include <libwebthree/WebThree.h>
 

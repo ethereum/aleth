@@ -123,6 +123,8 @@ endif()
 #Global include path for all libs.
 include_directories("${CMAKE_SOURCE_DIR}")
 
+add_subdirectory(libaleth-interpreter)
+
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
 add_subdirectory(libp2p)
