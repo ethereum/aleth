@@ -67,13 +67,6 @@ public:
     owning_bytes_ref exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
         uint8_t const* _code, size_t _codeSize);
 
-    bytes const& memory() const { return m_mem; }
-    u256s stack() const {
-        u256s stack(m_SP, m_stackEnd);
-        reverse(stack.begin(), stack.end());
-        return stack;
-    };
-
     uint64_t m_io_gas = 0;
 private:
     evmc_context* m_context = nullptr;
