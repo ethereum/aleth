@@ -19,3 +19,7 @@ add_library(
     VMOpt.cpp
 )
 target_link_libraries(aleth-interpreter PRIVATE devcore aleth-buildinfo evmc::evmc evmc::instructions)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+    target_compile_options(aleth-interpreter PRIVATE -fstack-usage)
+endif()
