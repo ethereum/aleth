@@ -59,10 +59,10 @@ struct VMSchedule
     static constexpr int64_t callNewAccount = 25000;
 };
 
-class VM : public evmc_instance
+class VM
 {
 public:
-    VM();
+    VM() = default;
 
     owning_bytes_ref exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
         uint8_t const* _code, size_t _codeSize);
