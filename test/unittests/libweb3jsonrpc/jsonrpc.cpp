@@ -14,10 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file jsonrpc.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
- */
+
+#pragma GCC diagnostic ignored "-Wdeprecated"
 
 #include "WebThreeStubClient.h"
 #include <jsonrpccpp/server/abstractserverconnector.h>
