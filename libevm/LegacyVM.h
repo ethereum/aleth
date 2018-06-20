@@ -18,9 +18,8 @@
 #pragma once
 
 #include "Instruction.h"
+#include "LegacyVMConfig.h"
 #include "VMFace.h"
-
-#include <libaleth-interpreter/VMConfig.h>
 
 namespace dev
 {
