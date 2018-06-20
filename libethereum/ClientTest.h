@@ -31,7 +31,6 @@ namespace eth
 {
 
 DEV_SIMPLE_EXCEPTION(ChainParamsInvalid);
-DEV_SIMPLE_EXCEPTION(ChainParamsNotNoProof);
 
 class ClientTest: public Client
 {

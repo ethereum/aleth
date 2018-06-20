@@ -47,7 +47,7 @@ public:
     Ethash();
     ~Ethash();
 
-    std::string name() const override { return "Ethash"; }
+    static std::string name() { return "Ethash"; }
     unsigned revision() const override { return 1; }
     unsigned sealFields() const override { return 2; }
     bytes sealRLP() const override { return rlp(h256()) + rlp(Nonce()); }

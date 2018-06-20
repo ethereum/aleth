@@ -848,10 +848,7 @@ int main(int argc, char** argv)
     auto caps = set<string>{"eth"};
 
     if (testingMode)
-    {
-        chainParams.sealEngineName = "NoProof";
         chainParams.allowFutureBlocks = true;
-    }
 
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), getDataDir(),
         snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),

@@ -77,7 +77,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
     {
         dev::p2p::NetworkPreferences nprefs;
         ChainParams chainParams;
-        chainParams.sealEngineName = "NoProof";
+        chainParams.sealEngineName = NoProof::name();
         chainParams.allowFutureBlocks = true;
         // add random extra data to randomize genesis hash and get random DB path,
         // so that tests can be run in parallel

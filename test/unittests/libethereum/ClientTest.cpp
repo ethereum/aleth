@@ -37,7 +37,7 @@ public:
     TestClientFixture()
     {
         ChainParams chainParams;
-        chainParams.sealEngineName = "NoProof";
+        chainParams.sealEngineName = NoProof::name();
         chainParams.allowFutureBlocks = true;
 
         fs::path dir = fs::temp_directory_path();

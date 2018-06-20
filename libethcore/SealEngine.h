@@ -47,10 +47,9 @@ class SealEngineFace
 public:
 	virtual ~SealEngineFace() {}
 
-	virtual std::string name() const = 0;
-	virtual unsigned revision() const { return 0; }
-	virtual unsigned sealFields() const { return 0; }
-	virtual bytes sealRLP() const { return bytes(); }
+    virtual unsigned revision() const { return 0; }
+    virtual unsigned sealFields() const { return 0; }
+    virtual bytes sealRLP() const { return bytes(); }
 	virtual StringHashMap jsInfo(BlockHeader const&) const { return StringHashMap(); }
 
 	/// Don't forget to call Super::verify when subclassing & overriding.
@@ -138,8 +137,8 @@ private:
 class NoProof: public eth::SealEngineBase
 {
 public:
-	std::string name() const override { return "NoProof"; }
-	static void init();
+    static std::string name() { return "NoProof"; }
+    static void init();
 };
 
 }
