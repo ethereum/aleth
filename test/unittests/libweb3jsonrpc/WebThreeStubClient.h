@@ -919,6 +919,88 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
+        Json::Value debug_accountRangeAt(const std::string& param1, int param2, const std::string& param3, int param4) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            p.append(param3);
+            p.append(param4);
+            Json::Value result = this->CallMethod("debug_accountRangeAt", p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value debug_traceTransaction(const std::string& param1, const Json::Value& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            Json::Value result = this->CallMethod("debug_traceTransaction", p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value debug_storageRangeAt(const std::string& param1, int param2, const std::string& param3, const std::string& param4, int param5) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            p.append(param3);
+            p.append(param4);
+            p.append(param5);
+            Json::Value result = this->CallMethod("debug_storageRangeAt", p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string debug_preimage(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("debug_preimage", p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value debug_traceBlockByNumber(int param1, const Json::Value& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            Json::Value result = this->CallMethod("debug_traceBlockByNumber", p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value debug_traceBlockByHash(const std::string& param1, const Json::Value& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            Json::Value result = this->CallMethod("debug_traceBlockByHash", p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value debug_traceCall(const Json::Value& param1, const std::string& param2, const Json::Value& param3) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            p.append(param3);
+            Json::Value result = this->CallMethod("debug_traceCall", p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
 };
 
 #endif //JSONRPC_CPP_STUB_WEBTHREESTUBCLIENT_H_

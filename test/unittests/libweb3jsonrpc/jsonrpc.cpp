@@ -25,6 +25,7 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/AdminEth.h>
 #include <libweb3jsonrpc/AdminNet.h>
+#include <libweb3jsonrpc/Debug.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/Net.h>
@@ -89,9 +90,11 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         web3->ethereum()->setAuthor(coinbase.address());
 
         using FullServer = ModularServer<rpc::EthFace, rpc::NetFace, rpc::Web3Face,
-            rpc::AdminEthFace, rpc::AdminNetFace>;
+            rpc::AdminEthFace, rpc::AdminNetFace, rpc::DebugFace>;
 
         accountHolder.reset(new FixedAccountHolder([&]() { return web3->ethereum(); }, {}));
+        accountHolder->setAccounts({coinbase});
+
         sessionManager.reset(new rpc::SessionManager());
         adminSession = sessionManager->newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
 
@@ -102,7 +105,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         rpcServer.reset(
             new FullServer(ethFace, new rpc::Net(*web3), new rpc::Web3(web3->clientVersion()),
                 new rpc::AdminEth(*web3->ethereum(), *gasPricer, keyManager, *sessionManager.get()),
-                new rpc::AdminNet(*web3, *sessionManager)));
+                new rpc::AdminNet(*web3, *sessionManager), new rpc::Debug(*web3->ethereum())));
         auto ipcServer = new TestIpcServer;
         rpcServer->addConnector(ipcServer);
         ipcServer->StartListening();
@@ -216,8 +219,6 @@ BOOST_AUTO_TEST_CASE(eth_coinbase)
 
 BOOST_AUTO_TEST_CASE(eth_sendTransaction)
 {
-    accountHolder->setAccounts({coinbase});
-
     auto address = coinbase.address();
     auto countAt = jsToU256(rpcClient->eth_getTransactionCount(toJS(address), "latest"));
 
@@ -272,8 +273,6 @@ BOOST_AUTO_TEST_CASE(eth_sendTransaction)
 
 BOOST_AUTO_TEST_CASE(simple_contract)
 {
-    accountHolder->setAccounts({coinbase});
-
     dev::eth::mine(*(web3->ethereum()), 1);
 
 
@@ -310,8 +309,6 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 
 BOOST_AUTO_TEST_CASE(contract_storage)
 {
-    accountHolder->setAccounts({coinbase});
-
     dev::eth::mine(*(web3->ethereum()), 1);
 
 
@@ -356,7 +353,7 @@ BOOST_AUTO_TEST_CASE(contract_storage)
     BOOST_CHECK_EQUAL(storage, "0x0000000000000000000000000000000000000000000000000000000000000003");
 }
 
-BOOST_AUTO_TEST_CASE(sha3)
+BOOST_AUTO_TEST_CASE(web3_sha3)
 {
     string testString = "multiply(uint256)";
     h256 expected = dev::sha3(testString);
@@ -365,6 +362,74 @@ BOOST_AUTO_TEST_CASE(sha3)
     string result = rpcClient->web3_sha3(hexValue);
     BOOST_CHECK_EQUAL(toJS(expected), result);
     BOOST_CHECK_EQUAL("0xc6888fa159d67f77c2f3d7a402e199802766bd7e8d4d1ecd2274fc920265d56a", result);
+}
+
+BOOST_AUTO_TEST_CASE(debugAccountRangeAtFinalBlockState)
+{
+    // mine to get some balance at coinbase
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    // send transaction to have non-emtpy block
+    Address receiver = Address::random();
+    Json::Value tx;
+    tx["from"] = toJS(coinbase.address());
+    tx["value"] = toJS(10);
+    tx["to"] = toJS(receiver);
+    tx["gas"] = toJS(EVMSchedule().txGas);
+    tx["gasPrice"] = toJS(10 * dev::eth::szabo);
+    string txHash = rpcClient->eth_sendTransaction(tx);
+    BOOST_REQUIRE(!txHash.empty());
+
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    string receiverHash = toString(sha3(receiver));
+
+    // receiver doesn't exist in the beginning of the 2nd block
+    Json::Value result = rpcClient->debug_accountRangeAt("2", 0, "0", 100);
+    BOOST_CHECK(!result["addressMap"].isMember(receiverHash));
+
+    // receiver exists in the end of the 2nd block
+    result = rpcClient->debug_accountRangeAt("2", 1, "0", 100);
+    BOOST_CHECK(result["addressMap"].isMember(receiverHash));
+    BOOST_CHECK_EQUAL(result["addressMap"][receiverHash], toString(receiver));
+}
+
+BOOST_AUTO_TEST_CASE(debugStorageRangeAtFinalBlockState)
+{
+    // mine to get some balance at coinbase
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    //pragma solidity ^0.4.22;
+    //contract test
+    //{
+    //    uint hello = 7;
+    //}
+    string initCode =
+        "608060405260076000553415601357600080fd5b60358060206000396000"
+        "f3006080604052600080fd00a165627a7a7230582006db0551577963b544"
+        "3e9501b4b10880e186cff876cd360e9ad6e4181731fcdd0029";
+
+    Json::Value tx;
+    tx["code"] = initCode;
+    tx["from"] = toJS(coinbase.address());
+    string txHash = rpcClient->eth_sendTransaction(tx);
+
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    Json::Value receipt = rpcClient->eth_getTransactionReceipt(txHash);
+    string contractAddress = receipt["contractAddress"].asString();
+
+    // contract doesn't exist in the beginning of the 2nd block
+    Json::Value result = rpcClient->debug_storageRangeAt("2", 0, contractAddress, "0", 100);
+    BOOST_CHECK(result["storage"].empty());
+
+    // contracts exists in the end of the 2nd block
+    result = rpcClient->debug_storageRangeAt("2", 1, contractAddress, "0", 100);
+    BOOST_CHECK(!result["storage"].empty());
+    string keyHash = toJS(sha3(u256{0}));
+    BOOST_CHECK(!result["storage"][keyHash].empty());
+    BOOST_CHECK_EQUAL(result["storage"][keyHash]["key"].asString(), "0x00");
+    BOOST_CHECK_EQUAL(result["storage"][keyHash]["value"].asString(), "0x07");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
