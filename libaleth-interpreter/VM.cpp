@@ -36,21 +36,21 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
     const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
 {
     (void)_instance;
-    dev::eth::VM vm;
+    std::unique_ptr<dev::eth::VM> vm{new dev::eth::VM};
 
     evmc_result result = {};
     dev::eth::owning_bytes_ref output;
 
     try
     {
-        output = vm.exec(_context, _rev, _msg, _code, _codeSize);
+        output = vm->exec(_context, _rev, _msg, _code, _codeSize);
         result.status_code = EVMC_SUCCESS;
-        result.gas_left = vm.m_io_gas;
+        result.gas_left = vm->m_io_gas;
     }
     catch (dev::eth::RevertInstruction& ex)
     {
         result.status_code = EVMC_REVERT;
-        result.gas_left = vm.m_io_gas;
+        result.gas_left = vm->m_io_gas;
         output = ex.output();  // This moves the output from the exception!
     }
     catch (dev::eth::VMException const&)
