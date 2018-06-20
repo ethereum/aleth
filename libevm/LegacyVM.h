@@ -18,7 +18,7 @@
 #pragma once
 
 #include "Instruction.h"
-#include "VMConfig.h"
+#include "LegacyVMConfig.h"
 #include "VMFace.h"
 
 namespace dev

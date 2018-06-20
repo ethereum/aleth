@@ -28,7 +28,6 @@
 #include <libethereum/ChainParams.h>
 #include <libethereum/Executive.h>
 #include <libethereum/LastBlockHashesFace.h>
-#include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 
 #include <aleth-buildinfo.h>

@@ -123,6 +123,9 @@ endif()
 #Global include path for all libs.
 include_directories("${CMAKE_SOURCE_DIR}")
 
+option(ALETH_INTERPRETER_SHARED "Build aleth-interpreter as a shared library" OFF)
+add_subdirectory(libaleth-interpreter)
+
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
 add_subdirectory(libp2p)

@@ -86,29 +86,6 @@ void VM::optimize()
         {
             pc += (byte)op - (byte)Instruction::PUSH1 + 1;
         }
-#if EIP_615
-        else if (
-            op == Instruction::JUMPTO ||
-            op == Instruction::JUMPIF ||
-            op == Instruction::JUMPSUB)
-        {
-            ++pc;
-            pc += 4;
-        }
-        else if (op == Instruction::JUMPV || op == Instruction::JUMPSUBV)
-        {
-            ++pc;
-            pc += 4 * m_code[pc];  // number of 4-byte dests followed by table
-        }
-        else if (op == Instruction::BEGINSUB)
-        {
-            m_beginSubs.push_back(pc);
-        }
-        else if (op == Instruction::BEGINDATA)
-        {
-            break;
-        }
-#endif
     }
     
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION

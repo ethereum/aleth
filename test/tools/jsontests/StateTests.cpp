@@ -29,7 +29,6 @@
 #include <libethereum/State.h>
 #include <libethereum/ExtVM.h>
 #include <libethereum/Defaults.h>
-#include <libevm/VM.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
 #include <test/tools/jsontests/StateTests.h>

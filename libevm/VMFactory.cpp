@@ -18,7 +18,8 @@
 #include "VMFactory.h"
 #include "EVMC.h"
 #include "LegacyVM.h"
-#include "interpreter.h"
+
+#include <libaleth-interpreter/interpreter.h>
 
 #include <boost/dll.hpp>
 #include <boost/filesystem.hpp>
