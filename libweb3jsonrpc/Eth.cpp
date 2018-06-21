@@ -258,60 +258,52 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 		case TransactionRepercussion::ProxySuccess:
 			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
 		case TransactionRepercussion::UnknownAccount:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Account unknown."));
+			throw JsonRpcException("Account unknown.");
 		case TransactionRepercussion::Locked:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Account is locked."));
+			throw JsonRpcException("Account is locked.");
 		case TransactionRepercussion::Refused:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Transaction rejected by user."));
+			throw JsonRpcException("Transaction rejected by user.");
 		case TransactionRepercussion::Unknown:
-			BOOST_THROW_EXCEPTION(JsonRpcException("Unknown reason."));
+			throw JsonRpcException("Unknown reason.");
 		}
-	}
-	catch (JsonRpcException&)
-	{
-		throw;
 	}
 	catch (ZeroSignatureTransaction&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Zero signature transaction."));
-	}
-	catch (InvalidTransactionFormat&)
-	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction format is invalid."));
+		throw JsonRpcException("Zero signature transaction.");
 	}
 	catch (GasPriceTooLow&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Pending transaction with same nonce but higher gas price exists."));
+		throw JsonRpcException("Pending transaction with same nonce but higher gas price exists.");
 	}
 	catch (BlockGasLimitReached&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Block gas limit reached."));
+		throw JsonRpcException("Block gas limit reached.");
 	}
 	catch (OutOfGasIntrinsic&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction gas amount is less than the intrinsic gas amount for this transaction type."));
+		throw JsonRpcException("Transaction gas amount is less than the intrinsic gas amount for this transaction type.");
 	}
 	catch (InvalidNonce&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Invalid transaction nonce."));
+		throw JsonRpcException("Invalid transaction nonce.");
 	}
 	catch (PendingTransactionAlreadyExists&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Same transaction already exists in the pending transaction queue."));
+		throw JsonRpcException("Same transaction already exists in the pending transaction queue.");
 	}
 	catch (TransactionAlreadyInChain&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Transaction is already in the blockchain."));
+		throw JsonRpcException("Transaction is already in the blockchain.");
 	}
 	catch (NotEnoughCash&)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException("Account balance is too low (balance < value + gas * gas price)."));
+		throw JsonRpcException("Account balance is too low (balance < value + gas * gas price).");
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 	}
-	BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 	return string();
 }
 
