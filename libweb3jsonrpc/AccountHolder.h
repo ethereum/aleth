@@ -138,8 +138,9 @@ public:
 
 	void setAccounts(std::vector<dev::KeyPair> const& _accounts)
 	{
-		for (auto const& i: _accounts)
-			m_accounts[i.address()] = i.secret();
+        m_accounts.clear();
+        for (auto const& i : _accounts)
+            m_accounts[i.address()] = i.secret();
 	}
 
 	dev::AddressHash realAccounts() const override
