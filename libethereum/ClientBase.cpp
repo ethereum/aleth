@@ -517,7 +517,7 @@ Block ClientBase::blockByNumber(BlockNumber _h) const
     if (_h == PendingBlock)
         return postSeal();
     else if (_h == LatestBlock)
-        return preSeal();
+        return block(bc().currentHash());
     return block(bc().numberHash(_h));
 }
 
