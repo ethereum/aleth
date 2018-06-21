@@ -40,7 +40,6 @@
 #include <libethereum/Defaults.h>
 #include <libethereum/SnapshotImporter.h>
 #include <libethereum/SnapshotStorage.h>
-#include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 #include <libwebthree/WebThree.h>
 
@@ -75,15 +74,6 @@ namespace
 
 std::atomic<bool> g_silence = {false};
 unsigned const c_lineWidth = 160;
-
-string ethCredits(bool _interactive = false)
-{
-    std::ostringstream cout;
-    if (_interactive)
-        cout
-            << "Type 'exit' to quit\n\n";
-    return credits() + cout.str();
-}
 
 void version()
 {
@@ -760,7 +750,7 @@ int main(int argc, char** argv)
     if (vm.count("help"))
     {
         cout << "NAME:\n"
-             << credits() << '\n'
+             << "   aleth " << Version << '\n'
              << "USAGE:\n"
              << "   aleth [options]\n\n"
              << "WALLET USAGE:\n";
@@ -802,7 +792,7 @@ int main(int argc, char** argv)
         chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 
     if (loggingOptions.verbosity > 0)
-        cout << EthGrayBold "cpp-ethereum, a C++ Ethereum client" EthReset << "\n";
+        cout << EthGrayBold "aleth, a C++ Ethereum client" EthReset << "\n";
 
     m.execute();
 
@@ -998,7 +988,7 @@ int main(int argc, char** argv)
         keyManager.import(s, "Imported key (UNSAFE)");
     }
 
-    cout << ethCredits();
+    cout << "aleth " << Version << "\n";
 
     if (mode == OperationMode::ImportSnapshot)
     {

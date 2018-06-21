@@ -28,6 +28,8 @@
 #include <json/json.h>
 #include <boost/timer.hpp>
 
+#include <numeric>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -163,7 +165,15 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 
 string StandardTrace::json(bool _styled) const
 {
-    return _styled ? Json::StyledWriter().write(m_trace) : Json::FastWriter().write(m_trace);
+    if (m_trace.empty())
+        return {};
+
+    if (_styled)
+        return Json::StyledWriter().write(m_trace);
+
+    return std::accumulate(std::next(m_trace.begin()), m_trace.end(),
+        Json::FastWriter().write(m_trace[0]),
+        [](std::string a, Json::Value b) { return a + Json::FastWriter().write(b); });
 }
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
@@ -296,14 +306,14 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         {
             m_excepted = TransactionException::OutOfGasBase;
             // Bail from exception.
-            
+
             // Empty precompiled contracts need to be deleted even in case of OOG
             // because the bug in both Geth and Parity led to deleting RIPEMD precompiled in this case
             // see https://github.com/ethereum/go-ethereum/pull/3341/files#diff-2433aa143ee4772026454b8abd76b9dd
             // We mark the account as touched here, so that is can be removed among other touched empty accounts (after tx finalization)
             if (m_envInfo.number() >= m_sealEngine.chainParams().EIP158ForkBlock)
                 m_s.addBalance(_p.codeAddress, 0);
-            
+
             return true;	// true actually means "all finished - nothing more to be done regarding go().
         }
         else

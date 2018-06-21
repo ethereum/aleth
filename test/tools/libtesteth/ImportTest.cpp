@@ -18,14 +18,15 @@
  * Helper class for managing data when running state tests
  */
 
-#include <test/tools/libtesteth/TestHelper.h>
-#include <test/tools/libtesteth/ImportTest.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <libethereum/ValidationSchemes.h>
+#include <test/tools/jsontests/BlockChainTests.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
+#include <test/tools/libtesteth/ImportTest.h>
 #include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtestutils/TestLastBlockHashes.h>
-#include <test/tools/jsontests/BlockChainTests.h>
 
 #include <boost/filesystem/path.hpp>
 
@@ -384,6 +385,11 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state, Acco
     json_spirit::mObject o = _o;
     replaceCodeInState(
         o);  // Compile LLL and other src code of the test Fillers using external call to lllc
+    for (auto const& account : o)
+    {
+        auto const& accountMaskJson = account.second.get_obj();
+        validation::validateAccountMaskObj(accountMaskJson);
+    }
     std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);
     _state.populateFrom(jsonToAccountMap(jsondata, 0, &o_mask));
 }

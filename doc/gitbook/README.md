@@ -7,8 +7,7 @@ cpp-ethereum is a distribution of software including a number of diverse tools. 
 
 The full software suite of cpp-ethereum includes:
 
-- **eth** (`eth`) The mainline CLI Ethereum client. Run it in the background and it will connect to the Ethereum network; you can mine, make transactions and inspect the blockchain.
-- `ethkey` A key/wallet management tool for Ethereum keys. This lets you add, remove and change your keys as well as *cold wallet device*-friendly transaction inspection and signing.
+- **aleth** (`aleth`) The mainline CLI Ethereum client. Run it in the background and it will connect to the Ethereum network; you can mine, make transactions and inspect the blockchain.
+- `aleth-key` A key/wallet management tool for Ethereum keys. This lets you add, remove and change your keys as well as *cold wallet device*-friendly transaction inspection and signing.
 - `ethminer` A standalone miner. This can be used to check how fast you can mine and will mine for you in concert with `eth`, `geth` and `pyethereum`.
-- `ethvm` The Ethereum virtual machine emulator. You can use this to run EVM code.
 - `rlp` An serialisation/deserialisation tool for the Recursive Length Prefix format.

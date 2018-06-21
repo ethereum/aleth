@@ -40,7 +40,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
         if (upperBound == Invalid256 || upperBound > c_maxGasEstimate)
             upperBound = c_maxGasEstimate;
         int64_t lowerBound = Transaction::baseGasRequired(!_dest, &_data, EVMSchedule());
-        Block bk = block(_blockNumber);
+        Block bk = blockByNumber(_blockNumber);
         u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
         ExecutionResult er;
         ExecutionResult lastGood;
@@ -93,37 +93,37 @@ ImportResult ClientBase::injectBlock(bytes const& _block)
 
 u256 ClientBase::balanceAt(Address _a, BlockNumber _block) const
 {
-    return block(_block).balance(_a);
+    return blockByNumber(_block).balance(_a);
 }
 
 u256 ClientBase::countAt(Address _a, BlockNumber _block) const
 {
-    return block(_block).transactionsFrom(_a);
+    return blockByNumber(_block).transactionsFrom(_a);
 }
 
 u256 ClientBase::stateAt(Address _a, u256 _l, BlockNumber _block) const
 {
-    return block(_block).storage(_a, _l);
+    return blockByNumber(_block).storage(_a, _l);
 }
 
 h256 ClientBase::stateRootAt(Address _a, BlockNumber _block) const
 {
-    return block(_block).storageRoot(_a);
+    return blockByNumber(_block).storageRoot(_a);
 }
 
 bytes ClientBase::codeAt(Address _a, BlockNumber _block) const
 {
-    return block(_block).code(_a);
+    return blockByNumber(_block).code(_a);
 }
 
 h256 ClientBase::codeHashAt(Address _a, BlockNumber _block) const
 {
-    return block(_block).codeHash(_a);
+    return blockByNumber(_block).codeHash(_a);
 }
 
 map<h256, pair<u256, u256>> ClientBase::storageAt(Address _a, BlockNumber _block) const
 {
-    return block(_block).storage(_a);
+    return blockByNumber(_block).storage(_a);
 }
 
 // TODO: remove try/catch, allow exceptions
@@ -440,7 +440,7 @@ BlockDetails ClientBase::pendingDetails() const
 Addresses ClientBase::addresses(BlockNumber _block) const
 {
     Addresses ret;
-    for (auto const& i: block(_block).addresses())
+    for (auto const& i : blockByNumber(_block).addresses())
         ret.push_back(i.first);
     return ret;
 }
@@ -512,7 +512,7 @@ bool ClientBase::isKnownTransaction(h256 const& _blockHash, unsigned _i) const
     return isKnown(_blockHash) && block(_blockHash).pending().size() > _i;
 }
 
-Block ClientBase::block(BlockNumber _h) const
+Block ClientBase::blockByNumber(BlockNumber _h) const
 {
     if (_h == PendingBlock)
         return postSeal();

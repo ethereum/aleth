@@ -1,11 +1,8 @@
-# cpp-ethereum - Ethereum C++ client
+# Aleth – Ethereum C++ client, tools and libraries
 
-This repository contains [cpp-ethereum](http://cpp-ethereum.org), the [Ethereum](https://ethereum.org) C++ client.
-
-It is the third most popular of the Ethereum clients, behind [geth](https://github.com/ethereum/go-ethereum) (the [go](https://golang.org)
-client) and [Parity](https://github.com/paritytech/parity) (the [rust](https://www.rust-lang.org/) client).  The code is 
-[portable](http://cpp-ethereum.org/portability.html) and has been used successfully on a very broad range
-of operating systems and hardware.
+> The collection of C++ libraries and tools for Ethereum, 
+> formerly known as _cpp-ethereum_ project.
+> This includes the full Ethereum client **aleth**.
 
 
 ## Contact
@@ -111,20 +108,20 @@ cmake --build .        # Build all default targets.
 On **Windows** Visual Studio 2015 is required. You should generate Visual Studio 
 solution file (.sln) for 64-bit architecture by adding 
 `-G "Visual Studio 14 2015 Win64"` argument to the CMake configure command.
-After configuration is completed, the `cpp-ethereum.sln` can be found in the
+After configuration is completed, the `aleth.sln` can be found in the
 `build` directory.
 
 ```shell
 cmake .. -G "Visual Studio 14 2015 Win64"
 ```
 
-## Contributing
+## Contribute
 
 [![Contributors](https://img.shields.io/github/contributors/ethereum/cpp-ethereum.svg)](https://github.com/ethereum/cpp-ethereum/graphs/contributors)
 [![Gitter](https://img.shields.io/gitter/room/ethereum/cpp-ethereum.svg)](https://gitter.im/ethereum/cpp-ethereum)
-[![up-for-grabs](https://img.shields.io/github/issues-raw/ethereum/cpp-ethereum/up-for-grabs.svg)](https://github.com/ethereum/cpp-ethereum/labels/up-for-grabs)
+[![up-for-grabs](https://img.shields.io/github/issues-raw/ethereum/cpp-ethereum/help%20wanted.svg)](https://github.com/ethereum/cpp-ethereum/labels/help%20wanted)
 
-The current codebase is the work of many, many hands, with nearly 100
+The current codebase is the work of many, many hands, with over 100
 [individual contributors](https://github.com/ethereum/cpp-ethereum/graphs/contributors) over the course of its development.
 
 Our day-to-day development chat happens on the
@@ -132,7 +129,7 @@ Our day-to-day development chat happens on the
 
 All contributions are welcome! We try to keep a list of tasks that are suitable
 for newcomers under the tag 
-[up-for-grabs](https://github.com/ethereum/cpp-ethereum/labels/up-for-grabs).
+[help wanted](https://github.com/ethereum/cpp-ethereum/labels/help%20wanted).
 If you have any questions, please just ask.
 
 Please read [CONTRIBUTING](CONTRIBUTING.md) and [CODING_STYLE](CODING_STYLE.md) 

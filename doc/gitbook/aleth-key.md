@@ -1,6 +1,6 @@
-# ethkey
+# aleth-key
 
-`ethkey` is a CLI tool that allows you to interact with the Ethereum wallet. With it you can list, inspect, create, delete and modify keys and inspect, create and sign transactions.
+`aleth-key` is a CLI tool that allows you to interact with the Ethereum wallet. With it you can list, inspect, create, delete and modify keys and inspect, create and sign transactions.
 
 ### Keys and Wallets
 
@@ -14,10 +14,10 @@ While all clients have keys, some do not have wallets; these clients typically s
 
 We'll assume you have not yet run a client such as `eth` or anything in the Aleth series of clients. If you have, you should skip this section.
 
-To create a wallet, run `ethkey` with the `createwallet` command:
+To create a wallet, run `aleth-key` with the `createwallet` command:
 
 ```
-> ethkey createwallet
+> aleth-key createwallet
 Please enter a MASTER passphrase to protect your key store (make it strong!): 
 ```
 
@@ -28,7 +28,7 @@ You'll be asked for a "master" passphrase. This protects your privacy and acts a
 We can list the keys within the wallet simply by using the `list` command:
 
 ```
-> ethkey list
+> aleth-key list
 No keys found.
 ```
 
@@ -41,7 +41,7 @@ One of the nice things about Ethereum is that creating a key is tantamount to cr
 To create a key, we use the `new` command. To use it we must pass a name - this is the name we'll give to this account in the wallet. Let's call it "test":
 
 ```
-> ethkey new test
+> aleth-key new test
 Enter a passphrase  with which to secure this account (or nothing to use the master passphrase):
 ```
 
@@ -54,7 +54,7 @@ Once you enter a passphrase, it'll ask you to confirm it by entering again. Ente
 Because you gave it its own passphrase, it'll also ask you to provide a hint for this password which will be displayed to you whenever it asks you to enter it. The hint is stored in the wallet and is itself protected by the master passphrase. Enter the truly awful hint of `321 backwards`.
 
 ```
-> ethkey new test
+> aleth-key new test
 Enter a passphrase with which to secure this account (or nothing to use the master passphrase): 
 Please confirm the passphrase by entering it again: 
 Enter a hint to help you remember this passphrase: 321 backwards
@@ -72,7 +72,7 @@ Notice also that the key has another identifier after `Created key`. This is kno
 Now let's make sure it worked properly by listing the keys in the wallet:
 
 ```
-> ethkey list
+> aleth-key list
 055dde03-47ff-dded-8950-0fe39b1fa101 0092e965… XE472EVKU3CGMJF2YQ0J9RO1Y90BC0LDFZ  test
 ```
 
@@ -82,12 +82,12 @@ It reports one key on each line (for a total of one key here). In this case our 
 
 You might see addresses passed as hex-only strings, especially with old software. These are dangerous since they don't include a checksum or special code to detect typos. You should generally try to keep clear of them.
 
-Occasionally, however, it's important to convert between the two. `ethkey` provides the `inspect` command for this purpose. When passed any address, file or UUID, it will tell you information about it including both formats of address.
+Occasionally, however, it's important to convert between the two. `aleth-key` provides the `inspect` command for this purpose. When passed any address, file or UUID, it will tell you information about it including both formats of address.
 
 For example, to get it to tell us about our account, we might use:
 
 ```
-> ethkey inspect test
+> aleth-key inspect test
 test (0092e965…)
   ICAP: XE472EVKU3CGMJF2YQ0J9RO1Y90BC0LDFZ
   Raw hex: 0092e965928626f8880629cec353d3fd7ca5974f
@@ -96,11 +96,11 @@ test (0092e965…)
 We could just as easily use the ICAP `XE472EVK...` or raw hex `0092e965...`:
 
 ```
-> ethkey inspect XE472EVKU3CGMJF2YQ0J9RO1Y90BC0LDFZ
+> aleth-key inspect XE472EVKU3CGMJF2YQ0J9RO1Y90BC0LDFZ
 test (0092e965…)
   ICAP: XE472EVKU3CGMJF2YQ0J9RO1Y90BC0LDFZ
   Raw hex: 0092e965928626f8880629cec353d3fd7ca5974f
-> ethkey inspect 0092e965928626f8880629cec353d3fd7ca5974f
+> aleth-key inspect 0092e965928626f8880629cec353d3fd7ca5974f
 test (0092e965…)
   ICAP: XE472EVKU3CGMJF2YQ0J9RO1Y90BC0LDFZ
   Raw hex: 0092e965928626f8880629cec353d3fd7ca5974f
@@ -118,10 +118,10 @@ Here's an unsigned transaction. It authorises the donation of 1 ether to me:
 ec80850ba43b74008252089400be78bf8a425471eca0cf1d255118bc080abf95880de0b6b3a7640000801b8080
 ```
 
-On its own, it won't do much. We can see this by decoding it in `ethkey`:
+On its own, it won't do much. We can see this by decoding it in `aleth-key`:
 
 ```
-> ethkey decode ec80850ba43b74008252089400be78bf8a425471eca0cf1d255118bc080abf95880de0b6b3a7640000801b8080
+> aleth-key decode ec80850ba43b74008252089400be78bf8a425471eca0cf1d255118bc080abf95880de0b6b3a7640000801b8080
 Transaction 705d490edc318b50223efa7bb9c19d65f05c3c527e4f8e60535b46a2ed128706
   type: message
   to: XE6934MX3U67M48MPHYMC1A1X306AFKEXH (00be78bf…)
@@ -138,12 +138,12 @@ Note that it states the transaction is `<unsigned>` to the right of `from:`. Thi
 
 ### Signing a Transaction
 
-`ethkey` can be used to sign a pre-existing, but unsigned, transaction (it can also create a transaction and sign it itself). In this case, the transaction is actually harmless anyway since we're signing with the key of a fresh account that has no Ether to be transferred.
+`aleth-key` can be used to sign a pre-existing, but unsigned, transaction (it can also create a transaction and sign it itself). In this case, the transaction is actually harmless anyway since we're signing with the key of a fresh account that has no Ether to be transferred.
 
 The command we'll use is `sign`. To use it we must identify the account with which we wish to sign. This can be the ICAP (`XE472EVK...`), the hex address (`0092e965...`), the UUID (`055dde...`), the key file or simply the plain old name (`test`). Secondly you must describe transaction it should sign. This can be done through passing the hex or through a file containing the hex.
 
 ```
-> ethkey sign test ec80850ba43b74008252089400be78bf8a425471eca0cf1d255118bc080abf95880de0b6b3a7640000801b8080
+> aleth-key sign test ec80850ba43b74008252089400be78bf8a425471eca0cf1d255118bc080abf95880de0b6b3a7640000801b8080
 Enter passphrase for key (hint:321 backwards): 
 ```
 
@@ -156,7 +156,7 @@ a37c588c853dc20bbaef53b680e23642a03122897bbb9a53d25d0d8f3665a94f: f86c80850ba43b
 Let's make sure it worked by decoding it.
 
 ```
-> ethkey decode f86c80850ba43b74008252089400be78bf8a425471eca0cf1d255118bc080abf95880de0b6b3a7640000801ca07638c34170f3e04313bbb6c5bfc10a0c665200515a1aa5e922c7ae6c0dd085faa079ab46048e643bb4042bcb22da86d2646eb0b727f23aa3e165102b824563c70d
+> aleth-key decode f86c80850ba43b74008252089400be78bf8a425471eca0cf1d255118bc080abf95880de0b6b3a7640000801ca07638c34170f3e04313bbb6c5bfc10a0c665200515a1aa5e922c7ae6c0dd085faa079ab46048e643bb4042bcb22da86d2646eb0b727f23aa3e165102b824563c70d
 Transaction a37c588c853dc20bbaef53b680e23642a03122897bbb9a53d25d0d8f3665a94f
   type: message
   to: XE6934MX3U67M48MPHYMC1A1X306AFKEXH (00be78bf…)
@@ -195,7 +195,7 @@ or, for Windows:
 Now, we'll delete the key with the `kill` command:
 
 ```
-> ethkey kill test
+> aleth-key kill test
 1 key(s) deleted.
 ```
 
@@ -205,7 +205,7 @@ Check by calling `list`:
 
 
 ```
-> ethkey list
+> aleth-key list
 No keys found.
 ```
 
@@ -218,13 +218,13 @@ We could simply copy it back into the original `keys` directory. This would inde
 Better would be to reimport it into the wallet, which makes it addressable by its ICAP and hex, and gives it a name and password hint to boot. To do this, we need to use the `import` command, which takes the file and the name of the key:
 
 ```
-> ethkey import ~/backup-keys/* test
+> aleth-key import ~/backup-keys/* test
 ```
 
 or, for Windows:
 
 ```
-> ethkey import $HOME/backup-keys/*.* test
+> aleth-key import $HOME/backup-keys/*.* test
 ```
 
 Here it will need to know the passphrase for the key, mainly to determine the address of the key for placing into the wallet. There's no hint now because the wallet doesn't know anything about it. Enter the `123` passphrase.
@@ -246,7 +246,7 @@ Finally it will tell you that all went well and the key is reimported. We should
 To double-check, we can list the keys:
 
 ```
-> ethkey list     
+> aleth-key list     
 055dde03-47ff-dded-8950-0fe39b1fa101 0092e965… XE472EVKU3CGMJF2YQ0J9RO1Y90BC0LDFZ  test
 ```
 
@@ -256,10 +256,10 @@ All restored!
 
 Because our keys all share the same format it's really easy to import keys from other clients like Geth. In fact it's exactly the same process as restoring a key from a previous backup as we did in the last step.
 
-If we assume we have a geth key at `mygethkey.json`, then to import it to use `eth`, simply use:
+If we assume we have a geth key at `mygeth-key.json`, then to import it to use `aleth`, simply use:
 
 ```
-> ethkey import mygethkey.json "My Old Geth Key"
+> aleth-key import mygeth-key.json "My Old Geth Key"
 ```
 
 It will prompt you for your passphrase to ascertain the address for the key.
@@ -267,12 +267,12 @@ It will prompt you for your passphrase to ascertain the address for the key.
 
 ### Changing the Password
 
-Security people reckon that it is prudent to change your password regularly. You can do so easily with `ethkey` using the `recode` command (which actually does a whole lot more, but that's advanced usage).
+Security people reckon that it is prudent to change your password regularly. You can do so easily with `aleth-key` using the `recode` command (which actually does a whole lot more, but that's advanced usage).
 
 To do so, simply pass in the name(s) of any keys whose passwords you wish to change. Let's change our key's password:
 
 ```
-> ethkey recode test
+> aleth-key recode test
 Enter old passphrase for key 'test' (hint: 321 backwards):
 ```
 
@@ -291,9 +291,9 @@ You'll finally get a confirmation that the re-encoding took place; your key is n
 
 ## The Rest
 
-There's much more to discover with `ethkey`; it provides a suite of commands for playing with "bare" secrets, those not in the wallet (the `listbare`, `newbare`, ... commands), and allows keys to be imported without actually ever being decrypted (`importwithaddress`) and conversion between ICAP and hex (`inspectbare`).
+There's much more to discover with `aleth-key`; it provides a suite of commands for playing with "bare" secrets, those not in the wallet (the `listbare`, `newbare`, ... commands), and allows keys to be imported without actually ever being decrypted (`importwithaddress`) and conversion between ICAP and hex (`inspectbare`).
 
 Options allow you to alter transactions before you sign them and even create transactions from scratch. You can also configure the method by which keys are encrypted, changing the encryption function or its parameters.
 
-See `ethkey --help` for more information. Enjoy!
+See `aleth-key --help` for more information. Enjoy!
 

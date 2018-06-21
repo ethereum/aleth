@@ -27,7 +27,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libevm/ExtVMFace.h>
-#include <libevm/VM.h>
 #include <libethereum/Transaction.h>
 #include <libethereum/ExtVM.h>
 #include <libethereum/State.h>

@@ -17,9 +17,9 @@
 #pragma once
 
 namespace dev
-{
-namespace eth
-{
+    {
+        namespace eth
+    {
 ///////////////////////////////////////////////////////////////////////////////
 //
 // interpreter configuration macros for development, optimizations and tracing
@@ -54,7 +54,7 @@ namespace eth
 #endif
 #endif
 #if EVM_JUMP_DISPATCH
-#ifndef __GNUC__
+        #ifndef __GNUC__
 #error "address of label extension available only on Gnu"
 #endif
 #else
@@ -65,7 +65,7 @@ namespace eth
 #define EVM_OPTIMIZE false
 #endif
 #if EVM_OPTIMIZE
-#define EVM_REPLACE_CONST_JUMP true
+        #define EVM_REPLACE_CONST_JUMP true
 #define EVM_USE_CONSTANT_POOL true
 #define EVM_DO_FIRST_PASS_OPTIMIZATION (EVM_REPLACE_CONST_JUMP || EVM_USE_CONSTANT_POOL)
 #endif
@@ -80,7 +80,7 @@ namespace eth
 #endif
 #if EVM_TRACE > 0
 
-#undef ON_OP
+        #undef ON_OP
 #if EVM_TRACE > 2
 #define ON_OP() \
     (cerr << "### " << ++m_nSteps << ": " << m_PC << " " << instructionInfo(m_OP).name << endl)
@@ -120,7 +120,7 @@ namespace eth
 #define THROW_EXCEPTION(X) ((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), abort())
 #else
 #if EVM_TRACE > 0
-#define THROW_EXCEPTION(X) \
+        #define THROW_EXCEPTION(X) \
     ((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), BOOST_THROW_EXCEPTION(X))
 #else
 #define THROW_EXCEPTION(X) BOOST_THROW_EXCEPTION(X)
@@ -134,7 +134,7 @@ namespace eth
 //
 #if EVM_SWITCH_DISPATCH
 
-#define INIT_CASES
+        #define INIT_CASES
 #define DO_CASES            \
     for (;;)                \
     {                       \
@@ -160,7 +160,7 @@ namespace eth
 //
 #elif EVM_JUMP_DISPATCH
 
-#define INIT_CASES                              \
+        #define INIT_CASES                              \
                                                 \
     static const void* const jumpTable[256] = { \
         &&STOP, /* 00 */                        \
@@ -440,5 +440,5 @@ namespace eth
 #else
 #error No opcode dispatch configured
 #endif
-}
-}
+    }
+    }
