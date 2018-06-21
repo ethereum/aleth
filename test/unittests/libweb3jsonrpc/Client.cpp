@@ -33,6 +33,7 @@
 #include <libwebthree/WebThree.h>
 #include <libp2p/Network.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
+#include <test/tools/libtesteth/TestHelper.h>
 
 // This is defined by some weird windows header - workaround for now.
 #undef GetMessage
@@ -61,7 +62,7 @@ BOOST_AUTO_TEST_CASE(Personal)
         ChainParams(), WithExisting::Kill, set<string>{"eth"}, p2p::NetworkPreferences(0));
     web3.stopNetwork();
     web3.ethereum()->stopSealing();
-
+    
     bool userShouldEnterPassword = false;
     string passwordUserWillEnter;
 
@@ -86,7 +87,6 @@ BOOST_AUTO_TEST_CASE(Personal)
     Json::Value tx;
     tx["from"] = address;
     tx["to"] = string("0x0000000000000000000000000000000000000000");
-    tx["value"] = string("0x10000");
     tx["value"] = string("0x5208");
     auto sendingShouldFail = [&]() -> string
     {
@@ -119,6 +119,15 @@ BOOST_AUTO_TEST_CASE(Personal)
 
     BOOST_TEST_CHECKPOINT("Unlocking with correct password should work.");
     BOOST_CHECK(personal.personal_unlockAccount(address, password, 2));
+
+    // Mine 1 block so the account will have a non-zero balance
+    // and transactions can be sent successfully
+    const u256 blockReward = 5000000000000000000; // 5 ether
+    web3.ethereum()->setAuthor(jsToAddress(address));
+    dev::eth::mine(*(web3.ethereum()), 1 /* # blocks to mine */);
+    auto balance = web3.ethereum()->balanceAt(jsToAddress(address));
+    BOOST_CHECK_EQUAL(balance, blockReward);
+
     sendingShouldSucceed();
     BOOST_TEST_CHECKPOINT("Transaction should be sendable multiple times in unlocked mode.");
     sendingShouldSucceed();
