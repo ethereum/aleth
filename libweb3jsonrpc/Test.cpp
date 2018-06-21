@@ -73,7 +73,7 @@ string Test::test_getLogHash(string const& _txHash)
     catch (std::exception const& ex)
     {
         cwarn << ex.what();
-        throw JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR);
+        throw JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, ex.what());
     }
 }
 
@@ -122,19 +122,6 @@ bool Test::test_modifyTimestamp(int _timestamp)
     return true;
 }
 
-bool Test::test_addBlock(std::string const& _rlp)
-{
-    try
-    {
-        asClientTest(m_eth).addBlock(_rlp);
-    }
-    catch (std::exception const&)
-    {
-        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
-    }
-    return true;
-}
-
 bool Test::test_rewindToBlock(int _number)
 {
     try
@@ -147,4 +134,17 @@ bool Test::test_rewindToBlock(int _number)
         BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
     }
     return true;
+}
+
+std::string Test::test_importRawBlock(string const& _blockRLP)
+{
+    try
+    {
+        ClientTest& client = asClientTest(m_eth);
+        return toJS(client.importRawBlock(_blockRLP));
+    }
+    catch (std::exception const& ex)
+    {
+        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, ex.what()));
+    }
 }

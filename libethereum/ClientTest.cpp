@@ -19,6 +19,7 @@
  * @date 2016
  */
 
+#include <libdevcore/CommonJS.h>
 #include <libethashseal/Ethash.h>
 #include <libethereum/ClientTest.h>
 #include <libethereum/EthereumHost.h>
@@ -71,16 +72,6 @@ void ClientTest::setChainParams(string const& _genesis)
     }
 }
 
-bool ClientTest::addBlock(string const& _rlp)
-{
-    if (auto h = m_host.lock())
-        h->noteNewBlocks();
-
-    bytes rlpBytes = fromHex(_rlp, WhenError::Throw);
-    RLP blockRLP(rlpBytes);
-    return (m_bq.import(blockRLP.data(), true) == ImportResult::Success);
-}
-
 void ClientTest::modifyTimestamp(int64_t _timestamp)
 {
     Block block(chainParams().accountStartNonce);
@@ -130,4 +121,24 @@ bool ClientTest::completeSync()
 
     h->completeSync();
     return true;
+}
+
+h256 ClientTest::importRawBlock(const string& _blockRLP)
+{
+    bytes blockBytes = jsToBytes(_blockRLP, OnFailed::Throw);
+    h256 blockHash = BlockHeader::headerHashFromBlock(blockBytes);
+    ImportResult result = queueBlock(blockBytes, true);
+    if (result != ImportResult::Success)
+        BOOST_THROW_EXCEPTION(ImportBlockFailed() << errinfo_importResult(result));
+
+    if (auto h = m_host.lock())
+        h->noteNewBlocks();
+
+    bool moreToImport = true;
+    while (moreToImport)
+    {
+        tie(ignore, moreToImport, ignore) = syncQueue(100000);
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
+    return blockHash;
 }

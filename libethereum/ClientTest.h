@@ -31,6 +31,7 @@ namespace eth
 {
 
 DEV_SIMPLE_EXCEPTION(ChainParamsInvalid);
+DEV_SIMPLE_EXCEPTION(ImportBlockFailed);
 
 class ClientTest: public Client
 {
@@ -51,8 +52,8 @@ public:
 	void mineBlocks(unsigned _count);
 	void modifyTimestamp(int64_t _timestamp);
 	void rewindToBlock(unsigned _number);
-	bool addBlock(std::string const& _rlp);
-	bool completeSync();
+    h256 importRawBlock(std::string const& _blockRLP);
+    bool completeSync();
 
 protected:
 	unsigned m_blocksToMine;
