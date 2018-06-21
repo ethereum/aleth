@@ -20,16 +20,11 @@
 
 #include <aleth-buildinfo.h>
 
-extern "C" evmc_instance* evmc_create_interpreter() noexcept
-{
-    return new (std::nothrow) dev::eth::VM;
-}
-
 namespace
 {
 void destroy(evmc_instance* _instance)
 {
-    delete static_cast<dev::eth::VM*>(_instance);
+    (void)_instance;
 }
 
 void delete_output(const evmc_result* result)
@@ -40,7 +35,9 @@ void delete_output(const evmc_result* result)
 evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
     const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
 {
-    auto vm = static_cast<dev::eth::VM*>(_instance);
+    (void)_instance;
+    std::unique_ptr<dev::eth::VM> vm{new dev::eth::VM};
+
     evmc_result result = {};
     dev::eth::owning_bytes_ref output;
 
@@ -77,6 +74,20 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
 
     return result;
 }
+}  // namespace
+
+extern "C" evmc_instance* evmc_create_interpreter() noexcept
+{
+    // TODO: Allow creating multiple instances with different configurations.
+    static evmc_instance s_instance{
+        EVMC_ABI_VERSION,
+        "interpreter",
+        aleth_get_buildinfo()->project_version,
+        ::destroy,
+        ::execute,
+        nullptr,
+    };
+    return &s_instance;
 }
 
 
@@ -84,28 +95,19 @@ namespace dev
 {
 namespace eth
 {
-VM::VM()
-  : evmc_instance{
-        EVMC_ABI_VERSION,
-        "interpreter",
-        aleth_get_buildinfo()->project_version,
-        ::destroy,
-        ::execute,
-        nullptr,
-    }
-{}
-
 uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
     return toInt63(_size ? u512(_offset) + _size : u512(0));
 }
 
-template <class S> S divWorkaround(S const& _a, S const& _b)
+template <class S>
+S divWorkaround(S const& _a, S const& _b)
 {
     return (S)(s512(_a) / s512(_b));
 }
 
-template <class S> S modWorkaround(S const& _a, S const& _b)
+template <class S>
+S modWorkaround(S const& _a, S const& _b)
 {
     return (S)(s512(_a) % s512(_b));
 }
