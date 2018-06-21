@@ -122,6 +122,7 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
     bc().setOnBlockImport([=](BlockHeader const& _info) {
         if (auto h = m_host.lock())
             h->onBlockImported(_info);
+        m_onBlockImport(_info);
     });
 
     if (_forceAction == WithExisting::Rescue)
@@ -493,9 +494,12 @@ void Client::resyncStateFromChain()
     DEV_READ_GUARDED(x_working)
         if (bc().currentHash() == m_working.info().parentHash())
             return;
-        
-    // RESTART MINING
 
+    restartMining();
+}
+
+void Client::restartMining()
+{
     bool preChanged = false;
     Block newPreMine(chainParams().accountStartNonce);
     DEV_READ_GUARDED(x_preSeal)
@@ -512,7 +516,7 @@ void Client::resyncStateFromChain()
             m_working = newPreMine;
         DEV_READ_GUARDED(x_postSeal)
             if (!m_postSeal.isSealed() || m_postSeal.info().hash() != newPreMine.info().parentHash())
-                for (auto const& t: m_postSeal.pending())
+                for (auto const& t : m_postSeal.pending())
                 {
                     LOG(m_loggerDetail) << "Resubmitting post-seal transaction " << t;
                     //                      ctrace << "Resubmitting post-seal transaction " << t;
@@ -604,6 +608,8 @@ void Client::rejigSealing()
                     LOG(m_logger) << "Tried to seal sealed block...";
                     return;
                 }
+                // TODO is that needed? we have "Generating seal on" below
+                LOG(m_loggerDetail) << "Starting to seal block #" << m_working.info().number();
                 m_working.commitToSeal(bc(), m_extraData);
             }
             DEV_READ_GUARDED(x_working)
@@ -615,11 +621,14 @@ void Client::rejigSealing()
 
             if (wouldSeal())
             {
-                sealEngine()->onSealGenerated([=](bytes const& header){
-                    if (!this->submitSealed(header))
+                sealEngine()->onSealGenerated([=](bytes const& header) {
+                    LOG(m_logger) << "Block seal generated";
+                    if (this->submitSealed(header))
+                        m_onBlockSealed(header);
+                    else
                         LOG(m_logger) << "Submitting block failed...";
                 });
-                ctrace << "Generating seal on" << m_sealingInfo.hash(WithoutSeal) << "#" << m_sealingInfo.number();
+                ctrace << "Generating seal on " << m_sealingInfo.hash(WithoutSeal) << " #" << m_sealingInfo.number();
                 sealEngine()->generateSeal(m_sealingInfo);
             }
         }

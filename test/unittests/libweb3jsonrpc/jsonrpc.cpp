@@ -86,7 +86,6 @@ struct JsonRpcFixture : public TestOutputHelperFixture
 
         web3->setIdealPeerCount(5);
 
-        dev::KeyPair coinbase = KeyPair::create();
         web3->ethereum()->setAuthor(coinbase.address());
 
         using FullServer = ModularServer<rpc::EthFace, rpc::NetFace, rpc::Web3Face,
@@ -113,6 +112,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
     }
 
     unique_ptr<WebThreeDirect> web3;
+    dev::KeyPair coinbase{KeyPair::create()};
     unique_ptr<FixedAccountHolder> accountHolder;
     unique_ptr<rpc::SessionManager> sessionManager;
     std::shared_ptr<eth::TrivialGasPricer> gasPricer;
@@ -208,36 +208,32 @@ BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
     BOOST_CHECK_EQUAL(web3->ethereum()->stateAt(address, 0, 0), jsToU256(stateAt));
 }
 
-BOOST_AUTO_TEST_CASE(jsonrpc_transact)
+BOOST_AUTO_TEST_CASE(eth_coinbase)
 {
     string coinbase = rpcClient->eth_coinbase();
-    BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->author());
+    BOOST_REQUIRE_EQUAL(jsToAddress(coinbase), web3->ethereum()->author());
+}
 
+BOOST_AUTO_TEST_CASE(eth_sendTransaction)
+{
+    accountHolder->setAccounts({coinbase});
 
-    dev::KeyPair key = KeyPair::create();
-    auto address = key.address();
-    auto receiver = KeyPair::create();
-    web3->ethereum()->setAuthor(address);
-
-    coinbase = rpcClient->eth_coinbase();
-    BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->author());
-    BOOST_CHECK_EQUAL(jsToAddress(coinbase), address);
-
-    accountHolder->setAccounts({key});
-    auto balance = web3->ethereum()->balanceAt(address, 0);
-    string balanceString = rpcClient->eth_getBalance(toJS(address), "latest");
+    auto address = coinbase.address();
     auto countAt = jsToU256(rpcClient->eth_getTransactionCount(toJS(address), "latest"));
 
     BOOST_CHECK_EQUAL(countAt, web3->ethereum()->countAt(address));
     BOOST_CHECK_EQUAL(countAt, 0);
+    auto balance = web3->ethereum()->balanceAt(address, 0);
+    string balanceString = rpcClient->eth_getBalance(toJS(address), "latest");
     BOOST_CHECK_EQUAL(toJS(balance), balanceString);
     BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "0");
 
-
     dev::eth::mine(*(web3->ethereum()), 1);
+    BOOST_CHECK_EQUAL(web3->ethereum()->blockByNumber(LatestBlock).author(), address);
     balance = web3->ethereum()->balanceAt(address, LatestBlock);
     balanceString = rpcClient->eth_getBalance(toJS(address), "latest");
 
+    BOOST_REQUIRE_GT(balance, 0);
     BOOST_CHECK_EQUAL(toJS(balance), balanceString);
 
 
@@ -245,6 +241,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
     auto gasPrice = 10 * dev::eth::szabo;
     auto gas = EVMSchedule().txGas;
 
+    auto receiver = KeyPair::create();
 
     Json::Value t;
     t["from"] = toJS(address);
@@ -254,7 +251,9 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
     t["gas"] = toJS(gas);
     t["gasPrice"] = toJS(gasPrice);
 
-    rpcClient->eth_sendTransaction(t);
+    std::string txHash = rpcClient->eth_sendTransaction(t);
+    BOOST_REQUIRE(!txHash.empty());
+
     accountHolder->setAccounts({});
     dev::eth::mine(*(web3->ethereum()), 1);
 
@@ -273,9 +272,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 
 BOOST_AUTO_TEST_CASE(simple_contract)
 {
-    KeyPair kp = KeyPair::create();
-    web3->ethereum()->setAuthor(kp.address());
-    accountHolder->setAccounts({kp});
+    accountHolder->setAccounts({coinbase});
 
     dev::eth::mine(*(web3->ethereum()), 1);
 
@@ -313,9 +310,7 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 
 BOOST_AUTO_TEST_CASE(contract_storage)
 {
-    KeyPair kp = KeyPair::create();
-    web3->ethereum()->setAuthor(kp.address());
-    accountHolder->setAccounts({kp});
+    accountHolder->setAccounts({coinbase});
 
     dev::eth::mine(*(web3->ethereum()), 1);
 

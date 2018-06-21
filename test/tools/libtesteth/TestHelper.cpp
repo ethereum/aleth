@@ -43,17 +43,24 @@ namespace dev
 {
 namespace eth
 {
-
-void mine(Client& c, int numBlocks)
+void mine(Client& _c, int _numBlocks)
 {
-    auto startBlock = c.blockChain().details().number;
+    int sealedBlocks = 0;
+    auto sealHandler = _c.setOnBlockSealed([_numBlocks, &sealedBlocks, &_c](bytes const&) {
+        if (++sealedBlocks == _numBlocks)
+            _c.stopSealing();
+    });
 
-    c.startSealing();
-    while (c.blockChain().details().number < startBlock + numBlocks)
-        this_thread::sleep_for(chrono::milliseconds(100));
-    c.stopSealing();
-    while (c.blockQueue().items().first > 0)
-        this_thread::sleep_for(chrono::milliseconds(100));
+    int importedBlocks = 0;
+    std::promise<void> allBlocksImported;
+    auto importHandler =
+        _c.setOnBlockImport([_numBlocks, &importedBlocks, &allBlocksImported](BlockHeader const&) {
+            if (++importedBlocks == _numBlocks)
+                allBlocksImported.set_value();
+        });
+
+    _c.startSealing();
+    allBlocksImported.get_future().get();
 }
 
 void mine(Block& s, BlockChain const& _bc, SealEngineFace* _sealer)
