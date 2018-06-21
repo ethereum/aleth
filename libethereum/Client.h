@@ -145,7 +145,12 @@ public:
     // Note: "mining"/"miner" is deprecated. Use "sealing"/"sealer".
 
     Address author() const override { ReadGuard l(x_preSeal); return m_preSeal.author(); }
-    void setAuthor(Address const& _us) override { WriteGuard l(x_preSeal); m_preSeal.setAuthor(_us); }
+    void setAuthor(Address const& _us) override
+    {
+        DEV_WRITE_GUARDED(x_preSeal)
+            m_preSeal.setAuthor(_us);
+        restartMining();
+    }
 
     /// Type of sealers available for this seal engine.
     strings sealers() const { return sealEngine()->sealers(); }
@@ -211,6 +216,18 @@ public:
     /// should be called after the constructor of the most derived class finishes.
     void startWorking() { Worker::startWorking(); };
 
+    /// Change the function that is called when a new block is imported
+    Handler<BlockHeader const&> setOnBlockImport(std::function<void(BlockHeader const&)> _handler)
+    {
+        return m_onBlockImport.add(_handler);
+    }
+    /// Change the function that is called when a new block is sealed
+    Handler<bytes const&> setOnBlockSealed(std::function<void(bytes const&)> _handler)
+    {
+        return m_onBlockSealed.add(_handler);
+    }
+
+
 protected:
     /// Perform critical setup functions.
     /// Must be called in the constructor of the finally derived class.
@@ -264,6 +281,7 @@ protected:
 
     /// Called after processing blocks by onChainChanged(_ir)
     void resyncStateFromChain();
+    void restartMining();
 
     /// Clear working state of transactions
     void resetState();
@@ -349,6 +367,10 @@ protected:
     std::atomic<bool> m_syncBlockQueue = {false};
 
     bytes m_extraData;
+
+    Signal<BlockHeader const&> m_onBlockImport;  ///< Called if we have imported a new block into
+                                                 ///< the DB
+    Signal<bytes const&> m_onBlockSealed;        ///< Called if we have sealed a new block
 
     Logger m_logger{createLogger(VerbosityInfo, "client")};
     Logger m_loggerDetail{createLogger(VerbosityDebug, "client")};
