@@ -264,7 +264,8 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 		case TransactionRepercussion::Refused:
 			throw JsonRpcException("Transaction rejected by user.");
 		case TransactionRepercussion::Unknown:
-			throw JsonRpcException("Unknown reason.");
+		default:
+			throw JsonRpcException("Unknown authentication error.");
 		}
 	}
 	catch (ZeroSignatureTransaction&)
@@ -303,7 +304,6 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	{
 		throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 	}
-	throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 	return string();
 }
 
