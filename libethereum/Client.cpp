@@ -889,7 +889,7 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
         case ImportResult::AlreadyInChain:
             BOOST_THROW_EXCEPTION(TransactionAlreadyInChain());
         default:
-            BOOST_THROW_EXCEPTION(UnknownError());
+            BOOST_THROW_EXCEPTION(UnknownTransactionValidationError());
     }
 
     return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));
