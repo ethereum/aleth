@@ -281,6 +281,7 @@ protected:
 
     /// Called after processing blocks by onChainChanged(_ir)
     void resyncStateFromChain();
+    /// Update m_preSeal, m_working, m_postSeal blocks from the latest state of the chain
     void restartMining();
 
     /// Clear working state of transactions
