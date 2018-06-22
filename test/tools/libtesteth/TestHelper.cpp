@@ -60,7 +60,7 @@ void mine(Client& _c, int _numBlocks)
         });
 
     _c.startSealing();
-    allBlocksImported.get_future().get();
+    allBlocksImported.get_future().wait();
 }
 
 void mine(Block& s, BlockChain const& _bc, SealEngineFace* _sealer)
