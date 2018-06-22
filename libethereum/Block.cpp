@@ -837,8 +837,6 @@ bool Block::sealBlock(bytesConstRef _header)
     if (BlockHeader(_header, HeaderData).hash(WithoutSeal) != m_currentBlock.hash(WithoutSeal))
         return false;
 
-    LOG(m_loggerDetailed) << "Sealing block!";
-
     // Compile block:
     RLPStream ret;
     ret.appendList(3);

@@ -621,10 +621,10 @@ void Client::rejigSealing()
 
             if (wouldSeal())
             {
-                sealEngine()->onSealGenerated([=](bytes const& header) {
-                    LOG(m_logger) << "Block seal generated";
-                    if (this->submitSealed(header))
-                        m_onBlockSealed(header);
+                sealEngine()->onSealGenerated([=](bytes const& _header) {
+                    LOG(m_logger) << "Block sealed #" << BlockHeader(_header, HeaderData).number();
+                    if (this->submitSealed(_header))
+                        m_onBlockSealed(_header);
                     else
                         LOG(m_logger) << "Submitting block failed...";
                 });
