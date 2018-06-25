@@ -62,12 +62,9 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 		);
 
 		if (inputTest.count("expect"))
-		{
-			BOOST_REQUIRE_MESSAGE(_fillin, "a filled test should not contain any expect fields.");
-			spellCheckNetworkNamesInExpectField(inputTest.at("expect").get_array());
-		}
+            BOOST_REQUIRE_MESSAGE(_fillin, "a filled test should not contain any expect fields.");
 
-		if (_fillin)
+        if (_fillin)
 		{
             BOOST_REQUIRE(inputTest.count("expect") > 0);
             set<eth::Network> allnetworks = ImportTest::getAllNetworksFromExpectSections(
@@ -219,21 +216,6 @@ void ChainBranch::resetBlockchain()
 	dev::test::TestBlockChain::s_sealEngineNetwork = s_tempBlockchainNetwork;
 }
 
-
-void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects)
-{
-	for (auto& expect: _expects)
-	{
-        set<string> netlist;
-        json_spirit::mObject const& expectObj = expect.get_obj();
-        ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
-        for (string const& networkName : netlist)
-            if (networkName != "ALL")  // "ALL" is allowed as a wildcard.
-                (void)stringToNetId(networkName);
-	}
-}
-
-
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 {
 	json_spirit::mObject output;
@@ -339,8 +321,9 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
 		if (blObjInput.count("blockHeaderPremine"))
 			overwriteBlockHeaderForTest(blObjInput.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
 
-		cnote << "Mining block" <<  importBlockNumber << "for chain" << chainname << "at test " << testName;
-		block.mine(blockchain);
+        cnote << "Mining block '" << importBlockNumber << "' for chain '" << chainname
+              << "' at test '" << testName << "'";
+        block.mine(blockchain);
 		cnote << "Block mined with...";
 		cnote << "Transactions: " << block.transactionQueue().topTransactions(100).size();
 		cnote << "Uncles: " << block.uncles().size();

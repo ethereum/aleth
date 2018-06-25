@@ -81,6 +81,5 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, SealEngineFace const& _sealEngine);
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
 void testBCTest(json_spirit::mObject const& _o);
-void spellCheckNetworkNamesInExpectField(json_spirit::mArray const& _expects);
 
 } } // Namespace Close
