@@ -676,6 +676,7 @@ void BlockChainSync::collectBlocks()
             break;
         case ImportResult::Malformed:
         case ImportResult::BadChain:
+            LOG(m_logger) << "Malformed or bad chain, block #" << headers.first + i << ". Restarting sync.";
             restartSync();
             return;
 
@@ -689,6 +690,7 @@ void BlockChainSync::collectBlocks()
         case ImportResult::UnknownParent:
             if (headers.first + i > m_lastImportedBlock)
             {
+                LOG(m_logger) << "Already known or future time unknown or unknown parent, block #" << headers.first + i << ". Resetting sync.";
                 resetSync();
                 m_haveCommonHeader = false; // fork detected, search for common header again
             }
