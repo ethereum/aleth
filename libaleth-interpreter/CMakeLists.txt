@@ -5,7 +5,7 @@
 if(ALETH_INTERPRETER_SHARED)
     set(library_type SHARED)
 else()
-    set(library_type STATIC)
+    set(library_type)
 endif()
 
 add_library(
