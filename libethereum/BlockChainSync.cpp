@@ -226,7 +226,7 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
         // Before starting to exchange the data with the node, let's verify that it's on our chain
         if (!requestDaoForkBlockHeader(_peer))
             // DAO challenge not needed
-            syncPeer(_peer, true); 
+            syncPeer(_peer, false); 
     }
 }
 
