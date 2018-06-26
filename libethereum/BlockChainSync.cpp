@@ -675,8 +675,11 @@ void BlockChainSync::collectBlocks()
             }
             break;
         case ImportResult::Malformed:
+            LOG(m_logger) << "Malformed block #" << headers.first + i << ". Restarting sync.";
+            restartSync();
+            return;
         case ImportResult::BadChain:
-            LOG(m_logger) << "Malformed or bad chain, block #" << headers.first + i << ". Restarting sync.";
+            LOG(m_logger) << "Block from the bad chain, block #" << headers.first + i << ". Restarting sync.";
             restartSync();
             return;
 
