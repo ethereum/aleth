@@ -172,6 +172,25 @@ jobs:
       - *test-evmc-interpreter
       - *upload-coverage-data
 
+  linux-interpreter:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: g++-6
+      - CC:  gcc-6
+      - GCOV: gcov-6
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 3
+      - TEST_PARALLEL_JOBS: 4
+      - CMAKE_OPTIONS: -DTOOLCHAIN=cxx11-pic -DALETH_INTERPRETER_SHARED=ON
+    docker:
+      - image: ethereum/cpp-build-env:2
+    steps:
+      - checkout
+      - *update-submodules
+      - *environment-info
+      - *configure
+      - *build
+
   macos-xcode90:
     environment:
       - CXX: clang++
@@ -209,3 +228,4 @@ workflows:
       - macos-xcode90
       - linux-clang6
       - linux-gcc6
+      - linux-interpreter
