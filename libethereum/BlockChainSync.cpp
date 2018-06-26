@@ -492,12 +492,12 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
         }
         if (haveItem(m_headers, blockNumber))
         {
-            LOG(m_logger) << "Skipping header " << blockNumber;
+            LOG(m_logger) << "Skipping header " << blockNumber << " (already downloaded)";
             continue;
         }
         if (blockNumber <= m_lastImportedBlock && m_haveCommonHeader)
         {
-            LOG(m_logger) << "Skipping header " << blockNumber;
+            LOG(m_logger) << "Skipping header " << blockNumber << " (already imported)";
             continue;
         }
         if (blockNumber > m_highestBlock)
@@ -698,7 +698,7 @@ void BlockChainSync::collectBlocks()
         }
     }
 
-    LOG(m_logger) << dec << success << "imported OK, " << unknown << " with unknown parents, "
+    LOG(m_logger) << dec << success << " imported OK, " << unknown << " with unknown parents, "
                   << future << " with future timestamps, " << got << " already known received.";
 
     if (host().bq().unknownFull())
@@ -747,6 +747,9 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
     if (blockNumber > (m_lastImportedBlock + 1))
     {
         LOG(m_loggerDetail) << "Received unknown new block";
+        // Update the hash of highest known block of the peer.
+        // syncPeer will then request the highest block header to properly restart syncing
+        _peer->m_latestHash = h;
         syncPeer(_peer, true);
         return;
     }
