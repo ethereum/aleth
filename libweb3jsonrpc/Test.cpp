@@ -86,9 +86,10 @@ bool Test::test_setChainParams(Json::Value const& param1)
         asClientTest(m_eth).setChainParams(output);
         asClientTest(m_eth).completeSync();  // set sync state to idle for mining
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
-        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+        cwarn << ex.what();
+        throw JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, ex.what());
     }
 
     return true;

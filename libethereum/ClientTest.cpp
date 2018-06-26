@@ -66,9 +66,9 @@ void ClientTest::setChainParams(string const& _genesis)
 
         reopenChain(params, WithExisting::Kill);
     }
-    catch (...)
+    catch (std::exception const& ex)
     {
-        BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment("Provided configuration is not well formatted."));
+        BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment(ex.what()));
     }
 }
 
