@@ -36,7 +36,7 @@ int const c_bufferSize = 1024;
 template <class S> IpcServerBase<S>::IpcServerBase(string const& _path):
     m_path(_path)
 {
-    clog(VerbosityInfo, "rpc") << "JSONRPC socket path: " << _path;
+    clog(VerbosityInfo, "rpc") << "JSON-RPC socket path: " << _path;
 }
 
 template <class S> bool IpcServerBase<S>::StartListening()
