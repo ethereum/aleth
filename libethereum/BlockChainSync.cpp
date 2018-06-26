@@ -226,7 +226,7 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
         // Before starting to exchange the data with the node, let's verify that it's on our chain
         if (!requestDaoForkBlockHeader(_peer))
             // DAO challenge not needed
-            syncPeer(_peer, false); 
+            syncPeer(_peer, false);
     }
 }
 
@@ -679,7 +679,8 @@ void BlockChainSync::collectBlocks()
             restartSync();
             return;
         case ImportResult::BadChain:
-            LOG(m_logger) << "Block from the bad chain, block #" << headers.first + i << ". Restarting sync.";
+            LOG(m_logger) << "Block from the bad chain, block #" << headers.first + i
+                          << ". Restarting sync.";
             restartSync();
             return;
 
@@ -693,7 +694,8 @@ void BlockChainSync::collectBlocks()
         case ImportResult::UnknownParent:
             if (headers.first + i > m_lastImportedBlock)
             {
-                LOG(m_logger) << "Already known or future time unknown or unknown parent, block #" << headers.first + i << ". Resetting sync.";
+                LOG(m_logger) << "Already known or future time unknown or unknown parent, block #"
+                              << headers.first + i << ". Resetting sync.";
                 resetSync();
                 m_haveCommonHeader = false; // fork detected, search for common header again
             }
