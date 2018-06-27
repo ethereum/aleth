@@ -106,6 +106,7 @@ private:
     void collectBlocks();
     bool requestDaoForkBlockHeader(std::shared_ptr<EthereumPeer> _peer);
     bool verifyDaoChallengeResponse(RLP const& _r);
+    void logImported(unsigned _success, unsigned _future, unsigned _got, unsigned _unknown);
 
 private:
     struct Header
