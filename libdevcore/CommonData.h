@@ -358,4 +358,9 @@ bool contains(T const& _t, V const& _v)
 	return std::end(_t) != std::find(std::begin(_t), std::end(_t), _v);
 }
 
+template <class V>
+bool contains(std::unordered_set<V> const& _set, V const& _v)
+{
+    return _set.find(_v) != _set.end();
+}
 }

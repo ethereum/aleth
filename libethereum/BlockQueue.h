@@ -178,18 +178,21 @@ public:
         m_size += _blockData.size();
     }
 
+    // returns removed (hash, block data) pairs
     std::vector<std::pair<h256, bytes>> removeByKeyEqual(KeyType const& _key)
     {
         auto const equalRange = m_map.equal_range(_key);
         return removeRange(equalRange.first, equalRange.second);
     }
 
+    // returns removed (hash, block data) pairs
     std::vector<std::pair<h256, bytes>> removeByKeyNotGreater(KeyType const& _key)
     {
         return removeRange(m_map.begin(), m_map.upper_bound(_key));
     }
 
 private:
+    // map of key to (hash, block data) pairs
     using BlockMultimap = std::multimap<KeyType, std::pair<h256, bytes>>;
 
     std::vector<std::pair<h256, bytes>> removeRange(typename BlockMultimap::iterator _begin, typename BlockMultimap::iterator _end)
@@ -304,6 +307,7 @@ private:
     SizedBlockMap<h256> m_unknown;										///< For blocks that have an unknown parent; we map their parent hash to the block stuff, and insert once the block appears.
     h256Hash m_knownBad;												///< Set of blocks that we know will never be valid.
     SizedBlockMap<time_t> m_future;										///< Set of blocks that are not yet valid. Ordered by timestamp
+    h256Hash m_futureSet;  ///< Set of all blocks that are not yet valid.
     Signal<> m_onReady;													///< Called when a subsequent call to import blocks will return a non-empty container. Be nice and exit fast.
     Signal<> m_onRoomAvailable;											///< Called when space for new blocks becomes availabe after a drain. Be nice and exit fast.
 
