@@ -119,8 +119,10 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 
     cp.parentHash = h256(0); // required by the YP
 	cp.author = genesis.count(c_coinbase) ? h160(genesis[c_coinbase].get_str()) : h160(genesis[c_author].get_str());
-	cp.difficulty = genesis.count(c_difficulty) ? u256(fromBigEndian<u256>(fromHex(genesis[c_difficulty].get_str()))) : 0;
-	cp.gasLimit = u256(fromBigEndian<u256>(fromHex(genesis[c_gasLimit].get_str())));
+    cp.difficulty = genesis.count(c_difficulty) ?
+                        u256(fromBigEndian<u256>(fromHex(genesis[c_difficulty].get_str()))) :
+                        cp.minimumDifficulty;
+    cp.gasLimit = u256(fromBigEndian<u256>(fromHex(genesis[c_gasLimit].get_str())));
 	cp.gasUsed = genesis.count(c_gasUsed) ? u256(fromBigEndian<u256>(fromHex(genesis[c_gasUsed].get_str()))) : 0;
 	cp.timestamp = u256(fromBigEndian<u256>(fromHex(genesis[c_timestamp].get_str())));
 	cp.extraData = bytes(fromHex(genesis[c_extraData].get_str()));

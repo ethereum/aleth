@@ -31,7 +31,57 @@ void NoProof::init()
 
 void SealEngineFace::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
-	_bi.verify(_s, _parent, _block);
+    _bi.verify(_s, _parent, _block);
+
+    if (_s != CheckNothingNew)
+    {
+        if (_bi.difficulty() < chainParams().minimumDifficulty)
+            BOOST_THROW_EXCEPTION(
+                InvalidDifficulty() << RequirementError(
+                    bigint(chainParams().minimumDifficulty), bigint(_bi.difficulty())));
+
+        if (_bi.gasLimit() < chainParams().minGasLimit)
+            BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(
+                                      bigint(chainParams().minGasLimit), bigint(_bi.gasLimit())));
+
+        if (_bi.gasLimit() > chainParams().maxGasLimit)
+            BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(
+                                      bigint(chainParams().maxGasLimit), bigint(_bi.gasLimit())));
+
+        if (_bi.number() && _bi.extraData().size() > chainParams().maximumExtraDataSize)
+        {
+                BOOST_THROW_EXCEPTION(
+                    ExtraDataTooBig()
+                    << RequirementError(bigint(chainParams().maximumExtraDataSize),
+                           bigint(_bi.extraData().size()))
+                    << errinfo_extraData(_bi.extraData()));
+        }
+
+        u256 const& daoHardfork = chainParams().daoHardforkBlock;
+        if (daoHardfork != 0 && daoHardfork + 9 >= daoHardfork && _bi.number() >= daoHardfork &&
+            _bi.number() <= daoHardfork + 9)
+            if (_bi.extraData() != fromHex("0x64616f2d686172642d666f726b"))
+                BOOST_THROW_EXCEPTION(
+                    ExtraDataIncorrect()
+                    << errinfo_comment("Received block from the wrong fork (invalid extradata)."));
+    }
+
+    if (_parent)
+    {
+        auto gasLimit = _bi.gasLimit();
+        auto parentGasLimit = _parent.gasLimit();
+        if (gasLimit < chainParams().minGasLimit || gasLimit > chainParams().maxGasLimit ||
+            gasLimit <= parentGasLimit - parentGasLimit / chainParams().gasLimitBoundDivisor ||
+            gasLimit >= parentGasLimit + parentGasLimit / chainParams().gasLimitBoundDivisor)
+            BOOST_THROW_EXCEPTION(
+                InvalidGasLimit()
+                << errinfo_min(
+                       (bigint)((bigint)parentGasLimit -
+                                (bigint)(parentGasLimit / chainParams().gasLimitBoundDivisor)))
+                << errinfo_got((bigint)gasLimit)
+                << errinfo_max((bigint)((bigint)parentGasLimit +
+                                        parentGasLimit / chainParams().gasLimitBoundDivisor)));
+    }
 }
 
 void SealEngineFace::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const

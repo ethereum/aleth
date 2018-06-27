@@ -124,6 +124,8 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         ChainParams chainParams;
         chainParams.sealEngineName = NoProof::name();
         chainParams.allowFutureBlocks = true;
+        chainParams.difficulty = chainParams.minimumDifficulty;
+        chainParams.gasLimit = chainParams.maxGasLimit;
         // add random extra data to randomize genesis hash and get random DB path,
         // so that tests can be run in parallel
         // TODO: better make it use ethemeral in-memory databases
