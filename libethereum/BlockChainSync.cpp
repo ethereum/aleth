@@ -694,8 +694,10 @@ void BlockChainSync::collectBlocks()
         case ImportResult::UnknownParent:
             if (headers.first + i > m_lastImportedBlock)
             {
-                LOG(m_logger) << "Already known or future time unknown or unknown parent, block #"
-                              << headers.first + i << ". Resetting sync.";
+                logImported(success, future, got, unknown);
+                LOG(m_logger)
+                    << "Already known or future time & unknown parent or unknown parent, block #"
+                    << headers.first + i << ". Resetting sync.";
                 resetSync();
                 m_haveCommonHeader = false; // fork detected, search for common header again
             }
@@ -705,8 +707,7 @@ void BlockChainSync::collectBlocks()
         }
     }
 
-    LOG(m_logger) << dec << success << " imported OK, " << unknown << " with unknown parents, "
-                  << future << " with future timestamps, " << got << " already known received.";
+    logImported(success, future, got, unknown);
 
     if (host().bq().unknownFull())
     {
@@ -734,6 +735,13 @@ void BlockChainSync::collectBlocks()
         completeSync();
     }
     DEV_INVARIANT_CHECK_HERE;
+}
+
+void BlockChainSync::logImported(
+    unsigned _success, unsigned _future, unsigned _got, unsigned _unknown)
+{
+    LOG(m_logger) << dec << _success << " imported OK, " << _unknown << " with unknown parents, "
+                  << _future << " with future timestamps, " << _got << " already known received.";
 }
 
 void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
