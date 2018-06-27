@@ -77,6 +77,7 @@ void BlockQueue::clear()
     m_unknownSet.clear();
     m_unknown.clear();
     m_future.clear();
+    m_futureSet.clear();
     m_difficulty = 0;
     m_drainingDifficulty = 0;
 }
@@ -174,7 +175,8 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 
     UpgradableGuard l(m_lock);
 
-    if (m_readySet.count(h) || m_drainingSet.count(h) || m_unknownSet.count(h) || m_knownBad.count(h))
+    if (contains(m_readySet, h) || contains(m_drainingSet, h) || contains(m_unknownSet, h) ||
+        contains(m_knownBad, h) || contains(m_futureSet, h))
     {
         // Already know about this one.
         LOG(m_loggerDetail) << "Already known.";
@@ -210,6 +212,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
     if (bi.timestamp() > utcTime() && !_isOurs)
     {
         m_future.insert(static_cast<time_t>(bi.timestamp()), h, _block.toBytes());
+        m_futureSet.insert(h);
         char buf[24];
         time_t bit = static_cast<time_t>(bi.timestamp());
         if (strftime(buf, 24, "%X", localtime(&bit)) == 0)
@@ -217,7 +220,10 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
         LOG(m_loggerDetail) << "OK - queued for future [" << bi.timestamp() << " vs " << utcTime()
                          << "] - will wait until " << buf;
         m_difficulty += bi.difficulty();
-        bool unknown =  !m_readySet.count(bi.parentHash()) && !m_drainingSet.count(bi.parentHash()) && !m_bc->isKnown(bi.parentHash());
+        h256 const parentHash = bi.parentHash();
+        bool const unknown = !contains(m_readySet, parentHash) &&
+                             !contains(m_drainingSet, parentHash) &&
+                             !contains(m_futureSet, parentHash) && !m_bc->isKnown(parentHash);
         return unknown ? ImportResult::FutureTimeUnknown : ImportResult::FutureTimeKnown;
     }
     else
@@ -360,6 +366,8 @@ void BlockQueue::tick()
             UpgradeGuard l2(l);
             DEV_INVARIANT_CHECK;
             todo = m_future.removeByKeyNotGreater(t);
+            for (auto const& hash : todo)
+                m_futureSet.erase(hash.first);
         }
     }
     LOG(m_logger) << "Importing " << todo.size() << " past-future blocks.";
