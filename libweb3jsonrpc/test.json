@@ -1,4 +1,5 @@
 [
+{ "name": "test_getBlockStatus", "params": [""], "order": [], "returns": ""},
 { "name": "test_getLogHash", "params": [""], "order": [], "returns": ""},
 { "name": "test_importRawBlock", "params": [""], "order": [], "returns": ""},
 { "name": "test_setChainParams", "params": [{}], "order": [], "returns": false},
