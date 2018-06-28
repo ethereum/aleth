@@ -315,16 +315,17 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
     // TRANSACTIONS
     pair<TransactionReceipts, bool> ret;
 
-    auto ts = _tq.topTransactions(c_maxSyncTransactions, m_transactionSet);
-    ret.second = (ts.size() == c_maxSyncTransactions);	// say there's more to the caller if we hit the limit
+    Transactions transactions = _tq.topTransactions(c_maxSyncTransactions, m_transactionSet);
+    ret.second = (transactions.size() == c_maxSyncTransactions);  // say there's more to the caller
+                                                                  // if we hit the limit
 
     assert(_bc.currentHash() == m_currentBlock.parentHash());
     auto deadline =  chrono::steady_clock::now() + chrono::milliseconds(msTimeout);
 
-    for (int goodTxs = max(0, (int)ts.size() - 1); goodTxs < (int)ts.size(); )
+    for (int goodTxs = max(0, (int)transactions.size() - 1); goodTxs < (int)transactions.size();)
     {
         goodTxs = 0;
-        for (auto const& t: ts)
+        for (auto const& t : transactions)
             if (!m_transactionSet.count(t.sha3()))
             {
                 try
