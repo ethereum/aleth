@@ -494,6 +494,7 @@ bool Executive::go(OnOpFunc const& _onOp)
         {
             cwarn << "Internal VM Error (" << *boost::get_error_info<errinfo_evmcStatusCode>(_e) << ")\n"
                   << diagnostic_information(_e);
+            revert();
             throw;
         }
         catch (Exception const& _e)
