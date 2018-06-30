@@ -49,13 +49,6 @@ enum class TransactionRepercussion
 	Success
 };
 
-struct TransactionNotification
-{
-	TransactionRepercussion r;
-	h256 hash;
-	Address created;
-};
-
 /**
  * Manages real accounts (where we know the secret key) and proxy accounts (where transactions
  * to be sent from these accounts are forwarded to a proxy on the other side).
