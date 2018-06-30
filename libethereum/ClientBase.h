@@ -165,12 +165,6 @@ public:
             InterfaceNotSupported() << errinfo_interface("ClientBase::syncStatus"));
     }
 
-    void populateTransactionWithDefaults(TransactionSkeleton& _t) const override
-    {
-        BOOST_THROW_EXCEPTION(
-            InterfaceNotSupported() << errinfo_interface("ClientBase::populateTransactionWithDefaults"));
-    }
-
     Block blockByNumber(BlockNumber _h) const;
 
     int chainId() const override;
