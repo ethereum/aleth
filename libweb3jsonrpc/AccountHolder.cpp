@@ -105,9 +105,9 @@ AddressHash SimpleAccountHolder::realAccounts() const
 	return m_keyManager.accountsHash();
 }
 
-TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+pair<TransactionRepercussion, Secret> SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
-	TransactionNotification ret;
+	pair<TransactionRepercussion, Secret> ret;
 	bool locked = true;
 	if (m_unlockedAccounts.count(_t.from))
 	{
@@ -117,33 +117,27 @@ TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionS
 		if (start < end && chrono::steady_clock::now() < end)
 			locked = false;
 	}
-	ret.r = TransactionRepercussion::Locked;
+	ret.first = TransactionRepercussion::Locked;
 	if (locked && m_getAuthorisation)
 	{
 		if (m_getAuthorisation(_t, isProxyAccount(_t.from)))
 			locked = false;
 		else
-			ret.r = TransactionRepercussion::Refused;
+			ret.first = TransactionRepercussion::Refused;
 	}
 	if (locked)
 		return ret;
 	if (isRealAccount(_t.from))
 	{
 		if (Secret s = m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); }))
-		{
-			ret.r = TransactionRepercussion::Success;
-			tie(ret.hash, ret.created) = m_client()->submitTransaction(_t, s);
-		}
+			ret = make_pair(TransactionRepercussion::Success, s);
 		else
-			ret.r = TransactionRepercussion::Locked;
+			ret.first = TransactionRepercussion::Locked;
 	}
 	else if (isProxyAccount(_t.from))
-	{
-		ret.r = TransactionRepercussion::ProxySuccess;
-		queueTransaction(_t);
-	}
+		ret.first = TransactionRepercussion::ProxySuccess;
 	else
-		ret.r = TransactionRepercussion::UnknownAccount;
+		ret.first = TransactionRepercussion::UnknownAccount;
 	return ret;
 }
 
@@ -172,26 +166,24 @@ bool SimpleAccountHolder::unlockAccount(Address const& _account, string const& _
 	return true;
 }
 
-TransactionNotification FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+pair<TransactionRepercussion, Secret> FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
-	TransactionNotification ret;
+	pair<TransactionRepercussion, Secret> ret;
 	if (isRealAccount(_t.from))
 	{
 		if (m_accounts.count(_t.from))
 		{
-			ret.r = TransactionRepercussion::Success;
-			tie(ret.hash, ret.created) = m_client()->submitTransaction(_t, m_accounts[_t.from]);
+			ret = make_pair(TransactionRepercussion::Success, m_accounts[_t.from]);
 		}
 		else
-			ret.r = TransactionRepercussion::Locked;
+			ret.first = TransactionRepercussion::Locked;
 	}
 	else if (isProxyAccount(_t.from))
 	{
-		ret.r = TransactionRepercussion::ProxySuccess;
-		queueTransaction(_t);
+		ret.first = TransactionRepercussion::ProxySuccess;
 	}
 	else
-		ret.r = TransactionRepercussion::UnknownAccount;
+		ret.first = TransactionRepercussion::UnknownAccount;
 	return ret;
 }
 

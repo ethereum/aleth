@@ -60,6 +60,7 @@ Json::Value toJson(BlockHeader const& _bi, BlockDetails const& _bd, UncleHashes 
 Json::Value toJson(BlockHeader const& _bi, BlockDetails const& _bd, UncleHashes const& _us, TransactionHashes const& _ts, SealEngineFace* _face = nullptr);
 Json::Value toJson(TransactionSkeleton const& _t);
 Json::Value toJson(Transaction const& _t);
+Json::Value toJson(Transaction const& _t, bytes const& _rlp);
 Json::Value toJson(LocalisedTransaction const& _t);
 Json::Value toJson(TransactionReceipt const& _t);
 Json::Value toJson(LocalisedTransactionReceipt const& _t);
