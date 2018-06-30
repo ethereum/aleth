@@ -56,7 +56,7 @@ public:
     std::pair<h256, Address> submitTransaction(eth::TransactionSkeleton const&, Secret const&) override { return {}; };
     eth::ImportResult injectTransaction(bytes const&, eth::IfDropped) override { return {}; }
     eth::ExecutionResult call(Address const&, u256, Address, bytes const&, u256, u256, eth::BlockNumber, eth::FudgeFactor) override { return {}; };
-    void populateTransactionWithDefaults(eth::TransactionSkeleton& _t) const override {};
+    void populateTransactionWithDefaults(eth::TransactionSkeleton&) const override {};
 
 private:
     eth::BlockChain const& m_bc;
