@@ -47,6 +47,14 @@ defaults:
       command: |
         ETHEREUM_TEST_PATH=~/project/test/jsontests \
         test/testeth -t GeneralStateTests -- --vm interpreter
+        
+  nightly-test: &nightly-test
+    run:
+      name: "Nightly Test"
+      working_directory: ~/build
+      command: |
+        ETHEREUM_TEST_PATH=~/project/test/jsontests \
+        test/testeth -- --all
 
   store-package: &store-package
     store_artifacts:
@@ -197,10 +205,90 @@ jobs:
       - *save-deps-cache
       - *store-package
       - *test
+      
+  linux-clang6-test:
+    environment:
+      - BUILD_TYPE: Release
+      - CXX: clang++-6.0
+      - CC:  clang-6.0
+      - GCOV: llvm-cov-6.0 gcov
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 8
+      - TEST_PARALLEL_JOBS: 8
+    docker:
+      - image: ethereum/cpp-build-env:2
+    steps:
+      - checkout
+      - *update-submodules
+      - *environment-info
+      - *restore-deps-cache
+      - *restore-ccache
+      - *setup-ccache
+      - *configure
+      - *build
+      - *stat-ccache
+      - *save-ccache
+      - *save-deps-cache
+      - *nightly-test
+
+  linux-gcc6-test:
+    environment:
+      - BUILD_TYPE: RelWithDebInfo
+      - CXX: g++-6
+      - CC:  gcc-6
+      - GCOV: gcov-6
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 3
+      - TEST_PARALLEL_JOBS: 4
+      - CMAKE_OPTIONS: -DCOVERAGE=ON
+      # TODO: Fix memory leaks reported in leveldb.
+      # - CMAKE_OPTIONS: -DSANITIZE=address
+      # - ASAN_OPTIONS: detect_leaks=0
+    docker:
+      - image: ethereum/cpp-build-env:2
+    steps:
+      - checkout
+      - *update-submodules
+      - *environment-info
+      - *restore-deps-cache
+      - *restore-ccache
+      - *setup-ccache
+      - *configure
+      - *build
+      - *stat-ccache
+      - *save-ccache
+      - *save-deps-cache
+      - *nightly-test
+      - *upload-coverage-data
+
+  macos-xcode90-test:
+    environment:
+      - CXX: clang++
+      - GCOV: gcov
+      - GENERATOR: Ninja
+      - BUILD_PARALLEL_JOBS: 8
+      - TEST_PARALLEL_JOBS: 8
+    macos:
+      xcode: "9.0"
+    steps:
+      - checkout
+      - *update-submodules
+      - *environment-info
+      - run:
+          name: "Install macOS dependencies"
+          # Python3 and requests are needed for Hunter upload.
+          command: |
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install -q cmake ninja python3 leveldb
+            pip3 install -q requests gitpython
+      - *restore-deps-cache
+      - *configure
+      - *build
+      - *save-deps-cache
+      - *nightly-test
       - *store-randomcode-seed
 
 # TODO: Run GCC6 build only in develop branch.
-# TODO: Enabled nightly builds and add more configs.
+# TODO: Add more configs.
 # TODO: Separate builds from testing jobs.
 workflows:
   version: 2
@@ -209,3 +297,14 @@ workflows:
       - macos-xcode90
       - linux-clang6
       - linux-gcc6
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 1 * * *"
+          filters:
+            branches:
+              only: develop
+    jobs:
+      - macos-xcode90-test
+      - linux-clang6-test
+      - linux-gcc6-test
