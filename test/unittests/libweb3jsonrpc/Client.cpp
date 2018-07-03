@@ -61,8 +61,10 @@ BOOST_AUTO_TEST_CASE(Personal)
     // 'allowFutureBlocks = true' is required to mine multiple blocks,
     // otherwise mining will hang after the first block
     ChainParams chainParams;
-    chainParams.sealEngineName = "NoProof";
+    chainParams.sealEngineName = NoProof::name();
     chainParams.allowFutureBlocks = true;
+    chainParams.difficulty = chainParams.minimumDifficulty;
+    chainParams.gasLimit = chainParams.maxGasLimit;
     
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(), string(),
         chainParams, WithExisting::Kill, set<string>{"eth"}, p2p::NetworkPreferences(0));
