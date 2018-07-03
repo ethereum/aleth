@@ -46,7 +46,9 @@ ClientTest::ClientTest(ChainParams const& _params, int _networkID, p2p::Host* _h
     TransactionQueue::Limits const& _limits)
   : Client(
         _params, _networkID, _host, _gpForAdoption, _dbPath, std::string(), _forceAction, _limits)
-{}
+{
+    m_lastBlockStatus = BlockStatus::Idle;
+}
 
 ClientTest::~ClientTest()
 {
@@ -102,6 +104,7 @@ void ClientTest::modifyTimestamp(int64_t _timestamp)
 void ClientTest::mineBlocks(unsigned _count)
 {
     m_blocksToMine = _count;
+    m_lastBlockStatus = BlockStatus::Mining;
     startSealing();
 }
 
@@ -109,8 +112,11 @@ void ClientTest::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 {
     Client::onNewBlocks(_blocks, io_changed);
 
-    if(--m_blocksToMine <= 0)
+    if (--m_blocksToMine <= 0)
+    {
+        m_lastBlockStatus = BlockStatus::Success;
         stopSealing();
+    }
 }
 
 bool ClientTest::completeSync()

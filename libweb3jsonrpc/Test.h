@@ -42,6 +42,7 @@ public:
     {
         return RPCModules{RPCModule{"test", "1.0"}};
     }
+    virtual std::string test_getBlockStatus(std::string const& _blockHash) override;
     virtual std::string test_getLogHash(std::string const& _param1) override;
     virtual std::string test_importRawBlock(std::string const& _blockRLP) override;
     virtual bool test_setChainParams(const Json::Value& _param1) override;
