@@ -109,7 +109,7 @@ void ClientTest::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 {
     Client::onNewBlocks(_blocks, io_changed);
 
-    if(--m_blocksToMine <= 0)
+    if (--m_blocksToMine <= 0)
         stopSealing();
 }
 
