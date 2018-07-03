@@ -206,7 +206,7 @@ jobs:
       - *store-package
       - *test
       
-  linux-clang6-test:
+  linux-clang6-nightly:
     environment:
       - BUILD_TYPE: Release
       - CXX: clang++-6.0
@@ -231,7 +231,7 @@ jobs:
       - *save-deps-cache
       - *nightly-test
 
-  linux-gcc6-test:
+  linux-gcc6-nightly:
     environment:
       - BUILD_TYPE: RelWithDebInfo
       - CXX: g++-6
@@ -261,7 +261,7 @@ jobs:
       - *nightly-test
       - *upload-coverage-data
 
-  macos-xcode90-test:
+  macos-xcode90-nightly:
     environment:
       - CXX: clang++
       - GCOV: gcov
@@ -303,8 +303,10 @@ workflows:
           cron: "35 2 * * *"
           filters:
             branches:
-              only: develop
+              only: 
+                - develop
+                - nightly
     jobs:
-      - macos-xcode90-test
-      - linux-clang6-test
-      - linux-gcc6-test
+      - macos-xcode90-nightly
+      - linux-clang6-nightly
+      - linux-gcc6-nightly
