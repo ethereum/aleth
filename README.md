@@ -22,8 +22,8 @@ has a Quick Start section.
 
 Operating system | Status | Nightly
 ---------------- | ---------- | -----
-Ubuntu and macOS | [![TravisCI](https://img.shields.io/travis/ethereum/cpp-ethereum/develop.svg)](https://travis-ci.org/ethereum/cpp-ethereum) | [![CircleCI](https://img.shields.io/travis/ethereum/cpp-ethereum/nightly.svg)](https://circleci.com/gh/ethereum/cpp-ethereum)
-Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/develop.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum) | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/nightly.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
+Ubuntu and macOS | [![TravisCI](https://img.shields.io/travis/ethereum/cpp-ethereum/develop.svg)](https://travis-ci.org/ethereum/cpp-ethereum) | [![CircleCI](https://img.shields.io/circleci/project/github/ethereum/cpp-ethereum/nightly.svg)](https://circleci.com/gh/ethereum/cpp-ethereum/tree/nightly)
+Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/develop.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum) | 
 
 
 ## Building from source
