@@ -20,10 +20,10 @@ The Ethereum Documentation site hosts the **[cpp-ethereum homepage](http://cpp-e
 has a Quick Start section.
 
 
-Operating system | Status
----------------- | ----------
-Ubuntu and macOS | [![TravisCI](https://img.shields.io/travis/ethereum/cpp-ethereum/develop.svg)](https://travis-ci.org/ethereum/cpp-ethereum)
-Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/develop.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
+Operating system | Status | Nightly
+---------------- | ---------- | -----
+Ubuntu and macOS | [![TravisCI](https://img.shields.io/travis/ethereum/cpp-ethereum/develop.svg)](https://travis-ci.org/ethereum/cpp-ethereum) | [![CircleCI](https://img.shields.io/travis/ethereum/cpp-ethereum/nightly.svg)](https://circleci.com/gh/ethereum/cpp-ethereum)
+Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/develop.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum) | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/nightly.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
 
 
 ## Building from source
