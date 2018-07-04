@@ -130,6 +130,7 @@ jobs:
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
+      - CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON
     docker:
       - image: ethereum/cpp-build-env:2
     steps:
@@ -177,7 +178,6 @@ jobs:
       - *save-deps-cache
       - *store-package
       - *test
-      - *test-evmc-interpreter
       - *upload-coverage-data
 
   macos-xcode90:
