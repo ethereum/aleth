@@ -35,6 +35,12 @@ Capability::Capability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, 
                 << "; idOffset: " << m_idOffset;
 }
 
+void Capability::disconnect()
+{
+    if (auto s = session())
+        s->disconnect(UserReason);
+}
+
 void Capability::disable(std::string const& _problem)
 {
     cnetdetails << "DISABLE: Disabling capability '" << m_hostCap->name()

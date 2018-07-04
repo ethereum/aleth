@@ -209,24 +209,32 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
     std::shared_ptr<SessionFace> session = _peer->session();
     if (!session)
         return; // Expired
+    char const* disconnectReason = nullptr;
     if (_peer->m_genesisHash != host().chain().genesisHash())
-        _peer->disable("Invalid genesis hash");
+        disconnectReason = "Invalid genesis hash.";
     else if (_peer->m_protocolVersion != host().protocolVersion() && _peer->m_protocolVersion != EthereumHost::c_oldProtocolVersion)
-        _peer->disable("Invalid protocol version.");
+        disconnectReason = "Invalid protocol version.";
     else if (_peer->m_networkId != host().networkId())
-        _peer->disable("Invalid network identifier.");
+        disconnectReason = "Invalid network identifier.";
     else if (session->info().clientVersion.find("/v0.7.0/") != string::npos)
-        _peer->disable("Blacklisted client version.");
+        disconnectReason = "Blacklisted client version.";
     else if (host().isBanned(session->id()))
-        _peer->disable("Peer banned for previous bad behaviour.");
+        disconnectReason = "Peer banned for previous bad behaviour.";
     else if (_peer->m_asking != Asking::State && _peer->m_asking != Asking::Nothing)
-        _peer->disable("Peer banned for unexpected status message.");
-    else
+        disconnectReason = "Peer banned for unexpected status message.";
+
+    if (disconnectReason)
     {
-        // Before starting to exchange the data with the node, let's verify that it's on our chain
-        if (!requestDaoForkBlockHeader(_peer))
-            // DAO challenge not needed
-            syncPeer(_peer, false);
+        LOG(m_logger) << "Peer not suitable for sync: " << disconnectReason;
+        _peer->disconnect();
+        return;
+    }
+
+    // Before starting to exchange the data with the node, let's verify that it's on our chain
+    if (!requestDaoForkBlockHeader(_peer))
+    {
+        // DAO challenge not needed
+        syncPeer(_peer, false);
     }
 }
 

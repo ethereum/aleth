@@ -44,6 +44,11 @@ public:
     static u256 version() { return 0; }
     static unsigned messageCount() { return 0; }
 */
+
+    bool enabled() const { return m_enabled; }
+
+    void disconnect();
+
 protected:
     std::shared_ptr<SessionFace> session() const { return m_session.lock(); }
     HostCapabilityFace* hostCapability() const { return m_hostCap; }
