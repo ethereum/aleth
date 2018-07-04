@@ -46,7 +46,7 @@ defaults:
       working_directory: ~/build
       command: |
         ETHEREUM_TEST_PATH=~/project/test/jsontests \
-        test/testeth -t GeneralStateTests -- --vm interpreter
+        test/testeth -t GeneralStateTests -- --vm libaleth-interpreter/libaleth-interpreter.so
         
   nightly-test: &nightly-test
     run:
