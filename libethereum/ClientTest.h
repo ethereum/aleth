@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file ClientTest.h
  * @author Kholhlov Dimitry <dimitry@ethdev.com>
@@ -36,28 +36,24 @@ DEV_SIMPLE_EXCEPTION(ImportBlockFailed);
 class ClientTest: public Client
 {
 public:
-	/// Trivial forwarding constructor.
-	ClientTest(
-		ChainParams const& _params,
-		int _networkID,
-		p2p::Host* _host,
-		std::shared_ptr<GasPricer> _gpForAdoption,
-		boost::filesystem::path const& _dbPath = boost::filesystem::path(),
-		WithExisting _forceAction = WithExisting::Trust,
-		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
-	);
-	~ClientTest();
+    /// Trivial forwarding constructor.
+    ClientTest(ChainParams const& _params, int _networkID, p2p::Host* _host,
+        std::shared_ptr<GasPricer> _gpForAdoption,
+        boost::filesystem::path const& _dbPath = boost::filesystem::path(),
+        WithExisting _forceAction = WithExisting::Trust,
+        TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024});
+    ~ClientTest();
 
-	void setChainParams(std::string const& _genesis);
-	void mineBlocks(unsigned _count);
-	void modifyTimestamp(int64_t _timestamp);
-	void rewindToBlock(unsigned _number);
+    void setChainParams(std::string const& _genesis);
+    void mineBlocks(unsigned _count);
+    void modifyTimestamp(int64_t _timestamp);
+    void rewindToBlock(unsigned _number);
     h256 importRawBlock(std::string const& _blockRLP);
     bool completeSync();
 
 protected:
-	unsigned m_blocksToMine;
-	virtual void onNewBlocks(h256s const& _blocks, h256Hash& io_changed) override;
+    unsigned m_blocksToMine;
+    virtual void onNewBlocks(h256s const& _blocks, h256Hash& io_changed) override;
 };
 
 ClientTest& asClientTest(Interface& _c);
