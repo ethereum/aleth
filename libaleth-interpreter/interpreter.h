@@ -6,6 +6,7 @@
 #pragma once
 
 #include <evmc/evmc.h>
+#include <evmc/utils.h>
 
 #if __cplusplus
 extern "C" {
@@ -15,7 +16,7 @@ extern "C" {
 #define NOEXCEPT
 #endif
 
-struct evmc_instance* evmc_create_interpreter() NOEXCEPT;
+EVMC_EXPORT struct evmc_instance* evmc_create_interpreter() NOEXCEPT;
 
 #if __cplusplus
 }
