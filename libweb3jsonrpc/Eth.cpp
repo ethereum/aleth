@@ -250,13 +250,20 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		TransactionNotification n = m_ethAccounts.authenticate(t);
-		switch (n.r)
+		pair<TransactionRepercussion, Secret> ar = m_ethAccounts.authenticate(t);
+		switch (ar.first)
 		{
 		case TransactionRepercussion::Success:
-			return toJS(n.hash);
+		{
+			pair<h256, Address> txResult = client()->submitTransaction(t, ar.second);
+			return toJS(txResult.first);
+		}
 		case TransactionRepercussion::ProxySuccess:
-			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
+		{
+			m_ethAccounts.queueTransaction(t);
+			h256 emptyHash;
+			return toJS(emptyHash); // TODO: give back something more useful than an empty hash.
+		}
 		case TransactionRepercussion::UnknownAccount:
 			throw JsonRpcException("Account unknown.");
 		case TransactionRepercussion::Locked:
@@ -307,27 +314,32 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	return string();
 }
 
-string Eth::eth_signTransaction(Json::Value const& _json)
+Json::Value Eth::eth_signTransaction(Json::Value const& _json)
 {
 	try
 	{
-		TransactionSkeleton t = toTransactionSkeleton(_json);
-		setTransactionDefaults(t);
-		TransactionNotification n = m_ethAccounts.authenticate(t);
-		switch (n.r)
+		TransactionSkeleton ts = toTransactionSkeleton(_json);
+		setTransactionDefaults(ts);
+		ts = client()->populateTransactionWithDefaults(ts);
+		pair<TransactionRepercussion, Secret> ar = m_ethAccounts.authenticate(ts);
+		switch (ar.first)
 		{
 		case TransactionRepercussion::Success:
-			return toJS(n.hash);
 		case TransactionRepercussion::ProxySuccess:
-			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
+		{
+			Transaction t(ts, ar.second);
+			RLPStream s;
+			t.streamRLP(s);
+			return toJson(t, s.out());
+		}
 		default:
 			// TODO: provide more useful information in the exception.
-			BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+			throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 		}
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 	}
 }
 

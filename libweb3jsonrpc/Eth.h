@@ -112,7 +112,7 @@ public:
 	virtual std::string eth_register(std::string const& _address) override;
 	virtual bool eth_unregister(std::string const& _accountId) override;
 	virtual Json::Value eth_fetchQueuedTransactions(std::string const& _accountId) override;
-	virtual std::string eth_signTransaction(Json::Value const& _transaction) override;
+	virtual Json::Value eth_signTransaction(Json::Value const& _transaction) override;
 	virtual Json::Value eth_inspectTransaction(std::string const& _rlp) override;
 	virtual std::string eth_sendRawTransaction(std::string const& _rlp) override;
 	virtual bool eth_notePassword(std::string const&) override { return false; }

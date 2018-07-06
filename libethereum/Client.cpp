@@ -807,6 +807,24 @@ SyncStatus Client::syncStatus() const
     return status;
 }
 
+TransactionSkeleton Client::populateTransactionWithDefaults(TransactionSkeleton const& _t) const
+{
+    TransactionSkeleton ret(_t);
+
+    // Default gas value meets the intrinsic gas requirements of both
+    // send value and create contract transactions and is the same default
+    // value used by geth and testrpc.
+    const u256 defaultTransactionGas = 90000;
+    if (ret.nonce == Invalid256)
+        ret.nonce = max<u256>(postSeal().transactionsFrom(ret.from), m_tq.maxNonce(ret.from));
+    if (ret.gasPrice == Invalid256)
+        ret.gasPrice = gasBidPrice();
+    if (ret.gas == Invalid256)
+        ret.gas = defaultTransactionGas;
+
+    return ret;
+}
+
 bool Client::submitSealed(bytes const& _header)
 {
     bytes newBlock;
@@ -852,20 +870,8 @@ void Client::rewind(unsigned _n)
 pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
 {
     prepareForTransaction();
-
-    // Default gas value meets the intrinsic gas requirements of both
-    // send value and create contract transactions and is the same default
-    // value used by geth and testrpc.
-    const u256 defaultTransactionGas = 90000;
-    TransactionSkeleton ts(_t);
+    TransactionSkeleton ts = populateTransactionWithDefaults(_t);
     ts.from = toAddress(_secret);
-    if (_t.nonce == Invalid256)
-        ts.nonce = max<u256>(postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
-    if (ts.gasPrice == Invalid256)
-        ts.gasPrice = gasBidPrice();
-    if (ts.gas == Invalid256)
-        ts.gas = defaultTransactionGas;
-
     Transaction t(ts, _secret);
 
     // Use the Executive to perform basic validation of the transaction

@@ -59,7 +59,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_register", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_registerI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_unregister", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_unregisterI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_fetchQueuedTransactions", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_ARRAY, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_fetchQueuedTransactionsI);
-                    this->bindAndAddMethod(jsonrpc::Procedure("eth_signTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_signTransactionI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("eth_signTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_signTransactionI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_inspectTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_inspectTransactionI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_sendRawTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_sendRawTransactionI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_notePassword", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_notePasswordI);
@@ -335,7 +335,7 @@ namespace dev {
                 virtual std::string eth_register(const std::string& param1) = 0;
                 virtual bool eth_unregister(const std::string& param1) = 0;
                 virtual Json::Value eth_fetchQueuedTransactions(const std::string& param1) = 0;
-                virtual std::string eth_signTransaction(const Json::Value& param1) = 0;
+                virtual Json::Value eth_signTransaction(const Json::Value& param1) = 0;
                 virtual Json::Value eth_inspectTransaction(const std::string& param1) = 0;
                 virtual std::string eth_sendRawTransaction(const std::string& param1) = 0;
                 virtual bool eth_notePassword(const std::string& param1) = 0;

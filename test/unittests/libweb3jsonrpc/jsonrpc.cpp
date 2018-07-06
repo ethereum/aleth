@@ -319,6 +319,29 @@ BOOST_AUTO_TEST_CASE(eth_sendTransaction)
     BOOST_CHECK_EQUAL(txAmount, balance2);
 }
 
+BOOST_AUTO_TEST_CASE(eth_signTransaction)
+{
+    auto address = coinbase.address();
+    auto countAtBeforeSign = jsToU256(rpcClient->eth_getTransactionCount(toJS(address), "latest"));
+    auto receiver = KeyPair::create();
+
+    Json::Value t;
+    t["from"] = toJS(address);
+    t["value"] = jsToDecimal(toJS(1));
+    t["to"] = toJS(receiver.address());
+    
+    Json::Value res = rpcClient->eth_signTransaction(t);
+    BOOST_REQUIRE(res["raw"]);
+    BOOST_REQUIRE(res["tx"]);
+
+    accountHolder->setAccounts({});
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    auto countAtAfterSign = jsToU256(
+        rpcClient->eth_getTransactionCount(toJS(address), "latest"));
+    
+    BOOST_CHECK_EQUAL(countAtBeforeSign, countAtAfterSign);
+}
 
 BOOST_AUTO_TEST_CASE(simple_contract)
 {

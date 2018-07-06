@@ -230,6 +230,14 @@ Json::Value toJson(dev::eth::Transaction const& _t)
     return res;
 }
 
+Json::Value toJson(dev::eth::Transaction const& _t, bytes const& _rlp)
+{
+    Json::Value res;
+    res["raw"] = toJS(_rlp);
+    res["tx"] = toJson(_t);
+    return res;
+}
+
 Json::Value toJson(dev::eth::LocalisedTransaction const& _t)
 {
     Json::Value res;

@@ -130,6 +130,8 @@ public:
     BlockQueueStatus blockQueueStatus() const { return m_bq.status(); }
     /// Get some information on the block syncing.
     SyncStatus syncStatus() const override;
+    /// Populate the uninitialized fields in the supplied transaction with default values
+    TransactionSkeleton populateTransactionWithDefaults(TransactionSkeleton const& _t) const override;
     /// Get the block queue.
     BlockQueue const& blockQueue() const { return m_bq; }
     /// Get the state database.

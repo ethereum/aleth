@@ -204,6 +204,9 @@ public:
 	/// Get some information on the block queue.
 	virtual SyncStatus syncStatus() const = 0;
 
+	/// Populate the uninitialized fields in the supplied transaction with default values
+	virtual TransactionSkeleton populateTransactionWithDefaults(TransactionSkeleton const& _t) const = 0;
+
 	// [SEALING API]:
 
 	/// Set the block author address.
