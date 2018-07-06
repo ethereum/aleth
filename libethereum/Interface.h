@@ -205,7 +205,7 @@ public:
 	virtual SyncStatus syncStatus() const = 0;
 
 	/// Populate the uninitialized fields in the supplied transaction with default values
-	virtual void populateTransactionWithDefaults(TransactionSkeleton& _t) const = 0;
+	virtual TransactionSkeleton populateTransactionWithDefaults(TransactionSkeleton const& _t) const = 0;
 
 	// [SEALING API]:
 

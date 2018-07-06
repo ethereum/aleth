@@ -320,7 +320,7 @@ Json::Value Eth::eth_signTransaction(Json::Value const& _json)
 	{
 		TransactionSkeleton ts = toTransactionSkeleton(_json);
 		setTransactionDefaults(ts);
-		client()->populateTransactionWithDefaults(ts);
+		ts = client()->populateTransactionWithDefaults(ts);
 		pair<TransactionRepercussion, Secret> ar = m_ethAccounts.authenticate(ts);
 		switch (ar.first)
 		{
@@ -334,12 +334,12 @@ Json::Value Eth::eth_signTransaction(Json::Value const& _json)
 		}
 		default:
 			// TODO: provide more useful information in the exception.
-			BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+			throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 		}
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
 	}
 }
 

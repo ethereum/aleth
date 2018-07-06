@@ -131,7 +131,7 @@ public:
     /// Get some information on the block syncing.
     SyncStatus syncStatus() const override;
     /// Populate the uninitialized fields in the supplied transaction with default values
-    void populateTransactionWithDefaults(TransactionSkeleton& _t) const override;
+    TransactionSkeleton populateTransactionWithDefaults(TransactionSkeleton const& _t) const override;
     /// Get the block queue.
     BlockQueue const& blockQueue() const { return m_bq; }
     /// Get the state database.
