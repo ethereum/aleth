@@ -73,7 +73,7 @@ struct BlockChainSyncFixture: public TestOutputHelperFixture
 BOOST_FIXTURE_TEST_SUITE(BlockChainSyncSuite, BlockChainSyncFixture)
 
 
-BOOST_AUTO_TEST_CASE(syncFromMiner)
+BOOST_AUTO_TEST_CASE(basicSync)
 {
     dev::eth::mine(*(web3Node1->ethereum()), 10);
 
@@ -92,6 +92,34 @@ BOOST_AUTO_TEST_CASE(syncFromMiner)
     allBlocksImported.get_future().wait_for(std::chrono::minutes(1));
 
     BOOST_REQUIRE_EQUAL(blocksImported, 10);
+}
+
+BOOST_AUTO_TEST_CASE(syncFromMiner)
+{
+    int sealedBlocks = 0;
+    auto sealHandler =
+        web3Node1->ethereum()->setOnBlockSealed([&sealedBlocks](bytes const&) { ++sealedBlocks; });
+
+    int importedBlocks = 0;
+    auto importHandler = web3Node1->ethereum()->setOnBlockImport(
+        [&importedBlocks](eth::BlockHeader const&) { ++importedBlocks; });
+
+    web3Node1->ethereum()->startSealing();
+
+    /*    int blocksImported = 0;
+        std::promise<void> allBlocksImported;
+        auto importHandler =
+            web3Node2->ethereum()->setOnBlockImport([&blocksImported,
+       &allBlocksImported](eth::BlockHeader const&) { if (++blocksImported == 10)
+                allBlocksImported.set_value();
+        });
+    */
+    web3Node1->requirePeer(web3Node2->id(), "127.0.0.1:30304");
+
+
+    // allBlocksImported.get_future().wait_for(std::chrono::minutes(1));
+
+    BOOST_REQUIRE(web3Node1->ethereum()->wouldSeal());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
