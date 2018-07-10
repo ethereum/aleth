@@ -109,8 +109,10 @@ BOOST_AUTO_TEST_CASE(capability)
     NetworkPreferences prefs2(localhost, 0, false);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
-    auto thc1 = host1.registerCapability(make_shared<TestHostCapability>());
-    auto thc2 = host2.registerCapability(make_shared<TestHostCapability>());
+    auto thc1 = make_shared<TestHostCapability>();
+    host1.registerCapability(thc1);
+    auto thc2 = make_shared<TestHostCapability>();
+    host2.registerCapability(thc2);
     host1.start();	
     host2.start();
     auto port1 = host1.listenPort();
