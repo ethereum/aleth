@@ -133,12 +133,9 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
     // create Ethereum capability only if we're not downloading the snapshot
     if (_snapshotDownloadPath.empty())
     {
-        auto host = _extNet->registerCapability(
-            make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
-        m_host = host;
-
-        _extNet->addCapability(host, EthereumHost::staticName(),
-            EthereumHost::c_oldProtocolVersion);  // TODO: remove this once v61+ protocol is common
+        auto ethHostCapability = make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId);
+        _extNet->registerCapability(ethHostCapability);
+        m_host = ethHostCapability;
     }
 
     // create Warp capability if we either download snapshot or can give out snapshot
@@ -148,8 +145,10 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
     {
         std::shared_ptr<SnapshotStorageFace> snapshotStorage(
             importedSnapshotExists ? createSnapshotStorage(importedSnapshot) : nullptr);
-        m_warpHost = _extNet->registerCapability(make_shared<WarpHostCapability>(
-            bc(), _networkId, _snapshotDownloadPath, snapshotStorage));
+        auto warpHostCapability = make_shared<WarpHostCapability>(
+            bc(), _networkId, _snapshotDownloadPath, snapshotStorage);
+        _extNet->registerCapability(warpHostCapability);
+        m_warpHost = warpHostCapability;
     }
 
     if (_dbPath.size())

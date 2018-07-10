@@ -212,7 +212,7 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
     char const* disconnectReason = nullptr;
     if (_peer->m_genesisHash != host().chain().genesisHash())
         disconnectReason = "Invalid genesis hash.";
-    else if (_peer->m_protocolVersion != host().protocolVersion() && _peer->m_protocolVersion != EthereumHost::c_oldProtocolVersion)
+    else if (_peer->m_protocolVersion != host().protocolVersion())
         disconnectReason = "Invalid protocol version.";
     else if (_peer->m_networkId != host().networkId())
         disconnectReason = "Invalid network identifier.";
