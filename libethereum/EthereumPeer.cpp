@@ -133,13 +133,8 @@ void EthereumPeer::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty
     setAsking(Asking::State);
     m_requireTransactions = true;
     RLPStream s;
-    bool latest = m_peerCapabilityVersion == m_hostProtocolVersion;
-    prep(s, StatusPacket, 5)
-                    << (latest ? m_hostProtocolVersion : EthereumHost::c_oldProtocolVersion)
-                    << _hostNetworkId
-                    << _chainTotalDifficulty
-                    << _chainCurrentHash
-                    << _chainGenesisHash;
+    prep(s, StatusPacket, 5) << m_hostProtocolVersion << _hostNetworkId << _chainTotalDifficulty
+                             << _chainCurrentHash << _chainGenesisHash;
     sealAndSend(s);
 }
 

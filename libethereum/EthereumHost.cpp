@@ -38,7 +38,6 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-unsigned const EthereumHost::c_oldProtocolVersion = 62; //TODO: remove this once v63+ is common
 static unsigned const c_maxSendTransactions = 256;
 
 char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State"};
@@ -505,12 +504,6 @@ void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)
     for (auto s: sessions)
         if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
             return;
-
-    sessions = peerSessions(c_oldProtocolVersion); //TODO: remove once v61+ is common
-    std::sort(sessions.begin(), sessions.end(), sessionLess);
-    for (auto s: sessions)
-        if (!_f(capabilityFromSession<EthereumPeer>(*s.first, c_oldProtocolVersion)))
-            return;
 }
 
 tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<SessionFace>>> EthereumHost::randomSelection(unsigned _percent, std::function<bool(EthereumPeer*)> const& _allow)
@@ -609,8 +602,6 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
         return;
 
     std::shared_ptr<EthereumPeer> peer = capabilityFromSession<EthereumPeer>(*session);
-    if (!peer)
-        peer = capabilityFromSession<EthereumPeer>(*session, c_oldProtocolVersion);
     if (!peer)
         return;
 
