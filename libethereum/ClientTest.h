@@ -21,9 +21,10 @@
 
 #pragma once
 
-#include <tuple>
+#include <libethashseal/EthashClient.h>
 #include <libethereum/Client.h>
 #include <boost/filesystem/path.hpp>
+#include <tuple>
 
 namespace dev
 {
@@ -33,7 +34,7 @@ namespace eth
 DEV_SIMPLE_EXCEPTION(ChainParamsInvalid);
 DEV_SIMPLE_EXCEPTION(ImportBlockFailed);
 
-class ClientTest: public Client
+class ClientTest : public EthashClient
 {
 public:
     /// Trivial forwarding constructor.

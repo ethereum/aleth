@@ -44,7 +44,7 @@ ClientTest* dev::eth::asClientTest(Interface* _c)
 ClientTest::ClientTest(ChainParams const& _params, int _networkID, p2p::Host* _host,
     std::shared_ptr<GasPricer> _gpForAdoption, fs::path const& _dbPath, WithExisting _forceAction,
     TransactionQueue::Limits const& _limits)
-  : Client(
+  : EthashClient(
         _params, _networkID, _host, _gpForAdoption, _dbPath, std::string(), _forceAction, _limits)
 {}
 
