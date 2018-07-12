@@ -130,6 +130,9 @@ Json::Value toJson(dev::eth::Transaction const& _t, std::pair<h256, unsigned> _l
         res["blockHash"] = toJS(_location.first);
         res["transactionIndex"] = toJS(_location.second);
         res["blockNumber"] = toJS(_blockNumber);
+        res["v"] = toJS(_t.signature().v);
+        res["r"] = toJS(_t.signature().r);
+        res["s"] = toJS(_t.signature().s);
     }
     return res;
 }
