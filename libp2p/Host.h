@@ -22,25 +22,24 @@
 
 #pragma once
 
-#include <mutex>
-#include <map>
-#include <vector>
-#include <set>
-#include <memory>
-#include <utility>
-#include <thread>
-#include <chrono>
-
+#include "Common.h"
+#include "Network.h"
+#include "NodeTable.h"
+#include "Peer.h"
+#include "RLPXFrameCoder.h"
+#include "RLPXSocket.h"
+#include "Session.h"
 #include <libdevcore/Guards.h>
 #include <libdevcore/Worker.h>
 #include <libdevcrypto/Common.h>
-#include "NodeTable.h"
-#include "HostCapability.h"
-#include "Network.h"
-#include "Peer.h"
-#include "RLPXSocket.h"
-#include "RLPXFrameCoder.h"
-#include "Common.h"
+#include <chrono>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <set>
+#include <thread>
+#include <utility>
+#include <vector>
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
@@ -63,6 +62,7 @@ namespace p2p
 {
 
 class Host;
+class HostCapabilityFace;
 
 class HostNodeTableHandler: public NodeTableEventHandler
 {
@@ -131,7 +131,6 @@ class Host: public Worker
     friend class RLPXHandshake;
     
     friend class Session;
-    friend class HostCapabilityFace;
 
 public:
     /// Start server, listening for connections on the given port.
@@ -156,19 +155,13 @@ public:
     static std::unordered_map<Public, std::string> pocHosts();
 
     /// Register a host capability; all new peer connections will see this capability.
-    void registerCapability(std::shared_ptr<HostCapabilityFace> const& _cap)
-    {
-        registerCapability(_cap, _cap->name(), _cap->version());
-    }
+    void registerCapability(std::shared_ptr<HostCapabilityFace> const& _cap);
+
     /// Register a host capability with arbitrary name and version.
     /// Might be useful when you want to handle several subprotocol versions with a single
     /// capability class.
     void registerCapability(std::shared_ptr<HostCapabilityFace> const& _cap,
-        std::string const& _name, u256 const& _version)
-    {
-        _cap->m_host = this;
-        m_capabilities[std::make_pair(_name, _version)] = _cap;
-    }
+        std::string const& _name, u256 const& _version);
 
     bool haveCapability(CapDesc const& _name) const { return m_capabilities.count(_name) != 0; }
     CapDescs caps() const { CapDescs ret; for (auto const& i: m_capabilities) ret.push_back(i.first); return ret; }
@@ -249,6 +242,10 @@ public:
 
     /// Get the node information.
     p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
+
+    /// Get sessions by capability name and version
+    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions(
+        std::string const& _name, u256 const& _version) const;
 
 protected:
     void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);

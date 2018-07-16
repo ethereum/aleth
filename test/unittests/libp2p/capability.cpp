@@ -72,12 +72,13 @@ bool TestCapability::interpret(unsigned _id, RLP const& _r)
 class TestHostCapability: public HostCapability<TestCapability>, public Worker
 {
 public:
-    TestHostCapability(): Worker("test") {}
+    explicit TestHostCapability(Host* _host) : HostCapability<TestCapability>(_host), Worker("test")
+    {}
     virtual ~TestHostCapability() {}
 
     void sendTestMessage(NodeID const& _id, int _x)
     {
-        for (auto i: peerSessions())
+        for (auto i : peerSessions())
             if (_id == i.second->id)
                 capabilityFromSession<TestCapability>(*i.first)->sendTestMessage(_x);
     }
@@ -86,7 +87,7 @@ public:
     { 
         int cnt = 0;
         int checksum = 0;
-        for (auto i: peerSessions())
+        for (auto i : peerSessions())
             if (_id == i.second->id)
             {
                 cnt += capabilityFromSession<TestCapability>(*i.first)->countReceivedMessages();
@@ -109,9 +110,9 @@ BOOST_AUTO_TEST_CASE(capability)
     NetworkPreferences prefs2(localhost, 0, false);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
-    auto thc1 = make_shared<TestHostCapability>();
+    auto thc1 = make_shared<TestHostCapability>(&host1);
     host1.registerCapability(thc1);
-    auto thc2 = make_shared<TestHostCapability>();
+    auto thc2 = make_shared<TestHostCapability>(&host2);
     host2.registerCapability(thc2);
     host1.start();	
     host2.start();

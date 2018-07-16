@@ -28,7 +28,7 @@ namespace eth
 class WarpHostCapability : public p2p::HostCapability<WarpPeerCapability>, Worker
 {
 public:
-    WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
+    WarpHostCapability(p2p::Host* _host, BlockChain const& _blockChain, u256 const& _networkId,
         boost::filesystem::path const& _snapshotDownloadPath,
         std::shared_ptr<SnapshotStorageFace> _snapshotStorage);
     ~WarpHostCapability();

@@ -60,7 +60,8 @@ class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
 public:
     /// Start server, but don't listen.
-    EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
+    EthereumHost(p2p::Host* _host, BlockChain const& _ch, OverlayDB const& _db,
+        TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
     /// Will block on network process events.
     virtual ~EthereumHost();

@@ -20,23 +20,24 @@
  * @date 2014
  */
 
-#include <set>
-#include <chrono>
-#include <thread>
-#include <mutex>
-#include <memory>
-#include <boost/algorithm/string.hpp>
-#include <libdevcore/Common.h>
+#include "Host.h"
+#include "Capability.h"
+#include "Common.h"
+#include "HostCapability.h"
+#include "RLPxHandshake.h"
+#include "Session.h"
+#include "UPnP.h"
 #include <libdevcore/Assertions.h>
+#include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/FileSystem.h>
-#include "Session.h"
-#include "Common.h"
-#include "Capability.h"
-#include "UPnP.h"
-#include "RLPxHandshake.h"
-#include "Host.h"
+#include <boost/algorithm/string.hpp>
+#include <chrono>
+#include <memory>
+#include <mutex>
+#include <set>
+#include <thread>
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -493,6 +494,17 @@ std::unordered_map<Public, std::string> Host::pocHosts()
         { Public("6ce05930c72abc632c58e2e4324f7c7ea478cec0ed4fa2528982cf34483094e9cbc9216e7aa349691242576d552a2a56aaeae426c5303ded677ce455ba1acd9d"), "13.84.180.240:30303" },
         { Public("20c9ad97c081d63397d7b685a412227a40e23c8bdc6688c6f37e97cfbc22d2b4d1db1510d8f61e6a8866ad7f0e17c02b14182d37ea7c3c8b9c2683aeb6b733a1"), "52.169.14.227:30303" },
     };
+}
+
+void Host::registerCapability(std::shared_ptr<HostCapabilityFace> const& _cap)
+{
+    registerCapability(_cap, _cap->name(), _cap->version());
+}
+
+void Host::registerCapability(
+    std::shared_ptr<HostCapabilityFace> const& _cap, std::string const& _name, u256 const& _version)
+{
+    m_capabilities[std::make_pair(_name, _version)] = _cap;
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)
@@ -989,4 +1001,16 @@ bool Host::addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relati
 
     nodeTable->addNode(_node, _relation);
     return true;
+}
+
+std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> Host::peerSessions(
+    std::string const& _name, u256 const& _version) const
+{
+    RecursiveGuard l(x_sessions);
+    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> ret;
+    for (auto const& i : m_sessions)
+        if (std::shared_ptr<SessionFace> s = i.second.lock())
+            if (s->capabilities().count(std::make_pair(_name, _version)))
+                ret.push_back(make_pair(s, s->peer()));
+    return ret;
 }
