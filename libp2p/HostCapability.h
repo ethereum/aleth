@@ -55,7 +55,7 @@ template<class PeerCap>
 class HostCapability: public HostCapabilityFace
 {
 public:
-    explicit HostCapability(p2p::Host* _host) : m_host(_host) { assert(_host); }
+    explicit HostCapability(p2p::Host const& _host) : m_host(_host) {}
 
     std::string name() const override { return PeerCap::name(); }
     u256 version() const override { return PeerCap::version(); }
@@ -77,15 +77,15 @@ protected:
 
     std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions() const
     {
-        return m_host->peerSessions(name(), version());
+        return m_host.peerSessions(name(), version());
     }
     std::shared_ptr<SessionFace> peerSession(NodeID const& _id) const
     {
-        return m_host->peerSession(_id);
+        return m_host.peerSession(_id);
     }
 
 private:
-    p2p::Host* m_host = nullptr;
+    p2p::Host const& m_host;
 };
 
 }
