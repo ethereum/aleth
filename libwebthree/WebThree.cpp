@@ -49,14 +49,15 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
         Ethash::init();
         NoProof::init();
         if (_testing)
-            m_ethereum.reset(new eth::ClientTest(_params, (int)_params.networkID, &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+            m_ethereum.reset(new eth::ClientTest(
+                _params, (int)_params.networkID, m_net, shared_ptr<GasPricer>(), _dbPath, _we));
         else
         {
             if (_params.sealEngineName == Ethash::name())
-                m_ethereum.reset(new eth::EthashClient(_params, (int)_params.networkID, &m_net,
+                m_ethereum.reset(new eth::EthashClient(_params, (int)_params.networkID, m_net,
                     shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
             else if (_params.sealEngineName == NoProof::name())
-                m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, &m_net,
+                m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, m_net,
                     shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
             else
                 BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment(

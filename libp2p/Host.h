@@ -229,7 +229,11 @@ public:
     void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
 
     /// Get session by id
-    std::shared_ptr<SessionFace> peerSession(NodeID const& _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<SessionFace>(); }
+    std::shared_ptr<SessionFace> peerSession(NodeID const& _id) const
+    {
+        RecursiveGuard l(x_sessions);
+        return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<SessionFace>();
+    }
 
     /// Get our current node ID.
     NodeID id() const { return m_alias.pub(); }

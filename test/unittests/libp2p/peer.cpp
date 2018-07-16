@@ -56,7 +56,7 @@ protected:
 class TestHostCap: public HostCapability<TestCap>, public Worker
 {
 public:
-    TestHostCap(Host* _host): HostCapability<TestCap>(_host), Worker("test") {}
+    TestHostCap(Host const& _host) : HostCapability<TestCap>(_host), Worker("test") {}
     virtual ~TestHostCap() {}
 };
 
@@ -77,9 +77,9 @@ BOOST_AUTO_TEST_CASE(host)
     
     BOOST_REQUIRE_NE(host1port, host2port);
 
-    host1.registerCapability(make_shared<TestHostCap>(&host1));
-    host2.registerCapability(make_shared<TestHostCap>(&host2));
-    
+    host1.registerCapability(make_shared<TestHostCap>(host1));
+    host2.registerCapability(make_shared<TestHostCap>(host2));
+
     auto node2 = host2.id();
     int const step = 10;
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
         BOOST_REQUIRE(h->listenPort());
         bool inserted = ports.insert(h->listenPort()).second;
         BOOST_REQUIRE(inserted);
-        h->registerCapability(make_shared<TestHostCap>(h));
+        h->registerCapability(make_shared<TestHostCap>(*h));
         hosts.push_back(h);
     }
     
@@ -209,8 +209,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     BOOST_REQUIRE(port2);
     BOOST_REQUIRE_NE(port1, port2);
 
-    host1.registerCapability(make_shared<TestHostCap>(&host1));
-    host2.registerCapability(make_shared<TestHostCap>(&host2));
+    host1.registerCapability(make_shared<TestHostCap>(host1));
+    host2.registerCapability(make_shared<TestHostCap>(host2));
 
     host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 

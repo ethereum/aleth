@@ -70,11 +70,10 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
     return _out;
 }
 
-Client::Client(ChainParams const& _params, int _networkID, p2p::Host* _host,
+Client::Client(ChainParams const& _params, int _networkID, p2p::Host& _host,
     std::shared_ptr<GasPricer> _gpForAdoption, fs::path const& _dbPath,
     fs::path const& _snapshotPath, WithExisting _forceAction, TransactionQueue::Limits const& _l)
-  : ClientBase(),
-    Worker("eth", 0),
+  : Worker("eth", 0),
     m_bc(_params, _dbPath, _forceAction,
         [](unsigned d, unsigned t) {
             std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r";
@@ -95,7 +94,8 @@ Client::~Client()
     terminate();
 }
 
-void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _snapshotDownloadPath, WithExisting _forceAction, u256 _networkId)
+void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
+    fs::path const& _snapshotDownloadPath, WithExisting _forceAction, u256 _networkId)
 {
     DEV_TIMED_FUNCTION_ABOVE(500);
 
@@ -135,7 +135,7 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
     {
         auto ethHostCapability =
             make_shared<EthereumHost>(_extNet, bc(), m_stateDB, m_tq, m_bq, _networkId);
-        _extNet->registerCapability(ethHostCapability);
+        _extNet.registerCapability(ethHostCapability);
         m_host = ethHostCapability;
     }
 
@@ -148,7 +148,7 @@ void Client::init(p2p::Host* _extNet, fs::path const& _dbPath, fs::path const& _
             importedSnapshotExists ? createSnapshotStorage(importedSnapshot) : nullptr);
         auto warpHostCapability = make_shared<WarpHostCapability>(
             _extNet, bc(), _networkId, _snapshotDownloadPath, snapshotStorage);
-        _extNet->registerCapability(warpHostCapability);
+        _extNet.registerCapability(warpHostCapability);
         m_warpHost = warpHostCapability;
     }
 

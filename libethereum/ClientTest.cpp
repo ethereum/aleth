@@ -41,7 +41,7 @@ ClientTest* dev::eth::asClientTest(Interface* _c)
     return &dynamic_cast<ClientTest&>(*_c);
 }
 
-ClientTest::ClientTest(ChainParams const& _params, int _networkID, p2p::Host* _host,
+ClientTest::ClientTest(ChainParams const& _params, int _networkID, p2p::Host& _host,
     std::shared_ptr<GasPricer> _gpForAdoption, fs::path const& _dbPath, WithExisting _forceAction,
     TransactionQueue::Limits const& _limits)
   : Client(
