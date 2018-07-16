@@ -366,14 +366,15 @@ private:
 
 }
 
-EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
-    HostCapability<EthereumPeer>(),
-    Worker		("ethsync"),
-    m_chain		(_ch),
+EthereumHost::EthereumHost(Host* _host, BlockChain const& _ch, OverlayDB const& _db,
+    TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId)
+  : HostCapability<EthereumPeer>(_host),
+    Worker("ethsync"),
+    m_chain(_ch),
     m_db(_db),
-    m_tq		(_tq),
-    m_bq		(_bq),
-    m_networkId	(_networkId),
+    m_tq(_tq),
+    m_bq(_bq),
+    m_networkId(_networkId),
     m_hostData(make_shared<EthereumHostData>(m_chain, m_db))
 {
     // TODO: Composition would be better. Left like that to avoid initialization
@@ -597,7 +598,7 @@ SyncStatus EthereumHost::status() const
 
 void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId)
 {
-    auto session = host()->peerSession(_nodeId);
+    auto session = peerSession(_nodeId);
     if (!session)
         return;
 

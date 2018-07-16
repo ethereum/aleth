@@ -23,10 +23,11 @@
 
 #pragma once
 
-#include <memory>
-#include "Peer.h"
 #include "Common.h"
+#include "Host.h"
+#include "Peer.h"
 #include "Session.h"
+#include <memory>
 
 namespace dev
 {
@@ -36,46 +37,28 @@ namespace p2p
 
 class HostCapabilityFace
 {
-    friend class Host;
-    template <class T> friend class HostCapability;
-    friend class Capability;
-    friend class Session;
-
 public:
-    HostCapabilityFace() {}
-    virtual ~HostCapabilityFace() {}
-
-    Host* host() const { return m_host; }
-
-    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions() const;
-    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions(u256 const& _version) const;
+    virtual ~HostCapabilityFace() = default;
 
     virtual std::string name() const = 0;
     virtual u256 version() const = 0;
-
-protected:
-    CapDesc capDesc() const { return std::make_pair(name(), version()); }
     virtual unsigned messageCount() const = 0;
-    virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap) = 0;
 
-    virtual void onStarting() {}
-    virtual void onStopping() {}
+    virtual std::shared_ptr<Capability> newPeerCapability(
+        std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap) = 0;
 
-private:
-    Host* m_host = nullptr;
+    virtual void onStarting() = 0;
+    virtual void onStopping() = 0;
 };
 
 template<class PeerCap>
 class HostCapability: public HostCapabilityFace
 {
 public:
-    HostCapability() {}
-    virtual ~HostCapability() {}
+    explicit HostCapability(p2p::Host* _host) : m_host(_host) { assert(_host); }
 
     std::string name() const override { return PeerCap::name(); }
     u256 version() const override { return PeerCap::version(); }
-
-protected:
     unsigned messageCount() const override { return PeerCap::messageCount(); }
 
     std::shared_ptr<Capability> newPeerCapability(
@@ -85,6 +68,24 @@ protected:
         _s->registerCapability(_cap, p);
         return p;
     }
+
+    void onStarting() override {}
+    void onStopping() override {}
+
+protected:
+    CapDesc capDesc() const { return std::make_pair(name(), version()); }
+
+    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions() const
+    {
+        return m_host->peerSessions(name(), version());
+    }
+    std::shared_ptr<SessionFace> peerSession(NodeID const& _id) const
+    {
+        return m_host->peerSession(_id);
+    }
+
+private:
+    p2p::Host* m_host = nullptr;
 };
 
 }

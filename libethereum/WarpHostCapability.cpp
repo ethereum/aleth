@@ -309,10 +309,11 @@ private:
 }  // namespace
 
 
-WarpHostCapability::WarpHostCapability(BlockChain const& _blockChain, u256 const& _networkId,
-    boost::filesystem::path const& _snapshotDownloadPath,
+WarpHostCapability::WarpHostCapability(p2p::Host* _host, BlockChain const& _blockChain,
+    u256 const& _networkId, boost::filesystem::path const& _snapshotDownloadPath,
     std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
-  : m_blockChain(_blockChain),
+  : p2p::HostCapability<WarpPeerCapability>(_host),
+    m_blockChain(_blockChain),
     m_networkId(_networkId),
     m_snapshot(_snapshotStorage),
     // observer needed only in case we download snapshot
