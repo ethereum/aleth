@@ -45,7 +45,7 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
 	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().EIP158ForkBlock && _t.isReplayProtected())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 
-	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().constantinopleForkBlock && _t.hasZeroSignature())
+	if ((_ir & ImportRequirements::TransactionSignatures) && _header.number() < chainParams().constantinopleForkBlock && _t.hasZeroSignature() && _t.isCreation())
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 
 	if ((_ir & ImportRequirements::TransactionBasic) &&
