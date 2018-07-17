@@ -121,22 +121,13 @@ void LegacyVM::caseCreate()
 	m_runGas = toInt63(m_schedule->createGas);
 
 	// Collect arguments.
-	u256 endowment = m_SP[0];
-	u256 salt;
-	u256 initOff;
-	u256 initSize;
+	u256 const endowment = m_SP[0];
+	u256 const initOff = m_SP[1];
+	u256 const initSize = m_SP[2];
 
-	if (m_OP == Instruction::CREATE)
-	{
-		initOff = m_SP[1];
-		initSize = m_SP[2];
-	}
-	else
-	{
-		salt = m_SP[1];
-		initOff = m_SP[2];
-		initSize = m_SP[3];
-	}
+    u256 salt;
+    if (m_OP == Instruction::CREATE2)
+		salt = m_SP[3];
 
 	updateMem(memNeed(initOff, initSize));
 	updateIOGas();
