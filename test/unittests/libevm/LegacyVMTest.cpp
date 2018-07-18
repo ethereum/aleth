@@ -17,9 +17,9 @@
 
 #include <libethereum/LastBlockHashesFace.h>
 #include <libevm/LegacyVM.h>
+#include <test/tools/jsontests/vm.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
-#include <test/tools/jsontests/vm.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace dev;
@@ -29,7 +29,7 @@ using namespace dev::eth;
 
 namespace
 {
-class LastBlockHashes: public eth::LastBlockHashesFace
+class LastBlockHashes : public eth::LastBlockHashesFace
 {
 public:
     h256s precedingHashes(h256 const& /* _mostRecentHash */) const override
@@ -38,7 +38,7 @@ public:
     }
     void clear() override {}
 };
-}
+}  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
 
@@ -55,7 +55,8 @@ BOOST_AUTO_TEST_CASE(create2)
     State state(0);
     state.addBalance(address, 1 * ether);
 
-    std::unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::ConstantinopleTest)).createSealEngine());
+    std::unique_ptr<SealEngineFace> se(
+        ChainParams(genesisInfo(eth::Network::ConstantinopleTest)).createSealEngine());
 
 
     u256 value = 0;
@@ -72,8 +73,7 @@ BOOST_AUTO_TEST_CASE(create2)
     // pop
     bytes code = fromHex("368060006000376101238160006000f55050");
 
-    ExtVM extVm(state, envInfo, *se, address,
-        address, address, value, gasPrice, ref(inputData),
+    ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
         ref(code), sha3(code), depth, isCreate, staticCall);
 
     LegacyVM vm;
@@ -81,7 +81,8 @@ BOOST_AUTO_TEST_CASE(create2)
     u256 gas = 1000000;
     owning_bytes_ref res = vm.exec(gas, extVm, OnOpFunc{});
 
-    Address expectedAddress = right160(sha3(address.asBytes() + toBigEndian(0x123_cppui256) + inputData));
+    Address expectedAddress =
+        right160(sha3(address.asBytes() + toBigEndian(0x123_cppui256) + inputData));
     BOOST_REQUIRE(state.addressHasCode(expectedAddress));
 }
 
