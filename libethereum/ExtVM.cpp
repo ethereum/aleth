@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file ExtVM.cpp
  * @author Gav Wood <i@gavwood.com>
@@ -38,11 +38,11 @@ static size_t const c_singleExecutionStackSize = 100 * 1024;
 /// Standard thread stack size.
 static size_t const c_defaultStackSize =
 #if defined(__linux)
-	 8 * 1024 * 1024;
+     8 * 1024 * 1024;
 #elif defined(_WIN32)
-	16 * 1024 * 1024;
+    16 * 1024 * 1024;
 #else
-	512 * 1024; // OSX and other OSs
+    512 * 1024; // OSX and other OSs
 #endif
 
 /// Stack overhead prior to allocation.
@@ -53,41 +53,41 @@ static unsigned const c_offloadPoint = (c_defaultStackSize - c_entryOverhead) / 
 
 void goOnOffloadedStack(Executive& _e, OnOpFunc const& _onOp)
 {
-	// Set new stack size enouth to handle the rest of the calls up to the limit.
-	boost::thread::attributes attrs;
-	attrs.set_stack_size((c_depthLimit - c_offloadPoint) * c_singleExecutionStackSize);
+    // Set new stack size enouth to handle the rest of the calls up to the limit.
+    boost::thread::attributes attrs;
+    attrs.set_stack_size((c_depthLimit - c_offloadPoint) * c_singleExecutionStackSize);
 
-	// Create new thread with big stack and join immediately.
-	// TODO: It is possible to switch the implementation to Boost.Context or similar when the API is stable.
-	boost::exception_ptr exception;
-	boost::thread{attrs, [&]{
-		try
-		{
-			_e.go(_onOp);
-		}
-		catch (...)
-		{
-			exception = boost::current_exception(); // Catch all exceptions to be rethrown in parent thread.
-		}
-	}}.join();
-	if (exception)
-		boost::rethrow_exception(exception);
+    // Create new thread with big stack and join immediately.
+    // TODO: It is possible to switch the implementation to Boost.Context or similar when the API is stable.
+    boost::exception_ptr exception;
+    boost::thread{attrs, [&]{
+        try
+        {
+            _e.go(_onOp);
+        }
+        catch (...)
+        {
+            exception = boost::current_exception(); // Catch all exceptions to be rethrown in parent thread.
+        }
+    }}.join();
+    if (exception)
+        boost::rethrow_exception(exception);
 }
 
 void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 {
-	// If in the offloading point we need to switch to additional separated stack space.
-	// Current stack is too small to handle more CALL/CREATE executions.
-	// It needs to be done only once as newly allocated stack space it enough to handle
-	// the rest of the calls up to the depth limit (c_depthLimit).
+    // If in the offloading point we need to switch to additional separated stack space.
+    // Current stack is too small to handle more CALL/CREATE executions.
+    // It needs to be done only once as newly allocated stack space it enough to handle
+    // the rest of the calls up to the depth limit (c_depthLimit).
 
-	if (_depth == c_offloadPoint)
-	{
-		cnote << "Stack offloading (depth: " << c_offloadPoint << ")";
-		goOnOffloadedStack(_e, _onOp);
-	}
-	else
-		_e.go(_onOp);
+    if (_depth == c_offloadPoint)
+    {
+        cnote << "Stack offloading (depth: " << c_offloadPoint << ")";
+        goOnOffloadedStack(_e, _onOp);
+    }
+    else
+        _e.go(_onOp);
 }
 
 evmc_status_code transactionExceptionToEvmcStatusCode(TransactionException ex) noexcept
@@ -138,33 +138,33 @@ CallResult ExtVM::call(CallParameters& _p)
 
 size_t ExtVM::codeSizeAt(dev::Address _a)
 {
-	return m_s.codeSize(_a);
+    return m_s.codeSize(_a);
 }
 
 void ExtVM::setStore(u256 _n, u256 _v)
 {
-	m_s.setStorage(myAddress, _n, _v);
+    m_s.setStorage(myAddress, _n, _v);
 }
 
 CreateResult ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp)
 {
-	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
-	bool result = false;
-	if (_op == Instruction::CREATE)
-		result = e.createOpcode(myAddress, _endowment, gasPrice, io_gas, _code, origin);
+    Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
+    bool result = false;
+    if (_op == Instruction::CREATE)
+        result = e.createOpcode(myAddress, _endowment, gasPrice, io_gas, _code, origin);
     else
     {
         assert(_op == Instruction::CREATE2);
         result = e.create2Opcode(myAddress, _endowment, gasPrice, io_gas, _code, origin, _salt);
     }
 
-	if (!result)
-	{
-		go(depth, e, _onOp);
-		e.accrueSubState(sub);
-	}
-	io_gas = e.gas();
-	return {transactionExceptionToEvmcStatusCode(e.getException()), e.takeOutput(), e.newAddress()};
+    if (!result)
+    {
+        go(depth, e, _onOp);
+        e.accrueSubState(sub);
+    }
+    io_gas = e.gas();
+    return {transactionExceptionToEvmcStatusCode(e.getException()), e.takeOutput(), e.newAddress()};
 }
 
 void ExtVM::suicide(Address _a)
@@ -180,26 +180,26 @@ void ExtVM::suicide(Address _a)
 
 h256 ExtVM::blockHash(u256 _number)
 {
-	u256 const currentNumber = envInfo().number();
+    u256 const currentNumber = envInfo().number();
 
-	if (_number >= currentNumber || _number < (std::max<u256>(256, currentNumber) - 256))
-		return h256();
+    if (_number >= currentNumber || _number < (std::max<u256>(256, currentNumber) - 256))
+        return h256();
 
-	if (currentNumber < m_sealEngine.chainParams().constantinopleForkBlock + 256)
-	{
-		h256 const parentHash = envInfo().header().parentHash();
-		h256s const lastHashes = envInfo().lastHashes().precedingHashes(parentHash);
+    if (currentNumber < m_sealEngine.chainParams().constantinopleForkBlock + 256)
+    {
+        h256 const parentHash = envInfo().header().parentHash();
+        h256s const lastHashes = envInfo().lastHashes().precedingHashes(parentHash);
 
-		assert(lastHashes.size() > (unsigned)(currentNumber - 1 - _number));
-		return lastHashes[(unsigned)(currentNumber - 1 - _number)];
-	}
+        assert(lastHashes.size() > (unsigned)(currentNumber - 1 - _number));
+        return lastHashes[(unsigned)(currentNumber - 1 - _number)];
+    }
 
-	u256 const nonce = m_s.getNonce(caller);
-	u256 const gas = 1000000;
-	Transaction tx(0, 0, gas, c_blockhashContractAddress, toBigEndian(_number), nonce);
-	tx.forceSender(caller);
+    u256 const nonce = m_s.getNonce(caller);
+    u256 const gas = 1000000;
+    Transaction tx(0, 0, gas, c_blockhashContractAddress, toBigEndian(_number), nonce);
+    tx.forceSender(caller);
 
-	ExecutionResult res;
-	std::tie(res, std::ignore) = m_s.execute(envInfo(), m_sealEngine, tx, Permanence::Reverted);
-	return h256(res.output);
+    ExecutionResult res;
+    std::tie(res, std::ignore) = m_s.execute(envInfo(), m_sealEngine, tx, Permanence::Reverted);
+    return h256(res.output);
 }
