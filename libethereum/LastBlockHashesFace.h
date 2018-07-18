@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <libdevcore/FixedHash.h>
+
 
 namespace dev
 {
