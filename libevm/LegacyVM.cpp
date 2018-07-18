@@ -209,6 +209,8 @@ void LegacyVM::interpretCases()
 			ON_OP();
 			if (!m_schedule->haveCreate2)
 				throwBadInstruction();
+            if (m_ext->staticCall)
+                throwDisallowedStateChange();
 
 			m_bounce = &LegacyVM::caseCreate;
 		}
