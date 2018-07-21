@@ -866,16 +866,15 @@ void Client::rewind(unsigned _n)
     m_bq.clear();
 }
 
-pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
+h256 Client::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
 {
     TransactionSkeleton ts = populateTransactionWithDefaults(_t);
     ts.from = toAddress(_secret);
     Transaction t(ts, _secret);
-    importTransaction(t);
-    return make_pair<h256, Address>(t.sha3(), toAddress(ts.from, ts.nonce));
+    return importTransaction(t);
 }
 
-void Client::importTransaction(Transaction const& _t)
+h256 Client::importTransaction(Transaction const& _t)
 {
     prepareForTransaction();
 
@@ -902,6 +901,8 @@ void Client::importTransaction(Transaction const& _t)
         default:
             BOOST_THROW_EXCEPTION(UnknownTransactionValidationError());
     }
+
+    return _t.sha3();
 }
 
 // TODO: remove try/catch, allow exceptions

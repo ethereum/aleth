@@ -53,8 +53,8 @@ public:
     eth::Block postSeal() const override { ReadGuard l(x_stateDB); return m_block; }
     void setAuthor(Address const& _us) override { WriteGuard l(x_stateDB); m_block.setAuthor(_us); }
     void prepareForTransaction() override {}
-    std::pair<h256, Address> submitTransaction(eth::TransactionSkeleton const&, Secret const&) override { return {}; };
-    void importTransaction(eth::Transaction const&) override {}
+    h256 submitTransaction(eth::TransactionSkeleton const&, Secret const&) override { return {}; };
+    h256 importTransaction(eth::Transaction const&) override { return {}; }
     eth::ExecutionResult call(Address const&, u256, Address, bytes const&, u256, u256, eth::BlockNumber, eth::FudgeFactor) override { return {}; };
     eth::TransactionSkeleton populateTransactionWithDefaults(eth::TransactionSkeleton const&) const override { return {}; };
 
