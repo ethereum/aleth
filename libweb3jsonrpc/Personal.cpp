@@ -42,7 +42,7 @@ string Personal::personal_sendTransaction(Json::Value const& _transaction, strin
 	if (Secret s = m_keyManager.secret(t.from, [&](){ return _password; }, false))
 	{
 		// return the tx hash
-		return toJS(m_eth.submitTransaction(t, s).first);
+		return toJS(m_eth.submitTransaction(t, s));
 	}
 	BOOST_THROW_EXCEPTION(JsonRpcException("Invalid password or account."));
 }

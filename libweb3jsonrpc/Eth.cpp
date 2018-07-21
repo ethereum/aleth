@@ -255,8 +255,8 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 		{
 		case TransactionRepercussion::Success:
 		{
-			pair<h256, Address> txResult = client()->submitTransaction(t, ar.second);
-			return toJS(txResult.first);
+			h256 txHash = client()->submitTransaction(t, ar.second);
+			return toJS(txHash);
 		}
 		case TransactionRepercussion::ProxySuccess:
 		{
@@ -275,43 +275,14 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 			throw JsonRpcException("Unknown authentication error.");
 		}
 	}
-	catch (ZeroSignatureTransaction&)
+	catch (JsonRpcException&)
 	{
-		throw JsonRpcException("Zero signature transaction.");
+		throw;
 	}
-	catch (GasPriceTooLow&)
+	catch (Exception& e)
 	{
-		throw JsonRpcException("Pending transaction with same nonce but higher gas price exists.");
+		throw JsonRpcException(transactionExceptionToErrorMessage(e));
 	}
-	catch (BlockGasLimitReached&)
-	{
-		throw JsonRpcException("Block gas limit reached.");
-	}
-	catch (OutOfGasIntrinsic&)
-	{
-		throw JsonRpcException("Transaction gas amount is less than the intrinsic gas amount for this transaction type.");
-	}
-	catch (InvalidNonce&)
-	{
-		throw JsonRpcException("Invalid transaction nonce.");
-	}
-	catch (PendingTransactionAlreadyExists&)
-	{
-		throw JsonRpcException("Same transaction already exists in the pending transaction queue.");
-	}
-	catch (TransactionAlreadyInChain&)
-	{
-		throw JsonRpcException("Transaction is already in the blockchain.");
-	}
-	catch (NotEnoughCash&)
-	{
-		throw JsonRpcException("Account balance is too low (balance < value + gas * gas price).");
-	}
-	catch (...)
-	{
-		throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
-	}
-	return string();
 }
 
 Json::Value Eth::eth_signTransaction(Json::Value const& _json)
@@ -362,48 +333,11 @@ string Eth::eth_sendRawTransaction(std::string const& _rlp)
 		// Don't need to check the transaction signature (CheckTransaction::None) since it will
 		// be checked as a part of transaction import
 		Transaction t(jsToBytes(_rlp, OnFailed::Throw), CheckTransaction::None);
-		client()->importTransaction(t);
-		return toJS(t.sha3());
+		return toJS(client()->importTransaction(t));
 	}
-	catch (InvalidSignature&)
+	catch (Exception& e)
 	{
-		throw JsonRpcException("Invalid transaction signature.");
-	}
-	catch (ZeroSignatureTransaction&)
-	{
-		throw JsonRpcException("Zero signature transaction.");
-	}
-	catch (GasPriceTooLow&)
-	{
-		throw JsonRpcException("Pending transaction with same nonce but higher gas price exists.");
-	}
-	catch (BlockGasLimitReached&)
-	{
-		throw JsonRpcException("Block gas limit reached.");
-	}
-	catch (OutOfGasIntrinsic&)
-	{
-		throw JsonRpcException("Transaction gas amount is less than the intrinsic gas amount for this transaction type.");
-	}
-	catch (InvalidNonce&)
-	{
-		throw JsonRpcException("Invalid transaction nonce.");
-	}
-	catch (PendingTransactionAlreadyExists&)
-	{
-		throw JsonRpcException("Same transaction already exists in the pending transaction queue.");
-	}
-	catch (TransactionAlreadyInChain&)
-	{
-		throw JsonRpcException("Transaction is already in the blockchain.");
-	}
-	catch (NotEnoughCash&)
-	{
-		throw JsonRpcException("Account balance is too low (balance < value + gas * gas price).");
-	}
-	catch (...)
-	{
-		throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
+		throw JsonRpcException(transactionExceptionToErrorMessage(e));
 	}
 }
 
