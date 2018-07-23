@@ -38,52 +38,108 @@ public:
     }
     void clear() override {}
 };
-}  // namespace
 
-BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
-
-BOOST_AUTO_TEST_CASE(create2)
+BlockHeader initBlockHeader()
 {
     BlockHeader blockHeader;
     blockHeader.setGasLimit(0x7fffffffffffffff);
     blockHeader.setTimestamp(0);
+    return blockHeader;
+}
 
+class LegacyVMFCreate2TestFixture : public TestOutputHelperFixture
+{
+public:
+    LegacyVMFCreate2TestFixture() { state.addBalance(address, 1 * ether); }
+
+    BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
-    EnvInfo envInfo(blockHeader, lastBlockHashes, 0);
-
-    Address address = KeyPair::create().address();
-    State state(0);
-    state.addBalance(address, 1 * ether);
-
-    std::unique_ptr<SealEngineFace> se(
-        ChainParams(genesisInfo(eth::Network::ConstantinopleTest)).createSealEngine());
-
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
+    Address address{KeyPair::create().address()};
+    State state{0};
+    std::unique_ptr<SealEngineFace> se{
+        ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
 
     u256 value = 0;
     u256 gasPrice = 1;
     int depth = 0;
     bool isCreate = true;
     bool staticCall = false;
+    u256 gas = 1000000;
+
     // mstore(0, 0x60)
     // return(0, 0x20)
     bytes inputData = fromHex("606060005260206000f3");
+
     // let s : = calldatasize()
     // calldatacopy(0, 0, s)
     // create2(0, 0, s, 0x123)
     // pop
     bytes code = fromHex("368060006000376101238160006000f55050");
 
+    Address expectedAddress =
+        right160(sha3(address.asBytes() + toBigEndian(0x123_cppui256) + inputData));
+
+    LegacyVM vm;
+};
+
+}  // namespace
+
+BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
+BOOST_FIXTURE_TEST_SUITE(LegacyVMCreate2Suite, LegacyVMFCreate2TestFixture)
+
+BOOST_AUTO_TEST_CASE(create2worksInConstantinople)
+{
     ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
         ref(code), sha3(code), depth, isCreate, staticCall);
 
-    LegacyVM vm;
+    vm.exec(gas, extVm, OnOpFunc{});
 
-    u256 gas = 1000000;
-    owning_bytes_ref res = vm.exec(gas, extVm, OnOpFunc{});
-
-    Address expectedAddress =
-        right160(sha3(address.asBytes() + toBigEndian(0x123_cppui256) + inputData));
     BOOST_REQUIRE(state.addressHasCode(expectedAddress));
 }
 
+BOOST_AUTO_TEST_CASE(create2isInvalidBeforeConstantinople)
+{
+    se.reset(ChainParams(genesisInfo(Network::ByzantiumTest)).createSealEngine());
+
+    ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
+        ref(code), sha3(code), depth, isCreate, staticCall);
+
+    BOOST_REQUIRE_THROW(vm.exec(gas, extVm, OnOpFunc{}), BadInstruction);
+}
+
+BOOST_AUTO_TEST_CASE(create2succeedsIfAddressHasEther)
+{
+    state.addBalance(expectedAddress, 1 * ether);
+
+    ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
+        ref(code), sha3(code), depth, isCreate, staticCall);
+
+    vm.exec(gas, extVm, OnOpFunc{});
+
+    BOOST_REQUIRE(state.addressHasCode(expectedAddress));
+}
+
+BOOST_AUTO_TEST_CASE(create2doesntChangeContractIfAddressExists)
+{
+    state.setCode(expectedAddress, bytes{inputData});
+
+    ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
+        ref(code), sha3(code), depth, isCreate, staticCall);
+
+    vm.exec(gas, extVm, OnOpFunc{});
+    BOOST_REQUIRE(state.code(expectedAddress) == inputData);
+}
+
+BOOST_AUTO_TEST_CASE(create2isForbiddenInStaticCall)
+{
+    staticCall = true;
+
+    ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
+        ref(code), sha3(code), depth, isCreate, staticCall);
+
+    BOOST_REQUIRE_THROW(vm.exec(gas, extVm, OnOpFunc{}), DisallowedStateChange);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
