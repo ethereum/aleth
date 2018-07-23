@@ -408,13 +408,13 @@ namespace dev
         &&CALLCODE,                             \
         &&RETURN,                               \
         &&DELEGATECALL,                         \
-        &&INVALID,                              \
+        &&CREATE2,                              \
         &&INVALID,                              \
         &&INVALID,                              \
         &&INVALID,                              \
         &&INVALID,                              \
         &&STATICCALL,                           \
-        &&CREATE2,                              \
+        &&INVALID,                              \
         &&INVALID,                              \
         &&REVERT,                               \
         &&INVALID,                              \
