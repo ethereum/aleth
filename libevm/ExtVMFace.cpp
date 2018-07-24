@@ -153,13 +153,25 @@ void create(evmc_result* o_result, ExtVMFace& _env, evmc_message const* _msg) no
 {
 	u256 gas = _msg->gas;
 	u256 value = fromEvmC(_msg->value);
-	bytesConstRef init = {_msg->input_data, _msg->input_size};
 	// ExtVM::create takes the sender address from .myAddress.
 	assert(fromEvmC(_msg->sender) == _env.myAddress);
 
-	CreateResult result = _env.create(value, gas, init, Instruction::CREATE, u256(0), {});
-	o_result->status_code = result.status;
-	o_result->gas_left = static_cast<int64_t>(gas);
+    bytesConstRef init;
+    u256 salt;
+    Instruction opcode = Instruction::CREATE;
+    if (_msg->kind == EVMC_CREATE)
+        init = {_msg->input_data, _msg->input_size};
+    else
+    {
+        assert(_msg->kind == EVMC_CREATE2);
+        init = {_msg->input_data + 32, _msg->input_size - 32};
+        opcode = Instruction::CREATE2;
+        salt = fromBigEndian<u256>(bytesConstRef{_msg->input_data, 32});
+    }
+
+    CreateResult result = _env.create(value, gas, init, opcode, salt, {});
+    o_result->status_code = result.status;
+    o_result->gas_left = static_cast<int64_t>(gas);
 	o_result->release = nullptr;
 
 	if (result.status == EVMC_SUCCESS)
@@ -200,8 +212,8 @@ void call(evmc_result* o_result, evmc_context* _context, evmc_message const* _ms
 	auto& env = static_cast<ExtVMFace&>(*_context);
 
 	// Handle CREATE separately.
-	if (_msg->kind == EVMC_CREATE)
-		return create(o_result, env, _msg);
+    if (_msg->kind == EVMC_CREATE || _msg->kind == EVMC_CREATE2)
+        return create(o_result, env, _msg);
 
 	CallParameters params;
 	params.gas = _msg->gas;

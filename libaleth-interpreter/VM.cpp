@@ -53,6 +53,14 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
         result.gas_left = vm->m_io_gas;
         output = ex.output();  // This moves the output from the exception!
     }
+    catch (dev::eth::BadInstruction const&)
+    {
+        result.status_code = EVMC_UNDEFINED_INSTRUCTION;
+    }
+    catch (dev::eth::DisallowedStateChange const&)
+    {
+        result.status_code = EVMC_STATIC_MODE_VIOLATION;
+    }
     catch (dev::eth::VMException const&)
     {
         result.status_code = EVMC_FAILURE;
@@ -272,8 +280,10 @@ void VM::interpretCases()
         CASE(CREATE2)
         {
             ON_OP();
-            // TODO: Bring back support for CREATE2.
-            throwBadInstruction();
+            if (m_rev < EVMC_CONSTANTINOPLE)
+                throwBadInstruction();
+            if (m_message->flags & EVMC_STATIC)
+                throwDisallowedStateChange();
 
             m_bounce = &VM::caseCreate;
         }
