@@ -164,6 +164,8 @@ void create(evmc_result* o_result, ExtVMFace& _env, evmc_message const* _msg) no
     else
     {
         assert(_msg->kind == EVMC_CREATE2);
+        // Salt data is passsed as 32-byte prefix in evmc_message::input_data
+        assert(_msg->input_size >= 32);
         init = {_msg->input_data + 32, _msg->input_size - 32};
         opcode = Instruction::CREATE2;
         salt = fromBigEndian<u256>(bytesConstRef{_msg->input_data, 32});
