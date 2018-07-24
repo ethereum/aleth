@@ -101,14 +101,13 @@ bool Test::test_mineBlocks(int _number)
 {
     try
     {
-        asClientTest(m_eth).mineBlocks(_number);
+        return asClientTest(m_eth).mineBlocks(_number);  // Synchronous
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
-        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR));
+        cwarn << ex.what();
+        throw JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, ex.what());
     }
-
-    return true;
 }
 
 bool Test::test_modifyTimestamp(int _timestamp)
