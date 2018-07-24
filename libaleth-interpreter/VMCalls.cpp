@@ -148,6 +148,7 @@ void VM::caseCreate()
         else
         {
             assert(m_OP == Instruction::CREATE2);
+            // Pass salt data through EVMC as 32-byte prefix in evmc_message::input_data
             saltAndInputData = toBigEndian(salt) + bytesConstRef(&m_mem[off], size);
             msg.input_data = saltAndInputData.data();
             msg.input_size = saltAndInputData.size();
