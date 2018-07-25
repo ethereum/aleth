@@ -39,7 +39,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     # g++-7 \
     clang-3.8 \
     clang-6.0 \
-    llvm-6.0 \
+    llvm-6.0-dev \
     llvm-5.0-dev \
     libncurses-dev \
     libz-dev \

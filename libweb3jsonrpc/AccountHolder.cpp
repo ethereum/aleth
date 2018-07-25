@@ -105,9 +105,9 @@ AddressHash SimpleAccountHolder::realAccounts() const
 	return m_keyManager.accountsHash();
 }
 
-pair<TransactionRepercussion, Secret> SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+pair<bool, Secret> SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
-	pair<TransactionRepercussion, Secret> ret;
+	pair<bool, Secret> ret;
 	bool locked = true;
 	if (m_unlockedAccounts.count(_t.from))
 	{
@@ -117,27 +117,27 @@ pair<TransactionRepercussion, Secret> SimpleAccountHolder::authenticate(dev::eth
 		if (start < end && chrono::steady_clock::now() < end)
 			locked = false;
 	}
-	ret.first = TransactionRepercussion::Locked;
+	
 	if (locked && m_getAuthorisation)
 	{
 		if (m_getAuthorisation(_t, isProxyAccount(_t.from)))
 			locked = false;
 		else
-			ret.first = TransactionRepercussion::Refused;
+			BOOST_THROW_EXCEPTION(TransactionRefused());
 	}
 	if (locked)
-		return ret;
+		BOOST_THROW_EXCEPTION(AccountLocked());
 	if (isRealAccount(_t.from))
 	{
 		if (Secret s = m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); }))
-			ret = make_pair(TransactionRepercussion::Success, s);
+			ret = make_pair(false, s);
 		else
-			ret.first = TransactionRepercussion::Locked;
+			BOOST_THROW_EXCEPTION(AccountLocked());
 	}
 	else if (isProxyAccount(_t.from))
-		ret.first = TransactionRepercussion::ProxySuccess;
+		ret.first = true;
 	else
-		ret.first = TransactionRepercussion::UnknownAccount;
+		BOOST_THROW_EXCEPTION(UnknownAccount());
 	return ret;
 }
 
@@ -166,24 +166,24 @@ bool SimpleAccountHolder::unlockAccount(Address const& _account, string const& _
 	return true;
 }
 
-pair<TransactionRepercussion, Secret> FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+pair<bool, Secret> FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
-	pair<TransactionRepercussion, Secret> ret;
+	pair<bool, Secret> ret;
 	if (isRealAccount(_t.from))
 	{
 		if (m_accounts.count(_t.from))
 		{
-			ret = make_pair(TransactionRepercussion::Success, m_accounts[_t.from]);
+			ret = make_pair(false, m_accounts[_t.from]);
 		}
 		else
-			ret.first = TransactionRepercussion::Locked;
+			BOOST_THROW_EXCEPTION(AccountLocked());
 	}
 	else if (isProxyAccount(_t.from))
 	{
-		ret.first = TransactionRepercussion::ProxySuccess;
+		ret.first = true;
 	}
 	else
-		ret.first = TransactionRepercussion::UnknownAccount;
+		BOOST_THROW_EXCEPTION(UnknownAccount());
 	return ret;
 }
 

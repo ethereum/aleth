@@ -77,14 +77,13 @@ public:
 
 	/// Submits a new transaction.
 	/// @returns the transaction's hash.
-	virtual std::pair<h256, Address> submitTransaction(TransactionSkeleton const& _t, Secret const& _secret) = 0;
+	virtual h256 submitTransaction(TransactionSkeleton const& _t, Secret const& _secret) = 0;
 
 	/// Submits the given message-call transaction.
 	void submitTransaction(Secret const& _secret, u256 const& _value, Address const& _dest, bytes const& _data = bytes(), u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = Invalid256);
 
-	/// Submits a new contract-creation transaction.
-	/// @returns the new contract's address (assuming it all goes through).
-	Address submitTransaction(Secret const& _secret, u256 const& _endowment, bytes const& _init, u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = Invalid256);
+    /// Imports the given transaction into the transaction queue
+	virtual h256 importTransaction(Transaction const& _t) = 0;
 
 	/// Blocks until all pending transactions have been processed.
 	virtual void flushTransactions() = 0;
@@ -94,9 +93,6 @@ public:
 	ExecutionResult call(Address const& _from, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 1000000, u256 _gasPrice = DefaultGasPrice, FudgeFactor _ff = FudgeFactor::Strict) { return call(_from, _value, _dest, _data, _gas, _gasPrice, m_default, _ff); }
 	ExecutionResult call(Secret const& _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) { return call(toAddress(_secret), _value, _dest, _data, _gas, _gasPrice, _blockNumber, _ff); }
 	ExecutionResult call(Secret const& _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, FudgeFactor _ff = FudgeFactor::Strict) { return call(toAddress(_secret), _value, _dest, _data, _gas, _gasPrice, _ff); }
-
-	/// Injects the RLP-encoded transaction given by the _rlp into the transaction queue directly.
-	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) = 0;
 
 	/// Injects the RLP-encoded block given by the _rlp into the block queue directly.
 	virtual ImportResult injectBlock(bytes const& _block) = 0;

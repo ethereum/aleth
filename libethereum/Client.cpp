@@ -867,12 +867,17 @@ void Client::rewind(unsigned _n)
     m_bq.clear();
 }
 
-pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
+h256 Client::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
 {
-    prepareForTransaction();
     TransactionSkeleton ts = populateTransactionWithDefaults(_t);
     ts.from = toAddress(_secret);
     Transaction t(ts, _secret);
+    return importTransaction(t);
+}
+
+h256 Client::importTransaction(Transaction const& _t)
+{
+    prepareForTransaction();
 
     // Use the Executive to perform basic validation of the transaction
     // (e.g. transaction signature, account balance) using the state of
@@ -880,8 +885,8 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
     // we'll catch the exception at the RPC level.
     Block currentBlock = block(bc().currentHash());
     Executive e(currentBlock, bc());
-    e.initialize(t);
-    ImportResult res = m_tq.import(t.rlp());
+    e.initialize(_t);
+    ImportResult res = m_tq.import(_t.rlp());
     switch (res)
     {
         case ImportResult::Success:
@@ -898,7 +903,7 @@ pair<h256, Address> Client::submitTransaction(TransactionSkeleton const& _t, Sec
             BOOST_THROW_EXCEPTION(UnknownTransactionValidationError());
     }
 
-    return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));
+    return _t.sha3();
 }
 
 // TODO: remove try/catch, allow exceptions

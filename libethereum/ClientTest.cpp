@@ -24,6 +24,7 @@
 #include <libethereum/ClientTest.h>
 #include <libethereum/EthereumHost.h>
 #include <boost/filesystem/path.hpp>
+#include <future>
 
 using namespace std;
 using namespace dev;
@@ -99,18 +100,32 @@ void ClientTest::modifyTimestamp(int64_t _timestamp)
     onPostStateChanged();
 }
 
-void ClientTest::mineBlocks(unsigned _count)
+bool ClientTest::mineBlocks(unsigned _count) noexcept
 {
-    m_blocksToMine = _count;
-    startSealing();
-}
-
-void ClientTest::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
-{
-    Client::onNewBlocks(_blocks, io_changed);
-
-    if (--m_blocksToMine <= 0)
-        stopSealing();
+    if (wouldSeal())
+        return false;
+    try
+    {
+        std::promise<void> allBlocksImported;
+        int blocksLeftToImport = _count;
+        auto importHandler =
+            setOnBlockImport([this, &blocksLeftToImport, &allBlocksImported](BlockHeader const&) {
+                if (--blocksLeftToImport == 0)
+                {
+                    stopSealing();
+                    allBlocksImported.set_value();
+                }
+            });
+        startSealing();
+        future_status ret = allBlocksImported.get_future().wait_for(
+            std::chrono::seconds(m_singleBlockMaxMiningTimeInSeconds * _count));
+        return (ret == future_status::ready);
+    }
+    catch (std::exception const&)
+    {
+        LOG(m_logger) << boost::current_exception_diagnostic_information();
+        return false;
+    }
 }
 
 bool ClientTest::completeSync()
