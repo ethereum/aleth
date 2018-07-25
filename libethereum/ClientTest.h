@@ -45,7 +45,7 @@ public:
     ~ClientTest();
 
     void setChainParams(std::string const& _genesis);
-    bool mineBlocks(unsigned _count);
+    bool mineBlocks(unsigned _count) noexcept;
     void modifyTimestamp(int64_t _timestamp);
     void rewindToBlock(unsigned _number);
     h256 importRawBlock(std::string const& _blockRLP);

@@ -99,15 +99,9 @@ bool Test::test_setChainParams(Json::Value const& param1)
 
 bool Test::test_mineBlocks(int _number)
 {
-    try
-    {
-        return asClientTest(m_eth).mineBlocks(_number);  // Synchronous
-    }
-    catch (std::exception const& ex)
-    {
-        cwarn << ex.what();
-        throw JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, ex.what());
-    }
+    if (!asClientTest(m_eth).mineBlocks(_number))  // Synchronous
+        throw JsonRpcException("Mining failed.");
+    return true;
 }
 
 bool Test::test_modifyTimestamp(int _timestamp)

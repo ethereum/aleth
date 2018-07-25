@@ -100,24 +100,32 @@ void ClientTest::modifyTimestamp(int64_t _timestamp)
     onPostStateChanged();
 }
 
-bool ClientTest::mineBlocks(unsigned _count)
+bool ClientTest::mineBlocks(unsigned _count) noexcept
 {
     if (wouldSeal())
         return false;
-    std::promise<void> allBlocksImported;
-    int blocksLeftToImport = _count;
-    auto importHandler =
-        setOnBlockImport([this, &blocksLeftToImport, &allBlocksImported](BlockHeader const&) {
-            if (--blocksLeftToImport == 0)
-            {
-                stopSealing();
-                allBlocksImported.set_value();
-            }
-        });
-    startSealing();
-    future_status ret = allBlocksImported.get_future().wait_for(
-        std::chrono::seconds(m_singleBlockMaxMiningTimeInSeconds * _count));
-    return (ret == future_status::ready);
+    try
+    {
+        std::promise<void> allBlocksImported;
+        int blocksLeftToImport = _count;
+        auto importHandler =
+            setOnBlockImport([this, &blocksLeftToImport, &allBlocksImported](BlockHeader const&) {
+                if (--blocksLeftToImport == 0)
+                {
+                    stopSealing();
+                    allBlocksImported.set_value();
+                }
+            });
+        startSealing();
+        future_status ret = allBlocksImported.get_future().wait_for(
+            std::chrono::seconds(m_singleBlockMaxMiningTimeInSeconds * _count));
+        return (ret == future_status::ready);
+    }
+    catch (std::exception const&)
+    {
+        LOG(m_logger) << boost::current_exception_diagnostic_information();
+        return false;
+    }
 }
 
 bool ClientTest::completeSync()
