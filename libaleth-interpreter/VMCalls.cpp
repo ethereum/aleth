@@ -138,24 +138,12 @@ void VM::caseCreate()
         auto off = static_cast<size_t>(initOff);
         auto size = static_cast<size_t>(initSize);
 
-        bytes saltAndInputData;
-        if (m_OP == Instruction::CREATE)
-        {
-            msg.input_data = &m_mem[off];
-            msg.input_size = size;
-            msg.kind = EVMC_CREATE;  // FIXME: In EVM-C move the kind to the top.
-        }
-        else
-        {
-            assert(m_OP == Instruction::CREATE2);
-            // Pass salt data through EVMC as 32-byte prefix in evmc_message::input_data
-            saltAndInputData = toBigEndian(salt) + bytesConstRef(&m_mem[off], size);
-            msg.input_data = saltAndInputData.data();
-            msg.input_size = saltAndInputData.size();
-            msg.kind = EVMC_CREATE2;
-        }
+        msg.input_data = &m_mem[off];
+        msg.input_size = size;
+        msg.salt = toEvmC(salt);
         msg.sender = m_message->destination;
         msg.depth = m_message->depth + 1;
+        msg.kind = m_OP == Instruction::CREATE ? EVMC_CREATE : EVMC_CREATE2;  // FIXME: In EVM-C move the kind to the top.
         msg.value = toEvmC(endowment);
 
         evmc_result result;
