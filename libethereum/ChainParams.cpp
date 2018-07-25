@@ -63,13 +63,20 @@ ChainParams ChainParams::loadConfig(
     js::mObject obj = val.get_obj();
 
     validateConfigJson(obj);
-    cp.sealEngineName = obj[c_sealEngine].get_str();
+
     // params
+    cp.sealEngineName = obj[c_sealEngine].get_str();
     js::mObject params = obj[c_params].get_obj();
-    cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params[c_accountStartNonce].get_str())));
-    cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params[c_maximumExtraDataSize].get_str())));
+
+    // Params that are not required and could be set to default value
+    if (params.count(c_accountStartNonce))
+        cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params[c_accountStartNonce].get_str())));
+    if (params.count(c_maximumExtraDataSize))
+        cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params[c_maximumExtraDataSize].get_str())));
+
     cp.tieBreakingGas = params.count(c_tieBreakingGas) ? params[c_tieBreakingGas].get_bool() : true;
-    cp.setBlockReward(u256(fromBigEndian<u256>(fromHex(params[c_blockReward].get_str()))));
+    if (params.count(c_blockReward))
+        cp.setBlockReward(u256(fromBigEndian<u256>(fromHex(params[c_blockReward].get_str()))));
 
     auto setOptionalU256Parameter = [&params](u256 &_destination, string const& _name)
     {
