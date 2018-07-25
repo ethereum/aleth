@@ -101,5 +101,9 @@ DEV_SIMPLE_EXCEPTION(AccountAlreadyImported);
 DEV_SIMPLE_EXCEPTION(InvalidWarpStatusPacket);
 DEV_SIMPLE_EXCEPTION(FailedToDownloadManifest);
 DEV_SIMPLE_EXCEPTION(FailedToDownloadDaoForkBlockHeader);
+
+DEV_SIMPLE_EXCEPTION(AccountLocked);
+DEV_SIMPLE_EXCEPTION(TransactionRefused);
+DEV_SIMPLE_EXCEPTION(UnknownAccount);
 }
 }

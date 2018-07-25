@@ -250,38 +250,22 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		pair<TransactionRepercussion, Secret> ar = m_ethAccounts.authenticate(t);
-		switch (ar.first)
-		{
-		case TransactionRepercussion::Success:
+		pair<bool, Secret> ar = m_ethAccounts.authenticate(t);
+		if (!ar.first)
 		{
 			h256 txHash = client()->submitTransaction(t, ar.second);
 			return toJS(txHash);
 		}
-		case TransactionRepercussion::ProxySuccess:
+		else
 		{
 			m_ethAccounts.queueTransaction(t);
 			h256 emptyHash;
 			return toJS(emptyHash); // TODO: give back something more useful than an empty hash.
 		}
-		case TransactionRepercussion::UnknownAccount:
-			throw JsonRpcException("Account unknown.");
-		case TransactionRepercussion::Locked:
-			throw JsonRpcException("Account is locked.");
-		case TransactionRepercussion::Refused:
-			throw JsonRpcException("Transaction rejected by user.");
-		case TransactionRepercussion::Unknown:
-		default:
-			throw JsonRpcException("Unknown authentication error.");
-		}
 	}
-	catch (JsonRpcException&)
+	catch (Exception const&)
 	{
-		throw;
-	}
-	catch (Exception& e)
-	{
-		throw JsonRpcException(transactionExceptionToErrorMessage(e));
+		throw JsonRpcException(exceptionToErrorMessage());
 	}
 }
 
@@ -292,25 +276,15 @@ Json::Value Eth::eth_signTransaction(Json::Value const& _json)
 		TransactionSkeleton ts = toTransactionSkeleton(_json);
 		setTransactionDefaults(ts);
 		ts = client()->populateTransactionWithDefaults(ts);
-		pair<TransactionRepercussion, Secret> ar = m_ethAccounts.authenticate(ts);
-		switch (ar.first)
-		{
-		case TransactionRepercussion::Success:
-		case TransactionRepercussion::ProxySuccess:
-		{
-			Transaction t(ts, ar.second);
-			RLPStream s;
-			t.streamRLP(s);
-			return toJson(t, s.out());
-		}
-		default:
-			// TODO: provide more useful information in the exception.
-			throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
-		}
+		pair<bool, Secret> ar = m_ethAccounts.authenticate(ts);
+		Transaction t(ts, ar.second);
+		RLPStream s;
+		t.streamRLP(s);
+		return toJson(t, s.out());
 	}
-	catch (...)
+	catch (Exception const&)
 	{
-		throw JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS);
+		throw JsonRpcException(exceptionToErrorMessage());
 	}
 }
 
@@ -335,9 +309,9 @@ string Eth::eth_sendRawTransaction(std::string const& _rlp)
 		Transaction t(jsToBytes(_rlp, OnFailed::Throw), CheckTransaction::None);
 		return toJS(client()->importTransaction(t));
 	}
-	catch (Exception& e)
+	catch (Exception const&)
 	{
-		throw JsonRpcException(transactionExceptionToErrorMessage(e));
+		throw JsonRpcException(exceptionToErrorMessage());
 	}
 }
 
@@ -734,4 +708,68 @@ Json::Value Eth::eth_fetchQueuedTransactions(string const& _accountId)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
+}
+
+string dev::rpc::exceptionToErrorMessage()
+{
+	string ret;
+	try
+	{
+		throw;
+	}
+	// Transaction submission exceptions
+	catch (ZeroSignatureTransaction const&)
+	{
+		ret = "Zero signature transaction.";
+	}
+	catch (GasPriceTooLow const&)
+	{
+		ret = "Pending transaction with same nonce but higher gas price exists.";
+	}
+	catch (OutOfGasIntrinsic const&)
+	{
+		ret = "Transaction gas amount is less than the intrinsic gas amount for this transaction type.";
+	}
+	catch (BlockGasLimitReached const&)
+	{
+		ret = "Block gas limit reached.";
+	}
+	catch (InvalidNonce const&)
+	{
+		ret = "Invalid transaction nonce.";
+	}
+	catch (PendingTransactionAlreadyExists const&)
+	{
+		ret = "Same transaction already exists in the pending transaction queue.";
+	}
+	catch (TransactionAlreadyInChain const&)
+	{
+		ret = "Transaction is already in the blockchain.";
+	}
+	catch (NotEnoughCash const&)
+	{
+		ret = "Account balance is too low (balance < value + gas * gas price).";
+	}
+	catch (InvalidSignature const&)
+	{
+		ret = "Invalid transaction signature.";
+	}
+	// Acount holder exceptions
+	catch (AccountLocked const&)
+	{
+		ret = "Account is locked.";
+	}
+	catch (UnknownAccount const&)
+	{
+		ret = "Unknown account.";
+	}
+	catch (TransactionRefused const&)
+	{
+		ret = "Transaction rejected by user.";
+	}
+	catch (...)
+	{
+		ret = "Invalid RPC parameters.";
+	}
+	return ret;
 }

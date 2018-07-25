@@ -51,6 +51,9 @@ namespace dev
 namespace rpc
 {
 
+// Should only be called within a catch block
+std::string exceptionToErrorMessage();
+
 /**
  * @brief JSON-RPC api implementation
  */

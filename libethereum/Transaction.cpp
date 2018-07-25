@@ -73,47 +73,6 @@ TransactionException dev::eth::toTransactionException(Exception const& _e)
 	return TransactionException::Unknown;
 }
 
-string dev::eth::transactionExceptionToErrorMessage(Exception const& _e)
-{
-	if (!!dynamic_cast<ZeroSignatureTransaction const*>(&_e))
-	{
-		return "Zero signature transaction.";
-	}
-	if (!!dynamic_cast<GasPriceTooLow const*>(&_e))
-	{
-		return "Pending transaction with same nonce but higher gas price exists.";
-	}
-	if (!!dynamic_cast<BlockGasLimitReached const*>(&_e))
-	{
-		return "Block gas limit reached.";
-	}
-	if (!!dynamic_cast<OutOfGasIntrinsic const*>(&_e))
-	{
-		return "Transaction gas amount is less than the intrinsic gas amount for this transaction type.";
-	}
-	if (!!dynamic_cast<InvalidNonce const*>(&_e))
-	{
-		return "Invalid transaction nonce.";
-	}
-	if (!!dynamic_cast<PendingTransactionAlreadyExists const*>(&_e))
-	{
-		return "Same transaction already exists in the pending transaction queue.";
-	}
-	if (!!dynamic_cast<TransactionAlreadyInChain const*>(&_e))
-	{
-		return "Transaction is already in the blockchain.";
-	}
-	if (!!dynamic_cast<NotEnoughCash const*>(&_e))
-	{
-		return "Account balance is too low (balance < value + gas * gas price).";
-	}
-	if (!!dynamic_cast<InvalidSignature const*>(&_e))
-	{
-		return "Invalid transaction signature.";
-	}
-	return "Unknown transaction exception";
-}
-
 std::ostream& dev::eth::operator<<(std::ostream& _out, TransactionException const& _er)
 {
 	switch (_er)

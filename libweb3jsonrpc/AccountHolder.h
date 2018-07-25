@@ -39,16 +39,6 @@ namespace eth
 class KeyManager;
 class Interface;
 
-enum class TransactionRepercussion
-{
-	Unknown,
-	UnknownAccount,
-	Locked,
-	Refused,
-	ProxySuccess,
-	Success
-};
-
 /**
  * Manages real accounts (where we know the secret key) and proxy accounts (where transactions
  * to be sent from these accounts are forwarded to a proxy on the other side).
@@ -60,9 +50,10 @@ public:
 	virtual ~AccountHolder() = default;
 
 	virtual AddressHash realAccounts() const = 0;
-	// use m_web3's submitTransaction
-	// or use AccountHolder::queueTransaction(_t) to accept
-	virtual std::pair<TransactionRepercussion, Secret> authenticate(dev::eth::TransactionSkeleton const& _t) = 0;
+	// use m_web3's submitTransaction or use AccountHolder::queueTransaction(_t) to accept.
+	// @returns the authenticated account's Secret (if available) and if the account is a
+	// proxy account.
+	virtual std::pair<bool, Secret> authenticate(dev::eth::TransactionSkeleton const& _t) = 0;
 
 	Addresses allAccounts() const;
 	bool isRealAccount(Address const& _account) const { return realAccounts().count(_account) > 0; }
@@ -109,7 +100,7 @@ public:
 	{}
 
 	AddressHash realAccounts() const override;
-	std::pair<TransactionRepercussion, Secret> authenticate(dev::eth::TransactionSkeleton const& _t) override;
+	std::pair<bool, Secret> authenticate(dev::eth::TransactionSkeleton const& _t) override;
 
 	bool unlockAccount(Address const& _account, std::string const& _password, unsigned _duration) override;
 
@@ -144,9 +135,7 @@ public:
 		return ret;
 	}
 
-	// use m_web3's submitTransaction
-	// or use AccountHolder::queueTransaction(_t) to accept
-	std::pair<TransactionRepercussion, Secret> authenticate(dev::eth::TransactionSkeleton const& _t) override;
+	std::pair<bool, Secret> authenticate(dev::eth::TransactionSkeleton const& _t) override;
 
 private:
 	std::unordered_map<dev::Address, dev::Secret> m_accounts;
