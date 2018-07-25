@@ -44,7 +44,7 @@ public:
 
         string listenIP = "127.0.0.1";
         unsigned short listenPort = 30303;
-        auto netPrefs = NetworkPreferences(listenIP, listenPort, false);
+        auto netPrefs = NetworkConfig(listenIP, listenPort, false);
         netPrefs.discovery = false;
         netPrefs.pin = false;
 

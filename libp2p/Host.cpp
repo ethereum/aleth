@@ -98,7 +98,7 @@ bytes ReputationManager::data(SessionFace const& _s, std::string const& _sub) co
     return bytes();
 }
 
-Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkPreferences const& _n):
+Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig const& _n):
     Worker("p2p", 0),
     m_clientVersion(_clientVersion),
     m_netPrefs(_n),
@@ -111,7 +111,7 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkPreferenc
     cnetnote << "Id: " << id();
 }
 
-Host::Host(string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork):
+Host::Host(string const& _clientVersion, NetworkConfig const& _n, bytesConstRef _restoreNetwork):
     Host(_clientVersion, networkAlias(_restoreNetwork), _n)
 {
     m_restoreNetwork = _restoreNetwork.toBytes();
