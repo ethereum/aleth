@@ -63,7 +63,6 @@ enum class CodeDeposit
 
 struct VMException;
 
-std::string transactionExceptionToErrorMessage(Exception const& _e);
 TransactionException toTransactionException(Exception const& _e);
 std::ostream& operator<<(std::ostream& _out, TransactionException const& _er);
 
