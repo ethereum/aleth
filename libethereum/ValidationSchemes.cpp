@@ -130,12 +130,24 @@ void validateAccountObj(js::mObject const& _obj)
     }
     else
     {
-        // A standart account with all fields
-        requireJsonFields(_obj, "validateAccountObj",
-            {{c_code, {{js::str_type}, JsonFieldPresence::Required}},
-                {c_nonce, {{js::str_type}, JsonFieldPresence::Required}},
-                {c_storage, {{js::obj_type}, JsonFieldPresence::Required}},
-                {c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
+        if (_obj.count(c_codeFromFile))
+        {
+            // A standart account with external code
+            requireJsonFields(_obj, "validateAccountObj",
+                {{c_codeFromFile, {{js::str_type}, JsonFieldPresence::Required}},
+                    {c_nonce, {{js::str_type}, JsonFieldPresence::Required}},
+                    {c_storage, {{js::obj_type}, JsonFieldPresence::Required}},
+                    {c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
+        }
+        else
+        {
+            // A standart account with all fields
+            requireJsonFields(_obj, "validateAccountObj",
+                {{c_code, {{js::str_type}, JsonFieldPresence::Required}},
+                    {c_nonce, {{js::str_type}, JsonFieldPresence::Required}},
+                    {c_storage, {{js::obj_type}, JsonFieldPresence::Required}},
+                    {c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
+        }
     }
 }
 }
