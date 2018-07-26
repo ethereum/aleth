@@ -57,6 +57,12 @@ defaults:
       path: ~/package
       destination: package
 
+  add-package-to-workspace: &add-package-to-workspace
+      persist_to_workspace:
+        root: ~/package
+        paths:
+          - "*"
+
   store-randomcode-seed: &store-randomcode-seed
     store_artifacts:
       path: ~/build/test/randomCodeSeed.txt
@@ -142,6 +148,7 @@ jobs:
       - *save-ccache
       - *save-deps-cache
       - *store-package
+      - *add-package-to-workspace
       - *test
       - *test-evmc-interpreter
 
@@ -200,8 +207,25 @@ jobs:
       - *build
       - *save-deps-cache
       - *store-package
+      - *add-package-to-workspace
       - *test
       - *store-randomcode-seed
+
+  # The job collects built packages (available in the workspace) and
+  # uploads them to the GitHub release matching the git tag.
+  deploy:
+    docker:
+      - image: circleci/golang
+    steps:
+      - run:
+          name: "Install ghr"
+          command: go get -u github.com/tcnksm/ghr
+      - attach_workspace:
+          at: ~/package
+      - run:
+          name: "Create GitHub release"
+          command: |
+            ghr -u ethereum -r cpp-ethereum $CIRCLE_TAG ~/package
 
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
@@ -210,6 +234,21 @@ workflows:
   version: 2
   aleth:
     jobs:
-      - macos-xcode90
-      - linux-clang6
+      - macos-xcode90:
+          filters:
+            tags:
+              only: /.*/
+      - linux-clang6:
+          filters:
+            tags:
+              only: /.*/
       - linux-gcc6
+      - deploy:
+          requires:
+            - macos-xcode90
+            - linux-clang6
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
