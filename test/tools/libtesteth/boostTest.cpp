@@ -59,27 +59,27 @@ void customTestSuite()
     if (opt.singleTestFile.is_initialized())
     {
         boost::filesystem::path file(opt.singleTestFile.get());
-        if (opt.rCurrentTestSuite.find_first_of("GeneralStateTests") != std::string::npos)
+        if (opt.rCurrentTestSuite.find("GeneralStateTests") != std::string::npos)
         {
             dev::test::StateTestSuite suite;
             suite.runTestWithoutFiller(file);
         }
-        else if (opt.rCurrentTestSuite.find_first_of("BlockchainTests") != std::string::npos)
+        else if (opt.rCurrentTestSuite.find("BlockchainTests") != std::string::npos)
         {
             dev::test::BlockchainTestSuite suite;
             suite.runTestWithoutFiller(file);
         }
-        else if (opt.rCurrentTestSuite.find_first_of("TransitionTests") != std::string::npos)
+        else if (opt.rCurrentTestSuite.find("TransitionTests") != std::string::npos)
         {
             dev::test::TransitionTestsSuite suite;
             suite.runTestWithoutFiller(file);
         }
-        else if (opt.rCurrentTestSuite.find_first_of("VMtests") != std::string::npos)
+        else if (opt.rCurrentTestSuite.find("VMtests") != std::string::npos)
         {
             dev::test::VmTestSuite suite;
             suite.runTestWithoutFiller(file);
         }
-        else if (opt.rCurrentTestSuite.find_first_of("TransactionTests") != std::string::npos)
+        else if (opt.rCurrentTestSuite.find("TransactionTests") != std::string::npos)
         {
             dev::test::TransactionTestSuite suite;
             suite.runTestWithoutFiller(file);
