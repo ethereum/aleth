@@ -180,7 +180,7 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 	{ Instruction::XEQ,          { "XEQ",                 2,    1,  Tier::Special } },
 	{ Instruction::XISZERO,      { "XISZERO",             2,    1,  Tier::Special } },
 	{ Instruction::XAND,         { "XAND",                1,    1,  Tier::Special } },
-	{ Instruction::XOR,          { "XOR",                 2,    1,  Tier::Special } },
+	{ Instruction::XOOR,         { "XOOR",                2,    1,  Tier::Special } },
 	{ Instruction::XXOR,         { "XXOR",                2,    1,  Tier::Special } },
 	{ Instruction::XNOT,         { "XNOT",                2,    1,  Tier::Special } },
 	{ Instruction::XSHL,         { "XSHL",                2,    1,  Tier::Special } },
