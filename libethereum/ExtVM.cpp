@@ -141,6 +141,11 @@ size_t ExtVM::codeSizeAt(dev::Address _a)
     return m_s.codeSize(_a);
 }
 
+h256 ExtVM::codeHashAt(Address _a)
+{
+    return m_s.codeHash(_a);
+}
+
 void ExtVM::setStore(u256 _n, u256 _v)
 {
     m_s.setStorage(myAddress, _n, _v);
