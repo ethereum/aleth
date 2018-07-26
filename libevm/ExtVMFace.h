@@ -227,6 +227,9 @@ public:
     /// @returns the size of the code in bytes at the given address.
     virtual size_t codeSizeAt(Address) { return 0; }
 
+    /// @returns the hash of the code at the given address.
+    virtual h256 codeHashAt(Address) { return h256{}; }
+
     /// Does the account exist?
     virtual bool exists(Address) { return false; }
 

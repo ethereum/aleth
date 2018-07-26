@@ -55,29 +55,32 @@ public:
     }
 
 	/// Read storage location.
-	virtual u256 store(u256 _n) override final { return m_s.storage(myAddress, _n); }
+    u256 store(u256 _n) final { return m_s.storage(myAddress, _n); }
 
-	/// Write a value in storage.
-	virtual void setStore(u256 _n, u256 _v) override final;
+    /// Write a value in storage.
+    void setStore(u256 _n, u256 _v) final;
 
-	/// Read address's code.
-	virtual bytes const& codeAt(Address _a) override final { return m_s.code(_a); }
+    /// Read address's code.
+    bytes const& codeAt(Address _a) final { return m_s.code(_a); }
 
-	/// @returns the size of the code in  bytes at the given address.
-	virtual size_t codeSizeAt(Address _a) override final;
+    /// @returns the size of the code in  bytes at the given address.
+    size_t codeSizeAt(Address _a) final;
 
-	/// Create a new contract.
-	CreateResult create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp = {}) final;
+    /// @returns the size of the code in  bytes at the given address.
+    h256 codeHashAt(Address _a) final;
+
+    /// Create a new contract.
+    CreateResult create(u256 _endowment, u256& io_gas, bytesConstRef _code, Instruction _op, u256 _salt, OnOpFunc const& _onOp = {}) final;
 
 	/// Create a new message call.
 	CallResult call(CallParameters& _params) final;
 
 	/// Read address's balance.
-	virtual u256 balance(Address _a) override final { return m_s.balance(_a); }
+    u256 balance(Address _a) final { return m_s.balance(_a); }
 
-	/// Does the account exist?
-	virtual bool exists(Address _a) override final
-	{
+    /// Does the account exist?
+    bool exists(Address _a) final
+    {
 		if (evmSchedule().emptinessIsNonexistence())
 			return m_s.accountNonemptyAndExisting(_a);
 		else
@@ -85,15 +88,18 @@ public:
 	}
 
 	/// Suicide the associated contract to the given address.
-	virtual void suicide(Address _a) override final;
+    void suicide(Address _a) final;
 
-	/// Return the EVM gas-price schedule for this execution context.
-	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo().number()); }
+    /// Return the EVM gas-price schedule for this execution context.
+    EVMSchedule const& evmSchedule() const final
+    {
+        return m_sealEngine.evmSchedule(envInfo().number());
+    }
 
-	State const& state() const { return m_s; }
+    State const& state() const { return m_s; }
 
 	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
-	h256 blockHash(u256 _number) override;
+    h256 blockHash(u256 _number) final;
 
 private:
 	State& m_s;  ///< A reference to the base state.
