@@ -132,7 +132,7 @@ jobs:
       - GENERATOR: Ninja
       - BUILD_PARALLEL_JOBS: 8
       - TEST_PARALLEL_JOBS: 8
-      - CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON
+      - CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON -DSTATIC_LIBSTDCPP=ON
     docker:
       - image: ethereum/cpp-build-env:2
     steps:
