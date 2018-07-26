@@ -60,6 +60,7 @@ string const c_EIP158ForkBlock = "EIP158ForkBlock";
 string const c_byzantiumForkBlock = "byzantiumForkBlock";
 string const c_eWASMForkBlock = "eWASMForkBlock";
 string const c_constantinopleForkBlock = "constantinopleForkBlock";
+string const c_experimentalForkBlock = "experimentalForkBlock";
 string const c_accountStartNonce = "accountStartNonce";
 string const c_maximumExtraDataSize = "maximumExtraDataSize";
 string const c_tieBreakingGas = "tieBreakingGas";

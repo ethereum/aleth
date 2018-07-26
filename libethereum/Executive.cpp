@@ -293,7 +293,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         // FIXME: changelog contains unrevertable balance change that paid
         //        for the transaction.
         // Increment associated nonce for sender.
-        if (_p.senderAddress != MaxAddress || m_envInfo.number() < m_sealEngine.chainParams().constantinopleForkBlock) // EIP86
+        if (_p.senderAddress != MaxAddress ||
+            m_envInfo.number() < m_sealEngine.chainParams().experimentalForkBlock)  // EIP86
             m_s.incNonce(_p.senderAddress);
     }
 
@@ -371,7 +372,8 @@ bool Executive::create2Opcode(Address const& _sender, u256 const& _endowment, u2
 
 bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
 {
-    if (_sender != MaxAddress || m_envInfo.number() < m_sealEngine.chainParams().constantinopleForkBlock) // EIP86
+    if (_sender != MaxAddress ||
+        m_envInfo.number() < m_sealEngine.chainParams().experimentalForkBlock)  // EIP86
         m_s.incNonce(_sender);
 
     m_savepoint = m_s.savepoint();
