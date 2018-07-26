@@ -55,7 +55,7 @@ endif()
 
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
-cable_add_buildinfo_library(PREFIX aleth)
+cable_add_buildinfo_library(PROJECT_NAME aleth)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY On)
 

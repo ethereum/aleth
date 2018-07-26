@@ -27,7 +27,7 @@
 #include <libethashseal/EthashCPUMiner.h>
 #include <libethereum/Client.h>
 
-#include <aleth-buildinfo.h>
+#include <aleth/buildinfo.h>
 
 #include <yaml-cpp/yaml.h>
 #include <boost/algorithm/string/trim.hpp>

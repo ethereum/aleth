@@ -23,7 +23,7 @@
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/Ethash.h>
 
-#include <aleth-buildinfo.h>
+#include <aleth/buildinfo.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>

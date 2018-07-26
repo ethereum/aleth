@@ -10,13 +10,9 @@
 
 #if __cplusplus
 extern "C" {
-/* TODO: Move NOEXCEPT to evmc.h */
-#define NOEXCEPT noexcept
-#else
-#define NOEXCEPT
 #endif
 
-EVMC_EXPORT struct evmc_instance* evmc_create_interpreter() NOEXCEPT;
+EVMC_EXPORT struct evmc_instance* evmc_create_interpreter() EVMC_NOEXCEPT;
 
 #if __cplusplus
 }

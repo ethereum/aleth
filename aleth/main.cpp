@@ -60,7 +60,7 @@
 #include "MinerAux.h"
 #include "AccountManager.h"
 
-#include <aleth-buildinfo.h>
+#include <aleth/buildinfo.h>
 
 using namespace std;
 using namespace dev;
