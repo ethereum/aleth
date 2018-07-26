@@ -18,7 +18,7 @@
 #include "interpreter.h"
 #include "VM.h"
 
-#include <aleth-buildinfo.h>
+#include <aleth/buildinfo.h>
 
 namespace
 {
@@ -93,7 +93,8 @@ extern "C" evmc_instance* evmc_create_interpreter() noexcept
         aleth_get_buildinfo()->project_version,
         ::destroy,
         ::execute,
-        nullptr,
+        nullptr,  // set_tracer
+        nullptr,  // set_option
     };
     return &s_instance;
 }

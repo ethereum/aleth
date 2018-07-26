@@ -30,7 +30,7 @@
 #include <libethereum/LastBlockHashesFace.h>
 #include <libevm/VMFactory.h>
 
-#include <aleth-buildinfo.h>
+#include <aleth/buildinfo.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
