@@ -27,7 +27,11 @@ defaults:
     run:
       name: "Build"
       working_directory: ~/build
-      command: cmake --build . --target package -- -j $BUILD_PARALLEL_JOBS
+      command: |
+        cmake --build . --target package -- -j $BUILD_PARALLEL_JOBS
+        mkdir -p ../package
+        . aleth/buildinfo.sh
+        mv aleth.tar.gz ../package/$PROJECT_NAME-$PROJECT_VERSION-$SYSTEM_NAME-$SYSTEM_PROCESSOR.tar.gz
 
   test: &test
     run:
@@ -50,8 +54,8 @@ defaults:
 
   store-package: &store-package
     store_artifacts:
-      path: ~/build/aleth.tar.gz
-      destination: aleth.tar.gz
+      path: ~/package
+      destination: package
 
   store-randomcode-seed: &store-randomcode-seed
     store_artifacts:
