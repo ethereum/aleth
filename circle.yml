@@ -29,9 +29,9 @@ defaults:
       working_directory: ~/build
       command: |
         cmake --build . --target package -- -j $BUILD_PARALLEL_JOBS
-        mkdir -p ../package
+        mkdir -p ~/package
         . aleth/buildinfo.sh
-        mv aleth.tar.gz ../package/$PROJECT_NAME-$PROJECT_VERSION-$SYSTEM_NAME-$SYSTEM_PROCESSOR.tar.gz
+        mv aleth.tar.gz ~/package/$PROJECT_NAME-$PROJECT_VERSION-$SYSTEM_NAME-$SYSTEM_PROCESSOR.tar.gz
 
   test: &test
     run:
@@ -225,7 +225,8 @@ jobs:
       - run:
           name: "Create GitHub release"
           command: |
-            ghr -u ethereum -r cpp-ethereum $CIRCLE_TAG ~/package
+            prerelease_flag=$([[ $CIRCLE_TAG =~ ^v[0-9\.]+$ ]] || echo '-prerelease')
+            ghr -u ethereum -r cpp-ethereum $prerelease_flag $CIRCLE_TAG ~/package
 
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
