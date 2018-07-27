@@ -28,6 +28,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdevcore/Guards.h>
 #include <libdevcore/FileSystem.h>
 #include <boost/filesystem/path.hpp>
+#include <sys/select.h>
 
 // "Mac OS X does not support the flag MSG_NOSIGNAL but we have an equivalent."
 // See http://lists.apple.com/archives/macnetworkprog/2002/Dec/msg00091.html
@@ -54,6 +55,23 @@ fs::path getIpcPathOrDataDir()
 		return getDataDir();
 	return path;
 }
+
+/**
+ * Waits for the file descriptor @p fd to become readable within a given timeout.
+ * @retval true The file descriptor @p fd has become readable.
+ * @retval false Waiting for file descriptor @p fd readability timed out.
+ */
+static bool waitForReadable(int fd, unsigned timeoutMillis)
+{
+	fd_set in, out, err;
+	FD_ZERO(&in);
+	FD_ZERO(&out);
+	FD_ZERO(&err);
+	FD_SET(fd, &in);
+	timeval tv { timeoutMillis / 1000, timeoutMillis % 1000 };
+	return select(fd + 1, &in, &out, &err, &tv) > 0;
+}
+
 }
 
 UnixDomainSocketServer::UnixDomainSocketServer(string const& _appId):
@@ -108,6 +126,13 @@ void UnixDomainSocketServer::Listen()
 	socklen_t addressLen = sizeof(m_address);
 	while (m_running)
 	{
+		// Block until either m_socket is readable or skip tail and recheck for m_running.
+		// We do this test before calling accept() in order to gracefully exit
+		// this function when an external thread has set m_running to true
+		// (such as a signal handler in the main thread).
+		if (!waitForReadable(m_socket, 500))
+			continue;
+
 		int connection = accept(m_socket, (sockaddr*) &(m_address), &addressLen);
 		if (connection > 0)
 		{
