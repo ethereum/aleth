@@ -73,8 +73,14 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
         cwarn << "Execution rejected by EVMC, executing with default VM implementation";
         return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);
 
+    case EVMC_INTERNAL_ERROR:
     default:
-        BOOST_THROW_EXCEPTION(InternalVMError{} << errinfo_evmcStatusCode(r.status()));
+        if (r.status() <= EVMC_INTERNAL_ERROR)
+            BOOST_THROW_EXCEPTION(InternalVMError{} << errinfo_evmcStatusCode(r.status()));
+        else
+            // These cases aren't really internal errors, just more specific
+            // error codes returned by the VM. Map all of them to OOG.
+            BOOST_THROW_EXCEPTION(OutOfGas());
     }
 }
 
