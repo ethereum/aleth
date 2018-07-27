@@ -68,7 +68,7 @@ static bool waitForReadable(int fd, unsigned timeoutMillis)
 	FD_ZERO(&out);
 	FD_ZERO(&err);
 	FD_SET(fd, &in);
-	timeval tv { timeoutMillis / 1000, timeoutMillis % 1000 };
+	timeval tv { timeoutMillis / 1000, static_cast<decltype(timeval::tv_usec)>(timeoutMillis) % 1000 };
 	return select(fd + 1, &in, &out, &err, &tv) > 0;
 }
 
