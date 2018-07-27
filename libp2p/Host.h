@@ -136,7 +136,7 @@ public:
     /// Start server, listening for connections on the given port.
     Host(
         std::string const& _clientVersion,
-        NetworkConfig const& _n = NetworkConfig(),
+        NetworkConfig const& _n = {},
         bytesConstRef _restoreNetwork = bytesConstRef()
     );
 
@@ -145,7 +145,7 @@ public:
     Host(
         std::string const& _clientVersion,
         KeyPair const& _alias,
-        NetworkConfig const& _n = NetworkConfig()
+        NetworkConfig const& _n = {}
     );
 
     /// Will block on network process events.
@@ -205,9 +205,9 @@ public:
     // TODO: P2P this should be combined with peers into a HostStat object of some kind; coalesce data, as it's only used for status information.
     Peers getPeers() const { RecursiveGuard l(x_sessions); Peers ret; for (auto const& i: m_peers) ret.push_back(*i.second); return ret; }
 
-    NetworkConfig const& networkConfig() const { return m_netPrefs; }
+    NetworkConfig const& networkConfig() const { return m_netConfig; }
 
-    void setNetworkConfig(NetworkConfig const& _p, bool _dropPeers = false) { m_dropPeers = _dropPeers; auto had = isStarted(); if (had) stop(); m_netPrefs = _p; if (had) start(); }
+    void setNetworkConfig(NetworkConfig const& _p, bool _dropPeers = false) { m_dropPeers = _dropPeers; auto had = isStarted(); if (had) stop(); m_netConfig = _p; if (had) start(); }
 
     /// Start network. @threadsafe
     void start();
@@ -308,7 +308,7 @@ private:
 
     std::string m_clientVersion;											///< Our version string.
 
-    NetworkConfig m_netPrefs;										        ///< Network settings.
+    NetworkConfig m_netConfig;										        ///< Network settings.
 
     /// Interface addresses (private, public)
     std::set<bi::address> m_ifAddresses;								///< Interface addresses.
