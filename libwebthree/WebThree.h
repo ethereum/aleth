@@ -124,7 +124,7 @@ public:
         boost::filesystem::path const& _snapshotPath, eth::ChainParams const& _params,
         WithExisting _we = WithExisting::Trust,
         std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
-        p2p::NetworkConfig const& _n = {},
+        p2p::NetworkConfig const& _n = p2p::NetworkConfig{},
         bytesConstRef _network = bytesConstRef(), bool _testing = false);
 
     /// Destructor.
