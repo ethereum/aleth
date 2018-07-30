@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 import errno
 import socket
 import sys
+import threading
 
 if sys.platform == 'win32':
     import win32file
@@ -246,9 +247,21 @@ def parse_args():
 
 def run(proxy_url=DEFAULT_PROXY_URL, backend_path=DEFAULT_BACKEND_PATH):
     proxy = Proxy(proxy_url, backend_path)
-    proxy.serve_forever()
+    try:
+        proxy.serve_forever()
+    except KeyboardInterrupt:
+        proxy.shutdown()
+
+
+def run_daemon(proxy_url=DEFAULT_PROXY_URL, backend_path=DEFAULT_BACKEND_PATH):
+    proxy = Proxy(proxy_url, backend_path)
+    th = threading.Thread(name='jsonrpcproxy', target=proxy.serve_forever)
+    th.daemon = True
+    th.start()
+    return proxy
 
 
 if __name__ == '__main__':
     args = parse_args()
     run(args.proxy_url, args.backend_path)
+
