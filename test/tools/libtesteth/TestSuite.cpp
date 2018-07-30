@@ -98,6 +98,7 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource, h256 co
 
 		clientinfo["filledwith"] = test::prepareVersionString();
 		clientinfo["lllcversion"] = test::prepareLLLCVersionString();
+		clientinfo["binaryenVersion"] = test::prepareBinaryenVersionString();
 		clientinfo["source"] = _testSource.string();
 		clientinfo["sourceHash"] = toString(_testSourceHash);
 		clientinfo["comment"] = comment;

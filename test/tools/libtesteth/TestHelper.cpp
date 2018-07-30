@@ -637,6 +637,13 @@ string prepareLLLCVersionString()
     return "Error getting LLLC Version";
 }
 
+string prepareBinaryenVersionString()
+{
+    // NOTE: keep this in-sync with cmake/ProjectBinaryen.cmake
+    // FIXME: there is no internal API to retrieve this...
+    return "1.37.35";
+}
+
 void copyFile(fs::path const& _source, fs::path const& _destination)
 {
     fs::ifstream src(_source, ios::binary);
