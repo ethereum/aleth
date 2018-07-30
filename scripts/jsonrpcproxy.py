@@ -218,29 +218,37 @@ class Proxy(HTTPServer):
         return response
 
 
-def run():
+if sys.platform == 'win32':
+    DEFAULT_BACKEND_PATH = r'\\.\pipe\geth.ipc'
+    BACKEND_PATH_HELP = "Named Pipe of a backend RPC server"
+else:
+    DEFAULT_BACKEND_PATH = '~/.ethereum/geth.ipc'
+    BACKEND_PATH_HELP = "Unix Socket of a backend RPC server"
+
+DEFAULT_PROXY_URL = 'http://127.0.0.1:8545'
+PROXY_URL_HELP = "URL for this proxy server"
+
+
+def parse_args():
     parser = ArgumentParser(
         description='HTTP Proxy for JSON-RPC servers',
         formatter_class=ArgumentDefaultsHelpFormatter
     )
 
-    if sys.platform == 'win32':
-        default_backend_path = r'\\.\pipe\geth.ipc'
-        backend_path_help = "Named Pipe of a backend RPC server"
-    else:
-        default_backend_path = '~/.ethereum/geth.ipc'
-        backend_path_help = "Unix Socket of a backend RPC server"
-
     parser.add_argument('backend_path', nargs='?',
-                        default=default_backend_path,
-                        help=backend_path_help)
+                        default=DEFAULT_BACKEND_PATH,
+                        help=BACKEND_PATH_HELP)
     parser.add_argument('proxy_url', nargs='?',
-                        default='http://127.0.0.1:8545',
-                        help="URL for this proxy server")
-    args = parser.parse_args()
-    proxy = Proxy(args.proxy_url, args.backend_path)
+                        default=DEFAULT_PROXY_URL,
+                        help=PROXY_URL_HELP)
+    return parser.parse_args()
+
+
+def run(proxy_url=DEFAULT_PROXY_URL, backend_path=DEFAULT_BACKEND_PATH):
+    proxy = Proxy(proxy_url, backend_path)
     proxy.serve_forever()
 
 
 if __name__ == '__main__':
-    run()
+    args = parse_args()
+    run(args.proxy_url, args.backend_path)
