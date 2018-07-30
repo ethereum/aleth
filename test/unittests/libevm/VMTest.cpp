@@ -166,9 +166,69 @@ public:
 
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
-        bytes expected = sha3(extCode).asBytes();
-        bytes got = ret.toBytes();
         BOOST_REQUIRE(ret.toBytes() == sha3(extCode).asBytes());
+    }
+
+    void testExtCodeHashisInvalidBeforeConstantinople()
+    {
+        se.reset(ChainParams(genesisInfo(Network::ByzantiumTest)).createSealEngine());
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            extAddress.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        BOOST_REQUIRE_THROW(vm->exec(gas, extVm, OnOpFunc{}), BadInstruction);
+    }
+
+    void testExtCodeHashOfNonContractAccount()
+    {
+        Address addressWithEmptyCode{KeyPair::create().address()};
+        state.addBalance(addressWithEmptyCode, 1 * ether);
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            addressWithEmptyCode.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        BOOST_REQUIRE_EQUAL(toHex(ret.toBytes()),
+            "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
+    }
+
+    void testExtCodeHashOfNonExistentAccount()
+    {
+        Address addressNonExisting{0x1234};
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            addressNonExisting.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        BOOST_REQUIRE_EQUAL(fromBigEndian<int>(ret.toBytes()), 0);
+    }
+
+    void testExtCodeHashOfPrecomileZeroBalance()
+    {
+        Address addressPrecompile{0x1};
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            addressPrecompile.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        BOOST_REQUIRE_EQUAL(fromBigEndian<int>(ret.toBytes()), 0);
+    }
+
+    void testExtCodeHashOfPrecomileNonZeroBalance()
+    {
+        Address addressPrecompile{0x1};
+        state.addBalance(addressPrecompile, 1 * ether);
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            addressPrecompile.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        BOOST_REQUIRE_EQUAL(toHex(ret.toBytes()),
+            "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
     }
 
     BlockHeader blockHeader{initBlockHeader()};
@@ -242,9 +302,34 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMExtcodehashSuite, LegacyVMExtcodehashTestFixture)
 
-BOOST_AUTO_TEST_CASE(LegacyVMExtcodehash)
+BOOST_AUTO_TEST_CASE(LegacyVMExtcodehashWorksInConstantinople)
 {
     testExtcodehashWorksInConstantinople();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMExtcodehashIsInvalidConstantinople)
+{
+    testExtCodeHashisInvalidBeforeConstantinople();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMExtCodeHashOfNonContractAccount)
+{
+    testExtCodeHashOfNonContractAccount();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMExtCodeHashOfNonExistentAccount)
+{
+    testExtCodeHashOfPrecomileZeroBalance();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMExtCodeHashOfPrecomileZeroBalance)
+{
+    testExtCodeHashOfNonExistentAccount();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMExtCodeHashOfPrecomileNonZeroBalance)
+{
+    testExtCodeHashOfPrecomileNonZeroBalance();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
