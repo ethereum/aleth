@@ -116,7 +116,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
     return addresses;
 }
 
-int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkPreferences const& _netPrefs)
+int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkConfig const& _config)
 {
     // Due to the complexities of NAT and network environments (multiple NICs, tunnels, etc)
     // and security concerns automation is the enemy of network configuration.
@@ -124,23 +124,23 @@ int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkPreferences const& 
     //
     // Preferred IP: Attempt if set, else, try 0.0.0.0 (all interfaces)
     // Preferred Port: Attempt if set, else, try c_defaultListenPort or 0 (random)
-    // TODO: throw instead of returning -1 and rename NetworkPreferences to NetworkConfig
+    // TODO: throw instead of returning -1 
     
     bi::address listenIP;
     try
     {
-        listenIP = _netPrefs.listenIPAddress.empty() ? bi::address_v4() : bi::address::from_string(_netPrefs.listenIPAddress);
+        listenIP = _config.listenIPAddress.empty() ? bi::address_v4() : bi::address::from_string(_config.listenIPAddress);
     }
     catch (...)
     {
-        cwarn << "Couldn't start accepting connections on host. Failed to accept socket on " << listenIP << ":" << _netPrefs.listenPort << ".\n" << boost::current_exception_diagnostic_information();
+        cwarn << "Couldn't start accepting connections on host. Failed to accept socket on " << listenIP << ":" << _config.listenPort << ".\n" << boost::current_exception_diagnostic_information();
         return -1;
     }
-    bool requirePort = (bool)_netPrefs.listenPort;
+    bool requirePort = (bool)_config.listenPort;
 
     for (unsigned i = 0; i < 2; ++i)
     {
-        bi::tcp::endpoint endpoint(listenIP, requirePort ? _netPrefs.listenPort : (i ? 0 : c_defaultListenPort));
+        bi::tcp::endpoint endpoint(listenIP, requirePort ? _config.listenPort : (i ? 0 : c_defaultListenPort));
         try
         {
 #if defined(_WIN32)
@@ -160,7 +160,7 @@ int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkPreferences const& 
             if (i || requirePort)
             {
                 // both attempts failed
-                cwarn << "Couldn't start accepting connections on host. Failed to accept socket on " << listenIP << ":" << _netPrefs.listenPort << ".\n" << boost::current_exception_diagnostic_information();
+                cwarn << "Couldn't start accepting connections on host. Failed to accept socket on " << listenIP << ":" << _config.listenPort << ".\n" << boost::current_exception_diagnostic_information();
                 _acceptor.close();
                 return -1;
             }

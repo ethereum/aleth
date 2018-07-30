@@ -123,7 +123,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
 {
     JsonRpcFixture()
     {
-        dev::p2p::NetworkPreferences nprefs;
+        dev::p2p::NetworkConfig nprefs;
         ChainParams chainParams;
         chainParams.sealEngineName = NoProof::name();
         chainParams.allowFutureBlocks = true;

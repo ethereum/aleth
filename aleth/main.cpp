@@ -839,7 +839,7 @@ int main(int argc, char** argv)
         return getPassword("Enter password for address " + keyManager.accountName(a) + " (" + a.abridged() + "; hint:" + keyManager.passwordHint(a) + "): ");
     };
 
-    auto netPrefs = publicIP.empty() ? NetworkPreferences(listenIP, listenPort, upnp) : NetworkPreferences(publicIP, listenIP ,listenPort, upnp);
+    auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) : NetworkConfig(publicIP, listenIP ,listenPort, upnp);
     netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
     netPrefs.pin = vm.count("pin") != 0;
 

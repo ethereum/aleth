@@ -80,8 +80,8 @@ public:
 
     virtual bool haveNetwork() const = 0;
 
-    virtual p2p::NetworkPreferences const& networkPreferences() const = 0;
-    virtual void setNetworkPreferences(p2p::NetworkPreferences const& _n, bool _dropPeers) = 0;
+    virtual p2p::NetworkConfig const& networkConfig() const = 0;
+    virtual void setNetworkConfig(p2p::NetworkConfig const& _n, bool _dropPeers) = 0;
 
     virtual p2p::NodeID id() const = 0;
 
@@ -124,7 +124,7 @@ public:
         boost::filesystem::path const& _snapshotPath, eth::ChainParams const& _params,
         WithExisting _we = WithExisting::Trust,
         std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
-        p2p::NetworkPreferences const& _n = p2p::NetworkPreferences(),
+        p2p::NetworkConfig const& _n = p2p::NetworkConfig{},
         bytesConstRef _network = bytesConstRef(), bool _testing = false);
 
     /// Destructor.
@@ -184,9 +184,9 @@ public:
     
     bool haveNetwork() const override { return m_net.haveNetwork(); }
 
-    p2p::NetworkPreferences const& networkPreferences() const override;
+    p2p::NetworkConfig const& networkConfig() const override;
 
-    void setNetworkPreferences(p2p::NetworkPreferences const& _n, bool _dropPeers = false) override;
+    void setNetworkConfig(p2p::NetworkConfig const& _n, bool _dropPeers = false) override;
 
     p2p::NodeInfo nodeInfo() const override { return m_net.nodeInfo(); }
 

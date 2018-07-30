@@ -98,10 +98,10 @@ bytes ReputationManager::data(SessionFace const& _s, std::string const& _sub) co
     return bytes();
 }
 
-Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkPreferences const& _n):
+Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig const& _n):
     Worker("p2p", 0),
     m_clientVersion(_clientVersion),
-    m_netPrefs(_n),
+    m_netConfig(_n),
     m_ifAddresses(Network::getInterfaceAddresses()),
     m_ioService(2),
     m_tcp4Acceptor(m_ioService),
@@ -111,7 +111,7 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkPreferenc
     cnetnote << "Id: " << id();
 }
 
-Host::Host(string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork):
+Host::Host(string const& _clientVersion, NetworkConfig const& _n, bytesConstRef _restoreNetwork):
     Host(_clientVersion, networkAlias(_restoreNetwork), _n)
 {
     m_restoreNetwork = _restoreNetwork.toBytes();
@@ -297,7 +297,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         return;
     }
 
-    if (m_netPrefs.pin && !isRequiredPeer(_id))
+    if (m_netConfig.pin && !isRequiredPeer(_id))
     {
         cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
         ps->disconnect(UnexpectedIdentity);
@@ -384,26 +384,26 @@ void Host::determinePublic()
     // set m_tcpPublic := listenIP (if public) > public > upnp > unspecified address.
     
     auto ifAddresses = Network::getInterfaceAddresses();
-    auto laddr = m_netPrefs.listenIPAddress.empty() ? bi::address() : bi::address::from_string(m_netPrefs.listenIPAddress);
+    auto laddr = m_netConfig.listenIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.listenIPAddress);
     auto lset = !laddr.is_unspecified();
-    auto paddr = m_netPrefs.publicIPAddress.empty() ? bi::address() : bi::address::from_string(m_netPrefs.publicIPAddress);
+    auto paddr = m_netConfig.publicIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.publicIPAddress);
     auto pset = !paddr.is_unspecified();
     
     bool listenIsPublic = lset && isPublicAddress(laddr);
     bool publicIsHost = !lset && pset && ifAddresses.count(paddr);
     
     bi::tcp::endpoint ep(bi::address(), m_listenPort);
-    if (m_netPrefs.traverseNAT && listenIsPublic)
+    if (m_netConfig.traverseNAT && listenIsPublic)
     {
         cnetnote << "Listen address set to Public address: " << laddr << ". UPnP disabled.";
         ep.address(laddr);
     }
-    else if (m_netPrefs.traverseNAT && publicIsHost)
+    else if (m_netConfig.traverseNAT && publicIsHost)
     {
         cnetnote << "Public address set to Host configured address: " << paddr << ". UPnP disabled.";
         ep.address(paddr);
     }
-    else if (m_netPrefs.traverseNAT)
+    else if (m_netConfig.traverseNAT)
     {
         bi::address natIFAddr;
         ep = Network::traverseNAT(lset && ifAddresses.count(laddr) ? std::set<bi::address>({laddr}) : ifAddresses, m_listenPort, natIFAddr);
@@ -713,7 +713,7 @@ void Host::run(boost::system::error_code const&)
             bool required = p.second->peerType == PeerType::Required;
             if (haveSession && required)
                 reqConn++;
-            else if (!haveSession && p.second->shouldReconnect() && (!m_netPrefs.pin || required))
+            else if (!haveSession && p.second->shouldReconnect() && (!m_netConfig.pin || required))
                 toConnect.push_back(p.second);
         }
     }
@@ -722,7 +722,7 @@ void Host::run(boost::system::error_code const&)
         if (p->peerType == PeerType::Required && reqConn++ < m_idealPeerCount)
             connect(p);
     
-    if (!m_netPrefs.pin)
+    if (!m_netConfig.pin)
     {
         unsigned const maxSlots = m_idealPeerCount + reqConn;
         unsigned occupiedSlots = peerCount() + m_pendingPeerConns.size();
@@ -761,7 +761,7 @@ void Host::startedWorking()
         h.second->onStarting();
     
     // try to open acceptor (todo: ipv6)
-    int port = Network::tcp4Listen(m_tcp4Acceptor, m_netPrefs);
+    int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
     if (port > 0)
     {
         m_listenPort = port;
@@ -775,7 +775,7 @@ void Host::startedWorking()
         m_ioService,
         m_alias,
         NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()),
-        m_netPrefs.discovery
+        m_netConfig.discovery
     );
     nodeTable->setEventHandler(new HostNodeTableHandler(*this));
     DEV_GUARDED(x_nodeTable)
