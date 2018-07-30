@@ -240,7 +240,20 @@ jobs:
       - setup_remote_docker
       - run:
           name: "Build aleth docker image"
-          command: docker build -t ethereum/aleth -f scripts/docker/aleth.dockerfile .
+          command: docker build -t ethereum/aleth:latest -f scripts/docker/aleth.dockerfile .
+      - run:
+          name: "Push aleth docker image"
+          command: |
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER_ID --password-stdin
+            docker push ethereum/aleth:latest
+            echo "Pushed ethereum/aleth:latest"
+            if [[ $CIRCLE_TAG =~ ^v.* ]]; then
+              tag=${CIRCLE_TAG:1}
+              docker tag ethereum/aleth:latest ethereum/aleth:$tag
+              docker push ethereum/aleth:$tag
+              echo "Pushed ethereum/aleth:$tag"
+            fi
+            echo "See https://hub.docker.com/r/ethereum/aleth/tags/"
 
 # TODO: Run GCC6 build only in develop branch.
 # TODO: Enabled nightly builds and add more configs.
@@ -249,22 +262,37 @@ workflows:
   version: 2
   aleth:
     jobs:
-      - docker-aleth
-#      - macos-xcode90:
-#          filters:
-#            tags:
-#              only: /.*/
-#      - linux-clang6:
-#          filters:
-#            tags:
-#              only: /.*/
-#      - linux-gcc6
-#      - deploy:
-#          requires:
-#            - macos-xcode90
-#            - linux-clang6
-#          filters:
-#            branches:
-#              ignore: /.*/
-#            tags:
-#              only: /^v.*/
+      - macos-xcode90:
+          filters:
+            tags:
+              only: /.*/
+      - linux-clang6:
+          filters:
+            tags:
+              only: /.*/
+      - linux-gcc6:
+          filters:
+            tags:
+              only: /.*/
+
+      - deploy:
+          requires:
+            - macos-xcode90
+            - linux-clang6
+            - linux-gcc6
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
+      - docker-aleth:
+          requires:
+            - macos-xcode90
+            - linux-clang6
+            - linux-gcc6
+          filters:
+            branches:
+              only: develop
+            tags:
+              only: /.*/
