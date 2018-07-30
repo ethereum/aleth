@@ -66,7 +66,7 @@ public:
     /// @returns the size of the code in  bytes at the given address.
     size_t codeSizeAt(Address _a) final;
 
-    /// @returns the size of the code in  bytes at the given address.
+    /// @returns the hash of the code at the given address.
     h256 codeHashAt(Address _a) final;
 
     /// Create a new contract.

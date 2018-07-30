@@ -143,7 +143,7 @@ size_t ExtVM::codeSizeAt(dev::Address _a)
 
 h256 ExtVM::codeHashAt(Address _a)
 {
-    return m_s.codeHash(_a);
+    return exists(_a) ? m_s.codeHash(_a) : h256{};
 }
 
 void ExtVM::setStore(u256 _n, u256 _v)
