@@ -99,7 +99,6 @@ public:
 
     void testCreate2isForbiddenInStaticCall()
     {
-        isCreate = false;
         staticCall = true;
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
@@ -119,7 +118,7 @@ public:
     u256 value = 0;
     u256 gasPrice = 1;
     int depth = 0;
-    bool isCreate = true;
+    bool isCreate = false;
     bool staticCall = false;
     u256 gas = 1000000;
 
@@ -151,6 +150,64 @@ public:
     AlethInterpreterCreate2TestFixture(): Create2TestFixture{new EVMC{evmc_create_interpreter()}} {}
 };
 
+class ExtcodehashTestFixture : public TestOutputHelperFixture
+{
+public:
+    explicit ExtcodehashTestFixture(VMFace* _vm) : vm{_vm}
+    {
+        state.addBalance(address, 1 * ether);
+        state.setCode(extAddress, bytes{extCode});
+    }
+
+    void testExtcodehashWorksInConstantinople()
+    {
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            extAddress.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        bytes expected = sha3(extCode).asBytes();
+        bytes got = ret.toBytes();
+        BOOST_REQUIRE(ret.toBytes() == sha3(extCode).asBytes());
+    }
+
+    BlockHeader blockHeader{initBlockHeader()};
+    LastBlockHashes lastBlockHashes;
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
+    Address address{KeyPair::create().address()};
+    Address extAddress{KeyPair::create().address()};
+    State state{0};
+    std::unique_ptr<SealEngineFace> se{
+        ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+
+    u256 value = 0;
+    u256 gasPrice = 1;
+    int depth = 0;
+    bool isCreate = false;
+    bool staticCall = false;
+    u256 gas = 1000000;
+
+    // mstore(0, 0x60)
+    // return(0, 0x20)
+    bytes extCode = fromHex("606060005260206000f3");
+
+    // calldatacopy(12, 0, 20)
+    // let addr : = mload(0)
+    // let hash : = extcodehash(addr)
+    // mstore(0, hash)
+    // return(0, 32)
+    bytes code = fromHex("60146000600c37600051803f8060005260206000f35050");
+
+    std::unique_ptr<VMFace> vm;
+};
+
+class LegacyVMExtcodehashTestFixture : public ExtcodehashTestFixture
+{
+public:
+    LegacyVMExtcodehashTestFixture() : ExtcodehashTestFixture{new LegacyVM} {}
+};
+
+
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -179,6 +236,15 @@ BOOST_AUTO_TEST_CASE(LegacyVMCreate2doesntChangeContractIfAddressExists)
 BOOST_AUTO_TEST_CASE(LegacyVMCreate2isForbiddenInStaticCall)
 {
     testCreate2isForbiddenInStaticCall();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(LegacyVMExtcodehashSuite, LegacyVMExtcodehashTestFixture)
+
+BOOST_AUTO_TEST_CASE(LegacyVMExtcodehash)
+{
+    testExtcodehashWorksInConstantinople();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
