@@ -194,14 +194,17 @@ class Proxy(HTTPServer):
 
     def __init__(self, proxy_url, backend_path):
 
-        proxy_url = urlparse(proxy_url)
-        assert proxy_url.scheme == 'http'
-        proxy_address = proxy_url.hostname, proxy_url.port
+        url = urlparse(proxy_url)
+        assert url.scheme == 'http'
+        proxy_address = url.hostname, url.port
 
         super(Proxy, self).__init__(proxy_address, HTTPRequestHandler)
 
         self.backend_address = path.expanduser(backend_path)
         self.conn = get_ipc_connector(self.backend_address)
+
+        sys.stderr.write("JSON-RPC HTTP Proxy: {} -> {}\n".format(
+            self.backend_address, proxy_url))
 
     def process(self, request):
         self.conn.sendall(request)
