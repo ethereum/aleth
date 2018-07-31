@@ -169,6 +169,27 @@ public:
         BOOST_REQUIRE(ret.toBytes() == sha3(extCode).asBytes());
     }
 
+    void testExtcodehashHasCorrectCost()
+    {
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            extAddress.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (_instr == Instruction::EXTCODEHASH)
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+
+        vm->exec(gas, extVm, onOp);
+
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 400);
+    }
+
     void testExtCodeHashisInvalidBeforeConstantinople()
     {
         se.reset(ChainParams(genesisInfo(Network::ByzantiumTest)).createSealEngine());
@@ -229,6 +250,26 @@ public:
 
         BOOST_REQUIRE_EQUAL(toHex(ret.toBytes()),
             "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
+    }
+
+    void testExtcodehashIgnoresHigh12Bytes()
+    {
+        // calldatacopy(0, 0, 32)
+        // let addr : = mload(0)
+        // let hash : = extcodehash(addr)
+        // mstore(0, hash)
+        // return(0, 32)
+        code = fromHex("60206000600037600051803f8060005260206000f35050");
+
+        bytes extAddressPrefixed =
+            bytes{1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc} + extAddress.ref();
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
+            ref(extAddressPrefixed), ref(code), sha3(code), depth, isCreate, staticCall);
+
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        BOOST_REQUIRE(ret.toBytes() == sha3(extCode).asBytes());
     }
 
     BlockHeader blockHeader{initBlockHeader()};
@@ -316,6 +357,11 @@ BOOST_AUTO_TEST_CASE(LegacyVMExtcodehashWorksInConstantinople)
     testExtcodehashWorksInConstantinople();
 }
 
+BOOST_AUTO_TEST_CASE(LegacyVMExtcodehashHasCorrectCost)
+{
+    testExtcodehashHasCorrectCost();
+}
+
 BOOST_AUTO_TEST_CASE(LegacyVMExtcodehashIsInvalidConstantinople)
 {
     testExtCodeHashisInvalidBeforeConstantinople();
@@ -339,6 +385,11 @@ BOOST_AUTO_TEST_CASE(LegacyVMExtCodeHashOfPrecomileZeroBalance)
 BOOST_AUTO_TEST_CASE(LegacyVMExtCodeHashOfPrecomileNonZeroBalance)
 {
     testExtCodeHashOfPrecomileNonZeroBalance();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMExtcodehashIgnoresHigh12Bytes)
+{
+    testExtcodehashIgnoresHigh12Bytes();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -404,6 +455,11 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashOfPrecomileZeroBalance)
 BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashOfPrecomileNonZeroBalance)
 {
     testExtCodeHashOfPrecomileNonZeroBalance();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashIgnoresHigh12Bytes)
+{
+    testExtcodehashIgnoresHigh12Bytes();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
