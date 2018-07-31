@@ -182,7 +182,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(error_msg)
             self.log_message("Backend Error: {}".format(err))
 
-        # TODO: Handle other excaptions as error 500.
+        # TODO: Handle other exceptions as error 500.
 
     def addCORS(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -203,8 +203,8 @@ class Proxy(HTTPServer):
         self.backend_address = path.expanduser(backend_path)
         self.conn = get_ipc_connector(self.backend_address)
 
-        sys.stderr.write("JSON-RPC HTTP Proxy: {} -> {}\n".format(
-            self.backend_address, proxy_url))
+        print("JSON-RPC HTTP Proxy: {} -> {}".format(
+            self.backend_address, proxy_url), file=sys.stderr, flush=True)
 
     def process(self, request):
         self.conn.sendall(request)
