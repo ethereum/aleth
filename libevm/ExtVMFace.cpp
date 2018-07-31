@@ -84,6 +84,12 @@ size_t getCodeSize(evmc_context* _context, evmc_address const* _addr)
     return env.codeSizeAt(fromEvmC(*_addr));
 }
 
+void getCodeHash(evmc_uint256be* o_result, evmc_context* _context, evmc_address const* _addr)
+{
+    auto& env = static_cast<ExtVMFace&>(*_context);
+    *o_result = toEvmC(env.codeHashAt(fromEvmC(*_addr)));
+}
+
 size_t copyCode(evmc_context* _context, evmc_address const* _addr, size_t _codeOffset,
     byte* _bufferData, size_t _bufferSize)
 {
@@ -252,6 +258,7 @@ evmc_context_fn_table const fnTable = {
     setStorage,
     getBalance,
     getCodeSize,
+    getCodeHash,
     copyCode,
     selfdestruct,
     eth::call,
