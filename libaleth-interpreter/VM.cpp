@@ -1011,6 +1011,22 @@ void VM::interpretCases()
         }
         NEXT
 
+        CASE(EXTCODEHASH)
+        {
+            ON_OP();
+            if (m_rev < EVMC_CONSTANTINOPLE)
+                throwBadInstruction();
+
+            updateIOGas();
+
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
+
+            evmc_uint256be hash;
+            m_context->fn_table->get_code_hash(&hash, m_context, &address);
+            m_SPP[0] = fromEvmC(hash);
+        }
+        NEXT
+
         CASE(CODECOPY)
         {
             ON_OP();

@@ -268,6 +268,15 @@ public:
 };
 
 
+class AlethInterpreterExtcodehashTestFixture : public ExtcodehashTestFixture
+{
+public:
+    AlethInterpreterExtcodehashTestFixture()
+      : ExtcodehashTestFixture{new EVMC{evmc_create_interpreter()}}
+    {}
+};
+
+
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -364,4 +373,39 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterCreate2isForbiddenInStaticCall)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(AlethInterpreterExtcodehashSuite, AlethInterpreterExtcodehashTestFixture)
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterExtcodehashWorksInConstantinople)
+{
+    testExtcodehashWorksInConstantinople();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterExtcodehashIsInvalidConstantinople)
+{
+    testExtCodeHashisInvalidBeforeConstantinople();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashOfNonContractAccount)
+{
+    testExtCodeHashOfNonContractAccount();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashOfNonExistentAccount)
+{
+    testExtCodeHashOfPrecomileZeroBalance();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashOfPrecomileZeroBalance)
+{
+    testExtCodeHashOfNonExistentAccount();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashOfPrecomileNonZeroBalance)
+{
+    testExtCodeHashOfPrecomileNonZeroBalance();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
