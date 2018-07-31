@@ -16,7 +16,9 @@ RUN make -j $(nproc) && make install
 # Install stage
 FROM alpine:latest
 RUN apk add --no-cache \
+        python3 \
         libstdc++ \
         leveldb --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/
-COPY --from=builder /usr/bin/aleth /usr/bin/aleth
-ENTRYPOINT ["/usr/bin/aleth"]
+COPY --from=builder /usr/bin/aleth /source/scripts/aleth.py /source/scripts/jsonrpcproxy.py /usr/bin/
+EXPOSE 8545
+ENTRYPOINT ["/usr/bin/aleth.py"]
