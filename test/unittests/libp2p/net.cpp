@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacket)
     int count = 0;
     for (auto n: dynamic_cast<Neighbours&>(*in).neighbours)
     {
-        BOOST_REQUIRE_EQUAL(testNodes[count].second, n.endpoint.udpPort);
+        BOOST_REQUIRE_EQUAL(testNodes[count].second, n.endpoint.udpPort());
         BOOST_REQUIRE_EQUAL(testNodes[count].first, n.node);
         BOOST_REQUIRE_EQUAL(sha3(testNodes[count].first), sha3(n.node));
         count++;
