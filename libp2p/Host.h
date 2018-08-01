@@ -136,7 +136,7 @@ public:
     /// Start server, listening for connections on the given port.
     Host(
         std::string const& _clientVersion,
-        NetworkConfig const& _n = {},
+        NetworkConfig const& _n = NetworkConfig{},
         bytesConstRef _restoreNetwork = bytesConstRef()
     );
 
@@ -145,7 +145,7 @@ public:
     Host(
         std::string const& _clientVersion,
         KeyPair const& _alias,
-        NetworkConfig const& _n = {}
+        NetworkConfig const& _n = NetworkConfig{}
     );
 
     /// Will block on network process events.
