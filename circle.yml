@@ -247,7 +247,7 @@ jobs:
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER_ID --password-stdin
             docker push ethereum/aleth:latest
             echo "Pushed ethereum/aleth:latest"
-            if [[ $CIRCLE_TAG =~ ^v.* ]]; then
+            if [[ $CIRCLE_TAG =~ ^v[0-9].* ]]; then
               tag=${CIRCLE_TAG:1}
               docker tag ethereum/aleth:latest ethereum/aleth:$tag
               docker push ethereum/aleth:$tag
@@ -284,7 +284,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v.*/
+              only: /^v[0-9].*/
 
       - docker-aleth:
           requires:
