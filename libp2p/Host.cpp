@@ -257,7 +257,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
     }
     if (p->isOffline())
         p->m_lastConnected = std::chrono::system_clock::now();
-    p->endpoint.address = _s->remoteEndpoint().address();
+    p->endpoint.address() = _s->remoteEndpoint().address();
 
     auto protocolVersion = _rlp[0].toInt<unsigned>();
     auto clientVersion = _rlp[1].toString();
@@ -285,7 +285,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
             << " " << _id << " " << showbase << capslog.str() << " " << dec << listenPort;
 
     // create session so disconnects are managed
-    shared_ptr<SessionFace> ps = make_shared<Session>(this, move(_io), _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion}));
+    shared_ptr<SessionFace> ps = make_shared<Session>(this, move(_io), _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address().to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion}));
     if (protocolVersion < dev::p2p::c_protocolVersion - 1)
     {
         ps->disconnect(IncompatibleProtocol);
@@ -524,8 +524,8 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
         else
             return;
 
-    if (_endpoint.tcpPort < 30300 || _endpoint.tcpPort > 30305)
-        cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort;
+    if (_endpoint.tcpPort() < 30300 || _endpoint.tcpPort() > 30305)
+        cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort();
 
     addNodeToNodeTable(Node(_node, _endpoint));
 }
@@ -848,7 +848,7 @@ bytes Host::saveNetwork() const
     for (auto const& p: peers)
     {
         // todo: ipv6
-        if (!p.endpoint.address.is_v4())
+        if (!p.endpoint.address().is_v4())
             continue;
 
         // Only save peers which have connected within 2 days, with properly-advertised port and public IP address

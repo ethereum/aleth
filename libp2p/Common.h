@@ -185,18 +185,18 @@ public:
     static bool test_allowLocal;
 
     NodeIPEndpoint() = default;
-    NodeIPEndpoint(bi::address _addr, uint16_t _udp, uint16_t _tcp): address(_addr), udpPort(_udp), tcpPort(_tcp) {}
+    NodeIPEndpoint(bi::address _addr, uint16_t _udp, uint16_t _tcp): m_address(_addr), m_udpPort(_udp), m_tcpPort(_tcp) {}
     NodeIPEndpoint(RLP const& _r) { interpretRLP(_r); }
 
-    operator bi::udp::endpoint() const { return bi::udp::endpoint(address, udpPort); }
-    operator bi::tcp::endpoint() const { return bi::tcp::endpoint(address, tcpPort); }
+    operator bi::udp::endpoint() const { return bi::udp::endpoint(m_address, m_udpPort); }
+    operator bi::tcp::endpoint() const { return bi::tcp::endpoint(m_address, m_tcpPort); }
     
-    operator bool() const { return !address.is_unspecified() && udpPort > 0 && tcpPort > 0; }
+    operator bool() const { return !m_address.is_unspecified() && m_udpPort > 0 && m_tcpPort > 0; }
     
-    bool isAllowed() const { return NodeIPEndpoint::test_allowLocal ? !address.is_unspecified() : isPublicAddress(address); }
+    bool isAllowed() const { return NodeIPEndpoint::test_allowLocal ? !m_address.is_unspecified() : isPublicAddress(m_address); }
 
     bool operator==(NodeIPEndpoint const& _cmp) const {
-        return address == _cmp.address && udpPort == _cmp.udpPort && tcpPort == _cmp.tcpPort;
+        return m_address == _cmp.m_address && m_udpPort == _cmp.m_udpPort && m_tcpPort == _cmp.m_tcpPort;
     }
     bool operator!=(NodeIPEndpoint const& _cmp) const {
         return !operator==(_cmp);
@@ -205,10 +205,34 @@ public:
     void streamRLP(RLPStream& _s, RLPAppend _append = StreamList) const;
     void interpretRLP(RLP const& _r);
 
-    // TODO: make private, give accessors and rename m_...
-    bi::address address;
-    uint16_t udpPort = 0;
-    uint16_t tcpPort = 0;
+    void setAddress(bi::address _addr) {
+        m_address = _addr;
+    }
+
+    void setUdpPort(uint16_t _udp) {
+        m_udpPort = _udp;
+    }
+
+    void setTcpPort(uint16_t _tcp) {
+        m_tcpPort = _tcp;
+    }
+
+    bi::address address() const {
+        return m_address;
+    }
+
+    uint16_t udpPort() const {
+        return m_udpPort;
+    }
+
+    uint16_t tcpPort() const {
+        return m_tcpPort;
+    }
+
+private:
+    bi::address m_address;
+    uint16_t m_udpPort = 0;
+    uint16_t m_tcpPort = 0;
 };
 
 struct NodeSpec
