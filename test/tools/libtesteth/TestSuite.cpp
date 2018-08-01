@@ -81,13 +81,18 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource, h256 co
 
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
-	json_spirit::mValue v;
-	string const s = asString(dev::contents(_compiledTest));
+    json_spirit::mValue filledTest;
+    string s = dev::contentsString(_compiledTest);
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
-	json_spirit::read_string(s, v);
-	h256 const fillerHash = sha3(dev::contents(_sourceTest));
+    json_spirit::read_string(s, filledTest);
 
-	for (auto& i: v.get_obj())
+    json_spirit::mValue fillerTestSource;
+    s = dev::contentsString(_sourceTest);
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _sourceTest.string() + " is empty.");
+    json_spirit::read_string(s, fillerTestSource);
+    h256 const fillerHash = sha3(json_spirit::write_string(fillerTestSource, true));
+
+    for (auto& i: filledTest.get_obj())
 	{
 		BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain an object under a test name.");
 		json_spirit::mObject const& obj = i.second.get_obj();
@@ -212,21 +217,21 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			if (!Options::get().singleTest)
 				cnote << "Populating tests...";
 
-			json_spirit::mValue v;
+            json_spirit::mValue fillerJsonValue;
 			bytes const byteContents = dev::contents(_testFileName);
 			string const s = asString(byteContents);
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
 			if (_testFileName.extension() == ".json")
-				json_spirit::read_string(s, v);
+                json_spirit::read_string(s, fillerJsonValue);
 			else if (_testFileName.extension() == ".yml")
-				v = test::parseYamlToJson(s);
+                fillerJsonValue = test::parseYamlToJson(s);
 			else
 				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFile().string());
 
-			removeComments(v);
-			json_spirit::mValue output = doTests(v, true);
-			addClientInfo(output, boostRelativeTestPath, sha3(byteContents));
+            removeComments(fillerJsonValue);
+            json_spirit::mValue output = doTests(fillerJsonValue, true);
+            addClientInfo(output, boostRelativeTestPath, sha3(json_spirit::write_string(fillerJsonValue, true)));
 			writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
 		}
 	}
