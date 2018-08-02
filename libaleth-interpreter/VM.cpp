@@ -147,7 +147,7 @@ void VM::trace() noexcept
         auto const& metrics = c_metrics[static_cast<size_t>(m_OP)];
         evmc_uint256be topStackItem;
         evmc_uint256be const* pushedStackItem = nullptr;
-        if (metrics.num_stack_returned_items == 1)
+        if (metrics.num_stack_returned_items >= 1)
         {
             topStackItem = toEvmC(m_SPP[0]);
             pushedStackItem = &topStackItem;
@@ -1255,10 +1255,12 @@ void VM::interpretCases()
             // Construct a number out of PUSH bytes.
             // This requires the code has been copied and extended by 32 zero
             // bytes to handle "out of code" push data here.
-            for (++m_PC; numBytes--; ++m_PC)
-                m_SPP[0] = (m_SPP[0] << 8) | m_code[m_PC];
+            uint64_t codeOffset = m_PC + 1;
+            for (; numBytes--; ++codeOffset)
+                m_SPP[0] = (m_SPP[0] << 8) | m_code[codeOffset];
 
             trace();
+            m_PC = codeOffset;
         }
         CONTINUE
 
