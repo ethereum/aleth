@@ -303,10 +303,8 @@ workflows:
             - linux-clang6
             - linux-gcc6
           filters:
-            branches:
-              only: develop
             tags:
-              only: /.*/
+              only: /^v[0-9].*/
 
   nightly:
     triggers:
