@@ -233,7 +233,7 @@ jobs:
             ghr -u ethereum -r cpp-ethereum $prerelease_flag $CIRCLE_TAG ~/package
 
   # Builds aleth docker image and uploads it to Docker Hub.
-  docker-aleth:
+  docker-aleth: &docker-aleth
     docker:
       - image: circleci/golang
     steps:
@@ -244,20 +244,29 @@ jobs:
       - setup_remote_docker
       - run:
           name: "Build aleth docker image"
-          command: docker build -t ethereum/aleth:latest -f scripts/docker/aleth.dockerfile .
+          command: docker build -t ethereum/aleth:local -f scripts/docker/aleth.dockerfile .
       - run:
           name: "Push aleth docker image"
           command: |
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER_ID --password-stdin
-            docker push ethereum/aleth:latest
-            echo "Pushed ethereum/aleth:latest"
             if [[ $CIRCLE_TAG =~ ^v[0-9].* ]]; then
               tag=${CIRCLE_TAG:1}
-              docker tag ethereum/aleth:latest ethereum/aleth:$tag
+              docker tag ethereum/aleth:local ethereum/aleth:$tag
               docker push ethereum/aleth:$tag
               echo "Pushed ethereum/aleth:$tag"
             fi
+            if [[ $NIGHTLY ]]; then
+              docker tag ethereum/aleth:local ethereum/aleth:nightly
+              docker push ethereum/aleth:nightly
+              echo "Pushed ethereum/aleth:nightly"
+            fi
             echo "See https://hub.docker.com/r/ethereum/aleth/tags/"
+
+  docker-aleth-nightly:
+    <<: *docker-aleth
+    environment:
+      NIGHTLY: true
+
 
 workflows:
   version: 2
@@ -309,3 +318,6 @@ workflows:
             - master
     jobs:
       - linux-gcc6-nightly
+      - docker-aleth-nightly:
+          requires:
+            - linux-gcc6-nightly
