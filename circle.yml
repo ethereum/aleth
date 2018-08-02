@@ -153,8 +153,8 @@ jobs:
       - *test
       - *test-evmc-interpreter
 
-  linux-gcc6:
-    environment:
+  linux-gcc6: &linux-gcc6
+    environment: &linux-gcc6-environment
       BUILD_TYPE: RelWithDebInfo
       CXX: g++-6
       CC:  gcc-6
@@ -180,6 +180,12 @@ jobs:
       - *store-package
       - *test
       - *upload-coverage-data
+
+  linux-gcc6-nightly:
+    <<: *linux-gcc6
+    environment:
+      <<: *linux-gcc6-environment
+      CMAKE_OPTIONS: -DCOVERAGE=ON -DTESTETH_ARGS=--all
 
   macos-xcode90:
     environment:
@@ -253,11 +259,9 @@ jobs:
             fi
             echo "See https://hub.docker.com/r/ethereum/aleth/tags/"
 
-# TODO: Run GCC6 build only in develop branch.
-# TODO: Enabled nightly builds and add more configs.
-# TODO: Separate builds from testing jobs.
 workflows:
   version: 2
+
   aleth:
     jobs:
       - macos-xcode90:
@@ -294,3 +298,14 @@ workflows:
               only: develop
             tags:
               only: /.*/
+
+  nightly:
+    triggers:
+    - schedule:
+        cron: "0 0 * * *"
+        filters:
+          branches:
+            only:
+            - master
+    jobs:
+      - linux-gcc6-nightly
