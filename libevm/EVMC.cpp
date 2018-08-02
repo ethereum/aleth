@@ -52,29 +52,25 @@ EVM::Result EVM::execute(ExtVMFace& _ext, int64_t gas)
 
 EVMC::EVMC(evmc_instance* _instance) : EVM(_instance)
 {
-    static const auto tracer = [](evmc_tracer_context * context, size_t code_offset,
-        evmc_status_code status_code, int64_t gas_left, size_t stack_num_items,
-        const evmc_uint256be* pushed_stack_item, size_t memory_size, size_t changed_memory_offset,
-        size_t changed_memory_size, const uint8_t* changed_memory) noexcept
+    static const auto tracer = [](evmc_tracer_context * _context, size_t _codeOffset,
+        evmc_status_code _statusCode, int64_t _gasLeft, size_t _stackNumItems,
+        evmc_uint256be const* _pushedStackItem, size_t _memorySize,
+        size_t /*changed_memory_offset*/, size_t /*changed_memory_size*/,
+        uint8_t const* /*changed_memory*/) noexcept
     {
-        EVMC* evmc = reinterpret_cast<EVMC*>(context);
+        EVMC* evmc = reinterpret_cast<EVMC*>(_context);
 
         // TODO: It might be easier to just pass instruction from VM.
-        char const* name = evmc->m_instructionNames[evmc->m_code[code_offset]];
+        char const* name = evmc->m_instructionNames[evmc->m_code[_codeOffset]];
 
         std::cerr << "EVMC "
-                  << " " << evmc->m_step++ << " " << code_offset << " " << name << " "
-                  << status_code << " " << gas_left << " " << stack_num_items;
+                  << " " << evmc->m_step++ << " " << _codeOffset << " " << name << " "
+                  << _statusCode << " " << _gasLeft << " " << _stackNumItems;
 
-        if (pushed_stack_item)
-            std::cerr << " +[" << fromEvmC(*pushed_stack_item) << "]";
+        if (_pushedStackItem)
+            std::cerr << " +[" << fromEvmC(*_pushedStackItem) << "]";
 
-        std::cerr << " " << memory_size << "\n";
-
-        (void)changed_memory_offset;
-        (void)changed_memory_size;
-        (void)changed_memory_size;
-        (void)changed_memory;
+        std::cerr << " " << _memorySize << "\n";
     };
 
     _instance->set_tracer(_instance, tracer, reinterpret_cast<evmc_tracer_context*>(this));
