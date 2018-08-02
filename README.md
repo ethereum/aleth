@@ -39,15 +39,14 @@ cd cpp-ethereum
 
 The `--recursive` option is important. It orders git to clone additional 
 submodules to build the project.
-If you missed `--recursive` option you can correct your mistake with command 
+If you missed `--recursive` option, you are able to correct your mistake with command 
 `git submodule update --init`.
 
 ### Install CMake
 
-CMake is used to control the build configuration of the project. Quite recent 
-version of CMake is required 
+CMake is used to control the build configuration of the project. Latest version of CMake is required 
 (at the time of writing [3.4.3 is the minimum](CMakeLists.txt#L25)).
-We recommend installing CMake by downloading and unpacking the binary 
+We strongly recommend you to install CMake by downloading and unpacking the binary 
 distribution  of the latest version available on the 
 [**CMake download page**](https://cmake.org/download/).
 
@@ -69,7 +68,7 @@ development variant:
 - leveldb
 
 They usually can be installed using system-specific package manager.
-Examples for some systems:
+The examples for some systems are shown below:
 
 Operating system | Installation command
 ---------------- | --------------------
@@ -130,7 +129,7 @@ Our day-to-day development chat happens on the
 All contributions are welcome! We try to keep a list of tasks that are suitable
 for newcomers under the tag 
 [help wanted](https://github.com/ethereum/cpp-ethereum/labels/help%20wanted).
-If you have any questions, please just ask.
+If you have any questions, please do not hestitate to ask us about more information.
 
 Please read [CONTRIBUTING](CONTRIBUTING.md) and [CODING_STYLE](CODING_STYLE.md) 
 thoroughly before making alterations to the code base.
