@@ -94,6 +94,8 @@ private:
     bytesConstRef m_code;
     int m_step = 0;
     char const* const* m_instructionNames = nullptr;
+
+    Logger m_vmTraceLogger{createLogger(VerbosityTrace, "vmtrace")};
 };
 }
 }

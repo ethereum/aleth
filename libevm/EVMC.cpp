@@ -63,14 +63,17 @@ EVMC::EVMC(evmc_instance* _instance) : EVM(_instance)
         // TODO: It might be easier to just pass instruction from VM.
         char const* name = evmc->m_instructionNames[evmc->m_code[_codeOffset]];
 
-        std::cerr << "EVMC "
-                  << " " << evmc->m_step++ << " " << _codeOffset << " " << name << " "
-                  << _statusCode << " " << _gasLeft << " " << _stackNumItems;
+        std::ostringstream logMessage;
+        logMessage << "EVMC "
+                   << " " << evmc->m_step++ << " " << _codeOffset << " " << name << " "
+                   << _statusCode << " " << _gasLeft << " " << _stackNumItems;
 
         if (_pushedStackItem)
-            std::cerr << " +[" << fromEvmC(*_pushedStackItem) << "]";
+            logMessage << " +[" << fromEvmC(*_pushedStackItem) << "]";
 
-        std::cerr << " " << _memorySize << "\n";
+        logMessage << " " << _memorySize;
+
+        LOG(evmc->m_vmTraceLogger) << logMessage.str();
     };
 
     _instance->set_tracer(_instance, tracer, reinterpret_cast<evmc_tracer_context*>(this));
@@ -98,11 +101,11 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
 
     auto gas = static_cast<int64_t>(io_gas);
-    std::cerr << "EVMC message START " << _ext.depth << " " << _ext.caller << " -> "
-              << _ext.myAddress << " gas: " << gas << "\n";
+    LOG(m_vmTraceLogger) << "EVMC message START " << _ext.depth << " " << _ext.caller << " -> "
+                         << _ext.myAddress << " gas: " << gas << "\n";
     EVM::Result r = execute(_ext, gas);
-    std::cerr << "EVMC message END   " << _ext.depth << " status: " << r.status()
-              << " gas left: " << r.gasLeft() << "\n";
+    LOG(m_vmTraceLogger) << "EVMC message END   " << _ext.depth << " status: " << r.status()
+                         << " gas left: " << r.gasLeft() << "\n";
 
     switch (r.status())
     {
