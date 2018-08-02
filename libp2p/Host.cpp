@@ -257,7 +257,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
     }
     if (p->isOffline())
         p->m_lastConnected = std::chrono::system_clock::now();
-    p->endpoint.address() = _s->remoteEndpoint().address();
+    p->endpoint.setAddress(_s->remoteEndpoint().address());
 
     auto protocolVersion = _rlp[0].toInt<unsigned>();
     auto clientVersion = _rlp[1].toString();
