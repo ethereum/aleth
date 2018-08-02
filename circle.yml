@@ -1,4 +1,5 @@
-defaults:
+
+common-steps:
 
   update-submodules: &update-submodules
     run:
@@ -125,14 +126,14 @@ jobs:
 
   linux-clang6:
     environment:
-      - BUILD_TYPE: Release
-      - CXX: clang++-6.0
-      - CC:  clang-6.0
-      - GCOV: llvm-cov-6.0 gcov
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
-      - CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON -DSTATIC_LIBSTDCPP=ON -DLEVELDB_USE_STATIC_LIBS=ON
+      BUILD_TYPE: Release
+      CXX: clang++-6.0
+      CC:  clang-6.0
+      GCOV: llvm-cov-6.0 gcov
+      GENERATOR: Ninja
+      BUILD_PARALLEL_JOBS: 8
+      TEST_PARALLEL_JOBS: 8
+      CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON -DSTATIC_LIBSTDCPP=ON -DLEVELDB_USE_STATIC_LIBS=ON
     docker:
       - image: ethereum/cpp-build-env:2
     steps:
@@ -154,17 +155,14 @@ jobs:
 
   linux-gcc6:
     environment:
-      - BUILD_TYPE: RelWithDebInfo
-      - CXX: g++-6
-      - CC:  gcc-6
-      - GCOV: gcov-6
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 3
-      - TEST_PARALLEL_JOBS: 4
-      - CMAKE_OPTIONS: -DCOVERAGE=ON
-      # TODO: Fix memory leaks reported in leveldb.
-      # - CMAKE_OPTIONS: -DSANITIZE=address
-      # - ASAN_OPTIONS: detect_leaks=0
+      BUILD_TYPE: RelWithDebInfo
+      CXX: g++-6
+      CC:  gcc-6
+      GCOV: gcov-6
+      GENERATOR: Ninja
+      BUILD_PARALLEL_JOBS: 3
+      TEST_PARALLEL_JOBS: 4
+      CMAKE_OPTIONS: -DCOVERAGE=ON
     docker:
       - image: ethereum/cpp-build-env:2
     steps:
@@ -185,11 +183,11 @@ jobs:
 
   macos-xcode90:
     environment:
-      - CXX: clang++
-      - GCOV: gcov
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
+      CXX: clang++
+      GCOV: gcov
+      GENERATOR: Ninja
+      BUILD_PARALLEL_JOBS: 8
+      TEST_PARALLEL_JOBS: 8
     macos:
       xcode: "9.0"
     steps:
