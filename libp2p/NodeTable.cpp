@@ -102,7 +102,7 @@ shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relati
                       << (bi::udp::endpoint)_node.endpoint
                       << " (Advertising: " << (bi::udp::endpoint)m_node.endpoint << ")";
         DEV_GUARDED(x_pubkDiscoverPings)
-            m_pubkDiscoverPings[_node.endpoint.address()] = std::chrono::steady_clock::now();
+        m_pubkDiscoverPings[_node.endpoint.address()] = std::chrono::steady_clock::now();
         ping(_node.endpoint);
         return shared_ptr<NodeEntry>();
     }
@@ -455,7 +455,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_node.endpoint || !m_node.endpoint.isAllowed()) && isPublicAddress(in.destination.address()))
+                    if ((!m_node.endpoint || !m_node.endpoint.isAllowed()) &&
+                        isPublicAddress(in.destination.address()))
                         m_node.endpoint.setAddress(in.destination.address());
                     m_node.endpoint.setUdpPort(in.destination.udpPort());
                 }
