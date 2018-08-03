@@ -205,29 +205,23 @@ public:
     void streamRLP(RLPStream& _s, RLPAppend _append = StreamList) const;
     void interpretRLP(RLP const& _r);
 
-    void setAddress(bi::address _addr) {
-        m_address = _addr;
-    }
-
-    void setUdpPort(uint16_t _udp) {
-        m_udpPort = _udp;
-    }
-
-    void setTcpPort(uint16_t _tcp) {
-        m_tcpPort = _tcp;
-    }
-
     bi::address address() const {
         return m_address;
     }
+
+    void setAddress(bi::address _addr) {m_address = _addr;}
 
     uint16_t udpPort() const {
         return m_udpPort;
     }
 
+    void setUdpPort(uint16_t _udp) {m_udpPort = _udp;}
+
     uint16_t tcpPort() const {
         return m_tcpPort;
     }
+
+    void setTcpPort(uint16_t _tcp) {m_tcpPort = _tcp;}
 
 private:
     bi::address m_address;
