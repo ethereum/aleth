@@ -20,7 +20,9 @@
  */
 
 #include <libdevcore/TransientDirectory.h>
+#include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
+#include <libethcore/SealEngine.h>
 #include <libethereum/Block.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/GenesisInfo.h>
@@ -28,6 +30,7 @@
 #include <libethereum/ValidationSchemes.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/TestHelper.h>
+
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -100,8 +103,8 @@ void TestBlock::initBlockFromJsonHeader(mObject const& _blockHeader, mObject con
     m_tempDirState = std::unique_ptr<TransientDirectory>(new TransientDirectory());
 
     m_state = std::unique_ptr<State>(new State(0,
-        OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)),
-        BaseState::Empty));
+                                               OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)),
+                                               BaseState::Empty));
     ImportTest::importState(_stateObj, *m_state.get());
     m_state.get()->commit(State::CommitBehaviour::KeepEmptyAccounts);
 
@@ -116,7 +119,7 @@ void TestBlock::initBlockFromJsonHeader(mObject const& _blockHeader, mObject con
     m_accountMap = jsonToAccountMap(json_spirit::write_string(json_spirit::mValue(state), false));
 
     m_blockHeader =
-        constructBlock(_blockHeader, _stateObj.size() ? m_state.get()->rootHash() : h256{});
+            constructBlock(_blockHeader, _stateObj.size() ? m_state.get()->rootHash() : h256{});
     recalcBlockHeaderBytes();
 }
 
@@ -156,16 +159,16 @@ void TestBlock::premineUpdate(BlockHeader& _blockInfo)
         _blockInfo.setAuthor(m_blockHeader.author());
 
     if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
-        m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
+            m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
         _blockInfo.setRoots(m_premineUpdate.count("transactionsTrie") > 0 ?
                                 m_blockHeader.transactionsRoot() :
                                 _blockInfo.transactionsRoot(),
-            m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() :
-                                                       _blockInfo.receiptsRoot(),
-            m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() :
-                                                     _blockInfo.sha3Uncles(),
-            m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() :
-                                                     _blockInfo.stateRoot());
+                            m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() :
+                                                                       _blockInfo.receiptsRoot(),
+                            m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() :
+                                                                     _blockInfo.sha3Uncles(),
+                            m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() :
+                                                                     _blockInfo.stateRoot());
 
     if (m_premineUpdate.count("bloom") > 0)
         _blockInfo.setLogBloom(m_blockHeader.logBloom());
@@ -183,7 +186,7 @@ void TestBlock::premineUpdate(BlockHeader& _blockInfo)
         _blockInfo.setExtraData(m_blockHeader.extraData());
 
     m_premineHeader =
-        _blockInfo;  // needed for check that any altered fields are altered in mined block as well
+            _blockInfo;  // needed for check that any altered fields are altered in mined block as well
 }
 
 void TestBlock::mine(TestBlockChain const& _bc)
@@ -208,7 +211,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
 
         size_t transactionsOnImport = m_transactionQueue.topTransactions(100).size();
         block.sync(blockchain, m_transactionQueue,
-            gp);  //!!! Invalid transactions could be dropped from queue here!!!
+                   gp);  //!!! Invalid transactions could be dropped from queue here!!!
         // if (transactionsOnImport >  m_transactionQueue.topTransactions(1000).size())
         // BOOST_ERROR(TestOutputHelper::get().testName() + " Dropped invalid Transactions before
         // mining!");
@@ -216,7 +219,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
         blockchain.sealEngine()->verify(JustSeal, block.info());
         if (transactionsOnImport > block.pending().size())
             cnote << TestOutputHelper::get().testName() +
-                         " Dropped invalid Transactions when mining!";
+                     " Dropped invalid Transactions when mining!";
 
         // renew the TestBlock transactions
         m_transactionQueue.clear();
@@ -226,14 +229,14 @@ void TestBlock::mine(TestBlockChain const& _bc)
     catch (Exception const& _e)
     {
         cnote << TestOutputHelper::get().testName() +
-                     " block sync or mining did throw an exception: "
+                 " block sync or mining did throw an exception: "
               << diagnostic_information(_e);
         return;
     }
     catch (std::exception const& _e)
     {
         cnote << TestOutputHelper::get().testName() +
-                     " block sync or mining did throw an exception: "
+                 " block sync or mining did throw an exception: "
               << _e.what();
         return;
     }
@@ -247,7 +250,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
     }
 
     m_blockHeader = BlockHeader(block.blockData());  // NOTE no longer checked at this point in new
-                                                     // API. looks like it was unimportant anyway
+    // API. looks like it was unimportant anyway
     cnote << "Mined TrRoot: " << m_blockHeader.transactionsRoot();
     copyStateFrom(block.state());
 
@@ -366,7 +369,7 @@ void TestBlock::updateNonce(TestBlockChain const& _bc)
 {
     if (((BlockHeader)m_blockHeader).difficulty() == 0)
         BOOST_TEST_MESSAGE(
-            "Trying to mine a block with 0 difficulty! " + TestOutputHelper::get().testName());
+                    "Trying to mine a block with 0 difficulty! " + TestOutputHelper::get().testName());
     else
     {
         // do not verify blockheader for validity here
@@ -384,23 +387,23 @@ void TestBlock::verify(TestBlockChain const& _bc) const
     try
     {
         _bc.getInterface().sealEngine()->verify(
-            CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
+                    CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
     }
     catch (Exception const& _e)
     {
         u256 const& daoHardfork = _bc.getInterface().sealEngine()->chainParams().daoHardforkBlock;
         if ((m_blockHeader.number() >= daoHardfork && m_blockHeader.number() <= daoHardfork + 9) ||
-            m_blockHeader.number() == 0)
+                m_blockHeader.number() == 0)
         {
             string exWhat{_e.what()};
             string exExpect = "InvalidTransactionsRoot";
             BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos,
-                TestOutputHelper::get().testName() +
-                    "block import expected another exeption: " + exExpect);
+                                  TestOutputHelper::get().testName() +
+                                  "block import expected another exeption: " + exExpect);
         }
         else
             BOOST_ERROR(TestOutputHelper::get().testName() + toString(m_blockHeader.number()) +
-                            " BlockHeader Verification failed: "
+                        " BlockHeader Verification failed: "
                         << boost::current_exception_diagnostic_information());
     }
     catch (...)
@@ -450,8 +453,8 @@ void TestBlock::copyStateFrom(State const& _state)
     // share the same DB)
     m_tempDirState.reset(new TransientDirectory());
     m_state.reset(new State(0,
-        OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)),
-        BaseState::Empty));
+                            OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)),
+                            BaseState::Empty));
     json_spirit::mObject obj = fillJsonWithState(_state);
     ImportTest::importState(obj, *m_state.get());
 }
@@ -487,16 +490,20 @@ void TestBlock::populateFrom(TestBlock const& _original)
     m_dirty = false;
 }
 
-TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
+TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, MiningType _mining)
 {
-    reset(_genesisBlock);
+    reset(_genesisBlock, _mining);
 }
 
-void TestBlockChain::reset(TestBlock const& _genesisBlock)
+void TestBlockChain::reset(TestBlock const& _genesisBlock, MiningType _mining)
 {
     m_tempDirBlockchain.reset(new TransientDirectory);
     ChainParams p = ChainParams(genesisInfo(TestBlockChain::s_sealEngineNetwork),
-        _genesisBlock.bytes(), _genesisBlock.accountMap());
+                                _genesisBlock.bytes(), _genesisBlock.accountMap());
+    if (_mining == MiningType::ForceEthash)
+        p.sealEngineName = eth::Ethash::name();
+    else if (_mining == MiningType::ForceNoProof)
+        p.sealEngineName = eth::NoProof::name();
 
     m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
     if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))
@@ -576,7 +583,7 @@ vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)
 }
 
 TestTransaction TestTransaction::defaultTransaction(
-    u256 const& _nonce, u256 const& _gasPrice, u256 const& _gasLimit, bytes const& _data)
+        u256 const& _nonce, u256 const& _gasPrice, u256 const& _gasLimit, bytes const& _data)
 {
     json_spirit::mObject txObj;
     txObj["data"] = toHexPrefixed(_data);
@@ -617,12 +624,12 @@ json_spirit::mObject TestBlockChain::defaultGenesisBlockJson()
 {
     json_spirit::mObject blockObj;
     blockObj["bloom"] =
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "00000000000000000000000000000000000000000000000000000000000000";
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000";
     blockObj["coinbase"] = "0x8888f1f195afa192cfee860698584c030f4c9db1";
     blockObj["difficulty"] = "131072";
     blockObj["extraData"] = "0x42";
@@ -636,7 +643,7 @@ json_spirit::mObject TestBlockChain::defaultGenesisBlockJson()
     blockObj["stateRoot"] = "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
     blockObj["timestamp"] = "0x54c98c81";
     blockObj["transactionsTrie"] =
-        "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+            "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
     blockObj["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
     return blockObj;
 }

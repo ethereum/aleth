@@ -35,37 +35,37 @@ namespace test
 class BlockchainTestSuite: public TestSuite
 {
 public:
-	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
-	boost::filesystem::path suiteFolder() const override;
-	boost::filesystem::path suiteFillerFolder() const override;
+    json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
 };
 
 class BCGeneralStateTestsSuite: public BlockchainTestSuite
 {
-	boost::filesystem::path suiteFolder() const override;
-	boost::filesystem::path suiteFillerFolder() const override;
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
 };
 
 class TransitionTestsSuite: public TestSuite
 {
-	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
-	boost::filesystem::path suiteFolder() const override;
-	boost::filesystem::path suiteFillerFolder() const override;
+    json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
 };
 
 struct ChainBranch
 {
-	ChainBranch(TestBlock const& _genesis);
-	void reset();
-	void restoreFromHistory(size_t _importBlockNumber);
-	TestBlockChain blockchain;
-	vector<TestBlock> importedBlocks;
+    ChainBranch(TestBlock const& _genesis, TestBlockChain::MiningType _miningType);
+    void reset(TestBlockChain::MiningType _miningType);
+    void restoreFromHistory(size_t _importBlockNumber);
+    TestBlockChain blockchain;
+    vector<TestBlock> importedBlocks;
 
-	static void forceBlockchain(string const& chainname);
-	static void resetBlockchain();
+    static void forceBlockchain(string const& chainname);
+    static void resetBlockchain();
 
 private:
-	static eth::Network s_tempBlockchainNetwork;
+    static eth::Network s_tempBlockchainNetwork;
 };
 
 //Functions that working with test json
