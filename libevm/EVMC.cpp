@@ -54,6 +54,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     case EVMC_FAILURE:
         BOOST_THROW_EXCEPTION(OutOfGas());
 
+    case EVMC_INVALID_INSTRUCTION: // NOTE: this could have its own exception
     case EVMC_UNDEFINED_INSTRUCTION:
         BOOST_THROW_EXCEPTION(BadInstruction());
 
@@ -65,6 +66,9 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
     case EVMC_STACK_UNDERFLOW:
         BOOST_THROW_EXCEPTION(StackUnderflow());
+
+    case EVMC_INVALID_MEMORY_ACCESS:
+        BOOST_THROW_EXCEPTION(BufferOverrun());
 
     case EVMC_STATIC_MODE_VIOLATION:
         BOOST_THROW_EXCEPTION(DisallowedStateChange());
