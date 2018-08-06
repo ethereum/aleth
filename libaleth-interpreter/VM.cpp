@@ -22,13 +22,6 @@
 
 namespace
 {
-evmc_trace_callback g_traceCallback = nullptr;
-evmc_tracer_context* g_traceContext = nullptr;
-
-void destroy(evmc_instance* _instance)
-{
-    (void)_instance;
-}
 
 evmc_capabilities_flagset getCapabilities(evmc_instance* _instance) noexcept
 {
@@ -41,99 +34,115 @@ void delete_output(const evmc_result* result)
     delete[] result->output_data;
 }
 
-evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
-    evmc_message const* _msg, uint8_t const* _code, size_t _codeSize) noexcept
+class InterpreterEvmcInstance : public evmc_instance
 {
-    (void)_instance;
-    std::unique_ptr<dev::eth::VM> vm{new dev::eth::VM};
+public:
+    static InterpreterEvmcInstance* create() { return new InterpreterEvmcInstance{}; }
 
-    evmc_result result = {};
-    dev::eth::owning_bytes_ref output;
+private:
+    InterpreterEvmcInstance()
+      : evmc_instance{
+            EVMC_ABI_VERSION, "interpreter", aleth_get_buildinfo()->project_version, destroy,
+            execute, getCapabilities, setTracer,
+            nullptr,  // set_option
+        }
+    {}
 
-    try
+    static void destroy(evmc_instance* _instance)
     {
-        output = vm->exec(_context, _rev, _msg, _code, _codeSize);
-        result.status_code = EVMC_SUCCESS;
-        result.gas_left = vm->m_io_gas;
-    }
-    catch (dev::eth::RevertInstruction& ex)
-    {
-        result.status_code = EVMC_REVERT;
-        result.gas_left = vm->m_io_gas;
-        output = ex.output();  // This moves the output from the exception!
-    }
-    catch (dev::eth::BadInstruction const&)
-    {
-        result.status_code = EVMC_UNDEFINED_INSTRUCTION;
-    }
-    catch (dev::eth::OutOfStack const&)
-    {
-        result.status_code = EVMC_STACK_OVERFLOW;
-    }
-    catch (dev::eth::StackUnderflow const&)
-    {
-        result.status_code = EVMC_STACK_UNDERFLOW;
-    }
-    catch (dev::eth::BufferOverrun const&)
-    {
-        result.status_code = EVMC_INVALID_MEMORY_ACCESS;
-    }
-    catch (dev::eth::OutOfGas const&)
-    {
-        result.status_code = EVMC_OUT_OF_GAS;
-    }
-    catch (dev::eth::BadJumpDestination const&)
-    {
-        result.status_code = EVMC_BAD_JUMP_DESTINATION;
-    }
-    catch (dev::eth::DisallowedStateChange const&)
-    {
-        result.status_code = EVMC_STATIC_MODE_VIOLATION;
-    }
-    catch (dev::eth::VMException const&)
-    {
-        result.status_code = EVMC_FAILURE;
-    }
-    catch (...)
-    {
-        result.status_code = EVMC_INTERNAL_ERROR;
+        delete static_cast<InterpreterEvmcInstance*>(_instance);
     }
 
-    if (!output.empty())
+    static evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
+        evmc_message const* _msg, uint8_t const* _code, size_t _codeSize) noexcept
     {
-        // Make a copy of the output.
-        auto outputData = new uint8_t[output.size()];
-        std::memcpy(outputData, output.data(), output.size());
-        result.output_data = outputData;
-        result.output_size = output.size();
-        result.release = delete_output;
+        std::unique_ptr<dev::eth::VM> vm{new dev::eth::VM};
+
+        evmc_result result = {};
+        dev::eth::owning_bytes_ref output;
+
+        auto evmc = static_cast<InterpreterEvmcInstance*>(_instance);
+        try
+        {
+            output = vm->exec(_context, _rev, _msg, _code, _codeSize, evmc->m_traceCallback,
+                evmc->m_traceContext);
+            result.status_code = EVMC_SUCCESS;
+            result.gas_left = vm->m_io_gas;
+        }
+        catch (dev::eth::RevertInstruction& ex)
+        {
+            result.status_code = EVMC_REVERT;
+            result.gas_left = vm->m_io_gas;
+            output = ex.output();  // This moves the output from the exception!
+        }
+        catch (dev::eth::BadInstruction const&)
+        {
+            result.status_code = EVMC_UNDEFINED_INSTRUCTION;
+        }
+        catch (dev::eth::OutOfStack const&)
+        {
+            result.status_code = EVMC_STACK_OVERFLOW;
+        }
+        catch (dev::eth::StackUnderflow const&)
+        {
+            result.status_code = EVMC_STACK_UNDERFLOW;
+        }
+        catch (dev::eth::BufferOverrun const&)
+        {
+            result.status_code = EVMC_INVALID_MEMORY_ACCESS;
+        }
+        catch (dev::eth::OutOfGas const&)
+        {
+            result.status_code = EVMC_OUT_OF_GAS;
+        }
+        catch (dev::eth::BadJumpDestination const&)
+        {
+            result.status_code = EVMC_BAD_JUMP_DESTINATION;
+        }
+        catch (dev::eth::DisallowedStateChange const&)
+        {
+            result.status_code = EVMC_STATIC_MODE_VIOLATION;
+        }
+        catch (dev::eth::VMException const&)
+        {
+            result.status_code = EVMC_FAILURE;
+        }
+        catch (...)
+        {
+            result.status_code = EVMC_INTERNAL_ERROR;
+        }
+
+        if (!output.empty())
+        {
+            // Make a copy of the output.
+            auto outputData = new uint8_t[output.size()];
+            std::memcpy(outputData, output.data(), output.size());
+            result.output_data = outputData;
+            result.output_size = output.size();
+            result.release = delete_output;
+        }
+
+        return result;
     }
 
-    return result;
-}
+    static void setTracer(evmc_instance* _instance, evmc_trace_callback _callback,
+        evmc_tracer_context* _context) noexcept
+    {
+        auto evmc = static_cast<InterpreterEvmcInstance*>(_instance);
 
-void setTracer(evmc_instance* /*_instance*/, evmc_trace_callback _callback,
-    evmc_tracer_context* _context) noexcept
-{
-    g_traceCallback = _callback;
-    g_traceContext = _context;
-}
+        evmc->m_traceCallback = _callback;
+        evmc->m_traceContext = _context;
+    }
+
+    evmc_trace_callback m_traceCallback = nullptr;
+    evmc_tracer_context* m_traceContext = nullptr;
+};
+
 }  // namespace
 
 extern "C" evmc_instance* evmc_create_interpreter() noexcept
 {
-    // TODO: Allow creating multiple instances with different configurations.
-    static evmc_instance s_instance{
-        EVMC_ABI_VERSION,
-        "interpreter",
-        aleth_get_buildinfo()->project_version,
-        ::destroy,
-        ::execute,
-        getCapabilities,
-        ::setTracer,
-        nullptr,  // set_option
-    };
-    return &s_instance;
+    return InterpreterEvmcInstance::create();
 }
 
 namespace dev
@@ -142,7 +151,7 @@ namespace eth
 {
 void VM::trace() noexcept
 {
-    if (g_traceCallback)
+    if (m_traceCallback)
     {
         auto const& metrics = c_metrics[static_cast<size_t>(m_OP)];
         evmc_uint256be topStackItem;
@@ -152,7 +161,7 @@ void VM::trace() noexcept
             topStackItem = toEvmC(m_SPP[0]);
             pushedStackItem = &topStackItem;
         }
-        g_traceCallback(g_traceContext, m_PC, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
+        m_traceCallback(m_traceContext, m_PC, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
             pushedStackItem, m_mem.size(), 0, 0, nullptr);
     }
 }
@@ -288,7 +297,8 @@ evmc_tx_context const& VM::getTxContext()
 // interpreter entry point
 
 owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
-    uint8_t const* _code, size_t _codeSize)
+    uint8_t const* _code, size_t _codeSize, evmc_trace_callback _traceCallback,
+    evmc_tracer_context* _traceContext)
 {
     m_context = _context;
     m_rev = _rev;
@@ -297,6 +307,8 @@ owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc
     m_PC = 0;
     m_pCode = _code;
     m_codeSize = _codeSize;
+    m_traceCallback = _traceCallback;
+    m_traceContext = _traceContext;
 
     // trampoline to minimize depth of call stack when calling out
     m_bounce = &VM::initEntry;
