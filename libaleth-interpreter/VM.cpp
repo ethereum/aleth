@@ -57,6 +57,26 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
     {
         result.status_code = EVMC_UNDEFINED_INSTRUCTION;
     }
+    catch (dev::eth::OutOfStack const&)
+    {
+        result.status_code = EVMC_STACK_OVERFLOW;
+    }
+    catch (dev::eth::StackUnderflow const&)
+    {
+        result.status_code = EVMC_STACK_UNDERFLOW;
+    }
+    catch (dev::eth::BufferOverrun const&)
+    {
+        result.status_code = EVMC_INVALID_MEMORY_ACCESS;
+    }
+    catch (dev::eth::OutOfGas const&)
+    {
+        result.status_code = EVMC_OUT_OF_GAS;
+    }
+    catch (dev::eth::BadJumpDestination const&)
+    {
+        result.status_code = EVMC_BAD_JUMP_DESTINATION;
+    }
     catch (dev::eth::DisallowedStateChange const&)
     {
         result.status_code = EVMC_STATIC_MODE_VIOLATION;
