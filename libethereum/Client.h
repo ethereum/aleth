@@ -334,7 +334,7 @@ protected:
     Block m_working;                        ///< The state of the client which we're sealing (i.e. it'll have all the rewards added), while we're actually working on it.
     BlockHeader m_sealingInfo;              ///< The header we're attempting to seal on (derived from m_postSeal).
     bool remoteActive() const;              ///< Is there an active and valid remote worker?
-    bool m_remoteWorking = false;           ///< Has the remote worker recently been reset?
+    std::atomic<bool> m_remoteWorking = { false };          ///< Has the remote worker recently been reset?
     std::atomic<bool> m_needStateReset = { false };         ///< Need reset working state to premin on next sync
     std::chrono::system_clock::time_point m_lastGetWork;    ///< Is there an active and valid remote worker?
 
@@ -348,7 +348,7 @@ protected:
     Handler<h256 const&> m_tqReplaced;
     Handler<> m_bqReady;
 
-    bool m_wouldSeal = false;               ///< True if we /should/ be sealing.
+    std::atomic<bool> m_wouldSeal = { false };               ///< True if we /should/ be sealing.
     bool m_wouldButShouldnot = false;       ///< True if the last time we called rejigSealing wouldSeal() was true but sealer's shouldSeal() was false.
 
     mutable std::chrono::system_clock::time_point m_lastGarbageCollection;

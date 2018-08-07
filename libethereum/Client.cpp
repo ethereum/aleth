@@ -506,7 +506,14 @@ void Client::restartMining()
     // TODO: use m_postSeal to avoid re-evaluating our own blocks.
     preChanged = newPreMine.sync(bc());
 
-    if (preChanged || m_postSeal.author() != m_preSeal.author())
+    Address preAuthor;
+    DEV_READ_GUARDED(x_preSeal)
+        preAuthor = m_preSeal.author();
+    Address postAuthor;
+    DEV_READ_GUARDED(x_postSeal)
+        postAuthor = m_postSeal.author();
+
+    if (preChanged || postAuthor != preAuthor)
     {
         DEV_WRITE_GUARDED(x_preSeal)
             m_preSeal = newPreMine;
