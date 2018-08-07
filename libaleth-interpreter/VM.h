@@ -118,7 +118,7 @@ private:
 
     evmc_trace_callback m_traceCallback = nullptr;
     evmc_tracer_context* m_traceContext = nullptr;
-    void trace() noexcept;
+    void trace(uint64_t _pc) noexcept;
 
     // initialize interpreter
     void initEntry();

@@ -124,18 +124,24 @@ namespace eth
 #if EVM_SWITCH_DISPATCH
 
 #define INIT_CASES
-#define DO_CASES            \
-    for (;;)                \
-    {                       \
-        fetchInstruction(); \
-        switch (m_OP)       \
+#define DO_CASES             \
+    for (;;)                 \
+    {                        \
+        fetchInstruction();  \
+        auto startPC = m_PC; \
+        switch (m_OP)        \
         {
 #define CASE(name) case Instruction::name:
-#define NEXT \
-    ++m_PC;  \
+#define NEXT        \
+    trace(startPC); \
+    ++m_PC;         \
     break;
-#define CONTINUE continue;
-#define BREAK return;
+#define CONTINUE    \
+    trace(startPC); \
+    continue;
+#define BREAK       \
+    trace(startPC); \
+    return;
 #define DEFAULT default:
 #define WHILE_CASES \
     }               \
@@ -410,19 +416,24 @@ namespace eth
         &&SUICIDE,                              \
     };
 
-#define DO_CASES        \
-    fetchInstruction(); \
+#define DO_CASES         \
+    fetchInstruction();  \
+    auto startPC = m_PC; \
     goto* jumpTable[(int)m_OP];
 #define CASE(name) \
     name:
 #define NEXT            \
+    trace(startPC);     \
     ++m_PC;             \
     fetchInstruction(); \
     goto* jumpTable[(int)m_OP];
 #define CONTINUE        \
+    trace(startPC);     \
     fetchInstruction(); \
     goto* jumpTable[(int)m_OP];
-#define BREAK return;
+#define BREAK       \
+    trace(startPC); \
+    return;
 #define DEFAULT
 #define WHILE_CASES
 

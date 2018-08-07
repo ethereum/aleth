@@ -149,7 +149,7 @@ namespace dev
 {
 namespace eth
 {
-void VM::trace() noexcept
+void VM::trace(uint64_t _pc) noexcept
 {
     if (m_traceCallback)
     {
@@ -161,7 +161,7 @@ void VM::trace() noexcept
             topStackItem = toEvmC(m_SPP[0]);
             pushedStackItem = &topStackItem;
         }
-        m_traceCallback(m_traceContext, m_PC, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
+        m_traceCallback(m_traceContext, _pc, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
             pushedStackItem, m_mem.size(), 0, 0, nullptr);
     }
 }
@@ -449,7 +449,6 @@ void VM::interpretCases()
             updateIOGas();
 
             m_SPP[0] = (u256)*(h256 const*)(m_mem.data() + (unsigned)m_SP[0]);
-            trace();
         }
         NEXT
 
@@ -460,7 +459,6 @@ void VM::interpretCases()
             updateIOGas();
 
             *(h256*)&m_mem[(unsigned)m_SP[0]] = (h256)m_SP[1];
-            trace();
         }
         NEXT
 
@@ -1202,14 +1200,11 @@ void VM::interpretCases()
             // get val at two-byte offset into const pool and advance pc by one-byte remainder
             TRACE_OP(2, m_PC, m_OP);
             unsigned off;
-            uint64_t pc = m_PC;
-            ++pc;
-            off = m_code[pc++] << 8;
-            off |= m_code[pc++];
-            pc += m_code[pc];
+            ++m_PC;
+            off = m_code[m_PC++] << 8;
+            off |= m_code[m_PC++];
+            m_PC += m_code[m_PC];
             m_SPP[0] = m_pool[off];
-            trace();
-            m_PC = pc;
             TRACE_VAL(2, "Retrieved pooled const", m_SPP[0]);
 #else
             throwBadInstruction();
@@ -1222,7 +1217,6 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
             m_SPP[0] = m_code[m_PC + 1];
-            trace();
             m_PC += 2;
         }
         CONTINUE
@@ -1271,7 +1265,6 @@ void VM::interpretCases()
             for (; numBytes--; ++codeOffset)
                 m_SPP[0] = (m_SPP[0] << 8) | m_code[codeOffset];
 
-            trace();
             m_PC = codeOffset;
         }
         CONTINUE
@@ -1417,7 +1410,6 @@ void VM::interpretCases()
             }
 
             updateIOGas();
-            trace();
         }
         NEXT
 
