@@ -149,6 +149,9 @@ if (TESTS)
 endif()
 
 
+install(FILES ${PROJECT_BINARY_DIR}/aleth/buildinfo.json DESTINATION ${CMAKE_INSTALL_DATADIR}/aleth)
+
+
 if(WIN32)
     set(CPACK_GENERATOR ZIP)
 else()
