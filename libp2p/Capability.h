@@ -33,28 +33,36 @@ class ReputationManager;
 
 class Capability: public std::enable_shared_from_this<Capability>
 {
-    friend class Session;
-
 public:
     Capability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _idOffset);
     virtual ~Capability() {}
 
-    // Implement these in the derived class.
-/*  static std::string name() { return ""; }
-    static u256 version() { return 0; }
-    static unsigned messageCount() { return 0; }
-*/
-
+    /*  TODO
+        virtual std::string name() = 0;
+        virtual u256 version() = 0;
+        virtual unsigned messageCount() = 0;
+    */
     bool enabled() const { return m_enabled; }
+    bool canHandle(PacketType _packetType) const
+    {
+        return static_cast<unsigned>(_packetType) >= m_idOffset &&
+               static_cast<unsigned>(_packetType) < m_hostCap->messageCount() + m_idOffset;
+    }
+
+    // TODO is PacketType reasonable type here, enum arithmetics is weird
+    bool interpret(PacketType _packetType, RLP const& _rlp)
+    {
+        return interpret(_packetType - m_idOffset, _rlp);
+    }
 
     void disconnect();
 
+    // TODO replace with a signal in Session
+    virtual void onDisconnect() {}
+
 protected:
     std::shared_ptr<SessionFace> session() const { return m_session.lock(); }
-    HostCapabilityFace* hostCapability() const { return m_hostCap; }
-
     virtual bool interpret(unsigned _id, RLP const&) = 0;
-    virtual void onDisconnect() {}
 
     void disable(std::string const& _problem);
 
