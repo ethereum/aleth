@@ -193,7 +193,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 class Proxy(HTTPServer):
 
     def __init__(self, proxy_url, backend_path):
-
+        self.proxy_url = proxy_url
         url = urlparse(proxy_url)
         assert url.scheme == 'http'
         proxy_address = url.hostname, url.port
@@ -201,10 +201,6 @@ class Proxy(HTTPServer):
         super(Proxy, self).__init__(proxy_address, HTTPRequestHandler)
 
         self.backend_address = path.expanduser(backend_path)
-        self.conn = get_ipc_connector(self.backend_address)
-
-        print("JSON-RPC HTTP Proxy: {} -> {}".format(
-            self.backend_address, proxy_url), file=sys.stderr, flush=True)
 
     def process(self, request):
         self.conn.sendall(request)
@@ -220,6 +216,12 @@ class Proxy(HTTPServer):
             response += r
 
         return response
+
+    def run(self):
+        self.conn = get_ipc_connector(self.backend_address)
+        print("JSON-RPC HTTP Proxy: {} -> {}".format(
+            self.backend_address, self.proxy_url), file=sys.stderr, flush=True)
+        self.serve_forever()
 
 
 if sys.platform == 'win32':
@@ -251,14 +253,14 @@ def parse_args():
 def run(proxy_url=DEFAULT_PROXY_URL, backend_path=DEFAULT_BACKEND_PATH):
     proxy = Proxy(proxy_url, backend_path)
     try:
-        proxy.serve_forever()
+        proxy.run()
     except KeyboardInterrupt:
         proxy.shutdown()
 
 
 def run_daemon(proxy_url=DEFAULT_PROXY_URL, backend_path=DEFAULT_BACKEND_PATH):
     proxy = Proxy(proxy_url, backend_path)
-    th = threading.Thread(name='jsonrpcproxy', target=proxy.serve_forever)
+    th = threading.Thread(name='jsonrpcproxy', target=proxy.run)
     th.daemon = True
     th.start()
     return proxy
