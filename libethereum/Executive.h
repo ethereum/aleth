@@ -62,6 +62,7 @@ public:
     void setOptions(DebugOptions _options) { m_options = _options; }
 
     std::string json(bool _styled = false) const;
+    Json::Value jsonValue() const { return m_trace; }
 
     OnOpFunc onOp()
     {

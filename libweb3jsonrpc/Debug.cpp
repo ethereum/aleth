@@ -67,7 +67,6 @@ State Debug::stateAt(std::string const& _blockHashOrNumber, int _txIndex) const
 
 Json::Value Debug::traceTransaction(Executive& _e, Transaction const& _t, Json::Value const& _json)
 {
-    Json::Value trace;
     StandardTrace st;
     st.setShowMnemonics();
     st.setOptions(debugOptions(_json));
@@ -75,8 +74,7 @@ Json::Value Debug::traceTransaction(Executive& _e, Transaction const& _t, Json::
     if (!_e.execute())
         _e.go(st.onOp());
     _e.finalize();
-    Json::Reader().parse(st.json(), trace);
-    return trace;
+    return st.jsonValue();
 }
 
 Json::Value Debug::traceBlock(Block const& _block, Json::Value const& _json)
