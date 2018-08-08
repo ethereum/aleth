@@ -1,4 +1,5 @@
-defaults:
+
+common-steps:
 
   update-submodules: &update-submodules
     run:
@@ -125,14 +126,14 @@ jobs:
 
   linux-clang6:
     environment:
-      - BUILD_TYPE: Release
-      - CXX: clang++-6.0
-      - CC:  clang-6.0
-      - GCOV: llvm-cov-6.0 gcov
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
-      - CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON -DSTATIC_LIBSTDCPP=ON -DLEVELDB_USE_STATIC_LIBS=ON
+      BUILD_TYPE: Release
+      CXX: clang++-6.0
+      CC:  clang-6.0
+      GCOV: llvm-cov-6.0 gcov
+      GENERATOR: Ninja
+      BUILD_PARALLEL_JOBS: 8
+      TEST_PARALLEL_JOBS: 8
+      CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON -DSTATIC_LIBSTDCPP=ON -DLEVELDB_USE_STATIC_LIBS=ON
     docker:
       - image: ethereum/cpp-build-env:2
     steps:
@@ -152,19 +153,16 @@ jobs:
       - *test
       - *test-evmc-interpreter
 
-  linux-gcc6:
-    environment:
-      - BUILD_TYPE: RelWithDebInfo
-      - CXX: g++-6
-      - CC:  gcc-6
-      - GCOV: gcov-6
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 3
-      - TEST_PARALLEL_JOBS: 4
-      - CMAKE_OPTIONS: -DCOVERAGE=ON
-      # TODO: Fix memory leaks reported in leveldb.
-      # - CMAKE_OPTIONS: -DSANITIZE=address
-      # - ASAN_OPTIONS: detect_leaks=0
+  linux-gcc6: &linux-gcc6
+    environment: &linux-gcc6-environment
+      BUILD_TYPE: RelWithDebInfo
+      CXX: g++-6
+      CC:  gcc-6
+      GCOV: gcov-6
+      GENERATOR: Ninja
+      BUILD_PARALLEL_JOBS: 3
+      TEST_PARALLEL_JOBS: 4
+      CMAKE_OPTIONS: -DCOVERAGE=ON
     docker:
       - image: ethereum/cpp-build-env:2
     steps:
@@ -183,13 +181,19 @@ jobs:
       - *test
       - *upload-coverage-data
 
+  linux-gcc6-nightly:
+    <<: *linux-gcc6
+    environment:
+      <<: *linux-gcc6-environment
+      CMAKE_OPTIONS: -DCOVERAGE=ON -DTESTETH_ARGS=--all
+
   macos-xcode90:
     environment:
-      - CXX: clang++
-      - GCOV: gcov
-      - GENERATOR: Ninja
-      - BUILD_PARALLEL_JOBS: 8
-      - TEST_PARALLEL_JOBS: 8
+      CXX: clang++
+      GCOV: gcov
+      GENERATOR: Ninja
+      BUILD_PARALLEL_JOBS: 8
+      TEST_PARALLEL_JOBS: 8
     macos:
       xcode: "9.0"
     steps:
@@ -229,7 +233,7 @@ jobs:
             ghr -u ethereum -r cpp-ethereum $prerelease_flag $CIRCLE_TAG ~/package
 
   # Builds aleth docker image and uploads it to Docker Hub.
-  docker-aleth:
+  docker-aleth: &docker-aleth
     docker:
       - image: circleci/golang
     steps:
@@ -240,26 +244,33 @@ jobs:
       - setup_remote_docker
       - run:
           name: "Build aleth docker image"
-          command: docker build -t ethereum/aleth:latest -f scripts/docker/aleth.dockerfile .
+          command: docker build -t ethereum/aleth:local -f scripts/docker/aleth.dockerfile .
       - run:
           name: "Push aleth docker image"
           command: |
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER_ID --password-stdin
-            docker push ethereum/aleth:latest
-            echo "Pushed ethereum/aleth:latest"
             if [[ $CIRCLE_TAG =~ ^v[0-9].* ]]; then
               tag=${CIRCLE_TAG:1}
-              docker tag ethereum/aleth:latest ethereum/aleth:$tag
+              docker tag ethereum/aleth:local ethereum/aleth:$tag
               docker push ethereum/aleth:$tag
               echo "Pushed ethereum/aleth:$tag"
             fi
+            if [[ $NIGHTLY ]]; then
+              docker tag ethereum/aleth:local ethereum/aleth:nightly
+              docker push ethereum/aleth:nightly
+              echo "Pushed ethereum/aleth:nightly"
+            fi
             echo "See https://hub.docker.com/r/ethereum/aleth/tags/"
 
-# TODO: Run GCC6 build only in develop branch.
-# TODO: Enabled nightly builds and add more configs.
-# TODO: Separate builds from testing jobs.
+  docker-aleth-nightly:
+    <<: *docker-aleth
+    environment:
+      NIGHTLY: true
+
+
 workflows:
   version: 2
+
   aleth:
     jobs:
       - macos-xcode90:
@@ -292,7 +303,19 @@ workflows:
             - linux-clang6
             - linux-gcc6
           filters:
-            branches:
-              only: develop
             tags:
-              only: /.*/
+              only: /^v[0-9].*/
+
+  nightly:
+    triggers:
+    - schedule:
+        cron: "0 0 * * *"
+        filters:
+          branches:
+            only:
+            - master
+    jobs:
+      - linux-gcc6-nightly
+      - docker-aleth-nightly:
+          requires:
+            - linux-gcc6-nightly
