@@ -147,7 +147,6 @@ private:
     void onOperation() {}
     void adjustStack(int _removed, int _added);
     uint64_t gasForMem(u512 _size);
-    void updateSSGas();
     void updateIOGas();
     void updateGas();
     void updateMem(uint64_t _newMem);
