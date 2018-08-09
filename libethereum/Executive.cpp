@@ -163,14 +163,17 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
     m_trace.append(r);
 }
 
-string StandardTrace::json(bool _styled) const
+std::string StandardTrace::styledJson() const
+{
+    return Json::StyledWriter().write(m_trace);
+}
+
+string StandardTrace::multilineTrace() const
 {
     if (m_trace.empty())
         return {};
 
-    if (_styled)
-        return Json::StyledWriter().write(m_trace);
-
+    // Each opcode trace on a separate line
     return std::accumulate(std::next(m_trace.begin()), m_trace.end(),
         Json::FastWriter().write(m_trace[0]),
         [](std::string a, Json::Value b) { return a + Json::FastWriter().write(b); });

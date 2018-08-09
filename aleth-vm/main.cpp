@@ -385,7 +385,7 @@ int main(int argc, char** argv)
         }
     }
     else if (mode == Mode::Trace)
-        cout << st.json(styledJson);
+        cout << (styledJson ? st.styledJson() : st.multilineTrace());
     else if (mode == Mode::OutputOnly)
         cout << toHex(output) << '\n';
     else if (mode == Mode::Test)
