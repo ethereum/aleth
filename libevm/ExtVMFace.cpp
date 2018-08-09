@@ -50,22 +50,31 @@ void getStorage(
     *o_result = toEvmC(env.store(key));
 }
 
-void setStorage(
-    evmc_context* _context,
-    evmc_address const* _addr,
-    evmc_uint256be const* _key,
-    evmc_uint256be const* _value
-) noexcept
+evmc_storage_status setStorage(evmc_context* _context, evmc_address const* _addr,
+    evmc_uint256be const* _key, evmc_uint256be const* _value) noexcept
 {
-    (void) _addr;
+    (void)_addr;
     auto& env = static_cast<ExtVMFace&>(*_context);
     assert(fromEvmC(*_addr) == env.myAddress);
     u256 index = fromEvmC(*_key);
     u256 value = fromEvmC(*_value);
-    if (value == 0 && env.store(index) != 0)                   // If delete
-        env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
+    u256 oldValue = env.store(index);
 
-    env.setStore(index, value);    // Interface uses native endianness
+    if (value == oldValue)
+        return EVMC_STORAGE_UNCHANGED;
+
+    auto status = EVMC_STORAGE_MODIFIED;
+    if (oldValue == 0)
+        status = EVMC_STORAGE_ADDED;
+    else if (value == 0)
+    {
+        status = EVMC_STORAGE_DELETED;
+        env.sub.refunds += env.evmSchedule().sstoreRefundGas;
+    }
+
+    env.setStore(index, value);  // Interface uses native endianness
+
+    return status;
 }
 
 void getBalance(

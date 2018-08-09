@@ -189,15 +189,6 @@ void VM::adjustStack(int _removed, int _added)
         throwBadStack(_removed, _added);
 }
 
-void VM::updateSSGas()
-{
-    evmc_uint256be key = toEvmC(m_SP[0]);
-    evmc_uint256be rawValue;
-    m_context->fn_table->get_storage(&rawValue, m_context, &m_message->destination, &key);
-    u256 value = fromEvmC(rawValue);
-    m_runGas = (!value && m_SP[1]) ? VMSchedule::sstoreSetGas : VMSchedule::sstoreResetGas;
-}
-
 uint64_t VM::gasForMem(u512 _size)
 {
     constexpr int64_t memoryGas = VMSchedule::memoryGas;
@@ -1365,12 +1356,22 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            updateSSGas();
+            static_assert(
+                VMSchedule::sstoreResetGas <= VMSchedule::sstoreSetGas, "Wrong SSTORE gas costs");
+            m_runGas = VMSchedule::sstoreResetGas;  // Charge the modification cost up front.
             updateIOGas();
 
             evmc_uint256be key = toEvmC(m_SP[0]);
             evmc_uint256be value = toEvmC(m_SP[1]);
-            m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
+            auto status =
+                m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
+
+            if (status == EVMC_STORAGE_ADDED)
+            {
+                // Charge additional amount for added storage item.
+                m_runGas = VMSchedule::sstoreSetGas - VMSchedule::sstoreResetGas;
+                updateIOGas();
+            }
         }
         NEXT
 
