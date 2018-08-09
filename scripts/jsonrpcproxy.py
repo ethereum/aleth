@@ -30,9 +30,10 @@ if sys.platform == 'win32':
     import pywintypes
 
 
-VERSION = '0.1.0a1'
+VERSION = '0.2'
 BUFSIZE = 32
 DELIMITER = ord('\n')
+BACKEND_CONNECTION_TIMEOUT=10.0
 INFO = """JSON-RPC Proxy
 
 Version:  {version}
@@ -240,7 +241,7 @@ class Proxy(HTTPServer):
 
     def run(self):
         self.conn = get_ipc_connector(self.backend_address)
-        self.conn.check_connection(timeout=10.0)
+        self.conn.check_connection(timeout=BACKEND_CONNECTION_TIMEOUT)
 
         print("JSON-RPC HTTP Proxy: {} -> {}".format(
             self.backend_address, self.proxy_url), file=sys.stderr, flush=True)
