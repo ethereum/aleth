@@ -303,6 +303,8 @@ workflows:
             - linux-clang6
             - linux-gcc6
           filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^v[0-9].*/
 
