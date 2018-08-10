@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "VMFactory.h"
@@ -21,8 +21,7 @@
 
 #include <libaleth-interpreter/interpreter.h>
 
-#include <boost/dll.hpp>
-#include <boost/filesystem.hpp>
+#include <evmc/loader.h>
 
 #if ETH_EVMJIT
 #include <evmjit.h>
@@ -32,11 +31,7 @@
 #include <hera.h>
 #endif
 
-namespace dll = boost::dll;
-namespace fs = boost::filesystem;
 namespace po = boost::program_options;
-
-using evmc_create_fn = evmc_instance*();
 
 namespace dev
 {
@@ -50,7 +45,7 @@ auto g_kind = VMKind::Legacy;
 ///
 /// This variable is only written once when processing command line arguments,
 /// so access is thread-safe.
-boost::function<evmc_create_fn> g_dllEvmcCreate;
+evmc_create_fn g_evmcCreateFn;
 
 /// A helper type to build the tabled of VM implementations.
 ///
@@ -77,42 +72,6 @@ VMKindTableEntry vmKindsTable[] = {
 #endif
 };
 
-boost::function<evmc_create_fn> loadDllVM(fs::path _path)
-{
-    if (!fs::exists(_path))
-    {
-        // This we report error as "invalid value for option --vm". This is better than reporting
-        // DLL loading error in case someone tries to use build-time disabled VM like "jit".
-        BOOST_THROW_EXCEPTION(po::validation_error(
-            po::validation_error::invalid_option_value, "vm", _path.string(), 1));
-    }
-
-    auto symbols = dll::library_info{_path}.symbols();
-    static const auto predicate = [](const std::string& symbol) {
-        return symbol.find("evmc_create_") == 0;
-    };
-    auto it = std::find_if(symbols.begin(), symbols.end(), predicate);
-
-    if (it == symbols.end())
-    {
-        // This is what boost is doing when symbol not found.
-        auto ec = std::make_error_code(std::errc::invalid_seek);
-        std::string what = "loading " + _path.string() + " failed: EVMC create function not found";
-        BOOST_THROW_EXCEPTION(std::system_error(ec, what));
-    }
-
-    // Check for ambiguity of EVMC create functions.
-    auto dupIt = std::find_if(std::next(it), symbols.end(), predicate);
-    if (dupIt != symbols.end())
-    {
-        auto ec = std::make_error_code(std::errc::invalid_seek);
-        std::string what = "loading " + _path.string() +
-                           " failed: multiple EVMC create functions: " + *it + " and " + *dupIt;
-        BOOST_THROW_EXCEPTION(std::system_error(ec, what));
-    }
-    return dll::import<evmc_create_fn>(_path, *it);
-}
-
 void setVMKind(const std::string& _name)
 {
     for (auto& entry : vmKindsTable)
@@ -125,7 +84,25 @@ void setVMKind(const std::string& _name)
         }
     }
 
-    g_dllEvmcCreate = loadDllVM(_name);
+    // If not match for predefined VM names, try loading it as an EVMC DLL.
+
+    evmc_loader_error_code ec;
+    g_evmcCreateFn = evmc_load(_name.c_str(), &ec);
+    switch (ec)
+    {
+    case EVMC_LOADER_SUCCESS:
+        break;
+    case EVMC_LOADER_CANNOT_OPEN:
+        BOOST_THROW_EXCEPTION(
+            po::validation_error(po::validation_error::invalid_option_value, "vm", _name, 1));
+    case EVMC_LOADER_SYMBOL_NOT_FOUND:
+        BOOST_THROW_EXCEPTION(std::system_error(std::make_error_code(std::errc::invalid_seek),
+            "loading " + _name + " failed: EVMC create function not found"));
+    default:
+        BOOST_THROW_EXCEPTION(
+            std::system_error(std::error_code(static_cast<int>(ec), std::generic_category()),
+                "loading " + _name + " failed"));
+    }
     g_kind = VMKind::DLL;
 }
 }  // namespace
@@ -155,7 +132,7 @@ void parseEvmcOptions(const std::vector<std::string>& _opts)
         s_evmcOptions.emplace_back(std::move(name), std::move(value));
     }
 }
-}
+}  // namespace
 
 std::vector<std::pair<std::string, std::string>>& evmcOptions() noexcept
 {
@@ -217,11 +194,11 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
     case VMKind::Interpreter:
         return std::unique_ptr<VMFace>(new EVMC{evmc_create_interpreter()});
     case VMKind::DLL:
-        return std::unique_ptr<VMFace>(new EVMC{g_dllEvmcCreate()});
+        return std::unique_ptr<VMFace>(new EVMC{g_evmcCreateFn()});
     case VMKind::Legacy:
     default:
         return std::unique_ptr<VMFace>(new LegacyVM);
     }
 }
-}
-}
+}  // namespace eth
+}  // namespace dev
