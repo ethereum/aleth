@@ -98,11 +98,15 @@ shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relati
     if (!_node.id)
     {
         DEV_GUARDED(x_nodes)
-        LOG(m_logger) << "Sending public key discovery Ping to "
-                      << (bi::udp::endpoint)_node.endpoint
-                      << " (Advertising: " << (bi::udp::endpoint)m_node.endpoint << ")";
+        {
+            LOG(m_logger) << "Sending public key discovery Ping to "
+                          << (bi::udp::endpoint)_node.endpoint
+                          << " (Advertising: " << (bi::udp::endpoint)m_node.endpoint << ")";
+        }
         DEV_GUARDED(x_pubkDiscoverPings)
-            m_pubkDiscoverPings[_node.endpoint.address] = std::chrono::steady_clock::now();
+        {
+            m_pubkDiscoverPings[_node.endpoint.address()] = std::chrono::steady_clock::now();
+        }
         ping(_node.endpoint);
         return shared_ptr<NodeEntry>();
     }
@@ -113,10 +117,12 @@ shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relati
     
     auto ret = make_shared<NodeEntry>(m_node.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes)
+    {
         m_nodes[_node.id] = ret;
-        LOG(m_logger) << "addNode pending for " << _node.endpoint;
-        ping(_node.endpoint);
-        return ret;
+    }
+    LOG(m_logger) << "addNode pending for " << _node.endpoint;
+    ping(_node.endpoint);
+    return ret;
 }
 
 list<NodeID> NodeTable::nodes() const
@@ -319,8 +325,9 @@ void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _en
     {
         LOG(m_logger) << "Noting active node: " << _pubk << " " << _endpoint.address().to_string()
                       << ":" << _endpoint.port();
-        newNode->endpoint.address = _endpoint.address();
-        newNode->endpoint.udpPort = _endpoint.port();
+        newNode->endpoint.setAddress(_endpoint.address());
+        newNode->endpoint.setUdpPort(_endpoint.port());
+
 
         shared_ptr<NodeEntry> nodeToEvict;
         {
@@ -454,9 +461,10 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_node.endpoint || !m_node.endpoint.isAllowed()) && isPublicAddress(in.destination.address))
-                        m_node.endpoint.address = in.destination.address;
-                    m_node.endpoint.udpPort = in.destination.udpPort;
+                    if ((!m_node.endpoint || !m_node.endpoint.isAllowed()) &&
+                        isPublicAddress(in.destination.address()))
+                        m_node.endpoint.setAddress(in.destination.address());
+                    m_node.endpoint.setUdpPort(in.destination.udpPort());
                 }
 
                 LOG(m_logger) << "PONG from " << in.sourceid << " " << _from;
@@ -508,8 +516,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
             case PingNode::type:
             {
                 auto in = dynamic_cast<PingNode const&>(*packet);
-                in.source.address = _from.address();
-                in.source.udpPort = _from.port();
+                in.source.setAddress(_from.address());
+                in.source.setUdpPort(_from.port());
                 addNode(Node(in.sourceid, in.source));
                 
                 Pong p(in.source);

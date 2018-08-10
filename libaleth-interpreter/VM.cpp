@@ -57,6 +57,26 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
     {
         result.status_code = EVMC_UNDEFINED_INSTRUCTION;
     }
+    catch (dev::eth::OutOfStack const&)
+    {
+        result.status_code = EVMC_STACK_OVERFLOW;
+    }
+    catch (dev::eth::StackUnderflow const&)
+    {
+        result.status_code = EVMC_STACK_UNDERFLOW;
+    }
+    catch (dev::eth::BufferOverrun const&)
+    {
+        result.status_code = EVMC_INVALID_MEMORY_ACCESS;
+    }
+    catch (dev::eth::OutOfGas const&)
+    {
+        result.status_code = EVMC_OUT_OF_GAS;
+    }
+    catch (dev::eth::BadJumpDestination const&)
+    {
+        result.status_code = EVMC_BAD_JUMP_DESTINATION;
+    }
     catch (dev::eth::DisallowedStateChange const&)
     {
         result.status_code = EVMC_STATIC_MODE_VIOLATION;
@@ -167,15 +187,6 @@ void VM::adjustStack(int _removed, int _added)
     m_SPP -= _added;
     if (m_SPP < m_stack)
         throwBadStack(_removed, _added);
-}
-
-void VM::updateSSGas()
-{
-    evmc_uint256be key = toEvmC(m_SP[0]);
-    evmc_uint256be rawValue;
-    m_context->fn_table->get_storage(&rawValue, m_context, &m_message->destination, &key);
-    u256 value = fromEvmC(rawValue);
-    m_runGas = (!value && m_SP[1]) ? VMSchedule::sstoreSetGas : VMSchedule::sstoreResetGas;
 }
 
 uint64_t VM::gasForMem(u512 _size)
@@ -1011,6 +1022,22 @@ void VM::interpretCases()
         }
         NEXT
 
+        CASE(EXTCODEHASH)
+        {
+            ON_OP();
+            if (m_rev < EVMC_CONSTANTINOPLE)
+                throwBadInstruction();
+
+            updateIOGas();
+
+            evmc_address address = toEvmC(asAddress(m_SP[0]));
+
+            evmc_uint256be hash;
+            m_context->fn_table->get_code_hash(&hash, m_context, &address);
+            m_SPP[0] = fromEvmC(hash);
+        }
+        NEXT
+
         CASE(CODECOPY)
         {
             ON_OP();
@@ -1329,12 +1356,22 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            updateSSGas();
+            static_assert(
+                VMSchedule::sstoreResetGas <= VMSchedule::sstoreSetGas, "Wrong SSTORE gas costs");
+            m_runGas = VMSchedule::sstoreResetGas;  // Charge the modification cost up front.
             updateIOGas();
 
             evmc_uint256be key = toEvmC(m_SP[0]);
             evmc_uint256be value = toEvmC(m_SP[1]);
-            m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
+            auto status =
+                m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
+
+            if (status == EVMC_STORAGE_ADDED)
+            {
+                // Charge additional amount for added storage item.
+                m_runGas = VMSchedule::sstoreSetGas - VMSchedule::sstoreResetGas;
+                updateIOGas();
+            }
         }
         NEXT
 

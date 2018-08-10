@@ -123,7 +123,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
 {
     JsonRpcFixture()
     {
-        dev::p2p::NetworkPreferences nprefs;
+        dev::p2p::NetworkConfig nprefs;
         ChainParams chainParams;
         chainParams.sealEngineName = NoProof::name();
         chainParams.allowFutureBlocks = true;
@@ -653,6 +653,57 @@ BOOST_AUTO_TEST_CASE(debugStorageRangeAtFinalBlockState)
     BOOST_CHECK(!result["storage"][keyHash].empty());
     BOOST_CHECK_EQUAL(result["storage"][keyHash]["key"].asString(), "0x00");
     BOOST_CHECK_EQUAL(result["storage"][keyHash]["value"].asString(), "0x07");
+}
+
+BOOST_AUTO_TEST_CASE(debugTraceTransaction)
+{
+    // mine to get some balance at coinbase
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    // send some transaction requiring execution
+    string initCode =
+        "608060405260076000553415601357600080fd5b60358060206000396000"
+        "f3006080604052600080fd00a165627a7a7230582006db0551577963b544"
+        "3e9501b4b10880e186cff876cd360e9ad6e4181731fcdd0029";
+
+    Json::Value tx;
+    tx["code"] = initCode;
+    tx["from"] = toJS(coinbase.address());
+    string txHash = rpcClient->eth_sendTransaction(tx);
+    BOOST_REQUIRE(!txHash.empty());
+
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    Json::Value result = rpcClient->debug_traceTransaction(txHash, Json::Value(Json::objectValue));
+    BOOST_REQUIRE(result.isObject());
+    BOOST_REQUIRE(result["structLogs"].isArray());
+    BOOST_REQUIRE_GT(result["structLogs"].size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(adminEthVmTrace)
+{
+    // mine to get some balance at coinbase
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    // send some transaction requiring execution
+    string initCode =
+        "608060405260076000553415601357600080fd5b60358060206000396000"
+        "f3006080604052600080fd00a165627a7a7230582006db0551577963b544"
+        "3e9501b4b10880e186cff876cd360e9ad6e4181731fcdd0029";
+
+    Json::Value tx;
+    tx["code"] = initCode;
+    tx["from"] = toJS(coinbase.address());
+    string txHash = rpcClient->eth_sendTransaction(tx);
+    BOOST_REQUIRE(!txHash.empty());
+
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    // get trace for 0th transaction in 2nd block
+    Json::Value result = rpcClient->admin_eth_vmTrace("2", 0, adminSession);
+    BOOST_REQUIRE(result.isObject());
+    BOOST_REQUIRE(result["structLogs"].isArray());
+    BOOST_REQUIRE_GT(result["structLogs"].size(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(test_setChainParams)

@@ -260,7 +260,7 @@ int main(int argc, char** argv)
     }
 
 
-    MinerCLI m(MinerCLI::OperationMode::None);
+    MinerCLI miner(MinerCLI::OperationMode::None);
 
     bool listenSet = false;
     bool chainConfigIsSet = false;
@@ -417,7 +417,7 @@ int main(int argc, char** argv)
         return -1;
     }
     for (size_t i = 0; i < unrecognisedOptions.size(); ++i)
-        if (!m.interpretOption(i, unrecognisedOptions))
+        if (!miner.interpretOption(i, unrecognisedOptions))
         {
             cerr << "Invalid argument: " << unrecognisedOptions[i] << "\n";
             return -1;
@@ -794,7 +794,7 @@ int main(int argc, char** argv)
     if (loggingOptions.verbosity > 0)
         cout << EthGrayBold "aleth, a C++ Ethereum client" EthReset << "\n";
 
-    m.execute();
+    miner.execute();
 
     fs::path secretsPath;
     if (testingMode)
@@ -839,7 +839,7 @@ int main(int argc, char** argv)
         return getPassword("Enter password for address " + keyManager.accountName(a) + " (" + a.abridged() + "; hint:" + keyManager.passwordHint(a) + "): ");
     };
 
-    auto netPrefs = publicIP.empty() ? NetworkPreferences(listenIP, listenPort, upnp) : NetworkPreferences(publicIP, listenIP ,listenPort, upnp);
+    auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) : NetworkConfig(publicIP, listenIP ,listenPort, upnp);
     netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
     netPrefs.pin = vm.count("pin") != 0;
 
@@ -1015,7 +1015,7 @@ int main(int argc, char** argv)
     if (c)
     {
         c->setGasPricer(gasPricer);
-        c->setSealer(m.minerType());
+        c->setSealer(miner.minerType());
         c->setAuthor(author);
         if (networkID != NoNetworkID)
             c->setNetworkId(networkID);

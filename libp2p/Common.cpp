@@ -122,25 +122,25 @@ void NodeIPEndpoint::streamRLP(RLPStream& _s, RLPAppend _append) const
 {
     if (_append == StreamList)
         _s.appendList(3);
-    if (address.is_v4())
-        _s << bytesConstRef(&address.to_v4().to_bytes()[0], 4);
-    else if (address.is_v6())
-        _s << bytesConstRef(&address.to_v6().to_bytes()[0], 16);
+    if (m_address.is_v4())
+        _s << bytesConstRef(&m_address.to_v4().to_bytes()[0], 4);
+    else if (m_address.is_v6())
+        _s << bytesConstRef(&m_address.to_v6().to_bytes()[0], 16);
     else
         _s << bytes();
-    _s << udpPort << tcpPort;
+    _s << m_udpPort << m_tcpPort;
 }
 
 void NodeIPEndpoint::interpretRLP(RLP const& _r)
 {
     if (_r[0].size() == 4)
-        address = bi::address_v4(*(bi::address_v4::bytes_type*)_r[0].toBytes().data());
+        m_address = bi::address_v4(*(bi::address_v4::bytes_type*)_r[0].toBytes().data());
     else if (_r[0].size() == 16)
-        address = bi::address_v6(*(bi::address_v6::bytes_type*)_r[0].toBytes().data());
+        m_address = bi::address_v6(*(bi::address_v6::bytes_type*)_r[0].toBytes().data());
     else
-        address = bi::address();
-    udpPort = _r[1].toInt<uint16_t>();
-    tcpPort = _r[2].toInt<uint16_t>();
+        m_address = bi::address();
+    m_udpPort = _r[1].toInt<uint16_t>();
+    m_tcpPort = _r[2].toInt<uint16_t>();
 }
 
 void DeadlineOps::reap()
@@ -226,12 +226,13 @@ std::string NodeSpec::enode() const
 
 namespace dev
 {
-    
-std::ostream& operator<<(std::ostream& _out, dev::p2p::NodeIPEndpoint const& _ep)
+namespace p2p
 {
-    _out << _ep.address << _ep.udpPort << _ep.tcpPort;
+std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
+{
+    _out << _ep.address() << " UDP " << _ep.udpPort() << " TCP " << _ep.tcpPort();
     return _out;
 }
-
+}  // namespace p2p
 }
 

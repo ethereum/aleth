@@ -282,10 +282,13 @@ private:
 
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 {
-    _out << _nodeTable.center().address() << "\t" << "0\t" << _nodeTable.center().endpoint.address << ":" << _nodeTable.center().endpoint.udpPort << std::endl;
+    _out << _nodeTable.center().address() << "\t"
+         << "0\t" << _nodeTable.center().endpoint.address() << ":"
+         << _nodeTable.center().endpoint.udpPort() << std::endl;
     auto s = _nodeTable.snapshot();
     for (auto n: s)
-        _out << n.address() << "\t" << n.distance << "\t" << n.endpoint.address << ":" << n.endpoint.udpPort << std::endl;
+        _out << n.address() << "\t" << n.distance << "\t" << n.endpoint.address() << ":"
+             << n.endpoint.udpPort() << std::endl;
     return _out;
 }
 

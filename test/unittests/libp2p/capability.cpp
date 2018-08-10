@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(capability)
 
     int const step = 10;
     const char* const localhost = "127.0.0.1";
-    NetworkPreferences prefs1(localhost, 0, false);
-    NetworkPreferences prefs2(localhost, 0, false);
+    NetworkConfig prefs1(localhost, 0, false);
+    NetworkConfig prefs2(localhost, 0, false);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
     auto thc1 = make_shared<TestHostCapability>(host1);

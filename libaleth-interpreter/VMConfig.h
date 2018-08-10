@@ -215,7 +215,7 @@ namespace eth
         &&EXTCODECOPY,                          \
         &&RETURNDATASIZE,                       \
         &&RETURNDATACOPY,                       \
-        &&INVALID,                              \
+        &&EXTCODEHASH,                          \
         &&BLOCKHASH, /* 40, */                  \
         &&COINBASE,                             \
         &&TIMESTAMP,                            \

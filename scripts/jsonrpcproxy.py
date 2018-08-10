@@ -18,18 +18,22 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from os import path
 from urllib.parse import urlparse
+
 import errno
 import socket
 import sys
+import time
+import threading
 
 if sys.platform == 'win32':
     import win32file
     import pywintypes
 
 
-VERSION = '0.1.0a1'
+VERSION = '0.2'
 BUFSIZE = 32
 DELIMITER = ord('\n')
+BACKEND_CONNECTION_TIMEOUT=10.0
 INFO = """JSON-RPC Proxy
 
 Version:  {version}
@@ -81,6 +85,22 @@ class UnixSocketConnector(object):
     def is_connected(self):
         return self._socket is not None
 
+    def check_connection(self, timeout):
+        SLEEPTIME = 0.1
+        wait_time = 0.0
+        last_exception = None
+        while True:
+            try:
+                if self.socket():
+                    break
+            except BackendError as ex:
+                last_exception = ex  # Ignore backed errors for some time.
+
+            time.sleep(SLEEPTIME)
+            wait_time += SLEEPTIME
+            if wait_time > timeout:
+                raise last_exception if last_exception else TimeoutError
+
     def recv(self, max_length):
         return self.socket().recv(max_length)
 
@@ -109,6 +129,9 @@ class NamedPipeConnector(object):
 
     def is_connected(self):
         return True
+
+    def check_connection(self, timeout):
+        pass
 
     def recv(self, max_length):
         (err, data) = win32file.ReadFile(self.handle, max_length)
@@ -181,7 +204,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(error_msg)
             self.log_message("Backend Error: {}".format(err))
 
-        # TODO: Handle other excaptions as error 500.
+        # TODO: Handle other exceptions as error 500.
 
     def addCORS(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -192,15 +215,14 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 class Proxy(HTTPServer):
 
     def __init__(self, proxy_url, backend_path):
-
-        proxy_url = urlparse(proxy_url)
-        assert proxy_url.scheme == 'http'
-        proxy_address = proxy_url.hostname, proxy_url.port
+        self.proxy_url = proxy_url
+        url = urlparse(proxy_url)
+        assert url.scheme == 'http'
+        proxy_address = url.hostname, url.port
 
         super(Proxy, self).__init__(proxy_address, HTTPRequestHandler)
 
         self.backend_address = path.expanduser(backend_path)
-        self.conn = get_ipc_connector(self.backend_address)
 
     def process(self, request):
         self.conn.sendall(request)
@@ -217,30 +239,58 @@ class Proxy(HTTPServer):
 
         return response
 
+    def run(self):
+        self.conn = get_ipc_connector(self.backend_address)
+        self.conn.check_connection(timeout=BACKEND_CONNECTION_TIMEOUT)
 
-def run():
+        print("JSON-RPC HTTP Proxy: {} -> {}".format(
+            self.backend_address, self.proxy_url), file=sys.stderr, flush=True)
+        self.serve_forever()
+
+
+if sys.platform == 'win32':
+    DEFAULT_BACKEND_PATH = r'\\.\pipe\geth.ipc'
+    BACKEND_PATH_HELP = "Named Pipe of a backend RPC server"
+else:
+    DEFAULT_BACKEND_PATH = '~/.ethereum/geth.ipc'
+    BACKEND_PATH_HELP = "Unix Socket of a backend RPC server"
+
+DEFAULT_PROXY_URL = 'http://127.0.0.1:8545'
+PROXY_URL_HELP = "URL for this proxy server"
+
+
+def parse_args():
     parser = ArgumentParser(
         description='HTTP Proxy for JSON-RPC servers',
         formatter_class=ArgumentDefaultsHelpFormatter
     )
 
-    if sys.platform == 'win32':
-        default_backend_path = r'\\.\pipe\geth.ipc'
-        backend_path_help = "Named Pipe of a backend RPC server"
-    else:
-        default_backend_path = '~/.ethereum/geth.ipc'
-        backend_path_help = "Unix Socket of a backend RPC server"
-
     parser.add_argument('backend_path', nargs='?',
-                        default=default_backend_path,
-                        help=backend_path_help)
+                        default=DEFAULT_BACKEND_PATH,
+                        help=BACKEND_PATH_HELP)
     parser.add_argument('proxy_url', nargs='?',
-                        default='http://127.0.0.1:8545',
-                        help="URL for this proxy server")
-    args = parser.parse_args()
-    proxy = Proxy(args.proxy_url, args.backend_path)
-    proxy.serve_forever()
+                        default=DEFAULT_PROXY_URL,
+                        help=PROXY_URL_HELP)
+    return parser.parse_args()
+
+
+def run(proxy_url=DEFAULT_PROXY_URL, backend_path=DEFAULT_BACKEND_PATH):
+    proxy = Proxy(proxy_url, backend_path)
+    try:
+        proxy.run()
+    except KeyboardInterrupt:
+        proxy.shutdown()
+
+
+def run_daemon(proxy_url=DEFAULT_PROXY_URL, backend_path=DEFAULT_BACKEND_PATH):
+    proxy = Proxy(proxy_url, backend_path)
+    th = threading.Thread(name='jsonrpcproxy', target=proxy.run)
+    th.daemon = True
+    th.start()
+    return proxy
 
 
 if __name__ == '__main__':
-    run()
+    args = parse_args()
+    run(args.proxy_url, args.backend_path)
+

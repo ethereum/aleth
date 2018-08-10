@@ -39,16 +39,16 @@ namespace p2p
 
 static const unsigned short c_defaultListenPort = 30303;
 
-struct NetworkPreferences
+struct NetworkConfig
 {
 	// Default Network Preferences
-	NetworkPreferences(unsigned short lp = c_defaultListenPort): listenPort(lp) {}
+	explicit NetworkConfig(unsigned short lp = c_defaultListenPort): listenPort(lp) {}
 
 	// Network Preferences with specific Listen IP
-	NetworkPreferences(std::string const& l, unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(), listenIPAddress(l), listenPort(lp), traverseNAT(u) {}
+	NetworkConfig(std::string const& l, unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(), listenIPAddress(l), listenPort(lp), traverseNAT(u) {}
 
 	// Network Preferences with intended Public IP
-	NetworkPreferences(std::string const& publicIP, std::string const& l = std::string(), unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(publicIP), listenIPAddress(l), listenPort(lp), traverseNAT(u) { if (!publicIPAddress.empty() && !isPublicAddress(publicIPAddress)) BOOST_THROW_EXCEPTION(InvalidPublicIPAddress()); }
+	NetworkConfig(std::string const& publicIP, std::string const& l = std::string(), unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(publicIP), listenIPAddress(l), listenPort(lp), traverseNAT(u) { if (!publicIPAddress.empty() && !isPublicAddress(publicIPAddress)) BOOST_THROW_EXCEPTION(InvalidPublicIPAddress()); }
 
 	/// Addressing
 
@@ -75,7 +75,7 @@ public:
 	static std::set<bi::address> getInterfaceAddresses();
 
 	/// Try to bind and listen on _listenPort, else attempt net-allocated port.
-	static int tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkPreferences const& _netPrefs);
+	static int tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkConfig const& _config);
 
 	/// Return public endpoint of upnp interface. If successful o_upnpifaddr will be a private interface address and endpoint will contain public address and port.
 	static bi::tcp::endpoint traverseNAT(std::set<bi::address> const& _ifAddresses, unsigned short _listenPort, bi::address& o_upnpInterfaceAddr);
