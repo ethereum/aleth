@@ -98,11 +98,15 @@ shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relati
     if (!_node.id)
     {
         DEV_GUARDED(x_nodes)
-        LOG(m_logger) << "Sending public key discovery Ping to "
-                      << (bi::udp::endpoint)_node.endpoint
-                      << " (Advertising: " << (bi::udp::endpoint)m_node.endpoint << ")";
+        {
+            LOG(m_logger) << "Sending public key discovery Ping to "
+                          << (bi::udp::endpoint)_node.endpoint
+                          << " (Advertising: " << (bi::udp::endpoint)m_node.endpoint << ")";
+        }
         DEV_GUARDED(x_pubkDiscoverPings)
-        m_pubkDiscoverPings[_node.endpoint.address()] = std::chrono::steady_clock::now();
+        {
+            m_pubkDiscoverPings[_node.endpoint.address()] = std::chrono::steady_clock::now();
+        }
         ping(_node.endpoint);
         return shared_ptr<NodeEntry>();
     }
@@ -113,10 +117,12 @@ shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relati
     
     auto ret = make_shared<NodeEntry>(m_node.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes)
+    {
         m_nodes[_node.id] = ret;
-        LOG(m_logger) << "addNode pending for " << _node.endpoint;
-        ping(_node.endpoint);
-        return ret;
+    }
+    LOG(m_logger) << "addNode pending for " << _node.endpoint;
+    ping(_node.endpoint);
+    return ret;
 }
 
 list<NodeID> NodeTable::nodes() const
