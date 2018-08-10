@@ -22,6 +22,5 @@ RUN apk add --no-cache \
         leveldb --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/
 COPY --from=builder /usr/bin/aleth /source/scripts/aleth.py /source/scripts/jsonrpcproxy.py /usr/bin/
 COPY --from=builder /usr/share/aleth/ /usr/share/aleth/
-RUN ln -s /usr/share/aleth/buildinfo.json /version.json
 EXPOSE 8545
 ENTRYPOINT ["/usr/bin/aleth.py"]
