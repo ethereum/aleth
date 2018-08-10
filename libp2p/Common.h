@@ -329,10 +329,10 @@ private:
     std::atomic<bool> m_stopped;
 };
 
+/// Simple stream output for a NodeIPEndpoint.
+std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep);
 }
     
-/// Simple stream output for a NodeIPEndpoint.
-std::ostream& operator<<(std::ostream& _out, dev::p2p::NodeIPEndpoint const& _ep);
 }
 
 /// std::hash for asio::adress

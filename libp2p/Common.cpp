@@ -226,12 +226,13 @@ std::string NodeSpec::enode() const
 
 namespace dev
 {
-    
-std::ostream& operator<<(std::ostream& _out, dev::p2p::NodeIPEndpoint const& _ep)
+namespace p2p
 {
-    _out << _ep.address() << _ep.udpPort() << _ep.tcpPort();
+std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
+{
+    _out << _ep.address() << " UDP " << _ep.udpPort() << " TCP " << _ep.tcpPort();
     return _out;
 }
-
+}  // namespace p2p
 }
 
