@@ -204,6 +204,7 @@ BOOST_AUTO_TEST_CASE(stBugs){}
 
 //Constantinople Tests
 BOOST_AUTO_TEST_CASE(stShift){}
+BOOST_AUTO_TEST_CASE(stExtCodeHash){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}
