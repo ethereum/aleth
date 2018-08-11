@@ -226,6 +226,8 @@ public:
         return m_onBlockSealed.add(_handler);
     }
 
+    ///< Is there an active and valid remote worker?
+    bool remoteActive() const;
 
 protected:
     /// Perform critical setup functions.
@@ -333,7 +335,6 @@ protected:
     mutable SharedMutex x_working;          ///< Lock on m_working.
     Block m_working;                        ///< The state of the client which we're sealing (i.e. it'll have all the rewards added), while we're actually working on it.
     BlockHeader m_sealingInfo;              ///< The header we're attempting to seal on (derived from m_postSeal).
-    bool remoteActive() const;              ///< Is there an active and valid remote worker?
     bool m_remoteWorking = false;           ///< Has the remote worker recently been reset?
     std::atomic<bool> m_needStateReset = { false };         ///< Need reset working state to premin on next sync
     std::chrono::system_clock::time_point m_lastGetWork;    ///< Is there an active and valid remote worker?

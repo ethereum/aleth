@@ -34,7 +34,7 @@
 
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
-#include <libethashseal/EthashClient.h>
+#include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethcore/KeyManager.h>
 #include <libethereum/Defaults.h>
@@ -138,7 +138,8 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 {
     try
     {
-        if (io_mining != ~(unsigned)0 && io_mining && asEthashClient(_c)->isMining() && _c->blockChain().details().number - _start == io_mining)
+        if (io_mining != ~(unsigned)0 && io_mining && asEthash(_c->sealEngine())->isMining() &&
+            _c->blockChain().details().number - _start == io_mining)
         {
             _c->stopSealing();
             io_mining = ~(unsigned)0;

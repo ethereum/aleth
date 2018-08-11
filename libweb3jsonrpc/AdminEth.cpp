@@ -1,12 +1,12 @@
+#include "AdminEth.h"
+#include "JsonHelper.h"
+#include "SessionManager.h"
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonJS.h>
+#include <libethashseal/Ethash.h>
 #include <libethcore/KeyManager.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
-#include <libethashseal/EthashClient.h>
-#include "AdminEth.h"
-#include "SessionManager.h"
-#include "JsonHelper.h"
 using namespace std;
 using namespace dev;
 using namespace dev::rpc;
@@ -282,14 +282,12 @@ bool AdminEth::miner_setGasPrice(string const& _gasPrice)
 
 string AdminEth::miner_hashrate()
 {
-    EthashClient const* client = nullptr;
     try
     {
-        client = asEthashClient(&m_eth);
+        return toJS(asEthash(client()->sealEngine())->hashrate());
     }
     catch (...)
     {
         throw jsonrpc::JsonRpcException("Hashrate not available - blockchain does not support mining.");
     }
-    return toJS(client->hashrate());
 }

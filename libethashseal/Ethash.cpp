@@ -247,3 +247,76 @@ bool Ethash::shouldSeal(Interface*)
 {
     return true;
 }
+
+bool Ethash::isMining() const
+{
+    return m_farm.isMining();
+}
+
+WorkingProgress Ethash::miningProgress() const
+{
+    if (isMining())
+        return m_farm.miningProgress();
+    return WorkingProgress();
+}
+
+u256 Ethash::hashrate() const
+{
+    u256 r = externalHashrate();
+    if (isMining())
+        r += miningProgress().rate();
+    return r;
+}
+
+std::tuple<h256, h256, h256> Ethash::getEthashWork(Client const& _client)
+{
+    // lock the work so a later submission isn't invalidated by processing a transaction elsewhere.
+    // this will be reset as soon as a new block arrives, allowing more transactions to be
+    // processed.
+    bool oldShould = shouldServeWork(_client);
+    m_lastGetWork = chrono::system_clock::now();
+
+    if (!sealEngine()->shouldSeal(this))
+        return std::tuple<h256, h256, h256>();
+
+    // if this request has made us bother to serve work, prep it now.
+    if (!oldShould && shouldServeWork(_client))
+        onPostStateChanged();
+    else
+        // otherwise, set this to true so that it gets prepped next time.
+        m_remoteWorking = true;
+    manuallySetWork(m_sealingInfo);
+    return std::tuple<h256, h256, h256>(m_sealingInfo.hash(WithoutSeal),
+        Ethash::seedHash(m_sealingInfo), Ethash::boundary(m_sealingInfo));
+}
+
+bool Ethash::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
+{
+    manuallySubmitWork(_mixHash, _nonce);
+    return true;
+}
+
+void Ethash::submitExternalHashrate(u256 const& _rate, h256 const& _id)
+{
+    WriteGuard writeGuard(x_externalRates);
+    m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
+}
+
+u256 Ethash::externalHashrate() const
+{
+    u256 ret = 0;
+    WriteGuard writeGuard(x_externalRates);
+    for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
+        if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
+            i = m_externalRates.erase(i);
+        else
+            ret += i++->second.first;
+    return ret;
+}
+
+Ethash& asEthash(SealEngineFace& _f)
+{
+    if (dynamic_cast<Ethash*>(&_f))
+        return dynamic_cast<Ethash&>(_f);
+    throw InvalidSealEngine();
+}
