@@ -133,7 +133,7 @@ public:
     bytes code = fromHex("368060006000376101238160006000f55050");
 
     Address expectedAddress =
-        right160(sha3(address.asBytes() + toBigEndian(0x123_cppui256) + inputData));
+        right160(sha3(fromHex("ff") +address.asBytes() + toBigEndian(0x123_cppui256) + sha3(inputData)));
 
     std::unique_ptr<VMFace> vm;
 };
