@@ -14,10 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file RLP.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "RLP.h"
 using namespace std;
@@ -99,21 +95,6 @@ RLP RLP::operator[](size_t _i) const
 		m_lastEnd += m_lastItem.size();
 	}
 	return RLP(m_lastItem, ThrowOnFail | FailIfTooSmall);
-}
-
-RLPs RLP::toList(int _flags) const
-{
-	RLPs ret;
-	if (!isList())
-	{
-		if (_flags & ThrowOnFail)
-			BOOST_THROW_EXCEPTION(BadCast());
-		else
-			return ret;
-	}
-	for (auto const& i: *this)
-		ret.push_back(i);
-	return ret;
 }
 
 size_t RLP::actualSize() const
