@@ -56,7 +56,7 @@ void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId
         _chainGenesisHash, snapshotBlockHash, snapshotBlockNumber);
 }
 
-bool WarpPeerCapability::interpret(unsigned _id, RLP const& _r)
+bool WarpPeerCapability::interpretCapabilityPacket(unsigned _id, RLP const& _r)
 {
     std::shared_ptr<WarpPeerObserverFace> observer(m_observer.lock());
     // TODO: we still want to answer some messages when we only give out imported snapshot

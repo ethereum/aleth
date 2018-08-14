@@ -50,7 +50,10 @@ public:
     static unsigned messageCount() { return UserPacket + 1; }
 
 protected:
-    virtual bool interpret(unsigned _id, RLP const& _r) override { return _id > 0 || _r.size() > 0; }
+    virtual bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override
+    {
+        return _id > 0 || _r.size() > 0;
+    }
 };
 
 class TestHostCap: public HostCapability<TestCap>, public Worker
