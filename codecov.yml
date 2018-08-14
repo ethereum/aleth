@@ -1,5 +1,5 @@
 codecov:
-  branch: develop
+  branch: master
 coverage:
   range: 50...100
   notify:
