@@ -162,7 +162,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         rpcServer->addConnector(ipcServer);
         ipcServer->StartListening();
 
-        auto client = new TestIpcClient{*ipcServer};
+        client = unique_ptr<TestIpcClient>(new TestIpcClient{*ipcServer});
         rpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(*client));
     }
 
@@ -187,6 +187,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
     std::shared_ptr<eth::TrivialGasPricer> gasPricer;
     KeyManager keyManager{KeyManager::defaultPath(), SecretStore::defaultPath()};
     unique_ptr<ModularServer<>> rpcServer;
+    unique_ptr<TestIpcClient> client;
     unique_ptr<WebThreeStubClient> rpcClient;
     std::string adminSession;
 };
