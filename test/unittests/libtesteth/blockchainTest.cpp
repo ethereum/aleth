@@ -95,6 +95,21 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnSingleNetwork)
         {
             "fillingExpectationOnSingleNetwork" : {
                 "blocks" : [
+                     {
+                       "transactions" : [
+                        {
+                            "data" : "0x",
+                            "gasLimit" : "0x030d40",
+                            "gasPrice" : "0x01",
+                            "nonce" : "0x00",
+                            "to" : "0x1baf27b88c48dd02b744999cf3522766929d2b2a",
+                            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                            "value" : "0x00"
+                        }
+                        ],
+                        "uncleHeaders" : [
+                        ]
+                    }
                 ],
                 "expect" : [
                     {
@@ -105,10 +120,15 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnSingleNetwork)
                             },
                             "0x1000000000000000000000000000000000000001" : {
                                 "balance" : "0x00"
+                            },
+                            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                                "code" : "0x",
+                                "nonce" : "1"
                             }
                         }
                     }
                 ],
+                "sealEngine" : "NoProof",
                 "genesisBlockHeader" : {
                     "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
                     "coinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
@@ -134,20 +154,39 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnSingleNetwork)
                         "storage" : {
                         }
                     },
-                "0x1000000000000000000000000000000000000001" : {
-                    "balance" : "0x00",
-                    "code" : "0x60004060005563ffffffff4060015567ffffffffffffffff406002556fffffffffffffffffffffffffffffffff406003557fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff40600455",
-                    "nonce" : "0x00",
-                    "storage" : {
+                    "0x1000000000000000000000000000000000000001" : {
+                        "balance" : "0x00",
+                        "code" : "0x60004060005563ffffffff4060015567ffffffffffffffff406002556fffffffffffffffffffffffffffffffff406003557fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff40600455",
+                        "nonce" : "0x00",
+                        "storage" : {
+                        }
+                    },
+                    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                        "balance" : "10000000000",
+                        "nonce" : "0",
+                        "code" : "",
+                        "storage": {}
                     }
-                }
-        }
+            }
     )";
     json_spirit::mValue input;
     json_spirit::read_string(s, input);
     BlockchainTestSuite suite;
     json_spirit::mValue output = suite.doTests(input, true);
+    const string testname = "fillingExpectationOnSingleNetwork_EIP150";
     BOOST_CHECK_MESSAGE(output.get_obj().size() == 1, "A wrong number of tests were generated.");
+    BOOST_CHECK_MESSAGE(output.get_obj().count(testname) > 0, "Missing test name!");
+
+    json_spirit::mObject const& testObject = output.get_obj().at(testname).get_obj();
+    BOOST_CHECK_MESSAGE(testObject.size() == 8, "Wrong number of objects in the filled test!");
+    BOOST_CHECK_MESSAGE(testObject.at("blocks").get_array().size() > 0, "Missing blocks in the filled test!");
+
+    json_spirit::mObject const& testBlock = testObject.at("blocks").get_array().at(0).get_obj();
+    BOOST_CHECK_MESSAGE(testBlock.size() == 4, "Wrong number of items in filled block section!");
+    BOOST_CHECK_MESSAGE(testBlock.at("transactions").get_array().size() == 1, "Wrong number of transactions filled test!");
+
+    json_spirit::mObject const& testTransaction = testBlock.at("transactions").get_array().at(0).get_obj();
+    BOOST_CHECK_MESSAGE(testTransaction.at("data").get_str() == "0x", "Data in the transaction must be 0x prefixed (even if empty)!");
 }
 
 
