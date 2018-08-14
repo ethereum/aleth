@@ -58,7 +58,7 @@ public:
 	Addresses allAccounts() const;
 	bool isRealAccount(Address const& _account) const { return realAccounts().count(_account) > 0; }
 	bool isProxyAccount(Address const& _account) const { return m_proxyAccounts.count(_account) > 0; }
-	Address const& defaultTransactAccount() const;
+	Address defaultTransactAccount() const;
 
 	/// Automatically authenticate all transactions for the given account for the next @a _duration
 	/// seconds. Decrypt the key with @a _password if needed. @returns true on success.
