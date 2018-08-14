@@ -48,14 +48,13 @@ vector<Address> AccountHolder::allAccounts() const
 
 Address AccountHolder::defaultTransactAccount() const
 {
-	auto accounts = realAccounts();
-	if (accounts.empty())
-		return ZeroAddress;
-	Address const* bestMatch = &*accounts.begin();
-	for (auto const& account: accounts)
-		if (m_client()->balanceAt(account) > m_client()->balanceAt(*bestMatch))
-			bestMatch = &account;
-	return *bestMatch;
+    auto accounts = realAccounts();
+    auto* client = m_client();
+    auto best = std::max_element(
+        accounts.begin(), accounts.end(), [client](Address const& a, Address const& b) {
+            return client->balanceAt(a) < client->balanceAt(b);
+        });
+    return best != accounts.end() ? *best : Address{};
 }
 
 int AccountHolder::addProxyAccount(const Address& _account)
