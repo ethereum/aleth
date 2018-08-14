@@ -236,7 +236,7 @@ bool EthereumPeer::isCriticalSyncing() const
     return m_asking == Asking::BlockHeaders || m_asking == Asking::State || (m_asking == Asking::BlockBodies && m_protocolVersion == 62);
 }
 
-bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
+bool EthereumPeer::interpretCapabilityPacket(unsigned _id, RLP const& _r)
 {
     auto observer = m_observer.lock();
     auto hostData = m_hostData.lock();

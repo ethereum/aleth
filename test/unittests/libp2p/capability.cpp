@@ -54,13 +54,13 @@ public:
     void sendTestMessage(int _i) { RLPStream s; sealAndSend(prep(s, UserPacket, 1) << _i); }
 
 protected:
-    virtual bool interpret(unsigned _id, RLP const& _r) override;
+    virtual bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override;
 
     int m_cntReceivedMessages;
     int m_testSum;
 };
 
-bool TestCapability::interpret(unsigned _id, RLP const& _r) 
+bool TestCapability::interpretCapabilityPacket(unsigned _id, RLP const& _r)
 {
     //cnote << "Capability::interpret(): custom message received";
     ++m_cntReceivedMessages;

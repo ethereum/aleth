@@ -43,16 +43,14 @@ public:
         virtual unsigned messageCount() = 0;
     */
     bool enabled() const { return m_enabled; }
-    bool canHandle(PacketType _packetType) const
+    bool canHandle(unsigned _packetType) const
     {
-        return static_cast<unsigned>(_packetType) >= m_idOffset &&
-               static_cast<unsigned>(_packetType) < m_hostCap->messageCount() + m_idOffset;
+        return _packetType >= m_idOffset && _packetType < m_hostCap->messageCount() + m_idOffset;
     }
 
-    // TODO is PacketType reasonable type here, enum arithmetics is weird
-    bool interpret(PacketType _packetType, RLP const& _rlp)
+    bool interpret(unsigned _packetType, RLP const& _rlp)
     {
-        return interpret(_packetType - m_idOffset, _rlp);
+        return interpretCapabilityPacket(_packetType - m_idOffset, _rlp);
     }
 
     void disconnect();
@@ -62,7 +60,7 @@ public:
 
 protected:
     std::shared_ptr<SessionFace> session() const { return m_session.lock(); }
-    virtual bool interpret(unsigned _id, RLP const&) = 0;
+    virtual bool interpretCapabilityPacket(unsigned _id, RLP const&) = 0;
 
     void disable(std::string const& _problem);
 

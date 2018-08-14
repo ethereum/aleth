@@ -97,7 +97,7 @@ public:
 private:
     using p2p::Capability::sealAndSend;
 
-    bool interpret(unsigned _id, RLP const& _r) override;
+    bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override;
 
     void onDisconnect() override;
 
