@@ -52,11 +52,8 @@ public:
         Benchmark
     };
 
-
     explicit MinerCLI(OperationMode _mode = OperationMode::None): mode(_mode)
     {
-        Ethash::init();
-        NoProof::init();
         BasicAuthority::init();
     }
 
