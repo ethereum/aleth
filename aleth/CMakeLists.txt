@@ -2,7 +2,7 @@ set(
     sources
     AccountManager.cpp AccountManager.h
     main.cpp
-    MinerAux.h
+    MinerAux.cpp MinerAux.h
 )
 
 add_executable(aleth ${sources})
