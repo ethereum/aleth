@@ -4,19 +4,13 @@
 
 cmake_minimum_required(VERSION 3.5.1)
 
-include(evmc/cmake/cable/bootstrap.cmake)
+include(cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
 include(CableBuildType)
 include(CableToolchains)
 include(GNUInstallDirs)
 
-if(UNIX)
-    # Build deps with PIC to allow building shared libraries.
-    set(toolchain cxx11-pic)
-else()
-    set(toolchain cxx11)
-endif()
-cable_configure_toolchain(DEFAULT ${toolchain})
+cable_configure_toolchain(DEFAULT cxx11-pic)
 
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
