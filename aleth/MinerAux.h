@@ -54,7 +54,6 @@ public:
 
     explicit MinerCLI(OperationMode _mode = OperationMode::None): mode(_mode)
     {
-        BasicAuthority::init();
     }
 
     bool interpretOption(size_t& i, vector<string> const& argv)
