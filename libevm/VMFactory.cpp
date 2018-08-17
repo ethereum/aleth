@@ -28,7 +28,7 @@
 #endif
 
 #if ETH_HERA
-#include <hera.h>
+#include <hera/hera.h>
 #endif
 
 namespace po = boost::program_options;
