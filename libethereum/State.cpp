@@ -215,7 +215,7 @@ unordered_map<Address, u256> State::addresses() const
             ret[i.first] = RLP(i.second)[1].toInt<u256>();
     return ret;
 #else
-    BOOST_THROW_EXCEPTION(InterfaceNotSupported("State::addresses()"));
+    BOOST_THROW_EXCEPTION(InterfaceNotSupported() << errinfo_interface("State::addresses()"));
 #endif
 }
 
@@ -225,6 +225,7 @@ std::pair<State::AddressMap, h256> State::addresses(
     AddressMap addresses;
     h256 nextKey;
 
+#if ETH_FATDB
     for (auto it = m_state.hashedLowerBound(_beginHash); it != m_state.hashedEnd(); ++it)
     {
         auto const address = Address(it.key());
@@ -245,6 +246,7 @@ std::pair<State::AddressMap, h256> State::addresses(
         h256 const hashedAddress((*it).first);
         addresses[hashedAddress] = address;
     }
+#endif
 
     // get addresses from cache with hash >= _beginHash (both new and old touched, we can't
     // distinguish them) and order by hash
@@ -271,6 +273,7 @@ std::pair<State::AddressMap, h256> State::addresses(
 
     return {addresses, nextKey};
 }
+
 
 void State::setRoot(h256 const& _r)
 {
@@ -448,6 +451,7 @@ void State::clearStorage(Address const& _contract)
 
 map<h256, pair<u256, u256>> State::storage(Address const& _id) const
 {
+#if ETH_FATDB
     map<h256, pair<u256, u256>> ret;
 
     if (Account const* a = account(_id))
@@ -478,6 +482,10 @@ map<h256, pair<u256, u256>> State::storage(Address const& _id) const
         }
     }
     return ret;
+#else
+    (void) _id;
+    BOOST_THROW_EXCEPTION(InterfaceNotSupported() << errinfo_interface("State::storage(Address const& _id)"));
+#endif
 }
 
 h256 State::storageRoot(Address const& _id) const
