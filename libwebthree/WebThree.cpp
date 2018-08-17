@@ -44,10 +44,9 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
 {
     if (_dbPath.size())
         Defaults::setDBPath(_dbPath);
+
     if (_interfaces.count("eth"))
     {
-        Ethash::init();
-        NoProof::init();
         if (_testing)
             m_ethereum.reset(new eth::ClientTest(
                 _params, (int)_params.networkID, m_net, shared_ptr<GasPricer>(), _dbPath, _we));
