@@ -529,7 +529,7 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
     if (_node == id())
     {
-        cnetdetails << "Ingoring the request to connect to host " << _node;
+        cnetdetails << "Ingoring the request to connect to self " << _node;
         return;
     }
 
@@ -551,7 +551,7 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
     
     if (_n == id())
     {
-        cnetdetails << "Ingoring the request to connect to host " << _n;
+        cnetdetails << "Ingoring the request to connect to self " << _n;
         return;
     }
 
