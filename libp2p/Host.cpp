@@ -527,6 +527,12 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
         else
             return;
 
+    if (_node == id())
+    {
+        cnetdetails << "Ingoring the request to connect to self " << _node;
+        return;
+    }
+
     if (_endpoint.tcpPort() < 30300 || _endpoint.tcpPort() > 30305)
         cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort();
 
@@ -543,6 +549,12 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
     if (!m_run)
         return;
     
+    if (_n == id())
+    {
+        cnetdetails << "Ingoring the request to connect to self " << _n;
+        return;
+    }
+
     Node node(_n, _endpoint, PeerType::Required);
     if (_n)
     {
