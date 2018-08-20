@@ -8,10 +8,10 @@
 ## Contact
 
 [![Gitter](https://img.shields.io/gitter/room/ethereum/cpp-ethereum.svg)](https://gitter.im/ethereum/cpp-ethereum)
-[![GitHub Issues](https://img.shields.io/github/issues-raw/ethereum/cpp-ethereum.svg)](https://github.com/ethereum/cpp-ethereum/issues)
+[![GitHub Issues](https://img.shields.io/github/issues-raw/ethereum/cpp-ethereum.svg)](https://github.com/ethereum/aleth/issues)
 
 - Chat in [cpp-ethereum channel on Gitter](https://gitter.im/ethereum/cpp-ethereum).
-- Report bugs, issues or feature requests using [GitHub issues](https://github.com/ethereum/cpp-ethereum/issues/new).
+- Report bugs, issues or feature requests using [GitHub issues](https://github.com/ethereum/aleth/issues/new).
 
 
 ## Getting Started
@@ -33,8 +33,8 @@ Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-
 Git and GitHub are used to maintain the source code. Clone the repository by:
 
 ```shell
-git clone --recursive https://github.com/ethereum/cpp-ethereum.git
-cd cpp-ethereum
+git clone --recursive https://github.com/ethereum/aleth.git
+cd aleth
 ```
 
 The `--recursive` option is important. It orders git to clone additional 
@@ -116,12 +116,12 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 
 ## Contribute
 
-[![Contributors](https://img.shields.io/github/contributors/ethereum/cpp-ethereum.svg)](https://github.com/ethereum/cpp-ethereum/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/ethereum/aleth.svg)](https://github.com/ethereum/aleth/graphs/contributors)
 [![Gitter](https://img.shields.io/gitter/room/ethereum/cpp-ethereum.svg)](https://gitter.im/ethereum/cpp-ethereum)
-[![up-for-grabs](https://img.shields.io/github/issues-raw/ethereum/cpp-ethereum/help%20wanted.svg)](https://github.com/ethereum/cpp-ethereum/labels/help%20wanted)
+[![up-for-grabs](https://img.shields.io/github/issues-raw/ethereum/aleth/help%20wanted.svg)](https://github.com/ethereum/aleth/labels/help%20wanted)
 
 The current codebase is the work of many, many hands, with over 100
-[individual contributors](https://github.com/ethereum/cpp-ethereum/graphs/contributors) over the course of its development.
+[individual contributors](https://github.com/ethereum/aleth/graphs/contributors) over the course of its development.
 
 Our day-to-day development chat happens on the
 [cpp-ethereum](https://gitter.im/ethereum/cpp-ethereum) Gitter channel.
@@ -155,6 +155,6 @@ To run the tests, make sure you clone https://github.com/ethereum/tests and poin
 
 ## License
 
-[![License](https://img.shields.io/github/license/ethereum/cpp-ethereum.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/ethereum/aleth.svg)](LICENSE)
 
 All contributions are made under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).
