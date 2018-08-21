@@ -41,7 +41,7 @@ HunterGate(
 )
 
 project(aleth)
-set(PROJECT_VERSION 1.4.0rc3)
+set(PROJECT_VERSION 1.5.0.dev2)
 
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmjit/.git)
     message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
