@@ -111,11 +111,11 @@ public:
 class EthereumPeerTestFixture: public TestOutputHelperFixture
 {
 public:
-    EthereumPeerTestFixture():
-        session(std::make_shared<MockSession>()),
+    EthereumPeerTestFixture()
+      : session(std::make_shared<MockSession>()),
         observer(std::make_shared<MockEthereumPeerObserver>()),
         offset(UserPacket),
-        peer(session, &hostCap, offset, { "eth", 0 })
+        peer(session, hostCap.name(), hostCap.messageCount(), offset, {"eth", 0})
     {
         peer.init(63, 2, 0, h256(0), h256(0), std::shared_ptr<EthereumHostDataFace>(), observer);
     }
