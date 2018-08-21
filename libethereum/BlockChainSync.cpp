@@ -226,7 +226,7 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
     if (disconnectReason)
     {
         LOG(m_logger) << "Peer not suitable for sync: " << disconnectReason;
-        _peer->disconnect();
+        session->disconnect(UserReason);
         return;
     }
 

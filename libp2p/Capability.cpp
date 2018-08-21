@@ -35,12 +35,6 @@ Capability::Capability(std::shared_ptr<SessionFace> _s, string const& _name, uns
     cnetdetails << "New session for capability " << m_name << "; idOffset: " << m_idOffset;
 }
 
-void Capability::disconnect()
-{
-    if (auto s = session())
-        s->disconnect(UserReason);
-}
-
 void Capability::disable(std::string const& _problem)
 {
     cnetdetails << "DISABLE: Disabling capability '" << m_name << "'. Reason: " << _problem;
