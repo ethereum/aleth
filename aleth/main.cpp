@@ -560,6 +560,12 @@ int main(int argc, char** argv)
         {
             configPath = vm["config"].as<string>();
             configJSON = contentsString(configPath.string());
+
+            if (configJSON.empty())
+            {
+                cout << "Config file not found or empty (" << configPath.string() << ")\n";
+                return -1;
+            }
         }
         catch (...)
         {
