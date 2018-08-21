@@ -34,18 +34,19 @@ class ReputationManager;
 class Capability: public std::enable_shared_from_this<Capability>
 {
 public:
-    Capability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _idOffset);
+    Capability(std::shared_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
+        unsigned _idOffset);
     virtual ~Capability() {}
 
-    /*  TODO
-        virtual std::string name() = 0;
-        virtual u256 version() = 0;
-        virtual unsigned messageCount() = 0;
-    */
+    // Implement these in the derived class.
+    // static std::string name() { return ""; }
+    // static u256 version() { return 0; }
+    // static unsigned messageCount() { return 0; }
+
     bool enabled() const { return m_enabled; }
     bool canHandle(unsigned _packetType) const
     {
-        return _packetType >= m_idOffset && _packetType < m_hostCap->messageCount() + m_idOffset;
+        return _packetType >= m_idOffset && _packetType < m_messageCount + m_idOffset;
     }
 
     bool interpret(unsigned _packetType, RLP const& _rlp)
@@ -70,9 +71,10 @@ protected:
 
 private:
     std::weak_ptr<SessionFace> m_session;
-    HostCapabilityFace* m_hostCap;
     bool m_enabled = true;
-    unsigned m_idOffset;
+    std::string const m_name;
+    unsigned const m_messageCount;
+    unsigned const m_idOffset;
 };
 
 }

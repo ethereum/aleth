@@ -28,11 +28,11 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-Capability::Capability(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _idOffset):
-    m_session(_s), m_hostCap(_h), m_idOffset(_idOffset)
+Capability::Capability(std::shared_ptr<SessionFace> _s, string const& _name, unsigned _messageCount,
+    unsigned _idOffset)
+  : m_session(_s), m_name(_name), m_messageCount(_messageCount), m_idOffset(_idOffset)
 {
-    cnetdetails << "New session for capability " << m_hostCap->name()
-                << "; idOffset: " << m_idOffset;
+    cnetdetails << "New session for capability " << m_name << "; idOffset: " << m_idOffset;
 }
 
 void Capability::disconnect()
@@ -43,8 +43,7 @@ void Capability::disconnect()
 
 void Capability::disable(std::string const& _problem)
 {
-    cnetdetails << "DISABLE: Disabling capability '" << m_hostCap->name()
-                << "'. Reason: " << _problem;
+    cnetdetails << "DISABLE: Disabling capability '" << m_name << "'. Reason: " << _problem;
     m_enabled = false;
 }
 

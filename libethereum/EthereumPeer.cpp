@@ -54,9 +54,9 @@ static string toString(Asking _a)
     return "?";
 }
 
-EthereumPeer::EthereumPeer(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap):
-    Capability(_s, _h, _i),
-    m_peerCapabilityVersion(_cap.second)
+EthereumPeer::EthereumPeer(std::shared_ptr<SessionFace> _s, std::string const& _name,
+    unsigned _messageCount, unsigned _offset, CapDesc const& _cap)
+  : Capability(_s, _name, _messageCount, _offset), m_peerCapabilityVersion(_cap.second)
 {
     session()->addNote("manners", isRude() ? "RUDE" : "nice");
 }
