@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(contract_storage)
      // }
 
 
-    string compiled =
+    const string compiled =
         "6080604052341561000f57600080fd5b60c28061001d6000396000f3006"
         "08060405260043610603f576000357c0100000000000000000000000000"
         "000000000000000000000000000000900463ffffffff16806315b2eec31"
@@ -558,6 +558,8 @@ BOOST_AUTO_TEST_CASE(contract_storage)
         "0200191505060405180910390f35b600081600081905550600190509190"
         "505600a165627a7a72305820d8407d9cdaaf82966f3fa7a3e665b8cf4e6"
         "5ee8909b83094a3f856b9051274500029";
+
+    const string runtimeCode = compiled.substr(58);
 
     Json::Value create;
     create["code"] = compiled;
@@ -575,6 +577,18 @@ BOOST_AUTO_TEST_CASE(contract_storage)
 
     string storage = rpcClient->eth_getStorageAt(contractAddress, "0", "latest");
     BOOST_CHECK_EQUAL(storage, "0x0000000000000000000000000000000000000000000000000000000000000003");
+
+    auto code = rpcClient->eth_getCode(contractAddress, "latest");
+    BOOST_CHECK_EQUAL(code, "0x" + runtimeCode);
+}
+
+BOOST_AUTO_TEST_CASE(eth_getCode_emptyAccount)
+{
+    auto code = rpcClient->eth_getCode(toJS(coinbase.address()), "latest");
+    BOOST_CHECK_EQUAL(code, "");
+
+    code = rpcClient->eth_getCode("0xaabbccddeeff0000000011223344556677889900", "pending");
+    BOOST_CHECK_EQUAL(code, "");
 }
 
 BOOST_AUTO_TEST_CASE(web3_sha3)
