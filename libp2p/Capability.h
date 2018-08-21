@@ -54,9 +54,6 @@ public:
         return interpretCapabilityPacket(_packetType - m_idOffset, _rlp);
     }
 
-    void disconnect();
-
-    // TODO replace with a signal in Session
     virtual void onDisconnect() {}
 
 protected:
