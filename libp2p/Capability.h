@@ -34,7 +34,7 @@ class ReputationManager;
 class Capability: public std::enable_shared_from_this<Capability>
 {
 public:
-    Capability(std::shared_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
+    Capability(std::weak_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
         unsigned _idOffset);
     virtual ~Capability() = default;
 

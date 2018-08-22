@@ -87,7 +87,7 @@ class EthereumPeer: public p2p::Capability
 
 public:
     /// Basic constructor.
-    EthereumPeer(std::shared_ptr<p2p::SessionFace> _s, std::string const& _name,
+    EthereumPeer(std::weak_ptr<p2p::SessionFace> _s, std::string const& _name,
         unsigned _messageCount, unsigned _offset, p2p::CapDesc const& _cap);
 
     /// Basic destructor.
@@ -138,7 +138,7 @@ private:
     unsigned askOverride() const;
 
     /// Interpret an incoming message.
-    virtual bool interpretCapabilityPacket(unsigned _id, RLP const& _r);
+    bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override;
 
     /// Request status. Called from constructor
     void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash);

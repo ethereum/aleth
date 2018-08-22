@@ -44,11 +44,10 @@ struct P2PFixture: public TestOutputHelperFixture
 class TestCapability: public Capability
 {
 public:
-    TestCapability(std::shared_ptr<SessionFace> _s, std::string const& _name,
-        unsigned _messageCount, unsigned _idOffset, CapDesc const&)
+    TestCapability(std::weak_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
+        unsigned _idOffset, CapDesc const&)
       : Capability(_s, _name, _messageCount, _idOffset), m_cntReceivedMessages(0), m_testSum(0)
     {}
-    virtual ~TestCapability() {}
     int countReceivedMessages() { return m_cntReceivedMessages; }
     int testSum() { return m_testSum; }
     static std::string name() { return "test"; }
@@ -57,7 +56,7 @@ public:
     void sendTestMessage(int _i) { RLPStream s; sealAndSend(prep(s, UserPacket, 1) << _i); }
 
 protected:
-    virtual bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override;
+    bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override;
 
     int m_cntReceivedMessages;
     int m_testSum;
