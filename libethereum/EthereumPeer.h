@@ -40,7 +40,7 @@ namespace eth
 class EthereumPeerObserverFace
 {
 public:
-    virtual ~EthereumPeerObserverFace() {}
+    virtual ~EthereumPeerObserverFace() = default;
 
     virtual void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) = 0;
 
@@ -64,7 +64,7 @@ public:
 class EthereumHostDataFace
 {
 public:
-    virtual ~EthereumHostDataFace() {}
+    virtual ~EthereumHostDataFace() = default;
 
     virtual std::pair<bytes, unsigned> blockHeaders(RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse) const = 0;
 
@@ -91,7 +91,7 @@ public:
         unsigned _messageCount, unsigned _offset, p2p::CapDesc const& _cap);
 
     /// Basic destructor.
-    virtual ~EthereumPeer();
+    ~EthereumPeer() override;
 
     /// What is our name?
     static std::string name() { return "eth"; }
