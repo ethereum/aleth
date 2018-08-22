@@ -40,12 +40,12 @@ struct P2PPeerFixture: public TestOutputHelperFixture
     ~P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestCap: public Capability
+class TestCap : public PeerCapability
 {
 public:
     TestCap(std::weak_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
         unsigned _idOffset, CapDesc const&)
-      : Capability(_s, _name, _messageCount, _idOffset)
+      : PeerCapability(_s, _name, _messageCount, _idOffset)
     {}
     static std::string name() { return "p2pTestCapability"; }
     static u256 version() { return 2; }

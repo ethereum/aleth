@@ -80,7 +80,7 @@ public:
  * @todo Document fully.
  * @todo make state transitions thread-safe.
  */
-class EthereumPeer: public p2p::Capability
+class EthereumPeer : public p2p::PeerCapability
 {
     friend class EthereumHost; //TODO: remove this
     friend class BlockChainSync; //TODO: remove this
@@ -132,7 +132,7 @@ public:
     void abortSync();
 
 private:
-    using p2p::Capability::sealAndSend;
+    using p2p::PeerCapability::sealAndSend;
 
     /// Figure out the amount of blocks we should be asking for.
     unsigned askOverride() const;
