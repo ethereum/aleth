@@ -38,12 +38,12 @@ public:
 };
 
 
-class Capability : public PeerCapabilityFace,
-                   public std::enable_shared_from_this<PeerCapabilityFace>
+class PeerCapability : public PeerCapabilityFace,
+                       public std::enable_shared_from_this<PeerCapabilityFace>
 {
 public:
-    Capability(std::weak_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
-        unsigned _idOffset);
+    PeerCapability(std::weak_ptr<SessionFace> _s, std::string const& _name,
+        unsigned _messageCount, unsigned _idOffset);
 
     // Implement these in the derived class.
     // static std::string name() { return ""; }

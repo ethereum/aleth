@@ -28,32 +28,32 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-Capability::Capability(
-    std::weak_ptr<SessionFace> _s, string const& _name, unsigned _messageCount, unsigned _idOffset)
-  : m_session(std::move(_s)), m_name(_name), m_messageCount(_messageCount), m_idOffset(_idOffset)
+PeerCapability::PeerCapability(weak_ptr<SessionFace> _s, string const& _name,
+    unsigned _messageCount, unsigned _idOffset)
+  : m_session(move(_s)), m_name(_name), m_messageCount(_messageCount), m_idOffset(_idOffset)
 {
     cnetdetails << "New session for capability " << m_name << "; idOffset: " << m_idOffset;
 }
 
-void Capability::disable(std::string const& _problem)
+void PeerCapability::disable(std::string const& _problem)
 {
     cnetdetails << "DISABLE: Disabling capability '" << m_name << "'. Reason: " << _problem;
     m_enabled = false;
 }
 
-RLPStream& Capability::prep(RLPStream& _s, unsigned _id, unsigned _args)
+RLPStream& PeerCapability::prep(RLPStream& _s, unsigned _id, unsigned _args)
 {
     return _s.appendRaw(bytes(1, _id + m_idOffset)).appendList(_args);
 }
 
-void Capability::sealAndSend(RLPStream& _s)
+void PeerCapability::sealAndSend(RLPStream& _s)
 {
     shared_ptr<SessionFace> session = m_session.lock();
     if (session)
         session->sealAndSend(_s);
 }
 
-void Capability::addRating(int _r)
+void PeerCapability::addRating(int _r)
 {
     shared_ptr<SessionFace> session = m_session.lock();
     if (session)

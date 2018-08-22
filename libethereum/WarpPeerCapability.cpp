@@ -26,9 +26,10 @@ namespace dev
 {
 namespace eth
 {
-WarpPeerCapability::WarpPeerCapability(std::weak_ptr<p2p::SessionFace> _s, std::string const& _name,
-    unsigned _messageCount, unsigned _offset, p2p::CapDesc const& /* _cap */)
-  : Capability(std::move(_s), _name, _messageCount, _offset)
+WarpPeerCapability::WarpPeerCapability(std::weak_ptr<p2p::SessionFace> _s,
+    std::string const& _name, unsigned _messageCount, unsigned _offset,
+    p2p::CapDesc const& /* _cap */)
+  : PeerCapability(std::move(_s), _name, _messageCount, _offset)
 {}
 
 void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId,
