@@ -14,12 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file HostCapability.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- *
- * Miscellanea required for the Host/Session classes.
- */
 
 #pragma once
 
@@ -44,7 +38,7 @@ public:
     virtual u256 version() const = 0;
     virtual unsigned messageCount() const = 0;
 
-    virtual std::shared_ptr<Capability> newPeerCapability(
+    virtual std::shared_ptr<PeerCapabilityFace> newPeerCapability(
         std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap) = 0;
 
     virtual void onStarting() = 0;
@@ -61,7 +55,7 @@ public:
     u256 version() const override { return PeerCap::version(); }
     unsigned messageCount() const override { return PeerCap::messageCount(); }
 
-    std::shared_ptr<Capability> newPeerCapability(
+    std::shared_ptr<PeerCapabilityFace> newPeerCapability(
         std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap) override
     {
         auto p = std::make_shared<PeerCap>(

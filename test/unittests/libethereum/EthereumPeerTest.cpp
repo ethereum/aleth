@@ -31,10 +31,10 @@ public:
     string name() const override { return "mock capability name"; }
     u256 version() const override { return 0; }
     unsigned messageCount() const override { return 0; }
-    std::shared_ptr<Capability> newPeerCapability(
+    std::shared_ptr<PeerCapabilityFace> newPeerCapability(
         std::shared_ptr<SessionFace> const&, unsigned, CapDesc const&) override
     {
-        return std::shared_ptr<Capability>();
+        return std::shared_ptr<PeerCapabilityFace>();
     }
 
     void onStarting() override {}
@@ -69,9 +69,14 @@ public:
     PeerSessionInfo info() const override { return PeerSessionInfo{ NodeID{}, "", "", 0, std::chrono::steady_clock::duration{}, {}, 0, {}, 0 }; }
     std::chrono::steady_clock::time_point connectionTime() override { return std::chrono::steady_clock::time_point{}; }
 
-    void registerCapability(CapDesc const& /*_desc*/, std::shared_ptr<Capability> /*_p*/) override { }
+    void registerCapability(
+        CapDesc const& /*_desc*/, std::shared_ptr<PeerCapabilityFace> /*_p*/) override
+    {}
 
-    map<CapDesc, std::shared_ptr<Capability>> const&  capabilities() const override { return m_capabilities; }
+    map<CapDesc, std::shared_ptr<PeerCapabilityFace>> const& capabilities() const override
+    {
+        return m_capabilities;
+    }
 
     std::shared_ptr<Peer> peer() const override { return nullptr;  }
 
@@ -80,7 +85,7 @@ public:
     ReputationManager& repMan() override { return m_repMan; }
 
     ReputationManager m_repMan;
-    map<CapDesc, std::shared_ptr<Capability>> m_capabilities;
+    map<CapDesc, std::shared_ptr<PeerCapabilityFace>> m_capabilities;
     bytes m_bytesSent;
     map<string, string> m_notes;
 };

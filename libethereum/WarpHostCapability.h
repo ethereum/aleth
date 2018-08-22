@@ -37,8 +37,9 @@ public:
     u256 networkId() const { return m_networkId; }
 
 protected:
-    std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s,
-        unsigned _idOffset, p2p::CapDesc const& _cap) override;
+    std::shared_ptr<p2p::PeerCapabilityFace> newPeerCapability(
+        std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset,
+        p2p::CapDesc const& _cap) override;
 
 private:
     std::shared_ptr<WarpPeerObserverFace> createPeerObserver(

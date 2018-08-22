@@ -334,7 +334,7 @@ std::shared_ptr<WarpPeerObserverFace> WarpHostCapability::createPeerObserver(
     return std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
 }
 
-std::shared_ptr<p2p::Capability> WarpHostCapability::newPeerCapability(
+std::shared_ptr<p2p::PeerCapabilityFace> WarpHostCapability::newPeerCapability(
     std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap)
 {
     auto ret = HostCapability<WarpPeerCapability>::newPeerCapability(_s, _idOffset, _cap);
