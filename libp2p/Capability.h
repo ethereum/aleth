@@ -36,7 +36,7 @@ class Capability: public std::enable_shared_from_this<Capability>
 public:
     Capability(std::shared_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
         unsigned _idOffset);
-    virtual ~Capability() {}
+    virtual ~Capability() = default;
 
     // Implement these in the derived class.
     // static std::string name() { return ""; }

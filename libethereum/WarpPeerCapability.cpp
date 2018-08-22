@@ -29,7 +29,7 @@ namespace eth
 WarpPeerCapability::WarpPeerCapability(std::shared_ptr<p2p::SessionFace> _s,
     std::string const& _name, unsigned _messageCount, unsigned _offset,
     p2p::CapDesc const& /* _cap */)
-  : Capability(_s, _name, _messageCount, _offset)
+  : Capability(std::move(_s), _name, _messageCount, _offset)
 {}
 
 void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId,
