@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include "Capability.h"
+#include "PeerCapability.h"
 
 #include <libdevcore/Log.h>
 #include "Session.h"

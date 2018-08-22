@@ -29,7 +29,7 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/Guards.h>
 #include <libethcore/Common.h>
-#include <libp2p/Capability.h>
+#include <libp2p/PeerCapability.h>
 #include "CommonNet.h"
 
 namespace dev

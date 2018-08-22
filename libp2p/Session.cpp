@@ -22,12 +22,12 @@
 
 #include "Session.h"
 
-#include <chrono>
+#include "Host.h"
+#include "PeerCapability.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
-#include "Host.h"
-#include "Capability.h"
+#include <chrono>
 
 using namespace std;
 using namespace dev;

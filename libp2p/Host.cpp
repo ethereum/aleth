@@ -21,9 +21,9 @@
  */
 
 #include "Host.h"
-#include "Capability.h"
 #include "Common.h"
 #include "HostCapability.h"
+#include "PeerCapability.h"
 #include "RLPxHandshake.h"
 #include "Session.h"
 #include "UPnP.h"
