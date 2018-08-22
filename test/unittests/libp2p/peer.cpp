@@ -43,17 +43,16 @@ struct P2PPeerFixture: public TestOutputHelperFixture
 class TestCap: public Capability
 {
 public:
-    TestCap(std::shared_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
+    TestCap(std::weak_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
         unsigned _idOffset, CapDesc const&)
       : Capability(_s, _name, _messageCount, _idOffset)
     {}
-    virtual ~TestCap() {}
     static std::string name() { return "p2pTestCapability"; }
     static u256 version() { return 2; }
     static unsigned messageCount() { return UserPacket + 1; }
 
 protected:
-    virtual bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override
+    bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override
     {
         return _id > 0 || _r.size() > 0;
     }

@@ -61,7 +61,7 @@ public:
 class WarpPeerCapability : public p2p::Capability
 {
 public:
-    WarpPeerCapability(std::shared_ptr<p2p::SessionFace> _s, std::string const& _name,
+    WarpPeerCapability(std::weak_ptr<p2p::SessionFace> _s, std::string const& _name,
         unsigned _messageCount, unsigned _offset, p2p::CapDesc const& _cap);
 
     static std::string name() { return "par"; }

@@ -54,7 +54,7 @@ static string toString(Asking _a)
     return "?";
 }
 
-EthereumPeer::EthereumPeer(std::shared_ptr<SessionFace> _s, std::string const& _name,
+EthereumPeer::EthereumPeer(std::weak_ptr<SessionFace> _s, std::string const& _name,
     unsigned _messageCount, unsigned _offset, CapDesc const& _cap)
   : Capability(std::move(_s), _name, _messageCount, _offset), m_peerCapabilityVersion(_cap.second)
 {

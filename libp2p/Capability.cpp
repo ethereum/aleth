@@ -28,8 +28,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-Capability::Capability(std::shared_ptr<SessionFace> _s, string const& _name, unsigned _messageCount,
-    unsigned _idOffset)
+Capability::Capability(
+    std::weak_ptr<SessionFace> _s, string const& _name, unsigned _messageCount, unsigned _idOffset)
   : m_session(std::move(_s)), m_name(_name), m_messageCount(_messageCount), m_idOffset(_idOffset)
 {
     cnetdetails << "New session for capability " << m_name << "; idOffset: " << m_idOffset;
