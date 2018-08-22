@@ -23,7 +23,7 @@
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
 #include <libp2p/Host.h>
-#include <libp2p/Capability.h>
+#include <libp2p/PeerCapability.h>
 #include <libp2p/HostCapability.h>
 #include <chrono>
 #include <thread>

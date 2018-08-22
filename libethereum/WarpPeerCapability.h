@@ -20,7 +20,7 @@
 #include "CommonNet.h"
 
 #include <libdevcore/Common.h>
-#include <libp2p/Capability.h>
+#include <libp2p/PeerCapability.h>
 
 namespace dev
 {
