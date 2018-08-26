@@ -114,10 +114,10 @@ namespace
 /// space and we can reuse this variable in exception message.
 const char c_evmcPrefix[] = "evmc ";
 
-/// The list of EVM-C options stored as pairs of (name, value).
+/// The list of EVMC options stored as pairs of (name, value).
 std::vector<std::pair<std::string, std::string>> s_evmcOptions;
 
-/// The additional parser for EVM-C options. The options should look like
+/// The additional parser for EVMC options. The options should look like
 /// `--evmc name=value` or `--evmc=name=value`. The boost pass the strings
 /// of `name=value` here. This function splits the name and value or reports
 /// the syntax error if the `=` character is missing.
@@ -169,7 +169,7 @@ po::options_description vmProgramOptions(unsigned _lineLength)
         po::value<std::vector<std::string>>()
             ->value_name("<option>=<value>")
             ->notifier(parseEvmcOptions),
-        "EVM-C option\n");
+        "EVMC option\n");
 
     return opts;
 }
