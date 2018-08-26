@@ -85,6 +85,7 @@ void setVMKind(const std::string& _name)
     }
 
     // If not match for predefined VM names, try loading it as an EVMC DLL.
+    cnote << "Loading EVMC module: " << _name;
 
     evmc_loader_error_code ec;
     g_evmcCreateFn = evmc_load(_name.c_str(), &ec);
