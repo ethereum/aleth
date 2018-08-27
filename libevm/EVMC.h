@@ -6,6 +6,7 @@
 #include <libevm/VMFace.h>
 
 #include <evmc/evmc.h>
+#include <evmc/helpers.h>
 
 namespace dev
 {
