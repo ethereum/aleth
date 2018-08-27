@@ -6,15 +6,16 @@
 #include <libevm/VMFace.h>
 
 #include <evmc/evmc.h>
+#include <evmc/helpers.h>
 
 namespace dev
 {
 namespace eth
 {
-/// Translate the EVMSchedule to EVM-C revision.
+/// Translate the EVMSchedule to EVMC revision.
 evmc_revision toRevision(EVMSchedule const& _schedule);
 
-/// The RAII wrapper for an EVM-C instance.
+/// The RAII wrapper for an EVMC instance.
 class EVM
 {
 public:
@@ -82,12 +83,12 @@ public:
     }
 
 private:
-    /// The VM instance created with EVM-C <prefix>_create() function.
+    /// The VM instance created with EVMC <prefix>_create() function.
     evmc_instance* m_instance = nullptr;
 };
 
 
-/// The wrapper implementing the VMFace interface with a EVM-C VM as a backend.
+/// The wrapper implementing the VMFace interface with a EVMC VM as a backend.
 class EVMC : public EVM, public VMFace
 {
 public:
