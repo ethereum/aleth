@@ -190,7 +190,7 @@ h256 ExtVM::blockHash(u256 _number)
     if (_number >= currentNumber || _number < (std::max<u256>(256, currentNumber) - 256))
         return h256();
 
-    if (currentNumber < m_sealEngine.chainParams().constantinopleForkBlock + 256)
+    if (currentNumber < m_sealEngine.chainParams().experimentalForkBlock + 256)
     {
         h256 const parentHash = envInfo().header().parentHash();
         h256s const lastHashes = envInfo().lastHashes().precedingHashes(parentHash);
