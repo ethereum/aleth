@@ -102,7 +102,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     }
 }
 
-evmc_revision toRevision(EVMSchedule const& _schedule)
+evmc_revision EVM::toRevision(EVMSchedule const& _schedule)
 {
     if (_schedule.haveCreate2)
         return EVMC_CONSTANTINOPLE;

@@ -12,8 +12,6 @@ namespace dev
 {
 namespace eth
 {
-/// Translate the EVMSchedule to EVMC revision.
-evmc_revision toRevision(EVMSchedule const& _schedule);
 
 /// The RAII wrapper for an EVMC instance.
 class EVM
@@ -70,6 +68,9 @@ public:
 
     /// Handy wrapper for evmc_execute().
     Result execute(ExtVMFace& _ext, int64_t gas);
+
+    /// Translate the EVMSchedule to EVMC revision.
+    static evmc_revision toRevision(EVMSchedule const& _schedule);
 
 private:
     /// The VM instance created with EVMC <prefix>_create() function.
