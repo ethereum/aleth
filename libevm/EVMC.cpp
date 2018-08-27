@@ -21,6 +21,20 @@ EVM::EVM(evmc_instance* _instance) noexcept : m_instance(_instance)
             cwarn << "Failed to set EVMC parameter '" << pair.first << "'";
 }
 
+/// Handy wrapper for evmc_execute().
+EVM::Result EVM::execute(ExtVMFace& _ext, int64_t gas)
+{
+    auto mode = toRevision(_ext.evmSchedule());
+    evmc_call_kind kind = _ext.isCreate ? EVMC_CREATE : EVMC_CALL;
+    uint32_t flags = _ext.staticCall ? EVMC_STATIC : 0;
+    assert(flags != EVMC_STATIC || kind == EVMC_CALL);  // STATIC implies a CALL.
+    evmc_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller), toEvmC(_ext.value),
+        _ext.data.data(), _ext.data.size(), toEvmC(_ext.codeHash), toEvmC(0x0_cppui256), gas,
+        static_cast<int32_t>(_ext.depth), kind, flags};
+    return EVM::Result{
+        m_instance->execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
+}
+
 owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp)
 {
     assert(_ext.envInfo().number() >= 0);
