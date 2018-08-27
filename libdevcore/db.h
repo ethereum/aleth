@@ -14,10 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file DB.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
@@ -31,8 +27,8 @@ namespace dev
 {
 namespace db
 {
-// WriteBatchFace implements database write batch for a specific concrete
-// database implementation.
+/// WriteBatchFace implements database write batch for a specific concrete
+/// database implementation.
 class WriteBatchFace
 {
 public:
@@ -41,14 +37,10 @@ public:
     virtual void insert(Slice _key, Slice _value) = 0;
     virtual void kill(Slice _key) = 0;
 
-protected:
     WriteBatchFace() = default;
-    // Noncopyable
+
     WriteBatchFace(WriteBatchFace const&) = delete;
     WriteBatchFace& operator=(WriteBatchFace const&) = delete;
-    // Nonmovable
-    WriteBatchFace(WriteBatchFace&&) = delete;
-    WriteBatchFace& operator=(WriteBatchFace&&) = delete;
 };
 
 class DatabaseFace
