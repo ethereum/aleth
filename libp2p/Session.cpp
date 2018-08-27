@@ -435,6 +435,6 @@ void Session::registerCapability(CapDesc const& _desc, std::shared_ptr<PeerCapab
 {
     DEV_GUARDED(x_framing)
     {
-        m_capabilities[_desc] = _p;
+        m_capabilities[_desc] = move(_p);
     }
 }
