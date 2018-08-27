@@ -66,7 +66,7 @@ ThreadLocalLogName g_logThreadName("main");
 
 auto const g_timestampFormatter =
     (boost::log::expressions::stream
-        << EthViolet << boost::log::expressions::format_date_time(timestamp, "%Y-%m-%d %H:%M:%S")
+        << EthViolet << boost::log::expressions::format_date_time(timestamp, "%m-%d %H:%M:%S")
         << EthReset " ");
 
 std::string verbosityToString(int _verbosity)
@@ -76,24 +76,26 @@ std::string verbosityToString(int _verbosity)
     case VerbosityError:
         return "ERROR";
     case VerbosityWarning:
-        return "WARN ";
+        return "WARN";
     case VerbosityInfo:
-        return "INFO ";
+        return "INFO";
     case VerbosityDebug:
         return "DEBUG";
     case VerbosityTrace:
         return "TRACE";
     }
-    return "     ";
+    return {};
 }
 
 void formatter(boost::log::record_view const& _rec, boost::log::formatting_ostream& _strm)
 {
-    _strm << verbosityToString(_rec.attribute_values()[severity].get()) << " ";
+    _strm << std::setw(5) << std::left << verbosityToString(_rec.attribute_values()[severity].get())
+          << " ";
 
     g_timestampFormatter(_rec, _strm);
 
-    _strm << EthNavy << _rec[threadName] << EthReset " " << _rec[channel] << " ";
+    _strm << EthNavy << std::setw(4) << std::left << _rec[threadName] << EthReset " ";
+    _strm << std::setw(6) << std::left << _rec[channel] << " ";
     if (boost::log::expressions::has_attr(context)(_rec))
         _strm << EthNavy << _rec[context] << EthReset " ";
 
