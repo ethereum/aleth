@@ -30,18 +30,18 @@ class ExtVMTestFixture : public TestOutputHelperFixture
 {
 public:
     ExtVMTestFixture()
-      : networkSelector(eth::Network::ConstantinopleTransitionTest),
+      : networkSelector(eth::Network::ExperimentalTransitionTest),
         testBlockchain(TestBlockChain::defaultGenesisBlock()),
         genesisBlock(testBlockchain.testGenesis()),
         genesisDB(genesisBlock.state().db()),
         blockchain(testBlockchain.getInterface())
     {
         TestBlock testBlock;
-        // block 1 - before Constantinople
+        // block 1 - before Experimental
         testBlock.mine(testBlockchain);
         testBlockchain.addBlock(testBlock);
 
-        // block 2 - first Constantinople block
+        // block 2 - first Experimental block
         testBlock.mine(testBlockchain);
         testBlockchain.addBlock(testBlock);
     }
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
     BOOST_CHECK_EQUAL(extVM.blockHash(100), h256());
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
+BOOST_AUTO_TEST_CASE(BlockhashBeforeExperimentalReliesOnLastHashes)
 {
     Block block = blockchain.genesisBlock(genesisDB);
     block.sync(blockchain);
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeConstantinopleReliesOnLastHashes)
     BOOST_REQUIRE_EQUAL(hash, lastHashes[0]);
 }
 
-BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInConstantinople)
+BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInExperimental)
 {
-    // BLOCKHASH starts to work through the call to a contract 256 block after Constantinople fork
+    // BLOCKHASH starts to work through the call to a contract 256 block after Experimental fork
     // block
     TestBlock testBlock;
     for (int i = 0; i < 256; ++i)
