@@ -28,6 +28,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     cmake \
     make \
     ninja-build \
+    python \
     python3-pip \
     python3-requests \
     python3-git \
@@ -39,6 +40,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     # g++-7 \
     clang-3.8 \
     clang-6.0 \
+    clang-format-6.0 \
+    clang-tidy-6.0 \
     llvm-6.0-dev \
     llvm-5.0-dev \
     libncurses-dev \
@@ -48,6 +51,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && rm -rf /var/lib/apt/lists/* \
   && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6.0 1 \
   && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 1 \
+  && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-6.0 1 \
+  && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-6.0 1 \
   && update-alternatives --install /usr/bin/gcov gcov /usr/bin/llvm-cov-6.0 1 \
   && pip3 install codecov
 
