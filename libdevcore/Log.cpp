@@ -47,6 +47,12 @@ using log_sink = boost::log::sinks::synchronous_sink<T>;
 
 namespace dev
 {
+BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(context, "Context", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", int)
+BOOST_LOG_ATTRIBUTE_KEYWORD(threadName, "ThreadName", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
+
 namespace
 {
 /// Associate a name with each thread for nice logging.
@@ -57,6 +63,45 @@ struct ThreadLocalLogName
 };
 
 ThreadLocalLogName g_logThreadName("main");
+
+auto const g_timestampFormatter =
+    (boost::log::expressions::stream
+        << EthViolet << boost::log::expressions::format_date_time(timestamp, "%m-%d %H:%M:%S")
+        << EthReset " ");
+
+std::string verbosityToString(int _verbosity)
+{
+    switch (_verbosity)
+    {
+    case VerbosityError:
+        return "ERROR";
+    case VerbosityWarning:
+        return "WARN";
+    case VerbosityInfo:
+        return "INFO";
+    case VerbosityDebug:
+        return "DEBUG";
+    case VerbosityTrace:
+        return "TRACE";
+    }
+    return {};
+}
+
+void formatter(boost::log::record_view const& _rec, boost::log::formatting_ostream& _strm)
+{
+    _strm << std::setw(5) << std::left << verbosityToString(_rec.attribute_values()[severity].get())
+          << " ";
+
+    g_timestampFormatter(_rec, _strm);
+
+    _strm << EthNavy << std::setw(4) << std::left << _rec[threadName] << EthReset " ";
+    _strm << std::setw(6) << std::left << _rec[channel] << " ";
+    if (boost::log::expressions::has_attr(context)(_rec))
+        _strm << EthNavy << _rec[context] << EthReset " ";
+
+    _strm << _rec[boost::log::expressions::smessage];
+}
+
 }  // namespace
 
 std::string getThreadName()
@@ -82,11 +127,6 @@ void setThreadName(std::string const& _n)
 #endif
 }
 
-BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
-BOOST_LOG_ATTRIBUTE_KEYWORD(context, "Context", std::string)
-BOOST_LOG_ATTRIBUTE_KEYWORD(threadName, "ThreadName", std::string)
-BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
-
 void setupLogging(LoggingOptions const& _options)
 {
     auto sink = boost::make_shared<log_sink<boost::log::sinks::text_ostream_backend>>();
@@ -94,7 +134,7 @@ void setupLogging(LoggingOptions const& _options)
     boost::shared_ptr<std::ostream> stream{&std::cout, boost::null_deleter{}};
     sink->locked_backend()->add_stream(stream);
     sink->set_filter([_options](boost::log::attribute_value_set const& _set) {
-        if (_set["Severity"].extract<int>() > _options.verbosity)
+        if (_set[severity] > _options.verbosity)
             return false;
 
         auto const messageChannel = _set[channel];
@@ -103,13 +143,7 @@ void setupLogging(LoggingOptions const& _options)
                !contains(_options.excludeChannels, messageChannel);
     });
 
-    namespace expr = boost::log::expressions;
-    sink->set_formatter(expr::stream
-                        << EthViolet << expr::format_date_time(timestamp, "%Y-%m-%d %H:%M:%S")
-                        << EthReset " " EthNavy << threadName << EthReset " " << channel
-                        << expr::if_(expr::has_attr(
-                               context))[expr::stream << " " EthNavy << context << EthReset]
-                        << " " << expr::smessage);
+    sink->set_formatter(&formatter);
 
     boost::log::core::get()->add_sink(sink);
 
