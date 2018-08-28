@@ -22,7 +22,6 @@
 
 #include "ClientBase.h"
 #include <algorithm>
-#include <string>
 #include "BlockChain.h"
 #include "Executive.h"
 #include "State.h"
