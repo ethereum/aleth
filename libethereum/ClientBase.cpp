@@ -22,6 +22,7 @@
 
 #include "ClientBase.h"
 #include <algorithm>
+#include <string>
 #include "BlockChain.h"
 #include "Executive.h"
 #include "State.h"
@@ -361,6 +362,8 @@ LocalisedTransactionReceipt ClientBase::localisedTransactionReceipt(h256 const& 
         t.sha3(),
         tl.first,
         numberFromHash(tl.first),
+		t.from(),
+		t.to(), 
         tl.second,
         gasUsed,
         toAddress(t.from(), t.nonce()));
