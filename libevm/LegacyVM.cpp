@@ -97,15 +97,69 @@ void LegacyVM::adjustStack(unsigned _removed, unsigned _added)
 
 void LegacyVM::updateSSGas()
 {
-    if (!m_ext->store(m_SP[0]) && m_SP[1])
+    u256 const currentValue = m_ext->store(m_SP[0]);
+    u256 const newValue = m_SP[1];
+
+    if (m_schedule->eip1283Mode)
+        updateSSGasEIP1283(currentValue, newValue);
+    else
+        updateSSGasPreEIP1283(currentValue, newValue);
+}
+
+void LegacyVM::updateSSGasPreEIP1283(u256 const& _currentValue, u256 const& _newValue)
+{
+    if (!_currentValue && _newValue)
         m_runGas = toInt63(m_schedule->sstoreSetGas);
-    else if (m_ext->store(m_SP[0]) && !m_SP[1])
+    else if (_currentValue && !_newValue)
     {
         m_runGas = toInt63(m_schedule->sstoreResetGas);
         m_ext->sub.refunds += m_schedule->sstoreRefundGas;
     }
     else
         m_runGas = toInt63(m_schedule->sstoreResetGas);
+}
+
+void LegacyVM::updateSSGasEIP1283(u256 const& _currentValue, u256 const& _newValue)
+{
+    if (_currentValue == _newValue)
+        m_runGas = m_schedule->sstoreUnchangedGas;
+    else
+    {
+        u256 const originalValue = m_ext->originalStorageValue(m_SP[0]);
+        if (originalValue == _currentValue)
+        {
+            if (originalValue == 0)
+                m_runGas = m_schedule->sstoreSetGas;
+            else
+            {
+                m_runGas = m_schedule->sstoreResetGas;
+                if (_newValue == 0)
+                    m_ext->sub.refunds += m_schedule->sstoreRefundGas;
+            }
+        }
+        else
+        {
+            m_runGas = m_schedule->sstoreUnchangedGas;
+            if (originalValue != 0)
+            {
+                if (_currentValue == 0)
+                {
+                    assert(m_ext->sub.refunds >= m_schedule->sstoreRefundGas);
+                    m_ext->sub.refunds -= m_schedule->sstoreRefundGas;
+                }
+                else
+                    m_ext->sub.refunds += m_schedule->sstoreRefundGas;
+            }
+            if (originalValue == _newValue)
+            {
+                if (originalValue == 0)
+                    m_ext->sub.refunds +=
+                        m_schedule->sstoreRefundGas + m_schedule->sstoreRefundNonzeroGas;
+                else
+                    m_ext->sub.refunds += m_schedule->sstoreRefundNonzeroGas;
+            }
+        }
+    }
 }
 
 
