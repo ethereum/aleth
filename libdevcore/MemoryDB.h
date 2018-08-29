@@ -14,17 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file MemoryDB.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
-#include <unordered_map>
 #include "Common.h"
 #include "Log.h"
 #include "RLP.h"
+
+#include <unordered_map>
 
 namespace dev
 {
@@ -76,17 +73,5 @@ private:
     MemoryDB const& m_o;
     bool m_r;
 };
-
-inline std::ostream& operator<<(std::ostream& _out, MemoryDB const& _m)
-{
-    for (auto const& i: _m.get())
-    {
-        _out << i.first << ": ";
-        _out << RLP(i.second);
-        _out << " " << toHex(i.second);
-        _out << std::endl;
-    }
-    return _out;
-}
 
 }
