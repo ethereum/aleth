@@ -112,8 +112,12 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 			if (!foundResults)
 			{
 				Options const& opt = Options::get();
-				BOOST_ERROR("Transaction not found! (Network: " + (opt.singleTestNet.empty() ? "Any" : opt.singleTestNet) + ", dataInd: " + toString(opt.trDataIndex) + ", gasInd: " + toString(opt.trGasIndex) + ", valInd: " + toString(opt.trValueIndex) + ")");
-			}
+                BOOST_ERROR("Transaction not found! (Test: '" + testname + "', Network: " +
+                            (opt.singleTestNet.empty() ? "Any" : opt.singleTestNet) +
+                            ", dataInd: " + toString(opt.trDataIndex) +
+                            ", gasInd: " + toString(opt.trGasIndex) +
+                            ", valInd: " + toString(opt.trValueIndex) + ")");
+            }
 
 			if (Options::get().statediff)
 				importer.traceStateDiff();

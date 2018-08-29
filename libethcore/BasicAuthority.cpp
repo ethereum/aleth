@@ -50,8 +50,11 @@ void BasicAuthority::generateSeal(BlockHeader const& _bi)
 	BlockHeader bi = _bi;
 	h256 h = bi.hash(WithoutSeal);
 	Signature s = sign(m_secret, h);
-	setSig(bi, s);
-	SealEngineBase::generateSeal(bi);
+    setSig(bi, s);
+    RLPStream ret;
+    bi.streamRLP(ret);
+    if (m_onSealGenerated)
+        m_onSealGenerated(ret.out());
 }
 
 bool BasicAuthority::onOptionChanging(std::string const& _name, bytes const& _value)

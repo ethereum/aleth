@@ -97,14 +97,12 @@ private:
 class SealEngineBase: public SealEngineFace
 {
 public:
-	void generateSeal(BlockHeader const& _bi) override
-	{
-		RLPStream ret;
-		_bi.streamRLP(ret);
-		if (m_onSealGenerated)
-			m_onSealGenerated(ret.out());
-	}
-	void onSealGenerated(std::function<void(bytes const&)> const& _f) override { m_onSealGenerated = _f; }
+    enum
+    {
+        MixHashField = 0,
+        NonceField = 1
+    };
+    void onSealGenerated(std::function<void(bytes const&)> const& _f) override { m_onSealGenerated = _f; }
 	EVMSchedule const& evmSchedule(u256 const& _blockNumber) const override;
 	u256 blockReward(u256 const& _blockNumber) const override;
 
@@ -139,6 +137,7 @@ class NoProof: public eth::SealEngineBase
 public:
     static std::string name() { return "NoProof"; }
     static void init();
+    void generateSeal(BlockHeader const& _bi) override;
 };
 
 }
