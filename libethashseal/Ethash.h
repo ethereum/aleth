@@ -66,7 +66,6 @@ public:
 
     eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
 
-    enum { MixHashField = 0, NonceField = 1 };
     static h256 seedHash(BlockHeader const& _bi);
     static Nonce nonce(BlockHeader const& _bi) { return _bi.seal<Nonce>(NonceField); }
     static h256 mixHash(BlockHeader const& _bi) { return _bi.seal<h256>(MixHashField); }

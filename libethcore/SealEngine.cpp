@@ -29,6 +29,17 @@ void NoProof::init()
     ETH_REGISTER_SEAL_ENGINE(NoProof);
 }
 
+void NoProof::generateSeal(BlockHeader const& _bi)
+{
+    BlockHeader header(_bi);
+    header.setSeal(NonceField, h64{0});
+    header.setSeal(MixHashField, h256{0});
+    RLPStream ret;
+    header.streamRLP(ret);
+    if (m_onSealGenerated)
+        m_onSealGenerated(ret.out());
+}
+
 void SealEngineFace::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
     _bi.verify(_s, _parent, _block);
