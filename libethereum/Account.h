@@ -88,8 +88,19 @@ public:
     Account(u256 _nonce, u256 _balance, h256 _contractRoot, h256 _codeHash, Changedness _c): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance), m_storageRoot(_contractRoot), m_codeHash(_codeHash) { assert(_contractRoot); }
 
 
-    /// Kill this account. Useful for the suicide opcode. Following this call, isAlive() returns false.
-    void kill() { m_isAlive = false; m_storageOverlay.clear(); m_codeHash = EmptySHA3; m_storageRoot = EmptyTrie; m_balance = 0; m_nonce = 0; changed(); }
+    /// Kill this account. Useful for the suicide opcode. Following this call, isAlive() returns
+    /// false.
+    void kill()
+    {
+        m_isAlive = false;
+        m_storageOverlay.clear();
+        m_storageOriginal.clear();
+        m_codeHash = EmptySHA3;
+        m_storageRoot = EmptyTrie;
+        m_balance = 0;
+        m_nonce = 0;
+        changed();
+    }
 
     /// @returns true iff this object represents an account in the state. Returns false if this object
     /// represents an account that should no longer exist in the trie (an account that never existed or was
@@ -129,6 +140,8 @@ public:
     /// @returns the storage overlay as a simple hash map.
     std::unordered_map<u256, u256> const& storageOverlay() const { return m_storageOverlay; }
 
+    std::unordered_map<u256, u256> const& storageOriginal() const { return m_storageOriginal; }
+
     /// Set a key/value pair in the account's storage. This actually goes into the overlay, for committing
     /// to the trie later.
     void setStorage(u256 _p, u256 _v) { m_storageOverlay[_p] = _v; changed(); }
@@ -141,7 +154,9 @@ public:
 
     /// Set a key/value pair in the account's storage to a value that is already present inside the
     /// database.
-    void setStorageCache(u256 _p, u256 _v) const { const_cast<decltype(m_storageOverlay)&>(m_storageOverlay)[_p] = _v; }
+    void setStorageCache(u256 _p, u256 _v) const { m_storageOverlay[_p] = _v; }
+
+    void setStorageOriginal(u256 _p, u256 _v) const { m_storageOriginal[_p] = _v; }
 
     /// @returns the hash of the account's code.
     h256 codeHash() const { return m_codeHash; }
@@ -193,10 +208,13 @@ private:
     h256 m_codeHash = EmptySHA3;
 
     /// The map with is overlaid onto whatever storage is implied by the m_storageRoot in the trie.
-    std::unordered_map<u256, u256> m_storageOverlay;
+    mutable std::unordered_map<u256, u256> m_storageOverlay;
 
-    /// The associated code for this account. The SHA3 of this should be equal to m_codeHash unless m_codeHash
-    /// equals c_contractConceptionCodeHash.
+    /// The original values of the modified storage slots stored in m_storageOverlay.
+    mutable std::unordered_map<u256, u256> m_storageOriginal;
+
+    /// The associated code for this account. The SHA3 of this should be equal to m_codeHash unless
+    /// m_codeHash equals c_contractConceptionCodeHash.
     bytes m_codeCache;
 
     /// Value for m_codeHash when this account is having its code determined.
@@ -249,7 +267,7 @@ class PrecompiledContract;
 using PrecompiledContractMap = std::unordered_map<Address, PrecompiledContract>;
 
 AccountMap jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce = 0,
-    AccountMaskMap* o_mask = nullptr, PrecompiledContractMap* o_precompiled = nullptr,
-    const boost::filesystem::path& _configPath = {});
+	AccountMaskMap* o_mask = nullptr, PrecompiledContractMap* o_precompiled = nullptr,
+	const boost::filesystem::path& _configPath = {});
 }
 }

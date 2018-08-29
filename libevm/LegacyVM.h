@@ -134,6 +134,8 @@ private:
     void adjustStack(unsigned _removed, unsigned _added);
     uint64_t gasForMem(u512 _size);
     void updateSSGas();
+    void updateSSGasPreEIP1283(u256 const& _currentValue, u256 const& _newValue);
+    void updateSSGasEIP1283(u256 const& _currentValue, u256 const& _newValue);
     void updateIOGas();
     void updateGas();
     void updateMem(uint64_t _newMem);

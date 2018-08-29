@@ -33,6 +33,7 @@ struct EVMSchedule
     bool haveDelegateCall = true;
     bool eip150Mode = false;
     bool eip158Mode = false;
+    bool eip1283Mode = false;
     bool haveBitwiseShifting = false;
     bool haveRevert = false;
     bool haveReturnData = false;
@@ -47,7 +48,9 @@ struct EVMSchedule
     unsigned sloadGas = 50;
     unsigned sstoreSetGas = 20000;
     unsigned sstoreResetGas = 5000;
+    unsigned sstoreUnchangedGas = 200;
     unsigned sstoreRefundGas = 15000;
+    unsigned sstoreRefundNonzeroGas = 4800;
     unsigned jumpdestGas = 1;
     unsigned logGas = 375;
     unsigned logDataGas = 8;
@@ -135,6 +138,7 @@ static const EVMSchedule ConstantinopleSchedule = []
     schedule.haveCreate2 = true;
     schedule.haveBitwiseShifting = true;
     schedule.haveExtcodehash = true;
+    schedule.eip1283Mode = true;
     return schedule;
 }();
 

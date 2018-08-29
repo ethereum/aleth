@@ -60,6 +60,12 @@ public:
     /// Write a value in storage.
     void setStore(u256 _n, u256 _v) final;
 
+    /// Read original storage value (before modifications in the current transaction).
+    u256 originalStorageValue(u256 const& _key) final
+    {
+        return m_s.originalStorageValue(myAddress, _key);
+    }
+
     /// Read address's code.
     bytes const& codeAt(Address _a) final { return m_s.code(_a); }
 

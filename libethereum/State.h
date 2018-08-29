@@ -266,6 +266,11 @@ public:
     /// Set the value of a storage position of an account.
     void setStorage(Address const& _contract, u256 const& _location, u256 const& _value);
 
+    /// Get the original value of a storage position of an account (before modifications saved in
+    /// account cache).
+    /// @returns 0 if no account exists at that address.
+    u256 originalStorageValue(Address const& _contract, u256 const& _key) const;
+
     /// Clear the storage root hash of an account to the hash of the empty trie.
     void clearStorage(Address const& _contract);
 
