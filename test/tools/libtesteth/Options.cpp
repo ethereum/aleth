@@ -157,11 +157,20 @@ Options::Options(int argc, const char** argv)
             printVersion();
             exit(0);
         }
-        else if (arg == "--vm" || arg == "--evmc")
+        else if (arg == "--vm")
         {
             // Skip VM options because they are handled by vmProgramOptions().
             throwIfNoArgumentFollows();
             ++i;
+        }
+        else if (arg == "--evmc")
+        {
+            // Skip VM options because they are handled by vmProgramOptions().
+            throwIfNoArgumentFollows();
+
+            // --evmc is a multitoken option so skip all tokens.
+            while (i + 1 < argc && argv[i + 1][0] != '-')
+                ++i;
         }
         else if (arg == "--vmtrace")
         {
