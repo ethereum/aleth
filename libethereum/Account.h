@@ -22,13 +22,16 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#include <libdevcore/RLP.h>
-#include <libdevcore/TrieDB.h>
 #include <libdevcore/SHA3.h>
+#include <libdevcore/TrieCommon.h>
 #include <libethcore/Common.h>
+
+#include <boost/filesystem/path.hpp>
 
 namespace dev
 {
+class OverlayDB;
+
 namespace eth
 {
 
@@ -44,20 +47,6 @@ namespace eth
  * given as the Trie root to be looked up in the state database. Alterations beyond this base are specified
  * in the overlay, stored in this class and retrieved with storageOverlay(). setStorage allows the overlay
  * to be altered.
- *
- * The code handling explicitly supports a two-stage commit model needed for contract-creation. When creating
- * a contract (running the initialisation code), the code of the account is considered empty. The attribute
- * of emptiness can be retrieved with codeBearing(). After initialisation one must set the code accordingly;
- * the code of the Account can be set with setCode(). To validate a setCode() call, this class records the
- * state of being in contract-creation (and thus in a state where setCode may validly be called). It can be
- * determined through isFreshCode().
- *
- * The code can be retrieved through code(), and its hash through codeHash(). codeHash() is only valid when
- * the account is not in the contract-creation phase (i.e. when isFreshCode() returns false). This class
- * supports populating code on-demand from the state database. To determine if the code has been prepopulated
- * call codeCacheValid(). To populate the code, look it up with codeHash() and populate with noteCode().
- *
- * @todo: need to make a noteCodeCommitted().
  *
  * The constructor allows you to create an one of a number of "types" of accounts. The default constructor
  * makes a dead account (this is ignored by State when writing out the Trie). Another three allow a basic
@@ -132,15 +121,27 @@ public:
     /// the account.
     void setNonce(u256 const& _nonce) { m_nonce = _nonce; changed(); }
 
-
     /// @returns the root of the trie (whose nodes are stored in the state db externally to this class)
     /// which encodes the base-state of the account's storage (upon which the storage is overlaid).
     h256 baseRoot() const { assert(m_storageRoot); return m_storageRoot; }
 
+    /// @returns account's storage value corresponding to the @_key
+    /// taking into account overlayed modifications
+    u256 storageValue(u256 const& _key, OverlayDB const& _db) const
+    {
+        auto mit = m_storageOverlay.find(_key);
+        if (mit != m_storageOverlay.end())
+            return mit->second;
+
+        return originalStorageValue(_key, _db);
+    }
+
+    /// @returns account's original storage value corresponding to the @_key
+    /// not taking into account overlayed modifications
+    u256 originalStorageValue(u256 const& _key, OverlayDB const& _db) const;
+
     /// @returns the storage overlay as a simple hash map.
     std::unordered_map<u256, u256> const& storageOverlay() const { return m_storageOverlay; }
-
-    std::unordered_map<u256, u256> const& storageOriginal() const { return m_storageOriginal; }
 
     /// Set a key/value pair in the account's storage. This actually goes into the overlay, for committing
     /// to the trie later.
@@ -151,12 +152,6 @@ public:
 
     /// Set the storage root.  Used when clearStorage() is reverted.
     void setStorageRoot(h256 const& _root) { m_storageOverlay.clear(); m_storageRoot = _root; changed(); }
-
-    /// Set a key/value pair in the account's storage to a value that is already present inside the
-    /// database.
-    void setStorageCache(u256 _p, u256 _v) const { m_storageOverlay[_p] = _v; }
-
-    void setStorageOriginal(u256 _p, u256 _v) const { m_storageOriginal[_p] = _v; }
 
     /// @returns the hash of the account's code.
     h256 codeHash() const { return m_codeHash; }
@@ -210,7 +205,7 @@ private:
     /// The map with is overlaid onto whatever storage is implied by the m_storageRoot in the trie.
     mutable std::unordered_map<u256, u256> m_storageOverlay;
 
-    /// The original values of the modified storage slots stored in m_storageOverlay.
+    /// The cache of unmodifed storage items
     mutable std::unordered_map<u256, u256> m_storageOriginal;
 
     /// The associated code for this account. The SHA3 of this should be equal to m_codeHash unless

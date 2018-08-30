@@ -418,19 +418,7 @@ u256 State::getNonce(Address const& _addr) const
 u256 State::storage(Address const& _id, u256 const& _key) const
 {
     if (Account const* a = account(_id))
-    {
-        auto mit = a->storageOverlay().find(_key);
-        if (mit != a->storageOverlay().end())
-            return mit->second;
-
-        // Not in the storage cache - go to the DB.
-        SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), a->baseRoot());          // promise we won't change the overlay! :)
-        string payload = memdb.at(_key);
-        u256 ret = payload.size() ? RLP(payload).toInt<u256>() : 0;
-        a->setStorageCache(_key, ret);
-        a->setStorageOriginal(_key, ret);
-        return ret;
-    }
+        return a->storageValue(_key, m_db);
     else
         return 0;
 }
@@ -438,28 +426,13 @@ u256 State::storage(Address const& _id, u256 const& _key) const
 void State::setStorage(Address const& _contract, u256 const& _key, u256 const& _value)
 {
     m_changeLog.emplace_back(_contract, _key, storage(_contract, _key));
-    Account& a = m_cache[_contract];
-    a.setStorage(_key, _value);
-    if (a.storageOriginal().find(_key) == a.storageOriginal().end())
-    {
-        SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), a.baseRoot());
-        string payload = memdb.at(_key);
-        u256 original = payload.size() ? RLP(payload).toInt<u256>() : 0;
-        a.setStorageOriginal(_key, original);
-    }
+    m_cache[_contract].setStorage(_key, _value);
 }
 
 u256 State::originalStorageValue(Address const& _contract, u256 const& _key) const
 {
     if (Account const* a = account(_contract))
-    {
-        auto it = a->storageOriginal().find(_key);
-        if (it != a->storageOriginal().end())
-            return it->second;
-
-        assert(a->storageOverlay().find(_key) == a->storageOverlay().end());
-        return storage(_contract, _key);
-    }
+        return a->originalStorageValue(_key, m_db);
     else
         return 0;
 }
