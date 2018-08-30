@@ -59,6 +59,7 @@
 
 #include "MinerAux.h"
 #include "AccountManager.h"
+#include "utils.h"
 
 #include <aleth/buildinfo.h>
 
@@ -220,7 +221,7 @@ int main(int argc, char** argv)
 
     unsigned peers = 11;
     unsigned peerStretch = 7;
-    std::map<NodeID, pair<NodeIPEndpoint,bool>> preferredNodes;
+    utils::PeerNodeListMap preferredNodes;
     bool bootstrap = true;
     bool disableDiscovery = false;
     bool enableDiscovery = false;
@@ -357,7 +358,7 @@ int main(int argc, char** argv)
         "upnp", po::value<string>()->value_name("<on/off>"), "Use UPnP for NAT (default: on)");
 #endif
     addNetworkingOption("peerset", po::value<string>()->value_name("<list>"),
-        "Space delimited list of peers; element format: type:publickey@ipAddress[:port]\n        "
+        "Space delimited list of peers; element format: type:[enode://]publickey@ipAddress[:port]\n        "
         "Types:\n        default     Attempt connection when no other peers are available and "
         "pinning is disabled\n        required    Keep connected at all times\n");
     addNetworkingOption("no-discovery", "Disable node discovery; implies --no-bootstrap");
@@ -450,63 +451,24 @@ int main(int argc, char** argv)
         peers = vm["peers"].as<int>();
     if (vm.count("peer-stretch"))
         peerStretch = vm["peer-stretch"].as<int>();
+
     if (vm.count("peerset"))
     {
         string peerset = vm["peerset"].as<string>();
+
         if (peerset.empty())
         {
             cerr << "--peerset argument must not be empty";
             return -1;
         }
 
-        vector<string> each;
-        boost::split(each, peerset, boost::is_any_of("\t "));
-        for (auto const& p: each)
+        if (!utils::createPeerNodeList(peerset, preferredNodes))
         {
-            string type;
-            string pubk;
-            string hostIP;
-            unsigned short port = c_defaultListenPort;
-
-            // type:key@ip[:port]
-            vector<string> typeAndKeyAtHostAndPort;
-            boost::split(typeAndKeyAtHostAndPort, p, boost::is_any_of(":"));
-            if (typeAndKeyAtHostAndPort.size() < 2 || typeAndKeyAtHostAndPort.size() > 3)
-                continue;
-
-            type = typeAndKeyAtHostAndPort[0];
-            if (typeAndKeyAtHostAndPort.size() == 3)
-                port = (uint16_t)atoi(typeAndKeyAtHostAndPort[2].c_str());
-
-            vector<string> keyAndHost;
-            boost::split(keyAndHost, typeAndKeyAtHostAndPort[1], boost::is_any_of("@"));
-            if (keyAndHost.size() != 2)
-                continue;
-            pubk = keyAndHost[0];
-            if (pubk.size() != 128)
-                continue;
-            hostIP = keyAndHost[1];
-
-            // todo: use Network::resolveHost()
-            if (hostIP.size() < 4 /* g.it */)
-                continue;
-
-            bool required = type == "required";
-            if (!required && type != "default")
-                continue;
-
-            Public publicKey(fromHex(pubk));
-            try
-            {
-                preferredNodes[publicKey] = make_pair(NodeIPEndpoint(bi::address::from_string(hostIP), port, port), required);
-            }
-            catch (...)
-            {
-                cerr << "Unrecognized peerset: " << peerset << "\n";
-                return -1;
-            }
+            cerr << "Unrecognized peerset: " << peerset << "\n";
+            return -1;
         }
     }
+
     if (vm.count("mode"))
     {
         string m = vm["mode"].as<string>();
