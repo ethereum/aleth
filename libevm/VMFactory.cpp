@@ -167,6 +167,7 @@ po::options_description vmProgramOptions(unsigned _lineLength)
 
     add(c_evmcPrefix,
         po::value<std::vector<std::string>>()
+            ->multitoken()
             ->value_name("<option>=<value>")
             ->notifier(parseEvmcOptions),
         "EVMC option\n");
