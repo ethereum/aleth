@@ -317,6 +317,91 @@ public:
     {}
 };
 
+class SstoreTestFixture : public TestOutputHelperFixture
+{
+public:
+    explicit SstoreTestFixture(VMFace* _vm) : vm{_vm}
+    {
+        state.addBalance(from, 1 * ether);
+        state.addBalance(to, 1 * ether);
+    }
+
+    void testEip1283Case1() { testGasConsumed("0x60006000556000600055", 0, 412); }
+
+    void testEip1283Case2() { testGasConsumed("0x60006000556001600055", 0, 20212); }
+
+    void testEip1283Case3() { testGasConsumed("0x60016000556000600055", 0, 20212); }
+
+    void testEip1283Case4() { testGasConsumed("0x60016000556002600055", 0, 20212); }
+
+    void testEip1283Case5() { testGasConsumed("0x60016000556001600055", 0, 20212); }
+
+    void testEip1283Case6() { testGasConsumed("0x60006000556000600055", 1, 5212); }
+
+    void testEip1283Case7() { testGasConsumed("0x60006000556001600055", 1, 5212); }
+
+    void testEip1283Case8() { testGasConsumed("0x60006000556002600055", 1, 5212); }
+
+    void testEip1283Case9() { testGasConsumed("0x60026000556000600055", 1, 5212); }
+
+    void testEip1283Case10() { testGasConsumed("0x60026000556003600055", 1, 5212); }
+
+    void testEip1283Case11() { testGasConsumed("0x60026000556001600055", 1, 5212); }
+
+    void testEip1283Case12() { testGasConsumed("0x60026000556002600055", 1, 5212); }
+
+    void testEip1283Case13() { testGasConsumed("0x60016000556000600055", 1, 5212); }
+
+    void testEip1283Case14() { testGasConsumed("0x60016000556002600055", 1, 5212); }
+
+    void testEip1283Case15() { testGasConsumed("0x60016000556001600055", 1, 412); }
+
+    void testEip1283Case16() { testGasConsumed("0x600160005560006000556001600055", 0, 40218); }
+
+    void testEip1283Case17() { testGasConsumed("0x600060005560016000556000600055", 1, 10218); }
+
+    void testGasConsumed(
+        std::string const& _codeStr, u256 const& _originalValue, u256 const& _expectedGasConsumed)
+    {
+        state.setStorage(to, 0, _originalValue);
+        state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
+
+        bytes const code = fromHex(_codeStr);
+        ExtVM extVm(state, envInfo, *se, to, from, from, value, gasPrice, inputData, ref(code),
+            sha3(code), depth, isCreate, staticCall);
+
+        u256 gasBefore = gas;
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        BOOST_REQUIRE_EQUAL(gasBefore - gas, _expectedGasConsumed);
+    }
+
+
+    BlockHeader blockHeader{initBlockHeader()};
+    LastBlockHashes lastBlockHashes;
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
+    Address from{KeyPair::create().address()};
+    Address to{KeyPair::create().address()};
+    State state{0};
+    std::unique_ptr<SealEngineFace> se{
+        ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+
+    u256 value = 0;
+    u256 gasPrice = 1;
+    int depth = 0;
+    bool isCreate = false;
+    bool staticCall = false;
+    u256 gas = 1000000;
+    bytesConstRef inputData;
+
+    std::unique_ptr<VMFace> vm;
+};
+
+class LegacyVMSstoreTestFixture : public SstoreTestFixture
+{
+public:
+    LegacyVMSstoreTestFixture() : SstoreTestFixture{new LegacyVM} {}
+};
 
 }  // namespace
 
@@ -390,6 +475,95 @@ BOOST_AUTO_TEST_CASE(LegacyVMExtCodeHashOfPrecomileNonZeroBalance)
 BOOST_AUTO_TEST_CASE(LegacyVMExtcodehashIgnoresHigh12Bytes)
 {
     testExtcodehashIgnoresHigh12Bytes();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(LegacyVMSstoreSuite, LegacyVMSstoreTestFixture)
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case1)
+{
+    testEip1283Case1();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case2)
+{
+    testEip1283Case2();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case3)
+{
+    testEip1283Case3();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case4)
+{
+    testEip1283Case4();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case5)
+{
+    testEip1283Case5();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case6)
+{
+    testEip1283Case6();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case7)
+{
+    testEip1283Case7();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case8)
+{
+    testEip1283Case8();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case9)
+{
+    testEip1283Case9();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case10)
+{
+    testEip1283Case10();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case11)
+{
+    testEip1283Case11();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case12)
+{
+    testEip1283Case12();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case13)
+{
+    testEip1283Case13();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case14)
+{
+    testEip1283Case14();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case15)
+{
+    testEip1283Case15();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case16)
+{
+    testEip1283Case16();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case17)
+{
+    testEip1283Case17();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
