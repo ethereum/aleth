@@ -107,6 +107,22 @@ public:
         BOOST_REQUIRE_THROW(vm->exec(gas, extVm, OnOpFunc{}), DisallowedStateChange);
     }
 
+    void testCreate2collisionWithNonEmptyStorage()
+    {
+        // Theoretical edge-case for an account with empty code and zero nonce and balance and
+        // non-empty storage. This account should be considered empty and CREATE2 over should be
+        // able to overwrite it and clear storage.
+        state.setStorage(expectedAddress, 1, 1);
+        state.commit(State::CommitBehaviour::KeepEmptyAccounts);
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
+            ref(code), sha3(code), depth, isCreate, staticCall);
+
+        vm->exec(gas, extVm, OnOpFunc{});
+        BOOST_REQUIRE(state.addressHasCode(expectedAddress));
+        BOOST_REQUIRE_EQUAL(state.storage(expectedAddress, 1), 0);
+    }
+
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
     EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
@@ -433,6 +449,11 @@ BOOST_AUTO_TEST_CASE(LegacyVMCreate2isForbiddenInStaticCall)
     testCreate2isForbiddenInStaticCall();
 }
 
+BOOST_AUTO_TEST_CASE(LegacyVMCreate2collisionWithNonEmptyStorage)
+{
+    testCreate2collisionWithNonEmptyStorage();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMExtcodehashSuite, LegacyVMExtcodehashTestFixture)
@@ -595,6 +616,11 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterCreate2doesntChangeContractIfAddressExists)
 BOOST_AUTO_TEST_CASE(AlethInterpreterCreate2isForbiddenInStaticCall)
 {
     testCreate2isForbiddenInStaticCall();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterCreate2collisionWithNonEmptyStorage)
+{
+    testCreate2collisionWithNonEmptyStorage();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
