@@ -1355,23 +1355,42 @@ void VM::interpretCases()
 
             evmc_uint256be const key = toEvmC(m_SP[0]);
             evmc_uint256be const value = toEvmC(m_SP[1]);
-            auto const status =
-                m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
 
-            if (status == EVMC_STORAGE_ADDED)
-                m_runGas = VMSchedule::sstoreSetGas;
-            else if (status == EVMC_STORAGE_MODIFIED || status == EVMC_STORAGE_DELETED)
-                m_runGas = VMSchedule::sstoreResetGas;
-            else if (status == EVMC_STORAGE_UNCHANGED && m_rev < EVMC_CONSTANTINOPLE)
-                m_runGas = VMSchedule::sstoreResetGas;
+            if (m_rev < EVMC_CONSTANTINOPLE)
+            {
+                static_assert(VMSchedule::sstoreResetGas <= VMSchedule::sstoreSetGas,
+                    "Wrong SSTORE gas costs");
+                m_runGas = VMSchedule::sstoreResetGas;  // Charge the modification cost up front.
+                updateIOGas();
+
+                auto const status =
+                    m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
+
+                if (status == EVMC_STORAGE_ADDED)
+                {
+                    // Charge additional amount for added storage item.
+                    m_runGas = VMSchedule::sstoreSetGas - VMSchedule::sstoreResetGas;
+                    updateIOGas();
+                }
+            }
             else
             {
-                assert(status == EVMC_STORAGE_UNCHANGED || status == EVMC_STORAGE_MODIFIED_DIRTY);
-                assert(m_rev >= EVMC_CONSTANTINOPLE);
-                m_runGas = VMSchedule::sstoreUnchangedGas;
-            }
+                auto const status =
+                    m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
 
-            updateIOGas();
+                if (status == EVMC_STORAGE_ADDED)
+                    m_runGas = VMSchedule::sstoreSetGas;
+                else if (status == EVMC_STORAGE_MODIFIED || status == EVMC_STORAGE_DELETED)
+                    m_runGas = VMSchedule::sstoreResetGas;
+                else
+                {
+                    assert(
+                        status == EVMC_STORAGE_UNCHANGED || status == EVMC_STORAGE_MODIFIED_DIRTY);
+                    m_runGas = VMSchedule::sstoreUnchangedGas;
+                }
+
+                updateIOGas();
+            }
         }
         NEXT
 
