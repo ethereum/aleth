@@ -426,6 +426,12 @@ public:
     LegacyVMSstoreTestFixture() : SstoreTestFixture{new LegacyVM} {}
 };
 
+class AlethInterpreterSstoreTestFixture : public SstoreTestFixture
+{
+public:
+    AlethInterpreterSstoreTestFixture() : SstoreTestFixture{new EVMC{evmc_create_interpreter()}} {}
+};
+
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -667,6 +673,95 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashOfPrecomileNonZeroBalance)
 BOOST_AUTO_TEST_CASE(AlethInterpreterExtCodeHashIgnoresHigh12Bytes)
 {
     testExtcodehashIgnoresHigh12Bytes();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSstoreSuite, AlethInterpreterSstoreTestFixture)
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case1)
+{
+    testEip1283Case1();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case2)
+{
+    testEip1283Case2();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case3)
+{
+    testEip1283Case3();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case4)
+{
+    testEip1283Case4();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case5)
+{
+    testEip1283Case5();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case6)
+{
+    testEip1283Case6();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case7)
+{
+    testEip1283Case7();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case8)
+{
+    testEip1283Case8();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case9)
+{
+    testEip1283Case9();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case10)
+{
+    testEip1283Case10();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case11)
+{
+    testEip1283Case11();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case12)
+{
+    testEip1283Case12();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case13)
+{
+    testEip1283Case13();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case14)
+{
+    testEip1283Case14();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case15)
+{
+    testEip1283Case15();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case16)
+{
+    testEip1283Case16();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case17)
+{
+    testEip1283Case17();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
