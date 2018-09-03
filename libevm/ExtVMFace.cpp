@@ -58,23 +58,49 @@ evmc_storage_status setStorage(evmc_context* _context, evmc_address const* _addr
     (void)_addr;
     auto& env = static_cast<ExtVMFace&>(*_context);
     assert(fromEvmC(*_addr) == env.myAddress);
-    u256 index = fromEvmC(*_key);
-    u256 value = fromEvmC(*_value);
-    u256 oldValue = env.store(index);
+    u256 const index = fromEvmC(*_key);
+    u256 const newValue = fromEvmC(*_value);
+    u256 const currentValue = env.store(index);
 
-    if (value == oldValue)
+    if (newValue == currentValue)
         return EVMC_STORAGE_UNCHANGED;
 
+    EVMSchedule const& schedule = env.evmSchedule();
     auto status = EVMC_STORAGE_MODIFIED;
-    if (oldValue == 0)
-        status = EVMC_STORAGE_ADDED;
-    else if (value == 0)
+    u256 const originalValue = env.originalStorageValue(index);
+    if (originalValue == currentValue || !schedule.eip1283Mode)
     {
-        status = EVMC_STORAGE_DELETED;
-        env.sub.refunds += env.evmSchedule().sstoreRefundGas;
+        if (currentValue == 0)
+            status = EVMC_STORAGE_ADDED;
+        else if (newValue == 0)
+        {
+            status = EVMC_STORAGE_DELETED;
+            env.sub.refunds += schedule.sstoreRefundGas;
+        }
+    }
+    else
+    {
+        status = EVMC_STORAGE_MODIFIED_DIRTY;
+        if (originalValue != 0)
+        {
+            if (currentValue == 0)
+            {
+                assert(env.sub.refunds >= schedule.sstoreRefundGas);
+                env.sub.refunds -= schedule.sstoreRefundGas;
+            }
+            if (newValue == 0)
+                env.sub.refunds += schedule.sstoreRefundGas;
+        }
+        if (originalValue == newValue)
+        {
+            if (originalValue == 0)
+                env.sub.refunds += schedule.sstoreRefundGas + schedule.sstoreRefundNonzeroGas;
+            else
+                env.sub.refunds += schedule.sstoreRefundNonzeroGas;
+        }
     }
 
-    env.setStore(index, value);  // Interface uses native endianness
+    env.setStore(index, newValue);  // Interface uses native endianness
 
     return status;
 }
