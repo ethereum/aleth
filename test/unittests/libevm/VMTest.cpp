@@ -342,42 +342,48 @@ public:
         state.addBalance(to, 1 * ether);
     }
 
-    void testEip1283Case1() { testGasConsumed("0x60006000556000600055", 0, 412); }
+    void testEip1283Case1() { testGasConsumed("0x60006000556000600055", 0, 412, 0); }
 
-    void testEip1283Case2() { testGasConsumed("0x60006000556001600055", 0, 20212); }
+    void testEip1283Case2() { testGasConsumed("0x60006000556001600055", 0, 20212, 0); }
 
-    void testEip1283Case3() { testGasConsumed("0x60016000556000600055", 0, 20212); }
+    void testEip1283Case3() { testGasConsumed("0x60016000556000600055", 0, 20212, 19800); }
 
-    void testEip1283Case4() { testGasConsumed("0x60016000556002600055", 0, 20212); }
+    void testEip1283Case4() { testGasConsumed("0x60016000556002600055", 0, 20212, 0); }
 
-    void testEip1283Case5() { testGasConsumed("0x60016000556001600055", 0, 20212); }
+    void testEip1283Case5() { testGasConsumed("0x60016000556001600055", 0, 20212, 0); }
 
-    void testEip1283Case6() { testGasConsumed("0x60006000556000600055", 1, 5212); }
+    void testEip1283Case6() { testGasConsumed("0x60006000556000600055", 1, 5212, 15000); }
 
-    void testEip1283Case7() { testGasConsumed("0x60006000556001600055", 1, 5212); }
+    void testEip1283Case7() { testGasConsumed("0x60006000556001600055", 1, 5212, 4800); }
 
-    void testEip1283Case8() { testGasConsumed("0x60006000556002600055", 1, 5212); }
+    void testEip1283Case8() { testGasConsumed("0x60006000556002600055", 1, 5212, 0); }
 
-    void testEip1283Case9() { testGasConsumed("0x60026000556000600055", 1, 5212); }
+    void testEip1283Case9() { testGasConsumed("0x60026000556000600055", 1, 5212, 15000); }
 
-    void testEip1283Case10() { testGasConsumed("0x60026000556003600055", 1, 5212); }
+    void testEip1283Case10() { testGasConsumed("0x60026000556003600055", 1, 5212, 0); }
 
-    void testEip1283Case11() { testGasConsumed("0x60026000556001600055", 1, 5212); }
+    void testEip1283Case11() { testGasConsumed("0x60026000556001600055", 1, 5212, 4800); }
 
-    void testEip1283Case12() { testGasConsumed("0x60026000556002600055", 1, 5212); }
+    void testEip1283Case12() { testGasConsumed("0x60026000556002600055", 1, 5212, 0); }
 
-    void testEip1283Case13() { testGasConsumed("0x60016000556000600055", 1, 5212); }
+    void testEip1283Case13() { testGasConsumed("0x60016000556000600055", 1, 5212, 15000); }
 
-    void testEip1283Case14() { testGasConsumed("0x60016000556002600055", 1, 5212); }
+    void testEip1283Case14() { testGasConsumed("0x60016000556002600055", 1, 5212, 0); }
 
-    void testEip1283Case15() { testGasConsumed("0x60016000556001600055", 1, 412); }
+    void testEip1283Case15() { testGasConsumed("0x60016000556001600055", 1, 412, 0); }
 
-    void testEip1283Case16() { testGasConsumed("0x600160005560006000556001600055", 0, 40218); }
+    void testEip1283Case16()
+    {
+        testGasConsumed("0x600160005560006000556001600055", 0, 40218, 19800);
+    }
 
-    void testEip1283Case17() { testGasConsumed("0x600060005560016000556000600055", 1, 10218); }
+    void testEip1283Case17()
+    {
+        testGasConsumed("0x600060005560016000556000600055", 1, 10218, 19800);
+    }
 
-    void testGasConsumed(
-        std::string const& _codeStr, u256 const& _originalValue, u256 const& _expectedGasConsumed)
+    void testGasConsumed(std::string const& _codeStr, u256 const& _originalValue,
+        u256 const& _expectedGasConsumed, u256 const& _expectedRefund)
     {
         state.setStorage(to, 0, _originalValue);
         state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
@@ -389,7 +395,8 @@ public:
         u256 gasBefore = gas;
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
-        BOOST_REQUIRE_EQUAL(gasBefore - gas, _expectedGasConsumed);
+        BOOST_CHECK_EQUAL(gasBefore - gas, _expectedGasConsumed);
+        BOOST_CHECK_EQUAL(extVm.sub.refunds, _expectedRefund);
     }
 
 
