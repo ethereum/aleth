@@ -148,10 +148,22 @@ public:
     void setStorage(u256 _p, u256 _v) { m_storageOverlay[_p] = _v; changed(); }
 
     /// Empty the storage.  Used when a contract is overwritten.
-    void clearStorage() { m_storageOverlay.clear(); m_storageRoot = EmptyTrie; changed(); }
+    void clearStorage()
+    {
+        m_storageOverlay.clear();
+        m_storageOriginal.clear();
+        m_storageRoot = EmptyTrie;
+        changed();
+    }
 
     /// Set the storage root.  Used when clearStorage() is reverted.
-    void setStorageRoot(h256 const& _root) { m_storageOverlay.clear(); m_storageRoot = _root; changed(); }
+    void setStorageRoot(h256 const& _root)
+    {
+        m_storageOverlay.clear();
+        m_storageOriginal.clear();
+        m_storageRoot = _root;
+        changed();
+    }
 
     /// @returns the hash of the account's code.
     h256 codeHash() const { return m_codeHash; }
@@ -161,11 +173,8 @@ public:
     /// Sets the code of the account. Used by "create" messages.
     void setCode(bytes&& _code);
 
-    /// Reset the code set by previous CREATE message.
-    void resetCode() { m_codeCache.clear(); m_hasNewCode = false; m_codeHash = EmptySHA3; }
-
-    /// Specify to the object what the actual code is for the account. @a _code must have a SHA3 equal to
-    /// codeHash() and must only be called when isFreshCode() returns false.
+    /// Specify to the object what the actual code is for the account. @a _code must have a SHA3
+    /// equal to codeHash().
     void noteCode(bytesConstRef _code) { assert(sha3(_code) == m_codeHash); m_codeCache = _code.toBytes(); }
 
     /// @returns the account's code.
