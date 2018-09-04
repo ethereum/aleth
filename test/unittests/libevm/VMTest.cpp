@@ -112,6 +112,7 @@ public:
         // Theoretical edge-case for an account with empty code and zero nonce and balance and
         // non-empty storage. This account should be considered empty and CREATE2 over should be
         // able to overwrite it and clear storage.
+        state.createContract(expectedAddress);
         state.setStorage(expectedAddress, 1, 1);
         state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 
@@ -121,7 +122,28 @@ public:
         vm->exec(gas, extVm, OnOpFunc{});
         BOOST_REQUIRE(state.addressHasCode(expectedAddress));
         BOOST_REQUIRE_EQUAL(state.storage(expectedAddress, 1), 0);
+        BOOST_REQUIRE_EQUAL(state.getNonce(expectedAddress), 1);
     }
+
+    void testCreate2collisionWithNonEmptyStorageEmptyInitCode()
+    {
+        // Similar to previous case but with empty init code
+        inputData.clear();
+        expectedAddress = right160(sha3(
+            fromHex("ff") + address.asBytes() + toBigEndian(0x123_cppui256) + sha3(inputData)));
+
+        state.createContract(expectedAddress);
+        state.setStorage(expectedAddress, 1, 1);
+        state.commit(State::CommitBehaviour::KeepEmptyAccounts);
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
+            ref(code), sha3(code), depth, isCreate, staticCall);
+
+        vm->exec(gas, extVm, OnOpFunc{});
+        BOOST_REQUIRE_EQUAL(state.storage(expectedAddress, 1), 0);
+        BOOST_REQUIRE_EQUAL(state.getNonce(expectedAddress), 1);
+    }
+
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
@@ -148,8 +170,8 @@ public:
     // pop
     bytes code = fromHex("368060006000376101238160006000f55050");
 
-    Address expectedAddress =
-        right160(sha3(fromHex("ff") +address.asBytes() + toBigEndian(0x123_cppui256) + sha3(inputData)));
+    Address expectedAddress = right160(
+        sha3(fromHex("ff") + address.asBytes() + toBigEndian(0x123_cppui256) + sha3(inputData)));
 
     std::unique_ptr<VMFace> vm;
 };
@@ -461,6 +483,11 @@ BOOST_AUTO_TEST_CASE(LegacyVMCreate2collisionWithNonEmptyStorage)
     testCreate2collisionWithNonEmptyStorage();
 }
 
+BOOST_AUTO_TEST_CASE(LegacyVMCreate2collisionWithNonEmptyStorageEmptyInitCode)
+{
+    testCreate2collisionWithNonEmptyStorageEmptyInitCode();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMExtcodehashSuite, LegacyVMExtcodehashTestFixture)
@@ -628,6 +655,11 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterCreate2isForbiddenInStaticCall)
 BOOST_AUTO_TEST_CASE(AlethInterpreterCreate2collisionWithNonEmptyStorage)
 {
     testCreate2collisionWithNonEmptyStorage();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterCreate2collisionWithNonEmptyStorageEmptyInitCode)
+{
+    testCreate2collisionWithNonEmptyStorageEmptyInitCode();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
