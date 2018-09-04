@@ -208,6 +208,7 @@ BOOST_AUTO_TEST_CASE(stBugs){}
 
 //Constantinople Tests
 BOOST_AUTO_TEST_CASE(stShift){}
+BOOST_AUTO_TEST_CASE(stCreate2) {}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}

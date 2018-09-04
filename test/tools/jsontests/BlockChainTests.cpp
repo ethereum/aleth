@@ -1091,6 +1091,7 @@ BOOST_AUTO_TEST_CASE(stReturnDataTest){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge){}
 BOOST_AUTO_TEST_CASE(stZeroKnowledge2){}
 BOOST_AUTO_TEST_CASE(stBugs){}
+BOOST_AUTO_TEST_CASE(stCreate2) {}
 
 //Constantinople Tests
 BOOST_AUTO_TEST_CASE(stShift){}
