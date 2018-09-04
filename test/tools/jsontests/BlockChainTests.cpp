@@ -67,8 +67,20 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
         json_spirit::mObject const& inputTest = i.second.get_obj();
 
         //Select test by name if --singletest is set and not filling state tests as blockchain
-        if (!Options::get().fillchain && !TestOutputHelper::get().checkTest(testname))
-            continue;
+        if (!Options::get().fillchain)
+        {
+            if (test::Options::get().singleTest)
+                BOOST_REQUIRE_MESSAGE(!test::Options::get().singleTestNet.empty(),
+                    "Selecting a single Blockchain test requires --singlenet argument!");
+
+            // Select BC Test by singleTest + singleTestNet
+            if (test::Options::get().singleTest &&
+                test::Options::get().singleTestName + "_" + test::Options::get().singleTestNet !=
+                    testname)
+                continue;
+
+            TestOutputHelper::get().setCurrentTestName(testname);
+        }
 
         BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
                               "\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::get().testFile().string() +
