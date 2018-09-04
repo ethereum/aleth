@@ -79,6 +79,14 @@ void ImportTest::makeBlockchainTestFromStateTest(set<eth::Network> const& _netwo
         genesisObj["timestamp"] = toCompactHexPrefixed(m_envInfo->timestamp() - 50);
         testObj["genesisBlockHeader"] = genesisObj;
         testObj["pre"] = fillJsonWithState(m_statePre);
+        if (m_testInputObject.count("_info") &&
+            m_testInputObject.at("_info").get_obj().count("comment"))
+        {
+            json_spirit::mObject testInfoObj;
+            testInfoObj["comment"] =
+                m_testInputObject.at("_info").get_obj().at("comment").get_str();
+            testObj["_info"] = testInfoObj;
+        }
 
         // generate expect sections for this transaction
         BOOST_REQUIRE(m_testInputObject.count("expect") > 0);
