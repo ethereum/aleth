@@ -407,6 +407,8 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
         newNonce += 1;
     m_s.setNonce(m_newAddress, newNonce);
 
+    m_s.clearStorage(m_newAddress);
+
     // Schedule _init execution if not empty.
     if (!_init.empty())
         m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin,
@@ -449,7 +451,6 @@ bool Executive::go(OnOpFunc const& _onOp)
             auto vm = VMFactory::create();
             if (m_isCreation)
             {
-                m_s.clearStorage(m_ext->myAddress);
                 auto out = vm->exec(m_gas, *m_ext, _onOp);
                 if (m_res)
                 {
