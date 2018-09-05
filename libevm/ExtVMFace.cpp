@@ -80,7 +80,7 @@ evmc_storage_status setStorage(evmc_context* _context, evmc_address const* _addr
     }
     else
     {
-        status = EVMC_STORAGE_MODIFIED_DIRTY;
+        status = EVMC_STORAGE_MODIFIED_AGAIN;
         if (originalValue != 0)
         {
             if (currentValue == 0)
@@ -188,10 +188,16 @@ evmc_tx_context getTxContext(evmc_context* _context) noexcept
     return result;
 }
 
-void getBlockHash(evmc_uint256be* o_hash, evmc_context* _envPtr, int64_t _number)
+int getBlockHash(evmc_uint256be* o_hash, evmc_context* _envPtr, int64_t _number)
 {
     auto& env = static_cast<ExtVMFace&>(*_envPtr);
-    *o_hash = toEvmC(env.blockHash(_number));
+    if (h256 const hash = env.blockHash(_number))
+    {
+        *o_hash = toEvmC(hash);
+        return 1;
+    }
+    else
+        return 0;
 }
 
 evmc_result create(ExtVMFace& _env, evmc_message const* _msg) noexcept
