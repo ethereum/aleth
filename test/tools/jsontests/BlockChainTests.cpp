@@ -21,13 +21,14 @@
  * Simulating block import checking the post state.
  */
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
-#include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/jsontests/BlockChainTests.h>
+#include <test/tools/libtesteth/TestHelper.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/test/unit_test.hpp>
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -65,10 +66,7 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
     {
         string const& testname = i.first;
         json_spirit::mObject const& inputTest = i.second.get_obj();
-
-        //Select test by name if --singletest is set and not filling state tests as blockchain
-        if (!Options::get().fillchain && !TestOutputHelper::get().checkTest(testname))
-            continue;
+        TestOutputHelper::get().setCurrentTestName(testname);
 
         BOOST_REQUIRE_MESSAGE(inputTest.count("genesisBlockHeader"),
                               "\"genesisBlockHeader\" field is not found. filename: " + TestOutputHelper::get().testFile().string() +
@@ -120,6 +118,9 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
                 if (!found)
                     jObjOutput.erase(jObjOutput.find("expect"));
 
+                if (Options::get().verbosity > 1)
+                    std::cout << "Filling " << newtestname << std::endl;
+
                 TestOutputHelper::get().setCurrentTestName(newtestname);
                 jObjOutput = fillBCTest(jObjOutput);
                 jObjOutput["network"] = test::netIdToString(network);
@@ -130,6 +131,21 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
         }
         else
         {
+            // Select test by name if --singletest is set and not filling state tests as blockchain
+            if (!Options::get().fillchain)
+            {
+                Options const& opt = test::Options::get();
+
+                // Select BC Test by singleTest
+                if (opt.singleTest && !boost::algorithm::starts_with(testname, opt.singleTestName))
+                    continue;
+
+                // Select BC Test by singleNet
+                if (!opt.singleTestNet.empty() &&
+                    !boost::algorithm::ends_with(testname, opt.singleTestNet))
+                    continue;
+            }
+
             BOOST_REQUIRE_MESSAGE(inputTest.count("network"),
                                   "\"network\" field is not found. filename: " + TestOutputHelper::get().testFile().string() +
                                   " testname: " + TestOutputHelper::get().testName()
@@ -137,6 +153,8 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
             dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
             if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
                 continue;
+            if (Options::get().verbosity > 1)
+                std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
             testBCTest(inputTest);
         }
     }
