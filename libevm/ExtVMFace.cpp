@@ -209,14 +209,9 @@ evmc_result create(ExtVMFace& _env, evmc_message const* _msg) noexcept
     evmc_result evmcResult = {};
     evmcResult.status_code = result.status;
     evmcResult.gas_left = static_cast<int64_t>(gas);
-    evmcResult.release = nullptr;
 
     if (result.status == EVMC_SUCCESS)
-    {
         evmcResult.create_address = toEvmC(result.address);
-        evmcResult.output_data = nullptr;
-        evmcResult.output_size = 0;
-    }
     else
     {
         // Pass the output to the EVM without a copy. The EVM will delete it
