@@ -188,8 +188,16 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
     bigint o = target;
     unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number() + 1);
 
-    // EIP-649 modifies exponentialIceAgeBlockNumber
-    if (_bi.number() >= chainParams().byzantiumForkBlock)
+    // EIP-1234 Constantinople Ice Age delay
+    if (_bi.number() >= chainParams().constantinopleForkBlock)
+    {
+        if (exponentialIceAgeBlockNumber >= 5000000)
+            exponentialIceAgeBlockNumber -= 5000000;
+        else
+            exponentialIceAgeBlockNumber = 0;
+    }
+    // EIP-649 Byzantium Ice Age delay
+    else if (_bi.number() >= chainParams().byzantiumForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 3000000)
             exponentialIceAgeBlockNumber -= 3000000;

@@ -106,6 +106,52 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
     BOOST_CHECK_EQUAL(ethash.calculateDifficulty(header, parentHeader), 951688);
 }
 
+class IceAgeDelayFixture: public TestOutputHelperFixture
+{
+public:
+    IceAgeDelayFixture()
+    {
+        params.homesteadForkBlock = 0;
+        params.byzantiumForkBlock = 4000000;
+        params.constantinopleForkBlock = 6000000;
+
+        ethash.setChainParams(params);
+    }
+
+    u256 calculateDifficulty(int64_t _blockNumber)
+    {
+        BlockHeader parentHeader;
+        parentHeader.clear();
+        parentHeader.setNumber(_blockNumber - 1);
+        parentHeader.setTimestamp(100);
+        parentHeader.setDifficulty(1000000);
+
+        BlockHeader header;
+        header.clear();
+        header.setNumber(_blockNumber);
+        header.setTimestamp(1100);
+
+        return ethash.calculateDifficulty(header, parentHeader);
+    }
+
+    ChainOperationParams params;
+    Ethash ethash;
+};
+
+BOOST_FIXTURE_TEST_SUITE(IceAgeDelayTests, IceAgeDelayFixture)
+
+BOOST_AUTO_TEST_CASE(ByzantiumIceAgeDelay)
+{
+    BOOST_CHECK_EQUAL(calculateDifficulty(4500000), calculateDifficulty(1500000));
+}
+
+BOOST_AUTO_TEST_CASE(ConstantinopleIceAgeDelay)
+{
+    BOOST_CHECK_EQUAL(calculateDifficulty(6500000), calculateDifficulty(1500000));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_CASE(epochSeed)
 {
     BlockHeader header;
