@@ -46,6 +46,7 @@ struct VMSchedule
     static constexpr int64_t sloadGas = 50;
     static constexpr int64_t sstoreSetGas = 20000;
     static constexpr int64_t sstoreResetGas = 5000;
+    static constexpr int64_t sstoreUnchangedGas = 200;
     static constexpr int64_t jumpdestGas = 1;
     static constexpr int64_t logGas = 375;
     static constexpr int64_t logDataGas = 8;
