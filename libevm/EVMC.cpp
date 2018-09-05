@@ -28,9 +28,9 @@ EVM::Result EVM::execute(ExtVMFace& _ext, int64_t gas)
     evmc_call_kind kind = _ext.isCreate ? EVMC_CREATE : EVMC_CALL;
     uint32_t flags = _ext.staticCall ? EVMC_STATIC : 0;
     assert(flags != EVMC_STATIC || kind == EVMC_CALL);  // STATIC implies a CALL.
-    evmc_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller), toEvmC(_ext.value),
-        _ext.data.data(), _ext.data.size(), toEvmC(_ext.codeHash), toEvmC(0x0_cppui256), gas,
-        static_cast<int32_t>(_ext.depth), kind, flags};
+    evmc_message msg = {kind, flags, static_cast<int32_t>(_ext.depth), gas, toEvmC(_ext.myAddress),
+        toEvmC(_ext.caller), _ext.data.data(), _ext.data.size(), toEvmC(_ext.value),
+        toEvmC(0x0_cppui256)};
     return EVM::Result{
         m_instance->execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
 }

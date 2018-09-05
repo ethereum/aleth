@@ -1366,7 +1366,7 @@ void VM::interpretCases()
                 m_runGas = VMSchedule::sstoreResetGas;
             else
             {
-                assert(status == EVMC_STORAGE_UNCHANGED || status == EVMC_STORAGE_MODIFIED_DIRTY);
+                assert(status == EVMC_STORAGE_UNCHANGED || status == EVMC_STORAGE_MODIFIED_AGAIN);
                 assert(m_rev >= EVMC_CONSTANTINOPLE);
                 m_runGas = VMSchedule::sstoreUnchangedGas;
             }
