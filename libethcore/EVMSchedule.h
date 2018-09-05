@@ -139,6 +139,7 @@ static const EVMSchedule ConstantinopleSchedule = []
     schedule.haveBitwiseShifting = true;
     schedule.haveExtcodehash = true;
     schedule.eip1283Mode = true;
+    schedule.blockRewardOverwrite = {2 * ether};
     return schedule;
 }();
 
