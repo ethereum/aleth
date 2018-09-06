@@ -28,6 +28,7 @@
 #include <libdevcore/SHA3.h>
 
 #include <evmc/evmc.h>
+#include <evmc/helpers.h>
 
 #include <boost/optional.hpp>
 #include <functional>
