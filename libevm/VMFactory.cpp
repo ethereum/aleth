@@ -195,6 +195,7 @@ std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
     case VMKind::Interpreter:
         return std::unique_ptr<VMFace>(new EVMC{evmc_create_interpreter()});
     case VMKind::DLL:
+        assert(g_evmcCreateFn != nullptr);
         return std::unique_ptr<VMFace>(new EVMC{g_evmcCreateFn()});
     case VMKind::Legacy:
     default:
