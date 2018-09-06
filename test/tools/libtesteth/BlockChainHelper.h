@@ -195,5 +195,21 @@ public:
 
     NetworkSelector networkSelector;
 };
+
+class ByzantiumTestFixture : public TestOutputHelperFixture
+{
+public:
+    ByzantiumTestFixture() : networkSelector(Network::ByzantiumNoProofTest) {}
+
+    NetworkSelector networkSelector;
+};
+
+class ConstantinopleTestFixture : public TestOutputHelperFixture
+{
+public:
+    ConstantinopleTestFixture() : networkSelector(Network::ConstantinopleNoProofTest) {}
+
+    NetworkSelector networkSelector;
+};
 }
 }

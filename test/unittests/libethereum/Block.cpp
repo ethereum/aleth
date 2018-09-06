@@ -224,6 +224,37 @@ BOOST_AUTO_TEST_CASE(bGetReceiptOverflow)
     BOOST_CHECK_THROW(block.receipt(123), std::out_of_range);
 }
 
+
+BOOST_FIXTURE_TEST_SUITE(ByzantiumBlockSuite, ByzantiumTestFixture)
+
+BOOST_AUTO_TEST_CASE(bByzantiumBlockReward)
+{
+    TestBlockChain testBlockchain;
+    TestBlock testBlock;
+    testBlock.mine(testBlockchain);
+    testBlockchain.addBlock(testBlock);
+
+    TestBlock const& topBlock = testBlockchain.topBlock();
+    BOOST_REQUIRE_EQUAL(topBlock.state().balance(topBlock.beneficiary()), 3 * ether);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(ConstantinopleBlockSuite, ConstantinopleTestFixture)
+
+BOOST_AUTO_TEST_CASE(bConstantinopleBlockReward)
+{
+    TestBlockChain testBlockchain;
+    TestBlock testBlock;
+    testBlock.mine(testBlockchain);
+    testBlockchain.addBlock(testBlock);
+
+    TestBlock const& topBlock = testBlockchain.topBlock();
+    BOOST_REQUIRE_EQUAL(topBlock.state().balance(topBlock.beneficiary()), 2 * ether);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 class ExperimentalTransitionTestFixture : public TestOutputHelperFixture
 {
 public:

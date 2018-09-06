@@ -61,6 +61,10 @@ enum class Network
     ExperimentalTransitionTest = 79,
     /// MainNetwork rules without genesis accounts + NoProof seal engine
     MainNetworkNoProofTest = 80,
+    /// Byzantium rules + NoProof seal engine
+    ByzantiumNoProofTest = 81,
+    /// Constantinople rules + NoProof seal engine
+    ConstantinopleNoProofTest = 82,
 
     // TransitionTest networks
     FrontierToHomesteadAt5 = 100,
