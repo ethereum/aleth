@@ -24,8 +24,10 @@ using namespace dev;
 #include "genesis/ropsten.cpp"
 
 //Test configurations
+#include "genesis/test/byzantiumNoProofTest.cpp"
 #include "genesis/test/byzantiumTest.cpp"
 #include "genesis/test/byzantiumTransitionTest.cpp"
+#include "genesis/test/constantinopleNoProofTest.cpp"
 #include "genesis/test/constantinopleTest.cpp"
 #include "genesis/test/eip150Test.cpp"
 #include "genesis/test/eip158Test.cpp"
@@ -62,8 +64,13 @@ std::string const& dev::eth::genesisInfo(Network _n)
     case Network::EIP150Test: return c_genesisInfoEIP150Test;
     case Network::EIP158Test: return c_genesisInfoEIP158Test;
     case Network::ByzantiumTest: return c_genesisInfoByzantiumTest;
+    case Network::ByzantiumNoProofTest:
+        return c_genesisInfoByzantiumNoProofTest;
     case Network::ByzantiumTransitionTest: return c_genesisInfoByzantiumTransitionTest;
-    case Network::ConstantinopleTest: return c_genesisInfoConstantinopleTest;
+    case Network::ConstantinopleTest:
+        return c_genesisInfoConstantinopleTest;
+    case Network::ConstantinopleNoProofTest:
+        return c_genesisInfoConstantinopleNoProofTest;
     case Network::ExperimentalTransitionTest:
         return c_genesisInfoExperimentalTransitionTest;
 
