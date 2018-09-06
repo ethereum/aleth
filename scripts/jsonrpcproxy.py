@@ -33,7 +33,7 @@ if sys.platform == 'win32':
 VERSION = '0.2'
 BUFSIZE = 32
 DELIMITER = ord('\n')
-BACKEND_CONNECTION_TIMEOUT=10.0
+BACKEND_CONNECTION_TIMEOUT=30.0
 INFO = """JSON-RPC Proxy
 
 Version:  {version}
