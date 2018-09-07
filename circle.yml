@@ -240,7 +240,7 @@ jobs:
       - checkout
       - run:
           name: "Update required git submodules"
-          command: git submodule update --init --recursive evmc evmjit
+          command: git submodule update --init --recursive evmc
       - setup_remote_docker
       - run:
           name: "Build aleth docker image"

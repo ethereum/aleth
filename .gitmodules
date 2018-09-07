@@ -1,7 +1,3 @@
-[submodule "evmjit"]
-	path = evmjit
-	url = https://github.com/ethereum/evmjit
-	branch = develop
 [submodule "test/jsontests"]
 	path = test/jsontests
 	url = https://github.com/ethereum/tests.git
