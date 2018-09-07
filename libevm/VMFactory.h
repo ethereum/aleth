@@ -43,6 +43,8 @@ std::vector<std::pair<std::string, std::string>>& evmcOptions() noexcept;
 boost::program_options::options_description vmProgramOptions(
     unsigned _lineLength = boost::program_options::options_description::m_default_line_length);
 
+using VMPtr = std::unique_ptr<VMFace, void (*)(VMFace*)>;
+
 class VMFactory
 {
 public:
@@ -50,10 +52,10 @@ public:
     ~VMFactory() = delete;
 
     /// Creates a VM instance of the global kind (controlled by the --vm command line option).
-    static std::unique_ptr<VMFace> create();
+    static VMPtr create();
 
     /// Creates a VM instance of the kind provided.
-    static std::unique_ptr<VMFace> create(VMKind _kind);
+    static VMPtr create(VMKind _kind);
 };
 }  // namespace eth
 }  // namespace dev

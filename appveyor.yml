@@ -20,7 +20,7 @@
 branches:
   only:
     - master
-    - develop
+    - /release\/.+/
     - /v\d+\..+/
     - /release\/.+/
     - appveyor

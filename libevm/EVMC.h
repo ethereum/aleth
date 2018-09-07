@@ -24,6 +24,10 @@ public:
     EVM(EVM const&) = delete;
     EVM& operator=(EVM) = delete;
 
+    char const* name() const noexcept { return m_instance->name; }
+
+    char const* version() const noexcept { return m_instance->version; }
+
     class Result
     {
     public:
