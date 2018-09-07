@@ -23,10 +23,6 @@
 
 #include <evmc/loader.h>
 
-#if ETH_HERA
-#include <hera/hera.h>
-#endif
-
 namespace po = boost::program_options;
 
 namespace dev
@@ -60,9 +56,6 @@ struct VMKindTableEntry
 VMKindTableEntry vmKindsTable[] = {
     {VMKind::Interpreter, "interpreter"},
     {VMKind::Legacy, "legacy"},
-#if ETH_HERA
-    {VMKind::Hera, "hera"},
-#endif
 };
 
 void setVMKind(const std::string& _name)
@@ -182,10 +175,6 @@ VMPtr VMFactory::create(VMKind _kind)
 
     switch (_kind)
     {
-#ifdef ETH_HERA
-    case VMKind::Hera:
-        return {new EVMC{evmc_create_hera()}, default_delete};
-#endif
     case VMKind::Interpreter:
         return {new EVMC{evmc_create_interpreter()}, default_delete};
     case VMKind::DLL:

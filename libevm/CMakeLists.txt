@@ -22,8 +22,3 @@ target_link_libraries(
 if(EVM_OPTIMIZE)
     target_compile_definitions(evm PRIVATE EVM_OPTIMIZE)
 endif()
-
-if(HERA)
-    target_link_libraries(evm PRIVATE hera)
-    target_compile_definitions(evm PRIVATE ETH_HERA)
-endif()

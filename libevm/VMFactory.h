@@ -27,7 +27,6 @@ namespace eth
 enum class VMKind
 {
     Interpreter,
-    Hera,
     Legacy,
     DLL
 };

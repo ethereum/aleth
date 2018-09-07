@@ -97,15 +97,12 @@ set(UTILS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/utils")
 configure_project()
 
 if(TESTS)
-    # Import binaryen library before hera to make it available also to testeth.
+    # Import binaryen library from hera for testeth.
+    # TODO: remove this and the submodule once testeth uses binaryen as a CLI tool.
     include(hera/cmake/ProjectBinaryen.cmake)
 endif()
 
 add_subdirectory(evmc)
-
-if (HERA)
-    add_subdirectory(hera)
-endif()
 
 #Global include path for all libs.
 include_directories("${CMAKE_SOURCE_DIR}")
