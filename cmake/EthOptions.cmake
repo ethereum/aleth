@@ -24,8 +24,6 @@ macro(configure_project)
     # components
     option(TESTS "Build with tests" ON)
     option(TOOLS "Build additional tools" ON)
-    option(HERA "Build with HERA module enabled" OFF)
-
     # Resolve any clashes between incompatible options.
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
         if (PARANOID)
@@ -89,7 +87,6 @@ macro(print_config)
     message("------------------------------------------------------------- components")
     message("-- TESTS            Build tests                              ${TESTS}")
     message("-- TOOLS            Build tools                              ${TOOLS}")
-    message("-- HERA             Build Hera eWASM VM                      ${HERA}")
     message("------------------------------------------------------------- tests")
     message("-- FASTCTEST        Run only test suites in ctest            ${FASTCTEST}")
     message("-- TESTETH_ARGS     Testeth arguments in ctest:               ")
