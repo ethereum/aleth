@@ -23,10 +23,6 @@
 
 #include <evmc/loader.h>
 
-#if ETH_EVMJIT
-#include <evmjit.h>
-#endif
-
 #if ETH_HERA
 #include <hera/hera.h>
 #endif
@@ -64,9 +60,6 @@ struct VMKindTableEntry
 VMKindTableEntry vmKindsTable[] = {
     {VMKind::Interpreter, "interpreter"},
     {VMKind::Legacy, "legacy"},
-#if ETH_EVMJIT
-    {VMKind::JIT, "jit"},
-#endif
 #if ETH_HERA
     {VMKind::Hera, "hera"},
 #endif
@@ -189,10 +182,6 @@ VMPtr VMFactory::create(VMKind _kind)
 
     switch (_kind)
     {
-#ifdef ETH_EVMJIT
-    case VMKind::JIT:
-        return {new EVMC{evmjit_create()}, default_delete};
-#endif
 #ifdef ETH_HERA
     case VMKind::Hera:
         return {new EVMC{evmc_create_hera()}, default_delete};
