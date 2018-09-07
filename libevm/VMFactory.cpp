@@ -45,7 +45,7 @@ auto g_kind = VMKind::Legacy;
 ///
 /// This variable is only written once when processing command line arguments,
 /// so access is thread-safe.
-evmc_create_fn g_evmcCreateFn;
+std::unique_ptr<EVMC> g_evmcDll;
 
 /// A helper type to build the tabled of VM implementations.
 ///
@@ -84,11 +84,9 @@ void setVMKind(const std::string& _name)
         }
     }
 
-    // If not match for predefined VM names, try loading it as an EVMC DLL.
-    cnote << "Loading EVMC module: " << _name;
-
+    // If not match for predefined VM names, try loading it as an EVMC VM DLL.
     evmc_loader_error_code ec;
-    g_evmcCreateFn = evmc_load(_name.c_str(), &ec);
+    g_evmcDll.reset(new EVMC{evmc_load_and_create(_name.c_str(), &ec)});
     switch (ec)
     {
     case EVMC_LOADER_SUCCESS:
@@ -105,6 +103,9 @@ void setVMKind(const std::string& _name)
                 "loading " + _name + " failed"));
     }
     g_kind = VMKind::DLL;
+
+    cnote << "Loaded EVMC module: " << g_evmcDll->name() << " " << g_evmcDll->version() << " ("
+          << _name << ")";
 }
 }  // namespace
 
@@ -176,30 +177,35 @@ po::options_description vmProgramOptions(unsigned _lineLength)
 }
 
 
-std::unique_ptr<VMFace> VMFactory::create()
+VMPtr VMFactory::create()
 {
     return create(g_kind);
 }
 
-std::unique_ptr<VMFace> VMFactory::create(VMKind _kind)
+VMPtr VMFactory::create(VMKind _kind)
 {
+    static const auto default_delete = [](VMFace * _vm) noexcept { delete _vm; };
+    static const auto null_delete = [](VMFace*) noexcept {};
+
     switch (_kind)
     {
 #ifdef ETH_EVMJIT
     case VMKind::JIT:
-        return std::unique_ptr<VMFace>(new EVMC{evmjit_create()});
+        return {new EVMC{evmjit_create()}, default_delete};
 #endif
 #ifdef ETH_HERA
     case VMKind::Hera:
-        return std::unique_ptr<VMFace>(new EVMC{evmc_create_hera()});
+        return {new EVMC{evmc_create_hera()}, default_delete};
 #endif
     case VMKind::Interpreter:
-        return std::unique_ptr<VMFace>(new EVMC{evmc_create_interpreter()});
+        return {new EVMC{evmc_create_interpreter()}, default_delete};
     case VMKind::DLL:
-        return std::unique_ptr<VMFace>(new EVMC{g_evmcCreateFn()});
+        // Return "fake" owning pointer to global EVMC DLL VM.
+        assert(g_evmcDll != nullptr);
+        return {g_evmcDll.get(), null_delete};
     case VMKind::Legacy:
     default:
-        return std::unique_ptr<VMFace>(new LegacyVM);
+        return {new LegacyVM, default_delete};
     }
 }
 }  // namespace eth
