@@ -87,10 +87,10 @@ if it does not work for your use-case.
 ### Install dependencies (Windows)
 
 We provide prebuilt dependencies to build the project. Download them
-with the [scripts/install_deps.bat](scripts/install_deps.bat) script.
+with the [scripts\install_deps.bat](scripts\install_deps.bat) script.
 
 ```shell
-scripts/install_deps.bat
+scripts\install_deps.bat
 ```
 
 ### Build
