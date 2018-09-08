@@ -112,7 +112,11 @@ void getBalance(
 ) noexcept
 {
     auto& env = static_cast<ExtVMFace&>(*_context);
-    *o_result = toEvmC(env.balance(fromEvmC(*_addr)));
+    auto balance = env.balance(fromEvmC(*_addr));
+    if (balance)
+        *o_result = toEvmC(*balance);
+    else
+        *o_result = {};
 }
 
 size_t getCodeSize(evmc_context* _context, evmc_address const* _addr)

@@ -120,7 +120,11 @@ public:
 
     /// Get an account's balance.
     /// @returns 0 if the address has never been used.
-    u256 balance(Address const& _address) const { return m_state.balance(_address); }
+    u256 balance(Address const& _address) const
+    {
+        auto b = m_state.balance(_address);
+        return b ? *b : 0;
+    }
 
     /// Get the number of transactions a particular address has sent (used for the transaction nonce).
     /// @returns 0 if the address has never been used.
