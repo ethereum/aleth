@@ -29,6 +29,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     make \
     ninja-build \
     python \
+    python-pip \
     python3-pip \
     python3-requests \
     python3-git \
@@ -53,6 +54,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 1 \
   && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-6.0 1 \
   && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-6.0 1 \
+  && update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-6.0 1 \
   && update-alternatives --install /usr/bin/gcov gcov /usr/bin/llvm-cov-6.0 1 \
   && pip3 install codecov
 
