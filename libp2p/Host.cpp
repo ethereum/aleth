@@ -270,13 +270,11 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
     shared_ptr<Peer> peer;
     DEV_RECURSIVE_GUARDED(x_sessions)
     {
-        auto const itPeer = m_peers.find(_id);
         auto const remoteAddress = _s->remoteEndpoint().address();
         auto const remoteTcpPort = _s->remoteEndpoint().port();
-        if (itPeer != m_peers.end() && itPeer->second->endpoint.address() == remoteAddress &&
-            itPeer->second->endpoint.tcpPort() == remoteTcpPort)
-            peer = itPeer->second;
-        else
+
+        peer = findPeer(_id, remoteAddress, remoteTcpPort);
+        if (!peer)
         {
             peer = make_shared<Peer>(Node{_id, NodeIPEndpoint{remoteAddress, 0, remoteTcpPort}});
             m_peers[_id] = peer;
@@ -382,38 +380,35 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
                   << _s->remoteEndpoint();
 }
 
-void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
+void Host::onNodeTableEvent(NodeID const& _nodeID, NodeTableEventType const& _e)
 {
     if (_e == NodeEntryAdded)
     {
-        LOG(m_logger) << "p2p.host.nodeTable.events.nodeEntryAdded " << _n;
-        if (Node n = nodeFromNodeTable(_n))
+        LOG(m_logger) << "p2p.host.nodeTable.events.nodeEntryAdded " << _nodeID;
+        if (Node node = nodeFromNodeTable(_nodeID))
         {
-            shared_ptr<Peer> p;
+            shared_ptr<Peer> peer;
             DEV_RECURSIVE_GUARDED(x_sessions)
             {
-                if (m_peers.count(_n))
+                peer = findPeer(_nodeID, node.endpoint.address(), node.endpoint.tcpPort());
+                if (!peer)
                 {
-                    p = m_peers[_n];
-                    p->endpoint = n.endpoint;
-                }
-                else
-                {
-                    p = make_shared<Peer>(n);
-                    m_peers[_n] = p;
-                    LOG(m_logger) << "p2p.host.peers.events.peerAdded " << _n << " " << p->endpoint;
+                    peer = make_shared<Peer>(node);
+                    m_peers[_nodeID] = peer;
+                    LOG(m_logger) << "p2p.host.peers.events.peerAdded " << _nodeID << " "
+                                  << peer->endpoint;
                 }
             }
             if (peerSlotsAvailable(Egress))
-                connect(p);
+                connect(peer);
         }
     }
     else if (_e == NodeEntryDropped)
     {
-        LOG(m_logger) << "p2p.host.nodeTable.events.NodeEntryDropped " << _n;
+        LOG(m_logger) << "p2p.host.nodeTable.events.NodeEntryDropped " << _nodeID;
         RecursiveGuard l(x_sessions);
-        if (m_peers.count(_n) && m_peers[_n]->peerType == PeerType::Optional)
-            m_peers.erase(_n);
+        if (m_peers.count(_nodeID) && m_peers[_nodeID]->peerType == PeerType::Optional)
+            m_peers.erase(_nodeID);
     }
 }
 
@@ -572,54 +567,51 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
     addNodeToNodeTable(Node(_node, _endpoint));
 }
 
-void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
+void Host::requirePeer(NodeID const& _nodeID, NodeIPEndpoint const& _endpoint)
 {
     if (!m_run)
     {
-        cwarn << "Network not running so node (" << _n << ") with endpoint (" << _endpoint
+        cwarn << "Network not running so node (" << _nodeID << ") with endpoint (" << _endpoint
               << ") cannot be added as a required peer";
         return;
     }
     if (!haveCapabilities())
     {
-        cwarn << "No capabilities registered so node (" << _n << ") with endpoint (" << _endpoint
+        cwarn << "No capabilities registered so node (" << _nodeID << ") with endpoint (" << _endpoint
             << ") cannot be added as a required peer";
         return;
     }
 
-    if (_n == id())
+    if (_nodeID == id())
     {
-        cnetdetails << "Ignoring the request to connect to self " << _n;
+        cnetdetails << "Ignoring the request to connect to self " << _nodeID;
         return;
     }
 
-    if (!_n)
+    if (!_nodeID)
     {
         cnetdetails << "Ignoring the request to connect to null node id.";
         return;
     }
+
 
     {
         Guard l(x_requiredPeers);
         m_requiredPeers.insert(_n);
     }
 
-    Node const node(_n, _endpoint, PeerType::Required);
+    Node node(_nodeID, _endpoint, PeerType::Required);
     // create or update m_peers entry
-    shared_ptr<Peer> p;
+    shared_ptr<Peer> peer;
     DEV_RECURSIVE_GUARDED(x_sessions)
     {
-        auto it = m_peers.find(_n);
-        if (it != m_peers.end())
-        {
-            p = it->second;
-            p->endpoint = node.endpoint;
-            p->peerType = PeerType::Required;
-        }
+        peer = findPeer(_nodeID, node.endpoint.address(), node.endpoint.tcpPort());
+        if (peer)
+            peer->peerType = PeerType::Required;
         else
         {
-            p = make_shared<Peer>(node);
-            m_peers[_n] = p;
+            peer = make_shared<Peer>(node);
+            m_peers[_nodeID] = peer;
         }
     }
     // required for discovery
