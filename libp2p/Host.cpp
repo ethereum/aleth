@@ -270,24 +270,20 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
     shared_ptr<Peer> peer;
     DEV_RECURSIVE_GUARDED(x_sessions)
     {
-        auto itPeer = m_peers.find(_id);
-        if (itPeer != m_peers.end())
+        auto const itPeer = m_peers.find(_id);
+        auto const remoteAddress = _s->remoteEndpoint().address();
+        auto const remoteTcpPort = _s->remoteEndpoint().port();
+        if (itPeer != m_peers.end() && itPeer->second->endpoint.address() == remoteAddress &&
+            itPeer->second->endpoint.tcpPort() == remoteTcpPort)
             peer = itPeer->second;
         else
         {
-            // peer doesn't exist, try to get port info from node table
-            if (Node n = nodeFromNodeTable(_id))
-                peer = make_shared<Peer>(n);
-
-            if (!peer)
-                peer = make_shared<Peer>(Node(_id, UnspecifiedNodeIPEndpoint));
-
+            peer = make_shared<Peer>(Node{_id, NodeIPEndpoint{remoteAddress, 0, remoteTcpPort}});
             m_peers[_id] = peer;
         }
     }
     if (peer->isOffline())
-        peer->m_lastConnected = chrono::system_clock::now();
-    peer->endpoint.setAddress(_s->remoteEndpoint().address());
+        peer->m_lastConnected = std::chrono::system_clock::now();
 
     auto const protocolVersion = _hello[0].toInt<unsigned>();
     auto const clientVersion = _hello[1].toString();
