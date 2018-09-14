@@ -84,7 +84,7 @@ void setVMKind(const std::string& _name)
         }
     }
 
-    // If not match for predefined VM names, try loading it as an EVMC VM DLL.
+    // If no match for predefined VM names, try loading it as an EVMC VM DLL.
     evmc_loader_error_code ec;
     g_evmcDll.reset(new EVMC{evmc_load_and_create(_name.c_str(), &ec)});
     switch (ec)
@@ -97,6 +97,9 @@ void setVMKind(const std::string& _name)
     case EVMC_LOADER_SYMBOL_NOT_FOUND:
         BOOST_THROW_EXCEPTION(std::system_error(std::make_error_code(std::errc::invalid_seek),
             "loading " + _name + " failed: EVMC create function not found"));
+    case EVMC_LOADER_ABI_VERSION_MISMATCH:
+        BOOST_THROW_EXCEPTION(std::system_error(std::make_error_code(std::errc::invalid_argument),
+            "loading " + _name + " failed: EVMC ABI version mismatch"));
     default:
         BOOST_THROW_EXCEPTION(
             std::system_error(std::error_code(static_cast<int>(ec), std::generic_category()),
