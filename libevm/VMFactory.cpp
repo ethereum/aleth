@@ -85,8 +85,15 @@ void setVMKind(const std::string& _name)
     }
 
     // If no match for predefined VM names, try loading it as an EVMC VM DLL.
+    g_kind = VMKind::DLL;
+
+    // Release previous instance
+    g_evmcDll.reset();
+
     evmc_loader_error_code ec;
-    g_evmcDll.reset(new EVMC{evmc_load_and_create(_name.c_str(), &ec)});
+    evmc_instance *instance = evmc_load_and_create(_name.c_str(), &ec);
+    assert(ec == EVMC_LOADER_SUCCESS || instance == nullptr);
+
     switch (ec)
     {
     case EVMC_LOADER_SUCCESS:
@@ -105,7 +112,8 @@ void setVMKind(const std::string& _name)
             std::system_error(std::error_code(static_cast<int>(ec), std::generic_category()),
                 "loading " + _name + " failed"));
     }
-    g_kind = VMKind::DLL;
+
+    g_evmcDll.reset(new EVMC{instance});
 
     cnote << "Loaded EVMC module: " << g_evmcDll->name() << " " << g_evmcDll->version() << " ("
           << _name << ")";
@@ -202,8 +210,8 @@ VMPtr VMFactory::create(VMKind _kind)
     case VMKind::Interpreter:
         return {new EVMC{evmc_create_interpreter()}, default_delete};
     case VMKind::DLL:
-        // Return "fake" owning pointer to global EVMC DLL VM.
         assert(g_evmcDll != nullptr);
+        // Return "fake" owning pointer to global EVMC DLL VM.
         return {g_evmcDll.get(), null_delete};
     case VMKind::Legacy:
     default:
