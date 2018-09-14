@@ -56,7 +56,9 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-6.0 1 \
   && update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-6.0 1 \
   && update-alternatives --install /usr/bin/gcov gcov /usr/bin/llvm-cov-6.0 1 \
+  && pip3 install --upgrade pip setuptools
   && pip3 install codecov
+  && pip3 install codespell
 
 RUN adduser --disabled-password --gecos '' builder && adduser builder sudo && printf 'builder\tALL=NOPASSWD: ALL\n' >> /etc/sudoers
 
