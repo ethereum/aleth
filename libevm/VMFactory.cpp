@@ -84,7 +84,7 @@ void setVMKind(const std::string& _name)
         }
     }
 
-    // If not match for predefined VM names, try loading it as an EVMC VM DLL.
+    // If no match for predefined VM names, try loading it as an EVMC VM DLL.
     evmc_loader_error_code ec;
     g_evmcDll.reset(new EVMC{evmc_load_and_create(_name.c_str(), &ec)});
     switch (ec)
