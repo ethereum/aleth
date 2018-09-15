@@ -19,14 +19,14 @@ class EVM
 public:
     explicit EVM(evmc_instance* _instance) noexcept;
 
-    ~EVM() { m_instance->destroy(m_instance); }
+    ~EVM() { evmc_destroy(m_instance); }
 
     EVM(EVM const&) = delete;
     EVM& operator=(EVM) = delete;
 
-    char const* name() const noexcept { return m_instance->name; }
+    char const* name() const noexcept { return evmc_vm_name(m_instance); }
 
-    char const* version() const noexcept { return m_instance->version; }
+    char const* version() const noexcept { return evmc_vm_version(m_instance); }
 
     class Result
     {

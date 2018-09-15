@@ -13,7 +13,7 @@ namespace eth
 EVM::EVM(evmc_instance* _instance) noexcept : m_instance(_instance)
 {
     assert(m_instance != nullptr);
-    assert(m_instance->abi_version == EVMC_ABI_VERSION);
+    assert(evmc_is_abi_compatible(m_instance));
 
     // Set the options.
     for (auto& pair : evmcOptions())
@@ -32,7 +32,7 @@ EVM::Result EVM::execute(ExtVMFace& _ext, int64_t gas)
         toEvmC(_ext.caller), _ext.data.data(), _ext.data.size(), toEvmC(_ext.value),
         toEvmC(0x0_cppui256)};
     return EVM::Result{
-        m_instance->execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
+        evmc_execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
 }
 
 owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp)
