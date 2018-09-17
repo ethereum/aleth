@@ -305,12 +305,12 @@ bool State::addressHasCode(Address const& _id) const
         return false;
 }
 
-u256 State::balance(Address const& _id) const
+boost::optional<u256> State::balance(Address const& _id) const
 {
     if (auto a = account(_id))
-        return a->balance();
+        return {a->balance()};
     else
-        return 0;
+        return {};
 }
 
 void State::incNonce(Address const& _addr)

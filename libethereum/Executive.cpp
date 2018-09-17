@@ -253,7 +253,9 @@ void Executive::initialize(Transaction const& _transaction)
         // Avoid unaffordable transactions.
         bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
         bigint totalCost = m_t.value() + gasCost;
-        if (m_s.balance(m_t.sender()) < totalCost)
+        auto optionalSenderBalance = m_s.balance(m_t.sender());
+        u256 senderBalance = optionalSenderBalance ? *optionalSenderBalance : 0;
+        if (senderBalance < totalCost)
         {
             LOG(m_execLogger) << "Not enough cash: Require > " << totalCost << " = " << m_t.gas()
                               << " * " << m_t.gasPrice() << " + " << m_t.value() << " Got"

@@ -227,7 +227,7 @@ public:
 
     /// Get an account's balance.
     /// @returns 0 if the address has never been used.
-    u256 balance(Address const& _id) const;
+    boost::optional<u256> balance(Address const& _id) const;
 
     /// Add some amount to balance.
     /// Will initialise the address if it has never been used.

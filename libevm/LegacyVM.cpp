@@ -338,7 +338,7 @@ void LegacyVM::interpretCases()
             Address dest = asAddress(m_SP[0]);
 
             // After EIP158 zero-value suicides do not have to pay account creation gas.
-            if (m_ext->balance(m_ext->myAddress) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
+            if (*m_ext->balance(m_ext->myAddress) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
                 // After EIP150 hard fork charge additional cost of sending
                 // ethers to non-existing account.
                 if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
@@ -1229,7 +1229,8 @@ void LegacyVM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            m_SPP[0] = m_ext->balance(asAddress(m_SP[0]));
+            auto balance = m_ext->balance(asAddress(m_SP[0]));
+            m_SPP[0] = balance ? *balance : 0;
         }
         NEXT
 

@@ -223,7 +223,7 @@ public:
     virtual u256 originalStorageValue(u256 const&) { return 0; }
 
     /// Read address's balance.
-    virtual u256 balance(Address) { return 0; }
+    virtual boost::optional<u256> balance(Address) { return {}; }
 
     /// Read address's code.
     virtual bytes const& codeAt(Address) { return NullBytes; }

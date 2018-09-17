@@ -82,7 +82,7 @@ public:
     CallResult call(CallParameters& _params) final;
 
     /// Read address's balance.
-    u256 balance(Address _a) final { return m_s.balance(_a); }
+    boost::optional<u256> balance(Address _a) final { return m_s.balance(_a); }
 
     /// Does the account exist?
     bool exists(Address _a) final
