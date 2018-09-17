@@ -241,7 +241,7 @@ jobs:
       - checkout
       - run:
           name: "Update required git submodules"
-          command: git submodule update --init --recursive evmc
+          command: git submodule update --init --recursive evmc cmake/cable
       - setup_remote_docker
       - run:
           name: "Build aleth docker image"
