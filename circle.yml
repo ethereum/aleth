@@ -230,7 +230,8 @@ jobs:
           name: "Create GitHub release"
           command: |
             prerelease_flag=$([[ $CIRCLE_TAG =~ ^v[0-9\.]+$ ]] || echo '-prerelease')
-            ghr -u ethereum -r aleth $prerelease_flag $CIRCLE_TAG ~/package
+            name="Aleth ${CIRCLE_TAG:1}"
+            ghr -u ethereum -r aleth -n "$name" $prerelease_flag $CIRCLE_TAG ~/package
 
   # Builds aleth docker image and uploads it to Docker Hub.
   docker-aleth: &docker-aleth
