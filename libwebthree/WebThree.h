@@ -78,18 +78,8 @@ public:
     /// Sets the ideal number of peers.
     virtual void setIdealPeerCount(size_t _n) = 0;
 
-    virtual bool haveNetwork() const = 0;
-
-    virtual p2p::NetworkConfig const& networkConfig() const = 0;
-    virtual void setNetworkConfig(p2p::NetworkConfig const& _n, bool _dropPeers) = 0;
-
-    virtual p2p::NodeID id() const = 0;
-
     /// Get network id
     virtual u256 networkId() const = 0;
-
-    /// Gets the nodes.
-    virtual p2p::Peers nodes() const = 0;
 
     /// Start the network subsystem.
     virtual void startNetwork() = 0;
@@ -182,22 +172,11 @@ public:
     /// Experimental. Sets ceiling for incoming connections to multiple of ideal peer count.
     void setPeerStretch(size_t _n);
     
-    bool haveNetwork() const override { return m_net.haveNetwork(); }
-
-    p2p::NetworkConfig const& networkConfig() const override;
-
-    void setNetworkConfig(p2p::NetworkConfig const& _n, bool _dropPeers = false) override;
-
     p2p::NodeInfo nodeInfo() const override { return m_net.nodeInfo(); }
-
-    p2p::NodeID id() const override { return m_net.id(); }
 
     u256 networkId() const override { return m_ethereum.get()->networkId(); }
 
     std::string enode() const override { return m_net.enode(); }
-
-    /// Gets the nodes.
-    p2p::Peers nodes() const override { return m_net.getPeers(); }
 
     /// Start the network subsystem.
     void startNetwork() override { m_net.start(); }
