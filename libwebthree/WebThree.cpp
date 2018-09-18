@@ -95,21 +95,6 @@ std::string WebThreeDirect::composeClientVersion(std::string const& _client)
            buildinfo->compiler_id + buildinfo->compiler_version + "/" + buildinfo->build_type;
 }
 
-p2p::NetworkConfig const& WebThreeDirect::networkConfig() const
-{
-    return m_net.networkConfig();
-}
-
-void WebThreeDirect::setNetworkConfig(p2p::NetworkConfig const& _n, bool _dropPeers)
-{
-    auto had = isNetworkStarted();
-    if (had)
-        stopNetwork();
-    m_net.setNetworkConfig(_n, _dropPeers);
-    if (had)
-        startNetwork();
-}
-
 std::vector<PeerSessionInfo> WebThreeDirect::peers()
 {
     return m_net.peerSessionInfo();
