@@ -113,6 +113,11 @@ After configuration is completed, the `aleth.sln` can be found in the
 ```shell
 cmake .. -G "Visual Studio 14 2015 Win64"
 ```
+#### Common Issues Building on Windows
+##### LINK : fatal error LNK1158: cannot run 'rc.exe'
+Rc.exe is the [Microsoft Resource Compiler](https://docs.microsoft.com/en-us/windows/desktop/menurc/resource-compiler). It's distributed with the [Windows SDK](https://developer.microsoft.com/en-US/windows/downloads/windows-10-sdk) and is required for generating the Visual Studio solution file. It can be found in the following directory: ```%ProgramFiles(x86)%\Windows Kits\<OS major version>\bin\<OS full version>\<arch>\```
+
+If you hit this error, adding the directory to your path (and launching a new command prompt) should fix the issue. 
 
 ## Contribute
 
