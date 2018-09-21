@@ -14,14 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file MemoryDB.h
+/** @file StateCacheDB.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #pragma once
 
-#include <unordered_map>
 #include "Common.h"
 #include "Log.h"
 #include "RLP.h"
@@ -29,17 +28,17 @@
 namespace dev
 {
 
-class MemoryDB
+class StateCacheDB
 {
     friend class EnforceRefs;
 
 public:
-    MemoryDB() {}
-    MemoryDB(MemoryDB const& _c) { operator=(_c); }
+    StateCacheDB() {}
+    StateCacheDB(StateCacheDB const& _c) { operator=(_c); }
 
-    MemoryDB& operator=(MemoryDB const& _c);
+    StateCacheDB& operator=(StateCacheDB const& _c);
 
-    virtual ~MemoryDB() = default;
+    virtual ~StateCacheDB() = default;
 
     void clear() { m_main.clear(); m_aux.clear(); } // WARNING !!!! didn't originally clear m_refCount!!!
     std::unordered_map<h256, std::string> get() const;
@@ -69,15 +68,15 @@ protected:
 class EnforceRefs
 {
 public:
-    EnforceRefs(MemoryDB const& _o, bool _r): m_o(_o), m_r(_o.m_enforceRefs) { _o.m_enforceRefs = _r; }
+    EnforceRefs(StateCacheDB const& _o, bool _r): m_o(_o), m_r(_o.m_enforceRefs) { _o.m_enforceRefs = _r; }
     ~EnforceRefs() { m_o.m_enforceRefs = m_r; }
 
 private:
-    MemoryDB const& m_o;
+    StateCacheDB const& m_o;
     bool m_r;
 };
 
-inline std::ostream& operator<<(std::ostream& _out, MemoryDB const& _m)
+inline std::ostream& operator<<(std::ostream& _out, StateCacheDB const& _m)
 {
     for (auto const& i: _m.get())
     {

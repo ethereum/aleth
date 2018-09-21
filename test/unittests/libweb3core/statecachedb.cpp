@@ -14,15 +14,15 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file MemoryDB.cpp
+/** @file StateCacheDB.cpp
  * @author Christoph Jentzsch <cj@ethdev.com>
  * @date 2015
- * memDB test functions.
+ * stateCacheDB test functions.
  */
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>
-#include <libdevcore/MemoryDB.h>
+#include <libdevcore/StateCacheDB.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 
 using namespace std;
@@ -34,11 +34,11 @@ namespace dev {  namespace test {
 
 } }// Namespace Close
 
-BOOST_FIXTURE_TEST_SUITE(memDB, TestOutputHelperFixture)
+BOOST_FIXTURE_TEST_SUITE(stateCacheDB, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(kill)
 {
-    MemoryDB myDB;
+    StateCacheDB myDB;
     BOOST_CHECK(myDB.get().empty());
     bytes value = fromHex("43");
     myDB.insert(h256(42), &value);
@@ -50,12 +50,12 @@ BOOST_AUTO_TEST_CASE(kill)
 
 BOOST_AUTO_TEST_CASE(purgeMainMem)
 {
-    MemoryDB myDB;
+    StateCacheDB myDB;
     BOOST_CHECK(myDB.get().empty());
     string const value = "\x43";
 
     myDB.insert(h256(42), &value);
-    MemoryDB copy;
+    StateCacheDB copy;
     copy = myDB;
     BOOST_CHECK(myDB.exists(h256(42)));
     BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(purgeMainMem)
 
 BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
 {
-    MemoryDB myDB;
+    StateCacheDB myDB;
     {
         EnforceRefs enforceRefs(myDB, true);
 
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
         string const value = "\x43";
 
         myDB.insert(h256(42), &value);
-        MemoryDB copy;
+        StateCacheDB copy;
         copy = myDB;
         BOOST_CHECK(myDB.exists(h256(42)));
         BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
     string const value = "\x43";
 
     myDB.insert(h256(42), &value);
-    MemoryDB copy;
+    StateCacheDB copy;
     copy = myDB;
     BOOST_CHECK(myDB.exists(h256(42)));
     BOOST_CHECK_EQUAL(myDB.lookup(h256(42)), value);
@@ -133,13 +133,13 @@ BOOST_AUTO_TEST_CASE(purgeMainMem_Refs)
 
 BOOST_AUTO_TEST_CASE(purgeAuxMem)
 {
-    class AuxMemDB : public MemoryDB
+    class AuxStateCacheDB : public StateCacheDB
     {
     public:
         std::unordered_map<h256, std::pair<bytes, bool>> getAux() { return m_aux;}
     };
 
-    AuxMemDB myDB;
+    AuxStateCacheDB myDB;
     BOOST_CHECK(myDB.get().empty());
     bytes value = fromHex("43");
 
@@ -160,14 +160,14 @@ BOOST_AUTO_TEST_CASE(purgeAuxMem)
 
 BOOST_AUTO_TEST_CASE(copy)
 {
-    MemoryDB myDB;
+    StateCacheDB myDB;
     BOOST_CHECK(myDB.get().empty());
     bytes value = fromHex("43");
     myDB.insert(h256(42), &value);
     BOOST_CHECK(myDB.exists(h256(42)));
     BOOST_CHECK_EQUAL(myDB.get().size(), 1);
 
-    MemoryDB copyToDB;
+    StateCacheDB copyToDB;
     copyToDB = myDB;
     BOOST_CHECK(copyToDB.exists(h256(42)));
     BOOST_CHECK_EQUAL(copyToDB.get().size(), 1);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(copy)
 
 BOOST_AUTO_TEST_CASE(lookUp)
 {
-    MemoryDB myDB;
+    StateCacheDB myDB;
     BOOST_CHECK(myDB.get().empty());
     string const value = "\x43";
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(lookUp)
 
 BOOST_AUTO_TEST_CASE(stream)
 {
-    MemoryDB myDB;
+    StateCacheDB myDB;
     BOOST_CHECK(myDB.get().empty());
     bytes value = fromHex("43");
     myDB.insert(h256(42), &value);

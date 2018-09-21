@@ -106,4 +106,4 @@ implemenation is in
 For lower-level code accessing the database itself see
 `OverlayDB <https://github.com/ethereum/aleth/blob/master/libdevcore/OverlayDB.h>`__
 and
-`MemoryDB <https://github.com/ethereum/aleth/blob/master/libdevcore/MemoryDB.h>`__.
+`StateCacheDB` <https://github.com/ethereum/aleth/blob/master/libdevcore/StateCacheB.h>`__.
