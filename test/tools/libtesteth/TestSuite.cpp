@@ -18,10 +18,11 @@
  * Base functions for all test suites
  */
 
+#include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <test/tools/libtesteth/Stats.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
-#include <test/tools/libtesteth/Stats.h>
-#include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <boost/algorithm/string.hpp>
 #include <string>
 using namespace std;
 using namespace dev;
@@ -29,6 +30,11 @@ namespace fs = boost::filesystem;
 
 //Helper functions for test proccessing
 namespace {
+struct testFileData
+{
+    json_spirit::mValue data;
+    h256 hash;
+};
 
 void removeComments(json_spirit::mValue& _obj)
 {
@@ -53,6 +59,25 @@ void removeComments(json_spirit::mValue& _obj)
 		for (auto& i: _obj.get_array())
 			removeComments(i);
 	}
+}
+
+testFileData readTestFile(fs::path _testFileName)
+{
+    testFileData testData;
+    bytes const byteContents = dev::contents(_testFileName);
+    string const s = asString(byteContents);
+    BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
+
+    if (_testFileName.extension() == ".json")
+        json_spirit::read_string(s, testData.data);
+    else if (_testFileName.extension() == ".yml")
+        testData.data = test::parseYamlToJson(s);
+    else
+        BOOST_ERROR("Unknow test format!" + test::TestOutputHelper::get().testFile().string());
+
+    removeComments(testData.data);
+    testData.hash = h256(sha3(json_spirit::write_string(testData.data, true)));
+    return testData;
 }
 
 void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource, h256 const& _testSourceHash)
@@ -86,12 +111,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
     json_spirit::read_string(s, filledTest);
 
-    json_spirit::mValue fillerTestSource;
-    s = dev::contentsString(_sourceTest);
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _sourceTest.string() + " is empty.");
-    json_spirit::read_string(s, fillerTestSource);
-    h256 const fillerHash = sha3(json_spirit::write_string(fillerTestSource, true));
-
+    testFileData fillerData = readTestFile(_sourceTest);
     for (auto& i: filledTest.get_obj())
 	{
 		BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain an object under a test name.");
@@ -100,8 +120,11 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 		json_spirit::mObject const& info = obj.at("_info").get_obj();
 		BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.first);
 		h256 const sourceHash = h256(info.at("sourceHash").get_str());
-		BOOST_CHECK_MESSAGE(sourceHash == fillerHash, "Test " + _compiledTest.string() + " in " + i.first + " is outdated. Filler hash is different!");
-	}
+        BOOST_CHECK_MESSAGE(sourceHash == fillerData.hash,
+            "Test " + _compiledTest.string() + " in " + i.first +
+                " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+                "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
+    }
 }
 
 }
@@ -217,24 +240,12 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			if (!Options::get().singleTest)
 				cnote << "Populating tests...";
 
-            json_spirit::mValue fillerJsonValue;
-			bytes const byteContents = dev::contents(_testFileName);
-			string const s = asString(byteContents);
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
-
-			if (_testFileName.extension() == ".json")
-                json_spirit::read_string(s, fillerJsonValue);
-			else if (_testFileName.extension() == ".yml")
-                fillerJsonValue = test::parseYamlToJson(s);
-			else
-				BOOST_ERROR("Unknow test format!" + TestOutputHelper::get().testFile().string());
-
-            removeComments(fillerJsonValue);
-            json_spirit::mValue output = doTests(fillerJsonValue, true);
-            addClientInfo(output, boostRelativeTestPath, sha3(json_spirit::write_string(fillerJsonValue, true)));
-			writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
-		}
-	}
+            testFileData fillerData = readTestFile(_testFileName);
+            json_spirit::mValue output = doTests(fillerData.data, true);
+            addClientInfo(output, boostRelativeTestPath, fillerData.hash);
+            writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));
+        }
+    }
 
 	// Test is generated. Now run it and check that there should be no errors
     if (Options::get().verbosity > 1)
