@@ -666,8 +666,7 @@ dev::eth::BlockHeader constructHeader(h256 const& _parentHash, h256 const& _sha3
     u256 const& _number, u256 const& _gasLimit, u256 const& _gasUsed, u256 const& _timestamp,
     bytes const& _extraData)
 {
-    RLPStream rlpStream;
-    rlpStream.appendList(15);
+    RLPStream rlpStream(15);
 
     rlpStream << _parentHash << _sha3Uncles << _author << _stateRoot << _transactionsRoot
               << _receiptsRoot << _logBloom << _difficulty << _number << _gasLimit << _gasUsed
