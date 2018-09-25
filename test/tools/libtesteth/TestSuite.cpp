@@ -75,8 +75,8 @@ testFileData readTestFile(fs::path _testFileName)
     else
         BOOST_ERROR("Unknow test format!" + test::TestOutputHelper::get().testFile().string());
 
+    testData.hash = h256(sha3(json_spirit::write_string(testData.data, false)));
     removeComments(testData.data);
-    testData.hash = h256(sha3(json_spirit::write_string(testData.data, true)));
     return testData;
 }
 
