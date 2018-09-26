@@ -30,7 +30,7 @@ namespace fs = boost::filesystem;
 
 //Helper functions for test proccessing
 namespace {
-struct testFileData
+struct TestFileData
 {
     json_spirit::mValue data;
     h256 hash;
@@ -61,11 +61,10 @@ void removeComments(json_spirit::mValue& _obj)
 	}
 }
 
-testFileData readTestFile(fs::path _testFileName)
+TestFileData readTestFile(fs::path _testFileName)
 {
-    testFileData testData;
-    bytes const byteContents = dev::contents(_testFileName);
-    string const s = asString(byteContents);
+    TestFileData testData;
+    string const s = dev::contentsString(_testFileName);
     BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _testFileName.string() + " is empty.");
 
     if (_testFileName.extension() == ".json")
@@ -76,7 +75,6 @@ testFileData readTestFile(fs::path _testFileName)
         BOOST_ERROR("Unknow test format!" + test::TestOutputHelper::get().testFile().string());
 
     testData.hash = h256(sha3(json_spirit::write_string(testData.data, false)));
-    removeComments(testData.data);
     return testData;
 }
 
@@ -111,7 +109,7 @@ void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
     json_spirit::read_string(s, filledTest);
 
-    testFileData fillerData = readTestFile(_sourceTest);
+    TestFileData fillerData = readTestFile(_sourceTest);
     for (auto& i: filledTest.get_obj())
 	{
 		BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain an object under a test name.");
@@ -240,7 +238,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			if (!Options::get().singleTest)
 				cnote << "Populating tests...";
 
-            testFileData fillerData = readTestFile(_testFileName);
+            TestFileData fillerData = readTestFile(_testFileName);
+            removeComments(fillerData.data);
             json_spirit::mValue output = doTests(fillerData.data, true);
             addClientInfo(output, boostRelativeTestPath, fillerData.hash);
             writeFile(boostTestPath, asBytes(json_spirit::write_string(output, true)));

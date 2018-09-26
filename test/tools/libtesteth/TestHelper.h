@@ -84,9 +84,12 @@ std::set<eth::Network> const& getNetworks();
 std::set<std::string> translateNetworks(std::set<std::string> const& _networks);
 u256 toU256(json_spirit::mValue const& _v);
 
-/// Parses a JSON value as an 64-bit signed integer.
+/// Parses a JSON value as an 64-bit unsigned integer.
 /// Throws std::out_of_range exception in case the value is too big or negative.
-int64_t toPositiveInt64(const json_spirit::mValue& _v);
+uint64_t toPositiveInt64(const json_spirit::mValue& _v);
+
+/// Parses a JSON value as an 64-bit signed integer.
+int64_t toInt64(const json_spirit::mValue& _v);
 
 byte toByte(json_spirit::mValue const& _v);
 bytes processDataOrCode(json_spirit::mObject const& _o, std::string const& nodeName);
