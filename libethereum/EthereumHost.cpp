@@ -383,6 +383,8 @@ EthereumHost::EthereumHost(Host const& _host, BlockChain const& _ch, OverlayDB c
     m_peerObserver = make_shared<EthereumPeerObserver>(m_sync, m_tq);
     m_latestBlockSent = _ch.currentHash();
     m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
+    std::random_device seed;
+    m_urng = std::mt19937_64(seed());
 }
 
 EthereumHost::~EthereumHost()
@@ -512,27 +514,29 @@ tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector
     vector<shared_ptr<EthereumPeer>> chosen;
     vector<shared_ptr<EthereumPeer>> allowed;
     vector<shared_ptr<SessionFace>> sessions;
-
-    size_t peerCount = 0;
+    double percentDecimal = _percent / 100.0;
     foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
     {
         if (_allow(_p.get()))
         {
-            allowed.push_back(_p);
             sessions.push_back(_p->session());
+            allowed.push_back(_p);
         }
-        ++peerCount;
         return true;
     });
 
-    size_t chosenSize = (peerCount * _percent + 99) / 100;
-    chosen.reserve(chosenSize);
-    for (unsigned i = chosenSize; i && allowed.size(); i--)
+    if (_percent == 0 || allowed.size() == 0)
     {
-        unsigned n = rand() % allowed.size();
-        chosen.push_back(std::move(allowed[n]));
-        allowed.erase(allowed.begin() + n);
+        return make_tuple(move(chosen), move(allowed), move(sessions));
     }
+
+    std::shuffle(allowed.begin(), allowed.end(), m_urng);
+
+   // Remove elements from the end of the shuffled allowed vector and move them to chosen.
+    size_t chosenSize = percentDecimal * allowed.size();
+    chosen.reserve(chosenSize);
+    std::move(allowed.begin() + chosenSize, allowed.end(), std::back_inserter(chosen));
+    allowed.erase(allowed.begin() + chosenSize, allowed.end());
     return make_tuple(move(chosen), move(allowed), move(sessions));
 }
 

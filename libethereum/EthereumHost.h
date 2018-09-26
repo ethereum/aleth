@@ -28,6 +28,7 @@
 #include <memory>
 #include <utility>
 #include <thread>
+#include <random>
 
 #include <libdevcore/Guards.h>
 #include <libdevcore/Worker.h>
@@ -139,6 +140,8 @@ private:
 
     std::shared_ptr<EthereumHostDataFace> m_hostData;
     std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
+
+    std::mt19937_64 m_urng; // Mersenne Twister psuedo-random number generator
 
     Logger m_logger{createLogger(VerbosityDebug, "host")};
 };
