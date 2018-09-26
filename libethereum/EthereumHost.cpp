@@ -514,25 +514,22 @@ tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector
     vector<shared_ptr<SessionFace>> sessions;
 
     size_t peerCount = 0;
+    double percentDecimal = _percent / 100.0;
     foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
     {
         if (_allow(_p.get()))
         {
-            allowed.push_back(_p);
             sessions.push_back(_p->session());
+            allowed.push_back(_p);
+            // Random selection of peers according to percent requested
+            if(((double)rand() / RAND_MAX) < percentDecimal)
+            {
+                chosen.push_back(_p);
+            }
         }
         ++peerCount;
         return true;
     });
-
-    size_t chosenSize = (peerCount * _percent + 99) / 100;
-    chosen.reserve(chosenSize);
-    for (unsigned i = chosenSize; i && allowed.size(); i--)
-    {
-        unsigned n = rand() % allowed.size();
-        chosen.push_back(std::move(allowed[n]));
-        allowed.erase(allowed.begin() + n);
-    }
     return make_tuple(move(chosen), move(allowed), move(sessions));
 }
 
