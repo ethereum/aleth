@@ -356,6 +356,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
             block.addUncle(uncle);
         }
 
+        cnote << "Syncing uncle with chain " << testName;
         vector<TestBlock> validUncles = blockchain.syncUncles(block.uncles());
         block.setUncles(validUncles);
 
@@ -831,6 +832,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
     }
 
     uncle.setBlockHeader(uncleHeader);
+    cnote << "Updating block nonce. Difficulty of: " << uncle.blockHeader().difficulty();
     uncle.updateNonce(_chainBranch.blockchain);
 
     if (overwrite == "nonce" || overwrite == "mixHash")
