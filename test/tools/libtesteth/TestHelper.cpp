@@ -254,7 +254,7 @@ string exportLog(eth::LogEntries const& _logs)
     return toHexPrefixed(sha3(s.out()));
 }
 
-u256 toInt(json_spirit::mValue const& _v)
+u256 toU256(json_spirit::mValue const& _v)
 {
     switch (_v.type())
     {
@@ -523,11 +523,11 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o)
     auto expectedOutput = _o.at("out").get_str();
 
     if (expectedOutput.find("#") == 0)
-        BOOST_CHECK(_output.size() == toInt(expectedOutput.substr(1)));
+        BOOST_CHECK(_output.size() == toU256(expectedOutput.substr(1)));
     else if (_o.at("out").type() == json_spirit::array_type)
         for (auto const& d : _o.at("out").get_array())
         {
-            BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
+            BOOST_CHECK_MESSAGE(_output[j] == toU256(d), "Output byte [" << j << "] different!");
             ++j;
         }
     else if (expectedOutput.find("0x") == 0)

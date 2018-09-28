@@ -82,7 +82,7 @@ std::set<eth::Network> const& getNetworks();
 /// >Homestead to EIP150, EIP158, Byzantium, ...
 /// <=Homestead to Frontier, Homestead
 std::set<std::string> translateNetworks(std::set<std::string> const& _networks);
-u256 toInt(json_spirit::mValue const& _v);
+u256 toU256(json_spirit::mValue const& _v);
 
 /// Parses a JSON value as an 64-bit signed integer.
 /// Throws std::out_of_range exception in case the value is too big or negative.

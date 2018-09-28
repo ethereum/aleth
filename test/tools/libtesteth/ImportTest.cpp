@@ -124,7 +124,7 @@ void ImportTest::makeBlockchainTestFromStateTest(set<eth::Network> const& _netwo
                         if (adr.first == toHexPrefixed(m_envInfo->author()) &&
                                 adr.second.get_obj().count("balance"))
                         {
-                            u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
+                            u256 expectCoinbaseBalance = toU256(adr.second.get_obj()["balance"]);
                             expectCoinbaseBalance += blockReward;
                             adr.second.get_obj()["balance"] =
                                     toCompactHexPrefixed(expectCoinbaseBalance);
@@ -355,7 +355,7 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
             {
                 str = isData ? replaceCode(j.get_str()) : j.get_str();
                 arr.push_back(
-                            (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1));
+                    (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toU256(str), 1));
             }
             output[key] = arr;
             continue;
@@ -365,7 +365,7 @@ json_spirit::mObject ImportTest::makeAllFieldsHex(json_spirit::mObject const& _i
         if (isHash)
             output[key] = (str.substr(0, 2) == "0x" || str.empty()) ? str : "0x" + str;
         else
-            output[key] = (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toInt(str), 1);
+            output[key] = (str.substr(0, 2) == "0x") ? str : toCompactHexPrefixed(toU256(str), 1);
     }
     return output;
 }
@@ -376,11 +376,11 @@ void ImportTest::importEnv(json_spirit::mObject const& _o)
     {{"currentCoinbase", jsonVType::str_type}, {"currentDifficulty", jsonVType::str_type},
      {"currentGasLimit", jsonVType::str_type}, {"currentNumber", jsonVType::str_type},
      {"currentTimestamp", jsonVType::str_type}, {"previousHash", jsonVType::str_type}});
-    auto gasLimit = toInt(_o.at("currentGasLimit"));
+    auto gasLimit = toU256(_o.at("currentGasLimit"));
     BOOST_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
     BlockHeader header;
     header.setGasLimit(gasLimit.convert_to<int64_t>());
-    header.setDifficulty(toInt(_o.at("currentDifficulty")));
+    header.setDifficulty(toU256(_o.at("currentDifficulty")));
     header.setNumber(toPositiveInt64(_o.at("currentNumber")));
     header.setTimestamp(toPositiveInt64(_o.at("currentTimestamp")));
     header.setAuthor(Address(_o.at("currentCoinbase").get_str()));
@@ -439,8 +439,12 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
             BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
         o_tr = _o.at("to").get_str().empty() ?
-                    Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce")), Secret(_o.at("secretKey").get_str())) :
-                    Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o), toInt(_o.at("nonce")), Secret(_o.at("secretKey").get_str()));
+                   Transaction(toU256(_o.at("value")), toU256(_o.at("gasPrice")),
+                       toU256(_o.at("gasLimit")), importData(_o), toU256(_o.at("nonce")),
+                       Secret(_o.at("secretKey").get_str())) :
+                   Transaction(toU256(_o.at("value")), toU256(_o.at("gasPrice")),
+                       toU256(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o),
+                       toU256(_o.at("nonce")), Secret(_o.at("secretKey").get_str()));
     }
     else
     {
@@ -460,8 +464,11 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
         {
             // create unsigned transaction
             o_tr = _o.at("to").get_str().empty() ?
-                        Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce"))) :
-                        Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o), toInt(_o.at("nonce")));
+                       Transaction(toU256(_o.at("value")), toU256(_o.at("gasPrice")),
+                           toU256(_o.at("gasLimit")), importData(_o), toU256(_o.at("nonce"))) :
+                       Transaction(toU256(_o.at("value")), toU256(_o.at("gasPrice")),
+                           toU256(_o.at("gasLimit")), Address(_o.at("to").get_str()),
+                           importData(_o), toU256(_o.at("nonce")));
         }
         catch (Exception& _e)
         {
