@@ -1,10 +1,26 @@
+/*
+    This file is part of cpp-ethereum.
+
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "MemoryDB.h"
 
 namespace dev
 {
 namespace db
 {
-
 using MemoryDBBatch = std::unordered_map<std::string, std::string>;
 
 class MemoryDBWriteBatch : public WriteBatchFace
@@ -22,41 +38,42 @@ private:
 
 void MemoryDBWriteBatch::insert(Slice _key, Slice _value)
 {
-    m_batch[_key.data()] = _value.data();
+    m_batch[_key.toString()] = _value.toString();
 }
 
 void MemoryDBWriteBatch::kill(Slice _key)
 {
-    m_batch.erase(_key.data());
+    m_batch.erase(_key.toString());
 }
 
 std::string MemoryDB::lookup(Slice _key) const
 {
     std::string value;
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if (m_db.count(_key.data()))
+    Guard lock(m_mutex);
+    auto const& it = m_db.find(_key.toString());
+    if (it != m_db.end())
     {
-        value = m_db.find(_key.data())->first;
+        value = it->first;
     }
     return value;
 }
 
 bool MemoryDB::exists(Slice _key) const
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    return m_db.count(_key.data()) != 0;
+    Guard lock(m_mutex);
+    return m_db.count(_key.toString()) != 0;
 }
 
 void MemoryDB::insert(Slice _key, Slice _value)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_db[_key.data()] = _value.data();
+    Guard lock(m_mutex);
+    m_db[_key.toString()] = _value.toString();
 }
 
 void MemoryDB::kill(Slice _key)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_db.erase(_key.data());
+    Guard lock(m_mutex);
+    m_db.erase(_key.toString());
 }
 
 std::unique_ptr<WriteBatchFace> MemoryDB::createWriteBatch() const
@@ -74,11 +91,12 @@ void MemoryDB::commit(std::unique_ptr<WriteBatchFace> _batch)
     auto* batchPtr = dynamic_cast<MemoryDBWriteBatch*>(_batch.get());
     if (!batchPtr)
     {
-        BOOST_THROW_EXCEPTION(DatabaseError() << errinfo_comment("Invalid batch type passed to MemoryDB::commit"));
+        BOOST_THROW_EXCEPTION(
+            DatabaseError() << errinfo_comment("Invalid batch type passed to MemoryDB::commit"));
     }
     MemoryDBBatch batch = batchPtr->writeBatch();
-    std::lock_guard<std::mutex> lock(m_mutex);
-    for (const auto& e : batch)
+    Guard lock(m_mutex);
+    for (auto const& e : batch)
     {
         m_db[e.first] = e.second;
     }
@@ -88,17 +106,17 @@ void MemoryDB::commit(std::unique_ptr<WriteBatchFace> _batch)
 // to pass in a function `f`, which will be called with the key and value
 // of each record in the database. If `f` returns false, the `forEach`
 // method must return immediately.
-void MemoryDB::forEach(std::function<bool(Slice, Slice)> f) const
+void MemoryDB::forEach(std::function<bool(Slice, Slice)> _f) const
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    for (const auto& e : m_db)
+    Guard lock(m_mutex);
+    for (auto const& e : m_db)
     {
-        if (!f(Slice(e.first.c_str()), Slice(e.second.c_str())))
+        if (!_f(Slice(e.first), Slice(e.second)))
         {
             return;
         }
     }
 }
-    
-}
-}
+
+}  // namespace db
+}  // namespace dev

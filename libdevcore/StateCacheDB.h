@@ -14,10 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file StateCacheDB.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
@@ -27,7 +23,6 @@
 
 namespace dev
 {
-
 class StateCacheDB
 {
     friend class EnforceRefs;
@@ -40,7 +35,11 @@ public:
 
     virtual ~StateCacheDB() = default;
 
-    void clear() { m_main.clear(); m_aux.clear(); } // WARNING !!!! didn't originally clear m_refCount!!!
+    void clear()
+    {
+        m_main.clear();
+        m_aux.clear();
+    }  // WARNING !!!! didn't originally clear m_refCount!!!
     std::unordered_map<h256, std::string> get() const;
 
     std::string lookup(h256 const& _h) const;
@@ -68,7 +67,10 @@ protected:
 class EnforceRefs
 {
 public:
-    EnforceRefs(StateCacheDB const& _o, bool _r): m_o(_o), m_r(_o.m_enforceRefs) { _o.m_enforceRefs = _r; }
+    EnforceRefs(StateCacheDB const& _o, bool _r) : m_o(_o), m_r(_o.m_enforceRefs)
+    {
+        _o.m_enforceRefs = _r;
+    }
     ~EnforceRefs() { m_o.m_enforceRefs = m_r; }
 
 private:
@@ -78,7 +80,7 @@ private:
 
 inline std::ostream& operator<<(std::ostream& _out, StateCacheDB const& _m)
 {
-    for (auto const& i: _m.get())
+    for (auto const& i : _m.get())
     {
         _out << i.first << ": ";
         _out << RLP(i.second);
@@ -88,4 +90,4 @@ inline std::ostream& operator<<(std::ostream& _out, StateCacheDB const& _m)
     return _out;
 }
 
-}
+}  // namespace dev

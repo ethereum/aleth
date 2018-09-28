@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <mutex>
 #include "Common.h"
+#include "Guards.h"
 #include "db.h"
 
 namespace dev
@@ -40,11 +40,11 @@ public:
     // to pass in a function `f`, which will be called with the key and value
     // of each record in the database. If `f` returns false, the `forEach`
     // method must return immediately.
-    void forEach(std::function<bool(Slice, Slice)> f) const override;
+    void forEach(std::function<bool(Slice, Slice)> _f) const override;
 
 private:
-        std::unordered_map<std::string, std::string> m_db;
-        mutable std::mutex m_mutex;
+    std::unordered_map<std::string, std::string> m_db;
+    mutable Mutex m_mutex;
 };
-}
-}
+}  // namespace db
+}  // namespace dev
