@@ -204,6 +204,7 @@ void BlockHeader::populateFromParent(BlockHeader const& _parent)
     m_parentHash = _parent.m_hash;
     m_gasLimit = _parent.m_gasLimit;
     m_difficulty = _parent.m_difficulty;
+    m_timestamp = _parent.m_timestamp + 1;
     m_gasUsed = 0;
 }
 
