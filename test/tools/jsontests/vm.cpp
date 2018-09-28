@@ -99,12 +99,12 @@ EnvInfo FakeExtVM::importEnv(mObject const& _o, LastBlockHashesFace const& _last
     assert(_o.count("currentCoinbase") > 0);
     assert(_o.at("currentCoinbase").type() == str_type);
     assert(_o.count("currentNumber") > 0);
-    auto gasLimit = toInt(_o.at("currentGasLimit"));
+    auto gasLimit = toU256(_o.at("currentGasLimit"));
     assert(gasLimit <= std::numeric_limits<int64_t>::max());
 
     BlockHeader blockHeader;
     blockHeader.setGasLimit(gasLimit.convert_to<int64_t>());
-    blockHeader.setDifficulty(toInt(_o.at("currentDifficulty")));
+    blockHeader.setDifficulty(toU256(_o.at("currentDifficulty")));
     blockHeader.setTimestamp(toPositiveInt64(_o.at("currentTimestamp")));
     blockHeader.setAuthor(Address(_o.at("currentCoinbase").get_str()));
     blockHeader.setNumber(toPositiveInt64(_o.at("currentNumber")));
@@ -144,10 +144,10 @@ void FakeExtVM::importState(mObject const& _object)
         assert(o.count("code") > 0);
 
         auto& a = addresses[Address(i.first)];
-        get<0>(a) = toInt(o.at("balance"));
-        get<1>(a) = toInt(o.at("nonce"));
+        get<0>(a) = toU256(o.at("balance"));
+        get<1>(a) = toU256(o.at("nonce"));
         for (auto const& j: o.at("storage").get_obj())
-            get<2>(a)[toInt(j.first)] = toInt(j.second);
+            get<2>(a)[toU256(j.first)] = toU256(j.second);
 
         get<3>(a) = importCode(o);
     }
@@ -181,9 +181,9 @@ void FakeExtVM::importExec(mObject const& _o)
     myAddress = Address(_o.at("address").get_str());
     caller = Address(_o.at("caller").get_str());
     origin = Address(_o.at("origin").get_str());
-    value = toInt(_o.at("value"));
-    gasPrice = toInt(_o.at("gasPrice"));
-    gas = toInt(_o.at("gas"));
+    value = toU256(_o.at("value"));
+    gasPrice = toU256(_o.at("gasPrice"));
+    gas = toU256(_o.at("gas"));
     execGas = gas;
 
     thisTxCode.clear();
@@ -223,9 +223,12 @@ void FakeExtVM::importCallCreates(mArray const& _callcreates)
         assert(tx.count("value") > 0);
         assert(tx.count("destination") > 0);
         assert(tx.count("gasLimit") > 0);
-        Transaction t = tx["destination"].get_str().empty() ?
-            Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), fromHex(tx["data"].get_str())) :
-            Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), fromHex(tx["data"].get_str()));
+        Transaction t =
+            tx["destination"].get_str().empty() ?
+                Transaction(
+                    toU256(tx["value"]), 0, toU256(tx["gasLimit"]), fromHex(tx["data"].get_str())) :
+                Transaction(toU256(tx["value"]), 0, toU256(tx["gasLimit"]),
+                    Address(tx["destination"].get_str()), fromHex(tx["data"].get_str()));
         callcreates.push_back(t);
     }
 }
@@ -444,7 +447,7 @@ json_spirit::mValue VmTestSuite::doTests(json_spirit::mValue const& _input, bool
 
                 checkOutput(output, testInput);
 
-                BOOST_CHECK_EQUAL(toInt(testInput.at("gas")), fev.gas);
+                BOOST_CHECK_EQUAL(toU256(testInput.at("gas")), fev.gas);
 
                 State postState(State::Null);
                 State expectState(State::Null);

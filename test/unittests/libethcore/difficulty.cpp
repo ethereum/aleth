@@ -128,8 +128,8 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 
 		BlockHeader parent;
 		parent.setTimestamp(test::toPositiveInt64(o["parentTimestamp"]));
-		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
-		parent.setNumber(test::toPositiveInt64(o["currentBlockNumber"]) - 1);
+        parent.setDifficulty(test::toU256(o["parentDifficulty"]));
+        parent.setNumber(test::toPositiveInt64(o["currentBlockNumber"]) - 1);
 		parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
 
 		BlockHeader current;
@@ -137,8 +137,8 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		current.setNumber(test::toPositiveInt64(o["currentBlockNumber"]));
 
 		u256 difficulty = _sealEngine.calculateDifficulty(current, parent);
-		BOOST_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));
-	}
+        BOOST_CHECK_EQUAL(difficulty, test::toU256(o["currentDifficulty"]));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE(DifficultyTests)
