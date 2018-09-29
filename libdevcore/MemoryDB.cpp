@@ -21,20 +21,6 @@ namespace dev
 {
 namespace db
 {
-using MemoryDBBatch = std::unordered_map<std::string, std::string>;
-
-class MemoryDBWriteBatch : public WriteBatchFace
-{
-public:
-    void insert(Slice _key, Slice _value) override;
-    void kill(Slice _key) override;
-
-    MemoryDBBatch const& writeBatch() const { return m_batch; }
-    MemoryDBBatch& writeBatch() { return m_batch; }
-
-private:
-    MemoryDBBatch m_batch;
-};
 
 void MemoryDBWriteBatch::insert(Slice _key, Slice _value)
 {
@@ -53,7 +39,7 @@ std::string MemoryDB::lookup(Slice _key) const
     auto const& it = m_db.find(_key.toString());
     if (it != m_db.end())
     {
-        value = it->first;
+        value = it->second;
     }
     return value;
 }
@@ -94,7 +80,7 @@ void MemoryDB::commit(std::unique_ptr<WriteBatchFace> _batch)
         BOOST_THROW_EXCEPTION(
             DatabaseError() << errinfo_comment("Invalid batch type passed to MemoryDB::commit"));
     }
-    MemoryDBBatch batch = batchPtr->writeBatch();
+    std::unordered_map<std::string, std::string> batch = batchPtr->writeBatch();
     Guard lock(m_mutex);
     for (auto const& e : batch)
     {
