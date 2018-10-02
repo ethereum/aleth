@@ -230,8 +230,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 			json_spirit::mValue v;
 			string const s = asString(dev::contents(boostTestPath));
 			json_spirit::read_string(s, v);
-			addClientInfo(v, boostRelativeTestPath, sha3(dev::contents(_testFileName)));
-			writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));
+            addClientInfo(v, boostRelativeTestPath, readTestFile(_testFileName).hash);
+            writeFile(boostTestPath, asBytes(json_spirit::write_string(v, true)));
 		}
 		else
 		{
