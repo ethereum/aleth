@@ -127,7 +127,11 @@ void LegacyVM::caseCreate()
 
     u256 salt;
     if (m_OP == Instruction::CREATE2)
+    {
         salt = m_SP[3];
+        // charge for hashing initCode = GSHA3WORD * ceil(len(init_code) / 32)
+        m_runGas += toInt63((u512{initSize} + 31) / 32 * m_schedule->sha3WordGas);
+    }
 
     updateMem(memNeed(initOff, initSize));
     updateIOGas();
