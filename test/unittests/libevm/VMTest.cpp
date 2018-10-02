@@ -144,6 +144,40 @@ public:
         BOOST_REQUIRE_EQUAL(state.getNonce(expectedAddress), 1);
     }
 
+    void testCreate2costIncludesInitCodeHashing()
+    {
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
+            ref(code), sha3(code), depth, isCreate, staticCall);
+
+        uint64_t gasBefore = 0;
+        uint64_t gasAfter = 0;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /* newMemSize */, bigint /* gasCost */,
+                        bigint _gas, VMFace const*, ExtVMFace const*) {
+            if (_instr == Instruction::CREATE2)
+            {
+                // before CREATE2 instruction
+                gasBefore = static_cast<uint64_t>(_gas);
+            }
+            else if (gasBefore != 0 && gasAfter == 0)
+            {
+                // first instruction of the init code
+                gasAfter = static_cast<uint64_t>(_gas);
+            }
+        };
+
+        vm->exec(gas, extVm, onOp);
+
+        // create cost
+        uint64_t expectedGasAfter = gasBefore - 32000;
+        // hashing cost, assuming no memory expansion needed
+        expectedGasAfter -=
+            static_cast<uint64_t>(std::ceil(static_cast<double>(inputData.size()) / 32)) * 6;
+        // EIP-150 adjustion of subcall gas
+        expectedGasAfter -= expectedGasAfter / 64;
+        BOOST_REQUIRE_EQUAL(gasAfter, expectedGasAfter);
+    }
+
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
@@ -492,6 +526,11 @@ BOOST_AUTO_TEST_CASE(LegacyVMCreate2collisionWithNonEmptyStorage)
 BOOST_AUTO_TEST_CASE(LegacyVMCreate2collisionWithNonEmptyStorageEmptyInitCode)
 {
     testCreate2collisionWithNonEmptyStorageEmptyInitCode();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMCreate2costIncludesInitCodeHashing)
+{
+    testCreate2costIncludesInitCodeHashing();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
