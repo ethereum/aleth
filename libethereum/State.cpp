@@ -23,11 +23,10 @@
 
 #include "Block.h"
 #include "BlockChain.h"
-#include "Defaults.h"
 #include "ExtVM.h"
 #include "TransactionQueue.h"
 #include <libdevcore/Assertions.h>
-#include <libdevcore/DBImpl.h>
+#include <libdevcore/DBFactory.h>
 #include <libdevcore/TrieHash.h>
 #include <libevm/VMFactory.h>
 #include <boost/filesystem.hpp>
@@ -60,28 +59,33 @@ State::State(State const& _s):
 
 OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
-    fs::path path = _basePath.empty() ? Defaults::get()->m_dbPath : _basePath;
+    fs::path path = _basePath.empty() ? db::databasePath() : _basePath;
 
-    if (_we == WithExisting::Kill)
+    if (!db::isMemoryDB() && _we == WithExisting::Kill)
     {
         clog(VerbosityDebug, "statedb") << "Killing state database (WithExisting::Kill).";
         fs::remove_all(path / fs::path("state"));
     }
 
     path /= fs::path(toHex(_genesisHash.ref().cropped(0, 4))) / fs::path(toString(c_databaseVersion));
-    fs::create_directories(path);
-    DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
+    if (!db::isMemoryDB())
+    {
+        fs::create_directories(path);
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
+    }
 
     try
     {
-        std::unique_ptr<db::DatabaseFace> db(new db::DBImpl(path / fs::path("state")));
+		std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(path / fs::path("state"));
         clog(VerbosityTrace, "statedb") << "Opened state DB.";
         return OverlayDB(std::move(db));
     }
     catch (boost::exception const& ex)
     {
         cwarn << boost::diagnostic_information(ex) << '\n';
-        if (fs::space(path / fs::path("state")).available < 1024)
+        if (db::isMemoryDB())
+            throw;
+        else if (fs::space(path / fs::path("state")).available < 1024)
         {
             cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
             BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());

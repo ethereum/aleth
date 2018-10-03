@@ -34,12 +34,14 @@ BOOST_FIXTURE_TEST_SUITE(MemoryDBTests, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(defaultEmpty)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     BOOST_CHECK(!db->size());
 }
 
 BOOST_AUTO_TEST_CASE(insertAndKillSingle)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     string testKey("foo");
     string testVal("bar");
 
@@ -58,6 +60,7 @@ BOOST_AUTO_TEST_CASE(insertAndKillSingle)
 BOOST_AUTO_TEST_CASE(InsertAndKillMultiple)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
 
     // Insert keys/values and verify insertion
     size_t insertedCount = 0;
@@ -82,6 +85,7 @@ BOOST_AUTO_TEST_CASE(InsertAndKillMultiple)
 BOOST_AUTO_TEST_CASE(ForEachComplete)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     array<string, 3> testData = {{"foo", "bar", "baz"}};
 
     // Insert keys and verify insertion
@@ -109,6 +113,7 @@ BOOST_AUTO_TEST_CASE(ForEachComplete)
 BOOST_AUTO_TEST_CASE(ForEachTerminateEarly)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
 
     // Insert keys and verify insertion
     size_t insertedCount = 0;
@@ -137,7 +142,9 @@ BOOST_AUTO_TEST_CASE(ForEachTerminateEarly)
 BOOST_AUTO_TEST_CASE(defaultEmptyWriteBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
+    BOOST_REQUIRE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
         BOOST_CHECK(!rawBatch->size());
@@ -147,7 +154,9 @@ BOOST_AUTO_TEST_CASE(defaultEmptyWriteBatch)
 BOOST_AUTO_TEST_CASE(insertAndKillSingleBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
+    BOOST_REQUIRE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
 
@@ -165,7 +174,9 @@ BOOST_AUTO_TEST_CASE(insertAndKillSingleBatch)
 BOOST_AUTO_TEST_CASE(insertAndKillMultipleValuesBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
+    BOOST_REQUIRE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
 
@@ -191,8 +202,10 @@ BOOST_AUTO_TEST_CASE(insertAndKillMultipleValuesBatch)
 BOOST_AUTO_TEST_CASE(commitEmptyBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     BOOST_CHECK(!db->size());
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
+    BOOST_REQUIRE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
         BOOST_CHECK(!rawBatch->size());
@@ -205,7 +218,9 @@ BOOST_AUTO_TEST_CASE(commitEmptyBatch)
 BOOST_AUTO_TEST_CASE(commitMultipleValuesBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
+    BOOST_REQUIRE(writeBatch);
 
     // Insert keys/values
     size_t insertedCount = 0;
@@ -227,12 +242,14 @@ BOOST_AUTO_TEST_CASE(commitMultipleValuesBatch)
 BOOST_AUTO_TEST_CASE(commitMultipleBatches)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
+    BOOST_REQUIRE(db);
     unique_ptr<WriteBatchFace> writeBatches[g_testData.size()];
 
     size_t insertedCount = 0;
     for (size_t i = 0; i < g_testData.size(); i++)
     {
         writeBatches[i] = db->createWriteBatch();
+        BOOST_REQUIRE(writeBatches[i]);
         writeBatches[i]->insert(Slice(g_testData[i].first), Slice(g_testData[i].second));
         db->commit(move(writeBatches[i]));
         BOOST_CHECK_EQUAL(++insertedCount, db->size());

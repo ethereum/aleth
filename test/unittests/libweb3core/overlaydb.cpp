@@ -20,14 +20,15 @@
  * OverlayDB tests.
  */
 
-#include <libdevcore/DBImpl.h>
 #include <libdevcore/OverlayDB.h>
+#include <libdevcore/DBFactory.h>
 #include <libdevcore/TransientDirectory.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
+using namespace db;
 using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
@@ -35,7 +36,7 @@ BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(basicUsage)
 {
     TransientDirectory td;
-    std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
+	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::LevelDB, td.path());
     BOOST_REQUIRE(db);
 
     OverlayDB odb(std::move(db));
@@ -67,7 +68,7 @@ BOOST_AUTO_TEST_CASE(basicUsage)
 BOOST_AUTO_TEST_CASE(auxMem)
 {
     TransientDirectory td;
-    std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
+	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::LevelDB, td.path());
     BOOST_REQUIRE(db);
 
     OverlayDB odb(std::move(db));
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(auxMem)
 BOOST_AUTO_TEST_CASE(rollback)
 {
     TransientDirectory td;
-    std::unique_ptr<db::DBImpl> db(new db::DBImpl(td.path()));
+	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::LevelDB, td.path());
     BOOST_REQUIRE(db);
 
     OverlayDB odb(std::move(db));

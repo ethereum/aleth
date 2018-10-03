@@ -31,7 +31,6 @@ public:
     void insert(Slice _key, Slice _value) override;
     void kill(Slice _key) override;
 
-    std::unordered_map<std::string, std::string> const& writeBatch() const { return m_batch; }
     std::unordered_map<std::string, std::string>& writeBatch() { return m_batch; }
     size_t size() { return m_batch.size(); }
 

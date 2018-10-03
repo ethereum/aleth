@@ -34,14 +34,11 @@ void MemoryDBWriteBatch::kill(Slice _key)
 
 std::string MemoryDB::lookup(Slice _key) const
 {
-    std::string value;
     Guard lock(m_mutex);
     auto const& it = m_db.find(_key.toString());
     if (it != m_db.end())
-    {
-        value = it->second;
-    }
-    return value;
+        return it->second;
+    return {};
 }
 
 bool MemoryDB::exists(Slice _key) const
@@ -64,7 +61,7 @@ void MemoryDB::kill(Slice _key)
 
 std::unique_ptr<WriteBatchFace> MemoryDB::createWriteBatch() const
 {
-    return std::unique_ptr<WriteBatchFace>(new MemoryDBWriteBatch());
+    return std::unique_ptr<WriteBatchFace>(new MemoryDBWriteBatch);
 }
 
 void MemoryDB::commit(std::unique_ptr<WriteBatchFace> _batch)
@@ -80,9 +77,9 @@ void MemoryDB::commit(std::unique_ptr<WriteBatchFace> _batch)
         BOOST_THROW_EXCEPTION(
             DatabaseError() << errinfo_comment("Invalid batch type passed to MemoryDB::commit"));
     }
-    std::unordered_map<std::string, std::string> batch = batchPtr->writeBatch();
+    auto const& batch = batchPtr->writeBatch();
     Guard lock(m_mutex);
-    for (auto const& e : batch)
+    for (auto& e : batch)
     {
         m_db[e.first] = e.second;
     }
