@@ -209,7 +209,8 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
     uncleBlock.mine(bc);
 
     BlockHeader uncleHeader = uncleBlock.blockHeader();
-    uncleHeader.setTimestamp(uncleHeader.timestamp() + 10000);
+    uncleHeader.setTimestamp(
+        dev::utcTime() + 1000000);  // mining does not reset timestamp on NoProof
     uncleBlock.setBlockHeader(uncleHeader);
     uncleBlock.updateNonce(bc);
 
