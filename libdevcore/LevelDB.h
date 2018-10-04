@@ -47,7 +47,7 @@ public:
     std::unique_ptr<WriteBatchFace> createWriteBatch() const override;
     void commit(std::unique_ptr<WriteBatchFace> _batch) override;
 
-    void forEach(std::function<bool(Slice, Slice)> f) const override;
+    void forEach(std::function<bool(Slice, Slice)> _f) const override;
 
 private:
     std::unique_ptr<leveldb::DB> m_db;

@@ -17,7 +17,6 @@
 
 #include "WebThree.h"
 
-#include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
 #include <libethashseal/EthashClient.h>
@@ -42,9 +41,6 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
     NetworkConfig const& _n, bytesConstRef _network, bool _testing)
   : m_clientVersion(_clientVersion), m_net(_clientVersion, _n, _network)
 {
-    if (_dbPath.size())
-        Defaults::setDBPath(_dbPath);
-
     if (_interfaces.count("eth"))
     {
         if (_testing)

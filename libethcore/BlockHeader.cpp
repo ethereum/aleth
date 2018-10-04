@@ -23,7 +23,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieDB.h>
-#include <libdevcore/MemoryDB.h>
+#include <libdevcore/StateCacheDB.h>
 #include <libdevcore/TrieHash.h>
 #include <libethcore/Common.h>
 #include "Exceptions.h"
@@ -237,8 +237,8 @@ void BlockHeader::verify(Strictness _s, BlockHeader const& _parent, bytesConstRe
         LOG(m_logger) << "Expected trie root: " << toString(expectedRoot);
         if (m_transactionsRoot != expectedRoot)
         {
-            MemoryDB tm;
-            GenericTrieDB<MemoryDB> transactionsTrie(&tm);
+            StateCacheDB tm;
+            GenericTrieDB<StateCacheDB> transactionsTrie(&tm);
             transactionsTrie.init();
 
             vector<bytesConstRef> txs;
