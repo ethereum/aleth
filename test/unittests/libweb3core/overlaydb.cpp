@@ -14,15 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file trie.cpp
- * @author Christoph Jentzsch <cj@ethdev.com>
- * @date 2015
- * OverlayDB tests.
- */
 
 #include <libdevcore/OverlayDB.h>
 #include <libdevcore/DBFactory.h>
-#include <libdevcore/TransientDirectory.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <boost/test/unit_test.hpp>
 
@@ -35,8 +29,7 @@ BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(basicUsage)
 {
-    TransientDirectory td;
-	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::LevelDB, td.path());
+	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
     BOOST_REQUIRE(db);
 
     OverlayDB odb(std::move(db));
@@ -67,8 +60,7 @@ BOOST_AUTO_TEST_CASE(basicUsage)
 
 BOOST_AUTO_TEST_CASE(auxMem)
 {
-    TransientDirectory td;
-	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::LevelDB, td.path());
+	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
     BOOST_REQUIRE(db);
 
     OverlayDB odb(std::move(db));
@@ -104,8 +96,7 @@ BOOST_AUTO_TEST_CASE(auxMem)
 
 BOOST_AUTO_TEST_CASE(rollback)
 {
-    TransientDirectory td;
-	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::LevelDB, td.path());
+	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
     BOOST_REQUIRE(db);
 
     OverlayDB odb(std::move(db));
