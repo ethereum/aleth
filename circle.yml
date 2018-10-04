@@ -319,6 +319,4 @@ workflows:
             - master
     jobs:
       - linux-gcc6-nightly
-      - docker-aleth-nightly:
-          requires:
-            - linux-gcc6-nightly
+      - docker-aleth-nightly
