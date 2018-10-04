@@ -39,21 +39,47 @@ using namespace dev::eth;
 using namespace p2p;
 
 static unsigned const c_maxSendTransactions = 256;
+static const unsigned c_maxHeadersToSend = 1024;
+static const unsigned c_maxIncomingNewHashes = 1024;
 
 char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State"};
 
 namespace
 {
+string toString(Asking _a)
+{
+    switch (_a)
+    {
+    case Asking::BlockHeaders:
+        return "BlockHeaders";
+    case Asking::BlockBodies:
+        return "BlockBodies";
+    case Asking::NodeData:
+        return "NodeData";
+    case Asking::Receipts:
+        return "Receipts";
+    case Asking::Nothing:
+        return "Nothing";
+    case Asking::State:
+        return "State";
+    case Asking::WarpManifest:
+        return "WarpManifest";
+    case Asking::WarpData:
+        return "WarpData";
+    }
+    return "?";
+}
+
 class EthereumPeerObserver: public EthereumPeerObserverFace
 {
 public:
     EthereumPeerObserver(shared_ptr<BlockChainSync> _sync, TransactionQueue& _tq): m_sync(_sync), m_tq(_tq) {}
 
-    void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) override
+    void onPeerStatus(NodeID const& _peerID, EthereumPeerStatus const& _status) override
     {
         try
         {
-            m_sync->onPeerStatus(_peer);
+            m_sync->onPeerStatus(_peerID, _status);
         }
         catch (FailedInvariant const&)
         {
@@ -63,11 +89,11 @@ public:
         }
     }
 
-    void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
+    void onPeerTransactions(NodeID const& _peerID, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
         LOG(m_logger) << "Transactions (" << dec << itemCount << " entries)";
-        m_tq.enqueue(_r, _peer->id());
+        m_tq.enqueue(_r, _peerID);
     }
 
     void onPeerAborting() override
@@ -82,11 +108,11 @@ public:
         }
     }
 
-    void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers) override
+    void onPeerBlockHeaders(NodeID const& _peerID, RLP const& _headers) override
     {
         try
         {
-            m_sync->onPeerBlockHeaders(_peer, _headers);
+            m_sync->onPeerBlockHeaders(_peerID, _headers);
         }
         catch (FailedInvariant const&)
         {
@@ -96,11 +122,11 @@ public:
         }
     }
 
-    void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
+    void onPeerBlockBodies(NodeID const& _peerID, RLP const& _r) override
     {
         try
         {
-            m_sync->onPeerBlockBodies(_peer, _r);
+            m_sync->onPeerBlockBodies(_peerID, _r);
         }
         catch (FailedInvariant const&)
         {
@@ -110,11 +136,12 @@ public:
         }
     }
 
-    void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes) override
+    void onPeerNewHashes(
+        NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes) override
     {
         try
         {
-            m_sync->onPeerNewHashes(_peer, _hashes);
+            m_sync->onPeerNewHashes(_peerID, _hashes);
         }
         catch (FailedInvariant const&)
         {
@@ -124,11 +151,11 @@ public:
         }
     }
 
-    void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
+    void onPeerNewBlock(NodeID const& _peerID, RLP const& _r) override
     {
         try
         {
-            m_sync->onPeerNewBlock(_peer, _r);
+            m_sync->onPeerNewBlock(_peerID, _r);
         }
         catch (FailedInvariant const&)
         {
@@ -138,13 +165,13 @@ public:
         }
     }
 
-    void onPeerNodeData(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r) override
+    void onPeerNodeData(NodeID const& /* _peerID */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
         LOG(m_logger) << "Node Data (" << dec << itemCount << " entries)";
     }
 
-    void onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r) override
+    void onPeerReceipts(NodeID const& /* _peerID */, RLP const& _r) override
     {
         unsigned itemCount = _r.itemCount();
         LOG(m_logger) << "Receipts (" << dec << itemCount << " entries)";
@@ -366,10 +393,11 @@ private:
 
 }
 
-EthereumHost::EthereumHost(Host const& _host, BlockChain const& _ch, OverlayDB const& _db,
-    TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId)
-  : HostCapability<EthereumPeer>(_host),
+EthereumHost::EthereumHost(shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _ch,
+    OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId)
+  : HostCapability("eth", c_protocolVersion, PacketCount),
     Worker("ethsync"),
+    m_host(move(_host)),
     m_chain(_ch),
     m_db(_db),
     m_tq(_tq),
@@ -444,7 +472,14 @@ void EthereumHost::doWork()
     if (now - m_lastTick >= 1)
     {
         m_lastTick = now;
-        foreachPeer([](std::shared_ptr<EthereumPeer> _p) { _p->tick(); return true; });
+        for (auto const& peer : m_peers)
+        {
+            time_t now = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
+            auto const& status = peer.second;
+            if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
+                // timeout
+                m_host->disconnect(peer.first, PingTimeout);
+        }
     }
 
 //	return netChange;
@@ -455,7 +490,7 @@ void EthereumHost::doWork()
 void EthereumHost::maintainTransactions()
 {
     // Send any new transactions.
-    unordered_map<std::shared_ptr<EthereumPeer>, std::vector<size_t>> peerTransactions;
+    unordered_map<NodeID, std::vector<size_t>> peerTransactions;
     auto ts = m_tq.topTransactions(c_maxSendTransactions);
     {
         Guard l(x_transactions);
@@ -463,81 +498,83 @@ void EthereumHost::maintainTransactions()
         {
             auto const& t = ts[i];
             bool unsent = !m_transactionsSent.count(t.sha3());
-            auto peers = get<1>(randomSelection(0, [&](EthereumPeer* p) { return p->m_requireTransactions || (unsent && !p->m_knownTransactions.count(t.sha3())); }));
+            auto peers = get<1>(randomSelection(0, [&](EthereumPeerStatus const& status) {
+                return status.m_requireTransactions ||
+                       (unsent && !status.m_knownTransactions.count(t.sha3()));
+            }));
             for (auto const& p: peers)
                 peerTransactions[p].push_back(i);
         }
         for (auto const& t: ts)
             m_transactionsSent.insert(t.sha3());
     }
-    foreachPeer([&](shared_ptr<EthereumPeer> _p)
+    for (auto& peer : m_peers)
     {
         bytes b;
         unsigned n = 0;
-        for (auto const& i: peerTransactions[_p])
+        for (auto const& i : peerTransactions[peer.first])
         {
-            _p->m_knownTransactions.insert(ts[i].sha3());
+            peer.second.m_knownTransactions.insert(ts[i].sha3());
             b += ts[i].rlp();
             ++n;
         }
 
-        _p->clearKnownTransactions();
+        DEV_GUARDED(peer.second.x_knownTransactions)
+        peer.second.m_knownTransactions.clear();
 
-        if (n || _p->m_requireTransactions)
+        if (n || peer.second.m_requireTransactions)
         {
             RLPStream ts;
-            _p->prep(ts, TransactionsPacket, n).appendRaw(b, n);
-            _p->sealAndSend(ts);
-            LOG(m_logger) << "Sent " << n << " transactions to "
-                          << _p->session()->info().clientVersion;
+            m_host->prep(peer.first, CapDesc{name(), version()}, ts, TransactionsPacket, n)
+                .appendRaw(b, n);
+            m_host->sealAndSend(peer.first, ts);
+            LOG(m_logger) << "Sent " << n << " transactions to " << peer.first;
         }
-        _p->m_requireTransactions = false;
-        return true;
-    });
+        peer.second.m_requireTransactions = false;
+    }
 }
-
+/*
 void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const
 {
     //order peers by protocol, rating, connection age
     auto sessions = peerSessions();
-    auto sessionLess = [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left, std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right)
-        { return _left.first->rating() == _right.first->rating() ? _left.first->connectionTime() < _right.first->connectionTime() : _left.first->rating() > _right.first->rating(); };
+    auto sessionLess = [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const&
+_left, std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right) { return
+_left.first->rating() == _right.first->rating() ? _left.first->connectionTime() <
+_right.first->connectionTime() : _left.first->rating() > _right.first->rating(); };
 
     std::sort(sessions.begin(), sessions.end(), sessionLess);
     for (auto s: sessions)
         if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
             return;
 }
-
-tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<SessionFace>>> EthereumHost::randomSelection(unsigned _percent, std::function<bool(EthereumPeer*)> const& _allow)
+*/
+tuple<vector<NodeID>, vector<NodeID>> EthereumHost::randomSelection(
+    unsigned _percent, std::function<bool(EthereumPeerStatus const&)> const& _allow)
 {
-    vector<shared_ptr<EthereumPeer>> chosen;
-    vector<shared_ptr<EthereumPeer>> allowed;
-    vector<shared_ptr<SessionFace>> sessions;
+    vector<NodeID> chosen;
+    vector<NodeID> allowed;
     double percentDecimal = _percent / 100.0;
-    foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
+
+    for (auto const& peer : m_peers)
     {
-        if (_allow(_p.get()))
-        {
-            sessions.push_back(_p->session());
-            allowed.push_back(_p);
-        }
-        return true;
-    });
+        if (_allow(peer.second))
+            allowed.push_back(peer.first);
+    }
 
     if (_percent == 0 || allowed.size() == 0)
     {
-        return make_tuple(move(chosen), move(allowed), move(sessions));
+        return make_tuple(move(chosen), move(allowed));
     }
 
     std::shuffle(allowed.begin(), allowed.end(), m_urng);
 
-   // Remove elements from the end of the shuffled allowed vector and move them to chosen.
+    // Remove elements from the end of the shuffled allowed vector and move them to chosen.
     size_t chosenSize = percentDecimal * allowed.size();
     chosen.reserve(chosenSize);
     std::move(allowed.begin() + chosenSize, allowed.end(), std::back_inserter(chosen));
     allowed.erase(allowed.begin() + chosenSize, allowed.end());
-    return make_tuple(move(chosen), move(allowed), move(sessions));
+    return make_tuple(move(chosen), move(allowed));
 }
 
 void EthereumHost::maintainBlocks(h256 const& _currentHash)
@@ -555,25 +592,29 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 
             h256s blocks = get<0>(m_chain.treeRoute(m_latestBlockSent, _currentHash, false, false, true));
 
-            auto s = randomSelection(25, [&](EthereumPeer* p){
-                DEV_GUARDED(p->x_knownBlocks)
-                    return !p->m_knownBlocks.count(_currentHash);
+            auto s = randomSelection(25, [&](EthereumPeerStatus const& _status) {
+                DEV_GUARDED(_status.x_knownBlocks)
+                return !_status.m_knownBlocks.count(_currentHash);
                 return false;
             });
-            for (shared_ptr<EthereumPeer> const& p: get<0>(s))
+            for (NodeID const& peerID : get<0>(s))
                 for (auto const& b: blocks)
                 {
                     RLPStream ts;
-                    p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty);
+                    m_host->prep(peerID, CapDesc{name(), version()}, ts, NewBlockPacket, 2)
+                        .appendRaw(m_chain.block(b), 1)
+                        .append(m_chain.details(b).totalDifficulty);
 
-                    Guard l(p->x_knownBlocks);
-                    p->sealAndSend(ts);
-                    p->m_knownBlocks.clear();
+                    auto& peer = m_peers[peerID];
+                    Guard l(peer.x_knownBlocks);
+                    m_host->sealAndSend(peerID, ts);
+                    peer.m_knownBlocks.clear();
                 }
-            for (shared_ptr<EthereumPeer> const& p: get<1>(s))
+            for (NodeID const& peerID : get<1>(s))
             {
                 RLPStream ts;
-                p->prep(ts, NewBlockHashesPacket, blocks.size());
+                m_host->prep(
+                    peerID, CapDesc{name(), version()}, ts, NewBlockHashesPacket, blocks.size());
                 for (auto const& b: blocks)
                 {
                     ts.appendList(2);
@@ -581,9 +622,10 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
                     ts.append(m_chain.number(b));
                 }
 
-                Guard l(p->x_knownBlocks);
-                p->sealAndSend(ts);
-                p->m_knownBlocks.clear();
+                auto& peer = m_peers[peerID];
+                Guard l(peer.x_knownBlocks);
+                m_host->sealAndSend(peerID, ts);
+                peer.m_knownBlocks.clear();
             }
         }
         m_latestBlockSent = _currentHash;
@@ -602,34 +644,32 @@ SyncStatus EthereumHost::status() const
 
 void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId)
 {
-    auto session = peerSession(_nodeId);
-    if (!session)
+    auto itPeerStatus = m_peers.find(_nodeId);
+    if (itPeerStatus == m_peers.end())
         return;
 
-    std::shared_ptr<EthereumPeer> peer = capabilityFromSession<EthereumPeer>(*session);
-    if (!peer)
-        return;
+    auto& peerStatus = itPeerStatus->second;
 
-    Guard l(peer->x_knownTransactions);
-    peer->m_knownTransactions.insert(_h);
+    Guard l(peerStatus.x_knownTransactions);
+    peerStatus.m_knownTransactions.insert(_h);
     switch (_ir)
     {
     case ImportResult::Malformed:
-        peer->addRating(-100);
+        m_host->addRating(_nodeId, -100);
         break;
     case ImportResult::AlreadyKnown:
         // if we already had the transaction, then don't bother sending it on.
         DEV_GUARDED(x_transactions)
             m_transactionsSent.insert(_h);
-        peer->addRating(0);
-        break;
+            m_host->addRating(_nodeId, 0);
+            break;
     case ImportResult::Success:
-        peer->addRating(100);
+        m_host->addRating(_nodeId, 100);
         break;
     default:;
     }
 }
-
+/*
 shared_ptr<PeerCapabilityFace> EthereumHost::newPeerCapability(
     shared_ptr<SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap)
 {
@@ -648,4 +688,375 @@ shared_ptr<PeerCapabilityFace> EthereumHost::newPeerCapability(
     );
 
     return ret;
+}
+*/
+void EthereumHost::onConnect(p2p::NodeID const& _peerID, u256 const& _peerCapabilityVersion)
+{
+    m_peers[_peerID].m_peerCapabilityVersion = _peerCapabilityVersion;
+    requestStatus(_peerID, m_networkId, m_chain.details().totalDifficulty, m_chain.currentHash(),
+        m_chain.genesisHash());
+}
+
+void EthereumHost::onDisconnect(p2p::NodeID const& _nodeID)
+{
+    m_peers.erase(_nodeID);
+}
+
+bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r)
+{
+    auto& peerStatus = m_peers[_peerID];
+    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
+
+    try
+    {
+        switch (_id)
+        {
+        case StatusPacket:
+        {
+            peerStatus.m_protocolVersion = _r[0].toInt<unsigned>();
+            peerStatus.m_networkId = _r[1].toInt<u256>();
+            peerStatus.m_totalDifficulty = _r[2].toInt<u256>();
+            peerStatus.m_latestHash = _r[3].toHash<h256>();
+            peerStatus.m_genesisHash = _r[4].toHash<h256>();
+            if (peerStatus.m_peerCapabilityVersion == protocolVersion())
+                peerStatus.m_protocolVersion = protocolVersion();
+
+            LOG(m_logger) << "Status: " << peerStatus.m_protocolVersion << " / "
+                          << peerStatus.m_networkId << " / " << peerStatus.m_genesisHash
+                          << ", TD: " << peerStatus.m_totalDifficulty << " = "
+                          << peerStatus.m_latestHash;
+            setIdle(_peerID);
+            m_peerObserver->onPeerStatus(_peerID, peerStatus);
+            break;
+        }
+        case TransactionsPacket:
+        {
+            m_peerObserver->onPeerTransactions(_peerID, _r);
+            break;
+        }
+        case GetBlockHeadersPacket:
+        {
+            /// Packet layout:
+            /// [ block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ]
+            const auto blockId = _r[0];
+            const auto maxHeaders = _r[1].toInt<u256>();
+            const auto skip = _r[2].toInt<u256>();
+            const auto reverse = _r[3].toInt<bool>();
+
+            auto numHeadersToSend = maxHeaders <= c_maxHeadersToSend ?
+                                        static_cast<unsigned>(maxHeaders) :
+                                        c_maxHeadersToSend;
+
+            if (skip > std::numeric_limits<unsigned>::max() - 1)
+            {
+                cnetdetails << "Requested block skip is too big: " << skip;
+                break;
+            }
+
+            pair<bytes, unsigned> const rlpAndItemCount =
+                m_hostData->blockHeaders(blockId, numHeadersToSend, skip, reverse);
+
+            RLPStream s;
+            m_host
+                ->prep(_peerID, CapDesc{name(), version()}, s, BlockHeadersPacket,
+                    rlpAndItemCount.second)
+                .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
+            m_host->sealAndSend(_peerID, s);
+            m_host->addRating(_peerID, 0);
+            break;
+        }
+        case BlockHeadersPacket:
+        {
+            if (peerStatus.m_asking != Asking::BlockHeaders)
+                LOG(m_loggerImpolite)
+                    << "Peer giving us block headers when we didn't ask for them.";
+            else
+            {
+                setIdle(_peerID);
+                m_peerObserver->onPeerBlockHeaders(_peerID, _r);
+            }
+            break;
+        }
+        case GetBlockBodiesPacket:
+        {
+            unsigned count = static_cast<unsigned>(_r.itemCount());
+            cnetlog << "GetBlockBodies (" << dec << count << " entries)";
+
+            if (!count)
+            {
+                LOG(m_loggerImpolite) << "Zero-entry GetBlockBodies: Not replying.";
+                m_host->addRating(_peerID, -10);
+                break;
+            }
+
+            pair<bytes, unsigned> const rlpAndItemCount = m_hostData->blockBodies(_r);
+
+            m_host->addRating(_peerID, 0);
+            RLPStream s;
+            m_host
+                ->prep(_peerID, CapDesc{name(), version()}, s, BlockBodiesPacket,
+                    rlpAndItemCount.second)
+                .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
+            m_host->sealAndSend(_peerID, s);
+            break;
+        }
+        case BlockBodiesPacket:
+        {
+            if (peerStatus.m_asking != Asking::BlockBodies)
+                LOG(m_loggerImpolite) << "Peer giving us block bodies when we didn't ask for them.";
+            else
+            {
+                setIdle(_peerID);
+                m_peerObserver->onPeerBlockBodies(_peerID, _r);
+            }
+            break;
+        }
+        case NewBlockPacket:
+        {
+            m_peerObserver->onPeerNewBlock(_peerID, _r);
+            break;
+        }
+        case NewBlockHashesPacket:
+        {
+            unsigned itemCount = _r.itemCount();
+
+            cnetlog << "BlockHashes (" << dec << itemCount << " entries) "
+                    << (itemCount ? "" : " : NoMoreHashes");
+
+            if (itemCount > c_maxIncomingNewHashes)
+            {
+                m_host->disableCapability(
+                    _peerID, CapDesc{name(), version()}, "Too many new hashes");
+                break;
+            }
+
+            vector<pair<h256, u256>> hashes(itemCount);
+            for (unsigned i = 0; i < itemCount; ++i)
+                hashes[i] = std::make_pair(_r[i][0].toHash<h256>(), _r[i][1].toInt<u256>());
+
+            m_peerObserver->onPeerNewHashes(_peerID, hashes);
+            break;
+        }
+        case GetNodeDataPacket:
+        {
+            unsigned count = static_cast<unsigned>(_r.itemCount());
+            if (!count)
+            {
+                LOG(m_loggerImpolite) << "Zero-entry GetNodeData: Not replying.";
+                m_host->addRating(_peerID, -10);
+                break;
+            }
+            cnetlog << "GetNodeData (" << dec << count << " entries)";
+
+            strings const data = m_hostData->nodeData(_r);
+
+            m_host->addRating(_peerID, 0);
+            RLPStream s;
+            m_host->prep(_peerID, CapDesc{name(), version()}, s, NodeDataPacket, data.size());
+            for (auto const& element : data)
+                s.append(element);
+            m_host->sealAndSend(_peerID, s);
+            break;
+        }
+        case GetReceiptsPacket:
+        {
+            unsigned count = static_cast<unsigned>(_r.itemCount());
+            if (!count)
+            {
+                LOG(m_loggerImpolite) << "Zero-entry GetReceipts: Not replying.";
+                m_host->addRating(_peerID, -10);
+                break;
+            }
+            cnetlog << "GetReceipts (" << dec << count << " entries)";
+
+            pair<bytes, unsigned> const rlpAndItemCount = m_hostData->receipts(_r);
+
+            m_host->addRating(_peerID, 0);
+            RLPStream s;
+            m_host
+                ->prep(
+                    _peerID, CapDesc{name(), version()}, s, ReceiptsPacket, rlpAndItemCount.second)
+                .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
+            m_host->sealAndSend(_peerID, s);
+            break;
+        }
+        case NodeDataPacket:
+        {
+            if (peerStatus.m_asking != Asking::NodeData)
+                LOG(m_loggerImpolite) << "Peer giving us node data when we didn't ask for them.";
+            else
+            {
+                setIdle(_peerID);
+                m_peerObserver->onPeerNodeData(_peerID, _r);
+            }
+            break;
+        }
+        case ReceiptsPacket:
+        {
+            if (peerStatus.m_asking != Asking::Receipts)
+                LOG(m_loggerImpolite) << "Peer giving us receipts when we didn't ask for them.";
+            else
+            {
+                setIdle(_peerID);
+                m_peerObserver->onPeerReceipts(_peerID, _r);
+            }
+            break;
+        }
+        default:
+            return false;
+        }
+    }
+    catch (Exception const&)
+    {
+        cnetlog << "Peer causing an Exception: "
+                << boost::current_exception_diagnostic_information() << " " << _r;
+    }
+    catch (std::exception const& _e)
+    {
+        cnetlog << "Peer causing an exception: " << _e.what() << " " << _r;
+    }
+
+    return true;
+}
+
+void EthereumHost::setIdle(NodeID const& _peerID)
+{
+    setAsking(_peerID, Asking::Nothing);
+}
+
+void EthereumHost::setAsking(NodeID const& _peerID, Asking _a)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    auto& peerStatus = itPeerStatus->second;
+
+    peerStatus.m_asking = _a;
+    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
+
+    m_host->addNote(_peerID, "ask", ::toString(_a));
+    m_host->addNote(_peerID, "sync",
+        string(isCriticalSyncing(_peerID) ? "ONGOING" : "holding") +
+            (needsSyncing(_peerID) ? " & needed" : ""));
+}
+
+bool EthereumHost::isCriticalSyncing(p2p::NodeID const& _peerID) const
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return false;
+
+    auto const& peerStatus = itPeerStatus->second;
+
+    return peerStatus.m_asking == Asking::BlockHeaders || peerStatus.m_asking == Asking::State ||
+           (peerStatus.m_asking == Asking::BlockBodies && peerStatus.m_protocolVersion == 62);
+}
+
+void EthereumHost::requestStatus(p2p::NodeID const& _peerID, u256 _hostNetworkId,
+    u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    auto& peerStatus = itPeerStatus->second;
+
+    assert(peerStatus.m_asking == Asking::Nothing);
+    setAsking(_peerID, Asking::State);
+    peerStatus.m_requireTransactions = true;
+    RLPStream s;
+    m_host->prep(_peerID, CapDesc{name(), version()}, s, StatusPacket, 5)
+        << protocolVersion() << _hostNetworkId << _chainTotalDifficulty << _chainCurrentHash
+        << _chainGenesisHash;
+    m_host->sealAndSend(_peerID, s);
+}
+
+void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, unsigned _startNumber,
+    unsigned _count, unsigned _skip, bool _reverse)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    auto& peerStatus = itPeerStatus->second;
+
+    if (peerStatus.m_asking != Asking::Nothing)
+    {
+        LOG(m_logger) << "Asking headers while requesting " << ::toString(peerStatus.m_asking);
+    }
+    setAsking(_peerID, Asking::BlockHeaders);
+    RLPStream s;
+    m_host->prep(_peerID, CapDesc{name(), version()}, s, GetBlockHeadersPacket, 4)
+        << _startNumber << _count << _skip << (_reverse ? 1 : 0);
+    LOG(m_logger) << "Requesting " << _count << " block headers starting from " << _startNumber
+                  << (_reverse ? " in reverse" : "");
+    peerStatus.m_lastAskedHeaders = _count;
+    m_host->sealAndSend(_peerID, s);
+}
+
+void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, h256 const& _startHash,
+    unsigned _count, unsigned _skip, bool _reverse)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    auto& peerStatus = itPeerStatus->second;
+
+    if (peerStatus.m_asking != Asking::Nothing)
+    {
+        LOG(m_logger) << "Asking headers while requesting " << ::toString(peerStatus.m_asking);
+    }
+    setAsking(_peerID, Asking::BlockHeaders);
+    RLPStream s;
+    m_host->prep(_peerID, CapDesc{name(), version()}, s, GetBlockHeadersPacket, 4)
+        << _startHash << _count << _skip << (_reverse ? 1 : 0);
+    LOG(m_logger) << "Requesting " << _count << " block headers starting from " << _startHash
+                  << (_reverse ? " in reverse" : "");
+    peerStatus.m_lastAskedHeaders = _count;
+    m_host->sealAndSend(_peerID, s);
+}
+
+
+void EthereumHost::requestBlockBodies(p2p::NodeID const& _peerID, h256s const& _blocks)
+{
+    requestByHashes(_peerID, _blocks, Asking::BlockBodies, GetBlockBodiesPacket);
+}
+
+void EthereumHost::requestNodeData(p2p::NodeID const& _peerID, h256s const& _hashes)
+{
+    requestByHashes(_peerID, _hashes, Asking::NodeData, GetNodeDataPacket);
+}
+
+void EthereumHost::requestReceipts(p2p::NodeID const& _peerID, h256s const& _blocks)
+{
+    requestByHashes(_peerID, _blocks, Asking::Receipts, GetReceiptsPacket);
+}
+
+void EthereumHost::requestByHashes(p2p::NodeID const& _peerID, h256s const& _hashes, Asking _asking,
+    SubprotocolPacketType _packetType)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    auto& peerStatus = itPeerStatus->second;
+
+    if (peerStatus.m_asking != Asking::Nothing)
+    {
+        LOG(m_logger) << "Asking " << ::toString(_asking) << " while requesting "
+                      << ::toString(peerStatus.m_asking);
+    }
+    setAsking(_peerID, _asking);
+    if (_hashes.size())
+    {
+        RLPStream s;
+        m_host->prep(_peerID, CapDesc{name(), version()}, s, _packetType, _hashes.size());
+        for (auto const& i : _hashes)
+            s << i;
+        m_host->sealAndSend(_peerID, s);
+    }
+    else
+        setIdle(_peerID);
 }

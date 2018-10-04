@@ -27,7 +27,7 @@ namespace dev
 namespace eth
 {
 class SnapshotStorageFace;
-class WarpPeerCapability;
+class WarpPeerObserverFace;
 
 const unsigned c_WarpProtocolVersion = 1;
 
@@ -40,22 +40,6 @@ enum WarpSubprotocolPacketType : byte
     SnapshotData = 0x14,
 
     WarpSubprotocolPacketCount
-};
-
-class WarpPeerObserverFace
-{
-public:
-    virtual ~WarpPeerObserverFace() {}
-
-    virtual void onPeerStatus(std::shared_ptr<WarpPeerCapability> _peer) = 0;
-
-    virtual void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
-
-    virtual void onPeerBlockHeaders(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
-
-    virtual void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) = 0;
-
-    virtual void onPeerDisconnect(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
 };
 
 class WarpPeerCapability : public p2p::PeerCapability

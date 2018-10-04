@@ -80,9 +80,23 @@ public:
 	
 	/// Peer session is noted as useful.
 	void noteSessionGood() { m_failedAttempts = 0; }
-	
-protected:
-	/// Returns number of seconds to wait until attempting connection, based on attempted connection history.
+
+    unsigned capabilityOffset(CapDesc const& _cap) const
+    {
+        // TODO can not exist
+        // TODO name argument should be enough
+        return m_capabilityOffsets.find(_cap)->second;
+    }
+    void setCapabilityOffset(CapDesc const& _cap, unsigned _offset)
+    {
+        m_capabilityOffsets[_cap] = _offset;
+    }
+    //    void setCapabilityVersion(CapDesc const& _cap, u256 const _version) {
+    //    m_capabilityVersions[_cap] = _version; }
+
+
+private:
+    /// Returns number of seconds to wait until attempting connection, based on attempted connection history.
 	unsigned fallbackSeconds() const;
 
 	std::atomic<int> m_score{0};									///< All time cumulative.
@@ -97,6 +111,11 @@ protected:
 
 	/// Used by isOffline() and (todo) for peer to emit session information.
 	std::weak_ptr<Session> m_session;
+
+    /// Map of capability to packet id offset in the session
+    std::map<CapDesc, unsigned> m_capabilityOffsets;
+    /// Map of capability (host version) to peer version
+    //    std::unordered_map<CapDesc, u256> m_capabilityVersions;
 };
 using Peers = std::vector<Peer>;
 

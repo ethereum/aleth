@@ -23,7 +23,6 @@
 #include "Host.h"
 #include "Common.h"
 #include "HostCapability.h"
-#include "PeerCapability.h"
 #include "RLPxHandshake.h"
 #include "Session.h"
 #include "UPnP.h"
@@ -41,6 +40,98 @@
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
+
+namespace
+{
+class CapabilityHost : public CapabilityHostFace
+{
+public:
+    explicit CapabilityHost(Host& _host) : m_host{_host} {}
+
+    boost::optional<PeerSessionInfo> peerSessionInfo(NodeID const& _nodeID) const override
+    {
+        auto session = m_host.peerSession(_nodeID);
+        return session ? session->info() : boost::optional<PeerSessionInfo>{};
+    }
+
+    void disconnect(NodeID const& _nodeID, DisconnectReason _reason) override
+    {
+        auto session = m_host.peerSession(_nodeID);
+        if (session)
+            session->disconnect(_reason);
+    }
+
+    void disableCapability(
+        NodeID const& _nodeID, CapDesc const& _capDesc, std::string const& _problem) override
+    {
+        auto session = m_host.peerSession(_nodeID);
+        if (session)
+            session->disableCapability(_capDesc, _problem);
+    }
+
+    void addRating(NodeID const& _nodeID, int _r) override
+    {
+        auto session = m_host.peerSession(_nodeID);
+        if (session)
+            session->addRating(_r);
+    }
+
+    RLPStream& prep(NodeID const& _nodeID, CapDesc const& _capDesc, RLPStream& _s, unsigned _id,
+        unsigned _args = 0) override
+    {
+        auto session = m_host.peerSession(_nodeID);
+        if (!session)
+            return _s;
+
+        unsigned const offset = session->peer()->capabilityOffset(_capDesc);
+        return _s.appendRaw(bytes(1, _id + offset)).appendList(_args);
+    }
+
+    void sealAndSend(NodeID const& _nodeID, RLPStream& _s) override
+    {
+        auto session = m_host.peerSession(_nodeID);
+        if (session)
+            session->sealAndSend(_s);
+    }
+
+    void addNote(NodeID const& _nodeID, std::string const& _k, std::string const& _v) override
+    {
+        auto session = m_host.peerSession(_nodeID);
+        if (session)
+            session->addNote(_k, _v);
+    }
+
+    bool isRude(NodeID const& _nodeID, std::string const& _capability) const override
+    {
+        auto s = m_host.peerSession(_nodeID);
+        if (s)
+            return s->repMan().isRude(*s, _capability);
+        return false;
+    }
+
+    void foreachPeer(std::string const& _name, u256 const& _version,
+        std::function<bool(NodeID const&)> _f) const override
+    {
+        // order peers by protocol, rating, connection age
+        auto sessions = m_host.peerSessions(_name, _version);
+        auto sessionLess =
+            [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left,
+                std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right) {
+                return _left.first->rating() == _right.first->rating() ?
+                           _left.first->connectionTime() < _right.first->connectionTime() :
+                           _left.first->rating() > _right.first->rating();
+            };
+
+        std::sort(sessions.begin(), sessions.end(), sessionLess);
+        for (auto s : sessions)
+            if (!_f(s.first->id()))
+                return;
+    }
+
+private:
+    Host& m_host;
+};
+}  // namespace
 
 /// Interval at which Host::run will call keepAlivePeers to ping peers.
 std::chrono::seconds const c_keepAliveInterval = std::chrono::seconds(30);
@@ -98,15 +189,16 @@ bytes ReputationManager::data(SessionFace const& _s, std::string const& _sub) co
     return bytes();
 }
 
-Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig const& _n):
-    Worker("p2p", 0),
+Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig const& _n)
+  : Worker("p2p", 0),
     m_clientVersion(_clientVersion),
     m_netConfig(_n),
     m_ifAddresses(Network::getInterfaceAddresses()),
     m_ioService(2),
     m_tcp4Acceptor(m_ioService),
     m_alias(_alias),
-    m_lastPing(chrono::steady_clock::time_point::min())
+    m_lastPing(chrono::steady_clock::time_point::min()),
+    m_capabilityHost(make_shared<CapabilityHost>(*this))
 {
     cnetnote << "Id: " << id();
 }
@@ -238,26 +330,26 @@ bool Host::isRequiredPeer(NodeID const& _id) const
 void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
 {
     // session maybe ingress or egress so m_peers and node table entries may not exist
-    shared_ptr<Peer> p;
+    shared_ptr<Peer> peer;
     DEV_RECURSIVE_GUARDED(x_sessions)
     {
         if (m_peers.count(_id))
-            p = m_peers[_id];
+            peer = m_peers[_id];
         else
         {
             // peer doesn't exist, try to get port info from node table
             if (Node n = nodeFromNodeTable(_id))
-                p = make_shared<Peer>(n);
+                peer = make_shared<Peer>(n);
 
-            if (!p)
-                p = make_shared<Peer>(Node(_id, UnspecifiedNodeIPEndpoint));
+            if (!peer)
+                peer = make_shared<Peer>(Node(_id, UnspecifiedNodeIPEndpoint));
 
-            m_peers[_id] = p;
+            m_peers[_id] = peer;
         }
     }
-    if (p->isOffline())
-        p->m_lastConnected = std::chrono::system_clock::now();
-    p->endpoint.setAddress(_s->remoteEndpoint().address());
+    if (peer->isOffline())
+        peer->m_lastConnected = std::chrono::system_clock::now();
+    peer->endpoint.setAddress(_s->remoteEndpoint().address());
 
     auto protocolVersion = _rlp[0].toInt<unsigned>();
     auto clientVersion = _rlp[1].toString();
@@ -285,25 +377,25 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
             << " " << _id << " " << showbase << capslog.str() << " " << dec << listenPort;
 
     // create session so disconnects are managed
-    shared_ptr<SessionFace> ps = make_shared<Session>(this, move(_io), _s, p,
-        PeerSessionInfo({_id, clientVersion, p->endpoint.address().to_string(), listenPort,
+    shared_ptr<SessionFace> session = make_shared<Session>(this, move(_io), _s, peer,
+        PeerSessionInfo({_id, clientVersion, peer->endpoint.address().to_string(), listenPort,
             chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(),
             protocolVersion}));
     if (protocolVersion < dev::p2p::c_protocolVersion - 1)
     {
-        ps->disconnect(IncompatibleProtocol);
+        session->disconnect(IncompatibleProtocol);
         return;
     }
     if (caps.empty())
     {
-        ps->disconnect(UselessPeer);
+        session->disconnect(UselessPeer);
         return;
     }
 
     if (m_netConfig.pin && !isRequiredPeer(_id))
     {
         cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
-        ps->disconnect(UnexpectedIdentity);
+        session->disconnect(UnexpectedIdentity);
         return;
     }
     
@@ -315,7 +407,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
                 {
                     // Already connected.
                     cnetlog << "Session already exists for peer with id " << _id;
-                    ps->disconnect(DuplicatePeer);
+                    session->disconnect(DuplicatePeer);
                     return;
                 }
         
@@ -323,25 +415,29 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         {
             cnetdetails << "Too many peers, can't connect. peer count: " << peerCount()
                         << " pending peers: " << m_pendingPeerConns.size();
-            ps->disconnect(TooManyPeers);
+            session->disconnect(TooManyPeers);
             return;
         }
 
         unsigned offset = (unsigned)UserPacket;
 
         // todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
-        for (auto const& i: caps)
+        for (auto const& capDesc : caps)
         {
-            auto pcap = m_capabilities[i];
+            auto pcap = m_capabilities[capDesc];
             if (!pcap)
-                return ps->disconnect(IncompatibleProtocol);
+                return session->disconnect(IncompatibleProtocol);
 
-            pcap->newPeerCapability(ps, offset, i);
+            // pcap->newPeerCapability(session, offset, capDesc);
+            peer->setCapabilityOffset(capDesc, offset);
+
+            pcap->onConnect(_id, capDesc.second);
+
             offset += pcap->messageCount();
         }
 
-        ps->start();
-        m_sessions[_id] = ps;
+        session->start();
+        m_sessions[_id] = session;
     }
     
     LOG(m_logger) << "p2p.host.peer.register " << _id;

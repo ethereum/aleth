@@ -29,7 +29,6 @@
 #include <libethcore/Exceptions.h>
 #include "BlockChain.h"
 #include "BlockQueue.h"
-#include "EthereumPeer.h"
 #include "EthereumHost.h"
 
 using namespace std;
@@ -195,64 +194,61 @@ void BlockChainSync::abortSync()
 {
     RecursiveGuard l(x_sync);
     resetSync();
-    host().foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
-    {
-        _p->abortSync();
-        return true;
-    });
+    onPeerAborting();
 }
 
-void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
+void BlockChainSync::onPeerStatus(NodeID const& _peerID, EthereumPeerStatus const& _status)
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
-    std::shared_ptr<SessionFace> session = _peer->session();
-    if (!session)
+
+    auto peerSessionInfo = m_host.capabilityHost().peerSessionInfo(_peerID);
+    if (!peerSessionInfo)
         return; // Expired
+
     char const* disconnectReason = nullptr;
-    if (_peer->m_genesisHash != host().chain().genesisHash())
+    if (_status.m_genesisHash != host().chain().genesisHash())
         disconnectReason = "Invalid genesis hash.";
-    else if (_peer->m_protocolVersion != host().protocolVersion())
+    else if (_status.m_protocolVersion != host().protocolVersion())
         disconnectReason = "Invalid protocol version.";
-    else if (_peer->m_networkId != host().networkId())
+    else if (_status.m_networkId != host().networkId())
         disconnectReason = "Invalid network identifier.";
-    else if (session->info().clientVersion.find("/v0.7.0/") != string::npos)
+    else if (peerSessionInfo->clientVersion.find("/v0.7.0/") != string::npos)
         disconnectReason = "Blacklisted client version.";
-    else if (host().isBanned(session->id()))
-        disconnectReason = "Peer banned for previous bad behaviour.";
-    else if (_peer->m_asking != Asking::State && _peer->m_asking != Asking::Nothing)
+    else if (_status.m_asking != Asking::State && _status.m_asking != Asking::Nothing)
         disconnectReason = "Peer banned for unexpected status message.";
 
     if (disconnectReason)
     {
         LOG(m_logger) << "Peer not suitable for sync: " << disconnectReason;
-        session->disconnect(UserReason);
+        m_host.capabilityHost().disconnect(_peerID, UserReason);
         return;
     }
 
     // Before starting to exchange the data with the node, let's verify that it's on our chain
-    if (!requestDaoForkBlockHeader(_peer))
+    if (!requestDaoForkBlockHeader(_peerID))
     {
         // DAO challenge not needed
-        syncPeer(_peer, false);
+        syncPeer(_peerID, false);
     }
 }
 
-bool BlockChainSync::requestDaoForkBlockHeader(std::shared_ptr<EthereumPeer> _peer)
+bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
 {
     // DAO challenge
     unsigned const daoHardfork = static_cast<unsigned>(host().chain().sealEngine()->chainParams().daoHardforkBlock);
     if (daoHardfork == 0)
         return false;
 
-    m_daoChallengedPeers.insert(_peer);
-    _peer->requestBlockHeaders(daoHardfork, 1, 0, false);
+    m_daoChallengedPeers.insert(_peerID);
+    m_host.requestBlockHeaders(_peerID, daoHardfork, 1, 0, false);
     return true;
 }
 
-void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
+void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 {
-    if (_peer->m_asking != Asking::Nothing)
+    auto& peerStatus = m_host.peerStatus(_peerID);
+    if (peerStatus.m_asking != Asking::Nothing)
     {
         LOG(m_loggerDetail) << "Can't sync with this peer - outstanding asks.";
         return;
@@ -267,42 +263,42 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 
     u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
 
-    if (_force || _peer->m_totalDifficulty > syncingDifficulty)
+    if (_force || peerStatus.m_totalDifficulty > syncingDifficulty)
     {
-        if (_peer->m_totalDifficulty > syncingDifficulty)
+        if (peerStatus.m_totalDifficulty > syncingDifficulty)
             LOG(m_logger) << "Discovered new highest difficulty";
 
         // start sync
-        m_syncingTotalDifficulty = _peer->m_totalDifficulty;
+        m_syncingTotalDifficulty = peerStatus.m_totalDifficulty;
         if (m_state == SyncState::Idle || m_state == SyncState::NotSynced)
         {
             LOG(m_loggerInfo) << "Starting full sync";
             m_state = SyncState::Blocks;
         }
-        _peer->requestBlockHeaders(_peer->m_latestHash, 1, 0, false);
-        _peer->m_requireTransactions = true;
+        m_host.requestBlockHeaders(_peerID, peerStatus.m_latestHash, 1, 0, false);
+        m_host.markPeerAsWaitingForTransactions(_peerID);
         return;
     }
 
     if (m_state == SyncState::Blocks)
     {
-        requestBlocks(_peer);
+        requestBlocks(_peerID);
         return;
     }
 }
 
 void BlockChainSync::continueSync()
 {
-    host().foreachPeer([this](std::shared_ptr<EthereumPeer> _p)
-    {
-        syncPeer(_p, false);
-        return true;
-    });
+    host().capabilityHost().foreachPeer(
+        m_host.name(), m_host.version(), [this](NodeID const& _peerID) {
+            syncPeer(_peerID, false);
+            return true;
+        });
 }
 
-void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
+void BlockChainSync::requestBlocks(NodeID const& _peerID)
 {
-    clearPeerDownload(_peer);
+    clearPeerDownload(_peerID);
     if (host().bq().knownFull())
     {
         LOG(m_loggerDetail) << "Waiting for block queue before downloading blocks";
@@ -333,8 +329,8 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
     }
     if (neededBodies.size() > 0)
     {
-        m_bodySyncPeers[_peer] = neededNumbers;
-        _peer->requestBlockBodies(neededBodies);
+        m_bodySyncPeers[_peerID] = neededNumbers;
+        m_host.requestBlockBodies(_peerID, neededBodies);
     }
     else
     {
@@ -381,9 +377,9 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
                 count = headers.size();
                 if (count > 0)
                 {
-                    m_headerSyncPeers[_peer] = headers;
+                    m_headerSyncPeers[_peerID] = headers;
                     assert(!haveItem(m_headers, start));
-                    _peer->requestBlockHeaders(start, count, 0, false);
+                    m_host.requestBlockHeaders(_peerID, start, count, 0, false);
                 }
                 else if (start >= next->first)
                 {
@@ -393,34 +389,34 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
             }
         }
         else
-            _peer->requestBlockHeaders(start, 1, 0, false);
+            m_host.requestBlockHeaders(_peerID, start, 1, 0, false);
     }
 }
 
-void BlockChainSync::clearPeerDownload(std::shared_ptr<EthereumPeer> _peer)
+void BlockChainSync::clearPeerDownload(NodeID const& _peerID)
 {
-    auto syncPeer = m_headerSyncPeers.find(_peer);
+    auto syncPeer = m_headerSyncPeers.find(_peerID);
     if (syncPeer != m_headerSyncPeers.end())
     {
         for (unsigned block : syncPeer->second)
             m_downloadingHeaders.erase(block);
         m_headerSyncPeers.erase(syncPeer);
     }
-    syncPeer = m_bodySyncPeers.find(_peer);
+    syncPeer = m_bodySyncPeers.find(_peerID);
     if (syncPeer != m_bodySyncPeers.end())
     {
         for (unsigned block : syncPeer->second)
             m_downloadingBodies.erase(block);
         m_bodySyncPeers.erase(syncPeer);
     }
-    m_daoChallengedPeers.erase(_peer);
+    m_daoChallengedPeers.erase(_peerID);
 }
 
 void BlockChainSync::clearPeerDownload()
 {
     for (auto s = m_headerSyncPeers.begin(); s != m_headerSyncPeers.end();)
     {
-        if (s->first.expired())
+        if (!m_host.capabilityHost().peerSessionInfo(s->first))
         {
             for (unsigned block : s->second)
                 m_downloadingHeaders.erase(block);
@@ -431,7 +427,7 @@ void BlockChainSync::clearPeerDownload()
     }
     for (auto s = m_bodySyncPeers.begin(); s != m_bodySyncPeers.end();)
     {
-        if (s->first.expired())
+        if (!m_host.capabilityHost().peerSessionInfo(s->first))
         {
             for (unsigned block : s->second)
                 m_downloadingBodies.erase(block);
@@ -442,7 +438,7 @@ void BlockChainSync::clearPeerDownload()
     }
     for (auto s = m_daoChallengedPeers.begin(); s != m_daoChallengedPeers.end();)
     {
-        if (s->expired())
+        if (!m_host.capabilityHost().peerSessionInfo(*s))
             m_daoChallengedPeers.erase(s++);
         else
             ++s;
@@ -454,7 +450,7 @@ void BlockChainSync::logNewBlock(h256 const& _h)
     m_knownNewHashes.erase(_h);
 }
 
-void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
@@ -462,18 +458,21 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
     LOG(m_logger) << "BlocksHeaders (" << dec << itemCount << " entries) "
                   << (itemCount ? "" : ": NoMoreHeaders");
 
-    if (m_daoChallengedPeers.find(_peer) != m_daoChallengedPeers.end())
+    if (m_daoChallengedPeers.find(_peerID) != m_daoChallengedPeers.end())
     {
         if (verifyDaoChallengeResponse(_r))
-            syncPeer(_peer, false);
+            syncPeer(_peerID, false);
         else
-            _peer->disable("Peer from another fork.");
+            // TODO extract
+            // TODO passing cap name should be enough
+            m_host.capabilityHost().disableCapability(
+                _peerID, CapDesc{m_host.name(), m_host.version()}, "Peer from another fork.");
 
-        m_daoChallengedPeers.erase(_peer);
+        m_daoChallengedPeers.erase(_peerID);
         return;
     }
 
-    clearPeerDownload(_peer);
+    clearPeerDownload(_peerID);
     if (m_state != SyncState::Blocks && m_state != SyncState::Waiting)
     {
         LOG(m_logger) << "Ignoring unexpected blocks";
@@ -487,7 +486,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
     if (itemCount == 0)
     {
         LOG(m_loggerDetail) << "Peer does not have the blocks requested";
-        _peer->addRating(-1);
+        m_host.capabilityHost().addRating(_peerID, -1);
     }
     for (unsigned i = 0; i < itemCount; i++)
     {
@@ -543,7 +542,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
                     // mismatching parent id, delete the previous block and don't add this one
                     clog(VerbosityWarning, "sync") << "Unknown block header " << blockNumber << " "
                                                    << info.hash() << " (Restart syncing)";
-                    _peer->addRating(-1);
+                    m_host.capabilityHost().addRating(_peerID, -1);
                     restartSync();
                     return ;
                 }
@@ -598,14 +597,14 @@ bool BlockChainSync::verifyDaoChallengeResponse(RLP const& _r)
         info.extraData() == fromHex("0x64616f2d686172642d666f726b");
 }
 
-void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
     size_t itemCount = _r.itemCount();
     LOG(m_logger) << "BlocksBodies (" << dec << itemCount << " entries) "
                   << (itemCount ? "" : ": NoMoreBodies");
-    clearPeerDownload(_peer);
+    clearPeerDownload(_peerID);
     if (m_state != SyncState::Blocks && m_state != SyncState::Waiting) {
         LOG(m_logger) << "Ignoring unexpected blocks";
         return;
@@ -618,7 +617,7 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
     if (itemCount == 0)
     {
         LOG(m_loggerDetail) << "Peer does not have the blocks requested";
-        _peer->addRating(-1);
+        m_host.capabilityHost().addRating(_peerID, -1);
     }
     for (unsigned i = 0; i < itemCount; i++)
     {
@@ -752,34 +751,34 @@ void BlockChainSync::logImported(
                   << _future << " with future timestamps, " << _got << " already known received.";
 }
 
-void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
 
     if (_r.itemCount() != 2)
     {
-        _peer->disable("NewBlock without 2 data fields.");
+        m_host.capabilityHost().disableCapability(
+            _peerID, CapDesc{m_host.name(), m_host.version()}, "NewBlock without 2 data fields.");
         return;
     }
     BlockHeader info(_r[0][0].data(), HeaderData);
     auto h = info.hash();
-    DEV_GUARDED(_peer->x_knownBlocks)
-        _peer->m_knownBlocks.insert(h);
+    m_host.markBlockAsKnownToPeer(_peerID, h);
     unsigned blockNumber = static_cast<unsigned>(info.number());
     if (blockNumber > (m_lastImportedBlock + 1))
     {
         LOG(m_loggerDetail) << "Received unknown new block";
         // Update the hash of highest known block of the peer.
         // syncPeer will then request the highest block header to properly restart syncing
-        _peer->m_latestHash = h;
-        syncPeer(_peer, true);
+        m_host.setPeerLatestHash(_peerID, h);
+        syncPeer(_peerID, true);
         return;
     }
     switch (host().bq().import(_r[0].data()))
     {
     case ImportResult::Success:
-        _peer->addRating(100);
+        m_host.capabilityHost().addRating(_peerID, 100);
         logNewBlock(h);
         if (blockNumber > m_lastImportedBlock) 
         {
@@ -809,7 +808,8 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
     case ImportResult::Malformed:
     case ImportResult::BadChain:
         logNewBlock(h);
-        _peer->disable("Malformed block received.");
+        m_host.capabilityHost().disableCapability(
+            _peerID, CapDesc{m_host.name(), m_host.version()}, "Malformed block received.");
         return;
 
     case ImportResult::AlreadyInChain:
@@ -819,18 +819,19 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
     case ImportResult::FutureTimeUnknown:
     case ImportResult::UnknownParent:
     {
-        _peer->m_unknownNewBlocks++;
-        if (_peer->m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
+        m_host.incrementPeerUnknownNewBlocks(_peerID);
+        if (m_host.peerStatus(_peerID).m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
         {
-            _peer->disable("Too many uknown new blocks");
+            m_host.capabilityHost().disableCapability(
+                _peerID, CapDesc{m_host.name(), m_host.version()}, "Too many uknown new blocks");
             restartSync();
         }
         logNewBlock(h);
         u256 totalDifficulty = _r[1].toInt<u256>();
-        if (totalDifficulty > _peer->m_totalDifficulty)
+        if (totalDifficulty > m_host.peerStatus(_peerID).m_totalDifficulty)
         {
             LOG(m_loggerDetail) << "Received block with no known parent. Peer needs syncing...";
-            syncPeer(_peer, true);
+            syncPeer(_peerID, true);
         }
         break;
     }
@@ -892,11 +893,12 @@ bool BlockChainSync::isSyncing() const
     return m_state != SyncState::Idle;
 }
 
-void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes)
+void BlockChainSync::onPeerNewHashes(
+    NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes)
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
-    if (_peer->isConversing())
+    if (m_host.isPeerConversing(_peerID))
     {
         LOG(m_loggerDetail) << "Ignoring new hashes since we're already downloading.";
         return;
@@ -908,9 +910,8 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
     for (auto const& p: _hashes)
     {
         h256 const& h = p.first;
-        _peer->addRating(1);
-        DEV_GUARDED(_peer->x_knownBlocks)
-            _peer->m_knownBlocks.insert(h);
+        m_host.capabilityHost().addRating(_peerID, 1);
+        m_host.markBlockAsKnownToPeer(_peerID, h);
         auto status = host().bq().blockStatus(h);
         if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h))
             knowns++;
@@ -925,7 +926,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
             if (p.second > maxHeight)
             {
                 maxHeight = (unsigned)p.second;
-                _peer->m_latestHash = h;
+                m_host.setPeerLatestHash(_peerID, h);
             }
         }
         else
@@ -935,7 +936,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
     if (unknowns > 0)
     {
         LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing.";
-        syncPeer(_peer, true);
+        syncPeer(_peerID, true);
     }
 }
 

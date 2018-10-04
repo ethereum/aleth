@@ -41,6 +41,7 @@ namespace eth
 class EthereumHost;
 class BlockQueue;
 class EthereumPeer;
+struct EthereumPeerStatus;
 
 /**
  * @brief Base BlockChain synchronization strategy class.
@@ -64,18 +65,19 @@ public:
     void completeSync();
 
     /// Called by peer to report status
-    void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
+    void onPeerStatus(p2p::NodeID const& _peerID, EthereumPeerStatus const& _status);
 
     /// Called by peer once it has new block headers during sync
-    void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+    void onPeerBlockHeaders(p2p::NodeID const& _peerID, RLP const& _r);
 
     /// Called by peer once it has new block bodies
-    void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+    void onPeerBlockBodies(p2p::NodeID const& _peerID, RLP const& _r);
 
     /// Called by peer once it has new block bodies
-    void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+    void onPeerNewBlock(p2p::NodeID const& _peerID, RLP const& _r);
 
-    void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
+    void onPeerNewHashes(
+        p2p::NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes);
 
     /// Called by peer when it is disconnecting
     void onPeerAborting();
@@ -99,12 +101,12 @@ private:
     EthereumHost const& host() const { return m_host; }
 
     void resetSync();
-    void syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force);
-    void requestBlocks(std::shared_ptr<EthereumPeer> _peer);
-    void clearPeerDownload(std::shared_ptr<EthereumPeer> _peer);
+    void syncPeer(p2p::NodeID const& _peerID, bool _force);
+    void requestBlocks(p2p::NodeID const& _peerID);
+    void clearPeerDownload(p2p::NodeID const& _peerID);
     void clearPeerDownload();
     void collectBlocks();
-    bool requestDaoForkBlockHeader(std::shared_ptr<EthereumPeer> _peer);
+    bool requestDaoForkBlockHeader(p2p::NodeID const& _peerID);
     bool verifyDaoChallengeResponse(RLP const& _r);
     void logImported(unsigned _success, unsigned _future, unsigned _got, unsigned _unknown);
 
@@ -143,7 +145,8 @@ private:
     EthereumHost& m_host;
     Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
     mutable RecursiveMutex x_sync;
-    std::set<std::weak_ptr<EthereumPeer>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_daoChallengedPeers; ///> Peers to which we've sent DAO challenge request
+    std::set<p2p::NodeID> m_daoChallengedPeers;  ///> Peers to which we've sent DAO challenge
+                                                 ///request
     std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state
     h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
     unsigned m_chainStartBlock = 0;
@@ -153,8 +156,12 @@ private:
     std::unordered_set<unsigned> m_downloadingBodies;		///< Set of block header numbers being downloaded
     std::map<unsigned, std::vector<Header>> m_headers;	    ///< Downloaded headers
     std::map<unsigned, std::vector<bytes>> m_bodies;	    ///< Downloaded block bodies
-    std::map<std::weak_ptr<EthereumPeer>, std::vector<unsigned>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_headerSyncPeers; ///< Peers to m_downloadingSubchain number map
-    std::map<std::weak_ptr<EthereumPeer>, std::vector<unsigned>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_bodySyncPeers; ///< Peers to m_downloadingSubchain number map
+    std::map<p2p::NodeID, std::vector<unsigned>> m_headerSyncPeers;  ///< Peers to
+                                                                     ///< m_downloadingSubchain
+                                                                     ///< number map
+    std::map<p2p::NodeID, std::vector<unsigned>> m_bodySyncPeers;    ///< Peers to
+                                                                   ///< m_downloadingSubchain number
+                                                                   ///< map
     std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
     bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
     unsigned m_lastImportedBlock = 0; 			///< Last imported block number

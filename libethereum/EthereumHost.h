@@ -30,15 +30,15 @@
 #include <thread>
 #include <random>
 
-#include <libdevcore/Guards.h>
-#include <libdevcore/Worker.h>
-#include <libethcore/Common.h>
-#include <libp2p/Common.h>
-#include <libdevcore/OverlayDB.h>
-#include <libethcore/BlockHeader.h>
-#include <libethereum/BlockChainSync.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
+#include <libdevcore/Guards.h>
+#include <libdevcore/OverlayDB.h>
+#include <libdevcore/Worker.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/Common.h>
+#include <libethereum/BlockChainSync.h>
+#include <libp2p/Common.h>
 
 namespace dev
 {
@@ -52,17 +52,88 @@ class TransactionQueue;
 class BlockQueue;
 class BlockChainSync;
 
+struct EthereumPeerStatus
+{
+    /// What, if anything, we last asked the other peer for.
+    Asking m_asking = Asking::Nothing;
+    // TODO why atomic
+    /// When we asked for it. Allows a time out.
+    std::atomic<time_t> m_lastAsk;
+    /// Peer's protocol version.
+    unsigned m_protocolVersion;
+    /// Peer's network id.
+    u256 m_networkId;
+    /// These are determined through either a Status message or from NewBlock.
+    h256 m_latestHash;  ///< Peer's latest block's hash that we know about or default null value if
+                        ///< no need to sync.
+    u256 m_totalDifficulty;        ///< Peer's latest block's total difficulty.
+    h256 m_genesisHash;            ///< Peer's genesis hash
+    u256 m_peerCapabilityVersion;  ///< Protocol version this peer supports received as capability
+                                   /// Have we received a GetTransactions packet that we haven't yet
+                                   /// answered?
+    bool m_requireTransactions = false;
+
+    mutable Mutex x_knownBlocks;
+    h256Hash m_knownBlocks;  ///< Blocks that the peer already knows about (that don't need to be
+                             ///< sent to them).
+    mutable Mutex x_knownTransactions;
+    h256Hash m_knownTransactions;     ///< Transactions that the peer already knows of.
+    unsigned m_unknownNewBlocks = 0;  ///< Number of unknown NewBlocks received from this peer
+    unsigned m_lastAskedHeaders = 0;  ///< Number of hashes asked
+};
+
+class EthereumPeerObserverFace
+{
+public:
+    virtual ~EthereumPeerObserverFace() = default;
+
+    virtual void onPeerStatus(p2p::NodeID const& _peerID, EthereumPeerStatus const& _status) = 0;
+
+    virtual void onPeerTransactions(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+
+    virtual void onPeerBlockHeaders(p2p::NodeID const& _peerID, RLP const& _headers) = 0;
+
+    virtual void onPeerBlockBodies(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+
+    virtual void onPeerNewHashes(
+        p2p::NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes) = 0;
+
+    virtual void onPeerNewBlock(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+
+    virtual void onPeerNodeData(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+
+    virtual void onPeerReceipts(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+
+    virtual void onPeerAborting() = 0;
+};
+
+class EthereumHostDataFace
+{
+public:
+    virtual ~EthereumHostDataFace() = default;
+
+    virtual std::pair<bytes, unsigned> blockHeaders(
+        RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse) const = 0;
+
+    virtual std::pair<bytes, unsigned> blockBodies(RLP const& _blockHashes) const = 0;
+
+    virtual strings nodeData(RLP const& _dataHashes) const = 0;
+
+    virtual std::pair<bytes, unsigned> receipts(RLP const& _blockHashes) const = 0;
+};
+
+
 /**
  * @brief The EthereumHost class
  * @warning None of this is thread-safe. You have been warned.
  * @doWork Syncs to peers and sends new blocks and transactions.
  */
-class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
+class EthereumHost: public p2p::HostCapability, Worker
 {
 public:
     /// Start server, but don't listen.
-    EthereumHost(p2p::Host const& _host, BlockChain const& _ch, OverlayDB const& _db,
-        TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
+    EthereumHost(std::shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _ch,
+        OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
     /// Will block on network process events.
     virtual ~EthereumHost();
@@ -76,7 +147,6 @@ public:
     void completeSync();
 
     bool isSyncing() const;
-    bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
     void noteNewTransactions() { m_newTransactions = true; }
     void noteNewBlocks() { m_newBlocks = true; }
@@ -91,17 +161,87 @@ public:
     static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
 
     static unsigned const c_oldProtocolVersion;
-    void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
+    //    void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
+
+    void onConnect(p2p::NodeID const& _nodeID, u256 const& _peerCapabilityVersion) override;
+    void onDisconnect(p2p::NodeID const& _nodeID) override;
+    bool interpretCapabilityPacket(
+        p2p::NodeID const& _peerID, unsigned _id, RLP const& _r) override;
+
+    p2p::CapabilityHostFace& capabilityHost() { return *m_host; }
+
+    EthereumPeerStatus const& peerStatus(p2p::NodeID const& _peerID) const
+    {
+        // TODO can not exist
+        return m_peers.find(_peerID)->second;
+    }
+
+    bool isPeerConversing(p2p::NodeID const& _peerID) const
+    {
+        // TODO can not exist
+        return m_peers.find(_peerID)->second.m_asking != Asking::Nothing;
+    }
+
+    void markPeerAsWaitingForTransactions(p2p::NodeID const& _peerID)
+    {
+        m_peers[_peerID].m_requireTransactions = true;
+    }
+
+    void markBlockAsKnownToPeer(p2p::NodeID const& _peerID, h256 const& _hash)
+    {
+        auto& peer = m_peers[_peerID];
+        DEV_GUARDED(peer.x_knownBlocks)
+        peer.m_knownBlocks.insert(_hash);
+    }
+
+    void setPeerLatestHash(p2p::NodeID const& _peerID, h256 const& _hash)
+    {
+        m_peers[_peerID].m_latestHash = _hash;
+    }
+
+    void incrementPeerUnknownNewBlocks(p2p::NodeID const& _peerID)
+    {
+        ++m_peers[_peerID].m_unknownNewBlocks;
+    }
+
+    void requestStatus(p2p::NodeID const& _peerID, u256 _hostNetworkId, u256 _chainTotalDifficulty,
+        h256 _chainCurrentHash, h256 _chainGenesPeersh);
+
+    /// Request hashes for given parent hash.
+    void requestBlockHeaders(p2p::NodeID const& _nodeID, h256 const& _startHash, unsigned _count,
+        unsigned _skip, bool _reverse);
+    void requestBlockHeaders(p2p::NodeID const& _nodeID, unsigned _startNumber, unsigned _count,
+        unsigned _skip, bool _reverse);
+
+    /// Request specified blocks from peer.
+    void requestBlockBodies(p2p::NodeID const& _nodeID, h256s const& _blocks);
+
+    /// Request values for specified keys from peer.
+    void requestNodeData(p2p::NodeID const& _nodeID, h256s const& _hashes);
+
+    /// Request receipts for specified blocks from peer.
+    void requestReceipts(p2p::NodeID const& _nodeID, h256s const& _blocks);
+
+    /// Check if this node is rude.
+    bool isRude(p2p::NodeID const& _nodeID) const;
+
+    /// Set that it's a rude node.
+    void setRude(p2p::NodeID const& _nodeID);
+
+    /// Abort the sync operation.
+    void abortSync(p2p::NodeID const& _nodeID);
 
 protected:
-    std::shared_ptr<p2p::PeerCapabilityFace> newPeerCapability(
-        std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset,
-        p2p::CapDesc const& _cap) override;
-
+    /*    std::shared_ptr<p2p::PeerCapabilityFace> newPeerCapability(
+            std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset,
+            p2p::CapDesc const& _cap) override;
+    */
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 
-    std::tuple<std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<p2p::SessionFace>>> randomSelection(unsigned _percent = 25, std::function<bool(EthereumPeer*)> const& _allow = [](EthereumPeer const*){ return true; });
+    std::tuple<std::vector<p2p::NodeID>, std::vector<p2p::NodeID>> randomSelection(
+        unsigned _percent = 25, std::function<bool(EthereumPeerStatus const&)> const& _allow =
+                                    [](EthereumPeerStatus const&) { return true; });
 
     /// Sync with the BlockChain. It might contain one of our mined blocks, we might have new candidates from the network.
     virtual void doWork() override;
@@ -119,6 +259,28 @@ private:
     virtual void onStarting() override { startWorking(); }
     virtual void onStopping() override { stopWorking(); }
 
+    void setIdle(p2p::NodeID const& _peerID);
+    void setAsking(p2p::NodeID const& _peerID, Asking _a);
+
+    /// Are we presently in a critical part of the syncing process with this peer?
+    bool isCriticalSyncing(p2p::NodeID const& _peerID) const;
+
+    /// Do we presently need syncing with this peer?
+    bool needsSyncing(p2p::NodeID const& _peerID) const
+    {
+        if (m_host->isRude(_peerID, name()))
+            return false;
+
+        auto peerStatus = m_peers.find(_peerID);
+        return (peerStatus != m_peers.end() && peerStatus->second.m_latestHash);
+    }
+
+    // Request of type _packetType with _hashes as input parameters
+    void requestByHashes(p2p::NodeID const& _peerID, h256s const& _hashes, Asking _asking,
+        SubprotocolPacketType _packetType);
+
+    std::shared_ptr<p2p::CapabilityHostFace> m_host;
+
     BlockChain const& m_chain;
     OverlayDB const& m_db;					///< References to DB, needed for some of the Ethereum Protocol responses.
     TransactionQueue& m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
@@ -129,8 +291,6 @@ private:
     h256 m_latestBlockSent;
     h256Hash m_transactionsSent;
 
-    std::unordered_set<p2p::NodeID> m_banned;
-
     bool m_newTransactions = false;
     bool m_newBlocks = false;
 
@@ -138,12 +298,18 @@ private:
     std::shared_ptr<BlockChainSync> m_sync;
     std::atomic<time_t> m_lastTick = { 0 };
 
+    // TODO these can be unique
     std::shared_ptr<EthereumHostDataFace> m_hostData;
     std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
 
+    std::unordered_map<p2p::NodeID, EthereumPeerStatus> m_peers;
+
     std::mt19937_64 m_urng; // Mersenne Twister psuedo-random number generator
 
-    Logger m_logger{createLogger(VerbosityDebug, "host")};
+
+    Logger m_logger{createLogger(VerbosityDebug, "ethhost")};
+    /// Logger for messages about impolite behaivour of peers.
+    Logger m_loggerImpolite{createLogger(VerbosityDebug, "impolite")};
 };
 
 }
