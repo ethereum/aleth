@@ -17,8 +17,10 @@
 
 #include "WarpHostCapability.h"
 #include "BlockChain.h"
+#include "SnapshotStorage.h"
 
 #include <boost/fiber/all.hpp>
+#include <chrono>
 
 namespace dev
 {
@@ -48,9 +50,10 @@ h256 snapshotBlockHash(RLP const& _manifestRlp)
 class WarpPeerObserver : public WarpPeerObserverFace
 {
 public:
-    WarpPeerObserver(WarpHostCapability const& _host, BlockChain const& _blockChain,
+    WarpPeerObserver(WarpHostCapability& _host, BlockChain const& _blockChain,
         boost::filesystem::path const& _snapshotPath)
-      : m_hostProtocolVersion(_host.protocolVersion()),
+      : m_host(_host),
+        m_hostProtocolVersion(_host.protocolVersion()),
         m_hostNetworkId(_host.networkId()),
         m_hostGenesisHash(_blockChain.genesisHash()),
         m_daoForkBlock(_blockChain.sealEngine()->chainParams().daoHardforkBlock),
@@ -63,10 +66,9 @@ public:
             m_downloadFiber->join();
     }
 
-    void onPeerStatus(std::shared_ptr<WarpPeerCapability> _peer) override
+    void onPeerStatus(p2p::NodeID const& _peerID) override
     {
-        boost::fibers::fiber checkPeerFiber(
-            &WarpPeerObserver::validatePeer, this, std::move(_peer));
+        boost::fibers::fiber checkPeerFiber(&WarpPeerObserver::validatePeer, this, _peerID);
         checkPeerFiber.detach();
 
         // start the downloading fiber in the thread handling network messages
@@ -77,19 +79,19 @@ public:
         boost::this_fiber::yield();
     }
 
-    void onPeerManifest(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
+    void onPeerManifest(p2p::NodeID const& _peerID, RLP const& _r) override
     {
-        m_manifests[_peer].set_value(_r.data().toBytes());
+        m_manifests[_peerID].set_value(_r.data().toBytes());
         boost::this_fiber::yield();
     }
 
-    void onPeerBlockHeaders(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
+    void onPeerBlockHeaders(p2p::NodeID const& _peerID, RLP const& _r) override
     {
-        m_daoForkHeaders[_peer].set_value(_r.data().toBytes());
+        m_daoForkHeaders[_peerID].set_value(_r.data().toBytes());
         boost::this_fiber::yield();
     }
 
-    void onPeerData(std::shared_ptr<WarpPeerCapability> _peer, RLP const& _r) override
+    void onPeerData(p2p::NodeID const& _peerID, RLP const& _r) override
     {
         if (!_r.isList() || _r.itemCount() != 1)
             return;
@@ -98,7 +100,7 @@ public:
 
         h256 const hash = sha3(data.toBytesConstRef());
 
-        auto it = m_requestedChunks.find(_peer);
+        auto it = m_requestedChunks.find(_peerID);
         if (it == m_requestedChunks.end())
             return;
 
@@ -119,28 +121,28 @@ public:
         else
             m_neededChunks.push_back(askedHash);
 
-        m_freePeers.push(_peer);
+        m_freePeers.push(_peerID);
         boost::this_fiber::yield();
     }
 
-    void onPeerDisconnect(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) override
+    void onPeerDisconnect(p2p::NodeID const& _peerID, Asking _asking) override
     {
         if (_asking == Asking::WarpManifest)
         {
-            auto it = m_manifests.find(_peer);
+            auto it = m_manifests.find(_peerID);
             if (it != m_manifests.end())
                 it->second.set_exception(std::make_exception_ptr(FailedToDownloadManifest()));
         }
         else if (_asking == Asking::BlockHeaders)
         {
-            auto it = m_daoForkHeaders.find(_peer);
+            auto it = m_daoForkHeaders.find(_peerID);
             if (it != m_daoForkHeaders.end())
                 it->second.set_exception(
                     std::make_exception_ptr(FailedToDownloadDaoForkBlockHeader()));
         }
         else if (_asking == Asking::WarpData)
         {
-            auto it = m_requestedChunks.find(_peer);
+            auto it = m_requestedChunks.find(_peerID);
             if (it != m_requestedChunks.end())
             {
                 m_neededChunks.push_back(it->second);
@@ -151,14 +153,15 @@ public:
     }
 
 private:
-    void validatePeer(std::shared_ptr<WarpPeerCapability> _peer)
+    void validatePeer(p2p::NodeID _peerID)
     {
-        if (!_peer->validateStatus(m_hostGenesisHash, {m_hostProtocolVersion}, m_hostNetworkId))
+        if (!m_host.validateStatus(
+                _peerID, m_hostGenesisHash, {m_hostProtocolVersion}, m_hostNetworkId))
             return;
 
-        _peer->requestManifest();
+        m_host.requestManifest(_peerID);
 
-        bytes const manifestBytes = waitForManifestResponse(_peer);
+        bytes const manifestBytes = waitForManifestResponse(_peerID);
         if (manifestBytes.empty())
             return;
 
@@ -166,7 +169,8 @@ private:
         if (!validateManifest(manifestRlp))
         {
             // TODO try disconnecting instead of disabling; disabled peer still occupies the peer slot
-            _peer->disable("Invalid snapshot manifest.");
+            m_host.capabilityHost().disableCapability(_peerID,
+                p2p::CapDesc{m_host.name(), m_host.version()}, "Invalid snapshot manifest.");
             return;
         }
 
@@ -174,60 +178,62 @@ private:
         if (m_syncingSnapshotHash)
         {
             if (snapshotHash == m_syncingSnapshotHash)
-                m_freePeers.push(_peer);
+                m_freePeers.push(_peerID);
             else
-                _peer->disable("Another snapshot.");
+                m_host.capabilityHost().disableCapability(
+                    _peerID, p2p::CapDesc{m_host.name(), m_host.version()}, "Another snapshot.");
         }
         else
         {
             if (m_daoForkBlock)
             {
-                _peer->requestBlockHeaders(m_daoForkBlock, 1, 0, false);
+                m_host.requestBlockHeaders(_peerID, m_daoForkBlock, 1, 0, false);
 
-                bytes const headerBytes = waitForDaoForkBlockResponse(_peer);
+                bytes const headerBytes = waitForDaoForkBlockResponse(_peerID);
                 if (headerBytes.empty())
                     return;
 
                 RLP headerRlp(headerBytes);
                 if (!verifyDaoChallengeResponse(headerRlp))
                 {
-                    _peer->disable("Peer from another fork.");
+                    m_host.capabilityHost().disableCapability(_peerID,
+                        p2p::CapDesc{m_host.name(), m_host.version()}, "Peer from another fork.");
                     return;
                 }
             }
 
             m_syncingSnapshotHash = snapshotHash;
             m_manifest.set_value(manifestBytes);
-            m_freePeers.push(_peer);
+            m_freePeers.push(_peerID);
         }
     }
 
-    bytes waitForManifestResponse(std::weak_ptr<WarpPeerCapability> _peer)
+    bytes waitForManifestResponse(p2p::NodeID const& _peerID)
     {
         try
         {
-            bytes const result = m_manifests[_peer].get_future().get();
-            m_manifests.erase(_peer);
+            bytes const result = m_manifests[_peerID].get_future().get();
+            m_manifests.erase(_peerID);
             return result;
         }
         catch (Exception const&)
         {
-            m_manifests.erase(_peer);
+            m_manifests.erase(_peerID);
         }
         return bytes{};
     }
 
-    bytes waitForDaoForkBlockResponse(std::weak_ptr<WarpPeerCapability> _peer)
+    bytes waitForDaoForkBlockResponse(p2p::NodeID const& _peerID)
     {
         try
         {
-            bytes const result = m_daoForkHeaders[_peer].get_future().get();
-            m_daoForkHeaders.erase(_peer);
+            bytes const result = m_daoForkHeaders[_peerID].get_future().get();
+            m_daoForkHeaders.erase(_peerID);
             return result;
         }
         catch (Exception const&)
         {
-            m_daoForkHeaders.erase(_peer);
+            m_daoForkHeaders.erase(_peerID);
         }
         return bytes{};
     }
@@ -270,18 +276,20 @@ private:
         {
             h256 const chunkHash(m_neededChunks.front());
 
-            std::shared_ptr<WarpPeerCapability> peer;
-            while (!peer)
-                peer = m_freePeers.value_pop().lock();
+            p2p::NodeID peerID;
+            do
+            {
+                peerID = m_freePeers.value_pop();
+            } while (!m_host.requestData(peerID, chunkHash));
 
-            LOG(m_logger) << "Requesting chunk " << chunkHash;
-            peer->requestData(chunkHash);
+            LOG(m_logger) << "Requested chunk " << chunkHash;
 
-            m_requestedChunks[peer] = chunkHash;
+            m_requestedChunks[peerID] = chunkHash;
             m_neededChunks.pop_front();
         }
     }
 
+    WarpHostCapability& m_host;
     unsigned const m_hostProtocolVersion;
     u256 const m_hostNetworkId;
     h256 const m_hostGenesisHash;
@@ -289,17 +297,11 @@ private:
     boost::fibers::promise<bytes> m_manifest;
     h256 m_syncingSnapshotHash;
     std::deque<h256> m_neededChunks;
-    boost::fibers::buffered_channel<std::weak_ptr<WarpPeerCapability>> m_freePeers;
+    boost::fibers::buffered_channel<p2p::NodeID> m_freePeers;
     boost::filesystem::path const m_snapshotDir;
-    std::map<std::weak_ptr<WarpPeerCapability>, boost::fibers::promise<bytes>,
-        std::owner_less<std::weak_ptr<WarpPeerCapability>>>
-        m_manifests;
-    std::map<std::weak_ptr<WarpPeerCapability>, boost::fibers::promise<bytes>,
-        std::owner_less<std::weak_ptr<WarpPeerCapability>>>
-        m_daoForkHeaders;
-    std::map<std::weak_ptr<WarpPeerCapability>, h256,
-        std::owner_less<std::weak_ptr<WarpPeerCapability>>>
-        m_requestedChunks;
+    std::map<p2p::NodeID, boost::fibers::promise<bytes>> m_manifests;
+    std::map<p2p::NodeID, boost::fibers::promise<bytes>> m_daoForkHeaders;
+    std::map<p2p::NodeID, h256> m_requestedChunks;
 
     std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
 
@@ -309,10 +311,12 @@ private:
 }  // namespace
 
 
-WarpHostCapability::WarpHostCapability(p2p::Host const& _host, BlockChain const& _blockChain,
-    u256 const& _networkId, boost::filesystem::path const& _snapshotDownloadPath,
+WarpHostCapability::WarpHostCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
+    BlockChain const& _blockChain, u256 const& _networkId,
+    boost::filesystem::path const& _snapshotDownloadPath,
     std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
-  : p2p::HostCapability<WarpPeerCapability>(_host),
+  : HostCapability("par", c_WarpProtocolVersion, WarpSubprotocolPacketCount),
+    m_host(std::move(_host)),
     m_blockChain(_blockChain),
     m_networkId(_networkId),
     m_snapshot(_snapshotStorage),
@@ -329,22 +333,9 @@ WarpHostCapability::~WarpHostCapability()
 }
 
 std::shared_ptr<WarpPeerObserverFace> WarpHostCapability::createPeerObserver(
-    boost::filesystem::path const& _snapshotDownloadPath) const
+    boost::filesystem::path const& _snapshotDownloadPath)
 {
     return std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
-}
-
-std::shared_ptr<p2p::PeerCapabilityFace> WarpHostCapability::newPeerCapability(
-    std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap)
-{
-    auto ret = HostCapability<WarpPeerCapability>::newPeerCapability(_s, _idOffset, _cap);
-
-    auto cap = p2p::capabilityFromSession<WarpPeerCapability>(*_s, _cap.second);
-    assert(cap);
-    cap->init(c_WarpProtocolVersion, m_networkId, m_blockChain.details().totalDifficulty,
-        m_blockChain.currentHash(), m_blockChain.genesisHash(), m_snapshot, m_peerObserver);
-
-    return ret;
 }
 
 void WarpHostCapability::doWork()
@@ -354,14 +345,255 @@ void WarpHostCapability::doWork()
     {
         m_lastTick = now;
 
-        auto sessions = peerSessions();
-        for (auto s : sessions)
+        for (auto const& peer : m_peers)
         {
-            auto cap = p2p::capabilityFromSession<WarpPeerCapability>(*s.first);
-            assert(cap);
-            cap->tick();
+            time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            auto const& status = peer.second;
+            if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
+            {
+                // timeout
+                m_host->disconnect(peer.first, p2p::PingTimeout);
+            }
         }
     }
+}
+
+void WarpHostCapability::onConnect(
+    p2p::NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)
+{
+    // TODO hack to work around moving std::atomic
+    m_peers[_peerID].m_asking = Asking::Nothing;
+
+    u256 snapshotBlockNumber;
+    h256 snapshotBlockHash;
+    if (m_snapshot)
+    {
+        bytes const snapshotManifest(m_snapshot->readManifest());
+        RLP manifest(snapshotManifest);
+        if (manifest.itemCount() != 6)
+            BOOST_THROW_EXCEPTION(InvalidSnapshotManifest());
+        snapshotBlockNumber = manifest[4].toInt<u256>(RLP::VeryStrict);
+        snapshotBlockHash = manifest[5].toHash<h256>(RLP::VeryStrict);
+    }
+
+    requestStatus(_peerID, c_WarpProtocolVersion, m_networkId,
+        m_blockChain.details().totalDifficulty, m_blockChain.currentHash(),
+        m_blockChain.genesisHash(), snapshotBlockHash, snapshotBlockNumber);
+}
+
+bool WarpHostCapability::interpretCapabilityPacket(
+    p2p::NodeID const& _peerID, unsigned _id, RLP const& _r)
+{
+    auto& peerStatus = m_peers[_peerID];
+    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    try
+    {
+        switch (_id)
+        {
+        case WarpStatusPacket:
+        {
+            if (_r.itemCount() < 7)
+                BOOST_THROW_EXCEPTION(InvalidWarpStatusPacket());
+
+            // Packet layout:
+            // [ version:P, state_hashes : [hash_1:B_32, hash_2 : B_32, ...],  block_hashes :
+            // [hash_1:B_32, hash_2 : B_32, ...],
+            //      state_root : B_32, block_number : P, block_hash : B_32 ]
+            peerStatus.m_protocolVersion = _r[0].toInt<unsigned>();
+            peerStatus.m_networkId = _r[1].toInt<u256>();
+            peerStatus.m_totalDifficulty = _r[2].toInt<u256>();
+            peerStatus.m_latestHash = _r[3].toHash<h256>();
+            peerStatus.m_genesisHash = _r[4].toHash<h256>();
+            peerStatus.m_snapshotHash = _r[5].toHash<h256>();
+            peerStatus.m_snapshotNumber = _r[6].toInt<u256>();
+
+            cnetlog << "Status: "
+                    << " protocol version " << peerStatus.m_protocolVersion << " networkId "
+                    << peerStatus.m_networkId << " genesis hash " << peerStatus.m_genesisHash
+                    << " total difficulty " << peerStatus.m_totalDifficulty << " latest hash "
+                    << peerStatus.m_latestHash << " snapshot hash " << peerStatus.m_snapshotHash
+                    << " snapshot number " << peerStatus.m_snapshotNumber;
+            setIdle(_peerID);
+            m_peerObserver->onPeerStatus(_peerID);
+            break;
+        }
+        case GetSnapshotManifest:
+        {
+            if (!m_snapshot)
+                return false;
+
+            RLPStream s;
+            m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, SnapshotManifest, 1)
+                .appendRaw(m_snapshot->readManifest());
+            m_host->sealAndSend(_peerID, s);
+            break;
+        }
+        case GetSnapshotData:
+        {
+            if (!m_snapshot)
+                return false;
+
+            const h256 chunkHash = _r[0].toHash<h256>(RLP::VeryStrict);
+
+            RLPStream s;
+            m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, SnapshotData, 1)
+                .append(m_snapshot->readCompressedChunk(chunkHash));
+            m_host->sealAndSend(_peerID, s);
+            break;
+        }
+        case GetBlockHeadersPacket:
+        {
+            // TODO We are being asked DAO fork block sometimes, need to be able to answer this
+            RLPStream s;
+            m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, BlockHeadersPacket);
+            m_host->sealAndSend(_peerID, s);
+            break;
+        }
+        case BlockHeadersPacket:
+        {
+            setIdle(_peerID);
+            m_peerObserver->onPeerBlockHeaders((_peerID), _r);
+            break;
+        }
+        case SnapshotManifest:
+        {
+            setIdle(_peerID);
+            m_peerObserver->onPeerManifest((_peerID), _r);
+            break;
+        }
+        case SnapshotData:
+        {
+            setIdle(_peerID);
+            m_peerObserver->onPeerData((_peerID), _r);
+            break;
+        }
+        default:
+            return false;
+        }
+    }
+    catch (Exception const&)
+    {
+        cnetlog << "Warp Peer causing an Exception: "
+                << boost::current_exception_diagnostic_information() << " " << _r;
+    }
+    catch (std::exception const& _e)
+    {
+        cnetlog << "Warp Peer causing an exception: " << _e.what() << " " << _r;
+    }
+
+    return true;
+}
+
+void WarpHostCapability::onDisconnect(p2p::NodeID const& _peerID)
+{
+    m_peers.erase(_peerID);
+}
+
+
+void WarpHostCapability::requestStatus(p2p::NodeID const& _peerID, unsigned _hostProtocolVersion,
+    u256 const& _hostNetworkId, u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,
+    h256 const& _chainGenesisHash, h256 const& _snapshotBlockHash, u256 const& _snapshotBlockNumber)
+{
+    RLPStream s;
+    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, WarpStatusPacket, 7)
+        << _hostProtocolVersion << _hostNetworkId << _chainTotalDifficulty << _chainCurrentHash
+        << _chainGenesisHash << _snapshotBlockHash << _snapshotBlockNumber;
+    m_host->sealAndSend(_peerID, s);
+}
+
+
+void WarpHostCapability::requestBlockHeaders(p2p::NodeID const& _peerID, unsigned _startNumber,
+    unsigned _count, unsigned _skip, bool _reverse)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    assert(itPeerStatus->second.m_asking == Asking::Nothing);
+    setAsking(_peerID, Asking::BlockHeaders);
+    RLPStream s;
+    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, GetBlockHeadersPacket, 4)
+        << _startNumber << _count << _skip << (_reverse ? 1 : 0);
+    m_host->sealAndSend(_peerID, s);
+}
+
+void WarpHostCapability::requestManifest(p2p::NodeID const& _peerID)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    assert(itPeerStatus->second.m_asking == Asking::Nothing);
+    setAsking(_peerID, Asking::WarpManifest);
+    RLPStream s;
+    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, GetSnapshotManifest);
+    m_host->sealAndSend(_peerID, s);
+}
+
+bool WarpHostCapability::requestData(p2p::NodeID const& _peerID, h256 const& _chunkHash)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return false;
+
+    assert(itPeerStatus->second.m_asking == Asking::Nothing);
+    setAsking(_peerID, Asking::WarpData);
+    RLPStream s;
+
+    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, GetSnapshotData, 1) << _chunkHash;
+    m_host->sealAndSend(_peerID, s);
+    return true;
+}
+
+void WarpHostCapability::setAsking(p2p::NodeID const& _peerID, Asking _a)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return;
+
+    auto& peerStatus = itPeerStatus->second;
+
+    peerStatus.m_asking = _a;
+    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+}
+
+/// Validates whether peer is able to communicate with the host, disables peer if not
+bool WarpHostCapability::validateStatus(p2p::NodeID const& _peerID, h256 const& _genesisHash,
+    std::vector<unsigned> const& _protocolVersions, u256 const& _networkId)
+{
+    auto itPeerStatus = m_peers.find(_peerID);
+    if (itPeerStatus == m_peers.end())
+        return false;  // Expired
+
+    auto const& peerStatus = itPeerStatus->second;
+
+    if (peerStatus.m_genesisHash != _genesisHash)
+    {
+        m_host->disableCapability(_peerID, p2p::CapDesc{name(), version()}, "Invalid genesis hash");
+        return false;
+    }
+    if (find(_protocolVersions.begin(), _protocolVersions.end(), peerStatus.m_protocolVersion) ==
+        _protocolVersions.end())
+    {
+        m_host->disableCapability(
+            _peerID, p2p::CapDesc{name(), version()}, "Invalid protocol version.");
+        return false;
+    }
+    if (peerStatus.m_networkId != _networkId)
+    {
+        m_host->disableCapability(
+            _peerID, p2p::CapDesc{name(), version()}, "Invalid network identifier.");
+        return false;
+    }
+    if (peerStatus.m_asking != Asking::State && peerStatus.m_asking != Asking::Nothing)
+    {
+        m_host->disableCapability(
+            _peerID, p2p::CapDesc{name(), version()}, "Peer banned for unexpected status message.");
+        return false;
+    }
+
+    return true;
 }
 
 }  // namespace eth

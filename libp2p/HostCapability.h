@@ -38,31 +38,23 @@ public:
     virtual u256 version() const = 0;
     virtual unsigned messageCount() const = 0;
 
-    virtual std::shared_ptr<PeerCapabilityFace> newPeerCapability(
-        std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap) = 0;
-
     virtual void onStarting() = 0;
     virtual void onStopping() = 0;
+
+    virtual void onConnect(NodeID const& _nodeID, u256 const& _peerCapabilityVersion) = 0;
+    virtual bool interpretCapabilityPacket(NodeID const& _nodeID, unsigned _id, RLP const&) = 0;
+    virtual void onDisconnect(NodeID const& _nodeID) = 0;
 };
 
-template<class PeerCap>
-class HostCapability: public HostCapabilityFace
+// TODO remove
+class HostCapability : public HostCapabilityFace
 {
 public:
-    explicit HostCapability(p2p::Host const& _host) : m_host(_host) {}
+    HostCapability(std::string const& _name, u256 const& _version, unsigned _messageCount) : m_name(_name), m_version(_version), m_messageCount(_messageCount) {}
 
-    std::string name() const override { return PeerCap::name(); }
-    u256 version() const override { return PeerCap::version(); }
-    unsigned messageCount() const override { return PeerCap::messageCount(); }
-
-    std::shared_ptr<PeerCapabilityFace> newPeerCapability(
-        std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap) override
-    {
-        auto p = std::make_shared<PeerCap>(
-            std::weak_ptr<SessionFace>{_s}, name(), messageCount(), _idOffset, _cap);
-        _s->registerCapability(_cap, p);
-        return p;
-    }
+    std::string name() const override { return m_name; }
+    u256 version() const override { return m_version; }
+    unsigned messageCount() const override { return m_messageCount; }
 
     void onStarting() override {}
     void onStopping() override {}
@@ -70,17 +62,10 @@ public:
 protected:
     CapDesc capDesc() const { return std::make_pair(name(), version()); }
 
-    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions() const
-    {
-        return m_host.peerSessions(name(), version());
-    }
-    std::shared_ptr<SessionFace> peerSession(NodeID const& _id) const
-    {
-        return m_host.peerSession(_id);
-    }
-
 private:
-    p2p::Host const& m_host;
+    std::string const m_name;
+    u256 const m_version;
+    unsigned const m_messageCount;
 };
 
 }

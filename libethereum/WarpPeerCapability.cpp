@@ -57,118 +57,13 @@ void WarpPeerCapability::init(unsigned _hostProtocolVersion, u256 _hostNetworkId
         _chainGenesisHash, snapshotBlockHash, snapshotBlockNumber);
 }
 
-bool WarpPeerCapability::interpretCapabilityPacket(unsigned _id, RLP const& _r)
+bool WarpPeerCapability::interpretCapabilityPacket(unsigned, RLP const&)
 {
-    std::shared_ptr<WarpPeerObserverFace> observer(m_observer.lock());
-    // TODO: we still want to answer some messages when we only give out imported snapshot
-    if (!observer)
-        return false;
-
-    m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    try
-    {
-        switch (_id)
-        {
-        case WarpStatusPacket:
-        {
-            if (_r.itemCount() < 7)
-                BOOST_THROW_EXCEPTION(InvalidWarpStatusPacket());
-
-            // Packet layout:
-            // [ version:P, state_hashes : [hash_1:B_32, hash_2 : B_32, ...],  block_hashes :
-            // [hash_1:B_32, hash_2 : B_32, ...],
-            //      state_root : B_32, block_number : P, block_hash : B_32 ]
-            m_protocolVersion = _r[0].toInt<unsigned>();
-            m_networkId = _r[1].toInt<u256>();
-            m_totalDifficulty = _r[2].toInt<u256>();
-            m_latestHash = _r[3].toHash<h256>();
-            m_genesisHash = _r[4].toHash<h256>();
-            m_snapshotHash = _r[5].toHash<h256>();
-            m_snapshotNumber = _r[6].toInt<u256>();
-
-            cnetlog << "Status: "
-                    << " protocol version " << m_protocolVersion << " networkId " << m_networkId
-                    << " genesis hash " << m_genesisHash << " total difficulty "
-                    << m_totalDifficulty << " latest hash " << m_latestHash << " snapshot hash "
-                    << m_snapshotHash << " snapshot number " << m_snapshotNumber;
-            setIdle();
-            observer->onPeerStatus(
-                std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()));
-            break;
-        }
-        case GetSnapshotManifest:
-        {
-            if (!m_snapshot)
-                return false;
-
-            RLPStream s;
-            prep(s, SnapshotManifest, 1).appendRaw(m_snapshot->readManifest());
-            sealAndSend(s);
-            break;
-        }
-        case GetSnapshotData:
-        {
-            if (!m_snapshot)
-                return false;
-
-            const h256 chunkHash = _r[0].toHash<h256>(RLP::VeryStrict);
-
-            RLPStream s;
-            prep(s, SnapshotData, 1).append(m_snapshot->readCompressedChunk(chunkHash));
-            sealAndSend(s);
-            break;
-        }
-        case GetBlockHeadersPacket:
-        {
-            // TODO We are being asked DAO fork block sometimes, need to be able to answer this
-            RLPStream s;
-            prep(s, BlockHeadersPacket);
-            sealAndSend(s);
-            break;
-        }
-        case BlockHeadersPacket:
-        {
-            setIdle();
-            observer->onPeerBlockHeaders(
-                (std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
-            break;
-        }
-        case SnapshotManifest:
-        {
-            setIdle();
-            observer->onPeerManifest(
-                (std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
-            break;
-        }
-        case SnapshotData:
-        {
-            setIdle();
-            observer->onPeerData(
-                (std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this())), _r);
-            break;
-        }
-        default:
-            return false;
-        }
-    }
-    catch (Exception const&)
-    {
-        cnetlog << "Warp Peer causing an Exception: "
-                << boost::current_exception_diagnostic_information() << " " << _r;
-    }
-    catch (std::exception const& _e)
-    {
-        cnetlog << "Warp Peer causing an exception: " << _e.what() << " " << _r;
-    }
-
     return true;
 }
 
 void WarpPeerCapability::onDisconnect()
 {
-    if (std::shared_ptr<WarpPeerObserverFace> observer = m_observer.lock())
-        observer->onPeerDisconnect(
-            std::dynamic_pointer_cast<WarpPeerCapability>(shared_from_this()), m_asking);
 }
 
 /// Validates whether peer is able to communicate with the host, disables peer if not

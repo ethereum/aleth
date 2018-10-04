@@ -15,7 +15,7 @@
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libethereum/EthereumPeer.h>
+#include <libethereum/EthereumHost.h>
 #include <libp2p/Host.h>
 #include <test/tools/libtesteth/TestHelper.h>
 
@@ -31,14 +31,16 @@ public:
     string name() const override { return "mock capability name"; }
     u256 version() const override { return 0; }
     unsigned messageCount() const override { return 0; }
-    std::shared_ptr<PeerCapabilityFace> newPeerCapability(
-        std::shared_ptr<SessionFace> const&, unsigned, CapDesc const&) override
-    {
-        return std::shared_ptr<PeerCapabilityFace>();
-    }
 
     void onStarting() override {}
     void onStopping() override {}
+
+    void onConnect(NodeID const&, u256 const&) override {}
+    bool interpretCapabilityPacket(NodeID const&, unsigned, RLP const&) override
+    {
+        return true;
+    }
+    void onDisconnect(NodeID const&) override {}
 };
 
 class MockSession: public SessionFace
@@ -69,46 +71,44 @@ public:
     PeerSessionInfo info() const override { return PeerSessionInfo{ NodeID{}, "", "", 0, std::chrono::steady_clock::duration{}, {}, 0, {}, 0 }; }
     std::chrono::steady_clock::time_point connectionTime() override { return std::chrono::steady_clock::time_point{}; }
 
-    void registerCapability(
-        CapDesc const& /*_desc*/, std::shared_ptr<PeerCapabilityFace> /*_p*/) override
-    {}
-
-    map<CapDesc, std::shared_ptr<PeerCapabilityFace>> const& capabilities() const override
-    {
-        return m_capabilities;
-    }
-
     std::shared_ptr<Peer> peer() const override { return nullptr;  }
 
     std::chrono::steady_clock::time_point lastReceived() const override { return std::chrono::steady_clock::time_point{}; }
 
     ReputationManager& repMan() override { return m_repMan; }
 
+    void disableCapability(CapDesc const&, std::string const&) override {}
+
+    std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> const& capabilities() const override
+    {
+        return m_caps;
+    }
+
     ReputationManager m_repMan;
-    map<CapDesc, std::shared_ptr<PeerCapabilityFace>> m_capabilities;
     bytes m_bytesSent;
     map<string, string> m_notes;
+    std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_caps;
 };
 
 
 class MockEthereumPeerObserver: public EthereumPeerObserverFace
 {
 public:
-    void onPeerStatus(std::shared_ptr<EthereumPeer>) override {}
+    void onPeerStatus(p2p::NodeID const&, EthereumPeerStatus const&) override {}
 
-    void onPeerTransactions(std::shared_ptr<EthereumPeer>, RLP const&) override {}
+    void onPeerTransactions(p2p::NodeID const&, RLP const&) override {}
 
-    void onPeerBlockHeaders(std::shared_ptr<EthereumPeer>, RLP const&) override {}
+    void onPeerBlockHeaders(p2p::NodeID const&, RLP const&) override {}
 
-    void onPeerBlockBodies(std::shared_ptr<EthereumPeer>, RLP const&) override {}
+    void onPeerBlockBodies(p2p::NodeID const&, RLP const&) override {}
 
-    void onPeerNewHashes(std::shared_ptr<EthereumPeer>, std::vector<std::pair<h256, u256>> const&) override {}
+    void onPeerNewHashes(p2p::NodeID const&, std::vector<std::pair<h256, u256>> const&) override {}
 
-    void onPeerNewBlock(std::shared_ptr<EthereumPeer>, RLP const&) override {}
+    void onPeerNewBlock(p2p::NodeID const&, RLP const&) override {}
 
-    void onPeerNodeData(std::shared_ptr<EthereumPeer>, RLP const&) override {}
+    void onPeerNodeData(p2p::NodeID const&, RLP const&) override {}
 
-    void onPeerReceipts(std::shared_ptr<EthereumPeer>, RLP const&) override {}
+    void onPeerReceipts(p2p::NodeID const&, RLP const&) override {}
 
     void onPeerAborting() override {}
 };

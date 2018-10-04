@@ -40,29 +40,18 @@ struct P2PPeerFixture: public TestOutputHelperFixture
     ~P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestCap : public PeerCapability
+class TestHostCap : public HostCapability, public Worker
 {
 public:
-    TestCap(std::weak_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
-        unsigned _idOffset, CapDesc const&)
-      : PeerCapability(_s, _name, _messageCount, _idOffset)
-    {}
-    static std::string name() { return "p2pTestCapability"; }
-    static u256 version() { return 2; }
-    static unsigned messageCount() { return UserPacket + 1; }
+    TestHostCap() : HostCapability("p2pTestCapability", 2, UserPacket + 1), Worker("test") {}
+    virtual ~TestHostCap() {}
 
-protected:
-    bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override
+    void onConnect(NodeID const&, u256 const&) override {}
+    bool interpretCapabilityPacket(NodeID const&, unsigned _id, RLP const& _r) override
     {
         return _id > 0 || _r.size() > 0;
     }
-};
-
-class TestHostCap: public HostCapability<TestCap>, public Worker
-{
-public:
-    TestHostCap(Host const& _host) : HostCapability<TestCap>(_host), Worker("test") {}
-    virtual ~TestHostCap() {}
+    void onDisconnect(NodeID const&) override {}
 };
 
 BOOST_AUTO_TEST_SUITE(libp2p)
@@ -82,8 +71,8 @@ BOOST_AUTO_TEST_CASE(host)
     
     BOOST_REQUIRE_NE(host1port, host2port);
 
-    host1.registerCapability(make_shared<TestHostCap>(host1));
-    host2.registerCapability(make_shared<TestHostCap>(host2));
+    host1.registerCapability(make_shared<TestHostCap>());
+    host2.registerCapability(make_shared<TestHostCap>());
 
     auto node2 = host2.id();
     int const step = 10;
@@ -152,7 +141,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
         BOOST_REQUIRE(h->listenPort());
         bool inserted = ports.insert(h->listenPort()).second;
         BOOST_REQUIRE(inserted);
-        h->registerCapability(make_shared<TestHostCap>(*h));
+        h->registerCapability(make_shared<TestHostCap>());
         hosts.push_back(h);
     }
     
@@ -214,8 +203,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     BOOST_REQUIRE(port2);
     BOOST_REQUIRE_NE(port1, port2);
 
-    host1.registerCapability(make_shared<TestHostCap>(host1));
-    host2.registerCapability(make_shared<TestHostCap>(host2));
+    host1.registerCapability(make_shared<TestHostCap>());
+    host2.registerCapability(make_shared<TestHostCap>());
 
     host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 

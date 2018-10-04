@@ -41,64 +41,62 @@ struct P2PFixture: public TestOutputHelperFixture
     ~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestCapability : public PeerCapability
+class TestHostCapability: public HostCapability, public Worker
 {
 public:
-    TestCapability(weak_ptr<SessionFace> _s, std::string const& _name,
-        unsigned _messageCount, unsigned _idOffset, CapDesc const&)
-      : PeerCapability(move(_s), _name, _messageCount, _idOffset), m_cntReceivedMessages(0), m_testSum(0)
-    {}
-    int countReceivedMessages() { return m_cntReceivedMessages; }
-    int testSum() { return m_testSum; }
-    static std::string name() { return "test"; }
-    static u256 version() { return 2; }
-    static unsigned messageCount() { return UserPacket + 1; }
-    void sendTestMessage(int _i) { RLPStream s; sealAndSend(prep(s, UserPacket, 1) << _i); }
-
-protected:
-    bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override;
-
-    int m_cntReceivedMessages;
-    int m_testSum;
-};
-
-bool TestCapability::interpretCapabilityPacket(unsigned _id, RLP const& _r)
-{
-    //cnote << "Capability::interpret(): custom message received";
-    ++m_cntReceivedMessages;
-    m_testSum += _r[0].toInt();
-    BOOST_ASSERT(_id == UserPacket);
-    return (_id == UserPacket);
-}
-
-class TestHostCapability: public HostCapability<TestCapability>, public Worker
-{
-public:
-    explicit TestHostCapability(Host const& _host)
-      : HostCapability<TestCapability>(_host), Worker("test")
-    {}
+    explicit TestHostCapability(Host const& _host) : HostCapability("test", 2, UserPacket + 1), Worker("test"), m_host(_host) {}
     virtual ~TestHostCapability() {}
+
+    void onStarting() override {}
+    void onStopping() override {}
+
+    void onConnect(NodeID const& _nodeID, u256 const&) override
+    {
+        m_cntReceivedMessages[_nodeID] = 0;
+        m_testSums[_nodeID] = 0;
+    }
+    bool interpretCapabilityPacket(NodeID const& _nodeID, unsigned _id, RLP const& _r) override
+    {
+        // cnote << "Capability::interpret(): custom message received";
+        ++m_cntReceivedMessages[_nodeID];
+        m_testSums[_nodeID] += _r[0].toInt();
+        BOOST_ASSERT(_id == UserPacket);
+        return (_id == UserPacket);
+    }
+    void onDisconnect(NodeID const& _nodeID) override
+    {
+        m_cntReceivedMessages.erase(_nodeID);
+        m_testSums.erase(_nodeID);
+    }
 
     void sendTestMessage(NodeID const& _id, int _x)
     {
-        for (auto i : peerSessions())
+        for (auto i : m_host.peerSessions(name(), version()))
             if (_id == i.second->id)
-                capabilityFromSession<TestCapability>(*i.first)->sendTestMessage(_x);
+            {
+                RLPStream s;
+                m_host.capabilityHost()->sealAndSend(
+                    _id, m_host.capabilityHost()->prep(_id, capDesc(), s, UserPacket, 1) << _x);
+            }
     }
 
     std::pair<int, int> retrieveTestData(NodeID const& _id)
     { 
         int cnt = 0;
         int checksum = 0;
-        for (auto i : peerSessions())
-            if (_id == i.second->id)
+        for (auto i : m_cntReceivedMessages)
+            if (_id == i.first)
             {
-                cnt += capabilityFromSession<TestCapability>(*i.first)->countReceivedMessages();
-                checksum += capabilityFromSession<TestCapability>(*i.first)->testSum();
+                cnt += i.second;
+                checksum += m_testSums[_id];
             }
 
         return std::pair<int, int>(cnt, checksum);
     }
+
+    Host const& m_host;
+    std::unordered_map<NodeID, int> m_cntReceivedMessages;
+    std::unordered_map<NodeID, int> m_testSums;
 };
 
 BOOST_FIXTURE_TEST_SUITE(p2pCapability, P2PFixture)
