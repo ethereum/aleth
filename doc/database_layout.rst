@@ -13,7 +13,7 @@ settings). Their physical disk locations are as follows:
 
 where
 
-``{ETH_DATABASE_DIR}`` - base Aleth data directory
+``{ETH_DATABASE_DIR}`` - base Aleth database directory
 ``{GENESIS_HASH}`` - hex representation of first 4 bytes of genesis
 block hash (``d4e56740`` for main net, ``41941023`` for Ropsten)
 ``{DATABASE_VERSION}`` - encoded current version of the database layout
