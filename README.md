@@ -141,9 +141,12 @@ thoroughly before making alterations to the code base.
 
 All development goes in develop branch.
 
-## Running
+## Usage
+*Note: The following is the output of ```aleth.exe -h [--help]```*
 
 ```
+NAME:
+   aleth 1.4.0
 USAGE:
    aleth [options]
 
@@ -182,6 +185,11 @@ CLIENT TRANSACTING:
   --bid <wei>            Set the bid gas price to pay for transactions (default: 20000000000)
   --unsafe-transactions  Allow all transactions to proceed without verification; EXTREMELY UNSAFE
                          
+CLIENT MINING:
+  -a [ --address ] <addr>         Set the author (mining payout) address (default: auto)
+  -m [ --mining ] <on/off/number> Enable mining; optionally for a specified number of blocks (default: off)
+  --extra-data arg                Set extra data for the sealed blocks
+                                  
 CLIENT NETWORKING:
   -b [ --bootstrap ]              Connect to the default Ethereum peer servers (default unless --no-discovery used)
   --no-bootstrap                  Do not connect to the default Ethereum peer servers (default only when --no-discovery is used)
@@ -201,23 +209,18 @@ CLIENT NETWORKING:
   --no-discovery                  Disable node discovery; implies --no-bootstrap
   --pin                           Only accept or connect to trusted peers
                                   
-CLIENT MINING:
-  -a [ --address ] <addr>         Set the author (mining payout) address (default: auto)
-  -m [ --mining ] <on/off/number> Enable mining; optionally for a specified number of blocks (default: off)
-  --extra-data arg                Set extra data for the sealed blocks
-                                  
 BENCHMARKING MODE:
-  -M [ --benchmark ]           Benchmark for mining and exit
+  -M,--benchmark               Benchmark for mining and exit
   --benchmark-warmup <seconds> Set the duration of warmup for the benchmark tests (default: 3)
   --benchmark-trial <seconds>  Set the duration for each trial for the benchmark tests (default: 3)
   --benchmark-trials <n>       Set the number of trials for the benchmark tests (default: 5)
 
 MINING CONFIGURATION:
-  -C [ --cpu ]                 When mining, use the CPU
-  -t [ --mining-threads ] <n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform)
-  --current-block <n>          Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory
-  --disable-submit-hashrate    When mining, don't submit hashrate to node
-                               
+  -C,--cpu                   When mining, use the CPU
+  -t, --mining-threads <n>   Limit number of CPU/GPU miners to n (default: use everything available on selected platform)
+  --current-block            Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory
+  --disable-submit-hashrate  When mining, don't submit hashrate to node
+
 IMPORT/EXPORT MODES:
   -I [ --import ] <file>      Import blocks from file
   -E [ --export ] <file>      Export blocks to file
@@ -242,7 +245,7 @@ GENERAL OPTIONS:
   -d [ --db-path ] <path> Load database from path (default: C:\Users\nilse\AppData\Roaming\Ethereum)
   -V [ --version ]        Show the version and exit
   -h [ --help ]           Show this help message and exit
-  ```
+```
                           
 ## Mining
 
