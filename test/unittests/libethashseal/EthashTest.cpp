@@ -55,7 +55,8 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
     header.setNumber(0x2001);
     header.setTimestamp(130);
 
-    BOOST_CHECK_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999024);
+    BOOST_CHECK_EQUAL(
+        calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 999024);
 }
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
@@ -80,7 +81,8 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
     header.setNumber(0x2001);
     header.setTimestamp(130);
 
-    BOOST_CHECK_EQUAL(ethash.calculateDifficulty(header, parentHeader), 999512);
+    BOOST_CHECK_EQUAL(
+        calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 999512);
 }
 
 BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
@@ -103,7 +105,8 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
     header.setNumber(0x2001);
     header.setTimestamp(1100);
 
-    BOOST_CHECK_EQUAL(ethash.calculateDifficulty(header, parentHeader), 951688);
+    BOOST_CHECK_EQUAL(
+        calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 951688);
 }
 
 class IceAgeDelayFixture: public TestOutputHelperFixture
@@ -131,7 +134,7 @@ public:
         header.setNumber(_blockNumber);
         header.setTimestamp(1100);
 
-        return ethash.calculateDifficulty(header, parentHeader);
+        return dev::eth::calculateEthashDifficulty(ethash.chainParams(), header, parentHeader);
     }
 
     ChainOperationParams params;

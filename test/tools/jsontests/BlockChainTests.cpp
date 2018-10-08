@@ -673,7 +673,8 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
         {
             BlockHeader parentHeader = importedBlocks.at(importedBlocks.size() - 1).blockHeader();
             tmp.setTimestamp(toPositiveInt64(ho["RelTimestamp"]) + parentHeader.timestamp());
-            tmp.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(tmp, parentHeader));
+            tmp.setDifficulty(
+                calculateEthashDifficulty(sealEngine->chainParams(), tmp, parentHeader));
         }
 
         Ethash::setMixHash(tmp, ho.count("mixHash") ? h256(ho["mixHash"].get_str()) : Ethash::mixHash(header));
@@ -788,7 +789,8 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
                 BlockHeader parentHeader = importedBlocks.at(number).blockHeader();
                 uncleHeader.setTimestamp(
                             toPositiveInt64(uncleHeaderObj["RelTimestamp"]) + parentHeader.timestamp());
-                uncleHeader.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(uncleHeader, parentHeader));
+                uncleHeader.setDifficulty(calculateEthashDifficulty(
+                    sealEngine->chainParams(), uncleHeader, parentHeader));
                 uncleHeaderObj.erase("RelTimestamp");
             }
         }
@@ -815,9 +817,8 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
             overwrite == "difficulty" ?
                 toU256(uncleHeaderObj.at("difficulty")) :
                 overwrite == "timestamp" ?
-                ((const Ethash*)sealEngine)
-                        ->calculateDifficulty(uncleHeader,
-                            importedBlocks.at((size_t)uncleHeader.number() - 1).blockHeader()) :
+                calculateEthashDifficulty(sealEngine->chainParams(), uncleHeader,
+                    importedBlocks.at((size_t)uncleHeader.number() - 1).blockHeader()) :
                 uncleHeader.difficulty(),
             overwrite == "number" ? toU256(uncleHeaderObj.at("number")) : uncleHeader.number(),
             overwrite == "gasLimit" ? toU256(uncleHeaderObj.at("gasLimit")) :

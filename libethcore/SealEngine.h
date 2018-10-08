@@ -138,7 +138,13 @@ public:
     static std::string name() { return "NoProof"; }
     static void init();
     void generateSeal(BlockHeader const& _bi) override;
+    void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const override;
 };
 
+u256 calculateEthashDifficulty(
+    ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent);
+
+u256 calculateGasLimit(ChainOperationParams const& _chainParams, BlockHeader const& _bi,
+    u256 const& _gasFloorTarget = Invalid256);
 }
 }
