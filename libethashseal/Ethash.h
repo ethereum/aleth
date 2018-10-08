@@ -73,9 +73,6 @@ public:
     static BlockHeader& setNonce(BlockHeader& _bi, Nonce _v) { _bi.setSeal(NonceField, _v); return _bi; }
     static BlockHeader& setMixHash(BlockHeader& _bi, h256 const& _v) { _bi.setSeal(MixHashField, _v); return _bi; }
 
-    u256 calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _parent) const;
-    u256 childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget = Invalid256) const;
-
     void manuallySetWork(BlockHeader const& _work) { m_sealing = _work; }
     void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);
 
