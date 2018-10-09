@@ -196,6 +196,19 @@ BOOST_AUTO_TEST_CASE(difficultyByzantium)
 	testDifficulty(testFileFullName, sealEngine);
 }
 
+BOOST_AUTO_TEST_CASE(difficultyConstantinople)
+{
+    fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyConstantinople.json");
+
+    Ethash sealEngine;
+    sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::ConstantinopleTest)));
+
+    if (dev::test::Options::get().filltests)
+        fillDifficulty(testFileFullName, sealEngine);
+
+    testDifficulty(testFileFullName, sealEngine);
+}
+
 BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 {
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyMainNetwork.json");
