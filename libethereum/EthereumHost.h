@@ -86,22 +86,22 @@ class EthereumPeerObserverFace
 public:
     virtual ~EthereumPeerObserverFace() = default;
 
-    virtual void onPeerStatus(p2p::NodeID const& _peerID, EthereumPeerStatus const& _status) = 0;
+    virtual void onPeerStatus(NodeID const& _peerID, EthereumPeerStatus const& _status) = 0;
 
-    virtual void onPeerTransactions(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+    virtual void onPeerTransactions(NodeID const& _peerID, RLP const& _r) = 0;
 
-    virtual void onPeerBlockHeaders(p2p::NodeID const& _peerID, RLP const& _headers) = 0;
+    virtual void onPeerBlockHeaders(NodeID const& _peerID, RLP const& _headers) = 0;
 
-    virtual void onPeerBlockBodies(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+    virtual void onPeerBlockBodies(NodeID const& _peerID, RLP const& _r) = 0;
 
     virtual void onPeerNewHashes(
-        p2p::NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes) = 0;
+        NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes) = 0;
 
-    virtual void onPeerNewBlock(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+    virtual void onPeerNewBlock(NodeID const& _peerID, RLP const& _r) = 0;
 
-    virtual void onPeerNodeData(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+    virtual void onPeerNodeData(NodeID const& _peerID, RLP const& _r) = 0;
 
-    virtual void onPeerReceipts(p2p::NodeID const& _peerID, RLP const& _r) = 0;
+    virtual void onPeerReceipts(NodeID const& _peerID, RLP const& _r) = 0;
 
     virtual void onPeerAborting() = 0;
 };
@@ -162,73 +162,72 @@ public:
     static unsigned const c_oldProtocolVersion;
     //    void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
-    void onConnect(p2p::NodeID const& _nodeID, u256 const& _peerCapabilityVersion) override;
-    void onDisconnect(p2p::NodeID const& _nodeID) override;
-    bool interpretCapabilityPacket(
-        p2p::NodeID const& _peerID, unsigned _id, RLP const& _r) override;
+    void onConnect(NodeID const& _nodeID, u256 const& _peerCapabilityVersion) override;
+    void onDisconnect(NodeID const& _nodeID) override;
+    bool interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r) override;
 
     p2p::CapabilityHostFace& capabilityHost() { return *m_host; }
 
-    EthereumPeerStatus const& peerStatus(p2p::NodeID const& _peerID) const
+    EthereumPeerStatus const& peerStatus(NodeID const& _peerID) const
     {
         // TODO can not exist
         return m_peers.find(_peerID)->second;
     }
 
-    bool isPeerConversing(p2p::NodeID const& _peerID) const
+    bool isPeerConversing(NodeID const& _peerID) const
     {
         // TODO can not exist
         return m_peers.find(_peerID)->second.m_asking != Asking::Nothing;
     }
 
-    void markPeerAsWaitingForTransactions(p2p::NodeID const& _peerID)
+    void markPeerAsWaitingForTransactions(NodeID const& _peerID)
     {
         m_peers[_peerID].m_requireTransactions = true;
     }
 
-    void markBlockAsKnownToPeer(p2p::NodeID const& _peerID, h256 const& _hash)
+    void markBlockAsKnownToPeer(NodeID const& _peerID, h256 const& _hash)
     {
         auto& peer = m_peers[_peerID];
         DEV_GUARDED(peer.x_knownBlocks)
         peer.m_knownBlocks.insert(_hash);
     }
 
-    void setPeerLatestHash(p2p::NodeID const& _peerID, h256 const& _hash)
+    void setPeerLatestHash(NodeID const& _peerID, h256 const& _hash)
     {
         m_peers[_peerID].m_latestHash = _hash;
     }
 
-    void incrementPeerUnknownNewBlocks(p2p::NodeID const& _peerID)
+    void incrementPeerUnknownNewBlocks(NodeID const& _peerID)
     {
         ++m_peers[_peerID].m_unknownNewBlocks;
     }
 
-    void requestStatus(p2p::NodeID const& _peerID, u256 _hostNetworkId, u256 _chainTotalDifficulty,
+    void requestStatus(NodeID const& _peerID, u256 _hostNetworkId, u256 _chainTotalDifficulty,
         h256 _chainCurrentHash, h256 _chainGenesPeersh);
 
     /// Request hashes for given parent hash.
-    void requestBlockHeaders(p2p::NodeID const& _nodeID, h256 const& _startHash, unsigned _count,
+    void requestBlockHeaders(NodeID const& _nodeID, h256 const& _startHash, unsigned _count,
         unsigned _skip, bool _reverse);
-    void requestBlockHeaders(p2p::NodeID const& _nodeID, unsigned _startNumber, unsigned _count,
+    void requestBlockHeaders(NodeID const& _nodeID, unsigned _startNumber, unsigned _count,
         unsigned _skip, bool _reverse);
 
     /// Request specified blocks from peer.
-    void requestBlockBodies(p2p::NodeID const& _nodeID, h256s const& _blocks);
+    void requestBlockBodies(NodeID const& _nodeID, h256s const& _blocks);
 
     /// Request values for specified keys from peer.
-    void requestNodeData(p2p::NodeID const& _nodeID, h256s const& _hashes);
+    void requestNodeData(NodeID const& _nodeID, h256s const& _hashes);
 
     /// Request receipts for specified blocks from peer.
-    void requestReceipts(p2p::NodeID const& _nodeID, h256s const& _blocks);
+    void requestReceipts(NodeID const& _nodeID, h256s const& _blocks);
 
     /// Check if this node is rude.
-    bool isRude(p2p::NodeID const& _nodeID) const;
+    bool isRude(NodeID const& _nodeID) const;
 
     /// Set that it's a rude node.
-    void setRude(p2p::NodeID const& _nodeID);
+    void setRude(NodeID const& _nodeID);
 
     /// Abort the sync operation.
-    void abortSync(p2p::NodeID const& _nodeID);
+    void abortSync(NodeID const& _nodeID);
 
 protected:
     /*    std::shared_ptr<p2p::PeerCapabilityFace> newPeerCapability(
@@ -238,7 +237,7 @@ protected:
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 
-    std::tuple<std::vector<p2p::NodeID>, std::vector<p2p::NodeID>> randomSelection(
+    std::tuple<std::vector<NodeID>, std::vector<NodeID>> randomSelection(
         unsigned _percent = 25, std::function<bool(EthereumPeerStatus const&)> const& _allow =
                                     [](EthereumPeerStatus const&) { return true; });
 
@@ -258,14 +257,14 @@ private:
     virtual void onStarting() override { startWorking(); }
     virtual void onStopping() override { stopWorking(); }
 
-    void setIdle(p2p::NodeID const& _peerID);
-    void setAsking(p2p::NodeID const& _peerID, Asking _a);
+    void setIdle(NodeID const& _peerID);
+    void setAsking(NodeID const& _peerID, Asking _a);
 
     /// Are we presently in a critical part of the syncing process with this peer?
-    bool isCriticalSyncing(p2p::NodeID const& _peerID) const;
+    bool isCriticalSyncing(NodeID const& _peerID) const;
 
     /// Do we presently need syncing with this peer?
-    bool needsSyncing(p2p::NodeID const& _peerID) const
+    bool needsSyncing(NodeID const& _peerID) const
     {
         if (m_host->isRude(_peerID, name()))
             return false;
@@ -275,7 +274,7 @@ private:
     }
 
     // Request of type _packetType with _hashes as input parameters
-    void requestByHashes(p2p::NodeID const& _peerID, h256s const& _hashes, Asking _asking,
+    void requestByHashes(NodeID const& _peerID, h256s const& _hashes, Asking _asking,
         SubprotocolPacketType _packetType);
 
     std::shared_ptr<p2p::CapabilityHostFace> m_host;
@@ -301,7 +300,7 @@ private:
     std::shared_ptr<EthereumHostDataFace> m_hostData;
     std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
 
-    std::unordered_map<p2p::NodeID, EthereumPeerStatus> m_peers;
+    std::unordered_map<NodeID, EthereumPeerStatus> m_peers;
 
     std::mt19937_64 m_urng; // Mersenne Twister psuedo-random number generator
 
