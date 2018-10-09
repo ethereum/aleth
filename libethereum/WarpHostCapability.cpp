@@ -66,7 +66,7 @@ public:
             m_downloadFiber->join();
     }
 
-    void onPeerStatus(p2p::NodeID const& _peerID) override
+    void onPeerStatus(NodeID const& _peerID) override
     {
         boost::fibers::fiber checkPeerFiber(&WarpPeerObserver::validatePeer, this, _peerID);
         checkPeerFiber.detach();
@@ -79,19 +79,19 @@ public:
         boost::this_fiber::yield();
     }
 
-    void onPeerManifest(p2p::NodeID const& _peerID, RLP const& _r) override
+    void onPeerManifest(NodeID const& _peerID, RLP const& _r) override
     {
         m_manifests[_peerID].set_value(_r.data().toBytes());
         boost::this_fiber::yield();
     }
 
-    void onPeerBlockHeaders(p2p::NodeID const& _peerID, RLP const& _r) override
+    void onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r) override
     {
         m_daoForkHeaders[_peerID].set_value(_r.data().toBytes());
         boost::this_fiber::yield();
     }
 
-    void onPeerData(p2p::NodeID const& _peerID, RLP const& _r) override
+    void onPeerData(NodeID const& _peerID, RLP const& _r) override
     {
         if (!_r.isList() || _r.itemCount() != 1)
             return;
@@ -125,7 +125,7 @@ public:
         boost::this_fiber::yield();
     }
 
-    void onPeerDisconnect(p2p::NodeID const& _peerID, Asking _asking) override
+    void onPeerDisconnect(NodeID const& _peerID, Asking _asking) override
     {
         if (_asking == Asking::WarpManifest)
         {
@@ -153,7 +153,7 @@ public:
     }
 
 private:
-    void validatePeer(p2p::NodeID _peerID)
+    void validatePeer(NodeID _peerID)
     {
         if (!m_host.validateStatus(
                 _peerID, m_hostGenesisHash, {m_hostProtocolVersion}, m_hostNetworkId))
@@ -208,7 +208,7 @@ private:
         }
     }
 
-    bytes waitForManifestResponse(p2p::NodeID const& _peerID)
+    bytes waitForManifestResponse(NodeID const& _peerID)
     {
         try
         {
@@ -223,7 +223,7 @@ private:
         return bytes{};
     }
 
-    bytes waitForDaoForkBlockResponse(p2p::NodeID const& _peerID)
+    bytes waitForDaoForkBlockResponse(NodeID const& _peerID)
     {
         try
         {
@@ -276,7 +276,7 @@ private:
         {
             h256 const chunkHash(m_neededChunks.front());
 
-            p2p::NodeID peerID;
+            NodeID peerID;
             do
             {
                 peerID = m_freePeers.value_pop();
@@ -297,11 +297,11 @@ private:
     boost::fibers::promise<bytes> m_manifest;
     h256 m_syncingSnapshotHash;
     std::deque<h256> m_neededChunks;
-    boost::fibers::buffered_channel<p2p::NodeID> m_freePeers;
+    boost::fibers::buffered_channel<NodeID> m_freePeers;
     boost::filesystem::path const m_snapshotDir;
-    std::map<p2p::NodeID, boost::fibers::promise<bytes>> m_manifests;
-    std::map<p2p::NodeID, boost::fibers::promise<bytes>> m_daoForkHeaders;
-    std::map<p2p::NodeID, h256> m_requestedChunks;
+    std::map<NodeID, boost::fibers::promise<bytes>> m_manifests;
+    std::map<NodeID, boost::fibers::promise<bytes>> m_daoForkHeaders;
+    std::map<NodeID, h256> m_requestedChunks;
 
     std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
 
@@ -358,8 +358,7 @@ void WarpHostCapability::doWork()
     }
 }
 
-void WarpHostCapability::onConnect(
-    p2p::NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)
+void WarpHostCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)
 {
     // TODO hack to work around moving std::atomic
     m_peers[_peerID].m_asking = Asking::Nothing;
@@ -382,7 +381,7 @@ void WarpHostCapability::onConnect(
 }
 
 bool WarpHostCapability::interpretCapabilityPacket(
-    p2p::NodeID const& _peerID, unsigned _id, RLP const& _r)
+    NodeID const& _peerID, unsigned _id, RLP const& _r)
 {
     auto& peerStatus = m_peers[_peerID];
     peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -485,13 +484,13 @@ bool WarpHostCapability::interpretCapabilityPacket(
     return true;
 }
 
-void WarpHostCapability::onDisconnect(p2p::NodeID const& _peerID)
+void WarpHostCapability::onDisconnect(NodeID const& _peerID)
 {
     m_peers.erase(_peerID);
 }
 
 
-void WarpHostCapability::requestStatus(p2p::NodeID const& _peerID, unsigned _hostProtocolVersion,
+void WarpHostCapability::requestStatus(NodeID const& _peerID, unsigned _hostProtocolVersion,
     u256 const& _hostNetworkId, u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,
     h256 const& _chainGenesisHash, h256 const& _snapshotBlockHash, u256 const& _snapshotBlockNumber)
 {
@@ -503,8 +502,8 @@ void WarpHostCapability::requestStatus(p2p::NodeID const& _peerID, unsigned _hos
 }
 
 
-void WarpHostCapability::requestBlockHeaders(p2p::NodeID const& _peerID, unsigned _startNumber,
-    unsigned _count, unsigned _skip, bool _reverse)
+void WarpHostCapability::requestBlockHeaders(
+    NodeID const& _peerID, unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -518,7 +517,7 @@ void WarpHostCapability::requestBlockHeaders(p2p::NodeID const& _peerID, unsigne
     m_host->sealAndSend(_peerID, s);
 }
 
-void WarpHostCapability::requestManifest(p2p::NodeID const& _peerID)
+void WarpHostCapability::requestManifest(NodeID const& _peerID)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -531,7 +530,7 @@ void WarpHostCapability::requestManifest(p2p::NodeID const& _peerID)
     m_host->sealAndSend(_peerID, s);
 }
 
-bool WarpHostCapability::requestData(p2p::NodeID const& _peerID, h256 const& _chunkHash)
+bool WarpHostCapability::requestData(NodeID const& _peerID, h256 const& _chunkHash)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -546,7 +545,7 @@ bool WarpHostCapability::requestData(p2p::NodeID const& _peerID, h256 const& _ch
     return true;
 }
 
-void WarpHostCapability::setAsking(p2p::NodeID const& _peerID, Asking _a)
+void WarpHostCapability::setAsking(NodeID const& _peerID, Asking _a)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -559,7 +558,7 @@ void WarpHostCapability::setAsking(p2p::NodeID const& _peerID, Asking _a)
 }
 
 /// Validates whether peer is able to communicate with the host, disables peer if not
-bool WarpHostCapability::validateStatus(p2p::NodeID const& _peerID, h256 const& _genesisHash,
+bool WarpHostCapability::validateStatus(NodeID const& _peerID, h256 const& _genesisHash,
     std::vector<unsigned> const& _protocolVersions, u256 const& _networkId)
 {
     auto itPeerStatus = m_peers.find(_peerID);

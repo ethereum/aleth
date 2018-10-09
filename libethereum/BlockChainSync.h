@@ -65,19 +65,18 @@ public:
     void completeSync();
 
     /// Called by peer to report status
-    void onPeerStatus(p2p::NodeID const& _peerID, EthereumPeerStatus const& _status);
+    void onPeerStatus(NodeID const& _peerID, EthereumPeerStatus const& _status);
 
     /// Called by peer once it has new block headers during sync
-    void onPeerBlockHeaders(p2p::NodeID const& _peerID, RLP const& _r);
+    void onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r);
 
     /// Called by peer once it has new block bodies
-    void onPeerBlockBodies(p2p::NodeID const& _peerID, RLP const& _r);
+    void onPeerBlockBodies(NodeID const& _peerID, RLP const& _r);
 
     /// Called by peer once it has new block bodies
-    void onPeerNewBlock(p2p::NodeID const& _peerID, RLP const& _r);
+    void onPeerNewBlock(NodeID const& _peerID, RLP const& _r);
 
-    void onPeerNewHashes(
-        p2p::NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes);
+    void onPeerNewHashes(NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes);
 
     /// Called by peer when it is disconnecting
     void onPeerAborting();
@@ -101,12 +100,12 @@ private:
     EthereumHost const& host() const { return m_host; }
 
     void resetSync();
-    void syncPeer(p2p::NodeID const& _peerID, bool _force);
-    void requestBlocks(p2p::NodeID const& _peerID);
-    void clearPeerDownload(p2p::NodeID const& _peerID);
+    void syncPeer(NodeID const& _peerID, bool _force);
+    void requestBlocks(NodeID const& _peerID);
+    void clearPeerDownload(NodeID const& _peerID);
     void clearPeerDownload();
     void collectBlocks();
-    bool requestDaoForkBlockHeader(p2p::NodeID const& _peerID);
+    bool requestDaoForkBlockHeader(NodeID const& _peerID);
     bool verifyDaoChallengeResponse(RLP const& _r);
     void logImported(unsigned _success, unsigned _future, unsigned _got, unsigned _unknown);
 
@@ -145,8 +144,8 @@ private:
     EthereumHost& m_host;
     Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
     mutable RecursiveMutex x_sync;
-    std::set<p2p::NodeID> m_daoChallengedPeers;  ///> Peers to which we've sent DAO challenge
-                                                 ///request
+    /// Peers to which we've sent DAO request
+    std::set<NodeID> m_daoChallengedPeers;
     std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state
     h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
     unsigned m_chainStartBlock = 0;
@@ -156,12 +155,10 @@ private:
     std::unordered_set<unsigned> m_downloadingBodies;		///< Set of block header numbers being downloaded
     std::map<unsigned, std::vector<Header>> m_headers;	    ///< Downloaded headers
     std::map<unsigned, std::vector<bytes>> m_bodies;	    ///< Downloaded block bodies
-    std::map<p2p::NodeID, std::vector<unsigned>> m_headerSyncPeers;  ///< Peers to
-                                                                     ///< m_downloadingSubchain
-                                                                     ///< number map
-    std::map<p2p::NodeID, std::vector<unsigned>> m_bodySyncPeers;    ///< Peers to
-                                                                   ///< m_downloadingSubchain number
-                                                                   ///< map
+    /// Peers m_downloadingSubchain number map
+    std::map<NodeID, std::vector<unsigned>> m_headerSyncPeers;
+    /// Peers m_downloadingSubchain number map
+    std::map<NodeID, std::vector<unsigned>> m_bodySyncPeers;
     std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
     bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
     unsigned m_lastImportedBlock = 0; 			///< Last imported block number

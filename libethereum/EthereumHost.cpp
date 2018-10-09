@@ -685,14 +685,14 @@ shared_ptr<PeerCapabilityFace> EthereumHost::newPeerCapability(
     return ret;
 }
 */
-void EthereumHost::onConnect(p2p::NodeID const& _peerID, u256 const& _peerCapabilityVersion)
+void EthereumHost::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion)
 {
     m_peers[_peerID].m_peerCapabilityVersion = _peerCapabilityVersion;
     requestStatus(_peerID, m_networkId, m_chain.details().totalDifficulty, m_chain.currentHash(),
         m_chain.genesisHash());
 }
 
-void EthereumHost::onDisconnect(p2p::NodeID const& _nodeID)
+void EthereumHost::onDisconnect(NodeID const& _nodeID)
 {
     m_peers.erase(_nodeID);
 }
@@ -929,7 +929,7 @@ void EthereumHost::setAsking(NodeID const& _peerID, Asking _a)
             (needsSyncing(_peerID) ? " & needed" : ""));
 }
 
-bool EthereumHost::isCriticalSyncing(p2p::NodeID const& _peerID) const
+bool EthereumHost::isCriticalSyncing(NodeID const& _peerID) const
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -941,7 +941,7 @@ bool EthereumHost::isCriticalSyncing(p2p::NodeID const& _peerID) const
            (peerStatus.m_asking == Asking::BlockBodies && peerStatus.m_protocolVersion == 62);
 }
 
-void EthereumHost::requestStatus(p2p::NodeID const& _peerID, u256 _hostNetworkId,
+void EthereumHost::requestStatus(NodeID const& _peerID, u256 _hostNetworkId,
     u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash)
 {
     auto itPeerStatus = m_peers.find(_peerID);
@@ -960,8 +960,8 @@ void EthereumHost::requestStatus(p2p::NodeID const& _peerID, u256 _hostNetworkId
     m_host->sealAndSend(_peerID, s);
 }
 
-void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, unsigned _startNumber,
-    unsigned _count, unsigned _skip, bool _reverse)
+void EthereumHost::requestBlockHeaders(
+    NodeID const& _peerID, unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -983,8 +983,8 @@ void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, unsigned _sta
     m_host->sealAndSend(_peerID, s);
 }
 
-void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, h256 const& _startHash,
-    unsigned _count, unsigned _skip, bool _reverse)
+void EthereumHost::requestBlockHeaders(
+    NodeID const& _peerID, h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -1007,23 +1007,23 @@ void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, h256 const& _
 }
 
 
-void EthereumHost::requestBlockBodies(p2p::NodeID const& _peerID, h256s const& _blocks)
+void EthereumHost::requestBlockBodies(NodeID const& _peerID, h256s const& _blocks)
 {
     requestByHashes(_peerID, _blocks, Asking::BlockBodies, GetBlockBodiesPacket);
 }
 
-void EthereumHost::requestNodeData(p2p::NodeID const& _peerID, h256s const& _hashes)
+void EthereumHost::requestNodeData(NodeID const& _peerID, h256s const& _hashes)
 {
     requestByHashes(_peerID, _hashes, Asking::NodeData, GetNodeDataPacket);
 }
 
-void EthereumHost::requestReceipts(p2p::NodeID const& _peerID, h256s const& _blocks)
+void EthereumHost::requestReceipts(NodeID const& _peerID, h256s const& _blocks)
 {
     requestByHashes(_peerID, _blocks, Asking::Receipts, GetReceiptsPacket);
 }
 
-void EthereumHost::requestByHashes(p2p::NodeID const& _peerID, h256s const& _hashes, Asking _asking,
-    SubprotocolPacketType _packetType)
+void EthereumHost::requestByHashes(
+    NodeID const& _peerID, h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
