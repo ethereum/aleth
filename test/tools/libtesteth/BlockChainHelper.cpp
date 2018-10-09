@@ -215,6 +215,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
         // if (transactionsOnImport >  m_transactionQueue.topTransactions(1000).size())
         // BOOST_ERROR(TestOutputHelper::get().testName() + " Dropped invalid Transactions before
         // mining!");
+        cnote << "Mining block difficulty of:  " << block.info().difficulty();
         dev::eth::mine(block, blockchain, blockchain.sealEngine());
         blockchain.sealEngine()->verify(JustSeal, block.info());
         if (transactionsOnImport > block.pending().size())

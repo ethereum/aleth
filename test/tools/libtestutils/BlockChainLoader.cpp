@@ -33,13 +33,21 @@ BlockChainLoader::BlockChainLoader(Json::Value const& _json, eth::Network _sealE
 	m_block(Block::Null)
 {
 	// load genesisBlock
-	bytes genesisBlock = fromHex(_json["genesisRLP"].asString());
+    Json::FastWriter a;
+    bytes genesisBlock = fromHex(_json["genesisRLP"].asString());
+    ChainParams params(
+        genesisInfo(_sealEngineNetwork), genesisBlock, jsonToAccountMap(a.write(_json["pre"])));
+    if (_json.isMember("sealEngine"))
+    {
+        if (_json["sealEngine"].asString() == eth::NoProof::name())
+            params.sealEngineName = eth::NoProof::name();
+        else if (_json["sealEngine"].asString() == eth::Ethash::name())
+            params.sealEngineName = eth::Ethash::name();
+    }
+    m_bc.reset(new BlockChain(params, m_dir.path(), WithExisting::Kill));
 
-	Json::FastWriter a;
-	m_bc.reset(new BlockChain(ChainParams(genesisInfo(_sealEngineNetwork), genesisBlock, jsonToAccountMap(a.write(_json["pre"]))), m_dir.path(), WithExisting::Kill));
-
-	// load pre state
-	m_block = m_bc->genesisBlock(State::openDB(m_dir.path(), m_bc->genesisHash(), WithExisting::Kill));
+    // load pre state
+    m_block = m_bc->genesisBlock(State::openDB(m_dir.path(), m_bc->genesisHash(), WithExisting::Kill));
 
 	assert(m_block.rootHash() == m_bc->info().stateRoot());
 

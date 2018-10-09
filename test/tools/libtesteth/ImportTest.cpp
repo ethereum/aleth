@@ -381,8 +381,8 @@ void ImportTest::importEnv(json_spirit::mObject const& _o)
     BlockHeader header;
     header.setGasLimit(gasLimit.convert_to<int64_t>());
     header.setDifficulty(toU256(_o.at("currentDifficulty")));
-    header.setNumber(toPositiveInt64(_o.at("currentNumber")));
-    header.setTimestamp(toPositiveInt64(_o.at("currentTimestamp")));
+    header.setNumber(toUint64(_o.at("currentNumber")));
+    header.setTimestamp(toUint64(_o.at("currentTimestamp")));
     header.setAuthor(Address(_o.at("currentCoinbase").get_str()));
 
     m_lastBlockHashes.reset(new TestLastBlockHashes(lastHashes(header.number())));
