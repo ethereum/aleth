@@ -220,7 +220,7 @@ int main(int argc, char** argv)
 
     unsigned peers = 11;
     unsigned peerStretch = 7;
-    std::map<NodeID, pair<NodeIPEndpoint,bool>> preferredNodes;
+    std::map<p2p::NodeID, pair<NodeIPEndpoint, bool>> preferredNodes;
     bool bootstrap = true;
     bool disableDiscovery = false;
     bool enableDiscovery = false;

@@ -34,7 +34,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace p2p;
 
 unsigned const c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
 unsigned const c_maxRequestHeaders = 1024;
@@ -221,7 +220,7 @@ void BlockChainSync::onPeerStatus(NodeID const& _peerID, EthereumPeerStatus cons
     if (disconnectReason)
     {
         LOG(m_logger) << "Peer not suitable for sync: " << disconnectReason;
-        m_host.capabilityHost().disconnect(_peerID, UserReason);
+        m_host.capabilityHost().disconnect(_peerID, p2p::UserReason);
         return;
     }
 
@@ -466,7 +465,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
             // TODO extract
             // TODO passing cap name should be enough
             m_host.capabilityHost().disableCapability(
-                _peerID, CapDesc{m_host.name(), m_host.version()}, "Peer from another fork.");
+                _peerID, p2p::CapDesc{m_host.name(), m_host.version()}, "Peer from another fork.");
 
         m_daoChallengedPeers.erase(_peerID);
         return;
@@ -758,8 +757,8 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
 
     if (_r.itemCount() != 2)
     {
-        m_host.capabilityHost().disableCapability(
-            _peerID, CapDesc{m_host.name(), m_host.version()}, "NewBlock without 2 data fields.");
+        m_host.capabilityHost().disableCapability(_peerID,
+            p2p::CapDesc{m_host.name(), m_host.version()}, "NewBlock without 2 data fields.");
         return;
     }
     BlockHeader info(_r[0][0].data(), HeaderData);
@@ -809,7 +808,7 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
     case ImportResult::BadChain:
         logNewBlock(h);
         m_host.capabilityHost().disableCapability(
-            _peerID, CapDesc{m_host.name(), m_host.version()}, "Malformed block received.");
+            _peerID, p2p::CapDesc{m_host.name(), m_host.version()}, "Malformed block received.");
         return;
 
     case ImportResult::AlreadyInChain:
@@ -822,8 +821,8 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
         m_host.incrementPeerUnknownNewBlocks(_peerID);
         if (m_host.peerStatus(_peerID).m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
         {
-            m_host.capabilityHost().disableCapability(
-                _peerID, CapDesc{m_host.name(), m_host.version()}, "Too many uknown new blocks");
+            m_host.capabilityHost().disableCapability(_peerID,
+                p2p::CapDesc{m_host.name(), m_host.version()}, "Too many uknown new blocks");
             restartSync();
         }
         logNewBlock(h);
