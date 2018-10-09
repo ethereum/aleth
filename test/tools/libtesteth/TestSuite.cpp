@@ -61,7 +61,7 @@ void removeComments(json_spirit::mValue& _obj)
 	}
 }
 
-TestFileData readTestFile(fs::path _testFileName)
+TestFileData readTestFile(fs::path const& _testFileName)
 {
     TestFileData testData;
     string const s = dev::contentsString(_testFileName);
@@ -74,7 +74,7 @@ TestFileData readTestFile(fs::path _testFileName)
     else
         BOOST_ERROR("Unknow test format!" + test::TestOutputHelper::get().testFile().string());
 
-    testData.hash = h256(sha3(json_spirit::write_string(testData.data, false)));
+    testData.hash = sha3(json_spirit::write_string(testData.data, false));
     return testData;
 }
 
@@ -105,7 +105,7 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource, h256 co
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
     json_spirit::mValue filledTest;
-    string s = dev::contentsString(_compiledTest);
+    string const s = dev::contentsString(_compiledTest);
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
     json_spirit::read_string(s, filledTest);
 

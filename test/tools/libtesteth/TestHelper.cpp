@@ -271,7 +271,7 @@ u256 toU256(json_spirit::mValue const& _v)
     return 0;
 }
 
-int64_t toInt64(const json_spirit::mValue& _v)
+int64_t toInt64(json_spirit::mValue const& _v)
 {
     int64_t n = 0;
     switch (_v.type())
@@ -288,7 +288,7 @@ int64_t toInt64(const json_spirit::mValue& _v)
     return n;
 }
 
-uint64_t toPositiveInt64(const json_spirit::mValue& _v)
+uint64_t toUint64(json_spirit::mValue const& _v)
 {
     uint64_t n = 0;
     switch (_v.type())
@@ -297,9 +297,9 @@ uint64_t toPositiveInt64(const json_spirit::mValue& _v)
     {
         long long readval = std::stoll(_v.get_str(), nullptr, 0);
         if (readval < 0)
-            throw std::out_of_range{
-                "TestOutputHelper::toPositiveInt64: unexpected negative value: " +
-                std::to_string(readval)};
+            BOOST_THROW_EXCEPTION(UnexpectedNegative() << errinfo_comment(
+                                      "TestOutputHelper::toUint64: unexpected negative value: " +
+                                      std::to_string(readval)));
         n = readval;
     }
     break;
