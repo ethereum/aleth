@@ -23,10 +23,11 @@
 
 #pragma once
 
-#include <string>
-#include <chrono>
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
+#include <libp2p/Common.h>
+#include <chrono>
+#include <string>
 
 namespace dev
 {
@@ -101,5 +102,6 @@ struct SyncStatus
     bool majorSyncing = false;
 };
 
+using NodeID = p2p::NodeID;
 }
 }

@@ -36,7 +36,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace p2p;
 
 static unsigned const c_maxSendTransactions = 256;
 static const unsigned c_maxHeadersToSend = 1024;
@@ -478,7 +477,7 @@ void EthereumHost::doWork()
             auto const& status = peer.second;
             if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
                 // timeout
-                m_host->disconnect(peer.first, PingTimeout);
+                m_host->disconnect(peer.first, p2p::PingTimeout);
         }
     }
 
@@ -525,8 +524,7 @@ void EthereumHost::maintainTransactions()
         if (n || peer.second.m_requireTransactions)
         {
             RLPStream ts;
-            m_host->prep(peer.first, CapDesc{name(), version()}, ts, TransactionsPacket, n)
-                .appendRaw(b, n);
+            m_host->prep(peer.first, capDesc(), ts, TransactionsPacket, n).appendRaw(b, n);
             m_host->sealAndSend(peer.first, ts);
             LOG(m_logger) << "Sent " << n << " transactions to " << peer.first;
         }
@@ -601,7 +599,7 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
                 for (auto const& b: blocks)
                 {
                     RLPStream ts;
-                    m_host->prep(peerID, CapDesc{name(), version()}, ts, NewBlockPacket, 2)
+                    m_host->prep(peerID, capDesc(), ts, NewBlockPacket, 2)
                         .appendRaw(m_chain.block(b), 1)
                         .append(m_chain.details(b).totalDifficulty);
 
@@ -613,8 +611,7 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
             for (NodeID const& peerID : get<1>(s))
             {
                 RLPStream ts;
-                m_host->prep(
-                    peerID, CapDesc{name(), version()}, ts, NewBlockHashesPacket, blocks.size());
+                m_host->prep(peerID, capDesc(), ts, NewBlockHashesPacket, blocks.size());
                 for (auto const& b: blocks)
                 {
                     ts.appendList(2);
@@ -756,9 +753,7 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
                 m_hostData->blockHeaders(blockId, numHeadersToSend, skip, reverse);
 
             RLPStream s;
-            m_host
-                ->prep(_peerID, CapDesc{name(), version()}, s, BlockHeadersPacket,
-                    rlpAndItemCount.second)
+            m_host->prep(_peerID, capDesc(), s, BlockHeadersPacket, rlpAndItemCount.second)
                 .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
             m_host->sealAndSend(_peerID, s);
             m_host->addRating(_peerID, 0);
@@ -792,9 +787,7 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
 
             m_host->addRating(_peerID, 0);
             RLPStream s;
-            m_host
-                ->prep(_peerID, CapDesc{name(), version()}, s, BlockBodiesPacket,
-                    rlpAndItemCount.second)
+            m_host->prep(_peerID, capDesc(), s, BlockBodiesPacket, rlpAndItemCount.second)
                 .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
             m_host->sealAndSend(_peerID, s);
             break;
@@ -824,8 +817,7 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
 
             if (itemCount > c_maxIncomingNewHashes)
             {
-                m_host->disableCapability(
-                    _peerID, CapDesc{name(), version()}, "Too many new hashes");
+                m_host->disableCapability(_peerID, capDesc(), "Too many new hashes");
                 break;
             }
 
@@ -851,7 +843,7 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
 
             m_host->addRating(_peerID, 0);
             RLPStream s;
-            m_host->prep(_peerID, CapDesc{name(), version()}, s, NodeDataPacket, data.size());
+            m_host->prep(_peerID, capDesc(), s, NodeDataPacket, data.size());
             for (auto const& element : data)
                 s.append(element);
             m_host->sealAndSend(_peerID, s);
@@ -872,9 +864,7 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
 
             m_host->addRating(_peerID, 0);
             RLPStream s;
-            m_host
-                ->prep(
-                    _peerID, CapDesc{name(), version()}, s, ReceiptsPacket, rlpAndItemCount.second)
+            m_host->prep(_peerID, capDesc(), s, ReceiptsPacket, rlpAndItemCount.second)
                 .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
             m_host->sealAndSend(_peerID, s);
             break;
@@ -965,7 +955,7 @@ void EthereumHost::requestStatus(p2p::NodeID const& _peerID, u256 _hostNetworkId
     setAsking(_peerID, Asking::State);
     peerStatus.m_requireTransactions = true;
     RLPStream s;
-    m_host->prep(_peerID, CapDesc{name(), version()}, s, StatusPacket, 5)
+    m_host->prep(_peerID, capDesc(), s, StatusPacket, 5)
         << protocolVersion() << _hostNetworkId << _chainTotalDifficulty << _chainCurrentHash
         << _chainGenesisHash;
     m_host->sealAndSend(_peerID, s);
@@ -986,7 +976,7 @@ void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, unsigned _sta
     }
     setAsking(_peerID, Asking::BlockHeaders);
     RLPStream s;
-    m_host->prep(_peerID, CapDesc{name(), version()}, s, GetBlockHeadersPacket, 4)
+    m_host->prep(_peerID, capDesc(), s, GetBlockHeadersPacket, 4)
         << _startNumber << _count << _skip << (_reverse ? 1 : 0);
     LOG(m_logger) << "Requesting " << _count << " block headers starting from " << _startNumber
                   << (_reverse ? " in reverse" : "");
@@ -1009,7 +999,7 @@ void EthereumHost::requestBlockHeaders(p2p::NodeID const& _peerID, h256 const& _
     }
     setAsking(_peerID, Asking::BlockHeaders);
     RLPStream s;
-    m_host->prep(_peerID, CapDesc{name(), version()}, s, GetBlockHeadersPacket, 4)
+    m_host->prep(_peerID, capDesc(), s, GetBlockHeadersPacket, 4)
         << _startHash << _count << _skip << (_reverse ? 1 : 0);
     LOG(m_logger) << "Requesting " << _count << " block headers starting from " << _startHash
                   << (_reverse ? " in reverse" : "");
@@ -1051,7 +1041,7 @@ void EthereumHost::requestByHashes(p2p::NodeID const& _peerID, h256s const& _has
     if (_hashes.size())
     {
         RLPStream s;
-        m_host->prep(_peerID, CapDesc{name(), version()}, s, _packetType, _hashes.size());
+        m_host->prep(_peerID, capDesc(), s, _packetType, _hashes.size());
         for (auto const& i : _hashes)
             s << i;
         m_host->sealAndSend(_peerID, s);

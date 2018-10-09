@@ -35,12 +35,12 @@ public:
     void onStarting() override {}
     void onStopping() override {}
 
-    void onConnect(NodeID const&, u256 const&) override {}
-    bool interpretCapabilityPacket(NodeID const&, unsigned, RLP const&) override
+    void onConnect(p2p::NodeID const&, u256 const&) override {}
+    bool interpretCapabilityPacket(p2p::NodeID const&, unsigned, RLP const&) override
     {
         return true;
     }
-    void onDisconnect(NodeID const&) override {}
+    void onDisconnect(p2p::NodeID const&) override {}
 };
 
 class MockSession: public SessionFace
@@ -53,7 +53,7 @@ public:
 
     bool isConnected() const override { return true; }
 
-    NodeID id() const override { return {}; }
+    p2p::NodeID id() const override { return {}; }
 
     void sealAndSend(RLPStream& _s) override
     {
@@ -68,7 +68,11 @@ public:
         m_notes[_k] = _v;
     }
 
-    PeerSessionInfo info() const override { return PeerSessionInfo{ NodeID{}, "", "", 0, std::chrono::steady_clock::duration{}, {}, 0, {}, 0 }; }
+    PeerSessionInfo info() const override
+    {
+        return PeerSessionInfo{
+            p2p::NodeID{}, "", "", 0, std::chrono::steady_clock::duration{}, {}, 0, {}, 0};
+    }
     std::chrono::steady_clock::time_point connectionTime() override { return std::chrono::steady_clock::time_point{}; }
 
     void registerCapability(
