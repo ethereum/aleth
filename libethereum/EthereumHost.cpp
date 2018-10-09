@@ -30,7 +30,6 @@
 #include "BlockChain.h"
 #include "TransactionQueue.h"
 #include "BlockQueue.h"
-#include "EthereumPeer.h"
 #include "BlockChainSync.h"
 
 using namespace std;
