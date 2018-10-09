@@ -659,10 +659,9 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
         break;
     case ImportResult::AlreadyKnown:
         // if we already had the transaction, then don't bother sending it on.
-        DEV_GUARDED(x_transactions)
-            m_transactionsSent.insert(_h);
-            m_host->addRating(_nodeId, 0);
-            break;
+        DEV_GUARDED(x_transactions) { m_transactionsSent.insert(_h); }
+        m_host->addRating(_nodeId, 0);
+        break;
     case ImportResult::Success:
         m_host->addRating(_nodeId, 100);
         break;
