@@ -60,30 +60,6 @@ and used if it meets the minimum version requirement.
 > a fixed version of CMake and unpacks it to the given directory prefix.
 > Example usage: `scripts/install_cmake.sh --prefix /usr/local`.
 
-### Install dependencies (Linux, macOS)
-
-The following *libraries* are required to be installed in the system in their
-development variant:
-
-- leveldb
-
-They usually can be installed using system-specific package manager.
-The examples for some systems are shown below:
-
-Operating system | Installation command
----------------- | --------------------
-Debian-based     | `sudo apt-get install libleveldb-dev`
-RedHat-based     | `dnf install leveldb-devel`
-macOS            | `brew install leveldb`
-
-
-We also support a "one-button" shell script
-[scripts/install_deps.sh](scripts/install_deps.sh)
-which attempts to aggregate dependencies installation instructions for Unix-like
-operating systems. It identifies your distro and installs the external packages.
-Supporting the script is non-trivial task so please [inform us](#contact)
-if it does not work for your use-case.
-
 ### Install dependencies (Windows)
 
 We provide prebuilt dependencies to build the project. Download them
