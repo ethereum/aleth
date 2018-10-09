@@ -430,6 +430,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 
             // pcap->newPeerCapability(session, offset, capDesc);
             peer->setCapabilityOffset(capDesc, offset);
+            session->registerCapability(capDesc, pcap);
 
             pcap->onConnect(_id, capDesc.second);
 

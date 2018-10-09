@@ -71,6 +71,10 @@ public:
     PeerSessionInfo info() const override { return PeerSessionInfo{ NodeID{}, "", "", 0, std::chrono::steady_clock::duration{}, {}, 0, {}, 0 }; }
     std::chrono::steady_clock::time_point connectionTime() override { return std::chrono::steady_clock::time_point{}; }
 
+    void registerCapability(
+        CapDesc const& /*_desc*/, std::shared_ptr<HostCapabilityFace> /*_p*/) override
+    {}
+
     std::shared_ptr<Peer> peer() const override { return nullptr;  }
 
     std::chrono::steady_clock::time_point lastReceived() const override { return std::chrono::steady_clock::time_point{}; }
