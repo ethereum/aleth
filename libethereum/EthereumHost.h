@@ -21,17 +21,7 @@
 
 #pragma once
 
-#include <mutex>
-#include <unordered_map>
-#include <vector>
-#include <unordered_set>
-#include <memory>
-#include <utility>
-#include <thread>
-#include <random>
-
 #include "CommonNet.h"
-#include "EthereumPeer.h"
 #include <libdevcore/Guards.h>
 #include <libdevcore/OverlayDB.h>
 #include <libdevcore/Worker.h>
@@ -39,6 +29,15 @@
 #include <libethcore/Common.h>
 #include <libethereum/BlockChainSync.h>
 #include <libp2p/Common.h>
+#include <libp2p/HostCapability.h>
+#include <memory>
+#include <mutex>
+#include <random>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace dev
 {
