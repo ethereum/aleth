@@ -69,9 +69,9 @@ public:
     virtual PeerSessionInfo info() const = 0;
     virtual std::chrono::steady_clock::time_point connectionTime() = 0;
 
-/*    virtual void registerCapability(
-        CapDesc const& _desc, std::shared_ptr<PeerCapabilityFace> _p) = 0;
-*/
+    virtual void registerCapability(
+        CapDesc const& _desc, std::shared_ptr<HostCapabilityFace> _p) = 0;
+
     virtual std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> const& capabilities() const = 0;
 
     virtual std::shared_ptr<Peer> peer() const = 0;
@@ -112,7 +112,7 @@ public:
     PeerSessionInfo info() const override { Guard l(x_info); return m_info; }
     std::chrono::steady_clock::time_point connectionTime() override { return m_connect; }
 
-//    void registerCapability(CapDesc const& _desc, std::shared_ptr<PeerCapabilityFace> _p) override;
+    void registerCapability(CapDesc const& _desc, std::shared_ptr<HostCapabilityFace> _p) override;
 
     // TODO try to return set<CapDesc>
     std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> const& capabilities() const override
