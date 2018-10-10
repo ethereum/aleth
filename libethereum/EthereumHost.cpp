@@ -941,6 +941,46 @@ bool EthereumHost::isCriticalSyncing(NodeID const& _peerID) const
            (peerStatus.m_asking == Asking::BlockBodies && peerStatus.m_protocolVersion == 62);
 }
 
+EthereumPeerStatus const& EthereumHost::peerStatus(NodeID const& _peerID) const
+{
+    auto const peer = m_peers.find(_peerID);
+    if (peer == m_peers.end())
+        BOOST_THROW_EXCEPTION(PeerDisconnected() << errinfo_nodeID(_peerID));
+
+    return peer->second;
+}
+
+bool EthereumHost::isPeerConversing(NodeID const& _peerID) const
+{
+    auto const peer = m_peers.find(_peerID);
+    if (peer == m_peers.end())
+        BOOST_THROW_EXCEPTION(PeerDisconnected() << errinfo_nodeID(_peerID));
+
+    return peer->second.m_asking != Asking::Nothing;
+}
+
+void EthereumHost::markPeerAsWaitingForTransactions(NodeID const& _peerID)
+{
+    m_peers[_peerID].m_requireTransactions = true;
+}
+
+void EthereumHost::markBlockAsKnownToPeer(NodeID const& _peerID, h256 const& _hash)
+{
+    auto& peer = m_peers[_peerID];
+    DEV_GUARDED(peer.x_knownBlocks)
+    peer.m_knownBlocks.insert(_hash);
+}
+
+void EthereumHost::setPeerLatestHash(NodeID const& _peerID, h256 const& _hash)
+{
+    m_peers[_peerID].m_latestHash = _hash;
+}
+
+void EthereumHost::incrementPeerUnknownNewBlocks(NodeID const& _peerID)
+{
+    ++m_peers[_peerID].m_unknownNewBlocks;
+}
+
 void EthereumHost::requestStatus(NodeID const& _peerID, u256 _hostNetworkId,
     u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash)
 {

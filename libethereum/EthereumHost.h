@@ -160,7 +160,6 @@ public:
     static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
 
     static unsigned const c_oldProtocolVersion;
-    //    void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
     void onConnect(NodeID const& _nodeID, u256 const& _peerCapabilityVersion) override;
     void onDisconnect(NodeID const& _nodeID) override;
@@ -168,39 +167,13 @@ public:
 
     p2p::CapabilityHostFace& capabilityHost() { return *m_host; }
 
-    EthereumPeerStatus const& peerStatus(NodeID const& _peerID) const
-    {
-        // TODO can not exist
-        return m_peers.find(_peerID)->second;
-    }
+    EthereumPeerStatus const& peerStatus(NodeID const& _peerID) const;
+    bool isPeerConversing(NodeID const& _peerID) const;
 
-    bool isPeerConversing(NodeID const& _peerID) const
-    {
-        // TODO can not exist
-        return m_peers.find(_peerID)->second.m_asking != Asking::Nothing;
-    }
-
-    void markPeerAsWaitingForTransactions(NodeID const& _peerID)
-    {
-        m_peers[_peerID].m_requireTransactions = true;
-    }
-
-    void markBlockAsKnownToPeer(NodeID const& _peerID, h256 const& _hash)
-    {
-        auto& peer = m_peers[_peerID];
-        DEV_GUARDED(peer.x_knownBlocks)
-        peer.m_knownBlocks.insert(_hash);
-    }
-
-    void setPeerLatestHash(NodeID const& _peerID, h256 const& _hash)
-    {
-        m_peers[_peerID].m_latestHash = _hash;
-    }
-
-    void incrementPeerUnknownNewBlocks(NodeID const& _peerID)
-    {
-        ++m_peers[_peerID].m_unknownNewBlocks;
-    }
+    void markPeerAsWaitingForTransactions(NodeID const& _peerID);
+    void markBlockAsKnownToPeer(NodeID const& _peerID, h256 const& _hash);
+    void setPeerLatestHash(NodeID const& _peerID, h256 const& _hash);
+    void incrementPeerUnknownNewBlocks(NodeID const& _peerID);
 
     void requestStatus(NodeID const& _peerID, u256 _hostNetworkId, u256 _chainTotalDifficulty,
         h256 _chainCurrentHash, h256 _chainGenesPeersh);
@@ -229,11 +202,6 @@ public:
     /// Abort the sync operation.
     void abortSync(NodeID const& _nodeID);
 
-protected:
-    /*    std::shared_ptr<p2p::PeerCapabilityFace> newPeerCapability(
-            std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset,
-            p2p::CapDesc const& _cap) override;
-    */
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 
