@@ -246,7 +246,7 @@ bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
 
 void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 {
-    auto& peerStatus = m_host.peerStatus(_peerID);
+    auto const& peerStatus = m_host.peerStatus(_peerID);
     if (peerStatus.m_asking != Asking::Nothing)
     {
         LOG(m_loggerDetail) << "Can't sync with this peer - outstanding asks.";
@@ -462,10 +462,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
         if (verifyDaoChallengeResponse(_r))
             syncPeer(_peerID, false);
         else
-            // TODO extract
-            // TODO passing cap name should be enough
-            m_host.capabilityHost().disableCapability(
-                _peerID, p2p::CapDesc{m_host.name(), m_host.version()}, "Peer from another fork.");
+            m_host.disablePeer(_peerID, "Peer from another fork.");
 
         m_daoChallengedPeers.erase(_peerID);
         return;
@@ -757,8 +754,7 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
 
     if (_r.itemCount() != 2)
     {
-        m_host.capabilityHost().disableCapability(_peerID,
-            p2p::CapDesc{m_host.name(), m_host.version()}, "NewBlock without 2 data fields.");
+        m_host.disablePeer(_peerID, "NewBlock without 2 data fields.");
         return;
     }
     BlockHeader info(_r[0][0].data(), HeaderData);
@@ -807,8 +803,7 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
     case ImportResult::Malformed:
     case ImportResult::BadChain:
         logNewBlock(h);
-        m_host.capabilityHost().disableCapability(
-            _peerID, p2p::CapDesc{m_host.name(), m_host.version()}, "Malformed block received.");
+        m_host.disablePeer(_peerID, "Malformed block received.");
         return;
 
     case ImportResult::AlreadyInChain:
@@ -821,8 +816,7 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
         m_host.incrementPeerUnknownNewBlocks(_peerID);
         if (m_host.peerStatus(_peerID).m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
         {
-            m_host.capabilityHost().disableCapability(_peerID,
-                p2p::CapDesc{m_host.name(), m_host.version()}, "Too many uknown new blocks");
+            m_host.disablePeer(_peerID, "Too many uknown new blocks");
             restartSync();
         }
         logNewBlock(h);

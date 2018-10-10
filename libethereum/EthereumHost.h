@@ -174,6 +174,7 @@ public:
     void markBlockAsKnownToPeer(NodeID const& _peerID, h256 const& _hash);
     void setPeerLatestHash(NodeID const& _peerID, h256 const& _hash);
     void incrementPeerUnknownNewBlocks(NodeID const& _peerID);
+    void disablePeer(NodeID const& _peerID, std::string const& _problem);
 
     void requestStatus(NodeID const& _peerID, u256 _hostNetworkId, u256 _chainTotalDifficulty,
         h256 _chainCurrentHash, h256 _chainGenesPeersh);
