@@ -29,7 +29,7 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 auto g_kind = DatabaseKind::LevelDB;
-fs::path g_dbPath;
+fs::path g_dbPath = getDataDir();
 
 /// A helper type to build the table of DB implementations.
 ///
@@ -82,7 +82,7 @@ DatabaseKind databaseKind()
 
 fs::path databasePath()
 {
-    return g_dbPath.empty() ? getDataDir() : g_dbPath;
+    return g_dbPath;
 }
 
 po::options_description databaseProgramOptions(unsigned _lineLength)
@@ -120,7 +120,7 @@ po::options_description databaseProgramOptions(unsigned _lineLength)
 
 std::unique_ptr<DatabaseFace> DBFactory::create()
 {
-    return create(databasePath());
+    return create(g_dbPath);
 }
 
 std::unique_ptr<DatabaseFace> DBFactory::create(fs::path const& _path)
@@ -130,7 +130,7 @@ std::unique_ptr<DatabaseFace> DBFactory::create(fs::path const& _path)
 
 std::unique_ptr<DatabaseFace> DBFactory::create(DatabaseKind _kind)
 {
-    return create(_kind, databasePath());
+    return create(_kind, g_dbPath);
 }
 
 std::unique_ptr<DatabaseFace> DBFactory::create(DatabaseKind _kind, fs::path const& _path)
