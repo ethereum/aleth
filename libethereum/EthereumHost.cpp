@@ -816,7 +816,7 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
 
             if (itemCount > c_maxIncomingNewHashes)
             {
-                m_host->disableCapability(_peerID, capDesc(), "Too many new hashes");
+                disablePeer(_peerID, "Too many new hashes");
                 break;
             }
 
@@ -979,6 +979,12 @@ void EthereumHost::setPeerLatestHash(NodeID const& _peerID, h256 const& _hash)
 void EthereumHost::incrementPeerUnknownNewBlocks(NodeID const& _peerID)
 {
     ++m_peers[_peerID].m_unknownNewBlocks;
+}
+
+void EthereumHost::disablePeer(NodeID const& _peerID, std::string const& _problem)
+{
+    // TODO passing cap name should be enough
+    m_host->disableCapability(_peerID, capDesc(), _problem);
 }
 
 void EthereumHost::requestStatus(NodeID const& _peerID, u256 _hostNetworkId,
