@@ -250,8 +250,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
         m_receipts.appendRaw(receipt);
     }
 
-    m_blockHeader = BlockHeader(block.blockData());  // NOTE no longer checked at this point in new
-    // API. looks like it was unimportant anyway
+    m_blockHeader = BlockHeader(block.blockData());
     cnote << "Mined TrRoot: " << m_blockHeader.transactionsRoot();
     copyStateFrom(block.state());
 
@@ -269,6 +268,8 @@ void TestBlock::mine(TestBlockChain const& _bc)
             uncleStream.appendRaw(uncleRlp.out());
         }
 
+        if (m_blockHeader.sha3Uncles() != sha3(uncleStream.out()))
+            cnote << "Some uncles been rejected when mining a test block!";
         m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
         updateNonce(_bc);
     }

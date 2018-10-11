@@ -154,35 +154,35 @@ BOOST_AUTO_TEST_CASE(basicGasPricer_notxs_homestead)
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowestPrio)
 {
-    u256 _expectedAsk = 15563249408;
+    u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 10000000000000;
 	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Lowest, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowPrio)
 {
-    u256 _expectedAsk = 15563249408;
+    u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 15734152261884;
 	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Low, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_MediumPrio)
 {
-    u256 _expectedAsk = 15563249408;
+    u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 20000000000000;
 	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighPrio)
 {
-    u256 _expectedAsk = 15563249408;
+    u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 24265847738115;
 	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::High, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighestPrio)
 {
-    u256 _expectedAsk = 15563249408;
+    u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 30000000000000;
 	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Highest, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
