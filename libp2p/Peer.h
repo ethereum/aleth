@@ -81,18 +81,16 @@ public:
 	/// Peer session is noted as useful.
 	void noteSessionGood() { m_failedAttempts = 0; }
 
-    unsigned capabilityOffset(CapDesc const& _cap) const
+    // TODO move to session
+    unsigned capabilityOffset(std::string const& _capabilityName) const
     {
         // TODO can not exist
-        // TODO name argument should be enough
-        return m_capabilityOffsets.find(_cap)->second;
+        return m_capabilityOffsets.find(_capabilityName)->second;
     }
-    void setCapabilityOffset(CapDesc const& _cap, unsigned _offset)
+    void setCapabilityOffset(std::string const& _capabilityName, unsigned _offset)
     {
-        m_capabilityOffsets[_cap] = _offset;
+        m_capabilityOffsets[_capabilityName] = _offset;
     }
-    //    void setCapabilityVersion(CapDesc const& _cap, u256 const _version) {
-    //    m_capabilityVersions[_cap] = _version; }
 
 
 private:
@@ -113,9 +111,7 @@ private:
 	std::weak_ptr<Session> m_session;
 
     /// Map of capability to packet id offset in the session
-    std::map<CapDesc, unsigned> m_capabilityOffsets;
-    /// Map of capability (host version) to peer version
-    //    std::unordered_map<CapDesc, u256> m_capabilityVersions;
+    std::unordered_map<std::string, unsigned> m_capabilityOffsets;
 };
 using Peers = std::vector<Peer>;
 

@@ -80,7 +80,8 @@ public:
 
     virtual ReputationManager& repMan() = 0;
 
-    virtual void disableCapability(CapDesc const& _capDesc, std::string const& _problem) = 0;
+    virtual void disableCapability(
+        std::string const& _capabilityName, std::string const& _problem) = 0;
 };
 
 /**
@@ -126,11 +127,11 @@ public:
 
     ReputationManager& repMan() override;
 
-    void disableCapability(CapDesc const& _capDesc, std::string const& _problem) override
+    void disableCapability(std::string const& _capabilityName, std::string const& _problem) override
     {
-        cnetdetails << "DISABLE: Disabling capability '" << _capDesc.first
+        cnetdetails << "DISABLE: Disabling capability '" << _capabilityName
                     << "'. Reason: " << _problem;
-        m_disabledCapabilities.insert(_capDesc);
+        m_disabledCapabilities.insert(_capabilityName);
     }
 
 private:
@@ -159,17 +160,16 @@ private:
     /// @returns true iff the _msg forms a valid message for sending or receiving on the network.
     static bool checkPacket(bytesConstRef _msg);
 
-    bool capabilityEnabled(CapDesc const& _capDesc) const
+    bool capabilityEnabled(std::string const& _capability) const
     {
-        return m_disabledCapabilities.find(_capDesc) == m_disabledCapabilities.end();
+        return m_disabledCapabilities.find(_capability) == m_disabledCapabilities.end();
     }
 
-    bool canHandle(CapDesc const& _cap, unsigned _messageCount, unsigned _packetType) const
+    bool canHandle(
+        std::string const& _capability, unsigned _messageCount, unsigned _packetType) const
     {
         // TODO can not exist
-        // TODO name argument should be enough
-
-        auto const offset = m_peer->capabilityOffset(_cap);
+        auto const offset = m_peer->capabilityOffset(_capability);
 
         return _packetType >= offset  && _packetType < _messageCount + offset;
     }
@@ -193,10 +193,10 @@ private:
     std::chrono::steady_clock::time_point m_ping;			///< Time point of last ping.
     std::chrono::steady_clock::time_point m_lastReceived;	///< Time point of last message.
 
-    std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_capabilities;  ///< The peer's
-                                                                            ///< capability set.
+    /// The peer's capability set.
+    std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_capabilities;
 
-    std::set<CapDesc> m_disabledCapabilities;
+    std::set<std::string> m_disabledCapabilities;
 
     std::string const m_logContext;
 };

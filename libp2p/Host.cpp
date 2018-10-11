@@ -61,12 +61,12 @@ public:
             session->disconnect(_reason);
     }
 
-    void disableCapability(
-        NodeID const& _nodeID, CapDesc const& _capDesc, std::string const& _problem) override
+    void disableCapability(NodeID const& _nodeID, std::string const& _capabilityName,
+        std::string const& _problem) override
     {
         auto session = m_host.peerSession(_nodeID);
         if (session)
-            session->disableCapability(_capDesc, _problem);
+            session->disableCapability(_capabilityName, _problem);
     }
 
     void addRating(NodeID const& _nodeID, int _r) override
@@ -76,14 +76,14 @@ public:
             session->addRating(_r);
     }
 
-    RLPStream& prep(NodeID const& _nodeID, CapDesc const& _capDesc, RLPStream& _s, unsigned _id,
-        unsigned _args = 0) override
+    RLPStream& prep(NodeID const& _nodeID, std::string const& _capabilityName, RLPStream& _s,
+        unsigned _id, unsigned _args = 0) override
     {
         auto session = m_host.peerSession(_nodeID);
         if (!session)
             return _s;
 
-        unsigned const offset = session->peer()->capabilityOffset(_capDesc);
+        unsigned const offset = session->peer()->capabilityOffset(_capabilityName);
         return _s.appendRaw(bytes(1, _id + offset)).appendList(_args);
     }
 
@@ -428,8 +428,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
             if (!pcap)
                 return session->disconnect(IncompatibleProtocol);
 
-            // pcap->newPeerCapability(session, offset, capDesc);
-            peer->setCapabilityOffset(capDesc, offset);
+            peer->setCapabilityOffset(capDesc.first, offset);
             session->registerCapability(capDesc, pcap);
 
             pcap->onConnect(_id, capDesc.second);

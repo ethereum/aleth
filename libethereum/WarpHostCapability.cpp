@@ -169,8 +169,8 @@ private:
         if (!validateManifest(manifestRlp))
         {
             // TODO try disconnecting instead of disabling; disabled peer still occupies the peer slot
-            m_host.capabilityHost().disableCapability(_peerID,
-                p2p::CapDesc{m_host.name(), m_host.version()}, "Invalid snapshot manifest.");
+            m_host.capabilityHost().disableCapability(
+                _peerID, m_host.name(), "Invalid snapshot manifest.");
             return;
         }
 
@@ -181,7 +181,7 @@ private:
                 m_freePeers.push(_peerID);
             else
                 m_host.capabilityHost().disableCapability(
-                    _peerID, p2p::CapDesc{m_host.name(), m_host.version()}, "Another snapshot.");
+                    _peerID, m_host.name(), "Another snapshot.");
         }
         else
         {
@@ -196,8 +196,8 @@ private:
                 RLP headerRlp(headerBytes);
                 if (!verifyDaoChallengeResponse(headerRlp))
                 {
-                    m_host.capabilityHost().disableCapability(_peerID,
-                        p2p::CapDesc{m_host.name(), m_host.version()}, "Peer from another fork.");
+                    m_host.capabilityHost().disableCapability(
+                        _peerID, m_host.name(), "Peer from another fork.");
                     return;
                 }
             }
@@ -423,7 +423,7 @@ bool WarpHostCapability::interpretCapabilityPacket(
                 return false;
 
             RLPStream s;
-            m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, SnapshotManifest, 1)
+            m_host->prep(_peerID, name(), s, SnapshotManifest, 1)
                 .appendRaw(m_snapshot->readManifest());
             m_host->sealAndSend(_peerID, s);
             break;
@@ -436,7 +436,7 @@ bool WarpHostCapability::interpretCapabilityPacket(
             const h256 chunkHash = _r[0].toHash<h256>(RLP::VeryStrict);
 
             RLPStream s;
-            m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, SnapshotData, 1)
+            m_host->prep(_peerID, name(), s, SnapshotData, 1)
                 .append(m_snapshot->readCompressedChunk(chunkHash));
             m_host->sealAndSend(_peerID, s);
             break;
@@ -445,7 +445,7 @@ bool WarpHostCapability::interpretCapabilityPacket(
         {
             // TODO We are being asked DAO fork block sometimes, need to be able to answer this
             RLPStream s;
-            m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, BlockHeadersPacket);
+            m_host->prep(_peerID, name(), s, BlockHeadersPacket);
             m_host->sealAndSend(_peerID, s);
             break;
         }
@@ -495,7 +495,7 @@ void WarpHostCapability::requestStatus(NodeID const& _peerID, unsigned _hostProt
     h256 const& _chainGenesisHash, h256 const& _snapshotBlockHash, u256 const& _snapshotBlockNumber)
 {
     RLPStream s;
-    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, WarpStatusPacket, 7)
+    m_host->prep(_peerID, name(), s, WarpStatusPacket, 7)
         << _hostProtocolVersion << _hostNetworkId << _chainTotalDifficulty << _chainCurrentHash
         << _chainGenesisHash << _snapshotBlockHash << _snapshotBlockNumber;
     m_host->sealAndSend(_peerID, s);
@@ -512,7 +512,7 @@ void WarpHostCapability::requestBlockHeaders(
     assert(itPeerStatus->second.m_asking == Asking::Nothing);
     setAsking(_peerID, Asking::BlockHeaders);
     RLPStream s;
-    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, GetBlockHeadersPacket, 4)
+    m_host->prep(_peerID, name(), s, GetBlockHeadersPacket, 4)
         << _startNumber << _count << _skip << (_reverse ? 1 : 0);
     m_host->sealAndSend(_peerID, s);
 }
@@ -526,7 +526,7 @@ void WarpHostCapability::requestManifest(NodeID const& _peerID)
     assert(itPeerStatus->second.m_asking == Asking::Nothing);
     setAsking(_peerID, Asking::WarpManifest);
     RLPStream s;
-    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, GetSnapshotManifest);
+    m_host->prep(_peerID, name(), s, GetSnapshotManifest);
     m_host->sealAndSend(_peerID, s);
 }
 
@@ -540,7 +540,7 @@ bool WarpHostCapability::requestData(NodeID const& _peerID, h256 const& _chunkHa
     setAsking(_peerID, Asking::WarpData);
     RLPStream s;
 
-    m_host->prep(_peerID, p2p::CapDesc{name(), version()}, s, GetSnapshotData, 1) << _chunkHash;
+    m_host->prep(_peerID, name(), s, GetSnapshotData, 1) << _chunkHash;
     m_host->sealAndSend(_peerID, s);
     return true;
 }
@@ -569,26 +569,23 @@ bool WarpHostCapability::validateStatus(NodeID const& _peerID, h256 const& _gene
 
     if (peerStatus.m_genesisHash != _genesisHash)
     {
-        m_host->disableCapability(_peerID, p2p::CapDesc{name(), version()}, "Invalid genesis hash");
+        m_host->disableCapability(_peerID, name(), "Invalid genesis hash");
         return false;
     }
     if (find(_protocolVersions.begin(), _protocolVersions.end(), peerStatus.m_protocolVersion) ==
         _protocolVersions.end())
     {
-        m_host->disableCapability(
-            _peerID, p2p::CapDesc{name(), version()}, "Invalid protocol version.");
+        m_host->disableCapability(_peerID, name(), "Invalid protocol version.");
         return false;
     }
     if (peerStatus.m_networkId != _networkId)
     {
-        m_host->disableCapability(
-            _peerID, p2p::CapDesc{name(), version()}, "Invalid network identifier.");
+        m_host->disableCapability(_peerID, name(), "Invalid network identifier.");
         return false;
     }
     if (peerStatus.m_asking != Asking::State && peerStatus.m_asking != Asking::Nothing)
     {
-        m_host->disableCapability(
-            _peerID, p2p::CapDesc{name(), version()}, "Peer banned for unexpected status message.");
+        m_host->disableCapability(_peerID, name(), "Peer banned for unexpected status message.");
         return false;
     }
 
