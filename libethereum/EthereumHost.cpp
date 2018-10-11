@@ -393,8 +393,7 @@ private:
 
 EthereumHost::EthereumHost(shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _ch,
     OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId)
-  : HostCapability("eth", c_protocolVersion, PacketCount),
-    Worker("ethsync"),
+  : Worker("ethsync"),
     m_host(move(_host)),
     m_chain(_ch),
     m_db(_db),

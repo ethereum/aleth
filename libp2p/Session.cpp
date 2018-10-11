@@ -445,3 +445,12 @@ void Session::registerCapability(CapDesc const& _desc, std::shared_ptr<HostCapab
         m_capabilities[_desc] = move(_p);
     }
 }
+
+bool Session::canHandle(
+    std::string const& _capability, unsigned _messageCount, unsigned _packetType) const
+{
+    // TODO can not exist
+    auto const offset = m_peer->capabilityOffset(_capability);
+
+    return _packetType >= offset && _packetType < _messageCount + offset;
+}

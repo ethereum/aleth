@@ -18,10 +18,6 @@
 #pragma once
 
 #include "Common.h"
-#include "Host.h"
-#include "Peer.h"
-#include "Session.h"
-#include <memory>
 
 namespace dev
 {
@@ -44,28 +40,6 @@ public:
     virtual void onConnect(NodeID const& _nodeID, u256 const& _peerCapabilityVersion) = 0;
     virtual bool interpretCapabilityPacket(NodeID const& _nodeID, unsigned _id, RLP const&) = 0;
     virtual void onDisconnect(NodeID const& _nodeID) = 0;
-};
-
-// TODO remove
-class HostCapability : public HostCapabilityFace
-{
-public:
-    HostCapability(std::string const& _name, u256 const& _version, unsigned _messageCount) : m_name(_name), m_version(_version), m_messageCount(_messageCount) {}
-
-    std::string name() const override { return m_name; }
-    u256 version() const override { return m_version; }
-    unsigned messageCount() const override { return m_messageCount; }
-
-    void onStarting() override {}
-    void onStopping() override {}
-
-protected:
-    CapDesc capDesc() const { return std::make_pair(name(), version()); }
-
-private:
-    std::string const m_name;
-    u256 const m_version;
-    unsigned const m_messageCount;
 };
 
 }

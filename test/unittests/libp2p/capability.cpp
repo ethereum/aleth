@@ -19,15 +19,16 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 * @date May 2015
 */
 
+#include <libp2p/CapabilityHost.h>
+#include <libp2p/Common.h>
+#include <libp2p/Host.h>
+#include <libp2p/HostCapability.h>
+#include <libp2p/Session.h>
+#include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
 #include <boost/test/unit_test.hpp>
 #include <chrono>
 #include <thread>
-#include <libp2p/Common.h>
-#include <libp2p/Host.h>
-#include <libp2p/Session.h>
-#include <libp2p/HostCapability.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <test/tools/libtesteth/Options.h>
 
 using namespace std;
 using namespace dev;
@@ -40,11 +41,14 @@ struct P2PFixture: public TestOutputHelperFixture
     ~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestHostCapability: public HostCapability, public Worker
+class TestHostCapability : public HostCapabilityFace, public Worker
 {
 public:
-    explicit TestHostCapability(Host const& _host) : HostCapability("test", 2, UserPacket + 1), Worker("test"), m_host(_host) {}
-    virtual ~TestHostCapability() {}
+    explicit TestHostCapability(Host const& _host) : Worker("test"), m_host(_host) {}
+
+    std::string name() const override { return "test"; }
+    u256 version() const override { return 2; }
+    unsigned messageCount() const override { return UserPacket + 1; }
 
     void onStarting() override {}
     void onStopping() override {}
@@ -70,13 +74,9 @@ public:
 
     void sendTestMessage(NodeID const& _id, int _x)
     {
-        for (auto i : m_host.peerSessions(name(), version()))
-            if (_id == i.second->id)
-            {
-                RLPStream s;
-                m_host.capabilityHost()->sealAndSend(
-                    _id, m_host.capabilityHost()->prep(_id, name(), s, UserPacket, 1) << _x);
-            }
+        RLPStream s;
+        m_host.capabilityHost()->sealAndSend(
+            _id, m_host.capabilityHost()->prep(_id, name(), s, UserPacket, 1) << _x);
     }
 
     std::pair<int, int> retrieveTestData(NodeID const& _id)

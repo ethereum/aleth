@@ -39,11 +39,15 @@ struct P2PPeerFixture: public TestOutputHelperFixture
     ~P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestHostCap : public HostCapability, public Worker
+class TestHostCap : public HostCapabilityFace, public Worker
 {
 public:
-    TestHostCap() : HostCapability("p2pTestCapability", 2, UserPacket + 1), Worker("test") {}
-    virtual ~TestHostCap() {}
+    std::string name() const override { return "p2pTestCapability"; }
+    u256 version() const override { return 2; }
+    unsigned messageCount() const override { return UserPacket + 1; }
+
+    void onStarting() override {}
+    void onStopping() override {}
 
     void onConnect(NodeID const&, u256 const&) override {}
     bool interpretCapabilityPacket(NodeID const&, unsigned _id, RLP const& _r) override

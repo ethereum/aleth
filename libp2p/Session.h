@@ -166,13 +166,7 @@ private:
     }
 
     bool canHandle(
-        std::string const& _capability, unsigned _messageCount, unsigned _packetType) const
-    {
-        // TODO can not exist
-        auto const offset = m_peer->capabilityOffset(_capability);
-
-        return _packetType >= offset  && _packetType < _messageCount + offset;
-    }
+        std::string const& _capability, unsigned _messageCount, unsigned _packetType) const;
 
     Host* m_server;							///< The host that owns us. Never null.
 
