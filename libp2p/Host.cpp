@@ -21,6 +21,7 @@
  */
 
 #include "Host.h"
+#include "CapabilityHost.h"
 #include "Common.h"
 #include "HostCapability.h"
 #include "RLPxHandshake.h"
@@ -112,6 +113,7 @@ public:
     void foreachPeer(std::string const& _name, u256 const& _version,
         std::function<bool(NodeID const&)> _f) const override
     {
+        // TODO move implementation into Host
         // order peers by protocol, rating, connection age
         auto sessions = m_host.peerSessions(_name, _version);
         auto sessionLess =

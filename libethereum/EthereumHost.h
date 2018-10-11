@@ -28,6 +28,7 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Common.h>
 #include <libethereum/BlockChainSync.h>
+#include <libp2p/CapabilityHost.h>
 #include <libp2p/Common.h>
 #include <libp2p/HostCapability.h>
 #include <memory>
@@ -127,7 +128,7 @@ public:
  * @warning None of this is thread-safe. You have been warned.
  * @doWork Syncs to peers and sends new blocks and transactions.
  */
-class EthereumHost: public p2p::HostCapability, Worker
+class EthereumHost : public p2p::HostCapabilityFace, Worker
 {
 public:
     /// Start server, but don't listen.
@@ -135,7 +136,11 @@ public:
         OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
     /// Will block on network process events.
-    virtual ~EthereumHost();
+    ~EthereumHost() override;
+
+    std::string name() const override { return "eth"; }
+    u256 version() const override { return c_protocolVersion; }
+    unsigned messageCount() const override { return PacketCount; }
 
     unsigned protocolVersion() const { return c_protocolVersion; }
     u256 networkId() const { return m_networkId; }

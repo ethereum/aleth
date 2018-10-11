@@ -315,8 +315,7 @@ WarpHostCapability::WarpHostCapability(std::shared_ptr<p2p::CapabilityHostFace> 
     BlockChain const& _blockChain, u256 const& _networkId,
     boost::filesystem::path const& _snapshotDownloadPath,
     std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
-  : HostCapability("par", c_WarpProtocolVersion, WarpSubprotocolPacketCount),
-    m_host(std::move(_host)),
+  : m_host(std::move(_host)),
     m_blockChain(_blockChain),
     m_networkId(_networkId),
     m_snapshot(_snapshotStorage),
