@@ -75,7 +75,7 @@ public:
             {
                 RLPStream s;
                 m_host.capabilityHost()->sealAndSend(
-                    _id, m_host.capabilityHost()->prep(_id, capDesc(), s, UserPacket, 1) << _x);
+                    _id, m_host.capabilityHost()->prep(_id, name(), s, UserPacket, 1) << _x);
             }
     }
 

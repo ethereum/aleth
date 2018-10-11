@@ -126,14 +126,14 @@ public:
     virtual boost::optional<PeerSessionInfo> peerSessionInfo(NodeID const& _nodeID) const = 0;
 
     virtual void disableCapability(
-        NodeID const& _nodeID, CapDesc const& _capDesc, std::string const& _problem) = 0;
+        NodeID const& _nodeID, std::string const& _capabilityName, std::string const& _problem) = 0;
 
     virtual void disconnect(NodeID const& _nodeID, DisconnectReason _reason) = 0;
 
     virtual void addRating(NodeID const& _nodeID, int _r) = 0;
 
-    virtual RLPStream& prep(NodeID const& _nodeID, CapDesc const& _capDesc, RLPStream& _s,
-        unsigned _id, unsigned _args = 0) = 0;
+    virtual RLPStream& prep(NodeID const& _nodeID, std::string const& _capabilityName,
+        RLPStream& _s, unsigned _id, unsigned _args = 0) = 0;
 
     virtual void sealAndSend(NodeID const& _nodeID, RLPStream& _s) = 0;
 

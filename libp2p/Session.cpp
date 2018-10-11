@@ -126,11 +126,17 @@ bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
         if (_capId == 0 && _packetType < UserPacket)
             return interpret(_packetType, _r);
 
-        for (auto const& i: m_capabilities)
-            if (canHandle(i.first, i.second->messageCount(), _packetType))
-                return capabilityEnabled(i.first) ?
-                           i.second->interpretCapabilityPacket(id(), _packetType - m_peer->capabilityOffset(i.first), _r) :
+        for (auto const& cap : m_capabilities)
+        {
+            auto const& name = cap.first.first;
+            auto const& capability = cap.second;
+
+            if (canHandle(name, capability->messageCount(), _packetType))
+                return capabilityEnabled(name) ?
+                           capability->interpretCapabilityPacket(
+                               id(), _packetType - m_peer->capabilityOffset(name), _r) :
                            true;
+        }
 
         return false;
     }
