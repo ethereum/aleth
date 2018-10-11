@@ -401,12 +401,12 @@ EthereumHost::EthereumHost(shared_ptr<p2p::CapabilityHostFace> _host, BlockChain
     m_tq(_tq),
     m_bq(_bq),
     m_networkId(_networkId),
-    m_hostData(make_shared<EthereumHostData>(m_chain, m_db))
+    m_hostData(new EthereumHostData(m_chain, m_db))
 {
     // TODO: Composition would be better. Left like that to avoid initialization
     //       issues as BlockChainSync accesses other EthereumHost members.
     m_sync.reset(new BlockChainSync(*this));
-    m_peerObserver = make_shared<EthereumPeerObserver>(m_sync, m_tq);
+    m_peerObserver.reset(new EthereumPeerObserver(m_sync, m_tq));
     m_latestBlockSent = _ch.currentHash();
     m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
     std::random_device seed;

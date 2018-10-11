@@ -55,7 +55,6 @@ struct EthereumPeerStatus
 {
     /// What, if anything, we last asked the other peer for.
     Asking m_asking = Asking::Nothing;
-    // TODO why atomic
     /// When we asked for it. Allows a time out.
     std::atomic<time_t> m_lastAsk;
     /// Peer's protocol version.
@@ -63,18 +62,19 @@ struct EthereumPeerStatus
     /// Peer's network id.
     u256 m_networkId;
     /// These are determined through either a Status message or from NewBlock.
-    h256 m_latestHash;  ///< Peer's latest block's hash that we know about or default null value if
-                        ///< no need to sync.
-    u256 m_totalDifficulty;        ///< Peer's latest block's total difficulty.
+    /// Peer's latest block's hash that we know about or default null value if no need to sync.
+    h256 m_latestHash;
+    /// Peer's latest block's total difficulty.
+    u256 m_totalDifficulty;
     h256 m_genesisHash;            ///< Peer's genesis hash
-    u256 m_peerCapabilityVersion;  ///< Protocol version this peer supports received as capability
-                                   /// Have we received a GetTransactions packet that we haven't yet
-                                   /// answered?
+    /// Protocol version this peer supports received as capability
+    u256 m_peerCapabilityVersion;
+    /// Have we received a GetTransactions packet that we haven't yet answered?
     bool m_requireTransactions = false;
 
     mutable Mutex x_knownBlocks;
-    h256Hash m_knownBlocks;  ///< Blocks that the peer already knows about (that don't need to be
-                             ///< sent to them).
+    /// Blocks that the peer already knows about (that don't need to be sent to them).
+    h256Hash m_knownBlocks;
     mutable Mutex x_knownTransactions;
     h256Hash m_knownTransactions;     ///< Transactions that the peer already knows of.
     unsigned m_unknownNewBlocks = 0;  ///< Number of unknown NewBlocks received from this peer
@@ -265,9 +265,8 @@ private:
     std::shared_ptr<BlockChainSync> m_sync;
     std::atomic<time_t> m_lastTick = { 0 };
 
-    // TODO these can be unique
-    std::shared_ptr<EthereumHostDataFace> m_hostData;
-    std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
+    std::unique_ptr<EthereumHostDataFace> m_hostData;
+    std::unique_ptr<EthereumPeerObserverFace> m_peerObserver;
 
     std::unordered_map<NodeID, EthereumPeerStatus> m_peers;
 
