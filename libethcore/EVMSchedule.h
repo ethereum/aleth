@@ -134,7 +134,6 @@ static const EVMSchedule EWASMSchedule = []
 static const EVMSchedule ConstantinopleSchedule = []
 {
     EVMSchedule schedule = ByzantiumSchedule;
-    schedule.blockhashGas = 800;
     schedule.haveCreate2 = true;
     schedule.haveBitwiseShifting = true;
     schedule.haveExtcodehash = true;
@@ -145,6 +144,7 @@ static const EVMSchedule ConstantinopleSchedule = []
 
 static const EVMSchedule ExperimentalSchedule = [] {
     EVMSchedule schedule = ConstantinopleSchedule;
+    schedule.blockhashGas = 800;
     return schedule;
 }();
 }
