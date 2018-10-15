@@ -541,7 +541,8 @@ bool Executive::finalize()
 
         // Refunds must be applied before the miner gets the fees.
         assert(m_ext->sub.refunds >= 0);
-        m_gas += min((m_t.gas() - m_gas) / 2, m_ext->sub.refunds);
+        int64_t maxRefund = (static_cast<int64_t>(m_t.gas()) - static_cast<int64_t>(m_gas)) / 2;
+        m_gas += min(maxRefund, m_ext->sub.refunds);
     }
 
     if (m_t)
