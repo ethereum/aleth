@@ -88,9 +88,9 @@ private:
 
 struct SubState
 {
-    std::set<Address> suicides;    ///< Any accounts that have suicided.
-    LogEntries logs;            ///< Any logs.
-    u256 refunds;                ///< Refund counter of SSTORE nonzero->zero.
+    std::set<Address> suicides;  ///< Any accounts that have suicided.
+    LogEntries logs;             ///< Any logs.
+    int64_t refunds = 0;         ///< Refund counter for storage changes.
 
     SubState& operator+=(SubState const& _s)
     {

@@ -143,10 +143,7 @@ void LegacyVM::updateSSGasEIP1283(u256 const& _currentValue, u256 const& _newVal
             if (originalValue != 0)
             {
                 if (_currentValue == 0)
-                {
-                    assert(m_ext->sub.refunds >= m_schedule->sstoreRefundGas);
-                    m_ext->sub.refunds -= m_schedule->sstoreRefundGas;
-                }
+                    m_ext->sub.refunds -= m_schedule->sstoreRefundGas;  // Can go negative.
                 if (_newValue == 0)
                     m_ext->sub.refunds += m_schedule->sstoreRefundGas;
             }

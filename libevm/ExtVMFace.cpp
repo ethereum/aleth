@@ -84,10 +84,7 @@ evmc_storage_status setStorage(evmc_context* _context, evmc_address const* _addr
         if (originalValue != 0)
         {
             if (currentValue == 0)
-            {
-                assert(env.sub.refunds >= schedule.sstoreRefundGas);
-                env.sub.refunds -= schedule.sstoreRefundGas;
-            }
+                env.sub.refunds -= schedule.sstoreRefundGas;  // Can go negative.
             if (newValue == 0)
                 env.sub.refunds += schedule.sstoreRefundGas;
         }
