@@ -322,7 +322,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         }
         else
         {
-            m_gas = (u256)(_p.gas - g);
+            m_gas = static_cast<int64_t>(_p.gas - g);
             bytes output;
             bool success;
             tie(success, output) = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
@@ -338,7 +338,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
     }
     else
     {
-        m_gas = _p.gas;
+        m_gas = static_cast<int64_t>(_p.gas);
         if (m_s.addressHasCode(_p.codeAddress))
         {
             bytes const& c = m_s.code(_p.codeAddress);
@@ -386,7 +386,7 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
     // We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
     // we delete it explicitly if we decide we need to revert.
 
-    m_gas = _gas;
+    m_gas = static_cast<int64_t>(_gas);
     bool accountAlreadyExist = (m_s.addressHasCode(m_newAddress) || m_s.getNonce(m_newAddress) > 0);
     if (accountAlreadyExist)
     {
@@ -449,9 +449,11 @@ bool Executive::go(OnOpFunc const& _onOp)
         {
             // Create VM instance. Force Interpreter if tracing requested.
             auto vm = VMFactory::create();
+            u256 vmGas = m_gas;
+            auto out = vm->exec(vmGas, *m_ext, _onOp);
+            m_gas = static_cast<int64_t>(vmGas);
             if (m_isCreation)
             {
-                auto out = vm->exec(m_gas, *m_ext, _onOp);
                 if (m_res)
                 {
                     m_res->gasForDeposit = m_gas;
@@ -459,7 +461,7 @@ bool Executive::go(OnOpFunc const& _onOp)
                 }
                 if (out.size() > m_ext->evmSchedule().maxCodeSize)
                     BOOST_THROW_EXCEPTION(OutOfGas());
-                else if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
+                else if (int64_t(out.size()) * m_ext->evmSchedule().createDataGas <= m_gas)
                 {
                     if (m_res)
                         m_res->codeDeposit = CodeDeposit::Success;
@@ -481,7 +483,7 @@ bool Executive::go(OnOpFunc const& _onOp)
                 m_s.setCode(m_ext->myAddress, out.toVector());
             }
             else
-                m_output = vm->exec(m_gas, *m_ext, _onOp);
+                m_output = std::move(out);
         }
         catch (RevertInstruction& _e)
         {
@@ -541,7 +543,7 @@ bool Executive::finalize()
 
         // Refunds must be applied before the miner gets the fees.
         assert(m_ext->sub.refunds >= 0);
-        int64_t maxRefund = (static_cast<int64_t>(m_t.gas()) - static_cast<int64_t>(m_gas)) / 2;
+        int64_t maxRefund = (static_cast<int64_t>(m_t.gas()) - m_gas) / 2;
         m_gas += min(maxRefund, m_ext->sub.refunds);
     }
 
