@@ -84,7 +84,7 @@ public:
         if (!session)
             return _s;
 
-        unsigned const offset = session->peer()->capabilityOffset(_capabilityName);
+        unsigned const offset = session->capabilityOffset(_capabilityName);
         return _s.appendRaw(bytes(1, _id + offset)).appendList(_args);
     }
 
@@ -416,8 +416,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
             if (!pcap)
                 return session->disconnect(IncompatibleProtocol);
 
-            peer->setCapabilityOffset(capDesc.first, offset);
-            session->registerCapability(capDesc, pcap);
+            session->registerCapability(capDesc, offset, pcap);
 
             pcap->onConnect(_id, capDesc.second);
 

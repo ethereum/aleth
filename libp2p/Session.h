@@ -70,7 +70,7 @@ public:
     virtual std::chrono::steady_clock::time_point connectionTime() = 0;
 
     virtual void registerCapability(
-        CapDesc const& _desc, std::shared_ptr<HostCapabilityFace> _p) = 0;
+        CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p) = 0;
 
     virtual std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> const& capabilities() const = 0;
 
@@ -82,6 +82,8 @@ public:
 
     virtual void disableCapability(
         std::string const& _capabilityName, std::string const& _problem) = 0;
+
+    virtual unsigned capabilityOffset(std::string const& _capabilityName) const = 0;
 };
 
 /**
@@ -113,7 +115,7 @@ public:
     PeerSessionInfo info() const override { Guard l(x_info); return m_info; }
     std::chrono::steady_clock::time_point connectionTime() override { return m_connect; }
 
-    void registerCapability(CapDesc const& _desc, std::shared_ptr<HostCapabilityFace> _p) override;
+    void registerCapability(CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p) override;
 
     // TODO try to return set<CapDesc>
     std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> const& capabilities() const override
@@ -132,6 +134,12 @@ public:
         cnetdetails << "DISABLE: Disabling capability '" << _capabilityName
                     << "'. Reason: " << _problem;
         m_disabledCapabilities.insert(_capabilityName);
+    }
+
+    unsigned capabilityOffset(std::string const& _capabilityName) const override
+    {
+        // TODO can not exist
+        return m_capabilityOffsets.find(_capabilityName)->second;
     }
 
 private:
@@ -189,6 +197,9 @@ private:
 
     /// The peer's capability set.
     std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_capabilities;
+
+    /// Map of capability to packet id offset in the session
+    std::unordered_map<std::string, unsigned> m_capabilityOffsets;
 
     std::set<std::string> m_disabledCapabilities;
 
