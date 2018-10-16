@@ -1113,7 +1113,7 @@ void Host::forEachPeer(
     std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> sessions;
     for (auto const& i : m_sessions)
         if (std::shared_ptr<SessionFace> s = i.second.lock())
-            if (s->capabilities().count(std::make_pair(_name, _version)))
+            if (contains(s->capabilities(), std::make_pair(_name, _version)))
                 sessions.push_back(make_pair(s, s->peer()));
 
     // order peers by protocol, rating, connection age
