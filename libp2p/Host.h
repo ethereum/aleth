@@ -247,10 +247,9 @@ public:
     /// Get the node information.
     p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkConfig().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
 
-    /// Get sessions by capability name and version
-    // TODO delete
-    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions(
-        std::string const& _name, u256 const& _version) const;
+    /// Apply function to each session
+    void forEachPeer(std::string const& _name, u256 const& _version,
+        std::function<bool(NodeID const&)> _f) const;
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 

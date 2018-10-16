@@ -113,21 +113,7 @@ public:
     void foreachPeer(std::string const& _name, u256 const& _version,
         std::function<bool(NodeID const&)> _f) const override
     {
-        // TODO move implementation into Host
-        // order peers by protocol, rating, connection age
-        auto sessions = m_host.peerSessions(_name, _version);
-        auto sessionLess =
-            [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left,
-                std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right) {
-                return _left.first->rating() == _right.first->rating() ?
-                           _left.first->connectionTime() < _right.first->connectionTime() :
-                           _left.first->rating() > _right.first->rating();
-            };
-
-        std::sort(sessions.begin(), sessions.end(), sessionLess);
-        for (auto s : sessions)
-            if (!_f(s.first->id()))
-                return;
+        m_host.forEachPeer(_name, _version, _f);
     }
 
 private:
@@ -1118,14 +1104,27 @@ bool Host::addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relati
     return true;
 }
 
-std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> Host::peerSessions(
-    std::string const& _name, u256 const& _version) const
+void Host::forEachPeer(
+    std::string const& _name, u256 const& _version, std::function<bool(NodeID const&)> _f) const
 {
     RecursiveGuard l(x_sessions);
-    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> ret;
+    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> sessions;
     for (auto const& i : m_sessions)
         if (std::shared_ptr<SessionFace> s = i.second.lock())
             if (s->capabilities().count(std::make_pair(_name, _version)))
-                ret.push_back(make_pair(s, s->peer()));
-    return ret;
+                sessions.push_back(make_pair(s, s->peer()));
+
+    // order peers by protocol, rating, connection age
+    auto sessionLess =
+        [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left,
+            std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right) {
+            return _left.first->rating() == _right.first->rating() ?
+                       _left.first->connectionTime() < _right.first->connectionTime() :
+                       _left.first->rating() > _right.first->rating();
+        };
+    std::sort(sessions.begin(), sessions.end(), sessionLess);
+
+    for (auto s : sessions)
+        if (!_f(s.first->id()))
+            return;
 }
