@@ -83,7 +83,8 @@ public:
     virtual void disableCapability(
         std::string const& _capabilityName, std::string const& _problem) = 0;
 
-    virtual unsigned capabilityOffset(std::string const& _capabilityName) const = 0;
+    virtual boost::optional<unsigned> capabilityOffset(
+        std::string const& _capabilityName) const = 0;
 };
 
 /**
@@ -129,18 +130,10 @@ public:
 
     ReputationManager& repMan() override;
 
-    void disableCapability(std::string const& _capabilityName, std::string const& _problem) override
-    {
-        cnetdetails << "DISABLE: Disabling capability '" << _capabilityName
-                    << "'. Reason: " << _problem;
-        m_disabledCapabilities.insert(_capabilityName);
-    }
+    void disableCapability(
+        std::string const& _capabilityName, std::string const& _problem) override;
 
-    unsigned capabilityOffset(std::string const& _capabilityName) const override
-    {
-        // TODO can not exist
-        return m_capabilityOffsets.find(_capabilityName)->second;
-    }
+    boost::optional<unsigned> capabilityOffset(std::string const& _capabilityName) const override;
 
 private:
     static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);

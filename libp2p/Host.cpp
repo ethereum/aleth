@@ -84,8 +84,11 @@ public:
         if (!session)
             return _s;
 
-        unsigned const offset = session->capabilityOffset(_capabilityName);
-        return _s.appendRaw(bytes(1, _id + offset)).appendList(_args);
+        auto const offset = session->capabilityOffset(_capabilityName);
+        if (!offset)
+            return _s;
+
+        return _s.appendRaw(bytes(1, _id + *offset)).appendList(_args);
     }
 
     void sealAndSend(NodeID const& _nodeID, RLPStream& _s) override

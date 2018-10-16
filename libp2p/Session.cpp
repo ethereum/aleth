@@ -132,10 +132,14 @@ bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
             auto const& capability = cap.second;
 
             if (canHandle(name, capability->messageCount(), _packetType))
-                return capabilityEnabled(name) ?
-                           capability->interpretCapabilityPacket(
-                               id(), _packetType - capabilityOffset(name), _r) :
-                           true;
+            {
+                if (!capabilityEnabled(name))
+                    return true;
+
+                auto offset = capabilityOffset(name);
+                assert(offset);
+                return capability->interpretCapabilityPacket(id(), _packetType - *offset, _r);
+            }
         }
 
         return false;
@@ -452,5 +456,18 @@ bool Session::canHandle(
 {
     auto const offset = capabilityOffset(_capability);
 
-    return _packetType >= offset && _packetType < _messageCount + offset;
+    return offset && _packetType >= *offset && _packetType < _messageCount + *offset;
+}
+
+void Session::disableCapability(std::string const& _capabilityName, std::string const& _problem)
+{
+    cnetdetails << "DISABLE: Disabling capability '" << _capabilityName
+                << "'. Reason: " << _problem;
+    m_disabledCapabilities.insert(_capabilityName);
+}
+
+boost::optional<unsigned> Session::capabilityOffset(std::string const& _capabilityName) const
+{
+    auto it = m_capabilityOffsets.find(_capabilityName);
+    return it == m_capabilityOffsets.end() ? boost::optional<unsigned>{} : it->second;
 }
