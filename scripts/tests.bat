@@ -32,9 +32,7 @@ if "%TESTS%"=="On" (
 
     REM Copy the DLLs into the test directory which need to be able to run.
     cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
-    copy %APPVEYOR_BUILD_FOLDER%\build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
-    copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCl.dll .
 
     REM Run the tests for the Interpreter
     echo Testing testeth
