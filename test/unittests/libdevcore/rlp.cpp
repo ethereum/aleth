@@ -297,4 +297,24 @@ BOOST_AUTO_TEST_CASE(rlpRandom)
     }
 }
 
+BOOST_AUTO_TEST_CASE(rlpActualSize)
+{
+    BOOST_CHECK_EQUAL(RLP{}.actualSize(), 0);
+
+    bytes b{0x79};
+    BOOST_CHECK_EQUAL(RLP{b}.actualSize(), 1);
+
+    b = {0x80};
+    BOOST_CHECK_EQUAL(RLP{b}.actualSize(), 1);
+
+    b = {0x81, 0xff};
+    BOOST_CHECK_EQUAL(RLP{b}.actualSize(), 2);
+
+    b = {0xc0};
+    BOOST_CHECK_EQUAL(RLP{b}.actualSize(), 1);
+
+    b = {0xc1, 0x00};
+    BOOST_CHECK_EQUAL(RLP{b}.actualSize(), 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
