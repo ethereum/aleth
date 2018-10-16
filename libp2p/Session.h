@@ -72,7 +72,7 @@ public:
     virtual void registerCapability(
         CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p) = 0;
 
-    virtual std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> const& capabilities() const = 0;
+    virtual std::vector<CapDesc> capabilities() const = 0;
 
     virtual std::shared_ptr<Peer> peer() const = 0;
 
@@ -118,11 +118,7 @@ public:
 
     void registerCapability(CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p) override;
 
-    // TODO try to return set<CapDesc>
-    std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> const& capabilities() const override
-    {
-        return m_capabilities;
-    }
+    std::vector<CapDesc> capabilities() const override { return keysOf(m_capabilities); }
 
     std::shared_ptr<Peer> peer() const override { return m_peer; }
 
