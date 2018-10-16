@@ -134,7 +134,7 @@ bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
             if (canHandle(name, capability->messageCount(), _packetType))
                 return capabilityEnabled(name) ?
                            capability->interpretCapabilityPacket(
-                               id(), _packetType - m_peer->capabilityOffset(name), _r) :
+                               id(), _packetType - capabilityOffset(name), _r) :
                            true;
         }
 
@@ -438,19 +438,19 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
     return true;
 }
 
-void Session::registerCapability(CapDesc const& _desc, std::shared_ptr<HostCapabilityFace> _p)
+void Session::registerCapability(CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p)
 {
     DEV_GUARDED(x_framing)
     {
         m_capabilities[_desc] = move(_p);
+        m_capabilityOffsets[_desc.first] = _offset;
     }
 }
 
 bool Session::canHandle(
     std::string const& _capability, unsigned _messageCount, unsigned _packetType) const
 {
-    // TODO can not exist
-    auto const offset = m_peer->capabilityOffset(_capability);
+    auto const offset = capabilityOffset(_capability);
 
     return _packetType >= offset && _packetType < _messageCount + offset;
 }
