@@ -69,7 +69,13 @@ public:
     static h256 seedHash(BlockHeader const& _bi);
     static Nonce nonce(BlockHeader const& _bi) { return _bi.seal<Nonce>(NonceField); }
     static h256 mixHash(BlockHeader const& _bi) { return _bi.seal<h256>(MixHashField); }
-    static h256 boundary(BlockHeader const& _bi) { auto d = _bi.difficulty(); return d ? (h256)u256((bigint(1) << 256) / d) : h256(); }
+
+    static h256 boundary(BlockHeader const& _bi)
+    {
+        auto const& d = _bi.difficulty();
+        return d > 1 ? h256{u256((u512(1) << 256) / d)} : ~h256{};
+    }
+
     static BlockHeader& setNonce(BlockHeader& _bi, Nonce _v) { _bi.setSeal(NonceField, _v); return _bi; }
     static BlockHeader& setMixHash(BlockHeader& _bi, h256 const& _v) { _bi.setSeal(MixHashField, _v); return _bi; }
 
