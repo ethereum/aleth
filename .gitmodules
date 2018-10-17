@@ -7,3 +7,6 @@
 [submodule "cable"]
 	path = cmake/cable
 	url = https://github.com/ethereum/cable
+[submodule "scripts/dopple"]
+	path = scripts/dopple
+	url = https://github.com/ethereum/dopple

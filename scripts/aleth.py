@@ -5,7 +5,7 @@ import subprocess
 import sys
 import os
 
-from jsonrpcproxy import run_daemon, DEFAULT_PROXY_URL, DEFAULT_BACKEND_PATH
+from dopple import run_daemon, DEFAULT_PROXY_URL, DEFAULT_BACKEND_PATH
 
 DEFAULT_ALETH_EXEC = '/usr/bin/aleth'
 
