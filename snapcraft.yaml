@@ -20,4 +20,3 @@ parts:
     build-packages:
       - build-essential
       - libgmp-dev
-      - libleveldb-dev
