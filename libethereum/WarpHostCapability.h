@@ -52,7 +52,7 @@ struct WarpPeerStatus
     /// What, if anything, we last asked the other peer for.
     Asking m_asking = Asking::Nothing;
     /// When we asked for it. Allows a time out.
-    std::atomic<time_t> m_lastAsk;
+    time_t m_lastAsk;
 
     /// These are determined through either a Status message.
     h256 m_latestHash;       ///< Peer's latest block's hash.
