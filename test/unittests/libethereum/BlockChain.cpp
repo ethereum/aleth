@@ -22,6 +22,7 @@
 
 #include <libethereum/Block.h>
 #include <libethereum/BlockChain.h>
+#include <libdevcore/DBFactory.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <libethereum/GenesisInfo.h>
@@ -29,6 +30,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::db;
 using namespace dev::eth;
 using namespace dev::test;
 namespace utf = boost::unit_test;
@@ -50,14 +52,23 @@ BOOST_AUTO_TEST_CASE(output)
     buffer.str(std::string());
 }
 
+// We always run this test using a disk-backed database since that's the configuration that
+// client users will be using.
 BOOST_AUTO_TEST_CASE(opendb)
 {
+    // Need to set database kind before creating a genesis block since that creates a state
+    // database
+    auto preDatabaseKind = databaseKind();
+    setDatabaseKind(DatabaseKind::LevelDB);
+
     TestBlock genesis = TestBlockChain::defaultGenesisBlock();
     TransientDirectory tempDirBlockchain;
     ChainParams p(genesisInfo(eth::Network::TransitionnetTest), genesis.bytes(), genesis.accountMap());
     BlockChain bc(p, tempDirBlockchain.path(), WithExisting::Kill);
     auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("DatabaseAlreadyOpen") != string::npos; };
     BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
+
+    setDatabaseKind(preDatabaseKind);
 }
 
 BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)

@@ -22,6 +22,7 @@
 #include <boost/io/ios_state.hpp>
 #include <libethashseal/Ethash.h>
 #include <libethcore/BasicAuthority.h>
+#include <libdevcore/DBFactory.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
 #include <numeric>
@@ -29,6 +30,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::test;
+using namespace dev::db;
 using namespace dev::eth;
 using namespace boost;
 
@@ -45,6 +47,10 @@ void TestOutputHelper::initTest(size_t _maxTests)
 		std::cout << "Test Case \"" + m_currentTestCaseName + "\": \n";
 	m_maxTests = _maxTests;
 	m_currTest = 0;
+
+	// Configure the test to use the memory database for block and state data
+	m_preDatabaseKind = databaseKind();
+	setDatabaseKind(DatabaseKind::MemoryDB);
 }
 
 bool TestOutputHelper::checkTest(std::string const& _testName)
@@ -80,6 +86,7 @@ void TestOutputHelper::finishTest()
 		std::cout << res.second + " time: " + toString(res.first) << "\n";
 		m_execTimeResults.push_back(res);
 	}
+	setDatabaseKind(m_preDatabaseKind);
 }
 
 void TestOutputHelper::printTestExecStats()

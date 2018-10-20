@@ -50,7 +50,7 @@ DBKindTableEntry dbKindsTable[] = {
     {DatabaseKind::MemoryDB, "memorydb"},
 };
 
-void setDatabaseKind(std::string const& _name)
+void setDatabaseKindByName(std::string const& _name)
 {
     for (auto& entry : dbKindsTable)
     {
@@ -61,8 +61,13 @@ void setDatabaseKind(std::string const& _name)
         }
     }
 
-    BOOST_THROW_EXCEPTION(eth::InvalidDatabaseKind()
-                          << errinfo_comment("invalid database kind supplied: " + _name));
+    BOOST_THROW_EXCEPTION(
+        eth::InvalidDatabaseKind() << errinfo_comment("invalid database name supplied: " + _name));
+}
+
+void setDatabaseKind(DatabaseKind _kind)
+{
+    g_kind = _kind;
 }
 
 void setDatabasePath(std::string const& _path)
@@ -105,7 +110,7 @@ po::options_description databaseProgramOptions(unsigned _lineLength)
 
     add("db",
         po::value<std::string>()->value_name("<name>")->default_value("leveldb")->notifier(
-            setDatabaseKind),
+            setDatabaseKindByName),
         description.data());
 
     add("db-path",

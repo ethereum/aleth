@@ -42,6 +42,8 @@ boost::program_options::options_description databaseProgramOptions(
 
 bool isMemoryDB();
 DatabaseKind databaseKind();
+void setDatabaseKindByName(std::string const& _name);
+void setDatabaseKind(DatabaseKind _kind);
 boost::filesystem::path databasePath();
 
 class DBFactory

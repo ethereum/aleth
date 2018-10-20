@@ -50,6 +50,7 @@ public:
     eth::StandardTrace::DebugOptions jsontraceOptions; ///< output config for jsontrace
     std::string testpath;	///< Custom test folder path
     boost::optional<boost::filesystem::path> randomCodeOptionsPath; ///< Options for random code generation in fuzz tests
+    bool useDiskDatabase = false; ///< Use a disk-backed state and block database for the consensus tests
 
     /// Test selection
     /// @{

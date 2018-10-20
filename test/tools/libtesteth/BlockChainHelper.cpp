@@ -19,6 +19,7 @@
  * that manage block/transaction import and test mining
  */
 
+#include <libdevcore/DBFactory.h>
 #include <libdevcore/TransientDirectory.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
@@ -35,6 +36,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+namespace fs = boost::filesystem;
 
 namespace dev
 {
@@ -100,10 +102,13 @@ TestBlock& TestBlock::operator=(TestBlock const& _original)
 
 void TestBlock::initBlockFromJsonHeader(mObject const& _blockHeader, mObject const& _stateObj)
 {
-    m_tempDirState = std::unique_ptr<TransientDirectory>(new TransientDirectory());
-
+    if (dev::test::Options::get().useDiskDatabase)
+        m_tempDirState = std::unique_ptr<TransientDirectory>(new TransientDirectory());
+    
+    const fs::path tempDirPath = m_tempDirState.get() ? m_tempDirState.get()->path() : "";
+    
     m_state = std::unique_ptr<State>(new State(0,
-                                               OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)),
+                                               OverlayDB(State::openDB(tempDirPath, h256{}, WithExisting::Kill)),
                                                BaseState::Empty));
     ImportTest::importState(_stateObj, *m_state.get());
     m_state.get()->commit(State::CommitBehaviour::KeepEmptyAccounts);
@@ -453,9 +458,12 @@ void TestBlock::copyStateFrom(State const& _state)
 {
     // WEIRD WAY TO COPY STATE AS COPY CONSTRUCTOR FOR STATE NOT IMPLEMENTED CORRECTLY (they would
     // share the same DB)
-    m_tempDirState.reset(new TransientDirectory());
+    if (dev::test::Options::get().useDiskDatabase)
+        m_tempDirState.reset(new TransientDirectory());
+    
+    fs::path tempDirPath = m_tempDirState.get() ? m_tempDirState.get()->path() : "";
     m_state.reset(new State(0,
-                            OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)),
+                            OverlayDB(State::openDB(tempDirPath, h256{}, WithExisting::Kill)),
                             BaseState::Empty));
     json_spirit::mObject obj = fillJsonWithState(_state);
     ImportTest::importState(obj, *m_state.get());
@@ -499,7 +507,10 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, MiningType _minin
 
 void TestBlockChain::reset(TestBlock const& _genesisBlock, MiningType _mining)
 {
-    m_tempDirBlockchain.reset(new TransientDirectory);
+    if (dev::test::Options::get().useDiskDatabase)
+        m_tempDirBlockchain.reset(new TransientDirectory);
+
+    fs::path tempDirBlockchainPath = m_tempDirBlockchain.get() ? m_tempDirBlockchain.get()->path() : "";
     ChainParams p = ChainParams(genesisInfo(TestBlockChain::s_sealEngineNetwork),
                                 _genesisBlock.bytes(), _genesisBlock.accountMap());
     if (_mining == MiningType::ForceEthash)
@@ -507,7 +518,7 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock, MiningType _mining)
     else if (_mining == MiningType::ForceNoProof)
         p.sealEngineName = eth::NoProof::name();
 
-    m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
+    m_blockChain.reset(new BlockChain(p, tempDirBlockchainPath, WithExisting::Kill));
     if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))
     {
         cdebug << "Not known:" << BlockHeader::headerHashFromBlock(_genesisBlock.bytes())
