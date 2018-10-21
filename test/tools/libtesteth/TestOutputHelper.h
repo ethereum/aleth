@@ -21,13 +21,10 @@
 #pragma once
 #include <test/tools/libtesteth/JsonSpiritHeaders.h>
 #include <test/tools/libtestutils/Common.h>
+#include <libdevcore/DBFactory.h>
 
 namespace dev
 {
-namespace db
-{
-enum class DatabaseKind : int;
-}
 namespace test
 {
 class TestOutputHelper
@@ -66,14 +63,24 @@ private:
     boost::filesystem::path m_currentTestFileName;
     typedef std::pair<double, std::string> execTimeName;
     std::vector<execTimeName> m_execTimeResults;
-    dev::db::DatabaseKind m_preDatabaseKind;
 };
 
 class TestOutputHelperFixture
 {
 public:
-    TestOutputHelperFixture() { TestOutputHelper::get().initTest(); }
-    ~TestOutputHelperFixture() { TestOutputHelper::get().finishTest(); }
+    TestOutputHelperFixture()
+    { 
+        m_preDatabaseKind = db::databaseKind();
+        db::setDatabaseKind(db::DatabaseKind::MemoryDB);
+        TestOutputHelper::get().initTest();
+    }
+    ~TestOutputHelperFixture() 
+    {
+        TestOutputHelper::get().finishTest();
+        db::setDatabaseKind(m_preDatabaseKind);
+    }
+private:
+    db::DatabaseKind m_preDatabaseKind;
 };
 
 }  // namespace test
