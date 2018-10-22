@@ -410,6 +410,8 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
             return;
         }
 
+        m_sessions[_id] = session;
+
         unsigned offset = (unsigned)UserPacket;
 
         // todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
@@ -421,13 +423,14 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 
             session->registerCapability(capDesc, offset, pcap);
 
+            cnetlog << "New session for capability " << capDesc.first << "; idOffset: " << offset;
+
             pcap->onConnect(_id, capDesc.second);
 
             offset += pcap->messageCount();
         }
 
         session->start();
-        m_sessions[_id] = session;
     }
     
     LOG(m_logger) << "p2p.host.peer.register " << _id;
