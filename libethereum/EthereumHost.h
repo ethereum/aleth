@@ -238,14 +238,7 @@ private:
     bool isCriticalSyncing(NodeID const& _peerID) const;
 
     /// Do we presently need syncing with this peer?
-    bool needsSyncing(NodeID const& _peerID) const
-    {
-        if (m_host->isRude(_peerID, name()))
-            return false;
-
-        auto peerStatus = m_peers.find(_peerID);
-        return (peerStatus != m_peers.end() && peerStatus->second.m_latestHash);
-    }
+    bool needsSyncing(NodeID const& _peerID) const;
 
     // Request of type _packetType with _hashes as input parameters
     void requestByHashes(NodeID const& _peerID, h256s const& _hashes, Asking _asking,

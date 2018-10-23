@@ -505,6 +505,8 @@ void EthereumHost::maintainTransactions()
         for (auto const& t: ts)
             m_transactionsSent.insert(t.sha3());
     }
+
+    // TODO this is not thread-safe, call this code from net IO thread instead
     for (auto& peer : m_peers)
     {
         bytes b;
@@ -515,9 +517,6 @@ void EthereumHost::maintainTransactions()
             b += ts[i].rlp();
             ++n;
         }
-
-        DEV_GUARDED(peer.second.x_knownTransactions)
-        peer.second.m_knownTransactions.clear();
 
         if (n || peer.second.m_requireTransactions)
         {
@@ -574,9 +573,8 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
             h256s blocks = get<0>(m_chain.treeRoute(m_latestBlockSent, _currentHash, false, false, true));
 
             auto s = randomSelection(25, [&](EthereumPeerStatus const& _status) {
-                DEV_GUARDED(_status.x_knownBlocks)
+                Guard guard(x_transactions);
                 return !_status.m_knownBlocks.count(_currentHash);
-                return false;
             });
             for (NodeID const& peerID : get<0>(s))
                 for (auto const& b: blocks)
@@ -586,10 +584,13 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
                         .appendRaw(m_chain.block(b), 1)
                         .append(m_chain.details(b).totalDifficulty);
 
-                    auto& peer = m_peers[peerID];
-                    Guard l(peer.x_knownBlocks);
-                    m_host->sealAndSend(peerID, ts);
-                    peer.m_knownBlocks.clear();
+                    auto itPeer = m_peers.find(peerID);
+                    if (itPeer != m_peers.end())
+                    {
+                        Guard l(itPeer->second.x_knownBlocks);
+                        m_host->sealAndSend(peerID, ts);
+                        itPeer->second.m_knownBlocks.clear();
+                    }
                 }
             for (NodeID const& peerID : get<1>(s))
             {
@@ -602,10 +603,13 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
                     ts.append(m_chain.number(b));
                 }
 
-                auto& peer = m_peers[peerID];
-                Guard l(peer.x_knownBlocks);
-                m_host->sealAndSend(peerID, ts);
-                peer.m_knownBlocks.clear();
+                auto itPeer = m_peers.find(peerID);
+                if (itPeer != m_peers.end())
+                {
+                    Guard l(itPeer->second.x_knownBlocks);
+                    m_host->sealAndSend(peerID, ts);
+                    itPeer->second.m_knownBlocks.clear();
+                }
             }
         }
         m_latestBlockSent = _currentHash;
@@ -648,27 +652,7 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
     default:;
     }
 }
-/*
-shared_ptr<PeerCapabilityFace> EthereumHost::newPeerCapability(
-    shared_ptr<SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap)
-{
-    auto ret = HostCapability<EthereumPeer>::newPeerCapability(_s, _idOffset, _cap);
 
-    auto cap = capabilityFromSession<EthereumPeer>(*_s, _cap.second);
-    assert(cap);
-    cap->init(
-        protocolVersion(),
-        m_networkId,
-        m_chain.details().totalDifficulty,
-        m_chain.currentHash(),
-        m_chain.genesisHash(),
-        m_hostData,
-        m_peerObserver
-    );
-
-    return ret;
-}
-*/
 void EthereumHost::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion)
 {
     m_peers[_peerID].m_peerCapabilityVersion = _peerCapabilityVersion;
@@ -925,6 +909,15 @@ bool EthereumHost::isCriticalSyncing(NodeID const& _peerID) const
            (peerStatus.m_asking == Asking::BlockBodies && peerStatus.m_protocolVersion == 62);
 }
 
+bool EthereumHost::needsSyncing(NodeID const& _peerID) const
+{
+    if (m_host->isRude(_peerID, name()))
+        return false;
+
+    auto peerStatus = m_peers.find(_peerID);
+    return (peerStatus != m_peers.end() && peerStatus->second.m_latestHash);
+}
+
 EthereumPeerStatus const& EthereumHost::peerStatus(NodeID const& _peerID) const
 {
     auto const peer = m_peers.find(_peerID);
@@ -967,7 +960,6 @@ void EthereumHost::incrementPeerUnknownNewBlocks(NodeID const& _peerID)
 
 void EthereumHost::disablePeer(NodeID const& _peerID, std::string const& _problem)
 {
-    // TODO passing cap name should be enough
     m_host->disableCapability(_peerID, name(), _problem);
 }
 
