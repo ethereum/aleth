@@ -48,6 +48,20 @@ void NoProof::generateSeal(BlockHeader const& _bi)
         m_onSealGenerated(ret.out());
 }
 
+void NoProof::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
+{
+    SealEngineFace::verify(_s, _bi, _parent, _block);
+
+    if (_parent)
+    {
+        // Check difficulty is correct given the two timestamps.
+        auto expected = calculateEthashDifficulty(chainParams(), _bi, _parent);
+        auto difficulty = _bi.difficulty();
+        if (difficulty != expected)
+            BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
+    }
+}
+
 void SealEngineFace::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
     _bi.verify(_s, _parent, _block);

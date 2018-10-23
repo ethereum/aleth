@@ -334,4 +334,29 @@ BOOST_AUTO_TEST_CASE(ethashEvalHeader)
     }
 }
 
+BOOST_AUTO_TEST_CASE(boundary)
+{
+    BlockHeader header;
+
+    header.setDifficulty(0);
+    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+        h256{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"});
+
+    header.setDifficulty(1);
+    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+        h256{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"});
+
+    header.setDifficulty(2);
+    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+        h256{"8000000000000000000000000000000000000000000000000000000000000000"});
+
+    header.setDifficulty(31);
+    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+        h256{"0842108421084210842108421084210842108421084210842108421084210842"});
+
+    header.setDifficulty(32);
+    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+        h256{"0800000000000000000000000000000000000000000000000000000000000000"});
+}
+
 BOOST_AUTO_TEST_SUITE_END()

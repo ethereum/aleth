@@ -534,14 +534,16 @@ bool Executive::go(OnOpFunc const& _onOp)
 
 bool Executive::finalize()
 {
-    // Accumulate refunds for suicides.
     if (m_ext)
+    {
+        // Accumulate refunds for suicides.
         m_ext->sub.refunds += m_ext->evmSchedule().suicideRefundGas * m_ext->sub.suicides.size();
 
-    // SSTORE refunds...
-    // must be done before the miner gets the fees.
-    m_refunded = m_ext ? min((m_t.gas() - m_gas) / 2, m_ext->sub.refunds) : 0;
-    m_gas += m_refunded;
+        // Refunds must be applied before the miner gets the fees.
+        assert(m_ext->sub.refunds >= 0);
+        int64_t maxRefund = (static_cast<int64_t>(m_t.gas()) - static_cast<int64_t>(m_gas)) / 2;
+        m_gas += min(maxRefund, m_ext->sub.refunds);
+    }
 
     if (m_t)
     {

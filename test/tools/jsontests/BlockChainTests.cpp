@@ -353,6 +353,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
                 uncleChainName = uncleHeaderObj["chainname"].get_str();
 
             overwriteUncleHeaderForTest(uncleHeaderObj, uncle, block.uncles(), *chainMap[uncleChainName]);
+            std::this_thread::sleep_for(std::chrono::seconds(1));  // wait uncle timestamp on NoProof
             block.addUncle(uncle);
         }
 
@@ -394,7 +395,9 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
             if (blObjInput.count("expectException"))
                 BOOST_ERROR("Deprecated expectException field! " + testName);
 
+            cnote << "Adding block to temp blockchain...";
             blockchain.addBlock(alterBlock);
+            cnote << "Adding block to test blockchain...";
             if (testChain.addBlock(alterBlock))
                 cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testName;
 
@@ -771,12 +774,13 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
     BlockHeader uncleHeader;
     if (uncleHeaderObj.count("populateFromBlock"))
     {
-        uncleHeader.setTimestamp(time(0));
         size_t number = (size_t)toU256(uncleHeaderObj.at("populateFromBlock"));
         uncleHeaderObj.erase("populateFromBlock");
         if (number < importedBlocks.size())
         {
+            uncleHeader.setTimestamp(importedBlocks.at(number).blockHeader().timestamp() + 1);
             sealEngine->populateFromParent(uncleHeader, importedBlocks.at(number).blockHeader());
+
             //Set Default roots for empty block
             //m_transactionsRoot = _t; m_receiptsRoot = _r; m_sha3Uncles = _u; m_stateRoot = _s;
             uncleHeader.setRoots((h256)fromHex("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"),
