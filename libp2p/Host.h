@@ -248,8 +248,8 @@ public:
     p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkConfig().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
 
     /// Apply function to each session
-    void forEachPeer(std::string const& _name, u256 const& _version,
-        std::function<bool(NodeID const&)> _f) const;
+    void forEachPeer(
+        std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 

@@ -113,10 +113,10 @@ public:
         return false;
     }
 
-    void foreachPeer(std::string const& _name, u256 const& _version,
-        std::function<bool(NodeID const&)> _f) const override
+    void foreachPeer(
+        std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const override
     {
-        m_host.forEachPeer(_name, _version, _f);
+        m_host.forEachPeer(_capabilityName, _f);
     }
 
 private:
@@ -1110,16 +1110,20 @@ bool Host::addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relati
 }
 
 void Host::forEachPeer(
-    std::string const& _name, u256 const& _version, std::function<bool(NodeID const&)> _f) const
+    std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const
 {
     RecursiveGuard l(x_sessions);
     std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> sessions;
     for (auto const& i : m_sessions)
         if (std::shared_ptr<SessionFace> s = i.second.lock())
-            if (contains(s->capabilities(), std::make_pair(_name, _version)))
-                sessions.push_back(make_pair(s, s->peer()));
+        {
+            std::vector<CapDesc> capabilities = s->capabilities();
+            for (auto const& cap : capabilities)
+                if (cap.first == _capabilityName)
+                    sessions.push_back(make_pair(s, s->peer()));
+        }
 
-    // order peers by protocol, rating, connection age
+    // order peers by rating, connection age
     auto sessionLess =
         [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left,
             std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right) {

@@ -288,11 +288,10 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 
 void BlockChainSync::continueSync()
 {
-    host().capabilityHost().foreachPeer(
-        m_host.name(), m_host.version(), [this](NodeID const& _peerID) {
-            syncPeer(_peerID, false);
-            return true;
-        });
+    host().capabilityHost().foreachPeer(m_host.name(), [this](NodeID const& _peerID) {
+        syncPeer(_peerID, false);
+        return true;
+    });
 }
 
 void BlockChainSync::requestBlocks(NodeID const& _peerID)

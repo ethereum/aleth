@@ -46,7 +46,7 @@ public:
 
     virtual bool isRude(NodeID const& _nodeID, std::string const& _capability) const = 0;
 
-    virtual void foreachPeer(std::string const& _name, u256 const& _version,
+    virtual void foreachPeer(std::string const& _capabilityName,
         std::function<bool(NodeID const& _nodeID)> _f) const = 0;
 };
 
