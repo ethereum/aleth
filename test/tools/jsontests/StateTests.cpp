@@ -25,7 +25,6 @@
 
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/DBFactory.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/State.h>
 #include <libethereum/ExtVM.h>
@@ -36,7 +35,6 @@
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
-using namespace dev::db;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
@@ -151,10 +149,7 @@ public:
 			std::cout << "Skipping " << casename << " because --all option is not specified.\n";
 			return;
 		}
-		auto preDatabaseKind = databaseKind();
-		setDatabaseKind(test::Options::get().useDiskDatabase ? DatabaseKind::LevelDB : DatabaseKind::MemoryDB);
 		suite.runAllTestsInFolder(casename);
-		setDatabaseKind(preDatabaseKind);
 	}
 };
 

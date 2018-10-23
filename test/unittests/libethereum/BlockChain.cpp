@@ -53,12 +53,12 @@ BOOST_AUTO_TEST_CASE(output)
 }
 
 // We always run this test using a disk-backed database since that's the configuration that
-// client users will be using.
+// users are running.
 BOOST_AUTO_TEST_CASE(opendb)
 {
     // Need to set database kind before creating a genesis block since that creates a state
     // database
-    auto preDatabaseKind = databaseKind();
+    auto const preDatabaseKind = databaseKind();
     setDatabaseKind(DatabaseKind::LevelDB);
 
     TestBlock genesis = TestBlockChain::defaultGenesisBlock();

@@ -22,7 +22,6 @@
 #include <boost/io/ios_state.hpp>
 #include <libethashseal/Ethash.h>
 #include <libethcore/BasicAuthority.h>
-#include <libdevcore/DBFactory.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
 #include <numeric>
@@ -30,7 +29,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::test;
-using namespace dev::db;
 using namespace dev::eth;
 using namespace boost;
 

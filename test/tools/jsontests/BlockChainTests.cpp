@@ -22,7 +22,6 @@
  */
 
 #include <libdevcore/FileSystem.h>
-#include <libdevcore/DBFactory.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/jsontests/BlockChainTests.h>
 #include <test/tools/libtesteth/TestHelper.h>
@@ -33,7 +32,6 @@
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
-using namespace dev::db;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
@@ -1018,10 +1016,8 @@ public:
             cnote << "Skipping " << casename << " because --all option is not specified.\n";
             return;
         }
-        auto preDatabaseKind = databaseKind();
-        setDatabaseKind(test::Options::get().useDiskDatabase ? DatabaseKind::LevelDB : DatabaseKind::MemoryDB);
+
         suite.runAllTestsInFolder(casename);
-        setDatabaseKind(preDatabaseKind);
     }
 };
 
@@ -1031,10 +1027,7 @@ public:
     {
         test::TransitionTestsSuite suite;
         string const& casename = boost::unit_test::framework::current_test_case().p_name;
-        auto preDatabaseKind = databaseKind();
-        setDatabaseKind(test::Options::get().useDiskDatabase ? DatabaseKind::LevelDB : DatabaseKind::MemoryDB);
         suite.runAllTestsInFolder(casename);
-        setDatabaseKind(preDatabaseKind);
     }
 };
 
@@ -1051,10 +1044,7 @@ public:
             cnote << "Skipping hive test " << casename << ". Use --all to run it.\n";
             return;
         }
-        auto preDatabaseKind = databaseKind();
-        setDatabaseKind(test::Options::get().useDiskDatabase ? DatabaseKind::LevelDB : DatabaseKind::MemoryDB);
         suite.runAllTestsInFolder(casename);
-        setDatabaseKind(preDatabaseKind);
     }
 };
 

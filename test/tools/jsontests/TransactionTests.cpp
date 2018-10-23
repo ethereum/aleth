@@ -23,7 +23,6 @@
 #include <libethcore/SealEngine.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
-#include <libdevcore/DBFactory.h>
 #include <test/tools/libtestutils/Common.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
@@ -36,7 +35,6 @@
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
-using namespace dev::db;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
@@ -222,10 +220,7 @@ public:
     {
         string const& casename = boost::unit_test::framework::current_test_case().p_name;
         test::TransactionTestSuite suite;
-        auto preDatabaseKind = databaseKind();
-        setDatabaseKind(test::Options::get().useDiskDatabase ? DatabaseKind::LevelDB : DatabaseKind::MemoryDB);
         suite.runAllTestsInFolder(casename);
-        setDatabaseKind(preDatabaseKind);
     }
 };
 
