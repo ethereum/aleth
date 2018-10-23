@@ -425,10 +425,18 @@ string BlockChain::dumpDatabase() const
 {
     ostringstream oss;
     oss << m_lastBlockHash << '\n';
-    m_extrasDB->forEach([&oss](db::Slice key, db::Slice value) {
-        oss << toHex(key) << "/" << toHex(value) << '\n';
+
+    // We need to first insert the db data into an ordered map so that the string returned from this function
+    // always has data in the same order, regardless of the underlying database implementation
+    std::map<std::string, std::string> dbData;
+    m_extrasDB->forEach([&dbData](db::Slice key, db::Slice value) {
+        dbData[key.toString()] = value.toString();
         return true;
     });
+
+    for (auto const& it : dbData)
+        oss << toHex(it.first) << "/" << toHex(it.second) << '\n';
+
     return oss.str();
 }
 
