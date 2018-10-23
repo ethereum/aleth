@@ -628,6 +628,7 @@ SyncStatus EthereumHost::status() const
 
 void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId)
 {
+    // TODO this is not thread safe, do it from IO thread
     auto itPeerStatus = m_peers.find(_nodeId);
     if (itPeerStatus == m_peers.end())
         return;
@@ -920,7 +921,7 @@ bool EthereumHost::needsSyncing(NodeID const& _peerID) const
 
 EthereumPeerStatus const& EthereumHost::peerStatus(NodeID const& _peerID) const
 {
-    auto const peer = m_peers.find(_peerID);
+    auto peer = m_peers.find(_peerID);
     if (peer == m_peers.end())
         BOOST_THROW_EXCEPTION(PeerDisconnected() << errinfo_nodeID(_peerID));
 
@@ -929,33 +930,39 @@ EthereumPeerStatus const& EthereumHost::peerStatus(NodeID const& _peerID) const
 
 bool EthereumHost::isPeerConversing(NodeID const& _peerID) const
 {
-    auto const peer = m_peers.find(_peerID);
-    if (peer == m_peers.end())
-        BOOST_THROW_EXCEPTION(PeerDisconnected() << errinfo_nodeID(_peerID));
-
-    return peer->second.m_asking != Asking::Nothing;
+    auto peer = m_peers.find(_peerID);
+    return peer != m_peers.end() && peer->second.m_asking != Asking::Nothing;
 }
 
 void EthereumHost::markPeerAsWaitingForTransactions(NodeID const& _peerID)
 {
-    m_peers[_peerID].m_requireTransactions = true;
+    auto peer = m_peers.find(_peerID);
+    if (peer != m_peers.end())
+        peer->second.m_requireTransactions = true;
 }
 
 void EthereumHost::markBlockAsKnownToPeer(NodeID const& _peerID, h256 const& _hash)
 {
-    auto& peer = m_peers[_peerID];
-    DEV_GUARDED(peer.x_knownBlocks)
-    peer.m_knownBlocks.insert(_hash);
+    auto peer = m_peers.find(_peerID);
+    if (peer != m_peers.end())
+    {
+        Guard guard(peer->second.x_knownBlocks);
+        peer->second.m_knownBlocks.insert(_hash);
+    }
 }
 
 void EthereumHost::setPeerLatestHash(NodeID const& _peerID, h256 const& _hash)
 {
-    m_peers[_peerID].m_latestHash = _hash;
+    auto peer = m_peers.find(_peerID);
+    if (peer != m_peers.end())
+        peer->second.m_latestHash = _hash;
 }
 
 void EthereumHost::incrementPeerUnknownNewBlocks(NodeID const& _peerID)
 {
-    ++m_peers[_peerID].m_unknownNewBlocks;
+    auto peer = m_peers.find(_peerID);
+    if (peer != m_peers.end())
+        ++peer->second.m_unknownNewBlocks;
 }
 
 void EthereumHost::disablePeer(NodeID const& _peerID, std::string const& _problem)
@@ -966,11 +973,11 @@ void EthereumHost::disablePeer(NodeID const& _peerID, std::string const& _proble
 void EthereumHost::requestStatus(NodeID const& _peerID, u256 _hostNetworkId,
     u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash)
 {
-    auto itPeerStatus = m_peers.find(_peerID);
-    if (itPeerStatus == m_peers.end())
+    auto peer = m_peers.find(_peerID);
+    if (peer == m_peers.end())
         return;
 
-    auto& peerStatus = itPeerStatus->second;
+    auto& peerStatus = peer->second;
 
     assert(peerStatus.m_asking == Asking::Nothing);
     setAsking(_peerID, Asking::State);
@@ -985,11 +992,11 @@ void EthereumHost::requestStatus(NodeID const& _peerID, u256 _hostNetworkId,
 void EthereumHost::requestBlockHeaders(
     NodeID const& _peerID, unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse)
 {
-    auto itPeerStatus = m_peers.find(_peerID);
-    if (itPeerStatus == m_peers.end())
+    auto peer = m_peers.find(_peerID);
+    if (peer == m_peers.end())
         return;
 
-    auto& peerStatus = itPeerStatus->second;
+    auto& peerStatus = peer->second;
 
     if (peerStatus.m_asking != Asking::Nothing)
     {
@@ -1008,11 +1015,11 @@ void EthereumHost::requestBlockHeaders(
 void EthereumHost::requestBlockHeaders(
     NodeID const& _peerID, h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse)
 {
-    auto itPeerStatus = m_peers.find(_peerID);
-    if (itPeerStatus == m_peers.end())
+    auto peer = m_peers.find(_peerID);
+    if (peer == m_peers.end())
         return;
 
-    auto& peerStatus = itPeerStatus->second;
+    auto& peerStatus = peer->second;
 
     if (peerStatus.m_asking != Asking::Nothing)
     {
@@ -1047,11 +1054,11 @@ void EthereumHost::requestReceipts(NodeID const& _peerID, h256s const& _blocks)
 void EthereumHost::requestByHashes(
     NodeID const& _peerID, h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType)
 {
-    auto itPeerStatus = m_peers.find(_peerID);
-    if (itPeerStatus == m_peers.end())
+    auto peer = m_peers.find(_peerID);
+    if (peer == m_peers.end())
         return;
 
-    auto& peerStatus = itPeerStatus->second;
+    auto& peerStatus = peer->second;
 
     if (peerStatus.m_asking != Asking::Nothing)
     {
