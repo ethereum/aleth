@@ -656,14 +656,19 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
 
 void EthereumHost::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion)
 {
+    m_host->addNote(_peerID, "manners", m_host->isRude(_peerID, name()) ? "RUDE" : "nice");
+
     m_peers[_peerID].m_peerCapabilityVersion = _peerCapabilityVersion;
     requestStatus(_peerID, m_networkId, m_chain.details().totalDifficulty, m_chain.currentHash(),
         m_chain.genesisHash());
 }
 
-void EthereumHost::onDisconnect(NodeID const& _nodeID)
+void EthereumHost::onDisconnect(NodeID const& _peerID)
 {
-    m_peers.erase(_nodeID);
+    // TODO lower peer's rating or mark as rude if it disconnects when being asked for something
+    m_peerObserver->onPeerAborting();
+
+    m_peers.erase(_peerID);
 }
 
 bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r)
