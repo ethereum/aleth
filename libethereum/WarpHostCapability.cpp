@@ -169,8 +169,7 @@ private:
         if (!validateManifest(manifestRlp))
         {
             // TODO try disconnecting instead of disabling; disabled peer still occupies the peer slot
-            m_host.capabilityHost().disableCapability(
-                _peerID, m_host.name(), "Invalid snapshot manifest.");
+            m_host.disablePeer(_peerID, "Invalid snapshot manifest.");
             return;
         }
 
@@ -180,8 +179,7 @@ private:
             if (snapshotHash == m_syncingSnapshotHash)
                 m_freePeers.push(_peerID);
             else
-                m_host.capabilityHost().disableCapability(
-                    _peerID, m_host.name(), "Another snapshot.");
+                m_host.disablePeer(_peerID, "Another snapshot.");
         }
         else
         {
@@ -196,8 +194,7 @@ private:
                 RLP headerRlp(headerBytes);
                 if (!verifyDaoChallengeResponse(headerRlp))
                 {
-                    m_host.capabilityHost().disableCapability(
-                        _peerID, m_host.name(), "Peer from another fork.");
+                    m_host.disablePeer(_peerID, "Peer from another fork.");
                     return;
                 }
             }
@@ -568,27 +565,32 @@ bool WarpHostCapability::validateStatus(NodeID const& _peerID, h256 const& _gene
 
     if (peerStatus.m_genesisHash != _genesisHash)
     {
-        m_host->disableCapability(_peerID, name(), "Invalid genesis hash");
+        disablePeer(_peerID, "Invalid genesis hash");
         return false;
     }
     if (find(_protocolVersions.begin(), _protocolVersions.end(), peerStatus.m_protocolVersion) ==
         _protocolVersions.end())
     {
-        m_host->disableCapability(_peerID, name(), "Invalid protocol version.");
+        disablePeer(_peerID, "Invalid protocol version.");
         return false;
     }
     if (peerStatus.m_networkId != _networkId)
     {
-        m_host->disableCapability(_peerID, name(), "Invalid network identifier.");
+        disablePeer(_peerID, "Invalid network identifier.");
         return false;
     }
     if (peerStatus.m_asking != Asking::State && peerStatus.m_asking != Asking::Nothing)
     {
-        m_host->disableCapability(_peerID, name(), "Peer banned for unexpected status message.");
+        disablePeer(_peerID, "Peer banned for unexpected status message.");
         return false;
     }
 
     return true;
+}
+
+void WarpHostCapability::disablePeer(NodeID const& _peerID, std::string const& _problem)
+{
+    m_host->disableCapability(_peerID, name(), _problem);
 }
 
 }  // namespace eth
