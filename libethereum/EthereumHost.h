@@ -199,15 +199,6 @@ public:
     /// Request receipts for specified blocks from peer.
     void requestReceipts(NodeID const& _nodeID, h256s const& _blocks);
 
-    /// Check if this node is rude.
-    bool isRude(NodeID const& _nodeID) const;
-
-    /// Set that it's a rude node.
-    void setRude(NodeID const& _nodeID);
-
-    /// Abort the sync operation.
-    void abortSync(NodeID const& _nodeID);
-
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 

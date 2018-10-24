@@ -113,6 +113,15 @@ public:
         return false;
     }
 
+    void setRude(NodeID const& _nodeID, std::string const& _capability) override
+    {
+        auto s = m_host.peerSession(_nodeID);
+        if (!s)
+            return;
+
+        s->repMan().noteRude(*s, _capability);
+    }
+
     void foreachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const override
     {
