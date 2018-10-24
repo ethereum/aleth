@@ -118,6 +118,8 @@ public:
     bool validateStatus(NodeID const& _peerID, h256 const& _genesisHash,
         std::vector<unsigned> const& _protocolVersions, u256 const& _networkId);
 
+    void disablePeer(NodeID const& _peerID, std::string const& _problem);
+
 private:
     std::shared_ptr<WarpPeerObserverFace> createPeerObserver(
         boost::filesystem::path const& _snapshotDownloadPath);
