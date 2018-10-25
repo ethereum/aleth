@@ -155,9 +155,9 @@ private:
     std::unordered_set<unsigned> m_downloadingBodies;		///< Set of block header numbers being downloaded
     std::map<unsigned, std::vector<Header>> m_headers;	    ///< Downloaded headers
     std::map<unsigned, std::vector<bytes>> m_bodies;	    ///< Downloaded block bodies
-    /// Peers m_downloadingSubchain number map
+    /// Peers to m_downloadingHeaders number map
     std::map<NodeID, std::vector<unsigned>> m_headerSyncPeers;
-    /// Peers m_downloadingSubchain number map
+    /// Peers to m_downloadingBodies number map
     std::map<NodeID, std::vector<unsigned>> m_bodySyncPeers;
     std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
     bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
