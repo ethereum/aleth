@@ -482,6 +482,7 @@ bool WarpHostCapability::interpretCapabilityPacket(
 
 void WarpHostCapability::onDisconnect(NodeID const& _peerID)
 {
+    m_peerObserver->onPeerDisconnect(_peerID, m_peers[_peerID].m_asking);
     m_peers.erase(_peerID);
 }
 
