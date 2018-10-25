@@ -128,9 +128,7 @@ void VM::caseCreate()
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
-    evmc_uint256be rawBalance;
-    m_context->host->get_balance(&rawBalance, m_context, &m_message->destination);
-    u256 balance = fromEvmC(rawBalance);
+    u256 const balance = fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
     if (balance >= endowment && m_message->depth < 1024)
     {
         evmc_message msg = {};
@@ -274,9 +272,8 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
             o_msg.value = toEvmC(m_SP[2]);
             o_msg.gas += VMSchedule::callStipend;
             {
-                evmc_uint256be rawBalance;
-                m_context->host->get_balance(&rawBalance, m_context, &m_message->destination);
-                u256 balance = fromEvmC(rawBalance);
+                u256 const balance =
+                    fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
                 balanceOk = balance >= value;
             }
         }

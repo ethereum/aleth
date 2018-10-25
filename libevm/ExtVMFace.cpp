@@ -31,25 +31,21 @@ static_assert(alignof(Address) == alignof(evmc_address), "Address types alignmen
 static_assert(sizeof(h256) == sizeof(evmc_uint256be), "Hash types size mismatch");
 static_assert(alignof(h256) == alignof(evmc_uint256be), "Hash types alignment mismatch");
 
-int accountExists(evmc_context* _context, evmc_address const* _addr) noexcept
+bool accountExists(evmc_context* _context, evmc_address const* _addr) noexcept
 {
     auto& env = static_cast<ExtVMFace&>(*_context);
     Address addr = fromEvmC(*_addr);
-    return env.exists(addr) ? 1 : 0;
+    return env.exists(addr);
 }
 
-void getStorage(
-    evmc_uint256be* o_result,
-    evmc_context* _context,
-    evmc_address const* _addr,
-    evmc_uint256be const* _key
-) noexcept
+evmc_bytes32 getStorage(
+    evmc_context* _context, evmc_address const* _addr, evmc_uint256be const* _key) noexcept
 {
     (void) _addr;
     auto& env = static_cast<ExtVMFace&>(*_context);
     assert(fromEvmC(*_addr) == env.myAddress);
     u256 key = fromEvmC(*_key);
-    *o_result = toEvmC(env.store(key));
+    return toEvmC(env.store(key));
 }
 
 evmc_storage_status setStorage(evmc_context* _context, evmc_address const* _addr,
@@ -102,14 +98,10 @@ evmc_storage_status setStorage(evmc_context* _context, evmc_address const* _addr
     return status;
 }
 
-void getBalance(
-    evmc_uint256be* o_result,
-    evmc_context* _context,
-    evmc_address const* _addr
-) noexcept
+evmc_uint256be getBalance(evmc_context* _context, evmc_address const* _addr) noexcept
 {
     auto& env = static_cast<ExtVMFace&>(*_context);
-    *o_result = toEvmC(env.balance(fromEvmC(*_addr)));
+    return toEvmC(env.balance(fromEvmC(*_addr)));
 }
 
 size_t getCodeSize(evmc_context* _context, evmc_address const* _addr)
@@ -118,10 +110,10 @@ size_t getCodeSize(evmc_context* _context, evmc_address const* _addr)
     return env.codeSizeAt(fromEvmC(*_addr));
 }
 
-void getCodeHash(evmc_uint256be* o_result, evmc_context* _context, evmc_address const* _addr)
+evmc_bytes32 getCodeHash(evmc_context* _context, evmc_address const* _addr)
 {
     auto& env = static_cast<ExtVMFace&>(*_context);
-    *o_result = toEvmC(env.codeHashAt(fromEvmC(*_addr)));
+    return toEvmC(env.codeHashAt(fromEvmC(*_addr)));
 }
 
 size_t copyCode(evmc_context* _context, evmc_address const* _addr, size_t _codeOffset,
@@ -185,16 +177,10 @@ evmc_tx_context getTxContext(evmc_context* _context) noexcept
     return result;
 }
 
-int getBlockHash(evmc_uint256be* o_hash, evmc_context* _envPtr, int64_t _number)
+evmc_bytes32 getBlockHash(evmc_context* _envPtr, int64_t _number)
 {
     auto& env = static_cast<ExtVMFace&>(*_envPtr);
-    if (h256 const hash = env.blockHash(_number))
-    {
-        *o_hash = toEvmC(hash);
-        return 1;
-    }
-    else
-        return 0;
+    return toEvmC(env.blockHash(_number));
 }
 
 evmc_result create(ExtVMFace& _env, evmc_message const* _msg) noexcept
