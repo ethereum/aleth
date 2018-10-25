@@ -87,5 +87,9 @@ public:
         std::function<bool(NodeID const& _nodeID)> _f) const = 0;
 };
 
+class Host;
+
+std::shared_ptr<CapabilityHostFace> createCapabilityHost(Host& _host);
+
 }  // namespace p2p
 }  // namespace dev
