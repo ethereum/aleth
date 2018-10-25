@@ -1032,27 +1032,26 @@ void Host::forEachPeer(
     std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const
 {
     RecursiveGuard l(x_sessions);
-    std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> sessions;
+    std::vector<std::shared_ptr<SessionFace>> sessions;
     for (auto const& i : m_sessions)
         if (std::shared_ptr<SessionFace> s = i.second.lock())
         {
             std::vector<CapDesc> capabilities = s->capabilities();
             for (auto const& cap : capabilities)
                 if (cap.first == _capabilityName)
-                    sessions.push_back(make_pair(s, s->peer()));
+                    sessions.push_back(s);
         }
 
     // order peers by rating, connection age
-    auto sessionLess =
-        [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left,
-            std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right) {
-            return _left.first->rating() == _right.first->rating() ?
-                       _left.first->connectionTime() < _right.first->connectionTime() :
-                       _left.first->rating() > _right.first->rating();
-        };
+    auto sessionLess = [](std::shared_ptr<SessionFace> const& _left,
+                           std::shared_ptr<SessionFace> const& _right) {
+        return _left->rating() == _right->rating() ?
+                   _left->connectionTime() < _right->connectionTime() :
+                   _left->rating() > _right->rating();
+    };
     std::sort(sessions.begin(), sessions.end(), sessionLess);
 
     for (auto s : sessions)
-        if (!_f(s.first->id()))
+        if (!_f(s->id()))
             return;
 }
