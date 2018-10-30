@@ -30,6 +30,7 @@ namespace db
 enum class DatabaseKind
 {
     LevelDB,
+    RocksDB,
     MemoryDB
 };
 
