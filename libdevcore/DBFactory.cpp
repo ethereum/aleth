@@ -82,6 +82,18 @@ bool isMemoryDB()
     return g_kind == DatabaseKind::MemoryDB;
 }
 
+bool isDiskDatabase()
+{
+    switch (g_kind)
+    {
+        case DatabaseKind::LevelDB:
+        case DatabaseKind::RocksDB:
+            return true;
+        default:
+            return false;
+    }
+}
+
 DatabaseKind databaseKind()
 {
     return g_kind;

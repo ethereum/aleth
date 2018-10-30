@@ -102,7 +102,7 @@ TestBlock& TestBlock::operator=(TestBlock const& _original)
 
 void TestBlock::initBlockFromJsonHeader(mObject const& _blockHeader, mObject const& _stateObj)
 {
-    if (dev::test::Options::get().useDiskDatabase)
+    if (dev::db::isDiskDatabase())
         m_tempDirState = std::unique_ptr<TransientDirectory>(new TransientDirectory());
     
     const fs::path tempDirPath = m_tempDirState.get() ? m_tempDirState.get()->path() : "";
@@ -458,7 +458,7 @@ void TestBlock::copyStateFrom(State const& _state)
 {
     // WEIRD WAY TO COPY STATE AS COPY CONSTRUCTOR FOR STATE NOT IMPLEMENTED CORRECTLY (they would
     // share the same DB)
-    if (dev::test::Options::get().useDiskDatabase)
+    if (dev::db::isDiskDatabase())
         m_tempDirState.reset(new TransientDirectory());
     
     fs::path tempDirPath = m_tempDirState.get() ? m_tempDirState.get()->path() : "";
@@ -507,7 +507,7 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, MiningType _minin
 
 void TestBlockChain::reset(TestBlock const& _genesisBlock, MiningType _mining)
 {
-    if (dev::test::Options::get().useDiskDatabase)
+    if (dev::db::isDiskDatabase())
         m_tempDirBlockchain.reset(new TransientDirectory);
 
     fs::path tempDirBlockchainPath = m_tempDirBlockchain.get() ? m_tempDirBlockchain.get()->path() : "";

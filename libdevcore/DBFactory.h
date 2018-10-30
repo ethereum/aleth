@@ -42,6 +42,7 @@ boost::program_options::options_description databaseProgramOptions(
     unsigned _lineLength = boost::program_options::options_description::m_default_line_length);
 
 bool isMemoryDB();
+bool isDiskDatabase();
 DatabaseKind databaseKind();
 void setDatabaseKindByName(std::string const& _name);
 void setDatabaseKind(DatabaseKind _kind);
