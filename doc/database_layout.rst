@@ -2,8 +2,9 @@ Database Layout
 ===============
 
 Aleth uses three databases, all of them are essentially just
-key-value storages (LevelDB or RocksDB is used depending on build
-settings). Their physical disk locations are as follows:
+key-value storages (MemoryDB, LevelDB, or RocksDB is used depending on
+the runtime settings). Their physical disk locations are as follows (note
+that this doesn't apply to MemoryDB):
 
 -  Blocks - ``{ETH_DATABASE_DIR}/{GENESIS_HASH}/blocks``
 -  Extras -
