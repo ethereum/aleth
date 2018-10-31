@@ -27,6 +27,12 @@ void destroy(evmc_instance* _instance)
     (void)_instance;
 }
 
+evmc_capabilities_flagset getCapabilities(evmc_instance* _instance) noexcept
+{
+    (void)_instance;
+    return EVMC_CAPABILITY_EVM1;
+}
+
 void delete_output(const evmc_result* result)
 {
     delete[] result->output_data;
@@ -113,6 +119,7 @@ extern "C" evmc_instance* evmc_create_interpreter() noexcept
         aleth_get_buildinfo()->project_version,
         ::destroy,
         ::execute,
+        getCapabilities,
         nullptr,  // set_tracer
         nullptr,  // set_option
     };
@@ -366,9 +373,8 @@ void VM::interpretCases()
             evmc_address destination = toEvmC(asAddress(m_SP[0]));
 
             // After EIP158 zero-value suicides do not have to pay account creation gas.
-            evmc_uint256be rawBalance;
-            m_context->host->get_balance(&rawBalance, m_context, &m_message->destination);
-            u256 balance = fromEvmC(rawBalance);
+            u256 const balance =
+                fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
             if (balance > 0 || m_rev < EVMC_SPURIOUS_DRAGON)
             {
                 // After EIP150 hard fork charge additional cost of sending
@@ -900,9 +906,7 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
-            evmc_uint256be rawBalance;
-            m_context->host->get_balance(&rawBalance, m_context, &address);
-            m_SPP[0] = fromEvmC(rawBalance);
+            m_SPP[0] = fromEvmC(m_context->host->get_balance(m_context, &address));
         }
         NEXT
 
@@ -1028,10 +1032,7 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
-
-            evmc_uint256be hash;
-            m_context->host->get_code_hash(&hash, m_context, &address);
-            m_SPP[0] = fromEvmC(hash);
+            m_SPP[0] = fromEvmC(m_context->host->get_code_hash(m_context, &address));
         }
         NEXT
 
@@ -1091,9 +1092,7 @@ void VM::interpretCases()
 
             if (number < blockNumber && number >= std::max(int64_t(256), blockNumber) - 256)
             {
-                evmc_uint256be hash;
-                m_context->host->get_block_hash(&hash, m_context, int64_t(number));
-                m_SPP[0] = fromEvmC(hash);
+                m_SPP[0] = fromEvmC(m_context->host->get_block_hash(m_context, int64_t(number)));
             }
             else
                 m_SPP[0] = 0;
@@ -1341,9 +1340,8 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_uint256be key = toEvmC(m_SP[0]);
-            evmc_uint256be value;
-            m_context->host->get_storage(&value, m_context, &m_message->destination, &key);
-            m_SPP[0] = fromEvmC(value);
+            m_SPP[0] =
+                fromEvmC(m_context->host->get_storage(m_context, &m_message->destination, &key));
         }
         NEXT
 
