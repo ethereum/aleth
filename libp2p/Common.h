@@ -234,7 +234,7 @@ struct NodeSpec
 {
     NodeSpec() {}
 
-    /// Accepts user-readable strings of the form (enode://pubkey@)host({:port,:tcpport.udpport})
+    /// Accepts user-readable strings in the form defined here: https://github.com/ethereum/wiki/wiki/enode-url-format
     NodeSpec(std::string const& _user);
 
     NodeSpec(std::string const& _addr, uint16_t _port, int _udpPort = -1):
@@ -248,6 +248,8 @@ struct NodeSpec
     NodeIPEndpoint nodeIPEndpoint() const;
 
     std::string enode() const;
+
+    bool isInitialized() const;
 
 private:
     std::string m_address;

@@ -25,6 +25,7 @@
 #include <thread>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <signal.h>
 
 #include <boost/algorithm/string.hpp>
@@ -59,7 +60,6 @@
 
 #include "MinerAux.h"
 #include "AccountManager.h"
-#include "utils.h"
 
 #include <aleth/buildinfo.h>
 
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
 
     unsigned peers = 11;
     unsigned peerStretch = 7;
-    utils::PeerNodeListMap preferredNodes;
+    std::map<NodeID, pair<NodeIPEndpoint,bool>> preferredNodes;
     bool bootstrap = true;
     bool disableDiscovery = false;
     bool enableDiscovery = false;
@@ -357,7 +357,7 @@ int main(int argc, char** argv)
         "upnp", po::value<string>()->value_name("<on/off>"), "Use UPnP for NAT (default: on)");
 #endif
     addNetworkingOption("peerset", po::value<string>()->value_name("<list>"),
-        "Space delimited list of peers; element format: type:[enode://]publickey@ipAddress[:port]\n        "
+        "Comma delimited list of peers; element format: type:enode://publickey@ipAddress[:port[?discport=port]]\n        "
         "Types:\n        default     Attempt connection when no other peers are available and "
         "pinning is disabled\n        required    Keep connected at all times\n");
     addNetworkingOption("no-discovery", "Disable node discovery; implies --no-bootstrap");
@@ -455,18 +455,37 @@ int main(int argc, char** argv)
 
     if (vm.count("peerset"))
     {
-        string peerset = vm["peerset"].as<string>();
-
-        if (peerset.empty())
+        string peersetStr = vm["peerset"].as<string>();
+        vector<string> peersetList;
+        boost::split(peersetList, peersetStr, boost::is_any_of(","));
+        bool parsingError = false;
+        const string peerPattern = "^(default|required):(.*)";
+        regex rx(peerPattern);
+        smatch match;
+        for (auto const& p : peersetList)
         {
-            cerr << "--peerset argument must not be empty";
-            return -1;
+            if (regex_match(p, match, rx))
+            {
+                bool required = match.str(1) == "required";
+                NodeSpec ns(match.str(2));
+                if (ns.isInitialized())
+                    preferredNodes[ns.id()] = make_pair(ns.nodeIPEndpoint(), required);
+                else
+                {
+                    parsingError = true;
+                    break;
+                }
+            }
+            else
+            {
+                parsingError = true;
+                break;
+            }
         }
-
-        if (!utils::createPeerNodeList(peerset, preferredNodes))
+        if (parsingError)
         {
-            cerr << "Unrecognized peerset: " << peerset << "\n";
-            return -1;
+             cerr << "Unrecognized peerset: " << peersetStr << "\n";
+             return -1;
         }
     }
 
