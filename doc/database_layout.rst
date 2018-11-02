@@ -1,7 +1,7 @@
 Database Layout
 ===============
 
-cpp-ethereum uses three databases, all of them are essentially just
+Aleth uses three databases, all of them are essentially just
 key-value storages (LevelDB or RocksDB is used depending on build
 settings). Their physical disk locations are as follows:
 
@@ -13,7 +13,7 @@ settings). Their physical disk locations are as follows:
 
 where
 
-``{ETH_DATABASE_DIR}`` - base cpp-ethereum data directory
+``{ETH_DATABASE_DIR}`` - base Aleth database directory
 ``{GENESIS_HASH}`` - hex representation of first 4 bytes of genesis
 block hash (``d4e56740`` for main net, ``41941023`` for Ropsten)
 ``{DATABASE_VERSION}`` - encoded current version of the database layout
@@ -33,7 +33,7 @@ Every record is:
 
 Low-level access to both Blocks and Extras databases is encapsulated in
 `BlockChain
-class <https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/BlockChain.h>`__.
+class <https://github.com/ethereum/aleth/blob/master/libethereum/BlockChain.h>`__.
 
 Extras
 ------
@@ -99,11 +99,11 @@ database stores the nodes of this trie.
    ``hash + 255 => preimage`` (``+`` is concatenation).
 
 For the code managing the state see `State
-class <https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/State.h>`__
+class <https://github.com/ethereum/aleth/blob/master/libethereum/State.h>`__
 (also note free function ``commit`` there). Merkle Patricia Trie
 implemenation is in
-`TrieDB.h <https://github.com/ethereum/cpp-ethereum/blob/develop/libdevcore/TrieDB.h>`__.
+`TrieDB.h <https://github.com/ethereum/aleth/blob/master/libdevcore/TrieDB.h>`__.
 For lower-level code accessing the database itself see
-`OverlayDB <https://github.com/ethereum/cpp-ethereum/blob/develop/libdevcore/OverlayDB.h>`__
+`OverlayDB <https://github.com/ethereum/aleth/blob/master/libdevcore/OverlayDB.h>`__
 and
-`MemoryDB <https://github.com/ethereum/cpp-ethereum/blob/develop/libdevcore/MemoryDB.h>`__.
+`StateCacheDB` <https://github.com/ethereum/aleth/blob/master/libdevcore/StateCacheB.h>`__.

@@ -20,7 +20,7 @@
 #include "CommonNet.h"
 
 #include <libdevcore/Common.h>
-#include <libp2p/Capability.h>
+#include <libp2p/PeerCapability.h>
 
 namespace dev
 {
@@ -58,7 +58,7 @@ public:
     virtual void onPeerDisconnect(std::shared_ptr<WarpPeerCapability> _peer, Asking _asking) = 0;
 };
 
-class WarpPeerCapability : public p2p::Capability
+class WarpPeerCapability : public p2p::PeerCapability
 {
 public:
     WarpPeerCapability(std::weak_ptr<p2p::SessionFace> _s, std::string const& _name,
@@ -92,10 +92,10 @@ public:
 
     u256 snapshotNumber() const { return m_snapshotNumber; }
 
-    using p2p::Capability::disable;
+    using p2p::PeerCapability::disable;
 
 private:
-    using p2p::Capability::sealAndSend;
+    using p2p::PeerCapability::sealAndSend;
 
     bool interpretCapabilityPacket(unsigned _id, RLP const& _r) override;
 

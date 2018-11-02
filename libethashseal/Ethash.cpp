@@ -93,7 +93,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
     if (_parent)
     {
         // Check difficulty is correct given the two timestamps.
-        auto expected = calculateDifficulty(_bi, _parent);
+        auto expected = calculateEthashDifficulty(chainParams(), _bi, _parent);
         auto difficulty = _bi.difficulty();
         if (difficulty != expected)
             BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
@@ -145,71 +145,16 @@ void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase co
     }
 }
 
-u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
-{
-    u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
-    u256 gasLimit = _bi.gasLimit();
-    u256 boundDivisor = chainParams().gasLimitBoundDivisor;
-    if (gasLimit < gasFloorTarget)
-        return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
-    else
-        return max<u256>(gasFloorTarget, gasLimit - gasLimit / boundDivisor + 1 + (_bi.gasUsed() * 6 / 5) / boundDivisor);
-}
-
 void Ethash::manuallySubmitWork(const h256& _mixHash, Nonce _nonce)
 {
     m_farm.submitProof(EthashProofOfWork::Solution{_nonce, _mixHash}, nullptr);
 }
 
-u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _parent) const
-{
-    const unsigned c_expDiffPeriod = 100000;
-
-    if (!_bi.number())
-        throw GenesisBlockCannotBeCalculated();
-    auto const& minimumDifficulty = chainParams().minimumDifficulty;
-    auto const& difficultyBoundDivisor = chainParams().difficultyBoundDivisor;
-    auto const& durationLimit = chainParams().durationLimit;
-
-    bigint target;    // stick to a bigint for the target. Don't want to risk going negative.
-    if (_bi.number() < chainParams().homesteadForkBlock)
-        // Frontier-era difficulty adjustment
-        target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
-    else
-    {
-        bigint const timestampDiff = bigint(_bi.timestamp()) - _parent.timestamp();
-        bigint const adjFactor = _bi.number() < chainParams().byzantiumForkBlock ?
-            max<bigint>(1 - timestampDiff / 10, -99) : // Homestead-era difficulty adjustment
-            max<bigint>((_parent.hasUncles() ? 2 : 1) - timestampDiff / 9, -99); // Byzantium-era difficulty adjustment
-
-        target = _parent.difficulty() + _parent.difficulty() / 2048 * adjFactor;
-    }
-
-    bigint o = target;
-    unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number() + 1);
-
-    // EIP-649 modifies exponentialIceAgeBlockNumber
-    if (_bi.number() >= chainParams().byzantiumForkBlock)
-    {
-        if (exponentialIceAgeBlockNumber >= 3000000)
-            exponentialIceAgeBlockNumber -= 3000000;
-        else
-            exponentialIceAgeBlockNumber = 0;
-    }
-
-    unsigned periodCount = exponentialIceAgeBlockNumber / c_expDiffPeriod;
-    if (periodCount > 1)
-        o += (bigint(1) << (periodCount - 2));    // latter will eventually become huge, so ensure it's a bigint.
-
-    o = max<bigint>(minimumDifficulty, o);
-    return u256(min<bigint>(o, std::numeric_limits<u256>::max()));
-}
-
 void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
 {
     SealEngineFace::populateFromParent(_bi, _parent);
-    _bi.setDifficulty(calculateDifficulty(_bi, _parent));
-    _bi.setGasLimit(childGasLimit(_parent));
+    _bi.setDifficulty(calculateEthashDifficulty(chainParams(), _bi, _parent));
+    _bi.setGasLimit(calculateGasLimit(chainParams(), _bi));
 }
 
 bool Ethash::quickVerifySeal(BlockHeader const& _blockHeader) const

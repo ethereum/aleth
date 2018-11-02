@@ -4,6 +4,10 @@
 
 cmake_minimum_required(VERSION 3.5.1)
 
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmc/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/cmake/cable/.git)
+    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
+endif()
+
 include(cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
 include(CableBuildType)
@@ -41,11 +45,7 @@ HunterGate(
 )
 
 project(aleth)
-set(PROJECT_VERSION 1.5.0.dev2)
-
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmjit/.git)
-    message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
-endif()
+set(PROJECT_VERSION 1.5.0-alpha.4)
 
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
@@ -97,15 +97,12 @@ set(UTILS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/utils")
 configure_project()
 
 if(TESTS)
-    # Import binaryen library before hera to make it available also to testeth.
+    # Import binaryen library from hera for testeth.
+    # TODO: remove this and the submodule once testeth uses binaryen as a CLI tool.
     include(hera/cmake/ProjectBinaryen.cmake)
 endif()
 
 add_subdirectory(evmc)
-
-if (HERA)
-    add_subdirectory(hera)
-endif()
 
 #Global include path for all libs.
 include_directories("${CMAKE_SOURCE_DIR}")
@@ -124,10 +121,6 @@ add_subdirectory(libethashseal)
 
 add_subdirectory(libwebthree)
 add_subdirectory(libweb3jsonrpc)
-
-if (EVMJIT)
-    add_subdirectory(evmjit)
-endif()
 
 add_subdirectory(aleth)
 

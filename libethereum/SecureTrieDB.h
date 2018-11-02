@@ -17,13 +17,19 @@
 
 #pragma once
 
-#include <libdevcore/LevelDB.h>
-#include <libdevcore/db.h>
+#include <libdevcore/TrieDB.h>
 
 namespace dev
 {
-namespace db
+namespace eth
 {
-using DBImpl = LevelDB;
-}
+#if ETH_FATDB
+template <class KeyType, class DB>
+using SecureTrieDB = SpecificTrieDB<FatGenericTrieDB<DB>, KeyType>;
+#else
+template <class KeyType, class DB>
+using SecureTrieDB = SpecificTrieDB<HashedGenericTrieDB<DB>, KeyType>;
+#endif
+
+}  // namespace eth
 }  // namespace dev

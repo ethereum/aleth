@@ -78,6 +78,8 @@ public:
 		h256 const& _hash,
 		h256 const& _blockHash,
 		BlockNumber _blockNumber,
+		Address const& _from,
+		Address const& _to, 
 		unsigned _transactionIndex,
 		u256 const& _gasUsed,
 		Address const& _contractAddress = Address()
@@ -86,6 +88,8 @@ public:
 		m_hash(_hash),
 		m_blockHash(_blockHash),
 		m_blockNumber(_blockNumber),
+		m_from(_from),
+		m_to(_to),
 		m_transactionIndex(_transactionIndex),
 		m_gasUsed(_gasUsed),
 		m_contractAddress(_contractAddress)
@@ -105,6 +109,8 @@ public:
 	h256 const& hash() const { return m_hash; }
 	h256 const& blockHash() const { return m_blockHash; }
 	BlockNumber blockNumber() const { return m_blockNumber; }
+	Address const& from() const { return m_from; }
+	Address const& to() const { return m_to; }
 	unsigned transactionIndex() const { return m_transactionIndex; }
 	u256 const& gasUsed() const { return m_gasUsed; }
 	Address const& contractAddress() const { return m_contractAddress; }
@@ -114,6 +120,8 @@ private:
 	h256 m_hash;
 	h256 m_blockHash;
 	BlockNumber m_blockNumber;
+	Address m_from;
+	Address m_to;
 	unsigned m_transactionIndex = 0;
 	u256 m_gasUsed;
 	Address m_contractAddress;

@@ -626,7 +626,8 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
     }
 }
 
-shared_ptr<Capability> EthereumHost::newPeerCapability(shared_ptr<SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap)
+shared_ptr<PeerCapabilityFace> EthereumHost::newPeerCapability(
+    shared_ptr<SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap)
 {
     auto ret = HostCapability<EthereumPeer>::newPeerCapability(_s, _idOffset, _cap);
 

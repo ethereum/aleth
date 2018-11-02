@@ -361,6 +361,8 @@ LocalisedTransactionReceipt ClientBase::localisedTransactionReceipt(h256 const& 
         t.sha3(),
         tl.first,
         numberFromHash(tl.first),
+        t.from(),
+        t.to(), 
         tl.second,
         gasUsed,
         toAddress(t.from(), t.nonce()));

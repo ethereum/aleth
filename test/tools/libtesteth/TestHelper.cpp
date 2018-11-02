@@ -156,7 +156,6 @@ bool isDisabledNetwork(eth::Network _net)
     {
     case eth::Network::FrontierTest:
     case eth::Network::HomesteadTest:
-    case eth::Network::ConstantinopleTest:
     case eth::Network::FrontierToHomesteadAt5:
     case eth::Network::HomesteadToDaoAt5:
     case eth::Network::HomesteadToEIP150At5:
@@ -254,7 +253,7 @@ string exportLog(eth::LogEntries const& _logs)
     return toHexPrefixed(sha3(s.out()));
 }
 
-u256 toInt(json_spirit::mValue const& _v)
+u256 toU256(json_spirit::mValue const& _v)
 {
     switch (_v.type())
     {
@@ -272,7 +271,7 @@ u256 toInt(json_spirit::mValue const& _v)
     return 0;
 }
 
-int64_t toPositiveInt64(const json_spirit::mValue& _v)
+int64_t toInt64(json_spirit::mValue const& _v)
 {
     int64_t n = 0;
     switch (_v.type())
@@ -286,10 +285,30 @@ int64_t toPositiveInt64(const json_spirit::mValue& _v)
     default:
         cwarn << "Bad type for scalar: " << _v.type();
     }
+    return n;
+}
 
-    if (n < 0)
-        throw std::out_of_range{"unexpected negative value: " + std::to_string(n)};
-
+uint64_t toUint64(json_spirit::mValue const& _v)
+{
+    uint64_t n = 0;
+    switch (_v.type())
+    {
+    case json_spirit::str_type:
+    {
+        long long readval = std::stoll(_v.get_str(), nullptr, 0);
+        if (readval < 0)
+            BOOST_THROW_EXCEPTION(UnexpectedNegative() << errinfo_comment(
+                                      "TestOutputHelper::toUint64: unexpected negative value: " +
+                                      std::to_string(readval)));
+        n = readval;
+    }
+    break;
+    case json_spirit::int_type:
+        n = _v.get_uint64();
+        break;
+    default:
+        cwarn << "Bad type for scalar: " << _v.type();
+    }
     return n;
 }
 
@@ -523,11 +542,11 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o)
     auto expectedOutput = _o.at("out").get_str();
 
     if (expectedOutput.find("#") == 0)
-        BOOST_CHECK(_output.size() == toInt(expectedOutput.substr(1)));
+        BOOST_CHECK(_output.size() == toU256(expectedOutput.substr(1)));
     else if (_o.at("out").type() == json_spirit::array_type)
         for (auto const& d : _o.at("out").get_array())
         {
-            BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
+            BOOST_CHECK_MESSAGE(_output[j] == toU256(d), "Output byte [" << j << "] different!");
             ++j;
         }
     else if (expectedOutput.find("0x") == 0)
@@ -667,8 +686,7 @@ dev::eth::BlockHeader constructHeader(h256 const& _parentHash, h256 const& _sha3
     u256 const& _number, u256 const& _gasLimit, u256 const& _gasUsed, u256 const& _timestamp,
     bytes const& _extraData)
 {
-    RLPStream rlpStream;
-    rlpStream.appendList(15);
+    RLPStream rlpStream(15);
 
     rlpStream << _parentHash << _sha3Uncles << _author << _stateRoot << _transactionsRoot
               << _receiptsRoot << _logBloom << _difficulty << _number << _gasLimit << _gasUsed

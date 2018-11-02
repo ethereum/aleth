@@ -20,8 +20,9 @@
 branches:
   only:
     - master
-    - develop
+    - /release\/.+/
     - /v\d+\..+/
+    - /release\/.+/
     - appveyor
     - hunter
 os: Visual Studio 2015
@@ -45,7 +46,7 @@ install:
 before_build: |
   if not exist build mkdir build
   cd build
-  cmake -G "Visual Studio 14 2015 Win64" .. -DALETH_INTERPRETER_SHARED=ON
+  cmake -G "Visual Studio 14 2015 Win64" ..
 build_script: |
   cmake --build . --config %CONFIGURATION% --target package
 test_script:

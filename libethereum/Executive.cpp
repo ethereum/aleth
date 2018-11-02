@@ -407,6 +407,8 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
         newNonce += 1;
     m_s.setNonce(m_newAddress, newNonce);
 
+    m_s.clearStorage(m_newAddress);
+
     // Schedule _init execution if not empty.
     if (!_init.empty())
         m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin,
@@ -449,7 +451,6 @@ bool Executive::go(OnOpFunc const& _onOp)
             auto vm = VMFactory::create();
             if (m_isCreation)
             {
-                m_s.clearStorage(m_ext->myAddress);
                 auto out = vm->exec(m_gas, *m_ext, _onOp);
                 if (m_res)
                 {
@@ -497,15 +498,16 @@ bool Executive::go(OnOpFunc const& _onOp)
         }
         catch (InternalVMError const& _e)
         {
-            cwarn << "Internal VM Error (" << *boost::get_error_info<errinfo_evmcStatusCode>(_e) << ")\n"
-                  << diagnostic_information(_e);
+            cerror << "Internal VM Error (EVMC status code: "
+                 << *boost::get_error_info<errinfo_evmcStatusCode>(_e) << ")";
             revert();
             throw;
         }
         catch (Exception const& _e)
         {
             // TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
-            cwarn << "Unexpected exception in VM. There may be a bug in this implementation. " << diagnostic_information(_e);
+            cerror << "Unexpected exception in VM. There may be a bug in this implementation. "
+                 << diagnostic_information(_e);
             exit(1);
             // Another solution would be to reject this transaction, but that also
             // has drawbacks. Essentially, the amount of ram has to be increased here.
@@ -513,7 +515,7 @@ bool Executive::go(OnOpFunc const& _onOp)
         catch (std::exception const& _e)
         {
             // TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
-            cwarn << "Unexpected std::exception in VM. Not enough RAM? " << _e.what();
+            cerror << "Unexpected std::exception in VM. Not enough RAM? " << _e.what();
             exit(1);
             // Another solution would be to reject this transaction, but that also
             // has drawbacks. Essentially, the amount of ram has to be increased here.
@@ -532,14 +534,16 @@ bool Executive::go(OnOpFunc const& _onOp)
 
 bool Executive::finalize()
 {
-    // Accumulate refunds for suicides.
     if (m_ext)
+    {
+        // Accumulate refunds for suicides.
         m_ext->sub.refunds += m_ext->evmSchedule().suicideRefundGas * m_ext->sub.suicides.size();
 
-    // SSTORE refunds...
-    // must be done before the miner gets the fees.
-    m_refunded = m_ext ? min((m_t.gas() - m_gas) / 2, m_ext->sub.refunds) : 0;
-    m_gas += m_refunded;
+        // Refunds must be applied before the miner gets the fees.
+        assert(m_ext->sub.refunds >= 0);
+        int64_t maxRefund = (static_cast<int64_t>(m_t.gas()) - static_cast<int64_t>(m_gas)) / 2;
+        m_gas += min(maxRefund, m_ext->sub.refunds);
+    }
 
     if (m_t)
     {

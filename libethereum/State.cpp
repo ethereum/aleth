@@ -23,11 +23,10 @@
 
 #include "Block.h"
 #include "BlockChain.h"
-#include "Defaults.h"
 #include "ExtVM.h"
 #include "TransactionQueue.h"
 #include <libdevcore/Assertions.h>
-#include <libdevcore/DBImpl.h>
+#include <libdevcore/DBFactory.h>
 #include <libdevcore/TrieHash.h>
 #include <libevm/VMFactory.h>
 #include <boost/filesystem.hpp>
@@ -60,28 +59,33 @@ State::State(State const& _s):
 
 OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
-    fs::path path = _basePath.empty() ? Defaults::get()->m_dbPath : _basePath;
+    fs::path path = _basePath.empty() ? db::databasePath() : _basePath;
 
-    if (_we == WithExisting::Kill)
+    if (!db::isMemoryDB() && _we == WithExisting::Kill)
     {
         clog(VerbosityDebug, "statedb") << "Killing state database (WithExisting::Kill).";
         fs::remove_all(path / fs::path("state"));
     }
 
     path /= fs::path(toHex(_genesisHash.ref().cropped(0, 4))) / fs::path(toString(c_databaseVersion));
-    fs::create_directories(path);
-    DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
+    if (!db::isMemoryDB())
+    {
+        fs::create_directories(path);
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
+    }
 
     try
     {
-        std::unique_ptr<db::DatabaseFace> db(new db::DBImpl(path / fs::path("state")));
+		std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(path / fs::path("state"));
         clog(VerbosityTrace, "statedb") << "Opened state DB.";
         return OverlayDB(std::move(db));
     }
     catch (boost::exception const& ex)
     {
         cwarn << boost::diagnostic_information(ex) << '\n';
-        if (fs::space(path / fs::path("state")).available < 1024)
+        if (db::isMemoryDB())
+            throw;
+        else if (fs::space(path / fs::path("state")).available < 1024)
         {
             cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
             BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
@@ -418,18 +422,7 @@ u256 State::getNonce(Address const& _addr) const
 u256 State::storage(Address const& _id, u256 const& _key) const
 {
     if (Account const* a = account(_id))
-    {
-        auto mit = a->storageOverlay().find(_key);
-        if (mit != a->storageOverlay().end())
-            return mit->second;
-
-        // Not in the storage cache - go to the DB.
-        SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), a->baseRoot());          // promise we won't change the overlay! :)
-        string payload = memdb.at(_key);
-        u256 ret = payload.size() ? RLP(payload).toInt<u256>() : 0;
-        a->setStorageCache(_key, ret);
-        return ret;
-    }
+        return a->storageValue(_key, m_db);
     else
         return 0;
 }
@@ -438,6 +431,14 @@ void State::setStorage(Address const& _contract, u256 const& _key, u256 const& _
 {
     m_changeLog.emplace_back(_contract, _key, storage(_contract, _key));
     m_cache[_contract].setStorage(_key, _value);
+}
+
+u256 State::originalStorageValue(Address const& _contract, u256 const& _key) const
+{
+    if (Account const* a = account(_contract))
+        return a->originalStorageValue(_key, m_db);
+    else
+        return 0;
 }
 
 void State::clearStorage(Address const& _contract)
@@ -805,4 +806,4 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
 
 
 template AddressHash dev::eth::commit<OverlayDB>(AccountMap const& _cache, SecureTrieDB<Address, OverlayDB>& _state);
-template AddressHash dev::eth::commit<MemoryDB>(AccountMap const& _cache, SecureTrieDB<Address, MemoryDB>& _state);
+template AddressHash dev::eth::commit<StateCacheDB>(AccountMap const& _cache, SecureTrieDB<Address, StateCacheDB>& _state);

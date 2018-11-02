@@ -27,6 +27,12 @@ void destroy(evmc_instance* _instance)
     (void)_instance;
 }
 
+evmc_capabilities_flagset getCapabilities(evmc_instance* _instance) noexcept
+{
+    (void)_instance;
+    return EVMC_CAPABILITY_EVM1;
+}
+
 void delete_output(const evmc_result* result)
 {
     delete[] result->output_data;
@@ -113,6 +119,7 @@ extern "C" evmc_instance* evmc_create_interpreter() noexcept
         aleth_get_buildinfo()->project_version,
         ::destroy,
         ::execute,
+        getCapabilities,
         nullptr,  // set_tracer
         nullptr,  // set_option
     };
@@ -245,10 +252,7 @@ void VM::fetchInstruction()
 evmc_tx_context const& VM::getTxContext()
 {
     if (!m_tx_context)
-    {
-        m_tx_context.emplace();
-        m_context->fn_table->get_tx_context(&m_tx_context.value(), m_context);
-    }
+        m_tx_context.emplace(m_context->host->get_tx_context(m_context));
     return m_tx_context.value();
 }
 
@@ -369,21 +373,20 @@ void VM::interpretCases()
             evmc_address destination = toEvmC(asAddress(m_SP[0]));
 
             // After EIP158 zero-value suicides do not have to pay account creation gas.
-            evmc_uint256be rawBalance;
-            m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
-            u256 balance = fromEvmC(rawBalance);
+            u256 const balance =
+                fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
             if (balance > 0 || m_rev < EVMC_SPURIOUS_DRAGON)
             {
                 // After EIP150 hard fork charge additional cost of sending
                 // ethers to non-existing account.
                 int destinationExists =
-                    m_context->fn_table->account_exists(m_context, &destination);
+                    m_context->host->account_exists(m_context, &destination);
                 if (m_rev >= EVMC_TANGERINE_WHISTLE && !destinationExists)
                     m_runGas += VMSchedule::callNewAccount;
             }
 
             updateIOGas();
-            m_context->fn_table->selfdestruct(m_context, &m_message->destination, &destination);
+            m_context->host->selfdestruct(m_context, &m_message->destination, &destination);
             m_bounce = nullptr;
         }
         BREAK
@@ -458,7 +461,7 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            m_context->fn_table->emit_log(
+            m_context->host->emit_log(
                 m_context, &m_message->destination, data, dataSize, nullptr, 0);
         }
         NEXT
@@ -478,7 +481,7 @@ void VM::interpretCases()
             evmc_uint256be topics[] = {toEvmC(m_SP[2])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->fn_table->emit_log(
+            m_context->host->emit_log(
                 m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
@@ -498,7 +501,7 @@ void VM::interpretCases()
             evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->fn_table->emit_log(
+            m_context->host->emit_log(
                 m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
@@ -518,7 +521,7 @@ void VM::interpretCases()
             evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->fn_table->emit_log(
+            m_context->host->emit_log(
                 m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
@@ -539,7 +542,7 @@ void VM::interpretCases()
                 toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4]), toEvmC(m_SP[5])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->fn_table->emit_log(
+            m_context->host->emit_log(
                 m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
@@ -903,9 +906,7 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
-            evmc_uint256be rawBalance;
-            m_context->fn_table->get_balance(&rawBalance, m_context, &address);
-            m_SPP[0] = fromEvmC(rawBalance);
+            m_SPP[0] = fromEvmC(m_context->host->get_balance(m_context, &address));
         }
         NEXT
 
@@ -989,7 +990,7 @@ void VM::interpretCases()
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
 
-            m_SPP[0] = m_context->fn_table->get_code_size(m_context, &address);
+            m_SPP[0] = m_context->host->get_code_size(m_context, &address);
         }
         NEXT
 
@@ -1031,10 +1032,7 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
-
-            evmc_uint256be hash;
-            m_context->fn_table->get_code_hash(&hash, m_context, &address);
-            m_SPP[0] = fromEvmC(hash);
+            m_SPP[0] = fromEvmC(m_context->host->get_code_hash(m_context, &address));
         }
         NEXT
 
@@ -1066,7 +1064,7 @@ void VM::interpretCases()
                 m_SP[2] > codeOffsetMax ? codeOffsetMax : static_cast<size_t>(m_SP[2]);
             size_t size = static_cast<size_t>(copyMemSize);
 
-            size_t numCopied = m_context->fn_table->copy_code(
+            size_t numCopied = m_context->host->copy_code(
                 m_context, &address, codeOffset, &m_mem[memoryOffset], size);
 
             std::fill_n(&m_mem[memoryOffset + numCopied], size - numCopied, 0);
@@ -1094,9 +1092,7 @@ void VM::interpretCases()
 
             if (number < blockNumber && number >= std::max(int64_t(256), blockNumber) - 256)
             {
-                evmc_uint256be hash;
-                m_context->fn_table->get_block_hash(&hash, m_context, int64_t(number));
-                m_SPP[0] = fromEvmC(hash);
+                m_SPP[0] = fromEvmC(m_context->host->get_block_hash(m_context, int64_t(number)));
             }
             else
                 m_SPP[0] = 0;
@@ -1344,9 +1340,8 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_uint256be key = toEvmC(m_SP[0]);
-            evmc_uint256be value;
-            m_context->fn_table->get_storage(&value, m_context, &m_message->destination, &key);
-            m_SPP[0] = fromEvmC(value);
+            m_SPP[0] =
+                fromEvmC(m_context->host->get_storage(m_context, &m_message->destination, &key));
         }
         NEXT
 
@@ -1356,22 +1351,25 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            static_assert(
-                VMSchedule::sstoreResetGas <= VMSchedule::sstoreSetGas, "Wrong SSTORE gas costs");
-            m_runGas = VMSchedule::sstoreResetGas;  // Charge the modification cost up front.
-            updateIOGas();
-
-            evmc_uint256be key = toEvmC(m_SP[0]);
-            evmc_uint256be value = toEvmC(m_SP[1]);
-            auto status =
-                m_context->fn_table->set_storage(m_context, &m_message->destination, &key, &value);
+            evmc_uint256be const key = toEvmC(m_SP[0]);
+            evmc_uint256be const value = toEvmC(m_SP[1]);
+            auto const status =
+                m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
 
             if (status == EVMC_STORAGE_ADDED)
+                m_runGas = VMSchedule::sstoreSetGas;
+            else if (status == EVMC_STORAGE_MODIFIED || status == EVMC_STORAGE_DELETED)
+                m_runGas = VMSchedule::sstoreResetGas;
+            else if (status == EVMC_STORAGE_UNCHANGED && m_rev < EVMC_CONSTANTINOPLE)
+                m_runGas = VMSchedule::sstoreResetGas;
+            else
             {
-                // Charge additional amount for added storage item.
-                m_runGas = VMSchedule::sstoreSetGas - VMSchedule::sstoreResetGas;
-                updateIOGas();
+                assert(status == EVMC_STORAGE_UNCHANGED || status == EVMC_STORAGE_MODIFIED_AGAIN);
+                assert(m_rev >= EVMC_CONSTANTINOPLE);
+                m_runGas = VMSchedule::sstoreUnchangedGas;
             }
+
+            updateIOGas();
         }
         NEXT
 

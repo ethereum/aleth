@@ -1,23 +1,22 @@
 /*
-This file is part of cpp-ethereum.
+		This file is part of cpp-ethereum.
 
-cpp-ethereum is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+		cpp-ethereum is free software: you can redistribute it and/or modify
+		it under the terms of the GNU General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
 
-cpp-ethereum is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+		cpp-ethereum is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+		You should have received a copy of the GNU General Public License
+		along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../../GenesisInfo.h"
 
-static std::string const c_genesisInfoConstantinopleTransitionTest = std::string() +
-R"E(
+static std::string const c_genesisInfoConstantinopleNoProofTest = R"E(
 {
 	"sealEngine": "NoProof",
 	"params": {
@@ -27,7 +26,7 @@ R"E(
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x00",
 		"byzantiumForkBlock": "0x00",
-		"constantinopleForkBlock": "0x02",
+		"constantinopleForkBlock": "0x00",
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,
@@ -55,10 +54,10 @@ R"E(
 		"0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
 		"0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
 		"0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-		"0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp", "startingBlock": "0x02" } },
-		"0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "startingBlock": "0x02", "linear": { "base": 500, "word": 0 } } },
-		"0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "startingBlock": "0x02", "linear": { "base": 40000, "word": 0 } } },
-		"0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product", "startingBlock": "0x02" } }
+		"0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" } },
+		"0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
+		"0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
+		"0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" } }
 	}
 }
 )E";

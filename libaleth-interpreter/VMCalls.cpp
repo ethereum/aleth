@@ -116,7 +116,11 @@ void VM::caseCreate()
 
     u256 salt;
     if (m_OP == Instruction::CREATE2)
+    {
         salt = m_SP[3];
+        // charge for hashing initCode = GSHA3WORD * ceil(len(init_code) / 32)
+        m_runGas += toInt63((u512{initSize} + 31) / 32 * uint64_t{VMSchedule::sha3WordGas});
+    }
 
     updateMem(memNeed(initOff, initSize));
     updateIOGas();
@@ -124,9 +128,7 @@ void VM::caseCreate()
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
-    evmc_uint256be rawBalance;
-    m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
-    u256 balance = fromEvmC(rawBalance);
+    u256 const balance = fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
     if (balance >= endowment && m_message->depth < 1024)
     {
         evmc_message msg = {};
@@ -146,8 +148,7 @@ void VM::caseCreate()
         msg.kind = m_OP == Instruction::CREATE ? EVMC_CREATE : EVMC_CREATE2;  // FIXME: In EVMC move the kind to the top.
         msg.value = toEvmC(endowment);
 
-        evmc_result result;
-        m_context->fn_table->call(&result, m_context, &msg);
+        evmc_result result = m_context->host->call(m_context, &msg);
 
         if (result.status_code == EVMC_SUCCESS)
             m_SPP[0] = fromAddress(fromEvmC(result.create_address));
@@ -177,8 +178,7 @@ void VM::caseCall()
     bytesRef output;
     if (caseCallSetup(msg, output))
     {
-        evmc_result result;
-        m_context->fn_table->call(&result, m_context, &msg);
+        evmc_result result = m_context->host->call(m_context, &msg);
 
         m_returnData.assign(result.output_data, result.output_data + result.output_size);
         bytesConstRef{&m_returnData}.copyTo(output);
@@ -222,7 +222,7 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
     evmc_address destination = toEvmC(asAddress(m_SP[1]));
-    int destinationExists = m_context->fn_table->account_exists(m_context, &destination);
+    int destinationExists = m_context->host->account_exists(m_context, &destination);
 
     if (m_OP == Instruction::CALL && !destinationExists)
     {
@@ -272,9 +272,8 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
             o_msg.value = toEvmC(m_SP[2]);
             o_msg.gas += VMSchedule::callStipend;
             {
-                evmc_uint256be rawBalance;
-                m_context->fn_table->get_balance(&rawBalance, m_context, &m_message->destination);
-                u256 balance = fromEvmC(rawBalance);
+                u256 const balance =
+                    fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
                 balanceOk = balance >= value;
             }
         }

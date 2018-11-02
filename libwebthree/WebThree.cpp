@@ -17,7 +17,6 @@
 
 #include "WebThree.h"
 
-#include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
 #include <libethashseal/EthashClient.h>
@@ -42,9 +41,6 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
     NetworkConfig const& _n, bytesConstRef _network, bool _testing)
   : m_clientVersion(_clientVersion), m_net(_clientVersion, _n, _network)
 {
-    if (_dbPath.size())
-        Defaults::setDBPath(_dbPath);
-
     if (_interfaces.count("eth"))
     {
         if (_testing)
@@ -93,21 +89,6 @@ std::string WebThreeDirect::composeClientVersion(std::string const& _client)
     const auto* buildinfo = aleth_get_buildinfo();
     return _client + "/" + buildinfo->project_version + "/" + buildinfo->system_name + "/" +
            buildinfo->compiler_id + buildinfo->compiler_version + "/" + buildinfo->build_type;
-}
-
-p2p::NetworkConfig const& WebThreeDirect::networkConfig() const
-{
-    return m_net.networkConfig();
-}
-
-void WebThreeDirect::setNetworkConfig(p2p::NetworkConfig const& _n, bool _dropPeers)
-{
-    auto had = isNetworkStarted();
-    if (had)
-        stopNetwork();
-    m_net.setNetworkConfig(_n, _dropPeers);
-    if (had)
-        startNetwork();
 }
 
 std::vector<PeerSessionInfo> WebThreeDirect::peers()

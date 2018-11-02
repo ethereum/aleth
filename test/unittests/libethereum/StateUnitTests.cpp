@@ -21,7 +21,6 @@
 #include <libethereum/BlockChain.h>
 #include <libethereum/Block.h>
 #include <libethcore/BasicAuthority.h>
-#include <libethereum/Defaults.h>
 
 using namespace std;
 using namespace dev;

@@ -87,10 +87,11 @@ void fillDifficulty(boost::filesystem::path const& _testFileFullName, Ethash& _s
 				replaceMap["[PUNCLS]"] = toCompactHexPrefixed(parent.sha3Uncles());
 				replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
 				replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
-				replaceMap["[CDIFF]"] = toCompactHexPrefixed(_sealEngine.calculateDifficulty(current, parent));
+                replaceMap["[CDIFF]"] = toCompactHexPrefixed(
+                    calculateEthashDifficulty(_sealEngine.chainParams(), current, parent));
 
-				test::RandomCodeOptions defaultOptions;
-				test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap, defaultOptions);
+                test::RandomCodeOptions defaultOptions;
+                test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap, defaultOptions);
 				finalTest << tmptest;
 			}
 		}
@@ -127,18 +128,18 @@ void testDifficulty(fs::path const& _testFileFullName, Ethash& _sealEngine)
 		BOOST_REQUIRE_MESSAGE(o.count("currentDifficulty") > 0, testname + " missing currentDifficulty field");
 
 		BlockHeader parent;
-		parent.setTimestamp(test::toPositiveInt64(o["parentTimestamp"]));
-		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
-		parent.setNumber(test::toPositiveInt64(o["currentBlockNumber"]) - 1);
-		parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
+        parent.setTimestamp(test::toUint64(o["parentTimestamp"]));
+        parent.setDifficulty(test::toU256(o["parentDifficulty"]));
+        parent.setNumber(test::toUint64(o["currentBlockNumber"]) - 1);
+        parent.setSha3Uncles(h256(o["parentUncles"].get_str()));
 
-		BlockHeader current;
-		current.setTimestamp(test::toPositiveInt64(o["currentTimestamp"]));
-		current.setNumber(test::toPositiveInt64(o["currentBlockNumber"]));
+        BlockHeader current;
+        current.setTimestamp(test::toUint64(o["currentTimestamp"]));
+        current.setNumber(test::toUint64(o["currentBlockNumber"]));
 
-		u256 difficulty = _sealEngine.calculateDifficulty(current, parent);
-		BOOST_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));
-	}
+        u256 difficulty = calculateEthashDifficulty(_sealEngine.chainParams(), current, parent);
+        BOOST_CHECK_EQUAL(difficulty, test::toU256(o["currentDifficulty"]));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE(DifficultyTests)
@@ -193,6 +194,19 @@ BOOST_AUTO_TEST_CASE(difficultyByzantium)
 		fillDifficulty(testFileFullName, sealEngine);
 
 	testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyConstantinople)
+{
+    fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyConstantinople.json");
+
+    Ethash sealEngine;
+    sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::ConstantinopleTest)));
+
+    if (dev::test::Options::get().filltests)
+        fillDifficulty(testFileFullName, sealEngine);
+
+    testDifficulty(testFileFullName, sealEngine);
 }
 
 BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
@@ -259,10 +273,11 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 						replaceMap["[PUNCLS]"] = toCompactHexPrefixed(parent.sha3Uncles());
 						replaceMap["[СSTAMP]"] = toCompactHexPrefixed(cStamp);
 						replaceMap["[CNUM]"] = toCompactHexPrefixed(cNum);
-						replaceMap["[CDIFF]"] = toCompactHexPrefixed(sealEngine.calculateDifficulty(current, parent));
+                        replaceMap["[CDIFF]"] = toCompactHexPrefixed(
+                            calculateEthashDifficulty(sealEngine.chainParams(), current, parent));
 
-						test::RandomCodeOptions defaultOptions;
-						test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap, defaultOptions);
+                        test::RandomCodeOptions defaultOptions;
+                        test::RandomCode::get().parseTestWithTypes(tmptest, replaceMap, defaultOptions);
 						finalTest << tmptest;
 					}
 

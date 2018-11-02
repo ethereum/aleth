@@ -101,7 +101,7 @@ void OverlayDB::commit()
 
 bytes OverlayDB::lookupAux(h256 const& _h) const
 {
-    bytes ret = MemoryDB::lookupAux(_h);
+    bytes ret = StateCacheDB::lookupAux(_h);
     if (!ret.empty() || !m_db)
         return ret;
 
@@ -124,7 +124,7 @@ void OverlayDB::rollback()
 
 std::string OverlayDB::lookup(h256 const& _h) const
 {
-    std::string ret = MemoryDB::lookup(_h);
+    std::string ret = StateCacheDB::lookup(_h);
     if (!ret.empty() || !m_db)
         return ret;
 
@@ -133,7 +133,7 @@ std::string OverlayDB::lookup(h256 const& _h) const
 
 bool OverlayDB::exists(h256 const& _h) const
 {
-    if (MemoryDB::exists(_h))
+    if (StateCacheDB::exists(_h))
         return true;
     return m_db && m_db->exists(toSlice(_h));
 }
@@ -141,7 +141,7 @@ bool OverlayDB::exists(h256 const& _h) const
 void OverlayDB::kill(h256 const& _h)
 {
 #if ETH_PARANOIA || 1
-    if (!MemoryDB::kill(_h))
+    if (!StateCacheDB::kill(_h))
     {
         if (m_db)
         {
@@ -158,7 +158,7 @@ void OverlayDB::kill(h256 const& _h)
         }
     }
 #else
-    MemoryDB::kill(_h);
+    StateCacheDB::kill(_h);
 #endif
 }
 

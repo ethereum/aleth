@@ -14,46 +14,51 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #pragma once
 
-#include "VMFace.h"
+#include "Common.h"
+#include "db.h"
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options/options_description.hpp>
 
 namespace dev
 {
-namespace eth
+namespace db
 {
-enum class VMKind
+enum class DatabaseKind
 {
-    Interpreter,
-    Legacy,
-    DLL
+    LevelDB,
+    MemoryDB
 };
 
-/// Returns the EVMC options parsed from command line.
-std::vector<std::pair<std::string, std::string>>& evmcOptions() noexcept;
-
-/// Provide a set of program options related to VMs.
+/// Provide a set of program options related to databases
 ///
 /// @param _lineLength  The line length for description text wrapping, the same as in
 ///                     boost::program_options::options_description::options_description().
-boost::program_options::options_description vmProgramOptions(
+boost::program_options::options_description databaseProgramOptions(
     unsigned _lineLength = boost::program_options::options_description::m_default_line_length);
 
-using VMPtr = std::unique_ptr<VMFace, void (*)(VMFace*)>;
+bool isMemoryDB();
+DatabaseKind databaseKind();
+void setDatabaseKindByName(std::string const& _name);
+void setDatabaseKind(DatabaseKind _kind);
+boost::filesystem::path databasePath();
 
-class VMFactory
+class DBFactory
 {
 public:
-    VMFactory() = delete;
-    ~VMFactory() = delete;
+    DBFactory() = delete;
+    ~DBFactory() = delete;
 
-    /// Creates a VM instance of the global kind (controlled by the --vm command line option).
-    static VMPtr create();
+    static std::unique_ptr<DatabaseFace> create();
+    static std::unique_ptr<DatabaseFace> create(boost::filesystem::path const& _path);
+    static std::unique_ptr<DatabaseFace> create(DatabaseKind _kind);
+    static std::unique_ptr<DatabaseFace> create(
+        DatabaseKind _kind, boost::filesystem::path const& _path);
 
-    /// Creates a VM instance of the kind provided.
-    static VMPtr create(VMKind _kind);
+private:
 };
-}  // namespace eth
+}  // namespace db
 }  // namespace dev

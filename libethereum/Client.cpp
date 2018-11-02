@@ -21,12 +21,12 @@
 
 #include "Client.h"
 #include "Block.h"
-#include "Defaults.h"
 #include "EthereumHost.h"
 #include "Executive.h"
 #include "SnapshotStorage.h"
 #include "TransactionQueue.h"
 #include <libdevcore/Log.h>
+#include <libdevcore/DBFactory.h>
 #include <libp2p/Host.h>
 #include <boost/filesystem.hpp>
 #include <chrono>
@@ -152,8 +152,6 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
         m_warpHost = warpHostCapability;
     }
 
-    if (_dbPath.size())
-        Defaults::setDBPath(_dbPath);
     doWork(false);
 }
 
@@ -292,7 +290,7 @@ void Client::reopenChain(ChainParams const& _p, WithExisting _we)
 
         m_stateDB = OverlayDB();
         bc().reopen(_p, _we);
-        m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), _we);
+        m_stateDB = State::openDB(db::databasePath(), bc().genesisHash(), _we);
 
         m_preSeal = bc().genesisBlock(m_stateDB);
         m_preSeal.setAuthor(_p.author);

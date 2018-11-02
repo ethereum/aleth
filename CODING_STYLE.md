@@ -1,4 +1,4 @@
-# C++ Ethereum Coding Style
+# Aleth Coding Style
 
 ## Code Formatting
 

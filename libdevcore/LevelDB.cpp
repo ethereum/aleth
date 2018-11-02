@@ -172,7 +172,7 @@ void LevelDB::commit(std::unique_ptr<WriteBatchFace> _batch)
     checkStatus(status);
 }
 
-void LevelDB::forEach(std::function<bool(Slice, Slice)> f) const
+void LevelDB::forEach(std::function<bool(Slice, Slice)> _f) const
 {
     std::unique_ptr<leveldb::Iterator> itr(m_db->NewIterator(m_readOptions));
     if (itr == nullptr)
@@ -186,7 +186,7 @@ void LevelDB::forEach(std::function<bool(Slice, Slice)> f) const
         auto const dbValue = itr->value();
         Slice const key(dbKey.data(), dbKey.size());
         Slice const value(dbValue.data(), dbValue.size());
-        keepIterating = f(key, value);
+        keepIterating = _f(key, value);
     }
 }
 

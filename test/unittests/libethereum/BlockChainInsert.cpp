@@ -152,8 +152,6 @@ void syncStateTrie(bytesConstRef _block, OverlayDB const& _dbSource, OverlayDB& 
 BOOST_AUTO_TEST_CASE(bcBasicInsert)
 {
     BasicAuthority::init();
-    BasicAuthority::init();
-
     KeyPair me = Secret(sha3("Gav Wood"));
     KeyPair myMiner = Secret(sha3("Gav's Miner"));
 

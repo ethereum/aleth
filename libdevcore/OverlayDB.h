@@ -25,12 +25,12 @@
 #include <libdevcore/db.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
-#include <libdevcore/MemoryDB.h>
+#include <libdevcore/StateCacheDB.h>
 
 namespace dev
 {
 
-class OverlayDB: public MemoryDB
+class OverlayDB: public StateCacheDB
 {
 public:
     explicit OverlayDB(std::unique_ptr<db::DatabaseFace> _db = nullptr)
@@ -59,7 +59,7 @@ public:
 	bytes lookupAux(h256 const& _h) const;
 
 private:
-	using MemoryDB::clear;
+	using StateCacheDB::clear;
 
     std::shared_ptr<db::DatabaseFace> m_db;
 };

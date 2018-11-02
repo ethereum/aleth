@@ -25,7 +25,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libp2p/Common.h>
 #include <libp2p/Host.h>
 #include <libp2p/Session.h>
-#include <libp2p/Capability.h>
+#include <libp2p/PeerCapability.h>
 #include <libp2p/HostCapability.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
@@ -41,12 +41,12 @@ struct P2PFixture: public TestOutputHelperFixture
     ~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestCapability: public Capability
+class TestCapability : public PeerCapability
 {
 public:
-    TestCapability(std::weak_ptr<SessionFace> _s, std::string const& _name, unsigned _messageCount,
-        unsigned _idOffset, CapDesc const&)
-      : Capability(_s, _name, _messageCount, _idOffset), m_cntReceivedMessages(0), m_testSum(0)
+    TestCapability(weak_ptr<SessionFace> _s, std::string const& _name,
+        unsigned _messageCount, unsigned _idOffset, CapDesc const&)
+      : PeerCapability(move(_s), _name, _messageCount, _idOffset), m_cntReceivedMessages(0), m_testSum(0)
     {}
     int countReceivedMessages() { return m_cntReceivedMessages; }
     int testSum() { return m_testSum; }

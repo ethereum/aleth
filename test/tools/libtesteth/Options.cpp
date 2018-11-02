@@ -18,6 +18,7 @@
  * Class for handling testeth custom options
  */
 
+#include <libdevcore/DBFactory.h>
 #include <libevm/VMFactory.h>
 #include <libweb3jsonrpc/Debug.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
@@ -28,6 +29,7 @@
 
 using namespace std;
 using namespace dev::test;
+using namespace dev::db;
 using namespace dev::eth;
 
 namespace
@@ -68,6 +70,7 @@ void printHelp()
     cout << setw(30) << "--options <PathTo.json>" << setw(25) << "Use following options file for random code generation\n";
     //cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
 
+    cout << setw(30) << "--diskdb" << setw(25) << "Use a disk-backed block and state database for all tests\n";
     cout << setw(30) << "--help" << setw(25) << "Display list of command arguments\n";
     cout << setw(30) << "--version" << setw(25) << "Display build information\n";
 }
@@ -157,11 +160,20 @@ Options::Options(int argc, const char** argv)
             printVersion();
             exit(0);
         }
-        else if (arg == "--vm" || arg == "--evmc")
+        else if (arg == "--vm")
         {
             // Skip VM options because they are handled by vmProgramOptions().
             throwIfNoArgumentFollows();
             ++i;
+        }
+        else if (arg == "--evmc")
+        {
+            // Skip VM options because they are handled by vmProgramOptions().
+            throwIfNoArgumentFollows();
+
+            // --evmc is a multitoken option so skip all tokens.
+            while (i + 1 < argc && argv[i + 1][0] != '-')
+                ++i;
         }
         else if (arg == "--vmtrace")
         {
@@ -310,11 +322,13 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--seed")
         {
             throwIfNoArgumentFollows();
-            u256 input = toInt(argv[++i]);
+            u256 input = toU256(argv[++i]);
             if (input > std::numeric_limits<uint64_t>::max())
                 BOOST_WARN("Seed is > u64. Using u64_max instead.");
             randomTestSeed = static_cast<uint64_t>(min<u256>(std::numeric_limits<uint64_t>::max(), input));
         }
+        else if (arg == "--diskdb")
+            useDiskDatabase = true;
         else if (seenSeparator)
         {
             cerr << "Unknown option: " + arg << "\n";
@@ -322,7 +336,7 @@ Options::Options(int argc, const char** argv)
         }
     }
 
-    //check restrickted options
+    //check restricted options
     if (createRandomTest)
     {
         if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || singleTest || all ||
@@ -344,6 +358,12 @@ Options::Options(int argc, const char** argv)
 
     // If no verbosity is set. use default
     setVerbosity(verbosity == -1 ? 1 : verbosity);
+
+    // Set which database to use for block and state storage
+    if (useDiskDatabase)
+        setDatabaseKind(DatabaseKind::LevelDB);
+    else
+        setDatabaseKind(DatabaseKind::MemoryDB);
 }
 
 Options const& Options::get(int argc, const char** argv)

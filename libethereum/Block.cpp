@@ -31,7 +31,6 @@
 #include <libethcore/SealEngine.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
-#include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
 #include "TransactionQueue.h"
@@ -705,15 +704,15 @@ void Block::updateBlockhashContract()
 {
     u256 const& blockNumber = info().number();
 
-    u256 const& constantinopleForkBlock = m_sealEngine->chainParams().constantinopleForkBlock;
-    if (blockNumber == constantinopleForkBlock)
+    u256 const& forkBlock = m_sealEngine->chainParams().experimentalForkBlock;
+    if (blockNumber == forkBlock)
     {
         m_state.createContract(c_blockhashContractAddress);
         m_state.setCode(c_blockhashContractAddress, bytes(c_blockhashContractCode));
         m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
     }
 
-    if (blockNumber >= constantinopleForkBlock)
+    if (blockNumber >= forkBlock)
     {
         DummyLastBlockHashes lastBlockHashes; // assuming blockhash contract won't need BLOCKHASH itself
         Executive e(*this, lastBlockHashes);

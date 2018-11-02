@@ -187,8 +187,8 @@ void ChainParams::populateFromGenesis(bytes const& _genesisRLP, AccountMap const
 
 h256 ChainParams::calculateStateRoot(bool _force) const
 {
-    MemoryDB db;
-    SecureTrieDB<Address, MemoryDB> state(&db);
+    StateCacheDB db;
+    SecureTrieDB<Address, StateCacheDB> state(&db);
     state.init();
     if (!stateRoot || _force)
     {

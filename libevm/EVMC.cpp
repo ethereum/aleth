@@ -13,12 +13,26 @@ namespace eth
 EVM::EVM(evmc_instance* _instance) noexcept : m_instance(_instance)
 {
     assert(m_instance != nullptr);
-    assert(m_instance->abi_version == EVMC_ABI_VERSION);
+    assert(evmc_is_abi_compatible(m_instance));
 
     // Set the options.
-    if (m_instance->set_option)
-        for (auto& pair : evmcOptions())
-            m_instance->set_option(m_instance, pair.first.c_str(), pair.second.c_str());
+    for (auto& pair : evmcOptions())
+        if (evmc_set_option(m_instance, pair.first.c_str(), pair.second.c_str()) != 1)
+            cwarn << "Failed to set EVMC parameter '" << pair.first << "'";
+}
+
+/// Handy wrapper for evmc_execute().
+EVM::Result EVM::execute(ExtVMFace& _ext, int64_t gas)
+{
+    auto mode = toRevision(_ext.evmSchedule());
+    evmc_call_kind kind = _ext.isCreate ? EVMC_CREATE : EVMC_CALL;
+    uint32_t flags = _ext.staticCall ? EVMC_STATIC : 0;
+    assert(flags != EVMC_STATIC || kind == EVMC_CALL);  // STATIC implies a CALL.
+    evmc_message msg = {kind, flags, static_cast<int32_t>(_ext.depth), gas, toEvmC(_ext.myAddress),
+        toEvmC(_ext.caller), _ext.data.data(), _ext.data.size(), toEvmC(_ext.value),
+        toEvmC(0x0_cppui256)};
+    return EVM::Result{
+        evmc_execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
 }
 
 owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp)
@@ -88,7 +102,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     }
 }
 
-evmc_revision toRevision(EVMSchedule const& _schedule)
+evmc_revision EVM::toRevision(EVMSchedule const& _schedule)
 {
     if (_schedule.haveCreate2)
         return EVMC_CONSTANTINOPLE;

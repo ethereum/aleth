@@ -70,7 +70,7 @@ bool isPublicAddress(bi::address const& _addressToCheck);
 bool isPublicAddress(std::string const& _addressToCheck);
 
 class UPnP;
-class Capability;
+class PeerCapabilityFace;
 class Host;
 class Session;
 

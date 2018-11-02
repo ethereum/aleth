@@ -17,20 +17,20 @@
 
 #pragma once
 
-#include <array>
-#include <unordered_map>
-#include <libdevcore/Common.h>
-#include <libdevcore/RLP.h>
-#include <libdevcore/TrieDB.h>
-#include <libdevcore/OverlayDB.h>
-#include <libethcore/Exceptions.h>
-#include <libethcore/BlockHeader.h>
-#include <libethereum/CodeSizeCache.h>
-#include <libevm/ExtVMFace.h>
 #include "Account.h"
+#include "GasPricer.h"
+#include "SecureTrieDB.h"
 #include "Transaction.h"
 #include "TransactionReceipt.h"
-#include "GasPricer.h"
+#include <libdevcore/Common.h>
+#include <libdevcore/OverlayDB.h>
+#include <libdevcore/RLP.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/Exceptions.h>
+#include <libethereum/CodeSizeCache.h>
+#include <libevm/ExtVMFace.h>
+#include <array>
+#include <unordered_map>
 
 namespace dev
 {
@@ -73,14 +73,8 @@ enum class Permanence
 {
     Reverted,
     Committed,
-    Uncommitted	///< Uncommitted state for change log readings in tests.
+    Uncommitted  ///< Uncommitted state for change log readings in tests.
 };
-
-#if ETH_FATDB
-template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<FatGenericTrieDB<DB>, KeyType>;
-#else
-template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<HashedGenericTrieDB<DB>, KeyType>;
-#endif
 
 DEV_SIMPLE_EXCEPTION(InvalidAccountStartNonceInState);
 DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
@@ -266,6 +260,11 @@ public:
     /// Set the value of a storage position of an account.
     void setStorage(Address const& _contract, u256 const& _location, u256 const& _value);
 
+    /// Get the original value of a storage position of an account (before modifications saved in
+    /// account cache).
+    /// @returns 0 if no account exists at that address.
+    u256 originalStorageValue(Address const& _contract, u256 const& _key) const;
+
     /// Clear the storage root hash of an account to the hash of the empty trie.
     void clearStorage(Address const& _contract);
 
@@ -322,7 +321,7 @@ public:
     u256 const& requireAccountStartNonce() const;
     void noteAccountStartNonce(u256 const& _actual);
 
-    /// Create a savepoint in the state changelog.	///
+    /// Create a savepoint in the state changelog.
     /// @return The savepoint index that can be used in rollback() function.
     size_t savepoint() const;
 
@@ -352,12 +351,19 @@ private:
     /// exception occurred.
     bool executeTransaction(Executive& _e, Transaction const& _t, OnOpFunc const& _onOp);
 
-    OverlayDB m_db;								///< Our overlay for the state tree.
-    SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
-    mutable std::unordered_map<Address, Account> m_cache;	///< Our address cache. This stores the states of each address that has (or at least might have) been changed.
-    mutable std::vector<Address> m_unchangedCacheEntries;	///< Tracks entries in m_cache that can potentially be purged if it grows too large.
-    mutable std::set<Address> m_nonExistingAccountsCache;	///< Tracks addresses that are known to not exist.
-    AddressHash m_touched;						///< Tracks all addresses touched so far.
+    /// Our overlay for the state tree.
+    OverlayDB m_db;
+    /// Our state tree, as an OverlayDB DB.
+    SecureTrieDB<Address, OverlayDB> m_state;
+    /// Our address cache. This stores the states of each address that has (or at least might have)
+    /// been changed.
+    mutable std::unordered_map<Address, Account> m_cache;
+    /// Tracks entries in m_cache that can potentially be purged if it grows too large.
+    mutable std::vector<Address> m_unchangedCacheEntries;
+    /// Tracks addresses that are known to not exist.
+    mutable std::set<Address> m_nonExistingAccountsCache;
+    /// Tracks all addresses touched so far.
+    AddressHash m_touched;
 
     u256 m_accountStartNonce;
 

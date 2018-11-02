@@ -6,24 +6,27 @@
 #include <libevm/VMFace.h>
 
 #include <evmc/evmc.h>
+#include <evmc/helpers.h>
 
 namespace dev
 {
 namespace eth
 {
-/// Translate the EVMSchedule to EVM-C revision.
-evmc_revision toRevision(EVMSchedule const& _schedule);
 
-/// The RAII wrapper for an EVM-C instance.
+/// The RAII wrapper for an EVMC instance.
 class EVM
 {
 public:
     explicit EVM(evmc_instance* _instance) noexcept;
 
-    ~EVM() { m_instance->destroy(m_instance); }
+    ~EVM() { evmc_destroy(m_instance); }
 
     EVM(EVM const&) = delete;
     EVM& operator=(EVM) = delete;
+
+    char const* name() const noexcept { return evmc_vm_name(m_instance); }
+
+    char const* version() const noexcept { return evmc_vm_version(m_instance); }
 
     class Result
     {
@@ -68,26 +71,18 @@ public:
     };
 
     /// Handy wrapper for evmc_execute().
-    Result execute(ExtVMFace& _ext, int64_t gas)
-    {
-        auto mode = toRevision(_ext.evmSchedule());
-        evmc_call_kind kind = _ext.isCreate ? EVMC_CREATE : EVMC_CALL;
-        uint32_t flags = _ext.staticCall ? EVMC_STATIC : 0;
-        assert(flags != EVMC_STATIC || kind == EVMC_CALL);  // STATIC implies a CALL.
-        evmc_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller), toEvmC(_ext.value),
-            _ext.data.data(), _ext.data.size(), toEvmC(_ext.codeHash), toEvmC(0x0_cppui256), gas,
-            static_cast<int32_t>(_ext.depth), kind, flags};
-        return Result{
-            m_instance->execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
-    }
+    Result execute(ExtVMFace& _ext, int64_t gas);
+
+    /// Translate the EVMSchedule to EVMC revision.
+    static evmc_revision toRevision(EVMSchedule const& _schedule);
 
 private:
-    /// The VM instance created with EVM-C <prefix>_create() function.
+    /// The VM instance created with EVMC <prefix>_create() function.
     evmc_instance* m_instance = nullptr;
 };
 
 
-/// The wrapper implementing the VMFace interface with a EVM-C VM as a backend.
+/// The wrapper implementing the VMFace interface with a EVMC VM as a backend.
 class EVMC : public EVM, public VMFace
 {
 public:
