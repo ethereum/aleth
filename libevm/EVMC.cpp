@@ -17,8 +17,22 @@ EVM::EVM(evmc_instance* _instance) noexcept : m_instance(_instance)
 
     // Set the options.
     for (auto& pair : evmcOptions())
-        if (evmc_set_option(m_instance, pair.first.c_str(), pair.second.c_str()) != 1)
-            cwarn << "Failed to set EVMC parameter '" << pair.first << "'";
+    {
+        auto result = evmc_set_option(m_instance, pair.first.c_str(), pair.second.c_str());
+        switch (result)
+        {
+        case EVMC_SET_OPTION_SUCCESS:
+            break;
+        case EVMC_SET_OPTION_INVALID_NAME:
+            cwarn << "Unknown EVMC option '" << pair.first << "'";
+            break;
+        case EVMC_SET_OPTION_INVALID_VALUE:
+            cwarn << "Invalid value '" << pair.second << "' for EVMC option '" << pair.first << "'";
+            break;
+        default:
+            cwarn << "Unknown error when setting EVMC option '" << pair.first << "'";
+        }
+    }
 }
 
 /// Handy wrapper for evmc_execute().
@@ -68,7 +82,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     case EVMC_FAILURE:
         BOOST_THROW_EXCEPTION(OutOfGas());
 
-    case EVMC_INVALID_INSTRUCTION: // NOTE: this could have its own exception
+    case EVMC_INVALID_INSTRUCTION:  // NOTE: this could have its own exception
     case EVMC_UNDEFINED_INSTRUCTION:
         BOOST_THROW_EXCEPTION(BadInstruction());
 
