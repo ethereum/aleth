@@ -77,11 +77,6 @@ void setDatabasePath(std::string const& _path)
     g_dbPath = fs::path(_path);
 }
 
-bool isMemoryDB()
-{
-    return g_kind == DatabaseKind::MemoryDB;
-}
-
 bool isDiskDatabase()
 {
     switch (g_kind)
