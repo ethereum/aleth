@@ -19,9 +19,9 @@
  * @date 2014
  */
 
-#include <regex>
 #include "Common.h"
 #include "Network.h"
+#include <regex>
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -226,9 +226,9 @@ std::string NodeSpec::enode() const
     return ret;
 }
 
-bool NodeSpec::isInitialized() const
+bool NodeSpec::isValid() const
 {
-    return m_id != h512(0) && m_address.length() > 0;
+    return m_id && !m_address.empty();
 }
 
 namespace dev

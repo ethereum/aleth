@@ -249,7 +249,7 @@ struct NodeSpec
 
     std::string enode() const;
 
-    bool isInitialized() const;
+    bool isValid() const;
 
 private:
     std::string m_address;
