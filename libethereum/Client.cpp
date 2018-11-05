@@ -506,34 +506,31 @@ void Client::restartMining()
     // TODO: use m_postSeal to avoid re-evaluating our own blocks.
     preChanged = newPreMine.sync(bc());
 
-    Address preAuthor;
-    DEV_READ_GUARDED(x_preSeal)
-        preAuthor = m_preSeal.author();
-    Address postAuthor;
-    DEV_READ_GUARDED(x_postSeal)
-        postAuthor = m_postSeal.author();
-
-    if (preChanged || postAuthor != preAuthor)
+    DEV_READ_GUARDED(x_preSeal) DEV_READ_GUARDED(x_postSeal)
+            if (!preChanged && m_preSeal.author() == m_postSeal.author())
     {
-        DEV_WRITE_GUARDED(x_preSeal)
-            m_preSeal = newPreMine;
-        DEV_WRITE_GUARDED(x_working)
-            m_working = newPreMine;
-        DEV_READ_GUARDED(x_postSeal)
-            if (!m_postSeal.isSealed() || m_postSeal.info().hash() != newPreMine.info().parentHash())
-                for (auto const& t : m_postSeal.pending())
-                {
-                    LOG(m_loggerDetail) << "Resubmitting post-seal transaction " << t;
-                    //                      ctrace << "Resubmitting post-seal transaction " << t;
-                    auto ir = m_tq.import(t, IfDropped::Retry);
-                    if (ir != ImportResult::Success)
-                        onTransactionQueueReady();
-                }
-        DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postSeal)
-            m_postSeal = m_working;
-
-        onPostStateChanged();
+        onTransactionQueueReady();
+        return;
     }
+
+    DEV_WRITE_GUARDED(x_preSeal)
+        m_preSeal = newPreMine;
+    DEV_WRITE_GUARDED(x_working)
+        m_working = newPreMine;
+    DEV_READ_GUARDED(x_postSeal)
+        if (!m_postSeal.isSealed() || m_postSeal.info().hash() != newPreMine.info().parentHash())
+            for (auto const& t : m_postSeal.pending())
+            {
+                LOG(m_loggerDetail) << "Resubmitting post-seal transaction " << t;
+                //                      ctrace << "Resubmitting post-seal transaction " << t;
+                auto ir = m_tq.import(t, IfDropped::Retry);
+                if (ir != ImportResult::Success)
+                    onTransactionQueueReady();
+            }
+    DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postSeal)
+        m_postSeal = m_working;
+
+    onPostStateChanged();
 
     // Quick hack for now - the TQ at this point already has the prior pending transactions in it;
     // we should resync with it manually until we are stricter about what constitutes "knowing".
