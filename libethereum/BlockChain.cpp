@@ -216,7 +216,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
     fs::path extrasPath = chainPath / fs::path(toString(c_databaseVersion));
     unsigned lastMinor = c_minorProtocolVersion;
 
-    if (!db::isMemoryDB())
+    if (db::isDiskDatabase())
     {
         fs::create_directories(extrasPath);
         DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
@@ -253,7 +253,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         if (*boost::get_error_info<db::errinfo_dbStatusCode>(ex) != db::DatabaseStatus::IOError)
             throw;
 
-        if (!db::isMemoryDB())
+        if (db::isDiskDatabase())
         {
             if (fs::space(chainPath / fs::path("blocks")).available < 1024)
             {
@@ -340,7 +340,7 @@ void BlockChain::close()
 
 void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, unsigned)> const& _progress)
 {
-    if (db::isMemoryDB())
+    if (!db::isDiskDatabase())
     {
         cwarn <<"In-memory database detected, skipping rebuild (since there's no existing database to rebuild)";
         return;

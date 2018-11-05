@@ -11,3 +11,7 @@ target_link_libraries(devcore PUBLIC aleth-buildinfo Boost::filesystem Boost::sy
 find_package(LevelDB)
 target_include_directories(devcore SYSTEM PUBLIC ${LEVELDB_INCLUDE_DIRS})
 target_link_libraries(devcore PRIVATE ${LEVELDB_LIBRARIES})
+
+hunter_add_package(rocksdb)
+find_package(RocksDB CONFIG REQUIRED)
+target_link_libraries(devcore PRIVATE RocksDB::rocksdb)

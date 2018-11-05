@@ -61,14 +61,14 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 {
     fs::path path = _basePath.empty() ? db::databasePath() : _basePath;
 
-    if (!db::isMemoryDB() && _we == WithExisting::Kill)
+    if (db::isDiskDatabase() && _we == WithExisting::Kill)
     {
         clog(VerbosityDebug, "statedb") << "Killing state database (WithExisting::Kill).";
         fs::remove_all(path / fs::path("state"));
     }
 
     path /= fs::path(toHex(_genesisHash.ref().cropped(0, 4))) / fs::path(toString(c_databaseVersion));
-    if (!db::isMemoryDB())
+    if (db::isDiskDatabase())
     {
         fs::create_directories(path);
         DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
@@ -83,7 +83,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
     catch (boost::exception const& ex)
     {
         cwarn << boost::diagnostic_information(ex) << '\n';
-        if (db::isMemoryDB())
+        if (!db::isDiskDatabase())
             throw;
         else if (fs::space(path / fs::path("state")).available < 1024)
         {
