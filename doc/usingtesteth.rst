@@ -102,14 +102,11 @@ Note that some tests are disabled by default. Such as Frontier, Homestead rules 
    ``./testeth -- --all``
 
 
-Generating(Filling) the tests
+Generating (filling) the tests
 --------------------------------------------------------------------------------
 
-Tests are generated from test filler files located in the src folder of the test repo. Testeth will run the execution of a *Filler.json file and produce a final test in the repo.
-``--filltests`` option will rerun test creation. .json files will be overwritten, hashes recalculated and a fresh build info will be added to the tests.  
+Tests are generated from test filler files located in the src folder of the test repo. Testeth will run the execution of a ``Filler.json`` file and produce a final test in the repo.
 
-    ``./testeth -t <TEST_SUITE>/<TEST_CASE> --filltests --checkstate --all``
+Generating a test case and creating new tests is a whole new topic and it's described in more detail here: 
 
-If some test case has different results than it is expected to have (an expect section is specified in the *Filler.json file) then you will see an error in the cmd log. This error indicates that something went different and the post state does not match the expect section. So you should check the test and it's expect section. Generating a test case and creating new tests is rather a whole new topic and it's described in more detail here: 
-
-   https://github.com/ethereum/cpp-ethereum/blob/develop/doc/generating_tests.rst
+   https://ethereum-tests.readthedocs.io/en/latest/generating-tests.html
