@@ -1,4 +1,3 @@
 /build
 /deps
-/hera
-/test
+/test/jsontests
