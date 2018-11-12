@@ -1,3 +1,4 @@
+include(GoogleTest)
 
 hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
@@ -9,6 +10,8 @@ set(unittest_sources
 
 add_executable(aleth-unittests ${unittest_sources})
 target_link_libraries(aleth-unittests PRIVATE devcore GTest::gtest GTest::main)
+gtest_add_tests(TARGET aleth-unittests)
+
 
 file(GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp" "*.h" "*.sol" )
 
