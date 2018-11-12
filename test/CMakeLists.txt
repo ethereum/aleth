@@ -1,4 +1,19 @@
-file(GLOB_RECURSE sources "*.cpp" "*.h" "*.sol")
+
+hunter_add_package(GTest)
+find_package(GTest CONFIG REQUIRED)
+
+set(unittest_sources
+    unittests/libdevcore/CommonJS.cpp
+    unittests/libdevcore/core.cpp
+)
+
+add_executable(aleth-unittests ${unittest_sources})
+target_link_libraries(aleth-unittests PRIVATE devcore GTest::gtest GTest::main)
+
+file(GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp" "*.h" "*.sol" )
+
+# Skip unit tests included in aleth-unittests.
+list(REMOVE_ITEM sources ${unittest_sources})
 
 # search for test names and create ctest tests
 set(excludeSuites jsonrpc \"customTestSuite\" BlockQueueSuite)
