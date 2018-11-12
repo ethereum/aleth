@@ -2,7 +2,7 @@
 # Copyright 2018 Aleth Autors.
 # Licensed under the GNU General Public License, Version 3. See the LICENSE file.
 
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.9.3)
 
 if (NOT EXISTS ${CMAKE_SOURCE_DIR}/evmc/.git OR NOT EXISTS ${CMAKE_SOURCE_DIR}/cmake/cable/.git)
     message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init")
