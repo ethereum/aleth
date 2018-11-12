@@ -1038,9 +1038,10 @@ int main(int argc, char** argv)
     else
         cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host.\n";
 
-    unique_ptr<ModularServer<>> jsonrpcIpcServer;
     unique_ptr<rpc::SessionManager> sessionManager;
     unique_ptr<SimpleAccountHolder> accountHolder;
+    unique_ptr<ModularServer<>> jsonrpcIpcServer;
+
 
     AddressHash allowedDestinations;
 
