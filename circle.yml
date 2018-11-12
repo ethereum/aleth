@@ -135,7 +135,7 @@ jobs:
       TEST_PARALLEL_JOBS: 8
       CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON
     docker:
-      - image: ethereum/cpp-build-env:2
+      - image: ethereum/cpp-build-env:7
     steps:
       - checkout
       - *update-submodules
@@ -164,7 +164,7 @@ jobs:
       TEST_PARALLEL_JOBS: 4
       CMAKE_OPTIONS: -DCOVERAGE=ON
     docker:
-      - image: ethereum/cpp-build-env:2
+      - image: ethereum/cpp-build-env:7
     steps:
       - checkout
       - *update-submodules
