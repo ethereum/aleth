@@ -7,6 +7,7 @@ set(unittest_sources
     unittests/libdevcore/CommonJS.cpp
     unittests/libdevcore/core.cpp
     unittests/libdevcore/FixedHash.cpp
+    unittests/libdevcore/RangeMask.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
