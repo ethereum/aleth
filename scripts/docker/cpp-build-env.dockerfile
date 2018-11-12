@@ -15,17 +15,17 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 
 RUN export DEBIAN_FRONTEND=noninteractive \
   && echo 'deb http://deb.debian.org/debian jessie main' >> /etc/apt/sources.list \
-  # && echo 'deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main' >> /etc/apt/sources.list \
+  && echo 'deb http://ftp.debian.org/debian stretch-backports main' >> /etc/apt/sources.list \
   && echo 'deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-5.0 main' >> /etc/apt/sources.list \
   && echo 'deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-6.0 main' >> /etc/apt/sources.list \
   && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys \
     6084F3CF814B57C1CF12EFD515CF4D18AF4F7421 \
     60C317803A41BA51845E371A1E9377A2BA9EF27F \
-  && apt-get -qq update && apt-get install -yq --no-install-recommends \
+  && apt-get -qq update \
+  && apt-get install -yq --no-install-recommends \
     # Build tools
     git \
     ssh-client \
-    cmake \
     make \
     ninja-build \
     python \
@@ -49,6 +49,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     libz-dev \
     # Dependencies
     libleveldb-dev \
+  && apt-get -t stretch-backports install -yq --no-install-recommends \
+    cmake \
   && rm -rf /var/lib/apt/lists/* \
   && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6.0 1 \
   && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 1 \
@@ -56,9 +58,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-6.0 1 \
   && update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /usr/bin/llvm-symbolizer-6.0 1 \
   && update-alternatives --install /usr/bin/gcov gcov /usr/bin/llvm-cov-6.0 1 \
-  && pip3 install --upgrade pip setuptools
-  && pip3 install codecov
-  && pip3 install codespell
+  && pip3 install setuptools \
+  && pip3 install codecov codespell
 
 RUN adduser --disabled-password --gecos '' builder && adduser builder sudo && printf 'builder\tALL=NOPASSWD: ALL\n' >> /etc/sudoers
 
