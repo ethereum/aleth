@@ -9,10 +9,12 @@ set(unittest_sources
     unittests/libdevcore/FixedHash.cpp
     unittests/libdevcore/RangeMask.cpp
     unittests/libdevcore/rlp.cpp
+
+    unittests/libdevcrypto/AES.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
-target_link_libraries(aleth-unittests PRIVATE devcore GTest::gtest GTest::main)
+target_link_libraries(aleth-unittests PRIVATE devcrypto devcore GTest::gtest GTest::main)
 gtest_add_tests(TARGET aleth-unittests)
 
 
