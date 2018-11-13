@@ -8,7 +8,7 @@
 
 set -e
 
-VERSION=3.7.1
+VERSION=3.12.4
 
 if [ "$1" = "--prefix" ]; then
     PREFIX="$2"
@@ -18,8 +18,8 @@ fi
 
 OS=$(uname -s)
 case $OS in
-Linux)  SHA256=7b4b7a1d9f314f45722899c0521c261e4bfab4a6b532609e37fef391da6bade2;;
-Darwin) SHA256=1851d1448964893fdc5a8c05863326119f397a3790e0c84c40b83499c7960267;;
+Linux)  SHA256=486edd6710b5250946b4b199406ccbf8f567ef0e23cfe38f7938b8c78a2ffa5f;;
+Darwin) SHA256=95d76c00ccb9ecb5cb51de137de00965c5e8d34b2cf71556cf8ba40577d1cff3;;
 esac
 
 
@@ -29,7 +29,7 @@ if test -f $BIN/cmake && ($BIN/cmake --version | grep -q "$VERSION"); then
     echo "CMake $VERSION already installed in $BIN"
 else
     FILE=cmake-$VERSION-$OS-x86_64.tar.gz
-    URL=https://cmake.org/files/v3.7/$FILE
+    URL=https://cmake.org/files/v3.12/$FILE
     ERROR=0
     TMPFILE=$(mktemp --tmpdir cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
     echo "Downloading CMake ($URL)..."

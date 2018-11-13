@@ -45,7 +45,7 @@ If you missed `--recursive` option, you are able to correct your mistake with co
 ### Install CMake
 
 CMake is used to control the build configuration of the project. Latest version of CMake is required
-(at the time of writing [3.4.3 is the minimum](CMakeLists.txt#L25)).
+(at the time of writing [3.9.3 is the minimum](CMakeLists.txt#L5)).
 We strongly recommend you to install CMake by downloading and unpacking the binary
 distribution  of the latest version available on the
 [**CMake download page**](https://cmake.org/download/).
@@ -93,7 +93,7 @@ cmake .. -G "Visual Studio 14 2015 Win64"
 ##### LINK : fatal error LNK1158: cannot run 'rc.exe'
 Rc.exe is the [Microsoft Resource Compiler](https://docs.microsoft.com/en-us/windows/desktop/menurc/resource-compiler). It's distributed with the [Windows SDK](https://developer.microsoft.com/en-US/windows/downloads/windows-10-sdk) and is required for generating the Visual Studio solution file. It can be found in the following directory: ```%ProgramFiles(x86)%\Windows Kits\<OS major version>\bin\<OS full version>\<arch>\```
 
-If you hit this error, adding the directory to your path (and launching a new command prompt) should fix the issue. 
+If you hit this error, adding the directory to your path (and launching a new command prompt) should fix the issue.
 
 ## Contribute
 
@@ -139,9 +139,9 @@ CLIENT MODE (default):
   --private <name>                        Use a private chain
   --test                                  Testing mode; disable PoW and provide test rpc interface
   --config <file>                         Configure specialised blockchain using given JSON information
-                                          
+
   -o [ --mode ] <full/peer>               Start a full node or a peer node (default: full)
-                                          
+
   --ipc                                   Enable IPC server (default: on)
   --ipcpath <path>                        Set .ipc socket path (default: data directory)
   --no-ipc                                Disable IPC server
@@ -149,23 +149,23 @@ CLIENT MODE (default):
   -K [ --kill ]                           Kill the blockchain first
   -R [ --rebuild ]                        Rebuild the blockchain from the existing database
   --rescue                                Attempt to rescue a corrupt database
-                                          
+
   --import-presale <file>                 Import a pre-sale key; you'll need to specify the password to this key
   -s [ --import-secret ] <secret>         Import a secret key into the key store
   -S [ --import-session-secret ] <secret> Import a secret session into the key store
   --master <password>                     Give the master password for the key store; use --master "" to show a prompt
   --password <password>                   Give a password for a private key
-                                          
+
 CLIENT TRANSACTING:
   --ask <wei>            Set the minimum ask gas price under which no transaction will be mined (default: 20000000000)
   --bid <wei>            Set the bid gas price to pay for transactions (default: 20000000000)
   --unsafe-transactions  Allow all transactions to proceed without verification; EXTREMELY UNSAFE
-                         
+
 CLIENT MINING:
   -a [ --address ] <addr>         Set the author (mining payout) address (default: auto)
   -m [ --mining ] <on/off/number> Enable mining; optionally for a specified number of blocks (default: off)
   --extra-data arg                Set extra data for the sealed blocks
-                                  
+
 CLIENT NETWORKING:
   -b [ --bootstrap ]              Connect to the default Ethereum peer servers (default unless --no-discovery used)
   --no-bootstrap                  Do not connect to the default Ethereum peer servers (default only when --no-discovery is used)
@@ -181,10 +181,10 @@ CLIENT NETWORKING:
                                           Types:
                                           default     Attempt connection when no other peers are available and pinning is disabled
                                           required    Keep connected at all times
-                                  
+
   --no-discovery                  Disable node discovery; implies --no-bootstrap
   --pin                           Only accept or connect to trusted peers
-                                  
+
 BENCHMARKING MODE:
   -M,--benchmark               Benchmark for mining and exit
   --benchmark-warmup <seconds> Set the duration of warmup for the benchmark tests (default: 3)
@@ -207,22 +207,22 @@ IMPORT/EXPORT MODES:
   --dont-check                Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid
   --download-snapshot <path>  Download Parity Warp Sync snapshot data to the specified path
   --import-snapshot <path>    Import blockchain and state data from the Parity Warp Sync snapshot
-                              
+
 VM OPTIONS:
   --vm <name>|<path> (=legacy) Select VM implementation. Available options are: interpreter, legacy.
   --evmc  <option>=<value>     EVMC option
-                               
+
 LOGGING OPTIONS:
   -v [ --log-verbosity ] <0 - 4>        Set the log verbosity from 0 to 4 (default: 2).
   --log-channels <channel_list>         Space-separated list of the log channels to show (default: show all channels).
   --log-exclude-channels <channel_list> Space-separated list of the log channels to hide.
-                                        
+
 GENERAL OPTIONS:
   -d [ --db-path ] <path> Load database from path (default: C:\Users\nilse\AppData\Roaming\Ethereum)
   -V [ --version ]        Show the version and exit
   -h [ --help ]           Show this help message and exit
 ```
-                          
+
 ## Mining
 
 This project is **not suitable for Ethereum mining** because the support for GPU mining
