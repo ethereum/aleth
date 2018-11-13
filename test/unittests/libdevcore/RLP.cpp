@@ -10,7 +10,7 @@
 using namespace dev;
 using namespace std;
 
-TEST(rlp, EmptyArrayList)
+TEST(RLP, emptyArrayList)
 {
     try
     {
@@ -28,7 +28,7 @@ TEST(rlp, EmptyArrayList)
     }
 }
 
-TEST(rlp, ActualSize)
+TEST(RLP, actualSize)
 {
     EXPECT_EQ(RLP{}.actualSize(), 0);
 

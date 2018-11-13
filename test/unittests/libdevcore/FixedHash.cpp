@@ -23,7 +23,7 @@
 using namespace std;
 using namespace dev;
 
-TEST(FixedHash, Comparisons)
+TEST(FixedHash, comparisons)
 {
     FixedHash<4> h1(sha3("abcd"));
     FixedHash<4> h2(sha3("abcd"));
@@ -73,7 +73,7 @@ TEST(FixedHash, AND)
     EXPECT_EQ(h1, h3);
 }
 
-TEST(FixedHash, Invert)
+TEST(FixedHash, invert)
 {
     FixedHash<4> h1("0xD3ADB33F");
     FixedHash<4> h2("0x2C524CC0");
@@ -81,7 +81,7 @@ TEST(FixedHash, Invert)
     EXPECT_EQ(~h1, h2);
 }
 
-TEST(FixedHash, Contains)
+TEST(FixedHash, contains)
 {
     FixedHash<4> h1("0xD3ADB331");
     FixedHash<4> h2("0x0000B331");
@@ -116,7 +116,7 @@ void incrementSingleIteration(unsigned seed)
     EXPECT_EQ(next, reverse2);
 }
 
-TEST(FixedHash, Increment)
+TEST(FixedHash, increment)
 {
     incrementSingleIteration(0);
     incrementSingleIteration(1);

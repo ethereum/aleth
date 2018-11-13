@@ -8,7 +8,7 @@ set(unittest_sources
     unittests/libdevcore/core.cpp
     unittests/libdevcore/FixedHash.cpp
     unittests/libdevcore/RangeMask.cpp
-    unittests/libdevcore/rlp.cpp
+    unittests/libdevcore/RLP.cpp
 
     unittests/libdevcrypto/AES.cpp
 )

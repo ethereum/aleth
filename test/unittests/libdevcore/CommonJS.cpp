@@ -22,7 +22,7 @@
 using namespace dev;
 using namespace std;
 
-TEST(common_js, toJS)
+TEST(CommonJS, toJS)
 {
     h64 a("0xbaadf00ddeadbeef");
     u64 b("0xffff0000bbbaaaa");
@@ -35,7 +35,7 @@ TEST(common_js, toJS)
     EXPECT_EQ(toJS(d), "0xff00efbc");
 }
 
-TEST(common_js, jsToBytes)
+TEST(CommonJS, jsToBytes)
 {
     bytes a = {0xff, 0xaa, 0xbb, 0xcc};
     bytes b = {0x03, 0x89, 0x90, 0x23, 0x42, 0x43};
@@ -45,7 +45,7 @@ TEST(common_js, jsToBytes)
     EXPECT_EQ(bytes(), jsToBytes("Invalid hex chars"));
 }
 
-TEST(common_js, padded)
+TEST(CommonJS, padded)
 {
     bytes a = {0xff, 0xaa};
     EXPECT_EQ(bytes({0x00, 0x00, 0xff, 0xaa}), padded(a, 4));
@@ -55,7 +55,7 @@ TEST(common_js, padded)
     EXPECT_EQ(bytes{0xcc}, padded(c, 1));
 }
 
-TEST(common_js, paddedRight)
+TEST(CommonJS, paddedRight)
 {
     bytes a = {0xff, 0xaa};
     EXPECT_EQ(bytes({0xff, 0xaa, 0x00, 0x00}), paddedRight(a, 4));
@@ -65,7 +65,7 @@ TEST(common_js, paddedRight)
     EXPECT_EQ(bytes{0xff}, paddedRight(c, 1));
 }
 
-TEST(common_js, unpadded)
+TEST(CommonJS, unpadded)
 {
     bytes a = {0xff, 0xaa, 0x00, 0x00, 0x00};
     EXPECT_EQ(bytes({0xff, 0xaa}), unpadded(a));
@@ -75,7 +75,7 @@ TEST(common_js, unpadded)
     EXPECT_EQ(bytes(), unpadded(c));
 }
 
-TEST(common_js, unpaddedLeft)
+TEST(CommonJS, unpaddedLeft)
 {
     bytes a = {0x00, 0x00, 0x00, 0xff, 0xaa};
     EXPECT_EQ(bytes({0xff, 0xaa}), unpadLeft(a));
@@ -85,7 +85,7 @@ TEST(common_js, unpaddedLeft)
     EXPECT_EQ(bytes(), unpadLeft(c));
 }
 
-TEST(common_js, fromRaw)
+TEST(CommonJS, fromRaw)
 {
     // non ascii characters means empty string
     h256 a("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
@@ -96,7 +96,7 @@ TEST(common_js, fromRaw)
     EXPECT_EQ("AsciiCharacters", fromRaw(c));
 }
 
-TEST(common_js, jsToFixed)
+TEST(CommonJS, jsToFixed)
 {
     h256 a("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     EXPECT_EQ(
@@ -106,7 +106,7 @@ TEST(common_js, jsToFixed)
     EXPECT_EQ(h256(), jsToFixed<32>("NotAHexadecimalOrDecimal"));
 }
 
-TEST(common_js, jsToInt)
+TEST(CommonJS, jsToInt)
 {
     EXPECT_EQ(43832124, jsToInt("43832124"));
     EXPECT_EQ(1342356623, jsToInt("0x5002bc8f"));
@@ -121,7 +121,7 @@ TEST(common_js, jsToInt)
     EXPECT_EQ(u128(), jsToInt<16>("NotAHexadecimalOrDecimal"));
 }
 
-TEST(common_js, jsToU256)
+TEST(CommonJS, jsToU256)
 {
     EXPECT_EQ(u256("983298932490823474234"), jsToU256("983298932490823474234"));
     EXPECT_EQ(u256(), jsToU256("NotAHexadecimalOrDecimal"));

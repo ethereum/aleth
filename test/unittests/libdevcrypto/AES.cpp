@@ -23,7 +23,7 @@
 using namespace std;
 using namespace dev;
 
-TEST(Aes, Decrypt)
+TEST(AES, decrypt)
 {
     bytes seed = fromHex(
         "2dbaead416c20cfd00c2fc9f1788ff9f965a2000799c96a624767cb0e1e90d2d7191efdd92349226742fdc73d1"
@@ -33,7 +33,7 @@ TEST(Aes, Decrypt)
     EXPECT_EQ(Address("07746f871de684297923f933279555dda418f8a2"), kp.address());
 }
 
-TEST(Aes, DecryptWrongSeed)
+TEST(AES, decryptWrongSeed)
 {
     bytes seed = fromHex(
         "badaead416c20cfd00c2fc9f1788ff9f965a2000799c96a624767cb0e1e90d2d7191efdd92349226742fdc73d1"
@@ -43,7 +43,7 @@ TEST(Aes, DecryptWrongSeed)
     EXPECT_NE(Address("07746f871de684297923f933279555dda418f8a2"), kp.address());
 }
 
-TEST(Aes, DecryptWrongPassword)
+TEST(AES, decryptWrongPassword)
 {
     bytes seed = fromHex(
         "2dbaead416c20cfd00c2fc9f1788ff9f965a2000799c96a624767cb0e1e90d2d7191efdd92349226742fdc73d1"
@@ -53,7 +53,7 @@ TEST(Aes, DecryptWrongPassword)
     EXPECT_NE(Address("07746f871de684297923f933279555dda418f8a2"), kp.address());
 }
 
-TEST(Aes, DecryptFailInvalidSeed)
+TEST(AES, decryptFailInvalidSeed)
 {
     bytes seed = fromHex(
         "xdbaead416c20cfd00c2fc9f1788ff9f965a2000799c96a624767cb0e1e90d2d7191efdd92349226742fdc73d1"
@@ -62,13 +62,13 @@ TEST(Aes, DecryptFailInvalidSeed)
     EXPECT_EQ(bytes(), aesDecrypt(&seed, "test"));
 }
 
-TEST(Aes, DecryptFailInvalidSeedSize)
+TEST(AES, decryptFailInvalidSeedSize)
 {
     bytes seed = fromHex("000102030405060708090a0b0c0d0e0f");
     EXPECT_EQ(bytes(), aesDecrypt(&seed, "test"));
 }
 
-TEST(Aes, DecryptFailInvalidSeed2)
+TEST(AES, decryptFailInvalidSeed2)
 {
     bytes seed = fromHex("000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f");
     EXPECT_EQ(bytes(), aesDecrypt(&seed, "test"));

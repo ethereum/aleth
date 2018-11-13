@@ -42,7 +42,7 @@ TEST(RangeMask, constructor)
     EXPECT_FALSE(RM(Range(2, 10)).full());
 }
 
-TEST(RangeMask, simple_unions)
+TEST(RangeMask, simpleUnions)
 {
     using RM = RangeMask;
     using Range = pair<unsigned, unsigned>;
@@ -63,7 +63,7 @@ TEST(RangeMask, simple_unions)
     EXPECT_FALSE(m.contains(258));
 }
 
-TEST(RangeMask, empty_union)
+TEST(RangeMask, emptyUnion)
 {
     using RM = RangeMask;
     using Range = pair<unsigned, unsigned>;
@@ -82,7 +82,7 @@ TEST(RangeMask, empty_union)
     EXPECT_EQ(m.size(), 3);
 }
 
-TEST(RangeMask, overlapping_unions)
+TEST(RangeMask, overlappingUnions)
 {
     using RM = RangeMask;
     using Range = pair<unsigned, unsigned>;
