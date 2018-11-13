@@ -13,6 +13,9 @@ set(unittest_sources
     unittests/libdevcrypto/AES.cpp
 
     unittests/libethashseal/EthashTest.cpp
+
+    unittests/libethcore/CommonJS.cpp
+    unittests/libethcore/KeyManager.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
