@@ -1,4 +1,27 @@
-file(GLOB_RECURSE sources "*.cpp" "*.h" "*.sol")
+include(GoogleTest)
+
+hunter_add_package(GTest)
+find_package(GTest CONFIG REQUIRED)
+
+set(unittest_sources
+    unittests/libdevcore/CommonJS.cpp
+    unittests/libdevcore/core.cpp
+    unittests/libdevcore/FixedHash.cpp
+    unittests/libdevcore/RangeMask.cpp
+    unittests/libdevcore/RLP.cpp
+
+    unittests/libdevcrypto/AES.cpp
+)
+
+add_executable(aleth-unittests ${unittest_sources})
+target_link_libraries(aleth-unittests PRIVATE devcrypto devcore GTest::gtest GTest::main)
+gtest_add_tests(TARGET aleth-unittests TEST_PREFIX unittests/)
+
+
+file(GLOB_RECURSE sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cpp" "*.h" "*.sol" )
+
+# Skip unit tests included in aleth-unittests.
+list(REMOVE_ITEM sources ${unittest_sources})
 
 # search for test names and create ctest tests
 set(excludeSuites jsonrpc \"customTestSuite\" BlockQueueSuite)
