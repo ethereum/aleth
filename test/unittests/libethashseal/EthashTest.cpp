@@ -14,28 +14,18 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file
- * Ethash class testing.
- */
 
 #include <libethashseal/Ethash.h>
 
-#include <test/tools/libtesteth/TestOutputHelper.h>
-
-#include <ethash/ethash.hpp>
-
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
-
-BOOST_FIXTURE_TEST_SUITE(EthashTests, TestOutputHelperFixture)
 
 // FIXME: Add a helper function here, because the test cases are almost identical.
 // TODO: Add tests for Homestead difficulty change.
 
-BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
+TEST(Ethash, calculateDifficultyByzantiumWithoutUncles)
 {
     ChainOperationParams params;
     params.homesteadForkBlock = 0;
@@ -55,11 +45,10 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithoutUncles)
     header.setNumber(0x2001);
     header.setTimestamp(130);
 
-    BOOST_CHECK_EQUAL(
-        calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 999024);
+    EXPECT_EQ(calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 999024);
 }
 
-BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
+TEST(Ethash, calculateDifficultyByzantiumWithUncles)
 {
     ChainOperationParams params;
     params.homesteadForkBlock = 0;
@@ -81,11 +70,10 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumWithUncles)
     header.setNumber(0x2001);
     header.setTimestamp(130);
 
-    BOOST_CHECK_EQUAL(
-        calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 999512);
+    EXPECT_EQ(calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 999512);
 }
 
-BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
+TEST(Ethash, calculateDifficultyByzantiumMaxAdjustment)
 {
     ChainOperationParams params;
     params.homesteadForkBlock = 0;
@@ -105,14 +93,13 @@ BOOST_AUTO_TEST_CASE(calculateDifficultyByzantiumMaxAdjustment)
     header.setNumber(0x2001);
     header.setTimestamp(1100);
 
-    BOOST_CHECK_EQUAL(
-        calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 951688);
+    EXPECT_EQ(calculateEthashDifficulty(ethash.chainParams(), header, parentHeader), 951688);
 }
 
-class IceAgeDelayFixture: public TestOutputHelperFixture
+class IceAgeDelay : public testing::Test
 {
 public:
-    IceAgeDelayFixture()
+    IceAgeDelay()
     {
         params.homesteadForkBlock = 0;
         params.byzantiumForkBlock = 4000000;
@@ -141,39 +128,33 @@ public:
     Ethash ethash;
 };
 
-BOOST_FIXTURE_TEST_SUITE(IceAgeDelayTests, IceAgeDelayFixture)
-
-BOOST_AUTO_TEST_CASE(ByzantiumIceAgeDelay)
+TEST_F(IceAgeDelay, ByzantiumIceAgeDelay)
 {
-    BOOST_CHECK_EQUAL(calculateDifficulty(4500000), calculateDifficulty(1500000));
+    EXPECT_EQ(calculateDifficulty(4500000), calculateDifficulty(1500000));
 }
 
-BOOST_AUTO_TEST_CASE(ConstantinopleIceAgeDelay)
+TEST_F(IceAgeDelay, ConstantinopleIceAgeDelay)
 {
-    BOOST_CHECK_EQUAL(calculateDifficulty(6500000), calculateDifficulty(1500000));
+    EXPECT_EQ(calculateDifficulty(6500000), calculateDifficulty(1500000));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_CASE(epochSeed)
+TEST(Ethash, epochSeed)
 {
     BlockHeader header;
     header.setNumber(0);
     h256 seed = Ethash::seedHash(header);
-    BOOST_CHECK_EQUAL(seed, h256{});
+    EXPECT_EQ(seed, h256{});
 
     header.setNumber(30000);
     seed = Ethash::seedHash(header);
-    BOOST_CHECK_EQUAL(
-        seed, h256{"290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"});
+    EXPECT_EQ(seed, h256{"290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563"});
 
     header.setNumber(2048 * 30000);
     seed = Ethash::seedHash(header);
-    BOOST_CHECK_EQUAL(
-        seed, h256{"20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920"});
+    EXPECT_EQ(seed, h256{"20a7678ca7b50829183baac2e1e3c43fa3c4bcbc171b11cf5a9f30bebd172920"});
 }
 
-BOOST_AUTO_TEST_CASE(etashQuickVerify)
+TEST(Ethash, etashQuickVerify)
 {
     BlockHeader header;
     header.setParentHash(h256{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"});
@@ -185,10 +166,10 @@ BOOST_AUTO_TEST_CASE(etashQuickVerify)
     Ethash::setNonce(header, Nonce{3272400});
     etash.verify(QuickNonce, header, {}, {});
     Ethash::setNonce(header, Nonce{3272401});
-    BOOST_CHECK_THROW(etash.verify(QuickNonce, header, {}, {}), InvalidBlockNonce);
+    EXPECT_THROW(etash.verify(QuickNonce, header, {}, {}), InvalidBlockNonce);
 }
 
-BOOST_AUTO_TEST_CASE(etashVerify)
+TEST(Ethash, etashVerify)
 {
     BlockHeader header;
     header.setParentHash(h256{"aff00eb20f8a48450b9ea5307e2737287854f357c9022280772e995cc22affd3"});
@@ -204,7 +185,7 @@ BOOST_AUTO_TEST_CASE(etashVerify)
     header.setGasUsed(55179);
     header.setTimestamp(1507291743);
 
-    BOOST_CHECK_EQUAL(header.hash(WithoutSeal),
+    EXPECT_EQ(header.hash(WithoutSeal),
         h256{"57c5cfb8fe8a70a24ea81f12398e8a074ac25dd32b6dba8cd1f2bf85680fbfce"});
 
     Ethash::setMixHash(
@@ -219,14 +200,14 @@ BOOST_AUTO_TEST_CASE(etashVerify)
     try
     {
         etash.verify(CheckEverything, header, {}, {});
-        BOOST_CHECK(false);
+        ADD_FAILURE();
     }
     catch (InvalidBlockNonce const& ex)
     {
         std::tuple<h256, h256> ethashResult = *boost::get_error_info<errinfo_ethashResult>(ex);
-        BOOST_CHECK_EQUAL(std::get<0>(ethashResult),
+        EXPECT_EQ(std::get<0>(ethashResult),
             h256{"07a4017237d933aa1ff4f62650f68ea2118c8bd741575e97c2867fb41d5b832d"});
-        BOOST_CHECK_EQUAL(std::get<1>(ethashResult),
+        EXPECT_EQ(std::get<1>(ethashResult),
             h256{"a842d613f0b8ad1266e507bb1845b2db75673caf593596d1de4951ecd9620a93"});
     }
     Ethash::setNonce(header, Nonce{"81c3f9bfae230a8e"});
@@ -234,11 +215,11 @@ BOOST_AUTO_TEST_CASE(etashVerify)
     // Break mix hash.
     Ethash::setMixHash(
         header, h256{"e8ada7ff7720ebc9700c170c046352b8ee6fb4630cf6a285489896daac7a40eb"});
-    BOOST_CHECK_THROW(etash.verify(CheckEverything, header, {}, {}), InvalidBlockNonce);
+    EXPECT_THROW(etash.verify(CheckEverything, header, {}, {}), InvalidBlockNonce);
 
     // Break nonce & mix hash.
     Ethash::setNonce(header, Nonce{"71c3f9bfae230a8e"});
-    BOOST_CHECK_THROW(etash.verify(CheckEverything, header, {}, {}), InvalidBlockNonce);
+    EXPECT_THROW(etash.verify(CheckEverything, header, {}, {}), InvalidBlockNonce);
     Ethash::setNonce(header, Nonce{"81c3f9bfae230a8e"});
     Ethash::setMixHash(
         header, h256{"d8ada7ff7720ebc9700c170c046352b8ee6fb4630cf6a285489896daac7a40eb"});
@@ -247,116 +228,27 @@ BOOST_AUTO_TEST_CASE(etashVerify)
     etash.verify(CheckEverything, header, {}, {});
 }
 
-namespace
-{
-struct EthashTestCase
-{
-    char const* nonce;
-    char const* mixHash;
-    char const* header;
-    char const* seed;
-    char const* result;
-    int cacheSize;
-    int fullSize;
-    char const* headerHash;
-    char const* cacheHash;
-};
-
-EthashTestCase ethashTestCases[] = {
-    {
-        "4242424242424242",
-        "58f759ede17a706c93f13030328bcea40c1d1341fb26f2facd21ceb0dae57017",
-        "f901f3a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7a"
-        "ab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000"
-        "a09178d0f23c965d81f0834a4c72c6253ce6830f4022b1359aaebfc1ecba442d4ea056e81f171bcc55a6ff8345"
-        "e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cad"
-        "c001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302"
-        "000080830f4240808080a058f759ede17a706c93f13030328bcea40c1d1341fb26f2facd21ceb0dae570178842"
-        "42424242424242",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "dd47fd2d98db51078356852d7c4014e6a5d6c387c35f40e2875b74a256ed7906",
-        16776896,
-        1073739904,
-        "2a8de2adf89af77358250bf908bf04ba94a6e8c3ba87775564a41d269a05e4ce",
-        "35ded12eecf2ce2e8da2e15c06d463aae9b84cb2530a00b932e4bbc484cde353",
-    },
-    {
-        "307692cf71b12f6d",
-        "e55d02c555a7969361cf74a9ec6211d8c14e4517930a00442f171bdb1698d175",
-        "f901f7a01bef91439a3e070a6586851c11e6fd79bbbea074b2b836727b8e75c7d4a6b698a01dcc4de8dec75d7a"
-        "ab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794ea3cb5f94fa2ddd52ec6dd6eb75cf824f4058ca1"
-        "a00c6e51346be0670ce63ac5f05324e27d20b180146269c5aab844d09a2b108c64a056e81f171bcc55a6ff8345"
-        "e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cad"
-        "c001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302"
-        "004002832fefd880845511ed2a80a0e55d02c555a7969361cf74a9ec6211d8c14e4517930a00442f171bdb1698"
-        "d17588307692cf71b12f6d",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "ab9b13423cface72cbec8424221651bc2e384ef0f7a560e038fc68c8d8684829",
-        16776896,
-        1073739904,
-        "100cbec5e5ef82991290d0d93d758f19082e71f234cf479192a8b94df6da6bfe",
-        "35ded12eecf2ce2e8da2e15c06d463aae9b84cb2530a00b932e4bbc484cde353",
-    },
-};
-}  // namespace
-
-BOOST_AUTO_TEST_CASE(ethashEvalHeader)
-{
-    // FIXME: Drop this test as ethash library has this test cases in its test suite.
-
-    for (auto& t : ethashTestCases)
-    {
-        BlockHeader header{fromHex(t.header), HeaderData};
-        h256 headerHash{t.headerHash};
-        eth::Nonce nonce{t.nonce};
-        BOOST_REQUIRE_EQUAL(headerHash, header.hash(WithoutSeal));
-        BOOST_REQUIRE_EQUAL(nonce, Ethash::nonce(header));
-
-        ethash::result result = ethash::hash(
-            ethash::get_global_epoch_context(ethash::get_epoch_number(header.number())),
-            ethash::hash256_from_bytes(header.hash(WithoutSeal).data()), (uint64_t)(u64)nonce);
-
-        h256 mix{result.mix_hash.bytes, h256::ConstructFromPointer};
-        h256 final{result.final_hash.bytes, h256::ConstructFromPointer};
-
-        BOOST_REQUIRE_EQUAL(final, h256{t.result});
-        BOOST_REQUIRE_EQUAL(mix, Ethash::mixHash(header));
-    }
-}
-
-BOOST_AUTO_TEST_CASE(boundary)
+TEST(Ethash, boundary)
 {
     BlockHeader header;
 
     header.setDifficulty(0);
-    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+    EXPECT_EQ(Ethash::boundary(header),
         h256{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"});
 
     header.setDifficulty(1);
-    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+    EXPECT_EQ(Ethash::boundary(header),
         h256{"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"});
 
     header.setDifficulty(2);
-    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+    EXPECT_EQ(Ethash::boundary(header),
         h256{"8000000000000000000000000000000000000000000000000000000000000000"});
 
     header.setDifficulty(31);
-    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+    EXPECT_EQ(Ethash::boundary(header),
         h256{"0842108421084210842108421084210842108421084210842108421084210842"});
 
     header.setDifficulty(32);
-    BOOST_CHECK_EQUAL(Ethash::boundary(header),
+    EXPECT_EQ(Ethash::boundary(header),
         h256{"0800000000000000000000000000000000000000000000000000000000000000"});
 }
-
-BOOST_AUTO_TEST_SUITE_END()
