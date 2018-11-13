@@ -53,27 +53,13 @@ EVM::Result EVM::execute(ExtVMFace& _ext, int64_t gas)
 EVMC::EVMC(evmc_instance* _instance) : EVM(_instance)
 {
     static const auto tracer = [](evmc_tracer_context * _context, size_t _codeOffset,
-        evmc_status_code _statusCode, int64_t _gasLeft, size_t _stackNumItems,
-        evmc_uint256be const* _pushedStackItem, size_t _memorySize,
+        evmc_status_code _statusCode, int64_t _gasLeft, size_t /*_stackNumItems*/,
+        evmc_uint256be const* /*_pushedStackItem*/, size_t /*_memorySize*/,
         size_t /*changed_memory_offset*/, size_t /*changed_memory_size*/,
         uint8_t const* /*changed_memory*/) noexcept
     {
         EVMC* evmc = reinterpret_cast<EVMC*>(_context);
-
-        // TODO: It might be easier to just pass instruction from VM.
-        char const* name = evmc->m_instructionNames[evmc->m_code[_codeOffset]];
-
-        std::ostringstream logMessage;
-        logMessage << "EVMC "
-                   << " " << evmc->m_step++ << " " << _codeOffset << " " << name << " "
-                   << _statusCode << " " << _gasLeft << " " << _stackNumItems;
-
-        if (_pushedStackItem)
-            logMessage << " +[" << fromEvmC(*_pushedStackItem) << "]";
-
-        logMessage << " " << _memorySize;
-
-        LOG(evmc->m_vmTraceLogger) << logMessage.str();
+        evmc->trace.emplace_back(InstructionTrace{evmc->m_code[_codeOffset], _codeOffset, _statusCode, _gasLeft});
     };
 
     _instance->set_tracer(_instance, tracer, reinterpret_cast<evmc_tracer_context*>(this));
@@ -94,18 +80,18 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     assert(_ext.depth <= static_cast<size_t>(std::numeric_limits<int32_t>::max()));
 
     m_code = bytesConstRef{&_ext.code};
-    m_step = 0;
-
-    // FIXME: EVMC revision found twice.
-    m_instructionNames = evmc_get_instruction_names_table(toRevision(_ext.evmSchedule()));
-
 
     auto gas = static_cast<int64_t>(io_gas);
-    LOG(m_vmTraceLogger) << "EVMC message START " << _ext.depth << " " << _ext.caller << " -> "
-                         << _ext.myAddress << " gas: " << gas << "\n";
+
+    calls.emplace_back(CallTrace{static_cast<int>(_ext.depth),
+        _ext.isCreate ? EVMC_CREATE : EVMC_CALL, trace.size(), trace.size(), gas});
+
     EVM::Result r = execute(_ext, gas);
-    LOG(m_vmTraceLogger) << "EVMC message END   " << _ext.depth << " status: " << r.status()
-                         << " gas left: " << r.gasLeft() << "\n";
+
+    calls.back().end = trace.size();
+
+    if (_ext.depth == 0)
+        dumpTrace();
 
     switch (r.status())
     {
@@ -171,5 +157,24 @@ evmc_revision EVM::toRevision(EVMSchedule const& _schedule)
         return EVMC_HOMESTEAD;
     return EVMC_FRONTIER;
 }
+
+void EVMC::dumpTrace()
+{
+    auto names = evmc_get_instruction_names_table(EVMC_LATEST_REVISION);
+
+    for (auto& c : calls)
+    {
+        std::cout << "call " << c.kind << " " << c.gas << "\n";
+        for (size_t i = c.begin; i < c.end; ++i)
+        {
+            std::cout << names[trace[i].opcode] << "\n";
+        }
+        std::cout << "endcall \n";
+    }
+
+    calls.clear();
+    trace.clear();
+}
+
 }  // namespace eth
 }  // namespace dev

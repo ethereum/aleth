@@ -82,6 +82,25 @@ private:
 };
 
 
+
+struct InstructionTrace
+{
+    uint8_t opcode;
+    size_t codeOffset;
+    evmc_status_code statusCode;
+    int64_t gasLeft;
+};
+
+struct CallTrace
+{
+    int depth;
+    evmc_call_kind kind;
+    size_t begin;
+    size_t end;
+    int64_t gas;
+};
+
+
 /// The wrapper implementing the VMFace interface with a EVMC VM as a backend.
 class EVMC : public EVM, public VMFace
 {
@@ -92,10 +111,13 @@ public:
 
 private:
     bytesConstRef m_code;
-    int m_step = 0;
-    char const* const* m_instructionNames = nullptr;
 
     Logger m_vmTraceLogger{createLogger(VerbosityTrace, "vmtrace")};
+
+    std::vector<CallTrace> calls;
+    std::vector<InstructionTrace> trace;
+
+    void dumpTrace();
 };
 }
 }
