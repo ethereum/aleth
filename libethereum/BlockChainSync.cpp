@@ -196,39 +196,34 @@ void BlockChainSync::abortSync()
     onPeerAborting();
 }
 
-void BlockChainSync::onPeerStatus(NodeID const& _peerID, EthereumPeerStatus const& _status)
+void BlockChainSync::onPeerStatus(EthereumPeer const& _peer)
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
 
-    auto peerSessionInfo = m_host.capabilityHost().peerSessionInfo(_peerID);
+    auto peerSessionInfo = m_host.capabilityHost().peerSessionInfo(_peer.id());
     if (!peerSessionInfo)
         return; // Expired
 
-    char const* disconnectReason = nullptr;
-    if (_status.m_genesisHash != host().chain().genesisHash())
-        disconnectReason = "Invalid genesis hash.";
-    else if (_status.m_protocolVersion != host().protocolVersion())
-        disconnectReason = "Invalid protocol version.";
-    else if (_status.m_networkId != host().networkId())
-        disconnectReason = "Invalid network identifier.";
-    else if (peerSessionInfo->clientVersion.find("/v0.7.0/") != string::npos)
+    std::string disconnectReason;
+    if (peerSessionInfo->clientVersion.find("/v0.7.0/") != string::npos)
         disconnectReason = "Blacklisted client version.";
-    else if (_status.m_asking != Asking::State && _status.m_asking != Asking::Nothing)
-        disconnectReason = "Peer banned for unexpected status message.";
+    else
+        disconnectReason = _peer.validate(
+            host().chain().genesisHash(), host().protocolVersion(), host().networkId());
 
-    if (disconnectReason)
+    if (!disconnectReason.empty())
     {
         LOG(m_logger) << "Peer not suitable for sync: " << disconnectReason;
-        m_host.capabilityHost().disconnect(_peerID, p2p::UserReason);
+        m_host.capabilityHost().disconnect(_peer.id(), p2p::UserReason);
         return;
     }
 
     // Before starting to exchange the data with the node, let's verify that it's on our chain
-    if (!requestDaoForkBlockHeader(_peerID))
+    if (!requestDaoForkBlockHeader(_peer.id()))
     {
         // DAO challenge not needed
-        syncPeer(_peerID, false);
+        syncPeer(_peer.id(), false);
     }
 }
 
@@ -240,14 +235,13 @@ bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
         return false;
 
     m_daoChallengedPeers.insert(_peerID);
-    m_host.requestBlockHeaders(_peerID, daoHardfork, 1, 0, false);
+    m_host.peer(_peerID).requestBlockHeaders(daoHardfork, 1, 0, false);
     return true;
 }
 
 void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 {
-    auto const& peerStatus = m_host.peerStatus(_peerID);
-    if (peerStatus.m_asking != Asking::Nothing)
+    if (m_host.peer(_peerID).isConversing())
     {
         LOG(m_loggerDetail) << "Can't sync with this peer - outstanding asks.";
         return;
@@ -262,20 +256,23 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 
     u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
 
-    if (_force || peerStatus.m_totalDifficulty > syncingDifficulty)
+    auto& peer = m_host.peer(_peerID);
+    u256 peerTotalDifficulty = peer.totalDifficulty();
+
+    if (_force || peerTotalDifficulty > syncingDifficulty)
     {
-        if (peerStatus.m_totalDifficulty > syncingDifficulty)
+        if (peerTotalDifficulty > syncingDifficulty)
             LOG(m_logger) << "Discovered new highest difficulty";
 
         // start sync
-        m_syncingTotalDifficulty = peerStatus.m_totalDifficulty;
+        m_syncingTotalDifficulty = peerTotalDifficulty;
         if (m_state == SyncState::Idle || m_state == SyncState::NotSynced)
         {
             LOG(m_loggerInfo) << "Starting full sync";
             m_state = SyncState::Blocks;
         }
-        m_host.requestBlockHeaders(_peerID, peerStatus.m_latestHash, 1, 0, false);
-        m_host.markPeerAsWaitingForTransactions(_peerID);
+        peer.requestBlockHeaders(peer.latestHash(), 1, 0, false);
+        peer.setWaitingForTransactions(true);
         return;
     }
 
@@ -328,7 +325,7 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
     if (neededBodies.size() > 0)
     {
         m_bodySyncPeers[_peerID] = neededNumbers;
-        m_host.requestBlockBodies(_peerID, neededBodies);
+        m_host.peer(_peerID).requestBlockBodies(neededBodies);
     }
     else
     {
@@ -377,7 +374,7 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
                 {
                     m_headerSyncPeers[_peerID] = headers;
                     assert(!haveItem(m_headers, start));
-                    m_host.requestBlockHeaders(_peerID, start, count, 0, false);
+                    m_host.peer(_peerID).requestBlockHeaders(start, count, 0, false);
                 }
                 else if (start >= next->first)
                 {
@@ -387,7 +384,7 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
             }
         }
         else
-            m_host.requestBlockHeaders(_peerID, start, 1, 0, false);
+            m_host.peer(_peerID).requestBlockHeaders(start, 1, 0, false);
     }
 }
 
@@ -758,14 +755,15 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
     }
     BlockHeader info(_r[0][0].data(), HeaderData);
     auto h = info.hash();
-    m_host.markBlockAsKnownToPeer(_peerID, h);
+    auto& peer = m_host.peer(_peerID);
+    peer.markBlockAsKnown(h);
     unsigned blockNumber = static_cast<unsigned>(info.number());
     if (blockNumber > (m_lastImportedBlock + 1))
     {
         LOG(m_loggerDetail) << "Received unknown new block";
         // Update the hash of highest known block of the peer.
         // syncPeer will then request the highest block header to properly restart syncing
-        m_host.setPeerLatestHash(_peerID, h);
+        peer.setLatestHash(h);
         syncPeer(_peerID, true);
         return;
     }
@@ -812,15 +810,15 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
     case ImportResult::FutureTimeUnknown:
     case ImportResult::UnknownParent:
     {
-        m_host.incrementPeerUnknownNewBlocks(_peerID);
-        if (m_host.peerStatus(_peerID).m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
+        peer.incrementUnknownNewBlocks();
+        if (peer.unknownNewBlocks() > c_maxPeerUknownNewBlocks)
         {
             m_host.disablePeer(_peerID, "Too many uknown new blocks");
             restartSync();
         }
         logNewBlock(h);
         u256 totalDifficulty = _r[1].toInt<u256>();
-        if (totalDifficulty > m_host.peerStatus(_peerID).m_totalDifficulty)
+        if (totalDifficulty > peer.totalDifficulty())
         {
             LOG(m_loggerDetail) << "Received block with no known parent. Peer needs syncing...";
             syncPeer(_peerID, true);
@@ -890,7 +888,9 @@ void BlockChainSync::onPeerNewHashes(
 {
     RecursiveGuard l(x_sync);
     DEV_INVARIANT_CHECK;
-    if (m_host.isPeerConversing(_peerID))
+
+    auto& peer = m_host.peer(_peerID);
+    if (peer.isConversing())
     {
         LOG(m_loggerDetail) << "Ignoring new hashes since we're already downloading.";
         return;
@@ -903,7 +903,7 @@ void BlockChainSync::onPeerNewHashes(
     {
         h256 const& h = p.first;
         m_host.capabilityHost().addRating(_peerID, 1);
-        m_host.markBlockAsKnownToPeer(_peerID, h);
+        peer.markBlockAsKnown(h);
         auto status = host().bq().blockStatus(h);
         if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h))
             knowns++;
@@ -918,7 +918,7 @@ void BlockChainSync::onPeerNewHashes(
             if (p.second > maxHeight)
             {
                 maxHeight = (unsigned)p.second;
-                m_host.setPeerLatestHash(_peerID, h);
+                peer.setLatestHash(h);
             }
         }
         else

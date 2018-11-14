@@ -41,7 +41,6 @@ namespace eth
 class EthereumHost;
 class BlockQueue;
 class EthereumPeer;
-struct EthereumPeerStatus;
 
 /**
  * @brief Base BlockChain synchronization strategy class.
@@ -65,7 +64,7 @@ public:
     void completeSync();
 
     /// Called by peer to report status
-    void onPeerStatus(NodeID const& _peerID, EthereumPeerStatus const& _status);
+    void onPeerStatus(EthereumPeer const& _peer);
 
     /// Called by peer once it has new block headers during sync
     void onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r);
