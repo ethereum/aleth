@@ -53,17 +53,14 @@ string toString(Asking _a)
 }
 }  // namespace
 
-void EthereumPeer::setStatus(unsigned _protocolVersion, unsigned _hostProtocolVersion,
-    u256 const& _networkId, u256 const& _totalDifficulty, h256 const& _latestHash,
-    h256 const& _genesisHash)
+void EthereumPeer::setStatus(unsigned _protocolVersion, u256 const& _networkId,
+    u256 const& _totalDifficulty, h256 const& _latestHash, h256 const& _genesisHash)
 {
     m_protocolVersion = _protocolVersion;
     m_networkId = _networkId;
     m_totalDifficulty = _totalDifficulty;
     m_latestHash = _latestHash;
     m_genesisHash = _genesisHash;
-    if (m_peerCapabilityVersion == _hostProtocolVersion)
-        m_protocolVersion = _hostProtocolVersion;
 }
 
 

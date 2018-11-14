@@ -685,8 +685,8 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
             LOG(m_logger) << "Status: " << peerProtocolVersion << " / " << networkId << " / "
                           << genesisHash << ", TD: " << totalDifficulty << " = " << latestHash;
 
-            peer.setStatus(peerProtocolVersion, protocolVersion(), networkId, totalDifficulty,
-                latestHash, genesisHash);
+            peer.setStatus(
+                peerProtocolVersion, networkId, totalDifficulty, latestHash, genesisHash);
             setIdle(_peerID);
             m_peerObserver->onPeerStatus(peer);
             break;
@@ -905,8 +905,7 @@ bool EthereumHost::isCriticalSyncing(NodeID const& _peerID) const
     auto const& peerStatus = itPeerStatus->second;
 
     auto const asking = peerStatus.asking();
-    return asking == Asking::BlockHeaders || asking == Asking::State ||
-           (asking == Asking::BlockBodies && peerStatus.protocolVersion() == 62);
+    return asking == Asking::BlockHeaders || asking == Asking::State;
 }
 
 bool EthereumHost::needsSyncing(NodeID const& _peerID) const
