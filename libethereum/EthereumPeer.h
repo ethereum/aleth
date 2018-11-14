@@ -33,19 +33,18 @@ class EthereumPeer
 public:
     EthereumPeer() = default;
     EthereumPeer(std::shared_ptr<p2p::CapabilityHostFace> _host, NodeID const& _peerID,
-        u256 const& _capabilityVersion)
-      : m_host(std::move(_host)), m_id(_peerID), m_peerCapabilityVersion(_capabilityVersion)
+        u256 const& /*_capabilityVersion*/)
+      : m_host(std::move(_host)), m_id(_peerID)
     {}
 
-    void setStatus(unsigned _protocolVersion, unsigned _hostProtocolVersion, u256 const& _networkId,
-        u256 const& _totalDifficulty, h256 const& _latestHash, h256 const& _genesisHash);
+    void setStatus(unsigned _protocolVersion, u256 const& _networkId, u256 const& _totalDifficulty,
+        h256 const& _latestHash, h256 const& _genesisHash);
 
     std::string validate(h256 const& _hostGenesisHash, unsigned _hostProtocolVersion,
         u256 const& _hostNetworkId) const;
 
     NodeID id() const { return m_id; }
 
-    unsigned protocolVersion() const { return m_protocolVersion; }
     u256 totalDifficulty() const { return m_totalDifficulty; }
 
     time_t lastAsk() const { return m_lastAsk; }
@@ -110,8 +109,6 @@ private:
     /// Peer's latest block's total difficulty.
     u256 m_totalDifficulty;
     h256 m_genesisHash;  ///< Peer's genesis hash
-    /// Protocol version this peer supports received as capability
-    u256 const m_peerCapabilityVersion;
     /// Have we received a GetTransactions packet that we haven't yet answered?
     bool m_requireTransactions = false;
 
