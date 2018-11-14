@@ -1041,7 +1041,7 @@ void Host::forEachPeer(
             std::vector<CapDesc> capabilities = s->capabilities();
             for (auto const& cap : capabilities)
                 if (cap.first == _capabilityName)
-                    sessions.push_back(s);
+                    sessions.emplace_back(std::move(s));
         }
 
     // order peers by rating, connection age
@@ -1053,7 +1053,7 @@ void Host::forEachPeer(
     };
     std::sort(sessions.begin(), sessions.end(), sessionLess);
 
-    for (auto s : sessions)
+    for (auto const& s : sessions)
         if (!_f(s->id()))
             return;
 }
