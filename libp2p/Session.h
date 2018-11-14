@@ -22,8 +22,8 @@
 
 #pragma once
 
+#include "Capability.h"
 #include "Common.h"
-#include "HostCapability.h"
 #include "RLPXFrameCoder.h"
 #include "RLPXSocket.h"
 #include <libdevcore/Common.h>
@@ -70,7 +70,7 @@ public:
     virtual std::chrono::steady_clock::time_point connectionTime() = 0;
 
     virtual void registerCapability(
-        CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p) = 0;
+        CapDesc const& _desc, unsigned _offset, std::shared_ptr<CapabilityFace> _p) = 0;
 
     virtual std::vector<CapDesc> capabilities() const = 0;
 
@@ -116,7 +116,8 @@ public:
     PeerSessionInfo info() const override { Guard l(x_info); return m_info; }
     std::chrono::steady_clock::time_point connectionTime() override { return m_connect; }
 
-    void registerCapability(CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p) override;
+    void registerCapability(
+        CapDesc const& _desc, unsigned _offset, std::shared_ptr<CapabilityFace> _p) override;
 
     std::vector<CapDesc> capabilities() const override { return keysOf(m_capabilities); }
 
@@ -185,7 +186,7 @@ private:
     std::chrono::steady_clock::time_point m_lastReceived;	///< Time point of last message.
 
     /// The peer's capability set.
-    std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_capabilities;
+    std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
 
     /// Map of capability to packet id offset in the session
     std::unordered_map<std::string, unsigned> m_capabilityOffsets;

@@ -442,7 +442,8 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
     return true;
 }
 
-void Session::registerCapability(CapDesc const& _desc, unsigned _offset, std::shared_ptr<HostCapabilityFace> _p)
+void Session::registerCapability(
+    CapDesc const& _desc, unsigned _offset, std::shared_ptr<CapabilityFace> _p)
 {
     DEV_GUARDED(x_framing)
     {

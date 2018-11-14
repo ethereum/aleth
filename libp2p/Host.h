@@ -59,9 +59,9 @@ namespace dev
 
 namespace p2p
 {
+class CapabilityFace;
 class CapabilityHostFace;
 class Host;
-class HostCapabilityFace;
 class SessionFace;
 
 class HostNodeTableHandler: public NodeTableEventHandler
@@ -155,13 +155,13 @@ public:
     static std::unordered_map<Public, std::string> pocHosts();
 
     /// Register a host capability; all new peer connections will see this capability.
-    void registerCapability(std::shared_ptr<HostCapabilityFace> const& _cap);
+    void registerCapability(std::shared_ptr<CapabilityFace> const& _cap);
 
     /// Register a host capability with arbitrary name and version.
     /// Might be useful when you want to handle several subprotocol versions with a single
     /// capability class.
-    void registerCapability(std::shared_ptr<HostCapabilityFace> const& _cap,
-        std::string const& _name, u256 const& _version);
+    void registerCapability(std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name,
+        u256 const& _version);
 
     bool haveCapability(CapDesc const& _name) const { return m_capabilities.count(_name) != 0; }
     CapDescs caps() const { CapDescs ret; for (auto const& i: m_capabilities) ret.push_back(i.first); return ret; }
@@ -351,8 +351,9 @@ private:
     unsigned m_idealPeerCount = 11;										///< Ideal number of peers to be connected to.
     unsigned m_stretchPeers = 7;										///< Accepted connection multiplier (max peers = ideal*stretch).
 
-    std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_capabilities;	///< Each of the capabilities we support.
-    
+    /// Each of the capabilities we support.
+    std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
+
     /// Deadline timers used for isolated network events. GC'd by run.
     std::list<std::shared_ptr<boost::asio::deadline_timer>> m_timers;
     Mutex x_timers;

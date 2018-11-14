@@ -21,9 +21,9 @@
  */
 
 #include "Host.h"
+#include "Capability.h"
 #include "CapabilityHost.h"
 #include "Common.h"
-#include "HostCapability.h"
 #include "RLPxHandshake.h"
 #include "Session.h"
 #include "UPnP.h"
@@ -511,13 +511,13 @@ std::unordered_map<Public, std::string> Host::pocHosts()
     };
 }
 
-void Host::registerCapability(std::shared_ptr<HostCapabilityFace> const& _cap)
+void Host::registerCapability(std::shared_ptr<CapabilityFace> const& _cap)
 {
     registerCapability(_cap, _cap->name(), _cap->version());
 }
 
 void Host::registerCapability(
-    std::shared_ptr<HostCapabilityFace> const& _cap, std::string const& _name, u256 const& _version)
+    std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name, u256 const& _version)
 {
     m_capabilities[std::make_pair(_name, _version)] = _cap;
 }
