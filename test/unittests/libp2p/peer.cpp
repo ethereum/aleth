@@ -20,13 +20,13 @@
  * Peer Network test functions.
  */
 
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <test/tools/libtesteth/Options.h>
+#include <libp2p/Capability.h>
 #include <libp2p/Host.h>
-#include <libp2p/HostCapability.h>
+#include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <boost/test/unit_test.hpp>
 #include <chrono>
 #include <thread>
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
@@ -39,7 +39,7 @@ struct P2PPeerFixture: public TestOutputHelperFixture
     ~P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestHostCap : public HostCapabilityFace, public Worker
+class TestCap : public CapabilityFace, public Worker
 {
 public:
     std::string name() const override { return "p2pTestCapability"; }
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(host)
     
     BOOST_REQUIRE_NE(host1port, host2port);
 
-    host1.registerCapability(make_shared<TestHostCap>());
-    host2.registerCapability(make_shared<TestHostCap>());
+    host1.registerCapability(make_shared<TestCap>());
+    host2.registerCapability(make_shared<TestCap>());
 
     auto node2 = host2.id();
     int const step = 10;
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
         BOOST_REQUIRE(h->listenPort());
         bool inserted = ports.insert(h->listenPort()).second;
         BOOST_REQUIRE(inserted);
-        h->registerCapability(make_shared<TestHostCap>());
+        h->registerCapability(make_shared<TestCap>());
         hosts.push_back(h);
     }
     
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     BOOST_REQUIRE(port2);
     BOOST_REQUIRE_NE(port1, port2);
 
-    host1.registerCapability(make_shared<TestHostCap>());
-    host2.registerCapability(make_shared<TestHostCap>());
+    host1.registerCapability(make_shared<TestCap>());
+    host2.registerCapability(make_shared<TestCap>());
 
     host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 

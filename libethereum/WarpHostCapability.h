@@ -19,8 +19,8 @@
 
 #include "CommonNet.h"
 #include <libdevcore/Worker.h>
+#include <libp2p/Capability.h>
 #include <libp2p/CapabilityHost.h>
-#include <libp2p/HostCapability.h>
 
 namespace dev
 {
@@ -80,7 +80,7 @@ public:
 };
 
 
-class WarpHostCapability : public p2p::HostCapabilityFace, Worker
+class WarpHostCapability : public p2p::CapabilityFace, Worker
 {
 public:
     WarpHostCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,

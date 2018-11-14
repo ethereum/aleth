@@ -21,7 +21,6 @@
 
 namespace dev
 {
-
 namespace p2p
 {
 /**
@@ -29,10 +28,10 @@ namespace p2p
  * This interface has to be implemented to support any devp2p subprotocol.
  */
 
-class HostCapabilityFace
+class CapabilityFace
 {
 public:
-    virtual ~HostCapabilityFace() = default;
+    virtual ~CapabilityFace() = default;
 
     /// Subprotocol name, used in negotiating common capabilities with the peers.
     virtual std::string name() const = 0;
@@ -59,6 +58,6 @@ public:
     virtual void onDisconnect(NodeID const& _nodeID) = 0;
 };
 
-}
+}  // namespace p2p
 
-}
+}  // namespace dev

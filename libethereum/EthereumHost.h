@@ -25,9 +25,9 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Common.h>
 #include <libethereum/BlockChainSync.h>
+#include <libp2p/Capability.h>
 #include <libp2p/CapabilityHost.h>
 #include <libp2p/Common.h>
-#include <libp2p/HostCapability.h>
 #include <memory>
 #include <mutex>
 #include <random>
@@ -95,7 +95,7 @@ public:
  * @warning None of this is thread-safe. You have been warned.
  * @doWork Syncs to peers and sends new blocks and transactions.
  */
-class EthereumHost : public p2p::HostCapabilityFace, Worker
+class EthereumHost : public p2p::CapabilityFace, Worker
 {
 public:
     /// Start server, but don't listen.

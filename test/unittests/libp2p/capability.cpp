@@ -19,10 +19,10 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 * @date May 2015
 */
 
+#include <libp2p/Capability.h>
 #include <libp2p/CapabilityHost.h>
 #include <libp2p/Common.h>
 #include <libp2p/Host.h>
-#include <libp2p/HostCapability.h>
 #include <libp2p/Session.h>
 #include <test/tools/libtesteth/Options.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
@@ -41,10 +41,10 @@ struct P2PFixture: public TestOutputHelperFixture
     ~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-class TestHostCapability : public HostCapabilityFace, public Worker
+class TestCapability : public CapabilityFace, public Worker
 {
 public:
-    explicit TestHostCapability(Host const& _host) : Worker("test"), m_host(_host) {}
+    explicit TestCapability(Host const& _host) : Worker("test"), m_host(_host) {}
 
     std::string name() const override { return "test"; }
     u256 version() const override { return 2; }
@@ -110,9 +110,9 @@ BOOST_AUTO_TEST_CASE(capability)
     NetworkConfig prefs2(localhost, 0, false);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
-    auto thc1 = make_shared<TestHostCapability>(host1);
+    auto thc1 = make_shared<TestCapability>(host1);
     host1.registerCapability(thc1);
-    auto thc2 = make_shared<TestHostCapability>(host2);
+    auto thc2 = make_shared<TestCapability>(host2);
     host2.registerCapability(thc2);
     host1.start();	
     host2.start();
