@@ -243,8 +243,9 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
     shared_ptr<Peer> peer;
     DEV_RECURSIVE_GUARDED(x_sessions)
     {
-        if (m_peers.count(_id))
-            peer = m_peers[_id];
+        auto itPeer = m_peers.find(_id);
+        if (itPeer != m_peers.end())
+            peer = itPeer->second;
         else
         {
             // peer doesn't exist, try to get port info from node table
@@ -336,17 +337,18 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         // todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
         for (auto const& capDesc : caps)
         {
-            auto pcap = m_capabilities[capDesc];
-            if (!pcap)
+            auto itCap = m_capabilities.find(capDesc);
+            if (itCap == m_capabilities.end())
                 return session->disconnect(IncompatibleProtocol);
 
-            session->registerCapability(capDesc, offset, pcap);
+            auto capability = itCap->second;
+            session->registerCapability(capDesc, offset, capability);
 
             cnetlog << "New session for capability " << capDesc.first << "; idOffset: " << offset;
 
-            pcap->onConnect(_id, capDesc.second);
+            capability->onConnect(_id, capDesc.second);
 
-            offset += pcap->messageCount();
+            offset += capability->messageCount();
         }
 
         session->start();
