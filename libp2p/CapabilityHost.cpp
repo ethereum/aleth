@@ -51,7 +51,7 @@ public:
             session->disableCapability(_capabilityName, _problem);
     }
 
-    void addRating(NodeID const& _nodeID, int _r) override
+    void updateRating(NodeID const& _nodeID, int _r) override
     {
         auto session = m_host.peerSession(_nodeID);
         if (session)

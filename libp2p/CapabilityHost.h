@@ -69,10 +69,10 @@ public:
     /// Has no effect if the peer is not connected.
     virtual void addNote(NodeID const& _nodeID, std::string const& _k, std::string const& _v) = 0;
 
-    /// Adjust the rating of the connected peer.
+    /// Adjust the rating of the connected peer by value @a _r.
     /// This affects the order of peer iteration in forEachPeer.
     /// Has no effect if the peer is not connected.
-    virtual void addRating(NodeID const& _nodeID, int _r) = 0;
+    virtual void updateRating(NodeID const& _nodeID, int _r) = 0;
 
     /// Mark the connected peer as having poor behaviour.
     /// This affects only isRude() result.
