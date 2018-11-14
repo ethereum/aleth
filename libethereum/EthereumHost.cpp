@@ -633,15 +633,15 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
     switch (_ir)
     {
     case ImportResult::Malformed:
-        m_host->addRating(_nodeId, -100);
+        m_host->updateRating(_nodeId, -100);
         break;
     case ImportResult::AlreadyKnown:
         // if we already had the transaction, then don't bother sending it on.
         DEV_GUARDED(x_transactions) { m_transactionsSent.insert(_h); }
-        m_host->addRating(_nodeId, 0);
+        m_host->updateRating(_nodeId, 0);
         break;
     case ImportResult::Success:
-        m_host->addRating(_nodeId, 100);
+        m_host->updateRating(_nodeId, 100);
         break;
     default:;
     }
@@ -722,7 +722,7 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
             m_host->prep(_peerID, name(), s, BlockHeadersPacket, rlpAndItemCount.second)
                 .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
             m_host->sealAndSend(_peerID, s);
-            m_host->addRating(_peerID, 0);
+            m_host->updateRating(_peerID, 0);
             break;
         }
         case BlockHeadersPacket:
@@ -745,13 +745,13 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
             if (!count)
             {
                 LOG(m_loggerImpolite) << "Zero-entry GetBlockBodies: Not replying.";
-                m_host->addRating(_peerID, -10);
+                m_host->updateRating(_peerID, -10);
                 break;
             }
 
             pair<bytes, unsigned> const rlpAndItemCount = m_hostData->blockBodies(_r);
 
-            m_host->addRating(_peerID, 0);
+            m_host->updateRating(_peerID, 0);
             RLPStream s;
             m_host->prep(_peerID, name(), s, BlockBodiesPacket, rlpAndItemCount.second)
                 .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);
@@ -800,14 +800,14 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
             if (!count)
             {
                 LOG(m_loggerImpolite) << "Zero-entry GetNodeData: Not replying.";
-                m_host->addRating(_peerID, -10);
+                m_host->updateRating(_peerID, -10);
                 break;
             }
             cnetlog << "GetNodeData (" << dec << count << " entries)";
 
             strings const data = m_hostData->nodeData(_r);
 
-            m_host->addRating(_peerID, 0);
+            m_host->updateRating(_peerID, 0);
             RLPStream s;
             m_host->prep(_peerID, name(), s, NodeDataPacket, data.size());
             for (auto const& element : data)
@@ -821,14 +821,14 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
             if (!count)
             {
                 LOG(m_loggerImpolite) << "Zero-entry GetReceipts: Not replying.";
-                m_host->addRating(_peerID, -10);
+                m_host->updateRating(_peerID, -10);
                 break;
             }
             cnetlog << "GetReceipts (" << dec << count << " entries)";
 
             pair<bytes, unsigned> const rlpAndItemCount = m_hostData->receipts(_r);
 
-            m_host->addRating(_peerID, 0);
+            m_host->updateRating(_peerID, 0);
             RLPStream s;
             m_host->prep(_peerID, name(), s, ReceiptsPacket, rlpAndItemCount.second)
                 .appendRaw(rlpAndItemCount.first, rlpAndItemCount.second);

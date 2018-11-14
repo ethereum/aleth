@@ -478,7 +478,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
     if (itemCount == 0)
     {
         LOG(m_loggerDetail) << "Peer does not have the blocks requested";
-        m_host.capabilityHost().addRating(_peerID, -1);
+        m_host.capabilityHost().updateRating(_peerID, -1);
     }
     for (unsigned i = 0; i < itemCount; i++)
     {
@@ -534,7 +534,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
                     // mismatching parent id, delete the previous block and don't add this one
                     clog(VerbosityWarning, "sync") << "Unknown block header " << blockNumber << " "
                                                    << info.hash() << " (Restart syncing)";
-                    m_host.capabilityHost().addRating(_peerID, -1);
+                    m_host.capabilityHost().updateRating(_peerID, -1);
                     restartSync();
                     return ;
                 }
@@ -609,7 +609,7 @@ void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
     if (itemCount == 0)
     {
         LOG(m_loggerDetail) << "Peer does not have the blocks requested";
-        m_host.capabilityHost().addRating(_peerID, -1);
+        m_host.capabilityHost().updateRating(_peerID, -1);
     }
     for (unsigned i = 0; i < itemCount; i++)
     {
@@ -770,7 +770,7 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
     switch (host().bq().import(_r[0].data()))
     {
     case ImportResult::Success:
-        m_host.capabilityHost().addRating(_peerID, 100);
+        m_host.capabilityHost().updateRating(_peerID, 100);
         logNewBlock(h);
         if (blockNumber > m_lastImportedBlock) 
         {
@@ -902,7 +902,7 @@ void BlockChainSync::onPeerNewHashes(
     for (auto const& p: _hashes)
     {
         h256 const& h = p.first;
-        m_host.capabilityHost().addRating(_peerID, 1);
+        m_host.capabilityHost().updateRating(_peerID, 1);
         peer.markBlockAsKnown(h);
         auto status = host().bq().blockStatus(h);
         if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h))
