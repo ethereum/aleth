@@ -705,10 +705,9 @@ void Host::run(boost::system::error_code const&)
     DEV_GUARDED(x_connecting)
         m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
     DEV_GUARDED(x_timers)
-        m_timers.remove_if([](std::shared_ptr<boost::asio::deadline_timer> t)
-        {
-            return t->expires_from_now().total_milliseconds() < 0;
-        });
+    m_timers.remove_if([](std::unique_ptr<boost::asio::deadline_timer> const& t) {
+        return t->expires_from_now().total_milliseconds() < 0;
+    });
 
     keepAlivePeers();
     
@@ -1049,12 +1048,11 @@ void Host::forEachPeer(
 
 void Host::scheduleExecution(int _delayMs, std::function<void()> _f)
 {
-    auto t = make_shared<boost::asio::deadline_timer>(m_ioService);
+    std::unique_ptr<boost::asio::deadline_timer> t(new boost::asio::deadline_timer(m_ioService));
     t->expires_from_now(boost::posix_time::milliseconds(_delayMs));
     t->async_wait([_f](boost::system::error_code const& _ec) {
         if (!_ec)
             _f();
     });
-    DEV_GUARDED(x_timers)
-    m_timers.push_back(t);
+    DEV_GUARDED(x_timers) { m_timers.emplace_back(std::move(t)); }
 }

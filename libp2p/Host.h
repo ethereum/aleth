@@ -352,7 +352,7 @@ private:
     std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
 
     /// Deadline timers used for isolated network events. GC'd by run.
-    std::list<std::shared_ptr<boost::asio::deadline_timer>> m_timers;
+    std::list<std::unique_ptr<boost::asio::deadline_timer>> m_timers;
     Mutex x_timers;
 
     std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
