@@ -14,11 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Host.h
- * @author Alex Leverington <nessence@gmail.com>
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
@@ -250,6 +245,8 @@ public:
     /// Apply function to each session
     void forEachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
+
+    void scheduleExecution(int _delayMs, std::function<void()> _f);
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 

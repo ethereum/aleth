@@ -85,6 +85,10 @@ public:
     /// Apply callback function to each of the connected peers with given capability.
     virtual void foreachPeer(std::string const& _capabilityName,
         std::function<bool(NodeID const& _nodeID)> _f) const = 0;
+
+    /// Schedule callback to be called from the network handling thread
+    /// after at least @a _delayMs milliseconds
+    virtual void scheduleExecution(int _delayMs, std::function<void()> _f) = 0;
 };
 
 class Host;

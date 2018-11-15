@@ -109,6 +109,11 @@ public:
         m_host.forEachPeer(_capabilityName, _f);
     }
 
+    void scheduleExecution(int _delayMs, std::function<void()> _f) override
+    {
+        m_host.scheduleExecution(_delayMs, std::move(_f));
+    }
+
 private:
     Host& m_host;
 };
