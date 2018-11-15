@@ -15,18 +15,17 @@
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "EthereumHost.h"
-
-#include <chrono>
-#include <thread>
+#include "EthereumCapability.h"
+#include "BlockChain.h"
+#include "BlockChainSync.h"
+#include "BlockQueue.h"
+#include "TransactionQueue.h"
 #include <libdevcore/Common.h>
+#include <libethcore/Exceptions.h>
 #include <libp2p/Host.h>
 #include <libp2p/Session.h>
-#include <libethcore/Exceptions.h>
-#include "BlockChain.h"
-#include "TransactionQueue.h"
-#include "BlockQueue.h"
-#include "BlockChainSync.h"
+#include <chrono>
+#include <thread>
 
 using namespace std;
 using namespace dev;
@@ -36,7 +35,8 @@ static unsigned const c_maxSendTransactions = 256;
 static unsigned const c_maxHeadersToSend = 1024;
 static unsigned const c_maxIncomingNewHashes = 1024;
 
-char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State"};
+char const* const EthereumCapability::s_stateNames[static_cast<int>(SyncState::Size)] = {
+    "NotSynced", "Idle", "Waiting", "Blocks", "State"};
 
 namespace
 {
@@ -191,7 +191,7 @@ public:
         assert(step > 0 && "step must not be 0");
 
         h256 blockHash;
-        if (_blockId.size() == 32) // block id is a hash
+        if (_blockId.size() == 32)  // block id is a hash
         {
             blockHash = _blockId.toHash<h256>();
             cnetlog << "GetBlockHeaders (block (hash): " << blockHash
@@ -315,8 +315,8 @@ public:
                 RLP block{blockBytes};
                 RLPStream body;
                 body.appendList(2);
-                body.appendRaw(block[1].data()); // transactions
-                body.appendRaw(block[2].data()); // uncles
+                body.appendRaw(block[1].data());  // transactions
+                body.appendRaw(block[2].data());  // uncles
                 auto bodyBytes = body.out();
                 rlp.insert(rlp.end(), bodyBytes.begin(), bodyBytes.end());
                 ++n;
@@ -387,8 +387,9 @@ private:
 
 }
 
-EthereumHost::EthereumHost(shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _ch,
-    OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId)
+EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host,
+    BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq,
+    u256 _networkId)
   : Worker("ethsync"),
     m_host(move(_host)),
     m_chain(_ch),
@@ -408,12 +409,12 @@ EthereumHost::EthereumHost(shared_ptr<p2p::CapabilityHostFace> _host, BlockChain
     m_urng = std::mt19937_64(seed());
 }
 
-EthereumHost::~EthereumHost()
+EthereumCapability::~EthereumCapability()
 {
     terminate();
 }
 
-bool EthereumHost::ensureInitialised()
+bool EthereumCapability::ensureInitialised()
 {
     if (!m_latestBlockSent)
     {
@@ -428,7 +429,7 @@ bool EthereumHost::ensureInitialised()
     return false;
 }
 
-void EthereumHost::reset()
+void EthereumCapability::reset()
 {
     m_sync->abortSync();
 
@@ -437,12 +438,12 @@ void EthereumHost::reset()
     m_transactionsSent.clear();
 }
 
-void EthereumHost::completeSync()
+void EthereumCapability::completeSync()
 {
     m_sync->completeSync();
 }
 
-void EthereumHost::doWork()
+void EthereumCapability::doWork()
 {
     bool netChange = ensureInitialised();
     auto h = m_chain.currentHash();
@@ -461,7 +462,7 @@ void EthereumHost::doWork()
         }
     }
 
-    time_t  now = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
+    time_t now = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
     if (now - m_lastTick >= 1)
     {
         m_lastTick = now;
@@ -480,7 +481,7 @@ void EthereumHost::doWork()
     (void)netChange;
 }
 
-void EthereumHost::maintainTransactions()
+void EthereumCapability::maintainTransactions()
 {
     // Send any new transactions.
     unordered_map<NodeID, std::vector<size_t>> peerTransactions;
@@ -525,7 +526,7 @@ void EthereumHost::maintainTransactions()
     }
 }
 
-tuple<vector<NodeID>, vector<NodeID>> EthereumHost::randomSelection(
+tuple<vector<NodeID>, vector<NodeID>> EthereumCapability::randomSelection(
     unsigned _percent, std::function<bool(EthereumPeer const&)> const& _allow)
 {
     vector<NodeID> chosen;
@@ -553,7 +554,7 @@ tuple<vector<NodeID>, vector<NodeID>> EthereumHost::randomSelection(
     return make_tuple(move(chosen), move(allowed));
 }
 
-void EthereumHost::maintainBlocks(h256 const& _currentHash)
+void EthereumCapability::maintainBlocks(h256 const& _currentHash)
 {
     // Send any new blocks.
     auto detailsFrom = m_chain.details(m_latestBlockSent);
@@ -610,17 +611,18 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
     }
 }
 
-bool EthereumHost::isSyncing() const
+bool EthereumCapability::isSyncing() const
 {
     return m_sync->isSyncing();
 }
 
-SyncStatus EthereumHost::status() const
+SyncStatus EthereumCapability::status() const
 {
     return m_sync->status();
 }
 
-void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId)
+void EthereumCapability::onTransactionImported(
+    ImportResult _ir, h256 const& _h, h512 const& _nodeId)
 {
     // TODO this is not thread safe, do it from IO thread
     auto itPeerStatus = m_peers.find(_nodeId);
@@ -647,7 +649,7 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
     }
 }
 
-void EthereumHost::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion)
+void EthereumCapability::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion)
 {
     m_host->addNote(_peerID, "manners", m_host->isRude(_peerID, name()) ? "RUDE" : "nice");
 
@@ -657,7 +659,7 @@ void EthereumHost::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityV
         m_chain.genesisHash());
 }
 
-void EthereumHost::onDisconnect(NodeID const& _peerID)
+void EthereumCapability::onDisconnect(NodeID const& _peerID)
 {
     // TODO lower peer's rating or mark as rude if it disconnects when being asked for something
     m_peerObserver->onPeerAborting();
@@ -665,7 +667,8 @@ void EthereumHost::onDisconnect(NodeID const& _peerID)
     m_peers.erase(_peerID);
 }
 
-bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r)
+bool EthereumCapability::interpretCapabilityPacket(
+    NodeID const& _peerID, unsigned _id, RLP const& _r)
 {
     auto& peer = m_peers[_peerID];
     peer.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
@@ -874,12 +877,12 @@ bool EthereumHost::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id
     return true;
 }
 
-void EthereumHost::setIdle(NodeID const& _peerID)
+void EthereumCapability::setIdle(NodeID const& _peerID)
 {
     setAsking(_peerID, Asking::Nothing);
 }
 
-void EthereumHost::setAsking(NodeID const& _peerID, Asking _a)
+void EthereumCapability::setAsking(NodeID const& _peerID, Asking _a)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -896,7 +899,7 @@ void EthereumHost::setAsking(NodeID const& _peerID, Asking _a)
             (needsSyncing(_peerID) ? " & needed" : ""));
 }
 
-bool EthereumHost::isCriticalSyncing(NodeID const& _peerID) const
+bool EthereumCapability::isCriticalSyncing(NodeID const& _peerID) const
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -908,7 +911,7 @@ bool EthereumHost::isCriticalSyncing(NodeID const& _peerID) const
     return asking == Asking::BlockHeaders || asking == Asking::State;
 }
 
-bool EthereumHost::needsSyncing(NodeID const& _peerID) const
+bool EthereumCapability::needsSyncing(NodeID const& _peerID) const
 {
     if (m_host->isRude(_peerID, name()))
         return false;
@@ -917,17 +920,17 @@ bool EthereumHost::needsSyncing(NodeID const& _peerID) const
     return (peerStatus != m_peers.end() && peerStatus->second.latestHash());
 }
 
-void EthereumHost::disablePeer(NodeID const& _peerID, std::string const& _problem)
+void EthereumCapability::disablePeer(NodeID const& _peerID, std::string const& _problem)
 {
     m_host->disableCapability(_peerID, name(), _problem);
 }
 
-EthereumPeer const& EthereumHost::peer(NodeID const& _peerID) const
+EthereumPeer const& EthereumCapability::peer(NodeID const& _peerID) const
 {
-    return const_cast<EthereumHost*>(this)->peer(_peerID);
+    return const_cast<EthereumCapability*>(this)->peer(_peerID);
 }
 
-EthereumPeer& EthereumHost::peer(NodeID const& _peerID)
+EthereumPeer& EthereumCapability::peer(NodeID const& _peerID)
 {
     auto peer = m_peers.find(_peerID);
     if (peer == m_peers.end())

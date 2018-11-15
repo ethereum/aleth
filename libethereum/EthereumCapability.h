@@ -91,19 +91,19 @@ public:
 
 
 /**
- * @brief The EthereumHost class
+ * @brief The EthereumCapability class
  * @warning None of this is thread-safe. You have been warned.
  * @doWork Syncs to peers and sends new blocks and transactions.
  */
-class EthereumHost : public p2p::CapabilityFace, Worker
+class EthereumCapability : public p2p::CapabilityFace, Worker
 {
 public:
     /// Start server, but don't listen.
-    EthereumHost(std::shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _ch,
+    EthereumCapability(std::shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _ch,
         OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
     /// Will block on network process events.
-    ~EthereumHost() override;
+    ~EthereumCapability() override;
 
     std::string name() const override { return "eth"; }
     u256 version() const override { return c_protocolVersion; }
@@ -200,10 +200,10 @@ private:
 
     std::unordered_map<NodeID, EthereumPeer> m_peers;
 
-    std::mt19937_64 m_urng; // Mersenne Twister psuedo-random number generator
+    std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
 
 
-    Logger m_logger{createLogger(VerbosityDebug, "ethhost")};
+    Logger m_logger{createLogger(VerbosityDebug, "ethcap")};
     /// Logger for messages about impolite behaivour of peers.
     Logger m_loggerImpolite{createLogger(VerbosityDebug, "impolite")};
 };

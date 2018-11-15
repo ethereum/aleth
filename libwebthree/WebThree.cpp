@@ -17,10 +17,10 @@
 
 #include "WebThree.h"
 
-#include <libethereum/EthereumHost.h>
-#include <libethereum/ClientTest.h>
-#include <libethashseal/EthashClient.h>
 #include <libethashseal/Ethash.h>
+#include <libethashseal/EthashClient.h>
+#include <libethereum/ClientTest.h>
+#include <libethereum/EthereumCapability.h>
 
 #include <aleth/buildinfo.h>
 

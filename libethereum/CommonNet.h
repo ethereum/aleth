@@ -47,7 +47,7 @@ static const unsigned c_maxReceipts = c_maxBlocks; ///< Maximum number of receip
 
 class BlockChain;
 class TransactionQueue;
-class EthereumHost;
+class EthereumCapability;
 class EthereumPeer;
 
 enum SubprotocolPacketType: byte
