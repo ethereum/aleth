@@ -21,15 +21,15 @@
 
 #include "BlockChainSync.h"
 
-#include <chrono>
-#include <libdevcore/Common.h>
-#include <libdevcore/TrieHash.h>
-#include <libp2p/Host.h>
-#include <libp2p/Session.h>
-#include <libethcore/Exceptions.h>
 #include "BlockChain.h"
 #include "BlockQueue.h"
-#include "EthereumHost.h"
+#include "EthereumCapability.h"
+#include <libdevcore/Common.h>
+#include <libdevcore/TrieHash.h>
+#include <libethcore/Exceptions.h>
+#include <libp2p/Host.h>
+#include <libp2p/Session.h>
+#include <chrono>
 
 using namespace std;
 using namespace dev;
@@ -43,7 +43,7 @@ unsigned const c_maxRequestBodies = 1024;
 std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 {
     _out << "protocol: " << _sync.protocolVersion << endl;
-    _out << "state: " << EthereumHost::stateName(_sync.state) << " ";
+    _out << "state: " << EthereumCapability::stateName(_sync.state) << " ";
     if (_sync.state == SyncState::Blocks)
         _out << _sync.currentBlockNumber << "/" << _sync.highestBlockNumber;
     return _out;
@@ -155,8 +155,8 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 
 }  // Anonymous namespace -- helper functions.
 
-BlockChainSync::BlockChainSync(EthereumHost& _host):
-    m_host(_host),
+BlockChainSync::BlockChainSync(EthereumCapability& _host)
+  : m_host(_host),
     m_chainStartBlock(_host.chain().chainStartBlockNumber()),
     m_startingBlock(_host.chain().number()),
     m_lastImportedBlock(m_startingBlock),

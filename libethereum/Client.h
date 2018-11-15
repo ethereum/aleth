@@ -53,6 +53,7 @@ namespace eth
 
 class Client;
 class DownloadMan;
+class EthereumCapability;
 
 enum ClientWorkState
 {
@@ -338,7 +339,7 @@ protected:
     std::atomic<bool> m_needStateReset = { false };         ///< Need reset working state to premin on next sync
     std::chrono::system_clock::time_point m_lastGetWork;    ///< Is there an active and valid remote worker?
 
-    std::weak_ptr<EthereumHost> m_host;     ///< Our Ethereum Host. Don't do anything if we can't lock.
+    std::weak_ptr<EthereumCapability> m_host;
     std::weak_ptr<WarpHostCapability> m_warpHost;
 
     std::condition_variable m_signalled;

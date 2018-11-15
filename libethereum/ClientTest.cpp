@@ -22,7 +22,7 @@
 #include <libdevcore/CommonJS.h>
 #include <libethashseal/Ethash.h>
 #include <libethereum/ClientTest.h>
-#include <libethereum/EthereumHost.h>
+#include <libethereum/EthereumCapability.h>
 #include <boost/filesystem/path.hpp>
 #include <future>
 
