@@ -14,11 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Host.cpp
- * @author Alex Leverington <nessence@gmail.com>
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #include "Host.h"
 #include "Capability.h"
@@ -591,16 +586,10 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
     {
         if (!addNodeToNodeTable(node))
             return;
-        auto t = make_shared<boost::asio::deadline_timer>(m_ioService);
-        t->expires_from_now(boost::posix_time::milliseconds(600));
-        t->async_wait([this, _n](boost::system::error_code const& _ec)
-        {
-            if (!_ec)
-                if (auto n = nodeFromNodeTable(_n))
-                    requirePeer(n.id, n.endpoint);
+        scheduleExecution(600, [this, _n]() {
+            if (auto n = nodeFromNodeTable(_n))
+                requirePeer(n.id, n.endpoint);
         });
-        DEV_GUARDED(x_timers)
-            m_timers.push_back(t);
     }
 }
 
@@ -1056,4 +1045,16 @@ void Host::forEachPeer(
     for (auto const& s : sessions)
         if (!_f(s->id()))
             return;
+}
+
+void Host::scheduleExecution(int _delayMs, std::function<void()> _f)
+{
+    auto t = make_shared<boost::asio::deadline_timer>(m_ioService);
+    t->expires_from_now(boost::posix_time::milliseconds(_delayMs));
+    t->async_wait([_f](boost::system::error_code const& _ec) {
+        if (!_ec)
+            _f();
+    });
+    DEV_GUARDED(x_timers)
+    m_timers.push_back(t);
 }
