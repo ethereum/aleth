@@ -146,10 +146,10 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
     {
         std::shared_ptr<SnapshotStorageFace> snapshotStorage(
             importedSnapshotExists ? createSnapshotStorage(importedSnapshot) : nullptr);
-        auto warpHostCapability = make_shared<WarpHostCapability>(
+        auto warpCapability = make_shared<WarpCapability>(
             _extNet.capabilityHost(), bc(), _networkId, _snapshotDownloadPath, snapshotStorage);
-        _extNet.registerCapability(warpHostCapability);
-        m_warpHost = warpHostCapability;
+        _extNet.registerCapability(warpCapability);
+        m_warpHost = warpCapability;
     }
 
     doWork(false);

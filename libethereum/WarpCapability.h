@@ -80,14 +80,13 @@ public:
 };
 
 
-class WarpHostCapability : public p2p::CapabilityFace, Worker
+class WarpCapability : public p2p::CapabilityFace, Worker
 {
 public:
-    WarpHostCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
-        BlockChain const& _blockChain, u256 const& _networkId,
-        boost::filesystem::path const& _snapshotDownloadPath,
+    WarpCapability(std::shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _blockChain,
+        u256 const& _networkId, boost::filesystem::path const& _snapshotDownloadPath,
         std::shared_ptr<SnapshotStorageFace> _snapshotStorage);
-    ~WarpHostCapability();
+    ~WarpCapability();
 
     std::string name() const override { return "par"; }
     u256 version() const override { return c_WarpProtocolVersion; }
