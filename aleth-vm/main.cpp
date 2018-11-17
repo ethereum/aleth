@@ -348,7 +348,7 @@ int main(int argc, char** argv)
         };
     }
     else if (mode == Mode::Trace)
-        onOp = st;
+        onOp = st.onOp();
 
     Timer timer;
     executive.go(onOp);
