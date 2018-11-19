@@ -127,7 +127,7 @@ public:
     BlockQueue& bq() { return m_bq; }
     BlockQueue const& bq() const { return m_bq; }
     SyncStatus status() const;
-    h256 latestBlockSent() const { return m_latestBlockSent; }
+
     static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
 
     static unsigned const c_oldProtocolVersion;
