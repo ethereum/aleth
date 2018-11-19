@@ -21,7 +21,6 @@
 #include "EthereumPeer.h"
 #include <libdevcore/Guards.h>
 #include <libdevcore/OverlayDB.h>
-#include <libdevcore/Worker.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Common.h>
 #include <libethereum/BlockChainSync.h>
@@ -95,19 +94,19 @@ public:
  * @warning None of this is thread-safe. You have been warned.
  * @doWork Syncs to peers and sends new blocks and transactions.
  */
-class EthereumCapability : public p2p::CapabilityFace, Worker
+class EthereumCapability : public p2p::CapabilityFace
 {
 public:
     /// Start server, but don't listen.
     EthereumCapability(std::shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _ch,
         OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
-    /// Will block on network process events.
-    ~EthereumCapability() override;
-
     std::string name() const override { return "eth"; }
     u256 version() const override { return c_protocolVersion; }
     unsigned messageCount() const override { return PacketCount; }
+
+    void onStarting() override;
+    void onStopping() override;
 
     unsigned protocolVersion() const { return c_protocolVersion; }
     u256 networkId() const { return m_networkId; }
@@ -151,8 +150,7 @@ private:
             return true;
         });
 
-    /// Sync with the BlockChain. It might contain one of our mined blocks, we might have new candidates from the network.
-    virtual void doWork() override;
+    void doBackgroundWork();
 
     void maintainTransactions();
     void maintainBlocks(h256 const& _currentBlock);
@@ -163,9 +161,6 @@ private:
 
     /// Initialises the network peer-state, doing the stuff that needs to be once-only. @returns true if it really was first.
     bool ensureInitialised();
-
-    virtual void onStarting() override { startWorking(); }
-    virtual void onStopping() override { stopWorking(); }
 
     void setIdle(NodeID const& _peerID);
     void setAsking(NodeID const& _peerID, Asking _a);
@@ -200,8 +195,9 @@ private:
 
     std::unordered_map<NodeID, EthereumPeer> m_peers;
 
-    std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
+    std::atomic<bool> m_backgroundWork = {false};
 
+    std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
 
     Logger m_logger{createLogger(VerbosityDebug, "ethcap")};
     /// Logger for messages about impolite behaivour of peers.

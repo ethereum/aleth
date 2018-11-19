@@ -34,6 +34,7 @@ using namespace dev::eth;
 static unsigned const c_maxSendTransactions = 256;
 static unsigned const c_maxHeadersToSend = 1024;
 static unsigned const c_maxIncomingNewHashes = 1024;
+static int const c_backroundWorkPeriodMs = 1000;
 
 char const* const EthereumCapability::s_stateNames[static_cast<int>(SyncState::Size)] = {
     "NotSynced", "Idle", "Waiting", "Blocks", "State"};
@@ -390,8 +391,7 @@ private:
 EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host,
     BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq,
     u256 _networkId)
-  : Worker("ethsync"),
-    m_host(move(_host)),
+  : m_host(move(_host)),
     m_chain(_ch),
     m_db(_db),
     m_tq(_tq),
@@ -409,9 +409,15 @@ EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host
     m_urng = std::mt19937_64(seed());
 }
 
-EthereumCapability::~EthereumCapability()
+void EthereumCapability::onStarting()
 {
-    terminate();
+    m_backgroundWork = true;
+    m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
+}
+
+void EthereumCapability::onStopping()
+{
+    m_backgroundWork = false;
 }
 
 bool EthereumCapability::ensureInitialised()
@@ -443,9 +449,9 @@ void EthereumCapability::completeSync()
     m_sync->completeSync();
 }
 
-void EthereumCapability::doWork()
+void EthereumCapability::doBackgroundWork()
 {
-    bool netChange = ensureInitialised();
+    ensureInitialised();
     auto h = m_chain.currentHash();
     // If we've finished our initial sync (including getting all the blocks into the chain so as to reduce invalid transactions), start trading transactions & blocks
     if (!isSyncing() && m_chain.isKnown(m_latestBlockSent))
@@ -476,9 +482,8 @@ void EthereumCapability::doWork()
         }
     }
 
-//	return netChange;
-    // TODO: Figure out what to do with netChange.
-    (void)netChange;
+    if (m_backgroundWork)
+        m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
 }
 
 void EthereumCapability::maintainTransactions()
