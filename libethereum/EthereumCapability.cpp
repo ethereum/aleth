@@ -508,7 +508,6 @@ void EthereumCapability::maintainTransactions()
             m_transactionsSent.insert(t.sha3());
     }
 
-    // TODO this is not thread-safe, call this code from net IO thread instead
     for (auto& peer : m_peers)
     {
         bytes b;
@@ -629,29 +628,30 @@ SyncStatus EthereumCapability::status() const
 void EthereumCapability::onTransactionImported(
     ImportResult _ir, h256 const& _h, h512 const& _nodeId)
 {
-    // TODO this is not thread safe, do it from IO thread
-    auto itPeerStatus = m_peers.find(_nodeId);
-    if (itPeerStatus == m_peers.end())
-        return;
+    m_host->scheduleExecution(0, [this, _ir, _h, _nodeId]() {
+        auto itPeerStatus = m_peers.find(_nodeId);
+        if (itPeerStatus == m_peers.end())
+            return;
 
-    auto& peer = itPeerStatus->second;
+        auto& peer = itPeerStatus->second;
 
-    peer.markTransactionAsKnown(_h);
-    switch (_ir)
-    {
-    case ImportResult::Malformed:
-        m_host->updateRating(_nodeId, -100);
-        break;
-    case ImportResult::AlreadyKnown:
-        // if we already had the transaction, then don't bother sending it on.
-        DEV_GUARDED(x_transactions) { m_transactionsSent.insert(_h); }
-        m_host->updateRating(_nodeId, 0);
-        break;
-    case ImportResult::Success:
-        m_host->updateRating(_nodeId, 100);
-        break;
-    default:;
-    }
+        peer.markTransactionAsKnown(_h);
+        switch (_ir)
+        {
+        case ImportResult::Malformed:
+            m_host->updateRating(_nodeId, -100);
+            break;
+        case ImportResult::AlreadyKnown:
+            // if we already had the transaction, then don't bother sending it on.
+            DEV_GUARDED(x_transactions) { m_transactionsSent.insert(_h); }
+            m_host->updateRating(_nodeId, 0);
+            break;
+        case ImportResult::Success:
+            m_host->updateRating(_nodeId, 100);
+            break;
+        default:;
+        }
+    });
 }
 
 void EthereumCapability::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion)
