@@ -422,11 +422,11 @@ void EthereumCapability::onStopping()
 
 bool EthereumCapability::ensureInitialised()
 {
-    if (!m_latestBlockSent)
+    if (!m_latestBlockSent.load())
     {
         // First time - just initialise.
         m_latestBlockSent = m_chain.currentHash();
-        LOG(m_logger) << "Initialising: latest=" << m_latestBlockSent;
+        LOG(m_logger) << "Initialising: latest=" << m_latestBlockSent.load();
 
         Guard l(x_transactions);
         m_transactionsSent = m_tq.knownTransactions();
@@ -570,7 +570,7 @@ void EthereumCapability::maintainBlocks(h256 const& _currentHash)
         {
             // don't be sending more than 20 "new" blocks. if there are any more we were probably waaaay behind.
             LOG(m_logger) << "Sending a new block (current is " << _currentHash << ", was "
-                          << m_latestBlockSent << ")";
+                          << m_latestBlockSent.load() << ")";
 
             h256s blocks = get<0>(m_chain.treeRoute(m_latestBlockSent, _currentHash, false, false, true));
 

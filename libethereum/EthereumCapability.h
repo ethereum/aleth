@@ -127,7 +127,7 @@ public:
     BlockQueue& bq() { return m_bq; }
     BlockQueue const& bq() const { return m_bq; }
     SyncStatus status() const;
-    h256 latestBlockSent() { return m_latestBlockSent; }
+    h256 latestBlockSent() const { return m_latestBlockSent; }
     static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
 
     static unsigned const c_oldProtocolVersion;
@@ -156,9 +156,6 @@ private:
     void maintainBlocks(h256 const& _currentBlock);
     void onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId);
 
-    ///	Check to see if the network peer-state initialisation has happened.
-    bool isInitialised() const { return (bool)m_latestBlockSent; }
-
     /// Initialises the network peer-state, doing the stuff that needs to be once-only. @returns true if it really was first.
     bool ensureInitialised();
 
@@ -180,11 +177,11 @@ private:
 
     u256 m_networkId;
 
-    h256 m_latestBlockSent;
+    std::atomic<h256> m_latestBlockSent = {h256{}};
     h256Hash m_transactionsSent;
 
-    bool m_newTransactions = false;
-    bool m_newBlocks = false;
+    std::atomic<bool> m_newTransactions = {false};
+    std::atomic<bool> m_newBlocks = {false};
 
     mutable Mutex x_transactions;
     std::shared_ptr<BlockChainSync> m_sync;
