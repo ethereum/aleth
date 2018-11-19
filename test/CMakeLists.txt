@@ -11,10 +11,18 @@ set(unittest_sources
     unittests/libdevcore/RLP.cpp
 
     unittests/libdevcrypto/AES.cpp
+
+    unittests/libethashseal/EthashTest.cpp
+
+    unittests/libethcore/CommonJS.cpp
+    unittests/libethcore/KeyManager.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
-target_link_libraries(aleth-unittests PRIVATE devcrypto devcore GTest::gtest GTest::main)
+target_link_libraries(aleth-unittests PRIVATE
+    ethashseal devcrypto devcore
+    GTest::gtest GTest::main
+)
 gtest_add_tests(TARGET aleth-unittests TEST_PREFIX unittests/)
 
 

@@ -14,45 +14,35 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file commonjs.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
- */
 
-#include <boost/test/unit_test.hpp>
-#include <libdevcore/Log.h>
 #include <libethcore/CommonJS.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(commonjs, TestOutputHelperFixture)
-
-BOOST_AUTO_TEST_CASE(jsToPublic)
+TEST(CommonJS, jsToPublic)
 {
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.pub());
 	Public pub = dev::jsToPublic(s);
-	BOOST_CHECK_EQUAL(kp.pub(), pub);
+	EXPECT_EQ(kp.pub(), pub);
 }
 
-BOOST_AUTO_TEST_CASE(jsToAddress)
+TEST(CommonJS, jsToAddress)
 {
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.address());
 	Address address = dev::jsToAddress(s);
-	BOOST_CHECK_EQUAL(kp.address(), address);
+	EXPECT_EQ(kp.address(), address);
 }
 
-BOOST_AUTO_TEST_CASE(jsToSecret)
+TEST(CommonJS, jsToSecret)
 {
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.secret().makeInsecure());
 	Secret secret = dev::jsToSecret(s);
-	BOOST_CHECK_EQUAL(kp.secret().makeInsecure(), secret.makeInsecure());
+	EXPECT_EQ(kp.secret().makeInsecure(), secret.makeInsecure());
 }
-
-BOOST_AUTO_TEST_SUITE_END()
