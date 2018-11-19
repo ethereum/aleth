@@ -124,12 +124,6 @@ void importPresale(KeyManager& _km, string const& _file, function<string()> _pas
     _km.import(k.secret(), "Presale wallet" + _file + " (insecure)");
 }
 
-enum class NodeMode
-{
-    PeerServer,
-    Full
-};
-
 enum class OperationMode
 {
     Node,
@@ -198,9 +192,6 @@ int main(int argc, char** argv)
     string exportFrom = "1";
     string exportTo = "latest";
     Format exportFormat = Format::Binary;
-
-    /// General params for Node operation
-    NodeMode nodeMode = NodeMode::Full;
 
     bool ipc = true;
 
@@ -284,9 +275,7 @@ int main(int argc, char** argv)
     addClientOption("private", po::value<string>()->value_name("<name>"), "Use a private chain");
     addClientOption("test", "Testing mode; disable PoW and provide test rpc interface");
     addClientOption("config", po::value<string>()->value_name("<file>"),
-        "Configure specialised blockchain using given JSON information\n");
-    addClientOption("mode,o", po::value<string>()->value_name("<full/peer>"),
-        "Start a full node or a peer node (default: full)\n");
+        "Configure specialised blockchain using given JSON information");
     addClientOption("ipc", "Enable IPC server (default: on)");
     addClientOption("ipcpath", po::value<string>()->value_name("<path>"),
         "Set .ipc socket path (default: data directory)");
@@ -498,19 +487,6 @@ int main(int argc, char** argv)
         }
     }
 
-    if (vm.count("mode"))
-    {
-        string m = vm["mode"].as<string>();
-        if (m == "full")
-            nodeMode = NodeMode::Full;
-        else if (m == "peer")
-            nodeMode = NodeMode::PeerServer;
-        else
-        {
-            cerr << "Unknown mode: " << m << "\n";
-            return -1;
-        }
-    }
     if (vm.count("import-presale"))
         presaleImports.push_back(vm["import-presale"].as<string>());
     if (vm.count("admin"))
@@ -851,8 +827,7 @@ int main(int argc, char** argv)
         chainParams.allowFutureBlocks = true;
 
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), db::databasePath(),
-        snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
-        netPrefs, &nodesState, testingMode);
+        snapshotPath, chainParams, withExisting, caps, netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
         web3.ethereum()->setExtraData(extraData);
@@ -1012,15 +987,12 @@ int main(int argc, char** argv)
     web3.setPeerStretch(peerStretch);
     std::shared_ptr<eth::TrivialGasPricer> gasPricer =
         make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
-    eth::Client* c = nodeMode == NodeMode::Full ? web3.ethereum() : nullptr;
-    if (c)
-    {
-        c->setGasPricer(gasPricer);
-        c->setSealer(miner.minerType());
-        c->setAuthor(author);
-        if (networkID != NoNetworkID)
-            c->setNetworkId(networkID);
-    }
+    eth::Client* c = web3.ethereum();
+    c->setGasPricer(gasPricer);
+    c->setSealer(miner.minerType());
+    c->setAuthor(author);
+    if (networkID != NoNetworkID)
+        c->setNetworkId(networkID);
 
     auto renderFullAddress = [&](Address const& _a) -> std::string
     {
