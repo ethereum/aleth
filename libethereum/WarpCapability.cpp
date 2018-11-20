@@ -29,6 +29,7 @@ namespace eth
 namespace
 {
 static size_t const c_freePeerBufferSize = 32;
+static int const c_backroundWorkPeriodMs = 1000;
 
 bool validateManifest(RLP const& _manifestRlp)
 {
@@ -318,14 +319,19 @@ WarpCapability::WarpCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
     m_snapshot(_snapshotStorage),
     // observer needed only in case we download snapshot
     m_peerObserver(
-        _snapshotDownloadPath.empty() ? nullptr : createPeerObserver(_snapshotDownloadPath)),
-    m_lastTick(0)
+        _snapshotDownloadPath.empty() ? nullptr : createPeerObserver(_snapshotDownloadPath))
 {
 }
 
-WarpCapability::~WarpCapability()
+void WarpCapability::onStarting()
 {
-    terminate();
+    m_backgroundWorkEnabled = true;
+    m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
+}
+
+void WarpCapability::onStopping()
+{
+    m_backgroundWorkEnabled = false;
 }
 
 std::shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
@@ -334,25 +340,21 @@ std::shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
     return std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
 }
 
-void WarpCapability::doWork()
+void WarpCapability::doBackgroundWork()
 {
-    time_t const now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    if (now - m_lastTick >= 1)
+    for (auto const& peer : m_peers)
     {
-        m_lastTick = now;
-
-        // TODO this is not thread-safe, move this code to a fiber
-        for (auto const& peer : m_peers)
+        time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        auto const& status = peer.second;
+        if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
         {
-            time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-            auto const& status = peer.second;
-            if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
-            {
-                // timeout
-                m_host->disconnect(peer.first, p2p::PingTimeout);
-            }
+            // timeout
+            m_host->disconnect(peer.first, p2p::PingTimeout);
         }
     }
+
+    if (m_backgroundWorkEnabled)
+        m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)

@@ -18,7 +18,6 @@
 #pragma once
 
 #include "CommonNet.h"
-#include <libdevcore/Worker.h>
 #include <libp2p/Capability.h>
 #include <libp2p/CapabilityHost.h>
 
@@ -80,20 +79,19 @@ public:
 };
 
 
-class WarpCapability : public p2p::CapabilityFace, Worker
+class WarpCapability : public p2p::CapabilityFace
 {
 public:
     WarpCapability(std::shared_ptr<p2p::CapabilityHostFace> _host, BlockChain const& _blockChain,
         u256 const& _networkId, boost::filesystem::path const& _snapshotDownloadPath,
         std::shared_ptr<SnapshotStorageFace> _snapshotStorage);
-    ~WarpCapability();
 
     std::string name() const override { return "par"; }
     u256 version() const override { return c_WarpProtocolVersion; }
     unsigned messageCount() const override { return WarpSubprotocolPacketCount; }
 
-    void onStarting() override {}
-    void onStopping() override {}
+    void onStarting() override;
+    void onStopping() override;
 
     unsigned protocolVersion() const { return c_WarpProtocolVersion; }
     u256 networkId() const { return m_networkId; }
@@ -123,7 +121,7 @@ private:
     std::shared_ptr<WarpPeerObserverFace> createPeerObserver(
         boost::filesystem::path const& _snapshotDownloadPath);
 
-    void doWork() override;
+    void doBackgroundWork();
 
     void setAsking(NodeID const& _peerID, Asking _a);
 
@@ -136,9 +134,10 @@ private:
 
     std::shared_ptr<SnapshotStorageFace> m_snapshot;
     std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
-    time_t m_lastTick;
 
     std::unordered_map<NodeID, WarpPeerStatus> m_peers;
+
+    std::atomic<bool> m_backgroundWorkEnabled = {false};
 };
 
 }  // namespace eth
