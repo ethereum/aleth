@@ -54,12 +54,16 @@ EVMC::EVMC(evmc_instance* _instance) : EVM(_instance)
 {
     static const auto tracer = [](evmc_tracer_context * _context, size_t _codeOffset,
         evmc_status_code _statusCode, int64_t _gasLeft, size_t /*_stackNumItems*/,
-        evmc_uint256be const* /*_pushedStackItem*/, size_t /*_memorySize*/,
+        evmc_uint256be const* _pushedStackItem, size_t /*_memorySize*/,
         size_t /*changed_memory_offset*/, size_t /*changed_memory_size*/,
         uint8_t const* /*changed_memory*/) noexcept
     {
         EVMC* evmc = reinterpret_cast<EVMC*>(_context);
-        evmc->trace.emplace_back(InstructionTrace{evmc->m_code[_codeOffset], _codeOffset, _statusCode, _gasLeft});
+        boost::optional<evmc_uint256be> pushedStackItem;
+        if (_pushedStackItem)
+            pushedStackItem = *_pushedStackItem;
+        evmc->trace.emplace_back(InstructionTrace{evmc->m_code[_codeOffset], _codeOffset,
+            _statusCode, _gasLeft, pushedStackItem});
     };
 
     _instance->set_tracer(_instance, tracer, reinterpret_cast<evmc_tracer_context*>(this));
@@ -158,18 +162,44 @@ evmc_revision EVM::toRevision(EVMSchedule const& _schedule)
     return EVMC_FRONTIER;
 }
 
+static char const* to_string(evmc_call_kind _kind)
+{
+    switch (_kind)
+    {
+    case EVMC_CALL:
+        return "CALL";
+    case EVMC_CALLCODE:
+        return "CALLCODE";
+    case EVMC_DELEGATECALL:
+        return "DELEGATECALL";
+    case EVMC_CREATE:
+        return "CREATE";
+    case EVMC_CREATE2:
+        return "CREATE2";
+    }
+    return "<invalid call kind>";
+}
+
 void EVMC::dumpTrace()
 {
     auto names = evmc_get_instruction_names_table(EVMC_LATEST_REVISION);
 
     for (auto& c : calls)
     {
-        std::cout << "call " << c.kind << " " << c.gas << "\n";
+        std::string indent;
+        for (int i = 0; i <= c.depth; ++i)
+            indent.push_back(' ');
+
+        std::cout << ">>>>" << indent << to_string(c.kind) << " gas: " << c.gas << "\n";
         for (size_t i = c.begin; i < c.end; ++i)
         {
-            std::cout << names[trace[i].opcode] << "\n";
+            std::cout << std::hex << std::setfill('0') << std::setw(4) << trace[i].codeOffset
+                      << indent << " " << names[trace[i].opcode];
+            if (trace[i].pushedStackItem)
+                std::cout << " (" << fromEvmC(*trace[i].pushedStackItem) << ")";
+            std::cout << "\n";
         }
-        std::cout << "endcall \n";
+        std::cout << "<<<<\n";
     }
 
     calls.clear();

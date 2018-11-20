@@ -89,6 +89,7 @@ struct InstructionTrace
     size_t codeOffset;
     evmc_status_code statusCode;
     int64_t gasLeft;
+    boost::optional<evmc_uint256be> pushedStackItem;
 };
 
 struct CallTrace
