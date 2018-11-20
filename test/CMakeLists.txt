@@ -20,11 +20,13 @@ set(unittest_sources
     unittests/libweb3core/memorydb.cpp
     unittests/libweb3core/overlaydb.cpp
     unittests/libweb3core/statecachedb.cpp
+
+    unittests/libweb3jsonrpc/AccountHolder.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
 target_link_libraries(aleth-unittests PRIVATE
-    ethashseal devcrypto devcore
+    web3jsonrpc ethashseal devcrypto devcore
     GTest::gtest GTest::main
 )
 gtest_add_tests(TARGET aleth-unittests TEST_PREFIX unittests/)
