@@ -103,7 +103,6 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
     EVM::Result r = execute(_ext, gas);
 
-    m_prevCall = m_currentCall;
     m_currentCall = parentCall;
 
     m_code = prevCode;

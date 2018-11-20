@@ -118,7 +118,6 @@ private:
 
     std::vector<CallTrace> m_calls;
     size_t m_currentCall = 0;
-    size_t m_prevCall = 0;
 
     void dumpTrace();
 };
