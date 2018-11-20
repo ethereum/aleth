@@ -15,53 +15,50 @@
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <libdevcore/OverlayDB.h>
 #include <libdevcore/DBFactory.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <boost/test/unit_test.hpp>
+#include <libdevcore/OverlayDB.h>
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace dev;
 using namespace db;
-using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelperFixture)
-
-BOOST_AUTO_TEST_CASE(basicUsage)
+TEST(OverlayDB, basicUsage)
 {
-	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
-    BOOST_REQUIRE(db);
+    std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
+    ASSERT_TRUE(db);
 
     OverlayDB odb(std::move(db));
-    BOOST_CHECK(!odb.get().size());
+    EXPECT_TRUE(!odb.get().size());
 
     // commit nothing
     odb.commit();
 
     string const value = "\x43";
-    BOOST_CHECK(!odb.get().size());
+    EXPECT_TRUE(!odb.get().size());
 
     odb.insert(h256(42), &value);
-    BOOST_CHECK(odb.get().size());
-    BOOST_CHECK(odb.exists(h256(42)));
-    BOOST_CHECK_EQUAL(odb.lookup(h256(42)), value);
+    EXPECT_TRUE(odb.get().size());
+    EXPECT_TRUE(odb.exists(h256(42)));
+    EXPECT_EQ(odb.lookup(h256(42)), value);
 
     odb.commit();
-    BOOST_CHECK(!odb.get().size());
-    BOOST_CHECK(odb.exists(h256(42)));
-    BOOST_CHECK_EQUAL(odb.lookup(h256(42)), value);
+    EXPECT_TRUE(!odb.get().size());
+    EXPECT_TRUE(odb.exists(h256(42)));
+    EXPECT_EQ(odb.lookup(h256(42)), value);
 
     odb.insert(h256(41), &value);
     odb.commit();
-    BOOST_CHECK(!odb.get().size());
-    BOOST_CHECK(odb.exists(h256(41)));
-    BOOST_CHECK_EQUAL(odb.lookup(h256(41)), value);
+    EXPECT_TRUE(!odb.get().size());
+    EXPECT_TRUE(odb.exists(h256(41)));
+    EXPECT_EQ(odb.lookup(h256(41)), value);
 }
 
-BOOST_AUTO_TEST_CASE(auxMem)
+TEST(OverlayDB, auxMem)
 {
-	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
-    BOOST_REQUIRE(db);
+    std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
+    ASSERT_TRUE(db);
 
     OverlayDB odb(std::move(db));
 
@@ -78,34 +75,32 @@ BOOST_AUTO_TEST_CASE(auxMem)
 
     odb.commit();
 
-    BOOST_CHECK(!odb.get().size());
+    EXPECT_TRUE(!odb.get().size());
 
-    BOOST_CHECK(odb.exists(h256(42)));
-    BOOST_CHECK_EQUAL(odb.lookup(h256(42)), value);
+    EXPECT_TRUE(odb.exists(h256(42)));
+    EXPECT_EQ(odb.lookup(h256(42)), value);
 
-    BOOST_CHECK(odb.exists(h256(0)));
-    BOOST_CHECK_EQUAL(odb.lookup(h256(0)), value);
+    EXPECT_TRUE(odb.exists(h256(0)));
+    EXPECT_EQ(odb.lookup(h256(0)), value);
 
-    BOOST_CHECK(odb.exists(h256(std::numeric_limits<u256>::max())));
-    BOOST_CHECK_EQUAL(odb.lookup(h256(std::numeric_limits<u256>::max())), value);
+    EXPECT_TRUE(odb.exists(h256(std::numeric_limits<u256>::max())));
+    EXPECT_EQ(odb.lookup(h256(std::numeric_limits<u256>::max())), value);
 
-    BOOST_CHECK(odb.lookupAux(h256(42)) == valueAux);
-    BOOST_CHECK(odb.lookupAux(h256(0)) == valueAux);
-    BOOST_CHECK(odb.lookupAux(h256(std::numeric_limits<u256>::max())) == valueAux);
+    EXPECT_TRUE(odb.lookupAux(h256(42)) == valueAux);
+    EXPECT_TRUE(odb.lookupAux(h256(0)) == valueAux);
+    EXPECT_TRUE(odb.lookupAux(h256(std::numeric_limits<u256>::max())) == valueAux);
 }
 
-BOOST_AUTO_TEST_CASE(rollback)
+TEST(OverlayDB, rollback)
 {
-	std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
-    BOOST_REQUIRE(db);
+    std::unique_ptr<db::DatabaseFace> db = DBFactory::create(DatabaseKind::MemoryDB);
+    ASSERT_TRUE(db);
 
     OverlayDB odb(std::move(db));
     bytes value = fromHex("42");
 
     odb.insert(h256(43), &value);
-    BOOST_CHECK(odb.get().size());
+    EXPECT_TRUE(odb.get().size());
     odb.rollback();
-    BOOST_CHECK(!odb.get().size());
+    EXPECT_TRUE(!odb.get().size());
 }
-
-BOOST_AUTO_TEST_SUITE_END()

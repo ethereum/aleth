@@ -18,6 +18,7 @@ set(unittest_sources
     unittests/libethcore/KeyManager.cpp
 
     unittests/libweb3core/memorydb.cpp
+    unittests/libweb3core/overlaydb.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
