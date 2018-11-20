@@ -411,13 +411,13 @@ EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host
 
 void EthereumCapability::onStarting()
 {
-    m_backgroundWork = true;
+    m_backgroundWorkEnabled = true;
     m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
 }
 
 void EthereumCapability::onStopping()
 {
-    m_backgroundWork = false;
+    m_backgroundWorkEnabled = false;
 }
 
 bool EthereumCapability::ensureInitialised()
@@ -484,7 +484,7 @@ void EthereumCapability::doBackgroundWork()
         }
     }
 
-    if (m_backgroundWork)
+    if (m_backgroundWorkEnabled)
         m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
 }
 

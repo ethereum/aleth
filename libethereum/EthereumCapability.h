@@ -191,7 +191,7 @@ private:
 
     std::unordered_map<NodeID, EthereumPeer> m_peers;
 
-    std::atomic<bool> m_backgroundWork = {false};
+    std::atomic<bool> m_backgroundWorkEnabled = {false};
 
     std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
 
