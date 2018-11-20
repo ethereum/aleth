@@ -177,13 +177,12 @@ private:
 
     u256 m_networkId;
 
-    std::atomic<h256> m_latestBlockSent = {h256{}};
+    h256 m_latestBlockSent;
     h256Hash m_transactionsSent;
 
     std::atomic<bool> m_newTransactions = {false};
     std::atomic<bool> m_newBlocks = {false};
 
-    mutable Mutex x_transactions;
     std::shared_ptr<BlockChainSync> m_sync;
     std::atomic<time_t> m_lastTick = { 0 };
 
