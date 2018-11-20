@@ -16,6 +16,8 @@ set(unittest_sources
 
     unittests/libethcore/CommonJS.cpp
     unittests/libethcore/KeyManager.cpp
+
+    unittests/libweb3core/memorydb.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
