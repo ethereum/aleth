@@ -422,13 +422,12 @@ void EthereumCapability::onStopping()
 
 bool EthereumCapability::ensureInitialised()
 {
-    if (!m_latestBlockSent.load())
+    if (!m_latestBlockSent)
     {
         // First time - just initialise.
         m_latestBlockSent = m_chain.currentHash();
-        LOG(m_logger) << "Initialising: latest=" << m_latestBlockSent.load();
+        LOG(m_logger) << "Initialising: latest=" << m_latestBlockSent;
 
-        Guard l(x_transactions);
         m_transactionsSent = m_tq.knownTransactions();
         return true;
     }
@@ -439,9 +438,12 @@ void EthereumCapability::reset()
 {
     m_sync->abortSync();
 
-    m_latestBlockSent = h256();
-    Guard tl(x_transactions);
-    m_transactionsSent.clear();
+    // reset() can be called from RPC handling thread,
+    // but we access m_latestBlockSent and m_transactionsSent only from the network thread
+    m_host->scheduleExecution(0, [this]() {
+        m_latestBlockSent = h256();
+        m_transactionsSent.clear();
+    });
 }
 
 void EthereumCapability::completeSync()
@@ -492,7 +494,6 @@ void EthereumCapability::maintainTransactions()
     unordered_map<NodeID, std::vector<size_t>> peerTransactions;
     auto ts = m_tq.topTransactions(c_maxSendTransactions);
     {
-        Guard l(x_transactions);
         for (size_t i = 0; i < ts.size(); ++i)
         {
             auto const& t = ts[i];
@@ -569,12 +570,11 @@ void EthereumCapability::maintainBlocks(h256 const& _currentHash)
         {
             // don't be sending more than 20 "new" blocks. if there are any more we were probably waaaay behind.
             LOG(m_logger) << "Sending a new block (current is " << _currentHash << ", was "
-                          << m_latestBlockSent.load() << ")";
+                          << m_latestBlockSent << ")";
 
             h256s blocks = get<0>(m_chain.treeRoute(m_latestBlockSent, _currentHash, false, false, true));
 
             auto s = randomSelection(25, [&](EthereumPeer const& _peer) {
-                Guard guard(x_transactions);
                 return !_peer.isBlockKnown(_currentHash);
             });
             for (NodeID const& peerID : get<0>(s))
@@ -643,7 +643,7 @@ void EthereumCapability::onTransactionImported(
             break;
         case ImportResult::AlreadyKnown:
             // if we already had the transaction, then don't bother sending it on.
-            DEV_GUARDED(x_transactions) { m_transactionsSent.insert(_h); }
+            m_transactionsSent.insert(_h);
             m_host->updateRating(_nodeId, 0);
             break;
         case ImportResult::Success:
