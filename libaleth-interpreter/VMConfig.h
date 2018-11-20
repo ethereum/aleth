@@ -416,23 +416,23 @@ namespace eth
         &&SUICIDE,                              \
     };
 
-#define DO_CASES         \
-    fetchInstruction();  \
-    auto startPC = m_PC; \
+#define DO_CASES        \
+    fetchInstruction(); \
     goto* jumpTable[(int)m_OP];
 #define CASE(name) \
-    name:
+    name:          \
+    m_tracePC = m_PC;  // Safe the current PC for tracing.
 #define NEXT            \
-    trace(startPC);     \
+    trace();            \
     ++m_PC;             \
     fetchInstruction(); \
     goto* jumpTable[(int)m_OP];
 #define CONTINUE        \
-    trace(startPC);     \
+    trace();            \
     fetchInstruction(); \
     goto* jumpTable[(int)m_OP];
-#define BREAK       \
-    trace(startPC); \
+#define BREAK \
+    trace();  \
     return;
 #define DEFAULT
 #define WHILE_CASES

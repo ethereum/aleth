@@ -108,6 +108,7 @@ private:
     // interpreter state
     Instruction m_OP;         // current operation
     uint64_t m_PC = 0;        // program counter
+    uint64_t m_tracePC = 0;   // program counter for tracing
     u256* m_SP = m_stackEnd;  // stack pointer
     u256* m_SPP = m_SP;       // stack pointer prime (next SP)
 
@@ -118,7 +119,7 @@ private:
 
     evmc_trace_callback m_traceCallback = nullptr;
     evmc_tracer_context* m_traceContext = nullptr;
-    void trace(uint64_t _pc) noexcept;
+    void trace() noexcept;
 
     // initialize interpreter
     void initEntry();

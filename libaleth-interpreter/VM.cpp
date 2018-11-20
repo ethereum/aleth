@@ -149,10 +149,14 @@ namespace dev
 {
 namespace eth
 {
-void VM::trace(uint64_t _pc) noexcept
+void VM::trace() noexcept
 {
     if (m_traceCallback)
     {
+        // Skip the code extension added by the optimizer.
+        if (m_tracePC >= m_codeSize)
+            return;
+
         auto const& metrics = c_metrics[static_cast<size_t>(m_OP)];
         evmc_uint256be topStackItem;
         evmc_uint256be const* pushedStackItem = nullptr;
@@ -161,7 +165,7 @@ void VM::trace(uint64_t _pc) noexcept
             topStackItem = toEvmC(m_SPP[0]);
             pushedStackItem = &topStackItem;
         }
-        m_traceCallback(m_traceContext, _pc, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
+        m_traceCallback(m_traceContext, m_tracePC, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
             pushedStackItem, m_mem.size(), 0, 0, nullptr);
     }
 }
@@ -306,7 +310,7 @@ owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc
     m_io_gas = uint64_t(_msg->gas);
     m_PC = 0;
     m_pCode = _code;
-    m_codeSize = _codeSize;
+    m_codeSize = _codeSize;  ///< The size of the original code.
     m_traceCallback = _traceCallback;
     m_traceContext = _traceContext;
 
