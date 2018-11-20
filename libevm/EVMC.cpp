@@ -62,8 +62,10 @@ EVMC::EVMC(evmc_instance* _instance) : EVM(_instance)
         boost::optional<evmc_uint256be> pushedStackItem;
         if (_pushedStackItem)
             pushedStackItem = *_pushedStackItem;
-        evmc->trace.emplace_back(InstructionTrace{evmc->m_code[_codeOffset], _codeOffset,
-            _statusCode, _gasLeft, pushedStackItem});
+
+        auto opcode = evmc->m_code[_codeOffset];
+        evmc->m_calls[evmc->m_currentCall].trace.emplace_back(InstructionTrace{
+            opcode, _codeOffset, _statusCode, _gasLeft, pushedStackItem, -1});
     };
 
     _instance->set_tracer(_instance, tracer, reinterpret_cast<evmc_tracer_context*>(this));
@@ -87,12 +89,21 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
     auto gas = static_cast<int64_t>(io_gas);
 
-    calls.emplace_back(CallTrace{static_cast<int>(_ext.depth),
-        _ext.isCreate ? EVMC_CREATE : EVMC_CALL, trace.size(), trace.size(), gas});
+    m_calls.emplace_back(
+        CallTrace{static_cast<int>(_ext.depth), _ext.isCreate ? EVMC_CREATE : EVMC_CALL, gas, {}});
+    auto parentCall = m_currentCall;
+    m_currentCall = m_calls.size() - 1;
+    if (_ext.depth > 0)
+    {
+        // The parent trace should have a call instructions.
+        // TODO: Create this instruction after the call.
+        m_calls[parentCall].trace.back().callIndex = m_currentCall;
+    }
 
     EVM::Result r = execute(_ext, gas);
 
-    calls.back().end = trace.size();
+    m_prevCall = m_currentCall;
+    m_currentCall = parentCall;
 
     if (_ext.depth == 0)
         dumpTrace();
@@ -180,30 +191,41 @@ static char const* to_string(evmc_call_kind _kind)
     return "<invalid call kind>";
 }
 
+static void dumpCallTrace(
+    const std::vector<CallTrace>& calls, size_t index, char const* const* names)
+{
+    auto& c = calls[index];
+
+    std::string indent;
+    for (int i = 0; i <= c.depth; ++i)
+        indent.push_back(' ');
+
+    std::cout << ">>>>" << indent << to_string(c.kind) << " gas: " << std::dec << c.gas << "\n";
+    for (auto& trace : c.trace)
+    {
+        std::cout << std::hex << std::setfill('0') << std::setw(4) << trace.codeOffset
+                  << indent << " " << names[trace.opcode];
+        if (trace.pushedStackItem)
+            std::cout << " (" << fromEvmC(*trace.pushedStackItem) << ")";
+        std::cout << "\n";
+
+        if (trace.callIndex >= 0)
+            dumpCallTrace(calls, trace.callIndex, names);
+    }
+    std::cout << "<<<<\n";
+}
+
 void EVMC::dumpTrace()
 {
     auto names = evmc_get_instruction_names_table(EVMC_LATEST_REVISION);
 
-    for (auto& c : calls)
+    for (size_t i = 0; i < m_calls.size(); ++i)
     {
-        std::string indent;
-        for (int i = 0; i <= c.depth; ++i)
-            indent.push_back(' ');
-
-        std::cout << ">>>>" << indent << to_string(c.kind) << " gas: " << c.gas << "\n";
-        for (size_t i = c.begin; i < c.end; ++i)
-        {
-            std::cout << std::hex << std::setfill('0') << std::setw(4) << trace[i].codeOffset
-                      << indent << " " << names[trace[i].opcode];
-            if (trace[i].pushedStackItem)
-                std::cout << " (" << fromEvmC(*trace[i].pushedStackItem) << ")";
-            std::cout << "\n";
-        }
-        std::cout << "<<<<\n";
+        if (m_calls[i].depth == 0)
+            dumpCallTrace(m_calls, i, names);
     }
 
-    calls.clear();
-    trace.clear();
+    m_calls.clear();
 }
 
 }  // namespace eth

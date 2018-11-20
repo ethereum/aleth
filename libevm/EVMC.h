@@ -81,7 +81,7 @@ private:
     evmc_instance* m_instance = nullptr;
 };
 
-
+struct CallTrace;
 
 struct InstructionTrace
 {
@@ -90,15 +90,16 @@ struct InstructionTrace
     evmc_status_code statusCode;
     int64_t gasLeft;
     boost::optional<evmc_uint256be> pushedStackItem;
+    int callIndex;
 };
 
 struct CallTrace
 {
     int depth;
     evmc_call_kind kind;
-    size_t begin;
-    size_t end;
     int64_t gas;
+
+    std::vector<InstructionTrace> trace;
 };
 
 
@@ -115,8 +116,9 @@ private:
 
     Logger m_vmTraceLogger{createLogger(VerbosityTrace, "vmtrace")};
 
-    std::vector<CallTrace> calls;
-    std::vector<InstructionTrace> trace;
+    std::vector<CallTrace> m_calls;
+    size_t m_currentCall = 0;
+    size_t m_prevCall = 0;
 
     void dumpTrace();
 };
