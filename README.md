@@ -14,7 +14,7 @@
 - Report bugs, issues or feature requests using [GitHub issues](https://github.com/ethereum/aleth/issues/new).
 
 
-## Getting Started
+## Usage
 
 The Ethereum Documentation site hosts the **[aleth homepage](http://cpp-ethereum.org)**, which
 has a Quick Start section.
@@ -26,9 +26,27 @@ Ubuntu and macOS | [![TravisCI](https://img.shields.io/travis/ethereum/aleth/dev
 Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/develop.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
 
 
-## Building from source
+## Install
 
-### Get the source code
+### Download release binaries
+
+https://github.com/ethereum/aleth/releases
+
+### Using docker images
+
+Aleth:
+```bash
+docker run ethereum/aleth --help
+```
+
+Testeth:
+```bash
+docker run ethereum/testeth --help
+```
+
+### Building from source
+
+#### Get the source code
 
 Git and GitHub are used to maintain the source code. Clone the repository by:
 
@@ -42,7 +60,7 @@ submodules to build the project.
 If you missed `--recursive` option, you are able to correct your mistake with command
 `git submodule update --init`.
 
-### Install CMake
+#### Install CMake
 
 CMake is used to control the build configuration of the project. Latest version of CMake is required
 (at the time of writing [3.9.3 is the minimum](CMakeLists.txt#L5)).
@@ -60,7 +78,7 @@ and used if it meets the minimum version requirement.
 > a fixed version of CMake and unpacks it to the given directory prefix.
 > Example usage: `scripts/install_cmake.sh --prefix /usr/local`.
 
-### Install dependencies (Windows)
+#### Install dependencies (Windows)
 
 We provide prebuilt dependencies to build the project. Download them
 with the [scripts\install_deps.bat](scripts/install_deps.bat) script.
@@ -69,7 +87,7 @@ with the [scripts\install_deps.bat](scripts/install_deps.bat) script.
 scripts\install_deps.bat
 ```
 
-### Build
+#### Build
 
 Configure the project build with the following command to create the
 `build` directory with the configuration.
