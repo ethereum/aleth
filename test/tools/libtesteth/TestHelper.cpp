@@ -53,9 +53,10 @@ void mine(Client& _c, int _numBlocks)
 
     int importedBlocks = 0;
     std::promise<void> allBlocksImported;
-    auto importHandler =
-        _c.setOnBlockImport([_numBlocks, &importedBlocks, &allBlocksImported](BlockHeader const&) {
-            if (++importedBlocks == _numBlocks)
+    auto chainChangedHandler = _c.setOnChainChanged(
+        [_numBlocks, &importedBlocks, &allBlocksImported](h256s const&, h256s const& _newBlocks) {
+            importedBlocks += _newBlocks.size();
+            if (importedBlocks == _numBlocks)
                 allBlocksImported.set_value();
         });
 
