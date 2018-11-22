@@ -122,7 +122,6 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
     bc().setOnBlockImport([=](BlockHeader const& _info) {
         if (auto h = m_host.lock())
             h->onBlockImported(_info);
-        m_onBlockImport(_info);
     });
 
     if (_forceAction == WithExisting::Rescue)
