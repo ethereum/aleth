@@ -244,23 +244,33 @@ jobs:
           command: git submodule update --init --recursive evmc cmake/cable
       - setup_remote_docker
       - run:
-          name: "Build aleth docker image"
-          command: docker build -t ethereum/aleth:local -f scripts/docker/aleth.dockerfile .
-      - run:
-          name: "Push aleth docker image"
+          name: "Build docker images"
           command: |
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER_ID --password-stdin
-            if [[ $CIRCLE_TAG =~ ^v[0-9].* ]]; then
-              tag=${CIRCLE_TAG:1}
-              docker tag ethereum/aleth:local ethereum/aleth:$tag
-              docker push ethereum/aleth:$tag
-              echo "Pushed ethereum/aleth:$tag"
-            fi
+            docker build --target aleth -t ethereum/aleth:local -f scripts/docker/aleth.dockerfile .
+            docker build --target testeth -t ethereum/testeth:local -f scripts/docker/aleth.dockerfile .
+      - run:
+          name: "Push docker images"
+          command: |
+
+            tag=unknown
             if [[ $NIGHTLY ]]; then
-              docker tag ethereum/aleth:local ethereum/aleth:nightly
-              docker push ethereum/aleth:nightly
-              echo "Pushed ethereum/aleth:nightly"
+              tag=nightly
+            elif [[ $CIRCLE_TAG =~ ^v[0-9].* ]]; then
+              tag=${CIRCLE_TAG:1}
+            else
+              tag=$(date +%Y%m%d)
             fi
+
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER_ID --password-stdin
+
+            docker tag ethereum/aleth:local ethereum/aleth:$tag
+            docker push ethereum/aleth:$tag
+            echo "Pushed ethereum/aleth:$tag"
+
+            docker tag ethereum/testeth:local ethereum/testeth:$tag
+            docker push ethereum/testeth:$tag
+            echo "Pushed ethereum/testeth:$tag"
+
             echo "See https://hub.docker.com/r/ethereum/aleth/tags/"
 
   docker-aleth-nightly:
@@ -305,7 +315,7 @@ workflows:
             - linux-gcc6
           filters:
             branches:
-              ignore: /.*/
+              only: docker
             tags:
               only: /^v[0-9].*/
 
