@@ -106,16 +106,21 @@ bool ClientTest::mineBlocks(unsigned _count) noexcept
         return false;
     try
     {
+        unsigned sealedBlocks = 0;
+        auto sealHandler = setOnBlockSealed([this, _count, &sealedBlocks](bytes const&) {
+            if (++sealedBlocks == _count)
+                stopSealing();
+        });
+
         std::promise<void> allBlocksImported;
-        int blocksLeftToImport = _count;
-        auto importHandler =
-            setOnBlockImport([this, &blocksLeftToImport, &allBlocksImported](BlockHeader const&) {
-                if (--blocksLeftToImport == 0)
-                {
-                    stopSealing();
+        unsigned importedBlocks = 0;
+        auto chainChangedHandler = setOnChainChanged(
+            [_count, &importedBlocks, &allBlocksImported](h256s const&, h256s const& _newBlocks) {
+                importedBlocks += _newBlocks.size();
+                if (importedBlocks == _count)
                     allBlocksImported.set_value();
-                }
             });
+
         startSealing();
         future_status ret = allBlocksImported.get_future().wait_for(
             std::chrono::seconds(m_singleBlockMaxMiningTimeInSeconds * _count));

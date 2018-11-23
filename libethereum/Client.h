@@ -216,15 +216,16 @@ public:
     /// should be called after the constructor of the most derived class finishes.
     void startWorking() { Worker::startWorking(); };
 
-    /// Change the function that is called when a new block is imported
-    Handler<BlockHeader const&> setOnBlockImport(std::function<void(BlockHeader const&)> _handler)
-    {
-        return m_onBlockImport.add(_handler);
-    }
     /// Change the function that is called when a new block is sealed
     Handler<bytes const&> setOnBlockSealed(std::function<void(bytes const&)> _handler)
     {
         return m_onBlockSealed.add(_handler);
+    }
+    /// Change the function that is called when blockchain was changed
+    Handler<h256s const&, h256s const&> setOnChainChanged(
+        std::function<void(h256s const&, h256s const&)> _handler)
+    {
+        return m_onChainChanged.add(_handler);
     }
 
 
@@ -369,9 +370,10 @@ protected:
 
     bytes m_extraData;
 
-    Signal<BlockHeader const&> m_onBlockImport;  ///< Called if we have imported a new block into
-                                                 ///< the DB
     Signal<bytes const&> m_onBlockSealed;        ///< Called if we have sealed a new block
+
+    /// Called when blockchain was changed
+    Signal<h256s const&, h256s const&> m_onChainChanged;
 
     Logger m_logger{createLogger(VerbosityInfo, "client")};
     Logger m_loggerDetail{createLogger(VerbosityDebug, "client")};

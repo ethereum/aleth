@@ -122,7 +122,6 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
     bc().setOnBlockImport([=](BlockHeader const& _info) {
         if (auto h = m_host.lock())
             h->onBlockImported(_info);
-        m_onBlockImport(_info);
     });
 
     if (_forceAction == WithExisting::Rescue)
@@ -566,6 +565,7 @@ void Client::onChainChanged(ImportRoute const& _ir)
     if (!isMajorSyncing())
         resyncStateFromChain();
     noteChanged(changeds);
+    m_onChainChanged(_ir.deadBlocks, _ir.liveBlocks);
 }
 
 bool Client::remoteActive() const
@@ -926,7 +926,7 @@ ExecutionResult Client::call(Address const& _from, u256 _value, Address _dest, b
     }
     catch (...)
     {
-        // TODO: Some sort of notification of failure.
+        cwarn << boost::current_exception_diagnostic_information();
     }
     return ret;
 }
