@@ -34,20 +34,30 @@ BOOST_FIXTURE_TEST_SUITE(DBPerfTests, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(insertAndReadBlocks)
 {
     const size_t iterationCount = 11;
-    const size_t blockCount = 1000;
+    const size_t blockCount = 2500;
+    const size_t txCount = 5;
 
     vector<double> insertResults;
     vector<double> readResults;
 
     cout << "Generating " << blockCount << " test blocks..." << endl;
+    auto start = steady_clock::now();
     vector<TestBlock> blocks;
     for (size_t j = 0; j < blockCount; j++)
     {
         TestBlock block;
-        block.addTransaction(TestTransaction::defaultTransaction(j));
+        for (size_t k = 0; k < txCount; k++)
+        {
+            // We don't care about valid nonces since we're inserting the blocks
+            // directly into the database
+            block.addTransaction(TestTransaction::defaultTransaction(0));
+        }
+
         blocks.push_back(block);
     }
-    cout << "Block generation complete!" << endl;
+    auto end = steady_clock::now();
+    duration<double, milli> duration = end - start;
+    cout << "Block generation complete. Generation took " << duration.count() << " ms" << endl;
 
     cout << "Running " << iterationCount << " iterations..." << endl << endl;
     for (size_t i = 0; i < iterationCount; i++)
@@ -65,7 +75,7 @@ BOOST_AUTO_TEST_CASE(insertAndReadBlocks)
 
         // Insertion test
         cout << "Inserting " << blockCount << " blocks..." << endl;
-        auto start = steady_clock::now();
+        start = steady_clock::now();
         for (auto const& block : blocks)
         {
             unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
@@ -73,8 +83,8 @@ BOOST_AUTO_TEST_CASE(insertAndReadBlocks)
                 toSlice(block.blockHeader().hash()), Slice(bytesConstRef(&block.bytes())));
             db->commit(move(writeBatch));
         }
-        auto end = steady_clock::now();
-        duration<double, milli> duration = end - start;
+        end = steady_clock::now();
+        duration = end - start;
         cout << "Insertion time: " << duration.count() << endl;
         insertResults.push_back(duration.count());
 
