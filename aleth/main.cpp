@@ -180,6 +180,12 @@ int main(int argc, char** argv)
 {
     setDefaultOrCLocale();
 
+#if defined(_WIN32)
+    // Need to change the code page from the default OEM code page (437) so that
+    // UTF-8 characters are displayed correctly in the console
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+
     // Init secp256k1 context by calling one of the functions.
     toPublic({});
 
