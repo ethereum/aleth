@@ -16,76 +16,72 @@
 */
 
 #include <libdevcore/MemoryDB.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <boost/test/unit_test.hpp>
 
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace dev::db;
-using namespace dev::test;
 
 namespace
 {
 array<pair<string, string>, 3> g_testData = {{{"Foo", "Bar"}, {"Baz", "Qux"}, {"Hello", "world"}}};
 }
 
-BOOST_FIXTURE_TEST_SUITE(MemoryDBTests, TestOutputHelperFixture)
-
-BOOST_AUTO_TEST_CASE(defaultEmpty)
+TEST(MemoryDB, defaultEmpty)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
-    BOOST_CHECK(!db->size());
+    ASSERT_TRUE(db);
+    EXPECT_TRUE(!db->size());
 }
 
-BOOST_AUTO_TEST_CASE(insertAndKillSingle)
+TEST(MemoryDB, insertAndKillSingle)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
     string testKey("foo");
     string testVal("bar");
 
     size_t insertedCount = 0;
     db->insert(Slice(testKey), Slice(testVal));
-    BOOST_CHECK_EQUAL(++insertedCount, db->size());
-    BOOST_CHECK(db->exists(Slice(testKey)));
-    BOOST_CHECK_EQUAL(testVal, db->lookup(Slice(testKey)));
+    EXPECT_EQ(++insertedCount, db->size());
+    EXPECT_TRUE(db->exists(Slice(testKey)));
+    EXPECT_EQ(testVal, db->lookup(Slice(testKey)));
 
     db->kill(Slice(testKey));
-    BOOST_CHECK_EQUAL(--insertedCount, db->size());
-    BOOST_CHECK(!db->exists(Slice(testKey)));
-    BOOST_CHECK_EQUAL("", db->lookup(Slice(testKey)));
+    EXPECT_EQ(--insertedCount, db->size());
+    EXPECT_TRUE(!db->exists(Slice(testKey)));
+    EXPECT_EQ("", db->lookup(Slice(testKey)));
 }
 
-BOOST_AUTO_TEST_CASE(InsertAndKillMultiple)
+TEST(MemoryDB, InsertAndKillMultiple)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
 
     // Insert keys/values and verify insertion
     size_t insertedCount = 0;
     for (auto const& data : g_testData)
     {
         db->insert(Slice(data.first), Slice(data.second));
-        BOOST_CHECK_EQUAL(++insertedCount, db->size());
-        BOOST_CHECK(db->exists(Slice(data.first)));
-        BOOST_CHECK_EQUAL(data.second, db->lookup(Slice(data.first)));
+        EXPECT_EQ(++insertedCount, db->size());
+        EXPECT_TRUE(db->exists(Slice(data.first)));
+        EXPECT_EQ(data.second, db->lookup(Slice(data.first)));
     }
 
     // Kill keys/values and verify deletion
     for (auto const& data : g_testData)
     {
         db->kill(Slice(data.first));
-        BOOST_CHECK_EQUAL(--insertedCount, db->size());
-        BOOST_CHECK(!db->exists(Slice(data.first)));
-        BOOST_CHECK_EQUAL("", db->lookup(Slice(data.first)));
+        EXPECT_EQ(--insertedCount, db->size());
+        EXPECT_TRUE(!db->exists(Slice(data.first)));
+        EXPECT_EQ("", db->lookup(Slice(data.first)));
     }
 }
 
-BOOST_AUTO_TEST_CASE(ForEachComplete)
+TEST(MemoryDB, ForEachComplete)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
     array<string, 3> testData = {{"foo", "bar", "baz"}};
 
     // Insert keys and verify insertion
@@ -93,9 +89,9 @@ BOOST_AUTO_TEST_CASE(ForEachComplete)
     for (auto const& data : testData)
     {
         db->insert(Slice(data), Slice(data));
-        BOOST_CHECK_EQUAL(++insertedCount, db->size());
-        BOOST_CHECK(db->exists(Slice(data)));
-        BOOST_CHECK_EQUAL(data, db->lookup(Slice(data)));
+        EXPECT_EQ(++insertedCount, db->size());
+        EXPECT_TRUE(db->exists(Slice(data)));
+        EXPECT_EQ(data, db->lookup(Slice(data)));
     }
 
     size_t matchedCount = 0;
@@ -107,22 +103,22 @@ BOOST_AUTO_TEST_CASE(ForEachComplete)
         }
         return false;
     });
-    BOOST_CHECK_EQUAL(testData.size(), matchedCount);
+    EXPECT_EQ(testData.size(), matchedCount);
 }
 
-BOOST_AUTO_TEST_CASE(ForEachTerminateEarly)
+TEST(MemoryDB, ForEachTerminateEarly)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
 
     // Insert keys and verify insertion
     size_t insertedCount = 0;
     for (auto const& data : g_testData)
     {
         db->insert(Slice(data.first), Slice(data.second));
-        BOOST_CHECK_EQUAL(++insertedCount, db->size());
-        BOOST_CHECK(db->exists(Slice(data.first)));
-        BOOST_CHECK_EQUAL(data.second, db->lookup(Slice(data.first)));
+        EXPECT_EQ(++insertedCount, db->size());
+        EXPECT_TRUE(db->exists(Slice(data.first)));
+        EXPECT_EQ(data.second, db->lookup(Slice(data.first)));
     }
 
     size_t matchedCount = 0;
@@ -134,29 +130,29 @@ BOOST_AUTO_TEST_CASE(ForEachTerminateEarly)
         }
         return false;
     });
-    BOOST_CHECK(!matchedCount);
+    EXPECT_TRUE(!matchedCount);
 }
 
 // Write batch tests
 
-BOOST_AUTO_TEST_CASE(defaultEmptyWriteBatch)
+TEST(MemoryDB, defaultEmptyWriteBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
-    BOOST_REQUIRE(writeBatch);
+    ASSERT_TRUE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
-        BOOST_CHECK(!rawBatch->size());
+        EXPECT_TRUE(!rawBatch->size());
     }
 }
 
-BOOST_AUTO_TEST_CASE(insertAndKillSingleBatch)
+TEST(MemoryDB, insertAndKillSingleBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
-    BOOST_REQUIRE(writeBatch);
+    ASSERT_TRUE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
 
@@ -165,18 +161,18 @@ BOOST_AUTO_TEST_CASE(insertAndKillSingleBatch)
 
         size_t insertedCount = 0;
         rawBatch->insert(Slice(testKey), Slice(testVal));
-        BOOST_CHECK_EQUAL(++insertedCount, rawBatch->size());
+        EXPECT_EQ(++insertedCount, rawBatch->size());
         rawBatch->kill(Slice(testKey));
-        BOOST_CHECK_EQUAL(--insertedCount, rawBatch->size());
+        EXPECT_EQ(--insertedCount, rawBatch->size());
     }
 }
 
-BOOST_AUTO_TEST_CASE(insertAndKillMultipleValuesBatch)
+TEST(MemoryDB, insertAndKillMultipleValuesBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
-    BOOST_REQUIRE(writeBatch);
+    ASSERT_TRUE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
 
@@ -185,42 +181,42 @@ BOOST_AUTO_TEST_CASE(insertAndKillMultipleValuesBatch)
         for (auto const& data : g_testData)
         {
             rawBatch->insert(Slice(data.first), Slice(data.second));
-            BOOST_CHECK_EQUAL(++insertedCount, rawBatch->size());
+            EXPECT_EQ(++insertedCount, rawBatch->size());
         }
 
         // Kill keys/values from batch
         for (auto const& data : g_testData)
         {
             rawBatch->kill(Slice(data.first));
-            BOOST_CHECK_EQUAL(--insertedCount, rawBatch->size());
+            EXPECT_EQ(--insertedCount, rawBatch->size());
         }
     }
 }
 
 // Write batch commit tests
 
-BOOST_AUTO_TEST_CASE(commitEmptyBatch)
+TEST(MemoryDB, commitEmptyBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
-    BOOST_CHECK(!db->size());
+    ASSERT_TRUE(db);
+    EXPECT_TRUE(!db->size());
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
-    BOOST_REQUIRE(writeBatch);
+    ASSERT_TRUE(writeBatch);
     {
         MemoryDBWriteBatch* rawBatch = static_cast<MemoryDBWriteBatch*>(writeBatch.get());
-        BOOST_CHECK(!rawBatch->size());
+        EXPECT_TRUE(!rawBatch->size());
 
         db->commit(move(writeBatch));
-        BOOST_CHECK(!db->size());
+        EXPECT_TRUE(!db->size());
     }
 }
 
-BOOST_AUTO_TEST_CASE(commitMultipleValuesBatch)
+TEST(MemoryDB, commitMultipleValuesBatch)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
     unique_ptr<WriteBatchFace> writeBatch = db->createWriteBatch();
-    BOOST_REQUIRE(writeBatch);
+    ASSERT_TRUE(writeBatch);
 
     // Insert keys/values
     size_t insertedCount = 0;
@@ -230,31 +226,29 @@ BOOST_AUTO_TEST_CASE(commitMultipleValuesBatch)
         insertedCount++;
     }
 
-    BOOST_CHECK(!db->size());
+    EXPECT_TRUE(!db->size());
     db->commit(move(writeBatch));
-    BOOST_CHECK_EQUAL(insertedCount, db->size());
+    EXPECT_EQ(insertedCount, db->size());
     for (auto const& data : g_testData)
     {
-        BOOST_CHECK_EQUAL(data.second, db->lookup(Slice(data.first)));
+        EXPECT_EQ(data.second, db->lookup(Slice(data.first)));
     }
 }
 
-BOOST_AUTO_TEST_CASE(commitMultipleBatches)
+TEST(MemoryDB, commitMultipleBatches)
 {
     unique_ptr<MemoryDB> db(new MemoryDB());
-    BOOST_REQUIRE(db);
+    ASSERT_TRUE(db);
     unique_ptr<WriteBatchFace> writeBatches[g_testData.size()];
 
     size_t insertedCount = 0;
     for (size_t i = 0; i < g_testData.size(); i++)
     {
         writeBatches[i] = db->createWriteBatch();
-        BOOST_REQUIRE(writeBatches[i]);
+        ASSERT_TRUE(writeBatches[i]);
         writeBatches[i]->insert(Slice(g_testData[i].first), Slice(g_testData[i].second));
         db->commit(move(writeBatches[i]));
-        BOOST_CHECK_EQUAL(++insertedCount, db->size());
-        BOOST_CHECK_EQUAL(g_testData[i].second, db->lookup(Slice(g_testData[i].first)));
+        EXPECT_EQ(++insertedCount, db->size());
+        EXPECT_EQ(g_testData[i].second, db->lookup(Slice(g_testData[i].first)));
     }
 }
-
-BOOST_AUTO_TEST_SUITE_END()
