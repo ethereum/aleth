@@ -35,6 +35,7 @@ static unsigned const c_maxSendTransactions = 256;
 static unsigned const c_maxHeadersToSend = 1024;
 static unsigned const c_maxIncomingNewHashes = 1024;
 static int const c_backroundWorkPeriodMs = 1000;
+static int const c_minBlockBroadcastPeers = 4;
 
 char const* const EthereumCapability::s_stateNames[static_cast<int>(SyncState::Size)] = {
     "NotSynced", "Idle", "Waiting", "Blocks", "State"};
@@ -498,10 +499,10 @@ void EthereumCapability::maintainTransactions()
         {
             auto const& t = ts[i];
             bool unsent = !m_transactionsSent.count(t.sha3());
-            auto peers = get<1>(randomSelection(0, [&](EthereumPeer const& _peer) {
+            auto const peers = selectPeers([&](EthereumPeer const& _peer) {
                 return _peer.isWaitingForTransactions() ||
                        (unsent && !_peer.isTransactionKnown(t.sha3()));
-            }));
+            });
             for (auto const& p: peers)
                 peerTransactions[p].push_back(i);
         }
@@ -531,32 +532,33 @@ void EthereumCapability::maintainTransactions()
     }
 }
 
-tuple<vector<NodeID>, vector<NodeID>> EthereumCapability::randomSelection(
-    unsigned _percent, std::function<bool(EthereumPeer const&)> const& _allow)
+vector<NodeID> EthereumCapability::selectPeers(
+    std::function<bool(EthereumPeer const&)> const& _predicate) const
 {
-    vector<NodeID> chosen;
     vector<NodeID> allowed;
-    double percentDecimal = _percent / 100.0;
-
     for (auto const& peer : m_peers)
     {
-        if (_allow(peer.second))
+        if (_predicate(peer.second))
             allowed.push_back(peer.first);
     }
+    return allowed;
+}
 
-    if (_percent == 0 || allowed.size() == 0)
-    {
-        return make_tuple(move(chosen), move(allowed));
-    }
+std::pair<std::vector<NodeID>, std::vector<NodeID>> EthereumCapability::randomPartitionPeers(
+    std::vector<NodeID> const& _peers, std::size_t _number) const
+{
+    vector<NodeID> part1(_peers);
+    vector<NodeID> part2;
 
-    std::shuffle(allowed.begin(), allowed.end(), m_urng);
+    if (_number >= _peers.size())
+        return std::make_pair(part1, part2);
 
-    // Remove elements from the end of the shuffled allowed vector and move them to chosen.
-    size_t chosenSize = percentDecimal * allowed.size();
-    chosen.reserve(chosenSize);
-    std::move(allowed.begin() + chosenSize, allowed.end(), std::back_inserter(chosen));
-    allowed.erase(allowed.begin() + chosenSize, allowed.end());
-    return make_tuple(move(chosen), move(allowed));
+    std::shuffle(part1.begin(), part1.end(), m_urng);
+
+    // Remove elements from the end of the shuffled part1 vector and move them to part2.
+    std::move(part1.begin() + _number, part1.end(), std::back_inserter(part2));
+    part1.erase(part1.begin() + _number, part1.end());
+    return std::make_pair(move(part1), move(part2));
 }
 
 void EthereumCapability::maintainBlocks(h256 const& _currentHash)
@@ -569,15 +571,24 @@ void EthereumCapability::maintainBlocks(h256 const& _currentHash)
         if (diff(detailsFrom.number, detailsTo.number) < 20)
         {
             // don't be sending more than 20 "new" blocks. if there are any more we were probably waaaay behind.
-            LOG(m_logger) << "Sending a new block (current is " << _currentHash << ", was "
+            LOG(m_logger) << "Sending new blocks (current is " << _currentHash << ", was "
                           << m_latestBlockSent << ")";
 
             h256s blocks = get<0>(m_chain.treeRoute(m_latestBlockSent, _currentHash, false, false, true));
 
-            auto s = randomSelection(25, [&](EthereumPeer const& _peer) {
-                return !_peer.isBlockKnown(_currentHash);
-            });
-            for (NodeID const& peerID : get<0>(s))
+
+            auto const peersWithoutBlock = selectPeers(
+                [&](EthereumPeer const& _peer) { return !_peer.isBlockKnown(_currentHash); });
+
+            auto const peersToSendNumber =
+                std::max<std::size_t>(c_minBlockBroadcastPeers, std::sqrt(m_peers.size()));
+
+            std::vector<NodeID> peersToSend;
+            std::vector<NodeID> peersToAnnounce;
+            std::tie(peersToSend, peersToAnnounce) =
+                randomPartitionPeers(peersWithoutBlock, peersToSendNumber);
+
+            for (NodeID const& peerID : peersToSend)
                 for (auto const& b: blocks)
                 {
                     RLPStream ts;
@@ -592,7 +603,11 @@ void EthereumCapability::maintainBlocks(h256 const& _currentHash)
                         itPeer->second.clearKnownBlocks();
                     }
                 }
-            for (NodeID const& peerID : get<1>(s))
+            if (!peersToSend.empty())
+                LOG(m_logger) << "Sent " << blocks.size() << " block(s) to " << peersToSend.size()
+                              << " peers";
+
+            for (NodeID const& peerID : peersToAnnounce)
             {
                 RLPStream ts;
                 m_host->prep(peerID, name(), ts, NewBlockHashesPacket, blocks.size());
@@ -610,6 +625,9 @@ void EthereumCapability::maintainBlocks(h256 const& _currentHash)
                     itPeer->second.clearKnownBlocks();
                 }
             }
+            if (!peersToAnnounce.empty())
+                LOG(m_logger) << "Announced " << blocks.size() << " block(s) to "
+                              << peersToAnnounce.size() << " peers";
         }
         m_latestBlockSent = _currentHash;
     }
