@@ -383,7 +383,8 @@ void VM::interpretCases()
             uint64_t b = (uint64_t)m_SP[0];
             uint64_t s = (uint64_t)m_SP[1];
             m_output = owning_bytes_ref{std::move(m_mem), b, s};
-            m_bounce = 0;
+            m_bounce = nullptr;
+            trace();
         }
         BREAK
 
@@ -430,6 +431,7 @@ void VM::interpretCases()
             updateIOGas();
             m_context->host->selfdestruct(m_context, &m_message->destination, &destination);
             m_bounce = nullptr;
+            trace();
         }
         BREAK
 
@@ -437,7 +439,8 @@ void VM::interpretCases()
         {
             ON_OP();
             updateIOGas();
-            m_bounce = 0;
+            m_bounce = nullptr;
+            trace();
         }
         BREAK
 

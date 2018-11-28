@@ -163,6 +163,7 @@ void VM::caseCreate()
     }
     else
         m_SPP[0] = 0;
+    trace();
     ++m_PC;
 }
 
@@ -194,6 +195,7 @@ void VM::caseCall()
         m_SPP[0] = 0;
         m_io_gas += msg.gas;
     }
+    trace();
     ++m_PC;
 }
 

@@ -50,6 +50,12 @@ EVM::Result EVM::execute(ExtVMFace& _ext, int64_t gas)
         evmc_execute(m_instance, &_ext, mode, &msg, _ext.code.data(), _ext.code.size())};
 }
 
+static inline bool isCall(uint8_t _opcode) noexcept
+{
+    return _opcode == OP_CALL || _opcode == OP_CALLCODE || _opcode == OP_DELEGATECALL ||
+           _opcode == OP_CREATE || _opcode == OP_CREATE2;
+}
+
 EVMC::EVMC(evmc_instance* _instance) : EVM(_instance)
 {
     static const auto tracer = [](evmc_tracer_context * _context, size_t _codeOffset,
@@ -64,8 +70,9 @@ EVMC::EVMC(evmc_instance* _instance) : EVM(_instance)
             pushedStackItem = *_pushedStackItem;
 
         auto opcode = evmc->m_code[_codeOffset];
+        auto callIndex = isCall(opcode) ? evmc->m_prevCall : -1;
         evmc->m_calls[evmc->m_currentCall].trace.emplace_back(InstructionTrace{
-            opcode, _codeOffset, _statusCode, _gasLeft, pushedStackItem, -1});
+            opcode, _codeOffset, _statusCode, _gasLeft, pushedStackItem, callIndex});
     };
 
     _instance->set_tracer(_instance, tracer, reinterpret_cast<evmc_tracer_context*>(this));
@@ -94,15 +101,10 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
         CallTrace{static_cast<int>(_ext.depth), _ext.isCreate ? EVMC_CREATE : EVMC_CALL, gas, {}});
     auto parentCall = m_currentCall;
     m_currentCall = m_calls.size() - 1;
-    if (_ext.depth > 0)
-    {
-        // The parent trace should have a call instructions.
-        // TODO: Create this instruction after the call.
-        m_calls[parentCall].trace.back().callIndex = m_currentCall;
-    }
 
     EVM::Result r = execute(_ext, gas);
 
+    m_prevCall = m_currentCall;
     m_currentCall = parentCall;
 
     m_code = prevCode;
@@ -205,8 +207,8 @@ static void dumpCallTrace(
     std::cout << ">>>>" << indent << to_string(c.kind) << " gas: " << std::dec << c.gas << "\n";
     for (auto& trace : c.trace)
     {
-        std::cout << std::hex << std::setfill('0') << std::setw(4) << trace.codeOffset
-                  << indent << " " << names[trace.opcode];
+        std::cout << std::hex << std::setfill('0') << std::setw(4) << trace.codeOffset << indent
+                  << " " << names[trace.opcode];
         if (trace.pushedStackItem)
             std::cout << " (" << fromEvmC(*trace.pushedStackItem) << ")";
         std::cout << "\n";

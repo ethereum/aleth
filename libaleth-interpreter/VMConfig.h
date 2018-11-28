@@ -432,7 +432,6 @@ namespace eth
     fetchInstruction(); \
     goto* jumpTable[(int)m_OP];
 #define BREAK \
-    trace();  \
     return;
 #define DEFAULT
 #define WHILE_CASES

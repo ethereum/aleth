@@ -117,7 +117,8 @@ private:
     Logger m_vmTraceLogger{createLogger(VerbosityTrace, "vmtrace")};
 
     std::vector<CallTrace> m_calls;
-    size_t m_currentCall = 0;
+    int m_currentCall = -1;
+    int m_prevCall = -1;
 
     void dumpTrace();
 };
