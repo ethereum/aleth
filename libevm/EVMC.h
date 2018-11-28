@@ -98,6 +98,9 @@ struct CallTrace
     int depth;
     evmc_call_kind kind;
     int64_t gas;
+    int64_t gasLeft;
+    Address sender;
+    Address destination;
 
     std::vector<InstructionTrace> trace;
 };
