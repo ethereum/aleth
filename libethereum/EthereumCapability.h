@@ -145,10 +145,11 @@ public:
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 
-    std::tuple<std::vector<NodeID>, std::vector<NodeID>> randomSelection(unsigned _percent = 25,
-        std::function<bool(EthereumPeer const&)> const& _allow = [](EthereumPeer const&) {
-            return true;
-        });
+    std::vector<NodeID> selectPeers(
+        std::function<bool(EthereumPeer const&)> const& _predicate) const;
+
+    std::pair<std::vector<NodeID>, std::vector<NodeID>> randomPartitionPeers(
+        std::vector<NodeID> const& _peers, std::size_t _number) const;
 
     void doBackgroundWork();
 
@@ -193,7 +194,7 @@ private:
 
     std::atomic<bool> m_backgroundWorkEnabled = {false};
 
-    std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
+    mutable std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
 
     Logger m_logger{createLogger(VerbosityDebug, "ethcap")};
     /// Logger for messages about impolite behaivour of peers.
