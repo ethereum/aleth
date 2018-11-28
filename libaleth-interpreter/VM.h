@@ -109,6 +109,7 @@ private:
     Instruction m_OP;         // current operation
     uint64_t m_PC = 0;        // program counter
     uint64_t m_tracePC = 0;   // program counter for tracing
+    evmc_status_code m_traceStatus = EVMC_SUCCESS;  // the status of current instruction
     u256* m_SP = m_stackEnd;  // stack pointer
     u256* m_SPP = m_SP;       // stack pointer prime (next SP)
 

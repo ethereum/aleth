@@ -97,13 +97,15 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
     auto gas = static_cast<int64_t>(io_gas);
 
-    m_calls.emplace_back(CallTrace{static_cast<int>(_ext.depth),
-        _ext.isCreate ? EVMC_CREATE : EVMC_CALL, gas, -1, _ext.caller, _ext.myAddress, {}});
+    m_calls.emplace_back(
+        CallTrace{static_cast<int>(_ext.depth), _ext.isCreate ? EVMC_CREATE : EVMC_CALL,
+            EVMC_SUCCESS, gas, -1, _ext.caller, _ext.myAddress, {}});
     auto parentCall = m_currentCall;
     m_currentCall = m_calls.size() - 1;
 
     EVM::Result r = execute(_ext, gas);
 
+    m_calls[m_currentCall].status = r.status();
     m_calls[m_currentCall].gasLeft = r.gasLeft();
     m_prevCall = m_currentCall;
     m_currentCall = parentCall;
@@ -213,12 +215,15 @@ static void dumpCallTrace(
                   << " " << std::left << std::setfill(' ') << std::setw(7) << names[trace.opcode];
         if (trace.pushedStackItem)
             std::cout << " (" << fromEvmC(*trace.pushedStackItem) << ")";
+        if (trace.statusCode != EVMC_SUCCESS)
+            std::cout << " <" << trace.statusCode << ">";
         std::cout << "\n";
 
         if (trace.callIndex >= 0)
             dumpCallTrace(calls, trace.callIndex, names);
     }
-    std::cout << "<<<<" << indent << "< gas left: " << std::dec << c.gasLeft << "\n";
+    std::cout << "<<<<" << indent << "< <" << c.status << "> "
+              << "gas left: " << std::dec << c.gasLeft << "\n";
 }
 
 void EVMC::dumpTrace()

@@ -97,6 +97,7 @@ struct CallTrace
 {
     int depth;
     evmc_call_kind kind;
+    evmc_status_code status;
     int64_t gas;
     int64_t gasLeft;
     Address sender;

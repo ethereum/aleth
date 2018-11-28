@@ -165,7 +165,7 @@ void VM::trace() noexcept
             topStackItem = toEvmC(m_SPP[0]);
             pushedStackItem = &topStackItem;
         }
-        m_traceCallback(m_traceContext, m_tracePC, EVMC_SUCCESS, m_io_gas, m_stackEnd - m_SPP,
+        m_traceCallback(m_traceContext, m_tracePC, m_traceStatus, m_io_gas, m_stackEnd - m_SPP,
             pushedStackItem, m_mem.size(), 0, 0, nullptr);
     }
 }

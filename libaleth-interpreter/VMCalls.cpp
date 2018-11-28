@@ -41,21 +41,29 @@ void VM::copyDataToMemory(bytesConstRef _data, u256*_sp)
 
 void VM::throwOutOfGas()
 {
+    m_traceStatus = EVMC_OUT_OF_GAS;
+    trace();
     BOOST_THROW_EXCEPTION(OutOfGas());
 }
 
 void VM::throwBadInstruction()
 {
+    m_traceStatus = EVMC_UNDEFINED_INSTRUCTION;
+    trace();
     BOOST_THROW_EXCEPTION(BadInstruction());
 }
 
 void VM::throwBadJumpDestination()
 {
+    m_traceStatus = EVMC_BAD_JUMP_DESTINATION;
+    trace();
     BOOST_THROW_EXCEPTION(BadJumpDestination());
 }
 
 void VM::throwDisallowedStateChange()
 {
+    m_traceStatus = EVMC_STATIC_MODE_VIOLATION;
+    trace();
     BOOST_THROW_EXCEPTION(DisallowedStateChange());
 }
 
@@ -65,7 +73,10 @@ void VM::throwDisallowedStateChange()
 void VM::throwBadStack(int _removed, int _added)
 {
     bigint size = m_stackEnd - m_SPP;
-    if (size < _removed)
+    bool underflow = size < _removed;
+    m_traceStatus = underflow ? EVMC_STACK_UNDERFLOW : EVMC_STACK_OVERFLOW;
+    trace();
+    if (underflow)
         BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, size));
     else
         BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), size));
@@ -75,11 +86,15 @@ void VM::throwRevertInstruction(owning_bytes_ref&& _output)
 {
     // We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and
     // RevertInstruction has no copy constructor
+    m_traceStatus = EVMC_REVERT;
+    trace();
     throw RevertInstruction(std::move(_output));
 }
 
 void VM::throwBufferOverrun(bigint const& _endOfAccess)
 {
+    m_traceStatus = EVMC_INVALID_MEMORY_ACCESS;
+    trace();
     BOOST_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
 }
 
