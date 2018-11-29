@@ -97,6 +97,9 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
 
     auto gas = static_cast<int64_t>(io_gas);
 
+    if (_ext.depth == 0)
+        m_prevCall = -1;  // Reset prev call.
+
     m_calls.emplace_back(
         CallTrace{static_cast<int>(_ext.depth), _ext.isCreate ? EVMC_CREATE : EVMC_CALL,
             EVMC_SUCCESS, gas, -1, _ext.caller, _ext.myAddress, {}});
