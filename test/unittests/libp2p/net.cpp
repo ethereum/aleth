@@ -416,17 +416,18 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     auto leastRecentlySeenNodeId = nodes.front().lock()->id;
 
     // addNode will replace the node in the m_allNodes map, because it's the same id with enother
-    // andpoint
-    auto nodeWithNewEndpoint = nodeTable->addNode(
-        Node(leastRecentlySeenNodeId, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30000, 30000)),
-        NodeTable::Known);
+    // endpoint
+    NodeIPEndpoint newEndpoint{bi::address::from_string("127.0.0.1"), 30000, 30000};
+    nodeTable->addNode(Node(leastRecentlySeenNodeId, newEndpoint), NodeTable::Known);
 
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodes.size(), 16);
     // least recently seen node removed
     BOOST_CHECK_NE(nodes.front().lock()->id, leastRecentlySeenNodeId);
     // but added as most recently seen with new endpoint
-    BOOST_CHECK_EQUAL(nodes.back().lock(), nodeWithNewEndpoint);
+    auto mostRecentNodeEntry = nodes.back().lock();
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNodeId);
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint, newEndpoint);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

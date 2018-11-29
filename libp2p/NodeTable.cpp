@@ -81,49 +81,30 @@ void NodeTable::processEvents()
         m_nodeEventHandler->processEvents();
 }
 
-shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relation)
+void NodeTable::addNode(Node const& _node, NodeRelation _relation)
 {
     if (_relation == Known)
     {
-        auto ret = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
-        ret->pending = false;
-        DEV_GUARDED(x_nodes)
-        m_allNodes[_node.id] = ret;
+        auto nodeEntry = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
+        nodeEntry->pending = false;
+        DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
         noteActiveNode(_node.id, _node.endpoint);
-        return ret;
+        return;
     }
-    
-    if (!_node.endpoint)
-        return shared_ptr<NodeEntry>();
-    
-    // ping address to recover nodeid if nodeid is empty
-    if (!_node.id)
-    {
-        DEV_GUARDED(x_nodes)
-        {
-            LOG(m_logger) << "Sending public key discovery Ping to "
-                          << (bi::udp::endpoint)_node.endpoint
-                          << " (Advertising: " << (bi::udp::endpoint)m_hostNode.endpoint << ")";
-        }
-        DEV_GUARDED(x_pubkDiscoverPings)
-        {
-            m_pubkDiscoverPings[_node.endpoint.address()] = std::chrono::steady_clock::now();
-        }
-        ping(_node.endpoint);
-        return shared_ptr<NodeEntry>();
-    }
-    
+
+    if (!_node.endpoint || !_node.id)
+        return;
+
     DEV_GUARDED(x_nodes)
     {
         if (m_allNodes.count(_node.id))
-            return m_allNodes[_node.id];
+            return;
     }
 
     auto ret = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = ret; }
     LOG(m_logger) << "addNode pending for " << _node.endpoint;
     ping(_node.endpoint);
-    return ret;
 }
 
 list<NodeID> NodeTable::nodes() const
@@ -448,20 +429,8 @@ void NodeTable::onPacketReceived(
                 }
                 else
                 {
-                    // if not, check if it's known/pending or a pubk discovery ping
                     if (auto n = nodeEntry(in.sourceid))
                         n->pending = false;
-                    else
-                    {
-                        DEV_GUARDED(x_pubkDiscoverPings)
-                        {
-                            if (!m_pubkDiscoverPings.count(_from.address()))
-                                return; // unsolicited pong; don't note node as active
-                            m_pubkDiscoverPings.erase(_from.address());
-                        }
-                        if (!haveNode(in.sourceid))
-                            addNode(Node(in.sourceid, NodeIPEndpoint(_from.address(), _from.port(), _from.port())));
-                    }
                 }
                 
                 // update our endpoint address and UDP port

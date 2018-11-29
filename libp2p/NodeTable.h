@@ -154,8 +154,8 @@ public:
     /// Called by implementation which provided handler to process NodeEntryAdded/NodeEntryDropped events. Events are coalesced by type whereby old events are ignored.
     void processEvents();
 
-    /// Add node. Node will be pinged and empty shared_ptr is returned if node has never been seen or NodeID is empty.
-    std::shared_ptr<NodeEntry> addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
+    /// Add node. Node will be pinged.
+    void addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
 
     /// Returns list of node ids active in node table.
     std::list<NodeID> nodes() const;
@@ -275,9 +275,6 @@ private:
     Mutex x_evictions;												///< LOCK x_evictions first if both x_nodes and x_evictions locks are required.
     std::unordered_map<NodeID, EvictionTimeout> m_evictions;		///< Eviction timeouts.
     
-    Mutex x_pubkDiscoverPings;										///< LOCK x_nodes first if both x_nodes and x_pubkDiscoverPings locks are required.
-    std::unordered_map<bi::address, TimePoint> m_pubkDiscoverPings;	///< List of pending pings where node entry wasn't created due to unkown pubk.
-
     Mutex x_findNodeTimeout;
     std::list<NodeIdTimePoint> m_findNodeTimeout;					///< Timeouts for FindNode requests.
 
