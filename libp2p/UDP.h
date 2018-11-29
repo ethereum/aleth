@@ -91,8 +91,9 @@ struct UDPSocketFace
 struct UDPSocketEvents
 {
     virtual ~UDPSocketEvents() = default;
-    virtual void onDisconnected(UDPSocketFace*) {}
-    virtual void onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packetData) = 0;
+    virtual void onSocketDisconnected(UDPSocketFace*) {}
+    virtual void onPacketReceived(
+        UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packetData) = 0;
 };
 
 /**
@@ -206,7 +207,7 @@ void UDPSocket<Handler, MaxDatagramSize>::doRead()
             cnetlog << "Receiving UDP message failed. " << _ec.value() << " : " << _ec.message();
 
         if (_len)
-            m_host.onReceived(this, m_recvEndpoint, bytesConstRef(m_recvData.data(), _len));
+            m_host.onPacketReceived(this, m_recvEndpoint, bytesConstRef(m_recvData.data(), _len));
         doRead();
     });
 }
@@ -271,7 +272,7 @@ void UDPSocket<Handler, MaxDatagramSize>::disconnectWithError(boost::system::err
     if (wasClosed)
         return;
 
-    m_host.onDisconnected(this);
+    m_host.onSocketDisconnected(this);
 }
 
 }

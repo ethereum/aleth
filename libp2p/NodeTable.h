@@ -120,7 +120,7 @@ inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
  * @todo optimize knowledge at opposite edges; eg, s_bitsPerStep lookups. (Can be done via pointers to NodeBucket)
  * @todo ^ s_bitsPerStep = 8; // Denoted by b in [Kademlia]. Bits by which address space is divided.
  */
-class NodeTable: UDPSocketEvents, public std::enable_shared_from_this<NodeTable>
+class NodeTable : UDPSocketEvents
 {
     friend std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable);
     using NodeSocket = UDPSocket<NodeTable, 1280>;
@@ -161,13 +161,17 @@ public:
     std::list<NodeID> nodes() const;
 
     /// Returns node count.
-    unsigned count() const { return m_nodes.size(); }
+    unsigned count() const { return m_allNodes.size(); }
 
     /// Returns snapshot of table.
     std::list<NodeEntry> snapshot() const;
 
     /// Returns true if node id is in node table.
-    bool haveNode(NodeID const& _id) { Guard l(x_nodes); return m_nodes.count(_id) > 0; }
+    bool haveNode(NodeID const& _id)
+    {
+        Guard l(x_nodes);
+        return m_allNodes.count(_id) > 0;
+    }
 
     /// Returns the Node to the corresponding node id or the empty Node if that id is not found.
     Node node(NodeID const& _id);
@@ -182,7 +186,7 @@ private:
 
     static unsigned const s_addressByteSize = h256::size;					///< Size of address type in bytes.
     static unsigned const s_bits = 8 * s_addressByteSize;					///< Denoted by n in [Kademlia].
-    static unsigned const s_bins = s_bits - 1;								///< Size of m_state (excludes root, which is us).
+    static unsigned const s_bins = s_bits - 1;  ///< Size of m_buckets (excludes root, which is us).
     static unsigned const s_maxSteps = boost::static_log2<s_bits>::value;	///< Max iterations of discovery. (discover)
 
     /// Chosen constants
@@ -210,7 +214,10 @@ private:
     void ping(NodeEntry* _n) const;
 
     /// Returns center node entry which describes this node and used with dist() to calculate xor metric for node table nodes.
-    NodeEntry center() const { return NodeEntry(m_node.id, m_node.publicKey(), m_node.endpoint); }
+    NodeEntry center() const
+    {
+        return NodeEntry(m_hostNode.id, m_hostNode.publicKey(), m_hostNode.endpoint);
+    }
 
     /// Used by asynchronous operations to return NodeEntry which is active and managed by node table.
     std::shared_ptr<NodeEntry> nodeEntry(NodeID _id);
@@ -239,10 +246,11 @@ private:
     /// General Network Events
 
     /// Called by m_socket when packet is received.
-    void onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet);
+    void onPacketReceived(
+        UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet) override;
 
     /// Called by m_socket when socket is disconnected.
-    void onDisconnected(UDPSocketFace*) {}
+    void onSocketDisconnected(UDPSocketFace*) override {}
 
     /// Tasks
 
@@ -254,14 +262,15 @@ private:
 
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
-    Node m_node;													///< This node. LOCK x_state if endpoint access or mutation is required. Do not modify id.
+    /// This node. LOCK x_state if endpoint access or mutation is required. Do not modify id.
+    Node m_hostNode;
     Secret m_secret;												///< This nodes secret key.
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
-    std::unordered_map<NodeID, std::shared_ptr<NodeEntry>> m_nodes;	///< Known Node Endpoints
+    std::unordered_map<NodeID, std::shared_ptr<NodeEntry>> m_allNodes;  ///< Known Node Endpoints
 
     mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.
-    std::array<NodeBucket, s_bins> m_state;							///< State of p2p node network.
+    std::array<NodeBucket, s_bins> m_buckets;                       ///< State of p2p node network.
 
     Mutex x_evictions;												///< LOCK x_evictions first if both x_nodes and x_evictions locks are required.
     std::unordered_map<NodeID, EvictionTimeout> m_evictions;		///< Eviction timeouts.
