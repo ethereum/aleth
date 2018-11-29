@@ -160,7 +160,7 @@ void VM::trace() noexcept
         auto const& metrics = c_metrics[static_cast<size_t>(m_OP)];
         evmc_uint256be topStackItem;
         evmc_uint256be const* pushedStackItem = nullptr;
-        if (metrics.num_stack_returned_items >= 1)
+        if (m_traceStatus == EVMC_SUCCESS && metrics.num_stack_returned_items >= 1)
         {
             topStackItem = toEvmC(m_SPP[0]);
             pushedStackItem = &topStackItem;
