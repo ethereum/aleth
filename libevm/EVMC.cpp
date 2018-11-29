@@ -214,8 +214,13 @@ static void dumpCallTrace(
               << c.destination << " gas: " << std::dec << c.gas << "\n";
     for (auto& trace : c.trace)
     {
-        std::cout << std::hex << std::setfill('0') << std::setw(4) << trace.codeOffset << indent
-                  << " " << std::left << std::setfill(' ') << std::setw(7) << names[trace.opcode];
+        auto* name = names[trace.opcode];
+        std::cout << std::hex << std::right << std::setfill('0') << std::setw(4) << trace.codeOffset
+                  << indent << " ";
+        if (name)
+            std::cout << std::left << std::setfill(' ') << std::setw(7) << name;
+        else
+            std::cout << "<" << std::hex << std::right << std::setfill('0') << std::setw(2) << int(trace.opcode) << ">    ";
         if (trace.pushedStackItem)
             std::cout << " (" << fromEvmC(*trace.pushedStackItem) << ")";
         if (trace.statusCode != EVMC_SUCCESS)
