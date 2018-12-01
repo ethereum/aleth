@@ -14,13 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * @file main.cpp
- * @author Gav Wood <i@gavwood.com>
- * @author Tasha Carl <tasha@carl.pro> - I here by place all my contributions in this file under MIT licence, as specified by http://opensource.org/licenses/MIT.
- * @date 2014
- * Ethereum client.
- */
 
 #include <thread>
 #include <fstream>
@@ -74,7 +67,6 @@ namespace
 {
 
 std::atomic<bool> g_silence = {false};
-unsigned const c_lineWidth = 160;
 
 void version()
 {
@@ -85,27 +77,11 @@ void version()
     cout << "Build: " << buildinfo->system_name << "/" << buildinfo->build_type << "\n";
 }
 
-bool isTrue(std::string const& _m)
-{
-    return _m == "on" || _m == "yes" || _m == "true" || _m == "1";
-}
-
-bool isFalse(std::string const& _m)
-{
-    return _m == "off" || _m == "no" || _m == "false" || _m == "0";
-}
-
 void importPresale(KeyManager& _km, string const& _file, function<string()> _pass)
 {
     KeyPair k = _km.presaleSecret(contentsString(_file), [&](bool){ return _pass(); });
     _km.import(k.secret(), "Presale wallet" + _file + " (insecure)");
 }
-
-enum class NodeMode
-{
-    PeerServer,
-    Full
-};
 
 enum class OperationMode
 {
@@ -138,19 +114,6 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 
     this_thread::sleep_for(chrono::milliseconds(100));
 }
-
-class ExitHandler
-{
-public:
-    static void exitHandler(int) { s_shouldExit = true; }
-    bool shouldExit() const { return s_shouldExit; }
-
-private:
-    static bool s_shouldExit;
-};
-
-bool ExitHandler::s_shouldExit = false;
-
 }
 
 int main(int argc, char** argv)
@@ -175,9 +138,6 @@ int main(int argc, char** argv)
     string exportFrom = "1";
     string exportTo = "latest";
     Format exportFormat = Format::Binary;
-
-    /// General params for Node operation
-    NodeMode nodeMode = NodeMode::Full;
 
     bool ipc = true;
 
@@ -254,7 +214,7 @@ int main(int argc, char** argv)
     fs::path configPath;
     string configJSON;
 
-    po::options_description clientDefaultMode("CLIENT MODE (default)", c_lineWidth);
+    po::options_description clientDefaultMode("CLIENT MODE (default)", lineWidth());
     auto addClientOption = clientDefaultMode.add_options();
     addClientOption("mainnet", "Use the main network protocol");
     addClientOption("ropsten", "Use the Ropsten testnet");
@@ -262,8 +222,6 @@ int main(int argc, char** argv)
     addClientOption("test", "Testing mode; disable PoW and provide test rpc interface");
     addClientOption("config", po::value<string>()->value_name("<file>"),
         "Configure specialised blockchain using given JSON information\n");
-    addClientOption("mode,o", po::value<string>()->value_name("<full/peer>"),
-        "Start a full node or a peer node (default: full)\n");
     addClientOption("ipc", "Enable IPC server (default: on)");
     addClientOption("ipcpath", po::value<string>()->value_name("<path>"),
         "Set .ipc socket path (default: data directory)");
@@ -285,7 +243,7 @@ int main(int argc, char** argv)
     addClientOption("password", po::value<string>()->value_name("<password>"),
         "Give a password for a private key\n");
 
-    po::options_description clientTransacting("CLIENT TRANSACTING", c_lineWidth);
+    po::options_description clientTransacting("CLIENT TRANSACTING", lineWidth());
     auto addTransactingOption = clientTransacting.add_options();
     addTransactingOption("ask", po::value<u256>()->value_name("<wei>"),
         ("Set the minimum ask gas price under which no transaction will be mined (default: " +
@@ -298,7 +256,7 @@ int main(int argc, char** argv)
     addTransactingOption("unsafe-transactions",
         "Allow all transactions to proceed without verification; EXTREMELY UNSAFE\n");
 
-    po::options_description clientMining("CLIENT MINING", c_lineWidth);
+    po::options_description clientMining("CLIENT MINING", lineWidth());
     auto addMininigOption = clientMining.add_options();
     addMininigOption("address,a", po::value<Address>()->value_name("<addr>"),
         "Set the author (mining payout) address (default: auto)");
@@ -306,7 +264,7 @@ int main(int argc, char** argv)
         "Enable mining; optionally for a specified number of blocks (default: off)");
     addMininigOption("extra-data", po::value<string>(), "Set extra data for the sealed blocks\n");
 
-    po::options_description clientNetworking("CLIENT NETWORKING", c_lineWidth);
+    po::options_description clientNetworking("CLIENT NETWORKING", lineWidth());
     auto addNetworkingOption = clientNetworking.add_options();
     addNetworkingOption("bootstrap,b",
         "Connect to the default Ethereum peer servers (default unless --no-discovery used)");
@@ -350,7 +308,7 @@ int main(int argc, char** argv)
     addNetworkingOption("pin", "Only accept or connect to trusted peers\n");
 
     std::string snapshotPath;
-    po::options_description importExportMode("IMPORT/EXPORT MODES", c_lineWidth);
+    po::options_description importExportMode("IMPORT/EXPORT MODES", lineWidth());
     auto addImportExportOption = importExportMode.add_options();
     addImportExportOption(
         "import,I", po::value<string>()->value_name("<file>"), "Import blocks from file");
@@ -376,18 +334,18 @@ int main(int argc, char** argv)
 
     LoggingOptions loggingOptions;
     po::options_description loggingProgramOptions(
-        createLoggingProgramOptions(c_lineWidth, loggingOptions));
+        createLoggingProgramOptions(lineWidth(), loggingOptions));
 
-    po::options_description generalOptions("GENERAL OPTIONS", c_lineWidth);
+    po::options_description generalOptions("GENERAL OPTIONS", lineWidth());
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("data-dir,d", po::value<string>()->value_name("<path>"),
         ("Load configuration files and keystore from path (default: " + getDataDir().string() + ")").c_str());
     addGeneralOption("version,V", "Show the version and exit");
     addGeneralOption("help,h", "Show this help message and exit\n");
 
-    po::options_description vmOptions = vmProgramOptions(c_lineWidth);
-    po::options_description dbOptions = db::databaseProgramOptions(c_lineWidth);
-    po::options_description minerOptions = MinerCLI::createProgramOptions(c_lineWidth);
+    po::options_description vmOptions = vmProgramOptions(lineWidth());
+    po::options_description dbOptions = db::databaseProgramOptions(lineWidth());
+    po::options_description minerOptions = MinerCLI::createProgramOptions(lineWidth());
 
     po::options_description allowedOptions("Allowed options");
     allowedOptions.add(clientDefaultMode)
@@ -475,19 +433,6 @@ int main(int argc, char** argv)
         }
     }
 
-    if (vm.count("mode"))
-    {
-        string m = vm["mode"].as<string>();
-        if (m == "full")
-            nodeMode = NodeMode::Full;
-        else if (m == "peer")
-            nodeMode = NodeMode::PeerServer;
-        else
-        {
-            cerr << "Unknown mode: " << m << "\n";
-            return -1;
-        }
-    }
     if (vm.count("import-presale"))
         presaleImports.push_back(vm["import-presale"].as<string>());
     if (vm.count("admin"))
@@ -828,8 +773,7 @@ int main(int argc, char** argv)
         chainParams.allowFutureBlocks = true;
 
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), db::databasePath(),
-        snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
-        netPrefs, &nodesState, testingMode);
+        snapshotPath, chainParams, withExisting, caps, netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
         web3.ethereum()->setExtraData(extraData);
@@ -989,15 +933,12 @@ int main(int argc, char** argv)
     web3.setPeerStretch(peerStretch);
     std::shared_ptr<eth::TrivialGasPricer> gasPricer =
         make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
-    eth::Client* c = nodeMode == NodeMode::Full ? web3.ethereum() : nullptr;
-    if (c)
-    {
-        c->setGasPricer(gasPricer);
-        c->setSealer(miner.minerType());
-        c->setAuthor(author);
-        if (networkID != NoNetworkID)
-            c->setNetworkId(networkID);
-    }
+    eth::Client* c = web3.ethereum();
+    c->setGasPricer(gasPricer);
+    c->setSealer(miner.minerType());
+    c->setAuthor(author);
+    if (networkID != NoNetworkID)
+        c->setNetworkId(networkID);
 
     auto renderFullAddress = [&](Address const& _a) -> std::string
     {

@@ -123,6 +123,7 @@ add_subdirectory(libwebthree)
 add_subdirectory(libweb3jsonrpc)
 
 add_subdirectory(aleth)
+add_subdirectory(aleth-bootnode)
 
 if (TOOLS)
     add_subdirectory(aleth-key)

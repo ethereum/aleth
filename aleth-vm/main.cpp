@@ -46,8 +46,6 @@ namespace po = boost::program_options;
 
 namespace
 {
-unsigned const c_lineWidth = 160;
-
 int64_t maxBlockGasLimit()
 {
     static int64_t limit =
@@ -109,7 +107,7 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
 
-    po::options_description transactionOptions("Transaction options", c_lineWidth);
+    po::options_description transactionOptions("Transaction options", lineWidth());
     string const gasLimitDescription =
         "<n> Block gas limit (default: " + to_string(maxBlockGasLimit()) + ").";
     auto addTransactionOption = transactionOptions.add_options();
@@ -128,20 +126,20 @@ int main(int argc, char** argv)
     addTransactionOption("code", po::value<string>(),
         "<d> Contract code <d>. Makes transaction a call to this contract");
 
-    po::options_description networkOptions("Network options", c_lineWidth);
+    po::options_description networkOptions("Network options", lineWidth());
     networkOptions.add_options()("network", po::value<string>(),
         "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
 
-    po::options_description optionsForTrace("Options for trace", c_lineWidth);
+    po::options_description optionsForTrace("Options for trace", lineWidth());
     auto addTraceOption = optionsForTrace.add_options();
     addTraceOption("flat", "Minimal whitespace in the JSON.");
     addTraceOption("mnemonics", "Show instruction mnemonics in the trace (non-standard).\n");
 
     LoggingOptions loggingOptions;
     po::options_description loggingProgramOptions(
-        createLoggingProgramOptions(c_lineWidth, loggingOptions));
+        createLoggingProgramOptions(lineWidth(), loggingOptions));
 
-    po::options_description generalOptions("General options", c_lineWidth);
+    po::options_description generalOptions("General options", lineWidth());
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("version,v", "Show the version and exit.");
     addGeneralOption("help,h", "Show this help message and exit.");
@@ -161,7 +159,7 @@ int main(int argc, char** argv)
 
     po::options_description allowedOptions(
         "Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
-    allowedOptions.add(vmProgramOptions(c_lineWidth))
+    allowedOptions.add(vmProgramOptions(lineWidth()))
         .add(networkOptions)
         .add(optionsForTrace)
         .add(loggingProgramOptions)
