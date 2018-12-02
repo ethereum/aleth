@@ -235,7 +235,7 @@ u256 calculateEthashDifficulty(
 u256 calculateGasLimit(
     ChainOperationParams const& _chainParams, BlockHeader const& _bi, u256 const& _gasFloorTarget)
 {
-    u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
+    u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 8000000 : _gasFloorTarget;
     u256 gasLimit = _bi.gasLimit();
     u256 boundDivisor = _chainParams.gasLimitBoundDivisor;
     if (gasLimit < gasFloorTarget)
