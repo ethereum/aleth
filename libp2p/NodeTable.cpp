@@ -42,16 +42,18 @@ inline bool operator==(
 
 NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw): Node(_pubk, _gw), distance(NodeTable::distance(_src, _pubk)) {}
 
-NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled):
-    m_node(Node(_alias.pub(), _endpoint)),
+NodeTable::NodeTable(
+    ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled)
+  : m_hostNode(Node(_alias.pub(), _endpoint)),
     m_secret(_alias.secret()),
-    m_socket(make_shared<NodeSocket>(_io, *reinterpret_cast<UDPSocketEvents*>(this), (bi::udp::endpoint)m_node.endpoint)),
+    m_socket(make_shared<NodeSocket>(
+        _io, *reinterpret_cast<UDPSocketEvents*>(this), (bi::udp::endpoint)m_hostNode.endpoint)),
     m_socketPointer(m_socket.get()),
     m_timers(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
-        m_state[i].distance = i;
-    
+        m_buckets[i].distance = i;
+
     if (!_enabled)
         return;
     
@@ -79,58 +81,40 @@ void NodeTable::processEvents()
         m_nodeEventHandler->processEvents();
 }
 
-shared_ptr<NodeEntry> NodeTable::addNode(Node const& _node, NodeRelation _relation)
+void NodeTable::addNode(Node const& _node, NodeRelation _relation)
 {
     if (_relation == Known)
     {
-        auto ret = make_shared<NodeEntry>(m_node.id, _node.id, _node.endpoint);
-        ret->pending = false;
-        DEV_GUARDED(x_nodes)
-            m_nodes[_node.id] = ret;
+        auto nodeEntry = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
+        nodeEntry->pending = false;
+        DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
         noteActiveNode(_node.id, _node.endpoint);
-        return ret;
+        return;
     }
-    
-    if (!_node.endpoint)
-        return shared_ptr<NodeEntry>();
-    
-    // ping address to recover nodeid if nodeid is empty
-    if (!_node.id)
-    {
-        DEV_GUARDED(x_nodes)
-        {
-            LOG(m_logger) << "Sending public key discovery Ping to "
-                          << (bi::udp::endpoint)_node.endpoint
-                          << " (Advertising: " << (bi::udp::endpoint)m_node.endpoint << ")";
-        }
-        DEV_GUARDED(x_pubkDiscoverPings)
-        {
-            m_pubkDiscoverPings[_node.endpoint.address()] = std::chrono::steady_clock::now();
-        }
-        ping(_node.endpoint);
-        return shared_ptr<NodeEntry>();
-    }
-    
-    DEV_GUARDED(x_nodes)
-        if (m_nodes.count(_node.id))
-            return m_nodes[_node.id];
-    
-    auto ret = make_shared<NodeEntry>(m_node.id, _node.id, _node.endpoint);
+
+    if (!_node.endpoint || !_node.id)
+        return;
+
     DEV_GUARDED(x_nodes)
     {
-        m_nodes[_node.id] = ret;
+        if (m_allNodes.count(_node.id))
+            return;
     }
+
+    auto ret = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
+    DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = ret; }
     LOG(m_logger) << "addNode pending for " << _node.endpoint;
     ping(_node.endpoint);
-    return ret;
 }
 
 list<NodeID> NodeTable::nodes() const
 {
     list<NodeID> nodes;
     DEV_GUARDED(x_nodes)
-        for (auto& i: m_nodes)
+    {
+        for (auto& i : m_allNodes)
             nodes.push_back(i.second->id);
+    }
     return nodes;
 }
 
@@ -138,19 +122,22 @@ list<NodeEntry> NodeTable::snapshot() const
 {
     list<NodeEntry> ret;
     DEV_GUARDED(x_state)
-        for (auto const& s: m_state)
-            for (auto const& np: s.nodes)
+    {
+        for (auto const& s : m_buckets)
+            for (auto const& np : s.nodes)
                 if (auto n = np.lock())
                     ret.push_back(*n);
+    }
     return ret;
 }
 
 Node NodeTable::node(NodeID const& _id)
 {
     Guard l(x_nodes);
-    if (m_nodes.count(_id))
+    auto const it = m_allNodes.find(_id);
+    if (it != m_allNodes.end())
     {
-        auto entry = m_nodes[_id];
+        auto const& entry = it->second;
         return Node(_id, entry->endpoint, entry->peerType);
     }
     return UnspecifiedNode;
@@ -159,7 +146,8 @@ Node NodeTable::node(NodeID const& _id)
 shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID _id)
 {
     Guard l(x_nodes);
-    return m_nodes.count(_id) ? m_nodes[_id] : shared_ptr<NodeEntry>();
+    auto const it = m_allNodes.find(_id);
+    return it != m_allNodes.end() ? it->second : shared_ptr<NodeEntry>();
 }
 
 void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_ptr<NodeEntry>>> _tried)
@@ -231,7 +219,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
 {
     // send s_alpha FindNode packets to nodes we know, closest to target
     static unsigned lastBin = s_bins - 1;
-    unsigned head = distance(m_node.id, _target);
+    unsigned head = distance(m_hostNode.id, _target);
     unsigned tail = head == 0 ? lastBin : (head - 1) % s_bins;
     
     map<unsigned, list<shared_ptr<NodeEntry>>> found;
@@ -241,12 +229,12 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
         while (head != tail && head < s_bins)
         {
             Guard l(x_state);
-            for (auto const& n: m_state[head].nodes)
+            for (auto const& n : m_buckets[head].nodes)
                 if (auto p = n.lock())
                     found[distance(_target, p->id)].push_back(p);
 
             if (tail)
-                for (auto const& n: m_state[tail].nodes)
+                for (auto const& n : m_buckets[tail].nodes)
                     if (auto p = n.lock())
                         found[distance(_target, p->id)].push_back(p);
 
@@ -258,7 +246,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
         while (head < s_bins)
         {
             Guard l(x_state);
-            for (auto const& n: m_state[head].nodes)
+            for (auto const& n : m_buckets[head].nodes)
                 if (auto p = n.lock())
                     found[distance(_target, p->id)].push_back(p);
             head++;
@@ -267,7 +255,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
         while (tail > 0)
         {
             Guard l(x_state);
-            for (auto const& n: m_state[tail].nodes)
+            for (auto const& n : m_buckets[tail].nodes)
                 if (auto p = n.lock())
                     found[distance(_target, p->id)].push_back(p);
             tail--;
@@ -284,8 +272,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
 void NodeTable::ping(NodeIPEndpoint _to) const
 {
     NodeIPEndpoint src;
-    DEV_GUARDED(x_nodes)
-        src = m_node.endpoint;
+    DEV_GUARDED(x_nodes) { src = m_hostNode.endpoint; }
     PingNode p(src, _to);
     p.sign(m_secret);
     m_socketPointer->send(p);
@@ -317,7 +304,8 @@ void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _n
 
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
 {
-    if (_pubk == m_node.address() || !NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).isAllowed())
+    if (_pubk == m_hostNode.address() ||
+        !NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).isAllowed())
         return;
 
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
@@ -393,10 +381,11 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
 
 NodeTable::NodeBucket& NodeTable::bucket_UNSAFE(NodeEntry const* _n)
 {
-    return m_state[_n->distance - 1];
+    return m_buckets[_n->distance - 1];
 }
 
-void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet)
+void NodeTable::onPacketReceived(
+    UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet)
 {
     try {
         unique_ptr<DiscoveryDatagram> packet = DiscoveryDatagram::interpretUDP(_from, _packet);
@@ -442,29 +431,17 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
                 }
                 else
                 {
-                    // if not, check if it's known/pending or a pubk discovery ping
                     if (auto n = nodeEntry(in.sourceid))
                         n->pending = false;
-                    else
-                    {
-                        DEV_GUARDED(x_pubkDiscoverPings)
-                        {
-                            if (!m_pubkDiscoverPings.count(_from.address()))
-                                return; // unsolicited pong; don't note node as active
-                            m_pubkDiscoverPings.erase(_from.address());
-                        }
-                        if (!haveNode(in.sourceid))
-                            addNode(Node(in.sourceid, NodeIPEndpoint(_from.address(), _from.port(), _from.port())));
-                    }
                 }
                 
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_node.endpoint || !m_node.endpoint.isAllowed()) &&
+                    if ((!m_hostNode.endpoint || !m_hostNode.endpoint.isAllowed()) &&
                         isPublicAddress(in.destination.address()))
-                        m_node.endpoint.setAddress(in.destination.address());
-                    m_node.endpoint.setUdpPort(in.destination.udpPort());
+                        m_hostNode.endpoint.setAddress(in.destination.address());
+                    m_hostNode.endpoint.setUdpPort(in.destination.udpPort());
                 }
 
                 LOG(m_logger) << "PONG from " << in.sourceid << " " << _from;
@@ -562,8 +539,11 @@ void NodeTable::doCheckEvictions()
             Guard ln(x_nodes);
             for (auto& e: m_evictions)
                 if (chrono::steady_clock::now() - e.second.evictedTimePoint > c_reqTimeout)
-                    if (m_nodes.count(e.second.newNodeID))
-                        drop.push_back(m_nodes[e.second.newNodeID]);
+                {
+                    auto const it = m_allNodes.find(e.second.newNodeID);
+                    if (it != m_allNodes.end())
+                        drop.push_back(it->second);
+                }
             evictionsRemain = (m_evictions.size() - drop.size() > 0);
         }
         

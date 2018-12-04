@@ -107,9 +107,9 @@ struct TestNodeTable: public NodeTable
                 {
                     Guard ln(x_nodes);
                     shared_ptr<NodeEntry> node(new NodeEntry(
-                        m_node.id, n.first, NodeIPEndpoint(ourIp, n.second, n.second)));
+                        m_hostNode.id, n.first, NodeIPEndpoint(ourIp, n.second, n.second)));
                     node->pending = false;
-                    m_nodes[node->id] = node;
+                    m_allNodes[node->id] = node;
                 }
                 noteActiveNode(n.first, bi::udp::endpoint(ourIp, n.second));
             }
@@ -131,16 +131,16 @@ struct TestNodeTable: public NodeTable
             // manually add node for test
             {
                 Guard ln(x_nodes);
-                shared_ptr<NodeEntry> node(new NodeEntry(m_node.id, testNode->first,
+                shared_ptr<NodeEntry> node(new NodeEntry(m_hostNode.id, testNode->first,
                     NodeIPEndpoint(ourIp, testNode->second, testNode->second)));
                 node->pending = false;
-                m_nodes[node->id] = node;
+                m_allNodes[node->id] = node;
                 distance = node->distance;
             }
             noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
 
             auto const bucketIndex = distance - 1;
-            if (m_state[bucketIndex].nodes.size() >= _bucketSize)
+            if (m_buckets[bucketIndex].nodes.size() >= _bucketSize)
                 return bucketIndex;
 
             ++testNode;
@@ -153,13 +153,14 @@ struct TestNodeTable: public NodeTable
     void reset()
     {
         Guard l(x_state);
-        for (auto& n: m_state) n.nodes.clear();
+        for (auto& n : m_buckets)
+            n.nodes.clear();
     }
 
+    using NodeTable::m_allNodes;
+    using NodeTable::m_buckets;
     using NodeTable::m_evictions;
-    using NodeTable::m_nodes;
     using NodeTable::m_socket;
-    using NodeTable::m_state;
     using NodeTable::noteActiveNode;
 };
 
@@ -201,8 +202,12 @@ public:
       : m_socket(new UDPSocket<TestUDPSocketHost, 1024>(m_io, *this, _port))
     {}
 
-    void onDisconnected(UDPSocketFace*) {};
-    void onReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }
+    void onSocketDisconnected(UDPSocketFace*){};
+    void onPacketReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet)
+    {
+        if (_packet.toString() == "AAAA")
+            success = true;
+    }
 
     shared_ptr<UDPSocket<TestUDPSocketHost, 1024>> m_socket;
 
@@ -337,9 +342,9 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeAppendsNewNode)
     nodeTableHost.populate(1);
 
     auto nodeTable = nodeTableHost.nodeTable;
-    std::shared_ptr<NodeEntry> newNode = nodeTable->m_nodes.begin()->second;
+    std::shared_ptr<NodeEntry> newNode = nodeTable->m_allNodes.begin()->second;
 
-    auto const& nodeBucketArray = nodeTable->m_state;
+    auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodeBucket = nodeBucketArray[newNode->distance - 1];
     auto const& nodes = nodeBucket.nodes;
     BOOST_REQUIRE(!nodes.empty());
@@ -355,7 +360,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeUpdatesKnownNode)
     BOOST_REQUIRE(bucketIndex >= 0);
 
     auto nodeTable = nodeTableHost.nodeTable;
-    auto const& nodeBucketArray = nodeTable->m_state;
+    auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodes = nodeBucketArray[bucketIndex].nodes;
     auto knownNode = nodes.front().lock();
 
@@ -381,7 +386,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
 
     auto nodeTable = nodeTableHost.nodeTable;
-    auto const& nodeBucketArray = nodeTable->m_state;
+    auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodes = nodeBucketArray[bucketIndex].nodes;
     auto leastRecentlySeenNode = nodes.front().lock();
 
@@ -406,21 +411,23 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     BOOST_REQUIRE(bucketIndex >= 0);
 
     auto nodeTable = nodeTableHost.nodeTable;
-    auto const& nodeBucketArray = nodeTable->m_state;
+    auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodes = nodeBucketArray[bucketIndex].nodes;
     auto leastRecentlySeenNodeId = nodes.front().lock()->id;
 
-    // addNode will replace the node in the m_nodes map, because it's the same id with enother andpoint
-    auto nodeWithNewEndpoint = nodeTable->addNode(
-        Node(leastRecentlySeenNodeId, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30000, 30000)),
-        NodeTable::Known);
+    // addNode will replace the node in the m_allNodes map, because it's the same id with enother
+    // endpoint
+    NodeIPEndpoint newEndpoint{bi::address::from_string("127.0.0.1"), 30000, 30000};
+    nodeTable->addNode(Node(leastRecentlySeenNodeId, newEndpoint), NodeTable::Known);
 
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodes.size(), 16);
     // least recently seen node removed
     BOOST_CHECK_NE(nodes.front().lock()->id, leastRecentlySeenNodeId);
     // but added as most recently seen with new endpoint
-    BOOST_CHECK_EQUAL(nodes.back().lock(), nodeWithNewEndpoint);
+    auto mostRecentNodeEntry = nodes.back().lock();
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNodeId);
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint, newEndpoint);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
