@@ -14,10 +14,6 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file NodeTable.h
- * @author Alex Leverington <nessence@gmail.com>
- * @date 2014
- */
 
 #pragma once
 
@@ -40,8 +36,9 @@ namespace p2p
 struct NodeEntry: public Node
 {
     NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw);
-    int const distance;	///< Node's distance (xor of _src as integer).
-    bool pending = true;		///< Node will be ignored until Pong is received
+    int const distance = 0;  ///< Node's distance (xor of _src as integer).
+    uint32_t lastPongReceivedTime = 0;
+    // TODO uint32_t lastPongSentTime = 0;
 };
 
 enum NodeTableEventType
@@ -196,10 +193,14 @@ private:
 
     /// Intervals
 
-    /* todo: replace boost::posix_time; change constants to upper camelcase */
-    std::chrono::milliseconds const c_evictionCheckInterval = std::chrono::milliseconds(75);	///< Interval at which eviction timeouts are checked.
-    std::chrono::milliseconds const c_reqTimeout = std::chrono::milliseconds(300);						///< How long to wait for requests (evict, find iterations).
-    std::chrono::milliseconds const c_bucketRefresh = std::chrono::milliseconds(7200);							///< Refresh interval prevents bucket from becoming stale. [Kademlia]
+    /// Interval at which eviction timeouts are checked.
+    static std::chrono::milliseconds const c_evictionCheckInterval;
+    /// How long to wait for requests (evict, find iterations).
+    static std::chrono::milliseconds const c_reqTimeout;
+    /// Refresh interval prevents bucket from becoming stale. [Kademlia]
+    static std::chrono::milliseconds const c_bucketRefresh;
+    // Period during which we consider last PONG results to be valid before sending new PONG
+    static uint32_t const c_bondingTimeSeconds;
 
     struct NodeBucket
     {
@@ -207,8 +208,8 @@ private:
         std::list<std::weak_ptr<NodeEntry>> nodes;
     };
 
-    /// Used to ping endpoint. Used by node table when refreshing buckets and as part of eviction process (see evict).
-    void ping(NodeID _toId, NodeIPEndpoint _toEndpoint) const;
+    /// Used ping known node. Used by node table when refreshing buckets and as part of eviction process (see evict).
+    void ping(NodeEntry const& _nodeEntry);
 
     /// Returns center node entry which describes this node and used with dist() to calculate xor metric for node table nodes.
     NodeEntry center() const
@@ -257,6 +258,8 @@ private:
     /// Looks up a random node at @c_bucketRefresh interval.
     void doDiscovery();
 
+    void doHandleTimeouts();
+
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
     /// This node. LOCK x_state if endpoint access or mutation is required. Do not modify id.
@@ -277,6 +280,9 @@ private:
 
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 
+    // The hashes of PING packets we've sent to other nodes and haven't received PONG yet
+    std::unordered_map<NodeID, std::pair<TimePoint, h256>> m_sentPings;
+
     mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
 
     DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
@@ -296,8 +302,12 @@ inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 
 struct DiscoveryDatagram: public RLPXDatagramFace
 {
+    static std::chrono::seconds const c_timeToLive;
+
     /// Constructor used for sending.
-    DiscoveryDatagram(bi::udp::endpoint const& _to): RLPXDatagramFace(_to), ts(futureFromEpoch(std::chrono::seconds(60))) {}
+    DiscoveryDatagram(bi::udp::endpoint const& _to)
+      : RLPXDatagramFace(_to), ts(futureFromEpoch(c_timeToLive))
+    {}
 
     /// Constructor used for parsing inbound packets.
     DiscoveryDatagram(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): RLPXDatagramFace(_from), sourceid(_fromid), echo(_echo) {}

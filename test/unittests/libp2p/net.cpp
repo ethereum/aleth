@@ -83,16 +83,6 @@ struct TestNodeTable: public NodeTable
         return ret;
     }
 
-    void pingTestNodes(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
-    {
-        bi::address ourIp = bi::address::from_string("127.0.0.1");
-        for (auto& n: _testNodes)
-        {
-            ping(n.first.pub(), NodeIPEndpoint(ourIp, n.second, n.second));
-            this_thread::sleep_for(chrono::milliseconds(2));
-        }
-    }
-
     void populateTestNodes(
         std::vector<std::pair<Public, unsigned>> const& _testNodes, size_t _count = 0)
     {
@@ -108,7 +98,7 @@ struct TestNodeTable: public NodeTable
                     Guard ln(x_nodes);
                     shared_ptr<NodeEntry> node(new NodeEntry(
                         m_hostNode.id, n.first, NodeIPEndpoint(ourIp, n.second, n.second)));
-                    node->pending = false;
+                    node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
                     m_allNodes[node->id] = node;
                 }
                 noteActiveNode(n.first, bi::udp::endpoint(ourIp, n.second));
@@ -133,7 +123,7 @@ struct TestNodeTable: public NodeTable
                 Guard ln(x_nodes);
                 shared_ptr<NodeEntry> node(new NodeEntry(m_hostNode.id, testNode->first,
                     NodeIPEndpoint(ourIp, testNode->second, testNode->second)));
-                node->pending = false;
+                node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
                 m_allNodes[node->id] = node;
                 distance = node->distance;
             }
