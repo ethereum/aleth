@@ -71,14 +71,9 @@ strings Ethash::sealers() const
 
 h256 Ethash::seedHash(BlockHeader const& _bi)
 {
-    // FIXME: Use ethash lib for this (function not exposed in 0.3).
-
-    unsigned epoch = static_cast<unsigned>(_bi.number()) / ETHASH_EPOCH_LENGTH;
-
-    h256 seed;
-    for (unsigned n = 0; n < epoch; ++n)
-        seed = sha3(seed);
-    return seed;
+    auto const seed =
+        ethash::calculate_epoch_seed(ethash::get_epoch_number(static_cast<int>(_bi.number())));
+    return h256{seed.bytes, h256::ConstructFromPointer};
 }
 
 StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
