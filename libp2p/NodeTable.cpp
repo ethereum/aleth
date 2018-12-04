@@ -134,9 +134,10 @@ list<NodeEntry> NodeTable::snapshot() const
 Node NodeTable::node(NodeID const& _id)
 {
     Guard l(x_nodes);
-    if (m_allNodes.count(_id))
+    auto const it = m_allNodes.find(_id);
+    if (it != m_allNodes.end())
     {
-        auto entry = m_allNodes[_id];
+        auto const& entry = it->second;
         return Node(_id, entry->endpoint, entry->peerType);
     }
     return UnspecifiedNode;
@@ -145,7 +146,8 @@ Node NodeTable::node(NodeID const& _id)
 shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID _id)
 {
     Guard l(x_nodes);
-    return m_allNodes.count(_id) ? m_allNodes[_id] : shared_ptr<NodeEntry>();
+    auto const it = m_allNodes.find(_id);
+    return it != m_allNodes.end() ? it->second : shared_ptr<NodeEntry>();
 }
 
 void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_ptr<NodeEntry>>> _tried)
@@ -537,8 +539,11 @@ void NodeTable::doCheckEvictions()
             Guard ln(x_nodes);
             for (auto& e: m_evictions)
                 if (chrono::steady_clock::now() - e.second.evictedTimePoint > c_reqTimeout)
-                    if (m_allNodes.count(e.second.newNodeID))
-                        drop.push_back(m_allNodes[e.second.newNodeID]);
+                {
+                    auto const it = m_allNodes.find(e.second.newNodeID);
+                    if (it != m_allNodes.end())
+                        drop.push_back(it->second);
+                }
             evictionsRemain = (m_evictions.size() - drop.size() > 0);
         }
         
