@@ -18,3 +18,8 @@ hunter_config(
 )
 
 hunter_config(Boost VERSION 1.65.1)
+
+hunter_config(ethash VERSION 0.4.0
+    URL https://github.com/chfast/ethash/archive/v0.4.0.tar.gz
+    SHA1 fd92ffadff2931877a3b68685dd8c53f0bdec539
+)
