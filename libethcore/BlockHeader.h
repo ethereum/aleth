@@ -46,7 +46,6 @@ enum IncludeSeal
 enum Strictness
 {
     CheckEverything,
-    JustSeal,
     QuickNonce,
     IgnoreSeal,
     CheckNothingNew
