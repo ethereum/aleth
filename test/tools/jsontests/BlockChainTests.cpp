@@ -654,7 +654,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
             ho.count("number") ? toU256(ho["number"]) : header.number(),
             ho.count("gasLimit") ? toU256(ho["gasLimit"]) : header.gasLimit(),
             ho.count("gasUsed") ? toU256(ho["gasUsed"]) : header.gasUsed(),
-            ho.count("timestamp") ? toU256(ho["timestamp"]) : header.timestamp(),
+            ho.count("timestamp") ? toU256(ho["timestamp"]) : header.timestamp() >= 0 ? header.timestamp() : utcTime(),
             ho.count("extraData") ? importByteArray(ho["extraData"].get_str()) :
                                     header.extraData());
 
@@ -780,6 +780,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
         {
             uncleHeader.setTimestamp(importedBlocks.at(number).blockHeader().timestamp() + 1);
             sealEngine->populateFromParent(uncleHeader, importedBlocks.at(number).blockHeader());
+            uncleHeader.setAuthor(h160::random()); // make each populated block unique
 
             //Set Default roots for empty block
             //m_transactionsRoot = _t; m_receiptsRoot = _r; m_sha3Uncles = _u; m_stateRoot = _s;
