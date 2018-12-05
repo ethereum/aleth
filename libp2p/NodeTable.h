@@ -173,12 +173,8 @@ public:
     /// Returns the Node to the corresponding node id or the empty Node if that id is not found.
     Node node(NodeID const& _id);
 
-#if defined(BOOST_AUTO_TEST_SUITE) || defined(_MSC_VER) // MSVC includes access specifier in symbol name
+// protected only for derived classes in tests
 protected:
-#else
-private:
-#endif
-
     /// Constants for Kademlia, derived from address space.
 
     static unsigned const s_addressByteSize = h256::size;					///< Size of address type in bytes.
