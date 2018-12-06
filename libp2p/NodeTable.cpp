@@ -103,8 +103,8 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
 
     auto ret = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = ret; }
-    LOG(m_logger) << "addNode pending for node " << _node.id << "@" << _node.endpoint;
-    ping(_node.endpoint);
+    LOG(m_logger) << "addNode pending for " << _node.id << "@" << _node.endpoint;
+    ping(_node.id, _node.endpoint);
 }
 
 list<NodeID> NodeTable::nodes() const
@@ -178,6 +178,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             p.sign(m_secret);
             DEV_GUARDED(x_findNodeTimeout)
                 m_findNodeTimeout.push_back(make_pair(r->id, chrono::steady_clock::now()));
+            LOG(m_logger) << "Sending " << p.typeName() << " to " << _node << "@" << r->endpoint.address() << ":" << r->endpoint.udpPort();
             m_socketPointer->send(p);
         }
     
@@ -269,19 +270,14 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
     return ret;
 }
 
-void NodeTable::ping(NodeIPEndpoint _to) const
+void NodeTable::ping(NodeID _toId, NodeIPEndpoint _toEndpoint) const
 {
     NodeIPEndpoint src;
     DEV_GUARDED(x_nodes) { src = m_hostNode.endpoint; }
-    PingNode p(src, _to);
+    PingNode p(src, _toEndpoint);
     p.sign(m_secret);
+    LOG(m_logger) << "Sending " << p.typeName() << " to " << _toId << "@" << p.destination.address() << ":" << p.destination.udpPort();
     m_socketPointer->send(p);
-}
-
-void NodeTable::ping(NodeEntry* _n) const
-{
-    if (_n)
-        ping(_n->endpoint);
 }
 
 void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _new)
@@ -299,7 +295,8 @@ void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _n
 
     if (evicts == 1)
         doCheckEvictions();
-    ping(_leastSeen.get());
+    if (_leastSeen)
+        ping(_leastSeen->id, _leastSeen->endpoint);
 }
 
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
@@ -482,7 +479,7 @@ void NodeTable::onPacketReceived(
                 for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
                 {
                     Neighbours out(_from, nearest, offset, nlimit);
-                    LOG(m_logger) << "Sending " << packet->typeName() << " to " << out.sourceid << "@" << _from.address() << ":" << _from.port();
+                    LOG(m_logger) << "Sending " << out.typeName() << " to " << in.sourceid << "@" << _from.address() << ":" << _from.port();
                     out.sign(m_secret);
                     if (out.data.size() > 1280)
                         cnetlog << "Sending truncated datagram, size: " << out.data.size();
@@ -499,7 +496,7 @@ void NodeTable::onPacketReceived(
                 addNode(Node(in.sourceid, in.source));
                 
                 Pong p(in.source);
-                LOG(m_logger) << "Sending " << packet->typeName() << " to " << in.sourceid << "@" << _from.address() << ":" << _from.port();
+                LOG(m_logger) << "Sending " << p.typeName() << " to " << in.sourceid << "@" << _from.address() << ":" << _from.port();
                 p.echo = in.echo;
                 p.sign(m_secret);
                 m_socketPointer->send(p);

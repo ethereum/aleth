@@ -88,7 +88,7 @@ struct TestNodeTable: public NodeTable
         bi::address ourIp = bi::address::from_string("127.0.0.1");
         for (auto& n: _testNodes)
         {
-            ping(NodeIPEndpoint(ourIp, n.second, n.second));
+            ping(n.first.pub(), NodeIPEndpoint(ourIp, n.second, n.second));
             this_thread::sleep_for(chrono::milliseconds(2));
         }
     }

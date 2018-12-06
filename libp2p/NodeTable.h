@@ -207,11 +207,8 @@ private:
         std::list<std::weak_ptr<NodeEntry>> nodes;
     };
 
-    /// Used to ping endpoint.
-    void ping(NodeIPEndpoint _to) const;
-
-    /// Used ping known node. Used by node table when refreshing buckets and as part of eviction process (see evict).
-    void ping(NodeEntry* _n) const;
+    /// Used to ping endpoint. Used by node table when refreshing buckets and as part of eviction process (see evict).
+    void ping(NodeID _toId, NodeIPEndpoint _toEndpoint) const;
 
     /// Returns center node entry which describes this node and used with dist() to calculate xor metric for node table nodes.
     NodeEntry center() const
@@ -281,7 +278,7 @@ private:
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
     NodeSocket* m_socketPointer;									///< Set to m_socket.get(). Socket is created in constructor and disconnected in destructor to ensure access to pointer is safe.
 
-    Logger m_logger{createLogger(VerbosityDebug, "discov")};
+    mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
 
     DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
 };
