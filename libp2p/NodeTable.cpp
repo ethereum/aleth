@@ -535,7 +535,6 @@ void NodeTable::doCheckEvictions()
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
         
-        bool evictionsRemain = false;
         list<shared_ptr<NodeEntry>> drop;
         list<shared_ptr<NodeEntry>> active;
 
@@ -548,15 +547,16 @@ void NodeTable::doCheckEvictions()
                     auto const it = m_allNodes.find(e.first);
                     if (it != m_allNodes.end())
                     {
+                        // save the node to be dropped below (outside of Guards)
                         drop.push_back(it->second);
 
+                        // save the replacement node that should be activated
                         auto const itNewNode = m_allNodes.find(e.second.newNodeID);
                         if (itNewNode != m_allNodes.end())
                             active.push_back(itNewNode->second);
                     }
                 }
-            evictionsRemain = (m_evictions.size() - drop.size() > 0);
-
+            // remove evicted nodes from m_evictions
             drop.unique();
             for (auto n : drop)
                 m_evictions.erase(n->id);
@@ -565,10 +565,11 @@ void NodeTable::doCheckEvictions()
         for (auto n: drop)
             dropNode(n);
 
+        // activate replacement nodes and put them into buckets
         for (auto n : active)
             noteActiveNode(n->id, n->endpoint);
 
-        if (evictionsRemain)
+        if (!m_evictions.empty())
             doCheckEvictions();
     });
 }
