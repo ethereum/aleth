@@ -14,6 +14,7 @@ set(unittest_sources
 
     unittests/libethashseal/EthashTest.cpp
 
+    unittests/libethcore/BlockHeader.cpp
     unittests/libethcore/CommonJS.cpp
     unittests/libethcore/KeyManager.cpp
 
