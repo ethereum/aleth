@@ -375,7 +375,7 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
 
     DEV_GUARDED(x_nodes)
     {
-        m_nodes.erase(_n->id);
+        m_allNodes.erase(_n->id);
     }
     
     // notify host
@@ -417,7 +417,7 @@ void NodeTable::onPacketReceived(
                     auto e = m_evictions.find(in.sourceid);
                     if (e != m_evictions.end())
                     { 
-                        if (e->second.evictedTimePoint + c_reqTimeout > std::chrono::steady_clock::now())
+                        if (e->second.evictedTimePoint + c_reqTimeout >= std::chrono::steady_clock::now())
                         {
                             found = true;
                             leastSeenID = e->first;
@@ -561,11 +561,11 @@ void NodeTable::doCheckEvictions()
 
             drop.unique();
             for (auto n: drop)
-            {
                 m_evictions.erase(n->id);
-                dropNode(n);
-            }
         }
+
+        for (auto n: drop)
+            dropNode(n);
 
         for (auto n: active)
             noteActiveNode(n->id, n->endpoint);
