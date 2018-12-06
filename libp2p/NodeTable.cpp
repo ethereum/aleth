@@ -373,11 +373,8 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
             [_n](weak_ptr<NodeEntry> const& _bucketEntry) { return _bucketEntry == _n; });
     }
 
-    DEV_GUARDED(x_nodes)
-    {
-        m_allNodes.erase(_n->id);
-    }
-    
+    DEV_GUARDED(x_nodes) { m_allNodes.erase(_n->id); }
+
     // notify host
     LOG(m_logger) << "p2p.nodes.drop " << _n->id;
     if (m_nodeEventHandler)
@@ -416,8 +413,9 @@ void NodeTable::onPacketReceived(
                 { 
                     auto e = m_evictions.find(in.sourceid);
                     if (e != m_evictions.end())
-                    { 
-                        if (e->second.evictedTimePoint + c_reqTimeout >= std::chrono::steady_clock::now())
+                    {
+                        if (e->second.evictedTimePoint + c_reqTimeout >=
+                            std::chrono::steady_clock::now())
                         {
                             found = true;
                             leastSeenID = e->first;
@@ -551,7 +549,7 @@ void NodeTable::doCheckEvictions()
                     if (it != m_allNodes.end())
                     {
                         drop.push_back(it->second);
-    
+
                         auto const itNewNode = m_allNodes.find(e.second.newNodeID);
                         if (itNewNode != m_allNodes.end())
                             active.push_back(itNewNode->second);
@@ -560,16 +558,16 @@ void NodeTable::doCheckEvictions()
             evictionsRemain = (m_evictions.size() - drop.size() > 0);
 
             drop.unique();
-            for (auto n: drop)
+            for (auto n : drop)
                 m_evictions.erase(n->id);
         }
 
         for (auto n: drop)
             dropNode(n);
 
-        for (auto n: active)
+        for (auto n : active)
             noteActiveNode(n->id, n->endpoint);
-        
+
         if (evictionsRemain)
             doCheckEvictions();
     });
