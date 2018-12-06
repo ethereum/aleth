@@ -200,9 +200,22 @@ struct TestNodeTableHost: public TestHost
 class TestUDPSocketHost : UDPSocketEvents, public TestHost
 {
 public:
-    TestUDPSocketHost(unsigned _port)
-      : m_socket(new UDPSocket<TestUDPSocketHost, 1024>(m_io, *this, _port))
-    {}
+    TestUDPSocketHost(unsigned _port) : port(_port)
+    {
+        // find free port
+        while (!socket || !socket->isOpen())
+        {
+            socket.reset(new UDPSocket<TestUDPSocketHost, 1024>(m_io, *this, port));
+            try
+            {
+                socket->connect();
+            }
+            catch (std::exception const&)
+            {
+                ++port;
+            }
+        }
+    }
 
     void onSocketDisconnected(UDPSocketFace*){};
     void onPacketReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet)
@@ -213,7 +226,8 @@ public:
         packetReceived.set_value(_packet.toBytes());
     }
 
-    shared_ptr<UDPSocket<TestUDPSocketHost, 1024>> m_socket;
+    shared_ptr<UDPSocket<TestUDPSocketHost, 1024>> socket;
+    uint16_t port = 0;
 
     std::atomic<bool> success{false};
 
@@ -335,9 +349,8 @@ BOOST_AUTO_TEST_CASE(udpOnce)
     unsigned short port = 30333;
     UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), port), bytes({65,65,65,65}));
     TestUDPSocketHost a{port};
-    a.m_socket->connect();
     a.start();
-    a.m_socket->send(d);
+    a.socket->send(d);
     this_thread::sleep_for(chrono::seconds(1));
     BOOST_REQUIRE_EQUAL(true, a.success);
 }
@@ -446,11 +459,9 @@ BOOST_AUTO_TEST_CASE(unsolicitedPong)
     auto nodeKeyPair = KeyPair::create();
     pong.sign(nodeKeyPair.secret());
 
-    // TODO can be occupied
     TestUDPSocketHost a{30333};
-    a.m_socket->connect();
     a.start();
-    a.m_socket->send(pong);
+    a.socket->send(pong);
 
     // wait for PONG to be received and handled
     nodeTableHost.nodeTable->packetReceived.get_future().wait();
@@ -465,8 +476,12 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     TestNodeTableHost nodeTableHost(0);
     nodeTableHost.start();
 
+    // socket answering with PONG
+    TestUDPSocketHost nodeSocketHost{30500};
+    nodeSocketHost.start();
+    uint16_t nodePort = nodeSocketHost.port;
+
     // add a node to node table, initiating PING
-    uint16_t nodePort = 30500;
     auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
     auto nodeKeyPair = KeyPair::create();
     auto nodePubKey = nodeKeyPair.pub();
@@ -476,12 +491,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     Pong pong(nodeTableHost.nodeTable->m_hostNode.endpoint);
     pong.sign(nodeKeyPair.secret());
 
-    // socket answering with PONG
-    // TODO can be occupied
-    TestUDPSocketHost nodeSocketHost{nodePort};
-    nodeSocketHost.m_socket->connect();
-    nodeSocketHost.start();
-    nodeSocketHost.m_socket->send(pong);
+    nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
     nodeTableHost.nodeTable->packetReceived.get_future().wait();
@@ -498,11 +508,9 @@ BOOST_AUTO_TEST_CASE(validPong)
     nodeTableHost.start();
 
     // socket receiving PING
-    uint16_t nodePort = 30500;
-    // TODO can be occupied
-    TestUDPSocketHost nodeSocketHost{nodePort};
-    nodeSocketHost.m_socket->connect();
+    TestUDPSocketHost nodeSocketHost{30500};
     nodeSocketHost.start();
+    uint16_t nodePort = nodeSocketHost.port;
 
     // add a node to node table, initiating PING
     auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
@@ -520,7 +528,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     Pong pong(nodeTableHost.nodeTable->m_hostNode.endpoint);
     pong.echo = ping.echo;
     pong.sign(nodeKeyPair.secret());
-    nodeSocketHost.m_socket->send(pong);
+    nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
     nodeTableHost.nodeTable->packetReceived.get_future().wait();
