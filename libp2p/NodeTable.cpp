@@ -630,7 +630,12 @@ void NodeTable::doHandleTimeouts()
         for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
         {
             if (chrono::steady_clock::now() > it->second.first + DiscoveryDatagram::c_timeToLive)
+            {
+                if (auto node = nodeEntry(it->first))
+                    dropNode(node);
+
                 it = m_sentPings.erase(it);
+            }
             else
                 ++it;
         }
