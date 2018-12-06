@@ -30,28 +30,25 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace std;
 
+namespace
+{
+string const c_programName = "aleth-bootnode";
+string const c_networkConfigFileName = c_programName + "-network.rlp";
+}  // namespace
+
 int main(int argc, char** argv)
 {
     setDefaultOrCLocale();
 
-    string const ProgramName = "aleth-bootnode";
-    string const NetworkConfigFileName = ProgramName + "-network.rlp";
-
-    /// Networking params.
-    string listenIP;
-    unsigned short listenPort = c_defaultIPPort;
-    string publicIP;
-    bool upnp = true;
-
-    po::options_description generalOptions("GENERAL OPTIONS", lineWidth());
+    po::options_description generalOptions("GENERAL OPTIONS", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("help,h", "Show this help message and exit\n");
 
     LoggingOptions loggingOptions;
     po::options_description loggingProgramOptions(
-        createLoggingProgramOptions(lineWidth(), loggingOptions));
+        createLoggingProgramOptions(c_lineWidth, loggingOptions));
 
-    po::options_description clientNetworking("NETWORKING", lineWidth());
+    po::options_description clientNetworking("NETWORKING", c_lineWidth);
     auto addNetworkingOption = clientNetworking.add_options();
 #if ETH_MINIUPNPC
     addNetworkingOption(
@@ -83,9 +80,9 @@ int main(int argc, char** argv)
     if (vm.count("help"))
     {
         cout << "NAME:\n"
-             << "   " << ProgramName << "\n"
+             << "   " << c_programName << "\n"
              << "USAGE:\n"
-             << "   " << ProgramName << " [options]\n\n";
+             << "   " << c_programName << " [options]\n\n";
         cout << generalOptions << clientNetworking << loggingProgramOptions;
         return 0;
     }
@@ -123,15 +120,15 @@ int main(int argc, char** argv)
 
     setupLogging(loggingOptions);
     if (loggingOptions.verbosity > 0)
-        cout << EthGrayBold << ProgramName << ", a C++ Ethereum bootnode implementation" EthReset
+        cout << EthGrayBold << c_programName << ", a C++ Ethereum bootnode implementation" EthReset
              << "\n";
 
     auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) :
                                        NetworkConfig(publicIP, listenIP, listenPort, upnp);
-    auto netData = contents(getDataDir() / fs::path(NetworkConfigFileName));
+    auto netData = contents(getDataDir() / fs::path(c_networkConfigFileName));
 
-    // TODO: Compose client version
-    Host h(ProgramName, netPrefs, &netData);
+    // Pass in empty client version since it's not used in the discovery process
+    Host h("", netPrefs, &netData);
     h.start();
 
     cout << "Node ID: " << h.enode() << endl;
@@ -148,7 +145,7 @@ int main(int argc, char** argv)
 
     netData = h.saveNetwork();
     if (!netData.empty())
-        writeFile(getDataDir() / fs::path(NetworkConfigFileName), &netData);
+        writeFile(getDataDir() / fs::path(c_networkConfigFileName), &netData);
 
     return 0;
 }

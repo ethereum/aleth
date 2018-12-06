@@ -51,7 +51,7 @@ public:
         auto nodesState = contents(dir / fs::path("network.rlp"));
         bool testingMode = true;
         m_web3.reset(new dev::WebThreeDirect(WebThreeDirect::composeClientVersion("eth"), dir, dir,
-            chainParams, WithExisting::Kill, {"eth"}, netPrefs, &nodesState, testingMode));
+            chainParams, WithExisting::Kill, netPrefs, &nodesState, testingMode));
     }
 
     dev::WebThreeDirect* getWeb3() { return m_web3.get(); }

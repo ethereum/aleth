@@ -74,6 +74,8 @@ struct RLPXDatagramFace: public UDPDatagram
 
     virtual void streamRLP(RLPStream&) const = 0;
     virtual void interpretRLP(bytesConstRef _bytes) = 0;
+
+    virtual std::string typeName() const = 0;
 };
 
 /**

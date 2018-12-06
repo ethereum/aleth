@@ -37,36 +37,33 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
     boost::filesystem::path const& _dbPath, boost::filesystem::path const& _snapshotPath,
-    eth::ChainParams const& _params, WithExisting _we, std::set<std::string> const& _interfaces,
-    NetworkConfig const& _n, bytesConstRef _network, bool _testing)
+    eth::ChainParams const& _params, WithExisting _we, NetworkConfig const& _n,
+    bytesConstRef _network, bool _testing)
   : m_clientVersion(_clientVersion), m_net(_clientVersion, _n, _network)
 {
-    if (_interfaces.count("eth"))
+    if (_testing)
+        m_ethereum.reset(new eth::ClientTest(
+            _params, (int)_params.networkID, m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+    else
     {
-        if (_testing)
-            m_ethereum.reset(new eth::ClientTest(
-                _params, (int)_params.networkID, m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+        if (_params.sealEngineName == Ethash::name())
+            m_ethereum.reset(new eth::EthashClient(_params, (int)_params.networkID, m_net,
+                shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
+        else if (_params.sealEngineName == NoProof::name())
+            m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, m_net,
+                shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
         else
-        {
-            if (_params.sealEngineName == Ethash::name())
-                m_ethereum.reset(new eth::EthashClient(_params, (int)_params.networkID, m_net,
-                    shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
-            else if (_params.sealEngineName == NoProof::name())
-                m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, m_net,
-                    shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
-            else
-                BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment(
-                                          "Unknown seal engine: " + _params.sealEngineName));
-        }
-        m_ethereum->startWorking();
-
-        const auto* buildinfo = aleth_get_buildinfo();
-        m_ethereum->setExtraData(rlpList(0, string{buildinfo->project_version}.substr(0, 5) + "++" +
-                                                string{buildinfo->git_commit_hash}.substr(0, 4) +
-                                                string{buildinfo->build_type}.substr(0, 1) +
-                                                string{buildinfo->system_name}.substr(0, 5) +
-                                                string{buildinfo->compiler_id}.substr(0, 3)));
+            BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment(
+                                        "Unknown seal engine: " + _params.sealEngineName));
     }
+    m_ethereum->startWorking();
+
+    const auto* buildinfo = aleth_get_buildinfo();
+    m_ethereum->setExtraData(rlpList(0, string{buildinfo->project_version}.substr(0, 5) + "++" +
+                                            string{buildinfo->git_commit_hash}.substr(0, 4) +
+                                            string{buildinfo->build_type}.substr(0, 1) +
+                                            string{buildinfo->system_name}.substr(0, 5) +
+                                            string{buildinfo->compiler_id}.substr(0, 3)));
 }
 
 WebThreeDirect::~WebThreeDirect()

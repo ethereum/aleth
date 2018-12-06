@@ -32,30 +32,6 @@ namespace
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_discoveryWarnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "discov"))
-
-struct DatagramTypeTableEntry
-{
-    char const* name;
-    uint8_t type;
-};
-
-DatagramTypeTableEntry datagramTypesTable[] = {
-    {"PING", PingNode::type},
-    {"PONG", Pong::type},
-    {"FINDNODE", FindNode::type},
-    {"NEIGHBORS", Neighbours::type}
-};
-
-string datagramNameFromType(uint8_t _t)
-{
-    for (auto const& entry : datagramTypesTable)
-    {
-        if (entry.type == _t)
-            return entry.name;
-    }
-    return "UNKNOWN";
-}
-
 }  // namespace
 
 inline bool operator==(
@@ -422,7 +398,7 @@ void NodeTable::onPacketReceived(
             return;
         }
 
-        cnetdetails << "Received " << datagramNameFromType(packet->packetType()) << " from " << packet->sourceid << "@" << _from.address() << ":" << _from.port();
+        LOG(m_logger) << "Received " << packet->typeName() << " from " << packet->sourceid << "@" << _from.address() << ":" << _from.port();
         switch (packet->packetType())
         {
             case Pong::type:
@@ -506,7 +482,7 @@ void NodeTable::onPacketReceived(
                 for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
                 {
                     Neighbours out(_from, nearest, offset, nlimit);
-                    cnetdetails << "Sending " << datagramNameFromType(out.packetType()) << " to " << out.sourceid << "@" << _from.address() << ":" << _from.port();
+                    LOG(m_logger) << "Sending " << packet->typeName() << " to " << out.sourceid << "@" << _from.address() << ":" << _from.port();
                     out.sign(m_secret);
                     if (out.data.size() > 1280)
                         cnetlog << "Sending truncated datagram, size: " << out.data.size();
@@ -523,7 +499,7 @@ void NodeTable::onPacketReceived(
                 addNode(Node(in.sourceid, in.source));
                 
                 Pong p(in.source);
-                cnetdetails << "Sending " << datagramNameFromType(p.packetType()) << " to " << in.sourceid << "@" << _from.address() << ":" << _from.port();
+                LOG(m_logger) << "Sending " << packet->typeName() << " to " << in.sourceid << "@" << _from.address() << ":" << _from.port();
                 p.echo = in.echo;
                 p.sign(m_secret);
                 m_socketPointer->send(p);

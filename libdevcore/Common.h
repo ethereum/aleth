@@ -304,7 +304,7 @@ int64_t utcTime();
 
 void setDefaultOrCLocale();
 
-unsigned lineWidth();
+static constexpr unsigned c_lineWidth = 160;
 
 class ExitHandler
 {

@@ -335,13 +335,13 @@ struct PingNode: DiscoveryDatagram
     PingNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
     static const uint8_t type = 1;
-    uint8_t packetType() const { return type; }
+    uint8_t packetType() const override { return type; }
 
     unsigned version = 0;
     NodeIPEndpoint source;
     NodeIPEndpoint destination;
 
-    void streamRLP(RLPStream& _s) const
+    void streamRLP(RLPStream& _s) const override
     {
         _s.appendList(4);
         _s << dev::p2p::c_protocolVersion;
@@ -349,7 +349,7 @@ struct PingNode: DiscoveryDatagram
         destination.streamRLP(_s);
         _s << ts;
     }
-    void interpretRLP(bytesConstRef _bytes)
+    void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         version = r[0].toInt<unsigned>();
@@ -357,6 +357,8 @@ struct PingNode: DiscoveryDatagram
         destination.interpretRLP(r[2]);
         ts = r[3].toInt<uint32_t>();
     }
+
+    std::string typeName() const override { return "Ping"; }
 };
 
 /**
@@ -368,24 +370,26 @@ struct Pong: DiscoveryDatagram
     Pong(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
     static const uint8_t type = 2;
-    uint8_t packetType() const { return type; }
+    uint8_t packetType() const override { return type; }
 
     NodeIPEndpoint destination;
 
-    void streamRLP(RLPStream& _s) const
+    void streamRLP(RLPStream& _s) const override
     {
         _s.appendList(3);
         destination.streamRLP(_s);
         _s << echo;
         _s << ts;
     }
-    void interpretRLP(bytesConstRef _bytes)
+    void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         destination.interpretRLP(r[0]);
         echo = (h256)r[1];
         ts = r[2].toInt<uint32_t>();
     }
+
+    std::string typeName() const override { return "Pong"; }
 };
 
 /**
@@ -406,20 +410,22 @@ struct FindNode: DiscoveryDatagram
     FindNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
     static const uint8_t type = 3;
-    uint8_t packetType() const { return type; }
+    uint8_t packetType() const override { return type; }
 
     h512 target;
 
-    void streamRLP(RLPStream& _s) const
+    void streamRLP(RLPStream& _s) const override
     {
         _s.appendList(2); _s << target << ts;
     }
-    void interpretRLP(bytesConstRef _bytes)
+    void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         target = r[0].toHash<h512>();
         ts = r[1].toInt<uint32_t>();
     }
+
+    std::string typeName() const override { return "FindNode"; }
 };
 
 /**
@@ -446,11 +452,11 @@ struct Neighbours: DiscoveryDatagram
     };
 
     static const uint8_t type = 4;
-    uint8_t packetType() const { return type; }
+    uint8_t packetType() const override { return type; }
 
     std::vector<Neighbour> neighbours;
 
-    void streamRLP(RLPStream& _s) const
+    void streamRLP(RLPStream& _s) const override
     {
         _s.appendList(2);
         _s.appendList(neighbours.size());
@@ -458,13 +464,15 @@ struct Neighbours: DiscoveryDatagram
             n.streamRLP(_s);
         _s << ts;
     }
-    void interpretRLP(bytesConstRef _bytes)
+    void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         for (auto const& n: r[0])
             neighbours.emplace_back(n);
         ts = r[1].toInt<uint32_t>();
     }
+
+    std::string typeName() const override { return "Neighbours"; }
 };
 
 }

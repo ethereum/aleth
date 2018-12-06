@@ -133,8 +133,8 @@ struct JsonRpcFixture : public TestOutputHelperFixture
         // so that tests can be run in parallel
         // TODO: better make it use ethemeral in-memory databases
         chainParams.extraData = h256::random().asBytes();
-        web3.reset(new WebThreeDirect("eth tests", "", "", chainParams, WithExisting::Kill, {"eth"},
-            nprefs, bytesConstRef(), true));
+        web3.reset(new WebThreeDirect(
+            "eth tests", "", "", chainParams, WithExisting::Kill, nprefs, bytesConstRef(), true));
 
         web3->setIdealPeerCount(5);
 

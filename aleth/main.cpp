@@ -214,7 +214,7 @@ int main(int argc, char** argv)
     fs::path configPath;
     string configJSON;
 
-    po::options_description clientDefaultMode("CLIENT MODE (default)", lineWidth());
+    po::options_description clientDefaultMode("CLIENT MODE (default)", c_lineWidth);
     auto addClientOption = clientDefaultMode.add_options();
     addClientOption("mainnet", "Use the main network protocol");
     addClientOption("ropsten", "Use the Ropsten testnet");
@@ -243,7 +243,7 @@ int main(int argc, char** argv)
     addClientOption("password", po::value<string>()->value_name("<password>"),
         "Give a password for a private key\n");
 
-    po::options_description clientTransacting("CLIENT TRANSACTING", lineWidth());
+    po::options_description clientTransacting("CLIENT TRANSACTING", c_lineWidth);
     auto addTransactingOption = clientTransacting.add_options();
     addTransactingOption("ask", po::value<u256>()->value_name("<wei>"),
         ("Set the minimum ask gas price under which no transaction will be mined (default: " +
@@ -256,7 +256,7 @@ int main(int argc, char** argv)
     addTransactingOption("unsafe-transactions",
         "Allow all transactions to proceed without verification; EXTREMELY UNSAFE\n");
 
-    po::options_description clientMining("CLIENT MINING", lineWidth());
+    po::options_description clientMining("CLIENT MINING", c_lineWidth);
     auto addMininigOption = clientMining.add_options();
     addMininigOption("address,a", po::value<Address>()->value_name("<addr>"),
         "Set the author (mining payout) address (default: auto)");
@@ -264,7 +264,7 @@ int main(int argc, char** argv)
         "Enable mining; optionally for a specified number of blocks (default: off)");
     addMininigOption("extra-data", po::value<string>(), "Set extra data for the sealed blocks\n");
 
-    po::options_description clientNetworking("CLIENT NETWORKING", lineWidth());
+    po::options_description clientNetworking("CLIENT NETWORKING", c_lineWidth);
     auto addNetworkingOption = clientNetworking.add_options();
     addNetworkingOption("bootstrap,b",
         "Connect to the default Ethereum peer servers (default unless --no-discovery used)");
@@ -308,7 +308,7 @@ int main(int argc, char** argv)
     addNetworkingOption("pin", "Only accept or connect to trusted peers\n");
 
     std::string snapshotPath;
-    po::options_description importExportMode("IMPORT/EXPORT MODES", lineWidth());
+    po::options_description importExportMode("IMPORT/EXPORT MODES", c_lineWidth);
     auto addImportExportOption = importExportMode.add_options();
     addImportExportOption(
         "import,I", po::value<string>()->value_name("<file>"), "Import blocks from file");
@@ -334,18 +334,18 @@ int main(int argc, char** argv)
 
     LoggingOptions loggingOptions;
     po::options_description loggingProgramOptions(
-        createLoggingProgramOptions(lineWidth(), loggingOptions));
+        createLoggingProgramOptions(c_lineWidth, loggingOptions));
 
-    po::options_description generalOptions("GENERAL OPTIONS", lineWidth());
+    po::options_description generalOptions("GENERAL OPTIONS", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
     addGeneralOption("data-dir,d", po::value<string>()->value_name("<path>"),
         ("Load configuration files and keystore from path (default: " + getDataDir().string() + ")").c_str());
     addGeneralOption("version,V", "Show the version and exit");
     addGeneralOption("help,h", "Show this help message and exit\n");
 
-    po::options_description vmOptions = vmProgramOptions(lineWidth());
-    po::options_description dbOptions = db::databaseProgramOptions(lineWidth());
-    po::options_description minerOptions = MinerCLI::createProgramOptions(lineWidth());
+    po::options_description vmOptions = vmProgramOptions(c_lineWidth);
+    po::options_description dbOptions = db::databaseProgramOptions(c_lineWidth);
+    po::options_description minerOptions = MinerCLI::createProgramOptions(c_lineWidth);
 
     po::options_description allowedOptions("Allowed options");
     allowedOptions.add(clientDefaultMode)
@@ -767,13 +767,12 @@ int main(int argc, char** argv)
     netPrefs.pin = vm.count("pin") != 0;
 
     auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
-    auto caps = set<string>{"eth"};
 
     if (testingMode)
         chainParams.allowFutureBlocks = true;
 
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), db::databasePath(),
-        snapshotPath, chainParams, withExisting, caps, netPrefs, &nodesState, testingMode);
+        snapshotPath, chainParams, withExisting, netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
         web3.ethereum()->setExtraData(extraData);
@@ -933,12 +932,12 @@ int main(int argc, char** argv)
     web3.setPeerStretch(peerStretch);
     std::shared_ptr<eth::TrivialGasPricer> gasPricer =
         make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
-    eth::Client* c = web3.ethereum();
-    c->setGasPricer(gasPricer);
-    c->setSealer(miner.minerType());
-    c->setAuthor(author);
+    Client& c = *(web3.ethereum());
+    c.setGasPricer(gasPricer);
+    c.setSealer(miner.minerType());
+    c.setAuthor(author);
     if (networkID != NoNetworkID)
-        c->setNetworkId(networkID);
+        c.setNetworkId(networkID);
 
     auto renderFullAddress = [&](Address const& _a) -> std::string
     {
@@ -1041,18 +1040,12 @@ int main(int argc, char** argv)
     signal(SIGTERM, &ExitHandler::exitHandler);
     signal(SIGINT, &ExitHandler::exitHandler);
 
-    if (c)
-    {
-        unsigned n = c->blockChain().details().number;
-        if (mining)
-            c->startSealing();
+    unsigned n = c.blockChain().details().number;
+    if (mining)
+        c.startSealing();
 
-        while (!exitHandler.shouldExit())
-            stopSealingAfterXBlocks(c, n, mining);
-    }
-    else
-        while (!exitHandler.shouldExit())
-            this_thread::sleep_for(chrono::milliseconds(1000));
+    while (!exitHandler.shouldExit())
+        stopSealingAfterXBlocks(&c, n, mining);
 
     if (jsonrpcIpcServer.get())
         jsonrpcIpcServer->StopListening();
