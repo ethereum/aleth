@@ -127,8 +127,7 @@ int main(int argc, char** argv)
                                        NetworkConfig(publicIP, listenIP, listenPort, upnp);
     auto netData = contents(getDataDir() / fs::path(c_networkConfigFileName));
 
-    // Pass in empty client version since it's not used in the discovery process
-    Host h("", netPrefs, &netData);
+    Host h(c_programName, netPrefs, &netData);
     h.start();
 
     cout << "Node ID: " << h.enode() << endl;
