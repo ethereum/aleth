@@ -536,7 +536,7 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
     if (_node == id())
     {
-        cnetdetails << "Ingoring the request to connect to self " << _node;
+        cnetdetails << "Ignoring the request to connect to self " << _node;
         return;
     }
 

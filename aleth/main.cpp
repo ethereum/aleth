@@ -14,13 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * @file main.cpp
- * @author Gav Wood <i@gavwood.com>
- * @author Tasha Carl <tasha@carl.pro> - I here by place all my contributions in this file under MIT licence, as specified by http://opensource.org/licenses/MIT.
- * @date 2014
- * Ethereum client.
- */
 
 #include <thread>
 #include <fstream>
@@ -74,7 +67,6 @@ namespace
 {
 
 std::atomic<bool> g_silence = {false};
-unsigned const c_lineWidth = 160;
 
 void version()
 {
@@ -85,27 +77,11 @@ void version()
     cout << "Build: " << buildinfo->system_name << "/" << buildinfo->build_type << "\n";
 }
 
-bool isTrue(std::string const& _m)
-{
-    return _m == "on" || _m == "yes" || _m == "true" || _m == "1";
-}
-
-bool isFalse(std::string const& _m)
-{
-    return _m == "off" || _m == "no" || _m == "false" || _m == "0";
-}
-
 void importPresale(KeyManager& _km, string const& _file, function<string()> _pass)
 {
     KeyPair k = _km.presaleSecret(contentsString(_file), [&](bool){ return _pass(); });
     _km.import(k.secret(), "Presale wallet" + _file + " (insecure)");
 }
-
-enum class NodeMode
-{
-    PeerServer,
-    Full
-};
 
 enum class OperationMode
 {
@@ -138,19 +114,6 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 
     this_thread::sleep_for(chrono::milliseconds(100));
 }
-
-class ExitHandler
-{
-public:
-    static void exitHandler(int) { s_shouldExit = true; }
-    bool shouldExit() const { return s_shouldExit; }
-
-private:
-    static bool s_shouldExit;
-};
-
-bool ExitHandler::s_shouldExit = false;
-
 }
 
 int main(int argc, char** argv)
@@ -175,9 +138,6 @@ int main(int argc, char** argv)
     string exportFrom = "1";
     string exportTo = "latest";
     Format exportFormat = Format::Binary;
-
-    /// General params for Node operation
-    NodeMode nodeMode = NodeMode::Full;
 
     bool ipc = true;
 
@@ -262,8 +222,6 @@ int main(int argc, char** argv)
     addClientOption("test", "Testing mode; disable PoW and provide test rpc interface");
     addClientOption("config", po::value<string>()->value_name("<file>"),
         "Configure specialised blockchain using given JSON information\n");
-    addClientOption("mode,o", po::value<string>()->value_name("<full/peer>"),
-        "Start a full node or a peer node (default: full)\n");
     addClientOption("ipc", "Enable IPC server (default: on)");
     addClientOption("ipcpath", po::value<string>()->value_name("<path>"),
         "Set .ipc socket path (default: data directory)");
@@ -475,19 +433,6 @@ int main(int argc, char** argv)
         }
     }
 
-    if (vm.count("mode"))
-    {
-        string m = vm["mode"].as<string>();
-        if (m == "full")
-            nodeMode = NodeMode::Full;
-        else if (m == "peer")
-            nodeMode = NodeMode::PeerServer;
-        else
-        {
-            cerr << "Unknown mode: " << m << "\n";
-            return -1;
-        }
-    }
     if (vm.count("import-presale"))
         presaleImports.push_back(vm["import-presale"].as<string>());
     if (vm.count("admin"))
@@ -822,14 +767,12 @@ int main(int argc, char** argv)
     netPrefs.pin = vm.count("pin") != 0;
 
     auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
-    auto caps = set<string>{"eth"};
 
     if (testingMode)
         chainParams.allowFutureBlocks = true;
 
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), db::databasePath(),
-        snapshotPath, chainParams, withExisting, nodeMode == NodeMode::Full ? caps : set<string>(),
-        netPrefs, &nodesState, testingMode);
+        snapshotPath, chainParams, withExisting, netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
         web3.ethereum()->setExtraData(extraData);
@@ -989,15 +932,12 @@ int main(int argc, char** argv)
     web3.setPeerStretch(peerStretch);
     std::shared_ptr<eth::TrivialGasPricer> gasPricer =
         make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
-    eth::Client* c = nodeMode == NodeMode::Full ? web3.ethereum() : nullptr;
-    if (c)
-    {
-        c->setGasPricer(gasPricer);
-        c->setSealer(miner.minerType());
-        c->setAuthor(author);
-        if (networkID != NoNetworkID)
-            c->setNetworkId(networkID);
-    }
+    Client& c = *(web3.ethereum());
+    c.setGasPricer(gasPricer);
+    c.setSealer(miner.minerType());
+    c.setAuthor(author);
+    if (networkID != NoNetworkID)
+        c.setNetworkId(networkID);
 
     auto renderFullAddress = [&](Address const& _a) -> std::string
     {
@@ -1100,18 +1040,12 @@ int main(int argc, char** argv)
     signal(SIGTERM, &ExitHandler::exitHandler);
     signal(SIGINT, &ExitHandler::exitHandler);
 
-    if (c)
-    {
-        unsigned n = c->blockChain().details().number;
-        if (mining)
-            c->startSealing();
+    unsigned n = c.blockChain().details().number;
+    if (mining)
+        c.startSealing();
 
-        while (!exitHandler.shouldExit())
-            stopSealingAfterXBlocks(c, n, mining);
-    }
-    else
-        while (!exitHandler.shouldExit())
-            this_thread::sleep_for(chrono::milliseconds(1000));
+    while (!exitHandler.shouldExit())
+        stopSealingAfterXBlocks(&c, n, mining);
 
     if (jsonrpcIpcServer.get())
         jsonrpcIpcServer->StopListening();

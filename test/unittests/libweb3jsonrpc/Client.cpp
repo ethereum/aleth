@@ -65,9 +65,9 @@ BOOST_AUTO_TEST_CASE(Personal)
     chainParams.allowFutureBlocks = true;
     chainParams.difficulty = chainParams.minimumDifficulty;
     chainParams.gasLimit = chainParams.maxGasLimit;
-    
+
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("eth"), getDataDir(), string(),
-        chainParams, WithExisting::Kill, set<string>{"eth"}, p2p::NetworkConfig(0));
+        chainParams, WithExisting::Kill, p2p::NetworkConfig(0));
     web3.stopNetwork();
     web3.ethereum()->stopSealing();
     

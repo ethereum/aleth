@@ -46,8 +46,6 @@ namespace po = boost::program_options;
 
 namespace
 {
-unsigned const c_lineWidth = 160;
-
 int64_t maxBlockGasLimit()
 {
     static int64_t limit =

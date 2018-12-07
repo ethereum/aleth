@@ -112,9 +112,7 @@ public:
     /// ethereum() may be safely static_cast()ed to a eth::Client*.
     WebThreeDirect(std::string const& _clientVersion, boost::filesystem::path const& _dbPath,
         boost::filesystem::path const& _snapshotPath, eth::ChainParams const& _params,
-        WithExisting _we = WithExisting::Trust,
-        std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
-        p2p::NetworkConfig const& _n = p2p::NetworkConfig{},
+        WithExisting _we = WithExisting::Trust, p2p::NetworkConfig const& _n = p2p::NetworkConfig{},
         bytesConstRef _network = bytesConstRef(), bool _testing = false);
 
     /// Destructor.

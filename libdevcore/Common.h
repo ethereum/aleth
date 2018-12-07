@@ -303,4 +303,19 @@ enum class WithExisting: int
 int64_t utcTime();
 
 void setDefaultOrCLocale();
-}
+
+static constexpr unsigned c_lineWidth = 160;
+
+class ExitHandler
+{
+public:
+    static void exitHandler(int) { s_shouldExit = true; }
+    bool shouldExit() const { return s_shouldExit; }
+
+private:
+    static bool s_shouldExit;
+};
+
+bool isTrue(std::string const& _m);
+bool isFalse(std::string const& _m);
+}  // namespace dev
