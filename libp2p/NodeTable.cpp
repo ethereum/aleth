@@ -280,7 +280,7 @@ void NodeTable::ping(NodeID _toId, NodeIPEndpoint _toEndpoint) const
     m_socketPointer->send(p);
 }
 
-void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _new)
+void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 {
     if (!m_socketPointer->isOpen())
         return;
@@ -288,15 +288,14 @@ void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _n
     unsigned evicts = 0;
     DEV_GUARDED(x_evictions)
     {
-        EvictionTimeout evictTimeout{_new->id, chrono::steady_clock::now()};  
-        m_evictions.emplace(_leastSeen->id, evictTimeout);
+        EvictionTimeout evictTimeout{_new.id, chrono::steady_clock::now()};  
+        m_evictions.emplace(_leastSeen.id, evictTimeout);
         evicts = m_evictions.size();
     }
 
     if (evicts == 1)
         doCheckEvictions();
-    if (_leastSeen)
-        ping(_leastSeen->id, _leastSeen->endpoint);
+    ping(_leastSeen.id, _leastSeen.endpoint);
 }
 
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
@@ -356,7 +355,7 @@ void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _en
         }
 
         if (nodeToEvict)
-            evict(nodeToEvict, newNode);
+            evict(*nodeToEvict, *newNode);
     }
 }
 

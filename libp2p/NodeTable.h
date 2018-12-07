@@ -227,7 +227,7 @@ private:
     std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID _target);
 
     /// Asynchronously drops _leastSeen node if it doesn't reply and adds _new node, otherwise _new node is thrown away.
-    void evict(std::shared_ptr<NodeEntry> _leastSeen, std::shared_ptr<NodeEntry> _new);
+    void evict(NodeEntry const& _leastSeen, NodeEntry const& _new);
 
     /// Called whenever activity is received from a node in order to maintain node table.
     void noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint);
