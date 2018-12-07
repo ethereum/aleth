@@ -68,6 +68,7 @@ project.pbxproj
 
 # JetBrains stuff
 .idea/
+cmake-build-*/
 bin/
 
 # Visual Studio Code

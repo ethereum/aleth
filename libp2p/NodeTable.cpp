@@ -372,7 +372,9 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
         s.nodes.remove_if(
             [_n](weak_ptr<NodeEntry> const& _bucketEntry) { return _bucketEntry == _n; });
     }
-    
+
+    DEV_GUARDED(x_nodes) { m_allNodes.erase(_n->id); }
+
     // notify host
     LOG(m_logger) << "p2p.nodes.drop " << _n->id;
     if (m_nodeEventHandler)
@@ -411,8 +413,9 @@ void NodeTable::onPacketReceived(
                 { 
                     auto e = m_evictions.find(in.sourceid);
                     if (e != m_evictions.end())
-                    { 
-                        if (e->second.evictedTimePoint > std::chrono::steady_clock::now())
+                    {
+                        if (e->second.evictedTimePoint + c_reqTimeout >=
+                            std::chrono::steady_clock::now())
                         {
                             found = true;
                             leastSeenID = e->first;
@@ -532,26 +535,41 @@ void NodeTable::doCheckEvictions()
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
         
-        bool evictionsRemain = false;
         list<shared_ptr<NodeEntry>> drop;
+        list<shared_ptr<NodeEntry>> active;
+
         {
             Guard le(x_evictions);
             Guard ln(x_nodes);
             for (auto& e: m_evictions)
                 if (chrono::steady_clock::now() - e.second.evictedTimePoint > c_reqTimeout)
                 {
-                    auto const it = m_allNodes.find(e.second.newNodeID);
+                    auto const it = m_allNodes.find(e.first);
                     if (it != m_allNodes.end())
+                    {
+                        // save the node to be dropped below (outside of Guards)
                         drop.push_back(it->second);
+
+                        // save the replacement node that should be activated
+                        auto const itNewNode = m_allNodes.find(e.second.newNodeID);
+                        if (itNewNode != m_allNodes.end())
+                            active.push_back(itNewNode->second);
+                    }
                 }
-            evictionsRemain = (m_evictions.size() - drop.size() > 0);
+            // remove evicted nodes from m_evictions
+            drop.unique();
+            for (auto n : drop)
+                m_evictions.erase(n->id);
         }
-        
-        drop.unique();
+
         for (auto n: drop)
             dropNode(n);
-        
-        if (evictionsRemain)
+
+        // activate replacement nodes and put them into buckets
+        for (auto n : active)
+            noteActiveNode(n->id, n->endpoint);
+
+        if (!m_evictions.empty())
             doCheckEvictions();
     });
 }
