@@ -1,22 +1,18 @@
 /*
- This file is part of cpp-ethereum.
+ This file is part of aleth.
 
- cpp-ethereum is free software: you can redistribute it and/or modify
+ aleth is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
 
- cpp-ethereum is distributed in the hope that it will be useful,
+ aleth is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General Public License
- along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
- */
-/** @file NodeTable.h
- * @author Alex Leverington <nessence@gmail.com>
- * @date 2014
+ along with aleth.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
@@ -154,8 +150,8 @@ public:
     /// Called by implementation which provided handler to process NodeEntryAdded/NodeEntryDropped events. Events are coalesced by type whereby old events are ignored.
     void processEvents();
 
-    /// Add node. Node will be pinged.
-    void addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
+    /// Add node and optionally ping it
+    void addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown, bool _ping = true);
 
     /// Returns list of node ids active in node table.
     std::list<NodeID> nodes() const;

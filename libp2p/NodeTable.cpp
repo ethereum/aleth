@@ -1,22 +1,18 @@
 /*
- This file is part of cpp-ethereum.
+ This file is part of aleth.
  
- cpp-ethereum is free software: you can redistribute it and/or modify
+ aleth is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
  
- cpp-ethereum is distributed in the hope that it will be useful,
+ aleth is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  
  You should have received a copy of the GNU General Public License
- along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
- */
-/** @file NodeTable.cpp
- * @author Alex Leverington <nessence@gmail.com>
- * @date 2014
+ along with aleth.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "NodeTable.h"
@@ -81,7 +77,7 @@ void NodeTable::processEvents()
         m_nodeEventHandler->processEvents();
 }
 
-void NodeTable::addNode(Node const& _node, NodeRelation _relation)
+void NodeTable::addNode(Node const& _node, NodeRelation _relation, bool _ping)
 {
     if (_relation == Known)
     {
@@ -104,7 +100,11 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
     auto ret = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = ret; }
     LOG(m_logger) << "addNode pending for " << _node.id << "@" << _node.endpoint;
-    ping(_node.id, _node.endpoint);
+
+    // Avoid redundant ping - we don't want to ping if this addNode was invoked in response
+    // to the receipt of a ping packet
+    if (_ping)
+        ping(_node.id, _node.endpoint);
 }
 
 list<NodeID> NodeTable::nodes() const
@@ -495,7 +495,7 @@ void NodeTable::onPacketReceived(
                 auto in = dynamic_cast<PingNode const&>(*packet);
                 in.source.setAddress(_from.address());
                 in.source.setUdpPort(_from.port());
-                addNode(Node(in.sourceid, in.source));
+                addNode(Node(in.sourceid, in.source), NodeRelation::Unknown, false);
                 
                 Pong p(in.source);
                 LOG(m_logger) << "Sending " << p.typeName() << " to " << in.sourceid << "@" << _from;
