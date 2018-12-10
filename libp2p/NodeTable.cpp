@@ -450,14 +450,15 @@ void NodeTable::onPacketReceived(
                 bool expected = false;
                 auto now = chrono::steady_clock::now();
                 DEV_GUARDED(x_findNodeTimeout)
-                    m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& t)
+                m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& t) noexcept {
+                    if (t.first == in.sourceid)
                     {
-                        if (t.first == in.sourceid && now - t.second < c_reqTimeout)
+                        if (now - t.second < c_reqTimeout)
                             expected = true;
-                        else if (t.first == in.sourceid)
-                            return true;
-                        return false;
-                    });
+                        return true;
+                    }
+                    return false;
+                });
                 if (!expected)
                 {
                     cnetdetails << "Dropping unsolicited neighbours packet from "
