@@ -47,8 +47,7 @@ NodeTable::NodeTable(
   : m_hostNode(Node(_alias.pub(), _endpoint)),
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
-        _io, *reinterpret_cast<UDPSocketEvents*>(this), (bi::udp::endpoint)m_hostNode.endpoint)),
-    m_socketPointer(m_socket.get()),
+        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNode.endpoint)),
     m_timers(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -56,7 +55,7 @@ NodeTable::NodeTable(
 
     if (!_enabled)
         return;
-    
+
     try
     {
         m_socketPointer->connect();
@@ -68,7 +67,7 @@ NodeTable::NodeTable(
         cwarn << "Discovery disabled.";
     }
 }
-    
+
 NodeTable::~NodeTable()
 {
     m_socketPointer->disconnect();
