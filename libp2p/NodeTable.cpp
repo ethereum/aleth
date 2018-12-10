@@ -58,7 +58,7 @@ NodeTable::NodeTable(
 
     try
     {
-        m_socketPointer->connect();
+        m_socket->connect();
         doDiscovery();
     }
     catch (std::exception const& _e)
@@ -70,7 +70,7 @@ NodeTable::NodeTable(
 
 NodeTable::~NodeTable()
 {
-    m_socketPointer->disconnect();
+    m_socket->disconnect();
     m_timers.stop();
 }
 
@@ -153,7 +153,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
 {
     // NOTE: ONLY called by doDiscovery!
     
-    if (!m_socketPointer->isOpen())
+    if (!m_socket->isOpen())
         return;
     
     if (_round == s_maxSteps)
@@ -178,7 +178,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             DEV_GUARDED(x_findNodeTimeout)
                 m_findNodeTimeout.emplace_back(r->id, chrono::steady_clock::now());
             LOG(m_logger) << p.typeName() << " to " << _node << "@" << r->endpoint;
-            m_socketPointer->send(p);
+            m_socket->send(p);
         }
     
     if (tried.empty())
@@ -276,12 +276,12 @@ void NodeTable::ping(NodeID _toId, NodeIPEndpoint _toEndpoint) const
     PingNode p(src, _toEndpoint);
     p.sign(m_secret);
     LOG(m_logger) << p.typeName() << " to " << _toId << "@" << p.destination;
-    m_socketPointer->send(p);
+    m_socket->send(p);
 }
 
 void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 {
-    if (!m_socketPointer->isOpen())
+    if (!m_socket->isOpen())
         return;
     
     unsigned evicts = 0;
@@ -482,7 +482,7 @@ void NodeTable::onPacketReceived(
                     out.sign(m_secret);
                     if (out.data.size() > 1280)
                         cnetlog << "Sending truncated datagram, size: " << out.data.size();
-                    m_socketPointer->send(out);
+                    m_socket->send(out);
                 }
                 break;
             }
@@ -498,7 +498,7 @@ void NodeTable::onPacketReceived(
                 LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
                 p.echo = in.echo;
                 p.sign(m_secret);
-                m_socketPointer->send(p);
+                m_socket->send(p);
                 break;
             }
         }
