@@ -53,6 +53,7 @@ NodeTable::NodeTable(
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
+    m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),        
     m_timers(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -182,6 +183,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             auto r = nearest[i];
             tried.push_back(r);
             FindNode p(r->endpoint, _node);
+            p.ts = nextRequestExpirationTime();
             p.sign(m_secret);
             DEV_GUARDED(x_findNodeTimeout)
                 m_findNodeTimeout.emplace_back(r->id, chrono::steady_clock::now());
@@ -287,6 +289,7 @@ void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const&
         NodeIPEndpoint src;
         src = m_hostNodeEndpoint;
         PingNode p(src, _nodeEntry.endpoint);
+        p.ts = nextRequestExpirationTime();
         auto const pingHash = p.sign(m_secret);
         LOG(m_logger) << p.typeName() << " to " << _nodeEntry.id << "@" << p.destination;
         m_socket->send(p);
@@ -484,6 +487,7 @@ void NodeTable::onPacketReceived(
                 for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
                 {
                     Neighbours out(_from, nearest, offset, nlimit);
+                    out.ts = nextRequestExpirationTime();
                     LOG(m_logger) << out.typeName() << " to " << in.sourceid << "@" << _from;
                     out.sign(m_secret);
                     if (out.data.size() > 1280)
@@ -502,6 +506,7 @@ void NodeTable::onPacketReceived(
                 
                 Pong p(in.source);
                 LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
+                p.ts = nextRequestExpirationTime();
                 p.echo = in.echo;
                 p.sign(m_secret);
                 m_socket->send(p);
@@ -554,7 +559,7 @@ void NodeTable::doHandleTimeouts()
         for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
         {
             if (chrono::steady_clock::now() >
-                it->second.pingSendTime + DiscoveryDatagram::c_timeToLive)
+                it->second.pingSendTime + m_requestTimeToLive)
             {
                 if (auto node = nodeEntry(it->first))
                 {

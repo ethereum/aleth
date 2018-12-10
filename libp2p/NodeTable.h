@@ -255,6 +255,14 @@ protected:
 
     void doHandleTimeouts();
 
+    // Useful ony for tests.
+    void setRequestTimeToLive(std::chrono::seconds const& _time) { m_requestTimeToLive = _time; }
+    uint32_t nextRequestExpirationTime() const
+    {
+        return RLPXDatagramFace::futureFromEpoch(m_requestTimeToLive);
+    }
+
+
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
     NodeID const m_hostNodeID;
@@ -274,6 +282,9 @@ protected:
 
     // The info about PING packets we've sent to other nodes and haven't received PONG yet
     std::unordered_map<NodeID, NodeValidation> m_sentPings;
+
+    // Expiration time of sent discovery packets.
+    std::chrono::seconds m_requestTimeToLive;
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
 
