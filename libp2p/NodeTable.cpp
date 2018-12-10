@@ -474,7 +474,7 @@ void NodeTable::onPacketReceived(
             {
                 auto in = dynamic_cast<FindNode const&>(*packet);
                 vector<shared_ptr<NodeEntry>> nearest = nearestNodeEntries(in.target);
-                static unsigned const nlimit = (m_socketPointer->maxDatagramSize - 109) / 90;
+                static unsigned constexpr nlimit = (NodeSocket::maxDatagramSize - 109) / 90;
                 for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
                 {
                     Neighbours out(_from, nearest, offset, nlimit);
