@@ -465,7 +465,7 @@ void NodeTable::onPacketReceived(
                     break;
                 }
 
-                for (auto n: in.neighbours)
+                for (auto const& n: in.neighbours)
                     addNode(Node(n.node, n.endpoint));
                 break;
             }
