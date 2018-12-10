@@ -103,7 +103,7 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
 
     auto ret = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = ret; }
-    LOG(m_logger) << "addNode pending for " << _node.id << "@" << _node.endpoint;
+    LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
     ping(_node.id, _node.endpoint);
 }
 
@@ -426,15 +426,12 @@ void NodeTable::onPacketReceived(
                 {
                     if (auto n = nodeEntry(evictionEntry.newNodeID))
                         dropNode(n);
-                    if (auto n = nodeEntry(leastSeenID))
-                        n->pending = false;
                 }
-                else
-                {
-                    if (auto n = nodeEntry(in.sourceid))
-                        n->pending = false;
-                }
-                
+
+                auto n = nodeEntry(found ? leastSeenID : in.sourceid);
+                if (n && n->pending)
+                    n->pending = false;
+
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
