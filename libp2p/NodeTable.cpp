@@ -177,7 +177,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             FindNode p(r->endpoint, _node);
             p.sign(m_secret);
             DEV_GUARDED(x_findNodeTimeout)
-                m_findNodeTimeout.push_back(make_pair(r->id, chrono::steady_clock::now()));
+                m_findNodeTimeout.emplace_back(r->id, chrono::steady_clock::now());
             LOG(m_logger) << p.typeName() << " to " << _node << "@" << r->endpoint;
             m_socketPointer->send(p);
         }
@@ -554,15 +554,15 @@ void NodeTable::doCheckEvictions()
                 }
             // remove evicted nodes from m_evictions
             drop.unique();
-            for (auto n : drop)
+            for (auto const& n : drop)
                 m_evictions.erase(n->id);
         }
 
-        for (auto n: drop)
+        for (auto const& n: drop)
             dropNode(n);
 
         // activate replacement nodes and put them into buckets
-        for (auto n : active)
+        for (auto const& n : active)
             noteActiveNode(n->id, n->endpoint);
 
         if (!m_evictions.empty())
