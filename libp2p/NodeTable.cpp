@@ -450,8 +450,8 @@ void NodeTable::onPacketReceived(
                 }
                 // if we don't want to evict, we don't need to remember replacement anymore
                 if (replacementNodeID)
-                    if (auto n = nodeEntry(replacementNodeID))
-                        dropNode(n);
+                    if (auto replacementNode = nodeEntry(replacementNodeID))
+                        dropNode(move(replacementNode));
 
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
@@ -559,21 +559,27 @@ void NodeTable::doCheckEvictions()
         {
             Guard le(x_evictions);
             Guard ln(x_nodes);
-            for (auto& e: m_evictions)
-                if (chrono::steady_clock::now() - e.second.evictedTimePoint > c_reqTimeout)
+            for (auto const& e : m_evictions)
+            {
+                NodeID const& evictedID = e.first;
+                NodeID const& replacementID = e.second.newNodeID;
+                TimePoint const& evictedTimePoint = e.second.evictedTimePoint;
+
+                if (chrono::steady_clock::now() - evictedTimePoint > c_reqTimeout)
                 {
-                    auto const it = m_allNodes.find(e.first);
-                    if (it != m_allNodes.end())
+                    auto const itEvicted = m_allNodes.find(evictedID);
+                    if (itEvicted != m_allNodes.end())
                     {
-                        // save the node to be dropped below (outside of Guards)
-                        drop.push_back(it->second);
+                        // save the evicted node to be dropped below (outside of Guards)
+                        drop.push_back(itEvicted->second);
 
                         // save the replacement node that should be activated
-                        auto const itNewNode = m_allNodes.find(e.second.newNodeID);
-                        if (itNewNode != m_allNodes.end())
-                            active.push_back(itNewNode->second);
+                        auto const itReplacement = m_allNodes.find(replacementID);
+                        if (itReplacement != m_allNodes.end())
+                            active.push_back(itReplacement->second);
                     }
                 }
+            }
 
             // remove evicted nodes from m_evictions
             drop.unique();
@@ -582,7 +588,7 @@ void NodeTable::doCheckEvictions()
         }
 
         for (auto const& n : drop)
-            dropNode(n);
+            dropNode(move(n));
 
         // activate replacement nodes and put them into buckets
         for (auto const& n : active)
@@ -625,7 +631,7 @@ void NodeTable::doHandleTimeouts()
             if (chrono::steady_clock::now() > it->second.first + DiscoveryDatagram::c_timeToLive)
             {
                 if (auto node = nodeEntry(it->first))
-                    dropNode(node);
+                    dropNode(move(node));
 
                 it = m_sentPings.erase(it);
             }
