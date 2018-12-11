@@ -306,8 +306,7 @@ void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _en
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
     if (newNode && !newNode->pending)
     {
-        LOG(m_logger) << "Noting active node: " << _pubk << " " << _endpoint.address().to_string()
-                      << ":" << _endpoint.port();
+        LOG(m_logger) << "Active node " << _pubk << '@' << _endpoint;
         newNode->endpoint.setAddress(_endpoint.address());
         newNode->endpoint.setUdpPort(_endpoint.port());
 
