@@ -50,6 +50,7 @@ TestTransaction::TestTransaction(mObject const& _o) : m_jsonTransaction(_o)
 TestBlock::TestBlock()
 {
     m_dirty = false;
+    m_blockHeader.setTimestamp(0);  // Create a valid header.
 }
 
 TestBlock::TestBlock(mObject const& _blockObj) : TestBlock()
@@ -222,7 +223,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
         // mining!");
         cnote << "Mining block difficulty of:  " << block.info().difficulty();
         dev::eth::mine(block, blockchain, blockchain.sealEngine());
-        blockchain.sealEngine()->verify(JustSeal, block.info());
+        blockchain.sealEngine()->verify(CheckNothingNew, block.info());
         if (transactionsOnImport > block.pending().size())
             cnote << TestOutputHelper::get().testName() +
                      " Dropped invalid Transactions when mining!";

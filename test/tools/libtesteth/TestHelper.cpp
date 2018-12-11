@@ -88,7 +88,7 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify)
     // Ethash::nonce(_bi) << _bi.hash(WithoutSeal).hex();
     if (_verify)  // sometimes it is needed to mine incorrect blockheaders for
                   // testing
-        _sealer->verify(JustSeal, _bi);
+        _sealer->verify(CheckNothingNew, _bi);
 }
 
 }

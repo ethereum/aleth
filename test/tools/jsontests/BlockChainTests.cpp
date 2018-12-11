@@ -780,6 +780,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
         {
             uncleHeader.setTimestamp(importedBlocks.at(number).blockHeader().timestamp() + 1);
             sealEngine->populateFromParent(uncleHeader, importedBlocks.at(number).blockHeader());
+            uncleHeader.setAuthor(h160::random()); // make each populated block unique
 
             //Set Default roots for empty block
             //m_transactionsRoot = _t; m_receiptsRoot = _r; m_sha3Uncles = _u; m_stateRoot = _s;
