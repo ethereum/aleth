@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint, newEndpoint);
 }
 
-BOOST_AUTO_TEST_CASE(unsolicitedPong)
+BOOST_AUTO_TEST_CASE(unexpectedPong)
 {
     // NodeTable receiving PONG
     TestNodeTableHost nodeTableHost(0);

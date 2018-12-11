@@ -177,26 +177,26 @@ public:
 protected:
     /// Constants for Kademlia, derived from address space.
 
-    static unsigned const s_addressByteSize = h256::size;					///< Size of address type in bytes.
-    static unsigned const s_bits = 8 * s_addressByteSize;					///< Denoted by n in [Kademlia].
-    static unsigned const s_bins = s_bits - 1;  ///< Size of m_buckets (excludes root, which is us).
-    static unsigned const s_maxSteps = boost::static_log2<s_bits>::value;	///< Max iterations of discovery. (discover)
+    static constexpr unsigned s_addressByteSize = h256::size;					///< Size of address type in bytes.
+    static constexpr unsigned s_bits = 8 * s_addressByteSize;					///< Denoted by n in [Kademlia].
+    static constexpr unsigned s_bins = s_bits - 1;  ///< Size of m_buckets (excludes root, which is us).
+    static constexpr unsigned s_maxSteps = boost::static_log2<s_bits>::value;	///< Max iterations of discovery. (discover)
 
     /// Chosen constants
 
-    static unsigned const s_bucketSize = 16;			///< Denoted by k in [Kademlia]. Number of nodes stored in each bucket.
-    static unsigned const s_alpha = 3;				///< Denoted by \alpha in [Kademlia]. Number of concurrent FindNode requests.
+    static constexpr unsigned s_bucketSize = 16;			///< Denoted by k in [Kademlia]. Number of nodes stored in each bucket.
+    static constexpr unsigned s_alpha = 3;				///< Denoted by \alpha in [Kademlia]. Number of concurrent FindNode requests.
 
     /// Intervals
 
     /// Interval at which eviction timeouts are checked.
-    static std::chrono::milliseconds const c_evictionCheckInterval;
+    static constexpr std::chrono::milliseconds c_evictionCheckInterval{75};
     /// How long to wait for requests (evict, find iterations).
-    static std::chrono::milliseconds const c_reqTimeout;
+    static constexpr std::chrono::milliseconds c_reqTimeout{300};
     /// Refresh interval prevents bucket from becoming stale. [Kademlia]
-    static std::chrono::milliseconds const c_bucketRefresh;
+    static constexpr std::chrono::milliseconds c_bucketRefresh{7200};
     // Period during which we consider last PONG results to be valid before sending new PONG
-    static uint32_t const c_bondingTimeSeconds;
+    static constexpr uint32_t c_bondingTimeSeconds{12 * 60 * 60};
 
     struct NodeBucket
     {
@@ -298,7 +298,7 @@ inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 
 struct DiscoveryDatagram: public RLPXDatagramFace
 {
-    static std::chrono::seconds const c_timeToLive;
+    static constexpr std::chrono::seconds c_timeToLive{60};
 
     /// Constructor used for sending.
     DiscoveryDatagram(bi::udp::endpoint const& _to)

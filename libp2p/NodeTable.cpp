@@ -29,16 +29,9 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_discoveryWarnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "discov"))
 
-const unsigned c_handleTimeoutsIntervalMs = 5000;
+constexpr unsigned c_handleTimeoutsIntervalMs = 5000;
 
 }  // namespace
-
-std::chrono::seconds const DiscoveryDatagram::c_timeToLive{60};
-std::chrono::milliseconds const NodeTable::c_evictionCheckInterval{75};
-std::chrono::milliseconds const NodeTable::c_reqTimeout{300};
-std::chrono::milliseconds const NodeTable::c_bucketRefresh{7200};
-uint32_t const NodeTable::c_bondingTimeSeconds = 12 * 60 * 60;
-
 
 inline bool operator==(
     std::weak_ptr<NodeEntry> const& _weak, std::shared_ptr<NodeEntry> const& _shared)
@@ -416,14 +409,14 @@ void NodeTable::onPacketReceived(
         {
             case Pong::type:
             {
-                auto pong = dynamic_cast<Pong const&>(*packet);
-                auto const sourceId = pong.sourceid;
+                auto const& pong = dynamic_cast<Pong const&>(*packet);
+                auto const& sourceId = pong.sourceid;
 
                 // validate pong
                 auto const sentPing = m_sentPings.find(sourceId);
                 if (sentPing == m_sentPings.end())
                 {
-                    LOG(m_logger) << "Unsolicited PONG from " << _from.address().to_string() << ":"
+                    LOG(m_logger) << "Unexpected PONG from " << _from.address().to_string() << ":"
                                   << _from.port();
                     return;
                 }
@@ -475,7 +468,7 @@ void NodeTable::onPacketReceived(
 
             case Neighbours::type:
             {
-                auto in = dynamic_cast<Neighbours const&>(*packet);
+                auto const& in = dynamic_cast<Neighbours const&>(*packet);
                 bool expected = false;
                 auto now = chrono::steady_clock::now();
                 DEV_GUARDED(x_findNodeTimeout)
@@ -502,7 +495,7 @@ void NodeTable::onPacketReceived(
 
             case FindNode::type:
             {
-                auto in = dynamic_cast<FindNode const&>(*packet);
+                auto const& in = dynamic_cast<FindNode const&>(*packet);
                 vector<shared_ptr<NodeEntry>> nearest = nearestNodeEntries(in.target);
                 static unsigned constexpr nlimit = (NodeSocket::maxDatagramSize - 109) / 90;
                 for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
@@ -519,7 +512,7 @@ void NodeTable::onPacketReceived(
 
             case PingNode::type:
             {
-                auto in = dynamic_cast<PingNode const&>(*packet);
+                auto& in = dynamic_cast<PingNode&>(*packet);
                 in.source.setAddress(_from.address());
                 in.source.setUdpPort(_from.port());
                 addNode(Node(in.sourceid, in.source));
