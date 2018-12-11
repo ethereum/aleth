@@ -276,7 +276,6 @@ private:
     std::list<NodeIdTimePoint> m_findNodeTimeout;					///< Timeouts for FindNode requests.
 
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
-    NodeSocket* m_socketPointer;									///< Set to m_socket.get(). Socket is created in constructor and disconnected in destructor to ensure access to pointer is safe.
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
 

@@ -47,8 +47,7 @@ NodeTable::NodeTable(
   : m_hostNode(Node(_alias.pub(), _endpoint)),
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
-        _io, *reinterpret_cast<UDPSocketEvents*>(this), (bi::udp::endpoint)m_hostNode.endpoint)),
-    m_socketPointer(m_socket.get()),
+        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNode.endpoint)),
     m_timers(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -56,10 +55,10 @@ NodeTable::NodeTable(
 
     if (!_enabled)
         return;
-    
+
     try
     {
-        m_socketPointer->connect();
+        m_socket->connect();
         doDiscovery();
     }
     catch (std::exception const& _e)
@@ -68,10 +67,10 @@ NodeTable::NodeTable(
         cwarn << "Discovery disabled.";
     }
 }
-    
+
 NodeTable::~NodeTable()
 {
-    m_socketPointer->disconnect();
+    m_socket->disconnect();
     m_timers.stop();
 }
 
@@ -103,7 +102,7 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
 
     auto ret = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = ret; }
-    LOG(m_logger) << "addNode pending for " << _node.id << "@" << _node.endpoint;
+    LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
     ping(_node.id, _node.endpoint);
 }
 
@@ -154,7 +153,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
 {
     // NOTE: ONLY called by doDiscovery!
     
-    if (!m_socketPointer->isOpen())
+    if (!m_socket->isOpen())
         return;
     
     if (_round == s_maxSteps)
@@ -177,9 +176,9 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             FindNode p(r->endpoint, _node);
             p.sign(m_secret);
             DEV_GUARDED(x_findNodeTimeout)
-                m_findNodeTimeout.push_back(make_pair(r->id, chrono::steady_clock::now()));
-            LOG(m_logger) << "Sending " << p.typeName() << " to " << _node << "@" << r->endpoint;
-            m_socketPointer->send(p);
+                m_findNodeTimeout.emplace_back(r->id, chrono::steady_clock::now());
+            LOG(m_logger) << p.typeName() << " to " << _node << "@" << r->endpoint;
+            m_socket->send(p);
         }
     
     if (tried.empty())
@@ -276,13 +275,13 @@ void NodeTable::ping(NodeID _toId, NodeIPEndpoint _toEndpoint) const
     DEV_GUARDED(x_nodes) { src = m_hostNode.endpoint; }
     PingNode p(src, _toEndpoint);
     p.sign(m_secret);
-    LOG(m_logger) << "Sending " << p.typeName() << " to " << _toId << "@" << p.destination;
-    m_socketPointer->send(p);
+    LOG(m_logger) << p.typeName() << " to " << _toId << "@" << p.destination;
+    m_socket->send(p);
 }
 
 void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 {
-    if (!m_socketPointer->isOpen())
+    if (!m_socket->isOpen())
         return;
     
     unsigned evicts = 0;
@@ -307,8 +306,7 @@ void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _en
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
     if (newNode && !newNode->pending)
     {
-        LOG(m_logger) << "Noting active node: " << _pubk << " " << _endpoint.address().to_string()
-                      << ":" << _endpoint.port();
+        LOG(m_logger) << "Active node " << _pubk << '@' << _endpoint;
         newNode->endpoint.setAddress(_endpoint.address());
         newNode->endpoint.setUdpPort(_endpoint.port());
 
@@ -391,12 +389,12 @@ void NodeTable::onPacketReceived(
             return;
         if (packet->isExpired())
         {
-            LOG(m_logger) << "Invalid packet (timestamp in the past) from "
-                          << _from.address().to_string() << ":" << _from.port();
+            LOG(m_logger) << "Expired " << packet->typeName() << " from " << packet->sourceid << "@"
+                          << _from;
             return;
         }
 
-        LOG(m_logger) << "Received " << packet->typeName() << " from " << packet->sourceid << "@" << _from;
+        LOG(m_logger) << packet->typeName() << " from " << packet->sourceid << "@" << _from;
         switch (packet->packetType())
         {
             case Pong::type:
@@ -426,15 +424,12 @@ void NodeTable::onPacketReceived(
                 {
                     if (auto n = nodeEntry(evictionEntry.newNodeID))
                         dropNode(n);
-                    if (auto n = nodeEntry(leastSeenID))
-                        n->pending = false;
                 }
-                else
-                {
-                    if (auto n = nodeEntry(in.sourceid))
-                        n->pending = false;
-                }
-                
+
+                auto n = nodeEntry(found ? leastSeenID : in.sourceid);
+                if (n && n->pending)
+                    n->pending = false;
+
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
@@ -446,21 +441,22 @@ void NodeTable::onPacketReceived(
 
                 break;
             }
-                
+
             case Neighbours::type:
             {
                 auto in = dynamic_cast<Neighbours const&>(*packet);
                 bool expected = false;
                 auto now = chrono::steady_clock::now();
                 DEV_GUARDED(x_findNodeTimeout)
-                    m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& t)
-                    {
-                        if (t.first == in.sourceid && now - t.second < c_reqTimeout)
+                {
+                    m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& _t) noexcept {
+                        if (_t.first != in.sourceid)
+                            return false;
+                        if (now - _t.second < c_reqTimeout)
                             expected = true;
-                        else if (t.first == in.sourceid)
-                            return true;
-                        return false;
+                        return true;
                     });
+                }
                 if (!expected)
                 {
                     cnetdetails << "Dropping unsolicited neighbours packet from "
@@ -468,7 +464,7 @@ void NodeTable::onPacketReceived(
                     break;
                 }
 
-                for (auto n: in.neighbours)
+                for (auto const& n : in.neighbours)
                     addNode(Node(n.node, n.endpoint));
                 break;
             }
@@ -477,15 +473,15 @@ void NodeTable::onPacketReceived(
             {
                 auto in = dynamic_cast<FindNode const&>(*packet);
                 vector<shared_ptr<NodeEntry>> nearest = nearestNodeEntries(in.target);
-                static unsigned const nlimit = (m_socketPointer->maxDatagramSize - 109) / 90;
+                static unsigned constexpr nlimit = (NodeSocket::maxDatagramSize - 109) / 90;
                 for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
                 {
                     Neighbours out(_from, nearest, offset, nlimit);
-                    LOG(m_logger) << "Sending " << out.typeName() << " to " << in.sourceid << "@" << _from;
+                    LOG(m_logger) << out.typeName() << " to " << in.sourceid << "@" << _from;
                     out.sign(m_secret);
                     if (out.data.size() > 1280)
                         cnetlog << "Sending truncated datagram, size: " << out.data.size();
-                    m_socketPointer->send(out);
+                    m_socket->send(out);
                 }
                 break;
             }
@@ -498,10 +494,10 @@ void NodeTable::onPacketReceived(
                 addNode(Node(in.sourceid, in.source));
                 
                 Pong p(in.source);
-                LOG(m_logger) << "Sending " << p.typeName() << " to " << in.sourceid << "@" << _from;
+                LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
                 p.echo = in.echo;
                 p.sign(m_secret);
-                m_socketPointer->send(p);
+                m_socket->send(p);
                 break;
             }
         }
@@ -556,15 +552,15 @@ void NodeTable::doCheckEvictions()
                 }
             // remove evicted nodes from m_evictions
             drop.unique();
-            for (auto n : drop)
+            for (auto const& n : drop)
                 m_evictions.erase(n->id);
         }
 
-        for (auto n: drop)
+        for (auto const& n : drop)
             dropNode(n);
 
         // activate replacement nodes and put them into buckets
-        for (auto n : active)
+        for (auto const& n : active)
             noteActiveNode(n->id, n->endpoint);
 
         if (!m_evictions.empty())
