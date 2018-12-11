@@ -63,6 +63,7 @@ void printHelp()
     cout << "\nTest Generation\n";
     cout << setw(30) << "--filltests" << setw(25) << "Run test fillers\n";
     cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
+    cout << setw(30) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     cout << setw(30) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
     cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
     cout << setw(30) << "--createRandomTest <PathToOptions.json>" << setw(25) << "Use following options file for random code generation\n";
@@ -198,6 +199,8 @@ Options::Options(int argc, const char** argv)
             filltests = true;
         else if (arg == "--fillchain")
             fillchain = true;
+        else if (arg == "--showhash")
+            showhash = true;
         else if (arg == "--stats")
         {
             throwIfNoArgumentFollows();
