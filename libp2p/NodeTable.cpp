@@ -442,22 +442,22 @@ void NodeTable::onPacketReceived(
 
                 break;
             }
-                
+
             case Neighbours::type:
             {
                 auto in = dynamic_cast<Neighbours const&>(*packet);
                 bool expected = false;
                 auto now = chrono::steady_clock::now();
                 DEV_GUARDED(x_findNodeTimeout)
-                m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& t) noexcept {
-                    if (t.first == in.sourceid)
-                    {
-                        if (now - t.second < c_reqTimeout)
+                {
+                    m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& _t) noexcept {
+                        if (_t.first != in.sourceid)
+                            return false;
+                        if (now - _t.second < c_reqTimeout)
                             expected = true;
                         return true;
-                    }
-                    return false;
-                });
+                    });
+                }
                 if (!expected)
                 {
                     cnetdetails << "Dropping unsolicited neighbours packet from "
@@ -465,7 +465,7 @@ void NodeTable::onPacketReceived(
                     break;
                 }
 
-                for (auto const& n: in.neighbours)
+                for (auto const& n : in.neighbours)
                     addNode(Node(n.node, n.endpoint));
                 break;
             }
@@ -557,7 +557,7 @@ void NodeTable::doCheckEvictions()
                 m_evictions.erase(n->id);
         }
 
-        for (auto const& n: drop)
+        for (auto const& n : drop)
             dropNode(n);
 
         // activate replacement nodes and put them into buckets
