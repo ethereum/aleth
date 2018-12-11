@@ -39,10 +39,11 @@ using namespace dev;
 #include "genesis/test/mainNetworkTest.cpp"
 
 //Transition configurations
+#include "genesis/test/ByzantiumToConstantinopleAt5Test.cpp"
+#include "genesis/test/EIP158ToByzantiumAt5Test.cpp"
 #include "genesis/test/frontierToHomesteadAt5Test.cpp"
 #include "genesis/test/homesteadToDaoAt5Test.cpp"
 #include "genesis/test/homesteadToEIP150At5Test.cpp"
-#include "genesis/test/EIP158ToByzantiumAt5Test.cpp"
 #include "genesis/test/transitionnetTest.cpp"
 
 static dev::h256 const c_genesisDefaultStateRoot;
@@ -79,6 +80,8 @@ std::string const& dev::eth::genesisInfo(Network _n)
     case Network::HomesteadToDaoAt5: return c_genesisInfoHomesteadToDaoAt5Test;
     case Network::HomesteadToEIP150At5: return c_genesisInfoHomesteadToEIP150At5Test;
     case Network::EIP158ToByzantiumAt5: return c_genesisInfoEIP158ToByzantiumAt5Test;
+    case Network::ByzantiumToConstantinopleAt5:
+        return c_genesisInfoByzantiumToConstantinopleAt5Test;
     case Network::TransitionnetTest: return c_genesisInfoTest;
 
     default:
