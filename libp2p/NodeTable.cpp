@@ -33,6 +33,11 @@ constexpr unsigned c_handleTimeoutsIntervalMs = 5000;
 
 }  // namespace
 
+constexpr std::chrono::seconds DiscoveryDatagram::c_timeToLive;
+constexpr std::chrono::milliseconds NodeTable::c_reqTimeout;
+constexpr std::chrono::milliseconds NodeTable::c_bucketRefresh;
+constexpr std::chrono::milliseconds NodeTable::c_evictionCheckInterval;
+
 inline bool operator==(
     std::weak_ptr<NodeEntry> const& _weak, std::shared_ptr<NodeEntry> const& _shared)
 {
