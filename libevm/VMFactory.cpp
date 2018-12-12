@@ -187,7 +187,10 @@ VMPtr VMFactory::create(VMKind _kind)
     switch (_kind)
     {
     case VMKind::Interpreter:
-        return {new EVMC{evmc_create_interpreter()}, default_delete};
+    {
+        static std::unique_ptr<EVMC> s_interpreter{new EVMC{evmc_create_interpreter()}};
+        return {s_interpreter.get(), null_delete};
+    }
     case VMKind::DLL:
         assert(g_evmcDll != nullptr);
         // Return "fake" owning pointer to global EVMC DLL VM.
