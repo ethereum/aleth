@@ -120,6 +120,8 @@ string netIdToString(eth::Network _netId)
         return "HomesteadToEIP150At5";
     case eth::Network::EIP158ToByzantiumAt5:
         return "EIP158ToByzantiumAt5";
+    case eth::Network::ByzantiumToConstantinopleAt5:
+        return "ByzantiumToConstantinopleAt5";
     case eth::Network::TransitionnetTest:
         return "TransitionNet";
     default:
@@ -136,7 +138,7 @@ eth::Network stringToNetId(string const& _netname)
             eth::Network::EIP158Test, eth::Network::ByzantiumTest, eth::Network::ConstantinopleTest,
             eth::Network::FrontierToHomesteadAt5, eth::Network::HomesteadToDaoAt5,
             eth::Network::HomesteadToEIP150At5, eth::Network::EIP158ToByzantiumAt5,
-            eth::Network::TransitionnetTest}};
+            eth::Network::ByzantiumToConstantinopleAt5, eth::Network::TransitionnetTest}};
 
     for (auto const& net : networks)
         if (netIdToString(net) == _netname)

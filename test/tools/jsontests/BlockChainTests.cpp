@@ -1075,6 +1075,7 @@ BOOST_AUTO_TEST_CASE(bcFrontierToHomestead){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToDao){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150){}
 BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium){}
+BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinople) {}
 
 BOOST_AUTO_TEST_SUITE_END()
 
@@ -1132,6 +1133,9 @@ BOOST_AUTO_TEST_CASE(stBugs){}
 
 //Constantinople Tests
 BOOST_AUTO_TEST_CASE(stShift){}
+BOOST_AUTO_TEST_CASE(stCreate2){}
+BOOST_AUTO_TEST_CASE(stExtCodeHash){}
+BOOST_AUTO_TEST_CASE(stSStoreTest){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}

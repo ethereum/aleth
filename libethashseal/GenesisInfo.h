@@ -71,6 +71,7 @@ enum class Network
     HomesteadToDaoAt5 = 101,
     HomesteadToEIP150At5 = 102,
     EIP158ToByzantiumAt5 = 103,
+    ByzantiumToConstantinopleAt5 = 104,
 
     Special = 0xff  ///< Something else.
 };

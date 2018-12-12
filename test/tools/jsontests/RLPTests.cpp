@@ -77,7 +77,7 @@ void doRlpTests(json_spirit::mValue const& _input)
         {
             RLPStream s;
             dev::test::buildRLP(o.at("in"), s);
-            string computedText = toHex(s.out());
+            string computedText = toHexPrefixed(s.out());
 
             string expectedText(o.at("out").get_str());
             transform(expectedText.begin(), expectedText.end(), expectedText.begin(), ::tolower);
