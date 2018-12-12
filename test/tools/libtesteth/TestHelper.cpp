@@ -497,9 +497,9 @@ string compileLLL(string const& _code)
     return "";
 #else
     fs::path path(fs::temp_directory_path() / fs::unique_path());
-    string cmd = string("lllc ") + path.string();
     writeFile(path.string(), _code);
-    string result = executeCmd(cmd);
+    // NOTE: this will abort if execution failed
+    string result = executeCmd(string("lllc ") + path.string());
     fs::remove(path);
     result = "0x" + result;
     checkHexHasEvenLength(result);
