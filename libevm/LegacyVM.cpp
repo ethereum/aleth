@@ -21,7 +21,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-uint64_t LegacyVM::memNeed(u256 _offset, u256 _size)
+uint64_t LegacyVM::memNeed(u256 const& _offset, u256 const& _size)
 {
     return toInt63(_size ? u512(_offset) + _size : u512(0));
 }
@@ -160,7 +160,7 @@ void LegacyVM::updateSSGasEIP1283(u256 const& _currentValue, u256 const& _newVal
 }
 
 
-uint64_t LegacyVM::gasForMem(u512 _size)
+uint64_t LegacyVM::gasForMem(u512 const& _size)
 {
     u512 s = _size / 32;
     return toInt63((u512)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv);

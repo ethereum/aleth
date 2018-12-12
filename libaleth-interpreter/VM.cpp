@@ -131,7 +131,7 @@ namespace dev
 {
 namespace eth
 {
-uint64_t VM::memNeed(u256 _offset, u256 _size)
+uint64_t VM::memNeed(u256 const& _offset, u256 const& _size)
 {
     return toInt63(_size ? u512(_offset) + _size : u512(0));
 }
@@ -196,7 +196,7 @@ void VM::adjustStack(int _removed, int _added)
         throwBadStack(_removed, _added);
 }
 
-uint64_t VM::gasForMem(u512 _size)
+uint64_t VM::gasForMem(u512 const& _size)
 {
     constexpr int64_t memoryGas = VMSchedule::memoryGas;
     constexpr int64_t quadCoeffDiv = VMSchedule::quadCoeffDiv;
