@@ -15,6 +15,8 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include <libdevcore/Exceptions.h>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <set>
