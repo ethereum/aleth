@@ -210,10 +210,13 @@ public:
 		unsigned ret = 0;
 		for (auto d: m_data)
 			if (d)
+			{
 				for (;; ++ret, d <<= 1)
+				{
 					if (d & 0x80)
 						return ret;
-					else {}
+				}
+			}
 			else
 				ret += 8;
 		return ret;

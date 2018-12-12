@@ -1019,9 +1019,10 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
             byte n = _k[0];
             for (byte i = 0; i < 17; ++i)
                 if (i == n)
+                {
                     if (!deleteAtAux(r, _orig[i], _k.mid(1)))	// bomb out if the key didn't turn up.
                         return bytes();
-                    else {}
+                }
                 else
                     r << _orig[i];
 
