@@ -179,8 +179,9 @@ public:
         StreamList,
         StreamInline
     };
-    
-    /// Setting true causes isAllowed to return true for all addresses. (Used by test fixtures)
+
+    /// Setting true causes isAllowed to return true for all addresses. (Used by test fixtures and
+    /// configurable via an aleth/aleth-bootnode command line argument)
     static bool test_allowLocal;
 
     NodeIPEndpoint() = default;
@@ -284,6 +285,7 @@ public:
 
 class DeadlineOps
 {
+    // Boost deadline timer wrapper which provides thread-safety
     class DeadlineOp
     {
     public:

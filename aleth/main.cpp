@@ -287,6 +287,8 @@ int main(int argc, char** argv)
         "Connect to the given remote port (default: 30303)");
     addNetworkingOption("network-id", po::value<unsigned>()->value_name("<n>"),
         "Only connect to other hosts with this network id");
+    addNetworkingOption("allow-local-discovery",
+        "Include local addresses in the discovery process. Used for testing purposes.");
 #if ETH_MINIUPNPC
     addNetworkingOption(
         "upnp", po::value<string>()->value_name("<on/off>"), "Use UPnP for NAT (default: on)");
@@ -631,6 +633,8 @@ int main(int argc, char** argv)
             cerr << "Bad " << "--network-id" << " option: " << vm["network-id"].as<string>() << "\n";
             return -1;
         }
+    if (vm.count("allow-local-discovery"))
+        NodeIPEndpoint::test_allowLocal = true;
     if (vm.count("private"))
         try
         {

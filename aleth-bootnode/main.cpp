@@ -59,8 +59,9 @@ int main(int argc, char** argv)
     addNetworkingOption("listen-ip", po::value<string>()->value_name("<ip>(:<port>)"),
         "Listen on the given IP for incoming connections (default: 0.0.0.0)");
     addNetworkingOption("listen", po::value<unsigned short>()->value_name("<port>"),
-        "Listen on the given port for incoming connections (default: 30303)\n");
-
+        "Listen on the given port for incoming connections (default: 30303)");
+    addNetworkingOption("allow-local-discovery",
+        "Include local addresses in the discovery process. Used for testing purposes.");
     po::options_description allowedOptions("Allowed options");
     allowedOptions.add(generalOptions).add(loggingProgramOptions).add(clientNetworking);
 
@@ -117,7 +118,8 @@ int main(int argc, char** argv)
         listenIP = vm["listen-ip"].as<string>();
     if (vm.count("listen"))
         listenPort = vm["listen"].as<unsigned short>();
-
+    if (vm.count("allow-local-discovery"))
+        NodeIPEndpoint::test_allowLocal = true;
     setupLogging(loggingOptions);
     if (loggingOptions.verbosity > 0)
         cout << EthGrayBold << c_programName << ", a C++ Ethereum bootnode implementation" EthReset
