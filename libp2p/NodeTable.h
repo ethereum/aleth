@@ -159,7 +159,11 @@ public:
     std::list<NodeID> nodes() const;
 
     /// Returns node count.
-    unsigned count() const { return m_allNodes.size(); }
+    unsigned count() const
+    {
+        Guard l(x_nodes);
+        return m_allNodes.size();
+    }
 
     /// Returns snapshot of table.
     std::list<NodeEntry> snapshot() const;
@@ -208,12 +212,6 @@ protected:
     /// Used ping known node. Used by node table when refreshing buckets and as part of eviction process (see evict).
     void ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID = {});
 
-    /// Returns center node entry which describes this node and used with dist() to calculate xor metric for node table nodes.
-    NodeEntry center() const
-    {
-        return NodeEntry(m_hostNode.id, m_hostNode.publicKey(), m_hostNode.endpoint);
-    }
-
     /// Used by asynchronous operations to return NodeEntry which is active and managed by node table.
     std::shared_ptr<NodeEntry> nodeEntry(NodeID _id);
 
@@ -259,8 +257,8 @@ protected:
 
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
-    /// This node. LOCK x_state if endpoint access or mutation is required. Do not modify id.
-    Node m_hostNode;
+    NodeID const m_hostNodeID;
+    NodeIPEndpoint m_hostNodeEndpoint;
     Secret m_secret;												///< This nodes secret key.
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
@@ -284,9 +282,9 @@ protected:
 
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 {
-    _out << _nodeTable.center().address() << "\t"
-         << "0\t" << _nodeTable.center().endpoint.address() << ":"
-         << _nodeTable.center().endpoint.udpPort() << std::endl;
+    _out << _nodeTable.m_hostNodeID << "\t"
+         << "0\t" << _nodeTable.m_hostNodeEndpoint.address() << ":"
+         << _nodeTable.m_hostNodeEndpoint.udpPort() << std::endl;
     auto s = _nodeTable.snapshot();
     for (auto n: s)
         _out << n.address() << "\t" << n.distance << "\t" << n.endpoint.address() << ":"

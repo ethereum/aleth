@@ -48,10 +48,11 @@ NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint con
 
 NodeTable::NodeTable(
     ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled)
-  : m_hostNode(Node(_alias.pub(), _endpoint)),
+  : m_hostNodeID(_alias.pub()),
+    m_hostNodeEndpoint(_endpoint),
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
-        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNode.endpoint)),
+        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
     m_timers(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -89,7 +90,7 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
 {
     if (_relation == Known)
     {
-        auto nodeEntry = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
+        auto nodeEntry = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
         // mark as validated
         // TODO get last pong time as input, ping if needed
         nodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
@@ -107,7 +108,7 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
             return;
     }
 
-    auto nodeEntry = make_shared<NodeEntry>(m_hostNode.id, _node.id, _node.endpoint);
+    auto nodeEntry = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
     LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
     ping(*nodeEntry);
@@ -226,7 +227,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
 {
     // send s_alpha FindNode packets to nodes we know, closest to target
     static unsigned lastBin = s_bins - 1;
-    unsigned head = distance(m_hostNode.id, _target);
+    unsigned head = distance(m_hostNodeID, _target);
     unsigned tail = head == 0 ? lastBin : (head - 1) % s_bins;
     
     map<unsigned, list<shared_ptr<NodeEntry>>> found;
@@ -284,10 +285,10 @@ void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const&
             return;
 
         NodeIPEndpoint src;
-        DEV_GUARDED(x_nodes) { src = m_hostNode.endpoint; }
+        src = m_hostNodeEndpoint;
         PingNode p(src, _nodeEntry.endpoint);
         auto const pingHash = p.sign(m_secret);
-	    LOG(m_logger) << p.typeName() << " to " << _nodeEntry.id << "@" << p.destination;
+        LOG(m_logger) << p.typeName() << " to " << _nodeEntry.id << "@" << p.destination;
         m_socket->send(p);
 
         m_sentPings[_nodeEntry.id] = {chrono::steady_clock::now(), pingHash, _replacementNodeID};
@@ -304,7 +305,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
 {
-    if (_pubk == m_hostNode.address() ||
+    if (_pubk == m_hostNodeID ||
         !NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).isAllowed())
         return;
 
@@ -440,10 +441,10 @@ void NodeTable::onPacketReceived(
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_hostNode.endpoint || !m_hostNode.endpoint.isAllowed()) &&
+                    if ((!m_hostNodeEndpoint || !m_hostNodeEndpoint.isAllowed()) &&
                         isPublicAddress(pong.destination.address()))
-                        m_hostNode.endpoint.setAddress(pong.destination.address());
-                    m_hostNode.endpoint.setUdpPort(pong.destination.udpPort());
+                        m_hostNodeEndpoint.setAddress(pong.destination.address());
+                    m_hostNodeEndpoint.setUdpPort(pong.destination.udpPort());
                 }
                 break;
             }

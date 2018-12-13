@@ -97,7 +97,7 @@ struct TestNodeTable: public NodeTable
                 {
                     Guard ln(x_nodes);
                     shared_ptr<NodeEntry> node(new NodeEntry(
-                        m_hostNode.id, n.first, NodeIPEndpoint(ourIp, n.second, n.second)));
+                        m_hostNodeID, n.first, NodeIPEndpoint(ourIp, n.second, n.second)));
                     node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
                     m_allNodes[node->id] = node;
                 }
@@ -121,7 +121,7 @@ struct TestNodeTable: public NodeTable
             // manually add node for test
             {
                 Guard ln(x_nodes);
-                shared_ptr<NodeEntry> node(new NodeEntry(m_hostNode.id, testNode->first,
+                shared_ptr<NodeEntry> node(new NodeEntry(m_hostNodeID, testNode->first,
                     NodeIPEndpoint(ourIp, testNode->second, testNode->second)));
                 node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
                 m_allNodes[node->id] = node;
@@ -160,7 +160,8 @@ struct TestNodeTable: public NodeTable
 
     using NodeTable::m_allNodes;
     using NodeTable::m_buckets;
-    using NodeTable::m_hostNode;
+    using NodeTable::m_hostNodeID;
+    using NodeTable::m_hostNodeEndpoint;
     using NodeTable::m_sentPings;
     using NodeTable::m_socket;
     using NodeTable::noteActiveNode;
@@ -460,7 +461,7 @@ BOOST_AUTO_TEST_CASE(unexpectedPong)
     TestNodeTableHost nodeTableHost(0);
     nodeTableHost.start();
 
-    Pong pong(nodeTableHost.nodeTable->m_hostNode.endpoint);
+    Pong pong(nodeTableHost.nodeTable->m_hostNodeEndpoint);
     auto nodeKeyPair = KeyPair::create();
     pong.sign(nodeKeyPair.secret());
 
@@ -493,7 +494,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     nodeTableHost.nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // send PONG
-    Pong pong(nodeTableHost.nodeTable->m_hostNode.endpoint);
+    Pong pong(nodeTableHost.nodeTable->m_hostNodeEndpoint);
     pong.sign(nodeKeyPair.secret());
 
     nodeSocketHost.socket->send(pong);
@@ -530,7 +531,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
-    Pong pong(nodeTableHost.nodeTable->m_hostNode.endpoint);
+    Pong pong(nodeTableHost.nodeTable->m_hostNodeEndpoint);
     pong.echo = ping.echo;
     pong.sign(nodeKeyPair.secret());
     nodeSocketHost.socket->send(pong);
