@@ -276,9 +276,10 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
     return ret;
 }
 
-void NodeTable::ping(NodeEntry const& _nodeEntry)
+void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID)
 {
-    m_timers.schedule(0, [this, _nodeEntry](boost::system::error_code const& _ec) {
+    m_timers.schedule(0, [this, _nodeEntry, _replacementNodeID](
+                             boost::system::error_code const& _ec) {
         if (_ec || m_timers.isStopped())
             return;
 
@@ -289,7 +290,7 @@ void NodeTable::ping(NodeEntry const& _nodeEntry)
 	    LOG(m_logger) << p.typeName() << " to " << _nodeEntry.id << "@" << p.destination;
         m_socket->send(p);
 
-        m_sentPings[_nodeEntry.id] = std::make_pair(chrono::steady_clock::now(), pingHash);
+        m_sentPings[_nodeEntry.id] = {chrono::steady_clock::now(), pingHash, _replacementNodeID};
     });
 }
 
@@ -297,18 +298,8 @@ void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 {
     if (!m_socket->isOpen())
         return;
-    
-    unsigned evicts = 0;
-    DEV_GUARDED(x_evictions)
-    {
-        EvictionTimeout evictTimeout{_new.id, chrono::steady_clock::now()};  
-        m_evictions.emplace(_leastSeen.id, evictTimeout);
-        evicts = m_evictions.size();
-    }
 
-    if (evicts == 1)
-        doCheckEvictions();
-    ping(_leastSeen);
+    ping(_leastSeen, _new.id);
 }
 
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
@@ -426,37 +417,25 @@ void NodeTable::onPacketReceived(
                     return;
                 }
 
-                if (pong.echo != sentPing->second.second)
+                if (pong.echo != sentPing->second.pingHash)
                 {
                     LOG(m_logger) << "Invalid PONG from " << _from.address().to_string() << ":"
                                   << _from.port();
                     return;
                 }
 
-                m_sentPings.erase(sentPing);
                 auto const sourceNodeEntry = nodeEntry(sourceId);
                 assert(sourceNodeEntry.get());
                 sourceNodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
 
-                // Whenever a pong is received, check if it's in m_evictions.
-                // Don't evict it if valid PONG received.
-                EvictionTimeout evictionEntry;
-                NodeID replacementNodeID;
-                DEV_GUARDED(x_evictions)
-                {
-                    auto e = m_evictions.find(sourceId);
-                    if (e != m_evictions.end() &&
-                        e->second.evictedTimePoint + c_reqTimeout >=
-                        std::chrono::steady_clock::now())
-                    {
-                        replacementNodeID = e->second.newNodeID;
-                        m_evictions.erase(e);
-                    }
-                }
-                // if we don't want to evict, we don't need to remember replacement anymore
-                if (replacementNodeID)
-                    if (auto replacementNode = nodeEntry(replacementNodeID))
+                // Valid PONG received, so we don't want to evict this node,
+                // and we don't need to remember replacement node anymore
+                auto const& optionalReplacementID = sentPing->second.replacementNodeID;
+                if (optionalReplacementID)
+                    if (auto replacementNode = nodeEntry(*optionalReplacementID))
                         dropNode(move(replacementNode));
+
+                m_sentPings.erase(sentPing);
 
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
@@ -466,8 +445,6 @@ void NodeTable::onPacketReceived(
                         m_hostNode.endpoint.setAddress(pong.destination.address());
                     m_hostNode.endpoint.setUdpPort(pong.destination.udpPort());
                 }
-
-                LOG(m_logger) << "PONG from " << sourceId << " " << _from;
                 break;
             }
 
@@ -545,65 +522,6 @@ void NodeTable::onPacketReceived(
     }
 }
 
-void NodeTable::doCheckEvictions()
-{
-    m_timers.schedule(c_evictionCheckInterval.count(), [this](boost::system::error_code const& _ec)
-    {
-        if (_ec)
-            // we can't use m_logger here, because captured this might be already destroyed
-            clog(VerbosityDebug, "discov")
-                << "Check Evictions timer was probably cancelled: " << _ec.value() << " "
-                << _ec.message();
-
-        if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
-            return;
-        
-        list<shared_ptr<NodeEntry>> drop;
-        list<shared_ptr<NodeEntry>> active;
-
-        {
-            Guard le(x_evictions);
-            Guard ln(x_nodes);
-            for (auto const& e : m_evictions)
-            {
-                NodeID const& evictedID = e.first;
-                NodeID const& replacementID = e.second.newNodeID;
-                TimePoint const& evictedTimePoint = e.second.evictedTimePoint;
-
-                if (chrono::steady_clock::now() - evictedTimePoint > c_reqTimeout)
-                {
-                    auto const itEvicted = m_allNodes.find(evictedID);
-                    if (itEvicted != m_allNodes.end())
-                    {
-                        // save the evicted node to be dropped below (outside of Guards)
-                        drop.push_back(itEvicted->second);
-
-                        // save the replacement node that should be activated
-                        auto const itReplacement = m_allNodes.find(replacementID);
-                        if (itReplacement != m_allNodes.end())
-                            active.push_back(itReplacement->second);
-                    }
-                }
-            }
-
-            // remove evicted nodes from m_evictions
-            drop.unique();
-            for (auto const& n : drop)
-                m_evictions.erase(n->id);
-        }
-
-        for (auto const& n : drop)
-            dropNode(move(n));
-
-        // activate replacement nodes and put them into buckets
-        for (auto const& n : active)
-            noteActiveNode(n->id, n->endpoint);
-
-        if (!m_evictions.empty())
-            doCheckEvictions();
-    });
-}
-
 void NodeTable::doDiscovery()
 {
     m_timers.schedule(c_bucketRefresh.count(), [this](boost::system::error_code const& _ec)
@@ -631,18 +549,31 @@ void NodeTable::doHandleTimeouts()
         if ((_ec && _ec.value() == boost::asio::error::operation_aborted) || m_timers.isStopped())
             return;
 
+        vector<shared_ptr<NodeEntry>> nodesToActivate;
         for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
         {
-            if (chrono::steady_clock::now() > it->second.first + DiscoveryDatagram::c_timeToLive)
+            if (chrono::steady_clock::now() >
+                it->second.pingSendTime + DiscoveryDatagram::c_timeToLive)
             {
                 if (auto node = nodeEntry(it->first))
+                {
                     dropNode(move(node));
+
+                    // save the replacement node that should be activated
+                    if (it->second.replacementNodeID)
+                        if (auto replacement = nodeEntry(*it->second.replacementNodeID))
+                            nodesToActivate.emplace_back(replacement);
+                }
 
                 it = m_sentPings.erase(it);
             }
             else
                 ++it;
         }
+
+        // activate replacement nodes and put them into buckets
+        for (auto const& n : nodesToActivate)
+            noteActiveNode(n->id, n->endpoint);
 
         doHandleTimeouts();
     });

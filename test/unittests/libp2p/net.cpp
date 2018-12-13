@@ -160,8 +160,8 @@ struct TestNodeTable: public NodeTable
 
     using NodeTable::m_allNodes;
     using NodeTable::m_buckets;
-    using NodeTable::m_evictions;
     using NodeTable::m_hostNode;
+    using NodeTable::m_sentPings;
     using NodeTable::m_socket;
     using NodeTable::noteActiveNode;
 };
@@ -395,6 +395,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     TestNodeTableHost nodeTableHost(512);
     int const bucketIndex = nodeTableHost.populateUntilBucketSize(16);
     BOOST_REQUIRE(bucketIndex >= 0);
+    nodeTableHost.start();
 
     // generate new address for the same bucket
     NodeID newNodeId;
@@ -413,14 +414,18 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
         Node(newNodeId, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30000, 30000)),
         NodeTable::Known);
 
+    // wait for PING to be sent out
+    this_thread::sleep_for(std::chrono::milliseconds(100));
+
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodes.size(), 16);
     // least recently seen node not removed yet
     BOOST_CHECK_EQUAL(nodes.front().lock(), leastRecentlySeenNode);
     // but added to evictions
-    auto evicted = nodeTable->m_evictions.find(leastRecentlySeenNode->id);
-    BOOST_REQUIRE(evicted != nodeTable->m_evictions.end());
-    BOOST_CHECK_EQUAL(evicted->second.newNodeID, newNodeId);
+    auto evicted = nodeTable->m_sentPings.find(leastRecentlySeenNode->id);
+    BOOST_REQUIRE(evicted != nodeTable->m_sentPings.end());
+    BOOST_REQUIRE(evicted->second.replacementNodeID);
+    BOOST_CHECK_EQUAL(*evicted->second.replacementNodeID, newNodeId);
 }
 
 BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)

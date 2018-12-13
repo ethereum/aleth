@@ -125,13 +125,14 @@ class NodeTable : UDPSocketEvents
     using NodeIdTimePoint = std::pair<NodeID, TimePoint>;
 
     /**
-     * EvictionTimeout is used to record the timepoint of the evicted node 
-     * and the new node ID is used to replace it.
+     * NodeValidation is used to record the timepoint of sent PING,
+     * time of sending and the new node ID to replace unresponsive node.
      */
-    struct EvictionTimeout
-    { 
-        NodeID newNodeID;
-        TimePoint evictedTimePoint;
+    struct NodeValidation
+    {
+        TimePoint pingSendTime;
+        h256 pingHash;
+        boost::optional<NodeID> replacementNodeID;
     };
 
 public:
@@ -205,7 +206,7 @@ protected:
     };
 
     /// Used ping known node. Used by node table when refreshing buckets and as part of eviction process (see evict).
-    void ping(NodeEntry const& _nodeEntry);
+    void ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID = {});
 
     /// Returns center node entry which describes this node and used with dist() to calculate xor metric for node table nodes.
     NodeEntry center() const
@@ -267,17 +268,14 @@ protected:
 
     mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.
     std::array<NodeBucket, s_bins> m_buckets;                       ///< State of p2p node network.
-
-    Mutex x_evictions;												///< LOCK x_evictions first if both x_nodes and x_evictions locks are required.
-    std::unordered_map<NodeID, EvictionTimeout> m_evictions;		///< Eviction timeouts.
     
     Mutex x_findNodeTimeout;
     std::list<NodeIdTimePoint> m_findNodeTimeout;					///< Timeouts for FindNode requests.
 
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 
-    // The hashes of PING packets we've sent to other nodes and haven't received PONG yet
-    std::unordered_map<NodeID, std::pair<TimePoint, h256>> m_sentPings;
+    // The info about PING packets we've sent to other nodes and haven't received PONG yet
+    std::unordered_map<NodeID, NodeValidation> m_sentPings;
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
 
