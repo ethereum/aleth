@@ -47,9 +47,10 @@ h256 RLPXDatagramFace::sign(Secret const& _k)
     rlpx.copyTo(rlpxPayload);
     
     bytesConstRef signedRLPx(&data[h256::size], data.size() - h256::size);
-    dev::sha3(signedRLPx).ref().copyTo(rlpxHash);
+    h256 hash(dev::sha3(signedRLPx));
+    hash.ref().copyTo(rlpxHash);
 
-    return sighash;
+    return hash;
 }
 
 Public RLPXDatagramFace::authenticate(bytesConstRef _sig, bytesConstRef _rlp)
