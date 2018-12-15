@@ -1,18 +1,18 @@
 /*
-    This file is part of cpp-ethereum.
+    This file is part of aleth.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
+    aleth is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
+    aleth is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    along with aleth.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
@@ -87,7 +87,7 @@ struct Reputation
 class ReputationManager
 {
 public:
-    ReputationManager();
+    ReputationManager() = default;
 
     void noteRude(SessionFace const& _s, std::string const& _sub = std::string());
     bool isRude(SessionFace const& _s, std::string const& _sub = std::string()) const;
@@ -317,9 +317,9 @@ private:
     ba::io_service m_ioService;											///< IOService for network stuff.
     bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
-    std::unique_ptr<boost::asio::deadline_timer> m_timer;					///< Timer which, when network is running, calls scheduler() every c_timerInterval ms.
+    std::unique_ptr<ba::deadline_timer> m_timer;					///< Timer which, when network is running, calls run() every c_timerInterval ms.
     mutable std::mutex x_runTimer;	///< Start/stop mutex.
-    static const unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
+    static constexpr unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
     std::condition_variable m_timerReset;
 
     std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
@@ -352,7 +352,7 @@ private:
     std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
 
     /// Deadline timers used for isolated network events. GC'd by run.
-    std::list<std::unique_ptr<boost::asio::deadline_timer>> m_timers;
+    std::list<std::unique_ptr<ba::deadline_timer>> m_timers;
     Mutex x_timers;
 
     std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
