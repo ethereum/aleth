@@ -759,20 +759,24 @@ void Host::startedWorking()
         m_run = true;
     }
 
-    // start capability threads (ready for incoming connections)
-    for (auto const& h: m_capabilities)
-        h.second->onStarting();
-    
-    // try to open acceptor (todo: ipv6)
-    int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
-    if (port > 0)
+    if (m_capabilities.size())
     {
-        m_listenPort = port;
-        determinePublic();
-        runAcceptor();
+        // start capability threads (ready for incoming connections)
+        for (auto const& h : m_capabilities)
+            h.second->onStarting();
+
+        // try to open acceptor (todo: ipv6)
+        int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
+        if (port > 0)
+        {
+            m_listenPort = port;
+            determinePublic();
+            runAcceptor();
+        }
+        else
+            LOG(m_logger) << "p2p.start.notice id: " << id()
+                          << " TCP Listen port is invalid or unavailable.";
     }
-    else
-        LOG(m_logger) << "p2p.start.notice id: " << id() << " TCP Listen port is invalid or unavailable.";
 
     auto nodeTable = make_shared<NodeTable>(
         m_ioService,
@@ -786,7 +790,10 @@ void Host::startedWorking()
         m_nodeTable = nodeTable;
     restoreNetwork(&m_restoreNetwork);
 
-    LOG(m_logger) << "p2p.started id: " << id();
+    if (m_capabilities.size())
+        LOG(m_logger) << "p2p.started id: " << id();
+    else
+        LOG(m_logger) << "no capabilities detected, p2p not started";
 
     run(boost::system::error_code());
 }
