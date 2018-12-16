@@ -778,13 +778,14 @@ void Host::startedWorking()
                           << " TCP Listen port is invalid or unavailable.";
     }
 
-    auto nodeTable = make_shared<NodeTable>(
-        m_ioService,
-        m_alias,
-        NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()),
-        m_netConfig.discovery,
-        m_netConfig.allowLocalDiscovery
-    );
+    auto nodeTable = make_shared<NodeTable>(m_ioService, m_alias,
+        // Use data from network configuration rather than Host's settings because p2p might not
+        // have been started
+        NodeIPEndpoint(!m_netConfig.listenIPAddress.empty() ?
+                           bi::address::from_string(m_netConfig.listenIPAddress) :
+                           bi::address_v4(),
+            m_netConfig.listenPort /* UDP */, m_netConfig.listenPort /* TCP */),
+        m_netConfig.discovery);
     nodeTable->setEventHandler(new HostNodeTableHandler(*this));
     DEV_GUARDED(x_nodeTable)
         m_nodeTable = nodeTable;
