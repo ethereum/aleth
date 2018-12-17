@@ -239,25 +239,12 @@ void pushFront(T& _t, _U _e)
 	_t[0] = _e;
 }
 
-/// Concatenate two vectors of elements of POD types.
-template <class T>
-inline std::vector<T>& operator+=(std::vector<typename std::enable_if<std::is_pod<T>::value, T>::type>& _a, std::vector<T> const& _b)
-{
-	auto s = _a.size();
-	_a.resize(_a.size() + _b.size());
-	memcpy(_a.data() + s, _b.data(), _b.size() * sizeof(T));
-	return _a;
-
-}
-
 /// Concatenate two vectors of elements.
 template <class T>
-inline std::vector<T>& operator+=(std::vector<typename std::enable_if<!std::is_pod<T>::value, T>::type>& _a, std::vector<T> const& _b)
+inline std::vector<T>& operator+=(std::vector<T>& _a, std::vector<T> const& _b)
 {
-	_a.reserve(_a.size() + _b.size());
-	for (auto& i: _b)
-		_a.push_back(i);
-	return _a;
+    _a.insert(_a.end(), _b.begin(), _b.end());
+    return _a;
 }
 
 /// Insert the contents of a container into a set
@@ -304,10 +291,9 @@ template <class T, class U> std::vector<T> operator+(std::vector<T> _a, U const&
 
 /// Concatenate two vectors of elements.
 template <class T>
-inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& _b)
+inline std::vector<T> operator+(std::vector<T> _a, std::vector<T> const& _b)
 {
-	std::vector<T> ret(_a);
-	return ret += _b;
+    return _a += _b;
 }
 
 
