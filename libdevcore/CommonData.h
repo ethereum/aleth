@@ -239,11 +239,11 @@ void pushFront(T& _t, _U _e)
 	_t[0] = _e;
 }
 
-/// Concatenate two vectors of elements.
-template <class T>
-inline std::vector<T>& operator+=(std::vector<T>& _a, std::vector<T> const& _b)
+/// Concatenate the contents of a container onto a vector.
+template <class T, class U>
+inline std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
 {
-    _a.insert(_a.end(), _b.begin(), _b.end());
+    _a.insert(_a.end(), std::begin(_b), std::end(_b));
     return _a;
 }
 
@@ -263,14 +263,6 @@ std::unordered_set<T>& operator+=(std::unordered_set<T>& _a, U const& _b)
     return _a;
 }
 
-/// Concatenate the contents of a container onto a vector
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
-{
-	for (auto const& i: _b)
-		_a.push_back(i);
-	return _a;
-}
-
 /// Insert the contents of a container into a set
 template <class T, class U> std::set<T> operator+(std::set<T> _a, U const& _b)
 {
@@ -287,13 +279,6 @@ template <class T, class U> std::unordered_set<T> operator+(std::unordered_set<T
 template <class T, class U> std::vector<T> operator+(std::vector<T> _a, U const& _b)
 {
 	return _a += _b;
-}
-
-/// Concatenate two vectors of elements.
-template <class T>
-inline std::vector<T> operator+(std::vector<T> _a, std::vector<T> const& _b)
-{
-    return _a += _b;
 }
 
 
