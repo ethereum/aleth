@@ -248,19 +248,19 @@ inline std::vector<T>& operator+=(std::vector<T>& _a, std::vector<T> const& _b)
 }
 
 /// Insert the contents of a container into a set
-template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
+template <class T, class U>
+std::set<T>& operator+=(std::set<T>& _a, U const& _b)
 {
-	for (auto const& i: _b)
-		_a.insert(i);
-	return _a;
+    _a.insert(std::begin(_b), std::end(_b));
+    return _a;
 }
 
 /// Insert the contents of a container into an unordered_set
-template <class T, class U> std::unordered_set<T>& operator+=(std::unordered_set<T>& _a, U const& _b)
+template <class T, class U>
+std::unordered_set<T>& operator+=(std::unordered_set<T>& _a, U const& _b)
 {
-	for (auto const& i: _b)
-		_a.insert(i);
-	return _a;
+    _a.insert(std::begin(_b), std::end(_b));
+    return _a;
 }
 
 /// Concatenate the contents of a container onto a vector
