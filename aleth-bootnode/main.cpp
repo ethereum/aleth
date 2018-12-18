@@ -118,8 +118,6 @@ int main(int argc, char** argv)
         listenIP = vm["listen-ip"].as<string>();
     if (vm.count("listen"))
         listenPort = vm["listen"].as<unsigned short>();
-    if (vm.count("allow-local-discovery"))
-        NodeIPEndpoint::test_allowLocal = true;
     setupLogging(loggingOptions);
     if (loggingOptions.verbosity > 0)
         cout << EthGrayBold << c_programName << ", a C++ Ethereum bootnode implementation" EthReset
@@ -127,6 +125,7 @@ int main(int argc, char** argv)
 
     auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) :
                                        NetworkConfig(publicIP, listenIP, listenPort, upnp);
+    netPrefs.allowLocalDiscovery = vm.count("allow-local-discovery") != 0;
     auto netData = contents(getDataDir() / fs::path(c_networkConfigFileName));
 
     Host h(c_programName, netPrefs, &netData);

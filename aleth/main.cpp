@@ -633,8 +633,6 @@ int main(int argc, char** argv)
             cerr << "Bad " << "--network-id" << " option: " << vm["network-id"].as<string>() << "\n";
             return -1;
         }
-    if (vm.count("allow-local-discovery"))
-        NodeIPEndpoint::test_allowLocal = true;
     if (vm.count("private"))
         try
         {
@@ -768,6 +766,7 @@ int main(int argc, char** argv)
 
     auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) : NetworkConfig(publicIP, listenIP ,listenPort, upnp);
     netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
+    netPrefs.allowLocalDiscovery = vm.count("allow-local-discovery") != 0;
     netPrefs.pin = vm.count("pin") != 0;
 
     auto nodesState = contents(getDataDir() / fs::path("network.rlp"));

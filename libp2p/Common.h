@@ -68,6 +68,7 @@ bool isLocalHostAddress(bi::address const& _addressToCheck);
 bool isLocalHostAddress(std::string const& _addressToCheck);
 bool isPublicAddress(bi::address const& _addressToCheck);
 bool isPublicAddress(std::string const& _addressToCheck);
+bool isAllowedAddress(bool _allowLocalDiscovery, bi::address const& _addressToCheck);
 
 class UPnP;
 class Host;
@@ -180,10 +181,6 @@ public:
         StreamInline
     };
 
-    /// Setting true causes isAllowed to return true for all addresses. (Used by test fixtures and
-    /// configurable via an aleth/aleth-bootnode command line argument)
-    static bool test_allowLocal;
-
     NodeIPEndpoint() = default;
     NodeIPEndpoint(bi::address _addr, uint16_t _udp, uint16_t _tcp)
       : m_address(_addr), m_udpPort(_udp), m_tcpPort(_tcp)
@@ -194,12 +191,6 @@ public:
     operator bi::tcp::endpoint() const { return bi::tcp::endpoint(m_address, m_tcpPort); }
 
     operator bool() const { return !m_address.is_unspecified() && m_udpPort > 0 && m_tcpPort > 0; }
-
-    bool isAllowed() const
-    {
-        return NodeIPEndpoint::test_allowLocal ? !m_address.is_unspecified() :
-                                                 isPublicAddress(m_address);
-    }
 
     bool operator==(NodeIPEndpoint const& _cmp) const {
         return m_address == _cmp.m_address && m_udpPort == _cmp.m_udpPort &&

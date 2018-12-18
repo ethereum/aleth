@@ -140,7 +140,8 @@ public:
     enum DiscoverType { Random = 0 };
     
     /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
-    NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled = true);
+    NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
+        bool _enabled = true, bool _allowLocalDiscovery = false);
     ~NodeTable();
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
@@ -287,6 +288,8 @@ protected:
     std::chrono::seconds m_requestTimeToLive;
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
+
+    bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
     DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
 };

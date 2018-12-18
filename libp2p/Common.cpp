@@ -33,8 +33,6 @@ static_assert(dev::p2p::c_protocolVersion == 4, "Replace v3 compatbility with v4
 const dev::p2p::NodeIPEndpoint dev::p2p::UnspecifiedNodeIPEndpoint = NodeIPEndpoint(bi::address(), 0, 0);
 const dev::p2p::Node dev::p2p::UnspecifiedNode = dev::p2p::Node(NodeID(), UnspecifiedNodeIPEndpoint);
 
-bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
-
 bool p2p::isPublicAddress(std::string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false : isPublicAddress(bi::address::from_string(_addressToCheck));
@@ -43,6 +41,12 @@ bool p2p::isPublicAddress(std::string const& _addressToCheck)
 bool p2p::isPublicAddress(bi::address const& _addressToCheck)
 {
     return !(isPrivateAddress(_addressToCheck) || isLocalHostAddress(_addressToCheck));
+}
+
+bool p2p::isAllowedAddress(bool _allowLocalDiscovery, bi::address const& _addressToCheck)
+{
+    return _allowLocalDiscovery ? !_addressToCheck.is_unspecified() :
+                                  isPublicAddress(_addressToCheck);
 }
 
 // Helper function to determine if an address falls within one of the reserved ranges

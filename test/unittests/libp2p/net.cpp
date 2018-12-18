@@ -36,15 +36,9 @@ using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
-struct NetFixture: public TestOutputHelperFixture
-{
-    NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
-    ~NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
-};
-
 BOOST_AUTO_TEST_SUITE(network)
 
-BOOST_FIXTURE_TEST_SUITE(net, NetFixture)
+BOOST_FIXTURE_TEST_SUITE(net, TestOutputHelperFixture)
 
 /**
  * Only used for testing. Not useful beyond tests.
@@ -65,7 +59,7 @@ protected:
 struct TestNodeTable: public NodeTable
 {
     /// Constructor
-    TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311): NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port)) {}
+    TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311): NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port), true /* discovery enabled */, true /* allow local discovery */) {}
 
     static std::vector<std::pair<Public, uint16_t>> createTestNodes(unsigned _count)
     {
