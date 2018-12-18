@@ -1,19 +1,6 @@
-/*
-    This file is part of aleth.
-
-    aleth is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    aleth is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with aleth.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2018 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "Host.h"
 #include "Capability.h"
@@ -97,7 +84,8 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig co
     m_clientVersion(_clientVersion),
     m_netConfig(_n),
     m_ifAddresses(Network::getInterfaceAddresses()),
-    m_ioService(2), // concurrency hint, suggests how many threads it should allow to run simultaneously
+    m_ioService(2),  // concurrency hint, suggests how many threads it should allow to run
+                     // simultaneously
     m_tcp4Acceptor(m_ioService),
     m_alias(_alias),
     m_lastPing(chrono::steady_clock::time_point::min()),
@@ -703,7 +691,7 @@ void Host::run(boost::system::error_code const&)
     DEV_GUARDED(x_connecting)
         m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
     DEV_GUARDED(x_timers)
-    m_timers.remove_if([](std::unique_ptr<ba::deadline_timer> const& t) {
+    m_timers.remove_if([](std::unique_ptr<io::deadline_timer> const& t) {
         return t->expires_from_now().total_milliseconds() < 0;
     });
 
@@ -755,10 +743,10 @@ void Host::run(boost::system::error_code const&)
     m_timer->async_wait(runcb);
 }
 
-// Called after thread has been started to perform additional class-specific state initialization (e.g. start
-// capability threads, start TCP listener, and kick off timers)
 void Host::startedWorking()
 {
+    // Called after thread has been started to perform additional class-specific state
+    // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
     asserts(!m_timer);
 
     {
@@ -767,7 +755,7 @@ void Host::startedWorking()
         // time, stop will wait on m_timer and graceful network shutdown.
         Guard l(x_runTimer);
         // create deadline timer
-        m_timer.reset(new ba::deadline_timer(m_ioService));
+        m_timer.reset(new io::deadline_timer(m_ioService));
         m_run = true;
     }
 
@@ -1048,7 +1036,7 @@ void Host::forEachPeer(
 
 void Host::scheduleExecution(int _delayMs, std::function<void()> _f)
 {
-    std::unique_ptr<ba::deadline_timer> t(new ba::deadline_timer(m_ioService));
+    std::unique_ptr<io::deadline_timer> t(new io::deadline_timer(m_ioService));
     t->expires_from_now(boost::posix_time::milliseconds(_delayMs));
     t->async_wait([_f](boost::system::error_code const& _ec) {
         if (!_ec)
