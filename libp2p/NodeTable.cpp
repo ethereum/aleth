@@ -569,6 +569,7 @@ void NodeTable::doHandleTimeouts()
                     if (it->second.replacementNodeID)
                         if (auto replacement = nodeEntry(*it->second.replacementNodeID))
                             nodesToActivate.emplace_back(replacement);
+
                 }
 
                 it = m_sentPings.erase(it);
