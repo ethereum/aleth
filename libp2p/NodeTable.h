@@ -38,7 +38,7 @@ struct NodeEntry: public Node
     NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw);
     int const distance = 0;  ///< Node's distance (xor of _src as integer).
     uint32_t lastPongReceivedTime = 0;
-    // TODO uint32_t lastPongSentTime = 0;
+    uint32_t lastPongSentTime = 0;
 };
 
 enum NodeTableEventType

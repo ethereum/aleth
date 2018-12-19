@@ -506,6 +506,8 @@ void NodeTable::onPacketReceived(
                 p.echo = in.echo;
                 p.sign(m_secret);
                 m_socket->send(p);
+                
+                m_allNodes[in.sourceid]->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
                 break;
             }
         }
