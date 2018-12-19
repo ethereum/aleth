@@ -256,13 +256,15 @@ protected:
 
     void doHandleTimeouts();
 
-    // Useful ony for tests.
+    // Useful only for tests.
     void setRequestTimeToLive(std::chrono::seconds const& _time) { m_requestTimeToLive = _time; }
     uint32_t nextRequestExpirationTime() const
     {
         return RLPXDatagramFace::futureFromEpoch(m_requestTimeToLive);
     }
 
+    /// Determines if a node with the supplied address is allowed to participate in discovery.
+    bool isAllowedAddress(bi::address const& _addressToCheck) const;
 
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 

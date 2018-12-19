@@ -855,18 +855,19 @@ bytes Host::saveNetwork() const
         if (!p.endpoint.address().is_v4())
             continue;
 
-        // Only save peers which have connected within 2 days, with properly-advertised port and public IP address
+        // Only save peers which have connected within 2 days, with properly-advertised port and
+        // public IP address
         if (chrono::system_clock::now() - p.m_lastConnected < chrono::seconds(3600 * 48) &&
             !!p.endpoint && p.id != id() &&
-            (p.peerType == PeerType::Required ||
-                isAllowedAddress(m_netConfig.allowLocalDiscovery, p.endpoint.address())))
+            (p.peerType == PeerType::Required || isAllowedAddress(p.endpoint.address())))
         {
             network.appendList(11);
             p.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
             network << p.id << (p.peerType == PeerType::Required ? true : false)
-                << chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
-                << chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
-                << p.m_failedAttempts.load() << (unsigned)p.m_lastDisconnect << p.m_score.load() << p.m_rating.load();
+                    << chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
+                    << chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
+                    << p.m_failedAttempts.load() << (unsigned)p.m_lastDisconnect << p.m_score.load()
+                    << p.m_rating.load();
             count++;
         }
     }
@@ -923,16 +924,14 @@ void Host::restoreNetwork(bytesConstRef _b)
             if (i.itemCount() == 4 || i.itemCount() == 11)
             {
                 Node n((NodeID)i[3], NodeIPEndpoint(i));
-                if (i.itemCount() == 4 &&
-                    isAllowedAddress(m_netConfig.allowLocalDiscovery, n.endpoint.address()))
+                if (i.itemCount() == 4 && isAllowedAddress(n.endpoint.address()))
                 {
                     addNodeToNodeTable(n);
                 }
                 else if (i.itemCount() == 11)
                 {
                     n.peerType = i[4].toInt<bool>() ? PeerType::Required : PeerType::Optional;
-                    if (!isAllowedAddress(m_netConfig.allowLocalDiscovery, n.endpoint.address()) &&
-                        n.peerType == PeerType::Optional)
+                    if (!isAllowedAddress(n.endpoint.address()) && n.peerType == PeerType::Optional)
                         continue;
                     shared_ptr<Peer> p = make_shared<Peer>(n);
                     p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
@@ -950,19 +949,20 @@ void Host::restoreNetwork(bytesConstRef _b)
             }
             else if (i.itemCount() == 3 || i.itemCount() == 10)
             {
-                Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()), i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
-                if (i.itemCount() == 3 &&
-                    isAllowedAddress(m_netConfig.allowLocalDiscovery, n.endpoint.address()))
+                Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()),
+                                         i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
+                if (i.itemCount() == 3 && isAllowedAddress(n.endpoint.address()))
                     addNodeToNodeTable(n);
                 else if (i.itemCount() == 10)
                 {
                     n.peerType = i[3].toInt<bool>() ? PeerType::Required : PeerType::Optional;
-                    if (!isAllowedAddress(m_netConfig.allowLocalDiscovery, n.endpoint.address()) &&
-                        n.peerType == PeerType::Optional)
+                    if (!isAllowedAddress(n.endpoint.address()) && n.peerType == PeerType::Optional)
                         continue;
                     shared_ptr<Peer> p = make_shared<Peer>(n);
-                    p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[4].toInt<unsigned>()));
-                    p->m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
+                    p->m_lastConnected =
+                        chrono::system_clock::time_point(chrono::seconds(i[4].toInt<unsigned>()));
+                    p->m_lastAttempted =
+                        chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
                     p->m_failedAttempts = i[6].toInt<unsigned>();
                     p->m_lastDisconnect = (DisconnectReason)i[7].toInt<unsigned>();
                     p->m_score = (int)i[8].toInt<unsigned>();
@@ -1012,6 +1012,12 @@ bool Host::addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relati
 
     nodeTable->addNode(_node, _relation);
     return true;
+}
+
+bool Host::isAllowedAddress(bi::address const& _addressToCheck) const
+{
+    return m_netConfig.allowLocalDiscovery ? !_addressToCheck.is_unspecified() :
+                                             isPublicAddress(_addressToCheck);
 }
 
 void Host::forEachPeer(

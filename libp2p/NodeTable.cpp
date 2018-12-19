@@ -271,12 +271,12 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
                     found[distance(_target, p->id)].push_back(p);
             tail--;
         }
-    
+
     vector<shared_ptr<NodeEntry>> ret;
-    for (auto& nodes: found)
-        for (auto const& n: nodes.second)
+    for (auto& nodes : found)
+        for (auto const& n : nodes.second)
             if (ret.size() < s_bucketSize && !!n->endpoint &&
-                isAllowedAddress(m_allowLocalDiscovery, n->endpoint.address()))
+                isAllowedAddress(n->endpoint.address()))
                 ret.push_back(n);
     return ret;
 }
@@ -311,8 +311,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
 {
     if (_pubk == m_hostNodeID ||
-        !isAllowedAddress(m_allowLocalDiscovery,
-            NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).address()))
+        !isAllowedAddress(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).address()))
         return;
 
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
@@ -447,8 +446,7 @@ void NodeTable::onPacketReceived(
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_hostNodeEndpoint || !isAllowedAddress(m_allowLocalDiscovery,
-                                                    m_hostNodeEndpoint.address())) &&
+                    if ((!m_hostNodeEndpoint || !isAllowedAddress(m_hostNodeEndpoint.address())) &&
                         isPublicAddress(pong.destination.address()))
                         m_hostNodeEndpoint.setAddress(pong.destination.address());
                     m_hostNodeEndpoint.setUdpPort(pong.destination.udpPort());
@@ -588,6 +586,12 @@ void NodeTable::doHandleTimeouts()
 
         doHandleTimeouts();
     });
+}
+
+bool NodeTable::isAllowedAddress(bi::address const& _addressToCheck) const
+{
+    return m_allowLocalDiscovery ? !_addressToCheck.is_unspecified() :
+                                   isPublicAddress(_addressToCheck);
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)
