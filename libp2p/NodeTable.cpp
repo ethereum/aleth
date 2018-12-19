@@ -181,8 +181,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             FindNode p(node->endpoint, _node);
             p.ts = nextRequestExpirationTime();
             p.sign(m_secret);
-            DEV_GUARDED(x_findNodeTimeout)
-                m_findNodeTimeout.emplace_back(node->id, chrono::steady_clock::now());
+            m_findNodeTimeout.emplace_back(node->id, chrono::steady_clock::now());
             LOG(m_logger) << p.typeName() << " to " << _node << "@" << node->endpoint;
             m_socket->send(p);
 
@@ -453,16 +452,13 @@ void NodeTable::onPacketReceived(
                 auto const& in = dynamic_cast<Neighbours const&>(*packet);
                 bool expected = false;
                 auto now = chrono::steady_clock::now();
-                DEV_GUARDED(x_findNodeTimeout)
-                {
-                    m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& _t) noexcept {
-                        if (_t.first != in.sourceid)
-                            return false;
-                        if (now - _t.second < c_reqTimeout)
-                            expected = true;
-                        return true;
-                    });
-                }
+                m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& _t) noexcept {
+                    if (_t.first != in.sourceid)
+                        return false;
+                    if (now - _t.second < c_reqTimeout)
+                        expected = true;
+                    return true;
+                });
                 if (!expected)
                 {
                     cnetdetails << "Dropping unsolicited neighbours packet from "
