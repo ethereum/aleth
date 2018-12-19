@@ -172,43 +172,31 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
     if (!m_socket->isOpen())
         return;
     
-    if (_round == s_maxSteps)
+    auto const nearestNodes = nearestNodeEntries(_node);
+    auto newTriedCount = 0;
+    for (auto const& node : nearestNodes)
     {
-        LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
-        doDiscovery();
-        return;
-    }
-    else if (!_round && !_tried)
-        // initialized _tried on first round
-        _tried = make_shared<set<shared_ptr<NodeEntry>>>();
-    
-    auto nearest = nearestNodeEntries(_node);
-    list<shared_ptr<NodeEntry>> tried;
-    for (unsigned i = 0; i < nearest.size() && tried.size() < s_alpha; i++)
-        if (!_tried->count(nearest[i]))
+        if (!contains(*_tried, node))
         {
-            auto r = nearest[i];
-            tried.push_back(r);
-            FindNode p(r->endpoint, _node);
+            FindNode p(node->endpoint, _node);
             p.ts = nextRequestExpirationTime();
             p.sign(m_secret);
             DEV_GUARDED(x_findNodeTimeout)
-                m_findNodeTimeout.emplace_back(r->id, chrono::steady_clock::now());
-            LOG(m_logger) << p.typeName() << " to " << _node << "@" << r->endpoint;
+                m_findNodeTimeout.emplace_back(node->id, chrono::steady_clock::now());
+            LOG(m_logger) << p.typeName() << " to " << _node << "@" << node->endpoint;
             m_socket->send(p);
+
+            _tried->emplace(node);
+            if (++newTriedCount == s_alpha)
+                break;
         }
+    }
     
-    if (tried.empty())
+    if (_round == s_maxSteps || newTriedCount == 0)
     {
         LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
         doDiscovery();
         return;
-    }
-        
-    while (!tried.empty())
-    {
-        _tried->insert(tried.front());
-        tried.pop_front();
     }
 
     m_timers.schedule(c_reqTimeout.count() * 2, [this, _node, _round, _tried](boost::system::error_code const& _ec)
@@ -553,7 +541,7 @@ void NodeTable::doDiscovery()
         NodeID randNodeId;
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));
-        doDiscover(randNodeId);
+        doDiscover(randNodeId, 0, make_shared<set<shared_ptr<NodeEntry>>>());
     });
 }
 

@@ -331,4 +331,10 @@ bool contains(std::unordered_set<V> const& _set, V const& _v)
 {
     return _set.find(_v) != _set.end();
 }
+
+template <class V>
+bool contains(std::set<V> const& _set, V const& _v)
+{
+    return _set.find(_v) != _set.end();
+}
 }

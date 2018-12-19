@@ -218,7 +218,7 @@ protected:
 
     /// Used to discovery nodes on network which are close to the given target.
     /// Sends s_alpha concurrent requests to nodes nearest to target, for nodes nearest to target, up to s_maxSteps rounds.
-    void doDiscover(NodeID _target, unsigned _round = 0, std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried = std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>>());
+    void doDiscover(NodeID _target, unsigned _round, std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried);
 
     /// Returns nodes from node table which are closest to target.
     std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID _target);
