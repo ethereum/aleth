@@ -140,6 +140,32 @@ struct TestNodeTable: public NodeTable
         return -1;
     }
 
+    // populate NodeTable until bucket _bucket reaches the size of _bucketSize
+    // return true if success, false if not enought test nodes
+    bool populateUntilSpecificBucketSize(std::vector<std::pair<Public, uint16_t>> const& _testNodes,
+        size_t _bucket, size_t _bucketSize)
+    {
+        auto testNode = _testNodes.begin();
+
+        bi::address ourIp = bi::address::from_string("127.0.0.1");
+        while (testNode != _testNodes.end() && m_buckets[_bucket].nodes.size() < _bucketSize)
+        {
+            // manually add node for test
+            {
+                Guard ln(x_nodes);
+                shared_ptr<NodeEntry> node(new NodeEntry(m_hostNodeID, testNode->first,
+                    NodeIPEndpoint(ourIp, testNode->second, testNode->second)));
+                node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
+                m_allNodes[node->id] = node;
+            }
+            noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
+
+            ++testNode;
+        }
+
+        return testNode != _testNodes.end();
+    }
+
     void reset()
     {
         Guard l(x_state);
@@ -165,6 +191,7 @@ struct TestNodeTable: public NodeTable
     using NodeTable::m_sentPings;
     using NodeTable::m_socket;
     using NodeTable::noteActiveNode;
+    using NodeTable::setRequestTimeToLive;
 };
 
 /**
@@ -192,6 +219,12 @@ struct TestNodeTableHost: public TestHost
     {
         return nodeTable->populateUntilBucketSize(testNodes, _size);
     }
+
+    bool populateUntilSpecificBucketSize(size_t _bucket, size_t _size)
+    {
+        return nodeTable->populateUntilSpecificBucketSize(testNodes, _bucket, _size);
+    }
+
 
     KeyPair m_alias;
     shared_ptr<TestNodeTable> nodeTable;
@@ -460,8 +493,9 @@ BOOST_AUTO_TEST_CASE(unexpectedPong)
     // NodeTable receiving PONG
     TestNodeTableHost nodeTableHost(0);
     nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
 
-    Pong pong(nodeTableHost.nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_hostNodeEndpoint);
     auto nodeKeyPair = KeyPair::create();
     pong.sign(nodeKeyPair.secret());
 
@@ -470,10 +504,10 @@ BOOST_AUTO_TEST_CASE(unexpectedPong)
     a.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTableHost.nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetReceived.get_future().wait();
 
-    auto addedNode = nodeTableHost.nodeTable->m_allNodes.find(nodeKeyPair.pub());
-    BOOST_REQUIRE(addedNode == nodeTableHost.nodeTable->m_allNodes.end());
+    auto addedNode = nodeTable->m_allNodes.find(nodeKeyPair.pub());
+    BOOST_REQUIRE(addedNode == nodeTable->m_allNodes.end());
 }
 
 BOOST_AUTO_TEST_CASE(invalidPong)
@@ -481,6 +515,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     // NodeTable sending PING
     TestNodeTableHost nodeTableHost(0);
     nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
 
     // socket answering with PONG
     TestUDPSocketHost nodeSocketHost{30500};
@@ -491,19 +526,19 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
     auto nodeKeyPair = KeyPair::create();
     auto nodePubKey = nodeKeyPair.pub();
-    nodeTableHost.nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // send PONG
-    Pong pong(nodeTableHost.nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_hostNodeEndpoint);
     pong.sign(nodeKeyPair.secret());
 
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTableHost.nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetReceived.get_future().wait();
 
-    auto addedNode = nodeTableHost.nodeTable->m_allNodes.find(nodePubKey);
-    BOOST_REQUIRE(addedNode != nodeTableHost.nodeTable->m_allNodes.end());
+    auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
+    BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
     BOOST_CHECK_EQUAL(addedNode->second->lastPongReceivedTime, 0);
 }
 
@@ -512,6 +547,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     // NodeTable sending PING
     TestNodeTableHost nodeTableHost(0);
     nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
 
     // socket receiving PING
     TestUDPSocketHost nodeSocketHost{30500};
@@ -522,7 +558,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
     auto nodeKeyPair = KeyPair::create();
     auto nodePubKey = nodeKeyPair.pub();
-    nodeTableHost.nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // handle received PING
     auto pingDataReceived = nodeSocketHost.packetReceived.get_future().get();
@@ -531,17 +567,176 @@ BOOST_AUTO_TEST_CASE(validPong)
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
-    Pong pong(nodeTableHost.nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_hostNodeEndpoint);
     pong.echo = ping.echo;
     pong.sign(nodeKeyPair.secret());
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTableHost.nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetReceived.get_future().wait();
 
-    auto addedNode = nodeTableHost.nodeTable->m_allNodes.find(nodePubKey);
-    BOOST_REQUIRE(addedNode != nodeTableHost.nodeTable->m_allNodes.end());
+    auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
+    BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
     BOOST_CHECK(addedNode->second->lastPongReceivedTime > 0);
+}
+
+BOOST_AUTO_TEST_CASE(pingTimeout)
+{
+    // NodeTable sending PING
+    TestNodeTableHost nodeTableHost(0);
+
+    nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
+    nodeTable->setRequestTimeToLive(std::chrono::seconds(1));
+
+    // socket receiving PING
+    TestUDPSocketHost nodeSocketHost{30500};
+    nodeSocketHost.start();
+    uint16_t nodePort = nodeSocketHost.port;
+
+    // add a node to node table, initiating PING
+    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
+    auto nodeKeyPair = KeyPair::create();
+    auto nodePubKey = nodeKeyPair.pub();
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+    this_thread::sleep_for(std::chrono::seconds(6));
+
+    auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
+    BOOST_CHECK(addedNode == nodeTable->m_allNodes.end());
+    auto sentPing = nodeTable->m_sentPings.find(nodePubKey);
+    BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
+
+    // handle received PING
+    auto pingDataReceived = nodeSocketHost.packetReceived.get_future().get();
+    auto pingDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+
+    // send PONG after timeout
+    Pong pong(nodeTable->m_hostNodeEndpoint);
+    pong.echo = ping.echo;
+    pong.sign(nodeKeyPair.secret());
+    nodeSocketHost.socket->send(pong);
+
+    // wait for PONG to be received and handled
+    nodeTable->packetReceived.get_future().wait();
+
+    addedNode = nodeTable->m_allNodes.find(nodePubKey);
+    BOOST_CHECK(addedNode == nodeTable->m_allNodes.end());
+    sentPing = nodeTable->m_sentPings.find(nodePubKey);
+    BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
+}
+
+BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
+{
+    TestNodeTableHost nodeTableHost(512);
+    auto& nodeTable = nodeTableHost.nodeTable;
+
+    // socket receiving PING
+    TestUDPSocketHost nodeSocketHost{30500};
+    nodeSocketHost.start();
+    uint16_t nodePort = nodeSocketHost.port;
+
+    // add a node to node table
+    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
+    auto nodeKeyPair = KeyPair::create();
+    auto nodeId = nodeKeyPair.pub();
+    nodeTable->addNode(Node{nodeId, nodeEndpoint}, NodeTable::Known);
+
+    // add 15 nodes more to the same bucket
+    BOOST_REQUIRE(nodeTable->m_allNodes.find(nodeId)->second->distance > 0);
+    int bucketIndex = nodeTable->m_allNodes[nodeId]->distance - 1;
+    nodeTableHost.populateUntilSpecificBucketSize(bucketIndex, 16);
+
+    nodeTableHost.start();
+
+    // generate new address for the same bucket
+    NodeID newNodeId;
+    do
+    {
+        KeyPair newNodeKeyPair = KeyPair::create();
+        newNodeId = newNodeKeyPair.pub();
+    } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
+
+    // add a node to node table, initiating eviction of nodeId
+    // port doesn't matter, it won't be pinged because we're adding it as known
+    auto newNodeEndpoint =
+        NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
+    nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, NodeTable::Known);
+
+    // wait for PING to be sent out
+    this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    auto evicted = nodeTable->m_sentPings.find(nodeId);
+    BOOST_REQUIRE(evicted != nodeTable->m_sentPings.end());
+
+    // handle received PING
+    auto pingDataReceived = nodeSocketHost.packetReceived.get_future().get();
+    auto pingDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+
+    // send valid PONG
+    Pong pong(nodeTable->m_hostNodeEndpoint);
+    pong.echo = ping.echo;
+    pong.sign(nodeKeyPair.secret());
+    nodeSocketHost.socket->send(pong);
+
+    // wait for PONG to be received and handled
+    nodeTable->packetReceived.get_future().wait();
+
+    // check that old node is not evicted
+    auto addedNode = nodeTable->m_allNodes.find(nodeId);
+    BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
+    BOOST_CHECK(addedNode->second->lastPongReceivedTime);
+    auto sentPing = nodeTable->m_sentPings.find(nodeId);
+    BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
+    // check that old node is most recently seen in the bucket
+    BOOST_CHECK(nodeTable->m_buckets[bucketIndex].nodes.back().lock()->id == nodeId);
+    // check that replacement node is dropped
+    BOOST_CHECK(nodeTable->m_allNodes.find(newNodeId) == nodeTable->m_allNodes.end());
+}
+
+BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
+{
+    TestNodeTableHost nodeTableHost(512);
+    int const bucketIndex = nodeTableHost.populateUntilBucketSize(16);
+    BOOST_REQUIRE(bucketIndex >= 0);
+
+    auto nodeTable = nodeTableHost.nodeTable;
+    nodeTable->setRequestTimeToLive(std::chrono::seconds(1));
+
+    nodeTableHost.start();
+
+    auto const& nodeBucketArray = nodeTable->m_buckets;
+    auto const& nodes = nodeBucketArray[bucketIndex].nodes;
+    auto oldNodeId = nodes.front().lock()->id;
+
+    // generate new address for the same bucket
+    NodeID newNodeId;
+    do
+    {
+        KeyPair newNodeKeyPair = KeyPair::create();
+        newNodeId = newNodeKeyPair.pub();
+    } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
+
+    // add new node to node table
+    // port doesn't matter, it won't be pinged because we're adding it as known
+    auto newNodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), 30500, 30500};
+    nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, NodeTable::Known);
+
+    // wait for PING time out
+    this_thread::sleep_for(std::chrono::seconds(6));
+
+    // check that old node is evicted
+    BOOST_CHECK(nodeTable->m_allNodes.find(oldNodeId) == nodeTable->m_allNodes.end());
+    BOOST_CHECK(nodeTable->m_sentPings.find(oldNodeId) == nodeTable->m_sentPings.end());
+    // check that replacement node is active
+    auto newNode = nodeTable->m_allNodes.find(newNodeId);
+    BOOST_CHECK(newNode != nodeTable->m_allNodes.end());
+    BOOST_CHECK(newNode->second->lastPongReceivedTime > 0);
+    BOOST_CHECK(nodes.back().lock()->id == newNodeId);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
