@@ -14,27 +14,7 @@
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
-include(EthCheckCXXCompilerFlag)
-
-eth_add_cxx_compiler_flag_if_supported(-fstack-protector-strong have_stack_protector_strong_support)
-if(NOT have_stack_protector_strong_support)
-    eth_add_cxx_compiler_flag_if_supported(-fstack-protector)
-endif()
-
-eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
-
-if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-    # Enables all the warnings about constructions that some users consider questionable,
-    # and that are easy to avoid.  Also enable some extra warning flags that are not
-    # enabled by -Wall.   Finally, treat at warnings-as-errors, which forces developers
-    # to fix warnings as they arise, so they don't accumulate "to be fixed later".
-    add_compile_options(-Wall)
-    add_compile_options(-Wextra)
-    add_compile_options(-Werror)
-
-    # Disable warnings about unknown pragmas (which is enabled by -Wall).
-    add_compile_options(-Wno-unknown-pragmas)
-
+if (CABLE_COMPILER_GNULIKE)
     # Configuration-specific compiler settings.
     set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g -DETH_DEBUG")
     set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
@@ -111,20 +91,6 @@ elseif (MSVC)
 else ()
     message(WARNING "Your compiler is not tested, if you run into any issues, we'd welcome any patches.")
 endif ()
-
-if (SANITIZE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=${SANITIZE}")
-    if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/sanitizer-blacklist.txt")
-    endif()
-endif()
-
-option(COVERAGE "Build with code coverage support" OFF)
-if(COVERAGE)
-    add_compile_options(-g --coverage)
-    set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
-endif()
 
 if(UNIX AND NOT APPLE)
     option(STATIC_LIBSTDCPP "Link libstdc++ staticly")

@@ -11,6 +11,7 @@ endif()
 include(cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
 include(CableBuildType)
+include(CableCompilerSettings)
 include(CableToolchains)
 include(GNUInstallDirs)
 
@@ -50,6 +51,8 @@ set(PROJECT_VERSION 1.5.0-alpha.7)
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
 cable_add_buildinfo_library(PROJECT_NAME aleth)
+
+cable_configure_compiler(NO_CONVERSION_WARNINGS NO_PEDANTIC)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY On)
 
