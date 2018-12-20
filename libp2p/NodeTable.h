@@ -281,7 +281,7 @@ protected:
     mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.
     std::array<NodeBucket, s_bins> m_buckets;                       ///< State of p2p node network.
     
-    std::list<NodeIdTimePoint> m_findNodeTimeout;					///< Timeouts for FindNode requests.
+    std::list<NodeIdTimePoint> m_sentFindNodes;					///< Timeouts for FindNode requests.
 
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 
