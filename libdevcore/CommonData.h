@@ -239,49 +239,28 @@ void pushFront(T& _t, _U _e)
 	_t[0] = _e;
 }
 
-/// Concatenate two vectors of elements of POD types.
-template <class T>
-inline std::vector<T>& operator+=(std::vector<typename std::enable_if<std::is_pod<T>::value, T>::type>& _a, std::vector<T> const& _b)
+/// Concatenate the contents of a container onto a vector.
+template <class T, class U>
+inline std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
 {
-	auto s = _a.size();
-	_a.resize(_a.size() + _b.size());
-	memcpy(_a.data() + s, _b.data(), _b.size() * sizeof(T));
-	return _a;
-
-}
-
-/// Concatenate two vectors of elements.
-template <class T>
-inline std::vector<T>& operator+=(std::vector<typename std::enable_if<!std::is_pod<T>::value, T>::type>& _a, std::vector<T> const& _b)
-{
-	_a.reserve(_a.size() + _b.size());
-	for (auto& i: _b)
-		_a.push_back(i);
-	return _a;
+    _a.insert(_a.end(), std::begin(_b), std::end(_b));
+    return _a;
 }
 
 /// Insert the contents of a container into a set
-template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
+template <class T, class U>
+std::set<T>& operator+=(std::set<T>& _a, U const& _b)
 {
-	for (auto const& i: _b)
-		_a.insert(i);
-	return _a;
+    _a.insert(std::begin(_b), std::end(_b));
+    return _a;
 }
 
 /// Insert the contents of a container into an unordered_set
-template <class T, class U> std::unordered_set<T>& operator+=(std::unordered_set<T>& _a, U const& _b)
+template <class T, class U>
+std::unordered_set<T>& operator+=(std::unordered_set<T>& _a, U const& _b)
 {
-	for (auto const& i: _b)
-		_a.insert(i);
-	return _a;
-}
-
-/// Concatenate the contents of a container onto a vector
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
-{
-	for (auto const& i: _b)
-		_a.push_back(i);
-	return _a;
+    _a.insert(std::begin(_b), std::end(_b));
+    return _a;
 }
 
 /// Insert the contents of a container into a set
@@ -302,17 +281,6 @@ template <class T, class U> std::vector<T> operator+(std::vector<T> _a, U const&
 	return _a += _b;
 }
 
-/// Concatenate two vectors of elements.
-template <class T>
-inline std::vector<T> operator+(std::vector<T> const& _a, std::vector<T> const& _b)
-{
-	std::vector<T> ret(_a);
-	return ret += _b;
-}
-
-
-/// Make normal string from fixed-length string.
-std::string toString(string32 const& _s);
 
 template<class T, class U>
 std::vector<T> keysOf(std::map<T, U> const& _m)

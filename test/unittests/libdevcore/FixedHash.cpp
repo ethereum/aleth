@@ -130,3 +130,15 @@ TEST(FixedHash, increment)
     FixedHash<4> zero;
     EXPECT_EQ(++h, zero);
 }
+
+dev::bytes test(dev::h160 const& addr)
+{
+    // This function was not able to be compiled with GCC -O2.
+    return dev::bytes{0xff} + addr.asBytes();
+}
+
+TEST(FixedHash, asBytes)
+{
+    auto y = test({});
+    EXPECT_EQ(y.size(), 21);
+}
