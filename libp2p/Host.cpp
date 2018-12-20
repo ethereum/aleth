@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2018 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "Host.h"
 #include "Capability.h"
@@ -37,22 +24,20 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-
+namespace
+{
 /// Interval at which Host::run will call keepAlivePeers to ping peers.
-std::chrono::seconds const c_keepAliveInterval = std::chrono::seconds(30);
+constexpr std::chrono::seconds c_keepAliveInterval = std::chrono::seconds(30);
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
-std::chrono::milliseconds const c_keepAliveTimeOut = std::chrono::milliseconds(1000);
+constexpr std::chrono::milliseconds c_keepAliveTimeOut = std::chrono::milliseconds(1000);
+}  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}
 
 void HostNodeTableHandler::processEvent(NodeID const& _n, NodeTableEventType const& _e)
 {
     m_host.onNodeTableEvent(_n, _e);
-}
-
-ReputationManager::ReputationManager()
-{
 }
 
 void ReputationManager::noteRude(SessionFace const& _s, std::string const& _sub)
@@ -99,7 +84,8 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig co
     m_clientVersion(_clientVersion),
     m_netConfig(_n),
     m_ifAddresses(Network::getInterfaceAddresses()),
-    m_ioService(2),
+    m_ioService(2),  // concurrency hint, suggests how many threads it should allow to run
+                     // simultaneously
     m_tcp4Acceptor(m_ioService),
     m_alias(_alias),
     m_lastPing(chrono::steady_clock::time_point::min()),
@@ -705,7 +691,7 @@ void Host::run(boost::system::error_code const&)
     DEV_GUARDED(x_connecting)
         m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
     DEV_GUARDED(x_timers)
-    m_timers.remove_if([](std::unique_ptr<boost::asio::deadline_timer> const& t) {
+    m_timers.remove_if([](std::unique_ptr<io::deadline_timer> const& t) {
         return t->expires_from_now().total_milliseconds() < 0;
     });
 
@@ -759,6 +745,8 @@ void Host::run(boost::system::error_code const&)
 
 void Host::startedWorking()
 {
+    // Called after thread has been started to perform additional class-specific state
+    // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
     asserts(!m_timer);
 
     {
@@ -767,7 +755,7 @@ void Host::startedWorking()
         // time, stop will wait on m_timer and graceful network shutdown.
         Guard l(x_runTimer);
         // create deadline timer
-        m_timer.reset(new boost::asio::deadline_timer(m_ioService));
+        m_timer.reset(new io::deadline_timer(m_ioService));
         m_run = true;
     }
 
@@ -1048,7 +1036,7 @@ void Host::forEachPeer(
 
 void Host::scheduleExecution(int _delayMs, std::function<void()> _f)
 {
-    std::unique_ptr<boost::asio::deadline_timer> t(new boost::asio::deadline_timer(m_ioService));
+    std::unique_ptr<io::deadline_timer> t(new io::deadline_timer(m_ioService));
     t->expires_from_now(boost::posix_time::milliseconds(_delayMs));
     t->async_wait([_f](boost::system::error_code const& _ec) {
         if (!_ec)
