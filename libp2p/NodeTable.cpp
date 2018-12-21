@@ -276,7 +276,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
     for (auto& nodes : found)
         for (auto const& n : nodes.second)
             if (ret.size() < s_bucketSize && !!n->endpoint &&
-                isAllowedAddress(n->endpoint.address()))
+                isAllowedEndpoint(n->endpoint))
                 ret.push_back(n);
     return ret;
 }
@@ -311,7 +311,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
 {
     if (_pubk == m_hostNodeID ||
-        !isAllowedAddress(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).address()))
+        !isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
         return;
 
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
@@ -446,7 +446,7 @@ void NodeTable::onPacketReceived(
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_hostNodeEndpoint || !isAllowedAddress(m_hostNodeEndpoint.address())) &&
+                    if ((!m_hostNodeEndpoint || !isAllowedEndpoint(m_hostNodeEndpoint)) &&
                         isPublicAddress(pong.destination.address()))
                         m_hostNodeEndpoint.setAddress(pong.destination.address());
                     m_hostNodeEndpoint.setUdpPort(pong.destination.udpPort());
@@ -586,12 +586,6 @@ void NodeTable::doHandleTimeouts()
 
         doHandleTimeouts();
     });
-}
-
-bool NodeTable::isAllowedAddress(bi::address const& _addressToCheck) const
-{
-    return m_allowLocalDiscovery ? !_addressToCheck.is_unspecified() :
-                                   isPublicAddress(_addressToCheck);
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)

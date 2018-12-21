@@ -68,6 +68,8 @@ bool isLocalHostAddress(bi::address const& _addressToCheck);
 bool isLocalHostAddress(std::string const& _addressToCheck);
 bool isPublicAddress(bi::address const& _addressToCheck);
 bool isPublicAddress(std::string const& _addressToCheck);
+bool isAllowedAddress(bool _allowLocalDiscovery, bi::address const& _addressToCheck);
+bool isAllowedEndpoint(bool _allowLocalDiscovery, NodeIPEndpoint const& _endpointToCheck);
 
 class UPnP;
 class Host;

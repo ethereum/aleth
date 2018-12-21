@@ -263,8 +263,11 @@ protected:
         return RLPXDatagramFace::futureFromEpoch(m_requestTimeToLive);
     }
 
-    /// Determines if a node with the supplied address is allowed to participate in discovery.
-    bool isAllowedAddress(bi::address const& _addressToCheck) const;
+    /// Determines if a node with the supplied endpoint is allowed to participate in discovery.
+    bool isAllowedEndpoint(NodeIPEndpoint const& _endpointToCheck) const
+    {
+        return dev::p2p::isAllowedEndpoint(m_allowLocalDiscovery, _endpointToCheck);
+    }
 
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 

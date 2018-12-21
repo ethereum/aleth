@@ -43,6 +43,17 @@ bool p2p::isPublicAddress(bi::address const& _addressToCheck)
     return !(isPrivateAddress(_addressToCheck) || isLocalHostAddress(_addressToCheck));
 }
 
+bool p2p::isAllowedAddress(bool _allowLocalDiscovery, bi::address const& _addressToCheck)
+{
+    return _allowLocalDiscovery ? !_addressToCheck.is_unspecified() :
+                                  isPublicAddress(_addressToCheck);
+}
+
+bool p2p::isAllowedEndpoint(bool _allowLocalDiscovery, NodeIPEndpoint const& _endpointToCheck)
+{
+    return isAllowedAddress(_allowLocalDiscovery, _endpointToCheck.address());
+}
+
 // Helper function to determine if an address falls within one of the reserved ranges
 // For V4:
 // Class A "10.*", Class B "172.[16->31].*", Class C "192.168.*"

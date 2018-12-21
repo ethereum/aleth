@@ -286,9 +286,12 @@ private:
     Node nodeFromNodeTable(Public const& _id) const;
     bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
 
-    /// Determines if a node with the supplied address should be included in or restored from the
+    /// Determines if a node with the supplied endpoint should be included in or restored from the
     /// serialized network configuration data
-    bool isAllowedAddress(bi::address const& _addressToCheck) const;
+    bool isAllowedEndpoint(NodeIPEndpoint const& _endpointToCheck) const
+    {
+        return dev::p2p::isAllowedEndpoint(m_netConfig.allowLocalDiscovery, _endpointToCheck);
+    }
 
     bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
