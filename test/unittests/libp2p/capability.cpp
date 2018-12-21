@@ -35,12 +35,6 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-struct P2PFixture: public TestOutputHelperFixture
-{
-    P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
-    ~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
-};
-
 class TestCapability : public CapabilityFace, public Worker
 {
 public:
@@ -98,7 +92,7 @@ public:
     std::unordered_map<NodeID, int> m_testSums;
 };
 
-BOOST_FIXTURE_TEST_SUITE(p2pCapability, P2PFixture)
+BOOST_FIXTURE_TEST_SUITE(p2pCapability, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(capability)
 {
@@ -106,8 +100,8 @@ BOOST_AUTO_TEST_CASE(capability)
 
     int const step = 10;
     const char* const localhost = "127.0.0.1";
-    NetworkConfig prefs1(localhost, 0, false);
-    NetworkConfig prefs2(localhost, 0, false);
+    NetworkConfig prefs1(localhost, 0, false /* upnp */, true /* allow local discovery */);
+    NetworkConfig prefs2(localhost, 0, false /* upnp */, true /* allow local discovery */);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
     auto thc1 = make_shared<TestCapability>(host1);

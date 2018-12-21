@@ -778,7 +778,8 @@ void Host::startedWorking()
         m_ioService,
         m_alias,
         NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()),
-        m_netConfig.discovery
+        m_netConfig.discovery,
+        m_netConfig.allowLocalDiscovery
     );
     nodeTable->setEventHandler(new HostNodeTableHandler(*this));
     DEV_GUARDED(x_nodeTable)
@@ -854,15 +855,19 @@ bytes Host::saveNetwork() const
         if (!p.endpoint.address().is_v4())
             continue;
 
-        // Only save peers which have connected within 2 days, with properly-advertised port and public IP address
-        if (chrono::system_clock::now() - p.m_lastConnected < chrono::seconds(3600 * 48) && !!p.endpoint && p.id != id() && (p.peerType == PeerType::Required || p.endpoint.isAllowed()))
+        // Only save peers which have connected within 2 days, with properly-advertised port and
+        // public IP address
+        if (chrono::system_clock::now() - p.m_lastConnected < chrono::seconds(3600 * 48) &&
+            !!p.endpoint && p.id != id() &&
+            (p.peerType == PeerType::Required || isAllowedEndpoint(p.endpoint)))
         {
             network.appendList(11);
             p.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
             network << p.id << (p.peerType == PeerType::Required ? true : false)
-                << chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
-                << chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
-                << p.m_failedAttempts.load() << (unsigned)p.m_lastDisconnect << p.m_score.load() << p.m_rating.load();
+                    << chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
+                    << chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
+                    << p.m_failedAttempts.load() << (unsigned)p.m_lastDisconnect << p.m_score.load()
+                    << p.m_rating.load();
             count++;
         }
     }
@@ -919,14 +924,14 @@ void Host::restoreNetwork(bytesConstRef _b)
             if (i.itemCount() == 4 || i.itemCount() == 11)
             {
                 Node n((NodeID)i[3], NodeIPEndpoint(i));
-                if (i.itemCount() == 4 && n.endpoint.isAllowed())
+                if (i.itemCount() == 4 && isAllowedEndpoint(n.endpoint))
                 {
                     addNodeToNodeTable(n);
                 }
                 else if (i.itemCount() == 11)
                 {
                     n.peerType = i[4].toInt<bool>() ? PeerType::Required : PeerType::Optional;
-                    if (!n.endpoint.isAllowed() && n.peerType == PeerType::Optional)
+                    if (!isAllowedEndpoint(n.endpoint) && n.peerType == PeerType::Optional)
                         continue;
                     shared_ptr<Peer> p = make_shared<Peer>(n);
                     p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
@@ -944,17 +949,20 @@ void Host::restoreNetwork(bytesConstRef _b)
             }
             else if (i.itemCount() == 3 || i.itemCount() == 10)
             {
-                Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()), i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
-                if (i.itemCount() == 3 && n.endpoint.isAllowed())
+                Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()),
+                                         i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
+                if (i.itemCount() == 3 && isAllowedEndpoint(n.endpoint))
                     addNodeToNodeTable(n);
                 else if (i.itemCount() == 10)
                 {
                     n.peerType = i[3].toInt<bool>() ? PeerType::Required : PeerType::Optional;
-                    if (!n.endpoint.isAllowed() && n.peerType == PeerType::Optional)
+                    if (!isAllowedEndpoint(n.endpoint) && n.peerType == PeerType::Optional)
                         continue;
                     shared_ptr<Peer> p = make_shared<Peer>(n);
-                    p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[4].toInt<unsigned>()));
-                    p->m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
+                    p->m_lastConnected =
+                        chrono::system_clock::time_point(chrono::seconds(i[4].toInt<unsigned>()));
+                    p->m_lastAttempted =
+                        chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
                     p->m_failedAttempts = i[6].toInt<unsigned>();
                     p->m_lastDisconnect = (DisconnectReason)i[7].toInt<unsigned>();
                     p->m_score = (int)i[8].toInt<unsigned>();

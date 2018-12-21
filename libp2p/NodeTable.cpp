@@ -46,14 +46,15 @@ inline bool operator==(
 
 NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw): Node(_pubk, _gw), distance(NodeTable::distance(_src, _pubk)) {}
 
-NodeTable::NodeTable(
-    ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled)
+NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
+    bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID(_alias.pub()),
     m_hostNodeEndpoint(_endpoint),
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
     m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),        
+    m_allowLocalDiscovery(_allowLocalDiscovery),
     m_timers(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -270,11 +271,12 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
                     found[distance(_target, p->id)].push_back(p);
             tail--;
         }
-    
+
     vector<shared_ptr<NodeEntry>> ret;
-    for (auto& nodes: found)
-        for (auto const& n: nodes.second)
-            if (ret.size() < s_bucketSize && !!n->endpoint && n->endpoint.isAllowed())
+    for (auto& nodes : found)
+        for (auto const& n : nodes.second)
+            if (ret.size() < s_bucketSize && !!n->endpoint &&
+                isAllowedEndpoint(n->endpoint))
                 ret.push_back(n);
     return ret;
 }
@@ -309,7 +311,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
 {
     if (_pubk == m_hostNodeID ||
-        !NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).isAllowed())
+        !isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
         return;
 
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
@@ -444,7 +446,7 @@ void NodeTable::onPacketReceived(
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_hostNodeEndpoint || !m_hostNodeEndpoint.isAllowed()) &&
+                    if ((!m_hostNodeEndpoint || !isAllowedEndpoint(m_hostNodeEndpoint)) &&
                         isPublicAddress(pong.destination.address()))
                         m_hostNodeEndpoint.setAddress(pong.destination.address());
                     m_hostNodeEndpoint.setUdpPort(pong.destination.udpPort());

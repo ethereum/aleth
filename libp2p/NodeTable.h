@@ -140,7 +140,8 @@ public:
     enum DiscoverType { Random = 0 };
     
     /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
-    NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint, bool _enabled = true);
+    NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
+        bool _enabled = true, bool _allowLocalDiscovery = false);
     ~NodeTable();
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
@@ -255,13 +256,18 @@ protected:
 
     void doHandleTimeouts();
 
-    // Useful ony for tests.
+    // Useful only for tests.
     void setRequestTimeToLive(std::chrono::seconds const& _time) { m_requestTimeToLive = _time; }
     uint32_t nextRequestExpirationTime() const
     {
         return RLPXDatagramFace::futureFromEpoch(m_requestTimeToLive);
     }
 
+    /// Determines if a node with the supplied endpoint is allowed to participate in discovery.
+    bool isAllowedEndpoint(NodeIPEndpoint const& _endpointToCheck) const
+    {
+        return dev::p2p::isAllowedEndpoint(m_allowLocalDiscovery, _endpointToCheck);
+    }
 
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
@@ -287,6 +293,8 @@ protected:
     std::chrono::seconds m_requestTimeToLive;
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "discov")};
+
+    bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
     DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
 };

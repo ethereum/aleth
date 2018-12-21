@@ -33,12 +33,6 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-struct P2PPeerFixture: public TestOutputHelperFixture
-{
-    P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
-    ~P2PPeerFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
-};
-
 class TestCap : public CapabilityFace, public Worker
 {
 public:
@@ -58,16 +52,16 @@ public:
 };
 
 BOOST_AUTO_TEST_SUITE(libp2p)
-BOOST_FIXTURE_TEST_SUITE(p2p, P2PPeerFixture)
+BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
-    Host host1("Test", NetworkConfig("127.0.0.1", 0, false));
+    Host host1("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
     host1.start();
     auto host1port = host1.listenPort();
     BOOST_REQUIRE(host1port);
 
-    Host host2("Test", NetworkConfig("127.0.0.1", 0, false));
+    Host host2("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
     host2.start();
     auto host2port = host2.listenPort();
     BOOST_REQUIRE(host2port);
@@ -135,7 +129,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
     for (unsigned i = 0; i < c_nodes; ++i)
     {
-        Host* h = new Host("Test", NetworkConfig("127.0.0.1", 0, false));
+        Host* h = new Host("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
         h->setIdealPeerCount(10);		
         h->start(); // starting host is required so listenport is available
         while (!h->haveNetwork())
@@ -187,14 +181,14 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(p2pPeer, P2PPeerFixture)
+BOOST_FIXTURE_TEST_SUITE(p2pPeer, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(requirePeer)
 {
     unsigned const step = 10;
     const char* const localhost = "127.0.0.1";
-    NetworkConfig prefs1(localhost, 0, false);
-    NetworkConfig prefs2(localhost, 0, false);
+    NetworkConfig prefs1(localhost, 0, false /* upnp */, true /* allow local discovery */);
+    NetworkConfig prefs2(localhost, 0, false /* upnp */, true /* allow local discovery */);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
     host1.start();

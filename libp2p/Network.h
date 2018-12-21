@@ -41,16 +41,37 @@ static const unsigned short c_defaultListenPort = 30303;
 
 struct NetworkConfig
 {
-	// Default Network Preferences
-	explicit NetworkConfig(unsigned short lp = c_defaultListenPort): listenPort(lp) {}
+    // Default Network Preferences
+    explicit NetworkConfig(unsigned short _listenPort = c_defaultListenPort)
+      : listenPort(_listenPort)
+    {}
 
-	// Network Preferences with specific Listen IP
-	NetworkConfig(std::string const& l, unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(), listenIPAddress(l), listenPort(lp), traverseNAT(u) {}
+    // Network Preferences with specific Listen IP
+    NetworkConfig(std::string const& _listenAddress,
+        unsigned short _listenPort = c_defaultListenPort, bool _upnp = true,
+        bool _allowLocalDiscovery = false)
+      : publicIPAddress(),
+        listenIPAddress(_listenAddress),
+        listenPort(_listenPort),
+        traverseNAT(_upnp),
+        allowLocalDiscovery(_allowLocalDiscovery)
+    {}
 
-	// Network Preferences with intended Public IP
-	NetworkConfig(std::string const& publicIP, std::string const& l = std::string(), unsigned short lp = c_defaultListenPort, bool u = true): publicIPAddress(publicIP), listenIPAddress(l), listenPort(lp), traverseNAT(u) { if (!publicIPAddress.empty() && !isPublicAddress(publicIPAddress)) BOOST_THROW_EXCEPTION(InvalidPublicIPAddress()); }
+    // Network Preferences with intended Public IP
+    NetworkConfig(std::string const& _publicIP, std::string const& _listenAddress = std::string(),
+        unsigned short _listenPort = c_defaultListenPort, bool _upnp = true,
+        bool _allowLocalDiscovery = false)
+      : publicIPAddress(_publicIP),
+        listenIPAddress(_listenAddress),
+        listenPort(_listenPort),
+        traverseNAT(_upnp),
+        allowLocalDiscovery(_allowLocalDiscovery)
+    {
+        if (!publicIPAddress.empty() && !isPublicAddress(publicIPAddress))
+            BOOST_THROW_EXCEPTION(InvalidPublicIPAddress());
+    }
 
-	/// Addressing
+    /// Addressing
 
 	std::string publicIPAddress;
 	std::string listenIPAddress;
@@ -61,6 +82,7 @@ struct NetworkConfig
 
 	bool traverseNAT = true;
 	bool discovery = true;		// Discovery is activated with network.
+	bool allowLocalDiscovery = false; // Include nodes with local IP addresses in the discovery process.
 	bool pin = false;			// Only accept or connect to trusted peers.
 };
 
