@@ -161,6 +161,7 @@ int main(int argc, char** argv)
     bool bootstrap = true;
     bool disableDiscovery = false;
     bool enableDiscovery = false;
+    bool allowLocalDiscovery = false;
     static const unsigned NoNetworkID = (unsigned)-1;
     unsigned networkID = NoNetworkID;
 
@@ -287,7 +288,7 @@ int main(int argc, char** argv)
         "Connect to the given remote port (default: 30303)");
     addNetworkingOption("network-id", po::value<unsigned>()->value_name("<n>"),
         "Only connect to other hosts with this network id");
-    addNetworkingOption("allow-local-discovery",
+    addNetworkingOption("allow-local-discovery", po::bool_switch(&allowLocalDiscovery),
         "Include local addresses in the discovery process. Used for testing purposes.");
 #if ETH_MINIUPNPC
     addNetworkingOption(
@@ -766,7 +767,7 @@ int main(int argc, char** argv)
 
     auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) : NetworkConfig(publicIP, listenIP ,listenPort, upnp);
     netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
-    netPrefs.allowLocalDiscovery = vm.count("allow-local-discovery") != 0;
+    netPrefs.allowLocalDiscovery = allowLocalDiscovery;
     netPrefs.pin = vm.count("pin") != 0;
 
     auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
