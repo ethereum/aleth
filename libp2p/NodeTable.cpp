@@ -110,6 +110,12 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
             return;
     }
 
+    if (m_hostNodeID == _node.id)
+    {
+        LOG(m_logger) << "Skip adding self to node table (" << _node.id << ")";
+        return;
+    }
+
     auto nodeEntry = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
     LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
