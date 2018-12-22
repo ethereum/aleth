@@ -145,70 +145,76 @@ void Host::stop()
 
 void Host::doneWorking()
 {
-    // reset ioservice (cancels all timers and allows manually polling network, below)
-    m_ioService.reset();
-
-    DEV_GUARDED(x_timers)
-        m_timers.clear();
-    
-    // shutdown acceptor
-    m_tcp4Acceptor.cancel();
-    if (m_tcp4Acceptor.is_open())
-        m_tcp4Acceptor.close();
-
-    // There maybe an incoming connection which started but hasn't finished.
-    // Wait for acceptor to end itself instead of assuming it's complete.
-    // This helps ensure a peer isn't stopped at the same time it's starting
-    // and that socket for pending connection is closed.
-    while (m_accepting)
-        m_ioService.poll();
-
-    // stop capabilities (eth: stops syncing or block/tx broadcast)
-    for (auto const& h: m_capabilities)
-        h.second->onStopping();
-
-    // disconnect pending handshake, before peers, as a handshake may create a peer
-    for (unsigned n = 0;; n = 0)
+    if (m_capabilities.size())
     {
-        DEV_GUARDED(x_connecting)
-            for (auto const& i: m_connecting)
-                if (auto h = i.lock())
-                {
-                    h->cancel();
-                    n++;
-                }
-        if (!n)
-            break;
-        m_ioService.poll();
-    }
-    
-    // disconnect peers
-    for (unsigned n = 0;; n = 0)
-    {
-        DEV_RECURSIVE_GUARDED(x_sessions)
-            for (auto i: m_sessions)
-                if (auto p = i.second.lock())
-                    if (p->isConnected())
+        // reset ioservice (cancels all timers and allows manually polling network, below)
+        m_ioService.reset();
+
+        DEV_GUARDED(x_timers)
+            m_timers.clear();
+        
+        // shutdown acceptor
+        m_tcp4Acceptor.cancel();
+        if (m_tcp4Acceptor.is_open())
+            m_tcp4Acceptor.close();
+
+        // There maybe an incoming connection which started but hasn't finished.
+        // Wait for acceptor to end itself instead of assuming it's complete.
+        // This helps ensure a peer isn't stopped at the same time it's starting
+        // and that socket for pending connection is closed.
+        while (m_accepting)
+            m_ioService.poll();
+
+        // stop capabilities (eth: stops syncing or block/tx broadcast)
+        for (auto const& h: m_capabilities)
+            h.second->onStopping();
+
+        // disconnect pending handshake, before peers, as a handshake may create a peer
+        for (unsigned n = 0;; n = 0)
+        {
+            DEV_GUARDED(x_connecting)
+                for (auto const& i: m_connecting)
+                    if (auto h = i.lock())
                     {
-                        p->disconnect(ClientQuit);
+                        h->cancel();
                         n++;
                     }
-        if (!n)
-            break;
+            if (!n)
+                break;
+            m_ioService.poll();
+        }
+        
+        // disconnect peers
+        for (unsigned n = 0;; n = 0)
+        {
+            DEV_RECURSIVE_GUARDED(x_sessions)
+                for (auto i: m_sessions)
+                    if (auto p = i.second.lock())
+                        if (p->isConnected())
+                        {
+                            p->disconnect(ClientQuit);
+                            n++;
+                        }
+            if (!n)
+                break;
 
-        // poll so that peers send out disconnect packets
-        m_ioService.poll();
+            // poll so that peers send out disconnect packets
+            m_ioService.poll();
+        }
+
+        // stop network (again; helpful to call before subsequent reset())
+        m_ioService.stop();
+
+        // reset network (allows reusing ioservice in future)
+        m_ioService.reset();
+
+        // finally, clear out peers (in case they're lingering)
+        RecursiveGuard l(x_sessions);
+        m_sessions.clear();
     }
-
-    // stop network (again; helpful to call before subsequent reset())
-    m_ioService.stop();
-
-    // reset network (allows reusing ioservice in future)
-    m_ioService.reset();
-
-    // finally, clear out peers (in case they're lingering)
-    RecursiveGuard l(x_sessions);
-    m_sessions.clear();
+    else
+        // allows reusing ioservice in the future
+        m_ioService.reset();
 }
 
 bool Host::isRequiredPeer(NodeID const& _id) const
@@ -691,15 +697,6 @@ void Host::run(boost::system::error_code const&)
         if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
             nodeTable->processEvents();
 
-<<<<<<< HEAD
-    // cleanup zombies
-    DEV_GUARDED(x_connecting)
-        m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
-    DEV_GUARDED(x_timers)
-    m_timers.remove_if([](std::unique_ptr<io::deadline_timer> const& t) {
-        return t->expires_from_now().total_milliseconds() < 0;
-    });
-=======
         // cleanup zombies
         DEV_GUARDED(x_connecting)
             m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
@@ -707,7 +704,6 @@ void Host::run(boost::system::error_code const&)
         m_timers.remove_if([](std::unique_ptr<boost::asio::deadline_timer> const& t) {
             return t->expires_from_now().total_milliseconds() < 0;
         });
->>>>>>> Make peer functionality in Host::run conditional
 
         keepAlivePeers();
         
