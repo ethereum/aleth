@@ -733,6 +733,23 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     BOOST_CHECK(nodes.back().lock()->id == newNodeId);
 }
 
+BOOST_AUTO_TEST_CASE(addSelf)
+{
+    TestNodeTableHost nodeTableHost(512);
+    auto& nodeTable = nodeTableHost.nodeTable;
+    
+    TestUDPSocketHost nodeSocketHost{ 30500 };
+    auto nodePort = nodeSocketHost.port;
+
+    auto nodeEndpoint = NodeIPEndpoint{ bi::address::from_string("127.0.0.1"), nodePort, nodePort };
+
+    Node self(nodeTableHost.m_alias.pub(), nodeEndpoint);
+    auto beforeNodeCount = nodeTable->count();
+    nodeTable->addNode(self);
+    auto afterNodeCount = nodeTable->count();
+    BOOST_CHECK(beforeNodeCount == afterNodeCount);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
