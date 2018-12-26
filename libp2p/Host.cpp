@@ -796,7 +796,7 @@ void Host::startedWorking()
                            bi::address::from_string(m_netConfig.listenIPAddress) :
                            bi::address_v4(),
             m_netConfig.listenPort /* UDP */, m_netConfig.listenPort /* TCP */),
-        m_netConfig.discovery);
+        m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
     if (m_capabilities.size())
         // Don't need to set event handler since there are no peers for Host to update when p2p
