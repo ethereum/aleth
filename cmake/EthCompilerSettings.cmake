@@ -53,21 +53,22 @@ if (CABLE_COMPILER_GNULIKE)
 # The major alternative compiler to GCC/Clang is Microsoft's Visual C++ compiler, only available on Windows.
 elseif (MSVC)
 
-    add_compile_options(/MP)                        # enable parallel compilation
-    add_compile_options(/EHsc)                        # specify Exception Handling Model in msvc
-    add_compile_options(/WX)                        # enable warnings-as-errors
-    add_compile_options(/wd4068)                    # disable unknown pragma warning (4068)
-    add_compile_options(/wd4996)                    # disable unsafe function warning (4996)
-    add_compile_options(/wd4503)                    # disable decorated name length exceeded, name was truncated (4503)
-    add_compile_options(/wd4267)                    # disable conversion from 'size_t' to 'type', possible loss of data (4267)
-    add_compile_options(/wd4180)                    # disable qualifier applied to function type has no meaning; ignored (4180)
-    add_compile_options(/wd4290)                    # disable C++ exception specification ignored except to indicate a function is not __declspec(nothrow) (4290)
-    add_compile_options(/wd4297)                    # disable <vector>'s function assumed not to throw an exception but does (4297)
-    add_compile_options(/wd4244)                    # disable conversion from 'type1' to 'type2', possible loss of data (4244)
-    add_compile_options(/wd4800)                    # disable forcing value to bool 'true' or 'false' (performance warning) (4800)
-    add_compile_options(-D_WIN32_WINNT=0x0600)        # declare Windows Vista API requirement
-    add_compile_options(-DNOMINMAX)                    # undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
-    add_compile_options(-DMINIUPNP_STATICLIB)        # define miniupnp static library
+    add_compile_options(/MP)                    # enable parallel compilation
+    add_compile_options(/EHsc)                  # specify Exception Handling Model in msvc
+    add_compile_options(/WX)                    # enable warnings-as-errors
+    add_compile_options(/wd4068)                # disable unknown pragma warning (4068)
+    add_compile_options(/wd4180)                # disable qualifier applied to function type has no meaning; ignored (4180)
+    add_compile_options(/wd4244)                # disable conversion from 'type1' to 'type2', possible loss of data (4244)
+    add_compile_options(/wd4267)                # disable conversion from 'size_t' to 'type', possible loss of data (4267)
+    add_compile_options(/wd4290)                # disable C++ exception specification ignored except to indicate a function is not __declspec(nothrow) (4290)
+    add_compile_options(/wd4297)                # disable <vector>'s function assumed not to throw an exception but does (4297)
+    add_compile_options(/wd4503)                # disable decorated name length exceeded, name was truncated (4503)
+    add_compile_options(/wd4714)                # disable function marked as __forceinline not inlined
+    add_compile_options(/wd4800)                # disable forcing value to bool 'true' or 'false' (performance warning) (4800)
+    add_compile_options(/wd4996)                # disable unsafe function warning (4996)
+    add_compile_options(-D_WIN32_WINNT=0x0600)  # declare Windows Vista API requirement
+    add_compile_options(-DNOMINMAX)             # undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
+    add_compile_options(-DMINIUPNP_STATICLIB)   # define miniupnp static library
 
     # Always use Release variant of C++ runtime.
     # We don't want to provide Debug variants of all dependencies. Some default
