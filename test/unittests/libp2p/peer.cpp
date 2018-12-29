@@ -56,6 +56,8 @@ BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
+    // Need to supply 0 for port when creating more than 1 host to get random listen port,
+    // otherwise NodeTable won't receive packets
     Host host1("Test", NetworkConfig("127.0.0.1", 0 /* listen port */, false /* upnp */,
                            true /* allow local discovery */));
     host1.registerCapability(make_shared<TestCap>());
@@ -130,6 +132,8 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
     for (unsigned i = 0; i < c_nodes; ++i)
     {
+        // Need to supply 0 for port when creating more than 1 host to get random listen port,
+        // otherwise NodeTable won't receive packets
         Host* h = new Host("Test", NetworkConfig("127.0.0.1", 0 /* listen port */, false /* upnp */,
                                        true /* allow local discovery */));
         h->registerCapability(make_shared<TestCap>());

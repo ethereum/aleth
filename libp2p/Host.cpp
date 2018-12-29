@@ -780,7 +780,8 @@ void Host::startedWorking()
         int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
         if (port > 0)
         {
-            m_listenPort = port;
+            // Port may have been changed if the specified port was already in use
+            m_netConfig.listenPort = m_listenPort = port;
             determinePublic();
             runAcceptor();
         }
@@ -799,7 +800,7 @@ void Host::startedWorking()
         m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
     if (m_capabilities.size())
-        // Don't need to set event handler since there are no peers for Host to update when p2p
+        // Only set the event handler if there are capabilities since otherwise p2p
         // isn't running
         nodeTable->setEventHandler(new HostNodeTableHandler(*this));
     DEV_GUARDED(x_nodeTable)
