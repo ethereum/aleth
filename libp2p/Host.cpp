@@ -132,11 +132,7 @@ void Host::stop()
     if (!m_run.exchange(false))
         return;
 
-    {
-        unique_lock<mutex> l(x_runTimer);
-        while (m_timer)
-            m_timerReset.wait(l);
-    }
+    m_ioService.stop();
 
     // stop worker thread
     if (isWorking())
@@ -519,7 +515,7 @@ void Host::addPeer(NodeSpec const& _s, PeerType _t)
 
 void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 {
-    // return if network is stopped while waiting on Host::run() or nodeTable to start
+    // return if network is stopped while waiting on Host::run or nodeTable to start
     while (!haveNetwork())
         if (isWorking())
             this_thread::sleep_for(chrono::milliseconds(50));
@@ -673,82 +669,62 @@ size_t Host::peerCount() const
 void Host::run(boost::system::error_code const&)
 {
     if (!m_run)
-    {
-        // reset NodeTable
-        DEV_GUARDED(x_nodeTable)
-            m_nodeTable.reset();
-
-        // stopping io service allows running manual network operations for shutdown
-        // and also stops blocking worker thread, allowing worker thread to exit
-        m_ioService.stop();
-
-        // resetting timer signals network that nothing else can be scheduled to run
-        DEV_GUARDED(x_runTimer)
-            m_timer.reset();
-
-        m_timerReset.notify_all();
         return;
-    }
 
-    // Don't need to process node table events (which results in peers being added/dropped) or
-    // perform any p2p functionality if we aren't running p2p
-    if (m_capabilities.size())
+    if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
+        nodeTable->processEvents();
+
+    // cleanup zombies
+    DEV_GUARDED(x_connecting)
+        m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
+    DEV_GUARDED(x_timers)
+    m_timers.remove_if([](std::unique_ptr<boost::asio::deadline_timer> const& t) {
+        return t->expires_from_now().total_milliseconds() < 0;
+    });
+
+    keepAlivePeers();
+        
+    // At this time peers will be disconnected based on natural TCP timeout.
+    // disconnectLatePeers needs to be updated for the assumption that Session
+    // is always live and to ensure reputation and fallback timers are properly
+    // updated. // disconnectLatePeers();
+
+    // todo: update peerSlotsAvailable()
+        
+    list<shared_ptr<Peer>> toConnect;
+    unsigned reqConn = 0;
     {
-        if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
-            nodeTable->processEvents();
-
-        // cleanup zombies
-        DEV_GUARDED(x_connecting)
-            m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
-        DEV_GUARDED(x_timers)
-        m_timers.remove_if([](std::unique_ptr<boost::asio::deadline_timer> const& t) {
-            return t->expires_from_now().total_milliseconds() < 0;
-        });
-
-        keepAlivePeers();
-        
-        // At this time peers will be disconnected based on natural TCP timeout.
-        // disconnectLatePeers needs to be updated for the assumption that Session
-        // is always live and to ensure reputation and fallback timers are properly
-        // updated. // disconnectLatePeers();
-
-        // todo: update peerSlotsAvailable()
-        
-        list<shared_ptr<Peer>> toConnect;
-        unsigned reqConn = 0;
+        RecursiveGuard l(x_sessions);
+        for (auto const& p: m_peers)
         {
-            RecursiveGuard l(x_sessions);
-            for (auto const& p: m_peers)
-            {
-                bool haveSession = havePeerSession(p.second->id);
-                bool required = p.second->peerType == PeerType::Required;
-                if (haveSession && required)
-                    reqConn++;
-                else if (!haveSession && p.second->shouldReconnect() && (!m_netConfig.pin || required))
-                    toConnect.push_back(p.second);
-            }
-        }
-
-        for (auto p: toConnect)
-            if (p->peerType == PeerType::Required && reqConn++ < m_idealPeerCount)
-                connect(p);
-        
-        if (!m_netConfig.pin)
-        {
-            unsigned const maxSlots = m_idealPeerCount + reqConn;
-            unsigned occupiedSlots = peerCount() + m_pendingPeerConns.size();
-            for (auto peerToConnect = toConnect.cbegin();
-                occupiedSlots <= maxSlots && peerToConnect != toConnect.cend(); ++peerToConnect)
-            {
-                if ((*peerToConnect)->peerType == PeerType::Optional)
-                {
-                    connect(*peerToConnect);
-                    ++occupiedSlots;
-                }
-            }
+            bool haveSession = havePeerSession(p.second->id);
+            bool required = p.second->peerType == PeerType::Required;
+            if (haveSession && required)
+                reqConn++;
+            else if (!haveSession && p.second->shouldReconnect() && (!m_netConfig.pin || required))
+                toConnect.push_back(p.second);
         }
     }
 
+    for (auto p: toConnect)
+        if (p->peerType == PeerType::Required && reqConn++ < m_idealPeerCount)
+            connect(p);
+        
+    if (!m_netConfig.pin)
+    {
+        unsigned const maxSlots = m_idealPeerCount + reqConn;
+        unsigned occupiedSlots = peerCount() + m_pendingPeerConns.size();
+        for (auto peerToConnect = toConnect.cbegin();
+            occupiedSlots <= maxSlots && peerToConnect != toConnect.cend(); ++peerToConnect)
+        {
+            if ((*peerToConnect)->peerType == PeerType::Optional)
+            {
+                connect(*peerToConnect);
+                ++occupiedSlots;
+            }
+        }
+    }
+    
     auto runcb = [this](boost::system::error_code const& error) { run(error); };
     m_timer->expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
     m_timer->async_wait(runcb);
@@ -808,11 +784,12 @@ void Host::startedWorking()
     restoreNetwork(&m_restoreNetwork);
 
     if (m_capabilities.size())
+    {
         LOG(m_logger) << "p2p.started id: " << id();
+        run(boost::system::error_code());
+    }
     else
         LOG(m_logger) << "No capabilities detected, p2p not started";
-
-    run(boost::system::error_code());
 }
 
 void Host::doWork()
