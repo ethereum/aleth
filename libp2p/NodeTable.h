@@ -153,7 +153,7 @@ public:
     /// Called by implementation which provided handler to process NodeEntryAdded/NodeEntryDropped events. Events are coalesced by type whereby old events are ignored.
     void processEvents();
 
-    /// Add node. Node will be pinged.
+    /// Add node to the list of all nodes and if the node is known, also add it to the node table.
     void addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
 
     /// Returns list of node ids active in node table.
@@ -226,7 +226,8 @@ protected:
     /// Asynchronously drops _leastSeen node if it doesn't reply and adds _new node, otherwise _new node is thrown away.
     void evict(NodeEntry const& _leastSeen, NodeEntry const& _new);
 
-    /// Called whenever activity is received from a node in order to maintain node table.
+    /// Called whenever activity is received from a node in order to maintain node table. Only
+    /// called for nodes with which we've completed an endpoint proof.
     void noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint);
 
     /// Used to drop node when timeout occurs or when evict() result is to keep previous node.
@@ -276,11 +277,15 @@ protected:
     Secret m_secret;												///< This nodes secret key.
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
-    std::unordered_map<NodeID, std::shared_ptr<NodeEntry>> m_allNodes;  ///< Known Node Endpoints
+    std::unordered_map<NodeID, std::shared_ptr<NodeEntry>>
+        m_allNodes;  ///< Node endpoints. Includes all nodes that we've been in contact with and
+                     ///< which haven't been evicted. This includes nodes for which we both have and haven't
+                     ///< completed the endpoint proof.
 
     mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.
-    std::array<NodeBucket, s_bins> m_buckets;                       ///< State of p2p node network.
-    
+    std::array<NodeBucket, s_bins> m_buckets;  ///< State of p2p node network. Only includes nodes
+                                               ///< for which we've completed the endpoint proof
+
     std::list<NodeIdTimePoint> m_sentFindNodes;					///< Timeouts for FindNode requests.
 
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
