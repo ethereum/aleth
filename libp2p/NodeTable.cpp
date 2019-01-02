@@ -178,8 +178,8 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
     {
         if (!contains(*_tried, node))
         {
-            // Avoid sending FindNode, if have have not sent a valid PONG lately
-            // This prevents being conisedered invalid node and FindNode being ignored
+            // Avoid sending FindNode, if we have not sent a valid PONG lately.
+            // This prevents being considered invalid node and FindNode being ignored.
             if (RLPXDatagramFace::secondsSinceEpoch() >=
                 node->lastPongSentTime + c_bondingTimeSeconds)
             {
