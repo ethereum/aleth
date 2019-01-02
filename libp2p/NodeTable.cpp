@@ -172,43 +172,39 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
     if (!m_socket->isOpen())
         return;
     
-    if (_round == s_maxSteps)
+    auto const nearestNodes = nearestNodeEntries(_node);
+    auto newTriedCount = 0;
+    for (auto const& node : nearestNodes)
     {
-        LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
-        doDiscovery();
-        return;
-    }
-    else if (!_round && !_tried)
-        // initialized _tried on first round
-        _tried = make_shared<set<shared_ptr<NodeEntry>>>();
-    
-    auto nearest = nearestNodeEntries(_node);
-    list<shared_ptr<NodeEntry>> tried;
-    for (unsigned i = 0; i < nearest.size() && tried.size() < s_alpha; i++)
-        if (!_tried->count(nearest[i]))
+        if (!contains(*_tried, node))
         {
-            auto r = nearest[i];
-            tried.push_back(r);
-            FindNode p(r->endpoint, _node);
+            // Avoid sending FindNode, if we have not sent a valid PONG lately.
+            // This prevents being considered invalid node and FindNode being ignored.
+            if (RLPXDatagramFace::secondsSinceEpoch() >=
+                node->lastPongSentTime + c_bondingTimeSeconds)
+            {
+                ping(*node);
+                continue;
+            }
+
+            FindNode p(node->endpoint, _node);
             p.ts = nextRequestExpirationTime();
             p.sign(m_secret);
-            DEV_GUARDED(x_findNodeTimeout)
-                m_findNodeTimeout.emplace_back(r->id, chrono::steady_clock::now());
-            LOG(m_logger) << p.typeName() << " to " << _node << "@" << r->endpoint;
+            m_sentFindNodes.emplace_back(node->id, chrono::steady_clock::now());
+            LOG(m_logger) << p.typeName() << " to " << _node << "@" << node->endpoint;
             m_socket->send(p);
+
+            _tried->emplace(node);
+            if (++newTriedCount == s_alpha)
+                break;
         }
+    }
     
-    if (tried.empty())
+    if (_round == s_maxSteps || newTriedCount == 0)
     {
         LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
         doDiscovery();
         return;
-    }
-        
-    while (!tried.empty())
-    {
-        _tried->insert(tried.front());
-        tried.pop_front();
     }
 
     m_timers.schedule(c_reqTimeout.count() * 2, [this, _node, _round, _tried](boost::system::error_code const& _ec)
@@ -465,16 +461,13 @@ void NodeTable::onPacketReceived(
                 auto const& in = dynamic_cast<Neighbours const&>(*packet);
                 bool expected = false;
                 auto now = chrono::steady_clock::now();
-                DEV_GUARDED(x_findNodeTimeout)
-                {
-                    m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& _t) noexcept {
-                        if (_t.first != in.sourceid)
-                            return false;
-                        if (now - _t.second < c_reqTimeout)
-                            expected = true;
-                        return true;
-                    });
-                }
+                m_sentFindNodes.remove_if([&](NodeIdTimePoint const& _t) noexcept {
+                    if (_t.first != in.sourceid)
+                        return false;
+                    if (now - _t.second < c_reqTimeout)
+                        expected = true;
+                    return true;
+                });
                 if (!expected)
                 {
                     cnetdetails << "Dropping unsolicited neighbours packet from "
@@ -518,6 +511,8 @@ void NodeTable::onPacketReceived(
                 p.echo = in.echo;
                 p.sign(m_secret);
                 m_socket->send(p);
+                
+                m_allNodes[in.sourceid]->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
                 break;
             }
         }
@@ -553,7 +548,7 @@ void NodeTable::doDiscovery()
         NodeID randNodeId;
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));
-        doDiscover(randNodeId);
+        doDiscover(randNodeId, 0, make_shared<set<shared_ptr<NodeEntry>>>());
     });
 }
 

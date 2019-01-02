@@ -38,7 +38,7 @@ struct NodeEntry: public Node
     NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw);
     int const distance = 0;  ///< Node's distance (xor of _src as integer).
     uint32_t lastPongReceivedTime = 0;
-    // TODO uint32_t lastPongSentTime = 0;
+    uint32_t lastPongSentTime = 0;
 };
 
 enum NodeTableEventType
@@ -218,7 +218,7 @@ protected:
 
     /// Used to discovery nodes on network which are close to the given target.
     /// Sends s_alpha concurrent requests to nodes nearest to target, for nodes nearest to target, up to s_maxSteps rounds.
-    void doDiscover(NodeID _target, unsigned _round = 0, std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried = std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>>());
+    void doDiscover(NodeID _target, unsigned _round, std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried);
 
     /// Returns nodes from node table which are closest to target.
     std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID _target);
@@ -281,8 +281,7 @@ protected:
     mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.
     std::array<NodeBucket, s_bins> m_buckets;                       ///< State of p2p node network.
     
-    Mutex x_findNodeTimeout;
-    std::list<NodeIdTimePoint> m_findNodeTimeout;					///< Timeouts for FindNode requests.
+    std::list<NodeIdTimePoint> m_sentFindNodes;					///< Timeouts for FindNode requests.
 
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 

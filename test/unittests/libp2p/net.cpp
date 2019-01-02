@@ -21,6 +21,7 @@
 
 #include <libdevcore/Assertions.h>
 #include <libdevcore/Worker.h>
+#include <libdevcore/concurrent_queue.h>
 #include <libdevcrypto/Common.h>
 #include <libp2p/NodeTable.h>
 #include <libp2p/UDP.h>
@@ -172,10 +173,10 @@ struct TestNodeTable: public NodeTable
     {
         NodeTable::onPacketReceived(_socket, _from, _packet);
 
-        packetReceived.set_value(_packet.toBytes());
+        packetsReceived.push(_packet.toBytes());
     }
 
-    std::promise<vector<byte>> packetReceived;
+    concurrent_queue<bytes> packetsReceived;
 
 
     using NodeTable::m_allNodes;
@@ -191,18 +192,17 @@ struct TestNodeTable: public NodeTable
 /**
  * Only used for testing. Not useful beyond tests.
  */
-struct TestNodeTableHost: public TestHost
+struct TestNodeTableHost : public TestHost
 {
-    TestNodeTableHost(unsigned _count = 8)
+    TestNodeTableHost(unsigned _count = 8, uint16_t _port = 30310)
       : m_alias(KeyPair::create()), testNodes(TestNodeTable::createTestNodes(_count))
     {
-        uint16_t port = 30310;
         // find free port
         do
         {
-            ++port;
             nodeTable.reset(
-                new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"), port));
+                new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"), _port));
+            ++_port;
         } while (!nodeTable->m_socket->isOpen());
     }
     ~TestNodeTableHost() { m_io.stop(); stopWorking(); }
@@ -251,7 +251,7 @@ public:
         if (_packet.toString() == "AAAA")
             success = true;
 
-        packetReceived.set_value(_packet.toBytes());
+        packetsReceived.push(_packet.toBytes());
     }
 
     shared_ptr<UDPSocket<TestUDPSocketHost, 1024>> socket;
@@ -259,7 +259,7 @@ public:
 
     std::atomic<bool> success{false};
 
-    std::promise<vector<byte>> packetReceived;
+    concurrent_queue<bytes> packetsReceived;
 };
 
 BOOST_AUTO_TEST_CASE(isIPAddressType)
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeAppendsNewNode)
     TestNodeTableHost nodeTableHost(1);
     nodeTableHost.populate(1);
 
-    auto nodeTable = nodeTableHost.nodeTable;
+    auto& nodeTable = nodeTableHost.nodeTable;
     std::shared_ptr<NodeEntry> newNode = nodeTable->m_allNodes.begin()->second;
 
     auto const& nodeBucketArray = nodeTable->m_buckets;
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeUpdatesKnownNode)
     int const bucketIndex = nodeTableHost.populateUntilBucketSize(3);
     BOOST_REQUIRE(bucketIndex >= 0);
 
-    auto nodeTable = nodeTableHost.nodeTable;
+    auto& nodeTable = nodeTableHost.nodeTable;
     auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodes = nodeBucketArray[bucketIndex].nodes;
     auto knownNode = nodes.front().lock();
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
         newNodeId = k.pub();
     } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
 
-    auto nodeTable = nodeTableHost.nodeTable;
+    auto& nodeTable = nodeTableHost.nodeTable;
     auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodes = nodeBucketArray[bucketIndex].nodes;
     auto leastRecentlySeenNode = nodes.front().lock();
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     int const bucketIndex = nodeTableHost.populateUntilBucketSize(16);
     BOOST_REQUIRE(bucketIndex >= 0);
 
-    auto nodeTable = nodeTableHost.nodeTable;
+    auto& nodeTable = nodeTableHost.nodeTable;
     auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodes = nodeBucketArray[bucketIndex].nodes;
     auto leastRecentlySeenNodeId = nodes.front().lock()->id;
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(unexpectedPong)
     a.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetsReceived.pop();
 
     auto addedNode = nodeTable->m_allNodes.find(nodeKeyPair.pub());
     BOOST_REQUIRE(addedNode == nodeTable->m_allNodes.end());
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetsReceived.pop();
 
     auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
     BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetReceived.get_future().get();
+    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
     auto pingDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetsReceived.pop();
 
     auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
     BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetReceived.get_future().get();
+    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
     auto pingDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetsReceived.pop();
 
     addedNode = nodeTable->m_allNodes.find(nodePubKey);
     BOOST_CHECK(addedNode == nodeTable->m_allNodes.end());
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     BOOST_REQUIRE(evicted != nodeTable->m_sentPings.end());
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetReceived.get_future().get();
+    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
     auto pingDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetReceived.get_future().wait();
+    nodeTable->packetsReceived.pop();
 
     // check that old node is not evicted
     auto addedNode = nodeTable->m_allNodes.find(nodeId);
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     int const bucketIndex = nodeTableHost.populateUntilBucketSize(16);
     BOOST_REQUIRE(bucketIndex >= 0);
 
-    auto nodeTable = nodeTableHost.nodeTable;
+    auto& nodeTable = nodeTableHost.nodeTable;
     nodeTable->setRequestTimeToLive(std::chrono::seconds(1));
 
     nodeTableHost.start();
@@ -755,6 +755,38 @@ BOOST_AUTO_TEST_CASE(addSelf)
     Node self(nodeTableHost.m_alias.pub(), nodeEndpoint);
     nodeTable->addNode(self);
     BOOST_CHECK(nodeTable->count() == ++expectedNodeCount - 1);
+}
+
+BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
+{
+    // Node Table receiving Ping and sending FindNode
+    TestNodeTableHost nodeTableHost1(15);
+    nodeTableHost1.populate();
+    nodeTableHost1.start();
+    auto& nodeTable1 = nodeTableHost1.nodeTable;
+
+    TestNodeTableHost nodeTableHost2(512, nodeTable1->m_hostNodeEndpoint.udpPort() + 1);
+    nodeTableHost2.populate();
+    nodeTableHost2.start();
+    auto& nodeTable2 = nodeTableHost2.nodeTable;
+
+    // add node1 to table2 initiating PING from table2 to table1
+    nodeTable2->addNode(Node{nodeTable1->m_hostNodeID, nodeTable1->m_hostNodeEndpoint});
+
+    auto packetReceived1 = nodeTable2->packetsReceived.pop();
+    auto datagram1 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived1));
+    BOOST_CHECK_EQUAL(datagram1->typeName(), "Pong");
+
+    auto packetReceived2 = nodeTable2->packetsReceived.pop();
+    auto datagram2 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived2));
+    BOOST_CHECK_EQUAL(datagram2->typeName(), "Ping");
+
+    auto packetReceived3 = nodeTable2->packetsReceived.pop();
+    auto datagram3 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived3));
+    BOOST_CHECK_EQUAL(datagram3->typeName(), "FindNode");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
