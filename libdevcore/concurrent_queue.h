@@ -15,11 +15,13 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
+
+#include "Exceptions.h"
+
 #include <utility>
 #include <queue>
 #include <condition_variable>
 #include <mutex>
-
 
 namespace dev
 {
@@ -42,15 +44,17 @@ public:
 		m_cv.notify_one();
 	}
 
-	_T pop()
+	_T pop(std::chrono::milliseconds const _waitDuration = std::chrono::milliseconds::max())
 	{
 		std::unique_lock<std::mutex> lock{x_mutex};
-		m_cv.wait(lock, [this]{ return !m_queue.empty(); });
+        if (!m_cv.wait_for(lock, _waitDuration, [this] { return !m_queue.empty(); }))
+            BOOST_THROW_EXCEPTION(WaitTimeout());
+
 		auto item = std::move(m_queue.front());
 		m_queue.pop();
 		return item;
 	}
-
+    
 private:
 	_QueueT m_queue;
 	std::mutex x_mutex;
