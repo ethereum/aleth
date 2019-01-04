@@ -734,15 +734,9 @@ void Host::startedWorking()
     // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
     asserts(!m_timer);
 
-    {
-        // prevent m_run from being set to true at same time as set to false by stop()
-        // don't release mutex until m_timer is set so in case stop() is called at same
-        // time, stop will wait on m_timer and graceful network shutdown.
-        Guard l(x_runTimer);
-        // create deadline timer
-        m_timer.reset(new io::deadline_timer(m_ioService));
-        m_run = true;
-    }
+    // create deadline timer
+    m_timer.reset(new io::deadline_timer(m_ioService));
+    m_run = true;
 
     if (m_capabilities.size())
     {

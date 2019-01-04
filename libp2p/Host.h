@@ -203,7 +203,7 @@ public:
     ReputationManager& repMan() { return m_repMan; }
 
     /// @returns if network is started and interactive.
-    bool haveNetwork() const { Guard l(x_runTimer); Guard ll(x_nodeTable); return m_run && !!m_nodeTable; }
+    bool haveNetwork() const { Guard ll(x_nodeTable); return m_run && !!m_nodeTable; }
     
     /// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
     void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
@@ -310,7 +310,6 @@ private:
     bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
     std::unique_ptr<io::deadline_timer> m_timer;					///< Timer which, when network is running, calls run() every c_timerInterval ms.
-    mutable std::mutex x_runTimer;	///< Start/stop mutex.
     static constexpr unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
 
     std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
