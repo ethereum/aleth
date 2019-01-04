@@ -111,9 +111,11 @@ void Host::start()
     while (isWorking() && !haveNetwork())
         this_thread::sleep_for(chrono::milliseconds(10));
     
-    // network start failed!
     if (isWorking())
+    {
+        cout << "Node ID: " << enode() << endl;
         return;
+    }
 
     cwarn << "Network start failed!";
     doneWorking();

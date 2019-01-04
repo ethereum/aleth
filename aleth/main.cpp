@@ -952,10 +952,7 @@ int main(int argc, char** argv)
         cout << "Mining Beneficiary: " << renderFullAddress(author) << "\n";
 
     if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet || !preferredNodes.empty())
-    {
         web3.startNetwork();
-        cout << "Node ID: " << web3.enode() << "\n";
-    }
     else
         cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host.\n";
 

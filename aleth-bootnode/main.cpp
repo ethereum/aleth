@@ -133,8 +133,6 @@ int main(int argc, char** argv)
     Host h(c_programName, netPrefs, &netData);
     h.start();
 
-    cout << "Node ID: " << h.enode() << endl;
-
     ExitHandler exitHandler;
     signal(SIGTERM, &ExitHandler::exitHandler);
     signal(SIGABRT, &ExitHandler::exitHandler);
