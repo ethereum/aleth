@@ -23,6 +23,7 @@ set(unittest_sources
     unittests/libweb3core/statecachedb.cpp
 
     unittests/libweb3jsonrpc/AccountHolder.cpp
+    unittests/libethereum/ValidationSchemes.cpp
 )
 
 add_executable(aleth-unittests ${unittest_sources})
