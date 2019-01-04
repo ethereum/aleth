@@ -43,7 +43,11 @@ protected:
 struct TestNodeTable: public NodeTable
 {
     /// Constructor
-    TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311): NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port), true /* discovery enabled */, true /* allow local discovery */) {}
+    TestNodeTable(
+        ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311)
+      : NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port), true /* discovery enabled */,
+            true /* allow local discovery */)
+    {}
 
     static std::vector<std::pair<Public, uint16_t>> createTestNodes(unsigned _count)
     {

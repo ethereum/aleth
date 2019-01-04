@@ -188,8 +188,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
         {
             // Avoid sending FindNode, if we have not sent a valid PONG lately.
             // This prevents being considered invalid node and FindNode being ignored.
-            if (RLPXDatagramFace::secondsSinceEpoch() >=
-                node->lastPongSentTime + c_bondingTimeSeconds)
+            if (!node->hasValidEndpointProof())
             {
                 ping(*node);
                 continue;
@@ -490,17 +489,21 @@ void NodeTable::onPacketReceived(
 
             case FindNode::type:
             {
-                auto const sourceNodeEntry = nodeEntry(packet->sourceid);
+                auto const& sourceNodeEntry = nodeEntry(packet->sourceid);
                 if (!sourceNodeEntry)
                 {
                     LOG(m_logger) << "Source node (" << packet->sourceid << "@" << _from
                                   << ") not found in node table. Ignoring FindNode request.";
                     return;
                 }
-                if (sourceNodeEntry->lastPongReceivedTime + c_bondingTimeSeconds <
-                    RLPXDatagramFace::secondsSinceEpoch())
+                if (!sourceNodeEntry->lastPongReceivedTime)
                 {
-                    LOG(m_logger) << "Endpoint proof has expired! Ignoring FindNode request";
+                    LOG(m_logger) << "Unexpected FindNode packet! Endpoint proof hasn't been performed yet.";
+                    return;
+                }
+                if (!sourceNodeEntry->hasValidEndpointProof())
+                {
+                    LOG(m_logger) << "Unexpected FindNode packet! Endpoint proof has expired.";
                     return;
                 }
 

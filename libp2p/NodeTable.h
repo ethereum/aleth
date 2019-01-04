@@ -29,18 +29,6 @@ namespace dev
 namespace p2p
 {
 
-/**
- * NodeEntry
- * @brief Entry in Node Table
- */
-struct NodeEntry: public Node
-{
-    NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw);
-    int const distance = 0;  ///< Node's distance (xor of _src as integer).
-    uint32_t lastPongReceivedTime = 0;
-    uint32_t lastPongSentTime = 0;
-};
-
 enum NodeTableEventType
 {
     NodeEntryAdded,
@@ -86,6 +74,8 @@ protected:
 
 class NodeTable;
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable);
+
+struct NodeEntry;
 
 /**
  * NodeTable using modified kademlia for node discovery and preference.
@@ -136,6 +126,9 @@ class NodeTable : UDPSocketEvents
     };
 
 public:
+    // Period during which we consider last PONG results to be valid before sending new PONG
+    static constexpr uint32_t c_bondingTimeSeconds{12 * 60 * 60};
+
     enum NodeRelation { Unknown = 0, Known };
     enum DiscoverType { Random = 0 };
     
@@ -153,7 +146,10 @@ public:
     /// Called by implementation which provided handler to process NodeEntryAdded/NodeEntryDropped events. Events are coalesced by type whereby old events are ignored.
     void processEvents();
 
-    /// Add node to the list of all nodes and if the node is known, also add it to the node table.
+    /// Add node to the list of all nodes and if the node is known (we've completed the endpoint
+    /// proof for it or it has been restored from the network config), also add it to the node table.
+    /// If the node is unknown (i.e. we haven't completed the endpoint proof for it yet) then ping
+    /// it to trigger the endpoint proof.
     void addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
 
     /// Returns list of node ids active in node table.
@@ -201,8 +197,6 @@ protected:
     static constexpr std::chrono::milliseconds c_reqTimeout{300};
     /// Refresh interval prevents bucket from becoming stale. [Kademlia]
     static constexpr std::chrono::milliseconds c_bucketRefresh{7200};
-    // Period during which we consider last PONG results to be valid before sending new PONG
-    static constexpr uint32_t c_bondingTimeSeconds{12 * 60 * 60};
 
     struct NodeBucket
     {
@@ -227,7 +221,7 @@ protected:
     void evict(NodeEntry const& _leastSeen, NodeEntry const& _new);
 
     /// Called whenever activity is received from a node in order to maintain node table. Only
-    /// called for nodes with which we've completed an endpoint proof.
+    /// called for nodes for which we've completed an endpoint proof.
     void noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint);
 
     /// Used to drop node when timeout occurs or when evict() result is to keep previous node.
@@ -277,14 +271,16 @@ protected:
     Secret m_secret;												///< This nodes secret key.
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
-    std::unordered_map<NodeID, std::shared_ptr<NodeEntry>>
-        m_allNodes;  ///< Node endpoints. Includes all nodes that we've been in contact with and
-                     ///< which haven't been evicted. This includes nodes for which we both have and haven't
-                     ///< completed the endpoint proof.
+
+    /// Node endpoints. Includes all nodes that we've been in contact with and which haven't been
+    /// evicted. This includes nodes for which we both have and haven't completed the endpoint
+    /// proof.
+    std::unordered_map<NodeID, std::shared_ptr<NodeEntry>> m_allNodes;
 
     mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.
-    std::array<NodeBucket, s_bins> m_buckets;  ///< State of p2p node network. Only includes nodes
-                                               ///< for which we've completed the endpoint proof
+
+    /// State of p2p node network. Only includes nodes for which we've completed the endpoint proof
+    std::array<NodeBucket, s_bins> m_buckets;
 
     std::list<NodeIdTimePoint> m_sentFindNodes;					///< Timeouts for FindNode requests.
 
@@ -301,6 +297,24 @@ protected:
     bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
     DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
+};
+
+/**
+ * NodeEntry
+ * @brief Entry in Node Table
+ */
+struct NodeEntry : public Node
+{
+    NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw);
+    bool hasValidEndpointProof() const
+    {
+        return RLPXDatagramFace::secondsSinceEpoch() <
+               lastPongReceivedTime + NodeTable::c_bondingTimeSeconds;
+    }
+
+    int const distance = 0;  ///< Node's distance (xor of _src as integer).
+    uint32_t lastPongReceivedTime = 0;
+    uint32_t lastPongSentTime = 0;
 };
 
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
