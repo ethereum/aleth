@@ -139,11 +139,11 @@ void Host::stop()
 
 void Host::doneWorking()
 {
+    // reset ioservice (cancels all timers and allows manually polling network if there are
+    // capabilities. Also enables reuse of the ioservice)
+    m_ioService.reset();
     if (m_capabilities.size())
     {
-        // reset ioservice (cancels all timers and allows manually polling network, below)
-        m_ioService.reset();
-
         DEV_GUARDED(x_timers)
             m_timers.clear();
 
@@ -206,9 +206,6 @@ void Host::doneWorking()
         RecursiveGuard l(x_sessions);
         m_sessions.clear();
     }
-    else
-        // allows reusing ioservice in the future
-        m_ioService.reset();
 }
 
 bool Host::isRequiredPeer(NodeID const& _id) const
