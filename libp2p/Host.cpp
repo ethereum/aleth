@@ -90,9 +90,7 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig co
     m_alias(_alias),
     m_lastPing(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this))
-{
-    cnetnote << "Id: " << id();
-}
+{}
 
 Host::Host(string const& _clientVersion, NetworkConfig const& _n, bytesConstRef _restoreNetwork):
     Host(_clientVersion, networkAlias(_restoreNetwork), _n)
@@ -148,7 +146,7 @@ void Host::doneWorking()
 
         DEV_GUARDED(x_timers)
             m_timers.clear();
-        
+
         // shutdown acceptor
         m_tcp4Acceptor.cancel();
         if (m_tcp4Acceptor.is_open())
@@ -162,14 +160,14 @@ void Host::doneWorking()
             m_ioService.poll();
 
         // stop capabilities (eth: stops syncing or block/tx broadcast)
-        for (auto const& h: m_capabilities)
+        for (auto const& h : m_capabilities)
             h.second->onStopping();
 
         // disconnect pending handshake, before peers, as a handshake may create a peer
         for (unsigned n = 0;; n = 0)
         {
             DEV_GUARDED(x_connecting)
-                for (auto const& i: m_connecting)
+                for (auto const& i : m_connecting)
                     if (auto h = i.lock())
                     {
                         h->cancel();
@@ -179,12 +177,12 @@ void Host::doneWorking()
                 break;
             m_ioService.poll();
         }
-        
+
         // disconnect peers
         for (unsigned n = 0;; n = 0)
         {
             DEV_RECURSIVE_GUARDED(x_sessions)
-                for (auto i: m_sessions)
+                for (auto i : m_sessions)
                     if (auto p = i.second.lock())
                         if (p->isConnected())
                         {
@@ -785,7 +783,7 @@ void Host::startedWorking()
 
     if (m_capabilities.size())
     {
-        LOG(m_logger) << "p2p.started id: " << id();
+        LOG(m_logger) << "Capabilities detected, p2p started";
         run(boost::system::error_code());
     }
     else
