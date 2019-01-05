@@ -49,10 +49,10 @@ NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint con
 NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
     bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID(_alias.pub()),
-    m_hostNodeEndpoint(_endpoint),
+    m_nodeEndpoint(_endpoint),
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
-        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
+        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_nodeEndpoint)),
     m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),        
     m_allowLocalDiscovery(_allowLocalDiscovery),
     m_timers(_io)
@@ -301,7 +301,7 @@ void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const&
             return;
 
         NodeIPEndpoint src;
-        src = m_hostNodeEndpoint;
+        src = m_nodeEndpoint;
         PingNode p(src, _nodeEntry.endpoint);
         p.ts = nextRequestExpirationTime();
         auto const pingHash = p.sign(m_secret);
@@ -458,10 +458,10 @@ void NodeTable::onPacketReceived(
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
                 {
-                    if ((!m_hostNodeEndpoint || !isAllowedEndpoint(m_hostNodeEndpoint)) &&
+                    if ((!m_nodeEndpoint || !isAllowedEndpoint(m_nodeEndpoint)) &&
                         isPublicAddress(pong.destination.address()))
-                        m_hostNodeEndpoint.setAddress(pong.destination.address());
-                    m_hostNodeEndpoint.setUdpPort(pong.destination.udpPort());
+                        m_nodeEndpoint.setAddress(pong.destination.address());
+                    m_nodeEndpoint.setUdpPort(pong.destination.udpPort());
                 }
                 break;
             }

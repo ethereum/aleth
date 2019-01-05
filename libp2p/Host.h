@@ -174,10 +174,31 @@ public:
     size_t peerCount() const;
 
     /// Get the address we're listening on currently.
-    std::string listenAddress() const { return m_tcpPublic.address().is_unspecified() ? "0.0.0.0" : m_tcpPublic.address().to_string(); }
+    std::string listenAddress() const
+    {
+        if (!m_capabilities.empty())
+        {
+            return m_tcpPublic.address().is_unspecified() ? "0.0.0.0" :
+                                                            m_tcpPublic.address().to_string();
+        }
+        else
+        {
+            return m_nodeTable->listenAddress();
+        }
+    }
 
     /// Get the port we're listening on currently.
-    unsigned short listenPort() const { return std::max(0, m_listenPort.load()); }
+    unsigned short listenPort() const
+    {
+        if (!m_capabilities.empty())
+        {
+            return std::max(0, m_listenPort.load());
+        }
+        else
+        {
+            return m_nodeTable->listenPort();
+        }
+    }
 
     /// Serialise the set of known peers.
     bytes saveNetwork() const;

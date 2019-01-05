@@ -169,7 +169,7 @@ struct TestNodeTable: public NodeTable
     using NodeTable::m_allNodes;
     using NodeTable::m_buckets;
     using NodeTable::m_hostNodeID;
-    using NodeTable::m_hostNodeEndpoint;
+    using NodeTable::m_nodeEndpoint;
     using NodeTable::m_sentPings;
     using NodeTable::m_socket;
     using NodeTable::noteActiveNode;
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(unexpectedPong)
     nodeTableHost.start();
     auto& nodeTable = nodeTableHost.nodeTable;
 
-    Pong pong(nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_nodeEndpoint);
     auto nodeKeyPair = KeyPair::create();
     pong.sign(nodeKeyPair.secret());
 
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // send PONG
-    Pong pong(nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_nodeEndpoint);
     pong.sign(nodeKeyPair.secret());
 
     nodeSocketHost.socket->send(pong);
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
-    Pong pong(nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_nodeEndpoint);
     pong.echo = ping.echo;
     pong.sign(nodeKeyPair.secret());
     nodeSocketHost.socket->send(pong);
@@ -588,7 +588,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG after timeout
-    Pong pong(nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_nodeEndpoint);
     pong.echo = ping.echo;
     pong.sign(nodeKeyPair.secret());
     nodeSocketHost.socket->send(pong);
@@ -735,7 +735,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send valid PONG
-    Pong pong(nodeTable->m_hostNodeEndpoint);
+    Pong pong(nodeTable->m_nodeEndpoint);
     pong.echo = ping.echo;
     pong.sign(nodeKeyPair.secret());
     nodeSocketHost.socket->send(pong);
@@ -828,13 +828,13 @@ BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
     nodeTableHost1.start();
     auto& nodeTable1 = nodeTableHost1.nodeTable;
 
-    TestNodeTableHost nodeTableHost2(512, nodeTable1->m_hostNodeEndpoint.udpPort() + 1);
+    TestNodeTableHost nodeTableHost2(512, nodeTable1->m_nodeEndpoint.udpPort() + 1);
     nodeTableHost2.populate();
     nodeTableHost2.start();
     auto& nodeTable2 = nodeTableHost2.nodeTable;
 
     // add node1 to table2 initiating PING from table2 to table1
-    nodeTable2->addNode(Node{nodeTable1->m_hostNodeID, nodeTable1->m_hostNodeEndpoint});
+    nodeTable2->addNode(Node{nodeTable1->m_hostNodeID, nodeTable1->m_nodeEndpoint});
 
     auto packetReceived1 = nodeTable2->packetsReceived.pop();
     auto datagram1 =

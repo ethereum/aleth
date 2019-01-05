@@ -733,12 +733,10 @@ void Host::run(boost::system::error_code const&)
     m_timer->async_wait(runcb);
 }
 
+// Called after thread has been started to perform additional class-specific state
+// initialization (e.g. start capability threads, start TCP listener, and kick off timers) 
 void Host::startedWorking()
 {
-    // Called after thread has been started to perform additional class-specific state
-    // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
-    asserts(!m_timer);
-
     // create deadline timer
     m_timer.reset(new io::deadline_timer(m_ioService));
     m_run = true;

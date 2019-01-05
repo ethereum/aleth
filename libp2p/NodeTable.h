@@ -140,6 +140,10 @@ public:
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
     static int distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
 
+    std::string listenAddress() const { return m_nodeEndpoint.address().to_string(); }
+
+    unsigned short listenPort() const { return m_nodeEndpoint.udpPort(); }
+
     /// Set event handler for NodeEntryAdded and NodeEntryDropped events.
     void setEventHandler(NodeTableEventHandler* _handler) { m_nodeEventHandler.reset(_handler); }
 
@@ -269,7 +273,9 @@ protected:
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
     NodeID const m_hostNodeID;
-    NodeIPEndpoint m_hostNodeEndpoint;
+
+    /// Host's endpoint if p2p is started, otherwise an endpoint specific to the NodeTable
+    NodeIPEndpoint m_nodeEndpoint;
     Secret m_secret;												///< This nodes secret key.
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
@@ -322,8 +328,8 @@ struct NodeEntry : public Node
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 {
     _out << _nodeTable.m_hostNodeID << "\t"
-         << "0\t" << _nodeTable.m_hostNodeEndpoint.address() << ":"
-         << _nodeTable.m_hostNodeEndpoint.udpPort() << std::endl;
+         << "0\t" << _nodeTable.m_nodeEndpoint.address() << ":"
+         << _nodeTable.m_nodeEndpoint.udpPort() << std::endl;
     auto s = _nodeTable.snapshot();
     for (auto n: s)
         _out << n.address() << "\t" << n.distance << "\t" << n.endpoint.address() << ":"
