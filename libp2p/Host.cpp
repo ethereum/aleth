@@ -144,70 +144,76 @@ void Host::doneWorking()
     // reset ioservice (cancels all timers and allows manually polling network if there are
     // capabilities. Also enables reuse of the ioservice)
     m_ioService.reset();
-    if (m_capabilities.size())
+    if (m_capabilities.empty())
+        return;
+
+    DEV_GUARDED(x_timers) { m_timers.clear(); }
+
+    // shutdown acceptor
+    m_tcp4Acceptor.cancel();
+    if (m_tcp4Acceptor.is_open())
+        m_tcp4Acceptor.close();
+
+    // There maybe an incoming connection which started but hasn't finished.
+    // Wait for acceptor to end itself instead of assuming it's complete.
+    // This helps ensure a peer isn't stopped at the same time it's starting
+    // and that socket for pending connection is closed.
+    while (m_accepting)
+        m_ioService.poll();
+
+    // stop capabilities (eth: stops syncing or block/tx broadcast)
+    for (auto const& h : m_capabilities)
+        h.second->onStopping();
+
+    // disconnect pending handshake, before peers, as a handshake may create a peer
+    bool handshakeDisconnected;
+    while (true)
     {
-        DEV_GUARDED(x_timers)
-            m_timers.clear();
-
-        // shutdown acceptor
-        m_tcp4Acceptor.cancel();
-        if (m_tcp4Acceptor.is_open())
-            m_tcp4Acceptor.close();
-
-        // There maybe an incoming connection which started but hasn't finished.
-        // Wait for acceptor to end itself instead of assuming it's complete.
-        // This helps ensure a peer isn't stopped at the same time it's starting
-        // and that socket for pending connection is closed.
-        while (m_accepting)
-            m_ioService.poll();
-
-        // stop capabilities (eth: stops syncing or block/tx broadcast)
-        for (auto const& h : m_capabilities)
-            h.second->onStopping();
-
-        // disconnect pending handshake, before peers, as a handshake may create a peer
-        for (unsigned n = 0;; n = 0)
+        handshakeDisconnected = false;
+        DEV_GUARDED(x_connecting)
         {
-            DEV_GUARDED(x_connecting)
-                for (auto const& i : m_connecting)
-                    if (auto h = i.lock())
-                    {
-                        h->cancel();
-                        n++;
-                    }
-            if (!n)
-                break;
-            m_ioService.poll();
+            for (auto const& i : m_connecting)
+                if (auto h = i.lock())
+                {
+                    h->cancel();
+                    handshakeDisconnected = true;
+                }
         }
-
-        // disconnect peers
-        for (unsigned n = 0;; n = 0)
-        {
-            DEV_RECURSIVE_GUARDED(x_sessions)
-                for (auto i : m_sessions)
-                    if (auto p = i.second.lock())
-                        if (p->isConnected())
-                        {
-                            p->disconnect(ClientQuit);
-                            n++;
-                        }
-            if (!n)
-                break;
-
-            // poll so that peers send out disconnect packets
-            m_ioService.poll();
-        }
-
-        // stop network (again; helpful to call before subsequent reset())
-        m_ioService.stop();
-
-        // reset network (allows reusing ioservice in future)
-        m_ioService.reset();
-
-        // finally, clear out peers (in case they're lingering)
-        RecursiveGuard l(x_sessions);
-        m_sessions.clear();
+        if (!handshakeDisconnected)
+            break;
+        m_ioService.poll();
     }
+
+    // disconnect peers
+    bool peerDisconnected;
+    while (true)
+    {
+        peerDisconnected = false;
+        DEV_RECURSIVE_GUARDED(x_sessions)
+        {
+            for (auto i : m_sessions)
+                if (auto p = i.second.lock())
+                    if (p->isConnected())
+                    {
+                        p->disconnect(ClientQuit);
+                        peerDisconnected = true;
+                    }
+        }
+        if (!peerDisconnected)
+            break;
+        // poll so that peers send out disconnect packets
+        m_ioService.poll();
+    }
+
+    // stop network (again; helpful to call before subsequent reset())
+    m_ioService.stop();
+
+    // reset network (allows reusing ioservice in future)
+    m_ioService.reset();
+
+    // finally, clear out peers (in case they're lingering)
+    RecursiveGuard l(x_sessions);
+    m_sessions.clear();
 }
 
 bool Host::isRequiredPeer(NodeID const& _id) const
@@ -680,7 +686,7 @@ void Host::run(boost::system::error_code const&)
     });
 
     keepAlivePeers();
-        
+
     // At this time peers will be disconnected based on natural TCP timeout.
     // disconnectLatePeers needs to be updated for the assumption that Session
     // is always live and to ensure reputation and fallback timers are properly
@@ -737,7 +743,7 @@ void Host::startedWorking()
     m_timer.reset(new io::deadline_timer(m_ioService));
     m_run = true;
 
-    if (m_capabilities.size())
+    if (!m_capabilities.empty())
     {
         // start capability threads (ready for incoming connections)
         for (auto const& h : m_capabilities)
@@ -753,8 +759,10 @@ void Host::startedWorking()
             runAcceptor();
         }
         else
+        {
             LOG(m_logger) << "p2p.start.notice id: " << id()
-                          << " TCP Listen port is invalid or unavailable.";
+                << " TCP Listen port is invalid or unavailable.";
+        }
     }
 
     auto nodeTable = make_shared<NodeTable>(m_ioService, m_alias,
@@ -766,21 +774,22 @@ void Host::startedWorking()
             m_netConfig.listenPort /* UDP */, m_netConfig.listenPort /* TCP */),
         m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
-    if (m_capabilities.size())
+    if (!m_capabilities.empty())
         // Only set the event handler if there are capabilities since otherwise p2p
         // isn't running
         nodeTable->setEventHandler(new HostNodeTableHandler(*this));
-    DEV_GUARDED(x_nodeTable)
-    m_nodeTable = nodeTable;
+
+    DEV_GUARDED(x_nodeTable) { m_nodeTable = nodeTable; }
+
     restoreNetwork(&m_restoreNetwork);
 
-    if (m_capabilities.size())
+    if (!m_capabilities.empty())
     {
-        LOG(m_logger) << "Capabilities detected, p2p started";
+        LOG(m_logger) << "P2P started (capabilities: " << m_capabilities.size() << ")";
         run(boost::system::error_code());
     }
     else
-        LOG(m_logger) << "No capabilities detected, p2p not started";
+        LOG(m_logger) << "P2P not started (no capabilities)";
 }
 
 void Host::doWork()
