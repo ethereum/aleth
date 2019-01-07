@@ -130,8 +130,7 @@ void validateAccountObj(js::mObject const& _obj)
                 {c_codeFromFile, {{js::str_type}, JsonFieldPresence::Optional}}});
 
         // At least one field must be set
-        if (!_obj.count(c_code) && !_obj.count(c_nonce) && !_obj.count(c_storage) &&
-            !_obj.count(c_balance) && !_obj.count(c_wei) && !_obj.count(c_codeFromFile))
+        if (_obj.empty())
         {
             string comment =
                 "Error in validateAccountObj: At least one field must be set (code, nonce, "

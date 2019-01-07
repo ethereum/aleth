@@ -27,6 +27,7 @@ set(unittest_sources
 )
 
 add_executable(aleth-unittests ${unittest_sources})
+target_include_directories(aleth-unittests PRIVATE ${UTILS_INCLUDE_DIR})
 target_link_libraries(aleth-unittests PRIVATE
     web3jsonrpc ethashseal devcrypto devcore
     GTest::gtest GTest::main
