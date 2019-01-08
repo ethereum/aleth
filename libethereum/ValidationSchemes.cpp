@@ -118,36 +118,40 @@ void validateAccountObj(js::mObject const& _obj)
                 {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
                 {c_balance, {{js::str_type}, JsonFieldPresence::Optional}}});
     }
-    else if (_obj.size() == 1)
-    {
-        // A genesis account with only balance set
-        if (_obj.count(c_balance))
-            requireJsonFields(_obj, "validateAccountObj",
-                {{c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
-        else
-            requireJsonFields(_obj, "validateAccountObj",
-                {{c_wei, {{js::str_type}, JsonFieldPresence::Required}}});
-    }
     else
     {
-        if (_obj.count(c_codeFromFile))
+        // Extendable account description. Check typo errors and fields type.
+        requireJsonFields(_obj, "validateAccountObj",
+            {{c_code, {{js::str_type}, JsonFieldPresence::Optional}},
+                {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
+                {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
+                {c_balance, {{js::str_type}, JsonFieldPresence::Optional}},
+                {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
+                {c_codeFromFile, {{js::str_type}, JsonFieldPresence::Optional}}});
+
+        // At least one field must be set
+        if (_obj.empty())
         {
-            // A standart account with external code
-            requireJsonFields(_obj, "validateAccountObj",
-                {{c_codeFromFile, {{js::str_type}, JsonFieldPresence::Required}},
-                    {c_nonce, {{js::str_type}, JsonFieldPresence::Required}},
-                    {c_storage, {{js::obj_type}, JsonFieldPresence::Required}},
-                    {c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
+            string comment =
+                "Error in validateAccountObj: At least one field must be set (code, nonce, "
+                "storage, balance, wei, codeFromFile)!";
+            BOOST_THROW_EXCEPTION(MissingField() << errinfo_comment(comment));
         }
-        else
+
+        // c_code, c_codeFromFile could not coexist
+        if (_obj.count(c_code) && _obj.count(c_codeFromFile))
         {
-            // A standart account with all fields
-            requireJsonFields(_obj, "validateAccountObj",
-                {{c_code, {{js::str_type}, JsonFieldPresence::Required}},
-                    {c_nonce, {{js::str_type}, JsonFieldPresence::Required}},
-                    {c_storage, {{js::obj_type}, JsonFieldPresence::Required}},
-                    {c_balance, {{js::str_type}, JsonFieldPresence::Required}}});
+            string comment =
+                "Error in validateAccountObj: field 'code' contradicts field 'codeFromFile'!";
+            BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
         }
+    }
+
+    // c_wei, c_balance could not coexist
+    if (_obj.count(c_wei) && _obj.count(c_balance))
+    {
+        string comment = "Error in validateAccountObj: field 'balance' contradicts field 'wei'!";
+        BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
     }
 }
 }
