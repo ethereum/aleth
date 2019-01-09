@@ -34,8 +34,8 @@ namespace eth
 
 inline std::ostream& operator<<(std::ostream& _out, WorkingProgress _p)
 {
-	_out << _p.rate() << " H/s = " <<  _p.hashes << " hashes / " << (double(_p.ms) / 1000) << " s";
-	return _out;
+    _out << _p.rate() << " H/s = " <<  _p.hashes << " hashes / " << (double(_p.ms) / 1000) << " s";
+    return _out;
 }
 
 template <class PoW> class GenericMiner;
@@ -48,20 +48,20 @@ template <class PoW> class GenericMiner;
 template <class PoW> class GenericFarmFace
 {
 public:
-	using WorkPackage = typename PoW::WorkPackage;
-	using Solution = typename PoW::Solution;
-	using Miner = GenericMiner<PoW>;
+    using WorkPackage = typename PoW::WorkPackage;
+    using Solution = typename PoW::Solution;
+    using Miner = GenericMiner<PoW>;
 
-	virtual ~GenericFarmFace() {}
+    virtual ~GenericFarmFace() {}
 
-	/**
-	 * @brief Called from a Miner to note a WorkPackage has a solution.
-	 * @param _p The solution.
-	 * @param _wp The WorkPackage that the Solution is for; this will be reset if the work is accepted.
-	 * @param _finder The miner that found it.
-	 * @return true iff the solution was good (implying that mining should be .
-	 */
-	virtual bool submitProof(Solution const& _p, Miner* _finder) = 0;
+    /**
+     * @brief Called from a Miner to note a WorkPackage has a solution.
+     * @param _p The solution.
+     * @param _wp The WorkPackage that the Solution is for; this will be reset if the work is accepted.
+     * @param _finder The miner that found it.
+     * @return true iff the solution was good (implying that mining should be .
+     */
+    virtual bool submitProof(Solution const& _p, Miner* _finder) = 0;
 };
 
 /**
@@ -71,93 +71,93 @@ public:
 template <class PoW> class GenericMiner
 {
 public:
-	using WorkPackage = typename PoW::WorkPackage;
-	using Solution = typename PoW::Solution;
-	using FarmFace = GenericFarmFace<PoW>;
-	using ConstructionInfo = std::pair<FarmFace*, unsigned>;
+    using WorkPackage = typename PoW::WorkPackage;
+    using Solution = typename PoW::Solution;
+    using FarmFace = GenericFarmFace<PoW>;
+    using ConstructionInfo = std::pair<FarmFace*, unsigned>;
 
-	GenericMiner(ConstructionInfo const& _ci):
-		m_farm(_ci.first),
-		m_index(_ci.second)
-	{}
-	virtual ~GenericMiner() {}
+    GenericMiner(ConstructionInfo const& _ci):
+        m_farm(_ci.first),
+        m_index(_ci.second)
+    {}
+    virtual ~GenericMiner() {}
 
-	// API FOR THE FARM TO CALL IN WITH
+    // API FOR THE FARM TO CALL IN WITH
 
-	void setWork(WorkPackage const& _work = WorkPackage())
-	{
-		bool const old_exists = !!m_work;
-		{
-			Guard l(x_work);
-			m_work = _work;
-		}
-		if (!!_work)
-		{
-			DEV_TIMED_ABOVE("pause", 250)
-				pause();
-			DEV_TIMED_ABOVE("kickOff", 250)
-				kickOff();
-		}
-		else if (!_work && old_exists)
-			pause();
-		Guard l(x_hashCount);
-		m_hashCount = 0;
-	}
+    void setWork(WorkPackage const& _work = WorkPackage())
+    {
+        bool const old_exists = !!m_work;
+        {
+            Guard l(x_work);
+            m_work = _work;
+        }
+        if (!!_work)
+        {
+            DEV_TIMED_ABOVE("pause", 250)
+                pause();
+            DEV_TIMED_ABOVE("kickOff", 250)
+                kickOff();
+        }
+        else if (!_work && old_exists)
+            pause();
+        Guard l(x_hashCount);
+        m_hashCount = 0;
+    }
 
-	uint64_t hashCount() const { Guard l(x_hashCount); return m_hashCount; }
+    uint64_t hashCount() const { Guard l(x_hashCount); return m_hashCount; }
 
-	void resetHashCount() { Guard l(x_hashCount); m_hashCount = 0; }
+    void resetHashCount() { Guard l(x_hashCount); m_hashCount = 0; }
 
-	unsigned index() const { return m_index; }
+    unsigned index() const { return m_index; }
 
 protected:
 
-	// REQUIRED TO BE REIMPLEMENTED BY A SUBCLASS:
+    // REQUIRED TO BE REIMPLEMENTED BY A SUBCLASS:
 
-	/**
-	 * @brief Begin working on a given work package, discarding any previous work.
-	 * @param _work The package for which to find a solution.
-	 */
-	virtual void kickOff() = 0;
+    /**
+     * @brief Begin working on a given work package, discarding any previous work.
+     * @param _work The package for which to find a solution.
+     */
+    virtual void kickOff() = 0;
 
-	/**
-	 * @brief No work left to be done. Pause until told to kickOff().
-	 */
-	virtual void pause() = 0;
+    /**
+     * @brief No work left to be done. Pause until told to kickOff().
+     */
+    virtual void pause() = 0;
 
-	// AVAILABLE FOR A SUBCLASS TO CALL:
+    // AVAILABLE FOR A SUBCLASS TO CALL:
 
-	/**
-	 * @brief Notes that the Miner found a solution.
-	 * @param _s The solution.
-	 * @return true if the solution was correct and that the miner should pause.
-	 */
-	bool submitProof(Solution const& _s)
-	{
-		if (!m_farm)
-			return true;
-		if (m_farm->submitProof(_s, this))
-		{
-			Guard l(x_work);
-			m_work.reset();
-			return true;
-		}
-		return false;
-	}
+    /**
+     * @brief Notes that the Miner found a solution.
+     * @param _s The solution.
+     * @return true if the solution was correct and that the miner should pause.
+     */
+    bool submitProof(Solution const& _s)
+    {
+        if (!m_farm)
+            return true;
+        if (m_farm->submitProof(_s, this))
+        {
+            Guard l(x_work);
+            m_work.reset();
+            return true;
+        }
+        return false;
+    }
 
-	WorkPackage const& work() const { Guard l(x_work); return m_work; }
+    WorkPackage const& work() const { Guard l(x_work); return m_work; }
 
-	void accumulateHashes(unsigned _n) { Guard l(x_hashCount); m_hashCount += _n; }
+    void accumulateHashes(unsigned _n) { Guard l(x_hashCount); m_hashCount += _n; }
 
 private:
-	FarmFace* m_farm = nullptr;
-	unsigned m_index;
+    FarmFace* m_farm = nullptr;
+    unsigned m_index;
 
-	uint64_t m_hashCount = 0;
-	mutable Mutex x_hashCount;
+    uint64_t m_hashCount = 0;
+    mutable Mutex x_hashCount;
 
-	WorkPackage m_work;
-	mutable Mutex x_work;
+    WorkPackage m_work;
+    mutable Mutex x_work;
 };
 
 }

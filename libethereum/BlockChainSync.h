@@ -110,9 +110,9 @@ private:
 private:
     struct Header
     {
-        bytes data;		///< Header data
-        h256 hash;		///< Block hash
-        h256 parent;	///< Parent hash
+        bytes data;        ///< Header data
+        h256 hash;        ///< Block hash
+        h256 parent;    ///< Parent hash
     };
 
     /// Used to identify header by transactions and uncles hashes
@@ -140,28 +140,28 @@ private:
     };
 
     EthereumCapability& m_host;
-    Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
+    Handler<> m_bqRoomAvailable;                ///< Triggered once block queue has space for more blocks
     mutable RecursiveMutex x_sync;
     /// Peers to which we've sent DAO request
     std::set<NodeID> m_daoChallengedPeers;
-    std::atomic<SyncState> m_state{SyncState::Idle};		///< Current sync state
-    h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
+    std::atomic<SyncState> m_state{SyncState::Idle};        ///< Current sync state
+    h256Hash m_knownNewHashes;                     ///< New hashes we know about use for logging only
     unsigned m_chainStartBlock = 0;
-    unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
-    unsigned m_highestBlock = 0;       	     	///< Highest block number seen
-    std::unordered_set<unsigned> m_downloadingHeaders;		///< Set of block body numbers being downloaded
-    std::unordered_set<unsigned> m_downloadingBodies;		///< Set of block header numbers being downloaded
-    std::map<unsigned, std::vector<Header>> m_headers;	    ///< Downloaded headers
-    std::map<unsigned, std::vector<bytes>> m_bodies;	    ///< Downloaded block bodies
+    unsigned m_startingBlock = 0;                  ///< Last block number for the start of sync
+    unsigned m_highestBlock = 0;                    ///< Highest block number seen
+    std::unordered_set<unsigned> m_downloadingHeaders;        ///< Set of block body numbers being downloaded
+    std::unordered_set<unsigned> m_downloadingBodies;        ///< Set of block header numbers being downloaded
+    std::map<unsigned, std::vector<Header>> m_headers;        ///< Downloaded headers
+    std::map<unsigned, std::vector<bytes>> m_bodies;        ///< Downloaded block bodies
     /// Peers to m_downloadingHeaders number map
     std::map<NodeID, std::vector<unsigned>> m_headerSyncPeers;
     /// Peers to m_downloadingBodies number map
     std::map<NodeID, std::vector<unsigned>> m_bodySyncPeers;
     std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
-    bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
-    unsigned m_lastImportedBlock = 0; 			///< Last imported block number
-    h256 m_lastImportedBlockHash;				///< Last imported block hash
-    u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
+    bool m_haveCommonHeader = false;            ///< True if common block for our and remote chain has been found
+    unsigned m_lastImportedBlock = 0;             ///< Last imported block number
+    h256 m_lastImportedBlockHash;                ///< Last imported block hash
+    u256 m_syncingTotalDifficulty;                ///< Highest peer difficulty
 
     Logger m_logger{createLogger(VerbosityDebug, "sync")};
     Logger m_loggerInfo{createLogger(VerbosityInfo, "sync")};

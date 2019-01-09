@@ -279,9 +279,9 @@ LocalisedLogEntries ClientBase::peekWatch(unsigned _watchId) const
 {
     Guard l(x_filtersWatches);
 
-    //	LOG(m_loggerWatch) << "peekWatch" << _watchId;
+    //    LOG(m_loggerWatch) << "peekWatch" << _watchId;
     auto& w = m_watches.at(_watchId);
-    //	LOG(m_loggerWatch) << "lastPoll updated to " <<
+    //    LOG(m_loggerWatch) << "lastPoll updated to " <<
     //chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
     if (w.lastPoll != chrono::system_clock::time_point::max())
         w.lastPoll = chrono::system_clock::now();
@@ -293,9 +293,9 @@ LocalisedLogEntries ClientBase::checkWatch(unsigned _watchId)
     Guard l(x_filtersWatches);
     LocalisedLogEntries ret;
 
-    //	LOG(m_loggerWatch) << "checkWatch" << _watchId;
+    //    LOG(m_loggerWatch) << "checkWatch" << _watchId;
     auto& w = m_watches.at(_watchId);
-    //	LOG(m_loggerWatch) << "lastPoll updated to " <<
+    //    LOG(m_loggerWatch) << "lastPoll updated to " <<
     //chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
     std::swap(ret, w.changes);
     if (w.lastPoll != chrono::system_clock::time_point::max())
@@ -525,5 +525,5 @@ Block ClientBase::blockByNumber(BlockNumber _h) const
 
 int ClientBase::chainId() const
 {
-	return bc().chainParams().chainID;
+    return bc().chainParams().chainID;
 }

@@ -172,9 +172,9 @@ private:
     std::shared_ptr<p2p::CapabilityHostFace> m_host;
 
     BlockChain const& m_chain;
-    OverlayDB const& m_db;					///< References to DB, needed for some of the Ethereum Protocol responses.
-    TransactionQueue& m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
-    BlockQueue& m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
+    OverlayDB const& m_db;                    ///< References to DB, needed for some of the Ethereum Protocol responses.
+    TransactionQueue& m_tq;                    ///< Maintains a list of incoming transactions not yet in a block on the blockchain.
+    BlockQueue& m_bq;                        ///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
 
     u256 m_networkId;
 

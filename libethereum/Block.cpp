@@ -65,7 +65,7 @@ Block::Block(BlockChain const& _bc, OverlayDB const& _db, BaseState _bs, Address
     noteChain(_bc);
     m_previousBlock.clear();
     m_currentBlock.clear();
-//	assert(m_state.root() == m_previousBlock.stateRoot());
+//    assert(m_state.root() == m_previousBlock.stateRoot());
 }
 
 Block::Block(BlockChain const& _bc, OverlayDB const& _db, h256 const& _root, Address const& _author):
@@ -77,7 +77,7 @@ Block::Block(BlockChain const& _bc, OverlayDB const& _db, h256 const& _root, Add
     m_state.setRoot(_root);
     m_previousBlock.clear();
     m_currentBlock.clear();
-//	assert(m_state.root() == m_previousBlock.stateRoot());
+//    assert(m_state.root() == m_previousBlock.stateRoot());
 }
 
 Block::Block(Block const& _s):
@@ -167,7 +167,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
     }
 
     auto b = _bc.block(_h);
-    BlockHeader bi(b);		// No need to check - it's already in the DB.
+    BlockHeader bi(b);        // No need to check - it's already in the DB.
     if (bi.number())
     {
         // Non-genesis:
@@ -189,7 +189,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
     {
         // Genesis required:
         // We know there are no transactions, so just populate directly.
-        m_state = State(m_state.accountStartNonce(), m_state.db(), BaseState::Empty);	// TODO: try with PreExisting.
+        m_state = State(m_state.accountStartNonce(), m_state.db(), BaseState::Empty);    // TODO: try with PreExisting.
         sync(_bc, _h, bi);
     }
 
@@ -251,7 +251,7 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
         // Find most recent state dump and replay what's left.
         // (Most recent state dump might end up being genesis.)
 
-        if (m_state.db().lookup(bi.stateRoot()).empty())	// TODO: API in State for this?
+        if (m_state.db().lookup(bi.stateRoot()).empty())    // TODO: API in State for this?
         {
             cwarn << "Unable to sync to" << bi.hash() << "; state root" << bi.stateRoot() << "not found in database.";
             cwarn << "Database corrupt: contains block without stateRoot:" << bi;
@@ -270,10 +270,10 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
         // (Most recent state dump might end up being genesis.)
 
         std::vector<h256> chain;
-        while (bi.number() != 0 && m_db.lookup(bi.stateRoot()).empty())	// while we don't have the state root of the latest block...
+        while (bi.number() != 0 && m_db.lookup(bi.stateRoot()).empty())    // while we don't have the state root of the latest block...
         {
-            chain.push_back(bi.hash());				// push back for later replay.
-            bi.populate(_bc.block(bi.parentHash()));	// move to parent.
+            chain.push_back(bi.hash());                // push back for later replay.
+            bi.populate(_bc.block(bi.parentHash()));    // move to parent.
         }
 
         m_previousBlock = bi;
@@ -331,11 +331,11 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
                 {
                     if (t.gasPrice() >= _gp.ask(*this))
                     {
-//						Timer t;
+//                        Timer t;
                         execute(_bc.lastBlockHashes(), t);
                         ret.first.push_back(m_receipts.back());
                         ++goodTxs;
-//						cnote << "TX took:" << t.elapsed() * 1000;
+//                        cnote << "TX took:" << t.elapsed() * 1000;
                     }
                     else if (t.gasPrice() < _gp.ask(*this) * 9 / 10)
                     {
@@ -404,7 +404,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
             }
         if (chrono::steady_clock::now() > deadline)
         {
-            ret.second = true;	// say there's more to the caller if we ended up crossing the deadline.
+            ret.second = true;    // say there's more to the caller if we ended up crossing the deadline.
             break;
         }
     }
@@ -479,8 +479,8 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
     m_currentBlock.noteDirty();
     m_currentBlock = _block.info;
 
-//	cnote << "playback begins:" << m_currentBlock.hash() << "(without: " << m_currentBlock.hash(WithoutSeal) << ")";
-//	cnote << m_state;
+//    cnote << "playback begins:" << m_currentBlock.hash() << "(without: " << m_currentBlock.hash(WithoutSeal) << ")";
+//    cnote << m_state;
 
     RLP rlp(_block.block);
 
@@ -493,10 +493,10 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
         {
             try
             {
-//				cnote << "Enacting transaction: " << tr.nonce() << tr.from() << state().transactionsFrom(tr.from()) << tr.value();
+//                cnote << "Enacting transaction: " << tr.nonce() << tr.from() << state().transactionsFrom(tr.from()) << tr.value();
                 execute(_bc.lastBlockHashes(), tr);
-//				cnote << "Now: " << tr.from() << state().transactionsFrom(tr.from());
-//				cnote << m_state;
+//                cnote << "Now: " << tr.from() << state().transactionsFrom(tr.from());
+//                cnote << m_state;
             }
             catch (Exception& ex)
             {
@@ -519,7 +519,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
         InvalidReceiptsStateRoot ex;
         ex << Hash256RequirementError(m_currentBlock.receiptsRoot(), receiptsRoot);
         ex << errinfo_receipts(receipts);
-//		ex << errinfo_vmtrace(vmTrace(_block.block, _bc, ImportRequirements::None));
+//        ex << errinfo_vmtrace(vmTrace(_block.block, _bc, ImportRequirements::None));
         BOOST_THROW_EXCEPTION(ex);
     }
 
@@ -574,14 +574,14 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
                     BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(uncle.parentHash()));
                 uncleParent = BlockHeader(_bc.block(uncle.parentHash()));
 
-                // m_currentBlock.number() - uncle.number()		m_cB.n - uP.n()
-                // 1											2
+                // m_currentBlock.number() - uncle.number()        m_cB.n - uP.n()
+                // 1                                            2
                 // 2
                 // 3
                 // 4
                 // 5
-                // 6											7
-                //												(8 Invalid)
+                // 6                                            7
+                //                                                (8 Invalid)
                 bigint depth = (bigint)m_currentBlock.number() - (bigint)uncle.number();
                 if (depth > 6)
                 {
@@ -598,13 +598,13 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
                     BOOST_THROW_EXCEPTION(ex);
                 }
                 // cB
-                // cB.p^1	    1 depth, valid uncle
-                // cB.p^2	---/  2
-                // cB.p^3	-----/  3
-                // cB.p^4	-------/  4
-                // cB.p^5	---------/  5
-                // cB.p^6	-----------/  6
-                // cB.p^7	-------------/
+                // cB.p^1        1 depth, valid uncle
+                // cB.p^2    ---/  2
+                // cB.p^3    -----/  3
+                // cB.p^4    -------/  4
+                // cB.p^5    ---------/  5
+                // cB.p^6    -----------/  6
+                // cB.p^7    -------------/
                 // cB.p^8
                 auto expectedUncleParent = _bc.details(m_currentBlock.parentHash()).parent;
                 for (unsigned i = 1; i < depth; expectedUncleParent = _bc.details(expectedUncleParent).parent, ++i) {}
@@ -640,14 +640,14 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
     if (m_currentBlock.stateRoot() != m_previousBlock.stateRoot() && m_currentBlock.stateRoot() != rootHash())
     {
         auto r = rootHash();
-        m_state.db().rollback();		// TODO: API in State for this?
+        m_state.db().rollback();        // TODO: API in State for this?
         BOOST_THROW_EXCEPTION(InvalidStateRoot() << Hash256RequirementError(m_currentBlock.stateRoot(), r));
     }
 
     if (m_currentBlock.gasUsed() != gasUsed())
     {
         // Rollback the trie.
-        m_state.db().rollback();		// TODO: API in State for this?
+        m_state.db().rollback();        // TODO: API in State for this?
         BOOST_THROW_EXCEPTION(InvalidGasUsed() << RequirementError(bigint(m_currentBlock.gasUsed()), bigint(gasUsed())));
     }
 
@@ -751,9 +751,9 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
         for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2; ++gen, p = _bc.details(p).parent)
         {
             auto us = _bc.details(p).children;
-            assert(us.size() >= 1);	// must be at least 1 child of our grandparent - it's our own parent!
+            assert(us.size() >= 1);    // must be at least 1 child of our grandparent - it's our own parent!
             for (auto const& u: us)
-                if (!excluded.count(u))	// ignore any uncles/mainline blocks that we know about.
+                if (!excluded.count(u))    // ignore any uncles/mainline blocks that we know about.
                 {
                     uncleBlockHeaders.push_back(_bc.info(u));
                     unclesData.appendRaw(_bc.headerData(u));
@@ -845,7 +845,7 @@ bool Block::sealBlock(bytesConstRef _header)
     ret.appendRaw(m_currentUncles);
     ret.swapOut(m_currentBytes);
     m_currentBlock = BlockHeader(_header, HeaderData);
-//	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
+//    cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
     // TODO: move into SealEngine
 
     m_state = m_precommit;
@@ -893,7 +893,7 @@ void Block::cleanup()
         throw;
     }
 
-    m_state.db().commit();	// TODO: State API for this?
+    m_state.db().commit();    // TODO: State API for this?
 
     LOG(m_logger) << "Committed: stateRoot " << m_currentBlock.stateRoot() << " = " << rootHash()
                   << " = " << toHex(asBytes(db().lookup(rootHash())));

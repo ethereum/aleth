@@ -175,20 +175,20 @@ void test::RandomCodeBase::parseTestWithTypes(std::string& _test, std::map<std::
 std::vector<std::string> test::RandomCodeBase::getTypes()
 {
     return {
-        "[RLP]",				//Random RLP String
-        "[CODE]",				//Random bytecode (could be empty string)
-        "[HEX]",				//Random hex value string 0x...  max value uint64
-        "[HEX32]",				//Random hex value string 0x...  max value uint32
-        "[HASH20]",				//Random hash 20 byte length
-        "[HASH32]",				//Random hash 32 byte length
-        "[0xHASH32]",			//Random hash string 0x...  32 byte length
-        "[V]",					//Random V value for transaction sig. could be invalid.
-        "[BLOCKGASLIMIT]",		//Random block gas limit with max of 2**55-1
-        "[ADDRESS]",			//Random account address
-        "[DESTADDRESS]",		//Random destination address for transaction (could be empty string)
-        "[0xADDRESS]",			//Random account address
+        "[RLP]",                //Random RLP String
+        "[CODE]",                //Random bytecode (could be empty string)
+        "[HEX]",                //Random hex value string 0x...  max value uint64
+        "[HEX32]",                //Random hex value string 0x...  max value uint32
+        "[HASH20]",                //Random hash 20 byte length
+        "[HASH32]",                //Random hash 32 byte length
+        "[0xHASH32]",            //Random hash string 0x...  32 byte length
+        "[V]",                    //Random V value for transaction sig. could be invalid.
+        "[BLOCKGASLIMIT]",        //Random block gas limit with max of 2**55-1
+        "[ADDRESS]",            //Random account address
+        "[DESTADDRESS]",        //Random destination address for transaction (could be empty string)
+        "[0xADDRESS]",            //Random account address
         "[TRANSACTIONGASLIMIT]", //Random reasonable gas limit for a transaction
-        "[GASPRICE]"			//Random reasonable gas price for transaction (could be 0)
+        "[GASPRICE]"            //Random reasonable gas price for transaction (could be 0)
     };
 }
 

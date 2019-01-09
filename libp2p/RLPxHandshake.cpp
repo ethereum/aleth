@@ -362,7 +362,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                 }
                 
                 /// rlp of header has protocol-type, sequence-id[, total-packet-size]
-                bytes headerRLP(header.size() - 3 - h128::size);	// this is always 32 - 3 - 16 = 13. wtf?
+                bytes headerRLP(header.size() - 3 - h128::size);    // this is always 32 - 3 - 16 = 13. wtf?
                 bytesConstRef(&header).cropped(3).copyTo(&headerRLP);
                 
                 /// read padded frame and mac

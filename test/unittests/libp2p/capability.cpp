@@ -108,12 +108,12 @@ BOOST_AUTO_TEST_CASE(capability)
     host1.registerCapability(thc1);
     auto thc2 = make_shared<TestCapability>(host2);
     host2.registerCapability(thc2);
-    host1.start();	
+    host1.start();    
     host2.start();
     auto port1 = host1.listenPort();
     auto port2 = host2.listenPort();
     BOOST_REQUIRE(port1);
-    BOOST_REQUIRE(port2);	
+    BOOST_REQUIRE(port2);    
     BOOST_REQUIRE_NE(port1, port2);
 
     for (unsigned i = 0; i < 3000; i += step)

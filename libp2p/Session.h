@@ -166,24 +166,24 @@ private:
     bool canHandle(
         std::string const& _capability, unsigned _messageCount, unsigned _packetType) const;
 
-    Host* m_server;							///< The host that owns us. Never null.
+    Host* m_server;                            ///< The host that owns us. Never null.
 
-    std::unique_ptr<RLPXFrameCoder> m_io;	///< Transport over which packets are sent.
-    std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
-    Mutex x_framing;						///< Mutex for the write queue.
-    std::deque<bytes> m_writeQueue;			///< The write queue.
-    std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
-    bytes m_incoming;						///< Read buffer for ingress bytes.
+    std::unique_ptr<RLPXFrameCoder> m_io;    ///< Transport over which packets are sent.
+    std::shared_ptr<RLPXSocket> m_socket;        ///< Socket of peer's connection.
+    Mutex x_framing;                        ///< Mutex for the write queue.
+    std::deque<bytes> m_writeQueue;            ///< The write queue.
+    std::vector<byte> m_data;                ///< Buffer for ingress packet data.
+    bytes m_incoming;                        ///< Read buffer for ingress bytes.
 
-    std::shared_ptr<Peer> m_peer;			///< The Peer object.
-    bool m_dropped = false;					///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
+    std::shared_ptr<Peer> m_peer;            ///< The Peer object.
+    bool m_dropped = false;                    ///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
 
     mutable Mutex x_info;
-    PeerSessionInfo m_info;						///< Dynamic information about this peer.
+    PeerSessionInfo m_info;                        ///< Dynamic information about this peer.
 
-    std::chrono::steady_clock::time_point m_connect;		///< Time point of connection.
-    std::chrono::steady_clock::time_point m_ping;			///< Time point of last ping.
-    std::chrono::steady_clock::time_point m_lastReceived;	///< Time point of last message.
+    std::chrono::steady_clock::time_point m_connect;        ///< Time point of connection.
+    std::chrono::steady_clock::time_point m_ping;            ///< Time point of last ping.
+    std::chrono::steady_clock::time_point m_lastReceived;    ///< Time point of last message.
 
     /// The peer's capability set.
     std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;

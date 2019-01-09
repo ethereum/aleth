@@ -76,7 +76,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
 
     try
     {
-		std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(path / fs::path("state"));
+        std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(path / fs::path("state"));
         clog(VerbosityTrace, "statedb") << "Opened state DB.";
         return OverlayDB(std::move(db));
     }

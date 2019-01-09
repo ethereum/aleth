@@ -121,7 +121,7 @@ class NodeTable : UDPSocketEvents
 {
     friend std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable);
     using NodeSocket = UDPSocket<NodeTable, 1280>;
-    using TimePoint = std::chrono::steady_clock::time_point;	///< Steady time point.
+    using TimePoint = std::chrono::steady_clock::time_point;    ///< Steady time point.
     using NodeIdTimePoint = std::pair<NodeID, TimePoint>;
 
     /**
@@ -183,15 +183,15 @@ public:
 protected:
     /// Constants for Kademlia, derived from address space.
 
-    static constexpr unsigned s_addressByteSize = h256::size;					///< Size of address type in bytes.
-    static constexpr unsigned s_bits = 8 * s_addressByteSize;					///< Denoted by n in [Kademlia].
+    static constexpr unsigned s_addressByteSize = h256::size;                    ///< Size of address type in bytes.
+    static constexpr unsigned s_bits = 8 * s_addressByteSize;                    ///< Denoted by n in [Kademlia].
     static constexpr unsigned s_bins = s_bits - 1;  ///< Size of m_buckets (excludes root, which is us).
-    static constexpr unsigned s_maxSteps = boost::static_log2<s_bits>::value;	///< Max iterations of discovery. (discover)
+    static constexpr unsigned s_maxSteps = boost::static_log2<s_bits>::value;    ///< Max iterations of discovery. (discover)
 
     /// Chosen constants
 
-    static constexpr unsigned s_bucketSize = 16;			///< Denoted by k in [Kademlia]. Number of nodes stored in each bucket.
-    static constexpr unsigned s_alpha = 3;				///< Denoted by \alpha in [Kademlia]. Number of concurrent FindNode requests.
+    static constexpr unsigned s_bucketSize = 16;            ///< Denoted by k in [Kademlia]. Number of nodes stored in each bucket.
+    static constexpr unsigned s_alpha = 3;                ///< Denoted by \alpha in [Kademlia]. Number of concurrent FindNode requests.
 
     /// Intervals
 
@@ -269,21 +269,21 @@ protected:
         return dev::p2p::isAllowedEndpoint(m_allowLocalDiscovery, _endpointToCheck);
     }
 
-    std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
+    std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;        ///< Event handler for node events.
 
     NodeID const m_hostNodeID;
     NodeIPEndpoint m_hostNodeEndpoint;
-    Secret m_secret;												///< This nodes secret key.
+    Secret m_secret;                                                ///< This nodes secret key.
 
-    mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
+    mutable Mutex x_nodes;                                            ///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
     std::unordered_map<NodeID, std::shared_ptr<NodeEntry>> m_allNodes;  ///< Known Node Endpoints
 
-    mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.
+    mutable Mutex x_state;                                            ///< LOCK x_state first if both x_nodes and x_state locks are required.
     std::array<NodeBucket, s_bins> m_buckets;                       ///< State of p2p node network.
     
-    std::list<NodeIdTimePoint> m_sentFindNodes;					///< Timeouts for FindNode requests.
+    std::list<NodeIdTimePoint> m_sentFindNodes;                    ///< Timeouts for FindNode requests.
 
-    std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
+    std::shared_ptr<NodeSocket> m_socket;                            ///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 
     // The info about PING packets we've sent to other nodes and haven't received PONG yet
     std::unordered_map<NodeID, NodeValidation> m_sentPings;

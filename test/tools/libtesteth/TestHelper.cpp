@@ -84,7 +84,7 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify)
     sealed.waitNot({});
     _sealer->onSealGenerated([](bytes const&) {});
     _bi = BlockHeader(sealed, HeaderData);
-    //	cdebug << "Block mined" << Ethash::boundary(_bi).hex() <<
+    //    cdebug << "Block mined" << Ethash::boundary(_bi).hex() <<
     // Ethash::nonce(_bi) << _bi.hash(WithoutSeal).hex();
     if (_verify)  // sometimes it is needed to mine incorrect blockheaders for
                   // testing

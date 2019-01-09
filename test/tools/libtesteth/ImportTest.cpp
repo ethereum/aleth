@@ -524,20 +524,20 @@ void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
     bool wasError = false;
-#define CHECK(a,b)						\
-    {									\
+#define CHECK(a,b)                        \
+    {                                    \
     if (_throw == WhenError::Throw) \
-    {								\
-    BOOST_CHECK_MESSAGE(a, b);	\
-    if (!a)						\
-    return 1;				\
-}								\
-    else							\
-    {								\
-    BOOST_WARN_MESSAGE(a,b);	\
-    if (!a)						\
-    wasError = true;		\
-}								\
+    {                                \
+    BOOST_CHECK_MESSAGE(a, b);    \
+    if (!a)                        \
+    return 1;                \
+}                                \
+    else                            \
+    {                                \
+    BOOST_WARN_MESSAGE(a,b);    \
+    if (!a)                        \
+    wasError = true;        \
+}                                \
 }
 
     for (auto const& a: _stateExpect.addresses())

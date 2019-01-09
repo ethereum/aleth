@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     for (unsigned i = 0; i < c_nodes; ++i)
     {
         Host* h = new Host("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
-        h->setIdealPeerCount(10);		
+        h->setIdealPeerCount(10);        
         h->start(); // starting host is required so listenport is available
         while (!h->haveNetwork())
             this_thread::sleep_for(chrono::milliseconds(c_step));
@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     BOOST_CHECK_EQUAL(host2.peerCount(), c_peers);
 
     bytes firstHostNetwork(host.saveNetwork());
-    bytes secondHostNetwork(host.saveNetwork());	
-    BOOST_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));	
+    bytes secondHostNetwork(host.saveNetwork());    
+    BOOST_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));    
     
     RLP r(firstHostNetwork);
     BOOST_REQUIRE(r.itemCount() == 3);

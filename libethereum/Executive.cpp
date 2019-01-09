@@ -318,7 +318,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
             if (m_envInfo.number() >= m_sealEngine.chainParams().EIP158ForkBlock)
                 m_s.addBalance(_p.codeAddress, 0);
 
-            return true;	// true actually means "all finished - nothing more to be done regarding go().
+            return true;    // true actually means "all finished - nothing more to be done regarding go().
         }
         else
         {
@@ -332,7 +332,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
             {
                 m_gas = 0;
                 m_excepted = TransactionException::OutOfGas;
-                return true;	// true means no need to run go().
+                return true;    // true means no need to run go().
             }
         }
     }

@@ -204,12 +204,12 @@ private:
     Address m_author;
     u256 m_difficulty;
 
-    std::vector<bytes> m_seal;		///< Additional (RLP-encoded) header fields.
+    std::vector<bytes> m_seal;        ///< Additional (RLP-encoded) header fields.
     mutable Mutex m_sealLock;
 
-    mutable h256 m_hash;			///< (Memoised) SHA3 hash of the block header with seal.
-    mutable h256 m_hashWithout;		///< (Memoised) SHA3 hash of the block header without seal.
-    mutable Mutex m_hashLock;		///< A lock for both m_hash and m_hashWithout.
+    mutable h256 m_hash;            ///< (Memoised) SHA3 hash of the block header with seal.
+    mutable h256 m_hashWithout;        ///< (Memoised) SHA3 hash of the block header without seal.
+    mutable Mutex m_hashLock;        ///< A lock for both m_hash and m_hashWithout.
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "blockhdr")};
 };

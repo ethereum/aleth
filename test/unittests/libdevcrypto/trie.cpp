@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
     {
         StateCacheDB m;
         GenericTrieDB<StateCacheDB> t(&m);
-        t.init();	// initialise as empty tree.
+        t.init();    // initialise as empty tree.
         cnote << t;
         cnote << m;
         cnote << t.root();
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
     {
         StateCacheDB m;
         GenericTrieDB<StateCacheDB> t(&m);
-        t.init();	// initialise as empty tree.
+        t.init();    // initialise as empty tree.
         t.insert(string("a"), string("A"));
         t.insert(string("b"), string("B"));
         cnote << t;
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
         StateCacheDB m;
         EnforceRefs r(m, true);
         GenericTrieDB<StateCacheDB> d(&m);
-        d.init();	// initialise as empty tree.
+        d.init();    // initialise as empty tree.
         MemTrie t;
         StringMap s;
 
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(trieLowerBound)
         StateCacheDB dm;
         EnforceRefs e(dm, true);
         GenericTrieDB<StateCacheDB> d(&dm);
-        d.init();	// initialise as empty tree.
+        d.init();    // initialise as empty tree.
         for (int a = 0; a < 20; ++a)
         {
             StringMap m;
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(trieStess)
         StateCacheDB dm;
         EnforceRefs e(dm, true);
         GenericTrieDB<StateCacheDB> d(&dm);
-        d.init();	// initialise as empty tree.
+        d.init();    // initialise as empty tree.
         MemTrie t;
         BOOST_REQUIRE(d.check(true));
         for (int a = 0; a < 20; ++a)
@@ -581,23 +581,23 @@ BOOST_AUTO_TEST_CASE(trieStess)
                     StateCacheDB dm2;
                     EnforceRefs e2(dm2, true);
                     GenericTrieDB<StateCacheDB> d2(&dm2);
-                    d2.init();	// initialise as empty tree.
+                    d2.init();    // initialise as empty tree.
                     for (auto i: d)
                         d2.insert(i.first, i.second);
 
                     cwarn << "Good:" << d2.root();
-//					for (auto i: dm2.get())
-//						cwarn << i.first << ": " << RLP(i.second);
+//                    for (auto i: dm2.get())
+//                        cwarn << i.first << ": " << RLP(i.second);
                     d2.debugStructure(cerr);
-                    cwarn << "Broken:" << d.root();	// Leaves an extension -> extension (3c1... -> 742...)
-//					for (auto i: dm.get())
-//						cwarn << i.first << ": " << RLP(i.second);
+                    cwarn << "Broken:" << d.root();    // Leaves an extension -> extension (3c1... -> 742...)
+//                    for (auto i: dm.get())
+//                        cwarn << i.first << ": " << RLP(i.second);
                     d.debugStructure(cerr);
 
                     d2.insert(k, v);
                     cwarn << "Pres:" << d2.root();
-//					for (auto i: dm2.get())
-//						cwarn << i.first << ": " << RLP(i.second);
+//                    for (auto i: dm2.get())
+//                        cwarn << i.first << ": " << RLP(i.second);
                     d2.debugStructure(cerr);
                     d2.remove(k);
 

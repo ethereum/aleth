@@ -30,9 +30,9 @@ namespace test
 class StateTestSuite: public TestSuite
 {
 public:
-	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
-	boost::filesystem::path suiteFolder() const override;
-	boost::filesystem::path suiteFillerFolder() const override;
+    json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
 };
 
 }

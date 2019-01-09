@@ -36,7 +36,7 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace fs = boost::filesystem;
 
-FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
+FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):            /// TODO: XXX: remove the default argument & fix.
     ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, false, _depth)
 {}
 
@@ -429,7 +429,7 @@ json_spirit::mValue VmTestSuite::doTests(json_spirit::mValue const& _input, bool
         }
         else
         {
-            if (testInput.count("post") > 0)	// No exceptions expected
+            if (testInput.count("post") > 0)    // No exceptions expected
             {
                 BOOST_REQUIRE_MESSAGE(testInput.at("post").type() == obj_type, testname + " post field is not an object.");
                 BOOST_CHECK(!vmExceptionOccured);
@@ -462,7 +462,7 @@ json_spirit::mValue VmTestSuite::doTests(json_spirit::mValue const& _input, bool
 
                 BOOST_CHECK_EQUAL(exportLog(fev.sub.logs), testInput.at("logs").get_str());
             }
-            else	// Exception expected
+            else    // Exception expected
                 BOOST_CHECK(vmExceptionOccured);
         }
     }

@@ -483,7 +483,7 @@ void testBCTest(json_spirit::mObject const& _o)
             TestBlock blRlp(blObj["rlp"].get_str());
             blockFromRlp = blRlp;
             if (blObj.count("blockHeader") == 0)
-                blockFromRlp.noteDirty();			//disable blockHeader check in TestBlock
+                blockFromRlp.noteDirty();            //disable blockHeader check in TestBlock
             testChain.addBlock(blockFromRlp);
         }
         // if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
@@ -686,7 +686,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
         tmp.noteDirty();
     }
     else
-        tmp = TestBlock(ho).blockHeader();	// take the blockheader as is
+        tmp = TestBlock(ho).blockHeader();    // take the blockheader as is
 
     if (ho.count("populateFromBlock"))
     {
@@ -718,8 +718,8 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std::vector<TestBlock> const& uncles, ChainBranch const& _chainBranch)
 {
     //uncleHeaderObj - json Uncle header with additional option fields
-    //uncle			 - uncle Block to overwrite
-    //uncles		 - previously imported uncles
+    //uncle             - uncle Block to overwrite
+    //uncles         - previously imported uncles
     //importedBlocks - blocks already included in BlockChain
     vector<TestBlock> const& importedBlocks = _chainBranch.importedBlocks;
     const SealEngineFace* sealEngine = _chainBranch.blockchain.getInterface().sealEngine();
@@ -903,7 +903,7 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 
 void checkExpectedException(mObject& _blObj, Exception const& _e)
 {
-    string exWhat {	_e.what() };
+    string exWhat {    _e.what() };
     bool isNetException = (_blObj.count("expectException"+test::netIdToString(test::TestBlockChain::s_sealEngineNetwork)) > 0);
     bool isAllNetException = (_blObj.count("expectExceptionALL") > 0);
 

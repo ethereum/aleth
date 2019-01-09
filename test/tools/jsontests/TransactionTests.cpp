@@ -74,7 +74,7 @@ json_spirit::mObject FillTransactionTest(json_spirit::mObject const& _o)
 
     // Theoretical block for transaction check
     BlockHeader bh;
-    bh.setNumber(1);	//Seal engine below enables network rules from block 0
+    bh.setNumber(1);    //Seal engine below enables network rules from block 0
     bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
     mValue expectObj = _o.at("expect");
@@ -132,7 +132,7 @@ void TestTransactionTest(json_spirit::mObject const& _o)
 
     // Theoretical block for transaction check
     BlockHeader bh;
-    bh.setNumber(1);	//Seal engine below enables network rules from block 0
+    bh.setNumber(1);    //Seal engine below enables network rules from block 0
     bh.setGasLimit(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
     for (auto const network: test::getNetworks())

@@ -79,7 +79,7 @@ public:
         cnote << "Importing sealed: " << sha3(sealed);
         cdebug << "importing..." << RLP(_block.blockData());
         m_bc.import(_block.blockData(), m_stateDB);
-//		cdebug << "done.";
+//        cdebug << "done.";
     }
 
     void import(Block const& _block)
@@ -117,7 +117,7 @@ h256s subs(bytesConstRef _node)
     }
     else if (r.itemCount() == 2)
         // extension or terminal
-        if (r[1].size() == 32)	// TODO: check whether it's really an extension node, or whether it's just an terminal-node with 32 bytes of data.
+        if (r[1].size() == 32)    // TODO: check whether it's really an extension node, or whether it's just an terminal-node with 32 bytes of data.
             ret.push_back(r[1].toHash<h256>());
     // TODO: include
     return ret;

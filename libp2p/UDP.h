@@ -138,20 +138,20 @@ protected:
 
     void disconnectWithError(boost::system::error_code _ec);
 
-    std::atomic<bool> m_started;					///< Atomically ensure connection is started once. Start cannot occur unless m_started is false. Managed by start and disconnectWithError.
-    std::atomic<bool> m_closed;					///< Connection availability.
+    std::atomic<bool> m_started;                    ///< Atomically ensure connection is started once. Start cannot occur unless m_started is false. Managed by start and disconnectWithError.
+    std::atomic<bool> m_closed;                    ///< Connection availability.
 
-    UDPSocketEvents& m_host;						///< Interface which owns this socket.
-    bi::udp::endpoint m_endpoint;					///< Endpoint which we listen to.
+    UDPSocketEvents& m_host;                        ///< Interface which owns this socket.
+    bi::udp::endpoint m_endpoint;                    ///< Endpoint which we listen to.
 
     Mutex x_sendQ;
-    std::deque<UDPDatagram> m_sendQ;				///< Queue for egress data.
-    std::array<byte, maxDatagramSize> m_recvData;	///< Buffer for ingress data.
-    bi::udp::endpoint m_recvEndpoint;				///< Endpoint data was received from.
-    bi::udp::socket m_socket;						///< Boost asio udp socket.
+    std::deque<UDPDatagram> m_sendQ;                ///< Queue for egress data.
+    std::array<byte, maxDatagramSize> m_recvData;    ///< Buffer for ingress data.
+    bi::udp::endpoint m_recvEndpoint;                ///< Endpoint data was received from.
+    bi::udp::socket m_socket;                        ///< Boost asio udp socket.
 
-    Mutex x_socketError;							///< Mutex for error which can be set from host or IO thread.
-    boost::system::error_code m_socketError;		///< Set when shut down due to error.
+    Mutex x_socketError;                            ///< Mutex for error which can be set from host or IO thread.
+    boost::system::error_code m_socketError;        ///< Set when shut down due to error.
 };
 
 template <typename Handler, unsigned MaxDatagramSize>

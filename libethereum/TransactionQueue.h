@@ -188,22 +188,22 @@ private:
     mutable SharedMutex m_lock;  ///< General lock.
     h256Hash m_known;            ///< Headers of transactions in both sets.
 
-    std::unordered_map<h256, std::function<void(ImportResult)>> m_callbacks;	///< Called once.
-    h256Hash m_dropped;															///< Transactions that have previously been dropped
+    std::unordered_map<h256, std::function<void(ImportResult)>> m_callbacks;    ///< Called once.
+    h256Hash m_dropped;                                                            ///< Transactions that have previously been dropped
 
     PriorityQueue m_current;
-    std::unordered_map<h256, PriorityQueue::iterator> m_currentByHash;			///< Transaction hash to set ref
+    std::unordered_map<h256, PriorityQueue::iterator> m_currentByHash;            ///< Transaction hash to set ref
     std::unordered_map<Address, std::map<u256, PriorityQueue::iterator>> m_currentByAddressAndNonce; ///< Transactions grouped by account and nonce
-    std::unordered_map<Address, std::map<u256, VerifiedTransaction>> m_future;	/// Future transactions
+    std::unordered_map<Address, std::map<u256, VerifiedTransaction>> m_future;    /// Future transactions
 
-    Signal<> m_onReady;															///< Called when a subsequent call to import transactions will return a non-empty container. Be nice and exit fast.
-    Signal<ImportResult, h256 const&, h512 const&> m_onImport;					///< Called for each import attempt. Arguments are result, transaction id an node id. Be nice and exit fast.
-    Signal<h256 const&> m_onReplaced;											///< Called whan transction is dropped during a call to import() to make room for another transaction.
-    unsigned m_limit;															///< Max number of pending transactions
-    unsigned m_futureLimit;														///< Max number of future transactions
-    unsigned m_futureSize = 0;													///< Current number of future transactions
+    Signal<> m_onReady;                                                            ///< Called when a subsequent call to import transactions will return a non-empty container. Be nice and exit fast.
+    Signal<ImportResult, h256 const&, h512 const&> m_onImport;                    ///< Called for each import attempt. Arguments are result, transaction id an node id. Be nice and exit fast.
+    Signal<h256 const&> m_onReplaced;                                            ///< Called whan transction is dropped during a call to import() to make room for another transaction.
+    unsigned m_limit;                                                            ///< Max number of pending transactions
+    unsigned m_futureLimit;                                                        ///< Max number of future transactions
+    unsigned m_futureSize = 0;                                                    ///< Current number of future transactions
 
-    std::condition_variable m_queueReady;										///< Signaled when m_unverified has a new entry.
+    std::condition_variable m_queueReady;                                        ///< Signaled when m_unverified has a new entry.
     std::vector<std::thread> m_verifiers;
     std::deque<UnverifiedTransaction> m_unverified;  ///< Pending verification queue
     mutable Mutex x_queue;                           ///< Verification queue mutex

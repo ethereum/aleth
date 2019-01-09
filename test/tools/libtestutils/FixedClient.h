@@ -61,7 +61,7 @@ public:
 private:
     eth::BlockChain const& m_bc;
     eth::Block m_block;
-    mutable SharedMutex x_stateDB;			///< Lock on the state DB, effectively a lock on m_postSeal.
+    mutable SharedMutex x_stateDB;            ///< Lock on the state DB, effectively a lock on m_postSeal.
 };
 
 }

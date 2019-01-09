@@ -294,23 +294,23 @@ private:
     /// Creates and updates the special contract for storing block hashes according to EIP96
     void updateBlockhashContract();
 
-    State m_state;								///< Our state tree, as an OverlayDB DB.
-    Transactions m_transactions;				///< The current list of transactions that we've included in the state.
-    TransactionReceipts m_receipts;				///< The corresponding list of transaction receipts.
-    h256Hash m_transactionSet;					///< The set of transaction hashes that we've included in the state.
-    State m_precommit;							///< State at the point immediately prior to rewards.
+    State m_state;                                ///< Our state tree, as an OverlayDB DB.
+    Transactions m_transactions;                ///< The current list of transactions that we've included in the state.
+    TransactionReceipts m_receipts;                ///< The corresponding list of transaction receipts.
+    h256Hash m_transactionSet;                    ///< The set of transaction hashes that we've included in the state.
+    State m_precommit;                            ///< State at the point immediately prior to rewards.
 
-    BlockHeader m_previousBlock;				///< The previous block's information.
-    BlockHeader m_currentBlock;					///< The current block's information.
-    bytes m_currentBytes;						///< The current block's bytes.
-    bool m_committedToSeal = false;				///< Have we committed to mine on the present m_currentBlock?
+    BlockHeader m_previousBlock;                ///< The previous block's information.
+    BlockHeader m_currentBlock;                    ///< The current block's information.
+    bytes m_currentBytes;                        ///< The current block's bytes.
+    bool m_committedToSeal = false;                ///< Have we committed to mine on the present m_currentBlock?
 
-    bytes m_currentTxs;							///< The RLP-encoded block of transactions.
-    bytes m_currentUncles;						///< The RLP-encoded block of uncles.
+    bytes m_currentTxs;                            ///< The RLP-encoded block of transactions.
+    bytes m_currentUncles;                        ///< The RLP-encoded block of uncles.
 
-    Address m_author;							///< Our address (i.e. the address to which fees go).
+    Address m_author;                            ///< Our address (i.e. the address to which fees go).
 
-    SealEngineFace* m_sealEngine = nullptr;		///< The chain's seal engine.
+    SealEngineFace* m_sealEngine = nullptr;        ///< The chain's seal engine.
 
     Logger m_logger{createLogger(VerbosityDebug, "block")};
     Logger m_loggerDetailed{createLogger(VerbosityTrace, "block")};

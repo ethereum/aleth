@@ -392,7 +392,7 @@ TransactionSkeleton toTransactionSkeleton(Json::Value const& _json)
     if (!_json["gasPrice"].empty())
         ret.gasPrice = jsToU256(_json["gasPrice"].asString());
 
-    if (!_json["data"].empty())							// ethereum.js has preconstructed the data array
+    if (!_json["data"].empty())                            // ethereum.js has preconstructed the data array
         ret.data = jsToBytes(_json["data"].asString(), OnFailed::Throw);
 
     if (!_json["code"].empty())
@@ -438,7 +438,7 @@ dev::eth::LogFilter toLogFilter(Json::Value const& _json)
 }
 
 // TODO: this should be removed once we decide to remove backward compatibility with old log filters
-dev::eth::LogFilter toLogFilter(Json::Value const& _json, Interface const& _client)	// commented to avoid warning. Uncomment once in use @ PoC-7.
+dev::eth::LogFilter toLogFilter(Json::Value const& _json, Interface const& _client)    // commented to avoid warning. Uncomment once in use @ PoC-7.
 {
     dev::eth::LogFilter filter;
     if (!_json.isObject() || _json.empty())

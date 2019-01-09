@@ -190,20 +190,20 @@ private:
     /// @returns false iff go() must be called (and thus a VM execution in required).
     bool executeCreate(Address const& _txSender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _code, Address const& _originAddress);
 
-    State& m_s;							///< The state to which this operation/transaction is applied.
+    State& m_s;                            ///< The state to which this operation/transaction is applied.
     // TODO: consider changign to EnvInfo const& to avoid LastHashes copy at every CALL/CREATE
-    EnvInfo m_envInfo;					///< Information on the runtime environment.
-    std::shared_ptr<ExtVM> m_ext;		///< The VM externality object for the VM execution or null if no VM is required. shared_ptr used only to allow ExtVM forward reference. This field does *NOT* survive this object.
-    owning_bytes_ref m_output;			///< Execution output.
-    ExecutionResult* m_res = nullptr;	///< Optional storage for execution results.
+    EnvInfo m_envInfo;                    ///< Information on the runtime environment.
+    std::shared_ptr<ExtVM> m_ext;        ///< The VM externality object for the VM execution or null if no VM is required. shared_ptr used only to allow ExtVM forward reference. This field does *NOT* survive this object.
+    owning_bytes_ref m_output;            ///< Execution output.
+    ExecutionResult* m_res = nullptr;    ///< Optional storage for execution results.
 
-    unsigned m_depth = 0;				///< The context's call-depth.
-    TransactionException m_excepted = TransactionException::None;	///< Details if the VM's execution resulted in an exception.
-    int64_t m_baseGasRequired;			///< The base amount of gas requried for executing this transaction.
-    u256 m_gas = 0;						///< The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
+    unsigned m_depth = 0;                ///< The context's call-depth.
+    TransactionException m_excepted = TransactionException::None;    ///< Details if the VM's execution resulted in an exception.
+    int64_t m_baseGasRequired;            ///< The base amount of gas requried for executing this transaction.
+    u256 m_gas = 0;                        ///< The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
 
-    Transaction m_t;					///< The original transaction. Set by setup().
-    LogEntries m_logs;					///< The log entries created by this transaction. Set by finalize().
+    Transaction m_t;                    ///< The original transaction. Set by setup().
+    LogEntries m_logs;                    ///< The log entries created by this transaction. Set by finalize().
 
     u256 m_gasCost;
     SealEngineFace const& m_sealEngine;

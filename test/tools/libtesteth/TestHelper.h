@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file
  * Helper functions to work with json::spirit and test files
@@ -66,8 +66,8 @@ DEV_SIMPLE_EXCEPTION(UnexpectedNegative);
 class ZeroGasPricer: public eth::GasPricer
 {
 protected:
-	u256 ask(eth::Block const&) const override { return 0; }
-	u256 bid(eth::TransactionPriority = eth::TransactionPriority::Medium) const override { return 0; }
+    u256 ask(eth::Block const&) const override { return 0; }
+    u256 bid(eth::TransactionPriority = eth::TransactionPriority::Medium) const override { return 0; }
 };
 
 // helping functions
@@ -112,19 +112,19 @@ void checkOutput(bytesConstRef _output, json_spirit::mObject const& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
 void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transactions const& _expectedCallCreates);
 dev::eth::BlockHeader constructHeader(
-	h256 const& _parentHash,
-	h256 const& _sha3Uncles,
-	Address const& _author,
-	h256 const& _stateRoot,
-	h256 const& _transactionsRoot,
-	h256 const& _receiptsRoot,
-	dev::eth::LogBloom const& _logBloom,
-	u256 const& _difficulty,
-	u256 const& _number,
-	u256 const& _gasLimit,
-	u256 const& _gasUsed,
-	u256 const& _timestamp,
-	bytes const& _extraData);
+    h256 const& _parentHash,
+    h256 const& _sha3Uncles,
+    Address const& _author,
+    h256 const& _stateRoot,
+    h256 const& _transactionsRoot,
+    h256 const& _receiptsRoot,
+    dev::eth::LogBloom const& _logBloom,
+    u256 const& _difficulty,
+    u256 const& _number,
+    u256 const& _gasLimit,
+    u256 const& _gasUsed,
+    u256 const& _timestamp,
+    bytes const& _extraData);
 void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::State const& _statePost, eth::ChangeLog const& _changeLog);
@@ -133,7 +133,7 @@ json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMas
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
-bool createRandomTest();	//returns true if succeed, false if there was an error;
+bool createRandomTest();    //returns true if succeed, false if there was an error;
 void doRlpTests(json_spirit::mValue const& _input);
 
 /// Allows observing test execution process.
@@ -141,28 +141,28 @@ void doRlpTests(json_spirit::mValue const& _input);
 class Listener
 {
 public:
-	virtual ~Listener() = default;
+    virtual ~Listener() = default;
 
-	virtual void suiteStarted(std::string const&) {}
-	virtual void testStarted(std::string const& _name) = 0;
-	virtual void testFinished(int64_t _gasUsed) = 0;
+    virtual void suiteStarted(std::string const&) {}
+    virtual void testStarted(std::string const& _name) = 0;
+    virtual void testFinished(int64_t _gasUsed) = 0;
 
-	static void registerListener(Listener& _listener);
-	static void notifySuiteStarted(std::string const& _name);
-	static void notifyTestStarted(std::string const& _name);
-	static void notifyTestFinished(int64_t _gasUsed);
+    static void registerListener(Listener& _listener);
+    static void notifySuiteStarted(std::string const& _name);
+    static void notifyTestStarted(std::string const& _name);
+    static void notifyTestFinished(int64_t _gasUsed);
 
-	/// Test started/finished notification RAII helper
-	class ExecTimeGuard
-	{
-		int64_t m_gasUsed = -1;
-	public:
-		ExecTimeGuard(std::string const& _testName) { notifyTestStarted(_testName);	}
-		~ExecTimeGuard() { notifyTestFinished(m_gasUsed); }
-		ExecTimeGuard(ExecTimeGuard const&) = delete;
-		ExecTimeGuard& operator=(ExecTimeGuard) = delete;
-		void setGasUsed(int64_t _gas) { m_gasUsed = _gas; }
-	};
+    /// Test started/finished notification RAII helper
+    class ExecTimeGuard
+    {
+        int64_t m_gasUsed = -1;
+    public:
+        ExecTimeGuard(std::string const& _testName) { notifyTestStarted(_testName);    }
+        ~ExecTimeGuard() { notifyTestFinished(m_gasUsed); }
+        ExecTimeGuard(ExecTimeGuard const&) = delete;
+        ExecTimeGuard& operator=(ExecTimeGuard) = delete;
+        void setGasUsed(int64_t _gas) { m_gasUsed = _gas; }
+    };
 };
 
 }

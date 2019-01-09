@@ -208,16 +208,16 @@ bytes ChainParams::genesisBlock() const
 
     block.appendList(BlockHeader::BasicFields + sealFields)
             << parentHash
-            << EmptyListSHA3	// sha3(uncles)
+            << EmptyListSHA3    // sha3(uncles)
             << author
             << stateRoot
-            << EmptyTrie		// transactions
-            << EmptyTrie		// receipts
+            << EmptyTrie        // transactions
+            << EmptyTrie        // receipts
             << LogBloom()
             << difficulty
-            << 0				// number
+            << 0                // number
             << gasLimit
-            << gasUsed			// gasUsed
+            << gasUsed            // gasUsed
             << timestamp
             << extraData;
     block.appendRaw(sealRLP, sealFields);

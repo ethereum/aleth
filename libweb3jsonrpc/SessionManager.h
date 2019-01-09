@@ -11,7 +11,7 @@ namespace rpc
 
 enum class Privilege
 {
-	Admin
+    Admin
 };
 
 }
@@ -19,10 +19,10 @@ enum class Privilege
 
 namespace std
 {
-	template<> struct hash<dev::rpc::Privilege>
-	{
-		size_t operator()(dev::rpc::Privilege _value) const { return (size_t)_value; }
-	};
+    template<> struct hash<dev::rpc::Privilege>
+    {
+        size_t operator()(dev::rpc::Privilege _value) const { return (size_t)_value; }
+    };
 }
 
 namespace dev
@@ -32,18 +32,18 @@ namespace rpc
 
 struct SessionPermissions
 {
-	std::unordered_set<Privilege> privileges;
+    std::unordered_set<Privilege> privileges;
 };
 
 class SessionManager
 {
 public:
-	std::string newSession(SessionPermissions const& _p);
-	void addSession(std::string const& _session, SessionPermissions const& _p);
-	bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const;
+    std::string newSession(SessionPermissions const& _p);
+    void addSession(std::string const& _session, SessionPermissions const& _p);
+    bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const;
 
 private:
-	std::unordered_map<std::string, SessionPermissions> m_sessions;
+    std::unordered_map<std::string, SessionPermissions> m_sessions;
 };
 
 }

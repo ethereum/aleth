@@ -51,8 +51,8 @@ namespace p2p
  */
 class Peer: public Node
 {
-    friend class Session;		/// Allows Session to update score and rating.
-    friend class Host;		/// For Host: saveNetwork(), restoreNetwork()
+    friend class Session;        /// Allows Session to update score and rating.
+    friend class Host;        /// For Host: saveNetwork(), restoreNetwork()
 
     friend class RLPXHandshake;
 
@@ -83,15 +83,15 @@ private:
     /// Returns number of seconds to wait until attempting connection, based on attempted connection history.
     unsigned fallbackSeconds() const;
 
-    std::atomic<int> m_score{0};									///< All time cumulative.
-    std::atomic<int> m_rating{0};									///< Trending.
+    std::atomic<int> m_score{0};                                    ///< All time cumulative.
+    std::atomic<int> m_rating{0};                                    ///< Trending.
     
     /// Network Availability
     
     std::chrono::system_clock::time_point m_lastConnected;
     std::chrono::system_clock::time_point m_lastAttempted;
     std::atomic<unsigned> m_failedAttempts{0};
-    DisconnectReason m_lastDisconnect = NoDisconnect;	///< Reason for disconnect that happened last.
+    DisconnectReason m_lastDisconnect = NoDisconnect;    ///< Reason for disconnect that happened last.
 
     /// Used by isOffline() and (todo) for peer to emit session information.
     std::weak_ptr<Session> m_session;

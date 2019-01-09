@@ -80,7 +80,7 @@ public:
     bytes data(SessionFace const& _s, std::string const& _subs) const;
 
 private:
-    std::unordered_map<std::pair<p2p::NodeID, std::string>, Reputation> m_nodes;	///< Nodes that were impolite while syncing. We avoid syncing from these if possible.
+    std::unordered_map<std::pair<p2p::NodeID, std::string>, Reputation> m_nodes;    ///< Nodes that were impolite while syncing. We avoid syncing from these if possible.
     SharedMutex mutable x_nodes;
 };
 
@@ -268,7 +268,7 @@ private:
     /// Called by Worker. Not thread-safe; to be called only by worker.
     virtual void startedWorking();
     /// Called by startedWorking. Not thread-safe; to be called only be Worker.
-    void run(boost::system::error_code const& error);			///< Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
+    void run(boost::system::error_code const& error);            ///< Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
 
     /// Run network. Not thread-safe; to be called only by worker.
     virtual void doWork();
@@ -293,32 +293,32 @@ private:
         return dev::p2p::isAllowedEndpoint(m_netConfig.allowLocalDiscovery, _endpointToCheck);
     }
 
-    bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
+    bytes m_restoreNetwork;                                        ///< Set by constructor and used to set Host key and restore network peers & nodes.
 
-    std::atomic<bool> m_run{false};													///< Whether network is running.
+    std::atomic<bool> m_run{false};                                                    ///< Whether network is running.
 
-    std::string m_clientVersion;											///< Our version string.
+    std::string m_clientVersion;                                            ///< Our version string.
 
-    NetworkConfig m_netConfig;										        ///< Network settings.
+    NetworkConfig m_netConfig;                                                ///< Network settings.
 
     /// Interface addresses (private, public)
-    std::set<bi::address> m_ifAddresses;								///< Interface addresses.
+    std::set<bi::address> m_ifAddresses;                                ///< Interface addresses.
 
-    std::atomic<int> m_listenPort{-1};												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
+    std::atomic<int> m_listenPort{-1};                                                ///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
 
-    io::io_service m_ioService;											///< IOService for network stuff.
-    bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
+    io::io_service m_ioService;                                            ///< IOService for network stuff.
+    bi::tcp::acceptor m_tcp4Acceptor;                                        ///< Listening acceptor.
 
-    std::unique_ptr<io::deadline_timer> m_timer;					///< Timer which, when network is running, calls run() every c_timerInterval ms.
-    mutable std::mutex x_runTimer;	///< Start/stop mutex.
-    static constexpr unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
+    std::unique_ptr<io::deadline_timer> m_timer;                    ///< Timer which, when network is running, calls run() every c_timerInterval ms.
+    mutable std::mutex x_runTimer;    ///< Start/stop mutex.
+    static constexpr unsigned c_timerInterval = 100;                            ///< Interval which m_timer is run when network is connected.
     std::condition_variable m_timerReset;
 
-    std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
+    std::set<Peer*> m_pendingPeerConns;                                    /// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
 
-    bi::tcp::endpoint m_tcpPublic;											///< Our public listening endpoint.
-    KeyPair m_alias;															///< Alias for network communication. Network address is k*G. k is key material. TODO: Replace KeyPair.
-    std::shared_ptr<NodeTable> m_nodeTable;									///< Node table (uses kademlia-like discovery).
+    bi::tcp::endpoint m_tcpPublic;                                            ///< Our public listening endpoint.
+    KeyPair m_alias;                                                            ///< Alias for network communication. Network address is k*G. k is key material. TODO: Replace KeyPair.
+    std::shared_ptr<NodeTable> m_nodeTable;                                    ///< Node table (uses kademlia-like discovery).
     mutable std::mutex x_nodeTable;
     std::shared_ptr<NodeTable> nodeTable() const { Guard l(x_nodeTable); return m_nodeTable; }
 
@@ -334,11 +334,11 @@ private:
     mutable std::unordered_map<NodeID, std::weak_ptr<SessionFace>> m_sessions;
     mutable RecursiveMutex x_sessions;
     
-    std::list<std::weak_ptr<RLPXHandshake>> m_connecting;					///< Pending connections.
-    Mutex x_connecting;													///< Mutex for m_connecting.
+    std::list<std::weak_ptr<RLPXHandshake>> m_connecting;                    ///< Pending connections.
+    Mutex x_connecting;                                                    ///< Mutex for m_connecting.
 
-    unsigned m_idealPeerCount = 11;										///< Ideal number of peers to be connected to.
-    unsigned m_stretchPeers = 7;										///< Accepted connection multiplier (max peers = ideal*stretch).
+    unsigned m_idealPeerCount = 11;                                        ///< Ideal number of peers to be connected to.
+    unsigned m_stretchPeers = 7;                                        ///< Accepted connection multiplier (max peers = ideal*stretch).
 
     /// Each of the capabilities we support.
     std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
@@ -347,7 +347,7 @@ private:
     std::list<std::unique_ptr<io::deadline_timer>> m_timers;
     Mutex x_timers;
 
-    std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
+    std::chrono::steady_clock::time_point m_lastPing;                        ///< Time we sent the last ping to all peers.
     bool m_accepting = false;
     bool m_dropPeers = false;
 

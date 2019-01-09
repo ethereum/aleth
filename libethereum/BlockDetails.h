@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file BlockDetails.h
  * @author Gav Wood <i@gavwood.com>
@@ -40,75 +40,75 @@ static const unsigned c_invalidNumber = (unsigned)-1;
 
 struct BlockDetails
 {
-	BlockDetails(): number(c_invalidNumber), totalDifficulty(Invalid256) {}
-	BlockDetails(unsigned _n, u256 _tD, h256 _p, h256s _c): number(_n), totalDifficulty(_tD), parent(_p), children(_c) {}
-	BlockDetails(RLP const& _r);
-	bytes rlp() const;
+    BlockDetails(): number(c_invalidNumber), totalDifficulty(Invalid256) {}
+    BlockDetails(unsigned _n, u256 _tD, h256 _p, h256s _c): number(_n), totalDifficulty(_tD), parent(_p), children(_c) {}
+    BlockDetails(RLP const& _r);
+    bytes rlp() const;
 
-	bool isNull() const { return number == c_invalidNumber; }
-	explicit operator bool() const { return !isNull(); }
+    bool isNull() const { return number == c_invalidNumber; }
+    explicit operator bool() const { return !isNull(); }
 
-	unsigned number = c_invalidNumber;
-	u256 totalDifficulty = Invalid256;
-	h256 parent;
-	h256s children;
+    unsigned number = c_invalidNumber;
+    u256 totalDifficulty = Invalid256;
+    h256 parent;
+    h256s children;
 
-	mutable unsigned size;
+    mutable unsigned size;
 };
 
 struct BlockLogBlooms
 {
-	BlockLogBlooms() {}
-	BlockLogBlooms(RLP const& _r) { blooms = _r.toVector<LogBloom>(); size = _r.data().size(); }
-	bytes rlp() const { bytes r = dev::rlp(blooms); size = r.size(); return r; }
+    BlockLogBlooms() {}
+    BlockLogBlooms(RLP const& _r) { blooms = _r.toVector<LogBloom>(); size = _r.data().size(); }
+    bytes rlp() const { bytes r = dev::rlp(blooms); size = r.size(); return r; }
 
-	LogBlooms blooms;
-	mutable unsigned size;
+    LogBlooms blooms;
+    mutable unsigned size;
 };
 
 struct BlocksBlooms
 {
-	BlocksBlooms() {}
-	BlocksBlooms(RLP const& _r) { blooms = _r.toArray<LogBloom, c_bloomIndexSize>(); size = _r.data().size(); }
-	bytes rlp() const { bytes r = dev::rlp(blooms); size = r.size(); return r; }
+    BlocksBlooms() {}
+    BlocksBlooms(RLP const& _r) { blooms = _r.toArray<LogBloom, c_bloomIndexSize>(); size = _r.data().size(); }
+    bytes rlp() const { bytes r = dev::rlp(blooms); size = r.size(); return r; }
 
-	std::array<LogBloom, c_bloomIndexSize> blooms;
-	mutable unsigned size;
+    std::array<LogBloom, c_bloomIndexSize> blooms;
+    mutable unsigned size;
 };
 
 struct BlockReceipts
 {
-	BlockReceipts() {}
-	BlockReceipts(RLP const& _r) { for (auto const& i: _r) receipts.emplace_back(i.data()); size = _r.data().size(); }
-	bytes rlp() const { RLPStream s(receipts.size()); for (TransactionReceipt const& i: receipts) i.streamRLP(s); size = s.out().size(); return s.out(); }
+    BlockReceipts() {}
+    BlockReceipts(RLP const& _r) { for (auto const& i: _r) receipts.emplace_back(i.data()); size = _r.data().size(); }
+    bytes rlp() const { RLPStream s(receipts.size()); for (TransactionReceipt const& i: receipts) i.streamRLP(s); size = s.out().size(); return s.out(); }
 
-	TransactionReceipts receipts;
-	mutable unsigned size = 0;
+    TransactionReceipts receipts;
+    mutable unsigned size = 0;
 };
 
 struct BlockHash
 {
-	BlockHash() {}
-	BlockHash(h256 const& _h): value(_h) {}
-	BlockHash(RLP const& _r) { value = _r.toHash<h256>(); }
-	bytes rlp() const { return dev::rlp(value); }
+    BlockHash() {}
+    BlockHash(h256 const& _h): value(_h) {}
+    BlockHash(RLP const& _r) { value = _r.toHash<h256>(); }
+    bytes rlp() const { return dev::rlp(value); }
 
-	h256 value;
-	static const unsigned size = 65;
+    h256 value;
+    static const unsigned size = 65;
 };
 
 struct TransactionAddress
 {
-	TransactionAddress() {}
-	TransactionAddress(RLP const& _rlp) { blockHash = _rlp[0].toHash<h256>(); index = _rlp[1].toInt<unsigned>(); }
-	bytes rlp() const { RLPStream s(2); s << blockHash << index; return s.out(); }
+    TransactionAddress() {}
+    TransactionAddress(RLP const& _rlp) { blockHash = _rlp[0].toHash<h256>(); index = _rlp[1].toInt<unsigned>(); }
+    bytes rlp() const { RLPStream s(2); s << blockHash << index; return s.out(); }
 
-	explicit operator bool() const { return !!blockHash; }
+    explicit operator bool() const { return !!blockHash; }
 
-	h256 blockHash;
-	unsigned index = 0;
+    h256 blockHash;
+    unsigned index = 0;
 
-	static const unsigned size = 67;
+    static const unsigned size = 67;
 };
 
 using BlockDetailsHash = std::unordered_map<h256, BlockDetails>;

@@ -1260,7 +1260,7 @@ void LegacyVM::interpretCases()
             else if (m_SP[0] >= m_ext->data.size())
                 m_SP[0] = u256(0);
             else
-            { 	h256 r;
+            {     h256 r;
                 for (uint64_t i = (uint64_t)m_SP[0], e = (uint64_t)m_SP[0] + (uint64_t)32, j = 0; i < e; ++i, ++j)
                     r[j] = i < m_ext->data.size() ? m_ext->data[i] : 0;
                 m_SP[0] = (u256)r;

@@ -16,8 +16,8 @@
 */
 /** @file FileSystem.h
  * @authors
- *	 Eric Lombrozo <elombrozo@gmail.com>
- *	 Gav Wood <i@gavwood.com>
+ *     Eric Lombrozo <elombrozo@gmail.com>
+ *     Gav Wood <i@gavwood.com>
  * @date 2014
  */
 

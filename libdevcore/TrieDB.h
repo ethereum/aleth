@@ -129,8 +129,8 @@ public:
         struct Node
         {
             std::string rlp;
-            std::string key;		// as hexPrefixEncoding.
-            byte child;				// 255 -> entering, 16 -> actually at the node, 17 -> exiting, 0-15 -> actual children.
+            std::string key;        // as hexPrefixEncoding.
+            byte child;                // 255 -> entering, 16 -> actually at the node, 17 -> exiting, 0-15 -> actual children.
 
             // 255 -> 16 -> 0 -> 1 -> ... -> 15 -> 17
 
@@ -156,7 +156,7 @@ public:
     void descendKey(h256 const& _k, h256Hash& _keyMask, bool _wasExt, std::ostream* _out, int _indent = 0) const
     {
         _keyMask.erase(_k);
-        if (_k == m_root && _k == EmptyTrie)	// root allowed to be empty
+        if (_k == m_root && _k == EmptyTrie)    // root allowed to be empty
             return;
         std::string const s = node(_k);
         RLP r = RLP(s);
@@ -182,7 +182,7 @@ public:
         {
             if (_out)
                 (*_out) << std::string(_indent * 2, ' ') << (_wasExt ? "!2 " : "2  ") << sha3(_r.data()) << ": " << _r << "\n";
-            if (!isLeaf(_r))						// don't go down leaves
+            if (!isLeaf(_r))                        // don't go down leaves
                 descendEntry(_r[1], _keyMask, true, _out, _indent + 1);
         }
         else if (_r.isList() && _r.itemCount() == 17)
@@ -190,7 +190,7 @@ public:
             if (_out)
                 (*_out) << std::string(_indent * 2, ' ') << "17 " << sha3(_r.data()) << ": " << _r << "\n";
             for (unsigned i = 0; i < 16; ++i)
-                if (!_r[i].isEmpty())				// 16 branches are allowed to be empty
+                if (!_r[i].isEmpty())                // 16 branches are allowed to be empty
                     descendEntry(_r[i], _keyMask, false, _out, _indent + 1);
         }
         else
@@ -505,14 +505,14 @@ namespace dev
 template <class DB> GenericTrieDB<DB>::iterator::iterator(GenericTrieDB const* _db)
 {
     m_that = _db;
-    m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), 255});	// one null byte is the HPE for the empty key.
+    m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), 255});    // one null byte is the HPE for the empty key.
     next();
 }
 
 template <class DB> GenericTrieDB<DB>::iterator::iterator(GenericTrieDB const* _db, bytesConstRef _fullKey)
 {
     m_that = _db;
-    m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), 255});	// one null byte is the HPE for the empty key.
+    m_trail.push_back({_db->node(_db->m_root), std::string(1, '\0'), 255});    // one null byte is the HPE for the empty key.
     next(_fullKey);
 }
 
@@ -521,7 +521,7 @@ template <class DB> typename GenericTrieDB<DB>::iterator::value_type GenericTrie
     assert(m_trail.size());
     Node const& b = m_trail.back();
     assert(b.key.size());
-    assert(!(b.key[0] & 0x10));	// should be an integer number of bytes (i.e. not an odd number of nibbles).
+    assert(!(b.key[0] & 0x10));    // should be an integer number of bytes (i.e. not an odd number of nibbles).
 
     RLP rlp(b.rlp);
     return std::make_pair(bytesConstRef(b.key).cropped(1), rlp[rlp.itemCount() == 2 ? 1 : 16].payload());
@@ -646,7 +646,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next(NibbleSlice _key)
             else if (!rlp[m_trail.back().child].isEmpty())
             {
                 if (m_trail.back().child == 16)
-                    return;	// have a value at this node - exit now.
+                    return;    // have a value at this node - exit now.
                 else
                 {
                     // lead-on to another node - enter child.
@@ -747,7 +747,7 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
             else if (!rlp[m_trail.back().child].isEmpty())
             {
                 if (m_trail.back().child == 16)
-                    return;	// have a value at this node - exit now.
+                    return;    // have a value at this node - exit now.
                 else
                 {
                     // lead-on to another node - enter child.
@@ -863,7 +863,7 @@ template <class DB> bytes GenericTrieDB<DB>::mergeAt(RLP const& _orig, h256 cons
         }
 
         auto sh = _k.shared(k);
-//		std::cout << _k << " sh " << k << " = " << sh << std::endl;
+//        std::cout << _k << " sh " << k << " = " << sh << std::endl;
         if (sh)
         {
             // shared stuff - cleve at disagreement.
@@ -1020,7 +1020,7 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
             for (byte i = 0; i < 17; ++i)
                 if (i == n)
                 {
-                    if (!deleteAtAux(r, _orig[i], _k.mid(1)))	// bomb out if the key didn't turn up.
+                    if (!deleteAtAux(r, _orig[i], _k.mid(1)))    // bomb out if the key didn't turn up.
                         return bytes();
                 }
                 else
@@ -1032,7 +1032,7 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
             // check if we ended up leaving the node invalid.
             RLP rlp(r.out());
             byte used = uniqueInUse(rlp, 255);
-            if (used == 255)	// no - all ok.
+            if (used == 255)    // no - all ok.
                 return r.out();
 
             // yes; merge
@@ -1053,10 +1053,10 @@ template <class DB> bool GenericTrieDB<DB>::deleteAtAux(RLPStream& _out, RLP con
 
     bytes b = _orig.isEmpty() ? bytes() : deleteAt(_orig.isList() ? _orig : RLP(node(_orig.toHash<h256>())), _k);
 
-    if (!b.size())	// not found - no change.
+    if (!b.size())    // not found - no change.
         return false;
 
-/*	if (_orig.isList())
+/*    if (_orig.isList())
         killNode(_orig);
     else
         killNode(_orig.toHash<h256>());*/
@@ -1144,9 +1144,9 @@ template <class DB> bytes GenericTrieDB<DB>::graft(RLP const& _orig)
     assert(n.itemCount() == 2);
 
     return rlpList(hexPrefixEncode(keyOf(_orig), keyOf(n), isLeaf(n)), n[1]);
-//	auto ret =
-//	std::cout << keyOf(_orig) << " ++ " << keyOf(n) << " == " << keyOf(RLP(ret)) << std::endl;
-//	return ret;
+//    auto ret =
+//    std::cout << keyOf(_orig) << " ++ " << keyOf(n) << " == " << keyOf(RLP(ret)) << std::endl;
+//    return ret;
 }
 
 template <class DB> bytes GenericTrieDB<DB>::merge(RLP const& _orig, byte _i)

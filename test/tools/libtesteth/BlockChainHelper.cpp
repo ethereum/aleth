@@ -297,7 +297,7 @@ BlockHeader TestBlock::constructBlock(mObject const& _o, h256 const& _stateRoot)
     {
         const dev::bytes c_blockRLP = createBlockRLPFromFields(_o, _stateRoot);
         ret = BlockHeader(c_blockRLP, HeaderData);
-        //		cdebug << "Block constructed of hash" << ret.hash() << "(without:" <<
+        //        cdebug << "Block constructed of hash" << ret.hash() << "(without:" <<
         //ret.hash(WithoutSeal) << ")";
     }
     catch (Exception const& _e)
