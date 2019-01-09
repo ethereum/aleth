@@ -134,6 +134,14 @@ struct TestNodeTable: public NodeTable
         {
             // manually add node for test
             {
+                // skip the nodes for other buckets
+                size_t const dist = distance(m_hostNodeID, testNode->first);
+                if (dist != _bucket + 1)
+                {
+                    ++testNode;
+                    continue;
+                }
+
                 Guard ln(x_nodes);
                 shared_ptr<NodeEntry> node(new NodeEntry(m_hostNodeID, testNode->first,
                     NodeIPEndpoint(ourIp, testNode->second, testNode->second)));
@@ -182,7 +190,7 @@ struct TestNodeTable: public NodeTable
 struct TestNodeTableHost : public TestHost
 {
     TestNodeTableHost(unsigned _count = 8, uint16_t _port = 30310)
-      : m_alias(KeyPair::create()), testNodes(TestNodeTable::createTestNodes(_count))
+      : m_alias(KeyPair::create()), testNodes(TestNodeTable::createTestNodes(_count)), timer(m_io)
     {
         // find free port
         do
@@ -207,9 +215,20 @@ struct TestNodeTableHost : public TestHost
     }
 
 
+    void processEvents(boost::system::error_code const& _e)
+    {
+        if (_e)
+            return;
+        nodeTable->processEvents();
+
+        timer.expires_from_now(boost::posix_time::milliseconds(100));
+        timer.async_wait([this](boost::system::error_code const& _e) { processEvents(_e); });
+    }
+
     KeyPair m_alias;
     shared_ptr<TestNodeTable> nodeTable;
     std::vector<std::pair<Public, uint16_t>> testNodes;  // keypair and port
+    ba::deadline_timer timer;
 };
 
 class TestUDPSocketHost : UDPSocketEvents, public TestHost
@@ -685,6 +704,17 @@ BOOST_AUTO_TEST_CASE(unexpectedFindNode)
     BOOST_CHECK_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)), WaitTimeout);
 }
 
+struct TestNodeTableEventHandler : NodeTableEventHandler
+{
+    void processEvent(NodeID const& _n, NodeTableEventType const& _e) override
+    {
+        if (_e == NodeEntryScheduledForEviction)
+            scheduledForEviction.push(_n);
+    }
+
+    concurrent_queue<NodeID> scheduledForEviction;
+};
+
 BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
 {
     TestNodeTableHost nodeTableHost(512);
@@ -701,12 +731,17 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     auto nodeId = nodeKeyPair.pub();
     nodeTable->addNode(Node{nodeId, nodeEndpoint}, NodeTable::Known);
 
+    unique_ptr<TestNodeTableEventHandler> eventHandler(new TestNodeTableEventHandler);
+    concurrent_queue<NodeID>& evictEvents = eventHandler->scheduledForEviction;
+    nodeTable->setEventHandler(eventHandler.release());
+
     // add 15 nodes more to the same bucket
     BOOST_REQUIRE(nodeTable->m_allNodes.find(nodeId)->second->distance > 0);
     int bucketIndex = nodeTable->m_allNodes[nodeId]->distance - 1;
     nodeTableHost.populateUntilSpecificBucketSize(bucketIndex, 16);
 
     nodeTableHost.start();
+    nodeTableHost.processEvents({});
 
     // generate new address for the same bucket
     NodeID newNodeId;
@@ -722,8 +757,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
         NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
     nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, NodeTable::Known);
 
-    // wait for PING to be sent out
-    this_thread::sleep_for(std::chrono::milliseconds(100));
+    // wait for eviction
+    evictEvents.pop();
 
     auto evicted = nodeTable->m_sentPings.find(nodeId);
     BOOST_REQUIRE(evicted != nodeTable->m_sentPings.end());

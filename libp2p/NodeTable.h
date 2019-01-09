@@ -32,7 +32,8 @@ namespace p2p
 enum NodeTableEventType
 {
     NodeEntryAdded,
-    NodeEntryDropped
+    NodeEntryDropped,
+    NodeEntryScheduledForEviction
 };
 
 class NodeTable;

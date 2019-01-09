@@ -309,6 +309,8 @@ void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const&
         m_socket->send(p);
 
         m_sentPings[_nodeEntry.id] = {chrono::steady_clock::now(), pingHash, _replacementNodeID};
+        if (m_nodeEventHandler && _replacementNodeID)
+            m_nodeEventHandler->appendEvent(_nodeEntry.id, NodeEntryScheduledForEviction);
     });
 }
 
