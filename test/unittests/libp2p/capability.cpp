@@ -1,38 +1,18 @@
-/*
-This file is part of cpp-ethereum.
-
-cpp-ethereum is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-cpp-ethereum is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file capability.cpp
-* @author Vladislav Gluhovsky <vlad@ethdev.com>
-* @date May 2015
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include <libp2p/Capability.h>
 #include <libp2p/CapabilityHost.h>
 #include <libp2p/Common.h>
 #include <libp2p/Host.h>
 #include <libp2p/Session.h>
-#include <test/tools/libtesteth/Options.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
 
 using namespace std;
 using namespace dev;
-using namespace dev::test;
 using namespace dev::p2p;
 
 class TestCapability : public CapabilityFace, public Worker
@@ -54,7 +34,6 @@ public:
     }
     bool interpretCapabilityPacket(NodeID const& _nodeID, unsigned _id, RLP const& _r) override
     {
-        // cnote << "Capability::interpret(): custom message received";
         ++m_cntReceivedMessages[_nodeID];
         m_testSums[_nodeID] += _r[0].toInt();
         BOOST_ASSERT(_id == UserPacket);
@@ -74,7 +53,7 @@ public:
     }
 
     std::pair<int, int> retrieveTestData(NodeID const& _id)
-    { 
+    {
         int cnt = 0;
         int checksum = 0;
         for (auto i : m_cntReceivedMessages)
@@ -84,7 +63,7 @@ public:
                 checksum += m_testSums[_id];
             }
 
-        return std::pair<int, int>(cnt, checksum);
+        return {cnt, checksum};
     }
 
     Host const& m_host;
@@ -92,12 +71,8 @@ public:
     std::unordered_map<NodeID, int> m_testSums;
 };
 
-BOOST_FIXTURE_TEST_SUITE(p2pCapability, TestOutputHelperFixture)
-
-BOOST_AUTO_TEST_CASE(capability)
+TEST(p2p, capability)
 {
-    cnote << "Testing Capability...";
-
     int const step = 10;
     const char* const localhost = "127.0.0.1";
     NetworkConfig prefs1(localhost, 0, false /* upnp */, true /* allow local discovery */);
@@ -108,13 +83,13 @@ BOOST_AUTO_TEST_CASE(capability)
     host1.registerCapability(thc1);
     auto thc2 = make_shared<TestCapability>(host2);
     host2.registerCapability(thc2);
-    host1.start();	
+    host1.start();
     host2.start();
     auto port1 = host1.listenPort();
     auto port2 = host2.listenPort();
-    BOOST_REQUIRE(port1);
-    BOOST_REQUIRE(port2);	
-    BOOST_REQUIRE_NE(port1, port2);
+    EXPECT_NE(port1, 0);
+    EXPECT_NE(port2, 0);
+    EXPECT_NE(port1, port2);
 
     for (unsigned i = 0; i < 3000; i += step)
     {
@@ -124,8 +99,10 @@ BOOST_AUTO_TEST_CASE(capability)
             break;
     }
 
-    BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
-    host1.requirePeer(host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
+    EXPECT_TRUE(host1.isStarted());
+    EXPECT_TRUE(host2.isStarted());
+    host1.requirePeer(
+        host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
     // Wait for up to 12 seconds, to give the hosts time to connect to each other.
     for (unsigned i = 0; i < 12000; i += step)
@@ -136,7 +113,8 @@ BOOST_AUTO_TEST_CASE(capability)
             break;
     }
 
-    BOOST_REQUIRE(host1.peerCount() > 0 && host2.peerCount() > 0);
+    EXPECT_GT(host1.peerCount(), 0);
+    EXPECT_GT(host2.peerCount(), 0);
 
     int const target = 64;
     int checksum = 0;
@@ -145,10 +123,6 @@ BOOST_AUTO_TEST_CASE(capability)
 
     this_thread::sleep_for(chrono::seconds(target / 64 + 1));
     std::pair<int, int> testData = thc1->retrieveTestData(host2.id());
-    BOOST_REQUIRE_EQUAL(target, testData.first);
-    BOOST_REQUIRE_EQUAL(checksum, testData.second);
+    EXPECT_EQ(target, testData.first);
+    EXPECT_EQ(checksum, testData.second);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
-
-

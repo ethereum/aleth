@@ -20,6 +20,8 @@ set(unittest_sources
 
     unittests/libethereum/ValidationSchemes.cpp
 
+    unittests/libp2p/capability.cpp
+
     unittests/libweb3core/memorydb.cpp
     unittests/libweb3core/overlaydb.cpp
     unittests/libweb3core/statecachedb.cpp
