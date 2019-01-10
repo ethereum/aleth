@@ -100,7 +100,8 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
     Block block = blockchain.genesisBlock(genesisDB);
     block.setAuthor(genesisBlock.beneficiary());
 
-    block = block;
+    auto& blockRef = block;  // Hide itself, compilers can complain about direct self-assignments.
+    block = blockRef;        // Assign to itself.
     Block block2 = block;
     BOOST_REQUIRE(ImportTest::compareStates(block.state(), block2.state()) == 0);
     BOOST_REQUIRE(block2.pending() == block.pending());
@@ -309,7 +310,7 @@ BOOST_AUTO_TEST_CASE(bBlockhashContractIsUpdated)
     block.sync(blockchain); // sync to the beginning of block 3
     h256 storageRoot3 = block.state().storageRoot(Address(0xf0));
     BOOST_CHECK(storageRoot3 != EmptyTrie);
-    
+
     BOOST_REQUIRE(storageRoot2 != storageRoot3);
 }
 
