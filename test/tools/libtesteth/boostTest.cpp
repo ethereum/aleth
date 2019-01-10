@@ -1,19 +1,7 @@
-/*
-    This file is part of cpp-ethereum.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2018 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
 /** @file
  * Stub for generating main boost.test module.
  * Original code taken from boost sources.
@@ -87,18 +75,6 @@ void customTestSuite()
     }
 }
 
-void travisOut(std::atomic_bool* _stopTravisOut)
-{
-    int tickCounter = 0;
-    while (!*_stopTravisOut)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        ++tickCounter;
-        if (tickCounter % 10 == 0)
-            std::cout << ".\n" << std::flush;  // Output dot every 10s.
-    }
-}
-
 // Custom Boost Unit Test Main
 int main(int argc, const char* argv[])
 {
@@ -160,22 +136,7 @@ int main(int argc, const char* argv[])
     std::cout << "Running tests using path: " << test::getTestPath() << std::endl;
     int result = 0;
     auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
-    if (opt.jsontrace || opt.vmtrace || opt.statediff)
-    {
-        // Do not use travis '.' output thread if debug is defined
-        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-        dev::test::TestOutputHelper::get().printTestExecStats();
-        return result;
-    }
-    else
-    {
-        // Initialize travis '.' output thread for log activity
-        std::atomic_bool stopTravisOut{false};
-        std::thread outputThread(travisOut, &stopTravisOut);
-        result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-        stopTravisOut = true;
-        outputThread.join();
-        dev::test::TestOutputHelper::get().printTestExecStats();
-        return result;
-    }
+    result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+    dev::test::TestOutputHelper::get().printTestExecStats();
+    return result;
 }
