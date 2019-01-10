@@ -200,7 +200,11 @@ struct TestNodeTableHost : public TestHost
             ++_port;
         } while (!nodeTable->m_socket->isOpen());
     }
-    ~TestNodeTableHost() { m_io.stop(); stopWorking(); }
+    ~TestNodeTableHost()
+    {
+        m_io.stop();
+        terminate();
+    }
 
     void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
 
@@ -249,6 +253,11 @@ public:
                 ++port;
             }
         }
+    }
+    ~TestUDPSocketHost()
+    {
+        m_io.stop();
+        terminate();
     }
 
     void onSocketDisconnected(UDPSocketFace*){};
@@ -842,10 +851,10 @@ BOOST_AUTO_TEST_CASE(addSelf)
 {
     TestNodeTableHost nodeTableHost(512);
     auto& nodeTable = nodeTableHost.nodeTable;
-    
+
     size_t expectedNodeCount = 0;
     BOOST_REQUIRE(nodeTable->count() == expectedNodeCount);
-    
+
     TestUDPSocketHost nodeSocketHost{ 30500 };
     auto nodePort = nodeSocketHost.port;
     auto nodeEndpoint = NodeIPEndpoint{ bi::address::from_string("127.0.0.1"), nodePort, nodePort };
@@ -855,7 +864,7 @@ BOOST_AUTO_TEST_CASE(addSelf)
     Node node(nodeKeyPair.pub(), nodeEndpoint);
     nodeTable->addNode(node);
     BOOST_CHECK(nodeTable->count() == ++expectedNodeCount);
-    
+
     // Create self node and verify it isn't added to the node table
     Node self(nodeTableHost.m_alias.pub(), nodeEndpoint);
     nodeTable->addNode(self);
