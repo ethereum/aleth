@@ -56,6 +56,12 @@ IncludeCategories:
   - Regex:           '^<boost/.*'
     Priority:        80
 
+  # Testing libraries:
+  - Regex:           '^<benchmark/.*'
+    Priority:        90
+  - Regex:           '^<gtest/.*'
+    Priority:        90
+
   # Public includes <>:
   - Regex:           '^<.*\.h|hpp>'
     Priority:        2
