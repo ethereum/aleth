@@ -1,23 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file net.cpp
- * @author Alex Leverington <nessence@gmail.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2018 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include <libdevcore/Assertions.h>
 #include <libdevcore/Worker.h>
@@ -60,19 +43,23 @@ protected:
 struct TestNodeTable: public NodeTable
 {
     /// Constructor
-    TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311): NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port), true /* discovery enabled */, true /* allow local discovery */) {}
+    TestNodeTable(
+        ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311)
+      : NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port), true /* discovery enabled */,
+            true /* allow local discovery */)
+    {}
 
     static std::vector<std::pair<Public, uint16_t>> createTestNodes(unsigned _count)
     {
         std::vector<std::pair<Public, uint16_t>> ret;
         asserts(_count < 1000);
-        static uint16_t s_basePort = 30500;
+        static constexpr uint16_t c_basePort = 30500;
 
         ret.clear();
         for (unsigned i = 0; i < _count; i++)
         {
             KeyPair k = KeyPair::create();
-            ret.push_back(make_pair(k.pub(), s_basePort + i));
+            ret.push_back(make_pair(k.pub(), c_basePort + i));
         }
 
         return ret;
@@ -303,7 +290,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
     bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
 
     // hash(32), signature(65), overhead: packetSz(3), type(1), nodeListSz(3), ts(5),
-    static unsigned const nlimit = (1280 - 109) / 90; // neighbour: 2 + 65 + 3 + 3 + 17
+    static unsigned constexpr nlimit = (1280 - 109) / 90; // neighbour: 2 + 65 + 3 + 3 + 17
     for (unsigned offset = 0; offset < testNodes.size(); offset += nlimit)
     {
         Neighbours out(to);
@@ -350,13 +337,6 @@ BOOST_AUTO_TEST_CASE(neighboursPacket)
         BOOST_REQUIRE_EQUAL(sha3(testNodes[count].first), sha3(n.node));
         count++;
     }
-}
-
-BOOST_AUTO_TEST_CASE(test_findnode_neighbours)
-{
-    // Executing findNode should result in a list which is serialized
-    // into Neighbours packet. Neighbours packet should then be deserialized
-    // into the same list of nearest nodes.
 }
 
 BOOST_AUTO_TEST_CASE(kademlia)
@@ -620,6 +600,66 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     BOOST_CHECK(addedNode == nodeTable->m_allNodes.end());
     sentPing = nodeTable->m_sentPings.find(nodePubKey);
     BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
+}
+
+BOOST_AUTO_TEST_CASE(neighboursSentAfterFindNode)
+{
+    unsigned constexpr nodeCount = 8;
+    TestNodeTableHost nodeTableHost(nodeCount);
+    nodeTableHost.start();
+    nodeTableHost.populate(nodeCount);
+    BOOST_REQUIRE_EQUAL(nodeTableHost.nodeTable->count(), nodeCount);
+
+    // Create and add a node to the node table. We will use this "node" to send the FindNode query
+    // to the node table
+    TestUDPSocketHost nodeSocketHost{30000};
+    auto const listenPort = nodeSocketHost.port;
+    nodeSocketHost.start();
+    auto const& nodeTable = nodeTableHost.nodeTable;
+    KeyPair newNodeKeyPair = KeyPair::create();
+    NodeID newNodeId = newNodeKeyPair.pub();
+    nodeTable->addNode(Node(newNodeId, NodeIPEndpoint(bi::address::from_string("127.0.0.1"),
+                                           listenPort, listenPort)),
+        NodeTable::Known /* Makes node table think that endpoint proof has been completed */);
+
+    // Create and send the FindNode packet from the new "node"
+    KeyPair target = KeyPair::create();
+    FindNode findNode(nodeTable->m_hostNodeEndpoint, target.pub());
+    findNode.sign(newNodeKeyPair.secret());
+    nodeSocketHost.socket->send(findNode);
+
+    // Wait for FindNode to be received and handled
+    nodeTable->packetsReceived.pop(chrono::milliseconds(5000));
+
+    // Wait for the Neighbours packet to be received
+    auto packetReceived = nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000));
+    auto datagram = DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived));
+    BOOST_CHECK_EQUAL(datagram->typeName(), "Neighbours");
+
+    // TODO: Validate the contents of the neighbours packet
+}
+
+BOOST_AUTO_TEST_CASE(unexpectedFindNode)
+{
+    unsigned constexpr nodeCount = 8;
+    TestNodeTableHost nodeTableHost(nodeCount);
+    nodeTableHost.start();
+    nodeTableHost.populate(nodeCount);
+    BOOST_REQUIRE_EQUAL(nodeTableHost.nodeTable->count(), nodeCount);
+
+    // Create and send the FindNode packet
+    TestUDPSocketHost nodeSocketHost{30000};
+    nodeSocketHost.start();
+    auto nodeTable = nodeTableHost.nodeTable;
+    FindNode findNode(nodeTable->m_hostNodeEndpoint, KeyPair::create().pub() /* target */);
+    findNode.sign(KeyPair::create().secret());
+    nodeSocketHost.socket->send(findNode);
+
+    // Wait for FindNode to be received
+    nodeTable->packetsReceived.pop(chrono::milliseconds(5000));
+
+    // Verify that no neighbours response is received
+    BOOST_CHECK_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)), WaitTimeout);
 }
 
 BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)

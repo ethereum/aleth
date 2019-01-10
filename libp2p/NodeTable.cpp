@@ -102,12 +102,20 @@ void NodeTable::addNode(Node const& _node, NodeRelation _relation)
     }
 
     if (!_node.endpoint || !_node.id)
+    {
+        LOG(m_logger) << "Supplied node has an invalid endpoint (" << _node.endpoint << ") or id ("
+                      << _node.id << "). Skipping adding to node table.";
         return;
+    }
 
     DEV_GUARDED(x_nodes)
     {
         if (m_allNodes.count(_node.id))
+        {
+            LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
+                          << " is already in the node table";
             return;
+        }
     }
 
     if (m_hostNodeID == _node.id)
@@ -180,8 +188,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
         {
             // Avoid sending FindNode, if we have not sent a valid PONG lately.
             // This prevents being considered invalid node and FindNode being ignored.
-            if (RLPXDatagramFace::secondsSinceEpoch() >=
-                node->lastPongSentTime + c_bondingTimeSeconds)
+            if (!node->hasValidEndpointProof())
             {
                 ping(*node);
                 continue;
@@ -433,7 +440,7 @@ void NodeTable::onPacketReceived(
                 }
 
                 auto const sourceNodeEntry = nodeEntry(sourceId);
-                assert(sourceNodeEntry.get());
+                assert(sourceNodeEntry);
                 sourceNodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
 
                 // Valid PONG received, so we don't want to evict this node,
@@ -482,6 +489,24 @@ void NodeTable::onPacketReceived(
 
             case FindNode::type:
             {
+                auto const& sourceNodeEntry = nodeEntry(packet->sourceid);
+                if (!sourceNodeEntry)
+                {
+                    LOG(m_logger) << "Source node (" << packet->sourceid << "@" << _from
+                                  << ") not found in node table. Ignoring FindNode request.";
+                    return;
+                }
+                if (!sourceNodeEntry->lastPongReceivedTime)
+                {
+                    LOG(m_logger) << "Unexpected FindNode packet! Endpoint proof hasn't been performed yet.";
+                    return;
+                }
+                if (!sourceNodeEntry->hasValidEndpointProof())
+                {
+                    LOG(m_logger) << "Unexpected FindNode packet! Endpoint proof has expired.";
+                    return;
+                }
+
                 auto const& in = dynamic_cast<FindNode const&>(*packet);
                 vector<shared_ptr<NodeEntry>> nearest = nearestNodeEntries(in.target);
                 static unsigned constexpr nlimit = (NodeSocket::maxDatagramSize - 109) / 90;
