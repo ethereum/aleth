@@ -150,7 +150,9 @@ public:
     /// proof for it or it has been restored from the network config), also add it to the node table.
     /// If the node is unknown (i.e. we haven't completed the endpoint proof for it yet) then ping
     /// it to trigger the endpoint proof.
-    void addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
+    ///
+    /// @return True if the node has been added to the table.
+    bool addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
 
     /// Returns list of node ids active in node table.
     std::list<NodeID> nodes() const;
