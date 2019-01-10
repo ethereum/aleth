@@ -154,7 +154,9 @@ public:
     void processEvents();
 
     /// Add node. Node will be pinged.
-    void addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
+    ///
+    /// @return True if the node has been added to the table.
+    bool addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
 
     /// Returns list of node ids active in node table.
     std::list<NodeID> nodes() const;
