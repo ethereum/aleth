@@ -47,16 +47,27 @@ DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 IncludeCategories:
+
+  # Local includes "":
   - Regex:           '^".*'
     Priority:        1
-  - Regex:           '^<boost.*'
-    Priority:        98
-  - Regex:           '^<.*\.h>'
+
+  # Standard library extensions / common generic purpose libraries:
+  - Regex:           '^<boost/.*'
+    Priority:        80
+
+  # Public includes <>:
+  - Regex:           '^<.*\.h|hpp>'
     Priority:        2
+
+  # Standard library:
   - Regex:           '^<.*'
-    Priority:        99
+    Priority:        100
+
+  # Anything else:
   - Regex:           '.*'
     Priority:        4
+
 IndentCaseLabels: false
 IndentWidth:     4
 IndentWrappedFunctionNames: false
