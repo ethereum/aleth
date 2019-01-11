@@ -621,9 +621,9 @@ size_t Host::peerCount() const
     return retCount;
 }
 
-void Host::run(boost::system::error_code const&)
+void Host::run(boost::system::error_code const& _ec)
 {
-    if (!m_run)
+    if (!m_run || _ec)
         return;
 
     if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
