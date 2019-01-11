@@ -602,6 +602,29 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
 }
 
+BOOST_AUTO_TEST_CASE(invalidPing)
+{
+    // NodeTable receiving PING
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
+
+    // port 0 is invalid
+    NodeIPEndpoint endpoint{boost::asio::ip::address::from_string("200.200.200.200"), 0, 0};
+    PingNode ping(endpoint, nodeTable->m_hostNodeEndpoint);
+    ping.sign(nodeTableHost.m_alias.secret());
+
+    TestUDPSocketHost nodeSocketHost{30333};
+    nodeSocketHost.start();
+    nodeSocketHost.socket->send(ping);
+
+    // wait for PING to be received and handled
+    nodeTable->packetsReceived.pop();
+
+    // Verify that no PONG response is received
+    BOOST_CHECK_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(3000)), WaitTimeout);
+}
+
 BOOST_AUTO_TEST_CASE(neighboursSentAfterFindNode)
 {
     unsigned constexpr nodeCount = 8;
