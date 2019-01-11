@@ -12,20 +12,6 @@ using namespace dev::rpc;
 
 AdminNet::AdminNet(NetworkFace& _network, SessionManager& _sm): m_network(_network), m_sm(_sm) {}
 
-bool AdminNet::admin_net_start(std::string const& _session)
-{
-	RPC_ADMIN;
-	m_network.startNetwork();
-	return true;
-}
-
-bool AdminNet::admin_net_stop(std::string const& _session)
-{
-	RPC_ADMIN;
-	m_network.stopNetwork();
-	return true;
-}
-
 bool AdminNet::admin_net_connect(std::string const& _node, std::string const& _session)
 {
 	RPC_ADMIN;

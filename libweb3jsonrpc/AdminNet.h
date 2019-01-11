@@ -19,8 +19,6 @@ public:
 	{
 		return RPCModules{RPCModule{"admin", "1.0"}};
 	}
-	virtual bool admin_net_start(std::string const& _session) override;
-	virtual bool admin_net_stop(std::string const& _session) override;
 	virtual bool admin_net_connect(std::string const& _node, std::string const& _session) override;
 	virtual Json::Value admin_net_peers(std::string const& _session) override;
 	virtual Json::Value admin_net_nodeInfo(std::string const& _session) override;

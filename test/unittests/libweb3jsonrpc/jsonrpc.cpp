@@ -252,15 +252,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_peerCount)
     BOOST_CHECK_EQUAL(web3->peerCount(), peerCount);
 }
 
-BOOST_AUTO_TEST_CASE(jsonrpc_setListening)
-{
-    rpcClient->admin_net_start(adminSession);
-    BOOST_CHECK_EQUAL(web3->isNetworkStarted(), true);
-
-    rpcClient->admin_net_stop(adminSession);
-    BOOST_CHECK_EQUAL(web3->isNetworkStarted(), false);
-}
-
 BOOST_AUTO_TEST_CASE(jsonrpc_setMining)
 {
     rpcClient->admin_eth_setMining(true, adminSession);
