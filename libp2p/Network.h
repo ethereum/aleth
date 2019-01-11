@@ -99,6 +99,10 @@ public:
 
 	/// Resolve "host:port" string as TCP endpoint. Returns unspecified endpoint on failure.
 	static bi::tcp::endpoint resolveHost(std::string const& _host);
+
+    /// Determine public address and port to listen on
+    /// @todo: ipv6, udp
+    static NodeIPEndpoint determinePublic(NetworkConfig const& _netConfig, unsigned short _listenPort);
 };
 
 }

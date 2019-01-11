@@ -250,3 +250,32 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
     return ep;
 }
 
+NodeIPEndpoint Network::determinePublic(NetworkConfig const& _netConfig, unsigned short _listenPort)
+{
+     // returned endpoint := listenIP (if public) > public > unspecified address.
+
+     auto ifAddresses = Network::getInterfaceAddresses();
+     auto laddr = _netConfig.listenIPAddress.empty() ? bi::address() : bi::address::from_string(_netConfig.listenIPAddress);
+     auto lset = !laddr.is_unspecified();
+     auto paddr = _netConfig.publicIPAddress.empty() ? bi::address() : bi::address::from_string(_netConfig.publicIPAddress);
+     auto pset = !paddr.is_unspecified();
+
+     bool listenIsPublic = lset && isPublicAddress(laddr);
+     bool publicIsHost = !lset && pset && ifAddresses.count(paddr);
+
+     NodeIPEndpoint ep(bi::address(), _listenPort, _listenPort);
+     if (listenIsPublic)
+     {
+         cnetnote << "Listen address set to Public address: " << laddr;
+         ep.setAddress(laddr);
+     }
+     else if (publicIsHost)
+     {
+         cnetnote << "Public address set to Host configured address: " << paddr;
+         ep.setAddress(paddr);
+     }
+     else if (pset)
+         ep.setAddress(paddr);
+
+     return ep;
+}

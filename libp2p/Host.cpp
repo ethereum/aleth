@@ -378,54 +378,6 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
     }
 }
 
-void Host::determinePublic()
-{
-    // set m_tcpPublic := listenIP (if public) > public > upnp > unspecified address.
-    
-    auto ifAddresses = Network::getInterfaceAddresses();
-    auto laddr = m_netConfig.listenIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.listenIPAddress);
-    auto lset = !laddr.is_unspecified();
-    auto paddr = m_netConfig.publicIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.publicIPAddress);
-    auto pset = !paddr.is_unspecified();
-    
-    bool listenIsPublic = lset && isPublicAddress(laddr);
-    bool publicIsHost = !lset && pset && ifAddresses.count(paddr);
-    
-    bi::tcp::endpoint ep(bi::address(), m_listenPort);
-    if (m_netConfig.traverseNAT && listenIsPublic)
-    {
-        cnetnote << "Listen address set to Public address: " << laddr << ". UPnP disabled.";
-        ep.address(laddr);
-    }
-    else if (m_netConfig.traverseNAT && publicIsHost)
-    {
-        cnetnote << "Public address set to Host configured address: " << paddr << ". UPnP disabled.";
-        ep.address(paddr);
-    }
-    else if (m_netConfig.traverseNAT)
-    {
-        bi::address natIFAddr;
-        ep = Network::traverseNAT(lset && ifAddresses.count(laddr) ? std::set<bi::address>({laddr}) : ifAddresses, m_listenPort, natIFAddr);
-        
-        if (lset && natIFAddr != laddr)
-            // if listen address is set, Host will use it, even if upnp returns different
-            cwarn << "Listen address " << laddr << " differs from local address " << natIFAddr
-                  << " returned by UPnP!";
-
-        if (pset && ep.address() != paddr)
-        {
-            // if public address is set, Host will advertise it, even if upnp returns different
-            cwarn << "Specified public address " << paddr << " differs from external address "
-                  << ep.address() << " returned by UPnP!";
-            ep.address(paddr);
-        }
-    }
-    else if (pset)
-        ep.address(paddr);
-
-    m_tcpPublic = ep;
-}
-
 void Host::runAcceptor()
 {
     assert(m_listenPort > 0);
@@ -741,6 +693,7 @@ void Host::startedWorking()
     m_timer.reset(new io::deadline_timer(m_ioService));
     m_run = true;
 
+    NodeIPEndpoint publicEndpoint;
     if (!m_capabilities.empty())
     {
         // start capability threads (ready for incoming connections)
@@ -752,8 +705,9 @@ void Host::startedWorking()
         if (port > 0)
         {
             // Port may have been changed if the specified port was already in use
-            m_netConfig.listenPort = m_listenPort = port;
-            determinePublic();
+            m_listenPort = port;
+            publicEndpoint = Network::determinePublic(m_netConfig, m_listenPort);
+            m_tcpPublic = (bi::tcp::endpoint)publicEndpoint;
             runAcceptor();
         }
         else
@@ -762,16 +716,16 @@ void Host::startedWorking()
                 << " TCP Listen port is invalid or unavailable.";
         }
     }
+    else
+        publicEndpoint = Network::determinePublic(m_netConfig, m_netConfig.listenPort);
 
-    auto nodeTable = make_shared<NodeTable>(m_ioService, m_alias,
-        // Use data from network configuration rather than Host's settings because p2p might not
-        // have been started
-        NodeIPEndpoint(!m_netConfig.listenIPAddress.empty() ?
-                           bi::address::from_string(m_netConfig.listenIPAddress) :
-                           bi::address_v4(),
-            m_netConfig.listenPort /* UDP */, m_netConfig.listenPort /* TCP */),
-        m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
-
+    auto nodeTable = make_shared<NodeTable>(
+        m_ioService,
+        m_alias,
+        publicEndpoint,
+        m_netConfig.discovery,
+        m_netConfig.allowLocalDiscovery
+        );
     if (!m_capabilities.empty())
         // Only set the event handler if there are capabilities since otherwise p2p
         // isn't running

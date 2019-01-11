@@ -102,7 +102,6 @@ struct NodeInfo
  * @brief The Host class
  * Capabilities should be registered prior to startNetwork, since m_capabilities is not thread-safe.
  *
- * @todo determinePublic: ipv6, udp
  * @todo per-session keepalive/ping instead of broadcast; set ping-timeout via median-latency
  */
 class Host: public Worker
@@ -268,9 +267,6 @@ private:
     unsigned peerSlots(PeerSlotType _type) { return _type == Egress ? m_idealPeerCount : m_idealPeerCount * m_stretchPeers; }
     
     bool havePeerSession(NodeID const& _id) { return !!peerSession(_id); }
-
-    /// Determines and sets m_tcpPublic to publicly advertised address.
-    void determinePublic();
 
     void connect(std::shared_ptr<Peer> const& _p);
 

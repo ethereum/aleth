@@ -162,13 +162,44 @@ void UDPSocket<Handler, MaxDatagramSize>::connect()
         return;
 
     m_socket.open(bi::udp::v4());
-    try
+
+    unsigned int bindAttempt = 0;
+    constexpr unsigned int maxBindAttempts = 4;
+    bi::udp::endpoint endpoint;
+    bool bindSuccessful = false;
+    while (!bindSuccessful)
     {
-        m_socket.bind(m_endpoint);
-    }
-    catch (...)
-    {
-        m_socket.bind(bi::udp::endpoint(bi::udp::v4(), m_endpoint.port()));
+        try
+        {
+            switch (bindAttempt)
+            {
+            case 0:
+                endpoint = m_endpoint;
+                break;
+            case 1:
+                endpoint = bi::udp::endpoint(bi::udp::v4(), m_endpoint.port());
+                break;
+            case 2:
+                endpoint = bi::udp::endpoint(m_endpoint.address(), 0 /* random port */);
+                break;
+            case 3:
+                endpoint = bi::udp::endpoint(bi::udp::v4(), 0 /* random port */);
+                break;
+            default:
+                break;
+            }
+            m_socket.bind(endpoint);
+            bindSuccessful = true;
+        }
+        catch (...)
+        {
+            cwarn << "Could not bind udp socket to endpoint " << endpoint;
+            if (++bindAttempt >= maxBindAttempts)
+            {
+                cwarn << "Giving up trying to bind udp socket.";
+                throw;
+            }
+        }
     }
 
     // clear write queue so reconnect doesn't send stale messages
