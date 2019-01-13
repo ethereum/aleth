@@ -528,7 +528,8 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
     if (!isAllowedEndpoint(_endpoint))
     {
-        cnetdetails << "Ignoring request to connect to node ( " << _node << ") with unallowed endpoint (" << _endpoint << ")";
+        cnetdetails << "Ignoring request to connect to node (" << _node
+                    << ") with unallowed endpoint (" << _endpoint << ")";
         return;
     }
 
@@ -541,16 +542,22 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 {
     if (!m_run)
+    {
+        cwarn << "Network not running so node (" << _n << ") with endpoint (" << _endpoint
+              << ") cannot be added as a required peer";
         return;
+    }
     
     if (_n == id())
     {
         cnetdetails << "Ignoring request to connect to self " << _n;
         return;
     }
+
     if (!isAllowedEndpoint(_endpoint))
     {
-        cnetdetails << "Ignoring request to connect to node (" << _n << ") with unallowed endpoint (" << _endpoint << ")";
+        cnetdetails << "Ignoring request to connect to node (" << _n
+                    << ") with unallowed endpoint (" << _endpoint << ")";
         return;
     }
 

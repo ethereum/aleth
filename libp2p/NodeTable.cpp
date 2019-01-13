@@ -128,7 +128,8 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
 
     if (!isAllowedEndpoint(_node.endpoint))
     {
-        LOG(m_logger) << "Skip adding node (" << _node.id << ") with unallowed endpoint (" << _node.endpoint << ") to node table";
+        LOG(m_logger) << "Skip adding node (" << _node.id << ") with unallowed endpoint ("
+                      << _node.endpoint << ") to node table";
         return false;
     }
 

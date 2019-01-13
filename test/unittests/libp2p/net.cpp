@@ -898,16 +898,16 @@ BOOST_AUTO_TEST_CASE(pingFromLocalhost)
     nodeTable->m_allowLocalDiscovery = false;
 
     // Ping from localhost and verify node isn't added to node table
-    TestUDPSocketHost nodeSocketHost{ 30500 };
+    TestUDPSocketHost nodeSocketHost{30500};
     nodeSocketHost.start();
     auto nodePort = nodeSocketHost.port;
-    auto nodeEndpoint = NodeIPEndpoint{ bi::address::from_string("127.0.0.1"), nodePort, nodePort };
+    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
 
     PingNode ping(nodeEndpoint, nodeTable->m_hostNodeEndpoint);
     ping.sign(KeyPair::create().secret());
-    
+
     nodeSocketHost.socket->send(ping);
-    
+
     // Wait for the node table to receive and process the ping
     nodeTable->packetsReceived.pop(chrono::milliseconds(5000));
 
@@ -915,7 +915,8 @@ BOOST_AUTO_TEST_CASE(pingFromLocalhost)
     BOOST_REQUIRE(nodeTable->count() == expectedNodeCount);
 
     // Verify that the node table doesn't respond with a pong
-    BOOST_REQUIRE_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)), WaitTimeout);
+    BOOST_REQUIRE_THROW(
+        nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)), WaitTimeout);
 }
 
 BOOST_AUTO_TEST_CASE(addSelf)
