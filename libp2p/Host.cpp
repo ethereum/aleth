@@ -522,11 +522,17 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
     if (_node == id())
     {
-        cnetdetails << "Ignoring the request to connect to self " << _node;
+        cnetdetails << "Ignoring request to connect to self " << _node;
         return;
     }
 
-    if (_endpoint.tcpPort() < 30300 || _endpoint.tcpPort() > 30305)
+    if (!isAllowedEndpoint(_endpoint))
+    {
+        cnetdetails << "Ignoring request to connect to node ( " << _node << ") with unallowed endpoint (" << _endpoint << ")";
+        return;
+    }
+
+    if (_endpoint.tcpPort() < c_defaultListenPort || _endpoint.tcpPort() > c_maxListenPort)
         cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort();
 
     addNodeToNodeTable(Node(_node, _endpoint));
@@ -534,18 +540,23 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 {
-    {
-        Guard l(x_requiredPeers);
-        m_requiredPeers.insert(_n);
-    }
-
     if (!m_run)
         return;
     
     if (_n == id())
     {
-        cnetdetails << "Ingoring the request to connect to self " << _n;
+        cnetdetails << "Ignoring request to connect to self " << _n;
         return;
+    }
+    if (!isAllowedEndpoint(_endpoint))
+    {
+        cnetdetails << "Ignoring request to connect to node (" << _n << ") with unallowed endpoint (" << _endpoint << ")";
+        return;
+    }
+
+    {
+        Guard l(x_requiredPeers);
+        m_requiredPeers.insert(_n);
     }
 
     Node node(_n, _endpoint, PeerType::Required);
