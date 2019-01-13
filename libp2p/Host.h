@@ -158,6 +158,9 @@ public:
     /// Create Peer and attempt keeping peer connected.
     void requirePeer(NodeID const& _node, bi::address const& _addr, unsigned short _udpPort, unsigned short _tcpPort) { requirePeer(_node, NodeIPEndpoint(_addr, _udpPort, _tcpPort)); }
 
+    /// returns true if a member of m_requiredPeers.
+    bool isRequiredPeer(NodeID const&) const;
+
     /// Note peer as no longer being required.
     void relinquishPeer(NodeID const& _node);
     
@@ -278,9 +281,6 @@ private:
 
     /// Get or create host identifier (KeyPair).
     static KeyPair networkAlias(bytesConstRef _b);
-
-    /// returns true if a member of m_requiredPeers
-    bool isRequiredPeer(NodeID const&) const;
 
     bool nodeTableHasNode(Public const& _id) const;
     Node nodeFromNodeTable(Public const& _id) const;

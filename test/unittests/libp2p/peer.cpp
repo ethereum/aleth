@@ -309,6 +309,27 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     BOOST_REQUIRE_EQUAL(host2peerCount, 1);
 }
 
+BOOST_AUTO_TEST_CASE(requirePeerNoNetwork)
+{
+    NetworkConfig prefs1(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */);
+    NetworkConfig prefs2(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */);
+    Host host1("Test", prefs1);
+    Host host2("Test", prefs2);
+    auto node2 = host2.id();
+
+    // Both hosts' ports should be 0 since we haven't started their network threads
+    BOOST_REQUIRE_EQUAL(host1.listenPort(), 0);
+    BOOST_REQUIRE_EQUAL(host2.listenPort(), 0);
+
+    host1.registerCapability(make_shared<TestCap>());
+    host2.registerCapability(make_shared<TestCap>());
+
+    host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp),
+                                 0 /* tcp port */, 0 /* udp port */));
+
+    BOOST_REQUIRE(!host1.isRequiredPeer(node2));
+}
+
 BOOST_AUTO_TEST_CASE(requireLocalhostPeer)
 {
     // Don't allow connections from nodes with localhost ips
