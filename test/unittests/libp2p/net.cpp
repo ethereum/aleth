@@ -111,9 +111,12 @@ struct TestNodeTable: public NodeTable
             }
             noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
 
-            auto const bucketIndex = distance - 1;
-            if (m_buckets[bucketIndex].nodes.size() >= _bucketSize)
-                return bucketIndex;
+            {
+                Guard stateGuard(x_state);
+                auto const bucketIndex = distance - 1;
+                if (m_buckets[bucketIndex].nodes.size() >= _bucketSize)
+                    return bucketIndex;
+            }
 
             ++testNode;
         }
@@ -130,7 +133,7 @@ struct TestNodeTable: public NodeTable
         auto testNode = _testNodes.begin();
 
         bi::address ourIp = bi::address::from_string("127.0.0.1");
-        while (testNode != _testNodes.end() && m_buckets[_bucket].nodes.size() < _bucketSize)
+        while (testNode != _testNodes.end() && bucketSize(_bucket) < _bucketSize)
         {
             // manually add node for test
             {
@@ -175,6 +178,24 @@ struct TestNodeTable: public NodeTable
     {
         Guard l(x_state);
         return contains(m_allNodes, _id);
+    }
+
+    size_t bucketSize(size_t _bucket) const
+    {
+        Guard l(x_state);
+        return m_buckets[_bucket].nodes.size();
+    }
+
+    shared_ptr<NodeEntry> bucketFirstNode(size_t _bucket)
+    {
+        Guard l(x_state);
+        return m_buckets[_bucket].nodes.front().lock();
+    }
+
+    shared_ptr<NodeEntry> bucketLastNode(size_t _bucket)
+    {
+        Guard l(x_state);
+        return m_buckets[_bucket].nodes.back().lock();
     }
 
     concurrent_queue<bytes> packetsReceived;
@@ -417,12 +438,9 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeAppendsNewNode)
     auto& nodeTable = nodeTableHost.nodeTable;
     std::shared_ptr<NodeEntry> newNode = nodeTable->nodeEntry(nodeTableHost.testNodes.front().first);
 
-    auto const& nodeBucketArray = nodeTable->m_buckets;
-    auto const& nodeBucket = nodeBucketArray[newNode->distance - 1];
-    auto const& nodes = nodeBucket.nodes;
-    BOOST_REQUIRE(!nodes.empty());
+    BOOST_REQUIRE_GT(nodeTable->bucketSize(newNode->distance - 1), 0);
 
-    auto firstNodeSharedPtr = nodes.front().lock();
+    auto firstNodeSharedPtr = nodeTable->bucketFirstNode(newNode->distance - 1);
     BOOST_REQUIRE_EQUAL(firstNodeSharedPtr, newNode);
 }
 
@@ -433,15 +451,13 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeUpdatesKnownNode)
     BOOST_REQUIRE(bucketIndex >= 0);
 
     auto& nodeTable = nodeTableHost.nodeTable;
-    auto const& nodeBucketArray = nodeTable->m_buckets;
-    auto const& nodes = nodeBucketArray[bucketIndex].nodes;
-    auto knownNode = nodes.front().lock();
+    auto knownNode = nodeTable->bucketFirstNode(bucketIndex);
 
     nodeTable->noteActiveNode(knownNode->id, knownNode->endpoint);
 
     // check that node was moved to the back of the bucket
-    BOOST_CHECK_NE(nodes.front().lock(), knownNode);
-    BOOST_CHECK_EQUAL(nodes.back().lock(), knownNode);
+    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex), knownNode);
+    BOOST_CHECK_EQUAL(nodeTable->bucketLastNode(bucketIndex), knownNode);
 }
 
 BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
@@ -467,9 +483,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
         newNodeId = k.pub();
     } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
 
-    auto const& nodeBucketArray = nodeTable->m_buckets;
-    auto const& nodes = nodeBucketArray[bucketIndex].nodes;
-    auto leastRecentlySeenNode = nodes.front().lock();
+    auto leastRecentlySeenNode = nodeTable->bucketFirstNode(bucketIndex);
 
     nodeTable->addNode(
         Node(newNodeId, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30000, 30000)),
@@ -479,9 +493,9 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     evictEvents.pop();
 
     // the bucket is still max size
-    BOOST_CHECK_EQUAL(nodes.size(), 16);
+    BOOST_CHECK_EQUAL(nodeTable->bucketSize(bucketIndex), 16);
     // least recently seen node not removed yet
-    BOOST_CHECK_EQUAL(nodes.front().lock(), leastRecentlySeenNode);
+    BOOST_CHECK_EQUAL(nodeTable->bucketFirstNode(bucketIndex), leastRecentlySeenNode);
     // but added to evictions
     auto evicted = nodeTable->m_sentPings.find(leastRecentlySeenNode->id);
     BOOST_REQUIRE(evicted != nodeTable->m_sentPings.end());
@@ -496,9 +510,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     BOOST_REQUIRE(bucketIndex >= 0);
 
     auto& nodeTable = nodeTableHost.nodeTable;
-    auto const& nodeBucketArray = nodeTable->m_buckets;
-    auto const& nodes = nodeBucketArray[bucketIndex].nodes;
-    auto leastRecentlySeenNodeId = nodes.front().lock()->id;
+    auto leastRecentlySeenNodeId = nodeTable->bucketFirstNode(bucketIndex)->id;
 
     // addNode will replace the node in the m_allNodes map, because it's the same id with enother
     // endpoint
@@ -506,11 +518,11 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     nodeTable->addNode(Node(leastRecentlySeenNodeId, newEndpoint), NodeTable::Known);
 
     // the bucket is still max size
-    BOOST_CHECK_EQUAL(nodes.size(), 16);
+    BOOST_CHECK_EQUAL(nodeTable->bucketSize(bucketIndex), 16);
     // least recently seen node removed
-    BOOST_CHECK_NE(nodes.front().lock()->id, leastRecentlySeenNodeId);
+    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex)->id, leastRecentlySeenNodeId);
     // but added as most recently seen with new endpoint
-    auto mostRecentNodeEntry = nodes.back().lock();
+    auto mostRecentNodeEntry = nodeTable->bucketLastNode(bucketIndex);
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNodeId);
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint, newEndpoint);
 }
@@ -805,7 +817,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     auto sentPing = nodeTable->m_sentPings.find(nodeId);
     BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
     // check that old node is most recently seen in the bucket
-    BOOST_CHECK(nodeTable->m_buckets[bucketIndex].nodes.back().lock()->id == nodeId);
+    BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id == nodeId);
     // check that replacement node is dropped
     BOOST_CHECK(!nodeTable->nodeExists(newNodeId));
 }
@@ -821,9 +833,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
 
     nodeTableHost.start();
 
-    auto const& nodeBucketArray = nodeTable->m_buckets;
-    auto const& nodes = nodeBucketArray[bucketIndex].nodes;
-    auto oldNodeId = nodes.front().lock()->id;
+    auto oldNodeId = nodeTable->bucketFirstNode(bucketIndex)->id;
 
     // generate new address for the same bucket
     NodeID newNodeId;
@@ -848,7 +858,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     BOOST_CHECK(nodeTable->nodeExists(newNodeId));
     auto newNode = nodeTable->nodeEntry(newNodeId);
     BOOST_CHECK(newNode->lastPongReceivedTime > 0);
-    BOOST_CHECK(nodes.back().lock()->id == newNodeId);
+    BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id == newNodeId);
 }
 
 BOOST_AUTO_TEST_CASE(addSelf)
