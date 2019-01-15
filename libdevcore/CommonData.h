@@ -332,6 +332,12 @@ bool contains(std::unordered_set<V> const& _set, V const& _v)
     return _set.find(_v) != _set.end();
 }
 
+template <class K, class V>
+bool contains(std::unordered_map<K, V> const& _map, K const& _k)
+{
+    return _map.find(_k) != _map.end();
+}
+
 template <class V>
 bool contains(std::set<V> const& _set, V const& _v)
 {

@@ -171,6 +171,12 @@ struct TestNodeTable: public NodeTable
         packetsReceived.push(_packet.toBytes());
     }
 
+    bool nodeExists(NodeID const& _id) const
+    {
+        Guard l(x_state);
+        return contains(m_allNodes, _id);
+    }
+
     concurrent_queue<bytes> packetsReceived;
 
 
@@ -182,6 +188,7 @@ struct TestNodeTable: public NodeTable
     using NodeTable::m_socket;
     using NodeTable::noteActiveNode;
     using NodeTable::setRequestTimeToLive;
+    using NodeTable::nodeEntry;
 };
 
 /**
@@ -408,7 +415,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeAppendsNewNode)
     nodeTableHost.populate(1);
 
     auto& nodeTable = nodeTableHost.nodeTable;
-    std::shared_ptr<NodeEntry> newNode = nodeTable->m_allNodes.begin()->second;
+    std::shared_ptr<NodeEntry> newNode = nodeTable->nodeEntry(nodeTableHost.testNodes.front().first);
 
     auto const& nodeBucketArray = nodeTable->m_buckets;
     auto const& nodeBucket = nodeBucketArray[newNode->distance - 1];
@@ -526,8 +533,7 @@ BOOST_AUTO_TEST_CASE(unexpectedPong)
     // wait for PONG to be received and handled
     nodeTable->packetsReceived.pop();
 
-    auto addedNode = nodeTable->m_allNodes.find(nodeKeyPair.pub());
-    BOOST_REQUIRE(addedNode == nodeTable->m_allNodes.end());
+    BOOST_REQUIRE(!nodeTable->nodeExists(nodeKeyPair.pub()));
 }
 
 BOOST_AUTO_TEST_CASE(invalidPong)
@@ -557,9 +563,9 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     // wait for PONG to be received and handled
     nodeTable->packetsReceived.pop();
 
-    auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
-    BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
-    BOOST_CHECK_EQUAL(addedNode->second->lastPongReceivedTime, 0);
+    BOOST_REQUIRE(nodeTable->nodeExists(nodePubKey));
+    auto addedNode = nodeTable->nodeEntry(nodePubKey);
+    BOOST_CHECK_EQUAL(addedNode->lastPongReceivedTime, 0);
 }
 
 BOOST_AUTO_TEST_CASE(validPong)
@@ -595,9 +601,9 @@ BOOST_AUTO_TEST_CASE(validPong)
     // wait for PONG to be received and handled
     nodeTable->packetsReceived.pop();
 
-    auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
-    BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
-    BOOST_CHECK(addedNode->second->lastPongReceivedTime > 0);
+    BOOST_REQUIRE(nodeTable->nodeExists(nodePubKey));
+    auto addedNode = nodeTable->nodeEntry(nodePubKey);
+    BOOST_CHECK(addedNode->lastPongReceivedTime > 0);
 }
 
 BOOST_AUTO_TEST_CASE(pingTimeout)
@@ -622,8 +628,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
 
     this_thread::sleep_for(std::chrono::seconds(6));
 
-    auto addedNode = nodeTable->m_allNodes.find(nodePubKey);
-    BOOST_CHECK(addedNode == nodeTable->m_allNodes.end());
+    BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
     auto sentPing = nodeTable->m_sentPings.find(nodePubKey);
     BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
 
@@ -642,8 +647,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     // wait for PONG to be received and handled
     nodeTable->packetsReceived.pop();
 
-    addedNode = nodeTable->m_allNodes.find(nodePubKey);
-    BOOST_CHECK(addedNode == nodeTable->m_allNodes.end());
+    BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
     sentPing = nodeTable->m_sentPings.find(nodePubKey);
     BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
 }
@@ -752,8 +756,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     nodeTable->setEventHandler(eventHandler.release());
 
     // add 15 nodes more to the same bucket
-    BOOST_REQUIRE(nodeTable->m_allNodes.find(nodeId)->second->distance > 0);
-    int bucketIndex = nodeTable->m_allNodes[nodeId]->distance - 1;
+    BOOST_REQUIRE(nodeTable->nodeEntry(nodeId)->distance > 0);
+    int bucketIndex = nodeTable->nodeEntry(nodeId)->distance - 1;
     nodeTableHost.populateUntilSpecificBucketSize(bucketIndex, 16);
 
     nodeTableHost.start();
@@ -795,15 +799,15 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     nodeTable->packetsReceived.pop();
 
     // check that old node is not evicted
-    auto addedNode = nodeTable->m_allNodes.find(nodeId);
-    BOOST_REQUIRE(addedNode != nodeTable->m_allNodes.end());
-    BOOST_CHECK(addedNode->second->lastPongReceivedTime);
+    BOOST_REQUIRE(nodeTable->nodeExists(nodeId));
+    auto addedNode = nodeTable->nodeEntry(nodeId);
+    BOOST_CHECK(addedNode->lastPongReceivedTime);
     auto sentPing = nodeTable->m_sentPings.find(nodeId);
     BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
     // check that old node is most recently seen in the bucket
     BOOST_CHECK(nodeTable->m_buckets[bucketIndex].nodes.back().lock()->id == nodeId);
     // check that replacement node is dropped
-    BOOST_CHECK(nodeTable->m_allNodes.find(newNodeId) == nodeTable->m_allNodes.end());
+    BOOST_CHECK(!nodeTable->nodeExists(newNodeId));
 }
 
 BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
@@ -838,12 +842,12 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     this_thread::sleep_for(std::chrono::seconds(6));
 
     // check that old node is evicted
-    BOOST_CHECK(nodeTable->m_allNodes.find(oldNodeId) == nodeTable->m_allNodes.end());
+    BOOST_CHECK(!nodeTable->nodeExists(oldNodeId));
     BOOST_CHECK(nodeTable->m_sentPings.find(oldNodeId) == nodeTable->m_sentPings.end());
     // check that replacement node is active
-    auto newNode = nodeTable->m_allNodes.find(newNodeId);
-    BOOST_CHECK(newNode != nodeTable->m_allNodes.end());
-    BOOST_CHECK(newNode->second->lastPongReceivedTime > 0);
+    BOOST_CHECK(nodeTable->nodeExists(newNodeId));
+    auto newNode = nodeTable->nodeEntry(newNodeId);
+    BOOST_CHECK(newNode->lastPongReceivedTime > 0);
     BOOST_CHECK(nodes.back().lock()->id == newNodeId);
 }
 
