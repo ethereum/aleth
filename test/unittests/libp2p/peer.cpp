@@ -33,6 +33,11 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
+namespace
+{
+constexpr const char* c_localhostIp = "127.0.0.1";
+}
+
 class TestCap : public CapabilityFace, public Worker
 {
 public:
@@ -56,12 +61,12 @@ BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
-    Host host1("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
+    Host host1("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
     host1.start();
     auto host1port = host1.listenPort();
     BOOST_REQUIRE(host1port);
 
-    Host host2("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
+    Host host2("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
     host2.start();
     auto host2port = host2.listenPort();
     BOOST_REQUIRE(host2port);
@@ -95,7 +100,7 @@ BOOST_AUTO_TEST_CASE(host)
     }
 
     BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
-    host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
+    host1.addNode(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp), host2port, host2port));
 
     // Wait for up to 24 seconds, to give the hosts time to find each other
     for (unsigned i = 0; i < 24000; i += step)
@@ -129,7 +134,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
     for (unsigned i = 0; i < c_nodes; ++i)
     {
-        Host* h = new Host("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
+        Host* h = new Host("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
         h->setIdealPeerCount(10);		
         h->start(); // starting host is required so listenport is available
         while (!h->haveNetwork())
@@ -144,14 +149,14 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     
     Host& host = *hosts.front();
     for (auto const& h: hosts)
-        host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
+        host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 1000 && host.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
 
     Host& host2 = *hosts.back();
     for (auto const& h: hosts)
-        host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
+        host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 2000 && host2.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
@@ -186,7 +191,7 @@ BOOST_FIXTURE_TEST_SUITE(p2pPeer, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(requirePeer)
 {
     unsigned const step = 10;
-    const char* const localhost = "127.0.0.1";
+    const char* const localhost = c_localhostIp;
     NetworkConfig prefs1(localhost, 0, false /* upnp */, true /* allow local discovery */);
     NetworkConfig prefs2(localhost, 0, false /* upnp */, true /* allow local discovery */);
     Host host1("Test", prefs1);

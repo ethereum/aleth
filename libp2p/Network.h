@@ -38,6 +38,7 @@ namespace p2p
 {
 
 constexpr const char* c_localhostIp = "127.0.0.1";
+constexpr unsigned short c_minListenPort = 30300;
 constexpr unsigned short c_defaultListenPort = 30303;
 constexpr unsigned short c_maxListenPort = 30305;
 

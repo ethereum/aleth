@@ -211,12 +211,6 @@ void Host::doneWorking()
     m_sessions.clear();
 }
 
-bool Host::isRequiredPeer(NodeID const& _id) const
-{
-    Guard l(x_requiredPeers);
-    return m_requiredPeers.count(_id);
-}
-
 // called after successful handshake
 void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
 {
@@ -522,18 +516,11 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
     if (_node == id())
     {
-        cnetdetails << "Ignoring request to connect to self " << _node;
+        cnetdetails << "Ignoring the request to connect to self " << _node;
         return;
     }
 
-    if (!isAllowedEndpoint(_endpoint))
-    {
-        cnetdetails << "Ignoring request to connect to node (" << _node
-                    << ") with unallowed endpoint (" << _endpoint << ")";
-        return;
-    }
-
-    if (_endpoint.tcpPort() < c_defaultListenPort || _endpoint.tcpPort() > c_maxListenPort)
+    if (_endpoint.tcpPort() < c_minListenPort || _endpoint.tcpPort() > c_maxListenPort)
         cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort();
 
     addNodeToNodeTable(Node(_node, _endpoint));
@@ -547,23 +534,16 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
               << ") cannot be added as a required peer";
         return;
     }
-    
-    if (_n == id())
-    {
-        cnetdetails << "Ignoring request to connect to self " << _n;
-        return;
-    }
-
-    if (!isAllowedEndpoint(_endpoint))
-    {
-        cnetdetails << "Ignoring request to connect to node (" << _n
-                    << ") with unallowed endpoint (" << _endpoint << ")";
-        return;
-    }
 
     {
         Guard l(x_requiredPeers);
         m_requiredPeers.insert(_n);
+    }
+
+    if (_n == id())
+    {
+        cnetdetails << "Ignoring the request to connect to self " << _n;
+        return;
     }
 
     Node node(_n, _endpoint, PeerType::Required);
@@ -595,6 +575,12 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
                 requirePeer(n.id, n.endpoint);
         });
     }
+}
+
+bool Host::isRequiredPeer(NodeID const& _id) const
+{
+    Guard l(x_requiredPeers);
+    return m_requiredPeers.count(_id);
 }
 
 void Host::relinquishPeer(NodeID const& _node)
