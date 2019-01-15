@@ -33,11 +33,6 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-namespace
-{
-constexpr const char* c_localhostIp = "127.0.0.1";
-}
-
 class TestCap : public CapabilityFace, public Worker
 {
 public:
@@ -61,12 +56,12 @@ BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
-    Host host1("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+    Host host1("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
     host1.start();
     auto host1port = host1.listenPort();
     BOOST_REQUIRE(host1port);
 
-    Host host2("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+    Host host2("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
     host2.start();
     auto host2port = host2.listenPort();
     BOOST_REQUIRE(host2port);
@@ -100,7 +95,7 @@ BOOST_AUTO_TEST_CASE(host)
     }
 
     BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
-    host1.addNode(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp), host2port, host2port));
+    host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
 
     // Wait for up to 24 seconds, to give the hosts time to find each other
     for (unsigned i = 0; i < 24000; i += step)
@@ -113,60 +108,6 @@ BOOST_AUTO_TEST_CASE(host)
 
     BOOST_REQUIRE_EQUAL(host1.peerCount(), 1);
     BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
-}
-
-BOOST_AUTO_TEST_CASE(addLocalhostPeer)
-{
-    // Don't allow hosts to bond with hosts with localhost IPs
-    constexpr bool allowLocalDiscovery = false;
-
-    Host host1("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, allowLocalDiscovery));
-    host1.start();
-    auto host1port = host1.listenPort();
-    BOOST_REQUIRE(host1port);
-
-    Host host2("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, allowLocalDiscovery));
-    host2.start();
-    auto host2port = host2.listenPort();
-    BOOST_REQUIRE(host2port);
-
-    BOOST_REQUIRE_NE(host1port, host2port);
-
-    host1.registerCapability(make_shared<TestCap>());
-    host2.registerCapability(make_shared<TestCap>());
-
-    auto node2 = host2.id();
-    int const step = 10;
-
-    // Wait for up to 6 seconds, to give the hosts time to start.
-    for (unsigned i = 0; i < 6000; i += step)
-    {
-        this_thread::sleep_for(chrono::milliseconds(step));
-
-        if (host1.isStarted() && host2.isStarted())
-            break;
-    }
-
-    BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
-
-    // Wait for up to 6 seconds, to give the hosts time to get their network connection established
-    for (unsigned i = 0; i < 6000; i += step)
-    {
-        this_thread::sleep_for(chrono::milliseconds(step));
-
-        if (host1.haveNetwork() && host2.haveNetwork())
-            break;
-    }
-
-    BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
-    host1.addNode(
-        node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp), host2port, host2port));
-
-    // Wait for 24 seconds and verify that neither peer adds each other
-    this_thread::sleep_for(chrono::milliseconds(24000));
-
-    BOOST_REQUIRE_EQUAL(host1.peerCount(), 0);
-    BOOST_REQUIRE_EQUAL(host2.peerCount(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(networkConfig)
@@ -188,7 +129,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
     for (unsigned i = 0; i < c_nodes; ++i)
     {
-        Host* h = new Host("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+        Host* h = new Host("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
         h->setIdealPeerCount(10);		
         h->start(); // starting host is required so listenport is available
         while (!h->haveNetwork())
@@ -203,14 +144,14 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     
     Host& host = *hosts.front();
     for (auto const& h: hosts)
-        host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
+        host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 1000 && host.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
 
     Host& host2 = *hosts.back();
     for (auto const& h: hosts)
-        host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
+        host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 2000 && host2.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
@@ -245,8 +186,9 @@ BOOST_FIXTURE_TEST_SUITE(p2pPeer, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(requirePeer)
 {
     unsigned const step = 10;
-    NetworkConfig prefs1(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */);
-    NetworkConfig prefs2(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */);
+    const char* const localhost = "127.0.0.1";
+    NetworkConfig prefs1(localhost, 0, false /* upnp */, true /* allow local discovery */);
+    NetworkConfig prefs2(localhost, 0, false /* upnp */, true /* allow local discovery */);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
     host1.start();
@@ -261,7 +203,7 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     host1.registerCapability(make_shared<TestCap>());
     host2.registerCapability(make_shared<TestCap>());
 
-    host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp), port2, port2));
+    host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
     // Wait for up to 12 seconds, to give the hosts time to connect to each other.
     for (unsigned i = 0; i < 12000; i += step)
@@ -328,37 +270,6 @@ BOOST_AUTO_TEST_CASE(requirePeerNoNetwork)
                                  0 /* tcp port */, 0 /* udp port */));
 
     BOOST_REQUIRE(!host1.isRequiredPeer(node2));
-}
-
-BOOST_AUTO_TEST_CASE(requireLocalhostPeer)
-{
-    // Don't allow connections from nodes with localhost ips
-    constexpr bool allowLocalDiscovery = false;
-
-    NetworkConfig prefs1(c_localhostIp, 0, false /* upnp */, allowLocalDiscovery);
-    NetworkConfig prefs2(c_localhostIp, 0, false /* upnp */, allowLocalDiscovery);
-    Host host1("Test", prefs1);
-    Host host2("Test", prefs2);
-    host1.start();
-    host2.start();
-    auto node2 = host2.id();
-    auto port1 = host1.listenPort();
-    auto port2 = host2.listenPort();
-    BOOST_REQUIRE(port1);
-    BOOST_REQUIRE(port2);
-    BOOST_REQUIRE_NE(port1, port2);
-
-    host1.registerCapability(make_shared<TestCap>());
-    host2.registerCapability(make_shared<TestCap>());
-
-    host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp), port2, port2));
-
-    // Wait for 12 seconds and verify that hosts haven't connected with each other
-    this_thread::sleep_for(chrono::milliseconds(12000));
-    auto host1peerCount = host1.peerCount();
-    auto host2peerCount = host2.peerCount();
-    BOOST_REQUIRE_EQUAL(host1peerCount, 0);
-    BOOST_REQUIRE_EQUAL(host2peerCount, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
