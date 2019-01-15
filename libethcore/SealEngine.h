@@ -47,6 +47,12 @@ class SealEngineFace
 public:
 	virtual ~SealEngineFace() {}
 
+    virtual std::tuple<h256, h256, h256> getWork(BlockHeader const& _bi)
+    {
+        (void)_bi;
+        return std::tuple<h256, h256, h256>{};
+    }
+    virtual bool isMining() const { return false; }
     virtual unsigned revision() const { return 0; }
     virtual unsigned sealFields() const { return 0; }
     virtual bytes sealRLP() const { return bytes(); }

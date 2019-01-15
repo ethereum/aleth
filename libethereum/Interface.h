@@ -235,6 +235,9 @@ public:
 	/// Get the seal engine.
 	virtual SealEngineFace* sealEngine() const { return nullptr; }
 
+    ///< Get POW depending on sealengine it's using
+    virtual std::tuple<h256, h256, h256> getWork() = 0;
+
 protected:
 	int m_default = PendingBlock;
 };

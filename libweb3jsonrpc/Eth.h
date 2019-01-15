@@ -23,13 +23,15 @@
 
 #pragma once
 
-#include <memory>
-#include <iosfwd>
-#include <jsonrpccpp/server.h>
-#include <jsonrpccpp/common/exception.h>
-#include <libdevcore/Common.h>
-#include "SessionManager.h"
 #include "EthFace.h"
+#include "SessionManager.h"
+#include <jsonrpccpp/common/exception.h>
+#include <jsonrpccpp/server.h>
+#include <libdevcore/Common.h>
+#include <libethashseal/Ethash.h>
+#include <libethereum/Client.h>
+#include <iosfwd>
+#include <memory>
 
 
 namespace dev
@@ -69,7 +71,7 @@ public:
 
 	eth::AccountHolder const& ethAccounts() const { return m_ethAccounts; }
 
-	virtual std::string eth_protocolVersion() override;
+    virtual std::string eth_protocolVersion() override;
 	virtual std::string eth_hashrate() override;
 	virtual std::string eth_coinbase() override;
 	virtual bool eth_mining() override;
@@ -126,8 +128,9 @@ public:
 protected:
 
 	eth::Interface* client() { return &m_eth; }
-	
-	eth::Interface& m_eth;
+    eth::Ethash& getEthash();
+
+    eth::Interface& m_eth;
 	eth::AccountHolder& m_ethAccounts;
 
 };

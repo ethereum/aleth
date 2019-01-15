@@ -26,18 +26,17 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
 
+#include <libdevcore/DBFactory.h>
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
-#include <libethashseal/EthashClient.h>
+#include <libdevcrypto/LibSnark.h>
+#include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethcore/KeyManager.h>
-#include <libdevcore/DBFactory.h>
 #include <libethereum/SnapshotImporter.h>
 #include <libethereum/SnapshotStorage.h>
 #include <libevm/VMFactory.h>
 #include <libwebthree/WebThree.h>
-#include <libethashseal/Ethash.h>
-#include <libdevcrypto/LibSnark.h>
 
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
@@ -102,7 +101,8 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 {
     try
     {
-        if (io_mining != ~(unsigned)0 && io_mining && asEthashClient(_c)->isMining() && _c->blockChain().details().number - _start == io_mining)
+        if (io_mining != ~(unsigned)0 && io_mining && asEthash(*_c->sealEngine()).isMining() &&
+            _c->blockChain().details().number - _start == io_mining)
         {
             _c->stopSealing();
             io_mining = ~(unsigned)0;

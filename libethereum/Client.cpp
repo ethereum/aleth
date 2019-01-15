@@ -930,3 +930,23 @@ ExecutionResult Client::call(Address const& _from, u256 _value, Address _dest, b
     }
     return ret;
 }
+
+std::tuple<h256, h256, h256> Client::getWork()
+{
+    // lock the work so a later submission isn't invalidated by processing a transaction elsewhere.
+    // this will be reset as soon as a new block arrives, allowing more transactions to be
+    // processed.
+    bool oldShould = shouldServeWork();
+    m_lastGetWork = chrono::system_clock::now();
+    if (!sealEngine()->shouldSeal(this))
+        return std::tuple<h256, h256, h256>();
+
+    // if this request has made us bother to serve work, prep it now.
+    if (!oldShould && shouldServeWork())
+        onPostStateChanged();
+    else
+        // otherwise, set this to true so that it gets prepped next time.
+        m_remoteWorking = true;
+
+    return sealEngine()->getWork(m_sealingInfo);
+}
