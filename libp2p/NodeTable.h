@@ -207,7 +207,8 @@ protected:
         std::list<std::weak_ptr<NodeEntry>> nodes;
     };
 
-    /// Used ping known node. Used by node table when refreshing buckets and as part of eviction process (see evict).
+    /// Used ping known node. Used by node table when refreshing buckets and as part of eviction
+    /// process (see evict). Not synchronous - the ping operation is queued via a timer
     void ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID = {});
 
     /// Used by asynchronous operations to return NodeEntry which is active and managed by node table.
