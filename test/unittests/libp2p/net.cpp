@@ -176,7 +176,7 @@ struct TestNodeTable: public NodeTable
 
     bool nodeExists(NodeID const& _id) const
     {
-        Guard l(x_state);
+        Guard l(x_nodes);
         return contains(m_allNodes, _id);
     }
 
