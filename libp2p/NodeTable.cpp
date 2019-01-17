@@ -543,8 +543,10 @@ void NodeTable::onPacketReceived(
                     p.sign(m_secret);
                     m_socket->send(p);
 
-                    m_allNodes[in.sourceid]->lastPongSentTime =
-                        RLPXDatagramFace::secondsSinceEpoch();
+                    Guard l(x_nodes);
+                    auto const it = m_allNodes.find(in.sourceid);
+                    if (it != m_allNodes.end())
+                        it->second->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
                 }
                 break;
             }

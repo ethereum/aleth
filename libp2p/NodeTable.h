@@ -115,17 +115,6 @@ class NodeTable : UDPSocketEvents
     using TimePoint = std::chrono::steady_clock::time_point;	///< Steady time point.
     using NodeIdTimePoint = std::pair<NodeID, TimePoint>;
 
-    /**
-     * NodeValidation is used to record the timepoint of sent PING,
-     * time of sending and the new node ID to replace unresponsive node.
-     */
-    struct NodeValidation
-    {
-        TimePoint pingSendTime;
-        h256 pingHash;
-        boost::optional<NodeID> replacementNodeID;
-    };
-
 public:
     // Period during which we consider last PONG results to be valid before sending new PONG
     static constexpr uint32_t c_bondingTimeSeconds{12 * 60 * 60};
@@ -180,6 +169,17 @@ public:
 
 // protected only for derived classes in tests
 protected:
+    /**
+     * NodeValidation is used to record the timepoint of sent PING,
+     * time of sending and the new node ID to replace unresponsive node.
+     */
+    struct NodeValidation
+    {
+        TimePoint pingSendTime;
+        h256 pingHash;
+        boost::optional<NodeID> replacementNodeID;
+    };
+
     /// Constants for Kademlia, derived from address space.
 
     static constexpr unsigned s_addressByteSize = h256::size;					///< Size of address type in bytes.
