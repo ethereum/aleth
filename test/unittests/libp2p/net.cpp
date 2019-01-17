@@ -198,14 +198,25 @@ struct TestNodeTable: public NodeTable
         return m_buckets[_bucket].nodes.back().lock();
     }
 
+    boost::optional<NodeValidation> nodeValidation(NodeID const& _id)
+    {
+        std::promise<boost::optional<NodeValidation>> promise;
+        m_timers.schedule(0, [this, &promise, _id](boost::system::error_code const&) {
+            auto validation = m_sentPings.find(_id);
+            if (validation != m_sentPings.end())
+                promise.set_value(validation->second);
+            else
+                promise.set_value(boost::optional<NodeValidation>{});
+        });
+        return promise.get_future().get();
+    }
+
+
     concurrent_queue<bytes> packetsReceived;
 
 
-    using NodeTable::m_allNodes;
-    using NodeTable::m_buckets;
     using NodeTable::m_hostNodeID;
     using NodeTable::m_hostNodeEndpoint;
-    using NodeTable::m_sentPings;
     using NodeTable::m_socket;
     using NodeTable::noteActiveNode;
     using NodeTable::setRequestTimeToLive;
@@ -497,10 +508,10 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     // least recently seen node not removed yet
     BOOST_CHECK_EQUAL(nodeTable->bucketFirstNode(bucketIndex), leastRecentlySeenNode);
     // but added to evictions
-    auto evicted = nodeTable->m_sentPings.find(leastRecentlySeenNode->id);
-    BOOST_REQUIRE(evicted != nodeTable->m_sentPings.end());
-    BOOST_REQUIRE(evicted->second.replacementNodeID);
-    BOOST_CHECK_EQUAL(*evicted->second.replacementNodeID, newNodeId);
+    auto evicted = nodeTable->nodeValidation(leastRecentlySeenNode->id);
+    BOOST_REQUIRE(evicted.is_initialized());
+    BOOST_REQUIRE(evicted->replacementNodeID);
+    BOOST_CHECK_EQUAL(*evicted->replacementNodeID, newNodeId);
 }
 
 BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
@@ -641,8 +652,8 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     this_thread::sleep_for(std::chrono::seconds(6));
 
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
-    auto sentPing = nodeTable->m_sentPings.find(nodePubKey);
-    BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
+    auto sentPing = nodeTable->nodeValidation(nodePubKey);
+    BOOST_CHECK(!sentPing.is_initialized());
 
     // handle received PING
     auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
@@ -660,8 +671,8 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     nodeTable->packetsReceived.pop();
 
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
-    sentPing = nodeTable->m_sentPings.find(nodePubKey);
-    BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
+    sentPing = nodeTable->nodeValidation(nodePubKey);
+    BOOST_CHECK(!sentPing.is_initialized());
 }
 
 BOOST_AUTO_TEST_CASE(invalidPing)
@@ -792,8 +803,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     // wait for eviction
     evictEvents.pop();
 
-    auto evicted = nodeTable->m_sentPings.find(nodeId);
-    BOOST_REQUIRE(evicted != nodeTable->m_sentPings.end());
+    auto evicted = nodeTable->nodeValidation(nodeId);
+    BOOST_REQUIRE(evicted.is_initialized());
 
     // handle received PING
     auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
@@ -814,8 +825,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     BOOST_REQUIRE(nodeTable->nodeExists(nodeId));
     auto addedNode = nodeTable->nodeEntry(nodeId);
     BOOST_CHECK(addedNode->lastPongReceivedTime);
-    auto sentPing = nodeTable->m_sentPings.find(nodeId);
-    BOOST_CHECK(sentPing == nodeTable->m_sentPings.end());
+    auto sentPing = nodeTable->nodeValidation(nodeId);
+    BOOST_CHECK(!sentPing.is_initialized());
     // check that old node is most recently seen in the bucket
     BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id == nodeId);
     // check that replacement node is dropped
@@ -853,7 +864,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
 
     // check that old node is evicted
     BOOST_CHECK(!nodeTable->nodeExists(oldNodeId));
-    BOOST_CHECK(nodeTable->m_sentPings.find(oldNodeId) == nodeTable->m_sentPings.end());
+    BOOST_CHECK(!nodeTable->nodeValidation(oldNodeId).is_initialized());
     // check that replacement node is active
     BOOST_CHECK(nodeTable->nodeExists(newNodeId));
     auto newNode = nodeTable->nodeEntry(newNodeId);
