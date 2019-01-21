@@ -37,7 +37,8 @@ namespace dev
 namespace p2p
 {
 
-static const unsigned short c_defaultListenPort = 30303;
+constexpr unsigned short c_defaultListenPort = 30303;
+constexpr const char* c_localhostIp = "127.0.0.1";
 
 struct NetworkConfig
 {

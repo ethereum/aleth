@@ -219,7 +219,7 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
 
     vector<string> split;
     boost::split(split, _addr, boost::is_any_of(":"));
-    unsigned port = dev::p2p::c_defaultIPPort;
+    unsigned port = dev::p2p::c_defaultListenPort;
 
     try
     {

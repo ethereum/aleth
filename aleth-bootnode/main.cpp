@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 
     /// Networking params.
     string listenIP;
-    unsigned short listenPort = c_defaultIPPort;
+    unsigned short listenPort = c_defaultListenPort;
     string publicIP;
     bool upnp = true;
 

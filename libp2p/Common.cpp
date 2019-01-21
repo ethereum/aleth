@@ -27,7 +27,6 @@ using namespace dev;
 using namespace dev::p2p;
 
 const unsigned dev::p2p::c_protocolVersion = 4;
-const unsigned dev::p2p::c_defaultIPPort = 30303;
 static_assert(dev::p2p::c_protocolVersion == 4, "Replace v3 compatbility with v4 compatibility before updating network version.");
 
 const dev::p2p::NodeIPEndpoint dev::p2p::UnspecifiedNodeIPEndpoint = NodeIPEndpoint(bi::address(), 0, 0);
@@ -93,7 +92,7 @@ bool p2p::isLocalHostAddress(bi::address const& _addressToCheck)
 {
     // @todo: ivp6 link-local adresses (macos), ex: fe80::1%lo0
     static const set<bi::address> c_rejectAddresses = {
-        {bi::address_v4::from_string("127.0.0.1")},
+        {bi::address_v4::from_string(c_localhostIp)},
         {bi::address_v4::from_string("0.0.0.0")},
         {bi::address_v6::from_string("::1")},
         {bi::address_v6::from_string("::")}
