@@ -53,7 +53,6 @@ namespace p2p
 
 /// Peer network protocol version.
 extern const unsigned c_protocolVersion;
-extern const unsigned c_defaultIPPort;
 
 class NodeIPEndpoint;
 class Node;

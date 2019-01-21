@@ -150,10 +150,10 @@ int main(int argc, char** argv)
 
     /// Networking params.
     string listenIP;
-    unsigned short listenPort = dev::p2p::c_defaultIPPort;
+    unsigned short listenPort = dev::p2p::c_defaultListenPort;
     string publicIP;
     string remoteHost;
-    unsigned short remotePort = dev::p2p::c_defaultIPPort;
+    unsigned short remotePort = dev::p2p::c_defaultListenPort;
 
     unsigned peers = 11;
     unsigned peerStretch = 7;
@@ -303,7 +303,7 @@ int main(int argc, char** argv)
         "        Ports:\n"
         "        The first port argument is the tcp port used for direct communication among peers. If the second port\n"
         "        argument isn't supplied, the first port argument will also be the udp port used for node discovery.\n"
-        "        If neither the first nor second port arguments are supplied, a default port of " << dev::p2p::c_defaultIPPort << " will be used for\n"
+        "        If neither the first nor second port arguments are supplied, a default port of " << dev::p2p::c_defaultListenPort << " will be used for\n"
         "        both peer communication and node discovery.";
     string peersetDescription = peersetDescriptionStream.str();
     addNetworkingOption("peerset", po::value<string>()->value_name("<list>"), peersetDescription.c_str());
