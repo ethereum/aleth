@@ -886,7 +886,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
 
 BOOST_AUTO_TEST_CASE(pingFromLocalhost)
 {
-    TestNodeTableHost nodeTableHost(512);
+    TestNodeTableHost nodeTableHost(0);
     nodeTableHost.start();
     auto& nodeTable = nodeTableHost.nodeTable;
 
@@ -898,10 +898,10 @@ BOOST_AUTO_TEST_CASE(pingFromLocalhost)
     nodeTable->m_allowLocalDiscovery = false;
 
     // Ping from localhost and verify node isn't added to node table
-    TestUDPSocketHost nodeSocketHost{30500};
+    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
     nodeSocketHost.start();
-    auto nodePort = nodeSocketHost.port;
-    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort, nodePort};
+    auto const nodePort = nodeSocketHost.port;
+    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
 
     PingNode ping(nodeEndpoint, nodeTable->m_hostNodeEndpoint);
     ping.sign(KeyPair::create().secret());
