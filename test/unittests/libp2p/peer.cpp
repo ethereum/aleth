@@ -33,11 +33,6 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-namespace
-{
-constexpr const char* c_localhostIp = "127.0.0.1";
-}
-
 class TestCap : public CapabilityFace, public Worker
 {
 public:
