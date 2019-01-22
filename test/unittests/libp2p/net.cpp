@@ -62,7 +62,7 @@ struct TestNodeTable: public NodeTable
     {
         std::vector<std::pair<Public, uint16_t>> ret;
         asserts(_count < 1000);
-        
+
         ret.clear();
         for (unsigned i = 0; i < _count; i++)
         {
@@ -297,7 +297,7 @@ public:
             }
             catch (std::exception const&)
             {
-                getRandomPortNumber();
+                port = getRandomPortNumber();
             }
         }
     }
