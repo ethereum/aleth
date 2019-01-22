@@ -984,15 +984,14 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     // * A ping is sent after a pong for a known node with an invalid endpoint proof
 
     TestNodeTableHost nodeTableHost1(0);
-    nodeTableHost1.populate();
     nodeTableHost1.start();
     auto& nodeTable1 = nodeTableHost1.nodeTable;
 
-    TestUDPSocketHost nodeSocketHost2{30500};
+    TestUDPSocketHost nodeSocketHost2{getRandomPortNumber()};
     nodeSocketHost2.start();
     auto nodePort2 = nodeSocketHost2.port;
     auto nodeEndpoint2 =
-        NodeIPEndpoint{bi::address::from_string("127.0.0.1"), nodePort2, nodePort2};
+        NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort2, nodePort2};
 
     // Add node to the node table to trigger ping
     auto nodeKeyPair2 = KeyPair::create();
