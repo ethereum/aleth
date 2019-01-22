@@ -226,6 +226,8 @@ int main(int argc, char** argv)
     if (vm.count("network"))
     {
         string network = vm["network"].as<string>();
+        if (network == "ConstantinopleFix")
+            networkName = Network::ConstantinopleFixTest;
         if (network == "Constantinople")
             networkName = Network::ConstantinopleTest;
         else if (network == "Byzantium")

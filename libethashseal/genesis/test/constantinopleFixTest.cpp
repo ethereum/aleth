@@ -16,7 +16,7 @@
 */
 #include "../../GenesisInfo.h"
 
-static std::string const c_genesisInfoConstantinopleTestFix = std::string() +
+static std::string const c_genesisInfoConstantinopleFixTest = std::string() +
                                                               R"E(
 {
 	"sealEngine": "Ethash",

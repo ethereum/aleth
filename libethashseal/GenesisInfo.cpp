@@ -29,7 +29,7 @@ using namespace dev;
 #include "genesis/test/byzantiumTransitionTest.cpp"
 #include "genesis/test/constantinopleNoProofTest.cpp"
 #include "genesis/test/constantinopleTest.cpp"
-#include "genesis/test/constantinopleTestFix.cpp"
+#include "genesis/test/constantinopleFixTest.cpp"
 #include "genesis/test/eip150Test.cpp"
 #include "genesis/test/eip158Test.cpp"
 #include "genesis/test/experimentalTransitionTest.cpp"
@@ -40,7 +40,7 @@ using namespace dev;
 #include "genesis/test/mainNetworkTest.cpp"
 
 //Transition configurations
-#include "genesis/test/ByzantiumToConstantinopleAt5Test.cpp"
+#include "genesis/test/ByzantiumToConstantinopleFixAt5Test.cpp"
 #include "genesis/test/EIP158ToByzantiumAt5Test.cpp"
 #include "genesis/test/frontierToHomesteadAt5Test.cpp"
 #include "genesis/test/homesteadToDaoAt5Test.cpp"
@@ -76,7 +76,7 @@ std::string const& dev::eth::genesisInfo(Network _n)
     case Network::ExperimentalTransitionTest:
         return c_genesisInfoExperimentalTransitionTest;
     case Network::ConstantinopleFixTest:
-        return c_genesisInfoConstantinopleTestFix;
+        return c_genesisInfoConstantinopleFixTest;
 
 
     //Transition test genesis

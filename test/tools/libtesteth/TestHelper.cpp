@@ -123,7 +123,7 @@ string netIdToString(eth::Network _netId)
     case eth::Network::EIP158ToByzantiumAt5:
         return "EIP158ToByzantiumAt5";
     case eth::Network::ByzantiumToConstantinopleFixAt5:
-        return "ByzantiumToConstantinopleAt5";
+        return "ByzantiumToConstantinopleFixAt5";
     case eth::Network::TransitionnetTest:
         return "TransitionNet";
     default:

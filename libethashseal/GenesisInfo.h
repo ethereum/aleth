@@ -65,7 +65,7 @@ enum class Network
     ByzantiumNoProofTest = 81,
     /// Constantinople rules + NoProof seal engine
     ConstantinopleNoProofTest = 82,
-    /// Byzantium + Constantinople + Constantinople FIx acrive from block 0
+    /// Byzantium + Constantinople + ConstantinopleFix acrive from block 0
     ConstantinopleFixTest = 83,
 
     // TransitionTest networks
