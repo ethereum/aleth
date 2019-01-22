@@ -61,8 +61,8 @@ struct TestNodeTable: public NodeTable
     static std::vector<std::pair<Public, uint16_t>> createTestNodes(unsigned _count)
     {
         std::vector<std::pair<Public, uint16_t>> ret;
-        asserts(_count < 1000);
-
+        asserts(_count <= 1000);
+        
         ret.clear();
         for (unsigned i = 0; i < _count; i++)
         {
@@ -770,7 +770,7 @@ BOOST_AUTO_TEST_CASE(unexpectedFindNode)
 
 BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
 {
-    TestNodeTableHost nodeTableHost(512);
+    TestNodeTableHost nodeTableHost(1000);
     auto& nodeTable = nodeTableHost.nodeTable;
 
     // socket receiving PING
@@ -791,7 +791,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     // add 15 nodes more to the same bucket
     BOOST_REQUIRE(nodeTable->nodeEntry(nodeId)->distance > 0);
     int bucketIndex = nodeTable->nodeEntry(nodeId)->distance - 1;
-    nodeTableHost.populateUntilSpecificBucketSize(bucketIndex, 16);
+    bool populated = nodeTableHost.populateUntilSpecificBucketSize(bucketIndex, 16);
+    BOOST_REQUIRE(populated);
 
     nodeTableHost.start();
     nodeTableHost.processEvents({});
@@ -811,7 +812,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, NodeTable::Known);
 
     // wait for eviction
-    evictEvents.pop();
+    evictEvents.pop(chrono::seconds(5));
 
     auto evicted = nodeTable->nodeValidation(nodeId);
     BOOST_REQUIRE(evicted.is_initialized());
