@@ -104,39 +104,36 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
         return false;
     }
 
-    // TODO: Make private version of addNode() that could return reference to added node.
-    if (_relation == Known)
-    {
-        auto nodeEntry = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
-        // mark as validated
-        // TODO get last pong time as input, ping if needed
-        nodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
-        DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
-        noteActiveNode(_node.id, _node.endpoint);
-        return true;
-    }
-
     bool bFound = false;
-    shared_ptr<NodeEntry> newNodeEntry = nullptr;
+    std::shared_ptr<NodeEntry> nodeEntry = nullptr;
     DEV_GUARDED(x_nodes)
     {
-        auto const it = m_allNodes.find(_node.id);
-        if (it != m_allNodes.end())
-            bFound = true;
-        else
-            m_allNodes[_node.id] = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
-        newNodeEntry = m_allNodes[_node.id];
+        auto nodePair = m_allNodes.insert(
+            {_node.id, make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint)});
+        bFound = !nodePair.second;
+        nodeEntry = nodePair.first->second;
     }
 
     // Log here to avoid holding the x_nodes mutex longer than necessary
     if (bFound)
         LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
                       << " is already in the node table";
-    else
+    else if (!bFound && _relation != Known)
         LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
+    else if (!bFound && _relation == Known)
+        LOG(m_logger) << "Known node " << _node.id << "@" << _node.endpoint;
 
-    if (!newNodeEntry->hasValidEndpointProof())
-        ping(*newNodeEntry);
+    if (_relation == Known)
+    {
+        // TODO: Get last pong time as input, ping if needed
+        // Note: Currently this code path is only hit when restoring peers from the network
+        // configuration file. This means that the "last pong received time" needs to be serialized
+        // and deserialized before we can accept the pong time as an input to this function.
+        nodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
+        noteActiveNode(nodeEntry->id, nodeEntry->endpoint);
+    }
+    else if (_relation != Known && !nodeEntry->hasValidEndpointProof())
+        ping(*nodeEntry);
 
     return true;
 }
@@ -568,6 +565,9 @@ void NodeTable::onPacketReceived(
                     if (it != m_allNodes.end())
                         it->second->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
                 }
+                else
+                    // Need to have valid endpoint proof before adding node to node table
+                    return;
                 break;
             }
         }
