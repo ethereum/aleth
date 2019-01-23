@@ -191,8 +191,6 @@ public:
 
     NetworkConfig const& networkConfig() const { return m_netConfig; }
 
-    void setNetworkConfig(NetworkConfig const& _p, bool _dropPeers = false) { m_dropPeers = _dropPeers; auto had = isStarted(); if (had) stop(); m_netConfig = _p; if (had) start(); }
-
     /// Start network. @threadsafe
     void start();
 
@@ -350,7 +348,6 @@ private:
 
     std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
     bool m_accepting = false;
-    bool m_dropPeers = false;
 
     ReputationManager m_repMan;
 
