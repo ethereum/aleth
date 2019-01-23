@@ -548,7 +548,12 @@ void NodeTable::onPacketReceived(
                 auto& in = dynamic_cast<PingNode&>(*packet);
                 in.source.setAddress(_from.address());
                 in.source.setUdpPort(_from.port());
-                if (addNode(Node(in.sourceid, in.source)))
+
+                if (!addNode(Node(in.sourceid, in.source)))
+                    // We don't want to add nodes to the buckets (noteActiveNode) which couldn't be
+                    // added to the node list
+                    return;
+
                 {
                     // Send PONG response.
                     Pong p(in.source);
@@ -563,8 +568,6 @@ void NodeTable::onPacketReceived(
                     if (it != m_allNodes.end())
                         it->second->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
                 }
-                else
-                    return;
                 break;
             }
         }

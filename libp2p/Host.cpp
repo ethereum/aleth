@@ -520,9 +520,6 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
         return;
     }
 
-    if (_endpoint.tcpPort() < c_minListenPort || _endpoint.tcpPort() > c_maxListenPort)
-        cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort();
-
     addNodeToNodeTable(Node(_node, _endpoint));
 }
 
