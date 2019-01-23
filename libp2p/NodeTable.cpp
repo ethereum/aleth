@@ -126,6 +126,13 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
         return false;
     }
 
+    if (!isAllowedEndpoint(_node.endpoint))
+    {
+        LOG(m_logger) << "Skip adding node (" << _node.id << ") with unallowed endpoint ("
+                      << _node.endpoint << ") to node table";
+        return false;
+    }
+
     auto nodeEntry = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
     DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
     LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
@@ -324,9 +331,17 @@ void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 
 void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
 {
-    if (_pubk == m_hostNodeID ||
-        !isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
+    if (_pubk == m_hostNodeID)
+    {
+        LOG(m_logger) << "Skipping making self active.";
         return;
+    }
+    if (!isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
+    {
+        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node " << _pubk
+                      << "@" << _endpoint;
+        return;
+    }
 
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
     if (newNode && RLPXDatagramFace::secondsSinceEpoch() <
@@ -533,7 +548,12 @@ void NodeTable::onPacketReceived(
                 auto& in = dynamic_cast<PingNode&>(*packet);
                 in.source.setAddress(_from.address());
                 in.source.setUdpPort(_from.port());
-                if (addNode(Node(in.sourceid, in.source)))
+
+                if (!addNode(Node(in.sourceid, in.source)))
+                    // We don't want to add nodes to the buckets (noteActiveNode) which couldn't be
+                    // added to the node list
+                    return;
+
                 {
                     // Send PONG response.
                     Pong p(in.source);

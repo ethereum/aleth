@@ -211,12 +211,6 @@ void Host::doneWorking()
     m_sessions.clear();
 }
 
-bool Host::isRequiredPeer(NodeID const& _id) const
-{
-    Guard l(x_requiredPeers);
-    return m_requiredPeers.count(_id);
-}
-
 // called after successful handshake
 void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
 {
@@ -526,25 +520,26 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
         return;
     }
 
-    if (_endpoint.tcpPort() < 30300 || _endpoint.tcpPort() > 30305)
-        cnetdetails << "Non-standard port being recorded: " << _endpoint.tcpPort();
-
     addNodeToNodeTable(Node(_node, _endpoint));
 }
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 {
+    if (!m_run)
+    {
+        cwarn << "Network not running so node (" << _n << ") with endpoint (" << _endpoint
+              << ") cannot be added as a required peer";
+        return;
+    }
+
     {
         Guard l(x_requiredPeers);
         m_requiredPeers.insert(_n);
     }
 
-    if (!m_run)
-        return;
-    
     if (_n == id())
     {
-        cnetdetails << "Ingoring the request to connect to self " << _n;
+        cnetdetails << "Ignoring the request to connect to self " << _n;
         return;
     }
 
@@ -577,6 +572,12 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
                 requirePeer(n.id, n.endpoint);
         });
     }
+}
+
+bool Host::isRequiredPeer(NodeID const& _id) const
+{
+    Guard l(x_requiredPeers);
+    return m_requiredPeers.count(_id);
 }
 
 void Host::relinquishPeer(NodeID const& _node)

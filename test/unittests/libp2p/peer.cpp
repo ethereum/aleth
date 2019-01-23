@@ -56,12 +56,12 @@ BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
-    Host host1("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
+    Host host1("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
     host1.start();
     auto host1port = host1.listenPort();
     BOOST_REQUIRE(host1port);
 
-    Host host2("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
+    Host host2("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
     host2.start();
     auto host2port = host2.listenPort();
     BOOST_REQUIRE(host2port);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(host)
     }
 
     BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
-    host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
+    host1.addNode(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp), host2port, host2port));
 
     // Wait for up to 24 seconds, to give the hosts time to find each other
     for (unsigned i = 0; i < 24000; i += step)
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
     for (unsigned i = 0; i < c_nodes; ++i)
     {
-        Host* h = new Host("Test", NetworkConfig("127.0.0.1", 0, false /* upnp */, true /* allow local discovery */));
+        Host* h = new Host("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
         h->setIdealPeerCount(10);		
         h->start(); // starting host is required so listenport is available
         while (!h->haveNetwork())
@@ -144,14 +144,14 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     
     Host& host = *hosts.front();
     for (auto const& h: hosts)
-        host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
+        host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 1000 && host.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
 
     Host& host2 = *hosts.back();
     for (auto const& h: hosts)
-        host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
+        host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 2000 && host2.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
@@ -186,7 +186,7 @@ BOOST_FIXTURE_TEST_SUITE(p2pPeer, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(requirePeer)
 {
     unsigned const step = 10;
-    const char* const localhost = "127.0.0.1";
+    const char* const localhost = c_localhostIp;
     NetworkConfig prefs1(localhost, 0, false /* upnp */, true /* allow local discovery */);
     NetworkConfig prefs2(localhost, 0, false /* upnp */, true /* allow local discovery */);
     Host host1("Test", prefs1);
@@ -249,6 +249,27 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     host2peerCount = host2.peerCount();
     BOOST_REQUIRE_EQUAL(host1peerCount, 1);
     BOOST_REQUIRE_EQUAL(host2peerCount, 1);
+}
+
+BOOST_AUTO_TEST_CASE(requirePeerNoNetwork)
+{
+    NetworkConfig prefs1(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */);
+    NetworkConfig prefs2(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */);
+    Host host1("Test", prefs1);
+    Host host2("Test", prefs2);
+    auto node2 = host2.id();
+
+    // Both hosts' ports should be 0 since we haven't started their network threads
+    BOOST_REQUIRE_EQUAL(host1.listenPort(), 0);
+    BOOST_REQUIRE_EQUAL(host2.listenPort(), 0);
+
+    host1.registerCapability(make_shared<TestCap>());
+    host2.registerCapability(make_shared<TestCap>());
+
+    host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp),
+                                 0 /* tcp port */, 0 /* udp port */));
+
+    BOOST_REQUIRE(!host1.isRequiredPeer(node2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
