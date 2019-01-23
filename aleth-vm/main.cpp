@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 
     po::options_description networkOptions("Network options", c_lineWidth);
     networkOptions.add_options()("network", po::value<string>(),
-        "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
+        "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople|ConstantinopleFix\n");
 
     po::options_description optionsForTrace("Options for trace", c_lineWidth);
     auto addTraceOption = optionsForTrace.add_options();

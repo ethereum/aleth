@@ -809,34 +809,30 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
         uncleHeader = uncle.blockHeader();
     }
 
-    if (overwrite.size())
+    for (auto const& rewrite : overwrite)
     {
-        for (auto const& rewrite : overwrite)
-        {
-            uncleHeader = constructHeader(rewrite == "parentHash" ?
-                                              h256(uncleHeaderObj.at("parentHash").get_str()) :
-                                              uncleHeader.parentHash(),
-                uncleHeader.sha3Uncles(),
-                rewrite == "coinbase" ? Address(uncleHeaderObj.at("coinbase").get_str()) :
-                                        uncleHeader.author(),
-                rewrite == "stateRoot" ? h256(uncleHeaderObj.at("stateRoot").get_str()) :
-                                         uncleHeader.stateRoot(),
-                uncleHeader.transactionsRoot(), uncleHeader.receiptsRoot(), uncleHeader.logBloom(),
-                rewrite == "difficulty" ?
-                    toU256(uncleHeaderObj.at("difficulty")) :
-                    rewrite == "timestamp" ?
-                    calculateEthashDifficulty(sealEngine->chainParams(), uncleHeader,
-                        importedBlocks.at((size_t)uncleHeader.number() - 1).blockHeader()) :
-                    uncleHeader.difficulty(),
-                rewrite == "number" ? toU256(uncleHeaderObj.at("number")) : uncleHeader.number(),
-                rewrite == "gasLimit" ? toU256(uncleHeaderObj.at("gasLimit")) :
-                                        uncleHeader.gasLimit(),
-                rewrite == "gasUsed" ? toU256(uncleHeaderObj.at("gasUsed")) : uncleHeader.gasUsed(),
-                rewrite == "timestamp" ? toU256(uncleHeaderObj.at("timestamp")) :
-                                         uncleHeader.timestamp(),
-                rewrite == "extraData" ? fromHex(uncleHeaderObj.at("extraData").get_str()) :
-                                         uncleHeader.extraData());
-        }
+        uncleHeader = constructHeader(rewrite == "parentHash" ?
+                                          h256(uncleHeaderObj.at("parentHash").get_str()) :
+                                          uncleHeader.parentHash(),
+            uncleHeader.sha3Uncles(),
+            rewrite == "coinbase" ? Address(uncleHeaderObj.at("coinbase").get_str()) :
+                                    uncleHeader.author(),
+            rewrite == "stateRoot" ? h256(uncleHeaderObj.at("stateRoot").get_str()) :
+                                     uncleHeader.stateRoot(),
+            uncleHeader.transactionsRoot(), uncleHeader.receiptsRoot(), uncleHeader.logBloom(),
+            rewrite == "difficulty" ?
+                toU256(uncleHeaderObj.at("difficulty")) :
+                rewrite == "timestamp" ?
+                calculateEthashDifficulty(sealEngine->chainParams(), uncleHeader,
+                    importedBlocks.at((size_t)uncleHeader.number() - 1).blockHeader()) :
+                uncleHeader.difficulty(),
+            rewrite == "number" ? toU256(uncleHeaderObj.at("number")) : uncleHeader.number(),
+            rewrite == "gasLimit" ? toU256(uncleHeaderObj.at("gasLimit")) : uncleHeader.gasLimit(),
+            rewrite == "gasUsed" ? toU256(uncleHeaderObj.at("gasUsed")) : uncleHeader.gasUsed(),
+            rewrite == "timestamp" ? toU256(uncleHeaderObj.at("timestamp")) :
+                                     uncleHeader.timestamp(),
+            rewrite == "extraData" ? fromHex(uncleHeaderObj.at("extraData").get_str()) :
+                                     uncleHeader.extraData());
     }
 
     uncle.setBlockHeader(uncleHeader);
@@ -1079,7 +1075,7 @@ BOOST_AUTO_TEST_CASE(bcFrontierToHomestead){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToDao){}
 BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150){}
 BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium){}
-BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinople) {}
+BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinopleFix) {}
 
 BOOST_AUTO_TEST_SUITE_END()
 
