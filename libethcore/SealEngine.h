@@ -140,6 +140,7 @@ public:
     void generateSeal(BlockHeader const& _bi) override;
     void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const override;
     void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const override;
+    StringHashMap jsInfo(BlockHeader const& _bi) const override;
 };
 
 u256 calculateEthashDifficulty(
