@@ -785,12 +785,5 @@ string dev::rpc::exceptionToErrorMessage()
 
 Ethash& Eth::getEthash()
 {
-    try
-    {
-        return asEthash(*client()->sealEngine());
-    }
-    catch (InvalidSealEngine&)
-    {
-        throw JsonRpcException("Seal Engine is not Ethash");
-    }
+    return asEthash(*client()->sealEngine());
 }
