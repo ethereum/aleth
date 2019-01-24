@@ -105,13 +105,15 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
     }
 
     bool bFound = false;
-    std::shared_ptr<NodeEntry> nodeEntry = nullptr;
+    std::shared_ptr<NodeEntry> nodeEntry;
     DEV_GUARDED(x_nodes)
     {
-        auto nodePair = m_allNodes.insert(
-            {_node.id, make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint)});
-        bFound = !nodePair.second;
-        nodeEntry = nodePair.first->second;
+        auto iterPair = m_allNodes.insert({_node.id, nullptr});
+        if (iterPair.second)  // Node id inserted, construct node entry:
+            iterPair.first->second = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
+        else
+            bFound = true;
+        nodeEntry = iterPair.first->second;
     }
 
     // Log here to avoid holding the x_nodes mutex longer than necessary
