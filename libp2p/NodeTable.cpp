@@ -1,16 +1,16 @@
 /*
  This file is part of cpp-ethereum.
- 
+
  cpp-ethereum is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  cpp-ethereum is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -53,7 +53,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
-    m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),        
+    m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),
     m_allowLocalDiscovery(_allowLocalDiscovery),
     m_timers(_io)
 {
@@ -120,10 +120,9 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
     if (bFound)
         LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
                       << " is already in the node table";
-    else if (!bFound && _relation != Known)
-        LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
-    else if (!bFound && _relation == Known)
-        LOG(m_logger) << "Known node " << _node.id << "@" << _node.endpoint;
+    else
+        LOG(m_logger) << (_relation == Known ? "Known" : "Pending") << " node " << _node.id << "@"
+                      << _node.endpoint;
 
     if (_relation == Known)
     {
@@ -186,10 +185,10 @@ shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID _id)
 void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_ptr<NodeEntry>>> _tried)
 {
     // NOTE: ONLY called by doDiscovery!
-    
+
     if (!m_socket->isOpen())
         return;
-    
+
     auto const nearestNodes = nearestNodeEntries(_node);
     auto newTriedCount = 0;
     for (auto const& node : nearestNodes)
@@ -216,7 +215,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
                 break;
         }
     }
-    
+
     if (_round == s_maxSteps || newTriedCount == 0)
     {
         LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
@@ -235,9 +234,9 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
 
-        // error::operation_aborted means that the timer was probably aborted. 
-        // It usually happens when "this" object is deallocated, in which case 
-        // subsequent call to doDiscover() would cause a crash. We can not rely on 
+        // error::operation_aborted means that the timer was probably aborted.
+        // It usually happens when "this" object is deallocated, in which case
+        // subsequent call to doDiscover() would cause a crash. We can not rely on
         // m_timers.isStopped(), because "this" pointer was captured by the lambda,
         // and therefore, in case of deallocation m_timers object no longer exists.
 
@@ -251,9 +250,9 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
     static unsigned lastBin = s_bins - 1;
     unsigned head = distance(m_hostNodeID, _target);
     unsigned tail = head == 0 ? lastBin : (head - 1) % s_bins;
-    
+
     map<unsigned, list<shared_ptr<NodeEntry>>> found;
-    
+
     // if d is 0, then we roll look forward, if last, we reverse, else, spread from d
     if (head > 1 && tail != lastBin)
         while (head != tail && head < s_bins)
