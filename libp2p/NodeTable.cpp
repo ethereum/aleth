@@ -547,29 +547,23 @@ void NodeTable::onPacketReceived(
                 auto& in = dynamic_cast<PingNode&>(*packet);
                 in.source.setAddress(_from.address());
                 in.source.setUdpPort(_from.port());
+                if (!addNode({in.sourceid, in.source}))
+                    return;  // Need to have valid endpoint proof before adding node to node table.
 
-                if (!addNode(Node(in.sourceid, in.source)))
-                    // We don't want to add nodes to the buckets (noteActiveNode) which couldn't be
-                    // added to the node list
-                    return;
+                // Send PONG response.
+                Pong p(in.source);
+                LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
+                p.ts = nextRequestExpirationTime();
+                p.echo = in.echo;
+                p.sign(m_secret);
+                m_socket->send(p);
 
+                DEV_GUARDED(x_nodes)
                 {
-                    // Send PONG response.
-                    Pong p(in.source);
-                    LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
-                    p.ts = nextRequestExpirationTime();
-                    p.echo = in.echo;
-                    p.sign(m_secret);
-                    m_socket->send(p);
-
-                    Guard l(x_nodes);
                     auto const it = m_allNodes.find(in.sourceid);
                     if (it != m_allNodes.end())
                         it->second->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
                 }
-                else
-                    // Need to have valid endpoint proof before adding node to node table
-                    return;
                 break;
             }
         }
