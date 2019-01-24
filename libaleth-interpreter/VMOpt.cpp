@@ -27,7 +27,7 @@ void VM::initMetrics()
     static bool done = []() noexcept
     {
         // Copy the metrics of the top EVM revision.
-        std::memcpy(&c_metrics[0], evmc_get_instruction_metrics_table(EVMC_LATEST_REVISION),
+        std::memcpy(&c_metrics[0], evmc_get_instruction_metrics_table(EVMC_MAX_REVISION),
             c_metrics.size() * sizeof(c_metrics[0]));
 
         // Inject interpreter optimization opcodes.
