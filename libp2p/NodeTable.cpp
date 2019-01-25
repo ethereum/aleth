@@ -104,6 +104,12 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
         return false;
     }
 
+    if (m_hostNodeID == _node.id)
+    {
+        LOG(m_logger) << "Skip adding self to node table (" << _node.id << ")";
+        return false;
+    }
+
     bool bFound = false;
     std::shared_ptr<NodeEntry> nodeEntry;
     DEV_GUARDED(x_nodes)
