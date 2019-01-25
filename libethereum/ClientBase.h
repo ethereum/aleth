@@ -168,7 +168,7 @@ public:
     Block blockByNumber(BlockNumber _h) const;
 
     int chainId() const override;
-    
+
 protected:
     /// The interface that must be implemented in any class deriving this.
     /// {

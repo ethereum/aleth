@@ -1,8 +1,6 @@
 set(sources
     Ethash.cpp
     Ethash.h
-    EthashClient.cpp
-    EthashClient.h
     EthashCPUMiner.cpp
     EthashCPUMiner.h
     EthashProofOfWork.cpp

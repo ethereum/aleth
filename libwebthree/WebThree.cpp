@@ -18,7 +18,6 @@
 #include "WebThree.h"
 
 #include <libethashseal/Ethash.h>
-#include <libethashseal/EthashClient.h>
 #include <libethereum/ClientTest.h>
 #include <libethereum/EthereumCapability.h>
 
@@ -45,19 +44,10 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
         m_ethereum.reset(new eth::ClientTest(
             _params, (int)_params.networkID, m_net, shared_ptr<GasPricer>(), _dbPath, _we));
     else
-    {
-        if (_params.sealEngineName == Ethash::name())
-            m_ethereum.reset(new eth::EthashClient(_params, (int)_params.networkID, m_net,
-                shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
-        else if (_params.sealEngineName == NoProof::name())
-            m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, m_net,
-                shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
-        else
-            BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment(
-                                        "Unknown seal engine: " + _params.sealEngineName));
-    }
-    m_ethereum->startWorking();
+        m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, m_net,
+            shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
 
+    m_ethereum->startWorking();
     const auto* buildinfo = aleth_get_buildinfo();
     m_ethereum->setExtraData(rlpList(0, string{buildinfo->project_version}.substr(0, 5) + "++" +
                                             string{buildinfo->git_commit_hash}.substr(0, 4) +

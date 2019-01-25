@@ -57,6 +57,7 @@ public:
     h256 importTransaction(eth::Transaction const&) override { return {}; }
     eth::ExecutionResult call(Address const&, u256, Address, bytes const&, u256, u256, eth::BlockNumber, eth::FudgeFactor) override { return {}; };
     eth::TransactionSkeleton populateTransactionWithDefaults(eth::TransactionSkeleton const&) const override { return {}; };
+    std::tuple<h256, h256, h256> getWork() override { return std::tuple<h256, h256, h256>{}; }
 
 private:
     eth::BlockChain const& m_bc;

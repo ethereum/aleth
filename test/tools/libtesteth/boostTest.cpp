@@ -10,13 +10,13 @@
 
 #define BOOST_TEST_MODULE EthereumTests
 #define BOOST_TEST_NO_MAIN
-#include <boost/test/included/unit_test.hpp>
 
 #include <test/tools/jsontests/BlockChainTests.h>
 #include <test/tools/jsontests/StateTests.h>
 #include <test/tools/jsontests/TransactionTests.h>
 #include <test/tools/jsontests/vm.h>
 #include <test/tools/libtesteth/TestHelper.h>
+#include <boost/test/included/unit_test.hpp>
 #include <clocale>
 #include <cstdlib>
 #include <iostream>

@@ -187,3 +187,60 @@ bool Ethash::shouldSeal(Interface*)
 {
     return true;
 }
+
+bool Ethash::isMining() const
+{
+    return m_farm.isMining();
+}
+
+WorkingProgress Ethash::miningProgress() const
+{
+    if (isMining())
+        return m_farm.miningProgress();
+    return WorkingProgress();
+}
+
+u256 Ethash::hashrate() const
+{
+    u256 r = externalHashrate();
+    if (isMining())
+        r += miningProgress().rate();
+    return r;
+}
+
+std::tuple<h256, h256, h256> Ethash::getWork(BlockHeader const& _bi)
+{
+    manuallySetWork(_bi);
+    return std::tuple<h256, h256, h256>(_bi.hash(WithoutSeal), seedHash(_bi), boundary(_bi));
+}
+
+bool Ethash::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
+{
+    manuallySubmitWork(_mixHash, _nonce);
+    return true;
+}
+
+void Ethash::submitExternalHashrate(u256 const& _rate, h256 const& _id)
+{
+    WriteGuard writeGuard(x_externalRates);
+    m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
+}
+
+u256 Ethash::externalHashrate() const
+{
+    u256 ret = 0;
+    WriteGuard writeGuard(x_externalRates);
+    for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
+        if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
+            i = m_externalRates.erase(i);
+        else
+            ret += i++->second.first;
+    return ret;
+}
+
+Ethash& eth::asEthash(SealEngineFace& _f)
+{
+    if (dynamic_cast<Ethash*>(&_f))
+        return dynamic_cast<Ethash&>(_f);
+    throw InvalidSealEngine();
+}
