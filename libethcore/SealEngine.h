@@ -47,9 +47,9 @@ class SealEngineFace
 public:
 	virtual ~SealEngineFace() {}
 
-    virtual std::tuple<h256, h256, h256> getWork(BlockHeader const& _bi)
+	/// @returns Tuple of hash of the current block to be mined minus nonce, seed hash, target boundary.
+    virtual std::tuple<h256, h256, h256> getWork(BlockHeader const&)
     {
-        (void)_bi;
         return std::tuple<h256, h256, h256>{};
     }
     virtual bool isMining() const { return false; }
