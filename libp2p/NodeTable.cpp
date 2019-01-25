@@ -137,6 +137,7 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
         // configuration file. This means that the "last pong received time" needs to be serialized
         // and deserialized before we can accept the pong time as an input to this function.
         nodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
+        nodeEntry->endpoint = _node.endpoint; // Update the endpoint in case it has changed
         noteActiveNode(nodeEntry->id, nodeEntry->endpoint);
     }
     else if (_relation != Known && !nodeEntry->hasValidEndpointProof())
