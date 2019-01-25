@@ -132,11 +132,9 @@ void Host::stop()
     if (!m_run.exchange(false))
         return;
 
-    {
-        unique_lock<mutex> l(x_runTimer);
-        while (m_timer)
-            m_timerReset.wait(l);
-    }
+    // stopping io service allows running manual network operations for shutdown
+    // and also stops blocking worker thread, allowing worker thread to exit
+    m_ioService.stop();
 
     // stop worker thread
     if (isWorking())
@@ -665,25 +663,10 @@ size_t Host::peerCount() const
     return retCount;
 }
 
-void Host::run(boost::system::error_code const&)
+void Host::run(boost::system::error_code const& _ec)
 {
-    if (!m_run)
-    {
-        // reset NodeTable
-        DEV_GUARDED(x_nodeTable)
-            m_nodeTable.reset();
-
-        // stopping io service allows running manual network operations for shutdown
-        // and also stops blocking worker thread, allowing worker thread to exit
-        m_ioService.stop();
-
-        // resetting timer signals network that nothing else can be scheduled to run
-        DEV_GUARDED(x_runTimer)
-            m_timer.reset();
-
-        m_timerReset.notify_all();
+    if (!m_run || _ec)
         return;
-    }
 
     if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
         nodeTable->processEvents();
@@ -739,9 +722,12 @@ void Host::run(boost::system::error_code const&)
         }
     }
 
-    auto runcb = [this](boost::system::error_code const& error) { run(error); };
-    m_timer->expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
-    m_timer->async_wait(runcb);
+    if (m_run)
+    {
+        auto runcb = [this](boost::system::error_code const& error) { run(error); };
+        m_timer->expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
+        m_timer->async_wait(runcb);
+    }
 }
 
 void Host::startedWorking()
@@ -750,15 +736,9 @@ void Host::startedWorking()
     // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
     asserts(!m_timer);
 
-    {
-        // prevent m_run from being set to true at same time as set to false by stop()
-        // don't release mutex until m_timer is set so in case stop() is called at same
-        // time, stop will wait on m_timer and graceful network shutdown.
-        Guard l(x_runTimer);
-        // create deadline timer
-        m_timer.reset(new io::deadline_timer(m_ioService));
-        m_run = true;
-    }
+    // create deadline timer
+    m_timer.reset(new io::deadline_timer(m_ioService));
+    m_run = true;
 
     // start capability threads (ready for incoming connections)
     for (auto const& h: m_capabilities)
