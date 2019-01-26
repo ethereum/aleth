@@ -198,12 +198,6 @@ void Host::doneWorking()
         m_ioService.poll();
     }
 
-    // stop network (again; helpful to call before subsequent reset())
-    m_ioService.stop();
-
-    // reset network (allows reusing ioservice in future)
-    m_ioService.reset();
-
     // finally, clear out peers (in case they're lingering)
     RecursiveGuard l(x_sessions);
     m_sessions.clear();
@@ -736,10 +730,6 @@ void Host::startedWorking()
     // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
     asserts(!m_timer);
 
-    // create deadline timer
-    m_timer.reset(new io::deadline_timer(m_ioService));
-    m_run = true;
-
     // start capability threads (ready for incoming connections)
     for (auto const& h: m_capabilities)
         h.second->onStarting();
@@ -768,6 +758,10 @@ void Host::startedWorking()
     restoreNetwork(&m_restoreNetwork);
 
     LOG(m_logger) << "p2p.started id: " << id();
+
+    // create deadline timer
+    m_timer.reset(new io::deadline_timer(m_ioService));
+    m_run = true;
 
     run(boost::system::error_code());
 }
@@ -819,6 +813,13 @@ void Host::disconnectLatePeers()
 
 bytes Host::saveNetwork() const
 {
+    constexpr uint16_t numItems = 3;
+    if (haveNetwork())
+    {
+        cwarn << "Cannot save network configuration while network is still running.";
+        return bytes{};
+    }
+
     std::list<Peer> peers;
     {
         RecursiveGuard l(x_sessions);
@@ -867,7 +868,7 @@ bytes Host::saveNetwork() const
     }
     // else: TODO: use previous configuration if available
 
-    RLPStream ret(3);
+    RLPStream ret(numItems);
     ret << dev::p2p::c_protocolVersion << m_alias.secret().ref();
     ret.appendList(count);
     if (!!count)
