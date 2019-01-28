@@ -14,7 +14,9 @@ namespace
 {
 evmc_revision toRevision(EVMSchedule const& _schedule) noexcept
 {
-    if (_schedule.haveCreate2)
+    if (_schedule.haveCreate2 && !_schedule.eip1283Mode)
+        return EVMC_CONSTANTINOPLE2;
+    if (_schedule.haveCreate2 && _schedule.eip1283Mode)
         return EVMC_CONSTANTINOPLE;
     if (_schedule.haveRevert)
         return EVMC_BYZANTIUM;
