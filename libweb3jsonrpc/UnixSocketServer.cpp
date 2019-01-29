@@ -86,6 +86,15 @@ bool UnixDomainSocketServer::StartListening()
 		::bind(m_socket, reinterpret_cast<sockaddr*>(&m_address), sizeof(sockaddr_un));
 		fs::permissions(m_path, fs::owner_read | fs::owner_write);
 		listen(m_socket, 128);
+
+		int keepalive = 1;
+		if (setsockopt(m_socket, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive) < 0)
+		{
+			CloseConnection(m_socket);
+			m_socket = -1;
+			unlink(m_path.c_str());
+			return false;
+		}
 	}
 	return IpcServerBase::StartListening();
 }
