@@ -441,10 +441,11 @@ BOOST_AUTO_TEST_CASE(kademlia)
 
 BOOST_AUTO_TEST_CASE(udpOnce)
 {
-    auto const port = getRandomPortNumber();
-    UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string(c_localhostIp), port), bytes({65,65,65,65}));
-    TestUDPSocketHost a{port};
+    TestUDPSocketHost a;
+    auto const port = a.port;
     a.start();
+    UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string(c_localhostIp), port),
+        bytes({65, 65, 65, 65}));
     a.socket->send(d);
     this_thread::sleep_for(chrono::seconds(1));
     BOOST_REQUIRE_EQUAL(true, a.success);
