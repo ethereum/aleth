@@ -283,7 +283,8 @@ private:
 
     bool nodeTableHasNode(Public const& _id) const;
     Node nodeFromNodeTable(Public const& _id) const;
-    bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
+    bool addNodeToNodeTable(
+        Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime);
 
     /// Determines if a node with the supplied endpoint should be included in or restored from the
     /// serialized network configuration data

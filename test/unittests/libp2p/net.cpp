@@ -79,10 +79,10 @@ struct TestNodeTable: public NodeTable
                 // manually add node for test
                 {
                     Guard ln(x_nodes);
-                    shared_ptr<NodeEntry> node(new NodeEntry(
-                        m_hostNodeID, n.first, NodeIPEndpoint(ourIp, n.second, n.second)));
-                    node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
-                    m_allNodes[node->id] = node;
+                    m_allNodes[n.first] = make_shared<NodeEntry>(m_hostNodeID, n.first,
+                        NodeIPEndpoint(ourIp, n.second, n.second),
+                        RLPXDatagramFace::secondsSinceEpoch(),
+                        RLPXDatagramFace::secondsSinceEpoch());
                 }
                 noteActiveNode(n.first, bi::udp::endpoint(ourIp, n.second));
             }
@@ -104,9 +104,9 @@ struct TestNodeTable: public NodeTable
             // manually add node for test
             {
                 Guard ln(x_nodes);
-                shared_ptr<NodeEntry> node(new NodeEntry(m_hostNodeID, testNode->first,
-                    NodeIPEndpoint(ourIp, testNode->second, testNode->second)));
-                node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
+                auto node(make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+                    NodeIPEndpoint(ourIp, testNode->second, testNode->second),
+                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch()));
                 m_allNodes[node->id] = node;
                 distance = node->distance;
             }
@@ -147,10 +147,9 @@ struct TestNodeTable: public NodeTable
                 }
 
                 Guard ln(x_nodes);
-                shared_ptr<NodeEntry> node(new NodeEntry(m_hostNodeID, testNode->first,
-                    NodeIPEndpoint(ourIp, testNode->second, testNode->second)));
-                node->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
-                m_allNodes[node->id] = node;
+                m_allNodes[testNode->first] = make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+                    NodeIPEndpoint(ourIp, testNode->second, testNode->second),
+                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
             }
             noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
 
@@ -542,7 +541,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     auto const port = randomPortNumber();
     nodeTable->addNode(
         Node(newNodeId, NodeIPEndpoint(bi::address::from_string(c_localhostIp), port, port)),
-        NodeTable::Known);
+        RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
 
     // wait for eviction
     evictEvents.pop();
@@ -571,7 +570,8 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     // endpoint
     auto const port = randomPortNumber();
     NodeIPEndpoint newEndpoint{bi::address::from_string(c_localhostIp), port, port };
-    nodeTable->addNode(Node(leastRecentlySeenNodeId, newEndpoint), NodeTable::Known);
+    nodeTable->addNode(Node(leastRecentlySeenNodeId, newEndpoint),
+        RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
 
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodeTable->bucketSize(bucketIndex), 16);
@@ -759,9 +759,8 @@ BOOST_AUTO_TEST_CASE(neighboursSentAfterFindNode)
     auto const& nodeTable = nodeTableHost.nodeTable;
     KeyPair newNodeKeyPair = KeyPair::create();
     NodeID newNodeId = newNodeKeyPair.pub();
-    nodeTable->addNode(Node(newNodeId, NodeIPEndpoint(bi::address::from_string(c_localhostIp),
-                                           listenPort, listenPort)),
-        NodeTable::Known /* Makes node table think that endpoint proof has been completed */);
+    nodeTable->addNode(
+        Node(newNodeId, NodeIPEndpoint(bi::address::from_string(c_localhostIp), listenPort, listenPort)), RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch() /* Makes node table think that endpoint proof has been completed */);
 
     // Create and send the FindNode packet from the new "node"
     KeyPair target = KeyPair::create();
@@ -817,7 +816,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
     auto nodeKeyPair = KeyPair::create();
     auto nodeId = nodeKeyPair.pub();
-    nodeTable->addNode(Node{nodeId, nodeEndpoint}, NodeTable::Known);
+    nodeTable->addNode(Node{nodeId, nodeEndpoint}, RLPXDatagramFace::secondsSinceEpoch(),
+        RLPXDatagramFace::secondsSinceEpoch());
 
     unique_ptr<TestNodeTableEventHandler> eventHandler(new TestNodeTableEventHandler);
     concurrent_queue<NodeID>& evictEvents = eventHandler->scheduledForEviction;
@@ -844,7 +844,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     // port doesn't matter, it won't be pinged because we're adding it as known
     auto newNodeEndpoint =
         NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
-    nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, NodeTable::Known);
+    nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, RLPXDatagramFace::secondsSinceEpoch(),
+        RLPXDatagramFace::secondsSinceEpoch());
 
     // wait for eviction
     evictEvents.pop(chrono::seconds(5));
@@ -904,7 +905,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     // port doesn't matter, it won't be pinged because we're adding it as known
     auto const port = randomPortNumber();
     auto newNodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), port, port };
-    nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, NodeTable::Known);
+    nodeTable->addNode(Node{newNodeId, newNodeEndpoint}, RLPXDatagramFace::secondsSinceEpoch(),
+        RLPXDatagramFace::secondsSinceEpoch());
 
     // wait for PING time out
     this_thread::sleep_for(std::chrono::seconds(6));

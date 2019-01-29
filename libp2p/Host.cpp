@@ -529,7 +529,7 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
         return;
     }
 
-    addNodeToNodeTable(Node(_node, _endpoint));
+    addNodeToNodeTable(Node(_node, _endpoint), 0, 0);
 }
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
@@ -547,22 +547,26 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
         return;
     }
 
-    {
-        Guard l(x_requiredPeers);
-        m_requiredPeers.insert(_n);
-    }
-
     if (_n == id())
     {
         cnetdetails << "Ignoring the request to connect to self " << _n;
         return;
     }
 
-    Node node(_n, _endpoint, PeerType::Required);
-    if (_n)
+    if (!_n)
     {
-        // create or update m_peers entry
-        shared_ptr<Peer> p;
+        cnetdetails << "Ignoring the request to connect to null node id.";
+        return;
+    }
+
+    {
+        Guard l(x_requiredPeers);
+        m_requiredPeers.insert(_n);
+    }
+
+    Node const node(_n, _endpoint, PeerType::Required);
+    // create or update m_peers entry
+    shared_ptr<Peer> p;
         DEV_RECURSIVE_GUARDED(x_sessions)
             if (m_peers.count(_n))
             {
@@ -573,20 +577,10 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
             else
             {
                 p = make_shared<Peer>(node);
-                m_peers[_n] = p;
-            }
-        // required for discovery
-        addNodeToNodeTable(*p, NodeTable::NodeRelation::Unknown);
+        m_peers[_n] = p;
     }
-    else
-    {
-        if (!addNodeToNodeTable(node))
-            return;
-        scheduleExecution(600, [this, _n]() {
-            if (auto n = nodeFromNodeTable(_n))
-                requirePeer(n.id, n.endpoint);
-        });
-    }
+    // required for discovery
+    addNodeToNodeTable(*p, 0, 0);
 }
 
 bool Host::isRequiredPeer(NodeID const& _id) const
@@ -865,6 +859,19 @@ bytes Host::saveNetwork() const
 
     RLPStream network;
     int count = 0;
+    if (auto nodeTable = this->nodeTable())
+    {
+        auto state = nodeTable->snapshot();
+        state.sort();
+        for (auto const& entry : state)
+        {
+            network.appendList(6);
+            entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
+            network << entry.id << entry.lastPongReceivedTime << entry.lastPongSentTime;
+            count++;
+        }
+    }
+
     for (auto const& p: peers)
     {
         // todo: ipv6
@@ -887,20 +894,6 @@ bytes Host::saveNetwork() const
             count++;
         }
     }
-
-    if (auto nodeTable = this->nodeTable())
-    {
-        auto state = nodeTable->snapshot();
-        state.sort();
-        for (auto const& entry: state)
-        {
-            network.appendList(4);
-            entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
-            network << entry.id;
-            count++;
-        }
-    }
-    // else: TODO: use previous configuration if available
 
     RLPStream ret(3);
     ret << dev::p2p::c_protocolVersion << m_alias.secret().ref();
@@ -936,10 +929,12 @@ void Host::restoreNetwork(bytesConstRef _b)
                 continue;
 
             Node node((NodeID)nodeRLP[3], NodeIPEndpoint(nodeRLP));
-            if (nodeRLP.itemCount() == 4 && isAllowedEndpoint(node.endpoint))
+            if (nodeRLP.itemCount() == 6 && isAllowedEndpoint(node.endpoint))
             {
                 // node was saved from the node table
-                addNodeToNodeTable(node);
+                auto const lastPongReceivedTime = nodeRLP[4].toInt<uint32_t>();
+                auto const lastPongSentTime = nodeRLP[5].toInt<uint32_t>();
+                addNodeToNodeTable(node, lastPongReceivedTime, lastPongSentTime);
             }
             else if (nodeRLP.itemCount() == 11)
             {
@@ -960,7 +955,7 @@ void Host::restoreNetwork(bytesConstRef _b)
                 if (peer->peerType == PeerType::Required)
                     requirePeer(peer->id, node.endpoint);
                 else
-                    addNodeToNodeTable(*peer, NodeTable::NodeRelation::Known);
+                    addNodeToNodeTable(*peer, 0, 0);
             }
         }
     }
@@ -992,13 +987,14 @@ Node Host::nodeFromNodeTable(Public const& _id) const
     return nodeTable ? nodeTable->node(_id) : Node{};
 }
 
-bool Host::addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation /* = NodeTable::NodeRelation::Unknown */)
+bool Host::addNodeToNodeTable(
+    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
 {
     auto nodeTable = this->nodeTable();
     if (!nodeTable)
         return false;
 
-    nodeTable->addNode(_node, _relation);
+    nodeTable->addNode(_node, _lastPongReceivedTime, _lastPongSentTime);
     return true;
 }
 

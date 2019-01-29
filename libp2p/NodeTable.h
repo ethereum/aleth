@@ -119,9 +119,6 @@ public:
     // Period during which we consider last PONG results to be valid before sending new PONG
     static constexpr uint32_t c_bondingTimeSeconds{12 * 60 * 60};
 
-    enum NodeRelation { Unknown = 0, Known };
-    enum DiscoverType { Random = 0 };
-    
     /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
     NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
         bool _enabled = true, bool _allowLocalDiscovery = false);
@@ -148,7 +145,8 @@ public:
     /// it to trigger the endpoint proof.
     ///
     /// @return True if the node has been added to the table.
-    bool addNode(Node const& _node, NodeRelation _relation = NodeRelation::Unknown);
+    bool addNode(
+        Node const& _node, uint32_t _lastPongReceivedTime = 0, uint32_t _lastPongSentTime = 0);
 
     /// Returns list of node ids active in node table.
     std::list<NodeID> nodes() const;
@@ -316,7 +314,13 @@ protected:
  */
 struct NodeEntry : public Node
 {
-    NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw);
+    NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw,
+        uint32_t _pongReceivedTime, uint32_t _pongSentTime)
+      : Node(_pubk, _gw),
+        distance(NodeTable::distance(_src, _pubk)),
+        lastPongReceivedTime(_pongReceivedTime),
+        lastPongSentTime(_pongSentTime)
+    {}
     bool hasValidEndpointProof() const
     {
         return RLPXDatagramFace::secondsSinceEpoch() <
