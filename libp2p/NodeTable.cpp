@@ -1,16 +1,16 @@
 /*
  This file is part of cpp-ethereum.
- 
+
  cpp-ethereum is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  cpp-ethereum is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -53,7 +53,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     m_secret(_alias.secret()),
     m_socket(make_shared<NodeSocket>(
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
-    m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),        
+    m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),
     m_allowLocalDiscovery(_allowLocalDiscovery),
     m_timers(_io)
 {
@@ -90,39 +90,10 @@ void NodeTable::processEvents()
 
 bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
 {
-    // TODO: Make private version of addNode() that could return reference to added node.
-    if (_relation == Known)
-    {
-        auto nodeEntry = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
-        // mark as validated
-        // TODO get last pong time as input, ping if needed
-        nodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
-        DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
-        noteActiveNode(_node.id, _node.endpoint);
-        return true;
-    }
-
     if (!_node.endpoint || !_node.id)
     {
         LOG(m_logger) << "Supplied node has an invalid endpoint (" << _node.endpoint << ") or id ("
                       << _node.id << "). Skipping adding to node table.";
-        return false;
-    }
-
-    DEV_GUARDED(x_nodes)
-    {
-        auto const it = m_allNodes.find(_node.id);
-        if (it != m_allNodes.end())
-        {
-            LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
-                          << " is already in the node table";
-            return true;
-        }
-    }
-
-    if (m_hostNodeID == _node.id)
-    {
-        LOG(m_logger) << "Skip adding self to node table (" << _node.id << ")";
         return false;
     }
 
@@ -133,10 +104,45 @@ bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
         return false;
     }
 
-    auto nodeEntry = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
-    DEV_GUARDED(x_nodes) { m_allNodes[_node.id] = nodeEntry; }
-    LOG(m_logger) << "Pending node " << _node.id << "@" << _node.endpoint;
-    ping(*nodeEntry);
+    if (m_hostNodeID == _node.id)
+    {
+        LOG(m_logger) << "Skip adding self to node table (" << _node.id << ")";
+        return false;
+    }
+
+    bool bFound = false;
+    std::shared_ptr<NodeEntry> nodeEntry;
+    DEV_GUARDED(x_nodes)
+    {
+        auto iterPair = m_allNodes.insert({_node.id, nullptr});
+        if (iterPair.second)  // Node id inserted, construct node entry:
+            iterPair.first->second = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
+        else
+            bFound = true;
+        nodeEntry = iterPair.first->second;
+    }
+
+    // Log here to avoid holding the x_nodes mutex longer than necessary
+    if (bFound)
+        LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
+                      << " is already in the node table";
+    else
+        LOG(m_logger) << (_relation == Known ? "Known" : "Pending") << " node " << _node.id << "@"
+                      << _node.endpoint;
+
+    if (_relation == Known)
+    {
+        // TODO: Get last pong time as input, ping if needed
+        // Note: Currently this code path is only hit when restoring peers from the network
+        // configuration file. This means that the "last pong received time" needs to be serialized
+        // and deserialized before we can accept the pong time as an input to this function.
+        nodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
+        nodeEntry->endpoint = _node.endpoint; // Update the endpoint in case it has changed
+        noteActiveNode(nodeEntry->id, nodeEntry->endpoint);
+    }
+    else if (_relation != Known && !nodeEntry->hasValidEndpointProof())
+        ping(*nodeEntry);
+
     return true;
 }
 
@@ -186,10 +192,10 @@ shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID _id)
 void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_ptr<NodeEntry>>> _tried)
 {
     // NOTE: ONLY called by doDiscovery!
-    
+
     if (!m_socket->isOpen())
         return;
-    
+
     auto const nearestNodes = nearestNodeEntries(_node);
     auto newTriedCount = 0;
     for (auto const& node : nearestNodes)
@@ -216,7 +222,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
                 break;
         }
     }
-    
+
     if (_round == s_maxSteps || newTriedCount == 0)
     {
         LOG(m_logger) << "Terminating discover after " << _round << " rounds.";
@@ -235,9 +241,9 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
 
-        // error::operation_aborted means that the timer was probably aborted. 
-        // It usually happens when "this" object is deallocated, in which case 
-        // subsequent call to doDiscover() would cause a crash. We can not rely on 
+        // error::operation_aborted means that the timer was probably aborted.
+        // It usually happens when "this" object is deallocated, in which case
+        // subsequent call to doDiscover() would cause a crash. We can not rely on
         // m_timers.isStopped(), because "this" pointer was captured by the lambda,
         // and therefore, in case of deallocation m_timers object no longer exists.
 
@@ -251,9 +257,9 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
     static unsigned lastBin = s_bins - 1;
     unsigned head = distance(m_hostNodeID, _target);
     unsigned tail = head == 0 ? lastBin : (head - 1) % s_bins;
-    
+
     map<unsigned, list<shared_ptr<NodeEntry>>> found;
-    
+
     // if d is 0, then we roll look forward, if last, we reverse, else, spread from d
     if (head > 1 && tail != lastBin)
         while (head != tail && head < s_bins)
@@ -344,8 +350,7 @@ void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _en
     }
 
     shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
-    if (newNode && RLPXDatagramFace::secondsSinceEpoch() <
-                       newNode->lastPongReceivedTime + c_bondingTimeSeconds)
+    if (newNode && newNode->hasValidEndpointProof())
     {
         LOG(m_logger) << "Active node " << _pubk << '@' << _endpoint;
         newNode->endpoint.setAddress(_endpoint.address());
@@ -548,22 +553,19 @@ void NodeTable::onPacketReceived(
                 auto& in = dynamic_cast<PingNode&>(*packet);
                 in.source.setAddress(_from.address());
                 in.source.setUdpPort(_from.port());
+                if (!addNode({in.sourceid, in.source}))
+                    return;  // Need to have valid endpoint proof before adding node to node table.
 
-                if (!addNode(Node(in.sourceid, in.source)))
-                    // We don't want to add nodes to the buckets (noteActiveNode) which couldn't be
-                    // added to the node list
-                    return;
+                // Send PONG response.
+                Pong p(in.source);
+                LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
+                p.ts = nextRequestExpirationTime();
+                p.echo = in.echo;
+                p.sign(m_secret);
+                m_socket->send(p);
 
+                DEV_GUARDED(x_nodes)
                 {
-                    // Send PONG response.
-                    Pong p(in.source);
-                    LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
-                    p.ts = nextRequestExpirationTime();
-                    p.echo = in.echo;
-                    p.sign(m_secret);
-                    m_socket->send(p);
-
-                    Guard l(x_nodes);
                     auto const it = m_allNodes.find(in.sourceid);
                     if (it != m_allNodes.end())
                         it->second->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();

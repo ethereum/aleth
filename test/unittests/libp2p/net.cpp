@@ -286,7 +286,7 @@ struct TestNodeTableHost : public TestHost
 class TestUDPSocketHost : UDPSocketEvents, public TestHost
 {
 public:
-    TestUDPSocketHost(unsigned _port) : port(_port)
+    TestUDPSocketHost(unsigned _port = getRandomPortNumber()) : port(_port)
     {
         // find free port
         while (!socket || !socket->isOpen())
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(unexpectedPong)
     auto nodeKeyPair = KeyPair::create();
     pong.sign(nodeKeyPair.secret());
 
-    TestUDPSocketHost a{getRandomPortNumber()};
+    TestUDPSocketHost a;
     a.start();
     a.socket->send(pong);
 
@@ -578,7 +578,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     auto& nodeTable = nodeTableHost.nodeTable;
 
     // socket answering with PONG
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     nodeSocketHost.start();
     auto const nodePort = nodeSocketHost.port;
 
@@ -610,7 +610,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     auto& nodeTable = nodeTableHost.nodeTable;
 
     // socket receiving PING
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     nodeSocketHost.start();
     uint16_t nodePort = nodeSocketHost.port;
 
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     nodeTable->setRequestTimeToLive(std::chrono::seconds(1));
 
     // socket receiving PING
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     nodeSocketHost.start();
     auto const nodePort = nodeSocketHost.port;
 
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(invalidPing)
     PingNode ping(endpoint, nodeTable->m_hostNodeEndpoint);
     ping.sign(nodeTableHost.m_alias.secret());
 
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     nodeSocketHost.start();
     nodeSocketHost.socket->send(ping);
 
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(neighboursSentAfterFindNode)
 
     // Create and add a node to the node table. We will use this "node" to send the FindNode query
     // to the node table
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     auto const listenPort = nodeSocketHost.port;
     nodeSocketHost.start();
     auto const& nodeTable = nodeTableHost.nodeTable;
@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(unexpectedFindNode)
     BOOST_REQUIRE_EQUAL(nodeTableHost.nodeTable->count(), nodeCount);
 
     // Create and send the FindNode packet
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     nodeSocketHost.start();
     auto nodeTable = nodeTableHost.nodeTable;
     FindNode findNode(nodeTable->m_hostNodeEndpoint, KeyPair::create().pub() /* target */);
@@ -775,7 +775,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     auto& nodeTable = nodeTableHost.nodeTable;
 
     // socket receiving PING
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     nodeSocketHost.start();
     auto const nodePort = nodeSocketHost.port;
 
@@ -928,7 +928,7 @@ BOOST_AUTO_TEST_CASE(addSelf)
     size_t expectedNodeCount = 0;
     BOOST_REQUIRE(nodeTable->count() == expectedNodeCount);
 
-    TestUDPSocketHost nodeSocketHost{getRandomPortNumber()};
+    TestUDPSocketHost nodeSocketHost;
     auto nodePort = nodeSocketHost.port;
     auto nodeEndpoint = NodeIPEndpoint{ bi::address::from_string(c_localhostIp), nodePort, nodePort };
 
@@ -974,6 +974,85 @@ BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
     auto datagram3 =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived3));
     BOOST_CHECK_EQUAL(datagram3->typeName(), "FindNode");
+}
+
+BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
+{
+    // Validate 3 scenarios:
+    // * A ping is sent after a pong for a new node
+    // * No ping is sent after a pong for a known node with a valid endpoint proof
+    // * A ping is sent after a pong for a known node with an invalid endpoint proof
+
+    TestNodeTableHost nodeTableHost1(0);
+    nodeTableHost1.start();
+    auto& nodeTable1 = nodeTableHost1.nodeTable;
+
+    TestUDPSocketHost nodeSocketHost2;
+    nodeSocketHost2.start();
+    auto nodePort2 = nodeSocketHost2.port;
+    auto nodeEndpoint2 =
+        NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort2, nodePort2};
+
+    // Add node to the node table to trigger ping
+    auto nodeKeyPair2 = KeyPair::create();
+    Node node2(nodeKeyPair2.pub(), nodeEndpoint2);
+    nodeTable1->addNode(node2);
+
+    // Verify ping is received
+    auto packetReceived1 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto datagram1 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived1));
+    BOOST_REQUIRE_EQUAL(datagram1->typeName(), "Ping");
+
+    // Send pong to trigger endpoint proof in node table
+    Pong pong(nodeTable1->m_hostNodeEndpoint);
+    auto const& ping1 = dynamic_cast<PingNode&>(*datagram1);
+    pong.echo = ping1.echo;
+    pong.sign(nodeKeyPair2.secret());
+    nodeSocketHost2.socket->send(pong);
+
+    // Receive FindNode packet
+    auto packetReceived3 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(20000));
+    auto datagram3 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived3));
+    BOOST_REQUIRE_EQUAL(datagram3->typeName(), "FindNode");
+
+    // Ping the node table and verify that a pong is received but no ping is received after
+    // (since the endpoint proof has already been completed)
+    PingNode ping2(nodeEndpoint2, nodeTable1->m_hostNodeEndpoint);
+    ping2.sign(nodeKeyPair2.secret());
+    nodeSocketHost2.socket->send(ping2);
+
+    auto packetReceived4 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto datagram4 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived4));
+    BOOST_REQUIRE_EQUAL(datagram4->typeName(), "Pong");
+
+    // Verify that the next packet received is not a ping
+    auto packetReceived5 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(20000));
+    auto datagram5 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived5));
+    BOOST_REQUIRE(datagram5->typeName() != "Ping");
+
+    // Force the endpoint proof to be invalid
+    auto newNode = nodeTable1->nodeEntry(nodeKeyPair2.pub());
+    newNode->lastPongReceivedTime = 0;
+    BOOST_REQUIRE(!newNode->hasValidEndpointProof());
+
+    // Ping the node table and verify you get a pong followed by a ping
+    PingNode ping3(nodeEndpoint2, nodeTable1->m_hostNodeEndpoint);
+    ping3.sign(nodeKeyPair2.secret());
+    nodeSocketHost2.socket->send(ping3);
+
+    auto packetReceived6 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto datagram6 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived4));
+    BOOST_CHECK_EQUAL(datagram4->typeName(), "Pong");
+
+    auto packetReceived7 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto datagram7 =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived7));
+    BOOST_REQUIRE(datagram7->typeName() == "Ping");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
