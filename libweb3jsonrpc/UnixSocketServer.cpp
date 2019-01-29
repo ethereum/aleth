@@ -150,7 +150,7 @@ size_t UnixDomainSocketServer::Write(int _connection, string const& _data)
 
 size_t UnixDomainSocketServer::Read(int _connection, void* _data, size_t _size)
 {
-	ssize_t r = read(_connection, _data, _size);
+	ssize_t r = recv(_connection, _data, _size, MSG_NOSIGNAL);
 	if (r < 0)
 		return 0;
 	return static_cast<size_t>(r);
