@@ -28,6 +28,8 @@ R"E(
         "EIP150ForkBlock": "0x259518",
         "EIP158ForkBlock": "0x28d138",
         "byzantiumForkBlock": "0x42ae50",
+        "constantinopleForkBlock": "0x6f1580",
+        "constantinopleFixForkBlock": "0x6f1580",
         "networkID" : "0x01",
         "chainID": "0x01",
         "maximumExtraDataSize": "0x20",
