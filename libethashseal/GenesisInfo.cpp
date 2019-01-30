@@ -29,6 +29,7 @@ using namespace dev;
 #include "genesis/test/byzantiumTransitionTest.cpp"
 #include "genesis/test/constantinopleNoProofTest.cpp"
 #include "genesis/test/constantinopleTest.cpp"
+#include "genesis/test/constantinopleFixTest.cpp"
 #include "genesis/test/eip150Test.cpp"
 #include "genesis/test/eip158Test.cpp"
 #include "genesis/test/experimentalTransitionTest.cpp"
@@ -39,7 +40,7 @@ using namespace dev;
 #include "genesis/test/mainNetworkTest.cpp"
 
 //Transition configurations
-#include "genesis/test/ByzantiumToConstantinopleAt5Test.cpp"
+#include "genesis/test/ByzantiumToConstantinopleFixAt5Test.cpp"
 #include "genesis/test/EIP158ToByzantiumAt5Test.cpp"
 #include "genesis/test/frontierToHomesteadAt5Test.cpp"
 #include "genesis/test/homesteadToDaoAt5Test.cpp"
@@ -74,14 +75,17 @@ std::string const& dev::eth::genesisInfo(Network _n)
         return c_genesisInfoConstantinopleNoProofTest;
     case Network::ExperimentalTransitionTest:
         return c_genesisInfoExperimentalTransitionTest;
+    case Network::ConstantinopleFixTest:
+        return c_genesisInfoConstantinopleFixTest;
+
 
     //Transition test genesis
     case Network::FrontierToHomesteadAt5: return c_genesisInfoFrontierToHomesteadAt5Test;
     case Network::HomesteadToDaoAt5: return c_genesisInfoHomesteadToDaoAt5Test;
     case Network::HomesteadToEIP150At5: return c_genesisInfoHomesteadToEIP150At5Test;
     case Network::EIP158ToByzantiumAt5: return c_genesisInfoEIP158ToByzantiumAt5Test;
-    case Network::ByzantiumToConstantinopleAt5:
-        return c_genesisInfoByzantiumToConstantinopleAt5Test;
+    case Network::ByzantiumToConstantinopleFixAt5:
+        return c_genesisInfoByzantiumToConstantinopleFixAt5Test;
     case Network::TransitionnetTest: return c_genesisInfoTest;
 
     default:
@@ -103,6 +107,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
     case Network::EIP158Test:
     case Network::ByzantiumTest:
     case Network::ConstantinopleTest:
+    case Network::ConstantinopleFixTest:
     case Network::ExperimentalTransitionTest:
         return c_genesisDefaultStateRoot;
     default:

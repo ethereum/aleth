@@ -93,6 +93,7 @@ public:
     u256 byzantiumForkBlock = c_infiniteBlockNumer;
     u256 eWASMForkBlock = c_infiniteBlockNumer;
     u256 constantinopleForkBlock = c_infiniteBlockNumer;
+    u256 constantinopleFixForkBlock = c_infiniteBlockNumer;
     u256 daoHardforkBlock = c_infiniteBlockNumer;
     u256 experimentalForkBlock = c_infiniteBlockNumer;
     int chainID = 0;    // Distinguishes different chains (mainnet, Ropsten, etc).

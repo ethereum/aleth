@@ -52,13 +52,14 @@ mObject getExpectSection(mValue const& _expect, eth::Network _network)
         BOOST_REQUIRE_MESSAGE(obj.count("network"), "network section not set in expect section!");
         set<string> networks;
         ImportTest::parseJsonStrValueIntoSet(obj["network"], networks);
+        networks = translateNetworks(networks);
         BOOST_CHECK_MESSAGE(networks.size() > 0, TestOutputHelper::get().testName() + " Network array not set!");
         ImportTest::checkAllowedNetwork(networks);
 
-        if (networks.count(test::netIdToString(_network)) || networks.count(string("ALL")))
+        if (networks.count(test::netIdToString(_network)))
             objVector.push_back(obj);
     }
-    BOOST_REQUIRE_MESSAGE(objVector.size() == 1, "Expect network should occur once in expect section of transaction test filler! (" + test::netIdToString(_network) + ")");
+    BOOST_REQUIRE_MESSAGE(objVector.size() == 1, "Expect network should occur once in expect section of transaction test filler! (" + test::netIdToString(_network) + ") " + TestOutputHelper::get().testName());
     return objVector.at(0);
 }
 

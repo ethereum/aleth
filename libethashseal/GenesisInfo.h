@@ -65,13 +65,15 @@ enum class Network
     ByzantiumNoProofTest = 81,
     /// Constantinople rules + NoProof seal engine
     ConstantinopleNoProofTest = 82,
+    /// Byzantium + Constantinople + ConstantinopleFix active from block 0
+    ConstantinopleFixTest = 83,
 
     // TransitionTest networks
     FrontierToHomesteadAt5 = 100,
     HomesteadToDaoAt5 = 101,
     HomesteadToEIP150At5 = 102,
     EIP158ToByzantiumAt5 = 103,
-    ByzantiumToConstantinopleAt5 = 104,
+    ByzantiumToConstantinopleFixAt5 = 104,
 
     Special = 0xff  ///< Something else.
 };

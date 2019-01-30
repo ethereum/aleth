@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 
     po::options_description networkOptions("Network options", c_lineWidth);
     networkOptions.add_options()("network", po::value<string>(),
-        "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople\n");
+        "Main|Ropsten|Homestead|Frontier|Byzantium|Constantinople|ConstantinopleFix\n");
 
     po::options_description optionsForTrace("Options for trace", c_lineWidth);
     auto addTraceOption = optionsForTrace.add_options();
@@ -226,6 +226,8 @@ int main(int argc, char** argv)
     if (vm.count("network"))
     {
         string network = vm["network"].as<string>();
+        if (network == "ConstantinopleFix")
+            networkName = Network::ConstantinopleFixTest;
         if (network == "Constantinople")
             networkName = Network::ConstantinopleTest;
         else if (network == "Byzantium")

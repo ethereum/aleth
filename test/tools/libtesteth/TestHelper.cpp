@@ -112,6 +112,8 @@ string netIdToString(eth::Network _netId)
         return "Byzantium";
     case eth::Network::ConstantinopleTest:
         return "Constantinople";
+    case eth::Network::ConstantinopleFixTest:
+        return "ConstantinopleFix";
     case eth::Network::FrontierToHomesteadAt5:
         return "FrontierToHomesteadAt5";
     case eth::Network::HomesteadToDaoAt5:
@@ -120,8 +122,8 @@ string netIdToString(eth::Network _netId)
         return "HomesteadToEIP150At5";
     case eth::Network::EIP158ToByzantiumAt5:
         return "EIP158ToByzantiumAt5";
-    case eth::Network::ByzantiumToConstantinopleAt5:
-        return "ByzantiumToConstantinopleAt5";
+    case eth::Network::ByzantiumToConstantinopleFixAt5:
+        return "ByzantiumToConstantinopleFixAt5";
     case eth::Network::TransitionnetTest:
         return "TransitionNet";
     default:
@@ -136,9 +138,10 @@ eth::Network stringToNetId(string const& _netname)
     static vector<eth::Network> const networks{
         {eth::Network::FrontierTest, eth::Network::HomesteadTest, eth::Network::EIP150Test,
             eth::Network::EIP158Test, eth::Network::ByzantiumTest, eth::Network::ConstantinopleTest,
-            eth::Network::FrontierToHomesteadAt5, eth::Network::HomesteadToDaoAt5,
-            eth::Network::HomesteadToEIP150At5, eth::Network::EIP158ToByzantiumAt5,
-            eth::Network::ByzantiumToConstantinopleAt5, eth::Network::TransitionnetTest}};
+            eth::Network::ConstantinopleFixTest, eth::Network::FrontierToHomesteadAt5,
+            eth::Network::HomesteadToDaoAt5, eth::Network::HomesteadToEIP150At5,
+            eth::Network::EIP158ToByzantiumAt5, eth::Network::ByzantiumToConstantinopleFixAt5,
+            eth::Network::TransitionnetTest}};
 
     for (auto const& net : networks)
         if (netIdToString(net) == _netname)
@@ -162,6 +165,7 @@ bool isDisabledNetwork(eth::Network _net)
     case eth::Network::FrontierToHomesteadAt5:
     case eth::Network::HomesteadToDaoAt5:
     case eth::Network::HomesteadToEIP150At5:
+    case eth::Network::ConstantinopleTest:  // Disable initial constantinople version
         return true;
     default:
         break;
@@ -172,9 +176,10 @@ bool isDisabledNetwork(eth::Network _net)
 set<eth::Network> const& getNetworks()
 {
     // Networks for the test case execution when filling the tests
-    static set<eth::Network> const networks{{eth::Network::FrontierTest,
-        eth::Network::HomesteadTest, eth::Network::EIP150Test, eth::Network::EIP158Test,
-        eth::Network::ByzantiumTest, eth::Network::ConstantinopleTest}};
+    static set<eth::Network> const networks{
+        {eth::Network::FrontierTest, eth::Network::HomesteadTest, eth::Network::EIP150Test,
+            eth::Network::EIP158Test, eth::Network::ByzantiumTest, eth::Network::ConstantinopleTest,
+            eth::Network::ConstantinopleFixTest}};
     return networks;
 }
 

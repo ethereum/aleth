@@ -16,8 +16,8 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../../GenesisInfo.h"
 
-static std::string const c_genesisInfoByzantiumToConstantinopleAt5Test = std::string() +
-                                                                         R"E(
+static std::string const c_genesisInfoByzantiumToConstantinopleFixAt5Test = std::string() +
+                                                                            R"E(
 {
 	"sealEngine": "Ethash",
 	"params": {
@@ -26,7 +26,8 @@ static std::string const c_genesisInfoByzantiumToConstantinopleAt5Test = std::st
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x00",
 		"byzantiumForkBlock": "0x00",
-		"constantinopleForkBlock": "0x05",
+		"constantinopleForkBlock": "0x00",
+		"constantinopleFixForkBlock": "0x05",
 		"networkID" : "0x1",
 		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",

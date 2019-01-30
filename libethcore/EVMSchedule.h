@@ -140,6 +140,12 @@ static const EVMSchedule ConstantinopleSchedule = []
     return schedule;
 }();
 
+static const EVMSchedule ConstantinopleFixSchedule = [] {
+    EVMSchedule schedule = ConstantinopleSchedule;
+    schedule.eip1283Mode = false;
+    return schedule;
+}();
+
 static const EVMSchedule ExperimentalSchedule = [] {
     EVMSchedule schedule = ConstantinopleSchedule;
     schedule.blockhashGas = 800;
