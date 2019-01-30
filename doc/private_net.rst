@@ -1,7 +1,7 @@
 Creating a private network and deploying a contract with Remix
 ===============
 
-This guide describes creating a private network with a single node and connecting Remix<https://remix.ethereum.org/> to it through HTTP RPC interface.
+This guide describes creating a private network with a single node and connecting `Remix <https://remix.ethereum.org/>`__ to it through HTTP RPC interface.
 
 Initializing aleth in the Command-Line Interface
 ------
@@ -25,6 +25,7 @@ You are then asked to enter and confirm a password for this account.
       "EIP158ForkBlock": "0x00",
       "byzantiumForkBlock": "0x00",
       "constantinopleForkBlock": "0x00",
+      "constantinopleFixForkBlock": "0x00",
       "minGasLimit": "0x5208",
       "maxGasLimit": "0x7fffffffffffffff",
       "tieBreakingGas": false,
@@ -63,7 +64,7 @@ You are then asked to enter and confirm a password for this account.
   }
   
   
-This includes all forks activated at genesis, all precompiled contracts existing on the main net as of Constantinople and initial balance for your account.
+This includes all forks activated at genesis, all precompiled contracts existing on the main net and initial balance for your account.
 
 In case this format gets out of date, please consult the format of the source files in https://github.com/ethereum/aleth/tree/master/libethashseal/genesis.
 
@@ -71,21 +72,21 @@ In case this format gets out of date, please consult the format of the source fi
 ::
   aleth/aleth --config /Users/johndoe/Documents/config.json -m on -a 008a78302c6fe24cc74008c7bdae27b7243a7066 --no-discovery --pin --unsafe-transactions
 
-``-m on`` enables CPU mining
+``-m on`` enables CPU mining;
 
-``-a 008a78302c6fe24cc74008c7bdae27b7243a7066`` sets the beneficiary of the mined blocks
+``-a 008a78302c6fe24cc74008c7bdae27b7243a7066`` sets the beneficiary of the mined blocks;
 
-``--no-discovery --pin`` effectively disables networking; we have ony single node, we don't need to discover other ones and we don't allow others to connect to us
+``--no-discovery --pin`` effectively disables networking; we have ony single node, we don't need to discover other ones and we don't allow others to connect to us;
 
-``--unsafe-transactions`` this disables additional prompt before sending each transaction, we don't need it in the testing environment.
+``--unsafe-transactions`` disables additional prompt before sending each transaction, we don't need it in the testing environment.
 
-It can take a while to mine the first block, but the following mining should go faster.
+It can take a while to mine the first block, but the mining should go faster further on.
 
 **4.** Meanwhile, open a new window in your CLI, navigate into the ``aleth`` directory, and run
 ::
-  scripts/jsonrpcproxy.py
+  scripts/dopple.py
 
-This enables HTTP RPC at http://127.0.0.1:8545 by running a proxy which redirects all HTTP requests to IPC interface of aleth.
+This enables HTTP RPC at http://127.0.0.1:8545 by running a proxy which forwards all HTTP requests to IPC interface of aleth.
 
 Connecting Remix
 ------
@@ -96,5 +97,5 @@ This assumes that the contract code is already entered and successfully compiled
 
 **2.** After connecting to the node it should fetch your account's address and automatically choose it in the ``Account`` list.
 
-**3.** ``Deploy`` button is used to deploy a compiled contract into the blockchain. Aleth requests the confirmation and the account's password in its console - switch to aleth window and confirm the transaction after clicking ``Deploy``
-(Our tests show that currently Remix may not wait for the confirmation and consider the transaction failed. In this case try once again, the password will be cached and confirmation not needed th second time)
+**3.** Use ``Deploy`` button to deploy a compiled contract into the blockchain. Aleth requests the confirmation and the account's password in its CLI - switch to aleth window and confirm the transaction after clicking ``Deploy``
+(Our tests show that currently Remix may not wait for the confirmation and consider the transaction failed. In this case try once again, the password will be already cached in aleth and confirmation not needed the second time)
