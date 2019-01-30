@@ -1,7 +1,7 @@
 Creating a private network and deploying a contract with Remix
 ===============
 
-???
+This guide describes creating a private network with a single node and connecting Remix<https://remix.ethereum.org/> to it through HTTP RPC interface.
 
 Initializing aleth in the Command-Line Interface
 ------
@@ -56,26 +56,45 @@ You are then asked to enter and confirm a password for this account.
       "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } }, "balance": "0x01" },
       "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } }, "balance": "0x01" },
       "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" }, "balance": "0x01" },
-      "008a78302c6fe24cc74008c7bdae27b7243a7066" /* <= Enter your account code here */: {
+      "008a78302c6fe24cc74008c7bdae27b7243a7066" /* <= Enter your account address here */: {
           "balance" : "0x200000000000000000000000000000000000000000000000000000000000000"
       }
     }
   }
   
-Save it preferably in your ``Documents`` folder.
+  
+This includes all forks activated at genesis, all precompiled contracts existing on the main net as of Constantinople and initial balance for your account.
 
+In case this format gets out of date, please consult the format of the source files in https://github.com/ethereum/aleth/tree/master/libethashseal/genesis.
 
-**3.** Navigate to ``aleth/build`` and run ``config.json`` with aleth.
+**3.** Run aleth with ``config.json``.
 ::
   aleth/aleth --config /Users/johndoe/Documents/config.json -m on -a 008a78302c6fe24cc74008c7bdae27b7243a7066 --no-discovery --pin --unsafe-transactions
 
-**Note:** The account code used (``008a78302c6fe24cc74008c7bdae27b7243a7066``) has to be the same as in the ``config.json`` file!
+``-m on`` enables CPU mining
+
+``-a 008a78302c6fe24cc74008c7bdae27b7243a7066`` sets the beneficiary of the mined blocks
+
+``--no-discovery --pin`` effectively disables networking; we have ony single node, we don't need to discover other ones and we don't allow others to connect to us
+
+``--unsafe-transactions`` this disables additional prompt before sending each transaction, we don't need it in the testing environment.
+
+It can take a while to mine the first block, but the following mining should go faster.
 
 **4.** Meanwhile, open a new window in your CLI, navigate into the ``aleth`` directory, and run
 ::
   scripts/jsonrpcproxy.py
 
-Running it on Remix
+This enables HTTP RPC at http://127.0.0.1:8545 by running a proxy which redirects all HTTP requests to IPC interface of aleth.
+
+Connecting Remix
 ------
 
-???
+This assumes that the contract code is already entered and successfully compiled.
+
+**1.** On the ``Run`` tab choose ``Web3 Provider`` in ``Environment`` list.
+
+**2.** After connecting to the node it should fetch your account's address and automatically choose it in the ``Account`` list.
+
+**3.** ``Deploy`` button is used to deploy a compiled contract into the blockchain. Aleth requests the confirmation and the account's password in its console - switch to aleth window and confirm the transaction after clicking ``Deploy``
+(Our tests show that currently Remix may not wait for the confirmation and consider the transaction failed. In this case try once again, the password will be cached and confirmation not needed th second time)
