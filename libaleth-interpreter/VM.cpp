@@ -1360,13 +1360,12 @@ void VM::interpretCases()
                 m_runGas = VMSchedule::sstoreSetGas;
             else if (status == EVMC_STORAGE_MODIFIED || status == EVMC_STORAGE_DELETED)
                 m_runGas = VMSchedule::sstoreResetGas;
-            else if (status == EVMC_STORAGE_UNCHANGED &&
-                     (m_rev < EVMC_CONSTANTINOPLE || m_rev >= EVMC_CONSTANTINOPLE2))
+            else if (status == EVMC_STORAGE_UNCHANGED && m_rev != EVMC_CONSTANTINOPLE)
                 m_runGas = VMSchedule::sstoreResetGas;
             else
             {
                 assert(status == EVMC_STORAGE_UNCHANGED || status == EVMC_STORAGE_MODIFIED_AGAIN);
-                assert(m_rev >= EVMC_CONSTANTINOPLE && m_rev < EVMC_CONSTANTINOPLE2);
+                assert(m_rev == EVMC_CONSTANTINOPLE);
                 m_runGas = VMSchedule::sstoreUnchangedGas;
             }
 

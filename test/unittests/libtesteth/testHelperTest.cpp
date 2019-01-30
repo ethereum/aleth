@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(translateNetworks_gtConstantinople)
 {
     set<string> networks = {">Constantinople"};
     networks = test::translateNetworks(networks);
-    BOOST_REQUIRE(networks.count("Constantinople") == 0);
-    BOOST_REQUIRE(networks.count("ConstantinopleFix") == 1);
+    BOOST_CHECK(!contains(networks, "Constantinople"));
+    BOOST_CHECK(contains(networks, "ConstantinopleFix"));
 }
 
 BOOST_AUTO_TEST_CASE(translateNetworks_gtHomestead)
