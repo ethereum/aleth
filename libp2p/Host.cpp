@@ -109,6 +109,9 @@ Host::~Host()
 void Host::start()
 {
     DEV_TIMED_FUNCTION_ABOVE(500);
+    if (m_nodeTable)
+        BOOST_THROW_EXCEPTION(NetworkRestartNotSupported());
+
     startWorking();
     while (isWorking() && !haveNetwork())
         this_thread::sleep_for(chrono::milliseconds(10));
@@ -782,7 +785,7 @@ void Host::doWork()
 
 void Host::keepAlivePeers()
 {
-    if (chrono::steady_clock::now() - c_keepAliveInterval < m_lastPing)
+    if (!m_run || chrono::steady_clock::now() - c_keepAliveInterval < m_lastPing)
         return;
 
     RecursiveGuard l(x_sessions);

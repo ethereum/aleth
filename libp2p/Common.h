@@ -76,6 +76,7 @@ class Session;
 
 struct NetworkStartRequired: virtual dev::Exception {};
 struct InvalidPublicIPAddress: virtual dev::Exception {};
+struct NetworkRestartNotSupported : virtual dev::Exception {};
 
 /// The ECDHE agreement failed during RLPx handshake.
 struct ECDHEError: virtual Exception {};

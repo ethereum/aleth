@@ -110,6 +110,18 @@ BOOST_AUTO_TEST_CASE(host)
     BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(attemptNetworkRestart)
+{
+    Host host("Test",
+        NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+    host.start();
+    BOOST_REQUIRE(host.listenPort());
+    BOOST_REQUIRE(host.haveNetwork());
+    host.stop();
+    BOOST_REQUIRE(!host.haveNetwork());
+    BOOST_REQUIRE_THROW(host.start(), NetworkRestartNotSupported);
+}
+
 BOOST_AUTO_TEST_CASE(networkConfig)
 {
     Host save("Test", NetworkConfig(false));
