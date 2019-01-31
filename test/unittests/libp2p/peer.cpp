@@ -171,6 +171,17 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     BOOST_CHECK_EQUAL(host.peerCount(), c_peers);
     BOOST_CHECK_EQUAL(host2.peerCount(), c_peers);
 
+    host.stop();
+
+    // Wait for up to 6 seconds, to give the host time to shut down
+    int const step = 10;
+    for (unsigned i = 0; i < 6000; i += step)
+    {
+        this_thread::sleep_for(chrono::milliseconds(step));
+        if (!host.haveNetwork())
+            break;
+    }
+
     bytes firstHostNetwork(host.saveNetwork());
     bytes secondHostNetwork(host.saveNetwork());	
     BOOST_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));	
