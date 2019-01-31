@@ -309,7 +309,9 @@ private:
     io::io_service m_ioService;											///< IOService for network stuff.
     bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
-    std::unique_ptr<io::deadline_timer> m_timer;					///< Timer which, when network is running, calls run() every c_timerInterval ms.
+    /// Timer which, when network is running, calls run() every c_timerInterval ms.
+    io::deadline_timer m_timer;
+
     static constexpr unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
 
     std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).

@@ -87,6 +87,7 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig co
     m_ioService(2),  // concurrency hint, suggests how many threads it should allow to run
                      // simultaneously
     m_tcp4Acceptor(m_ioService),
+    m_timer(m_ioService),
     m_alias(_alias),
     m_lastPing(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this))
@@ -130,8 +131,8 @@ void Host::stop()
     // such tasks may involve socket reads from Capabilities that maintain references
     // to resources we're about to free.
 
-    // ignore if already stopped/stopping, at the same time,
-    // signal run() to prepare for shutdown and reset m_timer
+    // ignore if already stopped/stopping, at the same time
+    // indicates that the network is shutting down
     if (!m_run.exchange(false))
         return;
 
@@ -731,12 +732,10 @@ void Host::run(boost::system::error_code const& _ec)
     m_timer.async_wait(runcb);
 }
 
+// Called after thread has been started to perform additional class-specific state
+// initialization (e.g. start capability threads, start TCP listener, and kick off timers)
 void Host::startedWorking()
 {
-    // Called after thread has been started to perform additional class-specific state
-    // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
-    asserts(!m_timer);
-
     // start capability threads (ready for incoming connections)
     for (auto const& h: m_capabilities)
         h.second->onStarting();
@@ -766,8 +765,6 @@ void Host::startedWorking()
 
     LOG(m_logger) << "p2p.started id: " << id();
 
-    // create deadline timer
-    m_timer.reset(new io::deadline_timer(m_ioService));
     m_run = true;
 
     run(boost::system::error_code());
