@@ -139,6 +139,10 @@ void Host::stop()
     // and also stops blocking worker thread, allowing worker thread to exit
     m_ioService.stop();
 
+    // Close the node table socket and cancel deadline timers. This effectively stops
+    // discovery, even during subsequent io service polling
+    nodeTable()->stop();
+
     // stop worker thread
     if (isWorking())
         stopWorking();
@@ -414,7 +418,7 @@ void Host::runAcceptor()
 {
     assert(m_listenPort > 0);
 
-    if (m_run && !m_accepting)
+    if (m_tcp4Acceptor.is_open() && !m_accepting)
     {
         cnetdetails << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic
                     << ")";
@@ -424,7 +428,7 @@ void Host::runAcceptor()
         m_tcp4Acceptor.async_accept(socket->ref(), [=](boost::system::error_code ec)
         {
             m_accepting = false;
-            if (ec || !m_run)
+            if (ec || !m_tcp4Acceptor.is_open())
             {
                 socket->close();
                 return;
@@ -719,12 +723,12 @@ void Host::run(boost::system::error_code const& _ec)
         }
     }
 
-    if (m_run)
-    {
-        auto runcb = [this](boost::system::error_code const& error) { run(error); };
-        m_timer->expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
-        m_timer->async_wait(runcb);
-    }
+    if (!m_run)
+        return;
+
+    auto runcb = [this](boost::system::error_code const& error) { run(error); };
+    m_timer.expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
+    m_timer.async_wait(runcb);
 }
 
 void Host::startedWorking()
@@ -816,7 +820,6 @@ void Host::disconnectLatePeers()
 
 bytes Host::saveNetwork() const
 {
-    constexpr uint16_t numItems = 3;
     if (haveNetwork())
     {
         cwarn << "Cannot save network configuration while network is still running.";
@@ -871,7 +874,7 @@ bytes Host::saveNetwork() const
     }
     // else: TODO: use previous configuration if available
 
-    RLPStream ret(numItems);
+    RLPStream ret(3);
     ret << dev::p2p::c_protocolVersion << m_alias.secret().ref();
     ret.appendList(count);
     if (!!count)
