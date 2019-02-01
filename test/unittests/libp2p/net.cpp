@@ -7,6 +7,7 @@
 #include <libdevcore/concurrent_queue.h>
 #include <libdevcrypto/Common.h>
 #include <libp2p/NodeTable.h>
+#include <libp2p/Host.h>
 #include <libp2p/Network.h>
 #include <libp2p/UDP.h>
 #include <test/tools/libtesteth/Options.h>
@@ -437,6 +438,46 @@ BOOST_AUTO_TEST_CASE(kademlia)
     node.populate(1);
     this_thread::sleep_for(chrono::milliseconds(2000));
     BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
+}
+
+BOOST_AUTO_TEST_CASE(hostNoCapsNoTcpListener)
+{
+	Host host("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+	host.start();
+	auto const hostPort = host.listenPort();
+	BOOST_REQUIRE(hostPort);
+
+	// Wait 6 seconds for network to come up
+	uint32_t const step = 10;
+	for (unsigned i = 0; i < 6000; i += step)
+	{
+		this_thread::sleep_for(chrono::milliseconds(step));
+		if (host.haveNetwork())
+			break;
+	}
+
+	BOOST_REQUIRE(host.haveNetwork());
+	BOOST_REQUIRE(host.caps().empty());
+
+	{
+		// Verify no TCP listener on the host port
+		io::io_service ioService;
+		bi::tcp::acceptor tcp4Acceptor{ioService};
+		auto const tcpListenPort = Network::tcp4Listen(tcp4Acceptor, NetworkConfig{ c_localhostIp, hostPort});
+		BOOST_REQUIRE_EQUAL(tcpListenPort, hostPort);
+	}
+
+	// Verify discovery is running - ping the host and verify a response is received
+	TestUDPSocketHost nodeSocketHost;
+	nodeSocketHost.start();
+	auto const sourcePort = nodeSocketHost.port;
+	NodeIPEndpoint sourceEndpoint{ boost::asio::ip::address::from_string(c_localhostIp), sourcePort, sourcePort };
+	NodeIPEndpoint targetEndpoint { boost::asio::ip::address::from_string(c_localhostIp), hostPort, hostPort};
+	PingNode ping(sourceEndpoint, targetEndpoint);
+	ping.sign(KeyPair::create().secret());
+	nodeSocketHost.socket->send(ping);
+
+	BOOST_REQUIRE_NO_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)));
 }
 
 BOOST_AUTO_TEST_CASE(udpOnce)
