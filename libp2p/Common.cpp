@@ -83,8 +83,8 @@ bool isLocalHostAddress(bi::address const& _addressToCheck)
         {bi::address_v6::from_string("::1")},
         {bi::address_v6::from_string("::")}
     };
-    
-    return find(c_rejectAddresses.begin(), c_rejectAddresses.end(), _addressToCheck) != c_rejectAddresses.end();
+
+    return c_rejectAddresses.find(_addressToCheck) != c_rejectAddresses.end();
 }
 
 bool isLocalHostAddress(std::string const& _addressToCheck)
@@ -144,7 +144,7 @@ void DeadlineOps::reap()
         return;
 
     Guard l(x_timers);
-    std::vector<DeadlineOp>::iterator t = m_timers.begin();
+    auto t = m_timers.begin();
     while (t != m_timers.end())
         if (t->expired())
         {
@@ -180,7 +180,8 @@ NodeSpec::NodeSpec(string const& _user)
     //      enode://6332792c4a00e3e4ee0926ed89e0d27ef985424d97b6a45bf0f23e51f0dcb5e66b875777506458aea7af6f9e4ffb69f43f3778ee73c81ed9d34c51c4b16b0b0f@52.232.243.152:30305
     //      enode://6332792c4a00e3e4ee0926ed89e0d27ef985424d97b6a45bf0f23e51f0dcb5e66b875777506458aea7af6f9e4ffb69f43f3778ee73c81ed9d34c51c4b16b0b0f@52.232.243.152:30305?discport=30303
     //      enode://6332792c4a00e3e4ee0926ed89e0d27ef985424d97b6a45bf0f23e51f0dcb5e66b875777506458aea7af6f9e4ffb69f43f3778ee73c81ed9d34c51c4b16b0b0f@52.232.243.152
-    const char* peerPattern = "^(enode://)([\\dabcdef]{128})@(\\d{1,3}.\\d{1,3}.\\d{1,3}.\\d{1,3})((:\\d{2,5})(\\?discport=(\\d{2,5}))?)?$";
+    const char* peerPattern =
+        R"(^(enode://)([\dabcdef]{128})@(\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})((:\d{2,5})(\?discport=(\d{2,5}))?)?$)";
     regex rx(peerPattern);
     smatch match;
 
@@ -200,7 +201,7 @@ NodeSpec::NodeSpec(string const& _user)
 
 NodeIPEndpoint NodeSpec::nodeIPEndpoint() const
 {
-    return NodeIPEndpoint(Network::resolveHost(m_address).address(), m_udpPort, m_tcpPort);
+    return {Network::resolveHost(m_address).address(), m_udpPort, m_tcpPort};
 }
 
 std::string NodeSpec::enode() const
@@ -214,7 +215,7 @@ std::string NodeSpec::enode() const
         else
             ret += ":" + toString(m_tcpPort);
     }
-   
+
     if (m_id)
         return "enode://" + m_id.hex() + "@" + ret;
     return ret;
@@ -227,7 +228,7 @@ bool NodeSpec::isValid() const
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
 {
     _out << _ep.address() << ':' << _ep.tcpPort();
-    // It rarely happens that TCP and UDP are different, so safe space
+    // It rarely happens that TCP and UDP are different, so save space
     // and only display the UDP one when different.
     if (_ep.udpPort() != _ep.tcpPort())
         _out << ":udp" << _ep.udpPort();
