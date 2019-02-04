@@ -529,7 +529,7 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
         return;
     }
 
-    addNodeToNodeTable(Node(_node, _endpoint), 0, 0);
+    addNodeToNodeTable(Node(_node, _endpoint));
 }
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
@@ -567,20 +567,20 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
     Node const node(_n, _endpoint, PeerType::Required);
     // create or update m_peers entry
     shared_ptr<Peer> p;
-        DEV_RECURSIVE_GUARDED(x_sessions)
-            if (m_peers.count(_n))
-            {
-                p = m_peers[_n];
-                p->endpoint = node.endpoint;
-                p->peerType = PeerType::Required;
-            }
-            else
-            {
-                p = make_shared<Peer>(node);
+    DEV_RECURSIVE_GUARDED(x_sessions)
+    if (m_peers.count(_n))
+    {
+        p = m_peers[_n];
+        p->endpoint = node.endpoint;
+        p->peerType = PeerType::Required;
+    }
+    else
+    {
+        p = make_shared<Peer>(node);
         m_peers[_n] = p;
     }
     // required for discovery
-    addNodeToNodeTable(*p, 0, 0);
+    addNodeToNodeTable(*p);
 }
 
 bool Host::isRequiredPeer(NodeID const& _id) const
@@ -934,7 +934,7 @@ void Host::restoreNetwork(bytesConstRef _b)
                 // node was saved from the node table
                 auto const lastPongReceivedTime = nodeRLP[4].toInt<uint32_t>();
                 auto const lastPongSentTime = nodeRLP[5].toInt<uint32_t>();
-                addNodeToNodeTable(node, lastPongReceivedTime, lastPongSentTime);
+                addKnownNodeToNodeTable(node, lastPongReceivedTime, lastPongSentTime);
             }
             else if (nodeRLP.itemCount() == 11)
             {
@@ -955,7 +955,7 @@ void Host::restoreNetwork(bytesConstRef _b)
                 if (peer->peerType == PeerType::Required)
                     requirePeer(peer->id, node.endpoint);
                 else
-                    addNodeToNodeTable(*peer, 0, 0);
+                    addNodeToNodeTable(*peer);
             }
         }
     }
@@ -987,14 +987,24 @@ Node Host::nodeFromNodeTable(Public const& _id) const
     return nodeTable ? nodeTable->node(_id) : Node{};
 }
 
-bool Host::addNodeToNodeTable(
-    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
+bool Host::addNodeToNodeTable(Node const& _node)
 {
     auto nodeTable = this->nodeTable();
     if (!nodeTable)
         return false;
 
-    nodeTable->addNode(_node, _lastPongReceivedTime, _lastPongSentTime);
+    nodeTable->addNode(_node);
+    return true;
+}
+
+bool Host::addKnownNodeToNodeTable(
+    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
+{
+    auto nt = nodeTable();
+    if (!nt)
+        return false;
+
+    nt->addKnownNode(_node, _lastPongReceivedTime, _lastPongSentTime);
     return true;
 }
 

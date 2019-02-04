@@ -80,59 +80,74 @@ void NodeTable::processEvents()
         m_nodeEventHandler->processEvents();
 }
 
-bool NodeTable::addNode(Node const& _node, uint32_t _lastPongReceivedTime /* = 0 */,
-    uint32_t _lastPongSentTime /* = 0 */)
+bool NodeTable::addNode(Node const& _node)
+{
+    auto entry = nodeEntry(_node.id);
+    if (!entry)
+        entry = createNodeEntry(_node, 0, 0);
+    if (!entry)
+        return false;
+
+    if (!entry->hasValidEndpointProof())
+        ping(*entry);
+
+    return true;
+}
+
+bool NodeTable::addKnownNode(
+    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
+{
+    auto nodeEntry = createNodeEntry(_node, _lastPongReceivedTime, _lastPongSentTime);
+    if (!nodeEntry)
+        return false;
+
+    if (nodeEntry->hasValidEndpointProof())
+        noteActiveNode(nodeEntry->id, nodeEntry->endpoint);
+    else
+        ping(*nodeEntry);
+
+    return true;
+}
+
+std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
+    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
 {
     if (!_node.endpoint || !_node.id)
     {
         LOG(m_logger) << "Supplied node has an invalid endpoint (" << _node.endpoint << ") or id ("
                       << _node.id << "). Skipping adding to node table.";
-        return false;
+        return {};
     }
 
     if (!isAllowedEndpoint(_node.endpoint))
     {
         LOG(m_logger) << "Skip adding node (" << _node.id << ") with unallowed endpoint ("
                       << _node.endpoint << ") to node table";
-        return false;
+        return {};
     }
 
     if (m_hostNodeID == _node.id)
     {
         LOG(m_logger) << "Skip adding self to node table (" << _node.id << ")";
-        return false;
+        return {};
     }
 
-    bool bFound = false;
-    std::shared_ptr<NodeEntry> nodeEntry;
-    DEV_GUARDED(x_nodes)
+    if (nodeEntry(_node.id))
     {
-        auto iterPair = m_allNodes.insert({_node.id, nullptr});
-        if (iterPair.second)  // Node id inserted, construct node entry:
-            iterPair.first->second = make_shared<NodeEntry>(
-                m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
-        else
-            bFound = true;
-        nodeEntry = iterPair.first->second;
-    }
-
-    // Log here to avoid holding the x_nodes mutex longer than necessary
-    if (bFound)
         LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
                       << " is already in the node table";
-    else
-        LOG(m_logger) << (_lastPongReceivedTime > 0 ? "Known" : "Pending") << " node " << _node.id
-                      << "@" << _node.endpoint;
-
-    if (_lastPongReceivedTime > 0)
-    {
-        nodeEntry->endpoint = _node.endpoint; // Update the endpoint in case it has changed
-        noteActiveNode(nodeEntry->id, nodeEntry->endpoint);
+        return {};
     }
-    else if (!nodeEntry->hasValidEndpointProof())
-        ping(*nodeEntry);
 
-    return true;
+    auto nodeEntry = make_shared<NodeEntry>(
+        m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
+    DEV_GUARDED(x_nodes) { m_allNodes.insert({_node.id, nodeEntry}); }
+
+    // Log here to avoid holding the x_nodes mutex longer than necessary
+    LOG(m_logger) << (_lastPongReceivedTime > 0 ? "Known" : "Pending") << " node " << _node.id
+                  << "@" << _node.endpoint;
+
+    return nodeEntry;
 }
 
 list<NodeID> NodeTable::nodes() const

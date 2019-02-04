@@ -215,7 +215,7 @@ struct TestNodeTable: public NodeTable
     {
         // current time as lastPongReceivedTime makes node table think that endpoint proof has been
         // completed
-        return addNode(
+        return NodeTable::addKnownNode(
             _node, RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
     }
 
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     // endpoint
     auto const port = randomPortNumber();
     NodeIPEndpoint newEndpoint{bi::address::from_string(c_localhostIp), port, port };
-    nodeTable->addKnownNode(Node(leastRecentlySeenNodeId, newEndpoint));
+    nodeTable->noteActiveNode(leastRecentlySeenNodeId, newEndpoint);
 
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodeTable->bucketSize(bucketIndex), 16);
@@ -586,7 +586,8 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     // but added as most recently seen with new endpoint
     auto mostRecentNodeEntry = nodeTable->bucketLastNode(bucketIndex);
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNodeId);
-    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint, newEndpoint);
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.address(), newEndpoint.address());
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.udpPort(), newEndpoint.udpPort());
 }
 
 BOOST_AUTO_TEST_CASE(unexpectedPong)
