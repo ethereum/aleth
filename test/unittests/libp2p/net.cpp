@@ -434,10 +434,8 @@ BOOST_AUTO_TEST_CASE(kademlia)
 
 BOOST_AUTO_TEST_CASE(hostNoCapsNoTcpListener)
 {
-	Host host("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+	Host host("Test", NetworkConfig(c_localhostIp, randomPortNumber(), false /* upnp */, true /* allow local discovery */));
 	host.start();
-	auto const hostPort = host.listenPort();
-	BOOST_REQUIRE(hostPort);
 
 	// Wait 6 seconds for network to come up
 	uint32_t const step = 10;
@@ -448,7 +446,9 @@ BOOST_AUTO_TEST_CASE(hostNoCapsNoTcpListener)
 			break;
 	}
 
-	BOOST_REQUIRE(host.haveNetwork());
+    BOOST_REQUIRE(host.haveNetwork());
+    auto const hostPort = host.listenPort();
+    BOOST_REQUIRE(hostPort);
 	BOOST_REQUIRE(host.caps().empty());
 
 	{

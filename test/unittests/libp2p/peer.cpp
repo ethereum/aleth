@@ -131,6 +131,27 @@ BOOST_AUTO_TEST_CASE(networkConfig)
     BOOST_REQUIRE(save.id() == restore.id());
 }
 
+BOOST_AUTO_TEST_CASE(registerCapabilityAfterNetworkStart)
+{
+    Host host("Test",
+        NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+    host.start();
+
+    // Wait for up to 6 seconds, to give the hosts time to get their network connection established
+    int const step = 10;
+    for (unsigned i = 0; i < 6000; i += step)
+    {
+        this_thread::sleep_for(chrono::milliseconds(step));
+
+        if (host.haveNetwork())
+            break;
+    }
+    BOOST_REQUIRE(host.haveNetwork());
+    BOOST_REQUIRE(!host.haveCapabilities());
+    host.registerCapability(make_shared<TestCap>());
+    BOOST_REQUIRE(!host.haveCapabilities());
+}
+
 BOOST_AUTO_TEST_CASE(saveNodes)
 {
     std::list<Host*> hosts;
