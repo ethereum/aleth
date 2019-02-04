@@ -13,7 +13,6 @@ namespace p2p
 using namespace std;
 
 const unsigned c_protocolVersion = 4;
-static_assert(c_protocolVersion == 4, "Replace v3 compatbility with v4 compatibility before updating network version.");
 
 const NodeIPEndpoint UnspecifiedNodeIPEndpoint = NodeIPEndpoint{{}, 0, 0};
 const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
