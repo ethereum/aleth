@@ -245,7 +245,11 @@ namespace p2p
 {
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
 {
-    _out << _ep.address() << " UDP " << _ep.udpPort() << " TCP " << _ep.tcpPort();
+    _out << _ep.address() << ':' << _ep.tcpPort();
+    // It rarely happens that TCP and UDP are different, so safe space
+    // and only display the UDP one when different.
+    if (_ep.udpPort() != _ep.tcpPort())
+        _out << ":udp" << _ep.udpPort();
     return _out;
 }
 }  // namespace p2p
