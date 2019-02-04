@@ -1,54 +1,40 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Common.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "Common.h"
 #include "Network.h"
 #include <regex>
+
+namespace dev
+{
+namespace p2p
+{
 using namespace std;
-using namespace dev;
-using namespace dev::p2p;
 
-const unsigned dev::p2p::c_protocolVersion = 4;
-static_assert(dev::p2p::c_protocolVersion == 4, "Replace v3 compatbility with v4 compatibility before updating network version.");
+const unsigned c_protocolVersion = 4;
+static_assert(c_protocolVersion == 4, "Replace v3 compatbility with v4 compatibility before updating network version.");
 
-const dev::p2p::NodeIPEndpoint dev::p2p::UnspecifiedNodeIPEndpoint = NodeIPEndpoint(bi::address(), 0, 0);
-const dev::p2p::Node dev::p2p::UnspecifiedNode = dev::p2p::Node(NodeID(), UnspecifiedNodeIPEndpoint);
+const NodeIPEndpoint UnspecifiedNodeIPEndpoint = NodeIPEndpoint{{}, 0, 0};
+const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
 
-bool p2p::isPublicAddress(std::string const& _addressToCheck)
+bool isPublicAddress(std::string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false : isPublicAddress(bi::address::from_string(_addressToCheck));
 }
 
-bool p2p::isPublicAddress(bi::address const& _addressToCheck)
+bool isPublicAddress(bi::address const& _addressToCheck)
 {
     return !(isPrivateAddress(_addressToCheck) || isLocalHostAddress(_addressToCheck));
 }
 
-bool p2p::isAllowedAddress(bool _allowLocalDiscovery, bi::address const& _addressToCheck)
+bool isAllowedAddress(bool _allowLocalDiscovery, bi::address const& _addressToCheck)
 {
     return _allowLocalDiscovery ? !_addressToCheck.is_unspecified() :
                                   isPublicAddress(_addressToCheck);
 }
 
-bool p2p::isAllowedEndpoint(bool _allowLocalDiscovery, NodeIPEndpoint const& _endpointToCheck)
+bool isAllowedEndpoint(bool _allowLocalDiscovery, NodeIPEndpoint const& _endpointToCheck)
 {
     return isAllowedAddress(_allowLocalDiscovery, _endpointToCheck.address());
 }
@@ -56,7 +42,7 @@ bool p2p::isAllowedEndpoint(bool _allowLocalDiscovery, NodeIPEndpoint const& _en
 // Helper function to determine if an address falls within one of the reserved ranges
 // For V4:
 // Class A "10.*", Class B "172.[16->31].*", Class C "192.168.*"
-bool p2p::isPrivateAddress(bi::address const& _addressToCheck)
+bool isPrivateAddress(bi::address const& _addressToCheck)
 {
     if (_addressToCheck.is_v4())
     {
@@ -82,13 +68,13 @@ bool p2p::isPrivateAddress(bi::address const& _addressToCheck)
     return false;
 }
 
-bool p2p::isPrivateAddress(std::string const& _addressToCheck)
+bool isPrivateAddress(std::string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false : isPrivateAddress(bi::address::from_string(_addressToCheck));
 }
 
 // Helper function to determine if an address is localhost
-bool p2p::isLocalHostAddress(bi::address const& _addressToCheck)
+bool isLocalHostAddress(bi::address const& _addressToCheck)
 {
     // @todo: ivp6 link-local adresses (macos), ex: fe80::1%lo0
     static const set<bi::address> c_rejectAddresses = {
@@ -101,12 +87,12 @@ bool p2p::isLocalHostAddress(bi::address const& _addressToCheck)
     return find(c_rejectAddresses.begin(), c_rejectAddresses.end(), _addressToCheck) != c_rejectAddresses.end();
 }
 
-bool p2p::isLocalHostAddress(std::string const& _addressToCheck)
+bool isLocalHostAddress(std::string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false : isLocalHostAddress(bi::address::from_string(_addressToCheck));
 }
 
-std::string p2p::reasonOf(DisconnectReason _r)
+std::string reasonOf(DisconnectReason _r)
 {
     switch (_r)
     {
@@ -201,7 +187,7 @@ NodeSpec::NodeSpec(string const& _user)
     m_tcpPort = m_udpPort = c_defaultListenPort;
     if (regex_match(_user, match, rx))
     {
-        m_id = p2p::NodeID(match.str(2));
+        m_id = NodeID(match.str(2));
         m_address = match.str(3);
         if (match[5].matched)
         {
@@ -214,7 +200,7 @@ NodeSpec::NodeSpec(string const& _user)
 
 NodeIPEndpoint NodeSpec::nodeIPEndpoint() const
 {
-    return NodeIPEndpoint(p2p::Network::resolveHost(m_address).address(), m_udpPort, m_tcpPort);
+    return NodeIPEndpoint(Network::resolveHost(m_address).address(), m_udpPort, m_tcpPort);
 }
 
 std::string NodeSpec::enode() const
@@ -238,11 +224,6 @@ bool NodeSpec::isValid() const
 {
     return m_id && !m_address.empty();
 }
-
-namespace dev
-{
-namespace p2p
-{
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
 {
     _out << _ep.address() << ':' << _ep.tcpPort();
@@ -253,5 +234,4 @@ std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
     return _out;
 }
 }  // namespace p2p
-}
-
+}  // namespace dev
