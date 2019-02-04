@@ -136,11 +136,11 @@ thoroughly before making alterations to the code base.
 All development goes in develop branch.
 
 ## Usage
-*Note: The following is the output of ```aleth.exe -h [--help]```*
+*Note: The following is the output of ```./aleth -h [--help]``` on Linux*
 
 ```
 NAME:
-   aleth 1.4.0
+   aleth 1.5.2
 USAGE:
    aleth [options]
 
@@ -157,8 +157,6 @@ CLIENT MODE (default):
   --private <name>                        Use a private chain
   --test                                  Testing mode; disable PoW and provide test rpc interface
   --config <file>                         Configure specialised blockchain using given JSON information
-
-  -o [ --mode ] <full/peer>               Start a full node or a peer node (default: full)
 
   --ipc                                   Enable IPC server (default: on)
   --ipcpath <path>                        Set .ipc socket path (default: data directory)
@@ -179,11 +177,6 @@ CLIENT TRANSACTING:
   --bid <wei>            Set the bid gas price to pay for transactions (default: 20000000000)
   --unsafe-transactions  Allow all transactions to proceed without verification; EXTREMELY UNSAFE
 
-CLIENT MINING:
-  -a [ --address ] <addr>         Set the author (mining payout) address (default: auto)
-  -m [ --mining ] <on/off/number> Enable mining; optionally for a specified number of blocks (default: off)
-  --extra-data arg                Set extra data for the sealed blocks
-
 CLIENT NETWORKING:
   -b [ --bootstrap ]              Connect to the default Ethereum peer servers (default unless --no-discovery used)
   --no-bootstrap                  Do not connect to the default Ethereum peer servers (default only when --no-discovery is used)
@@ -195,25 +188,36 @@ CLIENT NETWORKING:
   -r [ --remote ] <host>(:<port>) Connect to the given remote host (default: none)
   --port <port>                   Connect to the given remote port (default: 30303)
   --network-id <n>                Only connect to other hosts with this network id
-  --peerset <list>                Space delimited list of peers; element format: type:publickey@ipAddress[:port]
+  --allow-local-discovery         Include local addresses in the discovery process. Used for testing purposes.
+  --peerset <list>                Comma delimited list of peers; element format: type:enode://publickey@ipAddress[:port[?discport=port]]
                                           Types:
                                           default     Attempt connection when no other peers are available and pinning is disabled
                                           required    Keep connected at all times
 
+                                          Ports:
+                                          The first port argument is the tcp port used for direct communication among peers. If the second port
+                                          argument isn't supplied, the first port argument will also be the udp port used for node discovery.
+                                          If neither the first nor second port arguments are supplied, a default port of 30303 will be used for
+                                          both peer communication and node discovery.
   --no-discovery                  Disable node discovery; implies --no-bootstrap
   --pin                           Only accept or connect to trusted peers
 
+CLIENT MINING:
+  -a [ --address ] <addr>         Set the author (mining payout) address (default: auto)
+  -m [ --mining ] <on/off/number> Enable mining; optionally for a specified number of blocks (default: off)
+  --extra-data arg                Set extra data for the sealed blocks
+
 BENCHMARKING MODE:
-  -M,--benchmark               Benchmark for mining and exit
+  -M [ --benchmark ]           Benchmark for mining and exit
   --benchmark-warmup <seconds> Set the duration of warmup for the benchmark tests (default: 3)
   --benchmark-trial <seconds>  Set the duration for each trial for the benchmark tests (default: 3)
   --benchmark-trials <n>       Set the number of trials for the benchmark tests (default: 5)
 
 MINING CONFIGURATION:
-  -C,--cpu                   When mining, use the CPU
-  -t, --mining-threads <n>   Limit number of CPU/GPU miners to n (default: use everything available on selected platform)
-  --current-block            Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory
-  --disable-submit-hashrate  When mining, don't submit hashrate to node
+  -C [ --cpu ]                 When mining, use the CPU
+  -t [ --mining-threads ] <n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform)
+  --current-block <n>          Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory
+  --disable-submit-hashrate    When mining, don't submit hashrate to node
 
 IMPORT/EXPORT MODES:
   -I [ --import ] <file>      Import blocks from file
@@ -226,6 +230,10 @@ IMPORT/EXPORT MODES:
   --download-snapshot <path>  Download Parity Warp Sync snapshot data to the specified path
   --import-snapshot <path>    Import blockchain and state data from the Parity Warp Sync snapshot
 
+DATABASE OPTIONS:
+  --db <name> (=leveldb)                   Select database implementation. Available options are: leveldb, rocksdb, memorydb.
+  --db-path <path> (=$HOME/.ethereum) Database path (for non-memory database options)
+
 VM OPTIONS:
   --vm <name>|<path> (=legacy) Select VM implementation. Available options are: interpreter, legacy.
   --evmc  <option>=<value>     EVMC option
@@ -236,9 +244,9 @@ LOGGING OPTIONS:
   --log-exclude-channels <channel_list> Space-separated list of the log channels to hide.
 
 GENERAL OPTIONS:
-  -d [ --db-path ] <path> Load database from path (default: C:\Users\nilse\AppData\Roaming\Ethereum)
-  -V [ --version ]        Show the version and exit
-  -h [ --help ]           Show this help message and exit
+  -d [ --data-dir ] <path> Load configuration files and keystore from path (default: /home/mwo2/.ethereum)
+  -V [ --version ]         Show the version and exit
+  -h [ --help ]            Show this help message and exit
 ```
 
 ## Mining
