@@ -232,7 +232,7 @@ IMPORT/EXPORT MODES:
 
 DATABASE OPTIONS:
   --db <name> (=leveldb)                   Select database implementation. Available options are: leveldb, rocksdb, memorydb.
-  --db-path <path> (=/home/mwo2/.ethereum) Database path (for non-memory database options)
+  --db-path <path> (=$HOME/.ethereum) Database path (for non-memory database options)
 
 VM OPTIONS:
   --vm <name>|<path> (=legacy) Select VM implementation. Available options are: interpreter, legacy.
