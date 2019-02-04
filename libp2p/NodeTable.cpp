@@ -76,12 +76,6 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     }
 }
 
-NodeTable::~NodeTable()
-{
-    m_socket->disconnect();
-    m_timers.stop();
-}
-
 void NodeTable::processEvents()
 {
     if (m_nodeEventHandler)

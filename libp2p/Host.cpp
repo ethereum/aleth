@@ -87,6 +87,7 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig co
     m_ioService(2),  // concurrency hint, suggests how many threads it should allow to run
                      // simultaneously
     m_tcp4Acceptor(m_ioService),
+    m_timer(m_ioService),
     m_alias(_alias),
     m_lastPing(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this))
@@ -109,6 +110,9 @@ Host::~Host()
 void Host::start()
 {
     DEV_TIMED_FUNCTION_ABOVE(500);
+    if (m_nodeTable)
+        BOOST_THROW_EXCEPTION(NetworkRestartNotSupported());
+
     startWorking();
     while (isWorking() && !haveNetwork())
         this_thread::sleep_for(chrono::milliseconds(10));
@@ -127,16 +131,18 @@ void Host::stop()
     // such tasks may involve socket reads from Capabilities that maintain references
     // to resources we're about to free.
 
-    // ignore if already stopped/stopping, at the same time,
-    // signal run() to prepare for shutdown and reset m_timer
+    // ignore if already stopped/stopping, at the same time
+    // indicates that the network is shutting down
     if (!m_run.exchange(false))
         return;
 
-    {
-        unique_lock<mutex> l(x_runTimer);
-        while (m_timer)
-            m_timerReset.wait(l);
-    }
+    // stopping io service allows running manual network operations for shutdown
+    // and also stops blocking worker thread, allowing worker thread to exit
+    m_ioService.stop();
+
+    // Close the node table socket and cancel deadline timers. This effectively stops
+    // discovery, even during subsequent io service polling
+    nodeTable()->stop();
 
     // stop worker thread
     if (isWorking())
@@ -199,12 +205,6 @@ void Host::doneWorking()
         // poll so that peers send out disconnect packets
         m_ioService.poll();
     }
-
-    // stop network (again; helpful to call before subsequent reset())
-    m_ioService.stop();
-
-    // reset network (allows reusing ioservice in future)
-    m_ioService.reset();
 
     // finally, clear out peers (in case they're lingering)
     RecursiveGuard l(x_sessions);
@@ -419,7 +419,7 @@ void Host::runAcceptor()
 {
     assert(m_listenPort > 0);
 
-    if (m_run && !m_accepting)
+    if (m_tcp4Acceptor.is_open() && !m_accepting)
     {
         cnetdetails << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic
                     << ")";
@@ -429,7 +429,7 @@ void Host::runAcceptor()
         m_tcp4Acceptor.async_accept(socket->ref(), [=](boost::system::error_code ec)
         {
             m_accepting = false;
-            if (ec || !m_run)
+            if (ec || !m_tcp4Acceptor.is_open())
             {
                 socket->close();
                 return;
@@ -665,25 +665,10 @@ size_t Host::peerCount() const
     return retCount;
 }
 
-void Host::run(boost::system::error_code const&)
+void Host::run(boost::system::error_code const& _ec)
 {
-    if (!m_run)
-    {
-        // reset NodeTable
-        DEV_GUARDED(x_nodeTable)
-            m_nodeTable.reset();
-
-        // stopping io service allows running manual network operations for shutdown
-        // and also stops blocking worker thread, allowing worker thread to exit
-        m_ioService.stop();
-
-        // resetting timer signals network that nothing else can be scheduled to run
-        DEV_GUARDED(x_runTimer)
-            m_timer.reset();
-
-        m_timerReset.notify_all();
+    if (!m_run || _ec)
         return;
-    }
 
     if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
         nodeTable->processEvents();
@@ -739,27 +724,18 @@ void Host::run(boost::system::error_code const&)
         }
     }
 
+    if (!m_run)
+        return;
+
     auto runcb = [this](boost::system::error_code const& error) { run(error); };
-    m_timer->expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
-    m_timer->async_wait(runcb);
+    m_timer.expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
+    m_timer.async_wait(runcb);
 }
 
+// Called after thread has been started to perform additional class-specific state
+// initialization (e.g. start capability threads, start TCP listener, and kick off timers)
 void Host::startedWorking()
 {
-    // Called after thread has been started to perform additional class-specific state
-    // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
-    asserts(!m_timer);
-
-    {
-        // prevent m_run from being set to true at same time as set to false by stop()
-        // don't release mutex until m_timer is set so in case stop() is called at same
-        // time, stop will wait on m_timer and graceful network shutdown.
-        Guard l(x_runTimer);
-        // create deadline timer
-        m_timer.reset(new io::deadline_timer(m_ioService));
-        m_run = true;
-    }
-
     // start capability threads (ready for incoming connections)
     for (auto const& h: m_capabilities)
         h.second->onStarting();
@@ -789,6 +765,8 @@ void Host::startedWorking()
 
     LOG(m_logger) << "p2p.started id: " << id();
 
+    m_run = true;
+
     run(boost::system::error_code());
 }
 
@@ -808,7 +786,7 @@ void Host::doWork()
 
 void Host::keepAlivePeers()
 {
-    if (chrono::steady_clock::now() - c_keepAliveInterval < m_lastPing)
+    if (!m_run || chrono::steady_clock::now() - c_keepAliveInterval < m_lastPing)
         return;
 
     RecursiveGuard l(x_sessions);
@@ -839,6 +817,12 @@ void Host::disconnectLatePeers()
 
 bytes Host::saveNetwork() const
 {
+    if (haveNetwork())
+    {
+        cwarn << "Cannot save network configuration while network is still running.";
+        return bytes{};
+    }
+
     std::list<Peer> peers;
     {
         RecursiveGuard l(x_sessions);

@@ -110,6 +110,18 @@ BOOST_AUTO_TEST_CASE(host)
     BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(attemptNetworkRestart)
+{
+    Host host("Test",
+        NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+    host.start();
+    BOOST_REQUIRE(host.listenPort());
+    BOOST_REQUIRE(host.haveNetwork());
+    host.stop();
+    BOOST_REQUIRE(!host.haveNetwork());
+    BOOST_REQUIRE_THROW(host.start(), NetworkRestartNotSupported);
+}
+
 BOOST_AUTO_TEST_CASE(networkConfig)
 {
     Host save("Test", NetworkConfig(false));
@@ -158,6 +170,17 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
     BOOST_CHECK_EQUAL(host.peerCount(), c_peers);
     BOOST_CHECK_EQUAL(host2.peerCount(), c_peers);
+
+    host.stop();
+
+    // Wait for up to 6 seconds, to give the host time to shut down
+    int const step = 10;
+    for (unsigned i = 0; i < 6000; i += step)
+    {
+        this_thread::sleep_for(chrono::milliseconds(step));
+        if (!host.haveNetwork())
+            break;
+    }
 
     bytes firstHostNetwork(host.saveNetwork());
     bytes secondHostNetwork(host.saveNetwork());	

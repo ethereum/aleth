@@ -125,10 +125,16 @@ public:
     /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
     NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
         bool _enabled = true, bool _allowLocalDiscovery = false);
-    ~NodeTable();
+    ~NodeTable() { stop(); }
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
     static int distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
+
+    void stop()
+    {
+        m_socket->disconnect();
+        m_timers.stop();
+    }
 
     /// Set event handler for NodeEntryAdded and NodeEntryDropped events.
     void setEventHandler(NodeTableEventHandler* _handler) { m_nodeEventHandler.reset(_handler); }
