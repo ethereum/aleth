@@ -19,7 +19,8 @@ const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
 
 bool isPublicAddress(std::string const& _addressToCheck)
 {
-    return _addressToCheck.empty() ? false : isPublicAddress(bi::address::from_string(_addressToCheck));
+    return _addressToCheck.empty() ? false :
+                                     isPublicAddress(bi::address::from_string(_addressToCheck));
 }
 
 bool isPublicAddress(bi::address const& _addressToCheck)
@@ -60,8 +61,11 @@ bool isPrivateAddress(bi::address const& _addressToCheck)
         bi::address_v6::bytes_type bytesToCheck = v6Address.to_bytes();
         if (bytesToCheck[0] == 0xfd && bytesToCheck[1] == 0)
             return true;
-        if (!bytesToCheck[0] && !bytesToCheck[1] && !bytesToCheck[2] && !bytesToCheck[3] && !bytesToCheck[4] && !bytesToCheck[5] && !bytesToCheck[6] && !bytesToCheck[7]
-                 && !bytesToCheck[8] && !bytesToCheck[9] && !bytesToCheck[10] && !bytesToCheck[11] && !bytesToCheck[12] && !bytesToCheck[13] && !bytesToCheck[14] && (bytesToCheck[15] == 0 || bytesToCheck[15] == 1))
+        if (!bytesToCheck[0] && !bytesToCheck[1] && !bytesToCheck[2] && !bytesToCheck[3] &&
+            !bytesToCheck[4] && !bytesToCheck[5] && !bytesToCheck[6] && !bytesToCheck[7] &&
+            !bytesToCheck[8] && !bytesToCheck[9] && !bytesToCheck[10] && !bytesToCheck[11] &&
+            !bytesToCheck[12] && !bytesToCheck[13] && !bytesToCheck[14] &&
+            (bytesToCheck[15] == 0 || bytesToCheck[15] == 1))
             return true;
     }
     return false;
@@ -69,7 +73,8 @@ bool isPrivateAddress(bi::address const& _addressToCheck)
 
 bool isPrivateAddress(std::string const& _addressToCheck)
 {
-    return _addressToCheck.empty() ? false : isPrivateAddress(bi::address::from_string(_addressToCheck));
+    return _addressToCheck.empty() ? false :
+                                     isPrivateAddress(bi::address::from_string(_addressToCheck));
 }
 
 // Helper function to determine if an address is localhost
@@ -80,7 +85,7 @@ bool isLocalHostAddress(bi::address const& _addressToCheck)
         {bi::address_v4::from_string(c_localhostIp)},
         {bi::address_v4::from_string("0.0.0.0")},
         {bi::address_v6::from_string("::1")},
-        {bi::address_v6::from_string("::")}
+        {bi::address_v6::from_string("::")},
     };
 
     return c_rejectAddresses.find(_addressToCheck) != c_rejectAddresses.end();
@@ -88,27 +93,42 @@ bool isLocalHostAddress(bi::address const& _addressToCheck)
 
 bool isLocalHostAddress(std::string const& _addressToCheck)
 {
-    return _addressToCheck.empty() ? false : isLocalHostAddress(bi::address::from_string(_addressToCheck));
+    return _addressToCheck.empty() ? false :
+                                     isLocalHostAddress(bi::address::from_string(_addressToCheck));
 }
 
 std::string reasonOf(DisconnectReason _r)
 {
     switch (_r)
     {
-    case DisconnectRequested: return "Disconnect was requested.";
-    case TCPError: return "Low-level TCP communication error.";
-    case BadProtocol: return "Data format error.";
-    case UselessPeer: return "Peer had no use for this node.";
-    case TooManyPeers: return "Peer had too many connections.";
-    case DuplicatePeer: return "Peer was already connected.";
-    case IncompatibleProtocol: return "Peer protocol versions are incompatible.";
-    case NullIdentity: return "Null identity given.";
-    case ClientQuit: return "Peer is exiting.";
-    case UnexpectedIdentity: return "Unexpected identity given.";
-    case LocalIdentity: return "Connected to ourselves.";
-    case UserReason: return "Subprotocol reason.";
-    case NoDisconnect: return "(No disconnect has happened.)";
-    default: return "Unknown reason.";
+    case DisconnectRequested:
+        return "Disconnect was requested.";
+    case TCPError:
+        return "Low-level TCP communication error.";
+    case BadProtocol:
+        return "Data format error.";
+    case UselessPeer:
+        return "Peer had no use for this node.";
+    case TooManyPeers:
+        return "Peer had too many connections.";
+    case DuplicatePeer:
+        return "Peer was already connected.";
+    case IncompatibleProtocol:
+        return "Peer protocol versions are incompatible.";
+    case NullIdentity:
+        return "Null identity given.";
+    case ClientQuit:
+        return "Peer is exiting.";
+    case UnexpectedIdentity:
+        return "Unexpected identity given.";
+    case LocalIdentity:
+        return "Connected to ourselves.";
+    case UserReason:
+        return "Subprotocol reason.";
+    case NoDisconnect:
+        return "(No disconnect has happened.)";
+    default:
+        return "Unknown reason.";
     }
 }
 
@@ -153,23 +173,18 @@ void DeadlineOps::reap()
         else
             t++;
 
-    m_timers.emplace_back(m_io, m_reapIntervalMs, [this](boost::system::error_code const& ec)
-    {
+    m_timers.emplace_back(m_io, m_reapIntervalMs, [this](boost::system::error_code const& ec) {
         if (!ec && !m_stopped)
             reap();
     });
 }
 
-Node::Node(Node const& _original):
-    id(_original.id),
-    endpoint(_original.endpoint),
-    peerType(_original.peerType.load())
+Node::Node(Node const& _original)
+  : id(_original.id), endpoint(_original.endpoint), peerType(_original.peerType.load())
 {}
 
-Node::Node(NodeSpec const& _s, PeerType _p):
-    id(_s.id()),
-    endpoint(_s.nodeIPEndpoint()),
-    peerType(_p)
+Node::Node(NodeSpec const& _s, PeerType _p)
+  : id(_s.id()), endpoint(_s.nodeIPEndpoint()), peerType(_p)
 {}
 
 NodeSpec::NodeSpec(string const& _user)
