@@ -140,7 +140,7 @@ inline bool isPermanentProblem(DisconnectReason _r)
 /// @returns the string form of the given disconnection reason.
 std::string reasonOf(DisconnectReason _r);
 
-using CapDesc = std::pair<std::string, u256>;
+using CapDesc = std::pair<std::string, unsigned>;
 using CapDescSet = std::set<CapDesc>;
 using CapDescs = std::vector<CapDesc>;
 

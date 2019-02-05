@@ -87,13 +87,12 @@ public:
         std::shared_ptr<SnapshotStorageFace> _snapshotStorage);
 
     std::string name() const override { return "par"; }
-    u256 version() const override { return c_WarpProtocolVersion; }
+    unsigned version() const override { return c_WarpProtocolVersion; }
     unsigned messageCount() const override { return WarpSubprotocolPacketCount; }
 
     void onStarting() override;
     void onStopping() override;
 
-    unsigned protocolVersion() const { return c_WarpProtocolVersion; }
     u256 networkId() const { return m_networkId; }
 
     void onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion) override;

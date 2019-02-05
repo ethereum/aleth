@@ -54,7 +54,7 @@ public:
     WarpPeerObserver(WarpCapability& _host, BlockChain const& _blockChain,
         boost::filesystem::path const& _snapshotPath)
       : m_host(_host),
-        m_hostProtocolVersion(_host.protocolVersion()),
+        m_hostProtocolVersion(_host.version()),
         m_hostNetworkId(_host.networkId()),
         m_hostGenesisHash(_blockChain.genesisHash()),
         m_daoForkBlock(_blockChain.sealEngine()->chainParams().daoHardforkBlock),

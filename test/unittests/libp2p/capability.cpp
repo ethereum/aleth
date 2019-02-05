@@ -21,7 +21,7 @@ public:
     explicit TestCapability(Host const& _host) : Worker("test"), m_host(_host) {}
 
     std::string name() const override { return "test"; }
-    u256 version() const override { return 2; }
+    unsigned version() const override { return 2; }
     unsigned messageCount() const override { return UserPacket + 1; }
 
     void onStarting() override {}

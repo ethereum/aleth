@@ -141,7 +141,7 @@ public:
     /// Might be useful when you want to handle several subprotocol versions with a single
     /// capability class.
     void registerCapability(std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name,
-        u256 const& _version);
+        unsigned _version);
 
     bool haveCapability(CapDesc const& _name) const { return m_capabilities.count(_name) != 0; }
     bool haveCapabilities() const { return !caps().empty(); }

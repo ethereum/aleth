@@ -496,14 +496,14 @@ void Host::registerCapability(std::shared_ptr<CapabilityFace> const& _cap)
 }
 
 void Host::registerCapability(
-    std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name, u256 const& _version)
+    std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name, unsigned _version)
 {
     if (haveNetwork())
     {
         cwarn << "Capabilities must be registered before the network is started";
         return;
     }
-    m_capabilities[CapDesc{_name, _version}] = _cap;
+    m_capabilities[{_name, _version}] = _cap;
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)
