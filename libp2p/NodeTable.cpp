@@ -82,9 +82,15 @@ void NodeTable::processEvents()
 
 bool NodeTable::addNode(Node const& _node)
 {
-    auto entry = nodeEntry(_node.id);
-    if (!entry)
-        entry = createNodeEntry(_node, 0, 0);
+    shared_ptr<NodeEntry> entry;
+    DEV_GUARDED(x_nodes)
+    {
+        auto const it = m_allNodes.find(_node.id);
+        if (it == m_allNodes.end())
+            entry = createNodeEntry(_node, 0, 0);
+        else
+            entry = it->second;
+    }
     if (!entry)
         return false;
 
@@ -97,14 +103,18 @@ bool NodeTable::addNode(Node const& _node)
 bool NodeTable::addKnownNode(
     Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
 {
-    auto nodeEntry = createNodeEntry(_node, _lastPongReceivedTime, _lastPongSentTime);
-    if (!nodeEntry)
+    shared_ptr<NodeEntry> entry;
+    DEV_GUARDED(x_nodes)
+    {
+        entry = createNodeEntry(_node, _lastPongReceivedTime, _lastPongSentTime);
+    }
+    if (!entry)
         return false;
 
-    if (nodeEntry->hasValidEndpointProof())
-        noteActiveNode(nodeEntry->id, nodeEntry->endpoint);
+    if (entry->hasValidEndpointProof())
+        noteActiveNode(entry->id, entry->endpoint);
     else
-        ping(*nodeEntry);
+        ping(*entry);
 
     return true;
 }
@@ -132,7 +142,7 @@ std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
         return {};
     }
 
-    if (nodeEntry(_node.id))
+    if (m_allNodes.find(_node.id) != m_allNodes.end())
     {
         LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
                       << " is already in the node table";
@@ -141,9 +151,8 @@ std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
 
     auto nodeEntry = make_shared<NodeEntry>(
         m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
-    DEV_GUARDED(x_nodes) { m_allNodes.insert({_node.id, nodeEntry}); }
+    m_allNodes.insert({_node.id, nodeEntry});
 
-    // Log here to avoid holding the x_nodes mutex longer than necessary
     LOG(m_logger) << (_lastPongReceivedTime > 0 ? "Known" : "Pending") << " node " << _node.id
                   << "@" << _node.endpoint;
 
