@@ -434,42 +434,42 @@ BOOST_AUTO_TEST_CASE(kademlia)
 
 BOOST_AUTO_TEST_CASE(hostNoCapsNoTcpListener)
 {
-	Host host("Test", NetworkConfig(c_localhostIp, randomPortNumber(), false /* upnp */, true /* allow local discovery */));
-	host.start();
+    Host host("Test", NetworkConfig(c_localhostIp, randomPortNumber(), false /* upnp */, true /* allow local discovery */));
+    host.start();
 
-	// Wait 6 seconds for network to come up
-	uint32_t const step = 10;
-	for (unsigned i = 0; i < 6000; i += step)
-	{
-		this_thread::sleep_for(chrono::milliseconds(step));
-		if (host.haveNetwork())
-			break;
-	}
+    // Wait 6 seconds for network to come up
+    uint32_t const step = 10;
+    for (unsigned i = 0; i < 6000; i += step)
+    {
+        this_thread::sleep_for(chrono::milliseconds(step));
+        if (host.haveNetwork())
+            break;
+    }
 
     BOOST_REQUIRE(host.haveNetwork());
     auto const hostPort = host.listenPort();
     BOOST_REQUIRE(hostPort);
-	BOOST_REQUIRE(host.caps().empty());
+    BOOST_REQUIRE(host.caps().empty());
 
-	{
-		// Verify no TCP listener on the host port
-		io::io_service ioService;
-		bi::tcp::acceptor tcp4Acceptor{ioService};
-		auto const tcpListenPort = Network::tcp4Listen(tcp4Acceptor, NetworkConfig{ c_localhostIp, hostPort});
-		BOOST_REQUIRE_EQUAL(tcpListenPort, hostPort);
-	}
+    {
+        // Verify no TCP listener on the host port
+        io::io_service ioService;
+        bi::tcp::acceptor tcp4Acceptor{ioService};
+        auto const tcpListenPort = Network::tcp4Listen(tcp4Acceptor, NetworkConfig{ c_localhostIp, hostPort});
+        BOOST_REQUIRE_EQUAL(tcpListenPort, hostPort);
+    }
 
-	// Verify discovery is running - ping the host and verify a response is received
-	TestUDPSocketHost nodeSocketHost;
-	nodeSocketHost.start();
-	auto const sourcePort = nodeSocketHost.port;
-	NodeIPEndpoint sourceEndpoint{ boost::asio::ip::address::from_string(c_localhostIp), sourcePort, sourcePort };
-	NodeIPEndpoint targetEndpoint { boost::asio::ip::address::from_string(c_localhostIp), hostPort, hostPort};
-	PingNode ping(sourceEndpoint, targetEndpoint);
-	ping.sign(KeyPair::create().secret());
-	nodeSocketHost.socket->send(ping);
+    // Verify discovery is running - ping the host and verify a response is received
+    TestUDPSocketHost nodeSocketHost;
+    nodeSocketHost.start();
+    auto const sourcePort = nodeSocketHost.port;
+    NodeIPEndpoint sourceEndpoint{ boost::asio::ip::address::from_string(c_localhostIp), sourcePort, sourcePort };
+    NodeIPEndpoint targetEndpoint { boost::asio::ip::address::from_string(c_localhostIp), hostPort, hostPort};
+    PingNode ping(sourceEndpoint, targetEndpoint);
+    ping.sign(KeyPair::create().secret());
+    nodeSocketHost.socket->send(ping);
 
-	BOOST_REQUIRE_NO_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)));
+    BOOST_REQUIRE_NO_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)));
 }
 
 BOOST_AUTO_TEST_CASE(udpOnce)
