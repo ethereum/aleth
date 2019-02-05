@@ -142,12 +142,8 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     for (unsigned i = 0; i < c_nodes; ++i)
     {
         Host* h = new Host("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
-<<<<<<< HEAD
-        h->setIdealPeerCount(10);		
-=======
         h->setIdealPeerCount(10);
         h->registerCapability(make_shared<TestCap>());
->>>>>>> 4619d8b2e... Peer test
         h->start(); // starting host is required so listenport is available
         while (!h->haveNetwork())
             this_thread::sleep_for(chrono::milliseconds(c_step));
