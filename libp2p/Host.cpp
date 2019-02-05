@@ -503,7 +503,7 @@ void Host::registerCapability(
         cwarn << "Capabilities must be registered before the network is started";
         return;
     }
-    m_capabilities[std::make_pair(_name, _version)] = _cap;
+    m_capabilities[CapDesc{_name, _version}] = _cap;
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)
