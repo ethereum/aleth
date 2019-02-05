@@ -169,14 +169,17 @@ public:
 
     NodeIPEndpoint() = default;
     NodeIPEndpoint(bi::address _addr, uint16_t _udp, uint16_t _tcp)
-      : m_address(_addr), m_udpPort(_udp), m_tcpPort(_tcp)
+      : m_address(std::move(_addr)), m_udpPort(_udp), m_tcpPort(_tcp)
     {}
-    NodeIPEndpoint(RLP const& _r) { interpretRLP(_r); }
+    explicit NodeIPEndpoint(RLP const& _r) { interpretRLP(_r); }
 
-    operator bi::udp::endpoint() const { return bi::udp::endpoint(m_address, m_udpPort); }
-    operator bi::tcp::endpoint() const { return bi::tcp::endpoint(m_address, m_tcpPort); }
+    operator bi::udp::endpoint() const { return {m_address, m_udpPort}; }
+    operator bi::tcp::endpoint() const { return {m_address, m_tcpPort}; }
 
-    operator bool() const { return !m_address.is_unspecified() && m_udpPort > 0 && m_tcpPort > 0; }
+    explicit operator bool() const
+    {
+        return !m_address.is_unspecified() && m_udpPort > 0 && m_tcpPort > 0;
+    }
 
     bool operator==(NodeIPEndpoint const& _cmp) const {
         return m_address == _cmp.m_address && m_udpPort == _cmp.m_udpPort &&
@@ -191,7 +194,7 @@ public:
 
     bi::address address() const { return m_address; }
 
-    void setAddress(bi::address _addr) { m_address = _addr; }
+    void setAddress(bi::address _addr) { m_address = std::move(_addr); }
 
     uint16_t udpPort() const { return m_udpPort; }
 
