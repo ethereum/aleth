@@ -12,8 +12,6 @@ namespace p2p
 {
 using namespace std;
 
-const unsigned c_protocolVersion = 4;
-
 const NodeIPEndpoint UnspecifiedNodeIPEndpoint = NodeIPEndpoint{{}, 0, 0};
 const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
 

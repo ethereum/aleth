@@ -52,7 +52,7 @@ namespace p2p
 {
 
 /// Peer network protocol version.
-extern const unsigned c_protocolVersion;
+constexpr unsigned c_protocolVersion = 4;
 
 class NodeIPEndpoint;
 class Node;
