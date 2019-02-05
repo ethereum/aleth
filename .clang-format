@@ -52,6 +52,10 @@ IncludeCategories:
   - Regex:           '^".*'
     Priority:        1
 
+  # Third party libraries:
+  - Regex:           '^<cryptopp/.*'
+    Priority:        70
+
   # Standard library extensions / common generic purpose libraries:
   - Regex:           '^<boost/.*'
     Priority:        80
