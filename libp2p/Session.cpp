@@ -99,20 +99,6 @@ int Session::rating() const
     return m_peer->m_rating;
 }
 
-template <class T> vector<T> randomSelection(vector<T> const& _t, unsigned _n)
-{
-    if (_t.size() <= _n)
-        return _t;
-    vector<T> ret = _t;
-    while (ret.size() > _n)
-    {
-        auto i = ret.begin();
-        advance(i, rand() % ret.size());
-        ret.erase(i);
-    }
-    return ret;
-}
-
 bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
 {
     m_lastReceived = chrono::steady_clock::now();
