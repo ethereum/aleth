@@ -122,21 +122,6 @@ enum DisconnectReason
     NoDisconnect = 0xffff
 };
 
-inline bool isPermanentProblem(DisconnectReason _r)
-{
-    switch (_r)
-    {
-    case DuplicatePeer:
-    case IncompatibleProtocol:
-    case NullIdentity:
-    case UnexpectedIdentity:
-    case LocalIdentity:
-        return true;
-    default:
-        return false;
-    }
-}
-
 /// @returns the string form of the given disconnection reason.
 std::string reasonOf(DisconnectReason _r);
 
