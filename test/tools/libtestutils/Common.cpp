@@ -52,11 +52,16 @@ boost::filesystem::path dev::test::getTestPath()
     return boost::filesystem::path(testPath);
 }
 
-int dev::test::randomNumber()
+int dev::test::randomNumber(int _min, int _max)
 {
     static std::mt19937 randomGenerator(utcTime());
     randomGenerator.seed(std::random_device()());
-    return std::uniform_int_distribution<int>(1)(randomGenerator);
+    return std::uniform_int_distribution<int>(_min, _max)(randomGenerator);
+}
+
+unsigned short dev::test::randomPortNumber(unsigned short _min, unsigned short _max)
+{
+    return static_cast<unsigned short>(randomNumber(_min, _max));
 }
 
 Json::Value dev::test::loadJsonFromFile(fs::path const& _path)

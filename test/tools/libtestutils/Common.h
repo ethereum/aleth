@@ -33,7 +33,8 @@ namespace test
 {
 
 boost::filesystem::path getTestPath();
-int randomNumber();
+int randomNumber(int _min = 1, int _max = INT_MAX);
+unsigned short randomPortNumber(unsigned short _min = 1024, unsigned short _max = USHRT_MAX);
 Json::Value loadJsonFromFile(boost::filesystem::path const& _path);
 boost::filesystem::path toTestFilePath(std::string const& _filename);
 boost::filesystem::path getRandomPath();
