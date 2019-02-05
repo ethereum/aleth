@@ -57,19 +57,18 @@ BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)
 BOOST_AUTO_TEST_CASE(host)
 {
     Host host1("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+    host1.registerCapability(make_shared<TestCap>());
     host1.start();
     auto host1port = host1.listenPort();
     BOOST_REQUIRE(host1port);
 
     Host host2("Test", NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+    host2.registerCapability(make_shared<TestCap>());
     host2.start();
     auto host2port = host2.listenPort();
     BOOST_REQUIRE(host2port);
     
     BOOST_REQUIRE_NE(host1port, host2port);
-
-    host1.registerCapability(make_shared<TestCap>());
-    host2.registerCapability(make_shared<TestCap>());
 
     auto node2 = host2.id();
     int const step = 10;
@@ -113,7 +112,7 @@ BOOST_AUTO_TEST_CASE(host)
 BOOST_AUTO_TEST_CASE(attemptNetworkRestart)
 {
     Host host("Test",
-        NetworkConfig(c_localhostIp, 0, false /* upnp */, true /* allow local discovery */));
+        NetworkConfig(c_localhostIp, randomPortNumber(), false /* upnp */, true /* allow local discovery */));
     host.start();
     BOOST_REQUIRE(host.listenPort());
     BOOST_REQUIRE(host.haveNetwork());
@@ -236,6 +235,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     NetworkConfig prefs2(localhost, 0, false /* upnp */, true /* allow local discovery */);
     Host host1("Test", prefs1);
     Host host2("Test", prefs2);
+    host1.registerCapability(make_shared<TestCap>());
+    host2.registerCapability(make_shared<TestCap>());
     host1.start();
     host2.start();
     auto node2 = host2.id();
@@ -244,9 +245,6 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     BOOST_REQUIRE(port1);
     BOOST_REQUIRE(port2);
     BOOST_REQUIRE_NE(port1, port2);
-
-    host1.registerCapability(make_shared<TestCap>());
-    host2.registerCapability(make_shared<TestCap>());
 
     host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
