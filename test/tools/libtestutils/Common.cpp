@@ -61,7 +61,9 @@ int dev::test::randomNumber(int _min, int _max)
 
 unsigned short dev::test::randomPortNumber(unsigned short _min, unsigned short _max)
 {
-    return static_cast<unsigned short>(randomNumber(_min, _max));
+    static std::mt19937 randomGenerator(utcTime());
+    randomGenerator.seed(std::random_device()());
+    return std::uniform_int_distribution<unsigned short>(_min, _max)(randomGenerator);
 }
 
 Json::Value dev::test::loadJsonFromFile(fs::path const& _path)
