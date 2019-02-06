@@ -245,10 +245,9 @@ public:
     Node(Public _publicKey, NodeIPEndpoint const& _ip, PeerType _peerType = PeerType::Optional): id(_publicKey), endpoint(_ip), peerType(_peerType) {}
     Node(NodeSpec const& _s, PeerType _peerType = PeerType::Optional);
 
-    virtual NodeID const& address() const { return id; }
-    virtual Public const& publicKey() const { return id; }
-    
-    virtual operator bool() const { return (bool)id; }
+    NodeID const& address() const { return id; }
+
+    explicit operator bool() const { return bool{id}; }
 
     // TODO: make private, give accessors and rename m_...
     NodeID id;
