@@ -144,6 +144,7 @@ public:
         u256 const& _version);
 
     bool haveCapability(CapDesc const& _name) const { return m_capabilities.count(_name) != 0; }
+    bool haveCapabilities() const { return !caps().empty(); }
     CapDescs caps() const { CapDescs ret; for (auto const& i: m_capabilities) ret.push_back(i.first); return ret; }
 
     /// Add a potential peer.

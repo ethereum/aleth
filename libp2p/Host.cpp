@@ -151,6 +151,11 @@ void Host::stop()
 
 void Host::doneWorking()
 {
+    // Return early if we have no capabilities since there's nothing to do. We've already stopped
+    // the io service and cleared the node table timers which means discovery is no longer running.
+    if (!haveCapabilities())
+        return;
+
     // reset ioservice (cancels all timers and allows manually polling network, below)
     m_ioService.reset();
 
@@ -421,8 +426,7 @@ void Host::runAcceptor()
 
     if (m_tcp4Acceptor.is_open() && !m_accepting)
     {
-        cnetdetails << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic
-                    << ")";
+        cnetdetails << "Listening on local port " << m_listenPort;
         m_accepting = true;
 
         auto socket = make_shared<RLPXSocket>(m_ioService);
@@ -494,6 +498,11 @@ void Host::registerCapability(std::shared_ptr<CapabilityFace> const& _cap)
 void Host::registerCapability(
     std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name, u256 const& _version)
 {
+    if (haveNetwork())
+    {
+        cwarn << "Capabilities must be registered before the network is started";
+        return;
+    }
     m_capabilities[std::make_pair(_name, _version)] = _cap;
 }
 
@@ -529,6 +538,12 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
     {
         cwarn << "Network not running so node (" << _n << ") with endpoint (" << _endpoint
               << ") cannot be added as a required peer";
+        return;
+    }
+    if (!haveCapabilities())
+    {
+        cwarn << "No capabilities registered so node (" << _n << ") with endpoint (" << _endpoint
+            << ") cannot be added as a required peer";
         return;
     }
 
@@ -590,7 +605,15 @@ void Host::relinquishPeer(NodeID const& _node)
 void Host::connect(std::shared_ptr<Peer> const& _p)
 {
     if (!m_run)
+    {
+        cwarn << "Network not running so cannot connect to peer " << _p->id << "@" << _p->address();
         return;
+    }
+    if (!haveCapabilities())
+    {
+        cwarn << "No capabilities registered so cannot connect to peer " << _p->id << "@" << _p->address();
+        return;
+    }
     
     if (havePeerSession(_p->id))
     {
@@ -740,17 +763,22 @@ void Host::startedWorking()
     for (auto const& h: m_capabilities)
         h.second->onStarting();
     
-    // try to open acceptor (todo: ipv6)
-    int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
-    if (port > 0)
+    if (haveCapabilities())
     {
-        m_listenPort = port;
-        determinePublic();
-        runAcceptor();
+        // try to open acceptor (todo: ipv6)
+        int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
+        if (port > 0)
+        {
+            m_listenPort = port;
+            runAcceptor();
+        }
+        else
+            LOG(m_logger) << "p2p.start.notice id: " << id() << " TCP Listen port is invalid or unavailable.";
     }
     else
-        LOG(m_logger) << "p2p.start.notice id: " << id() << " TCP Listen port is invalid or unavailable.";
+        m_listenPort = m_netConfig.listenPort;
 
+    determinePublic();
     auto nodeTable = make_shared<NodeTable>(
         m_ioService,
         m_alias,
@@ -763,11 +791,14 @@ void Host::startedWorking()
         m_nodeTable = nodeTable;
     restoreNetwork(&m_restoreNetwork);
 
-    LOG(m_logger) << "p2p.started id: " << id();
-
     m_run = true;
-
-    run(boost::system::error_code());
+    if (haveCapabilities())
+    {
+        LOG(m_logger) << "devp2p started. Node id: " << id();
+        run(boost::system::error_code());
+    }
+    else
+        LOG(m_logger) << "No registered capabilities, devp2p not started.";
 }
 
 void Host::doWork()

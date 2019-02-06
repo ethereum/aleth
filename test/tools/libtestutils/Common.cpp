@@ -1,36 +1,24 @@
-/*
-    This file is part of cpp-ethereum.
- 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
- 
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
- 
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
- */
-/** @file Common.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2015
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-#include <random>
+#include "Common.h"
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/FileSystem.h>
 #include <test/tools/libtesteth/Options.h>
-#include "Common.h"
 #include <boost/filesystem.hpp>
+#include <random>
 
 using namespace std;
 using namespace dev;
 using namespace dev::test;
 namespace fs = boost::filesystem;
+
+namespace
+{
+mt19937_64 g_randomGenerator(random_device{}());
+}
 
 boost::filesystem::path dev::test::getTestPath()
 {
@@ -52,11 +40,14 @@ boost::filesystem::path dev::test::getTestPath()
     return boost::filesystem::path(testPath);
 }
 
-int dev::test::randomNumber()
+int dev::test::randomNumber(int _min, int _max)
 {
-    static std::mt19937 randomGenerator(utcTime());
-    randomGenerator.seed(std::random_device()());
-    return std::uniform_int_distribution<int>(1)(randomGenerator);
+    return std::uniform_int_distribution<int>{_min, _max}(g_randomGenerator);
+}
+
+unsigned short dev::test::randomPortNumber(unsigned short _min, unsigned short _max)
+{
+    return std::uniform_int_distribution<unsigned short>{_min, _max}(g_randomGenerator);
 }
 
 Json::Value dev::test::loadJsonFromFile(fs::path const& _path)
