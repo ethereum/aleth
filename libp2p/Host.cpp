@@ -848,21 +848,11 @@ bytes Host::saveNetwork() const
         return bytes{};
     }
 
-    std::list<Peer> peers;
-    {
-        RecursiveGuard l(x_sessions);
-        for (auto p: m_peers)
-            if (p.second)
-                peers.push_back(*p.second);
-    }
-    peers.sort();
-
     RLPStream network;
     int count = 0;
     if (auto nodeTable = this->nodeTable())
     {
         auto state = nodeTable->snapshot();
-        state.sort();
         for (auto const& entry : state)
         {
             network.appendList(6);
@@ -870,6 +860,14 @@ bytes Host::saveNetwork() const
             network << entry.id << entry.lastPongReceivedTime << entry.lastPongSentTime;
             count++;
         }
+    }
+
+    std::vector<Peer> peers;
+    {
+        RecursiveGuard l(x_sessions);
+        for (auto p: m_peers)
+            if (p.second)
+                peers.push_back(*p.second);
     }
 
     for (auto const& p: peers)
