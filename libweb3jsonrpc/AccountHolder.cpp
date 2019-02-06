@@ -1,40 +1,23 @@
-/*
-	This file is part of cpp-ethereum.
-
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file AccountHolder.cpp
- * @authors:
- *   Christian R <c@ethdev.com>
- *   Lefteris Karapetsas <lefteris@ethdev.com>
- * @date 2015
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "AccountHolder.h"
-#include <random>
 #include <libdevcore/Guards.h>
-#include <libethereum/Client.h>
 #include <libethcore/KeyManager.h>
-
+#include <libethereum/Client.h>
+#include <random>
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
 vector<TransactionSkeleton> g_emptyQueue;
-static std::mt19937 g_randomNumberGenerator(utcTime());
-static Mutex x_rngMutex;
+namespace
+{
+mt19937_64 g_randomGenerator(random_device{}());
+Mutex x_rngMutex;
+}  // namespace
 
 vector<Address> AccountHolder::allAccounts() const
 {
@@ -59,14 +42,14 @@ Address AccountHolder::defaultTransactAccount() const
 
 int AccountHolder::addProxyAccount(const Address& _account)
 {
-	Guard g(x_rngMutex);
-	int id = std::uniform_int_distribution<int>(1)(g_randomNumberGenerator);
-	id = int(u256(FixedHash<32>(sha3(bytesConstRef((byte*)(&id), sizeof(int) / sizeof(byte))))));
-	if (isProxyAccount(_account) || id == 0 || m_transactionQueues.count(id))
-		return 0;
-	m_proxyAccounts.insert(make_pair(_account, id));
-	m_transactionQueues[id].first = _account;
-	return id;
+    Guard g(x_rngMutex);
+    int id = std::uniform_int_distribution<int>(1)(g_randomGenerator);
+    id = int(u256(FixedHash<32>(sha3(bytesConstRef((byte*)(&id), sizeof(int) / sizeof(byte))))));
+    if (isProxyAccount(_account) || id == 0 || m_transactionQueues.count(id))
+        return 0;
+    m_proxyAccounts.insert(make_pair(_account, id));
+    m_transactionQueues[id].first = _account;
+    return id;
 }
 
 bool AccountHolder::removeProxyAccount(unsigned _id)

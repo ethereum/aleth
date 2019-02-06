@@ -1,14 +1,14 @@
 // Aleth: Ethereum C++ client, tools and libraries.
-// Copyright 2018 Aleth Authors.
+// Copyright 2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
-#include <random>
+#include "Common.h"
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/FileSystem.h>
 #include <test/tools/libtesteth/Options.h>
-#include "Common.h"
 #include <boost/filesystem.hpp>
+#include <random>
 
 using namespace std;
 using namespace dev;
@@ -17,7 +17,7 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-mt19937 g_randomGenerator(chrono::system_clock::now().time_since_epoch().count());
+mt19937_64 g_randomGenerator(random_device{}());
 }
 
 boost::filesystem::path dev::test::getTestPath()
@@ -42,13 +42,11 @@ boost::filesystem::path dev::test::getTestPath()
 
 int dev::test::randomNumber(int _min, int _max)
 {
-    g_randomGenerator.seed(random_device{}());
     return std::uniform_int_distribution<int>{_min, _max}(g_randomGenerator);
 }
 
 unsigned short dev::test::randomPortNumber(unsigned short _min, unsigned short _max)
 {
-    g_randomGenerator.seed(random_device{}());
     return std::uniform_int_distribution<unsigned short>{_min, _max}(g_randomGenerator);
 }
 
