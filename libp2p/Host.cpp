@@ -426,8 +426,7 @@ void Host::runAcceptor()
 
     if (m_tcp4Acceptor.is_open() && !m_accepting)
     {
-        cnetdetails << "Listening on local port " << m_listenPort << " (public: " << m_tcpPublic
-                    << ")";
+        cnetdetails << "Listening on local port " << m_listenPort;
         m_accepting = true;
 
         auto socket = make_shared<RLPXSocket>(m_ioService);
@@ -771,18 +770,15 @@ void Host::startedWorking()
         if (port > 0)
         {
             m_listenPort = port;
-            determinePublic();
             runAcceptor();
         }
         else
             LOG(m_logger) << "p2p.start.notice id: " << id() << " TCP Listen port is invalid or unavailable.";
     }
     else
-    {
         m_listenPort = m_netConfig.listenPort;
-        determinePublic();
-    }
 
+    determinePublic();
     auto nodeTable = make_shared<NodeTable>(
         m_ioService,
         m_alias,
