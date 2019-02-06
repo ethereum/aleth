@@ -32,6 +32,11 @@ using namespace dev;
 using namespace dev::test;
 namespace fs = boost::filesystem;
 
+namespace
+{
+mt19937 g_randomGenerator(chrono::system_clock::now().time_since_epoch().count());
+}
+
 boost::filesystem::path dev::test::getTestPath()
 {
     if (!Options::get().testpath.empty())
@@ -54,16 +59,14 @@ boost::filesystem::path dev::test::getTestPath()
 
 int dev::test::randomNumber(int _min, int _max)
 {
-    static std::mt19937 randomGenerator(utcTime());
-    randomGenerator.seed(std::random_device()());
-    return std::uniform_int_distribution<int>(_min, _max)(randomGenerator);
+    g_randomGenerator.seed(random_device{}());
+    return std::uniform_int_distribution<int>{_min, _max}(g_randomGenerator);
 }
 
 unsigned short dev::test::randomPortNumber(unsigned short _min, unsigned short _max)
 {
-    static std::mt19937 randomGenerator(utcTime());
-    randomGenerator.seed(std::random_device()());
-    return std::uniform_int_distribution<unsigned short>(_min, _max)(randomGenerator);
+    g_randomGenerator.seed(random_device{}());
+    return std::uniform_int_distribution<unsigned short>{_min, _max}(g_randomGenerator);
 }
 
 Json::Value dev::test::loadJsonFromFile(fs::path const& _path)
