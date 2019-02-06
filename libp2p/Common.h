@@ -260,6 +260,8 @@ public:
     std::atomic<PeerType> peerType{PeerType::Optional};
 };
 
+boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& _log, const Node& _node);
+
 class DeadlineOps
 {
     // Boost deadline timer wrapper which provides thread-safety

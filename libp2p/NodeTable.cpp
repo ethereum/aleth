@@ -153,8 +153,7 @@ std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
         m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
     m_allNodes.insert({_node.id, nodeEntry});
 
-    LOG(m_logger) << (_lastPongReceivedTime > 0 ? "Known" : "Pending") << " node " << _node.id
-                  << "@" << _node.endpoint;
+    LOG(m_logger) << (_lastPongReceivedTime > 0 ? "Known " : "Pending ") << _node;
 
     return nodeEntry;
 }
