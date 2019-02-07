@@ -568,16 +568,19 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
     // create or update m_peers entry
     shared_ptr<Peer> p;
     DEV_RECURSIVE_GUARDED(x_sessions)
-    if (m_peers.count(_n))
     {
-        p = m_peers[_n];
-        p->endpoint = node.endpoint;
-        p->peerType = PeerType::Required;
-    }
-    else
-    {
-        p = make_shared<Peer>(node);
-        m_peers[_n] = p;
+        auto it = m_peers.find(_n);
+        if (it != m_peers.end())
+        {
+            p = it->second;
+            p->endpoint = node.endpoint;
+            p->peerType = PeerType::Required;
+        }
+        else
+        {
+            p = make_shared<Peer>(node);
+            m_peers[_n] = p;
+        }
     }
     // required for discovery
     addNodeToNodeTable(*p);
@@ -849,17 +852,19 @@ bytes Host::saveNetwork() const
     }
 
     RLPStream network;
-    int count = 0;
-    if (auto nodeTable = this->nodeTable())
+    list<NodeEntry> nodeTableEntries;
+    DEV_GUARDED(x_nodeTable)
     {
-        auto state = nodeTable->snapshot();
-        for (auto const& entry : state)
-        {
-            network.appendList(6);
-            entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
-            network << entry.id << entry.lastPongReceivedTime << entry.lastPongSentTime;
-            count++;
-        }
+        if (m_nodeTable)
+            nodeTableEntries = m_nodeTable->snapshot();
+    }
+    int count = 0;
+    for (auto const& entry : nodeTableEntries)
+    {
+        network.appendList(6);
+        entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
+        network << entry.id << entry.lastPongReceivedTime << entry.lastPongSentTime;
+        count++;
     }
 
     std::vector<Peer> peers;
@@ -912,14 +917,14 @@ void Host::restoreNetwork(bytesConstRef _b)
 
     RecursiveGuard l(x_sessions);
     RLP r(_b);
-    unsigned protocolVersion = r[0].toInt<unsigned>();
+    auto const protocolVersion = r[0].toInt<unsigned>();
     if (r.itemCount() > 0 && r[0].isInt() && protocolVersion >= dev::p2p::c_protocolVersion)
     {
         // r[0] = version
         // r[1] = key
         // r[2] = nodes
 
-        for (auto nodeRLP : r[2])
+        for (auto const& nodeRLP : r[2])
         {
             // nodeRLP[0] - IP address
             // todo: ipv6
@@ -991,8 +996,7 @@ bool Host::addNodeToNodeTable(Node const& _node)
     if (!nodeTable)
         return false;
 
-    nodeTable->addNode(_node);
-    return true;
+    return nodeTable->addNode(_node);
 }
 
 bool Host::addKnownNodeToNodeTable(
@@ -1002,8 +1006,7 @@ bool Host::addKnownNodeToNodeTable(
     if (!nt)
         return false;
 
-    nt->addKnownNode(_node, _lastPongReceivedTime, _lastPongSentTime);
-    return true;
+    return nt->addKnownNode(_node, _lastPongReceivedTime, _lastPongSentTime);
 }
 
 void Host::forEachPeer(
