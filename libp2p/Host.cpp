@@ -788,9 +788,9 @@ void Host::startedWorking()
     nodeTable->setEventHandler(new HostNodeTableHandler(*this));
     DEV_GUARDED(x_nodeTable)
         m_nodeTable = nodeTable;
-    restoreNetwork(&m_restoreNetwork);
-
+    
     m_run = true;
+    restoreNetwork(&m_restoreNetwork);
     if (haveCapabilities())
     {
         LOG(m_logger) << "devp2p started. Node id: " << id();
