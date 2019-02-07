@@ -546,46 +546,43 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
         return;
     }
 
-    {
-        Guard l(x_requiredPeers);
-        m_requiredPeers.insert(_n);
-    }
-
     if (_n == id())
     {
         cnetdetails << "Ignoring the request to connect to self " << _n;
         return;
     }
 
-    Node node(_n, _endpoint, PeerType::Required);
-    if (_n)
+    if (!_n)
     {
-        // create or update m_peers entry
-        shared_ptr<Peer> p;
-        DEV_RECURSIVE_GUARDED(x_sessions)
-            if (m_peers.count(_n))
-            {
-                p = m_peers[_n];
-                p->endpoint = node.endpoint;
-                p->peerType = PeerType::Required;
-            }
-            else
-            {
-                p = make_shared<Peer>(node);
-                m_peers[_n] = p;
-            }
-        // required for discovery
-        addNodeToNodeTable(*p, NodeTable::NodeRelation::Unknown);
+        cnetdetails << "Ignoring the request to connect to null node id.";
+        return;
     }
-    else
+
     {
-        if (!addNodeToNodeTable(node))
-            return;
-        scheduleExecution(600, [this, _n]() {
-            if (auto n = nodeFromNodeTable(_n))
-                requirePeer(n.id, n.endpoint);
-        });
+        Guard l(x_requiredPeers);
+        m_requiredPeers.insert(_n);
     }
+
+    Node const node(_n, _endpoint, PeerType::Required);
+    // create or update m_peers entry
+    shared_ptr<Peer> p;
+    DEV_RECURSIVE_GUARDED(x_sessions)
+    {
+        auto it = m_peers.find(_n);
+        if (it != m_peers.end())
+        {
+            p = it->second;
+            p->endpoint = node.endpoint;
+            p->peerType = PeerType::Required;
+        }
+        else
+        {
+            p = make_shared<Peer>(node);
+            m_peers[_n] = p;
+        }
+    }
+    // required for discovery
+    addNodeToNodeTable(*p);
 }
 
 bool Host::isRequiredPeer(NodeID const& _id) const
@@ -853,17 +850,30 @@ bytes Host::saveNetwork() const
         return bytes{};
     }
 
-    std::list<Peer> peers;
+    RLPStream network;
+    list<NodeEntry> nodeTableEntries;
+    DEV_GUARDED(x_nodeTable)
+    {
+        if (m_nodeTable)
+            nodeTableEntries = m_nodeTable->snapshot();
+    }
+    int count = 0;
+    for (auto const& entry : nodeTableEntries)
+    {
+        network.appendList(6);
+        entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
+        network << entry.id << entry.lastPongReceivedTime << entry.lastPongSentTime;
+        count++;
+    }
+
+    std::vector<Peer> peers;
     {
         RecursiveGuard l(x_sessions);
         for (auto p: m_peers)
             if (p.second)
                 peers.push_back(*p.second);
     }
-    peers.sort();
 
-    RLPStream network;
-    int count = 0;
     for (auto const& p: peers)
     {
         // todo: ipv6
@@ -887,20 +897,6 @@ bytes Host::saveNetwork() const
         }
     }
 
-    if (auto nodeTable = this->nodeTable())
-    {
-        auto state = nodeTable->snapshot();
-        state.sort();
-        for (auto const& entry: state)
-        {
-            network.appendList(4);
-            entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
-            network << entry.id;
-            count++;
-        }
-    }
-    // else: TODO: use previous configuration if available
-
     RLPStream ret(3);
     ret << dev::p2p::c_protocolVersion << m_alias.secret().ref();
     ret.appendList(count);
@@ -918,76 +914,50 @@ void Host::restoreNetwork(bytesConstRef _b)
     if (!isStarted())
         BOOST_THROW_EXCEPTION(NetworkStartRequired());
 
-    if (m_dropPeers)
-        return;
-    
     RecursiveGuard l(x_sessions);
     RLP r(_b);
-    unsigned fileVersion = r[0].toInt<unsigned>();
-    if (r.itemCount() > 0 && r[0].isInt() && fileVersion >= dev::p2p::c_protocolVersion - 1)
+    auto const protocolVersion = r[0].toInt<unsigned>();
+    if (r.itemCount() > 0 && r[0].isInt() && protocolVersion >= dev::p2p::c_protocolVersion)
     {
         // r[0] = version
         // r[1] = key
         // r[2] = nodes
 
-        for (auto i: r[2])
+        for (auto const& nodeRLP : r[2])
         {
+            // nodeRLP[0] - IP address
             // todo: ipv6
-            if (i[0].itemCount() != 4 && i[0].size() != 4)
+            if (nodeRLP[0].itemCount() != 4 && nodeRLP[0].size() != 4)
                 continue;
 
-            if (i.itemCount() == 4 || i.itemCount() == 11)
+            Node node((NodeID)nodeRLP[3], NodeIPEndpoint(nodeRLP));
+            if (nodeRLP.itemCount() == 6 && isAllowedEndpoint(node.endpoint))
             {
-                Node n((NodeID)i[3], NodeIPEndpoint(i));
-                if (i.itemCount() == 4 && isAllowedEndpoint(n.endpoint))
-                {
-                    addNodeToNodeTable(n);
-                }
-                else if (i.itemCount() == 11)
-                {
-                    n.peerType = i[4].toInt<bool>() ? PeerType::Required : PeerType::Optional;
-                    if (!isAllowedEndpoint(n.endpoint) && n.peerType == PeerType::Optional)
-                        continue;
-                    shared_ptr<Peer> p = make_shared<Peer>(n);
-                    p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
-                    p->m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[6].toInt<unsigned>()));
-                    p->m_failedAttempts = i[7].toInt<unsigned>();
-                    p->m_lastDisconnect = (DisconnectReason)i[8].toInt<unsigned>();
-                    p->m_score = (int)i[9].toInt<unsigned>();
-                    p->m_rating = (int)i[10].toInt<unsigned>();
-                    m_peers[p->id] = p;
-                    if (p->peerType == PeerType::Required)
-                        requirePeer(p->id, n.endpoint);
-                    else 
-                        addNodeToNodeTable(*p.get(), NodeTable::NodeRelation::Known);
-                }
+                // node was saved from the node table
+                auto const lastPongReceivedTime = nodeRLP[4].toInt<uint32_t>();
+                auto const lastPongSentTime = nodeRLP[5].toInt<uint32_t>();
+                addKnownNodeToNodeTable(node, lastPongReceivedTime, lastPongSentTime);
             }
-            else if (i.itemCount() == 3 || i.itemCount() == 10)
+            else if (nodeRLP.itemCount() == 11)
             {
-                Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()),
-                                         i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
-                if (i.itemCount() == 3 && isAllowedEndpoint(n.endpoint))
-                    addNodeToNodeTable(n);
-                else if (i.itemCount() == 10)
-                {
-                    n.peerType = i[3].toInt<bool>() ? PeerType::Required : PeerType::Optional;
-                    if (!isAllowedEndpoint(n.endpoint) && n.peerType == PeerType::Optional)
-                        continue;
-                    shared_ptr<Peer> p = make_shared<Peer>(n);
-                    p->m_lastConnected =
-                        chrono::system_clock::time_point(chrono::seconds(i[4].toInt<unsigned>()));
-                    p->m_lastAttempted =
-                        chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
-                    p->m_failedAttempts = i[6].toInt<unsigned>();
-                    p->m_lastDisconnect = (DisconnectReason)i[7].toInt<unsigned>();
-                    p->m_score = (int)i[8].toInt<unsigned>();
-                    p->m_rating = (int)i[9].toInt<unsigned>();
-                    m_peers[p->id] = p;
-                    if (p->peerType == PeerType::Required)
-                        requirePeer(p->id, n.endpoint);
-                    else
-                        addNodeToNodeTable(*p.get(), NodeTable::NodeRelation::Known);
-                }
+                // node was saved from the connected peer list
+                node.peerType = nodeRLP[4].toInt<bool>() ? PeerType::Required : PeerType::Optional;
+                if (!isAllowedEndpoint(node.endpoint) && node.peerType == PeerType::Optional)
+                    continue;
+                shared_ptr<Peer> peer = make_shared<Peer>(node);
+                peer->m_lastConnected =
+                    chrono::system_clock::time_point(chrono::seconds(nodeRLP[5].toInt<unsigned>()));
+                peer->m_lastAttempted =
+                    chrono::system_clock::time_point(chrono::seconds(nodeRLP[6].toInt<unsigned>()));
+                peer->m_failedAttempts = nodeRLP[7].toInt<unsigned>();
+                peer->m_lastDisconnect = (DisconnectReason)nodeRLP[8].toInt<unsigned>();
+                peer->m_score = (int)nodeRLP[9].toInt<unsigned>();
+                peer->m_rating = (int)nodeRLP[10].toInt<unsigned>();
+                m_peers[peer->id] = peer;
+                if (peer->peerType == PeerType::Required)
+                    requirePeer(peer->id, node.endpoint);
+                else
+                    addNodeToNodeTable(*peer);
             }
         }
     }
@@ -1019,14 +989,23 @@ Node Host::nodeFromNodeTable(Public const& _id) const
     return nodeTable ? nodeTable->node(_id) : Node{};
 }
 
-bool Host::addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation /* = NodeTable::NodeRelation::Unknown */)
+bool Host::addNodeToNodeTable(Node const& _node)
 {
     auto nodeTable = this->nodeTable();
     if (!nodeTable)
         return false;
 
-    nodeTable->addNode(_node, _relation);
-    return true;
+    return nodeTable->addNode(_node);
+}
+
+bool Host::addKnownNodeToNodeTable(
+    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
+{
+    auto nt = nodeTable();
+    if (!nt)
+        return false;
+
+    return nt->addKnownNode(_node, _lastPongReceivedTime, _lastPongSentTime);
 }
 
 void Host::forEachPeer(

@@ -191,8 +191,6 @@ public:
 
     NetworkConfig const& networkConfig() const { return m_netConfig; }
 
-    void setNetworkConfig(NetworkConfig const& _p, bool _dropPeers = false) { m_dropPeers = _dropPeers; auto had = isStarted(); if (had) stop(); m_netConfig = _p; if (had) start(); }
-
     /// Start network. @threadsafe
     void start();
 
@@ -285,7 +283,10 @@ private:
 
     bool nodeTableHasNode(Public const& _id) const;
     Node nodeFromNodeTable(Public const& _id) const;
-    bool addNodeToNodeTable(Node const& _node, NodeTable::NodeRelation _relation = NodeTable::NodeRelation::Unknown);
+    bool addNodeToNodeTable(Node const& _node);
+
+    bool addKnownNodeToNodeTable(
+        Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime);
 
     /// Determines if a node with the supplied endpoint should be included in or restored from the
     /// serialized network configuration data
@@ -350,7 +351,6 @@ private:
 
     std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
     bool m_accepting = false;
-    bool m_dropPeers = false;
 
     ReputationManager m_repMan;
 

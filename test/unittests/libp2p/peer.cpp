@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     
     for (auto i: r[2])
     {
-        BOOST_REQUIRE(i.itemCount() == 4 || i.itemCount() == 11);
+        BOOST_REQUIRE(i.itemCount() == 6 || i.itemCount() == 11);
         BOOST_REQUIRE(i[0].size() == 4 || i[0].size() == 16);
     }
 

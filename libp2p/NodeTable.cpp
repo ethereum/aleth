@@ -44,8 +44,6 @@ inline bool operator==(
     return !_weak.owner_before(_shared) && !_shared.owner_before(_weak);
 }
 
-NodeEntry::NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw): Node(_pubk, _gw), distance(NodeTable::distance(_src, _pubk)) {}
-
 NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
     bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID(_alias.pub()),
@@ -82,62 +80,83 @@ void NodeTable::processEvents()
         m_nodeEventHandler->processEvents();
 }
 
-bool NodeTable::addNode(Node const& _node, NodeRelation _relation)
+bool NodeTable::addNode(Node const& _node)
+{
+    shared_ptr<NodeEntry> entry;
+    DEV_GUARDED(x_nodes)
+    {
+        auto const it = m_allNodes.find(_node.id);
+        if (it == m_allNodes.end())
+            entry = createNodeEntry(_node, 0, 0);
+        else
+            entry = it->second;
+    }
+    if (!entry)
+        return false;
+
+    if (!entry->hasValidEndpointProof())
+        ping(*entry);
+
+    return true;
+}
+
+bool NodeTable::addKnownNode(
+    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
+{
+    shared_ptr<NodeEntry> entry;
+    DEV_GUARDED(x_nodes)
+    {
+        entry = createNodeEntry(_node, _lastPongReceivedTime, _lastPongSentTime);
+    }
+    if (!entry)
+        return false;
+
+    if (entry->hasValidEndpointProof())
+        noteActiveNode(entry->id, entry->endpoint);
+    else
+        ping(*entry);
+
+    return true;
+}
+
+std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
+    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
 {
     if (!_node.endpoint || !_node.id)
     {
         LOG(m_logger) << "Supplied node has an invalid endpoint (" << _node.endpoint << ") or id ("
                       << _node.id << "). Skipping adding to node table.";
-        return false;
+        return {};
     }
 
     if (!isAllowedEndpoint(_node.endpoint))
     {
         LOG(m_logger) << "Skip adding node (" << _node.id << ") with unallowed endpoint ("
                       << _node.endpoint << ") to node table";
-        return false;
+        return {};
     }
 
     if (m_hostNodeID == _node.id)
     {
         LOG(m_logger) << "Skip adding self to node table (" << _node.id << ")";
-        return false;
+        return {};
     }
 
-    bool bFound = false;
-    std::shared_ptr<NodeEntry> nodeEntry;
-    DEV_GUARDED(x_nodes)
+    if (m_allNodes.find(_node.id) != m_allNodes.end())
     {
-        auto iterPair = m_allNodes.insert({_node.id, nullptr});
-        if (iterPair.second)  // Node id inserted, construct node entry:
-            iterPair.first->second = make_shared<NodeEntry>(m_hostNodeID, _node.id, _node.endpoint);
-        else
-            bFound = true;
-        nodeEntry = iterPair.first->second;
-    }
-
-    // Log here to avoid holding the x_nodes mutex longer than necessary
-    if (bFound)
         LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
                       << " is already in the node table";
-    else
-        LOG(m_logger) << (_relation == Known ? "Known" : "Pending") << " node " << _node.id << "@"
-                      << _node.endpoint;
-
-    if (_relation == Known)
-    {
-        // TODO: Get last pong time as input, ping if needed
-        // Note: Currently this code path is only hit when restoring peers from the network
-        // configuration file. This means that the "last pong received time" needs to be serialized
-        // and deserialized before we can accept the pong time as an input to this function.
-        nodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
-        nodeEntry->endpoint = _node.endpoint; // Update the endpoint in case it has changed
-        noteActiveNode(nodeEntry->id, nodeEntry->endpoint);
+        return {};
     }
-    else if (_relation != Known && !nodeEntry->hasValidEndpointProof())
-        ping(*nodeEntry);
 
-    return true;
+    auto nodeEntry = make_shared<NodeEntry>(
+        m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
+    m_allNodes.insert({_node.id, nodeEntry});
+
+    LOG(m_logger) << (_lastPongReceivedTime > 0 ? "Known" : "Pending") << " node " << _node.id
+                  << "@" << _node.endpoint;
+
+    return nodeEntry;
 }
 
 list<NodeID> NodeTable::nodes() const
