@@ -35,13 +35,15 @@ set(binaryen_other_libraries
     ${binary_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}support${CMAKE_STATIC_LIBRARY_SUFFIX}
 )
 
+set(BINARYEN_VERSION 1.37.35)
+
 ExternalProject_Add(binaryen
     PREFIX ${prefix}
-    DOWNLOAD_NAME binaryen-1.37.35.tar.gz
+    DOWNLOAD_NAME binaryen-${BINARYEN_VERSION}.tar.gz
     DOWNLOAD_DIR ${prefix}/downloads
     SOURCE_DIR ${source_dir}
     BINARY_DIR ${binary_dir}
-    URL https://github.com/WebAssembly/binaryen/archive/1.37.35.tar.gz
+    URL https://github.com/WebAssembly/binaryen/archive/${BINARYEN_VERSION}.tar.gz
     URL_HASH SHA256=19439e41dc576446eaae0c4a8e07d4cd4c40aea7dfb0a6475b925686852f8006
     CMAKE_ARGS
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
