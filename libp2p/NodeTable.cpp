@@ -595,10 +595,10 @@ void NodeTable::doDiscovery()
         if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
             return;
 
-        LOG(m_logger) << "performing random discovery";
         NodeID randNodeId;
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));
+        LOG(m_logger) << "Random discovery: " << randNodeId;
         doDiscover(randNodeId, 0, make_shared<set<shared_ptr<NodeEntry>>>());
     });
 }

@@ -270,8 +270,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
     // create session so disconnects are managed
     shared_ptr<SessionFace> session = make_shared<Session>(this, move(_io), _s, peer,
         PeerSessionInfo({_id, clientVersion, peer->endpoint.address().to_string(), listenPort,
-            chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(),
-            protocolVersion}));
+            chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), map<string, string>()}));
     if (protocolVersion < dev::p2p::c_protocolVersion - 1)
     {
         session->disconnect(IncompatibleProtocol);
@@ -496,14 +495,14 @@ void Host::registerCapability(std::shared_ptr<CapabilityFace> const& _cap)
 }
 
 void Host::registerCapability(
-    std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name, u256 const& _version)
+    std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name, unsigned _version)
 {
     if (haveNetwork())
     {
         cwarn << "Capabilities must be registered before the network is started";
         return;
     }
-    m_capabilities[std::make_pair(_name, _version)] = _cap;
+    m_capabilities[{_name, _version}] = _cap;
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)

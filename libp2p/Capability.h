@@ -36,7 +36,7 @@ public:
     /// Subprotocol name, used in negotiating common capabilities with the peers.
     virtual std::string name() const = 0;
     /// Subprotocol version, used in negotiating common capabilities with the peers.
-    virtual u256 version() const = 0;
+    virtual unsigned version() const = 0;
     /// Number of messages supported by the subprotocol version.
     virtual unsigned messageCount() const = 0;
 

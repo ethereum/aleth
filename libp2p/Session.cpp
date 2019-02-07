@@ -44,8 +44,6 @@ Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLP
 {
     m_peer->m_lastDisconnect = NoDisconnect;
     m_lastReceived = m_connect = chrono::steady_clock::now();
-    DEV_GUARDED(x_info)
-        m_info.socketId = m_socket->ref().native_handle();
 }
 
 Session::~Session()
@@ -99,20 +97,6 @@ void Session::addRating(int _r)
 int Session::rating() const
 {
     return m_peer->m_rating;
-}
-
-template <class T> vector<T> randomSelection(vector<T> const& _t, unsigned _n)
-{
-    if (_t.size() <= _n)
-        return _t;
-    vector<T> ret = _t;
-    while (ret.size() > _n)
-    {
-        auto i = ret.begin();
-        advance(i, rand() % ret.size());
-        ret.erase(i);
-    }
-    return ret;
 }
 
 bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)

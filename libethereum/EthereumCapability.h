@@ -102,7 +102,7 @@ public:
         OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
     std::string name() const override { return "eth"; }
-    u256 version() const override { return c_protocolVersion; }
+    unsigned version() const override { return c_protocolVersion; }
     unsigned messageCount() const override { return PacketCount; }
 
     void onStarting() override;

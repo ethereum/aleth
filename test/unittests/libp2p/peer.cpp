@@ -37,7 +37,7 @@ class TestCap : public CapabilityFace, public Worker
 {
 public:
     std::string name() const override { return "p2pTestCapability"; }
-    u256 version() const override { return 2; }
+    unsigned version() const override { return 2; }
     unsigned messageCount() const override { return UserPacket + 1; }
 
     void onStarting() override {}
