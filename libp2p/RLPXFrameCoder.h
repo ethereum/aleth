@@ -24,7 +24,7 @@ struct RLPXFrameDecryptFailed : virtual dev::Exception
 struct RLPXFrameInfo
 {
     /// Constructor. frame-size || protocol-type, [sequence-id[, total-packet-size]]
-    RLPXFrameInfo(bytesConstRef _frameHeader);
+    explicit RLPXFrameInfo(bytesConstRef _frameHeader);
 
     uint32_t const length;  ///< Size of frame (excludes padding). Max: 2**24
     uint8_t const padding;  ///< Length of padding which follows @length.
@@ -58,7 +58,7 @@ class RLPXFrameCoder
 public:
     /// Construct; requires instance of RLPXHandshake which has encrypted ECDH key exchange
     /// (first two phases of handshake).
-    RLPXFrameCoder(RLPXHandshake const& _init);
+    explicit RLPXFrameCoder(RLPXHandshake const& _init);
 
     /// Construct with external key material.
     RLPXFrameCoder(bool _originated, h512 const& _remoteEphemeral, h256 const& _remoteNonce,
