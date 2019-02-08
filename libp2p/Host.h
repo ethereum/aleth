@@ -1,5 +1,5 @@
 // Aleth: Ethereum C++ client, tools and libraries.
-// Copyright 2018 Aleth Authors.
+// Copyright 2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
 #pragma once
@@ -8,7 +8,6 @@
 #include "Network.h"
 #include "NodeTable.h"
 #include "Peer.h"
-#include "RLPXFrameCoder.h"
 #include "RLPXSocket.h"
 #include <libdevcore/Guards.h>
 #include <libdevcore/Worker.h>
@@ -45,6 +44,8 @@ class CapabilityFace;
 class CapabilityHostFace;
 class Host;
 class SessionFace;
+class RLPXFrameCoder;
+class RLPXHandshake;
 
 class HostNodeTableHandler: public NodeTableEventHandler
 {
@@ -335,8 +336,8 @@ private:
     /// Mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.
     mutable std::unordered_map<NodeID, std::weak_ptr<SessionFace>> m_sessions;
     mutable RecursiveMutex x_sessions;
-    
-    std::list<std::weak_ptr<RLPXHandshake>> m_connecting;					///< Pending connections.
+
+    std::list<std::weak_ptr<RLPXHandshake>> m_connecting;               ///< Pending connections.
     Mutex x_connecting;													///< Mutex for m_connecting.
 
     unsigned m_idealPeerCount = 11;										///< Ideal number of peers to be connected to.
