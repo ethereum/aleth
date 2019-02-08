@@ -40,20 +40,19 @@ struct RLPXFrameDecryptFailed: virtual dev::Exception {};
  */
 struct RLPXFrameInfo
 {
-	RLPXFrameInfo() = default;
-	/// Constructor. frame-size || protocol-type, [sequence-id[, total-packet-size]]
-	RLPXFrameInfo(bytesConstRef _frameHeader);
+    /// Constructor. frame-size || protocol-type, [sequence-id[, total-packet-size]]
+    RLPXFrameInfo(bytesConstRef _frameHeader);
 
-	uint32_t const length;			///< Size of frame (excludes padding). Max: 2**24
-	uint8_t const padding;			///< Length of padding which follows @length.
-	
-	bytes const data;				///< Bytes of Header.
-	RLP const header;				///< Header RLP.
-	
-	uint16_t const protocolId;		///< Protocol ID as negotiated by handshake.
-	bool const multiFrame;			///< If this frame is part of a sequence
-	uint16_t const sequenceId;		///< Sequence ID of frame
-	uint32_t const totalLength;		///< Set to total length of packet in first frame of multiframe packet
+    uint32_t const length;  ///< Size of frame (excludes padding). Max: 2**24
+    uint8_t const padding;  ///< Length of padding which follows @length.
+
+    bytes const data;  ///< Bytes of Header.
+    RLP const header;  ///< Header RLP.
+
+    uint16_t const protocolId;   ///< Protocol ID as negotiated by handshake.
+    bool const multiFrame;       ///< If this frame is part of a sequence
+    uint16_t const sequenceId;   ///< Sequence ID of frame
+    uint32_t const totalLength;  ///< Total length of packet in first frame of multiframe packet.
 };
 
 class RLPXHandshake;
