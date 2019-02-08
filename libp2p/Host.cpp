@@ -869,7 +869,7 @@ bytes Host::saveNetwork() const
     std::vector<Peer> peers;
     {
         RecursiveGuard l(x_sessions);
-        for (auto p: m_peers)
+        for (auto const& p: m_peers)
             if (p.second)
                 peers.push_back(*p.second);
     }
@@ -888,7 +888,7 @@ bytes Host::saveNetwork() const
         {
             network.appendList(11);
             p.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
-            network << p.id << (p.peerType == PeerType::Required ? true : false)
+            network << p.id << (p.peerType == PeerType::Required)
                     << chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
                     << chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
                     << p.m_failedAttempts.load() << (unsigned)p.m_lastDisconnect << p.m_score.load()

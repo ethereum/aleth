@@ -237,6 +237,7 @@ bool NodeSpec::isValid() const
 {
     return m_id && !m_address.empty();
 }
+
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
 {
     _out << _ep.address() << ':' << _ep.tcpPort();
@@ -246,5 +247,11 @@ std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
         _out << ":udp" << _ep.udpPort();
     return _out;
 }
+
+boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& _log, const Node& _node)
+{
+    return _log << _node.id << '@' << _node.endpoint;
+}
+
 }  // namespace p2p
 }  // namespace dev
