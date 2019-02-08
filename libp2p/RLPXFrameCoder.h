@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Common.h"
-#include <libdevcore/Guards.h>
+#include <libdevcore/RLP.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <memory>
 
@@ -13,9 +13,6 @@ namespace dev
 {
 namespace p2p
 {
-struct RLPXFrameDecryptFailed : virtual dev::Exception
-{
-};
 
 /**
  * @brief Encapsulation of Frame
