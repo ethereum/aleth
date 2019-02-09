@@ -1028,17 +1028,20 @@ int main(int argc, char** argv)
         cout << "JSONRPC Admin Session Key: " << jsonAdmin << "\n";
     }
 
-    for (auto const& p: preferredNodes)
-        if (p.second.second)
-            web3.requirePeer(p.first, p.second.first);
-        else
-            web3.addNode(p.first, p.second.first);
+    if (web3.isNetworkStarted())
+    {
+        for (auto const& p: preferredNodes)
+            if (p.second.second)
+                web3.requirePeer(p.first, p.second.first);
+            else
+                web3.addNode(p.first, p.second.first);
 
-    if (bootstrap && privateChain.empty())
-        for (auto const& i: Host::pocHosts())
-            web3.requirePeer(i.first, i.second);
-    if (!remoteHost.empty())
-        web3.addNode(p2p::NodeID(), remoteHost + ":" + toString(remotePort));
+        if (bootstrap && privateChain.empty())
+            for (auto const& i: Host::pocHosts())
+                web3.requirePeer(i.first, i.second);
+        if (!remoteHost.empty())
+            web3.addNode(p2p::NodeID(), remoteHost + ":" + toString(remotePort));
+    }
 
     signal(SIGABRT, &ExitHandler::exitHandler);
     signal(SIGTERM, &ExitHandler::exitHandler);
@@ -1054,8 +1057,12 @@ int main(int argc, char** argv)
     if (jsonrpcIpcServer.get())
         jsonrpcIpcServer->StopListening();
 
-    auto netData = web3.saveNetwork();
-    if (!netData.empty())
-        writeFile(getDataDir() / fs::path("network.rlp"), netData);
+    if (web3.isNetworkStarted())
+    {
+        web3.stopNetwork();
+        auto netData = web3.saveNetwork();
+        if (!netData.empty())
+            writeFile(getDataDir() / fs::path("network.rlp"), netData);
+    }
     return 0;
 }
