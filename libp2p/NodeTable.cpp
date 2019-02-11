@@ -1,19 +1,6 @@
-/*
- This file is part of cpp-ethereum.
-
- cpp-ethereum is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- cpp-ethereum is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "NodeTable.h"
 using namespace std;
@@ -124,15 +111,15 @@ std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
 {
     if (!_node.endpoint || !_node.id)
     {
-        LOG(m_logger) << "Supplied node has an invalid endpoint (" << _node.endpoint << ") or id ("
-                      << _node.id << "). Skipping adding to node table.";
+        LOG(m_logger) << "Supplied node " << _node
+                      << " has an invalid endpoint or id. Skipping adding node to node table.";
         return {};
     }
 
     if (!isAllowedEndpoint(_node.endpoint))
     {
-        LOG(m_logger) << "Skip adding node (" << _node.id << ") with unallowed endpoint ("
-                      << _node.endpoint << ") to node table";
+        LOG(m_logger) << "Supplied node" << _node
+                      << " doesn't have an allowed endpoint. Skipping adding node to node table";
         return {};
     }
 
@@ -144,8 +131,7 @@ std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
 
     if (m_allNodes.find(_node.id) != m_allNodes.end())
     {
-        LOG(m_logger) << "Node " << _node.id << "@" << _node.endpoint
-                      << " is already in the node table";
+        LOG(m_logger) << "Node " << _node << " is already in the node table";
         return {};
     }
 
@@ -226,7 +212,7 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             p.ts = nextRequestExpirationTime();
             p.sign(m_secret);
             m_sentFindNodes.emplace_back(node->id, chrono::steady_clock::now());
-            LOG(m_logger) << p.typeName() << " to " << _node << "@" << node->endpoint;
+            LOG(m_logger) << p.typeName() << " to " << node->id << "@" << node->endpoint << " (target: " << _node << ")";
             m_socket->send(p);
 
             _tried->emplace(node);
