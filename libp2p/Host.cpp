@@ -782,7 +782,11 @@ void Host::startedWorking()
         m_netConfig.discovery,
         m_netConfig.allowLocalDiscovery
     );
-    nodeTable->setEventHandler(new HostNodeTableHandler(*this));
+
+    // Don't set an event handler if we don't have capabilities, because no capabilities
+    // means there's no host state to update in response to node table events
+    if (haveCapabilities())
+        nodeTable->setEventHandler(new HostNodeTableHandler(*this));
     DEV_GUARDED(x_nodeTable)
         m_nodeTable = nodeTable;
     
