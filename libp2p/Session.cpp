@@ -23,6 +23,7 @@
 #include "Session.h"
 
 #include "Host.h"
+#include "RLPXFrameCoder.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>

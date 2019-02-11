@@ -24,7 +24,6 @@
 
 #include "Capability.h"
 #include "Common.h"
-#include "RLPXFrameCoder.h"
 #include "RLPXSocket.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/Guards.h>
@@ -44,6 +43,7 @@ namespace p2p
 
 class Peer;
 class ReputationManager;
+class RLPXFrameCoder;
 
 class SessionFace
 {
