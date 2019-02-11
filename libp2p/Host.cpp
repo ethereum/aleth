@@ -27,10 +27,10 @@ using namespace dev::p2p;
 namespace
 {
 /// Interval at which Host::run will call keepAlivePeers to ping peers.
-constexpr std::chrono::seconds c_keepAliveInterval = std::chrono::seconds(30);
+constexpr chrono::seconds c_keepAliveInterval = chrono::seconds(30);
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
-constexpr std::chrono::milliseconds c_keepAliveTimeOut = std::chrono::milliseconds(1000);
+constexpr chrono::milliseconds c_keepAliveTimeOut = chrono::milliseconds(1000);
 }  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}
@@ -40,13 +40,13 @@ void HostNodeTableHandler::processEvent(NodeID const& _n, NodeTableEventType con
     m_host.onNodeTableEvent(_n, _e);
 }
 
-void ReputationManager::noteRude(SessionFace const& _s, std::string const& _sub)
+void ReputationManager::noteRude(SessionFace const& _s, string const& _sub)
 {
     DEV_WRITE_GUARDED(x_nodes)
         m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].isRude = true;
 }
 
-bool ReputationManager::isRude(SessionFace const& _s, std::string const& _sub) const
+bool ReputationManager::isRude(SessionFace const& _s, string const& _sub) const
 {
     DEV_READ_GUARDED(x_nodes)
     {
@@ -60,13 +60,13 @@ bool ReputationManager::isRude(SessionFace const& _s, std::string const& _sub) c
     return false;
 }
 
-void ReputationManager::setData(SessionFace const& _s, std::string const& _sub, bytes const& _data)
+void ReputationManager::setData(SessionFace const& _s, string const& _sub, bytes const& _data)
 {
     DEV_WRITE_GUARDED(x_nodes)
         m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].data = _data;
 }
 
-bytes ReputationManager::data(SessionFace const& _s, std::string const& _sub) const
+bytes ReputationManager::data(SessionFace const& _s, string const& _sub) const
 {
     DEV_READ_GUARDED(x_nodes)
     {
@@ -217,7 +217,7 @@ void Host::doneWorking()
 }
 
 // called after successful handshake
-void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s)
+void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, shared_ptr<RLPXSocket> const& _s)
 {
     // session maybe ingress or egress so m_peers and node table entries may not exist
     shared_ptr<Peer> peer;
@@ -239,7 +239,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         }
     }
     if (peer->isOffline())
-        peer->m_lastConnected = std::chrono::system_clock::now();
+        peer->m_lastConnected = chrono::system_clock::now();
     peer->endpoint.setAddress(_s->remoteEndpoint().address());
 
     auto protocolVersion = _rlp[0].toInt<unsigned>();
@@ -398,7 +398,7 @@ void Host::determinePublic()
     else if (m_netConfig.traverseNAT)
     {
         bi::address natIFAddr;
-        ep = Network::traverseNAT(lset && ifAddresses.count(laddr) ? std::set<bi::address>({laddr}) : ifAddresses, m_listenPort, natIFAddr);
+        ep = Network::traverseNAT(lset && ifAddresses.count(laddr) ? set<bi::address>({laddr}) : ifAddresses, m_listenPort, natIFAddr);
         
         if (lset && natIFAddr != laddr)
             // if listen address is set, Host will use it, even if upnp returns different
@@ -460,7 +460,7 @@ void Host::runAcceptor()
             {
                 cwarn << "ERROR: " << diagnostic_information(_e);
             }
-            catch (std::exception const& _e)
+            catch (exception const& _e)
             {
                 cwarn << "ERROR: " << _e.what();
             }
@@ -472,7 +472,7 @@ void Host::runAcceptor()
     }
 }
 
-std::unordered_map<Public, std::string> Host::pocHosts()
+unordered_map<Public, string> Host::pocHosts()
 {
     return {
         // Mainnet:
@@ -489,13 +489,13 @@ std::unordered_map<Public, std::string> Host::pocHosts()
     };
 }
 
-void Host::registerCapability(std::shared_ptr<CapabilityFace> const& _cap)
+void Host::registerCapability(shared_ptr<CapabilityFace> const& _cap)
 {
     registerCapability(_cap, _cap->name(), _cap->version());
 }
 
 void Host::registerCapability(
-    std::shared_ptr<CapabilityFace> const& _cap, std::string const& _name, unsigned _version)
+    shared_ptr<CapabilityFace> const& _cap, string const& _name, unsigned _version)
 {
     if (haveNetwork())
     {
@@ -598,7 +598,7 @@ void Host::relinquishPeer(NodeID const& _node)
         m_requiredPeers.erase(_node);
 }
 
-void Host::connect(std::shared_ptr<Peer> const& _p)
+void Host::connect(shared_ptr<Peer> const& _p)
 {
     if (!m_run)
     {
@@ -626,14 +626,14 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
         return;
     m_pendingPeerConns.insert(nptr);
 
-    _p->m_lastAttempted = std::chrono::system_clock::now();
+    _p->m_lastAttempted = chrono::system_clock::now();
     
     bi::tcp::endpoint ep(_p->endpoint);
     cnetdetails << "Attempting connection to node " << _p->id << "@" << ep << " from " << id();
     auto socket = make_shared<RLPXSocket>(m_ioService);
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
-        _p->m_lastAttempted = std::chrono::system_clock::now();
+        _p->m_lastAttempted = chrono::system_clock::now();
         _p->m_failedAttempts++;
         
         if (ec)
@@ -664,7 +664,7 @@ PeerSessionInfos Host::peerSessionInfo() const
     if (!m_run)
         return PeerSessionInfos();
 
-    std::vector<PeerSessionInfo> ret;
+    vector<PeerSessionInfo> ret;
     RecursiveGuard l(x_sessions);
     for (auto& i: m_sessions)
         if (auto j = i.second.lock())
@@ -678,7 +678,7 @@ size_t Host::peerCount() const
     unsigned retCount = 0;
     RecursiveGuard l(x_sessions);
     for (auto& i: m_sessions)
-        if (std::shared_ptr<SessionFace> j = i.second.lock())
+        if (shared_ptr<SessionFace> j = i.second.lock())
             if (j->isConnected())
                 retCount++;
     return retCount;
@@ -694,9 +694,9 @@ void Host::run(boost::system::error_code const& _ec)
 
     // cleanup zombies
     DEV_GUARDED(x_connecting)
-        m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
+        m_connecting.remove_if([](weak_ptr<RLPXHandshake> h){ return h.expired(); });
     DEV_GUARDED(x_timers)
-    m_timers.remove_if([](std::unique_ptr<io::deadline_timer> const& t) {
+    m_timers.remove_if([](unique_ptr<io::deadline_timer> const& t) {
         return t->expires_from_now().total_milliseconds() < 0;
     });
 
@@ -808,7 +808,7 @@ void Host::doWork()
         if (m_run)
             m_ioService.run();
     }
-    catch (std::exception const& _e)
+    catch (exception const& _e)
     {
         cwarn << "Exception in Network Thread: " << _e.what();
         cwarn << "Network Restart is Recommended.";
@@ -870,7 +870,7 @@ bytes Host::saveNetwork() const
         count++;
     }
 
-    std::vector<Peer> peers;
+    vector<Peer> peers;
     {
         RecursiveGuard l(x_sessions);
         for (auto const& p: m_peers)
@@ -1013,40 +1013,40 @@ bool Host::addKnownNodeToNodeTable(
 }
 
 void Host::forEachPeer(
-    std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const
+    string const& _capabilityName, function<bool(NodeID const&)> _f) const
 {
     RecursiveGuard l(x_sessions);
-    std::vector<std::shared_ptr<SessionFace>> sessions;
+    vector<shared_ptr<SessionFace>> sessions;
     for (auto const& i : m_sessions)
-        if (std::shared_ptr<SessionFace> s = i.second.lock())
+        if (shared_ptr<SessionFace> s = i.second.lock())
         {
-            std::vector<CapDesc> capabilities = s->capabilities();
+            vector<CapDesc> capabilities = s->capabilities();
             for (auto const& cap : capabilities)
                 if (cap.first == _capabilityName)
-                    sessions.emplace_back(std::move(s));
+                    sessions.emplace_back(move(s));
         }
 
     // order peers by rating, connection age
-    auto sessionLess = [](std::shared_ptr<SessionFace> const& _left,
-                           std::shared_ptr<SessionFace> const& _right) {
+    auto sessionLess = [](shared_ptr<SessionFace> const& _left,
+                           shared_ptr<SessionFace> const& _right) {
         return _left->rating() == _right->rating() ?
                    _left->connectionTime() < _right->connectionTime() :
                    _left->rating() > _right->rating();
     };
-    std::sort(sessions.begin(), sessions.end(), sessionLess);
+    sort(sessions.begin(), sessions.end(), sessionLess);
 
     for (auto const& s : sessions)
         if (!_f(s->id()))
             return;
 }
 
-void Host::scheduleExecution(int _delayMs, std::function<void()> _f)
+void Host::scheduleExecution(int _delayMs, function<void()> _f)
 {
-    std::unique_ptr<io::deadline_timer> t(new io::deadline_timer(m_ioService));
+    unique_ptr<io::deadline_timer> t(new io::deadline_timer(m_ioService));
     t->expires_from_now(boost::posix_time::milliseconds(_delayMs));
     t->async_wait([_f](boost::system::error_code const& _ec) {
         if (!_ec)
             _f();
     });
-    DEV_GUARDED(x_timers) { m_timers.emplace_back(std::move(t)); }
+    DEV_GUARDED(x_timers) { m_timers.emplace_back(move(t)); }
 }
