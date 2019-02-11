@@ -1095,6 +1095,34 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     BOOST_REQUIRE(datagram7->typeName() == "Ping");
 }
 
+BOOST_AUTO_TEST_CASE(addNodePingsNodeOnlyOnce)
+{
+    // NodeTable sending PING
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
+
+    // add a node to node table, initiating PING
+    auto const nodePort = randomPortNumber();
+    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
+    auto nodePubKey = KeyPair::create().pub();
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+    auto sentPing = nodeTable->nodeValidation(nodePubKey);
+    BOOST_REQUIRE(sentPing.is_initialized());
+
+    this_thread::sleep_for(chrono::milliseconds(2000));
+
+    // add it for the second time
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+    auto sentPing2 = nodeTable->nodeValidation(nodePubKey);
+    BOOST_REQUIRE(sentPing2.is_initialized());
+
+    // check that Ping was sent only once, so Ping hash didn't change
+    BOOST_REQUIRE_EQUAL(sentPing->pingHash, sentPing2->pingHash);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
