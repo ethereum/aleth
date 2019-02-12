@@ -205,8 +205,12 @@ protected:
 
     /// Used to ping a node to initiate the endpoint proof. Used when contacting neighbours if they
     /// don't have a valid endpoint proof (see doDiscover), refreshing buckets and as part of
-    /// eviction process (see evict). Not synchronous - the ping operation is queued via a timer
+    /// eviction process (see evict). Synchronous, has to be called only from the network thread.
     void ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID = {});
+
+    /// Schedules ping() method to be called from the network thread.
+    /// Not synchronous - the ping operation is queued via a timer.
+    void schedulePing(NodeEntry const& _nodeEntry);
 
     /// Used by asynchronous operations to return NodeEntry which is active and managed by node table.
     std::shared_ptr<NodeEntry> nodeEntry(NodeID _id);

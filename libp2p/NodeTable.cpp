@@ -84,7 +84,7 @@ bool NodeTable::addNode(Node const& _node)
         return false;
 
     if (!entry->hasValidEndpointProof())
-        ping(*entry);
+        schedulePing(*entry);
 
     return true;
 }
@@ -105,7 +105,7 @@ bool NodeTable::addKnownNode(
     if (entry->hasValidEndpointProof())
         noteActiveNode(entry->id, entry->endpoint);
     else
-        ping(*entry);
+        schedulePing(*entry);
 
     return true;
 }
@@ -312,32 +312,30 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
 
 void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID)
 {
-    m_timers.schedule(0, [this, _nodeEntry, _replacementNodeID](
-                             boost::system::error_code const& _ec) {
+    // don't sent Ping if one is already sent
+    if (contains(m_sentPings, _nodeEntry.id))
+        return;
+
+    NodeIPEndpoint src;
+    src = m_hostNodeEndpoint;
+    PingNode p(src, _nodeEntry.endpoint);
+    p.ts = nextRequestExpirationTime();
+    auto const pingHash = p.sign(m_secret);
+    LOG(m_logger) << p.typeName() << " to " << _nodeEntry.id << "@" << p.destination;
+    m_socket->send(p);
+
+    m_sentPings[_nodeEntry.id] = {chrono::steady_clock::now(), pingHash, _replacementNodeID};
+    if (m_nodeEventHandler && _replacementNodeID)
+        m_nodeEventHandler->appendEvent(_nodeEntry.id, NodeEntryScheduledForEviction);
+}
+
+void NodeTable::schedulePing(NodeEntry const& _nodeEntry)
+{
+    m_timers.schedule(0, [this, _nodeEntry](boost::system::error_code const& _ec) {
         if (_ec || m_timers.isStopped())
             return;
 
-        // don't sent Ping if one is already sent
-        auto sentPing = m_sentPings.find(_nodeEntry.id);
-        if (sentPing != m_sentPings.end())
-        {
-            // we don't need replacement if we're not going to ping
-            if (_replacementNodeID && sentPing->second.replacementNodeID != _replacementNodeID)
-                DEV_GUARDED(x_nodes) { m_allNodes.erase(*_replacementNodeID); }
-            return;
-        }
-
-        NodeIPEndpoint src;
-        src = m_hostNodeEndpoint;
-        PingNode p(src, _nodeEntry.endpoint);
-        p.ts = nextRequestExpirationTime();
-        auto const pingHash = p.sign(m_secret);
-        LOG(m_logger) << p.typeName() << " to " << _nodeEntry.id << "@" << p.destination;
-        m_socket->send(p);
-
-        m_sentPings[_nodeEntry.id] = {chrono::steady_clock::now(), pingHash, _replacementNodeID};
-        if (m_nodeEventHandler && _replacementNodeID)
-            m_nodeEventHandler->appendEvent(_nodeEntry.id, NodeEntryScheduledForEviction);
+        ping(_nodeEntry, {});
     });
 }
 
@@ -345,6 +343,14 @@ void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
 {
     if (!m_socket->isOpen())
         return;
+
+    // if eviction for _leastSeen already started, just forget about _new
+    auto sentPing = m_sentPings.find(_leastSeen.id);
+    if (sentPing != m_sentPings.end() && sentPing->second.replacementNodeID != _new.id)
+    {
+        DEV_GUARDED(x_nodes) { m_allNodes.erase(_new.id); }
+        return;
+    }
 
     LOG(m_logger) << "Evicting node " << static_cast<Node const&>(_leastSeen);
     ping(_leastSeen, _new.id);
@@ -488,7 +494,10 @@ void NodeTable::onPacketReceived(
                 auto const& optionalReplacementID = sentPing->second.replacementNodeID;
                 if (optionalReplacementID)
                     if (auto replacementNode = nodeEntry(*optionalReplacementID))
+                    {
+                        m_sentPings.erase(replacementNode->id);
                         dropNode(move(replacementNode));
+                    }
 
                 m_sentPings.erase(sentPing);
 
