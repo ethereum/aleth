@@ -1,40 +1,21 @@
-/*
-    This file is part of cpp-ethereum.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+/// @file
+/// Forward-compatibility tests checking EIP-8 compliance.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file discovery.cpp
- * @author Felix Lange <fjl@twurst.com>
- * @date 2016
- * Forward-compatibility tests checking EIP-8 compliance.
- */
-
-#include <boost/test/unit_test.hpp>
-#include <libp2p/NodeTable.h>
 #include <libp2p/Host.h>
+#include <libp2p/NodeTable.h>
 #include <libp2p/RLPXSocket.h>
 #include <libp2p/RLPxHandshake.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::test;
 using namespace dev::p2p;
 
-BOOST_FIXTURE_TEST_SUITE(eip8, TestOutputHelperFixture)
-
-BOOST_AUTO_TEST_CASE(test_discovery_packets)
+TEST(eip8, test_discovery_packets)
 {
     bi::udp::endpoint ep;
     bytes packet;
@@ -46,10 +27,10 @@ BOOST_AUTO_TEST_CASE(test_discovery_packets)
         "000000000000000000018208ae820d058443b9a3550102"
     );
     auto ping1 = dynamic_cast<PingNode&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
-    BOOST_CHECK_EQUAL(ping1.version, 4);
-    BOOST_CHECK_EQUAL(ping1.ts, 1136239445);
-    BOOST_CHECK_EQUAL(ping1.source, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 3322, 5544));
-    BOOST_CHECK_EQUAL(ping1.destination, NodeIPEndpoint(bi::address::from_string("::1"), 2222, 3333));
+    EXPECT_EQ(ping1.version, 4);
+    EXPECT_EQ(ping1.ts, 1136239445);
+    EXPECT_EQ(ping1.source, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 3322, 5544));
+    EXPECT_EQ(ping1.destination, NodeIPEndpoint(bi::address::from_string("::1"), 2222, 3333));
 
     packet = fromHex(
         "577be4349c4dd26768081f58de4c6f375a7a22f3f7adda654d1428637412c3d7fe917cadc56d4e5e"
@@ -62,10 +43,10 @@ BOOST_AUTO_TEST_CASE(test_discovery_packets)
         "6d922dc3"
     );
     auto ping2 = dynamic_cast<PingNode&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
-    BOOST_CHECK_EQUAL(ping2.version, 555);
-    BOOST_CHECK_EQUAL(ping2.source, NodeIPEndpoint(bi::address::from_string("2001:db8:3c4d:15::abcd:ef12"), 3322, 5544));
-    BOOST_CHECK_EQUAL(ping2.destination, NodeIPEndpoint(bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
-    BOOST_CHECK_EQUAL(ping2.ts, 1136239445);
+    EXPECT_EQ(ping2.version, 555);
+    EXPECT_EQ(ping2.source, NodeIPEndpoint(bi::address::from_string("2001:db8:3c4d:15::abcd:ef12"), 3322, 5544));
+    EXPECT_EQ(ping2.destination, NodeIPEndpoint(bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
+    EXPECT_EQ(ping2.ts, 1136239445);
 
     packet = fromHex(
         "09b2428d83348d27cdf7064ad9024f526cebc19e4958f0fdad87c15eb598dd61d08423e0bf66b206"
@@ -76,9 +57,9 @@ BOOST_AUTO_TEST_CASE(test_discovery_packets)
         "42124e"
     );
     auto pong = dynamic_cast<Pong&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
-    BOOST_CHECK_EQUAL(pong.destination, NodeIPEndpoint(bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
-    BOOST_CHECK_EQUAL(pong.echo, h256("fbc914b16819237dcd8801d7e53f69e9719adecb3cc0e790c57e91ca4461c954"));
-    BOOST_CHECK_EQUAL(pong.ts, 1136239445);
+    EXPECT_EQ(pong.destination, NodeIPEndpoint(bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
+    EXPECT_EQ(pong.echo, h256("fbc914b16819237dcd8801d7e53f69e9719adecb3cc0e790c57e91ca4461c954"));
+    EXPECT_EQ(pong.ts, 1136239445);
 
     packet = fromHex(
         "c7c44041b9f7c7e41934417ebac9a8e1a4c6298f74553f2fcfdcae6ed6fe53163eb3d2b52e39fe91"
@@ -89,8 +70,8 @@ BOOST_AUTO_TEST_CASE(test_discovery_packets)
         "dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396"
     );
     auto findnode = dynamic_cast<FindNode&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
-    BOOST_CHECK_EQUAL(findnode.target, Public("ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f"));
-    BOOST_CHECK_EQUAL(findnode.ts, 1136239445);
+    EXPECT_EQ(findnode.target, Public("ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f"));
+    EXPECT_EQ(findnode.ts, 1136239445);
 
     packet = fromHex(
         "c679fc8fe0b8b12f06577f2e802d34f6fa257e6137a995f6f4cbfc9ee50ed3710faf6e66f932c4c8"
@@ -107,16 +88,16 @@ BOOST_AUTO_TEST_CASE(test_discovery_packets)
         "8443b9a355010203b525a138aa34383fec3d2719a0"
     );
     auto neighbours = dynamic_cast<Neighbours&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
-    BOOST_REQUIRE_EQUAL(neighbours.neighbours.size(), 4);
-    BOOST_CHECK_EQUAL(neighbours.neighbours[0].endpoint, NodeIPEndpoint(bi::address::from_string("99.33.22.55"), 4444, 4445));
-    BOOST_CHECK_EQUAL(neighbours.neighbours[0].node, Public("3155e1427f85f10a5c9a7755877748041af1bcd8d474ec065eb33df57a97babf54bfd2103575fa829115d224c523596b401065a97f74010610fce76382c0bf32"));
-    BOOST_CHECK_EQUAL(neighbours.neighbours[1].endpoint, NodeIPEndpoint(bi::address::from_string("1.2.3.4"), 1, 1));
-    BOOST_CHECK_EQUAL(neighbours.neighbours[1].node, Public("312c55512422cf9b8a4097e9a6ad79402e87a15ae909a4bfefa22398f03d20951933beea1e4dfa6f968212385e829f04c2d314fc2d4e255e0d3bc08792b069db"));
-    BOOST_CHECK_EQUAL(neighbours.neighbours[2].endpoint, NodeIPEndpoint(bi::address::from_string("2001:db8:3c4d:15::abcd:ef12"), 3333, 3333));
-    BOOST_CHECK_EQUAL(neighbours.neighbours[2].node, Public("38643200b172dcfef857492156971f0e6aa2c538d8b74010f8e140811d53b98c765dd2d96126051913f44582e8c199ad7c6d6819e9a56483f637feaac9448aac"));
-    BOOST_CHECK_EQUAL(neighbours.neighbours[3].endpoint, NodeIPEndpoint(bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 999, 1000));
-    BOOST_CHECK_EQUAL(neighbours.neighbours[3].node, Public("8dcab8618c3253b558d459da53bd8fa68935a719aff8b811197101a4b2b47dd2d47295286fc00cc081bb542d760717d1bdd6bec2c37cd72eca367d6dd3b9df73"));
-    BOOST_CHECK_EQUAL(neighbours.ts, 1136239445);
+    EXPECT_EQ(neighbours.neighbours.size(), 4);
+    EXPECT_EQ(neighbours.neighbours[0].endpoint, NodeIPEndpoint(bi::address::from_string("99.33.22.55"), 4444, 4445));
+    EXPECT_EQ(neighbours.neighbours[0].node, Public("3155e1427f85f10a5c9a7755877748041af1bcd8d474ec065eb33df57a97babf54bfd2103575fa829115d224c523596b401065a97f74010610fce76382c0bf32"));
+    EXPECT_EQ(neighbours.neighbours[1].endpoint, NodeIPEndpoint(bi::address::from_string("1.2.3.4"), 1, 1));
+    EXPECT_EQ(neighbours.neighbours[1].node, Public("312c55512422cf9b8a4097e9a6ad79402e87a15ae909a4bfefa22398f03d20951933beea1e4dfa6f968212385e829f04c2d314fc2d4e255e0d3bc08792b069db"));
+    EXPECT_EQ(neighbours.neighbours[2].endpoint, NodeIPEndpoint(bi::address::from_string("2001:db8:3c4d:15::abcd:ef12"), 3333, 3333));
+    EXPECT_EQ(neighbours.neighbours[2].node, Public("38643200b172dcfef857492156971f0e6aa2c538d8b74010f8e140811d53b98c765dd2d96126051913f44582e8c199ad7c6d6819e9a56483f637feaac9448aac"));
+    EXPECT_EQ(neighbours.neighbours[3].endpoint, NodeIPEndpoint(bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 999, 1000));
+    EXPECT_EQ(neighbours.neighbours[3].node, Public("8dcab8618c3253b558d459da53bd8fa68935a719aff8b811197101a4b2b47dd2d47295286fc00cc081bb542d760717d1bdd6bec2c37cd72eca367d6dd3b9df73"));
+    EXPECT_EQ(neighbours.ts, 1136239445);
 }
 
 class TestHandshake: public RLPXHandshake
@@ -157,7 +138,7 @@ public:
 // See https://github.com/ethereum/cpp-ethereum/issues/3273 
 
 #if !defined(_WIN32)
-BOOST_AUTO_TEST_CASE(test_handshake_plain_auth)
+TEST(eip8, test_handshake_plain_auth)
 {
     Secret keyB("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
     bytes auth(fromHex(
@@ -171,7 +152,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_plain_auth)
         "a4592ee77e2bd94d0be3691f3b406f9bba9b591fc63facc016bfa8"
     ));
     shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
-    BOOST_REQUIRE(h->completedKeyEstablishment());
+    EXPECT_TRUE(h->completedKeyEstablishment());
     h->checkAuthValuesEIP8(4);
 }
 #endif // !defined(_WIN32)
@@ -184,7 +165,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_plain_auth)
 // See https://github.com/ethereum/cpp-ethereum/issues/3273 
 
 #if !defined(_WIN32)
-BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth1)
+TEST(eip8, test_handshake_eip8_auth1)
 {
     Secret keyB("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
     bytes auth(fromHex(
@@ -201,7 +182,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth1)
         "3bf7678318e2d5b5340c9e488eefea198576344afbdf66db5f51204a6961a63ce072c8926c"
     ));
     shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
-    BOOST_REQUIRE(h->completedKeyEstablishment());
+    EXPECT_TRUE(h->completedKeyEstablishment());
     h->checkAuthValuesEIP8(4);
 }
 #endif // !defined(_WIN32)
@@ -214,7 +195,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth1)
 // See https://github.com/ethereum/cpp-ethereum/issues/3273 
 
 #if !defined(_WIN32)
-BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth2)
+TEST(eip8, test_handshake_eip8_auth2)
 {
     Secret keyB("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291");
     bytes auth(fromHex(
@@ -232,7 +213,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth2)
         "d490"
     ));
     shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
-    BOOST_REQUIRE(h->completedKeyEstablishment());
+    EXPECT_TRUE(h->completedKeyEstablishment());
     h->checkAuthValuesEIP8(56);
 }
 #endif // !defined(_WIN32)
@@ -245,7 +226,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth2)
 // See https://github.com/ethereum/cpp-ethereum/issues/3273 
 
 #if !defined(_WIN32)
-BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack_plain)
+TEST(eip8, test_handshake_eip8_ack_plain)
 {
     Secret keyA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee");
     bytes ack(fromHex(
@@ -258,7 +239,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack_plain)
     ));
     NodeID initiatorPubk("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877");
     shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
-    BOOST_REQUIRE(h->completedKeyEstablishment());
+    EXPECT_TRUE(h->completedKeyEstablishment());
     h->checkAckValuesEIP8(4);
 }
 #endif // !defined(_WIN32)
@@ -271,7 +252,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack_plain)
 // See https://github.com/ethereum/cpp-ethereum/issues/3273 
 
 #if !defined(_WIN32)
-BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack1)
+TEST(eip8, test_handshake_eip8_ack1)
 {
     Secret keyA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee");
     bytes ack(fromHex(
@@ -291,7 +272,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack1)
     ));
     NodeID initiatorPubk("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877");
     shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
-    BOOST_REQUIRE(h->completedKeyEstablishment());
+    EXPECT_TRUE(h->completedKeyEstablishment());
     h->checkAckValuesEIP8(4);
 }
 #endif // !defined(_WIN32)
@@ -304,7 +285,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack1)
 // See https://github.com/ethereum/cpp-ethereum/issues/3273 
 
 #if !defined(_WIN32)
-BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack2)
+TEST(eip8, test_handshake_eip8_ack2)
 {
     Secret keyA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee");
     bytes ack(fromHex(
@@ -324,24 +305,24 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack2)
     ));
     NodeID initiatorPubk("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877");
     shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
-    BOOST_REQUIRE(h->completedKeyEstablishment());
+    EXPECT_TRUE(h->completedKeyEstablishment());
     h->checkAckValuesEIP8(57);
 }
 #endif // !defined(_WIN32)
 
 void TestHandshake::checkAuthValuesEIP8(uint64_t _expectedRemoteVersion)
 {
-    BOOST_CHECK_EQUAL(m_remote, Public("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"));
-    BOOST_CHECK_EQUAL(m_remoteNonce, h256("7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"));
-    BOOST_CHECK_EQUAL(m_ecdheRemote, Public("654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"));
-    BOOST_CHECK_EQUAL(m_remoteVersion, _expectedRemoteVersion);
+    EXPECT_EQ(m_remote, Public("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877"));
+    EXPECT_EQ(m_remoteNonce, h256("7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6"));
+    EXPECT_EQ(m_ecdheRemote, Public("654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d"));
+    EXPECT_EQ(m_remoteVersion, _expectedRemoteVersion);
 }
 
 void TestHandshake::checkAckValuesEIP8(uint64_t _expectedRemoteVersion)
 {
-    BOOST_CHECK_EQUAL(m_remoteNonce, h256("559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"));
-    BOOST_CHECK_EQUAL(m_ecdheRemote, Public("b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"));
-    BOOST_CHECK_EQUAL(m_remoteVersion, _expectedRemoteVersion);
+    EXPECT_EQ(m_remoteNonce, h256("559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"));
+    EXPECT_EQ(m_ecdheRemote, Public("b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4"));
+    EXPECT_EQ(m_remoteVersion, _expectedRemoteVersion);
 }
 
 #define throwErrorCode(what, error)                                                      \
@@ -398,5 +379,3 @@ void TestHandshake::transition(boost::system::error_code _ec)
     }
     RLPXHandshake::transition(_ec);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
