@@ -317,8 +317,15 @@ void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const&
         if (_ec || m_timers.isStopped())
             return;
 
-        if (contains(m_sentPings, _nodeEntry.id))
+        // don't sent Ping if one is already sent
+        auto sentPing = m_sentPings.find(_nodeEntry.id);
+        if (sentPing != m_sentPings.end())
+        {
+            // we don't need replacement if we're not going to ping
+            if (_replacementNodeID && sentPing->second.replacementNodeID != _replacementNodeID)
+                DEV_GUARDED(x_nodes) { m_allNodes.erase(*_replacementNodeID); }
             return;
+        }
 
         NodeIPEndpoint src;
         src = m_hostNodeEndpoint;
