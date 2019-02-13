@@ -19,6 +19,7 @@
 #include <libdevcrypto/LibSnark.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
+#include <libethcore/Common.h>
 #include <libethcore/KeyManager.h>
 #include <libethereum/SnapshotImporter.h>
 #include <libethereum/SnapshotStorage.h>
@@ -53,6 +54,7 @@ namespace
 {
 
 std::atomic<bool> g_silence = {false};
+constexpr const char* c_networkConfigFileName = "network.rlp";
 
 void version()
 {
@@ -360,7 +362,7 @@ int main(int argc, char** argv)
     catch (po::error const& e)
     {
         cerr << e.what() << "\n";
-        return -1;
+        return AlethErrors::ArgumentProcessingFailure;
     }
 
     miner.interpretOptions(vm);
@@ -373,7 +375,7 @@ int main(int argc, char** argv)
     if (vm.count("version"))
     {
         version();
-        return 0;
+        return AlethErrors::Success;
     }
     if (vm.count("test"))
     {
@@ -419,7 +421,7 @@ int main(int argc, char** argv)
         if (parsingError)
         {
              cerr << "Unrecognized peerset: " << peersetStr << "\n";
-             return -1;
+             return AlethErrors::UnrecognizedPeerset;
         }
     }
 
@@ -445,7 +447,7 @@ int main(int argc, char** argv)
             }
             catch (...) {
                 cerr << "Unknown --mining option: " << m << "\n";
-                return -1;
+                return AlethErrors::UnknownMiningOption;
             }
     }
     if (vm.count("bootstrap"))
@@ -473,13 +475,13 @@ int main(int argc, char** argv)
             if (configJSON.empty())
             {
                 cerr << "Config file not found or empty (" << configPath.string() << ")\n";
-                return -1;
+                return AlethErrors::ConfigFileEmptyOrNotFound;
             }
         }
         catch (...)
         {
             cerr << "Bad --config option: " << vm["config"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadConfigOption;
         }
     }
     if (vm.count("extra-data"))
@@ -491,7 +493,7 @@ int main(int argc, char** argv)
         catch (...)
         {
             cerr << "Bad " << "--extra-data" << " option: " << vm["extra-data"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadExtraDataOption;
         }
     }
     if (vm.count("mainnet"))
@@ -513,7 +515,7 @@ int main(int argc, char** argv)
         catch (...)
         {
             cerr << "Bad --ask option: " << vm["ask"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadAskOption;
         }
     }
     if (vm.count("bid"))
@@ -525,7 +527,7 @@ int main(int argc, char** argv)
         catch (...)
         {
             cerr << "Bad --bid option: " << vm["bid"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadBidOption;
         }
     }
     if (vm.count("listen-ip"))
@@ -587,7 +589,7 @@ int main(int argc, char** argv)
         else
         {
             cerr << "Bad " << "--format" << " option: " << m << "\n";
-            return -1;
+            return AlethErrors::BadFormatOption;
         }
     }
     if (vm.count("to"))
@@ -607,7 +609,7 @@ int main(int argc, char** argv)
         else
         {
             cerr << "Bad " << "--upnp" << " option: " << m << "\n";
-            return -1;
+            return AlethErrors::BadUpnpOption;
         }
     }
 #endif
@@ -619,7 +621,7 @@ int main(int argc, char** argv)
         catch (...)
         {
             cerr << "Bad " << "--network-id" << " option: " << vm["network-id"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadNetworkIdOption;
         }
     if (vm.count("private"))
         try
@@ -629,7 +631,7 @@ int main(int argc, char** argv)
         catch (...)
         {
             cerr << "Bad " << "--private" << " option: " << vm["private"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadPrivateOption;
         }
     if (vm.count("kill"))
         withExisting = WithExisting::Kill;
@@ -645,12 +647,12 @@ int main(int argc, char** argv)
         catch (BadHexCharacter&)
         {
             cerr << "Bad hex in " << "--address" << " option: " << vm["address"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadHexValueInAddressOption;
         }
         catch (...)
         {
             cerr << "Bad " << "--address" << " option: " << vm["address"].as<string>() << "\n";
-            return -1;
+            return AlethErrors::BadAddressOption;
         }
     if ((vm.count("import-secret")))
     {
@@ -673,7 +675,7 @@ int main(int argc, char** argv)
         AccountManager::streamWalletHelp(cout);
         cout << clientDefaultMode << clientTransacting << clientNetworking << clientMining << minerOptions;
         cout << importExportMode << dbOptions << vmOptions << loggingProgramOptions << generalOptions;
-        return 0;
+        return AlethErrors::Success;
     }
 
     if (!configJSON.empty())
@@ -687,7 +689,7 @@ int main(int argc, char** argv)
         {
             cerr << "provided configuration is not well formatted\n";
             cerr << "sample: \n" << genesisInfo(eth::Network::MainNetworkTest) << "\n";
-            return 0;
+            return AlethErrors::Success;
         }
     }
 
@@ -757,7 +759,7 @@ int main(int argc, char** argv)
     netPrefs.allowLocalDiscovery = allowLocalDiscovery;
     netPrefs.pin = vm.count("pin") != 0;
 
-    auto nodesState = contents(getDataDir() / fs::path("network.rlp"));
+    auto nodesState = contents(getDataDir() / fs::path(c_networkConfigFileName));
 
     if (testingMode)
         chainParams.allowFutureBlocks = true;
@@ -780,7 +782,7 @@ int main(int argc, char** argv)
         catch (...)
         {
             cerr << "Bad block number/hash option: " << s << "\n";
-            return -1;
+            return AlethErrors::BadBlockNumberHashOption;
         }
     };
 
@@ -801,7 +803,7 @@ int main(int argc, char** argv)
             default:;
             }
         }
-        return 0;
+        return AlethErrors::Success;
     }
 
     if (mode == OperationMode::Import)
@@ -857,7 +859,7 @@ int main(int argc, char** argv)
         }
         double e = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - t).count() / 1000.0;
         cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")\n";
-        return 0;
+        return AlethErrors::Success;
     }
 
     try
@@ -886,7 +888,7 @@ int main(int argc, char** argv)
     catch(...)
     {
         cerr << "Error initializing key manager: " << boost::current_exception_diagnostic_information() << "\n";
-        return -1;
+        return AlethErrors::KeyManagerInitializationFailure;
     }
 
     for (auto const& presale: presaleImports)
@@ -914,7 +916,7 @@ int main(int argc, char** argv)
         catch (...)
         {
             cerr << "Error during importing the snapshot: " << boost::current_exception_diagnostic_information() << endl;
-            return -1;
+            return AlethErrors::SnapshotImportFailure;
         }
     }
 
@@ -1024,7 +1026,7 @@ int main(int argc, char** argv)
                 web3.addNode(p.first, p.second.first);
 
         if (bootstrap && privateChain.empty())
-            for (auto const& i: Host::pocHosts())
+            for (auto const& i : Host::pocHosts())
                 web3.requirePeer(i.first, i.second);
         if (!remoteHost.empty())
             web3.addNode(p2p::NodeID(), remoteHost + ":" + toString(remotePort));
@@ -1049,7 +1051,7 @@ int main(int argc, char** argv)
         web3.stopNetwork();
         auto netData = web3.saveNetwork();
         if (!netData.empty())
-            writeFile(getDataDir() / fs::path("network.rlp"), netData);
+            writeFile(getDataDir() / fs::path(c_networkConfigFileName), netData);
     }
-    return 0;
+    return AlethErrors::Success;
 }

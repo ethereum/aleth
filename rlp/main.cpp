@@ -1,40 +1,26 @@
-/*
-    This file is part of cpp-ethereum.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file main.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * RLP tool.
- */
-#include <clocale>
-#include <fstream>
-#include <iostream>
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <boost/program_options/options_description.hpp>
 #include <json_spirit/JsonSpiritHeaders.h>
+#include <libdevcore/Base64.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/Common.h>
 #include <libdevcrypto/CryptoPP.h>
-#include <libdevcore/Base64.h>
+#include <libethcore/Common.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <clocale>
+#include <fstream>
+#include <iostream>
 using namespace std;
 using namespace dev;
+using namespace dev::eth;
+
 namespace js = json_spirit;
 namespace po = boost::program_options;
 
@@ -204,7 +190,7 @@ int main(int argc, char** argv)
     catch (po::error const& e)
     {
         cerr << e.what();
-        return -1;
+        return AlethErrors::ArgumentProcessingFailure;
     }
 
 
@@ -234,7 +220,7 @@ int main(int argc, char** argv)
              << "    extract  [ <file> | -- ]  Extract all items in the RLP list, named by hash." << endl
              << "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
              << renderOptions << generalOptions;
-        exit(0);
+        exit(AlethErrors::Success);
     }
     if (vm.count("lenience"))
         lenience = true;
@@ -335,17 +321,17 @@ int main(int argc, char** argv)
         {
             if (!rlp.isList())
             {
-                cout << "Error: Invalid format; RLP data is not a list." << endl;
-                exit(1);
+                cerr << "Error: Invalid format; RLP data is not a list." << endl;
+                exit(AlethErrors::BadRlp);
             }
             cout << rlp.itemCount() << " items:" << endl;
             for (auto i: rlp)
             {
                 if (!i.isData())
                 {
-                    cout << "Error: Invalid format; RLP list item is not data." << endl;
+                    cerr << "Error: Invalid format; RLP list item is not data." << endl;
                     if (!lenience)
-                        exit(1);
+                        exit(AlethErrors::BadRlp);
                 }
                 cout << "    " << i.size() << " bytes: " << sha3(i.data()) << endl;
             }
@@ -355,17 +341,17 @@ int main(int argc, char** argv)
         {
             if (!rlp.isList())
             {
-                cout << "Error: Invalid format; RLP data is not a list." << endl;
-                exit(1);
+                cerr << "Error: Invalid format; RLP data is not a list." << endl;
+                exit(AlethErrors::BadRlp);
             }
             cout << rlp.itemCount() << " items:" << endl;
             for (auto i: rlp)
             {
                 if (!i.isData())
                 {
-                    cout << "Error: Invalid format; RLP list item is not data." << endl;
+                    cerr << "Error: Invalid format; RLP list item is not data." << endl;
                     if (!lenience)
-                        exit(1);
+                        exit(AlethErrors::BadRlp);
                 }
                 ofstream fout;
                 fout.open(toString(sha3(i.data())));
@@ -439,7 +425,7 @@ int main(int argc, char** argv)
             catch (...)
             {
                 cerr << "Error: Invalid format; bad JSON." << endl;
-                exit(1);
+                exit(AlethErrors::InvalidJson);
             }
             RLPStream out;
             while (!v.empty())
@@ -484,7 +470,7 @@ int main(int argc, char** argv)
                 default:
                     cerr << "ERROR: Unsupported type in JSON." << endl;
                     if (!lenience)
-                        exit(1);
+                        exit(AlethErrors::UnsupportedJsonType);
                 }
             }
             putOut(out.out(), encoding, encrypt, quiet);
@@ -496,8 +482,8 @@ int main(int argc, char** argv)
     catch (...)
     {
         cerr << "Error: Invalid format; bad RLP." << endl;
-        exit(1);
+        exit(AlethErrors::BadRlp);
     }
 
-    return 0;
+    return AlethErrors::Success;
 }

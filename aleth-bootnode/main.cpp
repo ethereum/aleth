@@ -17,6 +17,7 @@
 
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
+#include <libethcore/Common.h>
 #include <libp2p/Host.h>
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -28,6 +29,7 @@ namespace fs = boost::filesystem;
 
 using namespace dev;
 using namespace dev::p2p;
+using namespace dev::eth;
 using namespace std;
 
 namespace
@@ -77,7 +79,7 @@ int main(int argc, char** argv)
     catch (po::error const& e)
     {
         cout << e.what() << "\n";
-        return -1;
+        return AlethErrors::ArgumentProcessingFailure;
     }
 
     if (vm.count("help"))
@@ -87,7 +89,7 @@ int main(int argc, char** argv)
              << "USAGE:\n"
              << "   " << c_programName << " [options]\n\n";
         cout << generalOptions << clientNetworking << loggingProgramOptions;
-        return 0;
+        return AlethErrors::Success;
     }
 
     /// Networking params.
@@ -149,5 +151,5 @@ int main(int argc, char** argv)
     if (!netData.empty())
         writeFile(getDataDir() / fs::path(c_networkConfigFileName), &netData);
 
-    return 0;
+    return AlethErrors::Success;
 }
