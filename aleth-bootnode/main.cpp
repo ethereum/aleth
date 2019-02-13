@@ -5,6 +5,7 @@
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
 #include <libethcore/Common.h>
+#include <libp2p/Common.h>
 #include <libp2p/Host.h>
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -127,13 +128,13 @@ int main(int argc, char** argv)
     Host h(c_programName, netPrefs, &netData);
     h.start();
     if (!h.haveNetwork())
-        return -1;
+        return AlethErrors::NetworkStartFailure;
 
     cout << "Node ID: " << h.enode() << endl;
 
     if (!noBootstrap)
     {
-        for (auto const& bn : Host::pocHosts())
+        for (auto const& bn : defaultBootNodes())
         {
             bi::tcp::endpoint ep = Network::resolveHost(bn.second);
             h.addNode(
