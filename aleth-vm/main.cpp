@@ -1,28 +1,13 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/// @file
-/// EVM Execution tool.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/LoggingProgramOptions.h>
 #include <libdevcore/SHA3.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
+#include <libethcore/Common.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/Block.h>
 #include <libethereum/ChainParams.h>
@@ -58,7 +43,7 @@ void version()
     const auto* buildinfo = aleth_get_buildinfo();
     cout << "aleth-vm " << buildinfo->project_version << "\n";
     cout << "Build: " << buildinfo->system_name << "/" << buildinfo->build_type << "\n";
-    exit(0);
+    exit(AlethErrors::Success);
 }
 
 enum class Mode
@@ -191,13 +176,13 @@ int main(int argc, char** argv)
         else
         {
             cerr << "Unknown argument: " << arg << '\n';
-            return -1;
+            return AlethErrors::UnknownArgument;
         }
     }
     if (vm.count("help"))
     {
         cout << allowedOptions;
-        return 0;
+        return AlethErrors::Success;
     }
     if (vm.count("version"))
     {
@@ -243,7 +228,7 @@ int main(int argc, char** argv)
         else
         {
             cerr << "Unknown network type: " << network << "\n";
-            return -1;
+            return AlethErrors::UnknownNetworkType;
         }
     }
     if (vm.count("input"))
@@ -377,5 +362,5 @@ int main(int argc, char** argv)
              << '\n';
         cout << "exec time: " << fixed << setprecision(6) << execTime << '\n';
     }
-    return 0;
+    return AlethErrors::Success;
 }
