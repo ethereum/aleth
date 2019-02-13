@@ -241,7 +241,7 @@ jobs:
       - checkout
       - run:
           name: "Update required git submodules"
-          command: git submodule update --init --recursive evmc cmake/cable
+          command: git submodule update --init --recursive cmake/cable evmc scripts/dopple
       - setup_remote_docker
       - run:
           name: "Build docker images"
