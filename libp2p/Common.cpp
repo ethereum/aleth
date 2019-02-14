@@ -253,9 +253,9 @@ boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& _log,
     return _log << _node.id << '@' << _node.endpoint;
 }
 
-std::unordered_map<Public, std::string> defaultBootNodes()
+std::unordered_map<Public, std::string>& defaultBootNodes()
 {
-    return{
+    static std::unordered_map<Public, std::string> ret = {
         // Mainnet:
         { Public("a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c"), "52.16.188.185:30303" },
         { Public("3f1d12044546b76342d59d4a05532c14b85aa669704bfe1f864fe079415aa2c02d743e03218e57a33fb94523adb54032871a6c51b2cc5514cb7c7e35b3ed0a99"), "13.93.211.84:30303" },
@@ -268,6 +268,8 @@ std::unordered_map<Public, std::string> defaultBootNodes()
         { Public("6332792c4a00e3e4ee0926ed89e0d27ef985424d97b6a45bf0f23e51f0dcb5e66b875777506458aea7af6f9e4ffb69f43f3778ee73c81ed9d34c51c4b16b0b0f"), "52.232.243.152:30303" },
         { Public("94c15d1b9e2fe7ce56e458b9a3b672ef11894ddedd0c6f247e0f1d3487f52b66208fb4aeb8179fce6e3a749ea93ed147c37976d67af557508d199d9594c35f09"), "192.81.208.223:30303" },
     };
+
+    return ret;
 }
 
 }  // namespace p2p
