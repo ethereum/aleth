@@ -77,14 +77,10 @@ struct TestNodeTable: public NodeTable
             if (_count--)
             {
                 // manually add node for test
-                {
-                    Guard ln(x_nodes);
-                    m_allNodes[n.first] = make_shared<NodeEntry>(m_hostNodeID, n.first,
-                        NodeIPEndpoint(ourIp, n.second, n.second),
-                        RLPXDatagramFace::secondsSinceEpoch(),
-                        RLPXDatagramFace::secondsSinceEpoch());
-                }
-                noteActiveNode(n.first, bi::udp::endpoint(ourIp, n.second));
+                auto entry = make_shared<NodeEntry>(m_hostNodeID, n.first,
+                    NodeIPEndpoint(ourIp, n.second, n.second),
+                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
+                noteActiveNode(move(entry), bi::udp::endpoint(ourIp, n.second));
             }
             else
                 break;
@@ -100,17 +96,12 @@ struct TestNodeTable: public NodeTable
         bi::address ourIp = bi::address::from_string(c_localhostIp);
         while (testNode != _testNodes.end())
         {
-            unsigned distance = 0;
             // manually add node for test
-            {
-                Guard ln(x_nodes);
-                auto node(make_shared<NodeEntry>(m_hostNodeID, testNode->first,
-                    NodeIPEndpoint(ourIp, testNode->second, testNode->second),
-                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch()));
-                m_allNodes[node->id] = node;
-                distance = node->distance;
-            }
-            noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
+            auto node(make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+                NodeIPEndpoint(ourIp, testNode->second, testNode->second),
+                RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch()));
+            auto distance = node->distance;
+            noteActiveNode(move(node), bi::udp::endpoint(ourIp, testNode->second));
 
             {
                 Guard stateGuard(x_state);
@@ -137,21 +128,18 @@ struct TestNodeTable: public NodeTable
         while (testNode != _testNodes.end() && bucketSize(_bucket) < _bucketSize)
         {
             // manually add node for test
+            // skip the nodes for other buckets
+            size_t const dist = distance(m_hostNodeID, testNode->first);
+            if (dist != _bucket + 1)
             {
-                // skip the nodes for other buckets
-                size_t const dist = distance(m_hostNodeID, testNode->first);
-                if (dist != _bucket + 1)
-                {
-                    ++testNode;
-                    continue;
-                }
-
-                Guard ln(x_nodes);
-                m_allNodes[testNode->first] = make_shared<NodeEntry>(m_hostNodeID, testNode->first,
-                    NodeIPEndpoint(ourIp, testNode->second, testNode->second),
-                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
+                ++testNode;
+                continue;
             }
-            noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
+
+            auto entry = make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+                NodeIPEndpoint(ourIp, testNode->second, testNode->second),
+                RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
+            noteActiveNode(move(entry), bi::udp::endpoint(ourIp, testNode->second));
 
             ++testNode;
         }
@@ -514,7 +502,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeUpdatesKnownNode)
     auto& nodeTable = nodeTableHost.nodeTable;
     auto knownNode = nodeTable->bucketFirstNode(bucketIndex);
 
-    nodeTable->noteActiveNode(knownNode->id, knownNode->endpoint);
+    nodeTable->noteActiveNode(knownNode, knownNode->endpoint);
 
     // check that node was moved to the back of the bucket
     BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex), knownNode);
@@ -560,8 +548,8 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     // but added to evictions
     auto evicted = nodeTable->nodeValidation(leastRecentlySeenNode->id);
     BOOST_REQUIRE(evicted.is_initialized());
-    BOOST_REQUIRE(evicted->replacementNodeID);
-    BOOST_CHECK_EQUAL(*evicted->replacementNodeID, newNodeId);
+    BOOST_REQUIRE(evicted->replacementNodeEntry);
+    BOOST_CHECK_EQUAL(evicted->replacementNodeEntry->id, newNodeId);
 }
 
 BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
@@ -571,21 +559,21 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     BOOST_REQUIRE(bucketIndex >= 0);
 
     auto& nodeTable = nodeTableHost.nodeTable;
-    auto leastRecentlySeenNodeId = nodeTable->bucketFirstNode(bucketIndex)->id;
+    auto leastRecentlySeenNode = nodeTable->bucketFirstNode(bucketIndex);
 
     // addNode will replace the node in the m_allNodes map, because it's the same id with enother
     // endpoint
     auto const port = randomPortNumber();
     NodeIPEndpoint newEndpoint{bi::address::from_string(c_localhostIp), port, port };
-    nodeTable->noteActiveNode(leastRecentlySeenNodeId, newEndpoint);
+    nodeTable->noteActiveNode(leastRecentlySeenNode, newEndpoint);
 
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodeTable->bucketSize(bucketIndex), 16);
     // least recently seen node removed
-    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex)->id, leastRecentlySeenNodeId);
+    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex)->id, leastRecentlySeenNode->id);
     // but added as most recently seen with new endpoint
     auto mostRecentNodeEntry = nodeTable->bucketLastNode(bucketIndex);
-    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNodeId);
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNode->id);
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.address(), newEndpoint.address());
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.udpPort(), newEndpoint.udpPort());
 }
