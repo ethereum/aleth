@@ -15,7 +15,7 @@ using namespace std;
 const NodeIPEndpoint UnspecifiedNodeIPEndpoint = NodeIPEndpoint{{}, 0, 0};
 const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
 
-bool isPublicAddress(std::string const& _addressToCheck)
+bool isPublicAddress(string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false :
                                      isPublicAddress(bi::address::from_string(_addressToCheck));
@@ -69,7 +69,7 @@ bool isPrivateAddress(bi::address const& _addressToCheck)
     return false;
 }
 
-bool isPrivateAddress(std::string const& _addressToCheck)
+bool isPrivateAddress(string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false :
                                      isPrivateAddress(bi::address::from_string(_addressToCheck));
@@ -89,13 +89,13 @@ bool isLocalHostAddress(bi::address const& _addressToCheck)
     return c_rejectAddresses.find(_addressToCheck) != c_rejectAddresses.end();
 }
 
-bool isLocalHostAddress(std::string const& _addressToCheck)
+bool isLocalHostAddress(string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false :
                                      isLocalHostAddress(bi::address::from_string(_addressToCheck));
 }
 
-std::string reasonOf(DisconnectReason _r)
+string reasonOf(DisconnectReason _r)
 {
     switch (_r)
     {
@@ -216,7 +216,7 @@ NodeIPEndpoint NodeSpec::nodeIPEndpoint() const
     return {Network::resolveHost(m_address).address(), m_udpPort, m_tcpPort};
 }
 
-std::string NodeSpec::enode() const
+string NodeSpec::enode() const
 {
     string ret = m_address;
 
@@ -238,7 +238,7 @@ bool NodeSpec::isValid() const
     return m_id && !m_address.empty();
 }
 
-std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep)
+ostream& operator<<(ostream& _out, NodeIPEndpoint const& _ep)
 {
     _out << _ep.address() << ':' << _ep.tcpPort();
     // It rarely happens that TCP and UDP are different, so save space
@@ -253,9 +253,9 @@ boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& _log,
     return _log << _node.id << '@' << _node.endpoint;
 }
 
-std::unordered_map<Public, std::string>& defaultBootNodes()
+unordered_map<Public, string>& defaultBootNodes()
 {
-    static std::unordered_map<Public, std::string> ret = {
+    static unordered_map<Public, string> ret = {
         // Mainnet:
         { Public("a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c"), "52.16.188.185:30303" },
         { Public("3f1d12044546b76342d59d4a05532c14b85aa669704bfe1f864fe079415aa2c02d743e03218e57a33fb94523adb54032871a6c51b2cc5514cb7c7e35b3ed0a99"), "13.93.211.84:30303" },
