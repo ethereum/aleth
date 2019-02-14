@@ -1,23 +1,11 @@
-/*
-    This file is part of aleth.
-
-    aleth is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    aleth is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with aleth.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/LoggingProgramOptions.h>
 #include <libethcore/Common.h>
+#include <libp2p/Common.h>
 #include <libp2p/Host.h>
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -26,6 +14,7 @@
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+namespace bi = boost::asio::ip;
 
 using namespace dev;
 using namespace dev::p2p;
@@ -43,6 +32,7 @@ int main(int argc, char** argv)
     setDefaultOrCLocale();
 
     bool allowLocalDiscovery = false;
+    bool noBootstrap = false;
 
     po::options_description generalOptions("GENERAL OPTIONS", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
@@ -66,6 +56,8 @@ int main(int argc, char** argv)
         "Listen on the given port for incoming connections (default: 30303)");
     addNetworkingOption("allow-local-discovery", po::bool_switch(&allowLocalDiscovery),
         "Include local addresses in the discovery process. Used for testing purposes.");
+    addNetworkingOption("no-bootstrap", po::bool_switch(&noBootstrap),
+        "Do not connect to the default Ethereum bootnode servers");
     po::options_description allowedOptions("Allowed options");
     allowedOptions.add(generalOptions).add(loggingProgramOptions).add(clientNetworking);
 
@@ -122,6 +114,7 @@ int main(int argc, char** argv)
         listenIP = vm["listen-ip"].as<string>();
     if (vm.count("listen"))
         listenPort = vm["listen"].as<unsigned short>();
+
     setupLogging(loggingOptions);
     if (loggingOptions.verbosity > 0)
         cout << EthGrayBold << c_programName << ", a C++ Ethereum bootnode implementation" EthReset
@@ -134,8 +127,20 @@ int main(int argc, char** argv)
 
     Host h(c_programName, netPrefs, &netData);
     h.start();
+    if (!h.haveNetwork())
+        return AlethErrors::NetworkStartFailure;
 
     cout << "Node ID: " << h.enode() << endl;
+
+    if (!noBootstrap)
+    {
+        for (auto const& bn : defaultBootNodes())
+        {
+            bi::tcp::endpoint ep = Network::resolveHost(bn.second);
+            h.addNode(
+                bn.first, NodeIPEndpoint{ep.address(), ep.port() /* udp */, ep.port() /* tcp */});
+        }
+    }
 
     ExitHandler exitHandler;
     signal(SIGTERM, &ExitHandler::exitHandler);
