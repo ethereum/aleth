@@ -299,7 +299,7 @@ private:
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep);
 
 /// Official Ethereum boot nodes
-std::unordered_map<Public, std::string>& defaultBootNodes();
+std::vector<std::pair<Public, const char*>> defaultBootNodes();
 }
 }
 
