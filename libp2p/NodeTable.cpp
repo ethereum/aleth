@@ -312,11 +312,12 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
 {
     // Don't sent Ping if one is already sent
     if (contains(m_sentPings, _node.id))
+    {
+        LOG(m_logger) << "Ignoring request to ping " << _node << ", because it's already pinged";
         return;
+    }
 
-    NodeIPEndpoint src;
-    src = m_hostNodeEndpoint;
-    PingNode p(src, _node.endpoint);
+    PingNode p{m_hostNodeEndpoint, _node.endpoint};
     p.ts = nextRequestExpirationTime();
     auto const pingHash = p.sign(m_secret);
     LOG(m_logger) << p.typeName() << " to " << _node;
