@@ -1068,11 +1068,8 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived4));
     BOOST_REQUIRE_EQUAL(datagram4->typeName(), "Pong");
 
-    // Verify that the next packet received is not a ping
-    auto packetReceived5 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(20000));
-    auto datagram5 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived5));
-    BOOST_REQUIRE(datagram5->typeName() != "Ping");
+    // Verify that another ping isn't sent
+    BOOST_REQUIRE_THROW(nodeSocketHost2.packetsReceived.pop(chrono::seconds(3)), WaitTimeout);
 
     // Force the endpoint proof to be invalid
     auto newNode = nodeTable1->nodeEntry(nodeKeyPair2.pub());
