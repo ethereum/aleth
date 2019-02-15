@@ -110,7 +110,7 @@ bool NodeTable::addKnownNode(
     if (entry->hasValidEndpointProof())
     {
         LOG(m_logger) << "Known " << _node;
-        noteActiveNode(move(entry), entry->endpoint);
+        noteActiveNode(move(entry), _node.endpoint);
     }
     else
     {
