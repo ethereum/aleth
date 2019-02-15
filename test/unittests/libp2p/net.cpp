@@ -626,9 +626,10 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     // wait for PONG to be received and handled
     nodeTable->packetsReceived.pop();
 
-    BOOST_REQUIRE(nodeTable->nodeExists(nodePubKey));
-    auto addedNode = nodeTable->nodeEntry(nodePubKey);
-    BOOST_CHECK_EQUAL(addedNode->lastPongReceivedTime, 0);
+    // pending node validation should still be not deleted
+    BOOST_REQUIRE(nodeTable->nodeValidation(nodePubKey));
+    // node is not in the node table
+    BOOST_REQUIRE(!nodeTable->nodeExists(nodePubKey));
 }
 
 BOOST_AUTO_TEST_CASE(validPong)
@@ -950,7 +951,8 @@ BOOST_AUTO_TEST_CASE(pingFromLocalhost)
 
 BOOST_AUTO_TEST_CASE(addSelf)
 {
-    TestNodeTableHost nodeTableHost(512);
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
     auto& nodeTable = nodeTableHost.nodeTable;
 
     size_t expectedNodeCount = 0;
@@ -960,28 +962,26 @@ BOOST_AUTO_TEST_CASE(addSelf)
     auto nodePort = nodeSocketHost.port;
     auto nodeEndpoint = NodeIPEndpoint{ bi::address::from_string(c_localhostIp), nodePort, nodePort };
 
-    // Create arbitrary node and verify it can be added to the node table
-    auto nodeKeyPair = KeyPair::create();
-    Node node(nodeKeyPair.pub(), nodeEndpoint);
+    // Create arbitrary node and verify it can be pinged
+    auto nodePubKey = KeyPair::create().pub();
+    Node node(nodePubKey, nodeEndpoint);
     nodeTable->addNode(node);
-    BOOST_CHECK(nodeTable->count() == ++expectedNodeCount);
+    BOOST_CHECK(nodeTable->nodeValidation(nodePubKey));
 
-    // Create self node and verify it isn't added to the node table
+    // Create self node and verify it isn't pinged
     Node self(nodeTableHost.m_alias.pub(), nodeEndpoint);
     nodeTable->addNode(self);
-    BOOST_CHECK(nodeTable->count() == ++expectedNodeCount - 1);
+    BOOST_CHECK(!nodeTable->nodeValidation(nodeTableHost.m_alias.pub()));
 }
 
 BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
 {
     // Node Table receiving Ping and sending FindNode
-    TestNodeTableHost nodeTableHost1(15);
-    nodeTableHost1.populate();
+    TestNodeTableHost nodeTableHost1(0);
     nodeTableHost1.start();
     auto& nodeTable1 = nodeTableHost1.nodeTable;
 
-    TestNodeTableHost nodeTableHost2(512, nodeTable1->m_hostNodeEndpoint.udpPort() + 1);
-    nodeTableHost2.populate();
+    TestNodeTableHost nodeTableHost2(0, nodeTable1->m_hostNodeEndpoint.udpPort() + 1);
     nodeTableHost2.start();
     auto& nodeTable2 = nodeTableHost2.nodeTable;
 
