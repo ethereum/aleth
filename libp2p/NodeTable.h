@@ -126,10 +126,10 @@ public:
     /// Called by implementation which provided handler to process NodeEntryAdded/NodeEntryDropped events. Events are coalesced by type whereby old events are ignored.
     void processEvents();
 
-    /// Starts async node adding tot the node table by pinging it to trigger the endpoint proof.
+    /// Starts async node add to the node table by pinging it to trigger the endpoint proof.
     /// In case the node is already in the node table, pings only if the endpoint proof expired.
     ///
-    /// @return True if the node id valid.
+    /// @return True if the node is valid.
     bool addNode(Node const& _node);
 
     /// Add node to the list of all nodes and add it to the node table.
