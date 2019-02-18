@@ -30,7 +30,7 @@ namespace
 constexpr chrono::seconds c_keepAliveInterval = chrono::seconds(30);
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
-constexpr chrono::milliseconds c_keepAliveTimeOut = chrono::milliseconds(1000);
+constexpr chrono::seconds c_keepAliveTimeOut = chrono::seconds(1);
 }  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}

@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(kademlia)
     nodes.sort();
     node.nodeTable->reset();
     node.populate(1);
-    this_thread::sleep_for(chrono::milliseconds(2000));
+    this_thread::sleep_for(chrono::seconds(2));
     BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
 }
 
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(hostNoCapsNoTcpListener)
     ping.sign(KeyPair::create().secret());
     nodeSocketHost.socket->send(ping);
 
-    BOOST_REQUIRE_NO_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)));
+    BOOST_REQUIRE_NO_THROW(nodeSocketHost.packetsReceived.pop(chrono::seconds(5)));
 }
 
 BOOST_AUTO_TEST_CASE(udpOnce)
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(invalidPing)
     nodeTable->packetsReceived.pop();
 
     // Verify that no PONG response is received
-    BOOST_CHECK_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(3000)), WaitTimeout);
+    BOOST_CHECK_THROW(nodeSocketHost.packetsReceived.pop(chrono::seconds(3)), WaitTimeout);
 }
 
 BOOST_AUTO_TEST_CASE(neighboursSentAfterFindNode)
@@ -776,10 +776,10 @@ BOOST_AUTO_TEST_CASE(neighboursSentAfterFindNode)
     nodeSocketHost.socket->send(findNode);
 
     // Wait for FindNode to be received and handled
-    nodeTable->packetsReceived.pop(chrono::milliseconds(5000));
+    nodeTable->packetsReceived.pop(chrono::seconds(5));
 
     // Wait for the Neighbours packet to be received
-    auto packetReceived = nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000));
+    auto packetReceived = nodeSocketHost.packetsReceived.pop(chrono::seconds(5));
     auto datagram = DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived));
     BOOST_CHECK_EQUAL(datagram->typeName(), "Neighbours");
 
@@ -803,10 +803,10 @@ BOOST_AUTO_TEST_CASE(unexpectedFindNode)
     nodeSocketHost.socket->send(findNode);
 
     // Wait for FindNode to be received
-    nodeTable->packetsReceived.pop(chrono::milliseconds(5000));
+    nodeTable->packetsReceived.pop(chrono::seconds(5));
 
     // Verify that no neighbours response is received
-    BOOST_CHECK_THROW(nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)), WaitTimeout);
+    BOOST_CHECK_THROW(nodeSocketHost.packetsReceived.pop(chrono::seconds(5)), WaitTimeout);
 }
 
 BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
@@ -950,14 +950,14 @@ BOOST_AUTO_TEST_CASE(pingFromLocalhost)
     nodeSocketHost.socket->send(ping);
 
     // Wait for the node table to receive and process the ping
-    nodeTable->packetsReceived.pop(chrono::milliseconds(5000));
+    nodeTable->packetsReceived.pop(chrono::seconds(5));
 
     // Verify the node wasn't added to the node table
     BOOST_REQUIRE(nodeTable->count() == expectedNodeCount);
 
     // Verify that the node table doesn't respond with a pong
     BOOST_REQUIRE_THROW(
-        nodeSocketHost.packetsReceived.pop(chrono::milliseconds(5000)), WaitTimeout);
+        nodeSocketHost.packetsReceived.pop(chrono::seconds(5)), WaitTimeout);
 }
 
 BOOST_AUTO_TEST_CASE(addSelf)
@@ -1039,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     nodeTable1->addNode(node2);
 
     // Verify ping is received
-    auto packetReceived1 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto packetReceived1 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
     auto datagram1 =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived1));
     BOOST_REQUIRE_EQUAL(datagram1->typeName(), "Ping");
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     nodeSocketHost2.socket->send(pong);
 
     // Receive FindNode packet
-    auto packetReceived3 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(20000));
+    auto packetReceived3 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(20));
     auto datagram3 =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived3));
     BOOST_REQUIRE_EQUAL(datagram3->typeName(), "FindNode");
@@ -1063,16 +1063,13 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     ping2.sign(nodeKeyPair2.secret());
     nodeSocketHost2.socket->send(ping2);
 
-    auto packetReceived4 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto packetReceived4 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
     auto datagram4 =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived4));
     BOOST_REQUIRE_EQUAL(datagram4->typeName(), "Pong");
 
-    // Verify that the next packet received is not a ping
-    auto packetReceived5 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(20000));
-    auto datagram5 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived5));
-    BOOST_REQUIRE(datagram5->typeName() != "Ping");
+    // Verify that another ping isn't sent
+    BOOST_REQUIRE_THROW(nodeSocketHost2.packetsReceived.pop(chrono::seconds(3)), WaitTimeout);
 
     // Force the endpoint proof to be invalid
     auto newNode = nodeTable1->nodeEntry(nodeKeyPair2.pub());
@@ -1084,12 +1081,12 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     ping3.sign(nodeKeyPair2.secret());
     nodeSocketHost2.socket->send(ping3);
 
-    auto packetReceived6 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto packetReceived6 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
     auto datagram6 =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived4));
     BOOST_CHECK_EQUAL(datagram4->typeName(), "Pong");
 
-    auto packetReceived7 = nodeSocketHost2.packetsReceived.pop(chrono::milliseconds(5000));
+    auto packetReceived7 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
     auto datagram7 =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived7));
     BOOST_REQUIRE(datagram7->typeName() == "Ping");

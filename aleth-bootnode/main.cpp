@@ -148,7 +148,7 @@ int main(int argc, char** argv)
     signal(SIGINT, &ExitHandler::exitHandler);
 
     while (!exitHandler.shouldExit())
-        this_thread::sleep_for(chrono::milliseconds(1000));
+        this_thread::sleep_for(chrono::seconds(1));
 
     h.stop();
 
