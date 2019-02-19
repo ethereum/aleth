@@ -77,14 +77,10 @@ struct TestNodeTable: public NodeTable
             if (_count--)
             {
                 // manually add node for test
-                {
-                    Guard ln(x_nodes);
-                    m_allNodes[n.first] = make_shared<NodeEntry>(m_hostNodeID, n.first,
-                        NodeIPEndpoint(ourIp, n.second, n.second),
-                        RLPXDatagramFace::secondsSinceEpoch(),
-                        RLPXDatagramFace::secondsSinceEpoch());
-                }
-                noteActiveNode(n.first, bi::udp::endpoint(ourIp, n.second));
+                auto entry = make_shared<NodeEntry>(m_hostNodeID, n.first,
+                    NodeIPEndpoint(ourIp, n.second, n.second),
+                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
+                noteActiveNode(move(entry), bi::udp::endpoint(ourIp, n.second));
             }
             else
                 break;
@@ -100,17 +96,12 @@ struct TestNodeTable: public NodeTable
         bi::address ourIp = bi::address::from_string(c_localhostIp);
         while (testNode != _testNodes.end())
         {
-            unsigned distance = 0;
             // manually add node for test
-            {
-                Guard ln(x_nodes);
-                auto node(make_shared<NodeEntry>(m_hostNodeID, testNode->first,
-                    NodeIPEndpoint(ourIp, testNode->second, testNode->second),
-                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch()));
-                m_allNodes[node->id] = node;
-                distance = node->distance;
-            }
-            noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
+            auto node(make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+                NodeIPEndpoint(ourIp, testNode->second, testNode->second),
+                RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch()));
+            auto distance = node->distance;
+            noteActiveNode(move(node), bi::udp::endpoint(ourIp, testNode->second));
 
             {
                 Guard stateGuard(x_state);
@@ -137,21 +128,18 @@ struct TestNodeTable: public NodeTable
         while (testNode != _testNodes.end() && bucketSize(_bucket) < _bucketSize)
         {
             // manually add node for test
+            // skip the nodes for other buckets
+            size_t const dist = distance(m_hostNodeID, testNode->first);
+            if (dist != _bucket + 1)
             {
-                // skip the nodes for other buckets
-                size_t const dist = distance(m_hostNodeID, testNode->first);
-                if (dist != _bucket + 1)
-                {
-                    ++testNode;
-                    continue;
-                }
-
-                Guard ln(x_nodes);
-                m_allNodes[testNode->first] = make_shared<NodeEntry>(m_hostNodeID, testNode->first,
-                    NodeIPEndpoint(ourIp, testNode->second, testNode->second),
-                    RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
+                ++testNode;
+                continue;
             }
-            noteActiveNode(testNode->first, bi::udp::endpoint(ourIp, testNode->second));
+
+            auto entry = make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+                NodeIPEndpoint(ourIp, testNode->second, testNode->second),
+                RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
+            noteActiveNode(move(entry), bi::udp::endpoint(ourIp, testNode->second));
 
             ++testNode;
         }
@@ -514,7 +502,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeUpdatesKnownNode)
     auto& nodeTable = nodeTableHost.nodeTable;
     auto knownNode = nodeTable->bucketFirstNode(bucketIndex);
 
-    nodeTable->noteActiveNode(knownNode->id, knownNode->endpoint);
+    nodeTable->noteActiveNode(knownNode, knownNode->endpoint);
 
     // check that node was moved to the back of the bucket
     BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex), knownNode);
@@ -560,8 +548,8 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     // but added to evictions
     auto evicted = nodeTable->nodeValidation(leastRecentlySeenNode->id);
     BOOST_REQUIRE(evicted.is_initialized());
-    BOOST_REQUIRE(evicted->replacementNodeID);
-    BOOST_CHECK_EQUAL(*evicted->replacementNodeID, newNodeId);
+    BOOST_REQUIRE(evicted->replacementNodeEntry);
+    BOOST_CHECK_EQUAL(evicted->replacementNodeEntry->id, newNodeId);
 }
 
 BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
@@ -571,21 +559,21 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     BOOST_REQUIRE(bucketIndex >= 0);
 
     auto& nodeTable = nodeTableHost.nodeTable;
-    auto leastRecentlySeenNodeId = nodeTable->bucketFirstNode(bucketIndex)->id;
+    auto leastRecentlySeenNode = nodeTable->bucketFirstNode(bucketIndex);
 
     // addNode will replace the node in the m_allNodes map, because it's the same id with enother
     // endpoint
     auto const port = randomPortNumber();
     NodeIPEndpoint newEndpoint{bi::address::from_string(c_localhostIp), port, port };
-    nodeTable->noteActiveNode(leastRecentlySeenNodeId, newEndpoint);
+    nodeTable->noteActiveNode(leastRecentlySeenNode, newEndpoint);
 
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodeTable->bucketSize(bucketIndex), 16);
     // least recently seen node removed
-    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex)->id, leastRecentlySeenNodeId);
+    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex)->id, leastRecentlySeenNode->id);
     // but added as most recently seen with new endpoint
     auto mostRecentNodeEntry = nodeTable->bucketLastNode(bucketIndex);
-    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNodeId);
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNode->id);
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.address(), newEndpoint.address());
     BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.udpPort(), newEndpoint.udpPort());
 }
@@ -638,9 +626,10 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     // wait for PONG to be received and handled
     nodeTable->packetsReceived.pop();
 
-    BOOST_REQUIRE(nodeTable->nodeExists(nodePubKey));
-    auto addedNode = nodeTable->nodeEntry(nodePubKey);
-    BOOST_CHECK_EQUAL(addedNode->lastPongReceivedTime, 0);
+    // pending node validation should still be not deleted
+    BOOST_REQUIRE(nodeTable->nodeValidation(nodePubKey));
+    // node is not in the node table
+    BOOST_REQUIRE(!nodeTable->nodeExists(nodePubKey));
 }
 
 BOOST_AUTO_TEST_CASE(validPong)
@@ -962,7 +951,8 @@ BOOST_AUTO_TEST_CASE(pingFromLocalhost)
 
 BOOST_AUTO_TEST_CASE(addSelf)
 {
-    TestNodeTableHost nodeTableHost(512);
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
     auto& nodeTable = nodeTableHost.nodeTable;
 
     size_t expectedNodeCount = 0;
@@ -972,28 +962,26 @@ BOOST_AUTO_TEST_CASE(addSelf)
     auto nodePort = nodeSocketHost.port;
     auto nodeEndpoint = NodeIPEndpoint{ bi::address::from_string(c_localhostIp), nodePort, nodePort };
 
-    // Create arbitrary node and verify it can be added to the node table
-    auto nodeKeyPair = KeyPair::create();
-    Node node(nodeKeyPair.pub(), nodeEndpoint);
+    // Create arbitrary node and verify it can be pinged
+    auto nodePubKey = KeyPair::create().pub();
+    Node node(nodePubKey, nodeEndpoint);
     nodeTable->addNode(node);
-    BOOST_CHECK(nodeTable->count() == ++expectedNodeCount);
+    BOOST_CHECK(nodeTable->nodeValidation(nodePubKey));
 
-    // Create self node and verify it isn't added to the node table
+    // Create self node and verify it isn't pinged
     Node self(nodeTableHost.m_alias.pub(), nodeEndpoint);
     nodeTable->addNode(self);
-    BOOST_CHECK(nodeTable->count() == ++expectedNodeCount - 1);
+    BOOST_CHECK(!nodeTable->nodeValidation(nodeTableHost.m_alias.pub()));
 }
 
 BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
 {
     // Node Table receiving Ping and sending FindNode
-    TestNodeTableHost nodeTableHost1(15);
-    nodeTableHost1.populate();
+    TestNodeTableHost nodeTableHost1(0);
     nodeTableHost1.start();
     auto& nodeTable1 = nodeTableHost1.nodeTable;
 
-    TestNodeTableHost nodeTableHost2(512, nodeTable1->m_hostNodeEndpoint.udpPort() + 1);
-    nodeTableHost2.populate();
+    TestNodeTableHost nodeTableHost2(0, nodeTable1->m_hostNodeEndpoint.udpPort() + 1);
     nodeTableHost2.start();
     auto& nodeTable2 = nodeTableHost2.nodeTable;
 
@@ -1090,6 +1078,34 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     auto datagram7 =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived7));
     BOOST_REQUIRE(datagram7->typeName() == "Ping");
+}
+
+BOOST_AUTO_TEST_CASE(addNodePingsNodeOnlyOnce)
+{
+    // NodeTable sending PING
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
+
+    // add a node to node table, initiating PING
+    auto const nodePort = randomPortNumber();
+    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
+    auto nodePubKey = KeyPair::create().pub();
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+    auto sentPing = nodeTable->nodeValidation(nodePubKey);
+    BOOST_REQUIRE(sentPing.is_initialized());
+
+    this_thread::sleep_for(chrono::milliseconds(2000));
+
+    // add it for the second time
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+    auto sentPing2 = nodeTable->nodeValidation(nodePubKey);
+    BOOST_REQUIRE(sentPing2.is_initialized());
+
+    // check that Ping was sent only once, so Ping hash didn't change
+    BOOST_REQUIRE_EQUAL(sentPing->pingHash, sentPing2->pingHash);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -126,14 +126,17 @@ public:
     /// Called by implementation which provided handler to process NodeEntryAdded/NodeEntryDropped events. Events are coalesced by type whereby old events are ignored.
     void processEvents();
 
-    /// Add node to the list of all nodes and ping it to trigger the endpoint proof.
+    /// Starts async node add to the node table by pinging it to trigger the endpoint proof.
+    /// In case the node is already in the node table, pings only if the endpoint proof expired.
     ///
-    /// @return True if the node has been added.
+    /// @return True if the node is valid.
     bool addNode(Node const& _node);
 
     /// Add node to the list of all nodes and add it to the node table.
+    /// In case the node's endpoint proof expired, pings it.
+    /// In case the nodes is already in the node table, ignores add request.
     ///
-    /// @return True if the node has been added to the table.
+    /// @return True if the node is valid.
     bool addKnownNode(
         Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime);
 
@@ -163,14 +166,15 @@ public:
 // protected only for derived classes in tests
 protected:
     /**
-     * NodeValidation is used to record the timepoint of sent PING,
+     * NodeValidation is used to record Pinged node's endpoint, the timepoint of sent PING,
      * time of sending and the new node ID to replace unresponsive node.
      */
     struct NodeValidation
     {
+        NodeIPEndpoint endpoint;
         TimePoint pingSendTime;
         h256 pingHash;
-        boost::optional<NodeID> replacementNodeID;
+        std::shared_ptr<NodeEntry> replacementNodeEntry;
     };
 
     /// Constants for Kademlia, derived from address space.
@@ -200,16 +204,21 @@ protected:
         std::list<std::weak_ptr<NodeEntry>> nodes;
     };
 
-    std::shared_ptr<NodeEntry> createNodeEntry(
-        Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime);
+    /// @return true if the node is valid to be added to the node table.
+    /// (validates node ID and endpoint)
+    bool isValidNode(Node const& _node) const;
 
     /// Used to ping a node to initiate the endpoint proof. Used when contacting neighbours if they
     /// don't have a valid endpoint proof (see doDiscover), refreshing buckets and as part of
-    /// eviction process (see evict). Not synchronous - the ping operation is queued via a timer
-    void ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID = {});
+    /// eviction process (see evict). Synchronous, has to be called only from the network thread.
+    void ping(Node const& _node, std::shared_ptr<NodeEntry> _replacementNodeEntry = {});
+
+    /// Schedules ping() method to be called from the network thread.
+    /// Not synchronous - the ping operation is queued via a timer.
+    void schedulePing(Node const& _node);
 
     /// Used by asynchronous operations to return NodeEntry which is active and managed by node table.
-    std::shared_ptr<NodeEntry> nodeEntry(NodeID _id);
+    std::shared_ptr<NodeEntry> nodeEntry(NodeID const& _id);
 
     /// Used to discovery nodes on network which are close to the given target.
     /// Sends s_alpha concurrent requests to nodes nearest to target, for nodes nearest to target, up to s_maxSteps rounds.
@@ -218,12 +227,13 @@ protected:
     /// Returns nodes from node table which are closest to target.
     std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID _target);
 
-    /// Asynchronously drops _leastSeen node if it doesn't reply and adds _new node, otherwise _new node is thrown away.
-    void evict(NodeEntry const& _leastSeen, NodeEntry const& _new);
+    /// Asynchronously drops _leastSeen node if it doesn't reply and adds _replacement node,
+    /// otherwise _replacement is thrown away.
+    void evict(NodeEntry const& _leastSeen, std::shared_ptr<NodeEntry> _replacement);
 
     /// Called whenever activity is received from a node in order to maintain node table. Only
     /// called for nodes for which we've completed an endpoint proof.
-    void noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint);
+    void noteActiveNode(std::shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoint const& _endpoint);
 
     /// Used to drop node when timeout occurs or when evict() result is to keep previous node.
     void dropNode(std::shared_ptr<NodeEntry> _n);
@@ -273,9 +283,8 @@ protected:
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
 
-    /// Node endpoints. Includes all nodes that we've been in contact with and which haven't been
-    /// evicted. This includes nodes for which we both have and haven't completed the endpoint
-    /// proof.
+    /// Node endpoints. Includes all nodes that were added into node table's buckets
+    /// and have not been evicted yet.
     std::unordered_map<NodeID, std::shared_ptr<NodeEntry>> m_allNodes;
 
     mutable Mutex x_state;											///< LOCK x_state first if both x_nodes and x_state locks are required.

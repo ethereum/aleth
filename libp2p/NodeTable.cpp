@@ -69,20 +69,23 @@ void NodeTable::processEvents()
 
 bool NodeTable::addNode(Node const& _node)
 {
-    shared_ptr<NodeEntry> entry;
+    LOG(m_logger) << "Adding node " << _node;
+
+    if (!isValidNode(_node))
+        return false;
+
+    bool needToPing = false;
     DEV_GUARDED(x_nodes)
     {
         auto const it = m_allNodes.find(_node.id);
-        if (it == m_allNodes.end())
-            entry = createNodeEntry(_node, 0, 0);
-        else
-            entry = it->second;
+        needToPing = (it == m_allNodes.end() || !it->second->hasValidEndpointProof());
     }
-    if (!entry)
-        return false;
 
-    if (!entry->hasValidEndpointProof())
-        ping(*entry);
+    if (needToPing)
+    {
+        LOG(m_logger) << "Pending " << _node;
+        schedulePing(_node);
+    }
 
     return true;
 }
@@ -90,58 +93,57 @@ bool NodeTable::addNode(Node const& _node)
 bool NodeTable::addKnownNode(
     Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
 {
-    shared_ptr<NodeEntry> entry;
-    DEV_GUARDED(x_nodes)
-    {
-        entry = createNodeEntry(_node, _lastPongReceivedTime, _lastPongSentTime);
-    }
-    if (!entry)
+    LOG(m_logger) << "Adding known node " << _node;
+
+    if (!isValidNode(_node))
         return false;
 
+    if (nodeEntry(_node.id))
+    {
+        LOG(m_logger) << "Node " << _node << " is already in the node table";
+        return true;
+    }
+
+    auto entry = make_shared<NodeEntry>(
+        m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
+
     if (entry->hasValidEndpointProof())
-        noteActiveNode(entry->id, entry->endpoint);
+    {
+        LOG(m_logger) << "Known " << _node;
+        noteActiveNode(move(entry), _node.endpoint);
+    }
     else
-        ping(*entry);
+    {
+        LOG(m_logger) << "Pending " << _node;
+        schedulePing(_node);
+    }
 
     return true;
 }
 
-std::shared_ptr<NodeEntry> NodeTable::createNodeEntry(
-    Node const& _node, uint32_t _lastPongReceivedTime, uint32_t _lastPongSentTime)
+bool NodeTable::isValidNode(Node const& _node) const
 {
     if (!_node.endpoint || !_node.id)
     {
         LOG(m_logger) << "Supplied node " << _node
                       << " has an invalid endpoint or id. Skipping adding node to node table.";
-        return {};
+        return false;
     }
 
     if (!isAllowedEndpoint(_node.endpoint))
     {
         LOG(m_logger) << "Supplied node" << _node
                       << " doesn't have an allowed endpoint. Skipping adding node to node table";
-        return {};
+        return false;
     }
 
     if (m_hostNodeID == _node.id)
     {
         LOG(m_logger) << "Skip adding self to node table (" << _node.id << ")";
-        return {};
+        return false;
     }
 
-    if (m_allNodes.find(_node.id) != m_allNodes.end())
-    {
-        LOG(m_logger) << "Node " << _node << " is already in the node table";
-        return {};
-    }
-
-    auto nodeEntry = make_shared<NodeEntry>(
-        m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
-    m_allNodes.insert({_node.id, nodeEntry});
-
-    LOG(m_logger) << (_lastPongReceivedTime > 0 ? "Known " : "Pending ") << _node;
-
-    return nodeEntry;
+    return true;
 }
 
 list<NodeID> NodeTable::nodes() const
@@ -180,7 +182,7 @@ Node NodeTable::node(NodeID const& _id)
     return UnspecifiedNode;
 }
 
-shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID _id)
+shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID const& _id)
 {
     Guard l(x_nodes);
     auto const it = m_allNodes.find(_id);
@@ -204,6 +206,8 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
             // This prevents being considered invalid node and FindNode being ignored.
             if (!node->hasValidEndpointProof())
             {
+                LOG(m_logger) << "Node " << static_cast<Node const&>(*node)
+                              << " endpoint proof expired.";
                 ping(*node);
                 continue;
             }
@@ -304,101 +308,117 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
     return ret;
 }
 
-void NodeTable::ping(NodeEntry const& _nodeEntry, boost::optional<NodeID> const& _replacementNodeID)
+void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEntry)
 {
-    m_timers.schedule(0, [this, _nodeEntry, _replacementNodeID](
-                             boost::system::error_code const& _ec) {
+    // Don't sent Ping if one is already sent
+    if (contains(m_sentPings, _node.id))
+    {
+        LOG(m_logger) << "Ignoring request to ping " << _node << ", because it's already pinged";
+        return;
+    }
+
+    PingNode p{m_hostNodeEndpoint, _node.endpoint};
+    p.ts = nextRequestExpirationTime();
+    auto const pingHash = p.sign(m_secret);
+    LOG(m_logger) << p.typeName() << " to " << _node;
+    m_socket->send(p);
+
+    m_sentPings[_node.id] = {
+        _node.endpoint, chrono::steady_clock::now(), pingHash, move(_replacementNodeEntry)};
+}
+
+void NodeTable::schedulePing(Node const& _node)
+{
+    m_timers.schedule(0, [this, _node](boost::system::error_code const& _ec) {
         if (_ec || m_timers.isStopped())
             return;
 
-        NodeIPEndpoint src;
-        src = m_hostNodeEndpoint;
-        PingNode p(src, _nodeEntry.endpoint);
-        p.ts = nextRequestExpirationTime();
-        auto const pingHash = p.sign(m_secret);
-        LOG(m_logger) << p.typeName() << " to " << _nodeEntry.id << "@" << p.destination;
-        m_socket->send(p);
-
-        m_sentPings[_nodeEntry.id] = {chrono::steady_clock::now(), pingHash, _replacementNodeID};
-        if (m_nodeEventHandler && _replacementNodeID)
-            m_nodeEventHandler->appendEvent(_nodeEntry.id, NodeEntryScheduledForEviction);
+        ping(_node, {});
     });
 }
 
-void NodeTable::evict(NodeEntry const& _leastSeen, NodeEntry const& _new)
+void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replacement)
 {
     if (!m_socket->isOpen())
         return;
 
-    ping(_leastSeen, _new.id);
+    LOG(m_logger) << "Evicting node " << static_cast<Node const&>(_leastSeen);
+    ping(_leastSeen, std::move(_replacement));
+
+    if (m_nodeEventHandler)
+        m_nodeEventHandler->appendEvent(_leastSeen.id, NodeEntryScheduledForEviction);
 }
 
-void NodeTable::noteActiveNode(Public const& _pubk, bi::udp::endpoint const& _endpoint)
+void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoint const& _endpoint)
 {
-    if (_pubk == m_hostNodeID)
+    assert(_nodeEntry);
+
+    if (_nodeEntry->id == m_hostNodeID)
     {
         LOG(m_logger) << "Skipping making self active.";
         return;
     }
     if (!isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
     {
-        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node " << _pubk
-                      << "@" << _endpoint;
+        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node "
+                      << _nodeEntry->id << "@" << _endpoint;
         return;
     }
 
-    shared_ptr<NodeEntry> newNode = nodeEntry(_pubk);
-    if (newNode && newNode->hasValidEndpointProof())
+    if (!_nodeEntry->hasValidEndpointProof())
+        return;
+
+    LOG(m_logger) << "Active node " << _nodeEntry->id << '@' << _endpoint;
+    // TODO don't activate in case endpoint has changed
+    _nodeEntry->endpoint.setAddress(_endpoint.address());
+    _nodeEntry->endpoint.setUdpPort(_endpoint.port());
+
+
+    shared_ptr<NodeEntry> nodeToEvict;
     {
-        LOG(m_logger) << "Active node " << _pubk << '@' << _endpoint;
-        newNode->endpoint.setAddress(_endpoint.address());
-        newNode->endpoint.setUdpPort(_endpoint.port());
+        Guard l(x_state);
+        // Find a bucket to put a node to
+        NodeBucket& s = bucket_UNSAFE(_nodeEntry.get());
+        auto& nodes = s.nodes;
 
-
-        shared_ptr<NodeEntry> nodeToEvict;
+        // check if the node is already in the bucket
+        auto it = std::find(nodes.begin(), nodes.end(), _nodeEntry);
+        if (it != nodes.end())
         {
-            Guard l(x_state);
-            // Find a bucket to put a node to
-            NodeBucket& s = bucket_UNSAFE(newNode.get());
-            auto& nodes = s.nodes;
-
-            // check if the node is already in the bucket
-            auto it = std::find(nodes.begin(), nodes.end(), newNode);
-            if (it != nodes.end())
+            // if it was in the bucket, move it to the last position
+            nodes.splice(nodes.end(), nodes, it);
+        }
+        else
+        {
+            if (nodes.size() < s_bucketSize)
             {
-                // if it was in the bucket, move it to the last position
-                nodes.splice(nodes.end(), nodes, it);
+                // if it was not there, just add it as a most recently seen node
+                // (i.e. to the end of the list)
+                nodes.push_back(_nodeEntry);
+                DEV_GUARDED(x_nodes) { m_allNodes.insert({_nodeEntry->id, _nodeEntry}); }
+                if (m_nodeEventHandler)
+                    m_nodeEventHandler->appendEvent(_nodeEntry->id, NodeEntryAdded);
             }
             else
             {
-                if (nodes.size() < s_bucketSize)
+                // if bucket is full, start eviction process for the least recently seen node
+                nodeToEvict = nodes.front().lock();
+                // It could have been replaced in addNode(), then weak_ptr is expired.
+                // If so, just add a new one instead of expired
+                if (!nodeToEvict)
                 {
-                    // if it was not there, just add it as a most recently seen node
-                    // (i.e. to the end of the list)
-                    nodes.push_back(newNode);
+                    nodes.pop_front();
+                    nodes.push_back(_nodeEntry);
+                    DEV_GUARDED(x_nodes) { m_allNodes.insert({_nodeEntry->id, _nodeEntry}); }
                     if (m_nodeEventHandler)
-                        m_nodeEventHandler->appendEvent(newNode->id, NodeEntryAdded);
-                }
-                else
-                {
-                    // if bucket is full, start eviction process for the least recently seen node
-                    nodeToEvict = nodes.front().lock();
-                    // It could have been replaced in addNode(), then weak_ptr is expired.
-                    // If so, just add a new one instead of expired
-                    if (!nodeToEvict)
-                    {
-                        nodes.pop_front();
-                        nodes.push_back(newNode);
-                        if (m_nodeEventHandler)
-                            m_nodeEventHandler->appendEvent(newNode->id, NodeEntryAdded);
-                    }
+                        m_nodeEventHandler->appendEvent(_nodeEntry->id, NodeEntryAdded);
                 }
             }
         }
-
-        if (nodeToEvict)
-            evict(*nodeToEvict, *newNode);
     }
+
+    if (nodeToEvict)
+        evict(*nodeToEvict, _nodeEntry);
 }
 
 void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
@@ -439,6 +459,8 @@ void NodeTable::onPacketReceived(
         }
 
         LOG(m_logger) << packet->typeName() << " from " << packet->sourceid << "@" << _from;
+
+        shared_ptr<NodeEntry> sourceNodeEntry;
         switch (packet->packetType())
         {
             case Pong::type:
@@ -462,16 +484,20 @@ void NodeTable::onPacketReceived(
                     return;
                 }
 
-                auto const sourceNodeEntry = nodeEntry(sourceId);
-                assert(sourceNodeEntry);
-                sourceNodeEntry->lastPongReceivedTime = RLPXDatagramFace::secondsSinceEpoch();
-
-                // Valid PONG received, so we don't want to evict this node,
-                // and we don't need to remember replacement node anymore
-                auto const& optionalReplacementID = sentPing->second.replacementNodeID;
-                if (optionalReplacementID)
-                    if (auto replacementNode = nodeEntry(*optionalReplacementID))
-                        dropNode(move(replacementNode));
+                // create or update nodeEntry with new Pong received time
+                DEV_GUARDED(x_nodes)
+                {
+                    auto it = m_allNodes.find(sourceId);
+                    if (it == m_allNodes.end())
+                        sourceNodeEntry = make_shared<NodeEntry>(m_hostNodeID, sourceId,
+                            sentPing->second.endpoint, RLPXDatagramFace::secondsSinceEpoch(), 0);
+                    else
+                    {
+                        sourceNodeEntry = it->second;
+                        sourceNodeEntry->lastPongReceivedTime =
+                            RLPXDatagramFace::secondsSinceEpoch();
+                    }
+                }
 
                 m_sentPings.erase(sentPing);
 
@@ -488,7 +514,16 @@ void NodeTable::onPacketReceived(
 
             case Neighbours::type:
             {
+                sourceNodeEntry = nodeEntry(packet->sourceid);
+                if (!sourceNodeEntry)
+                {
+                    LOG(m_logger) << "Source node (" << packet->sourceid << "@" << _from
+                                  << ") not found in node table. Ignoring Neighbours packet.";
+                    return;
+                }
+
                 auto const& in = dynamic_cast<Neighbours const&>(*packet);
+
                 bool expected = false;
                 auto now = chrono::steady_clock::now();
                 m_sentFindNodes.remove_if([&](NodeIdTimePoint const& _t) noexcept {
@@ -512,7 +547,7 @@ void NodeTable::onPacketReceived(
 
             case FindNode::type:
             {
-                auto const& sourceNodeEntry = nodeEntry(packet->sourceid);
+                sourceNodeEntry = nodeEntry(packet->sourceid);
                 if (!sourceNodeEntry)
                 {
                     LOG(m_logger) << "Source node (" << packet->sourceid << "@" << _from
@@ -562,17 +597,20 @@ void NodeTable::onPacketReceived(
                 p.sign(m_secret);
                 m_socket->send(p);
 
-                DEV_GUARDED(x_nodes)
-                {
-                    auto const it = m_allNodes.find(in.sourceid);
-                    if (it != m_allNodes.end())
-                        it->second->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
-                }
+                // Quirk: when the node is a replacement node (that is, not added to the node table
+                // yet, but can be added after another node's eviction), it will not be returned
+                // from nodeEntry() and we won't update its lastPongSentTime. But that shouldn't be
+                // a big problem, at worst it can lead to more Ping-Pongs than needed.
+                sourceNodeEntry = nodeEntry(packet->sourceid);
+                if (sourceNodeEntry)
+                    sourceNodeEntry->lastPongSentTime = RLPXDatagramFace::secondsSinceEpoch();
+
                 break;
             }
         }
 
-        noteActiveNode(packet->sourceid, _from);
+        if (sourceNodeEntry)
+            noteActiveNode(move(sourceNodeEntry), _from);
     }
     catch (std::exception const& _e)
     {
@@ -624,10 +662,8 @@ void NodeTable::doHandleTimeouts()
                     dropNode(move(node));
 
                     // save the replacement node that should be activated
-                    if (it->second.replacementNodeID)
-                        if (auto replacement = nodeEntry(*it->second.replacementNodeID))
-                            nodesToActivate.emplace_back(replacement);
-
+                    if (it->second.replacementNodeEntry)
+                        nodesToActivate.emplace_back(move(it->second.replacementNodeEntry));
                 }
 
                 it = m_sentPings.erase(it);
@@ -638,7 +674,7 @@ void NodeTable::doHandleTimeouts()
 
         // activate replacement nodes and put them into buckets
         for (auto const& n : nodesToActivate)
-            noteActiveNode(n->id, n->endpoint);
+            noteActiveNode(n, n->endpoint);
 
         doHandleTimeouts();
     });
