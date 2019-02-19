@@ -89,7 +89,7 @@ int main(int argc, const char* argv[])
     catch (dev::test::InvalidOption const& e)
     {
         std::cerr << *boost::get_error_info<errinfo_comment>(e) << "\n";
-        exit(1);
+        return 1;
     }
 
     dev::test::Options const& opt = dev::test::Options::get();
