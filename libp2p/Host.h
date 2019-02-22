@@ -310,9 +310,7 @@ private:
     bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
     /// Timer which, when network is running, calls run() every c_timerInterval ms.
-    io::deadline_timer m_timer;
-
-    static constexpr unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
+    io::deadline_timer m_runTimer;
 
     std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
 
@@ -344,8 +342,8 @@ private:
     std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
 
     /// Deadline timers used for isolated network events. GC'd by run.
-    std::list<std::unique_ptr<io::deadline_timer>> m_timers;
-    Mutex x_timers;
+    std::list<std::unique_ptr<io::deadline_timer>> m_networkTimers;
+    Mutex x_networkTimers;
 
     std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
     bool m_accepting = false;

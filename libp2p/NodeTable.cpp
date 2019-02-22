@@ -360,15 +360,14 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
     }
     if (!isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
     {
-        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node "
-                      << _nodeEntry->id << "@" << _endpoint;
+        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node " << dynamic_cast<Node const&>(*_nodeEntry);
         return;
     }
 
     if (!_nodeEntry->hasValidEndpointProof())
         return;
 
-    LOG(m_logger) << "Active node " << _nodeEntry->id << '@' << _endpoint;
+    LOG(m_logger) << "Active node " << dynamic_cast<Node const&>(*_nodeEntry);
     // TODO don't activate in case endpoint has changed
     _nodeEntry->endpoint.setAddress(_endpoint.address());
     _nodeEntry->endpoint.setUdpPort(_endpoint.port());
