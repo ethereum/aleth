@@ -163,7 +163,9 @@ void Host::doneWorking()
     m_ioService.reset();
 
     DEV_GUARDED(x_networkTimers)
-    m_networkTimers.clear();
+    {
+        m_networkTimers.clear();
+    }
 
     // shutdown acceptor
     m_tcp4Acceptor.cancel();
@@ -683,9 +685,11 @@ void Host::run(boost::system::error_code const& _ec)
     DEV_GUARDED(x_connecting)
         m_connecting.remove_if([](weak_ptr<RLPXHandshake> h){ return h.expired(); });
     DEV_GUARDED(x_networkTimers)
-    m_networkTimers.remove_if([](unique_ptr<io::deadline_timer> const& t) {
-        return t->expires_from_now().total_milliseconds() < 0;
-    });
+    {
+        m_networkTimers.remove_if([](unique_ptr<io::deadline_timer> const& t) {
+            return t->expires_from_now().total_milliseconds() < 0;
+        });
+    }
 
     keepAlivePeers();
 
