@@ -31,6 +31,9 @@ constexpr chrono::seconds c_keepAliveInterval = chrono::seconds(30);
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
 constexpr chrono::seconds c_keepAliveTimeOut = chrono::seconds(1);
+
+/// Interval which m_runTimer is run when network is connected.
+constexpr unsigned int c_runTimerIntervalMs = 100;
 }  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}
@@ -87,7 +90,7 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig co
     m_ioService(2),  // concurrency hint, suggests how many threads it should allow to run
                      // simultaneously
     m_tcp4Acceptor(m_ioService),
-    m_timer(m_ioService),
+    m_runTimer(m_ioService),
     m_alias(_alias),
     m_lastPing(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this))
@@ -159,9 +162,11 @@ void Host::doneWorking()
     // reset ioservice (cancels all timers and allows manually polling network, below)
     m_ioService.reset();
 
-    DEV_GUARDED(x_timers)
-        m_timers.clear();
-    
+    DEV_GUARDED(x_networkTimers)
+    {
+        m_networkTimers.clear();
+    }
+
     // shutdown acceptor
     m_tcp4Acceptor.cancel();
     if (m_tcp4Acceptor.is_open())
@@ -672,37 +677,41 @@ void Host::run(boost::system::error_code const& _ec)
     if (!m_run || _ec)
         return;
 
-    if (auto nodeTable = this->nodeTable()) // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
+    // This again requires x_nodeTable, which is why an additional variable nodeTable is used.
+    if (auto nodeTable = this->nodeTable())
         nodeTable->processEvents();
 
     // cleanup zombies
     DEV_GUARDED(x_connecting)
         m_connecting.remove_if([](weak_ptr<RLPXHandshake> h){ return h.expired(); });
-    DEV_GUARDED(x_timers)
-    m_timers.remove_if([](unique_ptr<io::deadline_timer> const& t) {
-        return t->expires_from_now().total_milliseconds() < 0;
-    });
+    DEV_GUARDED(x_networkTimers)
+    {
+        m_networkTimers.remove_if([](unique_ptr<io::deadline_timer> const& t) {
+            return t->expires_from_now().total_milliseconds() < 0;
+        });
+    }
 
     keepAlivePeers();
-    
+
     // At this time peers will be disconnected based on natural TCP timeout.
     // disconnectLatePeers needs to be updated for the assumption that Session
     // is always live and to ensure reputation and fallback timers are properly
     // updated. // disconnectLatePeers();
 
     // todo: update peerSlotsAvailable()
-    
+
     list<shared_ptr<Peer>> toConnect;
     unsigned reqConn = 0;
     {
         RecursiveGuard l(x_sessions);
-        for (auto const& p: m_peers)
+        for (auto const& p : m_peers)
         {
             bool haveSession = havePeerSession(p.second->id);
             bool required = p.second->peerType == PeerType::Required;
             if (haveSession && required)
                 reqConn++;
-            else if (!haveSession && p.second->shouldReconnect() && (!m_netConfig.pin || required))
+            else if (!haveSession && p.second->shouldReconnect() &&
+                        (!m_netConfig.pin || required))
                 toConnect.push_back(p.second);
         }
     }
@@ -730,8 +739,8 @@ void Host::run(boost::system::error_code const& _ec)
         return;
 
     auto runcb = [this](boost::system::error_code const& error) { run(error); };
-    m_timer.expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
-    m_timer.async_wait(runcb);
+    m_runTimer.expires_from_now(boost::posix_time::milliseconds(c_runTimerIntervalMs));
+    m_runTimer.async_wait(runcb);
 }
 
 // Called after thread has been started to perform additional class-specific state
@@ -1031,5 +1040,5 @@ void Host::scheduleExecution(int _delayMs, function<void()> _f)
         if (!_ec)
             _f();
     });
-    DEV_GUARDED(x_timers) { m_timers.emplace_back(move(t)); }
+    DEV_GUARDED(x_networkTimers) { m_networkTimers.emplace_back(move(t)); }
 }
