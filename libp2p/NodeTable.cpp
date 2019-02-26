@@ -342,7 +342,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replac
     if (!m_socket->isOpen())
         return;
 
-    LOG(m_logger) << "Evicting node " << static_cast<Node const&>(_leastSeen);
+    LOG(m_logger) << "Evicting node " << _leastSeen;
     ping(_leastSeen, std::move(_replacement));
 
     if (m_nodeEventHandler)
@@ -360,15 +360,15 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
     }
     if (!isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
     {
-        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node " << static_cast<Node const&>(*_nodeEntry);
+        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node " << *_nodeEntry;
         return;
     }
 
     if (!_nodeEntry->hasValidEndpointProof())
         return;
 
-    LOG(m_logger) << "Active node " << static_cast<Node const&>(*_nodeEntry);
-    // TODO don't activate in case endpoint has changed
+    LOG(m_logger) << "Active node " << *_nodeEntry;
+    // TODO: don't activate in case endpoint has changed
     _nodeEntry->endpoint.setAddress(_endpoint.address());
     _nodeEntry->endpoint.setUdpPort(_endpoint.port());
 

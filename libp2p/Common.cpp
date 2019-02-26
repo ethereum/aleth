@@ -248,9 +248,9 @@ ostream& operator<<(ostream& _out, NodeIPEndpoint const& _ep)
     return _out;
 }
 
-boost::log::formatting_ostream& operator<<(boost::log::formatting_ostream& _log, const Node& _node)
+ostream& operator<<(ostream& _out, const Node& _node)
 {
-    return _log << _node.id << '@' << _node.endpoint;
+    return _out << _node.id << '@' << _node.endpoint;
 }
 
 vector<pair<Public, const char*>> defaultBootNodes()
