@@ -189,12 +189,12 @@ struct TestNodeTable: public NodeTable
     boost::optional<NodeValidation> nodeValidation(NodeID const& _id)
     {
         std::promise<boost::optional<NodeValidation>> promise;
-        m_timers.schedule(0, [this, &promise, _id](boost::system::error_code const&) {
+        m_io.post([this, &promise, _id] {
             auto validation = m_sentPings.find(_id);
             if (validation != m_sentPings.end())
                 promise.set_value(validation->second);
             else
-                promise.set_value(boost::optional<NodeValidation>{});
+                promise.set_value({});
         });
         return promise.get_future().get();
     }
