@@ -40,7 +40,8 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
     m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),
     m_allowLocalDiscovery(_allowLocalDiscovery),
-    m_timers(_io)
+    m_timers(_io),
+    m_io(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
         m_buckets[i].distance = i;
