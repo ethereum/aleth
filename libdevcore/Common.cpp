@@ -113,10 +113,8 @@ that users do not need to install language packs for their OS.
 void setDefaultOrCLocale()
 {
 #if __unix__
-    if (!std::setlocale(LC_ALL, ""))
-    {
+    if (!setlocale(LC_ALL, ""))
         setenv("LC_ALL", "C", 1);
-    }
 #endif
 
 #if defined(_WIN32)
