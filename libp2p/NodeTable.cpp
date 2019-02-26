@@ -330,12 +330,7 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
 
 void NodeTable::schedulePing(Node const& _node)
 {
-    m_timers.schedule(0, [this, _node](boost::system::error_code const& _ec) {
-        if (_ec || m_timers.isStopped())
-            return;
-
-        ping(_node, {});
-    });
+    m_io.post([this, _node] { ping(_node, {}); });
 }
 
 void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replacement)
