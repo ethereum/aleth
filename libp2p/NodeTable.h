@@ -95,7 +95,7 @@ struct NodeEntry;
  * @todo optimize knowledge at opposite edges; eg, s_bitsPerStep lookups. (Can be done via pointers to NodeBucket)
  * @todo ^ s_bitsPerStep = 8; // Denoted by b in [Kademlia]. Bits by which address space is divided.
  */
-class NodeTable : UDPSocketEvents
+class NodeTable : UDPSocketEvents, public std::enable_shared_from_this<NodeTable>
 {
     friend std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable);
     using NodeSocket = UDPSocket<NodeTable, 1280>;
@@ -114,10 +114,20 @@ public:
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
     static int distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
 
+    /// Open the udp socket and schedule execution of the discovery algorithm
+    void start();
+
     void stop()
     {
-        m_socket->disconnect();
-        m_timers.stop();
+        if (m_socket->isOpen())
+        {
+            // We "cancel" the timers by setting min_date_time rather than calling cancel() because
+            // cancel won't set the boost error code if the timers have already expired and the
+            // handlers are in the ready queue
+            m_discoveryTimer->expires_at(boost::posix_time::min_date_time);
+            m_evictionTimer->expires_at(boost::posix_time::min_date_time);
+            m_socket->disconnect();
+        }
     }
 
     /// Set event handler for NodeEntryAdded and NodeEntryDropped events.
@@ -222,7 +232,9 @@ protected:
 
     /// Used to discovery nodes on network which are close to the given target.
     /// Sends s_alpha concurrent requests to nodes nearest to target, for nodes nearest to target, up to s_maxSteps rounds.
-    void doDiscover(NodeID _target, unsigned _round, std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried);
+    void doDiscover(boost::system::error_code _ec, NodeID _target, unsigned _round,
+        std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried,
+        std::shared_ptr<ba::deadline_timer> _timer);
 
     /// Returns nodes from node table which are closest to target.
     std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID _target);
@@ -260,7 +272,8 @@ protected:
     /// Looks up a random node at @c_bucketRefresh interval.
     void doDiscovery();
 
-    void doHandleTimeouts();
+    void doHandleTimeouts(
+        boost::system::error_code const& _ec, std::shared_ptr<ba::deadline_timer> _timer);
 
     // Useful only for tests.
     void setRequestTimeToLive(std::chrono::seconds const& _time) { m_requestTimeToLive = _time; }
@@ -275,6 +288,7 @@ protected:
         return dev::p2p::isAllowedEndpoint(m_allowLocalDiscovery, _endpointToCheck);
     }
 
+    bool m_enabled;                                                 /// Is discovery enabled?
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
     NodeID const m_hostNodeID;
@@ -306,7 +320,13 @@ protected:
 
     bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
-    DeadlineOps m_timers; ///< this should be the last member - it must be destroyed first
+    // timers are shared_ptr so we can keep them alive if handlers are executed after the node table
+    // has been destroyed so we can check for timer cancellation. Note that this is technically not
+    // necessary since the node table's lifetime is tied to the host's lifetime and once the host is
+    // destructed there's no more ioservice work loop, but it's good practice to use this design in
+    // case the node table lifetime changes in the future
+    std::shared_ptr<ba::deadline_timer> m_discoveryTimer;
+    std::shared_ptr<ba::deadline_timer> m_evictionTimer;
 
     ba::io_service& m_io;
 };

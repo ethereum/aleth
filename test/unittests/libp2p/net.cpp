@@ -242,6 +242,8 @@ struct TestNodeTableHost : public TestHost
         terminate();
     }
 
+    void start() { TestHost::start(); nodeTable->start(); }
+
     void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
 
     int populateUntilBucketSize(size_t _size)
@@ -253,7 +255,6 @@ struct TestNodeTableHost : public TestHost
     {
         return nodeTable->populateUntilSpecificBucketSize(testNodes, _bucket, _size);
     }
-
 
     void processEvents(boost::system::error_code const& _e)
     {
