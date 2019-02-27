@@ -231,7 +231,7 @@ public:
 
     NodeID const& address() const { return id; }
 
-    explicit operator bool() const { return bool{id}; }
+    explicit operator bool() const { return static_cast<bool>(id); }
 
     // TODO: make private, give accessors and rename m_...
     NodeID id;
