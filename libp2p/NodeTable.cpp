@@ -40,7 +40,8 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
     m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),
     m_allowLocalDiscovery(_allowLocalDiscovery),
-    m_timers(_io)
+    m_timers(_io),
+    m_io(_io)
 {
     for (unsigned i = 0; i < s_bins; i++)
         m_buckets[i].distance = i;
@@ -329,12 +330,7 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
 
 void NodeTable::schedulePing(Node const& _node)
 {
-    m_timers.schedule(0, [this, _node](boost::system::error_code const& _ec) {
-        if (_ec || m_timers.isStopped())
-            return;
-
-        ping(_node, {});
-    });
+    m_io.post([this, _node] { ping(_node, {}); });
 }
 
 void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replacement)
