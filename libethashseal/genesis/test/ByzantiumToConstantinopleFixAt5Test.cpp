@@ -26,7 +26,7 @@ static std::string const c_genesisInfoByzantiumToConstantinopleFixAt5Test = std:
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x00",
 		"byzantiumForkBlock": "0x00",
-		"constantinopleForkBlock": "0x00",
+		"constantinopleForkBlock": "0x05",
 		"constantinopleFixForkBlock": "0x05",
 		"networkID" : "0x1",
 		"chainID": "0x01",
