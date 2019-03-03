@@ -20,13 +20,12 @@ constexpr unsigned c_handleTimeoutsIntervalMs = 5000;
 
 }  // namespace
 
-constexpr std::chrono::seconds DiscoveryDatagram::c_timeToLive;
-constexpr std::chrono::milliseconds NodeTable::c_reqTimeout;
-constexpr std::chrono::milliseconds NodeTable::c_bucketRefresh;
-constexpr std::chrono::milliseconds NodeTable::c_evictionCheckInterval;
+constexpr chrono::seconds DiscoveryDatagram::c_timeToLive;
+constexpr chrono::milliseconds NodeTable::c_reqTimeout;
+constexpr chrono::milliseconds NodeTable::c_bucketRefresh;
+constexpr chrono::milliseconds NodeTable::c_evictionCheckInterval;
 
-inline bool operator==(
-    std::weak_ptr<NodeEntry> const& _weak, std::shared_ptr<NodeEntry> const& _shared)
+inline bool operator==(weak_ptr<NodeEntry> const& _weak, shared_ptr<NodeEntry> const& _shared)
 {
     return !_weak.owner_before(_shared) && !_shared.owner_before(_weak);
 }
@@ -40,8 +39,8 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)},
     m_requestTimeToLive{DiscoveryDatagram::c_timeToLive},
     m_allowLocalDiscovery{_allowLocalDiscovery},
-    m_discoveryTimer{std::make_shared<ba::deadline_timer>(_io)},
-    m_evictionTimer{std::make_shared<ba::deadline_timer>(_io)},
+    m_discoveryTimer{make_shared<ba::deadline_timer>(_io)},
+    m_evictionTimer{make_shared<ba::deadline_timer>(_io)},
     m_io{_io}
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -78,10 +77,10 @@ void NodeTable::start()
         doDiscovery();
         m_evictionTimer->expires_from_now(
             boost::posix_time::milliseconds(c_handleTimeoutsIntervalMs));
-        m_evictionTimer->async_wait(std::bind(&NodeTable::doHandleTimeouts, shared_from_this(),
-            std::placeholders::_1, m_evictionTimer));
+        m_evictionTimer->async_wait(bind(
+            &NodeTable::doHandleTimeouts, shared_from_this(), placeholders::_1, m_evictionTimer));
     }
-    catch (std::exception const& _e)
+    catch (exception const& _e)
     {
         cwarn << "Exception starting the discovery process: " << _e.what();
         cwarn << "Discovery disabled.";
@@ -275,8 +274,8 @@ void NodeTable::doDiscover(boost::system::error_code _ec, NodeID _node, unsigned
     }
 
     _timer->expires_from_now(boost::posix_time::milliseconds(c_reqTimeout.count() * 2));
-    _timer->async_wait(std::bind(&NodeTable::doDiscover, shared_from_this(), std::placeholders::_1,
-        _node, _round + 1, _tried, _timer));
+    _timer->async_wait(bind(&NodeTable::doDiscover, shared_from_this(), placeholders::_1, _node,
+        _round + 1, _tried, _timer));
 }
 
 vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
@@ -365,7 +364,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replac
         return;
 
     LOG(m_logger) << "Evicting node " << _leastSeen;
-    ping(_leastSeen, std::move(_replacement));
+    ping(_leastSeen, move(_replacement));
 
     if (m_nodeEventHandler)
         m_nodeEventHandler->appendEvent(_leastSeen.id, NodeEntryScheduledForEviction);
@@ -403,7 +402,7 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
         auto& nodes = s.nodes;
 
         // check if the node is already in the bucket
-        auto it = std::find(nodes.begin(), nodes.end(), _nodeEntry);
+        auto it = find(nodes.begin(), nodes.end(), _nodeEntry);
         if (it != nodes.end())
         {
             // if it was in the bucket, move it to the last position
@@ -633,7 +632,7 @@ void NodeTable::onPacketReceived(
         if (sourceNodeEntry)
             noteActiveNode(move(sourceNodeEntry), _from);
     }
-    catch (std::exception const& _e)
+    catch (exception const& _e)
     {
         LOG(m_logger) << "Exception processing message from " << _from.address().to_string() << ":"
                       << _from.port() << ": " << _e.what();
@@ -653,13 +652,12 @@ void NodeTable::doDiscovery()
     LOG(m_logger) << "Queueing discovery algorithm run for random node id: " << randNodeId;
 
     m_discoveryTimer->expires_from_now(boost::posix_time::milliseconds(c_bucketRefresh.count()));
-    m_discoveryTimer->async_wait(
-        std::bind(&NodeTable::doDiscover, shared_from_this(), std::placeholders::_1, randNodeId,
-            0 /* round */, make_shared<set<shared_ptr<NodeEntry>>>(), m_discoveryTimer));
+    m_discoveryTimer->async_wait(bind(&NodeTable::doDiscover, shared_from_this(), placeholders::_1,
+        randNodeId, 0 /* round */, make_shared<set<shared_ptr<NodeEntry>>>(), m_discoveryTimer));
 }
 
 void NodeTable::doHandleTimeouts(
-    boost::system::error_code const& _ec, std::shared_ptr<ba::deadline_timer> _timer)
+    boost::system::error_code const& _ec, shared_ptr<ba::deadline_timer> _timer)
 {
     // We can't use m_logger yet because the NodeTable might have already been destroyed
     if (_ec == boost::asio::error::operation_aborted ||
@@ -701,7 +699,7 @@ void NodeTable::doHandleTimeouts(
 
     _timer->expires_from_now(boost::posix_time::milliseconds(c_handleTimeoutsIntervalMs));
     _timer->async_wait(
-        std::bind(&NodeTable::doHandleTimeouts, shared_from_this(), std::placeholders::_1, _timer));
+        bind(&NodeTable::doHandleTimeouts, shared_from_this(), placeholders::_1, _timer));
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)

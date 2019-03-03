@@ -51,9 +51,9 @@ struct TestNodeTable: public NodeTable
             true /* allow local discovery */)
     {}
 
-    static std::vector<std::pair<Public, uint16_t>> createTestNodes(unsigned _count)
+    static vector<pair<Public, uint16_t>> createTestNodes(unsigned _count)
     {
-        std::vector<std::pair<Public, uint16_t>> ret;
+        vector<pair<Public, uint16_t>> ret;
         asserts(_count <= 1000);
         
         ret.clear();
@@ -66,8 +66,7 @@ struct TestNodeTable: public NodeTable
         return ret;
     }
 
-    void populateTestNodes(
-        std::vector<std::pair<Public, uint16_t>> const& _testNodes, size_t _count = 0)
+    void populateTestNodes(vector<pair<Public, uint16_t>> const& _testNodes, size_t _count = 0)
     {
         if (!_count)
             _count = _testNodes.size();
@@ -89,7 +88,7 @@ struct TestNodeTable: public NodeTable
     // populate NodeTable until one of the buckets reaches the size of _bucketSize
     // return the index of this bucket
     int populateUntilBucketSize(
-        std::vector<std::pair<Public, uint16_t>> const& _testNodes, size_t _bucketSize)
+        vector<pair<Public, uint16_t>> const& _testNodes, size_t _bucketSize)
     {
         auto testNode = _testNodes.begin();
 
@@ -119,8 +118,8 @@ struct TestNodeTable: public NodeTable
 
     // populate NodeTable until bucket _bucket reaches the size of _bucketSize
     // return true if success, false if not enought test nodes
-    bool populateUntilSpecificBucketSize(std::vector<std::pair<Public, uint16_t>> const& _testNodes,
-        size_t _bucket, size_t _bucketSize)
+    bool populateUntilSpecificBucketSize(
+        vector<pair<Public, uint16_t>> const& _testNodes, size_t _bucket, size_t _bucketSize)
     {
         auto testNode = _testNodes.begin();
 
@@ -188,7 +187,7 @@ struct TestNodeTable: public NodeTable
 
     boost::optional<NodeValidation> nodeValidation(NodeID const& _id)
     {
-        std::promise<boost::optional<NodeValidation>> promise;
+        promise<boost::optional<NodeValidation>> promise;
         m_io.post([this, &promise, _id] {
             auto validation = m_sentPings.find(_id);
             if (validation != m_sentPings.end())
@@ -268,7 +267,7 @@ struct TestNodeTableHost : public TestHost
 
     KeyPair m_alias;
     shared_ptr<TestNodeTable> nodeTable;
-    std::vector<std::pair<Public, uint16_t>> testNodes;  // keypair and port
+    vector<pair<Public, uint16_t>> testNodes;  // keypair and port
     ba::deadline_timer timer;
 };
 
@@ -285,7 +284,7 @@ public:
             {
                 socket->connect();
             }
-            catch (std::exception const&)
+            catch (exception const&)
             {
                 port = randomPortNumber();
             }
@@ -309,7 +308,7 @@ public:
     shared_ptr<UDPSocket<TestUDPSocketHost, 1024>> socket;
     uint16_t port = 0;
 
-    std::atomic<bool> success{false};
+    atomic<bool> success{false};
 
     concurrent_queue<bytes> packetsReceived;
 };
@@ -331,7 +330,7 @@ BOOST_AUTO_TEST_CASE(isIPAddressType)
     BOOST_REQUIRE(bi::address::from_string(wildcard).is_unspecified());
 
     string empty = "";
-    BOOST_REQUIRE_THROW(bi::address::from_string(empty).is_unspecified(), std::exception);
+    BOOST_REQUIRE_THROW(bi::address::from_string(empty).is_unspecified(), exception);
 
     string publicAddress192 = "192.169.0.0";
     BOOST_REQUIRE(isPublicAddress(publicAddress192));
@@ -362,7 +361,7 @@ BOOST_AUTO_TEST_CASE(isIPAddressType)
 BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 {
     KeyPair k = KeyPair::create();
-    std::vector<std::pair<Public, uint16_t>> testNodes(TestNodeTable::createTestNodes(16));
+    vector<pair<Public, uint16_t>> testNodes(TestNodeTable::createTestNodes(16));
     bi::udp::endpoint to(boost::asio::ip::address::from_string(c_localhostIp), randomPortNumber());
 
     // hash(32), signature(65), overhead: packetSz(3), type(1), nodeListSz(3), ts(5),
@@ -371,8 +370,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
     {
         Neighbours out(to);
 
-        auto limit =
-            nlimit ? std::min(testNodes.size(), (size_t)(offset + nlimit)) : testNodes.size();
+        auto limit = nlimit ? min(testNodes.size(), (size_t)(offset + nlimit)) : testNodes.size();
         for (auto i = offset; i < limit; i++)
         {
             Node n(testNodes[i].first,
@@ -390,7 +388,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 BOOST_AUTO_TEST_CASE(neighboursPacket)
 {
     KeyPair k = KeyPair::create();
-    std::vector<std::pair<Public, uint16_t>> testNodes(TestNodeTable::createTestNodes(16));
+    vector<pair<Public, uint16_t>> testNodes(TestNodeTable::createTestNodes(16));
     bi::udp::endpoint to(boost::asio::ip::address::from_string(c_localhostIp), randomPortNumber());
 
     Neighbours out(to);
@@ -486,7 +484,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeAppendsNewNode)
     nodeTableHost.populate(1);
 
     auto& nodeTable = nodeTableHost.nodeTable;
-    std::shared_ptr<NodeEntry> newNode = nodeTable->nodeEntry(nodeTableHost.testNodes.front().first);
+    shared_ptr<NodeEntry> newNode = nodeTable->nodeEntry(nodeTableHost.testNodes.front().first);
 
     BOOST_REQUIRE_GT(nodeTable->bucketSize(newNode->distance - 1), 0);
 
@@ -678,7 +676,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
 
     nodeTableHost.start();
     auto& nodeTable = nodeTableHost.nodeTable;
-    nodeTable->setRequestTimeToLive(std::chrono::seconds(1));
+    nodeTable->setRequestTimeToLive(chrono::seconds(1));
 
     // socket receiving PING
     TestUDPSocketHost nodeSocketHost;
@@ -691,7 +689,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     auto nodePubKey = nodeKeyPair.pub();
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
-    this_thread::sleep_for(std::chrono::seconds(6));
+    this_thread::sleep_for(chrono::seconds(6));
 
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
     auto sentPing = nodeTable->nodeValidation(nodePubKey);
@@ -882,7 +880,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     BOOST_REQUIRE(bucketIndex >= 0);
 
     auto& nodeTable = nodeTableHost.nodeTable;
-    nodeTable->setRequestTimeToLive(std::chrono::seconds(1));
+    nodeTable->setRequestTimeToLive(chrono::seconds(1));
 
     nodeTableHost.start();
 
@@ -903,7 +901,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     nodeTable->addKnownNode(Node{newNodeId, newNodeEndpoint});
 
     // wait for PING time out
-    this_thread::sleep_for(std::chrono::seconds(6));
+    this_thread::sleep_for(chrono::seconds(6));
 
     // check that old node is evicted
     BOOST_CHECK(!nodeTable->nodeExists(oldNodeId));
@@ -1132,7 +1130,7 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
     ba::deadline_timer t(io);
     bool start = false;
     boost::system::error_code ec;
-    std::atomic<unsigned> fired(0);
+    atomic<unsigned> fired(0);
 
     thread thread([&](){ while(!start) this_thread::sleep_for(chrono::milliseconds(10)); io.run();
 }); t.expires_from_now(boost::posix_time::milliseconds(200)); start = true;
