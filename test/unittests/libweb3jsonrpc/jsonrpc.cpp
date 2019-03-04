@@ -746,4 +746,55 @@ BOOST_AUTO_TEST_CASE(test_importRawBlock)
         blockHash, "0xedef94eddd6002ae14803b91aa5138932f948026310144fc615d52d7d5ff29c7");
 }
 
+BOOST_AUTO_TEST_CASE( call_from_parameter ) {
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+
+    //    pragma solidity ^0.5.1;
+
+    //    contract Test
+    //    {
+
+    //        function whoAmI() public view returns (address) {
+    //            return msg.sender;
+    //        }
+    //    }
+
+
+    string compiled =
+        "608060405234801561001057600080fd5b5060c68061001f6000396000f"
+        "3fe6080604052600436106039576000357c010000000000000000000000"
+        "000000000000000000000000000000000090048063da91254c14603e575"
+        "b600080fd5b348015604957600080fd5b5060506092565b604051808273"
+        "ffffffffffffffffffffffffffffffffffffffff1673fffffffffffffff"
+        "fffffffffffffffffffffffff16815260200191505060405180910390f3"
+        "5b60003390509056fea165627a7a72305820abfa953fead48d8f657bca6"
+        "57713501650734d40342585cafcf156a3fe1f41d20029";
+
+    Json::Value create;
+    create["code"] = compiled;
+    create["gas"] = "180000";
+    string txHash = rpcClient->eth_sendTransaction( create );
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    Json::Value receipt = rpcClient->eth_getTransactionReceipt( txHash );
+    string contractAddress = receipt["contractAddress"].asString();
+
+    Json::Value transactionCallObject;
+    transactionCallObject["to"] = contractAddress;
+    transactionCallObject["data"] = "0xda91254c";
+
+    accountHolder->setAccounts( vector< dev::KeyPair >() );
+
+    string responseString = rpcClient->eth_call( transactionCallObject, "latest" );
+    BOOST_CHECK_EQUAL(
+        responseString, "0x0000000000000000000000000000000000000000000000000000000000000000" );
+
+    transactionCallObject["from"] = "0x112233445566778899aabbccddeeff0011223344";
+
+    responseString = rpcClient->eth_call( transactionCallObject, "latest" );
+    BOOST_CHECK_EQUAL(
+        responseString, "0x000000000000000000000000112233445566778899aabbccddeeff0011223344" );
+}
+
 BOOST_AUTO_TEST_SUITE_END()
