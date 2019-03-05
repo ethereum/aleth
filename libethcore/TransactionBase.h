@@ -184,7 +184,7 @@ protected:
 	int m_chainId = -4;					///< EIP155 value for calculating transaction hash https://github.com/ethereum/EIPs/issues/155
 
 	mutable h256 m_hashWith;			///< Cached hash of transaction with signature.
-	mutable Address m_sender;			///< Cached sender, determined from signature.
+    mutable boost::optional<Address> m_sender;  ///< Cached sender, determined from signature.
 };
 
 /// Nice name for vector of Transaction.

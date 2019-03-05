@@ -115,7 +115,7 @@ Address const& TransactionBase::safeSender() const noexcept
 
 Address const& TransactionBase::sender() const
 {
-	if (!m_sender)
+    if (!m_sender.is_initialized())
 	{
 		if (hasZeroSignature())
 			m_sender = MaxAddress;
@@ -130,7 +130,7 @@ Address const& TransactionBase::sender() const
 			m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
 		}
 	}
-	return m_sender;
+    return *m_sender;
 }
 
 SignatureStruct const& TransactionBase::signature() const
