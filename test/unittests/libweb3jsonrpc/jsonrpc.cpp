@@ -197,7 +197,7 @@ string fromAscii(string _s)
     bytes b = asBytes(_s);
     return toHexPrefixed(b);
 }
-}
+}  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(JsonRpcSuite, JsonRpcFixture)
 
@@ -221,13 +221,13 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isListening)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_accounts)
 {
-    std::vector <dev::KeyPair> keys = {KeyPair::create(), KeyPair::create()};
+    std::vector<dev::KeyPair> keys = {KeyPair::create(), KeyPair::create()};
     accountHolder->setAccounts(keys);
     Json::Value k = rpcClient->eth_accounts();
     accountHolder->setAccounts({});
     BOOST_CHECK_EQUAL(k.isArray(), true);
-    BOOST_CHECK_EQUAL(k.size(),  keys.size());
-    for (auto &i:k)
+    BOOST_CHECK_EQUAL(k.size(), keys.size());
+    for (auto& i : k)
     {
         auto it = std::find_if(keys.begin(), keys.end(), [i](dev::KeyPair const& keyPair) {
             return jsToAddress(i.asString()) == keyPair.address();
@@ -316,8 +316,7 @@ BOOST_AUTO_TEST_CASE(eth_sendTransaction)
     accountHolder->setAccounts({});
     dev::eth::mine(*(web3->ethereum()), 1);
 
-    countAt = jsToU256(
-        rpcClient->eth_getTransactionCount(toJS(address), "latest"));
+    countAt = jsToU256(rpcClient->eth_getTransactionCount(toJS(address), "latest"));
     auto balance2 = web3->ethereum()->balanceAt(receiver.address());
     string balanceString2 = rpcClient->eth_getBalance(toJS(receiver.address()), "latest");
 
@@ -364,11 +363,12 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorZeroBalance)
     t["from"] = toJS(senderAddress);
     t["to"] = toJS(receiver.address());
     t["value"] = jsToDecimal(toJS(10000 * dev::eth::szabo));
-    
+
     auto signedTx = rpcClient->eth_signTransaction(t);
     BOOST_REQUIRE(signedTx["raw"]);
 
-    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()), "Account balance is too low (balance < value + gas * gas price).");
+    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()),
+        "Account balance is too low (balance < value + gas * gas price).");
 }
 
 BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInvalidNonce)
@@ -394,14 +394,15 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInvalidNonce)
     auto txHash = rpcClient->eth_sendRawTransaction(signedTx["raw"].asString());
     BOOST_REQUIRE(!txHash.empty());
 
-    auto invalidNonce = jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest")) - 1;
+    auto invalidNonce =
+        jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest")) - 1;
     t["nonce"] = jsToDecimal(toJS(invalidNonce));
-    
+
     signedTx = rpcClient->eth_signTransaction(t);
     BOOST_REQUIRE(!signedTx["raw"].empty());
 
-    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()), "Invalid transaction nonce.");
-
+    BOOST_CHECK_EQUAL(
+        sendingRawShouldFail(signedTx["raw"].asString()), "Invalid transaction nonce.");
 }
 
 BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInsufficientGas)
@@ -423,11 +424,12 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInsufficientGas)
 
     const int minGasForValueTransferTx = 21000;
     t["gas"] = jsToDecimal(toJS(minGasForValueTransferTx - 1));
-    
+
     auto signedTx = rpcClient->eth_signTransaction(t);
     BOOST_REQUIRE(!signedTx["raw"].empty());
 
-    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()), "Transaction gas amount is less than the intrinsic gas amount for this transaction type.");
+    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()),
+        "Transaction gas amount is less than the intrinsic gas amount for this transaction type.");
 }
 
 BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorDuplicateTransaction)
@@ -452,14 +454,15 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorDuplicateTransaction)
 
     auto txHash = rpcClient->eth_sendRawTransaction(signedTx["raw"].asString());
     BOOST_REQUIRE(!txHash.empty());
-    
+
     auto txNonce = jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest"));
     t["nonce"] = jsToDecimal(toJS(txNonce));
-    
+
     signedTx = rpcClient->eth_signTransaction(t);
     BOOST_REQUIRE(!signedTx["raw"].empty());
-    
-    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()), "Same transaction already exists in the pending transaction queue.");
+
+    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()),
+        "Same transaction already exists in the pending transaction queue.");
 }
 
 BOOST_AUTO_TEST_CASE(eth_signTransaction)
@@ -472,7 +475,7 @@ BOOST_AUTO_TEST_CASE(eth_signTransaction)
     t["from"] = toJS(address);
     t["value"] = jsToDecimal(toJS(1));
     t["to"] = toJS(receiver.address());
-    
+
     Json::Value res = rpcClient->eth_signTransaction(t);
     BOOST_REQUIRE(res["raw"]);
     BOOST_REQUIRE(res["tx"]);
@@ -480,9 +483,8 @@ BOOST_AUTO_TEST_CASE(eth_signTransaction)
     accountHolder->setAccounts({});
     dev::eth::mine(*(web3->ethereum()), 1);
 
-    auto countAtAfterSign = jsToU256(
-        rpcClient->eth_getTransactionCount(toJS(address), "latest"));
-    
+    auto countAtAfterSign = jsToU256(rpcClient->eth_getTransactionCount(toJS(address), "latest"));
+
     BOOST_CHECK_EQUAL(countAtBeforeSign, countAtAfterSign);
 }
 
@@ -527,17 +529,17 @@ BOOST_AUTO_TEST_CASE(contract_storage)
     dev::eth::mine(*(web3->ethereum()), 1);
 
 
-     // pragma solidity ^0.4.22;
-        
-     // contract test
-     // {
-     //     uint hello;
-     //     function writeHello(uint value) returns(bool d)
-     //     {
-     //       hello = value;
-     //       return true;
-     //     }
-     // }
+    // pragma solidity ^0.4.22;
+
+    // contract test
+    // {
+    //     uint hello;
+    //     function writeHello(uint value) returns(bool d)
+    //     {
+    //       hello = value;
+    //       return true;
+    //     }
+    // }
 
 
     const string compiled =
@@ -559,7 +561,7 @@ BOOST_AUTO_TEST_CASE(contract_storage)
 
     Json::Value receipt = rpcClient->eth_getTransactionReceipt(txHash);
     string contractAddress = receipt["contractAddress"].asString();
-    
+
     Json::Value transact;
     transact["to"] = contractAddress;
     transact["data"] = "0x15b2eec30000000000000000000000000000000000000000000000000000000000000003";
@@ -567,7 +569,8 @@ BOOST_AUTO_TEST_CASE(contract_storage)
     dev::eth::mine(*(web3->ethereum()), 1);
 
     string storage = rpcClient->eth_getStorageAt(contractAddress, "0", "latest");
-    BOOST_CHECK_EQUAL(storage, "0x0000000000000000000000000000000000000000000000000000000000000003");
+    BOOST_CHECK_EQUAL(
+        storage, "0x0000000000000000000000000000000000000000000000000000000000000003");
 
     auto code = rpcClient->eth_getCode(contractAddress, "latest");
     BOOST_CHECK_EQUAL(code, "0x" + runtimeCode);
@@ -628,8 +631,8 @@ BOOST_AUTO_TEST_CASE(debugStorageRangeAtFinalBlockState)
     // mine to get some balance at coinbase
     dev::eth::mine(*(web3->ethereum()), 1);
 
-    //pragma solidity ^0.4.22;
-    //contract test
+    // pragma solidity ^0.4.22;
+    // contract test
     //{
     //    uint hello = 7;
     //}
@@ -746,7 +749,8 @@ BOOST_AUTO_TEST_CASE(test_importRawBlock)
         blockHash, "0xedef94eddd6002ae14803b91aa5138932f948026310144fc615d52d7d5ff29c7");
 }
 
-BOOST_AUTO_TEST_CASE( call_from_parameter ) {
+BOOST_AUTO_TEST_CASE(call_from_parameter)
+{
     dev::eth::mine(*(web3->ethereum()), 1);
 
 
@@ -754,7 +758,6 @@ BOOST_AUTO_TEST_CASE( call_from_parameter ) {
 
     //    contract Test
     //    {
-
     //        function whoAmI() public view returns (address) {
     //            return msg.sender;
     //        }
@@ -774,27 +777,27 @@ BOOST_AUTO_TEST_CASE( call_from_parameter ) {
     Json::Value create;
     create["code"] = compiled;
     create["gas"] = "180000";
-    string txHash = rpcClient->eth_sendTransaction( create );
+    string txHash = rpcClient->eth_sendTransaction(create);
     dev::eth::mine(*(web3->ethereum()), 1);
 
-    Json::Value receipt = rpcClient->eth_getTransactionReceipt( txHash );
+    Json::Value receipt = rpcClient->eth_getTransactionReceipt(txHash);
     string contractAddress = receipt["contractAddress"].asString();
 
     Json::Value transactionCallObject;
     transactionCallObject["to"] = contractAddress;
     transactionCallObject["data"] = "0xda91254c";
 
-    accountHolder->setAccounts( vector< dev::KeyPair >() );
+    accountHolder->setAccounts(vector<dev::KeyPair>());
 
-    string responseString = rpcClient->eth_call( transactionCallObject, "latest" );
+    string responseString = rpcClient->eth_call(transactionCallObject, "latest");
     BOOST_CHECK_EQUAL(
-        responseString, "0x0000000000000000000000000000000000000000000000000000000000000000" );
+        responseString, "0x0000000000000000000000000000000000000000000000000000000000000000");
 
     transactionCallObject["from"] = "0x112233445566778899aabbccddeeff0011223344";
 
-    responseString = rpcClient->eth_call( transactionCallObject, "latest" );
+    responseString = rpcClient->eth_call(transactionCallObject, "latest");
     BOOST_CHECK_EQUAL(
-        responseString, "0x000000000000000000000000112233445566778899aabbccddeeff0011223344" );
+        responseString, "0x000000000000000000000000112233445566778899aabbccddeeff0011223344");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
