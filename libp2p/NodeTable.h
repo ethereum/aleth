@@ -123,9 +123,15 @@ public:
         {
             // We "cancel" the timers by setting min_date_time rather than calling cancel() because
             // cancel won't set the boost error code if the timers have already expired and the
-            // handlers are in the ready queue
-            m_discoveryTimer->expires_at(boost::posix_time::min_date_time);
-            m_evictionTimer->expires_at(boost::posix_time::min_date_time);
+            // handlers are in the ready queue.
+            //
+            // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
+            // timers
+            auto self = shared_from_this();
+            m_io.post(
+                [this, self] { m_discoveryTimer->expires_at(boost::posix_time::min_date_time); });
+            m_io.post(
+                [this, self] { m_evictionTimer->expires_at(boost::posix_time::min_date_time); });
             m_socket->disconnect();
         }
     }
