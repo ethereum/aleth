@@ -237,11 +237,10 @@ struct TestNodeTableHost : public TestHost
     }
     ~TestNodeTableHost()
     {
+        nodeTable->stop();
         m_io.stop();
         terminate();
     }
-
-    void start() { TestHost::start(); nodeTable->start(); }
 
     void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
 

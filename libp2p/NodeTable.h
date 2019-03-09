@@ -95,7 +95,7 @@ struct NodeEntry;
  * @todo optimize knowledge at opposite edges; eg, s_bitsPerStep lookups. (Can be done via pointers to NodeBucket)
  * @todo ^ s_bitsPerStep = 8; // Denoted by b in [Kademlia]. Bits by which address space is divided.
  */
-class NodeTable : UDPSocketEvents, public std::enable_shared_from_this<NodeTable>
+class NodeTable : UDPSocketEvents
 {
     friend std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable);
     using NodeSocket = UDPSocket<NodeTable, 1280>;
@@ -109,13 +109,10 @@ public:
     /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
     NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
         bool _enabled = true, bool _allowLocalDiscovery = false);
-    ~NodeTable() { stop(); }
+    ~NodeTable() = default;
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
     static int distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
-
-    /// Open the udp socket and schedule execution of the discovery algorithm
-    void start();
 
     void stop()
     {
@@ -127,11 +124,12 @@ public:
             //
             // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
             // timers
-            auto self = shared_from_this();
+            auto discoveryTimer{m_discoveryTimer};
             m_io.post(
-                [this, self] { m_discoveryTimer->expires_at(boost::posix_time::min_date_time); });
+                [discoveryTimer] { discoveryTimer->expires_at(boost::posix_time::min_date_time); });
+            auto evictionTimer{m_evictionTimer};
             m_io.post(
-                [this, self] { m_evictionTimer->expires_at(boost::posix_time::min_date_time); });
+                [evictionTimer] { evictionTimer->expires_at(boost::posix_time::min_date_time); });
             m_socket->disconnect();
         }
     }
@@ -276,7 +274,8 @@ protected:
     /// Looks up a random node at @c_bucketRefresh interval.
     void doDiscovery();
 
-    /// Drop nodes from the node table who haven't responded to ping and bring in their replacements
+    /// Drop nodes from the node table which haven't responded to ping and bring in their
+    /// replacements
     void doProcessEvictions();
 
     // Useful only for tests.
@@ -323,11 +322,6 @@ protected:
 
     bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
-    // timers are shared_ptr so we can keep them alive if handlers are executed after the node table
-    // has been destroyed so we can check for timer cancellation. Note that this is technically not
-    // necessary since the node table's lifetime is tied to the host's lifetime and once the host is
-    // destructed there's no more ioservice work loop, but it's good practice to use this design in
-    // case the node table lifetime changes in the future
     std::shared_ptr<ba::deadline_timer> m_discoveryTimer;
     std::shared_ptr<ba::deadline_timer> m_evictionTimer;
 
