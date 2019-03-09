@@ -205,6 +205,8 @@ protected:
     static constexpr std::chrono::milliseconds c_evictionCheckInterval{75};
     /// How long to wait for requests (evict, find iterations).
     static constexpr std::chrono::milliseconds c_reqTimeout{300};
+    /// How long to wait before starting a new discovery round
+    static constexpr std::chrono::milliseconds c_discoveryRoundIntervalMs{c_reqTimeout * 2};
     /// Refresh interval prevents bucket from becoming stale. [Kademlia]
     static constexpr std::chrono::milliseconds c_bucketRefresh{7200};
 
@@ -219,7 +221,7 @@ protected:
     bool isValidNode(Node const& _node) const;
 
     /// Used to ping a node to initiate the endpoint proof. Used when contacting neighbours if they
-    /// don't have a valid endpoint proof (see doDiscover), refreshing buckets and as part of
+    /// don't have a valid endpoint proof (see doDiscoveryRound), refreshing buckets and as part of
     /// eviction process (see evict). Synchronous, has to be called only from the network thread.
     void ping(Node const& _node, std::shared_ptr<NodeEntry> _replacementNodeEntry = {});
 
@@ -232,9 +234,8 @@ protected:
 
     /// Used to discovery nodes on network which are close to the given target.
     /// Sends s_alpha concurrent requests to nodes nearest to target, for nodes nearest to target, up to s_maxSteps rounds.
-    void doDiscover(boost::system::error_code _ec, NodeID _target, unsigned _round,
-        std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried,
-        std::shared_ptr<ba::deadline_timer> _timer);
+    void doDiscoveryRound(NodeID _target, unsigned _round,
+        std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried);
 
     /// Returns nodes from node table which are closest to target.
     std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID _target);
@@ -266,14 +267,11 @@ protected:
 
     /// Tasks
 
-    /// Called by evict() to ensure eviction check is scheduled to run and terminates when no evictions remain. Asynchronous.
-    void doCheckEvictions();
-
     /// Looks up a random node at @c_bucketRefresh interval.
     void doDiscovery();
 
-    void doHandleTimeouts(
-        boost::system::error_code const& _ec, std::shared_ptr<ba::deadline_timer> _timer);
+    /// Drop nodes from the node table who haven't responded to ping and bring in their replacements
+    void doProcessEvictions();
 
     // Useful only for tests.
     void setRequestTimeToLive(std::chrono::seconds const& _time) { m_requestTimeToLive = _time; }
@@ -288,7 +286,6 @@ protected:
         return dev::p2p::isAllowedEndpoint(m_allowLocalDiscovery, _endpointToCheck);
     }
 
-    bool m_enabled;                                                 /// Is discovery enabled?
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
     NodeID const m_hostNodeID;

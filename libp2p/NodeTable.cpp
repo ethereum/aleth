@@ -16,13 +16,13 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_discoveryWarnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "discov"))
 
-constexpr unsigned c_handleTimeoutsIntervalMs = 5000;
-
+constexpr unsigned c_processEvictionsIntervalMs = 5000;
 }  // namespace
 
 constexpr chrono::seconds DiscoveryDatagram::c_timeToLive;
 constexpr chrono::milliseconds NodeTable::c_reqTimeout;
 constexpr chrono::milliseconds NodeTable::c_bucketRefresh;
+constexpr std::chrono::milliseconds NodeTable::c_discoveryRoundIntervalMs;
 constexpr chrono::milliseconds NodeTable::c_evictionCheckInterval;
 
 inline bool operator==(weak_ptr<NodeEntry> const& _weak, shared_ptr<NodeEntry> const& _shared)
@@ -75,10 +75,7 @@ void NodeTable::start()
     try
     {
         doDiscovery();
-        m_evictionTimer->expires_from_now(
-            boost::posix_time::milliseconds(c_handleTimeoutsIntervalMs));
-        m_evictionTimer->async_wait(bind(
-            &NodeTable::doHandleTimeouts, shared_from_this(), placeholders::_1, m_evictionTimer));
+        doProcessEvictions();
     }
     catch (exception const& _e)
     {
@@ -215,25 +212,10 @@ shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID const& _id)
     return it != m_allNodes.end() ? it->second : shared_ptr<NodeEntry>();
 }
 
-void NodeTable::doDiscover(boost::system::error_code _ec, NodeID _node, unsigned _round,
-    shared_ptr<set<shared_ptr<NodeEntry>>> _tried, shared_ptr<ba::deadline_timer> _timer)
+void NodeTable::doDiscoveryRound(
+    NodeID _node, unsigned _round, shared_ptr<set<shared_ptr<NodeEntry>>> _tried)
 {
-    // NOTE: ONLY called by doDiscovery!
-
-    // We can't use m_logger yet since the node table might have already been destroyed
-    if (_ec == boost::asio::error::operation_aborted ||
-        _timer->expires_at() == boost::posix_time::min_date_time)
-    {
-        clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
-        return;
-    }
-    else if (_ec)
-    {
-        clog(VerbosityDebug, "discov")
-            << "Discovery timer error detected: " << _ec.value() << " " << _ec.message();
-        return;
-    }
-
+    // NOTE: ONLY called by doDiscovery or via a lambda scheduled via deadline timer
     if (!m_socket->isOpen())
         return;
 
@@ -273,9 +255,29 @@ void NodeTable::doDiscover(boost::system::error_code _ec, NodeID _node, unsigned
         return;
     }
 
-    _timer->expires_from_now(boost::posix_time::milliseconds(c_reqTimeout.count() * 2));
-    _timer->async_wait(bind(&NodeTable::doDiscover, shared_from_this(), placeholders::_1, _node,
-        _round + 1, _tried, _timer));
+    m_discoveryTimer->expires_from_now(
+        boost::posix_time::milliseconds(c_discoveryRoundIntervalMs.count()));
+
+    auto self = shared_from_this();
+    shared_ptr<ba::deadline_timer> discoveryTimer{m_discoveryTimer};
+    m_discoveryTimer->async_wait(
+        [self, this, discoveryTimer, _node, _round, _tried](boost::system::error_code const& _ec) {
+            // We can't use m_logger yet since the node table might have already been destroyed
+            if (_ec == boost::asio::error::operation_aborted ||
+                discoveryTimer->expires_at() == boost::posix_time::min_date_time)
+            {
+                clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
+                return;
+            }
+            else if (_ec)
+            {
+                clog(VerbosityDebug, "discov")
+                    << "Discovery timer error detected: " << _ec.value() << " " << _ec.message();
+                return;
+            }
+
+            doDiscoveryRound(_node, _round + 1, _tried);
+        });
 }
 
 vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
@@ -646,60 +648,80 @@ void NodeTable::onPacketReceived(
 
 void NodeTable::doDiscovery()
 {
-    NodeID randNodeId;
-    crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));
-    crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));
-    LOG(m_logger) << "Queueing discovery algorithm run for random node id: " << randNodeId;
-
     m_discoveryTimer->expires_from_now(boost::posix_time::milliseconds(c_bucketRefresh.count()));
-    m_discoveryTimer->async_wait(bind(&NodeTable::doDiscover, shared_from_this(), placeholders::_1,
-        randNodeId, 0 /* round */, make_shared<set<shared_ptr<NodeEntry>>>(), m_discoveryTimer));
-}
 
-void NodeTable::doHandleTimeouts(
-    boost::system::error_code const& _ec, shared_ptr<ba::deadline_timer> _timer)
-{
-    // We can't use m_logger yet because the NodeTable might have already been destroyed
-    if (_ec == boost::asio::error::operation_aborted ||
-        _timer->expires_at() == boost::posix_time::min_date_time)
-    {
-        clog(VerbosityDebug, "discov") << "handleTimeouts timer was probably cancelled";
-        return;
-    }
-    else if (_ec)
-    {
-        clog(VerbosityDebug, "discov")
-            << "handleTimeouts timer encountered an error: " << _ec.value() << " " << _ec.message();
-        return;
-    }
-
-    vector<shared_ptr<NodeEntry>> nodesToActivate;
-    for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
-    {
-        if (chrono::steady_clock::now() > it->second.pingSendTime + m_requestTimeToLive)
-        {
-            if (auto node = nodeEntry(it->first))
+    auto self = shared_from_this();
+    shared_ptr<ba::deadline_timer> discoveryTimer{m_discoveryTimer};
+    m_discoveryTimer->async_wait(
+        [self, this, discoveryTimer](boost::system::error_code const& _ec) {
+            // We can't use m_logger yet since the node table might have already been destroyed
+            if (_ec == boost::asio::error::operation_aborted ||
+                discoveryTimer->expires_at() == boost::posix_time::min_date_time)
             {
-                dropNode(move(node));
-
-                // save the replacement node that should be activated
-                if (it->second.replacementNodeEntry)
-                    nodesToActivate.emplace_back(move(it->second.replacementNodeEntry));
+                clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
+                return;
+            }
+            else if (_ec)
+            {
+                clog(VerbosityDebug, "discov")
+                    << "Discovery timer error detected: " << _ec.value() << " " << _ec.message();
+                return;
             }
 
-            it = m_sentPings.erase(it);
+            NodeID randNodeId;
+            crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));
+            crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));
+            LOG(m_logger) << "Starting discovery algorithm run for random node id: " << randNodeId;
+            doDiscoveryRound(randNodeId, 0 /* round */, make_shared<set<shared_ptr<NodeEntry>>>());
+        });
+}
+
+void NodeTable::doProcessEvictions()
+{
+    m_evictionTimer.expires_from_now(boost::posix_time::milliseconds(c_processEvictionsIntervalMs));
+    auto self = shared_from_this();
+    shared_ptr<ba::deadline_timer> evictionTimer{m_evictionTimer};
+    m_evictionTimer->async_wait([self, this, evictionTimer](boost::system::error_code const& _ec) {
+        // We can't use m_logger yet because the NodeTable might have already been destroyed
+        if (_ec == boost::asio::error::operation_aborted ||
+            evictionTimer->expires_at() == boost::posix_time::min_date_time)
+        {
+            LOG(m_logger) << "evictions timer was probably cancelled";
+            return;
         }
-        else
-            ++it;
-    }
+        else if (_ec)
+        {
+            LOG(m_logger) << "evictions timer encountered an error: " << _ec.value() << " "
+                          << _ec.message();
+            return;
+        }
 
-    // activate replacement nodes and put them into buckets
-    for (auto const& n : nodesToActivate)
-        noteActiveNode(n, n->endpoint);
+        vector<shared_ptr<NodeEntry>> nodesToActivate;
+        for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
+        {
+            if (chrono::steady_clock::now() > it->second.pingSendTime + m_requestTimeToLive)
+            {
+                if (auto node = nodeEntry(it->first))
+                {
+                    dropNode(move(node));
 
-    _timer->expires_from_now(boost::posix_time::milliseconds(c_handleTimeoutsIntervalMs));
-    _timer->async_wait(
-        bind(&NodeTable::doHandleTimeouts, shared_from_this(), placeholders::_1, _timer));
+                    // save the replacement node that should be activated
+                    if (it->second.replacementNodeEntry)
+                        nodesToActivate.emplace_back(move(it->second.replacementNodeEntry));
+                }
+
+                it = m_sentPings.erase(it);
+            }
+            else
+                ++it;
+        }
+
+        // activate replacement nodes and put them into buckets
+        for (auto const& n : nodesToActivate)
+            noteActiveNode(n, n->endpoint);
+
+        doProcessEvictions();
+    });
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)
