@@ -2,7 +2,7 @@ FROM debian:testing
 
 LABEL maintainer="C++ Ethereum team"
 LABEL repo="https://github.com/ethereum/aleth"
-LABEL version="9"
+LABEL version="10"
 LABEL description="Build environment for C++ Ethereum projects"
 
 RUN export DEBIAN_FRONTEND=noninteractive \
@@ -14,7 +14,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && rm -rf /var/lib/apt/lists/*
 
 RUN export DEBIAN_FRONTEND=noninteractive \
-  && echo 'deb http://apt.llvm.org/unstable/ llvm-toolchain-6.0 main' >> /etc/apt/sources.list \
+  && echo 'deb http://deb.debian.org/debian stretch main' >> /etc/apt/sources.list \
   && echo 'deb http://apt.llvm.org/unstable/ llvm-toolchain-8 main' >> /etc/apt/sources.list \
   && apt-key adv --keyserver keyserver.ubuntu.com --no-tty --recv-keys \
     6084F3CF814B57C1CF12EFD515CF4D18AF4F7421 \
@@ -36,6 +36,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     doxygen \
     # Compilers
     g++ \
+    g++-6 \
     g++-7 \
     g++-8 \
     clang-3.8 \
