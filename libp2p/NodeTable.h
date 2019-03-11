@@ -177,15 +177,25 @@ public:
 // protected only for derived classes in tests
 protected:
     /**
-     * NodeValidation is used to record Pinged node's endpoint, the timepoint of sent PING,
+     * NodeValidation is used to record Pinged node's ID, the timepoint of sent PING,
      * time of sending and the new node ID to replace unresponsive node.
      */
     struct NodeValidation
     {
-        NodeIPEndpoint endpoint;
+        NodeID nodeID;
+        uint16_t tcpPort = 0;
         TimePoint pingSendTime;
         h256 pingHash;
         std::shared_ptr<NodeEntry> replacementNodeEntry;
+
+        NodeValidation(NodeID const& _nodeID, uint16_t _tcpPort, TimePoint _pingSendTime,
+            h256 const& _pingHash, std::shared_ptr<NodeEntry> _replacementNodeEntry)
+          : nodeID(_nodeID),
+            tcpPort(_tcpPort),
+            pingSendTime(_pingSendTime),
+            pingHash(_pingHash),
+            replacementNodeEntry(std::move(_replacementNodeEntry))
+        {}
     };
 
     /// Constants for Kademlia, derived from address space.
@@ -308,7 +318,7 @@ protected:
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 
     // The info about PING packets we've sent to other nodes and haven't received PONG yet
-    std::unordered_map<NodeID, NodeValidation> m_sentPings;
+    std::map<bi::udp::endpoint, NodeValidation> m_sentPings;
 
     // Expiration time of sent discovery packets.
     std::chrono::seconds m_requestTimeToLive;
