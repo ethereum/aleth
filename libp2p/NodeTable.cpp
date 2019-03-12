@@ -481,21 +481,29 @@ void NodeTable::onPacketReceived(
                 }
 
                 auto const& pong = dynamic_cast<Pong const&>(*packet);
-                if (pong.echo != sentPing->second.pingHash)
+                auto const& nodeValidation = sentPing->second;
+                if (pong.echo != nodeValidation.pingHash)
                 {
                     LOG(m_logger) << "Invalid PONG from " << _from.address().to_string() << ":"
                                   << _from.port();
                     return;
                 }
 
+                // in case the node answers with new NodeID, drop the record with the old NodeID
+                auto const& sourceId = pong.sourceid;
+                if (sourceId != nodeValidation.nodeID)
+                {
+                    if (auto node = nodeEntry(nodeValidation.nodeID))
+                        dropNode(move(node));
+                }
+
                 // create or update nodeEntry with new Pong received time
                 DEV_GUARDED(x_nodes)
                 {
-                    auto const& sourceId = pong.sourceid;
                     auto it = m_allNodes.find(sourceId);
                     if (it == m_allNodes.end())
                         sourceNodeEntry = make_shared<NodeEntry>(m_hostNodeID, sourceId,
-                            NodeIPEndpoint{_from.address(), _from.port(), sentPing->second.tcpPort},
+                            NodeIPEndpoint{_from.address(), _from.port(), nodeValidation.tcpPort},
                             RLPXDatagramFace::secondsSinceEpoch(), 0);
                     else
                     {
