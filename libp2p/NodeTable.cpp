@@ -493,6 +493,8 @@ void NodeTable::onPacketReceived(
                 auto const& sourceId = pong.sourceid;
                 if (sourceId != nodeValidation.nodeID)
                 {
+                    LOG(m_logger) << "Node " << _from << " changed public key from "
+                                  << nodeValidation.nodeID << " to " << sourceId;
                     if (auto node = nodeEntry(nodeValidation.nodeID))
                         dropNode(move(node));
                 }
