@@ -732,18 +732,22 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	
 	
 	// plaintext whose size isn't divisible by block size must use stream filter for padding
+	constexpr size_t size = 192 / 8;
 	string string192("AAAAAAAAAAAAAAAABBBBBBBB");
-	plainOriginal = string192;
+	char output[size + 1];
+	output[size] = 0x1e;
 
 	string cipher;
-	CryptoPP::StreamTransformationFilter* aesStream = new CryptoPP::StreamTransformationFilter(cbcEncryption, new CryptoPP::StringSink(cipher));
+	auto* aesStream = new CryptoPP::StreamTransformationFilter(cbcEncryption, new CryptoPP::StringSink(cipher));
 	CryptoPP::StringSource source(string192, true, aesStream);
 	BOOST_REQUIRE(cipher.size() == 32);
 
-	byte* pOut = reinterpret_cast<byte*>(&string192[0]);
+	byte* pOut = reinterpret_cast<byte*>(&output[0]);
 	byte const* pIn = reinterpret_cast<byte const*>(cipher.data());
+	BOOST_CHECK(output[size] == 0x1e);
 	cbcDecryption.ProcessData(pOut, pIn, cipher.size());
-	BOOST_REQUIRE(string192 == plainOriginal);
+	BOOST_CHECK(output[size] == 0x1e);  // Buffer overflow.
+	BOOST_CHECK(string192 == std::string(output, size));
 }
 
 BOOST_AUTO_TEST_CASE(recoverVgt3)
