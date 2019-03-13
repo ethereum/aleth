@@ -261,7 +261,7 @@ protected:
 
     /// Called whenever activity is received from a node in order to maintain node table. Only
     /// called for nodes for which we've completed an endpoint proof.
-    void noteActiveNode(std::shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoint const& _endpoint);
+    void noteActiveNode(std::shared_ptr<NodeEntry> _nodeEntry);
 
     /// Used to drop node when timeout occurs or when evict() result is to keep previous node.
     void dropNode(std::shared_ptr<NodeEntry> _n);
