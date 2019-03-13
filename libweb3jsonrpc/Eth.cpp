@@ -739,10 +739,12 @@ string dev::rpc::exceptionToErrorMessage()
 	{
 		ret = "Transaction gas amount is less than the intrinsic gas amount for this transaction type.";
 	}
-	catch (BlockGasLimitReached const&)
-	{
-		ret = "Block gas limit reached.";
-	}
+    catch (BlockGasLimitReached const& _ex)
+    {
+        string errorString = "Block gas limit reached! ";
+        cwarn << errorString + _ex.what();
+        ret = errorString;
+    }
 	catch (InvalidNonce const&)
 	{
 		ret = "Invalid transaction nonce.";
