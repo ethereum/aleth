@@ -303,6 +303,8 @@ void setDefaultOrCLocale();
 
 static constexpr unsigned c_lineWidth = 160;
 
+static const auto c_steadyClockMin = std::chrono::steady_clock::time_point::min();
+
 class ExitHandler
 {
 public:

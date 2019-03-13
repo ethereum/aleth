@@ -109,7 +109,6 @@ public:
     /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
     NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
         bool _enabled = true, bool _allowLocalDiscovery = false);
-    ~NodeTable() = default;
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
     static int distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
@@ -118,18 +117,16 @@ public:
     {
         if (m_socket->isOpen())
         {
-            // We "cancel" the timers by setting min_date_time rather than calling cancel() because
-            // cancel won't set the boost error code if the timers have already expired and the
-            // handlers are in the ready queue.
+            // We "cancel" the timers by setting c_steadyClockMin rather than calling cancel()
+            // because cancel won't set the boost error code if the timers have already expired and
+            // the handlers are in the ready queue.
             //
             // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
             // timers
             auto discoveryTimer{m_discoveryTimer};
-            m_io.post(
-                [discoveryTimer] { discoveryTimer->expires_at(boost::posix_time::min_date_time); });
+            m_io.post([discoveryTimer] { discoveryTimer->expires_at(c_steadyClockMin); });
             auto evictionTimer{m_evictionTimer};
-            m_io.post(
-                [evictionTimer] { evictionTimer->expires_at(boost::posix_time::min_date_time); });
+            m_io.post([evictionTimer] { evictionTimer->expires_at(c_steadyClockMin); });
             m_socket->disconnect();
         }
     }
@@ -205,14 +202,12 @@ protected:
 
     /// Intervals
 
-    /// Interval at which eviction timeouts are checked.
-    static constexpr std::chrono::milliseconds c_evictionCheckInterval{75};
     /// How long to wait for requests (evict, find iterations).
-    static constexpr std::chrono::milliseconds c_reqTimeout{300};
+    static constexpr std::chrono::milliseconds c_reqTimeoutMs{300};
     /// How long to wait before starting a new discovery round
-    static constexpr std::chrono::milliseconds c_discoveryRoundIntervalMs{c_reqTimeout * 2};
+    static constexpr std::chrono::milliseconds c_discoveryRoundIntervalMs{c_reqTimeoutMs * 2};
     /// Refresh interval prevents bucket from becoming stale. [Kademlia]
-    static constexpr std::chrono::milliseconds c_bucketRefresh{7200};
+    static constexpr std::chrono::milliseconds c_bucketRefreshMs{7200};
 
     struct NodeBucket
     {
@@ -322,8 +317,8 @@ protected:
 
     bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
-    std::shared_ptr<ba::deadline_timer> m_discoveryTimer;
-    std::shared_ptr<ba::deadline_timer> m_evictionTimer;
+    std::shared_ptr<ba::steady_timer> m_discoveryTimer;
+    std::shared_ptr<ba::steady_timer> m_evictionTimer;
 
     ba::io_service& m_io;
 };
@@ -366,11 +361,11 @@ inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 
 struct DiscoveryDatagram: public RLPXDatagramFace
 {
-    static constexpr std::chrono::seconds c_timeToLive{60};
+    static constexpr std::chrono::seconds c_timeToLiveS{60};
 
     /// Constructor used for sending.
     DiscoveryDatagram(bi::udp::endpoint const& _to)
-      : RLPXDatagramFace(_to), ts(futureFromEpoch(c_timeToLive))
+      : RLPXDatagramFace(_to), ts(futureFromEpoch(c_timeToLiveS))
     {}
 
     /// Constructor used for parsing inbound packets.

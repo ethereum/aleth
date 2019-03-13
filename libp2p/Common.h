@@ -16,6 +16,7 @@
 // Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include <chrono>
 #include <libdevcrypto/Common.h>
