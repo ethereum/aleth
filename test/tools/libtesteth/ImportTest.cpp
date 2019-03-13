@@ -667,9 +667,9 @@ bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
     else
     {
         // Expect section in filled test
-        requireJsonFields(_expects, "expect",
-        {{"indexes", jsonVType::obj_type}, {"hash", jsonVType::str_type},
-         {"logs", jsonVType::str_type}});
+        requireJsonFields(_expects, "post",
+            {{"indexes", jsonVType::obj_type}, {"hash", jsonVType::str_type},
+                {"logs", jsonVType::str_type}, {"hash_withRewards", jsonVType::str_type}});
     }
 
     vector<int> d;
@@ -848,6 +848,15 @@ int ImportTest::exportTest()
         obj2["indexes"] = obj;
         obj2["hash"] = toHexPrefixed(tr.postState.rootHash().asBytes());
         obj2["logs"] = exportLog(tr.output.second.log());
+
+        // Calculate the hash of the same state but with mining reward for retesteth
+        // Transaction gas reward is already calculated. calculate only mining reward
+        unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(tr.netId)).createSealEngine());
+        u256 reward = se.get()->blockReward(1);
+        eth::State miningRewardState = tr.postState;
+        miningRewardState.addBalance(m_envInfo.get()->author(), reward);  // imitate mining reward
+        miningRewardState.commit(State::CommitBehaviour::KeepEmptyAccounts);
+        obj2["hash_withRewards"] = toHexPrefixed(miningRewardState.rootHash().asBytes());
 
         //Print the post state if transaction has failed on expect section
         auto it = std::find(std::begin(stateIndexesToPrint), std::end(stateIndexesToPrint), i);
