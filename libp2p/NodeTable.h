@@ -125,8 +125,8 @@ public:
             // timers
             auto discoveryTimer{m_discoveryTimer};
             m_io.post([discoveryTimer] { discoveryTimer->expires_at(c_steadyClockMin); });
-            auto evictionTimer{m_evictionTimer};
-            m_io.post([evictionTimer] { evictionTimer->expires_at(c_steadyClockMin); });
+            auto timeoutsTimer{m_timeoutsTimer};
+            m_io.post([timeoutsTimer] { timeoutsTimer->expires_at(c_steadyClockMin); });
             m_socket->disconnect();
         }
     }
@@ -269,9 +269,9 @@ protected:
     /// Looks up a random node at @c_bucketRefresh interval.
     void doDiscovery();
 
-    /// Drop nodes from the node table which haven't responded to ping and bring in their
-    /// replacements
-    void doProcessEvictions();
+    /// Clear timed-out pings and drop nodes from the node table which haven't responded to ping and
+    /// bring in their replacements
+    void doHandleTimeouts();
 
     // Useful only for tests.
     void setRequestTimeToLive(std::chrono::seconds const& _time) { m_requestTimeToLive = _time; }
@@ -318,7 +318,7 @@ protected:
     bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
     std::shared_ptr<ba::steady_timer> m_discoveryTimer;
-    std::shared_ptr<ba::steady_timer> m_evictionTimer;
+    std::shared_ptr<ba::steady_timer> m_timeoutsTimer;
 
     ba::io_service& m_io;
 };

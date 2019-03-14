@@ -16,7 +16,8 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_discoveryWarnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "discov"))
 
-constexpr chrono::milliseconds c_processEvictionsIntervalMs{5000};
+// Cadence at which we timeout sent pings and evict unresponsive nodes
+constexpr chrono::milliseconds c_handleTimeoutsIntervalMs{5000};
 
 }  // namespace
 
@@ -40,7 +41,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     m_requestTimeToLive{DiscoveryDatagram::c_timeToLiveS},
     m_allowLocalDiscovery{_allowLocalDiscovery},
     m_discoveryTimer{make_shared<ba::steady_timer>(_io)},
-    m_evictionTimer{make_shared<ba::steady_timer>(_io)},
+    m_timeoutsTimer{make_shared<ba::steady_timer>(_io)},
     m_io{_io}
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -56,7 +57,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     {
         m_socket->connect();
         doDiscovery();
-        doProcessEvictions();
+        doHandleTimeouts();
     }
     catch (exception const& _e)
     {
@@ -656,15 +657,15 @@ void NodeTable::doDiscovery()
     });
 }
 
-void NodeTable::doProcessEvictions()
+void NodeTable::doHandleTimeouts()
 {
-    m_evictionTimer->expires_from_now(c_processEvictionsIntervalMs);
-    auto evictionTimer{m_evictionTimer};
-    m_evictionTimer->async_wait([this, evictionTimer](boost::system::error_code const& _ec) {
+    m_timeoutsTimer->expires_from_now(c_handleTimeoutsIntervalMs);
+    auto timeoutsTimer{m_timeoutsTimer};
+    m_timeoutsTimer->async_wait([this, timeoutsTimer](boost::system::error_code const& _ec) {
         // We can't use m_logger if an error occurred because captured this might be already
         // destroyed
         if (_ec.value() == boost::asio::error::operation_aborted ||
-            m_evictionTimer->expires_at() == c_steadyClockMin)
+            timeoutsTimer->expires_at() == c_steadyClockMin)
         {
             clog(VerbosityDebug, "discov") << "evictions timer was probably cancelled";
             return;
@@ -700,7 +701,7 @@ void NodeTable::doProcessEvictions()
         for (auto const& n : nodesToActivate)
             noteActiveNode(n, n->endpoint);
 
-        doProcessEvictions();
+        doHandleTimeouts();
     });
 }
 
