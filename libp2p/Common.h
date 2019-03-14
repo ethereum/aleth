@@ -16,6 +16,7 @@
 // Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 #include <chrono>
 #include <libdevcrypto/Common.h>
@@ -245,53 +246,6 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& _out, const Node& _node);
-
-class DeadlineOps
-{
-    // Boost deadline timer wrapper which provides thread-safety
-    class DeadlineOp
-    {
-    public:
-        DeadlineOp(ba::io_service& _io, unsigned _msInFuture, std::function<void(boost::system::error_code const&)> const& _f): m_timer(new ba::deadline_timer(_io)) { m_timer->expires_from_now(boost::posix_time::milliseconds(_msInFuture)); m_timer->async_wait(_f); }
-        ~DeadlineOp() { if (m_timer) m_timer->cancel(); }
-
-        DeadlineOp(DeadlineOp&& _s) noexcept : m_timer(std::move(_s.m_timer)) {}
-        DeadlineOp& operator=(DeadlineOp&& _s) noexcept
-        {
-            m_timer = std::move(_s.m_timer);
-            return *this;
-        }
-
-        bool expired() { Guard l(x_timer); return m_timer->expires_from_now().total_nanoseconds() <= 0; }
-        void wait() { Guard l(x_timer); m_timer->wait(); }
-
-    private:
-        std::unique_ptr<ba::deadline_timer> m_timer;
-        Mutex x_timer;
-    };
-
-public:
-    explicit DeadlineOps(ba::io_service& _io, unsigned _reapIntervalMs = 100): m_io(_io), m_reapIntervalMs(_reapIntervalMs), m_stopped(false) { reap(); }
-    ~DeadlineOps() { stop(); }
-
-    void schedule(unsigned _msInFuture, std::function<void(boost::system::error_code const&)> const& _f) { if (m_stopped) return; DEV_GUARDED(x_timers) m_timers.emplace_back(m_io, _msInFuture, _f); }	
-
-    void stop() { m_stopped = true; DEV_GUARDED(x_timers) m_timers.clear(); }
-
-    bool isStopped() const { return m_stopped; }
-    
-protected:
-    void reap();
-    
-private:
-    ba::io_service& m_io;
-    unsigned m_reapIntervalMs;
-    
-    std::vector<DeadlineOp> m_timers;
-    Mutex x_timers;
-    
-    std::atomic<bool> m_stopped;
-};
 
 /// Simple stream output for a NodeIPEndpoint.
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep);

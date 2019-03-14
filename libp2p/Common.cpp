@@ -155,28 +155,6 @@ void NodeIPEndpoint::interpretRLP(RLP const& _r)
     m_tcpPort = _r[2].toInt<uint16_t>();
 }
 
-void DeadlineOps::reap()
-{
-    if (m_stopped)
-        return;
-
-    Guard l(x_timers);
-    auto t = m_timers.begin();
-    while (t != m_timers.end())
-        if (t->expired())
-        {
-            t->wait();
-            t = m_timers.erase(t);
-        }
-        else
-            t++;
-
-    m_timers.emplace_back(m_io, m_reapIntervalMs, [this](boost::system::error_code const& ec) {
-        if (!ec && !m_stopped)
-            reap();
-    });
-}
-
 Node::Node(Node const& _original)
   : id(_original.id), endpoint(_original.endpoint), peerType(_original.peerType.load())
 {}

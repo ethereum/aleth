@@ -16,38 +16,42 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_discoveryWarnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = 0)(boost::log::keywords::channel = "discov"))
 
-constexpr unsigned c_handleTimeoutsIntervalMs = 5000;
+// Cadence at which we timeout sent pings and evict unresponsive nodes
+constexpr chrono::milliseconds c_handleTimeoutsIntervalMs{5000};
 
 }  // namespace
 
-constexpr std::chrono::seconds DiscoveryDatagram::c_timeToLive;
-constexpr std::chrono::milliseconds NodeTable::c_reqTimeout;
-constexpr std::chrono::milliseconds NodeTable::c_bucketRefresh;
-constexpr std::chrono::milliseconds NodeTable::c_evictionCheckInterval;
+constexpr chrono::seconds DiscoveryDatagram::c_timeToLiveS;
+constexpr chrono::milliseconds NodeTable::c_reqTimeoutMs;
+constexpr chrono::milliseconds NodeTable::c_bucketRefreshMs;
+constexpr chrono::milliseconds NodeTable::c_discoveryRoundIntervalMs;
 
-inline bool operator==(
-    std::weak_ptr<NodeEntry> const& _weak, std::shared_ptr<NodeEntry> const& _shared)
+inline bool operator==(weak_ptr<NodeEntry> const& _weak, shared_ptr<NodeEntry> const& _shared)
 {
     return !_weak.owner_before(_shared) && !_shared.owner_before(_weak);
 }
 
 NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
     bool _enabled, bool _allowLocalDiscovery)
-  : m_hostNodeID(_alias.pub()),
-    m_hostNodeEndpoint(_endpoint),
-    m_secret(_alias.secret()),
-    m_socket(make_shared<NodeSocket>(
-        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)),
-    m_requestTimeToLive(DiscoveryDatagram::c_timeToLive),
-    m_allowLocalDiscovery(_allowLocalDiscovery),
-    m_timers(_io),
-    m_io(_io)
+  : m_hostNodeID{_alias.pub()},
+    m_hostNodeEndpoint{_endpoint},
+    m_secret{_alias.secret()},
+    m_socket{make_shared<NodeSocket>(
+        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)},
+    m_requestTimeToLive{DiscoveryDatagram::c_timeToLiveS},
+    m_allowLocalDiscovery{_allowLocalDiscovery},
+    m_discoveryTimer{make_shared<ba::steady_timer>(_io)},
+    m_timeoutsTimer{make_shared<ba::steady_timer>(_io)},
+    m_io{_io}
 {
     for (unsigned i = 0; i < s_bins; i++)
         m_buckets[i].distance = i;
 
     if (!_enabled)
+    {
+        cwarn << "\"_enabled\" parameter is false, discovery is disabled";
         return;
+    }
 
     try
     {
@@ -55,7 +59,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
         doDiscovery();
         doHandleTimeouts();
     }
-    catch (std::exception const& _e)
+    catch (exception const& _e)
     {
         cwarn << "Exception connecting NodeTable socket: " << _e.what();
         cwarn << "Discovery disabled.";
@@ -190,10 +194,11 @@ shared_ptr<NodeEntry> NodeTable::nodeEntry(NodeID const& _id)
     return it != m_allNodes.end() ? it->second : shared_ptr<NodeEntry>();
 }
 
-void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_ptr<NodeEntry>>> _tried)
+void NodeTable::doDiscoveryRound(
+    NodeID _node, unsigned _round, shared_ptr<set<shared_ptr<NodeEntry>>> _tried)
 {
-    // NOTE: ONLY called by doDiscovery!
-
+    // NOTE: ONLY called by doDiscovery or "recursively" via lambda scheduled via timer at
+    // the end of this function
     if (!m_socket->isOpen())
         return;
 
@@ -233,25 +238,27 @@ void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr<set<shared_
         return;
     }
 
-    m_timers.schedule(c_reqTimeout.count() * 2, [this, _node, _round, _tried](boost::system::error_code const& _ec)
-    {
-        if (_ec)
-            // we can't use m_logger here, because captured this might be already destroyed
-            clog(VerbosityDebug, "discov")
-                << "Discovery timer was probably cancelled: " << _ec.value() << " "
-                << _ec.message();
+    m_discoveryTimer->expires_from_now(c_discoveryRoundIntervalMs);
+    auto discoveryTimer{m_discoveryTimer};
+    m_discoveryTimer->async_wait(
+        [this, discoveryTimer, _node, _round, _tried](boost::system::error_code const& _ec) {
+            // We can't use m_logger here if there's an error because captured this might already be
+            // destroyed
+            if (_ec.value() == boost::asio::error::operation_aborted ||
+                discoveryTimer->expires_at() == c_steadyClockMin)
+            {
+                clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
+                return;
+            }
+            else if (_ec)
+            {
+                clog(VerbosityDebug, "discov")
+                    << "Discovery timer error detected: " << _ec.value() << " " << _ec.message();
+                return;
+            }
 
-        if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
-            return;
-
-        // error::operation_aborted means that the timer was probably aborted.
-        // It usually happens when "this" object is deallocated, in which case
-        // subsequent call to doDiscover() would cause a crash. We can not rely on
-        // m_timers.isStopped(), because "this" pointer was captured by the lambda,
-        // and therefore, in case of deallocation m_timers object no longer exists.
-
-        doDiscover(_node, _round + 1, _tried);
-    });
+            doDiscoveryRound(_node, _round + 1, _tried);
+        });
 }
 
 vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
@@ -311,6 +318,9 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
 
 void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEntry)
 {
+    if (!m_socket->isOpen())
+        return;
+
     // Don't sent Ping if one is already sent
     if (contains(m_sentPings, _node.id))
     {
@@ -339,7 +349,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replac
         return;
 
     LOG(m_logger) << "Evicting node " << _leastSeen;
-    ping(_leastSeen, std::move(_replacement));
+    ping(_leastSeen, move(_replacement));
 
     if (m_nodeEventHandler)
         m_nodeEventHandler->appendEvent(_leastSeen.id, NodeEntryScheduledForEviction);
@@ -377,7 +387,7 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
         auto& nodes = s.nodes;
 
         // check if the node is already in the bucket
-        auto it = std::find(nodes.begin(), nodes.end(), _nodeEntry);
+        auto it = find(nodes.begin(), nodes.end(), _nodeEntry);
         if (it != nodes.end())
         {
             // if it was in the bucket, move it to the last position
@@ -524,7 +534,7 @@ void NodeTable::onPacketReceived(
                 m_sentFindNodes.remove_if([&](NodeIdTimePoint const& _t) noexcept {
                     if (_t.first != in.sourceid)
                         return false;
-                    if (now - _t.second < c_reqTimeout)
+                    if (now - _t.second < c_reqTimeoutMs)
                         expected = true;
                     return true;
                 });
@@ -607,7 +617,7 @@ void NodeTable::onPacketReceived(
         if (sourceNodeEntry)
             noteActiveNode(move(sourceNodeEntry), _from);
     }
-    catch (std::exception const& _e)
+    catch (exception const& _e)
     {
         LOG(m_logger) << "Exception processing message from " << _from.address().to_string() << ":"
                       << _from.port() << ": " << _e.what();
@@ -621,36 +631,56 @@ void NodeTable::onPacketReceived(
 
 void NodeTable::doDiscovery()
 {
-    m_timers.schedule(c_bucketRefresh.count(), [this](boost::system::error_code const& _ec)
-    {
-        if (_ec)
-            // we can't use m_logger here, because captured this might be already destroyed
-            clog(VerbosityDebug, "discov")
-                << "Discovery timer was probably cancelled: " << _ec.value() << " "
-                << _ec.message();
-
-        if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
+    m_discoveryTimer->expires_from_now(c_bucketRefreshMs);
+    auto discoveryTimer{m_discoveryTimer};
+    m_discoveryTimer->async_wait([this, discoveryTimer](boost::system::error_code const& _ec) {
+        // We can't use m_logger if an error occurred because captured this might be already
+        // destroyed
+        if (_ec.value() == boost::asio::error::operation_aborted ||
+            discoveryTimer->expires_at() == c_steadyClockMin)
+        {
+            clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
             return;
+        }
+        else if (_ec)
+        {
+            clog(VerbosityDebug, "discov")
+                << "Discovery timer error detected: " << _ec.value() << " " << _ec.message();
+            return;
+        }
 
         NodeID randNodeId;
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));
         crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));
-        LOG(m_logger) << "Random discovery: " << randNodeId;
-        doDiscover(randNodeId, 0, make_shared<set<shared_ptr<NodeEntry>>>());
+        LOG(m_logger) << "Starting discovery algorithm run for random node id: " << randNodeId;
+        doDiscoveryRound(randNodeId, 0 /* round */, make_shared<set<shared_ptr<NodeEntry>>>());
     });
 }
 
 void NodeTable::doHandleTimeouts()
 {
-    m_timers.schedule(c_handleTimeoutsIntervalMs, [this](boost::system::error_code const& _ec) {
-        if ((_ec && _ec.value() == boost::asio::error::operation_aborted) || m_timers.isStopped())
+    m_timeoutsTimer->expires_from_now(c_handleTimeoutsIntervalMs);
+    auto timeoutsTimer{m_timeoutsTimer};
+    m_timeoutsTimer->async_wait([this, timeoutsTimer](boost::system::error_code const& _ec) {
+        // We can't use m_logger if an error occurred because captured this might be already
+        // destroyed
+        if (_ec.value() == boost::asio::error::operation_aborted ||
+            timeoutsTimer->expires_at() == c_steadyClockMin)
+        {
+            clog(VerbosityDebug, "discov") << "evictions timer was probably cancelled";
             return;
+        }
+        else if (_ec)
+        {
+            clog(VerbosityDebug, "discov")
+                << "evictions timer encountered an error: " << _ec.value() << " " << _ec.message();
+            return;
+        }
 
         vector<shared_ptr<NodeEntry>> nodesToActivate;
         for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
         {
-            if (chrono::steady_clock::now() >
-                it->second.pingSendTime + m_requestTimeToLive)
+            if (chrono::steady_clock::now() > it->second.pingSendTime + m_requestTimeToLive)
             {
                 if (auto node = nodeEntry(it->first))
                 {
