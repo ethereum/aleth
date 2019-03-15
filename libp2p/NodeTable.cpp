@@ -321,7 +321,7 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
     if (!m_socket->isOpen())
         return;
 
-    // Don't sent Ping if one is already sent
+    // Don't send Ping if one is already sent
     if (m_sentPings.find(_node.endpoint) != m_sentPings.end())
     {
         LOG(m_logger) << "Ignoring request to ping " << _node << ", because it's already pinged";
@@ -334,8 +334,8 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
     LOG(m_logger) << p.typeName() << " to " << _node;
     m_socket->send(p);
 
-    NodeValidation const validation(_node.id, _node.endpoint.tcpPort(), chrono::steady_clock::now(),
-        pingHash, _replacementNodeEntry);
+    NodeValidation const validation{_node.id, _node.endpoint.tcpPort(), chrono::steady_clock::now(),
+        pingHash, _replacementNodeEntry};
     m_sentPings.insert({_node.endpoint, validation});
 }
 
@@ -506,7 +506,7 @@ void NodeTable::onPacketReceived(
                     if (it == m_allNodes.end())
                         sourceNodeEntry = make_shared<NodeEntry>(m_hostNodeID, sourceId,
                             NodeIPEndpoint{_from.address(), _from.port(), nodeValidation.tcpPort},
-                            RLPXDatagramFace::secondsSinceEpoch(), 0);
+                            RLPXDatagramFace::secondsSinceEpoch(), 0 /* lastPongSentTime */);
                     else
                     {
                         sourceNodeEntry = it->second;

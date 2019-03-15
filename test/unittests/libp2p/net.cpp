@@ -681,30 +681,32 @@ BOOST_AUTO_TEST_CASE(pongWithChangedNodeID)
     TestNodeTableHost nodeTableHost(0);
     nodeTableHost.start();
     auto& nodeTable = nodeTableHost.nodeTable;
-    nodeTable->setRequestTimeToLive(std::chrono::seconds(1));
+    nodeTable->setRequestTimeToLive(chrono::seconds(1));
 
     // socket receiving PING
     TestUDPSocketHost nodeSocketHost{randomPortNumber()};
     nodeSocketHost.start();
-    uint16_t nodePort = nodeSocketHost.port;
+    uint16_t const nodePort = nodeSocketHost.port;
 
     // add a node to node table, initiating PING
-    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
-    auto nodeKeyPair = KeyPair::create();
-    auto nodePubKey = nodeKeyPair.pub();
+    auto const nodeEndpoint =
+        NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
+    auto const nodeKeyPair = KeyPair::create();
+    auto const nodePubKey = nodeKeyPair.pub();
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto pingDatagram =
+    auto const pingDataReceived = nodeSocketHost.packetsReceived.pop();
+    auto const pingDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
-    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG with different NodeID
     Pong pong(nodeTable->m_hostNodeEndpoint);
     pong.echo = ping.echo;
-    auto newNodeKeyPair = KeyPair::create();
-    auto newNodePubKey = newNodeKeyPair.pub();
+    auto const newNodeKeyPair = KeyPair::create();
+    auto const newNodePubKey = newNodeKeyPair.pub();
     pong.sign(newNodeKeyPair.secret());
     nodeSocketHost.socket->send(pong);
 
@@ -712,14 +714,11 @@ BOOST_AUTO_TEST_CASE(pongWithChangedNodeID)
     nodeTable->packetsReceived.pop();
 
     BOOST_REQUIRE(nodeTable->nodeExists(newNodeKeyPair.pub()));
-    auto addedNode = nodeTable->nodeEntry(newNodePubKey);
+    auto const addedNode = nodeTable->nodeEntry(newNodePubKey);
     BOOST_CHECK(addedNode->lastPongReceivedTime > 0);
 
-    // wait for old node to be kicked out after timeout
-    this_thread::sleep_for(std::chrono::seconds(6));
-
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
-    auto sentPing = nodeTable->nodeValidation(nodeEndpoint);
+    auto const sentPing = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_CHECK(!sentPing.is_initialized());
 }
 
@@ -762,7 +761,10 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetsReceived.pop();
+    auto pongDataReceived = nodeTable->packetsReceived.pop();
+    auto pongDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
+    BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
 
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
     sentPing = nodeTable->nodeValidation(nodeEndpoint);
