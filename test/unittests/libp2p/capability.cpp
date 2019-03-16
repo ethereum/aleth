@@ -15,14 +15,23 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
+namespace
+{
+chrono::milliseconds constexpr c_backgroundWorkInterval{1000};
+}
+
 class TestCapability : public CapabilityFace, public Worker
 {
 public:
     explicit TestCapability(Host const& _host) : Worker("test"), m_host(_host) {}
 
-    std::string name() const override { return "test"; }
+    string name() const override { return "test"; }
     unsigned version() const override { return 2; }
     unsigned messageCount() const override { return UserPacket + 1; }
+    chrono::milliseconds backgroundWorkInterval() const override
+    {
+        return c_backgroundWorkInterval;
+    }
 
     void onStarting() override {}
     void onStopping() override {}
@@ -52,7 +61,7 @@ public:
             _id, m_host.capabilityHost()->prep(_id, name(), s, UserPacket, 1) << _x);
     }
 
-    std::pair<int, int> retrieveTestData(NodeID const& _id)
+    pair<int, int> retrieveTestData(NodeID const& _id)
     {
         int cnt = 0;
         int checksum = 0;
@@ -67,8 +76,8 @@ public:
     }
 
     Host const& m_host;
-    std::unordered_map<NodeID, int> m_cntReceivedMessages;
-    std::unordered_map<NodeID, int> m_testSums;
+    unordered_map<NodeID, int> m_cntReceivedMessages;
+    unordered_map<NodeID, int> m_testSums;
 };
 
 TEST(p2p, capability)
@@ -122,7 +131,7 @@ TEST(p2p, capability)
         thc2->sendTestMessage(host1.id(), i);
 
     this_thread::sleep_for(chrono::seconds(target / 64 + 1));
-    std::pair<int, int> testData = thc1->retrieveTestData(host2.id());
+    pair<int, int> testData = thc1->retrieveTestData(host2.id());
     EXPECT_EQ(target, testData.first);
     EXPECT_EQ(checksum, testData.second);
 }

@@ -231,11 +231,21 @@ public:
     void forEachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
 
-    void scheduleExecution(int _delayMs, std::function<void()> _f);
+    void scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, std::function<void()> _f);
+    void postCapabilityWork(CapDesc const& _capdesc, std::function<void()> _f);
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
 protected:
+    /*
+     * Used by the host to run a capability's background work loop
+     */
+    struct CapabilityRuntime
+    {
+        std::shared_ptr<CapabilityFace> capability;
+        std::unique_ptr<ba::steady_timer> backgroundWorkTimer;
+    };
+
     void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
 
     /// Deserialise the data and populate the set of known peers.
@@ -338,12 +348,9 @@ private:
     unsigned m_idealPeerCount = 11;										///< Ideal number of peers to be connected to.
     unsigned m_stretchPeers = 7;										///< Accepted connection multiplier (max peers = ideal*stretch).
 
-    /// Each of the capabilities we support.
-    std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
-
-    /// Deadline timers used for isolated network events. GC'd by run.
-    std::list<std::unique_ptr<io::deadline_timer>> m_networkTimers;
-    Mutex x_networkTimers;
+    /// Each of the capabilities we support. CapabilityRuntime is used to run a capability's
+    /// background work loop
+    std::map<CapDesc, CapabilityRuntime> m_capabilities;
 
     std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
     bool m_accepting = false;

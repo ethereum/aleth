@@ -86,9 +86,9 @@ public:
     virtual void foreachPeer(std::string const& _capabilityName,
         std::function<bool(NodeID const& _nodeID)> _f) const = 0;
 
-    /// Schedule callback to be called from the network handling thread
-    /// after at least @a _delayMs milliseconds
-    virtual void scheduleExecution(int _delayMs, std::function<void()> _f) = 0;
+    // TODO: 
+    virtual void scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, std::function<void()> _f) = 0;
+    virtual void postCapabilityWork(CapDesc const& _capDesc, std::function<void()> _f) = 0;
 };
 
 class Host;

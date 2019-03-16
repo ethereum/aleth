@@ -89,6 +89,7 @@ public:
     std::string name() const override { return "par"; }
     unsigned version() const override { return c_WarpProtocolVersion; }
     unsigned messageCount() const override { return WarpSubprotocolPacketCount; }
+    std::chrono::milliseconds backgroundWorkInterval() const override;
 
     void onStarting() override;
     void onStopping() override;

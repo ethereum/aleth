@@ -19,6 +19,8 @@
 #include "Host.h"
 #include "Session.h"
 
+using namespace std;
+
 namespace dev
 {
 namespace p2p
@@ -109,9 +111,14 @@ public:
         m_host.forEachPeer(_capabilityName, _f);
     }
 
-    void scheduleExecution(int _delayMs, std::function<void()> _f) override
+    void scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, function<void()> _f) override
     {
-        m_host.scheduleExecution(_delayMs, std::move(_f));
+        m_host.scheduleCapabilityBackgroundWork(_capDesc, move(_f));
+    }
+
+    void postCapabilityWork(CapDesc const& _capDesc, function<void()> _f) override
+    {
+        m_host.postCapabilityWork(_capDesc, move(_f));
     }
 
 private:

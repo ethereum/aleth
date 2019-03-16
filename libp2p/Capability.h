@@ -23,6 +23,9 @@ namespace dev
 {
 namespace p2p
 {
+
+    DEV_SIMPLE_EXCEPTION(UnknownCapability);
+
 /**
  * @brief The Capability interface.
  * This interface has to be implemented to support any devp2p subprotocol.
@@ -39,6 +42,8 @@ public:
     virtual unsigned version() const = 0;
     /// Number of messages supported by the subprotocol version.
     virtual unsigned messageCount() const = 0;
+    /// Time interval to run the background work loop at
+    virtual std::chrono::milliseconds backgroundWorkInterval() const = 0;
 
     /// Called by the Host when capability is activated
     /// (usually when network communication is being enabled)

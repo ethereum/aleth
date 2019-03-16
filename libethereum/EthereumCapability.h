@@ -91,6 +91,7 @@ public:
     std::string name() const override { return "eth"; }
     unsigned version() const override { return c_protocolVersion; }
     unsigned messageCount() const override { return PacketCount; }
+    std::chrono::milliseconds backgroundWorkInterval() const override;
 
     void onStarting() override;
     void onStopping() override;

@@ -18,9 +18,12 @@
 #include "WarpCapability.h"
 #include "BlockChain.h"
 #include "SnapshotStorage.h"
+#include "libp2p/Common.h"
 
 #include <boost/fiber/all.hpp>
 #include <chrono>
+
+using namespace std;
 
 namespace dev
 {
@@ -29,7 +32,7 @@ namespace eth
 namespace
 {
 static size_t const c_freePeerBufferSize = 32;
-static int const c_backroundWorkPeriodMs = 1000;
+constexpr chrono::milliseconds c_backgroundWorkInterval{1000};
 
 bool validateManifest(RLP const& _manifestRlp)
 {
@@ -323,10 +326,16 @@ WarpCapability::WarpCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
 {
 }
 
+chrono::milliseconds WarpCapability::backgroundWorkInterval() const
+{
+    return c_backgroundWorkInterval;
+}
+
 void WarpCapability::onStarting()
 {
     m_backgroundWorkEnabled = true;
-    m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
+    m_host->scheduleCapabilityBackgroundWork(
+        p2p::CapDesc{name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onStopping()
@@ -354,7 +363,8 @@ void WarpCapability::doBackgroundWork()
     }
 
     if (m_backgroundWorkEnabled)
-        m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
+        m_host->scheduleCapabilityBackgroundWork(
+            p2p::CapDesc{name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)
