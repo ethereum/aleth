@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "WarpCapability.h"
 #include "BlockChain.h"
@@ -135,14 +122,14 @@ public:
         {
             auto it = m_manifests.find(_peerID);
             if (it != m_manifests.end())
-                it->second.set_exception(std::make_exception_ptr(FailedToDownloadManifest()));
+                it->second.set_exception(make_exception_ptr(FailedToDownloadManifest()));
         }
         else if (_asking == Asking::BlockHeaders)
         {
             auto it = m_daoForkHeaders.find(_peerID);
             if (it != m_daoForkHeaders.end())
                 it->second.set_exception(
-                    std::make_exception_ptr(FailedToDownloadDaoForkBlockHeader()));
+                    make_exception_ptr(FailedToDownloadDaoForkBlockHeader()));
         }
         else if (_asking == Asking::WarpData)
         {
@@ -297,14 +284,14 @@ private:
     unsigned const m_daoForkBlock;
     boost::fibers::promise<bytes> m_manifest;
     h256 m_syncingSnapshotHash;
-    std::deque<h256> m_neededChunks;
+    deque<h256> m_neededChunks;
     boost::fibers::buffered_channel<NodeID> m_freePeers;
     boost::filesystem::path const m_snapshotDir;
-    std::map<NodeID, boost::fibers::promise<bytes>> m_manifests;
-    std::map<NodeID, boost::fibers::promise<bytes>> m_daoForkHeaders;
-    std::map<NodeID, h256> m_requestedChunks;
+    map<NodeID, boost::fibers::promise<bytes>> m_manifests;
+    map<NodeID, boost::fibers::promise<bytes>> m_daoForkHeaders;
+    map<NodeID, h256> m_requestedChunks;
 
-    std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
+    unique_ptr<boost::fibers::fiber> m_downloadFiber;
 
     Logger m_logger{createLogger(VerbosityInfo, "snap")};
 };
@@ -312,11 +299,11 @@ private:
 }  // namespace
 
 
-WarpCapability::WarpCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
+WarpCapability::WarpCapability(shared_ptr<p2p::CapabilityHostFace> _host,
     BlockChain const& _blockChain, u256 const& _networkId,
     boost::filesystem::path const& _snapshotDownloadPath,
-    std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
-  : m_host(std::move(_host)),
+    shared_ptr<SnapshotStorageFace> _snapshotStorage)
+  : m_host(move(_host)),
     m_blockChain(_blockChain),
     m_networkId(_networkId),
     m_snapshot(_snapshotStorage),
@@ -343,17 +330,17 @@ void WarpCapability::onStopping()
     m_backgroundWorkEnabled = false;
 }
 
-std::shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
+shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
     boost::filesystem::path const& _snapshotDownloadPath)
 {
-    return std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
+    return make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
 }
 
 void WarpCapability::doBackgroundWork()
 {
     for (auto const& peer : m_peers)
     {
-        time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
         auto const& status = peer.second;
         if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
         {
@@ -391,7 +378,7 @@ void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabi
 bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r)
 {
     auto& peerStatus = m_peers[_peerID];
-    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    peerStatus.m_lastAsk = chrono::system_clock::to_time_t(chrono::system_clock::now());
 
     try
     {
@@ -483,7 +470,7 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
         cnetlog << "Warp Peer causing an Exception: "
                 << boost::current_exception_diagnostic_information() << " " << _r;
     }
-    catch (std::exception const& _e)
+    catch (exception const& _e)
     {
         cnetlog << "Warp Peer causing an exception: " << _e.what() << " " << _r;
     }
@@ -562,12 +549,12 @@ void WarpCapability::setAsking(NodeID const& _peerID, Asking _a)
     auto& peerStatus = itPeerStatus->second;
 
     peerStatus.m_asking = _a;
-    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    peerStatus.m_lastAsk = chrono::system_clock::to_time_t(chrono::system_clock::now());
 }
 
 /// Validates whether peer is able to communicate with the host, disables peer if not
 bool WarpCapability::validateStatus(NodeID const& _peerID, h256 const& _genesisHash,
-    std::vector<unsigned> const& _protocolVersions, u256 const& _networkId)
+    vector<unsigned> const& _protocolVersions, u256 const& _networkId)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -600,7 +587,7 @@ bool WarpCapability::validateStatus(NodeID const& _peerID, h256 const& _genesisH
     return true;
 }
 
-void WarpCapability::disablePeer(NodeID const& _peerID, std::string const& _problem)
+void WarpCapability::disablePeer(NodeID const& _peerID, string const& _problem)
 {
     m_host->disableCapability(_peerID, name(), _problem);
 }
