@@ -22,15 +22,15 @@ using namespace dev::eth;
 char const* const EthereumCapability::s_stateNames[static_cast<int>(SyncState::Size)] = {
     "NotSynced", "Idle", "Waiting", "Blocks", "State"};
 
-constexpr chrono::milliseconds c_backgroundWorkInterval{1000};
+chrono::milliseconds constexpr EthereumCapability::s_backgroundWorkInterval;
 
 namespace
 {
-constexpr unsigned c_maxSendTransactions = 256;
-constexpr unsigned c_maxHeadersToSend = 1024;
-constexpr unsigned c_maxIncomingNewHashes = 1024;
-constexpr unsigned c_peerTimeoutSeconds = 10;
-constexpr int c_minBlockBroadcastPeers = 4;
+static constexpr unsigned c_maxSendTransactions = 256;
+static constexpr unsigned c_maxHeadersToSend = 1024;
+static constexpr unsigned c_maxIncomingNewHashes = 1024;
+static constexpr unsigned c_peerTimeoutSeconds = 10;
+static constexpr int c_minBlockBroadcastPeers = 4;
 
 string toString(Asking _a)
 {
@@ -402,14 +402,13 @@ EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host
 
 chrono::milliseconds EthereumCapability::backgroundWorkInterval() const
 {
-    return c_backgroundWorkInterval;
+    return s_backgroundWorkInterval;
 }
 
 void EthereumCapability::onStarting()
 {
     m_backgroundWorkEnabled = true;
-    m_host->scheduleCapabilityBackgroundWork(
-        p2p::CapDesc{name(), version()}, [this]() { doBackgroundWork(); });
+    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void EthereumCapability::onStopping()
@@ -437,7 +436,7 @@ void EthereumCapability::reset()
 
     // reset() can be called from RPC handling thread,
     // but we access m_latestBlockSent and m_transactionsSent only from the network thread
-    m_host->postCapabilityWork(p2p::CapDesc{name(), version()}, [this]() {
+    m_host->postCapabilityWork({name(), version()}, [this]() {
         m_latestBlockSent = h256();
         m_transactionsSent.clear();
     });
@@ -482,7 +481,8 @@ void EthereumCapability::doBackgroundWork()
     }
 
     if (m_backgroundWorkEnabled)
-        m_host->scheduleCapabilityBackgroundWork(make_pair(name(), version()), [this]() { doBackgroundWork(); });
+        m_host->scheduleCapabilityBackgroundWork(
+            {name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void EthereumCapability::maintainTransactions()
@@ -645,7 +645,7 @@ SyncStatus EthereumCapability::status() const
 void EthereumCapability::onTransactionImported(
     ImportResult _ir, h256 const& _h, h512 const& _nodeId)
 {
-    m_host->postCapabilityWork(p2p::CapDesc{name(), version()}, [this, _ir, _h, _nodeId]() {
+    m_host->postCapabilityWork({name(), version()}, [this, _ir, _h, _nodeId]() {
         auto itPeerStatus = m_peers.find(_nodeId);
         if (itPeerStatus == m_peers.end())
             return;

@@ -16,10 +16,12 @@ namespace dev
 {
 namespace eth
 {
+
+chrono::milliseconds constexpr WarpCapability::s_backgroundWorkInterval;
+
 namespace
 {
 static size_t const c_freePeerBufferSize = 32;
-constexpr chrono::milliseconds c_backgroundWorkInterval{1000};
 
 bool validateManifest(RLP const& _manifestRlp)
 {
@@ -315,14 +317,13 @@ WarpCapability::WarpCapability(shared_ptr<p2p::CapabilityHostFace> _host,
 
 chrono::milliseconds WarpCapability::backgroundWorkInterval() const
 {
-    return c_backgroundWorkInterval;
+    return s_backgroundWorkInterval;
 }
 
 void WarpCapability::onStarting()
 {
     m_backgroundWorkEnabled = true;
-    m_host->scheduleCapabilityBackgroundWork(
-        p2p::CapDesc{name(), version()}, [this]() { doBackgroundWork(); });
+    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onStopping()
@@ -351,7 +352,7 @@ void WarpCapability::doBackgroundWork()
 
     if (m_backgroundWorkEnabled)
         m_host->scheduleCapabilityBackgroundWork(
-            p2p::CapDesc{name(), version()}, [this]() { doBackgroundWork(); });
+            {name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)

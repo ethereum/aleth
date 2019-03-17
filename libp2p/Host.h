@@ -231,8 +231,11 @@ public:
     void forEachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
 
+    /// Schedule a capability's background work loop on the network thread
     void scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, std::function<void()> _f);
-    void postCapabilityWork(CapDesc const& _capdesc, std::function<void()> _f);
+
+    /// Execute capability work on the network thread
+    void postCapabilityWork(CapDesc const& _capDesc, std::function<void()> _f);
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
@@ -320,7 +323,7 @@ private:
     bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
     /// Timer which, when network is running, calls run() every c_timerInterval ms.
-    io::deadline_timer m_runTimer;
+    ba::steady_timer m_runTimer;
 
     std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
 

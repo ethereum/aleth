@@ -105,6 +105,8 @@ public:
     void disablePeer(NodeID const& _peerID, std::string const& _problem);
 
 private:
+    static constexpr std::chrono::milliseconds s_backgroundWorkInterval{1000};
+
     std::shared_ptr<WarpPeerObserverFace> createPeerObserver(
         boost::filesystem::path const& _snapshotDownloadPath);
 

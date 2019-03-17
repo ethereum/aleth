@@ -27,13 +27,13 @@ using namespace dev::p2p;
 namespace
 {
 /// Interval at which Host::run will call keepAlivePeers to ping peers.
-constexpr chrono::seconds c_keepAliveInterval = chrono::seconds(30);
+static constexpr chrono::seconds c_keepAliveInterval{30};
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
-constexpr chrono::seconds c_keepAliveTimeOut = chrono::seconds(1);
+static constexpr chrono::seconds c_keepAliveTimeOut{1};
 
 /// Interval which m_runTimer is run when network is connected.
-constexpr unsigned int c_runTimerIntervalMs = 100;
+static constexpr chrono::milliseconds c_runTimerInterval{100};
 }  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}
@@ -732,7 +732,7 @@ void Host::run(boost::system::error_code const& _ec)
         return;
 
     auto runcb = [this](boost::system::error_code const& error) { run(error); };
-    m_runTimer.expires_from_now(boost::posix_time::milliseconds(c_runTimerIntervalMs));
+    m_runTimer.expires_from_now(c_runTimerInterval);
     m_runTimer.async_wait(runcb);
 }
 
@@ -1029,10 +1029,13 @@ void Host::scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, function<vo
 {
     auto cap = m_capabilities.find(_capDesc);
     if (cap == m_capabilities.end())
-        BOOST_THROW_EXCEPTION(UnknownCapability());
+    {
+        LOG(m_logger) << "Capability not registered: " << _capDesc;
+        BOOST_THROW_EXCEPTION(CapabilityNotRegistered());
+    }
 
     auto timer = cap->second.backgroundWorkTimer.get();
-    timer->expires_from_now(chrono::milliseconds(cap->second.capability->backgroundWorkInterval()));
+    timer->expires_from_now(cap->second.capability->backgroundWorkInterval());
     timer->async_wait([_f](boost::system::error_code _ec) {
         if (!_ec)
             _f();
@@ -1042,7 +1045,10 @@ void Host::scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, function<vo
 void Host::postCapabilityWork(CapDesc const& _capDesc, function<void()> _f)
 {
     if (m_capabilities.find(_capDesc) == m_capabilities.end())
-        BOOST_THROW_EXCEPTION(UnknownCapability());
-    
+    {
+        LOG(m_logger) << "Capability not registered" << _capDesc;
+        BOOST_THROW_EXCEPTION(CapabilityNotRegistered());
+    }
+
     m_ioService.post(_f);
 }

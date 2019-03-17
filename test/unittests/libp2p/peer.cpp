@@ -15,11 +15,6 @@ using namespace dev;
 using namespace dev::test;
 using namespace dev::p2p;
 
-namespace
-{
-chrono::milliseconds c_backgroundWorkInterval{1000};
-}
-
 class TestCap : public CapabilityFace, public Worker
 {
 public:
@@ -29,7 +24,7 @@ public:
 
     chrono::milliseconds backgroundWorkInterval() const override
     {
-        return c_backgroundWorkInterval;
+        return s_backgroundWorkInterval;
     }
 
     void onStarting() override {}
@@ -41,7 +36,11 @@ public:
         return _id > 0 || _r.size() > 0;
     }
     void onDisconnect(NodeID const&) override {}
+
+    static chrono::milliseconds constexpr s_backgroundWorkInterval{1000};
 };
+
+chrono::milliseconds constexpr TestCap::s_backgroundWorkInterval;
 
 BOOST_AUTO_TEST_SUITE(libp2p)
 BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)

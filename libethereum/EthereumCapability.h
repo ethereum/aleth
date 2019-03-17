@@ -132,6 +132,7 @@ public:
 
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
+    static constexpr std::chrono::milliseconds s_backgroundWorkInterval{1000};
 
     std::vector<NodeID> selectPeers(
         std::function<bool(EthereumPeer const&)> const& _predicate) const;
