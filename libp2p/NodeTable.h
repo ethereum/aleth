@@ -363,6 +363,20 @@ struct NodeEntry : public Node
     uint32_t lastPongSentTime = 0;
 };
 
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, NodeEntry const& _node)
+{
+    return _strm << static_cast<Node const&>(_node);
+}
+
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, NodeEntry& _node)
+{
+    auto const& constValue = _node;
+    _strm << constValue;
+    return _strm;
+}
+
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 {
     _out << _nodeTable.m_hostNodeID << "\t"
