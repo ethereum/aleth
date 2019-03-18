@@ -321,8 +321,8 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
     if (!m_socket->isOpen())
         return;
 
-    // Don't sent Ping if one is already sent
-    if (contains(m_sentPings, _node.id))
+    // Don't send Ping if one is already sent
+    if (m_sentPings.find(_node.endpoint) != m_sentPings.end())
     {
         LOG(m_logger) << "Ignoring request to ping " << _node << ", because it's already pinged";
         return;
@@ -334,8 +334,9 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
     LOG(m_logger) << p.typeName() << " to " << _node;
     m_socket->send(p);
 
-    m_sentPings[_node.id] = {
-        _node.endpoint, chrono::steady_clock::now(), pingHash, move(_replacementNodeEntry)};
+    NodeValidation const validation{_node.id, _node.endpoint.tcpPort(), chrono::steady_clock::now(),
+        pingHash, _replacementNodeEntry};
+    m_sentPings.insert({_node.endpoint, validation});
 }
 
 void NodeTable::schedulePing(Node const& _node)
@@ -470,11 +471,8 @@ void NodeTable::onPacketReceived(
         {
             case Pong::type:
             {
-                auto const& pong = dynamic_cast<Pong const&>(*packet);
-                auto const& sourceId = pong.sourceid;
-
                 // validate pong
-                auto const sentPing = m_sentPings.find(sourceId);
+                auto const sentPing = m_sentPings.find(_from);
                 if (sentPing == m_sentPings.end())
                 {
                     LOG(m_logger) << "Unexpected PONG from " << _from.address().to_string() << ":"
@@ -482,11 +480,23 @@ void NodeTable::onPacketReceived(
                     return;
                 }
 
-                if (pong.echo != sentPing->second.pingHash)
+                auto const& pong = dynamic_cast<Pong const&>(*packet);
+                auto const& nodeValidation = sentPing->second;
+                if (pong.echo != nodeValidation.pingHash)
                 {
                     LOG(m_logger) << "Invalid PONG from " << _from.address().to_string() << ":"
                                   << _from.port();
                     return;
+                }
+
+                // in case the node answers with new NodeID, drop the record with the old NodeID
+                auto const& sourceId = pong.sourceid;
+                if (sourceId != nodeValidation.nodeID)
+                {
+                    LOG(m_logger) << "Node " << _from << " changed public key from "
+                                  << nodeValidation.nodeID << " to " << sourceId;
+                    if (auto node = nodeEntry(nodeValidation.nodeID))
+                        dropNode(move(node));
                 }
 
                 // create or update nodeEntry with new Pong received time
@@ -495,7 +505,8 @@ void NodeTable::onPacketReceived(
                     auto it = m_allNodes.find(sourceId);
                     if (it == m_allNodes.end())
                         sourceNodeEntry = make_shared<NodeEntry>(m_hostNodeID, sourceId,
-                            sentPing->second.endpoint, RLPXDatagramFace::secondsSinceEpoch(), 0);
+                            NodeIPEndpoint{_from.address(), _from.port(), nodeValidation.tcpPort},
+                            RLPXDatagramFace::secondsSinceEpoch(), 0 /* lastPongSentTime */);
                     else
                     {
                         sourceNodeEntry = it->second;
@@ -504,7 +515,7 @@ void NodeTable::onPacketReceived(
                     }
                 }
 
-                m_sentPings.erase(sentPing);
+                m_sentPings.erase(_from);
 
                 // update our endpoint address and UDP port
                 DEV_GUARDED(x_nodes)
@@ -680,9 +691,9 @@ void NodeTable::doHandleTimeouts()
         vector<shared_ptr<NodeEntry>> nodesToActivate;
         for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
         {
-            if (chrono::steady_clock::now() > it->second.pingSendTime + m_requestTimeToLive)
+            if (chrono::steady_clock::now() > it->second.pingSentTime + m_requestTimeToLive)
             {
-                if (auto node = nodeEntry(it->first))
+                if (auto node = nodeEntry(it->second.nodeID))
                 {
                     dropNode(move(node));
 

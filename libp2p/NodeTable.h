@@ -177,15 +177,31 @@ public:
 // protected only for derived classes in tests
 protected:
     /**
-     * NodeValidation is used to record Pinged node's endpoint, the timepoint of sent PING,
-     * time of sending and the new node ID to replace unresponsive node.
+     * NodeValidation is used to record information about the nodes that we have sent Ping to.
      */
     struct NodeValidation
     {
-        NodeIPEndpoint endpoint;
-        TimePoint pingSendTime;
+        // Public key of the target node
+        NodeID nodeID;
+        // We receive TCP port in the Ping packet, and store it here until it passes endpoint proof
+        // (answers with Pong), then it will be added to the bucket of the node table
+        uint16_t tcpPort = 0;
+        // Time we sent Ping - used to handle timeouts
+        TimePoint pingSentTime;
+        // Hash of the sent Ping packet - used to validate received Pong
         h256 pingHash;
+        // Replacement is put into the node table,
+        // if original pinged node doesn't answer after timeout
         std::shared_ptr<NodeEntry> replacementNodeEntry;
+
+        NodeValidation(NodeID const& _nodeID, uint16_t _tcpPort, TimePoint const& _pingSentTime,
+            h256 const& _pingHash, std::shared_ptr<NodeEntry> _replacementNodeEntry)
+          : nodeID{_nodeID},
+            tcpPort{_tcpPort},
+            pingSentTime{_pingSentTime},
+            pingHash{_pingHash},
+            replacementNodeEntry{std::move(_replacementNodeEntry)}
+        {}
     };
 
     /// Constants for Kademlia, derived from address space.
@@ -308,7 +324,7 @@ protected:
     std::shared_ptr<NodeSocket> m_socket;							///< Shared pointer for our UDPSocket; ASIO requires shared_ptr.
 
     // The info about PING packets we've sent to other nodes and haven't received PONG yet
-    std::unordered_map<NodeID, NodeValidation> m_sentPings;
+    std::map<bi::udp::endpoint, NodeValidation> m_sentPings;
 
     // Expiration time of sent discovery packets.
     std::chrono::seconds m_requestTimeToLive;

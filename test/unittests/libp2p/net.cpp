@@ -185,11 +185,11 @@ struct TestNodeTable: public NodeTable
         return m_buckets[_bucket].nodes.back().lock();
     }
 
-    boost::optional<NodeValidation> nodeValidation(NodeID const& _id)
+    boost::optional<NodeValidation> nodeValidation(bi::udp::endpoint const& _endpoint)
     {
         promise<boost::optional<NodeValidation>> promise;
-        m_io.post([this, &promise, _id] {
-            auto validation = m_sentPings.find(_id);
+        m_io.post([this, &promise, _endpoint] {
+            auto validation = m_sentPings.find(_endpoint);
             if (validation != m_sentPings.end())
                 promise.set_value(validation->second);
             else
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     // least recently seen node not removed yet
     BOOST_CHECK_EQUAL(nodeTable->bucketFirstNode(bucketIndex), leastRecentlySeenNode);
     // but added to evictions
-    auto evicted = nodeTable->nodeValidation(leastRecentlySeenNode->id);
+    auto evicted = nodeTable->nodeValidation(leastRecentlySeenNode->endpoint);
     BOOST_REQUIRE(evicted.is_initialized());
     BOOST_REQUIRE(evicted->replacementNodeEntry);
     BOOST_CHECK_EQUAL(evicted->replacementNodeEntry->id, newNodeId);
@@ -632,7 +632,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     nodeTable->packetsReceived.pop();
 
     // pending node validation should still be not deleted
-    BOOST_REQUIRE(nodeTable->nodeValidation(nodePubKey));
+    BOOST_REQUIRE(nodeTable->nodeValidation(nodeEndpoint));
     // node is not in the node table
     BOOST_REQUIRE(!nodeTable->nodeExists(nodePubKey));
 }
@@ -675,6 +675,53 @@ BOOST_AUTO_TEST_CASE(validPong)
     BOOST_CHECK(addedNode->lastPongReceivedTime > 0);
 }
 
+BOOST_AUTO_TEST_CASE(pongWithChangedNodeID)
+{
+    // NodeTable sending PING
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
+    nodeTable->setRequestTimeToLive(chrono::seconds(1));
+
+    // socket receiving PING
+    TestUDPSocketHost nodeSocketHost{randomPortNumber()};
+    nodeSocketHost.start();
+    uint16_t const nodePort = nodeSocketHost.port;
+
+    // add a node to node table, initiating PING
+    auto const nodeEndpoint =
+        NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
+    auto const nodeKeyPair = KeyPair::create();
+    auto const nodePubKey = nodeKeyPair.pub();
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+    // handle received PING
+    auto const pingDataReceived = nodeSocketHost.packetsReceived.pop();
+    auto const pingDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
+
+    // send PONG with different NodeID
+    Pong pong(nodeTable->m_hostNodeEndpoint);
+    pong.echo = ping.echo;
+    auto const newNodeKeyPair = KeyPair::create();
+    auto const newNodePubKey = newNodeKeyPair.pub();
+    pong.sign(newNodeKeyPair.secret());
+    nodeSocketHost.socket->send(pong);
+
+    // wait for PONG to be received and handled
+    nodeTable->packetsReceived.pop();
+
+    BOOST_REQUIRE(nodeTable->nodeExists(newNodeKeyPair.pub()));
+    auto const addedNode = nodeTable->nodeEntry(newNodePubKey);
+    BOOST_CHECK(addedNode->lastPongReceivedTime > 0);
+
+    BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
+    auto const sentPing = nodeTable->nodeValidation(nodeEndpoint);
+    BOOST_CHECK(!sentPing.is_initialized());
+}
+
 BOOST_AUTO_TEST_CASE(pingTimeout)
 {
     // NodeTable sending PING
@@ -698,7 +745,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     this_thread::sleep_for(chrono::seconds(6));
 
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
-    auto sentPing = nodeTable->nodeValidation(nodePubKey);
+    auto sentPing = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_CHECK(!sentPing.is_initialized());
 
     // handle received PING
@@ -714,10 +761,13 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetsReceived.pop();
+    auto pongDataReceived = nodeTable->packetsReceived.pop();
+    auto pongDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
+    BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
 
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
-    sentPing = nodeTable->nodeValidation(nodePubKey);
+    sentPing = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_CHECK(!sentPing.is_initialized());
 }
 
@@ -849,7 +899,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     // wait for eviction
     evictEvents.pop(chrono::seconds(5));
 
-    auto evicted = nodeTable->nodeValidation(nodeId);
+    auto evicted = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_REQUIRE(evicted.is_initialized());
 
     // handle received PING
@@ -871,7 +921,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     BOOST_REQUIRE(nodeTable->nodeExists(nodeId));
     auto addedNode = nodeTable->nodeEntry(nodeId);
     BOOST_CHECK(addedNode->lastPongReceivedTime);
-    auto sentPing = nodeTable->nodeValidation(nodeId);
+    auto sentPing = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_CHECK(!sentPing.is_initialized());
     // check that old node is most recently seen in the bucket
     BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id == nodeId);
@@ -890,7 +940,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
 
     nodeTableHost.start();
 
-    auto oldNodeId = nodeTable->bucketFirstNode(bucketIndex)->id;
+    auto oldNode = nodeTable->bucketFirstNode(bucketIndex);
 
     // generate new address for the same bucket
     NodeID newNodeId;
@@ -910,8 +960,8 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     this_thread::sleep_for(chrono::seconds(6));
 
     // check that old node is evicted
-    BOOST_CHECK(!nodeTable->nodeExists(oldNodeId));
-    BOOST_CHECK(!nodeTable->nodeValidation(oldNodeId).is_initialized());
+    BOOST_CHECK(!nodeTable->nodeExists(oldNode->id));
+    BOOST_CHECK(!nodeTable->nodeValidation(oldNode->endpoint).is_initialized());
     // check that replacement node is active
     BOOST_CHECK(nodeTable->nodeExists(newNodeId));
     auto newNode = nodeTable->nodeEntry(newNodeId);
@@ -971,12 +1021,12 @@ BOOST_AUTO_TEST_CASE(addSelf)
     auto nodePubKey = KeyPair::create().pub();
     Node node(nodePubKey, nodeEndpoint);
     nodeTable->addNode(node);
-    BOOST_CHECK(nodeTable->nodeValidation(nodePubKey));
+    BOOST_CHECK(nodeTable->nodeValidation(nodeEndpoint));
 
     // Create self node and verify it isn't pinged
-    Node self(nodeTableHost.m_alias.pub(), nodeEndpoint);
+    Node self(nodeTableHost.m_alias.pub(), nodeTable->m_hostNodeEndpoint);
     nodeTable->addNode(self);
-    BOOST_CHECK(!nodeTable->nodeValidation(nodeTableHost.m_alias.pub()));
+    BOOST_CHECK(!nodeTable->nodeValidation(nodeTable->m_hostNodeEndpoint));
 }
 
 BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
@@ -1108,7 +1158,7 @@ BOOST_AUTO_TEST_CASE(addNodePingsNodeOnlyOnce)
     auto nodePubKey = KeyPair::create().pub();
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
-    auto sentPing = nodeTable->nodeValidation(nodePubKey);
+    auto sentPing = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_REQUIRE(sentPing.is_initialized());
 
     this_thread::sleep_for(chrono::milliseconds(2000));
@@ -1116,7 +1166,7 @@ BOOST_AUTO_TEST_CASE(addNodePingsNodeOnlyOnce)
     // add it for the second time
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
-    auto sentPing2 = nodeTable->nodeValidation(nodePubKey);
+    auto sentPing2 = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_REQUIRE(sentPing2.is_initialized());
 
     // check that Ping was sent only once, so Ping hash didn't change
