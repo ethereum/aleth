@@ -857,8 +857,8 @@ bytes Host::saveNetwork() const
     for (auto const& entry : nodeTableEntries)
     {
         network.appendList(6);
-        entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
-        network << entry.id << entry.lastPongReceivedTime << entry.lastPongSentTime;
+        entry.endpoint().streamRLP(network, NodeIPEndpoint::StreamInline);
+        network << entry.id() << entry.lastPongReceivedTime << entry.lastPongSentTime;
         count++;
     }
 

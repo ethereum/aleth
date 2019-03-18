@@ -157,7 +157,7 @@ list<NodeID> NodeTable::nodes() const
     DEV_GUARDED(x_nodes)
     {
         for (auto& i : m_allNodes)
-            nodes.push_back(i.second->id);
+            nodes.push_back(i.second->id());
     }
     return nodes;
 }
@@ -182,7 +182,7 @@ Node NodeTable::node(NodeID const& _id)
     if (it != m_allNodes.end())
     {
         auto const& entry = it->second;
-        return Node(_id, entry->endpoint, entry->peerType);
+        return Node(_id, entry->endpoint(), entry->peerType());
     }
     return UnspecifiedNode;
 }
@@ -204,28 +204,28 @@ void NodeTable::doDiscoveryRound(
 
     auto const nearestNodes = nearestNodeEntries(_node);
     auto newTriedCount = 0;
-    for (auto const& node : nearestNodes)
+    for (auto const& nodeEntry : nearestNodes)
     {
-        if (!contains(*_tried, node))
+        if (!contains(*_tried, nodeEntry))
         {
             // Avoid sending FindNode, if we have not sent a valid PONG lately.
             // This prevents being considered invalid node and FindNode being ignored.
-            if (!node->hasValidEndpointProof())
+            if (!nodeEntry->hasValidEndpointProof())
             {
-                LOG(m_logger) << "Node " << static_cast<Node const&>(*node)
-                              << " endpoint proof expired.";
-                ping(*node);
+                LOG(m_logger) << "Node " << nodeEntry->node << " endpoint proof expired.";
+                ping(nodeEntry->node);
                 continue;
             }
 
-            FindNode p(node->endpoint, _node);
+            FindNode p(nodeEntry->endpoint(), _node);
             p.ts = nextRequestExpirationTime();
             p.sign(m_secret);
-            m_sentFindNodes.emplace_back(node->id, chrono::steady_clock::now());
-            LOG(m_logger) << p.typeName() << " to " << node->id << "@" << node->endpoint << " (target: " << _node << ")";
+            m_sentFindNodes.emplace_back(nodeEntry->id(), chrono::steady_clock::now());
+            LOG(m_logger) << p.typeName() << " to " << nodeEntry->node << " (target: " << _node
+                          << ")";
             m_socket->send(p);
 
-            _tried->emplace(node);
+            _tried->emplace(nodeEntry);
             if (++newTriedCount == s_alpha)
                 break;
         }
@@ -277,12 +277,12 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
             Guard l(x_state);
             for (auto const& n : m_buckets[head].nodes)
                 if (auto p = n.lock())
-                    found[distance(_target, p->id)].push_back(p);
+                    found[distance(_target, p->id())].push_back(p);
 
             if (tail)
                 for (auto const& n : m_buckets[tail].nodes)
                     if (auto p = n.lock())
-                        found[distance(_target, p->id)].push_back(p);
+                        found[distance(_target, p->id())].push_back(p);
 
             head++;
             if (tail)
@@ -294,7 +294,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
             Guard l(x_state);
             for (auto const& n : m_buckets[head].nodes)
                 if (auto p = n.lock())
-                    found[distance(_target, p->id)].push_back(p);
+                    found[distance(_target, p->id())].push_back(p);
             head++;
         }
     else
@@ -303,15 +303,14 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
             Guard l(x_state);
             for (auto const& n : m_buckets[tail].nodes)
                 if (auto p = n.lock())
-                    found[distance(_target, p->id)].push_back(p);
+                    found[distance(_target, p->id())].push_back(p);
             tail--;
         }
 
     vector<shared_ptr<NodeEntry>> ret;
     for (auto& nodes : found)
         for (auto const& n : nodes.second)
-            if (ret.size() < s_bucketSize && !!n->endpoint &&
-                isAllowedEndpoint(n->endpoint))
+            if (ret.size() < s_bucketSize && n->endpoint() && isAllowedEndpoint(n->endpoint()))
                 ret.push_back(n);
     return ret;
 }
@@ -349,35 +348,36 @@ void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replac
     if (!m_socket->isOpen())
         return;
 
-    LOG(m_logger) << "Evicting node " << _leastSeen;
-    ping(_leastSeen, move(_replacement));
+    LOG(m_logger) << "Evicting node " << _leastSeen.node;
+    ping(_leastSeen.node, move(_replacement));
 
     if (m_nodeEventHandler)
-        m_nodeEventHandler->appendEvent(_leastSeen.id, NodeEntryScheduledForEviction);
+        m_nodeEventHandler->appendEvent(_leastSeen.id(), NodeEntryScheduledForEviction);
 }
 
 void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoint const& _endpoint)
 {
     assert(_nodeEntry);
 
-    if (_nodeEntry->id == m_hostNodeID)
+    if (_nodeEntry->id() == m_hostNodeID)
     {
         LOG(m_logger) << "Skipping making self active.";
         return;
     }
     if (!isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
     {
-        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node " << *_nodeEntry;
+        LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node "
+                      << _nodeEntry->node;
         return;
     }
 
     if (!_nodeEntry->hasValidEndpointProof())
         return;
 
-    LOG(m_logger) << "Active node " << *_nodeEntry;
+    LOG(m_logger) << "Active node " << _nodeEntry->node;
     // TODO: don't activate in case endpoint has changed
-    _nodeEntry->endpoint.setAddress(_endpoint.address());
-    _nodeEntry->endpoint.setUdpPort(_endpoint.port());
+    _nodeEntry->endpoint().setAddress(_endpoint.address());
+    _nodeEntry->endpoint().setUdpPort(_endpoint.port());
 
 
     shared_ptr<NodeEntry> nodeToEvict;
@@ -401,9 +401,9 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
                 // if it was not there, just add it as a most recently seen node
                 // (i.e. to the end of the list)
                 nodes.push_back(_nodeEntry);
-                DEV_GUARDED(x_nodes) { m_allNodes.insert({_nodeEntry->id, _nodeEntry}); }
+                DEV_GUARDED(x_nodes) { m_allNodes.insert({_nodeEntry->id(), _nodeEntry}); }
                 if (m_nodeEventHandler)
-                    m_nodeEventHandler->appendEvent(_nodeEntry->id, NodeEntryAdded);
+                    m_nodeEventHandler->appendEvent(_nodeEntry->id(), NodeEntryAdded);
             }
             else
             {
@@ -415,9 +415,9 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
                 {
                     nodes.pop_front();
                     nodes.push_back(_nodeEntry);
-                    DEV_GUARDED(x_nodes) { m_allNodes.insert({_nodeEntry->id, _nodeEntry}); }
+                    DEV_GUARDED(x_nodes) { m_allNodes.insert({_nodeEntry->id(), _nodeEntry}); }
                     if (m_nodeEventHandler)
-                        m_nodeEventHandler->appendEvent(_nodeEntry->id, NodeEntryAdded);
+                        m_nodeEventHandler->appendEvent(_nodeEntry->id(), NodeEntryAdded);
                 }
             }
         }
@@ -437,12 +437,12 @@ void NodeTable::dropNode(shared_ptr<NodeEntry> _n)
             [_n](weak_ptr<NodeEntry> const& _bucketEntry) { return _bucketEntry == _n; });
     }
 
-    DEV_GUARDED(x_nodes) { m_allNodes.erase(_n->id); }
+    DEV_GUARDED(x_nodes) { m_allNodes.erase(_n->id()); }
 
     // notify host
-    LOG(m_logger) << "p2p.nodes.drop " << _n->id;
+    LOG(m_logger) << "p2p.nodes.drop " << _n->id();
     if (m_nodeEventHandler)
-        m_nodeEventHandler->appendEvent(_n->id, NodeEntryDropped);
+        m_nodeEventHandler->appendEvent(_n->id(), NodeEntryDropped);
 }
 
 NodeTable::NodeBucket& NodeTable::bucket_UNSAFE(NodeEntry const* _n)
@@ -710,7 +710,7 @@ void NodeTable::doHandleTimeouts()
 
         // activate replacement nodes and put them into buckets
         for (auto const& n : nodesToActivate)
-            noteActiveNode(n, n->endpoint);
+            noteActiveNode(n, n->endpoint());
 
         doHandleTimeouts();
     });
