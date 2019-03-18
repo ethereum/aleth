@@ -407,13 +407,7 @@ chrono::milliseconds EthereumCapability::backgroundWorkInterval() const
 
 void EthereumCapability::onStarting()
 {
-    m_backgroundWorkEnabled = true;
     m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
-}
-
-void EthereumCapability::onStopping()
-{
-    m_backgroundWorkEnabled = false;
 }
 
 bool EthereumCapability::ensureInitialised()
@@ -480,9 +474,7 @@ void EthereumCapability::doBackgroundWork()
         }
     }
 
-    if (m_backgroundWorkEnabled)
-        m_host->scheduleCapabilityBackgroundWork(
-            {name(), version()}, [this]() { doBackgroundWork(); });
+    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void EthereumCapability::maintainTransactions()

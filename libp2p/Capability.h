@@ -34,9 +34,6 @@ public:
     /// Called by the Host when capability is activated
     /// (usually when network communication is being enabled)
     virtual void onStarting() = 0;
-    /// Called by the Host when capability is deactivated
-    /// (usually when network communication is being disabled)
-    virtual void onStopping() = 0;
 
     /// Called by the Host when new peer is connected.
     /// Guaranteed to be called first before any interpretCapabilityPacket for this peer.

@@ -28,7 +28,6 @@ public:
     }
 
     void onStarting() override {}
-    void onStopping() override {}
 
     void onConnect(NodeID const&, u256 const&) override {}
     bool interpretCapabilityPacket(NodeID const&, unsigned _id, RLP const& _r) override

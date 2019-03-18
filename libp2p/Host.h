@@ -196,6 +196,9 @@ public:
     /// Resets acceptor, socket, and IO service. Called by deallocator.
     void stop();
 
+    /// Stop registered capabilities, typically done when the network is being shut down.
+    void stopCapabilities();
+
     /// @returns if network has been started.
     bool isStarted() const { return isWorking(); }
 
@@ -246,7 +249,7 @@ protected:
     struct CapabilityRuntime
     {
         std::shared_ptr<CapabilityFace> capability;
-        std::unique_ptr<ba::steady_timer> backgroundWorkTimer;
+        std::shared_ptr<ba::steady_timer> backgroundWorkTimer;
     };
 
     void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);

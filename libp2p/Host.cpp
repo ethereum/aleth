@@ -152,6 +152,15 @@ void Host::stop()
         stopWorking();
 }
 
+void Host::stopCapabilities()
+{
+    for (auto const& itCap : m_capabilities)
+    {
+        auto timer = itCap.second.backgroundWorkTimer;
+        m_ioService.post([timer] { timer->expires_at(c_steadyClockMin); });
+    }
+}
+
 void Host::doneWorking()
 {
     // Return early if we have no capabilities since there's nothing to do. We've already stopped
@@ -174,12 +183,8 @@ void Host::doneWorking()
     while (m_accepting)
         m_ioService.poll();
 
-    // stop capabilities (eth: stops syncing or block/tx broadcast)
-    for (auto const& h : m_capabilities)
-    {
-        h.second.capability->onStopping();
-        h.second.backgroundWorkTimer->cancel();
-    }
+    // (eth: stops syncing or block / tx broadcast)
+    stopCapabilities();
 
     // disconnect pending handshake, before peers, as a handshake may create a peer
     for (unsigned n = 0;; n = 0)
@@ -488,8 +493,7 @@ void Host::registerCapability(
         cwarn << "Capabilities must be registered before the network is started";
         return;
     }
-    m_capabilities[{_name, _version}] = {
-        _cap, unique_ptr<ba::steady_timer>{new ba::steady_timer{m_ioService}}};
+    m_capabilities[{_name, _version}] = {_cap, make_shared<ba::steady_timer>(m_ioService)};
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)
@@ -1034,10 +1038,10 @@ void Host::scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, function<vo
         BOOST_THROW_EXCEPTION(CapabilityNotRegistered());
     }
 
-    auto timer = cap->second.backgroundWorkTimer.get();
+    auto timer = cap->second.backgroundWorkTimer;
     timer->expires_from_now(cap->second.capability->backgroundWorkInterval());
-    timer->async_wait([_f](boost::system::error_code _ec) {
-        if (!_ec)
+    timer->async_wait([timer, _f](boost::system::error_code _ec) {
+        if (timer->expires_at() != c_steadyClockMin && !_ec)
             _f();
     });
 }

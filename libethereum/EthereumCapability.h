@@ -94,7 +94,6 @@ public:
     std::chrono::milliseconds backgroundWorkInterval() const override;
 
     void onStarting() override;
-    void onStopping() override;
 
     unsigned protocolVersion() const { return c_protocolVersion; }
     u256 networkId() const { return m_networkId; }
@@ -185,8 +184,6 @@ private:
     std::unique_ptr<EthereumPeerObserverFace> m_peerObserver;
 
     std::unordered_map<NodeID, EthereumPeer> m_peers;
-
-    std::atomic<bool> m_backgroundWorkEnabled = {false};
 
     mutable std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
 

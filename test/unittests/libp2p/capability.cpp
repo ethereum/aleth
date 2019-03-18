@@ -29,7 +29,6 @@ public:
     }
 
     void onStarting() override {}
-    void onStopping() override {}
 
     void onConnect(NodeID const& _nodeID, u256 const&) override
     {

@@ -322,13 +322,7 @@ chrono::milliseconds WarpCapability::backgroundWorkInterval() const
 
 void WarpCapability::onStarting()
 {
-    m_backgroundWorkEnabled = true;
     m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
-}
-
-void WarpCapability::onStopping()
-{
-    m_backgroundWorkEnabled = false;
 }
 
 shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
@@ -350,9 +344,7 @@ void WarpCapability::doBackgroundWork()
         }
     }
 
-    if (m_backgroundWorkEnabled)
-        m_host->scheduleCapabilityBackgroundWork(
-            {name(), version()}, [this]() { doBackgroundWork(); });
+    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)

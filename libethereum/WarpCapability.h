@@ -79,7 +79,6 @@ public:
     std::chrono::milliseconds backgroundWorkInterval() const override;
 
     void onStarting() override;
-    void onStopping() override;
 
     u256 networkId() const { return m_networkId; }
 
@@ -125,8 +124,6 @@ private:
     std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
 
     std::unordered_map<NodeID, WarpPeerStatus> m_peers;
-
-    std::atomic<bool> m_backgroundWorkEnabled = {false};
 };
 
 }  // namespace eth
