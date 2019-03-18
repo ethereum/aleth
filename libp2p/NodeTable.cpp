@@ -691,7 +691,7 @@ void NodeTable::doHandleTimeouts()
         vector<shared_ptr<NodeEntry>> nodesToActivate;
         for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
         {
-            if (chrono::steady_clock::now() > it->second.pingSendTime + m_requestTimeToLive)
+            if (chrono::steady_clock::now() > it->second.pingSentTime + m_requestTimeToLive)
             {
                 if (auto node = nodeEntry(it->second.nodeID))
                 {

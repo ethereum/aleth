@@ -187,18 +187,18 @@ protected:
         // (answers with Pong), then it will be added to the bucket of the node table
         uint16_t tcpPort = 0;
         // Time we sent Ping - used to handle timeouts
-        TimePoint pingSendTime;
+        TimePoint pingSentTime;
         // Hash of the sent Ping packet - used to validate received Pong
         h256 pingHash;
         // Replacement is put into the node table,
         // if original pinged node doesn't answer after timeout
         std::shared_ptr<NodeEntry> replacementNodeEntry;
 
-        NodeValidation(NodeID const& _nodeID, uint16_t _tcpPort, TimePoint const& _pingSendTime,
+        NodeValidation(NodeID const& _nodeID, uint16_t _tcpPort, TimePoint const& _pingSentTime,
             h256 const& _pingHash, std::shared_ptr<NodeEntry> _replacementNodeEntry)
           : nodeID{_nodeID},
             tcpPort{_tcpPort},
-            pingSendTime{_pingSendTime},
+            pingSentTime{_pingSentTime},
             pingHash{_pingHash},
             replacementNodeEntry{std::move(_replacementNodeEntry)}
         {}
