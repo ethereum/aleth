@@ -111,15 +111,7 @@ public:
         m_host.forEachPeer(_capabilityName, _f);
     }
 
-    void scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, function<void()> _f) override
-    {
-        m_host.scheduleCapabilityBackgroundWork(_capDesc, move(_f));
-    }
-
-    void postCapabilityWork(CapDesc const& _capDesc, function<void()> _f) override
-    {
-        m_host.postCapabilityWork(_capDesc, move(_f));
-    }
+    void postWork(function<void()> _f) override { m_host.postWork(move(_f)); }
 
 private:
     Host& m_host;

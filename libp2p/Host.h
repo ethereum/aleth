@@ -196,9 +196,6 @@ public:
     /// Resets acceptor, socket, and IO service. Called by deallocator.
     void stop();
 
-    /// Stop registered capabilities, typically done when the network is being shut down.
-    void stopCapabilities();
-
     /// @returns if network has been started.
     bool isStarted() const { return isWorking(); }
 
@@ -234,11 +231,8 @@ public:
     void forEachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
 
-    /// Schedule a capability's background work loop on the network thread
-    void scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, std::function<void()> _f);
-
-    /// Execute capability work on the network thread
-    void postCapabilityWork(CapDesc const& _capDesc, std::function<void()> _f);
+    /// Execute work on the network thread
+    void postWork(std::function<void()> _f) { m_ioService.post(_f); }
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
@@ -308,6 +302,16 @@ private:
     {
         return dev::p2p::isAllowedEndpoint(m_netConfig.allowLocalDiscovery, _endpointToCheck);
     }
+
+    /// Start registered capabilities, typically done on network start
+    void startCapabilities();
+
+    /// Schedule's a capability's work loop on the network thread
+    void scheduleCapabilityWorkLoop(
+        std::shared_ptr<CapabilityFace> _cap, std::shared_ptr<ba::steady_timer> _timer);
+
+    /// Stop registered capabilities, typically done when the network is being shut down.
+    void stopCapabilities();
 
     bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 

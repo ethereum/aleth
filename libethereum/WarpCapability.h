@@ -75,16 +75,17 @@ public:
 
     std::string name() const override { return "par"; }
     unsigned version() const override { return c_WarpProtocolVersion; }
+    p2p::CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return WarpSubprotocolPacketCount; }
     std::chrono::milliseconds backgroundWorkInterval() const override;
-
-    void onStarting() override;
 
     u256 networkId() const { return m_networkId; }
 
     void onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion) override;
     bool interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const&) override;
     void onDisconnect(NodeID const& _peerID) override;
+
+    void doBackgroundWork() override;
 
     p2p::CapabilityHostFace& capabilityHost() { return *m_host; }
 
@@ -104,12 +105,10 @@ public:
     void disablePeer(NodeID const& _peerID, std::string const& _problem);
 
 private:
-    static constexpr std::chrono::milliseconds s_backgroundWorkInterval{1000};
+    static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
 
     std::shared_ptr<WarpPeerObserverFace> createPeerObserver(
         boost::filesystem::path const& _snapshotDownloadPath);
-
-    void doBackgroundWork();
 
     void setAsking(NodeID const& _peerID, Asking _a);
 

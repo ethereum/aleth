@@ -20,14 +20,13 @@ class TestCap : public CapabilityFace, public Worker
 public:
     string name() const override { return "p2pTestCapability"; }
     unsigned version() const override { return 2; }
+    CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return UserPacket + 1; }
 
     chrono::milliseconds backgroundWorkInterval() const override
     {
-        return s_backgroundWorkInterval;
+        return c_backgroundWorkInterval;
     }
-
-    void onStarting() override {}
 
     void onConnect(NodeID const&, u256 const&) override {}
     bool interpretCapabilityPacket(NodeID const&, unsigned _id, RLP const& _r) override
@@ -35,11 +34,12 @@ public:
         return _id > 0 || _r.size() > 0;
     }
     void onDisconnect(NodeID const&) override {}
+    void doBackgroundWork() override {}
 
-    static chrono::milliseconds constexpr s_backgroundWorkInterval{1000};
+    static chrono::milliseconds constexpr c_backgroundWorkInterval{1000};
 };
 
-chrono::milliseconds constexpr TestCap::s_backgroundWorkInterval;
+chrono::milliseconds constexpr TestCap::c_backgroundWorkInterval;
 
 BOOST_AUTO_TEST_SUITE(libp2p)
 BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)

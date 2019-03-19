@@ -19,18 +19,18 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-char const* const EthereumCapability::s_stateNames[static_cast<int>(SyncState::Size)] = {
+char const* const EthereumCapability::c_stateNames[static_cast<int>(SyncState::Size)] = {
     "NotSynced", "Idle", "Waiting", "Blocks", "State"};
 
-chrono::milliseconds constexpr EthereumCapability::s_backgroundWorkInterval;
+chrono::milliseconds constexpr EthereumCapability::c_backgroundWorkInterval;
 
 namespace
 {
-static constexpr unsigned c_maxSendTransactions = 256;
-static constexpr unsigned c_maxHeadersToSend = 1024;
-static constexpr unsigned c_maxIncomingNewHashes = 1024;
-static constexpr unsigned c_peerTimeoutSeconds = 10;
-static constexpr int c_minBlockBroadcastPeers = 4;
+constexpr unsigned c_maxSendTransactions = 256;
+constexpr unsigned c_maxHeadersToSend = 1024;
+constexpr unsigned c_maxIncomingNewHashes = 1024;
+constexpr unsigned c_peerTimeoutSeconds = 10;
+constexpr int c_minBlockBroadcastPeers = 4;
 
 string toString(Asking _a)
 {
@@ -402,12 +402,7 @@ EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host
 
 chrono::milliseconds EthereumCapability::backgroundWorkInterval() const
 {
-    return s_backgroundWorkInterval;
-}
-
-void EthereumCapability::onStarting()
-{
-    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
+    return c_backgroundWorkInterval;
 }
 
 bool EthereumCapability::ensureInitialised()
@@ -430,7 +425,7 @@ void EthereumCapability::reset()
 
     // reset() can be called from RPC handling thread,
     // but we access m_latestBlockSent and m_transactionsSent only from the network thread
-    m_host->postCapabilityWork({name(), version()}, [this]() {
+    m_host->postWork([this]() {
         m_latestBlockSent = h256();
         m_transactionsSent.clear();
     });
@@ -439,42 +434,6 @@ void EthereumCapability::reset()
 void EthereumCapability::completeSync()
 {
     m_sync->completeSync();
-}
-
-void EthereumCapability::doBackgroundWork()
-{
-    ensureInitialised();
-    auto h = m_chain.currentHash();
-    // If we've finished our initial sync (including getting all the blocks into the chain so as to reduce invalid transactions), start trading transactions & blocks
-    if (!isSyncing() && m_chain.isKnown(m_latestBlockSent))
-    {
-        if (m_newTransactions)
-        {
-            m_newTransactions = false;
-            maintainTransactions();
-        }
-        if (m_newBlocks)
-        {
-            m_newBlocks = false;
-            maintainBlocks(h);
-        }
-    }
-
-    time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
-    if (now - m_lastTick >= 1)
-    {
-        m_lastTick = now;
-        for (auto const& peer : m_peers)
-        {
-            time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
-
-            if (now - peer.second.lastAsk() > c_peerTimeoutSeconds && peer.second.isConversing())
-                // timeout
-                m_host->disconnect(peer.first, p2p::PingTimeout);
-        }
-    }
-
-    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void EthereumCapability::maintainTransactions()
@@ -637,7 +596,7 @@ SyncStatus EthereumCapability::status() const
 void EthereumCapability::onTransactionImported(
     ImportResult _ir, h256 const& _h, h512 const& _nodeId)
 {
-    m_host->postCapabilityWork({name(), version()}, [this, _ir, _h, _nodeId]() {
+    m_host->postWork([this, _ir, _h, _nodeId]() {
         auto itPeerStatus = m_peers.find(_nodeId);
         if (itPeerStatus == m_peers.end())
             return;
@@ -889,6 +848,41 @@ bool EthereumCapability::interpretCapabilityPacket(
     }
 
     return true;
+}
+
+void EthereumCapability::doBackgroundWork()
+{
+    ensureInitialised();
+    auto h = m_chain.currentHash();
+    // If we've finished our initial sync (including getting all the blocks into the chain so as to
+    // reduce invalid transactions), start trading transactions & blocks
+    if (!isSyncing() && m_chain.isKnown(m_latestBlockSent))
+    {
+        if (m_newTransactions)
+        {
+            m_newTransactions = false;
+            maintainTransactions();
+        }
+        if (m_newBlocks)
+        {
+            m_newBlocks = false;
+            maintainBlocks(h);
+        }
+    }
+
+    time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    if (now - m_lastTick >= 1)
+    {
+        m_lastTick = now;
+        for (auto const& peer : m_peers)
+        {
+            time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+
+            if (now - peer.second.lastAsk() > c_peerTimeoutSeconds && peer.second.isConversing())
+                // timeout
+                m_host->disconnect(peer.first, p2p::PingTimeout);
+        }
+    }
 }
 
 void EthereumCapability::setIdle(NodeID const& _peerID)

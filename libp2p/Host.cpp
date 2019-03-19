@@ -27,13 +27,13 @@ using namespace dev::p2p;
 namespace
 {
 /// Interval at which Host::run will call keepAlivePeers to ping peers.
-static constexpr chrono::seconds c_keepAliveInterval{30};
+constexpr chrono::seconds c_keepAliveInterval{30};
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
-static constexpr chrono::seconds c_keepAliveTimeOut{1};
+constexpr chrono::seconds c_keepAliveTimeOut{1};
 
 /// Interval which m_runTimer is run when network is connected.
-static constexpr chrono::milliseconds c_runTimerInterval{100};
+constexpr chrono::milliseconds c_runTimerInterval{100};
 }  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}
@@ -150,6 +150,41 @@ void Host::stop()
     // stop worker thread
     if (isWorking())
         stopWorking();
+}
+
+void Host::startCapabilities()
+{
+    for (auto const& itCap : m_capabilities)
+    {
+        auto timer = itCap.second.backgroundWorkTimer;
+        auto cap = itCap.second.capability;
+        m_ioService.post([this, timer, cap]() {
+            cap->doBackgroundWork();
+            scheduleCapabilityWorkLoop(move(cap), move(timer));
+        });
+    }
+}
+
+void Host::scheduleCapabilityWorkLoop(
+    shared_ptr<CapabilityFace> _cap, shared_ptr<ba::steady_timer> _timer)
+{
+    _timer->expires_from_now(_cap->backgroundWorkInterval());
+    _timer->async_wait([this, _timer, _cap](boost::system::error_code _ec) {
+        if (_timer->expires_at() == c_steadyClockMin ||
+            _ec == boost::asio::error::operation_aborted)
+        {
+            LOG(m_logger) << "Timer was probably cancelled for capability: " << _cap->descriptor();
+            return;
+        }
+        else if (_ec)
+        {
+            LOG(m_logger) << "Timer error detected for capability: " << _cap->descriptor();
+            return;
+        }
+
+        _cap->doBackgroundWork();
+        scheduleCapabilityWorkLoop(move(_cap), move(_timer));
+    });
 }
 
 void Host::stopCapabilities()
@@ -744,12 +779,10 @@ void Host::run(boost::system::error_code const& _ec)
 // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
 void Host::startedWorking()
 {
-    // start capability threads (ready for incoming connections)
-    for (auto const& h : m_capabilities)
-        h.second.capability->onStarting();
-
     if (haveCapabilities())
     {
+        startCapabilities();
+
         // try to open acceptor (todo: ipv6)
         int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
         if (port > 0)
@@ -1029,30 +1062,3 @@ void Host::forEachPeer(
             return;
 }
 
-void Host::scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, function<void()> _f)
-{
-    auto cap = m_capabilities.find(_capDesc);
-    if (cap == m_capabilities.end())
-    {
-        LOG(m_logger) << "Capability not registered: " << _capDesc;
-        BOOST_THROW_EXCEPTION(CapabilityNotRegistered());
-    }
-
-    auto timer = cap->second.backgroundWorkTimer;
-    timer->expires_from_now(cap->second.capability->backgroundWorkInterval());
-    timer->async_wait([timer, _f](boost::system::error_code _ec) {
-        if (timer->expires_at() != c_steadyClockMin && !_ec)
-            _f();
-    });
-}
-
-void Host::postCapabilityWork(CapDesc const& _capDesc, function<void()> _f)
-{
-    if (m_capabilities.find(_capDesc) == m_capabilities.end())
-    {
-        LOG(m_logger) << "Capability not registered" << _capDesc;
-        BOOST_THROW_EXCEPTION(CapabilityNotRegistered());
-    }
-
-    m_ioService.post(_f);
-}

@@ -86,9 +86,8 @@ public:
     virtual void foreachPeer(std::string const& _capabilityName,
         std::function<bool(NodeID const& _nodeID)> _f) const = 0;
 
-    // TODO: 
-    virtual void scheduleCapabilityBackgroundWork(CapDesc const& _capDesc, std::function<void()> _f) = 0;
-    virtual void postCapabilityWork(CapDesc const& _capDesc, std::function<void()> _f) = 0;
+    /// Post work to be executed on the network thread
+    virtual void postWork(std::function<void()> _f) = 0;
 };
 
 class Host;

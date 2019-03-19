@@ -90,10 +90,9 @@ public:
 
     std::string name() const override { return "eth"; }
     unsigned version() const override { return c_protocolVersion; }
+    p2p::CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return PacketCount; }
     std::chrono::milliseconds backgroundWorkInterval() const override;
-
-    void onStarting() override;
 
     unsigned protocolVersion() const { return c_protocolVersion; }
     u256 networkId() const { return m_networkId; }
@@ -115,13 +114,17 @@ public:
     BlockQueue const& bq() const { return m_bq; }
     SyncStatus status() const;
 
-    static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
+    static char const* stateName(SyncState _s) { return c_stateNames[static_cast<int>(_s)]; }
 
     static unsigned const c_oldProtocolVersion;
 
     void onConnect(NodeID const& _nodeID, u256 const& _peerCapabilityVersion) override;
     void onDisconnect(NodeID const& _nodeID) override;
     bool interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r) override;
+
+    /// Main work loop - sends new transactions and blocks to available peers and disconnects from
+    /// timed out peers
+    void doBackgroundWork() override;
 
     p2p::CapabilityHostFace& capabilityHost() { return *m_host; }
 
@@ -130,8 +133,8 @@ public:
     void disablePeer(NodeID const& _peerID, std::string const& _problem);
 
 private:
-    static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
-    static constexpr std::chrono::milliseconds s_backgroundWorkInterval{1000};
+    static char const* const c_stateNames[static_cast<int>(SyncState::Size)];
+    static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
 
     std::vector<NodeID> selectPeers(
         std::function<bool(EthereumPeer const&)> const& _predicate) const;
@@ -139,14 +142,8 @@ private:
     std::pair<std::vector<NodeID>, std::vector<NodeID>> randomPartitionPeers(
         std::vector<NodeID> const& _peers, std::size_t _number) const;
 
-    /// Main work loop - sends new transactions and blocks to available peers and disconnects from
-    /// timed out peers
-    void doBackgroundWork();
-
     /// Send top transactions (by nonce and gas price) to available peers
     void maintainTransactions();
-
-
     void maintainBlocks(h256 const& _currentBlock);
     void onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId);
 

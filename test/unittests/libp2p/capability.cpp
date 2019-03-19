@@ -22,13 +22,12 @@ public:
 
     string name() const override { return "test"; }
     unsigned version() const override { return 2; }
+    CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return UserPacket + 1; }
     chrono::milliseconds backgroundWorkInterval() const override
     {
-        return s_backgroundWorkInterval;
+        return c_backgroundWorkInterval;
     }
-
-    void onStarting() override {}
 
     void onConnect(NodeID const& _nodeID, u256 const&) override
     {
@@ -47,6 +46,8 @@ public:
         m_cntReceivedMessages.erase(_nodeID);
         m_testSums.erase(_nodeID);
     }
+
+    void doBackgroundWork() override {}
 
     void sendTestMessage(NodeID const& _id, int _x)
     {
@@ -69,14 +70,14 @@ public:
         return {cnt, checksum};
     }
 
-    static chrono::milliseconds constexpr s_backgroundWorkInterval{1000};
+    static chrono::milliseconds constexpr c_backgroundWorkInterval{1000};
 
     Host const& m_host;
     unordered_map<NodeID, int> m_cntReceivedMessages;
     unordered_map<NodeID, int> m_testSums;
 };
 
-chrono::milliseconds constexpr TestCapability::s_backgroundWorkInterval;
+chrono::milliseconds constexpr TestCapability::c_backgroundWorkInterval;
 
 TEST(p2p, capability)
 {

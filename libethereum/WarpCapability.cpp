@@ -17,7 +17,7 @@ namespace dev
 namespace eth
 {
 
-chrono::milliseconds constexpr WarpCapability::s_backgroundWorkInterval;
+std::chrono::milliseconds constexpr WarpCapability::c_backgroundWorkInterval;
 
 namespace
 {
@@ -124,14 +124,14 @@ public:
         {
             auto it = m_manifests.find(_peerID);
             if (it != m_manifests.end())
-                it->second.set_exception(make_exception_ptr(FailedToDownloadManifest()));
+                it->second.set_exception(std::make_exception_ptr(FailedToDownloadManifest()));
         }
         else if (_asking == Asking::BlockHeaders)
         {
             auto it = m_daoForkHeaders.find(_peerID);
             if (it != m_daoForkHeaders.end())
                 it->second.set_exception(
-                    make_exception_ptr(FailedToDownloadDaoForkBlockHeader()));
+                    std::make_exception_ptr(FailedToDownloadDaoForkBlockHeader()));
         }
         else if (_asking == Asking::WarpData)
         {
@@ -304,8 +304,8 @@ private:
 WarpCapability::WarpCapability(shared_ptr<p2p::CapabilityHostFace> _host,
     BlockChain const& _blockChain, u256 const& _networkId,
     boost::filesystem::path const& _snapshotDownloadPath,
-    shared_ptr<SnapshotStorageFace> _snapshotStorage)
-  : m_host(move(_host)),
+    std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
+  : m_host(std::move(_host)),
     m_blockChain(_blockChain),
     m_networkId(_networkId),
     m_snapshot(_snapshotStorage),
@@ -317,34 +317,13 @@ WarpCapability::WarpCapability(shared_ptr<p2p::CapabilityHostFace> _host,
 
 chrono::milliseconds WarpCapability::backgroundWorkInterval() const
 {
-    return s_backgroundWorkInterval;
-}
-
-void WarpCapability::onStarting()
-{
-    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
+    return c_backgroundWorkInterval;
 }
 
 shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
     boost::filesystem::path const& _snapshotDownloadPath)
 {
     return make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
-}
-
-void WarpCapability::doBackgroundWork()
-{
-    for (auto const& peer : m_peers)
-    {
-        time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
-        auto const& status = peer.second;
-        if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
-        {
-            // timeout
-            m_host->disconnect(peer.first, p2p::PingTimeout);
-        }
-    }
-
-    m_host->scheduleCapabilityBackgroundWork({name(), version()}, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)
@@ -477,6 +456,19 @@ void WarpCapability::onDisconnect(NodeID const& _peerID)
     m_peers.erase(_peerID);
 }
 
+void WarpCapability::doBackgroundWork()
+{
+    for (auto const& peer : m_peers)
+    {
+        time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+        auto const& status = peer.second;
+        if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
+        {
+            // timeout
+            m_host->disconnect(peer.first, p2p::PingTimeout);
+        }
+    }
+}
 
 void WarpCapability::requestStatus(NodeID const& _peerID, unsigned _hostProtocolVersion,
     u256 const& _hostNetworkId, u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,

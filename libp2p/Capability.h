@@ -10,7 +10,6 @@ namespace dev
 {
 namespace p2p
 {
-DEV_SIMPLE_EXCEPTION(CapabilityNotRegistered);
 
 /**
  * @brief The Capability interface.
@@ -26,15 +25,12 @@ public:
     virtual std::string name() const = 0;
     /// Subprotocol version, used in negotiating common capabilities with the peers.
     virtual unsigned version() const = 0;
+    /// Combination of name and version
+    virtual CapDesc descriptor() const = 0;
     /// Number of messages supported by the subprotocol version.
     virtual unsigned messageCount() const = 0;
     /// Time interval to run the background work loop at
     virtual std::chrono::milliseconds backgroundWorkInterval() const = 0;
-
-    /// Called by the Host when capability is activated
-    /// (usually when network communication is being enabled)
-    virtual void onStarting() = 0;
-
     /// Called by the Host when new peer is connected.
     /// Guaranteed to be called first before any interpretCapabilityPacket for this peer.
     virtual void onConnect(NodeID const& _nodeID, u256 const& _peerCapabilityVersion) = 0;
@@ -44,6 +40,8 @@ public:
     /// Called by the Host when the peer is disconnected.
     /// Guaranteed to be called last after any interpretCapabilityPacket for this peer.
     virtual void onDisconnect(NodeID const& _nodeID) = 0;
+    /// Background work loop - called by the host every backgroundWorkInterval()
+    virtual void doBackgroundWork() = 0;
 };
 
 }  // namespace p2p
