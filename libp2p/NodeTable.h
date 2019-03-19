@@ -357,8 +357,8 @@ struct NodeEntry
         return RLPXDatagramFace::secondsSinceEpoch() <
                lastPongReceivedTime + NodeTable::c_bondingTimeSeconds;
     }
-    NodeID id() const { return node.id; }
-    NodeIPEndpoint endpoint() const { return node.endpoint; }
+    NodeID const& id() const { return node.id; }
+    NodeIPEndpoint const& endpoint() const { return node.endpoint; }
     PeerType peerType() const { return node.peerType; }
 
     Node node;

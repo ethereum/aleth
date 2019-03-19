@@ -376,8 +376,8 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
 
     LOG(m_logger) << "Active node " << _nodeEntry->node;
     // TODO: don't activate in case endpoint has changed
-    _nodeEntry->endpoint().setAddress(_endpoint.address());
-    _nodeEntry->endpoint().setUdpPort(_endpoint.port());
+    _nodeEntry->node.endpoint.setAddress(_endpoint.address());
+    _nodeEntry->node.endpoint.setUdpPort(_endpoint.port());
 
 
     shared_ptr<NodeEntry> nodeToEvict;
