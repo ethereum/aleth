@@ -7,7 +7,6 @@
 #include "BlockChainSync.h"
 #include "BlockQueue.h"
 #include "TransactionQueue.h"
-#include <libdevcore/Common.h>
 #include <libethcore/Exceptions.h>
 #include <libp2p/Common.h>
 #include <libp2p/Host.h>
@@ -22,7 +21,7 @@ using namespace dev::eth;
 char const* const EthereumCapability::c_stateNames[static_cast<int>(SyncState::Size)] = {
     "NotSynced", "Idle", "Waiting", "Blocks", "State"};
 
-chrono::milliseconds constexpr EthereumCapability::c_backgroundWorkInterval;
+std::chrono::milliseconds constexpr EthereumCapability::c_backgroundWorkInterval;
 
 namespace
 {
@@ -123,7 +122,7 @@ public:
     }
 
     void onPeerNewHashes(
-        NodeID const& _peerID, vector<pair<h256, u256>> const& _hashes) override
+        NodeID const& _peerID, std::vector<std::pair<h256, u256>> const& _hashes) override
     {
         try
         {
@@ -236,7 +235,7 @@ public:
                     blockHash = m_chain.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
                 }
             }
-            else if (n <= numeric_limits<unsigned>::max())
+            else if (n <= std::numeric_limits<unsigned>::max())
                 blockHash = m_chain.numberHash(static_cast<unsigned>(n));
             else
                 blockHash = {};
@@ -297,7 +296,7 @@ public:
 
         bytes rlp;
         unsigned n = 0;
-        auto numBodiesToSend = min(count, c_maxBlocks);
+        auto numBodiesToSend = std::min(count, c_maxBlocks);
         for (unsigned i = 0; i < numBodiesToSend && rlp.size() < c_maxPayload; ++i)
         {
             auto h = _blockHashes[i].toHash<h256>();
@@ -330,7 +329,7 @@ public:
 
         strings data;
         size_t payloadSize = 0;
-        auto numItemsToSend = min(count, c_maxNodes);
+        auto numItemsToSend = std::min(count, c_maxNodes);
         for (unsigned i = 0; i < numItemsToSend && payloadSize < c_maxPayload; ++i)
         {
             auto h = _dataHashes[i].toHash<h256>();
@@ -353,7 +352,7 @@ public:
 
         bytes rlp;
         unsigned n = 0;
-        auto numItemsToSend = min(count, c_maxReceipts);
+        auto numItemsToSend = std::min(count, c_maxReceipts);
         for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
         {
             auto h = _blockHashes[i].toHash<h256>();
@@ -396,11 +395,11 @@ EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host
     m_peerObserver.reset(new EthereumPeerObserver(m_sync, m_tq));
     m_latestBlockSent = _ch.currentHash();
     m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
-    random_device seed;
-    m_urng = mt19937_64(seed());
+    std::random_device seed;
+    m_urng = std::mt19937_64(seed());
 }
 
-chrono::milliseconds EthereumCapability::backgroundWorkInterval() const
+std::chrono::milliseconds EthereumCapability::backgroundWorkInterval() const
 {
     return c_backgroundWorkInterval;
 }
@@ -439,7 +438,7 @@ void EthereumCapability::completeSync()
 void EthereumCapability::maintainTransactions()
 {
     // Send any new transactions.
-    unordered_map<NodeID, vector<size_t>> peerTransactions;
+    unordered_map<NodeID, std::vector<size_t>> peerTransactions;
     auto ts = m_tq.topTransactions(c_maxSendTransactions);
     {
         for (size_t i = 0; i < ts.size(); ++i)
@@ -483,7 +482,7 @@ void EthereumCapability::maintainTransactions()
 }
 
 vector<NodeID> EthereumCapability::selectPeers(
-    function<bool(EthereumPeer const&)> const& _predicate) const
+    std::function<bool(EthereumPeer const&)> const& _predicate) const
 {
     vector<NodeID> allowed;
     for (auto const& peer : m_peers)
@@ -494,21 +493,21 @@ vector<NodeID> EthereumCapability::selectPeers(
     return allowed;
 }
 
-pair<vector<NodeID>, vector<NodeID>> EthereumCapability::randomPartitionPeers(
-    vector<NodeID> const& _peers, size_t _number) const
+std::pair<std::vector<NodeID>, std::vector<NodeID>> EthereumCapability::randomPartitionPeers(
+    std::vector<NodeID> const& _peers, std::size_t _number) const
 {
     vector<NodeID> part1(_peers);
     vector<NodeID> part2;
 
     if (_number >= _peers.size())
-        return make_pair(part1, part2);
+        return std::make_pair(part1, part2);
 
-    shuffle(part1.begin(), part1.end(), m_urng);
+    std::shuffle(part1.begin(), part1.end(), m_urng);
 
     // Remove elements from the end of the shuffled part1 vector and move them to part2.
-    move(part1.begin() + _number, part1.end(), back_inserter(part2));
+    std::move(part1.begin() + _number, part1.end(), std::back_inserter(part2));
     part1.erase(part1.begin() + _number, part1.end());
-    return make_pair(move(part1), move(part2));
+    return std::make_pair(move(part1), move(part2));
 }
 
 void EthereumCapability::maintainBlocks(h256 const& _currentHash)
@@ -531,11 +530,11 @@ void EthereumCapability::maintainBlocks(h256 const& _currentHash)
                 [&](EthereumPeer const& _peer) { return !_peer.isBlockKnown(_currentHash); });
 
             auto const peersToSendNumber =
-                max<size_t>(c_minBlockBroadcastPeers, sqrt(m_peers.size()));
+                std::max<std::size_t>(c_minBlockBroadcastPeers, std::sqrt(m_peers.size()));
 
-            vector<NodeID> peersToSend;
-            vector<NodeID> peersToAnnounce;
-            tie(peersToSend, peersToAnnounce) =
+            std::vector<NodeID> peersToSend;
+            std::vector<NodeID> peersToAnnounce;
+            std::tie(peersToSend, peersToAnnounce) =
                 randomPartitionPeers(peersWithoutBlock, peersToSendNumber);
 
             for (NodeID const& peerID : peersToSend)
@@ -644,7 +643,7 @@ bool EthereumCapability::interpretCapabilityPacket(
     NodeID const& _peerID, unsigned _id, RLP const& _r)
 {
     auto& peer = m_peers[_peerID];
-    peer.setLastAsk(chrono::system_clock::to_time_t(chrono::system_clock::now()));
+    peer.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
 
     try
     {
@@ -685,7 +684,7 @@ bool EthereumCapability::interpretCapabilityPacket(
                                         static_cast<unsigned>(maxHeaders) :
                                         c_maxHeadersToSend;
 
-            if (skip > numeric_limits<unsigned>::max() - 1)
+            if (skip > std::numeric_limits<unsigned>::max() - 1)
             {
                 cnetdetails << "Requested block skip is too big: " << skip;
                 break;
@@ -765,7 +764,7 @@ bool EthereumCapability::interpretCapabilityPacket(
 
             vector<pair<h256, u256>> hashes(itemCount);
             for (unsigned i = 0; i < itemCount; ++i)
-                hashes[i] = make_pair(_r[i][0].toHash<h256>(), _r[i][1].toInt<u256>());
+                hashes[i] = std::make_pair(_r[i][0].toHash<h256>(), _r[i][1].toInt<u256>());
 
             m_peerObserver->onPeerNewHashes(_peerID, hashes);
             break;
@@ -842,7 +841,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         cnetlog << "Peer causing an Exception: "
                 << boost::current_exception_diagnostic_information() << " " << _r;
     }
-    catch (exception const& _e)
+    catch (std::exception const& _e)
     {
         cnetlog << "Peer causing an exception: " << _e.what() << " " << _r;
     }
@@ -870,13 +869,13 @@ void EthereumCapability::doBackgroundWork()
         }
     }
 
-    time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     if (now - m_lastTick >= 1)
     {
         m_lastTick = now;
         for (auto const& peer : m_peers)
         {
-            time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+            time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
             if (now - peer.second.lastAsk() > c_peerTimeoutSeconds && peer.second.isConversing())
                 // timeout
@@ -899,7 +898,7 @@ void EthereumCapability::setAsking(NodeID const& _peerID, Asking _a)
     auto& peerStatus = itPeerStatus->second;
 
     peerStatus.setAsking(_a);
-    peerStatus.setLastAsk(chrono::system_clock::to_time_t(chrono::system_clock::now()));
+    peerStatus.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
 
     m_host->addNote(_peerID, "ask", ::toString(_a));
     m_host->addNote(_peerID, "sync",
@@ -928,7 +927,7 @@ bool EthereumCapability::needsSyncing(NodeID const& _peerID) const
     return (peerStatus != m_peers.end() && peerStatus->second.latestHash());
 }
 
-void EthereumCapability::disablePeer(NodeID const& _peerID, string const& _problem)
+void EthereumCapability::disablePeer(NodeID const& _peerID, std::string const& _problem)
 {
     m_host->disableCapability(_peerID, name(), _problem);
 }

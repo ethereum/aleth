@@ -114,8 +114,6 @@ using CapDesc = std::pair<std::string, unsigned>;
 using CapDescSet = std::set<CapDesc>;
 using CapDescs = std::vector<CapDesc>;
 
-std::ostream& operator<<(std::ostream& _out, CapDesc const& _capDesc);
-
 /*
  * Used by Host to pass negotiated information about a connection to a
  * new Peer Session; PeerSessionInfo is then maintained by Session and can

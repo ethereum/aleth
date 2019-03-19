@@ -130,11 +130,6 @@ string reasonOf(DisconnectReason _r)
     }
 }
 
-ostream& operator<<(ostream& _out, CapDesc const& _capDesc)
-{
-    return _out << _capDesc.first << ": " << _capDesc.second;
-}
-
 void NodeIPEndpoint::streamRLP(RLPStream& _s, RLPAppend _append) const
 {
     if (_append == StreamList)

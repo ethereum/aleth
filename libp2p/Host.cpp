@@ -156,12 +156,7 @@ void Host::startCapabilities()
 {
     for (auto const& itCap : m_capabilities)
     {
-        auto timer = itCap.second.backgroundWorkTimer;
-        auto cap = itCap.second.capability;
-        m_ioService.post([this, timer, cap]() {
-            cap->doBackgroundWork();
-            scheduleCapabilityWorkLoop(move(cap), move(timer));
-        });
+        scheduleCapabilityWorkLoop(itCap.second.capability, itCap.second.backgroundWorkTimer);
     }
 }
 

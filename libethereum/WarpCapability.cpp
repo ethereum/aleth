@@ -5,12 +5,9 @@
 #include "WarpCapability.h"
 #include "BlockChain.h"
 #include "SnapshotStorage.h"
-#include "libp2p/Common.h"
 
 #include <boost/fiber/all.hpp>
 #include <chrono>
-
-using namespace std;
 
 namespace dev
 {
@@ -286,14 +283,14 @@ private:
     unsigned const m_daoForkBlock;
     boost::fibers::promise<bytes> m_manifest;
     h256 m_syncingSnapshotHash;
-    deque<h256> m_neededChunks;
+    std::deque<h256> m_neededChunks;
     boost::fibers::buffered_channel<NodeID> m_freePeers;
     boost::filesystem::path const m_snapshotDir;
-    map<NodeID, boost::fibers::promise<bytes>> m_manifests;
-    map<NodeID, boost::fibers::promise<bytes>> m_daoForkHeaders;
-    map<NodeID, h256> m_requestedChunks;
+    std::map<NodeID, boost::fibers::promise<bytes>> m_manifests;
+    std::map<NodeID, boost::fibers::promise<bytes>> m_daoForkHeaders;
+    std::map<NodeID, h256> m_requestedChunks;
 
-    unique_ptr<boost::fibers::fiber> m_downloadFiber;
+    std::unique_ptr<boost::fibers::fiber> m_downloadFiber;
 
     Logger m_logger{createLogger(VerbosityInfo, "snap")};
 };
@@ -301,7 +298,7 @@ private:
 }  // namespace
 
 
-WarpCapability::WarpCapability(shared_ptr<p2p::CapabilityHostFace> _host,
+WarpCapability::WarpCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
     BlockChain const& _blockChain, u256 const& _networkId,
     boost::filesystem::path const& _snapshotDownloadPath,
     std::shared_ptr<SnapshotStorageFace> _snapshotStorage)
@@ -315,15 +312,15 @@ WarpCapability::WarpCapability(shared_ptr<p2p::CapabilityHostFace> _host,
 {
 }
 
-chrono::milliseconds WarpCapability::backgroundWorkInterval() const
+std::chrono::milliseconds WarpCapability::backgroundWorkInterval() const
 {
     return c_backgroundWorkInterval;
 }
 
-shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
+std::shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
     boost::filesystem::path const& _snapshotDownloadPath)
 {
-    return make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
+    return std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
 }
 
 void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)
@@ -350,7 +347,7 @@ void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabi
 bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r)
 {
     auto& peerStatus = m_peers[_peerID];
-    peerStatus.m_lastAsk = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
     try
     {
@@ -442,7 +439,7 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
         cnetlog << "Warp Peer causing an Exception: "
                 << boost::current_exception_diagnostic_information() << " " << _r;
     }
-    catch (exception const& _e)
+    catch (std::exception const& _e)
     {
         cnetlog << "Warp Peer causing an exception: " << _e.what() << " " << _r;
     }
@@ -460,7 +457,7 @@ void WarpCapability::doBackgroundWork()
 {
     for (auto const& peer : m_peers)
     {
-        time_t now = chrono::system_clock::to_time_t(chrono::system_clock::now());
+        time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         auto const& status = peer.second;
         if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
         {
@@ -534,12 +531,12 @@ void WarpCapability::setAsking(NodeID const& _peerID, Asking _a)
     auto& peerStatus = itPeerStatus->second;
 
     peerStatus.m_asking = _a;
-    peerStatus.m_lastAsk = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    peerStatus.m_lastAsk = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 }
 
 /// Validates whether peer is able to communicate with the host, disables peer if not
 bool WarpCapability::validateStatus(NodeID const& _peerID, h256 const& _genesisHash,
-    vector<unsigned> const& _protocolVersions, u256 const& _networkId)
+    std::vector<unsigned> const& _protocolVersions, u256 const& _networkId)
 {
     auto itPeerStatus = m_peers.find(_peerID);
     if (itPeerStatus == m_peers.end())
@@ -572,7 +569,7 @@ bool WarpCapability::validateStatus(NodeID const& _peerID, h256 const& _genesisH
     return true;
 }
 
-void WarpCapability::disablePeer(NodeID const& _peerID, string const& _problem)
+void WarpCapability::disablePeer(NodeID const& _peerID, std::string const& _problem)
 {
     m_host->disableCapability(_peerID, name(), _problem);
 }
