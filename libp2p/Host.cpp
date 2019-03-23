@@ -156,12 +156,11 @@ void Host::startCapabilities()
 {
     for (auto const& itCap : m_capabilities)
     {
-        scheduleCapabilityWorkLoop(itCap.second.capability, itCap.second.backgroundWorkTimer);
+        scheduleCapabilityWorkLoop(itCap.second.capability.get(), itCap.second.backgroundWorkTimer);
     }
 }
 
-void Host::scheduleCapabilityWorkLoop(
-    shared_ptr<CapabilityFace> _cap, shared_ptr<ba::steady_timer> _timer)
+void Host::scheduleCapabilityWorkLoop(CapabilityFace* _cap, shared_ptr<ba::steady_timer> _timer)
 {
     _timer->expires_from_now(_cap->backgroundWorkInterval());
     _timer->async_wait([this, _timer, _cap](boost::system::error_code _ec) {
@@ -178,7 +177,7 @@ void Host::scheduleCapabilityWorkLoop(
         }
 
         _cap->doBackgroundWork();
-        scheduleCapabilityWorkLoop(move(_cap), move(_timer));
+        scheduleCapabilityWorkLoop(_cap, move(_timer));
     });
 }
 
@@ -213,8 +212,10 @@ void Host::doneWorking()
     while (m_accepting)
         m_ioService.poll();
 
-    // (eth: stops syncing or block / tx broadcast)
+    // (eth: stops syncing or block / tx broadcast). Poll the io service so we can process
+    // capability cancellations
     stopCapabilities();
+    m_ioService.poll();
 
     // disconnect pending handshake, before peers, as a handshake may create a peer
     for (unsigned n = 0;; n = 0)
