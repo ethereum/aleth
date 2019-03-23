@@ -59,7 +59,20 @@ ChainParams ChainParams::loadConfig(
 {
     ChainParams cp(*this);
     js::mValue val;
-    js::read_string_or_throw(_json, val);
+
+    try
+    {
+        js::read_string_or_throw(_json, val);
+    }
+    catch (js::Error_position const& error)
+    {
+        std::string const comment = "json parsing error detected on line " +
+                                    std::to_string(error.line_) + " in column " +
+                                    std::to_string(error.column_) + ": " + error.reason_;
+        std::cerr << comment << "\n";
+        BOOST_THROW_EXCEPTION(SyntaxError() << errinfo_comment(comment));
+    }
+
     js::mObject obj = val.get_obj();
 
     validateConfigJson(obj);
