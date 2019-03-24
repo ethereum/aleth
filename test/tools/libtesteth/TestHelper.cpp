@@ -637,12 +637,6 @@ string prepareLLLCVersionString()
     return "Error getting LLLC Version";
 }
 
-#define STR(X) #X
-string prepareBinaryenVersionString()
-{
-    return STR(BINARYEN_VERSION);
-}
-
 void copyFile(fs::path const& _source, fs::path const& _destination)
 {
     fs::ifstream src(_source, ios::binary);
