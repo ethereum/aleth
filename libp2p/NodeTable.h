@@ -343,11 +343,11 @@ protected:
  * NodeEntry
  * @brief Entry in Node Table
  */
-struct NodeEntry : public Node
+struct NodeEntry
 {
     NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw,
         uint32_t _pongReceivedTime, uint32_t _pongSentTime)
-      : Node(_pubk, _gw),
+      : node(_pubk, _gw),
         distance(NodeTable::distance(_src, _pubk)),
         lastPongReceivedTime(_pongReceivedTime),
         lastPongSentTime(_pongSentTime)
@@ -357,7 +357,11 @@ struct NodeEntry : public Node
         return RLPXDatagramFace::secondsSinceEpoch() <
                lastPongReceivedTime + NodeTable::c_bondingTimeSeconds;
     }
+    NodeID const& id() const { return node.id; }
+    NodeIPEndpoint const& endpoint() const { return node.endpoint; }
+    PeerType peerType() const { return node.peerType; }
 
+    Node node;
     int const distance = 0;  ///< Node's distance (xor of _src as integer).
     uint32_t lastPongReceivedTime = 0;
     uint32_t lastPongSentTime = 0;
@@ -370,8 +374,7 @@ inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
          << _nodeTable.m_hostNodeEndpoint.udpPort() << std::endl;
     auto s = _nodeTable.snapshot();
     for (auto n: s)
-        _out << n.address() << "\t" << n.distance << "\t" << n.endpoint.address() << ":"
-             << n.endpoint.udpPort() << std::endl;
+        _out << n.id() << "\t" << n.distance << "\t" << n.endpoint() << "\n";
     return _out;
 }
 
@@ -518,7 +521,7 @@ struct Neighbours: DiscoveryDatagram
     {
         auto limit = _limit ? std::min(_nearest.size(), (size_t)(_offset + _limit)) : _nearest.size();
         for (auto i = _offset; i < limit; i++)
-            neighbours.push_back(Neighbour(*_nearest[i]));
+            neighbours.push_back(Neighbour(_nearest[i]->node));
     }
     Neighbours(bi::udp::endpoint const& _to): DiscoveryDatagram(_to) {}
     Neighbours(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}

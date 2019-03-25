@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeUpdatesKnownNode)
     auto& nodeTable = nodeTableHost.nodeTable;
     auto knownNode = nodeTable->bucketFirstNode(bucketIndex);
 
-    nodeTable->noteActiveNode(knownNode, knownNode->endpoint);
+    nodeTable->noteActiveNode(knownNode, knownNode->endpoint());
 
     // check that node was moved to the back of the bucket
     BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex), knownNode);
@@ -544,10 +544,10 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     // least recently seen node not removed yet
     BOOST_CHECK_EQUAL(nodeTable->bucketFirstNode(bucketIndex), leastRecentlySeenNode);
     // but added to evictions
-    auto evicted = nodeTable->nodeValidation(leastRecentlySeenNode->endpoint);
+    auto evicted = nodeTable->nodeValidation(leastRecentlySeenNode->endpoint());
     BOOST_REQUIRE(evicted.is_initialized());
     BOOST_REQUIRE(evicted->replacementNodeEntry);
-    BOOST_CHECK_EQUAL(evicted->replacementNodeEntry->id, newNodeId);
+    BOOST_CHECK_EQUAL(evicted->replacementNodeEntry->id(), newNodeId);
 }
 
 BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
@@ -568,12 +568,12 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeReplacesNodeInFullBucketWhenEndpointChanged)
     // the bucket is still max size
     BOOST_CHECK_EQUAL(nodeTable->bucketSize(bucketIndex), 16);
     // least recently seen node removed
-    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex)->id, leastRecentlySeenNode->id);
+    BOOST_CHECK_NE(nodeTable->bucketFirstNode(bucketIndex)->id(), leastRecentlySeenNode->id());
     // but added as most recently seen with new endpoint
     auto mostRecentNodeEntry = nodeTable->bucketLastNode(bucketIndex);
-    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id, leastRecentlySeenNode->id);
-    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.address(), newEndpoint.address());
-    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint.udpPort(), newEndpoint.udpPort());
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->id(), leastRecentlySeenNode->id());
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint().address(), newEndpoint.address());
+    BOOST_CHECK_EQUAL(mostRecentNodeEntry->endpoint().udpPort(), newEndpoint.udpPort());
 }
 
 BOOST_AUTO_TEST_CASE(unexpectedPong)
@@ -924,7 +924,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     auto sentPing = nodeTable->nodeValidation(nodeEndpoint);
     BOOST_CHECK(!sentPing.is_initialized());
     // check that old node is most recently seen in the bucket
-    BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id == nodeId);
+    BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id() == nodeId);
     // check that replacement node is dropped
     BOOST_CHECK(!nodeTable->nodeExists(newNodeId));
 }
@@ -960,13 +960,13 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     this_thread::sleep_for(chrono::seconds(6));
 
     // check that old node is evicted
-    BOOST_CHECK(!nodeTable->nodeExists(oldNode->id));
-    BOOST_CHECK(!nodeTable->nodeValidation(oldNode->endpoint).is_initialized());
+    BOOST_CHECK(!nodeTable->nodeExists(oldNode->id()));
+    BOOST_CHECK(!nodeTable->nodeValidation(oldNode->endpoint()).is_initialized());
     // check that replacement node is active
     BOOST_CHECK(nodeTable->nodeExists(newNodeId));
     auto newNode = nodeTable->nodeEntry(newNodeId);
     BOOST_CHECK(newNode->lastPongReceivedTime > 0);
-    BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id == newNodeId);
+    BOOST_CHECK(nodeTable->bucketLastNode(bucketIndex)->id() == newNodeId);
 }
 
 BOOST_AUTO_TEST_CASE(pingFromLocalhost)

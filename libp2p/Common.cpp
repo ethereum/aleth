@@ -226,11 +226,6 @@ ostream& operator<<(ostream& _out, NodeIPEndpoint const& _ep)
     return _out;
 }
 
-ostream& operator<<(ostream& _out, const Node& _node)
-{
-    return _out << _node.id << '@' << _node.endpoint;
-}
-
 vector<pair<Public, const char*>> defaultBootNodes()
 {
     // TODO: Use full string enode representation, maybe via Node, NodeSpec or other type.

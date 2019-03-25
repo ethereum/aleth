@@ -245,7 +245,20 @@ public:
     std::atomic<PeerType> peerType{PeerType::Optional};
 };
 
-std::ostream& operator<<(std::ostream& _out, const Node& _node);
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, Node const& _node)
+{
+    return _strm << _node.id << '@' << _node.endpoint;
+}
+
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, Node& _node)
+{
+    auto const& constValue = _node;
+    _strm << constValue;
+    return _strm;
+}
+
 
 /// Simple stream output for a NodeIPEndpoint.
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep);
