@@ -81,7 +81,7 @@ public:
     EVMSchedule const& scheduleForBlockNumber(u256 const& _blockNumber) const;
     u256 blockReward(EVMSchedule const& _schedule) const;
     void setBlockReward(u256 const& _newBlockReward);
-    u256 maximumExtraDataSize = 1024;
+    u256 maximumExtraDataSize = 32;
     u256 accountStartNonce = 0;
     bool tieBreakingGas = true;
     u256 minGasLimit;
