@@ -1167,13 +1167,14 @@ public:
         nodeTable->addNode(Node{nodePubKey, nodeEndpoint1});
 
         // handle received PING
-        auto pingDataReceived = nodeSocketHost1.packetsReceived.pop();
+        auto pingDataReceived = nodeSocketHost1.packetsReceived.pop(chrono::seconds(5));
         auto pingDatagram =
             DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+        BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
         auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
         // send PONG
-        Pong pong(nodeTable->m_hostNodeEndpoint);
+        Pong pong{nodeTable->m_hostNodeEndpoint};
         pong.echo = ping.echo;
         pong.sign(nodeKeyPair.secret());
         nodeSocketHost1.socket->send(pong);
@@ -1214,16 +1215,20 @@ BOOST_AUTO_TEST_CASE(addNode)
     auto pingDataReceived = nodeSocketHost2.packetsReceived.pop();
     auto pingDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
-    Pong pong(nodeTable->m_hostNodeEndpoint);
+    Pong pong{nodeTable->m_hostNodeEndpoint};
     pong.echo = ping.echo;
     pong.sign(nodeKeyPair.secret());
     nodeSocketHost2.socket->send(pong);
 
     // wait for PONG to be received and handled
-    nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto pongDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto pongDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
+    BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
 
     BOOST_REQUIRE_EQUAL(nodeEntry->endpoint, nodeEndpoint2);
 }
@@ -1231,12 +1236,15 @@ BOOST_AUTO_TEST_CASE(addNode)
 BOOST_AUTO_TEST_CASE(findNode)
 {
     // Create and send the FindNode packet through endpoint 2
-    FindNode findNode(nodeTable->m_hostNodeEndpoint, KeyPair::create().pub() /* target */);
+    FindNode findNode{nodeTable->m_hostNodeEndpoint, KeyPair::create().pub() /* target */};
     findNode.sign(nodeKeyPair.secret());
     nodeSocketHost2.socket->send(findNode);
 
     // Wait for FindNode to be received
-    nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto findNodeDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto findNodeDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(findNodeDataReceived));
+    BOOST_REQUIRE_EQUAL(findNodeDatagram->typeName(), "FindNode");
 
     // Verify that no neighbours response is received
     BOOST_CHECK_THROW(nodeSocketHost2.packetsReceived.pop(chrono::seconds(5)), WaitTimeout);
@@ -1248,20 +1256,24 @@ BOOST_AUTO_TEST_CASE(neighbours)
     auto findNodeDataReceived = nodeSocketHost1.packetsReceived.pop(chrono::seconds(10));
     auto findNodeDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(findNodeDataReceived));
+    BOOST_REQUIRE_EQUAL(findNodeDatagram->typeName(), "FindNode");
     auto findNode = dynamic_cast<FindNode const&>(*findNodeDatagram);
 
     // send Neighbours through endpoint 2
-    // TODO fill nearest with one node
     NodeIPEndpoint neighbourEndpoint{boost::asio::ip::address::from_string("200.200.200.200"),
         c_defaultListenPort, c_defaultListenPort};
-    vector<shared_ptr<NodeEntry>> nearest{make_shared<NodeEntry>(nodeTable->m_hostNodeID,
-        KeyPair::create().pub(), neighbourEndpoint, RLPXDatagramFace::secondsSinceEpoch(), 0)};
-    Neighbours neighbours(nodeTable->m_hostNodeEndpoint, nearest);
+    vector<shared_ptr<NodeEntry>> nearest{
+        make_shared<NodeEntry>(nodeTable->m_hostNodeID, KeyPair::create().pub(), neighbourEndpoint,
+            RLPXDatagramFace::secondsSinceEpoch(), 0 /* pongSentTime */)};
+    Neighbours neighbours{nodeTable->m_hostNodeEndpoint, nearest};
     neighbours.sign(nodeKeyPair.secret());
     nodeSocketHost2.socket->send(neighbours);
 
     // Wait for Neighbours to be received
-    nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto neighboursDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto neighboursDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(neighboursDataReceived));
+    BOOST_REQUIRE_EQUAL(neighboursDatagram->typeName(), "Neighbours");
 
     // no Ping is sent to neighbour
     auto sentPing = nodeTable->nodeValidation(neighbourEndpoint);

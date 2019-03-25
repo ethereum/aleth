@@ -499,7 +499,6 @@ void NodeTable::onPacketReceived(
                 // create or update nodeEntry with new Pong received time
                 DEV_GUARDED(x_nodes)
                 {
-                    auto const& sourceId = pong.sourceid;
                     auto it = m_allNodes.find(sourceId);
                     if (it == m_allNodes.end())
                         sourceNodeEntry = make_shared<NodeEntry>(m_hostNodeID, sourceId,
@@ -541,7 +540,8 @@ void NodeTable::onPacketReceived(
                 }
                 if (sourceNodeEntry->endpoint != _from)
                 {
-                    LOG(m_logger) << "Neighbours packet from unexpected endpoint.";
+                    LOG(m_logger) << "Neighbours packet from unexpected endpoint " << _from
+                                  << " instead of " << sourceNodeEntry->endpoint;
                     return;
                 }
 
@@ -579,7 +579,8 @@ void NodeTable::onPacketReceived(
                 }
                 if (sourceNodeEntry->endpoint != _from)
                 {
-                    LOG(m_logger) << "FindNode packet from unexpected endpoint.";
+                    LOG(m_logger) << "FindNode packet from unexpected endpoint " << _from
+                                  << " instead of " << sourceNodeEntry->endpoint;
                     return;
                 }
                 if (!sourceNodeEntry->lastPongReceivedTime)
