@@ -307,7 +307,7 @@ private:
     void startCapabilities();
 
     /// Schedule's a capability's work loop on the network thread
-    void scheduleCapabilityWorkLoop(CapabilityFace* _cap, std::shared_ptr<ba::steady_timer> _timer);
+    void scheduleCapabilityWorkLoop(CapabilityFace& _cap, std::shared_ptr<ba::steady_timer> _timer);
 
     /// Stop registered capabilities, typically done when the network is being shut down.
     void stopCapabilities();

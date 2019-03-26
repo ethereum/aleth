@@ -156,27 +156,27 @@ void Host::startCapabilities()
 {
     for (auto const& itCap : m_capabilities)
     {
-        scheduleCapabilityWorkLoop(itCap.second.capability.get(), itCap.second.backgroundWorkTimer);
+        scheduleCapabilityWorkLoop(*itCap.second.capability, itCap.second.backgroundWorkTimer);
     }
 }
 
-void Host::scheduleCapabilityWorkLoop(CapabilityFace* _cap, shared_ptr<ba::steady_timer> _timer)
+void Host::scheduleCapabilityWorkLoop(CapabilityFace& _cap, shared_ptr<ba::steady_timer> _timer)
 {
-    _timer->expires_from_now(_cap->backgroundWorkInterval());
-    _timer->async_wait([this, _timer, _cap](boost::system::error_code _ec) {
+    _timer->expires_from_now(_cap.backgroundWorkInterval());
+    _timer->async_wait([this, _timer, &_cap](boost::system::error_code _ec) {
         if (_timer->expires_at() == c_steadyClockMin ||
             _ec == boost::asio::error::operation_aborted)
         {
-            LOG(m_logger) << "Timer was probably cancelled for capability: " << _cap->descriptor();
+            LOG(m_logger) << "Timer was probably cancelled for capability: " << _cap.descriptor();
             return;
         }
         else if (_ec)
         {
-            LOG(m_logger) << "Timer error detected for capability: " << _cap->descriptor();
+            LOG(m_logger) << "Timer error detected for capability: " << _cap.descriptor();
             return;
         }
 
-        _cap->doBackgroundWork();
+        _cap.doBackgroundWork();
         scheduleCapabilityWorkLoop(_cap, move(_timer));
     });
 }
