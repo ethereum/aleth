@@ -39,43 +39,117 @@ namespace evmc
 {
 namespace host
 {
-class host : public evmc_context  // FIXME: Make private?
+class host : public evmc_context
 {
-protected:
-    explicit host(const evmc_host_interface* vtable) noexcept : evmc_context{vtable} {}
-
 public:
+    constexpr host() noexcept;
+
     virtual ~host() noexcept = default;
 
-    virtual bool account_exists(const evmc_address& address) noexcept = 0;
+    virtual bool account_exists(const evmc_address& addr) noexcept = 0;
 
     virtual evmc_bytes32 get_storage(
-        const evmc_address& _addr, const evmc_bytes32& _key) noexcept = 0;
+        const evmc_address& addr, const evmc_bytes32& key) noexcept = 0;
 
-    virtual evmc_storage_status set_storage(evmc_address const& _addr, evmc_bytes32 const& _key,
-        evmc_bytes32 const& _value) noexcept = 0;
+    virtual evmc_storage_status set_storage(
+        const evmc_address& addr, const evmc_bytes32& key, const evmc_bytes32& value) noexcept = 0;
 
-    virtual evmc_uint256be get_balance(const evmc_address& _addr) noexcept = 0;
+    virtual evmc_uint256be get_balance(const evmc_address& addr) noexcept = 0;
 
-    virtual size_t get_code_size(const evmc_address& _addr) noexcept = 0;
+    virtual size_t get_code_size(const evmc_address& addr) noexcept = 0;
 
-    virtual evmc_bytes32 get_code_hash(const evmc_address& _addr) noexcept = 0;
+    virtual evmc_bytes32 get_code_hash(const evmc_address& addr) noexcept = 0;
 
-    virtual size_t copy_code(evmc_address const& _addr, size_t _codeOffset, byte* _bufferData,
-        size_t _bufferSize) noexcept = 0;
+    virtual size_t copy_code(const evmc_address& addr, size_t code_offset, byte* buffer_data,
+        size_t buffer_size) noexcept = 0;
 
     virtual void selfdestruct(
-        evmc_address const& _addr, evmc_address const& _beneficiary) noexcept = 0;
+        const evmc_address& addr, const evmc_address& beneficiary) noexcept = 0;
 
-    virtual evmc_result call(evmc_message const& _msg) noexcept = 0;
+    virtual evmc_result call(const evmc_message& msg) noexcept = 0;
 
     virtual evmc_tx_context get_tx_context() noexcept = 0;
 
-    virtual evmc_bytes32 get_block_hash(int64_t _number) noexcept = 0;
+    virtual evmc_bytes32 get_block_hash(int64_t block_number) noexcept = 0;
 
-    virtual void emit_log(evmc_address const& _addr, uint8_t const* _data, size_t _dataSize,
-        evmc_uint256be const _topics[], size_t _numTopics) noexcept = 0;
+    virtual void emit_log(const evmc_address& addr, const uint8_t* _data, size_t _dataSize,
+        const evmc_bytes32 topics[], size_t num_topics) noexcept = 0;
 };
+
+namespace internal
+{
+inline bool account_exists(evmc_context* h, const evmc_address* _addr) noexcept
+{
+    return static_cast<host*>(h)->account_exists(*_addr);
+}
+inline evmc_bytes32 get_storage(
+    evmc_context* h, const evmc_address* _addr, evmc_bytes32 const* _key) noexcept
+{
+    return static_cast<host*>(h)->get_storage(*_addr, *_key);
+}
+inline evmc_storage_status set_storage(evmc_context* h, const evmc_address* _addr,
+    evmc_bytes32 const* _key, evmc_bytes32 const* _value) noexcept
+{
+    return static_cast<host*>(h)->set_storage(*_addr, *_key, *_value);
+}
+inline evmc_uint256be get_balance(evmc_context* h, const evmc_address* _addr) noexcept
+{
+    return static_cast<host*>(h)->get_balance(*_addr);
+}
+inline size_t get_code_size(evmc_context* h, const evmc_address* _addr) noexcept
+{
+    return static_cast<host*>(h)->get_code_size(*_addr);
+}
+inline evmc_bytes32 get_code_hash(evmc_context* h, const evmc_address* _addr) noexcept
+{
+    return static_cast<host*>(h)->get_code_hash(*_addr);
+}
+inline size_t copy_code(evmc_context* h, const evmc_address* _addr, size_t _codeOffset,
+    byte* _bufferData, size_t _bufferSize) noexcept
+{
+    return static_cast<host*>(h)->copy_code(*_addr, _codeOffset, _bufferData, _bufferSize);
+}
+inline void selfdestruct(
+    evmc_context* h, const evmc_address* _addr, const evmc_address* _beneficiary) noexcept
+{
+    static_cast<host*>(h)->selfdestruct(*_addr, *_beneficiary);
+}
+inline evmc_result call(evmc_context* h, evmc_message const* _msg) noexcept
+{
+    return static_cast<host*>(h)->call(*_msg);
+}
+inline evmc_tx_context get_tx_context(evmc_context* h) noexcept
+{
+    return static_cast<host*>(h)->get_tx_context();
+}
+inline evmc_bytes32 get_block_hash(evmc_context* h, int64_t _number) noexcept
+{
+    return static_cast<host*>(h)->get_block_hash(_number);
+}
+inline void emit_log(evmc_context* h, const evmc_address* _addr, uint8_t const* _data,
+    size_t _dataSize, evmc_uint256be const _topics[], size_t _numTopics) noexcept
+{
+    static_cast<host*>(h)->emit_log(*_addr, _data, _dataSize, _topics, _numTopics);
+}
+
+constexpr evmc_host_interface interface{
+    account_exists,
+    get_storage,
+    set_storage,
+    get_balance,
+    get_code_size,
+    get_code_hash,
+    copy_code,
+    selfdestruct,
+    call,
+    get_tx_context,
+    get_block_hash,
+    emit_log,
+};
+}  // namespace internal
+
+constexpr host::host() noexcept : evmc_context{&internal::interface} {}
+
 }  // namespace host
 }  // namespace evmc
 

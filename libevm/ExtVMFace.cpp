@@ -244,67 +244,10 @@ evmc_result ExtVMFace::call(evmc_message const& _msg) noexcept
     return evmcResult;
 }
 
-static evmc_host_interface const hostInterface = {
-    [](evmc_context * _context, evmc_address const* _addr) noexcept {
-        return static_cast<evmc::host::host*>(_context)->account_exists(*_addr);
-}  // namespace eth
-, [](evmc_context* _context, evmc_address const* _addr, evmc_bytes32 const* _key) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->get_storage(*_addr, *_key);
-}
-, [](evmc_context* _context, evmc_address const* _addr, evmc_bytes32 const* _key,
-      evmc_bytes32 const* _value) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->set_storage(*_addr, *_key, *_value);
-}
-, [](evmc_context* _context, evmc_address const* _addr) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->get_balance(*_addr);
-}
-, [](evmc_context* _context, evmc_address const* _addr) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->get_code_size(*_addr);
-}
-, [](evmc_context* _context, evmc_address const* _addr) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->get_code_hash(*_addr);
-}
-, [](evmc_context* _context, evmc_address const* _addr, size_t _codeOffset, byte* _bufferData,
-      size_t _bufferSize) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->copy_code(
-        *_addr, _codeOffset, _bufferData, _bufferSize);
-}
-, [](evmc_context* _context, evmc_address const* _addr, evmc_address const* _beneficiary) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->selfdestruct(*_addr, *_beneficiary);
-}
-, [](evmc_context* _context, evmc_message const* _msg) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->call(*_msg);
-}
-, [](evmc_context* _context) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->get_tx_context();
-}
-, [](evmc_context* _context, int64_t _number) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->get_block_hash(_number);
-}
-, [](evmc_context* _context, evmc_address const* _addr, uint8_t const* _data, size_t _dataSize,
-      evmc_uint256be const _topics[], size_t _numTopics) noexcept
-{
-    return static_cast<evmc::host::host*>(_context)->emit_log(
-        *_addr, _data, _dataSize, _topics, _numTopics);
-}
-,
-};
-
 ExtVMFace::ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin,
     u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash,
     unsigned _depth, bool _isCreate, bool _staticCall)
-  : host{&hostInterface},
-    m_envInfo(_envInfo),
+  : m_envInfo(_envInfo),
     myAddress(_myAddress),
     caller(_caller),
     origin(_origin),
