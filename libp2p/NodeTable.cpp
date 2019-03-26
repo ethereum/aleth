@@ -83,7 +83,7 @@ bool NodeTable::addNode(Node const& _node)
     DEV_GUARDED(x_nodes)
     {
         auto const it = m_allNodes.find(_node.id);
-        needToPing = (it == m_allNodes.end() || it->second->endpoint != _node.endpoint ||
+        needToPing = (it == m_allNodes.end() || it->second->endpoint() != _node.endpoint ||
                       !it->second->hasValidEndpointProof());
     }
 
@@ -365,7 +365,7 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry)
         LOG(m_logger) << "Skipping making self active.";
         return;
     }
-    if (!isAllowedEndpoint(_nodeEntry->endpoint))
+    if (!isAllowedEndpoint(_nodeEntry->endpoint()))
     {
         LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node "
                       << _nodeEntry->node;
@@ -375,7 +375,7 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry)
     if (!_nodeEntry->hasValidEndpointProof())
         return;
 
-    LOG(m_logger) << "Active node " << *_nodeEntry;
+    LOG(m_logger) << "Active node " << _nodeEntry->node;
 
     shared_ptr<NodeEntry> nodeToEvict;
     {
@@ -510,8 +510,8 @@ void NodeTable::onPacketReceived(
                         sourceNodeEntry->lastPongReceivedTime =
                             RLPXDatagramFace::secondsSinceEpoch();
 
-                        if (sourceNodeEntry->endpoint != _from)
-                            sourceNodeEntry->endpoint = NodeIPEndpoint{
+                        if (sourceNodeEntry->endpoint() != _from)
+                            sourceNodeEntry->node.endpoint = NodeIPEndpoint{
                                 _from.address(), _from.port(), nodeValidation.tcpPort};
                     }
                 }
@@ -538,10 +538,10 @@ void NodeTable::onPacketReceived(
                                   << ") not found in node table. Ignoring Neighbours packet.";
                     return;
                 }
-                if (sourceNodeEntry->endpoint != _from)
+                if (sourceNodeEntry->endpoint() != _from)
                 {
                     LOG(m_logger) << "Neighbours packet from unexpected endpoint " << _from
-                                  << " instead of " << sourceNodeEntry->endpoint;
+                                  << " instead of " << sourceNodeEntry->endpoint();
                     return;
                 }
 
@@ -577,10 +577,10 @@ void NodeTable::onPacketReceived(
                                   << ") not found in node table. Ignoring FindNode request.";
                     return;
                 }
-                if (sourceNodeEntry->endpoint != _from)
+                if (sourceNodeEntry->endpoint() != _from)
                 {
                     LOG(m_logger) << "FindNode packet from unexpected endpoint " << _from
-                                  << " instead of " << sourceNodeEntry->endpoint;
+                                  << " instead of " << sourceNodeEntry->endpoint();
                     return;
                 }
                 if (!sourceNodeEntry->lastPongReceivedTime)
@@ -723,7 +723,7 @@ void NodeTable::doHandleTimeouts()
 
         // activate replacement nodes and put them into buckets
         for (auto const& n : nodesToActivate)
-
+            noteActiveNode(n);
 
         doHandleTimeouts();
     });

@@ -1230,7 +1230,7 @@ BOOST_AUTO_TEST_CASE(addNode)
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
     BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
 
-    BOOST_REQUIRE_EQUAL(nodeEntry->endpoint, nodeEndpoint2);
+    BOOST_REQUIRE_EQUAL(nodeEntry->endpoint(), nodeEndpoint2);
 }
 
 BOOST_AUTO_TEST_CASE(findNode)
