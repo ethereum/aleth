@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #pragma once
 
@@ -103,10 +90,9 @@ public:
 
     std::string name() const override { return "eth"; }
     unsigned version() const override { return c_protocolVersion; }
+    p2p::CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return PacketCount; }
-
-    void onStarting() override;
-    void onStopping() override;
+    std::chrono::milliseconds backgroundWorkInterval() const override;
 
     unsigned protocolVersion() const { return c_protocolVersion; }
     u256 networkId() const { return m_networkId; }
@@ -128,13 +114,17 @@ public:
     BlockQueue const& bq() const { return m_bq; }
     SyncStatus status() const;
 
-    static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
+    static char const* stateName(SyncState _s) { return c_stateNames[static_cast<int>(_s)]; }
 
     static unsigned const c_oldProtocolVersion;
 
     void onConnect(NodeID const& _nodeID, u256 const& _peerCapabilityVersion) override;
     void onDisconnect(NodeID const& _nodeID) override;
     bool interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const& _r) override;
+
+    /// Main work loop - sends new transactions and blocks to available peers and disconnects from
+    /// timed out peers
+    void doBackgroundWork() override;
 
     p2p::CapabilityHostFace& capabilityHost() { return *m_host; }
 
@@ -143,7 +133,8 @@ public:
     void disablePeer(NodeID const& _peerID, std::string const& _problem);
 
 private:
-    static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
+    static char const* const c_stateNames[static_cast<int>(SyncState::Size)];
+    static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
 
     std::vector<NodeID> selectPeers(
         std::function<bool(EthereumPeer const&)> const& _predicate) const;
@@ -151,8 +142,7 @@ private:
     std::pair<std::vector<NodeID>, std::vector<NodeID>> randomPartitionPeers(
         std::vector<NodeID> const& _peers, std::size_t _number) const;
 
-    void doBackgroundWork();
-
+    /// Send top transactions (by nonce and gas price) to available peers
     void maintainTransactions();
     void maintainBlocks(h256 const& _currentBlock);
     void onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId);
@@ -191,8 +181,6 @@ private:
     std::unique_ptr<EthereumPeerObserverFace> m_peerObserver;
 
     std::unordered_map<NodeID, EthereumPeer> m_peers;
-
-    std::atomic<bool> m_backgroundWorkEnabled = {false};
 
     mutable std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
 

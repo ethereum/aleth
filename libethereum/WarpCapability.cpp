@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "WarpCapability.h"
 #include "BlockChain.h"
@@ -26,10 +13,12 @@ namespace dev
 {
 namespace eth
 {
+
+std::chrono::milliseconds constexpr WarpCapability::c_backgroundWorkInterval;
+
 namespace
 {
 static size_t const c_freePeerBufferSize = 32;
-static int const c_backroundWorkPeriodMs = 1000;
 
 bool validateManifest(RLP const& _manifestRlp)
 {
@@ -323,38 +312,15 @@ WarpCapability::WarpCapability(std::shared_ptr<p2p::CapabilityHostFace> _host,
 {
 }
 
-void WarpCapability::onStarting()
+std::chrono::milliseconds WarpCapability::backgroundWorkInterval() const
 {
-    m_backgroundWorkEnabled = true;
-    m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
-}
-
-void WarpCapability::onStopping()
-{
-    m_backgroundWorkEnabled = false;
+    return c_backgroundWorkInterval;
 }
 
 std::shared_ptr<WarpPeerObserverFace> WarpCapability::createPeerObserver(
     boost::filesystem::path const& _snapshotDownloadPath)
 {
     return std::make_shared<WarpPeerObserver>(*this, m_blockChain, _snapshotDownloadPath);
-}
-
-void WarpCapability::doBackgroundWork()
-{
-    for (auto const& peer : m_peers)
-    {
-        time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        auto const& status = peer.second;
-        if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
-        {
-            // timeout
-            m_host->disconnect(peer.first, p2p::PingTimeout);
-        }
-    }
-
-    if (m_backgroundWorkEnabled)
-        m_host->scheduleExecution(c_backroundWorkPeriodMs, [this]() { doBackgroundWork(); });
 }
 
 void WarpCapability::onConnect(NodeID const& _peerID, u256 const& /* _peerCapabilityVersion */)
@@ -487,6 +453,19 @@ void WarpCapability::onDisconnect(NodeID const& _peerID)
     m_peers.erase(_peerID);
 }
 
+void WarpCapability::doBackgroundWork()
+{
+    for (auto const& peer : m_peers)
+    {
+        time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        auto const& status = peer.second;
+        if (now - status.m_lastAsk > 10 && status.m_asking != Asking::Nothing)
+        {
+            // timeout
+            m_host->disconnect(peer.first, p2p::PingTimeout);
+        }
+    }
+}
 
 void WarpCapability::requestStatus(NodeID const& _peerID, unsigned _hostProtocolVersion,
     u256 const& _hostNetworkId, u256 const& _chainTotalDifficulty, h256 const& _chainCurrentHash,

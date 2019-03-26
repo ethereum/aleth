@@ -231,11 +231,21 @@ public:
     void forEachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
 
-    void scheduleExecution(int _delayMs, std::function<void()> _f);
+    /// Execute work on the network thread
+    void postWork(std::function<void()> _f) { m_ioService.post(_f); }
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
 protected:
+    /*
+     * Used by the host to run a capability's background work loop
+     */
+    struct CapabilityRuntime
+    {
+        std::shared_ptr<CapabilityFace> capability;
+        std::shared_ptr<ba::steady_timer> backgroundWorkTimer;
+    };
+
     void onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e);
 
     /// Deserialise the data and populate the set of known peers.
@@ -293,6 +303,15 @@ private:
         return dev::p2p::isAllowedEndpoint(m_netConfig.allowLocalDiscovery, _endpointToCheck);
     }
 
+    /// Start registered capabilities, typically done on network start
+    void startCapabilities();
+
+    /// Schedule's a capability's work loop on the network thread
+    void scheduleCapabilityWorkLoop(CapabilityFace& _cap, std::shared_ptr<ba::steady_timer> _timer);
+
+    /// Stop registered capabilities, typically done when the network is being shut down.
+    void stopCapabilities();
+
     bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
     std::atomic<bool> m_run{false};													///< Whether network is running.
@@ -310,7 +329,7 @@ private:
     bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
     /// Timer which, when network is running, calls run() every c_timerInterval ms.
-    io::deadline_timer m_runTimer;
+    ba::steady_timer m_runTimer;
 
     std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
 
@@ -338,12 +357,9 @@ private:
     unsigned m_idealPeerCount = 11;										///< Ideal number of peers to be connected to.
     unsigned m_stretchPeers = 7;										///< Accepted connection multiplier (max peers = ideal*stretch).
 
-    /// Each of the capabilities we support.
-    std::map<CapDesc, std::shared_ptr<CapabilityFace>> m_capabilities;
-
-    /// Deadline timers used for isolated network events. GC'd by run.
-    std::list<std::unique_ptr<io::deadline_timer>> m_networkTimers;
-    Mutex x_networkTimers;
+    /// Each of the capabilities we support. CapabilityRuntime is used to run a capability's
+    /// background work loop
+    std::map<CapDesc, CapabilityRuntime> m_capabilities;
 
     std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
     bool m_accepting = false;

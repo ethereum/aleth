@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #pragma once
 
@@ -88,16 +75,17 @@ public:
 
     std::string name() const override { return "par"; }
     unsigned version() const override { return c_WarpProtocolVersion; }
+    p2p::CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return WarpSubprotocolPacketCount; }
-
-    void onStarting() override;
-    void onStopping() override;
+    std::chrono::milliseconds backgroundWorkInterval() const override;
 
     u256 networkId() const { return m_networkId; }
 
     void onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion) override;
     bool interpretCapabilityPacket(NodeID const& _peerID, unsigned _id, RLP const&) override;
     void onDisconnect(NodeID const& _peerID) override;
+
+    void doBackgroundWork() override;
 
     p2p::CapabilityHostFace& capabilityHost() { return *m_host; }
 
@@ -117,10 +105,10 @@ public:
     void disablePeer(NodeID const& _peerID, std::string const& _problem);
 
 private:
+    static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
+
     std::shared_ptr<WarpPeerObserverFace> createPeerObserver(
         boost::filesystem::path const& _snapshotDownloadPath);
-
-    void doBackgroundWork();
 
     void setAsking(NodeID const& _peerID, Asking _a);
 
@@ -135,8 +123,6 @@ private:
     std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
 
     std::unordered_map<NodeID, WarpPeerStatus> m_peers;
-
-    std::atomic<bool> m_backgroundWorkEnabled = {false};
 };
 
 }  // namespace eth

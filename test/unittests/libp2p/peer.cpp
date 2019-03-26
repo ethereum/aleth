@@ -1,24 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file peer.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * Peer Network test functions.
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include <libp2p/Capability.h>
 #include <libp2p/Host.h>
@@ -36,12 +18,15 @@ using namespace dev::p2p;
 class TestCap : public CapabilityFace, public Worker
 {
 public:
-    std::string name() const override { return "p2pTestCapability"; }
+    string name() const override { return "p2pTestCapability"; }
     unsigned version() const override { return 2; }
+    CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return UserPacket + 1; }
 
-    void onStarting() override {}
-    void onStopping() override {}
+    chrono::milliseconds backgroundWorkInterval() const override
+    {
+        return c_backgroundWorkInterval;
+    }
 
     void onConnect(NodeID const&, u256 const&) override {}
     bool interpretCapabilityPacket(NodeID const&, unsigned _id, RLP const& _r) override
@@ -49,7 +34,12 @@ public:
         return _id > 0 || _r.size() > 0;
     }
     void onDisconnect(NodeID const&) override {}
+    void doBackgroundWork() override {}
+
+    static chrono::milliseconds constexpr c_backgroundWorkInterval{1000};
 };
+
+chrono::milliseconds constexpr TestCap::c_backgroundWorkInterval;
 
 BOOST_AUTO_TEST_SUITE(libp2p)
 BOOST_FIXTURE_TEST_SUITE(p2p, TestOutputHelperFixture)
@@ -153,11 +143,11 @@ BOOST_AUTO_TEST_CASE(registerCapabilityAfterNetworkStart)
 
 BOOST_AUTO_TEST_CASE(saveNodes)
 {
-    std::list<Host*> hosts;
+    list<Host*> hosts;
     unsigned const c_step = 10;
     unsigned const c_nodes = 6;
     unsigned const c_peers = c_nodes - 1;
-    std::set<short unsigned> ports;
+    set<short unsigned> ports;
 
     for (unsigned i = 0; i < c_nodes; ++i)
     {
@@ -323,8 +313,8 @@ BOOST_AUTO_TEST_CASE(emptySharedPeer)
 {
     shared_ptr<Peer> p;
     BOOST_REQUIRE(!p);
-    
-    std::map<NodeID, std::shared_ptr<Peer>> peers;
+
+    map<NodeID, shared_ptr<Peer>> peers;
     p = peers[NodeID()];
     BOOST_REQUIRE(!p);
     

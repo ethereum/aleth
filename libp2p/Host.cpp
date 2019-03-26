@@ -27,13 +27,13 @@ using namespace dev::p2p;
 namespace
 {
 /// Interval at which Host::run will call keepAlivePeers to ping peers.
-constexpr chrono::seconds c_keepAliveInterval = chrono::seconds(30);
+constexpr chrono::seconds c_keepAliveInterval{30};
 
 /// Disconnect timeout after failure to respond to keepAlivePeers ping.
-constexpr chrono::seconds c_keepAliveTimeOut = chrono::seconds(1);
+constexpr chrono::seconds c_keepAliveTimeOut{1};
 
 /// Interval which m_runTimer is run when network is connected.
-constexpr unsigned int c_runTimerIntervalMs = 100;
+constexpr chrono::milliseconds c_runTimerInterval{100};
 }  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}
@@ -152,6 +152,44 @@ void Host::stop()
         stopWorking();
 }
 
+void Host::startCapabilities()
+{
+    for (auto const& itCap : m_capabilities)
+    {
+        scheduleCapabilityWorkLoop(*itCap.second.capability, itCap.second.backgroundWorkTimer);
+    }
+}
+
+void Host::scheduleCapabilityWorkLoop(CapabilityFace& _cap, shared_ptr<ba::steady_timer> _timer)
+{
+    _timer->expires_from_now(_cap.backgroundWorkInterval());
+    _timer->async_wait([this, _timer, &_cap](boost::system::error_code _ec) {
+        if (_timer->expires_at() == c_steadyClockMin ||
+            _ec == boost::asio::error::operation_aborted)
+        {
+            LOG(m_logger) << "Timer was probably cancelled for capability: " << _cap.descriptor();
+            return;
+        }
+        else if (_ec)
+        {
+            LOG(m_logger) << "Timer error detected for capability: " << _cap.descriptor();
+            return;
+        }
+
+        _cap.doBackgroundWork();
+        scheduleCapabilityWorkLoop(_cap, move(_timer));
+    });
+}
+
+void Host::stopCapabilities()
+{
+    for (auto const& itCap : m_capabilities)
+    {
+        auto timer = itCap.second.backgroundWorkTimer;
+        m_ioService.post([timer] { timer->expires_at(c_steadyClockMin); });
+    }
+}
+
 void Host::doneWorking()
 {
     // Return early if we have no capabilities since there's nothing to do. We've already stopped
@@ -159,13 +197,8 @@ void Host::doneWorking()
     if (!haveCapabilities())
         return;
 
-    // reset ioservice (cancels all timers and allows manually polling network, below)
+    // reset ioservice (allows manually polling network, below)
     m_ioService.reset();
-
-    DEV_GUARDED(x_networkTimers)
-    {
-        m_networkTimers.clear();
-    }
 
     // shutdown acceptor
     m_tcp4Acceptor.cancel();
@@ -179,9 +212,10 @@ void Host::doneWorking()
     while (m_accepting)
         m_ioService.poll();
 
-    // stop capabilities (eth: stops syncing or block/tx broadcast)
-    for (auto const& h: m_capabilities)
-        h.second->onStopping();
+    // (eth: stops syncing or block / tx broadcast). Poll the io service so we can process
+    // capability cancellations
+    stopCapabilities();
+    m_ioService.poll();
 
     // disconnect pending handshake, before peers, as a handshake may create a peer
     for (unsigned n = 0;; n = 0)
@@ -325,7 +359,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
             if (itCap == m_capabilities.end())
                 return session->disconnect(IncompatibleProtocol);
 
-            auto capability = itCap->second;
+            auto capability = itCap->second.capability;
             session->registerCapability(capDesc, offset, capability);
 
             cnetlog << "New session for capability " << capDesc.first << "; idOffset: " << offset;
@@ -490,7 +524,7 @@ void Host::registerCapability(
         cwarn << "Capabilities must be registered before the network is started";
         return;
     }
-    m_capabilities[{_name, _version}] = _cap;
+    m_capabilities[{_name, _version}] = {_cap, make_shared<ba::steady_timer>(m_ioService)};
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)
@@ -684,12 +718,6 @@ void Host::run(boost::system::error_code const& _ec)
     // cleanup zombies
     DEV_GUARDED(x_connecting)
         m_connecting.remove_if([](weak_ptr<RLPXHandshake> h){ return h.expired(); });
-    DEV_GUARDED(x_networkTimers)
-    {
-        m_networkTimers.remove_if([](unique_ptr<io::deadline_timer> const& t) {
-            return t->expires_from_now().total_milliseconds() < 0;
-        });
-    }
 
     keepAlivePeers();
 
@@ -739,7 +767,7 @@ void Host::run(boost::system::error_code const& _ec)
         return;
 
     auto runcb = [this](boost::system::error_code const& error) { run(error); };
-    m_runTimer.expires_from_now(boost::posix_time::milliseconds(c_runTimerIntervalMs));
+    m_runTimer.expires_from_now(c_runTimerInterval);
     m_runTimer.async_wait(runcb);
 }
 
@@ -747,12 +775,10 @@ void Host::run(boost::system::error_code const& _ec)
 // initialization (e.g. start capability threads, start TCP listener, and kick off timers)
 void Host::startedWorking()
 {
-    // start capability threads (ready for incoming connections)
-    for (auto const& h: m_capabilities)
-        h.second->onStarting();
-    
     if (haveCapabilities())
     {
+        startCapabilities();
+
         // try to open acceptor (todo: ipv6)
         int port = Network::tcp4Listen(m_tcp4Acceptor, m_netConfig);
         if (port > 0)
@@ -1032,13 +1058,3 @@ void Host::forEachPeer(
             return;
 }
 
-void Host::scheduleExecution(int _delayMs, function<void()> _f)
-{
-    unique_ptr<io::deadline_timer> t(new io::deadline_timer(m_ioService));
-    t->expires_from_now(boost::posix_time::milliseconds(_delayMs));
-    t->async_wait([_f](boost::system::error_code const& _ec) {
-        if (!_ec)
-            _f();
-    });
-    DEV_GUARDED(x_networkTimers) { m_networkTimers.emplace_back(move(t)); }
-}
