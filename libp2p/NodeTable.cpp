@@ -83,7 +83,8 @@ bool NodeTable::addNode(Node const& _node)
     DEV_GUARDED(x_nodes)
     {
         auto const it = m_allNodes.find(_node.id);
-        needToPing = (it == m_allNodes.end() || !it->second->hasValidEndpointProof());
+        needToPing = (it == m_allNodes.end() || it->second->endpoint() != _node.endpoint ||
+                      !it->second->hasValidEndpointProof());
     }
 
     if (needToPing)
@@ -115,7 +116,7 @@ bool NodeTable::addKnownNode(
     if (entry->hasValidEndpointProof())
     {
         LOG(m_logger) << "Known " << _node;
-        noteActiveNode(move(entry), _node.endpoint);
+        noteActiveNode(move(entry));
     }
     else
     {
@@ -355,7 +356,7 @@ void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replac
         m_nodeEventHandler->appendEvent(_leastSeen.id(), NodeEntryScheduledForEviction);
 }
 
-void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoint const& _endpoint)
+void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry)
 {
     assert(_nodeEntry);
 
@@ -364,7 +365,7 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
         LOG(m_logger) << "Skipping making self active.";
         return;
     }
-    if (!isAllowedEndpoint(NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port())))
+    if (!isAllowedEndpoint(_nodeEntry->endpoint()))
     {
         LOG(m_logger) << "Skipping making node with unallowed endpoint active. Node "
                       << _nodeEntry->node;
@@ -375,10 +376,6 @@ void NodeTable::noteActiveNode(shared_ptr<NodeEntry> _nodeEntry, bi::udp::endpoi
         return;
 
     LOG(m_logger) << "Active node " << _nodeEntry->node;
-    // TODO: don't activate in case endpoint has changed
-    _nodeEntry->node.endpoint.setAddress(_endpoint.address());
-    _nodeEntry->node.endpoint.setUdpPort(_endpoint.port());
-
 
     shared_ptr<NodeEntry> nodeToEvict;
     {
@@ -512,6 +509,10 @@ void NodeTable::onPacketReceived(
                         sourceNodeEntry = it->second;
                         sourceNodeEntry->lastPongReceivedTime =
                             RLPXDatagramFace::secondsSinceEpoch();
+
+                        if (sourceNodeEntry->endpoint() != _from)
+                            sourceNodeEntry->node.endpoint = NodeIPEndpoint{
+                                _from.address(), _from.port(), nodeValidation.tcpPort};
                     }
                 }
 
@@ -535,6 +536,12 @@ void NodeTable::onPacketReceived(
                 {
                     LOG(m_logger) << "Source node (" << packet->sourceid << "@" << _from
                                   << ") not found in node table. Ignoring Neighbours packet.";
+                    return;
+                }
+                if (sourceNodeEntry->endpoint() != _from)
+                {
+                    LOG(m_logger) << "Neighbours packet from unexpected endpoint " << _from
+                                  << " instead of " << sourceNodeEntry->endpoint();
                     return;
                 }
 
@@ -568,6 +575,12 @@ void NodeTable::onPacketReceived(
                 {
                     LOG(m_logger) << "Source node (" << packet->sourceid << "@" << _from
                                   << ") not found in node table. Ignoring FindNode request.";
+                    return;
+                }
+                if (sourceNodeEntry->endpoint() != _from)
+                {
+                    LOG(m_logger) << "FindNode packet from unexpected endpoint " << _from
+                                  << " instead of " << sourceNodeEntry->endpoint();
                     return;
                 }
                 if (!sourceNodeEntry->lastPongReceivedTime)
@@ -626,7 +639,7 @@ void NodeTable::onPacketReceived(
         }
 
         if (sourceNodeEntry)
-            noteActiveNode(move(sourceNodeEntry), _from);
+            noteActiveNode(move(sourceNodeEntry));
     }
     catch (exception const& _e)
     {
@@ -710,7 +723,7 @@ void NodeTable::doHandleTimeouts()
 
         // activate replacement nodes and put them into buckets
         for (auto const& n : nodesToActivate)
-            noteActiveNode(n, n->endpoint());
+            noteActiveNode(n);
 
         doHandleTimeouts();
     });
