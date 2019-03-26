@@ -70,20 +70,19 @@ ChainParams ChainParams::loadConfig(
 
     // Params that are not required and could be set to default value
     if (params.count(c_accountStartNonce))
-        cp.accountStartNonce =
-            u256(fromBigEndian<u256>(fromHex(params[c_accountStartNonce].get_str())));
+        cp.accountStartNonce = fromBigEndian<u256>(fromHex(params[c_accountStartNonce].get_str()));
     if (params.count(c_maximumExtraDataSize))
         cp.maximumExtraDataSize =
-            u256(fromBigEndian<u256>(fromHex(params[c_maximumExtraDataSize].get_str())));
+            fromBigEndian<u256>(fromHex(params[c_maximumExtraDataSize].get_str()));
 
     cp.tieBreakingGas = params.count(c_tieBreakingGas) ? params[c_tieBreakingGas].get_bool() : true;
     if (params.count(c_blockReward))
-        cp.setBlockReward(u256(fromBigEndian<u256>(fromHex(params[c_blockReward].get_str()))));
+        cp.setBlockReward(fromBigEndian<u256>(fromHex(params[c_blockReward].get_str())));
 
     auto setOptionalU256Parameter = [&params](u256 &_destination, string const& _name)
     {
         if (params.count(_name))
-            _destination = u256(fromBigEndian<u256>(fromHex(params.at(_name).get_str())));
+            _destination = fromBigEndian<u256>(fromHex(params.at(_name).get_str()));
     };
     setOptionalU256Parameter(cp.minGasLimit, c_minGasLimit);
     setOptionalU256Parameter(cp.maxGasLimit, c_maxGasLimit);
@@ -102,9 +101,9 @@ ChainParams ChainParams::loadConfig(
     setOptionalU256Parameter(cp.durationLimit, c_durationLimit);
 
     if (params.count(c_chainID))
-        cp.chainID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_chainID).get_str()))));
+        cp.chainID = int(fromBigEndian<u256>(fromHex(params.at(c_chainID).get_str())));
     if (params.count(c_networkID))
-        cp.networkID = int(u256(fromBigEndian<u256>(fromHex(params.at(c_networkID).get_str()))));
+        cp.networkID = int(fromBigEndian<u256>(fromHex(params.at(c_networkID).get_str())));
     cp.allowFutureBlocks = params.count(c_allowFutureBlocks);
 
     // genesis
