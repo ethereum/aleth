@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file Common.h
  * @author Alex Leverington <nessence@gmail.com>
@@ -45,17 +45,17 @@ using Signature = h520;
 
 struct SignatureStruct
 {
-	SignatureStruct() = default;
-	SignatureStruct(Signature const& _s) { *(h520*)this = _s; }
-	SignatureStruct(h256 const& _r, h256 const& _s, byte _v): r(_r), s(_s), v(_v) {}
-	operator Signature() const { return *(h520 const*)this; }
+    SignatureStruct() = default;
+    SignatureStruct(Signature const& _s) { *(h520*)this = _s; }
+    SignatureStruct(h256 const& _r, h256 const& _s, byte _v): r(_r), s(_s), v(_v) {}
+    operator Signature() const { return *(h520 const*)this; }
 
-	/// @returns true if r,s,v values are valid, otherwise false
-	bool isValid() const noexcept;
+    /// @returns true if r,s,v values are valid, otherwise false
+    bool isValid() const noexcept;
 
-	h256 r;
-	h256 s;
-	byte v = 0;
+    h256 r;
+    h256 s;
+    byte v = 0;
 };
 
 /// A vector of secrets.
@@ -119,10 +119,10 @@ inline bytesSec decryptSymNoAuth(SecureFixedHash<32> const& _k, h128 const& _iv,
 
 /// Recovers Public key from signed message hash.
 Public recover(Signature const& _sig, h256 const& _hash);
-	
+    
 /// Returns siganture of message hash.
 Signature sign(Secret const& _k, h256 const& _hash);
-	
+    
 /// Verify signature.
 bool verify(Public const& _k, Signature const& _s, h256 const& _hash);
 
@@ -138,32 +138,32 @@ bytesSec scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uint3
 class KeyPair
 {
 public:
-	/// Normal constructor - populates object from the given secret key.
-	/// If the secret key is invalid the constructor succeeds, but public key
-	/// and address stay "null".
-	KeyPair(Secret const& _sec);
+    /// Normal constructor - populates object from the given secret key.
+    /// If the secret key is invalid the constructor succeeds, but public key
+    /// and address stay "null".
+    KeyPair(Secret const& _sec);
 
-	/// Create a new, randomly generated object.
-	static KeyPair create();
+    /// Create a new, randomly generated object.
+    static KeyPair create();
 
-	/// Create from an encrypted seed.
-	static KeyPair fromEncryptedSeed(bytesConstRef _seed, std::string const& _password);
+    /// Create from an encrypted seed.
+    static KeyPair fromEncryptedSeed(bytesConstRef _seed, std::string const& _password);
 
-	Secret const& secret() const { return m_secret; }
+    Secret const& secret() const { return m_secret; }
 
-	/// Retrieve the public key.
-	Public const& pub() const { return m_public; }
+    /// Retrieve the public key.
+    Public const& pub() const { return m_public; }
 
-	/// Retrieve the associated address of the public key.
-	Address const& address() const { return m_address; }
+    /// Retrieve the associated address of the public key.
+    Address const& address() const { return m_address; }
 
-	bool operator==(KeyPair const& _c) const { return m_public == _c.m_public; }
-	bool operator!=(KeyPair const& _c) const { return m_public != _c.m_public; }
+    bool operator==(KeyPair const& _c) const { return m_public == _c.m_public; }
+    bool operator!=(KeyPair const& _c) const { return m_public != _c.m_public; }
 
 private:
-	Secret m_secret;
-	Public m_public;
-	Address m_address;
+    Secret m_secret;
+    Public m_public;
+    Address m_address;
 };
 
 namespace crypto
@@ -186,17 +186,17 @@ h256 kdf(Secret const& _priv, h256 const& _hash);
 class Nonce
 {
 public:
-	/// Returns the next nonce (might be read from a file).
-	static Secret get() { static Nonce s; return s.next(); }
+    /// Returns the next nonce (might be read from a file).
+    static Secret get() { static Nonce s; return s.next(); }
 
 private:
-	Nonce() = default;
+    Nonce() = default;
 
-	/// @returns the next nonce.
-	Secret next();
+    /// @returns the next nonce.
+    Secret next();
 
-	std::mutex x_value;
-	Secret m_value;
+    std::mutex x_value;
+    Secret m_value;
 };
 
 namespace ecdh
