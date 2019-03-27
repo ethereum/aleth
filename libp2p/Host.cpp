@@ -212,10 +212,9 @@ void Host::doneWorking()
     while (m_accepting)
         m_ioService.poll();
 
-    // (eth: stops syncing or block / tx broadcast). Poll the io service so we can process
-    // capability cancellations
+    // (eth: stops syncing or block / tx broadcast). Capabilities will be cancelled when ioservice
+    // is polled on pending handshake / peer disconnect
     stopCapabilities();
-    m_ioService.poll();
 
     // disconnect pending handshake, before peers, as a handshake may create a peer
     for (unsigned n = 0;; n = 0)
