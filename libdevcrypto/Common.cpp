@@ -52,6 +52,20 @@ secp256k1_context const* getCtx()
     return s_ctx.get();
 }
 
+template <std::size_t KeySize>
+bool toPublicKey(Secret const& _secret, unsigned _flags, array<byte, KeySize>& o_serializedPubkey)
+{
+    auto* ctx = getCtx();
+    secp256k1_pubkey rawPubkey;
+    // Creation will fail if the secret key is invalid.
+    if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, _secret.data()))
+        return false;
+    size_t serializedPubkeySize = o_serializedPubkey.size();
+    secp256k1_ec_pubkey_serialize(
+        ctx, o_serializedPubkey.data(), &serializedPubkeySize, &rawPubkey, _flags);
+    assert(serializedPubkeySize == o_serializedPubkey.size());
+    return true;
+}
 }
 
 bool dev::SignatureStruct::isValid() const noexcept
@@ -64,22 +78,27 @@ bool dev::SignatureStruct::isValid() const noexcept
 
 Public dev::toPublic(Secret const& _secret)
 {
-    auto* ctx = getCtx();
-    secp256k1_pubkey rawPubkey;
-    // Creation will fail if the secret key is invalid.
-    if (!secp256k1_ec_pubkey_create(ctx, &rawPubkey, _secret.data()))
-        return {};
     std::array<byte, 65> serializedPubkey;
-    size_t serializedPubkeySize = serializedPubkey.size();
-    secp256k1_ec_pubkey_serialize(
-            ctx, serializedPubkey.data(), &serializedPubkeySize,
-            &rawPubkey, SECP256K1_EC_UNCOMPRESSED
-    );
-    assert(serializedPubkeySize == serializedPubkey.size());
+    if (!toPublicKey(_secret, SECP256K1_EC_UNCOMPRESSED, serializedPubkey))
+        return {};
+
     // Expect single byte header of value 0x04 -- uncompressed public key.
     assert(serializedPubkey[0] == 0x04);
+
     // Create the Public skipping the header.
     return Public{&serializedPubkey[1], Public::ConstructFromPointer};
+}
+
+PublicCompressed dev::toPublicCompressed(Secret const& _secret)
+{
+    PublicCompressed serializedPubkey;
+    if (!toPublicKey(_secret, SECP256K1_EC_COMPRESSED, serializedPubkey.asArray()))
+        return {};
+
+    // Expect single byte header of value 0x02 or 0x03 -- compressed public key.
+    assert(serializedPubkey[0] == 0x02 || serializedPubkey[0] == 0x03);
+
+    return serializedPubkey;
 }
 
 Address dev::toAddress(Public const& _public)

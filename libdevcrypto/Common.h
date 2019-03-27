@@ -39,6 +39,10 @@ using Secret = SecureFixedHash<32>;
 /// @NOTE This is not endian-specific; it's just a bunch of bytes.
 using Public = h512;
 
+/// A public key in compressed format: 33 bytes.
+/// @NOTE This is not endian-specific; it's just a bunch of bytes.
+using PublicCompressed = FixedHash<33>;
+
 /// A signature: 65 bytes: r: [0, 32), s: [32, 64), v: 64.
 /// @NOTE This is not endian-specific; it's just a bunch of bytes.
 using Signature = h520;
@@ -63,6 +67,9 @@ using Secrets = std::vector<Secret>;
 
 /// Convert a secret key into the public key equivalent.
 Public toPublic(Secret const& _secret);
+
+/// Convert a secret key into the public key in compressed format.
+PublicCompressed toPublicCompressed(Secret const& _secret);
 
 /// Convert a public key to address.
 Address toAddress(Public const& _public);
