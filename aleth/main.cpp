@@ -687,9 +687,10 @@ int main(int argc, char** argv)
         }
         catch (...)
         {
-            cerr << "provided configuration is not well formatted\n";
-            cerr << "sample: \n" << genesisInfo(eth::Network::MainNetworkTest) << "\n";
-            return AlethErrors::Success;
+            cerr << "provided configuration is not well-formatted\n";
+            cerr << "well-formatted sample: \n"
+                 << genesisInfo(eth::Network::MainNetworkTest) << "\n";
+            return AlethErrors::ConfigFileInvalid;
         }
     }
 

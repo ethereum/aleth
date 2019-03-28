@@ -226,6 +226,7 @@ enum AlethErrors
     UnknownArgument,
     UnknownMiningOption,
     ConfigFileEmptyOrNotFound,
+    ConfigFileInvalid,
     UnknownNetworkType,
     BadNetworkIdOption,
     BadConfigOption,

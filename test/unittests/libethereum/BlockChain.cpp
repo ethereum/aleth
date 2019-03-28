@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(invalidJsonThrows)
 {
     h256 emptyStateRoot;
     /* Below, a comma is missing between fields. */
-    BOOST_CHECK_THROW(ChainParams("{ \"sealEngine\" : \"unknown\" \"accountStartNonce\" : \"3\" }", emptyStateRoot), json_spirit::Error_position);
+    BOOST_CHECK_THROW(ChainParams("{ \"sealEngine\" : \"unknown\" \"accountStartNonce\" : \"3\" }", emptyStateRoot), SyntaxError);
 }
 
 BOOST_AUTO_TEST_CASE(unknownFieldThrows)
