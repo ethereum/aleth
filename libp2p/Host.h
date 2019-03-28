@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Common.h"
+#include "ENR.h"
 #include "Network.h"
 #include "NodeTable.h"
 #include "Peer.h"
@@ -123,11 +124,8 @@ public:
 
     /// Alternative constructor that allows providing the node key directly
     /// without restoring the network.
-    Host(
-        std::string const& _clientVersion,
-        KeyPair const& _alias,
-        NetworkConfig const& _n = NetworkConfig{}
-    );
+    Host(std::string const& _clientVersion, std::pair<Secret, ENR> const& _secretAndENR,
+        NetworkConfig const& _n = NetworkConfig{});
 
     /// Will block on network process events.
     virtual ~Host();
@@ -286,8 +284,8 @@ private:
     /// Shutdown network. Not thread-safe; to be called only by worker.
     virtual void doneWorking();
 
-    /// Get or create host identifier (KeyPair).
-    static KeyPair networkAlias(bytesConstRef _b);
+    /// Get or create host Ethereum Node record.
+    std::pair<Secret, ENR> restoreENR(bytesConstRef _b, NetworkConfig const& _networkConfig);
 
     bool nodeTableHasNode(Public const& _id) const;
     Node nodeFromNodeTable(Public const& _id) const;
@@ -334,7 +332,9 @@ private:
     std::set<Peer*> m_pendingPeerConns;									/// Used only by connect(Peer&) to limit concurrently connecting to same node. See connect(shared_ptr<Peer>const&).
 
     bi::tcp::endpoint m_tcpPublic;											///< Our public listening endpoint.
-    KeyPair m_alias;															///< Alias for network communication. Network address is k*G. k is key material. TODO: Replace KeyPair.
+    /// Alias for network communication.
+    KeyPair m_alias;
+    ENR m_enr;
     std::shared_ptr<NodeTable> m_nodeTable;									///< Node table (uses kademlia-like discovery).
     mutable std::mutex x_nodeTable;
     std::shared_ptr<NodeTable> nodeTable() const { Guard l(x_nodeTable); return m_nodeTable; }

@@ -200,7 +200,13 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     RLP r(firstHostNetwork);
     BOOST_REQUIRE(r.itemCount() == 3);
     BOOST_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
-    BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
+
+    BOOST_REQUIRE(r[1].isList());
+    BOOST_REQUIRE(r[1].itemCount() == 2);
+    BOOST_REQUIRE_EQUAL(r[1][0].toBytes().size(), 32);  // secret
+    BOOST_REQUIRE(r[1][1].isList());                    // ENR
+    cerr << r[1] << "\n";
+
     BOOST_REQUIRE(r[2].itemCount() >= c_nodes);
     
     for (auto i: r[2])
