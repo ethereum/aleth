@@ -242,7 +242,7 @@ public:
 	template <unsigned M> explicit SecureFixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = FixedHash<T>::AlignLeft): FixedHash<T>(_h, _t) {}
 	template <unsigned M> explicit SecureFixedHash(SecureFixedHash<M> const& _h, ConstructFromHashType _t = FixedHash<T>::AlignLeft): FixedHash<T>(_h.makeInsecure(), _t) {}
 	explicit SecureFixedHash(std::string const& _s, ConstructFromStringType _t = FixedHash<T>::FromHex, ConstructFromHashType _ht = FixedHash<T>::FailIfDifferent): FixedHash<T>(_s, _t, _ht) {}
-	explicit SecureFixedHash(bytes const* _d, ConstructFromPointerType _t): FixedHash<T>(_d, _t) {}
+	explicit SecureFixedHash(byte const* _d, ConstructFromPointerType _t): FixedHash<T>(_d, _t) {}
 	~SecureFixedHash() { ref().cleanse(); }
 
 	SecureFixedHash<T>& operator=(SecureFixedHash<T> const& _c)
