@@ -132,7 +132,6 @@ int main(int argc, char** argv)
 
     string jsonAdmin;
     ChainParams chainParams;
-    string privateChain;
 
     bool upnp = true;
     WithExisting withExisting = WithExisting::Trust;
@@ -208,7 +207,6 @@ int main(int argc, char** argv)
     auto addClientOption = clientDefaultMode.add_options();
     addClientOption("mainnet", "Use the main network protocol");
     addClientOption("ropsten", "Use the Ropsten testnet");
-    addClientOption("private", po::value<string>()->value_name("<name>"), "Use a private chain");
     addClientOption("test", "Testing mode; disable PoW and provide test rpc interface");
     addClientOption("config", po::value<string>()->value_name("<file>"),
         "Configure specialised blockchain using given JSON information\n");
@@ -623,16 +621,6 @@ int main(int argc, char** argv)
             cerr << "Bad " << "--network-id" << " option: " << vm["network-id"].as<string>() << "\n";
             return AlethErrors::BadNetworkIdOption;
         }
-    if (vm.count("private"))
-        try
-        {
-            privateChain = vm["private"].as<string>();
-        }
-        catch (...)
-        {
-            cerr << "Bad " << "--private" << " option: " << vm["private"].as<string>() << "\n";
-            return AlethErrors::BadPrivateOption;
-        }
     if (vm.count("kill"))
         withExisting = WithExisting::Kill;
     if (vm.count("rebuild"))
@@ -696,12 +684,6 @@ int main(int argc, char** argv)
 
     setupLogging(loggingOptions);
 
-    if (!privateChain.empty())
-    {
-        chainParams.extraData = sha3(privateChain).asBytes();
-        chainParams.difficulty = chainParams.minimumDifficulty;
-        chainParams.gasLimit = u256(1) << 32;
-    }
 
     if (!chainConfigIsSet)
         // default to mainnet if not already set with any of `--mainnet`, `--ropsten`, `--genesis`, `--config`
@@ -756,7 +738,7 @@ int main(int argc, char** argv)
     };
 
     auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) : NetworkConfig(publicIP, listenIP ,listenPort, upnp);
-    netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
+    netPrefs.discovery = (!disableDiscovery);
     netPrefs.allowLocalDiscovery = allowLocalDiscovery;
     netPrefs.pin = vm.count("pin") != 0;
 
@@ -1026,7 +1008,7 @@ int main(int argc, char** argv)
             else
                 web3.addNode(p.first, p.second.first);
 
-        if (bootstrap && privateChain.empty())
+        if (bootstrap)
             for (auto const& i : defaultBootNodes())
                 web3.requirePeer(i.first, i.second);
         if (!remoteHost.empty())
