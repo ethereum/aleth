@@ -148,7 +148,6 @@ int main(int argc, char** argv)
     std::map<p2p::NodeID, pair<NodeIPEndpoint, bool>> preferredNodes;
     bool bootstrap = true;
     bool disableDiscovery = false;
-    bool enableDiscovery = false;
     bool allowLocalDiscovery = false;
     static const unsigned NoNetworkID = (unsigned)-1;
     unsigned networkID = NoNetworkID;
@@ -378,7 +377,6 @@ int main(int argc, char** argv)
     if (vm.count("test"))
     {
         testingMode = true;
-        enableDiscovery = false;
         disableDiscovery = true;
         bootstrap = false;
     }
@@ -738,7 +736,7 @@ int main(int argc, char** argv)
     };
 
     auto netPrefs = publicIP.empty() ? NetworkConfig(listenIP, listenPort, upnp) : NetworkConfig(publicIP, listenIP ,listenPort, upnp);
-    netPrefs.discovery = (!disableDiscovery);
+    netPrefs.discovery = !disableDiscovery;
     netPrefs.allowLocalDiscovery = allowLocalDiscovery;
     netPrefs.pin = vm.count("pin") != 0;
 
@@ -923,7 +921,7 @@ int main(int argc, char** argv)
     if (author)
         cout << "Mining Beneficiary: " << renderFullAddress(author) << "\n";
 
-    if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet || !preferredNodes.empty())
+    if (bootstrap || !remoteHost.empty() || !disableDiscovery || listenSet || !preferredNodes.empty())
     {
         web3.startNetwork();
         cout << "Node ID: " << web3.enode() << "\n";
