@@ -230,8 +230,8 @@ void BlockChainSync::onPeerStatus(EthereumPeer const& _peer)
 bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
 {
     // DAO challenge
-    unsigned const daoHardfork = static_cast<unsigned>(host().chain().sealEngine()->chainParams().daoHardforkBlock);
-    if (daoHardfork == 0)
+    u256 const daoHardfork = host().chain().sealEngine()->chainParams().daoHardforkBlock;
+    if (daoHardfork == 0 || daoHardfork == c_infiniteBlockNumer)
         return false;
 
     m_daoChallengedPeers.insert(_peerID);
