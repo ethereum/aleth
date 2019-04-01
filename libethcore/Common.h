@@ -235,7 +235,6 @@ enum AlethErrors
     BadBidOption,
     BadFormatOption,
     BadUpnpOption,
-    BadPrivateOption,
     BadAddressOption,
     BadHexValueInAddressOption,
     BadBlockNumberHashOption,
