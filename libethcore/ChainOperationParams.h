@@ -63,7 +63,7 @@ private:
     u256 m_startingBlock = 0;
 };
 
-static constexpr int64_t c_infiniteBlockNumber = std::numeric_limits<int64_t>::max();
+constexpr int64_t c_infiniteBlockNumber = std::numeric_limits<int64_t>::max();
 
 struct ChainOperationParams
 {

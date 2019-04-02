@@ -30,9 +30,9 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 namespace  // Helper functions.
 {
 
-unsigned constexpr c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
-unsigned constexpr c_maxRequestHeaders = 1024;
-unsigned constexpr c_maxRequestBodies = 1024;
+constexpr unsigned c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
+constexpr unsigned c_maxRequestHeaders = 1024;
+constexpr unsigned c_maxRequestBodies = 1024;
 
 template<typename T> bool haveItem(std::map<unsigned, T>& _container, unsigned _number)
 {
