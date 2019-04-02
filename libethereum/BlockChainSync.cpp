@@ -1,23 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file BlockChainSync.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
+/// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "BlockChainSync.h"
 
@@ -35,11 +18,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-unsigned const c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
-unsigned const c_maxRequestHeaders = 1024;
-unsigned const c_maxRequestBodies = 1024;
-
-
 std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 {
     _out << "protocol: " << _sync.protocolVersion << endl;
@@ -51,6 +29,10 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 
 namespace  // Helper functions.
 {
+
+constexpr unsigned c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
+constexpr unsigned c_maxRequestHeaders = 1024;
+constexpr unsigned c_maxRequestBodies = 1024;
 
 template<typename T> bool haveItem(std::map<unsigned, T>& _container, unsigned _number)
 {
@@ -230,8 +212,8 @@ void BlockChainSync::onPeerStatus(EthereumPeer const& _peer)
 bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
 {
     // DAO challenge
-    unsigned const daoHardfork = static_cast<unsigned>(host().chain().sealEngine()->chainParams().daoHardforkBlock);
-    if (daoHardfork == 0)
+    u256 const daoHardfork = host().chain().sealEngine()->chainParams().daoHardforkBlock;
+    if (daoHardfork == 0 || daoHardfork == c_infiniteBlockNumber)
         return false;
 
     m_daoChallengedPeers.insert(_peerID);
