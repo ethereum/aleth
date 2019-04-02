@@ -10,6 +10,8 @@ static std::string const c_keySec256k1 = "sec256k1";
 static std::string const c_keyIP = "ip";
 static std::string const c_keyTCP = "tcp";
 static std::string const c_keyUDP = "udp";
+static dev::bytes const c_IDV4 = {'v', '4'};
+static size_t const c_ENRMaxSize = 300;
 
 namespace dev
 {
@@ -27,7 +29,8 @@ namespace
 
 ENR::ENR(RLP _rlp, VerifyFunction _verifyFunction)
 {
-    // TODO fail if > 300 bytes
+    if (_rlp.data().size() > c_ENRMaxSize)
+        BOOST_THROW_EXCEPTION(ENRIsTooBig());
 
     m_signature = _rlp[0].toBytes(RLP::VeryStrict);
 
@@ -86,7 +89,7 @@ ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint
     
     auto const address = _ip.is_v4() ? addressToBytes(_ip.to_v4()) : addressToBytes(_ip.to_v6());
 
-    std::map<std::string, bytes> keyValues = {{c_keyID, rlp(bytes{'v', '4'})},
+    std::map<std::string, bytes> keyValues = {{c_keyID, rlp(c_IDV4)},
         {c_keySec256k1, rlp(publicKey.asBytes())}, {c_keyIP, rlp(address)},
         {c_keyTCP, rlp(_tcpPort)}, {c_keyUDP, rlp(_udpPort)}};
 
@@ -97,6 +100,13 @@ ENR parseV4ENR(RLP _rlp)
 {
     ENR::VerifyFunction verifyFunction = [](std::map<std::string, bytes> const& _keyValues,
                                              bytesConstRef _signature, bytesConstRef _data) {
+        auto itID = _keyValues.find(c_keyID);
+        if (itID == _keyValues.end())
+            return false;
+        auto id = RLP(itID->second).toBytes(RLP::VeryStrict);
+        if (id != c_IDV4)
+            return false;
+
         auto itKey = _keyValues.find(c_keySec256k1);
         if (itKey == _keyValues.end())
             return false;
