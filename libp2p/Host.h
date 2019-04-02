@@ -225,6 +225,9 @@ public:
     /// Get the node information.
     p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkConfig().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
 
+    /// Get Ethereum Node Record of the host
+    ENR enr() const { return m_enr; }
+
     /// Apply function to each session
     void forEachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;

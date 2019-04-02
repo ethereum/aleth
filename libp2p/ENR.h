@@ -22,6 +22,9 @@ public:
     // create with given sign function
     ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues, SignFunction _signFunction);
 
+    uint64_t sequenceNumber() const { return m_seq; }
+    std::map<std::string, bytes> const& keyValues() const { return m_map; }
+
     void streamRLP(RLPStream& _s) const;
 
 private:
@@ -29,8 +32,9 @@ private:
     std::map<std::string, bytes> m_map;
     bytes m_signature;
 
-    std::vector<bytes> content() const;
-    bytes contentRlpList() const;
+    bytes content() const;
+    size_t contentListSize() const { return m_map.size() * 2 + 1; }
+    void streamContent(RLPStream& _s) const;
 };
 
 ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint16_t _tcpPort,  uint16_t _udpPort);

@@ -27,7 +27,7 @@ ENR::ENR(RLP _rlp)
     for (size_t i = 2; i < _rlp.itemCount(); i+= 2)
     {
         auto key = _rlp[i].toString();
-        auto value = _rlp[i + 1].toBytes();
+        auto value = _rlp[i + 1].data().toBytes();
         m_map.insert({key, value});
     }
     // TODO check signature
@@ -35,38 +35,33 @@ ENR::ENR(RLP _rlp)
 }
 
 ENR::ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues, SignFunction _signFunction)
-    : m_seq(_seq),
-    m_map(_keyValues),
-    m_signature(_signFunction(dev::ref(contentRlpList())))
+  : m_seq(_seq), m_map(_keyValues), m_signature(_signFunction(dev::ref(content())))
 {
 }
 
-std::vector<bytes> ENR::content() const
+bytes ENR::content() const
 {
-    std::vector<bytes> result{rlp(m_seq)};
-    for (auto const keyValue : m_map)
-    {
-        result.push_back(bytes(keyValue.first.begin(), keyValue.first.end()));
-        result.push_back(keyValue.second);
-    }
-    return result;
-}
-
-bytes ENR::contentRlpList() const
-{
-    RLPStream stream;
-    stream.appendVector(content());
+    RLPStream stream(contentListSize());
+    streamContent(stream);
     return stream.out();
 }
 
+
 void ENR::streamRLP(RLPStream& _s) const
 {
-    _s.appendList(m_map.size() * 2 + 2);
+    _s.appendList(contentListSize() + 1);
     _s << m_signature;
-    
-    auto const contentItems = content();
-    for (auto const& contentItem : contentItems)
-        _s << contentItem;
+    streamContent(_s);
+}
+
+void ENR::streamContent(RLPStream& _s) const
+{
+    _s << m_seq;
+    for (auto const keyValue : m_map)
+    {
+        _s << keyValue.first;
+        _s.appendRaw(keyValue.second);
+    }
 }
 
 ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint16_t _tcpPort,  uint16_t _udpPort)
@@ -80,14 +75,10 @@ ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint
     PublicCompressed publicKey = toPublicCompressed(_secret);
     
     auto const address = _ip.is_v4() ? addressToBytes(_ip.to_v4()) : addressToBytes(_ip.to_v6());
-    
-    std::map<std::string, bytes> keyValues = {
-        { "id", bytes{ 'v', '4' } },
-        { "sec256k1", publicKey.asBytes() },
-        { "ip", address },
-        { "tcp", rlp(_tcpPort) },
-        { "udp", rlp(_udpPort) }
-    };
+
+    std::map<std::string, bytes> keyValues = {{"id", rlp(bytes{'v', '4'})},
+        {"sec256k1", rlp(publicKey.asBytes())}, {"ip", rlp(address)}, {"tcp", rlp(_tcpPort)},
+        {"udp", rlp(_udpPort)}};
 
     return ENR{0, keyValues, signFunction};
 }

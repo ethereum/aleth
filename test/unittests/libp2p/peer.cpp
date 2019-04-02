@@ -219,6 +219,22 @@ BOOST_AUTO_TEST_CASE(saveNodes)
         delete host;
 }
 
+BOOST_AUTO_TEST_CASE(saveENR)
+{
+    NetworkConfig config("13.74.189.147", "", 30303, false);
+    Host host1("Test", config);
+    ENR enr1 = host1.enr();
+
+    bytes store(host1.saveNetwork());
+
+    Host host2("Test", config, bytesConstRef(&store));
+    ENR enr2 = host2.enr();
+
+    BOOST_REQUIRE_EQUAL(enr1.sequenceNumber(), enr2.sequenceNumber());
+    BOOST_REQUIRE(enr1.keyValues() == enr2.keyValues());
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(p2pPeer, TestOutputHelperFixture)
