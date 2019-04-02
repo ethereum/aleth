@@ -5,6 +5,12 @@
 #include "ENR.h"
 #include <libdevcore/SHA3.h>
 
+static std::string const c_keyID = "id";
+static std::string const c_keySec256k1 = "sec256k1";
+static std::string const c_keyIP = "ip";
+static std::string const c_keyTCP = "tcp";
+static std::string const c_keyUDP = "udp";
+
 namespace dev
 {
 namespace p2p
@@ -19,19 +25,23 @@ namespace
     }    
 }  // namespace
 
-ENR::ENR(RLP _rlp)
+ENR::ENR(RLP _rlp, VerifyFunction _verifyFunction)
 {
-    m_signature = _rlp[0].toBytes();
+    // TODO fail if > 300 bytes
 
-    m_seq = _rlp[1].toInt<uint64_t>();
+    m_signature = _rlp[0].toBytes(RLP::VeryStrict);
+
+    m_seq = _rlp[1].toInt<uint64_t>(RLP::VeryStrict);
+    // TODO check order
     for (size_t i = 2; i < _rlp.itemCount(); i+= 2)
     {
-        auto key = _rlp[i].toString();
+        auto key = _rlp[i].toString(RLP::VeryStrict);
         auto value = _rlp[i + 1].data().toBytes();
         m_map.insert({key, value});
     }
-    // TODO check signature
-    // TODO fail if > 300 bytes
+
+    if (!_verifyFunction(m_map, dev::ref(m_signature), dev::ref(content())))
+        BOOST_THROW_EXCEPTION(ENRSignatureIsInvalid());
 }
 
 ENR::ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues, SignFunction _signFunction)
@@ -76,11 +86,28 @@ ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint
     
     auto const address = _ip.is_v4() ? addressToBytes(_ip.to_v4()) : addressToBytes(_ip.to_v6());
 
-    std::map<std::string, bytes> keyValues = {{"id", rlp(bytes{'v', '4'})},
-        {"sec256k1", rlp(publicKey.asBytes())}, {"ip", rlp(address)}, {"tcp", rlp(_tcpPort)},
-        {"udp", rlp(_udpPort)}};
+    std::map<std::string, bytes> keyValues = {{c_keyID, rlp(bytes{'v', '4'})},
+        {c_keySec256k1, rlp(publicKey.asBytes())}, {c_keyIP, rlp(address)},
+        {c_keyTCP, rlp(_tcpPort)}, {c_keyUDP, rlp(_udpPort)}};
 
     return ENR{0, keyValues, signFunction};
+}
+
+ENR parseV4ENR(RLP _rlp)
+{
+    ENR::VerifyFunction verifyFunction = [](std::map<std::string, bytes> const& _keyValues,
+                                             bytesConstRef _signature, bytesConstRef _data) {
+        auto itKey = _keyValues.find(c_keySec256k1);
+        if (itKey == _keyValues.end())
+            return false;
+
+        auto const key = RLP(itKey->second).toHash<PublicCompressed>(RLP::VeryStrict);
+        h512 const signature{_signature};
+
+        return verify(key, signature, sha3(_data));
+    };
+
+    return ENR{_rlp, verifyFunction};
 }
 
 std::ostream& operator<<(std::ostream& _out, ENR const& _enr)

@@ -205,7 +205,6 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     BOOST_REQUIRE(r[1].itemCount() == 2);
     BOOST_REQUIRE_EQUAL(r[1][0].toBytes().size(), 32);  // secret
     BOOST_REQUIRE(r[1][1].isList());                    // ENR
-    cerr << r[1] << "\n";
 
     BOOST_REQUIRE(r[2].itemCount() >= c_nodes);
     
@@ -232,6 +231,7 @@ BOOST_AUTO_TEST_CASE(saveENR)
 
     BOOST_REQUIRE_EQUAL(enr1.sequenceNumber(), enr2.sequenceNumber());
     BOOST_REQUIRE(enr1.keyValues() == enr2.keyValues());
+    BOOST_REQUIRE(enr1.signature() == enr2.signature());
 }
 
 

@@ -1008,7 +1008,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
             auto const secret = Secret{r[1][0].toBytes()};
             auto enrRlp = r[1][1];
 
-            return make_pair(secret, ENR{enrRlp});
+            return make_pair(secret, parseV4ENR(enrRlp));
         }
 
         // Support for older format without ENR
