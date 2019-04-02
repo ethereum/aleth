@@ -277,6 +277,21 @@ bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
     return _p == recover(_s, _hash);
 }
 
+bool dev::verify(PublicCompressed const& _key, h512 const& _signature, h256 const& _hash)
+{
+    auto* ctx = getCtx();
+
+    secp256k1_ecdsa_signature rawSig;
+    if (!secp256k1_ecdsa_signature_parse_compact(ctx, &rawSig, _signature.data()))
+        return false;
+
+    secp256k1_pubkey rawPubkey;
+    if (!secp256k1_ec_pubkey_parse(ctx, &rawPubkey, _key.data(), PublicCompressed::size))
+        return false;  // Invalid public key.
+
+    return secp256k1_ecdsa_verify(ctx, &rawSig, _hash.data(), &rawPubkey);
+}
+
 bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
     bytesSec ret(_dkLen);

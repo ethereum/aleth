@@ -133,6 +133,9 @@ Signature sign(Secret const& _k, h256 const& _hash);
 /// Verify signature.
 bool verify(Public const& _k, Signature const& _s, h256 const& _hash);
 
+// Verify signature with compressed public key
+bool verify(PublicCompressed const& _key, h512 const& _signature, h256 const& _hash);
+
 /// Derive key via PBKDF2.
 bytesSec pbkdf2(std::string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen = 32);
 

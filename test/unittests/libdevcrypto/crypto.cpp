@@ -181,6 +181,34 @@ BOOST_AUTO_TEST_CASE(verify_secert)
 	BOOST_REQUIRE(k.address());
 }
 
+BOOST_AUTO_TEST_CASE(verifyWithPublicCompressed)
+{
+    PublicCompressed pub{
+        fromHex("0x02e32df42865e97135acfb65f3bae71bdc86f4d49150ad6a440b6f15878109880a")};
+    h512 sig{
+        fromHex("0x90f27b8b488db00b00606796d2987f6a5f59ae62ea05effe84fef5b8b0e549984a691139ad57a3f0"
+                "b906637673aa2f63d1f55cb1a69199d4009eea23ceaddc93")};
+    h256 msg{fromHex("0xce0677bb30baa8cf067c88db9811f4333d131bf8bcf12fe7065d211dce971008")};
+    BOOST_REQUIRE(verify(pub, sig, msg));
+
+    h512 invalidSig{sig};
+    ++invalidSig[4];
+    BOOST_REQUIRE(!verify(pub, invalidSig, msg));
+}
+
+BOOST_AUTO_TEST_CASE(signAndVerify)
+{
+    KeyPair kp = KeyPair::create();
+    auto msg = h256::random();
+    auto sig = sign(kp.secret(), msg);
+
+    auto pubCompressed = toPublicCompressed(kp.secret());
+    // remove recovery id (65th byte)
+    h512 sigWithoutV{sig};
+
+    BOOST_REQUIRE(verify(pubCompressed, sigWithoutV, msg));
+}
+
 BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 {
 	string message("Now is the time for all good persons to come to the aid of humanity.");
