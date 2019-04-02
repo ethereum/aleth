@@ -35,13 +35,21 @@ ENR::ENR(RLP _rlp, VerifyFunction _verifyFunction)
     m_signature = _rlp[0].toBytes(RLP::VeryStrict);
 
     m_seq = _rlp[1].toInt<uint64_t>(RLP::VeryStrict);
-    // TODO check order
+
+    // read key-values into vector first, to check the order
+    std::vector<std::pair<std::string const, bytes>> keyValues;
     for (size_t i = 2; i < _rlp.itemCount(); i+= 2)
     {
-        auto key = _rlp[i].toString(RLP::VeryStrict);
-        auto value = _rlp[i + 1].data().toBytes();
-        m_map.insert({key, value});
+        auto const key = _rlp[i].toString(RLP::VeryStrict);
+        auto const value = _rlp[i + 1].data().toBytes();
+        keyValues.push_back({key, value});
     }
+
+    // transfer to map, this will order them
+    m_map.insert(keyValues.begin(), keyValues.end());
+
+    if (!std::equal(m_map.begin(), m_map.end(), keyValues.begin()))
+        BOOST_THROW_EXCEPTION(ENRKeysAreNotSorted());
 
     if (!_verifyFunction(m_map, dev::ref(m_signature), dev::ref(content())))
         BOOST_THROW_EXCEPTION(ENRSignatureIsInvalid());

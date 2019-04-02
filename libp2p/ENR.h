@@ -12,7 +12,7 @@ namespace p2p
 {
 DEV_SIMPLE_EXCEPTION(ENRIsTooBig);
 DEV_SIMPLE_EXCEPTION(ENRSignatureIsInvalid);
-
+DEV_SIMPLE_EXCEPTION(ENRKeysAreNotSorted);
 
 class ENR
 {
