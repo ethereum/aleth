@@ -6,7 +6,7 @@
 #include <libdevcore/SHA3.h>
 
 static std::string const c_keyID = "id";
-static std::string const c_keySec256k1 = "sec256k1";
+static std::string const c_keySec256k1 = "secp256k1";
 static std::string const c_keyIP = "ip";
 static std::string const c_keyTCP = "tcp";
 static std::string const c_keyUDP = "udp";
@@ -48,8 +48,8 @@ ENR::ENR(RLP _rlp, VerifyFunction _verifyFunction)
     // transfer to map, this will order them
     m_map.insert(keyValues.begin(), keyValues.end());
 
-    if (!std::equal(m_map.begin(), m_map.end(), keyValues.begin()))
-        BOOST_THROW_EXCEPTION(ENRKeysAreNotSorted());
+    if (!std::equal(keyValues.begin(), keyValues.end(), m_map.begin()))
+        BOOST_THROW_EXCEPTION(ENRKeysAreNotUniqueSorted());
 
     if (!_verifyFunction(m_map, dev::ref(m_signature), dev::ref(content())))
         BOOST_THROW_EXCEPTION(ENRSignatureIsInvalid());
