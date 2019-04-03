@@ -1,31 +1,29 @@
 Creating a private network with 2 syncing nodes
 ===============================================
-These instructions cover creating an Ethereum private network consisting of 2 nodes - 1 node will mine blocks and the other node will connect to the first node and sync the mined blocks to its own block database.
+These instructions cover creating an Ethereum private network consisting of 2 nodes - 1 node will mine blocks and the other node will connect to the first node and sync the mined blocks to its own block database. Both nodes will use (the same) private chain configuration.
 
 Before we start
 ===============
-TODO?
-
 What is a private network?
 =========================
-"Private network" is a little bit of an ambiguous term since there's no official definition. It's often used to refer to a network of computers which have restricted access. For the purposes of this documentation, the term "private network" can be thought of as a network of Ethereum nodes only accessible on your physical machine.
+For the purposes of this documentation, a "private network" can be thought of as a network of Ethereum nodes only accessible on your physical machine.
 
 What is a private chain?
 ========================
-An Ethereum chain can be thought of as a set of rules used to govern interaction with an Ethereum blockchain. For the purposes of this documentation, a private chain is one whose configuration is only known on your local machine.
+An Ethereum chain is some state (e.g. accounts and balances and/or contract code) and a set of rules a set of rules for interacting with that state. For the purposes of this documentation, a private chain is an Ethereum chain is one whose configuration is only available on your physical machine.
 
 Mining
 ===========
-* Mining will be done using the Aleth CPU miner (Aleth doesn't include a GPU miner because of high support costs - TODO: verify with Pawel's mail)
-* Only 1 node will be mining to keep the system responsive - since both nodes are running on the same physical system, having both nodes mine will significantly slow system responsiveness.
-    * You can tune the number of mining threads if you feel mining is slowing down your system too much or if you want to run more than 1 mining node. The Aleth CPU miner is configured by default to use as many threads as possible (TODO: How many?)- see the -t <thread count> flag
+* Mining will be done using the Aleth CPU miner (Aleth doesn't include a GPU miner because of the high support costs)
+* Only 1 node will be mining to keep your machine responsive (since both nodes are running on the same physical system, having both mine will slow your system down significantly).
+* If you find your system being sluggish or if you'd like to have both nodes mine, you can tune the number of mining threads via the -t <thread count> flag
 
 Chain configuration
 ===================
-* You typically run a private network using a chain configuration json file - this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses with Ether.
+* You typically run a private chain using a chain configuration json file - this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses with Ether.
     * The chain configuration json file format is defined here: TODO
-    * Here's an example file: TODO:
-* Since the chain configuration is used to create the chain's genesis state, both clients must use the same chain configuration file otherwise they won't be able to peer with each other. An example of this error is shown in the TODO section.
+    * Here's an example file:
+* Since the configuration file is used to create the chain's genesis state, both nodes must use the same configuration file otherwise they will have different genesis states and consequently won't be able to peer with each other. An example of this is shown in the "Common Problems" section (TODO)
 
 Instructions
 ============
