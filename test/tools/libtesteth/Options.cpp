@@ -49,6 +49,7 @@ void printHelp()
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test\n";
     cout << setw(30) << "--singletest <TestFile> <TestName>\n";
+    cout << setw(30) << "--singlenet <networkId>" << setw(25) << "Run tests for a specific network\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(30) << "--vm <name|path> (=legacy)" << setw(25) << "Set VM type for VMTests suite. Available options are: interpreter, legacy.\n";
     cout << setw(30) << "--evmc <option>=<value>" << setw(25) << "EVMC option\n";
