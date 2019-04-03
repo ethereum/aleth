@@ -4,49 +4,92 @@ These instructions cover creating an Ethereum private network consisting of 2 no
 
 Before we start
 ===============
+TODO?
 
 What is a private network?
 =========================
-TODO
+"Private network" is a little bit of an ambiguous term since there's no official definition. It's often used to refer to a network of computers which have restricted access. For the purposes of this documentation, the term "private network" can be thought of as a network of Ethereum nodes only accessible on your physical machine.
 
 What is a private chain?
 ========================
-TODO:
+An Ethereum chain can be thought of as a set of rules used to govern interaction with an Ethereum blockchain. For the purposes of this documentation, a private chain is one whose configuration is only known on your local machine.
 
-Other notes
+Mining
 ===========
-* Mining will be done using a CPU miner (Aleth doesn't include a GPU miner for various reasons, the main one being the extremely high cost of end-user support - e.g. drivers, TODO: Look @ Pawel's notes in email)
-* Only 1 node will be mining because both nodes are running on the same physical system, so having multiple CPU miners will significantly impact system responsiveness - TODO: will running 2 miners be worse than 1 miner since mining is configured by default to use as many threads as possible?
-    * TODO: If you'd like to have both nodes mine (or system responsiveness is impacted by 1 miner), you can reduce the number of threads used by each CPU miner via the -t <thread count> flag. 
-    * TODO: CPU miner is configured by default to use as many threads as possible - TODO: Does it just use 1 thread per CPU core? It presumably doesn't just create UINT_MAX threads? 
-* You typically run a private network using a specialized chain configuration (though this isn't strictly required) in the form of a json file. TODO: more information? 
-* Since the json file is used to create the private chain's genesis state, both clients must use the same chain configuration file otherwise they won't be able to connect with each other. TODO:?
+* Mining will be done using the Aleth CPU miner (Aleth doesn't include a GPU miner because of high support costs - TODO: verify with Pawel's mail)
+* Only 1 node will be mining to keep the system responsive - since both nodes are running on the same physical system, having both nodes mine will significantly slow system responsiveness.
+    * You can tune the number of mining threads if you feel mining is slowing down your system too much or if you want to run more than 1 mining node. The Aleth CPU miner is configured by default to use as many threads as possible (TODO: How many?)- see the -t <thread count> flag
+
+Chain configuration
+===================
+* You typically run a private network using a chain configuration json file - this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses with Ether.
+    * The chain configuration json file format is defined here: TODO
+    * Here's an example file: TODO:
+* Since the chain configuration is used to create the chain's genesis state, both clients must use the same chain configuration file otherwise they won't be able to peer with each other. An example of this error is shown in the TODO section.
 
 Instructions
 ============
+Note: The examples in this section were generated on Windows 10 running aleth 1.6.0-alpha.1-31+commit.ad7204c9
+
 1. Create a key pair for each node
-Execute the following command:
+Execute the following command and enter the desired password when prompted
 
 aleth.exe account new
 
 Enter the desired password when prompted
 
-2. Add each address (these are the public keys generated in the previous step) that you wish to send transactions with into the "accounts" section of your chain configuration json file (we'll just call this config.json) along with the desired balance (in TODO:?). For example:
-TODO:
+    C:\Users\nilse\Documents\Code\aleth_ref\build\aleth\Debug>aleth account new
+    [2019-04-02 19:59:42.515684] [0x000041f0] [info]    ReadingC:\Users\nilse\AppData\Roaming\Web3\keys\4f04a5ed-87e4-1e4d-4367-604db42bdcff.json
+    [2019-04-02 19:59:42.520265] [0x000041f0] [info]    ReadingC:\Users\nilse\AppData\Roaming\Web3\keys\84258fde-b0d9-747e-b70f-f55e14831192.json
+    [2019-04-02 19:59:42.520265] [0x000041f0] [info]    ReadingC:\Users\nilse\AppData\Roaming\Web3\keys\9067d973-1c8d-fa86-a312-14c90188f610.json
+    Enter a passphrase with which to secure this account:Please confirm the passphrase by entering it again: Created key 623b80dd-d008-4cd4-dd06-c36f0f64296c
+    Address: 007e13502a8b226b0f19e7412db75352dc1d0760
 
-3. Start the first node by executing the following command (each of the options are explained below):
+    C:\Users\nilse\Documents\Code\aleth_ref\build\aleth\Debug>aleth account new
+    [2019-04-02 19:59:53.847216] [0x000011b4] [info]    ReadingC:\Users\nilse\AppData\Roaming\Web3\keys\4f04a5ed-87e4-1e4d-4367-604db42bdcff.json
+    [2019-04-02 19:59:53.849343] [0x000011b4] [info]    ReadingC:\Users\nilse\AppData\Roaming\Web3\keys\623b80dd-d008-4cd4-dd06-c36f0f64296c.json
+    [2019-04-02 19:59:53.850400] [0x000011b4] [info]    ReadingC:\Users\nilse\AppData\Roaming\Web3\keys\84258fde-b0d9-747e-b70f-f55e14831192.json
+    [2019-04-02 19:59:53.850400] [0x000011b4] [info]    ReadingC:\Users\nilse\AppData\Roaming\Web3\keys\9067d973-1c8d-fa86-a312-14c90188f610.json
+    Enter a passphrase with which to secure this account:Please confirm the passphrase by entering it again: Created key ab921356-8c9e-54ff-e3e7-da5c2f7aa685
+    Address: 002c73acd4bc217998966964d27f0ee79a47befb
 
-    Aleth -m on --config <file>  -a <addr> --no-discovery --unsafe-transactions --listen <port> --db-path <path>
+2. Add each address (these are the public keys generated in the previous step) into the "accounts" section of your chain configuration json file (we'll refer to this as config.json from now on) along with the desired balance in wei. 
+
+    For example, the following initializes each account created in step 1 with 2 ether:
+
+    "accounts": {
+      "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } }, "balance": "0x01" },
+      "0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } }, "balance": "0x01" },
+      "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } }, "balance": "0x01" },
+      "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } }, "balance": "0x01" },
+      "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" }, "balance": "0x01" },
+      "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } }, "balance": "0x01" },
+      "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } }, "balance": "0x01" },
+      "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" }, "balance": "0x01" },
+      "007e13502a8b226b0f19e7412db75352dc1d0760": {
+          "balance" : "0x2000000000000000000"
+      },
+      "002c73acd4bc217998966964d27f0ee79a47befb": {
+          "balance" : "0x2000000000000000000"
+      }
+    }
+
+3. Start the first node (each of the command-line options are explained below):
+
+    Aleth -m on --config <file>  -a <addr> --no-discovery --unsafe-transactions --listen <port>
 
 ○ -m on: Enables CPU mining
-○ --config: Path to chain configuration file
+○ --config: Path to chain configuration json file
 ○ -a: Sets recipient of mining block reward
 ○ --no-discovery: Disables the devp2p discovery protocol (it's unnecessary in a 2-node configuration, we'll be adding a peer manually)
-○ --unsafe-transactions: Don't prompt before sending each transaction (unnecessary in a testing environment)
-*  --listen: TCP port to listen for incoming peer connections. Required so that Aleth will start its devp2p protocol implementation - TODO?
-* --db-path: Path to save blocks to. You don't technically need to supply this, but if you've run other syncing nodes on your machine you'll want to make sure you save the private network blocks to a different location (otherwise you can run into TODO)
+○ --unsafe-transactions: Don't require approval before sending each transaction (unnecessary for testing purposes)
+* --listen: TCP port to listen for incoming peer connections
 
-Make note of the node's enode URL since you'll need to reference it when launching the second node. The enode URL should be logged within the first few lines. For example:
+    Example:
+
+        aleth -m on --config %CODE%\config.json -a 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6 --no-discovery --unsafe-transactions --listen 30303
+
+Make note of the node's enode URL since you'll need to reference it when launching the second node. The enode URL should be logged within the first few lines of log output. For example:
 
     aleth, a C++ Ethereum client
     INFO  04-01 20:34:38 main net    Id: ##fb867844…
@@ -61,45 +104,34 @@ Make note of the node's enode URL since you'll need to reference it when launchi
 
 If everything goes smoothly you should see the node start mining (empty) blocks after a minute or two:
 
-		C:\Users\nilse\Documents\Code\aleth\build\aleth\Debug>aleth -m on --config %CODE%\config.json -a 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6 --no-discovery --unsafe-transactions --listen 30303 --db-path %APPDATA%\EthereumPrivate_00
-		aleth, a C++ Ethereum client
-		INFO  04-01 20:38:58 main net    Id: ##5def5843…
-		aleth 1.6.0-alpha.1-28+commit.32bb833e.dirty
-		Mining Beneficiary: 84258fde-b0d9-747e-b70f-f55e14831192 - 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6
-		INFO  04-01 20:38:59 p2p  info   UPnP device not found.
-		WARN  04-01 20:38:59 p2p  warn   "_enabled" parameter is false, discovery is disabled
-		Node ID: enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@0.0.0.0:0
-		INFO  04-01 20:38:59 main rpc    JSON-RPC socket path: \\.\pipe\\geth.ipc
-		JSONRPC Admin Session Key: 2C/gbvE/pxQ=
-		INFO  04-01 20:38:59 main client Mining Beneficiary: @00fd4aaf…
-		INFO  04-01 20:40:36 miner2 client Block sealed #1
-		INFO  04-01 20:40:36 eth  client Tried to seal sealed block...
-		INFO  04-01 20:40:36 eth  client 1 blocks imported in 1 ms (515.198 blocks/s) in #1
-		INFO  04-01 20:40:37 miner0 client Block sealed #2
-		INFO  04-01 20:40:37 eth  client 1 blocks imported in 3 ms (316.056 blocks/s) in #2
-		INFO  04-01 20:40:39 miner1 client Block sealed #3
-        INFO  04-01 20:40:39 eth  client 1 blocks imported in 3 ms (300.842 blocks/s) in #3
+    INFO  04-01 20:38:59 main rpc    JSON-RPC socket path: \\.\pipe\\geth.ipc
+    JSONRPC Admin Session Key: 2C/gbvE/pxQ=
+    INFO  04-01 20:38:59 main client Mining Beneficiary: @00fd4aaf…
+    INFO  04-01 20:40:36 miner2 client Block sealed #1
+    INFO  04-01 20:40:36 eth  client Tried to seal sealed block...
+    INFO  04-01 20:40:36 eth  client 1 blocks imported in 1 ms (515.198 blocks/s) in #1
+    INFO  04-01 20:40:37 miner0 client Block sealed #2
+    INFO  04-01 20:40:37 eth  client 1 blocks imported in 3 ms (316.056 blocks/s) in #2
+    INFO  04-01 20:40:39 miner1 client Block sealed #3
+    INFO  04-01 20:40:39 eth  client 1 blocks imported in 3 ms (300.842 blocks/s) in #3
 
     4. Start the second node:
 
-        Aleth --config <config.json path>  --no-discovery --unsafe-transactions --listen <port number e.g. 30307> --peerset required:<node 1's enode URL> --db-path <path to node 2's block database>
+        Aleth --config <file> --no-discovery --unsafe-transactions --listen <port> --peerset required:<enode URL> --db-path <path>
 
-    ○ Notes: 
-        § You need to use the same config.json file
-        § --listen: Be sure to specify a different port
-        § --peerset: Be sure to update the IP address in the enode URL to 127.0.0.1:<node 1 listen port>
-        § We've omitted the mining options since this node will purely be a peer node and will not mine new blocks. Feel free to include the mining options if you would like this node to mine as well, though note that this will likely affect system responsiveness
-        § You'll need to specify a different --db-path than node 1 since 2 nodes can't share the same block database. 
+    Notes: 
+        * --config: You need to specify the same chain config file
+        § --listen: You need to specify a different port
+        § --peerset: Be sure to update the IP address in the enode URL to 127.0.0.1:<listen port>
+        * This node won't mine so there's no mining options.
+        * --db-path: Path to save sync'd blocks. Aleth saves blocks by default to %APPDATA%\Ethereum on Windows and TODO on Linux. You need to specify a different path for your second node otherwise you'll run into database concurrency issues. An example of this error is in the TODO section.
 
-	So if we want to connect to node 1 we'd execute the following:
+	For example:
 		
-		C:\Users\nilse\Documents\Code\aleth\build\aleth\Debug>aleth --config %CODE%\config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@127.0.0.1:30303
+		aleth --config %CODE%\config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@127.0.0.1:30303
 
     5. If all goes well the second node will connect to the first node and start syncing blocks:
-
-    	5. The second node will connect to the first node and start syncing blocks:
 	
-		C:\Users\nilse\Documents\Code\aleth\build\aleth\Debug>aleth --config %CODE%\config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@127.0.0.1:30303
 		aleth, a C++ Ethereum client
 		INFO  04-01 20:47:55 main net    Id: ##d4a0335d…
 		aleth 1.6.0-alpha.1-28+commit.32bb833e.dirty
@@ -117,61 +149,64 @@ If everything goes smoothly you should see the node start mining (empty) blocks 
 
 
 Common Problems
-* Unrecognized peerset    
+===============
+"Unrecognized peerset" error
+Example:
 Unrecognized peerset: required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@0.0.0.0:0
 
 You need to update the IP address in the enode URL to 127.0.0.1:<port> where <port> is the port number you supplied to node 1 via --listen
 
-* Database already open
+"Database already open" error
+Example:
 aleth, a C++ Ethereum client
 INFO  04-01 20:50:31 main net    Id: ##a7dbe409…
 WARN  04-01 20:50:31 main warn   Database "C:\Users\nilse\AppData\Roaming\EthereumPrivate_00\ddce0f53\blocks"or "C:\Users\nilse\AppData\Roaming\EthereumPrivate_00\ddce0f53\12041\extras"already open. You appear to have another instance of ethereum running. Bailing.
 
-Both of your Aleth nodes are using the same database. You need to set one of your nodes' database path to a different location.
+Both of your Aleth nodes are trying to use the same database location. You need to set one of your nodes' database path (--db-path) to a different location.
 
-* Node 2 doesn't sync with node 1
-This means that node 2 couldn't successfully peer with node 1, typically because you used a different config file for each node. You can get helpful debugging information by enabling verobse logging on node 1 (-v4) - be sure to also filter the log channels to net and sync (--log-channels net sync) otherwise it will be hard to pick out useful information in the logs.
+Node 2 doesn't sync with node 1
+Example:
+TODO:
 
-For example, here's what node 1 logs when the nodes use different config files: TODO:
+This means that node 2 couldn't successfully peer with node 1. This typically happens because you used a different chain config file for each node. You can enable verbose logging on node 1 (-v4 --log-channels net sync) to get helpful logs for debugging.
 
-			TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress receiving auth from 127.0.0.1:61309
-			TRACE 04-01 20:57:53 p2p  net    Listening on local port 30303
-			TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress sending ack to 127.0.0.1:61309
-			TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress sending capabilities handshake
-			TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress recvd hello header
-			TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress hello frame: success. starting session.
-			DEBUG 04-01 20:57:53 p2p  net    Hello: aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug V[4] ##8b7b78e1… (eth,63) 30305
-			DEBUG 04-01 20:57:53 p2p  net    New session for capability eth; idOffset: 16
-			TRACE 04-01 20:57:53 p2p  net    <- [ 0x3F, 0x42, 0x179D6F06, 0x9A610A1C26FFF584E79421406D77ABF46E9FDE72E11D2F6E8B880D3F5E84EDE8, 0xDDCE0F53ABB8348FDF758C4DABBD9C0A7BBD359CBE6E74AC60A2F12F6B9BAA74 ]
-			TRACE 04-01 20:57:53 p2p  net    <- [ ]
-			DEBUG 04-01 20:57:53 p2p  net    p2p.host.peer.register ##8b7b78e1…
-			TRACE 04-01 20:57:53 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Error reading: An established connection was aborted by the software in your host machine
-			TRACE 04-01 20:57:53 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing 127.0.0.1:61309 (Low-level TCP communication error.)
-			DEBUG 04-01 20:57:53 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing peer session :-(
-			TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress receiving auth from 127.0.0.1:61323
-			TRACE 04-01 20:57:58 p2p  net    Listening on local port 30303
-			TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress sending ack to 127.0.0.1:61323
-			TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress sending capabilities handshake
-			TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress recvd hello header
-			TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress hello frame: success. starting session.
-			DEBUG 04-01 20:57:58 p2p  net    Hello: aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug V[4] ##8b7b78e1… (eth,63) 30305
-			DEBUG 04-01 20:57:58 p2p  net    New session for capability eth; idOffset: 16
-			TRACE 04-01 20:57:58 p2p  net    <- [ 0x3F, 0x42, 0x179D6F06, 0x9A610A1C26FFF584E79421406D77ABF46E9FDE72E11D2F6E8B880D3F5E84EDE8, 0xDDCE0F53ABB8348FDF758C4DABBD9C0A7BBD359CBE6E74AC60A2F12F6B9BAA74 ]
-			TRACE 04-01 20:57:58 p2p  net    <- [ ]
-			DEBUG 04-01 20:57:58 p2p  net    p2p.host.peer.register ##8b7b78e1…
-			TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug -> 16 [ 0x3F, 0x42, 0x100000, 0xD8600904A41043A4E81D23863F178E7DC8B3C2CBAFA94EB4BBF5DC46BCCCE176, 0xD8600904A41043A4E81D23863F178E7DC8B3C2CBAFA94EB4BBF5DC46BCCCE176 ]
-			DEBUG 04-01 20:57:58 p2p  sync   8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Peer not suitable for sync: Invalid genesis hash.
-			TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Disconnecting (our reason: Subprotocol reason.)
-			TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug <- [ 0x10 ]
-			TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing 127.0.0.1:61323 (Subprotocol reason.)
-			DEBUG 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing peer session :-(
+For example, here are the node 1 logs when node 1 and node 2 use different chain configuration files:
 
-* Error: Couldn't start accepting connections on host. Failed to accept socket on <IP address>
+    TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress receiving auth from 127.0.0.1:61309
+    TRACE 04-01 20:57:53 p2p  net    Listening on local port 30303
+    TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress sending ack to 127.0.0.1:61309
+    TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress sending capabilities handshake
+    TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress recvd hello header
+    TRACE 04-01 20:57:53 p2p  net    p2p.connect.ingress hello frame: success. starting session.
+    DEBUG 04-01 20:57:53 p2p  net    Hello: aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug V[4] ##8b7b78e1… (eth,63) 30305
+    DEBUG 04-01 20:57:53 p2p  net    New session for capability eth; idOffset: 16
+    TRACE 04-01 20:57:53 p2p  net    <- [ 0x3F, 0x42, 0x179D6F06, 0x9A610A1C26FFF584E79421406D77ABF46E9FDE72E11D2F6E8B880D3F5E84EDE8, 0xDDCE0F53ABB8348FDF758C4DABBD9C0A7BBD359CBE6E74AC60A2F12F6B9BAA74 ]
+    TRACE 04-01 20:57:53 p2p  net    <- [ ]
+    DEBUG 04-01 20:57:53 p2p  net    p2p.host.peer.register ##8b7b78e1…
+    TRACE 04-01 20:57:53 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Error reading: An established connection was aborted by the software in your host machine
+    TRACE 04-01 20:57:53 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing 127.0.0.1:61309 (Low-level TCP communication error.)
+    DEBUG 04-01 20:57:53 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing peer session :-(
+    TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress receiving auth from 127.0.0.1:61323
+    TRACE 04-01 20:57:58 p2p  net    Listening on local port 30303
+    TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress sending ack to 127.0.0.1:61323
+    TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress sending capabilities handshake
+    TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress recvd hello header
+    TRACE 04-01 20:57:58 p2p  net    p2p.connect.ingress hello frame: success. starting session.
+    DEBUG 04-01 20:57:58 p2p  net    Hello: aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug V[4] ##8b7b78e1… (eth,63) 30305
+    DEBUG 04-01 20:57:58 p2p  net    New session for capability eth; idOffset: 16
+    TRACE 04-01 20:57:58 p2p  net    <- [ 0x3F, 0x42, 0x179D6F06, 0x9A610A1C26FFF584E79421406D77ABF46E9FDE72E11D2F6E8B880D3F5E84EDE8, 0xDDCE0F53ABB8348FDF758C4DABBD9C0A7BBD359CBE6E74AC60A2F12F6B9BAA74 ]
+    TRACE 04-01 20:57:58 p2p  net    <- [ ]
+    DEBUG 04-01 20:57:58 p2p  net    p2p.host.peer.register ##8b7b78e1…
+    TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug -> 16 [ 0x3F, 0x42, 0x100000, 0xD8600904A41043A4E81D23863F178E7DC8B3C2CBAFA94EB4BBF5DC46BCCCE176, 0xD8600904A41043A4E81D23863F178E7DC8B3C2CBAFA94EB4BBF5DC46BCCCE176 ]
+    DEBUG 04-01 20:57:58 p2p  sync   8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Peer not suitable for sync: Invalid genesis hash.
+    TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Disconnecting (our reason: Subprotocol reason.)
+    TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug <- [ 0x10 ]
+    TRACE 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing 127.0.0.1:61323 (Subprotocol reason.)
+    DEBUG 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing peer session :-(
 
-This means that you're running both nodes on the same listen port. Be sure to specify different ports via --listen. 
 
-Full error text:
-
+"Couldn't start accepting connections on host. Failed to accept socket on <IP address>" error
+Example:
     aleth, a C++ Ethereum client
     INFO  04-01 21:01:18 main net    Id: ##ac459be1…
     aleth 1.6.0-alpha.1-28+commit.32bb833e.dirty
@@ -183,3 +218,6 @@ Full error text:
 
     INFO  04-01 21:01:20 p2p  info   UPnP device not found.
     WARN  04-01 21:01:20 p2p  warn   "_enabled" parameter is false, discovery is disabled
+
+This means that you're running both nodes on the same listen port. Be sure to specify different ports via --listen.
+
