@@ -130,10 +130,13 @@ ENR parseV4ENR(RLP _rlp)
 
 std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
 {
-    RLPStream s;
-    _enr.streamRLP(s);
-
-    _out << RLP(s.out());
+    _out << "[ " << toHexPrefixed(_enr.signature()) << " seq=" << _enr.sequenceNumber() << " ";
+    for (auto const keyValue : _enr.keyValues())
+    {
+        _out << keyValue.first << "=";
+        _out << toHexPrefixed(RLP(keyValue.second).toBytes()) << " ";
+    }
+    _out << "]";
     return _out;
 }
 
