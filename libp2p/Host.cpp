@@ -1005,7 +1005,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
     {
         if (r[1].isList())
         {
-            auto const secret = Secret{r[1][0].toBytes()};
+            secret = Secret{r[1][0].toBytes()};
             auto enrRlp = r[1][1];
 
             return make_pair(secret, parseV4ENR(enrRlp));
@@ -1020,6 +1020,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
         secret = KeyPair::create().secret();
     }
 
+    // TODO(gumb0): update ENR in case new address given in config
     auto const address = _netConfig.publicIPAddress.empty() ?
                              bi::address{} :
                              bi::address::from_string(_netConfig.publicIPAddress);

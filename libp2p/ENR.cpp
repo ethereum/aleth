@@ -19,12 +19,13 @@ namespace p2p
 {
 namespace
 {
-    template<class Address>
-    bytes addressToBytes(Address const& _address)
-    {
-        auto const addressBytes = _address.to_bytes();
-        return bytes(addressBytes.begin(), addressBytes.end());
-    }    
+// Address can be either boost::asio::ip::address_v4 or boost::asio::ip::address_v6
+template <class Address>
+bytes addressToBytes(Address const& _address)
+{
+    auto const addressBytes = _address.to_bytes();
+    return bytes(addressBytes.begin(), addressBytes.end());
+}
 }  // namespace
 
 ENR::ENR(RLP _rlp, VerifyFunction _verifyFunction)
@@ -87,17 +88,20 @@ void ENR::streamContent(RLPStream& _s) const
 
 ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint16_t _tcpPort,  uint16_t _udpPort)
 {
-    ENR::SignFunction signFunction = [&_secret](bytesConstRef _data) { 
+    ENR::SignFunction signFunction = [&_secret](bytesConstRef _data) {
+        // dev::sign returns 65 bytes signature containing r,s,v values
         Signature s = dev::sign(_secret, sha3(_data)); 
         // The resulting 64-byte signature is encoded as the concatenation of the r and s signature values.
         return bytes(s.data(), s.data() + 64);
     };
 
-    PublicCompressed publicKey = toPublicCompressed(_secret);
-    
+    PublicCompressed const publicKey = toPublicCompressed(_secret);
+
     auto const address = _ip.is_v4() ? addressToBytes(_ip.to_v4()) : addressToBytes(_ip.to_v6());
 
-    std::map<std::string, bytes> keyValues = {{c_keyID, rlp(c_IDV4)},
+    // Values are of different types (string, bytes, uint16_t),
+    // so we store them as RLP representation
+    std::map<std::string, bytes> const keyValues = {{c_keyID, rlp(c_IDV4)},
         {c_keySec256k1, rlp(publicKey.asBytes())}, {c_keyIP, rlp(address)},
         {c_keyTCP, rlp(_tcpPort)}, {c_keyUDP, rlp(_udpPort)}};
 
@@ -122,7 +126,7 @@ ENR parseV4ENR(RLP _rlp)
         auto const key = RLP(itKey->second).toHash<PublicCompressed>(RLP::VeryStrict);
         h512 const signature{_signature};
 
-        return verify(key, signature, sha3(_data));
+        return dev::verify(key, signature, sha3(_data));
     };
 
     return ENR{_rlp, verifyFunction};
