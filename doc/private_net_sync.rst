@@ -14,8 +14,8 @@ An Ethereum chain is some state (e.g. accounts and balances and/or contract code
 Mining
 ------
 - Mining will be done using the Aleth CPU miner (Aleth doesn't include a GPU miner because of the high maintenance and support costs. Please see `EthMiner <https://github.com/ethereum-mining/ethminer>`_ for GPU mining support).
-- Only one node will be mining to keep your machine responsive (since both nodes are running on the same physical system, having both mine will really slow down your machine).
-- If you find your system being sluggish or if you'd like both nodes to mine, you can tune the number of mining threads via the ``-t <thread count>`` flag
+- Only one node will mine to keep your machine responsive.
+- If mining slows down your system too much or you'd like both nodes to mine, you can tune the number of mining threads via ``-t <thread count>``.
 
 Chain Configuration
 -------------------
@@ -72,7 +72,7 @@ Chain Configuration
         }
     }
 
-- **Both nodes must use the same chain configuration file!** The chain configuration is used to create the chain's genesis state, so using a different configuration with each node means that each node will be running on a different chain and won't be able to peer with each other. An example of what this looks like is shown in `Common Problems`_.
+- **Both nodes must use the same chain configuration file:** The chain configuration is used to create the chain's genesis state, so using a different configuration with each node means that the nodes will be unable to peer with each other. An example of this is shown in the `Common Problems`_ section.
 
 Instructions
 ============
@@ -106,7 +106,7 @@ Enter the desired password when prompted
     Address: 002c73acd4bc217998966964d27f0ee79a47befb
 
 
-2. Add each address generated in the previous step to the ``accounts`` section of your chain configuration file (we'll refer to this as ``config.json`` from now on) along with the desired balance in wei. For example, the following initializes each account with two ether:
+2. Add each address generated in the previous step to the ``accounts`` section of your chain configuration file (we'll refer to this as ``config.json`` from now on) along with the desired balance in wei. For example, the following initializes each account with 2000000000000000000 wei (2 ether):
 
 ::
 
@@ -135,21 +135,21 @@ Enter the desired password when prompted
     Aleth -m on --config <file> -a <addr> --no-discovery --unsafe-transactions --listen <port>
 
 -m on                       Enable CPU mining
---config                    Path to chain configuration json file
+--config                    Set chain configuration
 -a                          Set recipient of mining block reward
---no-discovery              Disable the devp2p discovery protocol (it's unnecessary in a two-node network, we'll be adding a peer manually)
+--no-discovery              Disable devp2p discovery protocol (it's unnecessary in a two-node network, we'll be adding a peer manually)
 --unsafe-transactions       Don't require approval before sending each transaction (unnecessary for testing purposes)
---listen                    TCP port to listen on for incoming peer connections
+--listen                    Set TCP port to listen on for incoming peer connections
 
 
 **Example:**
 
 ::
 
-    aleth -m on --config %CODE%\config.json -a 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6 --no-discovery --unsafe-transactions --listen 30303
+    aleth -m on --config config.json -a 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6 --no-discovery --unsafe-transactions --listen 30303
 
 
-Make note of the node's URL (which starts with ``enode://``) since you'll need to supply it when launching the second node. The URL should be logged within the first few lines of log output.
+Make note of the node's URL (which starts with ``enode://``) since you'll need to supply it when starting the second node. The URL should be logged within the first few lines of console output.
 
 **Example:**
 
@@ -164,7 +164,7 @@ Make note of the node's URL (which starts with ``enode://``) since you'll need t
     Node ID: enode://fb867844056920bbf0dd0945faff8a7a249d33726786ec367461a6c023cae62d7b2bb725a07e2f9832eb05be89e71cf81acf22022215b51a561929c37419531a@0.0.0.0:0
 
 
-You should see the node start mining blocks after a minute or two:
+The node should start mining blocks after a minute or two:
 
 ::
 
@@ -189,17 +189,17 @@ You should see the node start mining blocks after a minute or two:
 --config        Specify the same chain config file
 --listen        Specify a different port
 --peerset       Update the IP address in the node URL to ``127.0.0.1:<listen port>``
---db-path       Path to save sync'd blocks. Aleth saves blocks by default to ``%APPDATA%\Ethereum`` on Windows and ``$HOME/.ethereum`` on Linux. You need to specify a different path for your second node otherwise you'll run into database access issues. An example of this error is in the `Common Problems`_ section.
+--db-path       Path to save sync'd blocks. Aleth saves blocks by default to ``%APPDATA%\Ethereum`` on Windows and ``$HOME/.ethereum`` on Linux. You need to specify a different path for your second node otherwise you'll run into database access issues. See the `Common Problems`_ section for an example of this error.
 
 
 **Example:**
 
 ::
 
-    aleth --config %CODE%\config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://fb867844056920bbf0dd0945faff8a7a249d33726786ec367461a6c023cae62d7b2bb725a07e2f9832eb05be89e71cf81acf22022215b51a561929c37419531a@127.0.0.1:30303
+    aleth --config config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://fb867844056920bbf0dd0945faff8a7a249d33726786ec367461a6c023cae62d7b2bb725a07e2f9832eb05be89e71cf81acf22022215b51a561929c37419531a@127.0.0.1:30303
 
 
-5. The second node will connect to the first node and start syncing blocks:
+5. The node should connect to the first node and start syncing blocks:
 
 ::
 
@@ -230,7 +230,7 @@ Common Problems
     Unrecognized peerset: required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@0.0.0.0:0
 
 
-Your peerset string is formatted incorrectly. You probably need to update the IP address in the node URL to ``127.0.0.1:<port>``, where ``<port>`` is the port number you supplied to node 1 via ``--listen``.
+Your ``peerset`` string is formatted incorrectly. You probably need to update the IP address in the node URL to ``127.0.0.1:<port>``, where ``<port>`` is the port number you supplied to node 1 via ``--listen``.
 
 "Database already open" error
 -------------------------------
@@ -248,7 +248,7 @@ Both of your Aleth nodes are trying to use the same location for their block dat
 
 Node 2 doesn't sync with node 1
 -------------------------------
-This means that node 2 couldn't successfully peer with node 1. A common cause when running a private network is using a different chain config for each node. You can enable verbose logging on node 1 (``-v4 --log-channels net sync``) to get helpful logs for debugging. **You need to enable the verbose logging on the node being connected to (i.e. the miner).**
+This means that node 2 couldn't successfully peer with node 1. A possible reason for this when running a private network is using a different chain config for each node. To see if this is the issue, enable verbose logging on node 1 (``-v4 --log-channels net sync``) to get helpful logs for debugging.
 
 **Example**: Here are the node 1 logs when node 1 and node 2 use different chain configuration files (note the ``Peer not suitable for sync: Invalid genesis hash.`` error):
 
