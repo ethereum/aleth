@@ -87,7 +87,6 @@ Instructions
 
 Enter the desired password when prompted
 
-
 **Example:**
 ::
 
@@ -107,8 +106,7 @@ Enter the desired password when prompted
     Address: 002c73acd4bc217998966964d27f0ee79a47befb
 
 
-
-2. Add each address (these are the public keys generated in the previous step) into the "accounts" section of your chain configuration json file (we'll refer to this as ``config.json`` from now on) along with the desired balance in wei. For example, the following initializes each account created in step 1 with 2 ether:
+2. Add each address (the public keys generated in the previous step) to the ``accounts`` section of your chain configuration file (we'll refer to this as ``config.json`` from now on) along with the desired balance in wei. For example, the following initializes each account created in step 1 with 2 ether:
 
 ::
 
@@ -141,7 +139,8 @@ Enter the desired password when prompted
 -a                          Sets recipient of mining block reward
 --no-discovery              Disables the devp2p discovery protocol (it's unnecessary in a 2-node configuration, we'll be adding a peer manually)
 --unsafe-transactions       Don't require approval before sending each transaction (unnecessary for testing purposes)
---listen                    TCP port to listen for incoming peer connections
+--listen                    TCP port to listen on for incoming peer connections
+
 
 **Example:**
 
@@ -149,7 +148,8 @@ Enter the desired password when prompted
 
     aleth -m on --config %CODE%\config.json -a 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6 --no-discovery --unsafe-transactions --listen 30303
 
-Make note of the node's enode URL since you'll need to reference it when launching the second node. The enode URL should be logged within the first few lines of log output.
+
+Make note of the node's URL (starts with ``enode://``) since you'll need to reference it when launching the second node. The URL should be logged within the first few lines of log output.
 
 **Example:**
 
@@ -187,13 +187,13 @@ If everything goes smoothly you should see the node start mining (empty) blocks 
 
 ::
 
-    aleth --config <file> --no-discovery --unsafe-transactions --listen <port> --peerset required:<enode URL> --db-path <path>
+    aleth --config <file> --no-discovery --unsafe-transactions --listen <port> --peerset required:<url> --db-path <path>
 
  
     --config        You need to specify the same chain config file
     --listen        You need to specify a different port
-    --peerset       Be sure to update the IP address in the enode URL to ``127.0.0.1:<listen port>``
-    --db-path       Path to save sync'd blocks. Aleth saves blocks by default to ``%APPDATA%\Ethereum`` on Windows and TODO on Linux. You need to specify a different path for your second node otherwise you'll run into database concurrency issues. An example of this error is in the TODO section.
+    --peerset       Be sure to update the IP address in the node URL to 127.0.0.1:<listen port>
+    --db-path       Path to save sync'd blocks. Aleth saves blocks by default to %APPDATA%\Ethereum on Windows and $HOME/.ethereum on Linux. You need to specify a different path for your second node otherwise you'll run into database concurrency issues. An example of this error is in the `Common Problems`_ section.
 
 
 **Example:**
@@ -203,7 +203,7 @@ If everything goes smoothly you should see the node start mining (empty) blocks 
     aleth --config %CODE%\config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@127.0.0.1:30303
 
 
-5. If all goes well the second node will connect to the first node and start syncing blocks:
+5. The second node will connect to the first node and start syncing blocks:
 
 ::
 
@@ -225,7 +225,7 @@ If everything goes smoothly you should see the node start mining (empty) blocks 
 
 Common Problems
 ===============
-``Unrecognized peerset`` error
+"Unrecognized peerset" error
 ---------------------------------
 **Example:**
 
@@ -234,9 +234,9 @@ Common Problems
     Unrecognized peerset: required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@0.0.0.0:0
 
 
-You need to update the IP address in the enode URL to 127.0.0.1:<port> where <port> is the port number you supplied to node 1 via --listen
+You need to update the IP address in the node URL to ``127.0.0.1:<port>``, where ``<port>`` is the port number you supplied to node 1 via ``--listen``.
 
-``Database already open`` error
+"Database already open" error
 -------------------------------
 **Example:**
 
@@ -247,17 +247,14 @@ You need to update the IP address in the enode URL to 127.0.0.1:<port> where <po
     WARN  04-01 20:50:31 main warn   Database "C:\Users\nilse\AppData\Roaming\EthereumPrivate_00\ddce0f53\blocks"or "C:\Users\nilse\AppData\Roaming\EthereumPrivate_00\ddce0f53\12041\extras"already open. You appear to have another instance of ethereum running. Bailing.
 
 
-Both of your Aleth nodes are trying to use the same database location. You need to set one of your nodes' database path (--db-path) to a different location.
+Both of your Aleth nodes are trying to use the same location for their block databases. You need to set one of your nodes' database paths (``--db-path``) to a different location.
 
 
 Node 2 doesn't sync with node 1
 -------------------------------
-Example:
-TODO:
-
 This means that node 2 couldn't successfully peer with node 1. This typically happens because you used a different chain config file for each node. You can enable verbose logging on node 1 (``-v4 --log-channels net sync``) to get helpful logs for debugging.
 
-For example, here are the node 1 logs when node 1 and node 2 use different chain configuration files:
+For example, here are the node 1 logs when node 1 and node 2 use different chain configuration files (note the ``Peer not suitable for sync: Invalid genesis hash.`` error):
 
 ::
 
@@ -294,7 +291,7 @@ For example, here are the node 1 logs when node 1 and node 2 use different chain
     DEBUG 04-01 20:57:58 p2p  net    8b7b78e1…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Closing peer session :-(
 
 
-``Couldn't start accepting connections on host. Failed to accept socket on <IP address>`` error
+"Couldn't start accepting connections on host. Failed to accept socket on <IP address>" error
 --------------------------------------------------------------------------------------------------
 **Example:**
 
