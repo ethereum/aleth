@@ -14,12 +14,12 @@ An Ethereum chain is some state (e.g. accounts and balances and/or contract code
 Mining
 ------
 - Mining will be done using the Aleth CPU miner (Aleth doesn't include a GPU miner because of the high maintenance and support costs. Please see `EthMiner <https://github.com/ethereum-mining/ethminer>`_ for GPU mining support).
-- Only one node will mine to keep your machine responsive.
-- If mining slows down your system too much or you'd like both nodes to mine, you can tune the number of mining threads via ``-t <thread count>``.
+- We will only start mining for one node to keep your machine responsive.
+- If mining slows down your system too much or you'd like to have both nodes mine, you can tune the number of mining threads via ``-t <thread count>``.
 
 Chain Configuration
 -------------------
-- You typically run a private chain using a chain configuration json file (this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses).
+- You typically initialize a private chain using a chain configuration json file (this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses).
 - The chain configuration json file format is defined here: https://github.com/ethereum/wiki/wiki/Ethereum-Chain-Spec-Format
 - Here's an example file:
 
@@ -72,7 +72,7 @@ Chain Configuration
         }
     }
 
-- **Both nodes must use the same chain configuration file:** The chain configuration is used to create the chain's genesis state, so using a different configuration with each node means that the nodes will be unable to peer with each other. An example of this is shown in the `Common Problems`_ section.
+- **Both nodes must use the same chain configuration file:** The chain configuration is used to create the chain's genesis state, so using a different configuration for each node means that they won't be able to peer with each other. An example of this is shown in the `Common Problems`_ section.
 
 Instructions
 ============
@@ -106,7 +106,7 @@ Enter the desired password when prompted
     Address: 002c73acd4bc217998966964d27f0ee79a47befb
 
 
-2. Add each address generated in the previous step to the ``accounts`` section of your chain configuration file (we'll refer to this as ``config.json`` from now on) along with the desired balance in wei. For example, the following initializes each account with 2000000000000000000 wei (2 ether):
+2. Add each address generated in the previous step to the ``accounts`` section of your chain configuration file (we'll refer to this as ``config.json``) along with the desired balance in wei. For example, the following initializes each account with 2 ether (2000000000000000000 wei):
 
 ::
 
