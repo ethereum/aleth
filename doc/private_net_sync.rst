@@ -1,25 +1,25 @@
-Creating a private network with 2 syncing nodes
-===============================================
-These instructions cover creating an Ethereum private network consisting of two nodes - one node will mine blocks and the other node will connect to the first node and sync the mined blocks to its own block database. Both nodes will use (the same) private chain configuration.
+Creating A Private Network With Two Syncing Nodes
+==================================================
+These instructions cover creating an Ethereum private network consisting of two nodes - one node will mine blocks and the other node will connect to the first node and sync the mined blocks to its own block database.
 
 
-What is a private network?
+What is a Private Network?
 --------------------------
 For the purposes of this documentation, a **private network** can be thought of as a network of Ethereum nodes only accessible on your physical machine.
 
-What is a private chain?
+What is a Private Chain?
 -------------------------
 An Ethereum chain is some state (e.g. accounts and balances and/or contract code) and a set of rules for interacting with that state. For the purposes of this documentation, a **private chain** is an Ethereum chain whose configuration is only available on your physical machine.
 
 Mining
 ------
-- Mining will be done using the Aleth CPU miner (Aleth doesn't include a GPU miner because of the high maintenance and support costs. Please see `EthMiner <https://github.com/ethereum-mining/ethminer>`_) for GPU mining support.
-- Only one node will be mining to keep your machine responsive (since both nodes are running on the same physical system, having both mine will slow your system down significantly).
+- Mining will be done using the Aleth CPU miner (Aleth doesn't include a GPU miner because of the high maintenance and support costs. Please see `EthMiner <https://github.com/ethereum-mining/ethminer>`_ for GPU mining support).
+- Only one node will be mining to keep your machine responsive (since both nodes are running on the same physical system, having both mine will really slow down your machine).
 - If you find your system being sluggish or if you'd like both nodes to mine, you can tune the number of mining threads via the ``-t <thread count>`` flag
 
-Chain configuration
+Chain Configuration
 -------------------
-- You typically run a private chain using a chain configuration json file (this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses with Ether).
+- You typically run a private chain using a chain configuration json file (this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses).
 - The chain configuration json file format is defined here: https://github.com/ethereum/wiki/wiki/Ethereum-Chain-Spec-Format
 - Here's an example file:
 
@@ -72,11 +72,11 @@ Chain configuration
         }
     }
 
-- **Both nodes must use the same configuration file!** The configuration file is used to create the chain's genesis state, so using a different configuration file with each node means that each node will be running on a different chain. The nodes will therefore not be able to peer with each other - an example of this is shown in the `Common Problems`_ section.
+- **Both nodes must use the same chain configuration file!** The chain configuration is used to create the chain's genesis state, so using a different configuration with each node means that each node will be running on a different chain and won't be able to peer with each other. An example of what this looks like is shown in `Common Problems`_.
 
 Instructions
 ============
-*The examples in this section were generated on Windows 10 running aleth 1.6.0-alpha.1-31+commit.ad7204c9*
+*The output in this section was generated on Windows 10 running aleth 1.6.0-alpha.1-31+commit.ad7204c9*
 
 1. Create a key pair for each node:
 
@@ -106,7 +106,7 @@ Enter the desired password when prompted
     Address: 002c73acd4bc217998966964d27f0ee79a47befb
 
 
-2. Add each address (the public keys generated in the previous step) to the ``accounts`` section of your chain configuration file (we'll refer to this as ``config.json`` from now on) along with the desired balance in wei. For example, the following initializes each account created in step 1 with 2 ether:
+2. Add each address generated in the previous step to the ``accounts`` section of your chain configuration file (we'll refer to this as ``config.json`` from now on) along with the desired balance in wei. For example, the following initializes each account with two ether:
 
 ::
 
@@ -128,16 +128,16 @@ Enter the desired password when prompted
     }
 
 
-3. Start the first node (each of the command-line options are explained below):
+3. Start the first node:
 
 ::
 
-    Aleth -m on --config <file>  -a <addr> --no-discovery --unsafe-transactions --listen <port>
+    Aleth -m on --config <file> -a <addr> --no-discovery --unsafe-transactions --listen <port>
 
--m on                       Enables CPU mining
+-m on                       Enable CPU mining
 --config                    Path to chain configuration json file
--a                          Sets recipient of mining block reward
---no-discovery              Disables the devp2p discovery protocol (it's unnecessary in a 2-node configuration, we'll be adding a peer manually)
+-a                          Set recipient of mining block reward
+--no-discovery              Disable the devp2p discovery protocol (it's unnecessary in a two-node network, we'll be adding a peer manually)
 --unsafe-transactions       Don't require approval before sending each transaction (unnecessary for testing purposes)
 --listen                    TCP port to listen on for incoming peer connections
 
@@ -149,7 +149,7 @@ Enter the desired password when prompted
     aleth -m on --config %CODE%\config.json -a 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6 --no-discovery --unsafe-transactions --listen 30303
 
 
-Make note of the node's URL (starts with ``enode://``) since you'll need to reference it when launching the second node. The URL should be logged within the first few lines of log output.
+Make note of the node's URL (which starts with ``enode://``) since you'll need to supply it when launching the second node. The URL should be logged within the first few lines of log output.
 
 **Example:**
 
@@ -162,12 +162,9 @@ Make note of the node's URL (starts with ``enode://``) since you'll need to refe
     INFO  04-01 20:34:40 p2p  info   UPnP device not found.
     WARN  04-01 20:34:40 p2p  warn   "_enabled" parameter is false, discovery is disabled
     Node ID: enode://fb867844056920bbf0dd0945faff8a7a249d33726786ec367461a6c023cae62d7b2bb725a07e2f9832eb05be89e71cf81acf22022215b51a561929c37419531a@0.0.0.0:0
-    INFO  04-01 20:34:40 main rpc    JSON-RPC socket path: \\.\pipe\\geth.ipc
-    JSONRPC Admin Session Key: 7BPb1cysJuQ=
-    INFO  04-01 20:34:40 main client Mining Beneficiary: @00fd4aaf…
 
 
-If everything goes smoothly you should see the node start mining (empty) blocks after a minute or two:
+You should see the node start mining blocks after a minute or two:
 
 ::
 
@@ -189,18 +186,17 @@ If everything goes smoothly you should see the node start mining (empty) blocks 
 
     aleth --config <file> --no-discovery --unsafe-transactions --listen <port> --peerset required:<url> --db-path <path>
 
- 
-    --config        You need to specify the same chain config file
-    --listen        You need to specify a different port
-    --peerset       Be sure to update the IP address in the node URL to 127.0.0.1:<listen port>
-    --db-path       Path to save sync'd blocks. Aleth saves blocks by default to %APPDATA%\Ethereum on Windows and $HOME/.ethereum on Linux. You need to specify a different path for your second node otherwise you'll run into database concurrency issues. An example of this error is in the `Common Problems`_ section.
+--config        Specify the same chain config file
+--listen        Specify a different port
+--peerset       Update the IP address in the node URL to ``127.0.0.1:<listen port>``
+--db-path       Path to save sync'd blocks. Aleth saves blocks by default to ``%APPDATA%\Ethereum`` on Windows and ``$HOME/.ethereum`` on Linux. You need to specify a different path for your second node otherwise you'll run into database access issues. An example of this error is in the `Common Problems`_ section.
 
 
 **Example:**
 
 ::
 
-    aleth --config %CODE%\config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@127.0.0.1:30303
+    aleth --config %CODE%\config.json --no-discovery --unsafe-transactions --listen 30305 --db-path %APPDATA%\EthereumPrivate_01 --peerset required:enode://fb867844056920bbf0dd0945faff8a7a249d33726786ec367461a6c023cae62d7b2bb725a07e2f9832eb05be89e71cf81acf22022215b51a561929c37419531a@127.0.0.1:30303
 
 
 5. The second node will connect to the first node and start syncing blocks:
@@ -234,7 +230,7 @@ Common Problems
     Unrecognized peerset: required:enode://5def584369536c059df3cd86280200beb51829319e4bd1a8bb19df885babe215db30eafa548861b558ae4ac65d546a2d96a5664fade83ba3605c45b6bd88cc51@0.0.0.0:0
 
 
-You need to update the IP address in the node URL to ``127.0.0.1:<port>``, where ``<port>`` is the port number you supplied to node 1 via ``--listen``.
+Your peerset string is formatted incorrectly. You probably need to update the IP address in the node URL to ``127.0.0.1:<port>``, where ``<port>`` is the port number you supplied to node 1 via ``--listen``.
 
 "Database already open" error
 -------------------------------
@@ -247,14 +243,14 @@ You need to update the IP address in the node URL to ``127.0.0.1:<port>``, where
     WARN  04-01 20:50:31 main warn   Database "C:\Users\nilse\AppData\Roaming\EthereumPrivate_00\ddce0f53\blocks"or "C:\Users\nilse\AppData\Roaming\EthereumPrivate_00\ddce0f53\12041\extras"already open. You appear to have another instance of ethereum running. Bailing.
 
 
-Both of your Aleth nodes are trying to use the same location for their block databases. You need to set one of your nodes' database paths (``--db-path``) to a different location.
+Both of your Aleth nodes are trying to use the same location for their block databases. Set one of your nodes' database paths to a different location (``--db-path``).
 
 
 Node 2 doesn't sync with node 1
 -------------------------------
-This means that node 2 couldn't successfully peer with node 1. This typically happens because you used a different chain config file for each node. You can enable verbose logging on node 1 (``-v4 --log-channels net sync``) to get helpful logs for debugging.
+This means that node 2 couldn't successfully peer with node 1. A common cause when running a private network is using a different chain config for each node. You can enable verbose logging on node 1 (``-v4 --log-channels net sync``) to get helpful logs for debugging. **You need to enable the verbose logging on the node being connected to (i.e. the miner).**
 
-For example, here are the node 1 logs when node 1 and node 2 use different chain configuration files (note the ``Peer not suitable for sync: Invalid genesis hash.`` error):
+**Example**: Here are the node 1 logs when node 1 and node 2 use different chain configuration files (note the ``Peer not suitable for sync: Invalid genesis hash.`` error):
 
 ::
 
@@ -306,9 +302,5 @@ For example, here are the node 1 logs when node 1 and node 2 use different chain
     Dynamic exception type: class boost::exception_detail::clone_impl<struct boost::exception_detail::error_info_injector<class boost::system::system_error> >
     std::exception::what: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted
 
-    INFO  04-01 21:01:20 p2p  info   UPnP device not found.
-    WARN  04-01 21:01:20 p2p  warn   "_enabled" parameter is false, discovery is disabled
-
-
-You're running both nodes on the same listen port. Be sure to specify different ports via ``--listen``.
+You're running both nodes on the same listen port. Specify different ports when launching each node via ``--listen``.
 
