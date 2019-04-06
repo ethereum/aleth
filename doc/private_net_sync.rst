@@ -1,6 +1,6 @@
 Creating A Private Network With Two Syncing Nodes
 ==================================================
-These instructions cover creating an Ethereum private network consisting of two nodes - one node will mine blocks and the other node will connect to the first node and sync the mined blocks to its own block database.
+These instructions cover creating an Ethereum private network consisting of two nodes - one node will mine blocks and the other node will connect to the first node and sync the mined blocks to its own block database. Both nodes will run a private chain configuration.
 
 
 What is a Private Network?
@@ -9,7 +9,7 @@ For the purposes of this documentation, a **private network** can be thought of 
 
 What is a Private Chain?
 -------------------------
-An Ethereum chain is some state (e.g. accounts and balances and/or contract code) and a set of rules for interacting with that state. For the purposes of this documentation, a **private chain** is an Ethereum chain whose configuration is only available on your physical machine.
+An Ethereum chain is some state (e.g. accounts and balances and/or contract code) and a set of rules for interacting with that state.  **Private chain** is used in this documentation to refer to an Ethereum chain whose configuration is only available on your physical machine.
 
 Mining
 ------
@@ -19,8 +19,7 @@ Mining
 
 Chain Configuration
 -------------------
-- You typically initialize a private chain using a chain configuration json file (this isn't strictly required, but it makes testing a lot easier since you can do things like lower the difficulty rate and pre-fund addresses).
-- The chain configuration json file format is defined here: https://github.com/ethereum/wiki/wiki/Ethereum-Chain-Spec-Format
+- You typically initialize a private chain using a chain configuration json file (this isn't strictly required, but it makes testing easier since you can do things like lower the difficulty rate and pre-fund addresses).
 - Here's an example file:
 
 ::
@@ -28,47 +27,47 @@ Chain Configuration
     {
         "sealEngine": "Ethash",
         "params": {
-        "accountStartNonce": "0x00",
-        "maximumExtraDataSize": "0x20",
-        "homesteadForkBlock": "0x00",
-        "EIP150ForkBlock": "0x00",
-        "EIP158ForkBlock": "0x00",
-        "byzantiumForkBlock": "0x00",
-        "constantinopleForkBlock": "0x00",
-        "constantinopleFixForkBlock": "0x00",
-        "minGasLimit": "0x5208",
-        "maxGasLimit": "0x7fffffffffffffff",
-        "tieBreakingGas": false,
-        "gasLimitBoundDivisor": "0x0400",
-        "minimumDifficulty": "0x100000",
-        "difficultyBoundDivisor": "0x0800",
-        "durationLimit": "0x0d",
-        "blockReward": "0x4563918244F40000",
-        "networkID" : "0x42",
-        "chainID": "0x42",
-        "allowFutureBlocks" : false
+            "accountStartNonce": "0x00",
+            "maximumExtraDataSize": "0x20",
+            "homesteadForkBlock": "0x00",
+            "EIP150ForkBlock": "0x00",
+            "EIP158ForkBlock": "0x00",
+            "byzantiumForkBlock": "0x00",
+            "constantinopleForkBlock": "0x00",
+            "constantinopleFixForkBlock": "0x00",
+            "minGasLimit": "0x5208",
+            "maxGasLimit": "0x7fffffffffffffff",
+            "tieBreakingGas": false,
+            "gasLimitBoundDivisor": "0x0400",
+            "minimumDifficulty": "0x100000",
+            "difficultyBoundDivisor": "0x0800",
+            "durationLimit": "0x0d",
+            "blockReward": "0x4563918244F40000",
+            "networkID" : "0x42",
+            "chainID": "0x42",
+            "allowFutureBlocks" : false
         },
         "genesis": {
-        "nonce": "0x0000000000000042",
-        "difficulty": "0x100000",
-        "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "author": "0x0000000000000000000000000000000000000000",
-        "timestamp": "0x5A5B92D7",
-        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "extraData": "0x655741534d2074657374206e6574776f726b2030",
-        "gasLimit": "0x989680"
+            "nonce": "0x0000000000000042",
+            "difficulty": "0x100000",
+            "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "author": "0x0000000000000000000000000000000000000000",
+            "timestamp": "0x5A5B92D7",
+            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "extraData": "0x655741534d2074657374206e6574776f726b2030",
+            "gasLimit": "0x989680"
         },
         "accounts": {
-        "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } }, "balance": "0x01" },
-        "0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } }, "balance": "0x01" },
-        "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } }, "balance": "0x01" },
-        "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } }, "balance": "0x01" },
-        "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" }, "balance": "0x01" },
-        "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } }, "balance": "0x01" },
-        "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } }, "balance": "0x01" },
-        "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" }, "balance": "0x01" },
-        "00fd4aaf9713f5bb664c20a462acc4ebc363d1a6": { "balance" : "0x200000000000000000000000000000000000000000000000000000000000000" },
-        "004d5baf9ab6a9c29c73725ec35023e330af2bc8": { "balance" : "0x200000000000000000000000000000000000000000000000000000000000000" }
+            "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } }, "balance": "0x01" },
+            "0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } }, "balance": "0x01" },
+            "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } }, "balance": "0x01" },
+            "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } }, "balance": "0x01" },
+            "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" }, "balance": "0x01" },
+            "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } }, "balance": "0x01" },
+            "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } }, "balance": "0x01" },
+            "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" }, "balance": "0x01" },
+            "00fd4aaf9713f5bb664c20a462acc4ebc363d1a6": { "balance" : "0x200000000000000000000000000000000000000000000000000000000000000" },
+            "004d5baf9ab6a9c29c73725ec35023e330af2bc8": { "balance" : "0x200000000000000000000000000000000000000000000000000000000000000" }
         }
     }
 
@@ -111,20 +110,20 @@ Enter the desired password when prompted
 ::
 
     "accounts": {
-      "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" }, "balance": "0x01" },
-      "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" }, "balance": "0x01" },
-      "007e13502a8b226b0f19e7412db75352dc1d0760": {
-          "balance" : "0x2000000000000000000"
-      },
-      "002c73acd4bc217998966964d27f0ee79a47befb": {
-          "balance" : "0x2000000000000000000"
-      }
+        "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } }, "balance": "0x01" },
+        "0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } }, "balance": "0x01" },
+        "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } }, "balance": "0x01" },
+        "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } }, "balance": "0x01" },
+        "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" }, "balance": "0x01" },
+        "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } }, "balance": "0x01" },
+        "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } }, "balance": "0x01" },
+        "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" }, "balance": "0x01" },
+        "007e13502a8b226b0f19e7412db75352dc1d0760": {
+            "balance" : "2000000000000000000"
+        },
+        "002c73acd4bc217998966964d27f0ee79a47befb": {
+            "balance" : "2000000000000000000"
+        }
     }
 
 
@@ -132,7 +131,7 @@ Enter the desired password when prompted
 
 ::
 
-    Aleth -m on --config <file> -a <addr> --no-discovery --unsafe-transactions --listen <port>
+    aleth -m on --config <file> -a <addr> --no-discovery --unsafe-transactions --listen <port>
 
 -m on                       Enable CPU mining
 --config                    Set chain configuration
