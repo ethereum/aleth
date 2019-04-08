@@ -5,20 +5,21 @@
 #include "ENR.h"
 #include <libdevcore/SHA3.h>
 
-static std::string const c_keyID = "id";
-static std::string const c_keySec256k1 = "secp256k1";
-static std::string const c_keyIP = "ip";
-static std::string const c_keyTCP = "tcp";
-static std::string const c_keyUDP = "udp";
-static dev::bytes const c_IDV4 = {'v', '4'};
-static size_t const c_ENRMaxSize = 300;
-
 namespace dev
 {
 namespace p2p
 {
 namespace
 {
+constexpr char c_keyID[] = "id";
+constexpr char c_keySec256k1[] = "secp256k1";
+constexpr char c_keyIP[] = "ip";
+constexpr char c_keyTCP[] = "tcp";
+constexpr char c_keyUDP[] = "udp";
+constexpr char c_IDV4[] = "v4";
+constexpr size_t c_ENRMaxSize = 300;
+
+
 // Address can be either boost::asio::ip::address_v4 or boost::asio::ip::address_v6
 template <class Address>
 bytes addressToBytes(Address const& _address)
@@ -115,7 +116,7 @@ ENR parseV4ENR(RLP _rlp)
         auto itID = _keyValues.find(c_keyID);
         if (itID == _keyValues.end())
             return false;
-        auto id = RLP(itID->second).toBytes(RLP::VeryStrict);
+        auto id = RLP(itID->second).toString(RLP::VeryStrict);
         if (id != c_IDV4)
             return false;
 
