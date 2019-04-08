@@ -49,8 +49,10 @@ void printHelp()
     cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test\n";
     cout << setw(30) << "--singletest <TestFile> <TestName>\n";
+    cout << setw(30) << "--singlenet <networkId>" << setw(25) << "Run tests for a specific network (Frontier|Homestead|EIP150|EIP158|Byzantium|Constantinople|ConstantinopleFix)\n";
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
-    cout << setw(30) << "--vm <interpreter|jit|smart|hera>" << setw(25) << "Set VM type for VMTests suite\n";
+    cout << setw(30) << "--vm <name|path> (=legacy)" << setw(25) << "Set VM type for VMTests suite. Available options are: interpreter, legacy.\n";
+    cout << setw(30) << "--evmc <option>=<value>" << setw(25) << "EVMC option\n";
     cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test. (Require build with VMTRACE=1)\n";
     cout << setw(30) << "--jsontrace <Options>" << setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'\n";
     cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file\n";
