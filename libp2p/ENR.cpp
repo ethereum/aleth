@@ -92,7 +92,7 @@ ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint
         // dev::sign returns 65 bytes signature containing r,s,v values
         Signature s = dev::sign(_secret, sha3(_data)); 
         // The resulting 64-byte signature is encoded as the concatenation of the r and s signature values.
-        return bytes(s.data(), s.data() + 64);
+        return bytes(&s[0], &s[64]);
     };
 
     PublicCompressed const publicKey = toPublicCompressed(_secret);
