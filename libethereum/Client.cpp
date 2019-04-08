@@ -791,7 +791,7 @@ Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 
 void Client::flushTransactions()
 {
-    doWork();
+    doWork(false);
 }
 
 Transactions Client::pending() const
