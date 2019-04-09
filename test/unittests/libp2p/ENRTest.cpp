@@ -157,9 +157,12 @@ TEST(enr, createV4)
     auto keyValuePairs = enr.keyValuePairs();
 
     EXPECT_TRUE(contains(keyValuePairs, std::string("id")));
+    EXPECT_EQ(keyValuePairs["id"], rlp("v4"));
     EXPECT_TRUE(contains(keyValuePairs, std::string("secp256k1")));
     EXPECT_TRUE(contains(keyValuePairs, std::string("ip")));
     EXPECT_EQ(keyValuePairs["ip"], rlp(bytes{127, 0, 0, 1}));
     EXPECT_TRUE(contains(keyValuePairs, std::string("tcp")));
+    EXPECT_EQ(keyValuePairs["tcp"], rlp(3322));
     EXPECT_TRUE(contains(keyValuePairs, std::string("udp")));
+    EXPECT_EQ(keyValuePairs["udp"], rlp(5544));
 }
