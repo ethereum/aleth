@@ -33,12 +33,12 @@ TEST(enr, parse)
         fromHex("7098ad865b00a582051940cb9cf36836572411a47278783077011599ed5cd16b76f2635f4e234738f3"
                 "0813a89eb9137e3e3df5266e3a1f11df72ecf1145ccb9c"));
     EXPECT_EQ(enr.sequenceNumber(), 1);
-    auto keyValues = enr.keyValues();
-    EXPECT_EQ(RLP(keyValues["id"]).toString(), "v4");
-    EXPECT_EQ(RLP(keyValues["ip"]).toBytes(), fromHex("7f000001"));
-    EXPECT_EQ(RLP(keyValues["secp256k1"]).toBytes(),
+    auto keyValuePairs = enr.keyValuePairs();
+    EXPECT_EQ(RLP(keyValuePairs["id"]).toString(), "v4");
+    EXPECT_EQ(RLP(keyValuePairs["ip"]).toBytes(), fromHex("7f000001"));
+    EXPECT_EQ(RLP(keyValuePairs["secp256k1"]).toBytes(),
         fromHex("03ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd3138"));
-    EXPECT_EQ(RLP(keyValues["udp"]).toInt<uint64_t>(), 0x765f);
+    EXPECT_EQ(RLP(keyValuePairs["udp"]).toInt<uint64_t>(), 0x765f);
 }
 
 TEST(enr, createAndParse)
@@ -55,14 +55,14 @@ TEST(enr, createAndParse)
 
     EXPECT_EQ(enr1.signature(), enr2.signature());
     EXPECT_EQ(enr1.sequenceNumber(), enr2.sequenceNumber());
-    EXPECT_EQ(enr1.keyValues(), enr2.keyValues());
+    EXPECT_EQ(enr1.keyValuePairs(), enr2.keyValuePairs());
 }
 
 TEST(enr, parseTooBigRlp)
 {
-    std::map<std::string, bytes> keyValues = {{"key", rlp(bytes(300, 'a'))}};
+    std::map<std::string, bytes> keyValuePairs = {{"key", rlp(bytes(300, 'a'))}};
 
-    ENR enr1{0, keyValues, dummySignFunction};
+    ENR enr1{0, keyValuePairs, dummySignFunction};
 
     RLPStream s;
     enr1.streamRLP(s);
@@ -73,12 +73,13 @@ TEST(enr, parseTooBigRlp)
 
 TEST(enr, parseKeysNotSorted)
 {
-    std::vector<std::pair<std::string, bytes>> keyValues = {{"keyB", RLPNull}, {"keyA", RLPNull}};
+    std::vector<std::pair<std::string, bytes>> keyValuePairs = {
+        {"keyB", RLPNull}, {"keyA", RLPNull}};
 
-    RLPStream s((keyValues.size() * 2 + 2));
+    RLPStream s((keyValuePairs.size() * 2 + 2));
     s << bytes{};  // signature
     s << 0;        // sequence number
-    for (auto const keyValue : keyValues)
+    for (auto const keyValue : keyValuePairs)
     {
         s << keyValue.first;
         s.appendRaw(keyValue.second);
@@ -90,12 +91,12 @@ TEST(enr, parseKeysNotSorted)
 
 TEST(enr, parseKeysNotUnique)
 {
-    std::vector<std::pair<std::string, bytes>> keyValues = {{"key", RLPNull}, {"key", RLPNull}};
+    std::vector<std::pair<std::string, bytes>> keyValuePairs = {{"key", RLPNull}, {"key", RLPNull}};
 
-    RLPStream s((keyValues.size() * 2 + 2));
+    RLPStream s((keyValuePairs.size() * 2 + 2));
     s << bytes{};  // signature
     s << 0;        // sequence number
-    for (auto const keyValue : keyValues)
+    for (auto const keyValue : keyValuePairs)
     {
         s << keyValue.first;
         s.appendRaw(keyValue.second);
@@ -124,9 +125,9 @@ TEST(enr, parseInvalidSignature)
 
 TEST(enr, parseV4WithInvalidID)
 {
-    std::map<std::string, bytes> keyValues = {{"id", rlp("v5")}};
+    std::map<std::string, bytes> keyValuePairs = {{"id", rlp("v5")}};
 
-    ENR enr1{0, keyValues, dummySignFunction};
+    ENR enr1{0, keyValuePairs, dummySignFunction};
 
     RLPStream s;
     enr1.streamRLP(s);
@@ -137,9 +138,9 @@ TEST(enr, parseV4WithInvalidID)
 
 TEST(enr, parseV4WithNoPublicKey)
 {
-    std::map<std::string, bytes> keyValues = {{"id", rlp("v4")}};
+    std::map<std::string, bytes> keyValuePairs = {{"id", rlp("v4")}};
 
-    ENR enr1{0, keyValues, dummySignFunction};
+    ENR enr1{0, keyValuePairs, dummySignFunction};
 
     RLPStream s;
     enr1.streamRLP(s);
@@ -153,11 +154,12 @@ TEST(enr, createV4)
     auto keyPair = KeyPair::create();
     ENR enr = createV4ENR(keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
 
-    auto keyValues = enr.keyValues();
+    auto keyValuePairs = enr.keyValuePairs();
 
-    EXPECT_TRUE(contains(keyValues, std::string("id")));
-    EXPECT_TRUE(contains(keyValues, std::string("secp256k1")));
-    EXPECT_TRUE(contains(keyValues, std::string("ip")));
-    EXPECT_TRUE(contains(keyValues, std::string("tcp")));
-    EXPECT_TRUE(contains(keyValues, std::string("udp")));
+    EXPECT_TRUE(contains(keyValuePairs, std::string("id")));
+    EXPECT_TRUE(contains(keyValuePairs, std::string("secp256k1")));
+    EXPECT_TRUE(contains(keyValuePairs, std::string("ip")));
+    EXPECT_EQ(keyValuePairs["ip"], rlp(bytes{127, 0, 0, 1}));
+    EXPECT_TRUE(contains(keyValuePairs, std::string("tcp")));
+    EXPECT_TRUE(contains(keyValuePairs, std::string("udp")));
 }

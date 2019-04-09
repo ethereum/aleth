@@ -14,7 +14,7 @@ DEV_SIMPLE_EXCEPTION(ENRIsTooBig);
 DEV_SIMPLE_EXCEPTION(ENRSignatureIsInvalid);
 DEV_SIMPLE_EXCEPTION(ENRKeysAreNotUniqueSorted);
 
-/// Class representing Ethereum Node Record - see EIP-778 for the spec
+/// Class representing Ethereum Node Record - see EIP-778
 class ENR
 {
 public:
@@ -23,18 +23,19 @@ public:
 
     // Sign function gets serialized ENR contents and signs it according to some Identity Scheme
     using SignFunction = std::function<bytes(bytesConstRef)>;
-    // Verify function gets serialized ENR contents, signature and contents and validates the
+    // Verify function gets ENR key-value pairs, signature, and serialized content and validates the
     // signature according to some Identity Scheme
     using VerifyFunction =
         std::function<bool(std::map<std::string, bytes> const&, bytesConstRef, bytesConstRef)>;
 
     // Parse from RLP with given signature verification function
-    ENR(RLP _rlp, VerifyFunction _verifyFunction);
+    ENR(RLP _rlp, VerifyFunction const& _verifyFunction);
     // Create with given sign function
-    ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues, SignFunction _signFunction);
+    ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues,
+        SignFunction const& _signFunction);
 
     uint64_t sequenceNumber() const { return m_seq; }
-    std::map<std::string, bytes> const& keyValues() const { return m_map; }
+    std::map<std::string, bytes> const& keyValuePairs() const { return m_map; }
     bytes const& signature() const { return m_signature; }
 
     // Serialize to given RLP stream
@@ -46,7 +47,7 @@ private:
     bytes m_signature;
 
     bytes content() const;
-    size_t contentListSize() const { return m_map.size() * 2 + 1; }
+    size_t contentRlpListItemCount() const { return m_map.size() * 2 + 1; }
     void streamContent(RLPStream& _s) const;
 };
 

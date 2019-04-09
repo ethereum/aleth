@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(saveENR)
     ENR enr2 = host2.enr();
 
     BOOST_REQUIRE_EQUAL(enr1.sequenceNumber(), enr2.sequenceNumber());
-    BOOST_REQUIRE(enr1.keyValues() == enr2.keyValues());
+    BOOST_REQUIRE(enr1.keyValuePairs() == enr2.keyValuePairs());
     BOOST_REQUIRE(enr1.signature() == enr2.signature());
 }
 

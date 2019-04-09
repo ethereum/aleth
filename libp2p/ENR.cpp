@@ -17,7 +17,7 @@ constexpr char c_keyIP[] = "ip";
 constexpr char c_keyTCP[] = "tcp";
 constexpr char c_keyUDP[] = "udp";
 constexpr char c_IDV4[] = "v4";
-constexpr size_t c_ENRMaxSize = 300;
+constexpr size_t c_ENRMaxSizeBytes = 300;
 
 
 // Address can be either boost::asio::ip::address_v4 or boost::asio::ip::address_v6
@@ -29,9 +29,9 @@ bytes addressToBytes(Address const& _address)
 }
 }  // namespace
 
-ENR::ENR(RLP _rlp, VerifyFunction _verifyFunction)
+ENR::ENR(RLP _rlp, VerifyFunction const& _verifyFunction)
 {
-    if (_rlp.data().size() > c_ENRMaxSize)
+    if (_rlp.data().size() > c_ENRMaxSizeBytes)
         BOOST_THROW_EXCEPTION(ENRIsTooBig());
 
     m_signature = _rlp[0].toBytes(RLP::VeryStrict);
@@ -39,32 +39,33 @@ ENR::ENR(RLP _rlp, VerifyFunction _verifyFunction)
     m_seq = _rlp[1].toInt<uint64_t>(RLP::VeryStrict);
 
     // read key-values into vector first, to check the order
-    std::vector<std::pair<std::string const, bytes>> keyValues;
-    for (size_t i = 2; i < _rlp.itemCount(); i+= 2)
+    std::vector<std::pair<std::string const, bytes>> keyValuePairs;
+    for (size_t i = 2; i < _rlp.itemCount(); i += 2)
     {
         auto const key = _rlp[i].toString(RLP::VeryStrict);
         auto const value = _rlp[i + 1].data().toBytes();
-        keyValues.push_back({key, value});
+        keyValuePairs.push_back({key, value});
     }
 
     // transfer to map, this will order them
-    m_map.insert(keyValues.begin(), keyValues.end());
+    m_map.insert(keyValuePairs.begin(), keyValuePairs.end());
 
-    if (!std::equal(keyValues.begin(), keyValues.end(), m_map.begin()))
+    if (!std::equal(keyValuePairs.begin(), keyValuePairs.end(), m_map.begin()))
         BOOST_THROW_EXCEPTION(ENRKeysAreNotUniqueSorted());
 
     if (!_verifyFunction(m_map, dev::ref(m_signature), dev::ref(content())))
         BOOST_THROW_EXCEPTION(ENRSignatureIsInvalid());
 }
 
-ENR::ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues, SignFunction _signFunction)
-  : m_seq(_seq), m_map(_keyValues), m_signature(_signFunction(dev::ref(content())))
+ENR::ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValuePairs,
+    SignFunction const& _signFunction)
+  : m_seq{_seq}, m_map{_keyValuePairs}, m_signature{_signFunction(dev::ref(content()))}
 {
 }
 
 bytes ENR::content() const
 {
-    RLPStream stream(contentListSize());
+    RLPStream stream{contentRlpListItemCount()};
     streamContent(stream);
     return stream.out();
 }
@@ -72,7 +73,7 @@ bytes ENR::content() const
 
 void ENR::streamRLP(RLPStream& _s) const
 {
-    _s.appendList(contentListSize() + 1);
+    _s.appendList(contentRlpListItemCount() + 1);
     _s << m_signature;
     streamContent(_s);
 }
@@ -80,7 +81,7 @@ void ENR::streamRLP(RLPStream& _s) const
 void ENR::streamContent(RLPStream& _s) const
 {
     _s << m_seq;
-    for (auto const keyValue : m_map)
+    for (auto const& keyValue : m_map)
     {
         _s << keyValue.first;
         _s.appendRaw(keyValue.second);
@@ -102,26 +103,26 @@ ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint
 
     // Values are of different types (string, bytes, uint16_t),
     // so we store them as RLP representation
-    std::map<std::string, bytes> const keyValues = {{c_keyID, rlp(c_IDV4)},
+    std::map<std::string, bytes> const keyValuePairs = {{c_keyID, rlp(c_IDV4)},
         {c_keySec256k1, rlp(publicKey.asBytes())}, {c_keyIP, rlp(address)},
         {c_keyTCP, rlp(_tcpPort)}, {c_keyUDP, rlp(_udpPort)}};
 
-    return ENR{0, keyValues, signFunction};
+    return ENR{0 /* sequence number */, keyValuePairs, signFunction};
 }
 
 ENR parseV4ENR(RLP _rlp)
 {
-    ENR::VerifyFunction verifyFunction = [](std::map<std::string, bytes> const& _keyValues,
+    ENR::VerifyFunction verifyFunction = [](std::map<std::string, bytes> const& _keyValuePairs,
                                              bytesConstRef _signature, bytesConstRef _data) {
-        auto itID = _keyValues.find(c_keyID);
-        if (itID == _keyValues.end())
+        auto itID = _keyValuePairs.find(c_keyID);
+        if (itID == _keyValuePairs.end())
             return false;
-        auto id = RLP(itID->second).toString(RLP::VeryStrict);
+        auto const id = RLP(itID->second).toString(RLP::VeryStrict);
         if (id != c_IDV4)
             return false;
 
-        auto itKey = _keyValues.find(c_keySec256k1);
-        if (itKey == _keyValues.end())
+        auto itKey = _keyValuePairs.find(c_keySec256k1);
+        if (itKey == _keyValuePairs.end())
             return false;
 
         auto const key = RLP(itKey->second).toHash<PublicCompressed>(RLP::VeryStrict);
@@ -136,10 +137,10 @@ ENR parseV4ENR(RLP _rlp)
 std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
 {
     _out << "[ " << toHexPrefixed(_enr.signature()) << " seq=" << _enr.sequenceNumber() << " ";
-    for (auto const keyValue : _enr.keyValues())
+    for (auto const& keyValue : _enr.keyValuePairs())
     {
         _out << keyValue.first << "=";
-        _out << toHexPrefixed(RLP(keyValue.second).toBytes()) << " ";
+        _out << toHexPrefixed(RLP{keyValue.second}.toBytes()) << " ";
     }
     _out << "]";
     return _out;

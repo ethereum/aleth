@@ -92,8 +92,8 @@ Host::Host(
                      // simultaneously
     m_tcp4Acceptor(m_ioService),
     m_runTimer(m_ioService),
-    m_alias(_secretAndENR.first),
-    m_enr(_secretAndENR.second),
+    m_alias{_secretAndENR.first},
+    m_enr{_secretAndENR.second},
     m_lastPing(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this))
 {
@@ -1012,7 +1012,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
         }
 
         // Support for older format without ENR
-        secret = Secret{Secret(r[1].toBytes())};
+        secret = Secret{r[1].toBytes()};
     }
     else
     {
@@ -1021,6 +1021,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
     }
 
     // TODO(gumb0): update ENR in case new address given in config
+    // https://github.com/ethereum/aleth/issues/5551
     auto const address = _netConfig.publicIPAddress.empty() ?
                              bi::address{} :
                              bi::address::from_string(_netConfig.publicIPAddress);

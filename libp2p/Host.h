@@ -287,7 +287,7 @@ private:
     /// Shutdown network. Not thread-safe; to be called only by worker.
     virtual void doneWorking();
 
-    /// Get or create host Ethereum Node record.
+    /// Get or create host's Ethereum Node record.
     std::pair<Secret, ENR> restoreENR(bytesConstRef _b, NetworkConfig const& _networkConfig);
 
     bool nodeTableHasNode(Public const& _id) const;
