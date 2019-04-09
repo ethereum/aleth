@@ -217,7 +217,7 @@ bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
         return false;
 
     m_daoChallengedPeers.insert(_peerID);
-    m_host.peer(_peerID).requestBlockHeaders(daoHardfork, 1, 0, false);
+    m_host.peer(_peerID).requestBlockHeaders(static_cast<unsigned>(daoHardfork), 1, 0, false);
     return true;
 }
 
