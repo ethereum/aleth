@@ -45,7 +45,7 @@ HunterGate(
 )
 
 project(aleth)
-set(PROJECT_VERSION 1.6.0-alpha.1)
+set(PROJECT_VERSION 1.6.0-rc.0)
 
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 

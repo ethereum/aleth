@@ -17,4 +17,4 @@
 - Fixed: [#5539](https://github.com/ethereum/aleth/pull/5539) Fix logic for determining if dao hard fork block header should be requested.
 - Fixed: [#5547](https://github.com/ethereum/aleth/pull/5547) Fix unnecessary slow-down of eth_flush RPC method.
 
-[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...master
+[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...release/1.6
