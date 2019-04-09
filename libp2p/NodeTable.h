@@ -64,6 +64,7 @@ class NodeTable;
 inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable);
 
 struct NodeEntry;
+struct DiscoveryDatagram;
 
 /**
  * NodeTable using modified kademlia for node discovery and preference.
@@ -276,6 +277,15 @@ protected:
     /// Called by m_socket when packet is received.
     void onPacketReceived(
         UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet) override;
+
+    std::shared_ptr<NodeEntry> handlePong(
+        bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
+    std::shared_ptr<NodeEntry> handleNeighbours(
+        bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
+    std::shared_ptr<NodeEntry> handleFindNode(
+        bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
+    std::shared_ptr<NodeEntry> handlePingNode(
+        bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
 
     /// Called by m_socket when socket is disconnected.
     void onSocketDisconnected(UDPSocketFace*) override {}
