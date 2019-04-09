@@ -2,7 +2,7 @@ FROM debian:testing
 
 LABEL maintainer="C++ Ethereum team"
 LABEL repo="https://github.com/ethereum/aleth"
-LABEL version="9"
+LABEL version="11"
 LABEL description="Build environment for C++ Ethereum projects"
 
 RUN export DEBIAN_FRONTEND=noninteractive \
