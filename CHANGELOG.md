@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.0] - Unreleased
+
+- Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
+
+[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...master
+
 ## [1.6.0] - Unreleased
 
 - Added: [#5485](https://github.com/ethereum/aleth/pull/5485) aleth-bootnode now by default connects to official Ethereum bootnodes. This can be disabled with `--no-bootstrap` flag.
@@ -17,4 +23,5 @@
 - Fixed: [#5539](https://github.com/ethereum/aleth/pull/5539) Fix logic for determining if dao hard fork block header should be requested.
 - Fixed: [#5547](https://github.com/ethereum/aleth/pull/5547) Fix unnecessary slow-down of eth_flush RPC method.
 
-[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...master
+[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...release/1.6
+[1.7.0]: https://github.com/ethereum/aleth/compare/release/1.6...master
