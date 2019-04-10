@@ -52,9 +52,15 @@ public:
 	boost::filesystem::path const& testFile() { return m_currentTestFileName; }
 	void printTestExecStats();
 
+    // Mark the _folderName as executed for a given _suitePath (to filler files)
+    void markTestFolderAsFinished(
+        boost::filesystem::path const& _suitePath, std::string const& _folderName);
+
 private:
 	TestOutputHelper() {}
-	Timer m_timer;
+    void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test
+                                        // run
+    Timer m_timer;
 	size_t m_currTest;
 	size_t m_maxTests;
 	std::string m_currentTestName;
@@ -62,6 +68,8 @@ private:
 	boost::filesystem::path m_currentTestFileName;
 	typedef std::pair<double, std::string> execTimeName;
 	std::vector<execTimeName> m_execTimeResults;
+    typedef std::set<std::string> FolderNameSet;
+    std::map<boost::filesystem::path, FolderNameSet> m_finishedTestFoldersMap;
 };
 
 class TestOutputHelperFixture
