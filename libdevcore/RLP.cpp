@@ -84,14 +84,20 @@ RLP RLP::operator[](size_t _i) const
 {
 	if (_i < m_lastIndex)
 	{
+		// Get size of 0th item
 		m_lastEnd = sizeAsEncoded(payload());
+		// Set m_lastItem to 0th item data
 		m_lastItem = payload().cropped(0, m_lastEnd);
 		m_lastIndex = 0;
 	}
 	for (; m_lastIndex < _i && m_lastItem.size(); ++m_lastIndex)
 	{
+		// Get chunk of payload data starting right after m_lastItem
+		// This will be empty when we're out of bounds
 		m_lastItem = payload().cropped(m_lastEnd);
+		// Crop it to get the data of the next item
 		m_lastItem = m_lastItem.cropped(0, sizeAsEncoded(m_lastItem));
+		// Point m_lastEnd to next item
 		m_lastEnd += m_lastItem.size();
 	}
 	return RLP(m_lastItem, ThrowOnFail | FailIfTooSmall);

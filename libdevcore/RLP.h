@@ -340,8 +340,11 @@ private:
 	bytesConstRef m_data;
 
 	/// The list-indexing cache.
+	// Index of the last item accessed with operator[]
 	mutable size_t m_lastIndex = (size_t)-1;
+	// Offset of the next byte after last byte of m_lastItem
 	mutable size_t m_lastEnd = 0;
+	// Data of the last item accessed with operator[]
 	mutable bytesConstRef m_lastItem;
 };
 
