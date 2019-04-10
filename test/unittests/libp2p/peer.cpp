@@ -200,7 +200,12 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     RLP r(firstHostNetwork);
     BOOST_REQUIRE(r.itemCount() == 3);
     BOOST_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
-    BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
+
+    BOOST_REQUIRE(r[1].isList());
+    BOOST_REQUIRE(r[1].itemCount() == 2);
+    BOOST_REQUIRE_EQUAL(r[1][0].toBytes().size(), 32);  // secret
+    BOOST_REQUIRE(r[1][1].isList());                    // ENR
+
     BOOST_REQUIRE(r[2].itemCount() >= c_nodes);
     
     for (auto i: r[2])
@@ -212,6 +217,23 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     for (auto host: hosts)
         delete host;
 }
+
+BOOST_AUTO_TEST_CASE(saveENR)
+{
+    NetworkConfig config("13.74.189.147", "", 30303, false);
+    Host host1("Test", config);
+    ENR enr1 = host1.enr();
+
+    bytes store(host1.saveNetwork());
+
+    Host host2("Test", config, bytesConstRef(&store));
+    ENR enr2 = host2.enr();
+
+    BOOST_REQUIRE_EQUAL(enr1.sequenceNumber(), enr2.sequenceNumber());
+    BOOST_REQUIRE(enr1.keyValuePairs() == enr2.keyValuePairs());
+    BOOST_REQUIRE(enr1.signature() == enr2.signature());
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

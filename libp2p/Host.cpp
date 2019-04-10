@@ -82,7 +82,8 @@ bytes ReputationManager::data(SessionFace const& _s, string const& _sub) const
     return bytes();
 }
 
-Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig const& _n)
+Host::Host(
+    string const& _clientVersion, pair<Secret, ENR> const& _secretAndENR, NetworkConfig const& _n)
   : Worker("p2p", 0),
     m_clientVersion(_clientVersion),
     m_netConfig(_n),
@@ -91,15 +92,17 @@ Host::Host(string const& _clientVersion, KeyPair const& _alias, NetworkConfig co
                      // simultaneously
     m_tcp4Acceptor(m_ioService),
     m_runTimer(m_ioService),
-    m_alias(_alias),
+    m_alias{_secretAndENR.first},
+    m_enr{_secretAndENR.second},
     m_lastPing(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this))
 {
     cnetnote << "Id: " << id();
+    cnetnote << "ENR: " << m_enr;
 }
 
-Host::Host(string const& _clientVersion, NetworkConfig const& _n, bytesConstRef _restoreNetwork):
-    Host(_clientVersion, networkAlias(_restoreNetwork), _n)
+Host::Host(string const& _clientVersion, NetworkConfig const& _n, bytesConstRef _restoreNetwork)
+  : Host(_clientVersion, restoreENR(_restoreNetwork, _n), _n)
 {
     m_restoreNetwork = _restoreNetwork.toBytes();
 }
@@ -919,7 +922,12 @@ bytes Host::saveNetwork() const
     }
 
     RLPStream ret(3);
-    ret << dev::p2p::c_protocolVersion << m_alias.secret().ref();
+    ret << dev::p2p::c_protocolVersion;
+
+    ret.appendList(2);
+    ret << m_alias.secret().ref();
+    m_enr.streamRLP(ret);
+
     ret.appendList(count);
     if (!!count)
         ret.appendRaw(network.out(), count);
@@ -989,13 +997,36 @@ bool Host::peerSlotsAvailable(Host::PeerSlotType _type /*= Ingress*/)
     return peerCount() + m_pendingPeerConns.size() < peerSlots(_type);
 }
 
-KeyPair Host::networkAlias(bytesConstRef _b)
+std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _netConfig)
 {
     RLP r(_b);
+    Secret secret;
     if (r.itemCount() == 3 && r[0].isInt() && r[0].toInt<unsigned>() >= 3)
-        return KeyPair(Secret(r[1].toBytes()));
+    {
+        if (r[1].isList())
+        {
+            secret = Secret{r[1][0].toBytes()};
+            auto enrRlp = r[1][1];
+
+            return make_pair(secret, parseV4ENR(enrRlp));
+        }
+
+        // Support for older format without ENR
+        secret = Secret{r[1].toBytes()};
+    }
     else
-        return KeyPair::create();
+    {
+        // no private key found, create new one
+        secret = KeyPair::create().secret();
+    }
+
+    // TODO(gumb0): update ENR in case new address given in config
+    // https://github.com/ethereum/aleth/issues/5551
+    auto const address = _netConfig.publicIPAddress.empty() ?
+                             bi::address{} :
+                             bi::address::from_string(_netConfig.publicIPAddress);
+    return make_pair(
+        secret, createV4ENR(secret, address, _netConfig.listenPort, _netConfig.listenPort));
 }
 
 bool Host::nodeTableHasNode(Public const& _id) const
