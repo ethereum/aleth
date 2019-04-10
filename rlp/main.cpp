@@ -12,6 +12,7 @@
 #include <libethcore/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <clocale>
@@ -259,10 +260,20 @@ int main(int argc, char** argv)
     if (inputFile == "--")
         for (int i = cin.get(); i != -1; i = cin.get())
             in.push_back((byte)i);
-    else if (boost::filesystem::is_regular_file(inputFile))
-        in = contents(inputFile);
     else
-        in = asBytes(inputFile);
+    {
+        try
+        {
+            if (boost::filesystem::is_regular_file(inputFile))
+                in = contents(inputFile);
+        }
+        catch (boost::filesystem::filesystem_error const&)
+        {
+        }
+
+        if (in.empty())
+            in = asBytes(inputFile);
+    }
 
     bytes b;
 
