@@ -67,17 +67,20 @@ void EthereumPeer::setStatus(unsigned _protocolVersion, u256 const& _networkId,
 std::string EthereumPeer::validate(
     h256 const& _hostGenesisHash, unsigned _hostProtocolVersion, u256 const& _hostNetworkId) const
 {
-    std::string error;
-    if (m_genesisHash != _hostGenesisHash)
-        error = "Invalid genesis hash.";
+    std::stringstream error;
+    if (m_networkId != _hostNetworkId)
+        error << "Network identifier mismatch. Host network id: " << _hostNetworkId
+              << ", peer network id: " << m_networkId;
     else if (m_protocolVersion != _hostProtocolVersion)
-        error = "Invalid protocol version.";
-    else if (m_networkId != _hostNetworkId)
-        error = "Invalid network identifier.";
+        error << "Protocol version mismatch. Host protocol version: " << _hostProtocolVersion
+              << ", peer protocol version: " << m_protocolVersion;
+    else if (m_genesisHash != _hostGenesisHash)
+        error << "Genesis hash mismatch. Host genesis hash: " << _hostGenesisHash
+              << ", peer genesis hash: " << m_genesisHash;
     else if (m_asking != Asking::State && m_asking != Asking::Nothing)
-        error = "Peer banned for unexpected status message.";
+        error << "Peer banned for unexpected status message.";
 
-    return error;
+    return error.str();
 }
 
 void EthereumPeer::requestStatus(
