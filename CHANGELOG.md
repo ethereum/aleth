@@ -3,8 +3,8 @@
 ## [1.7.0] - Unreleased
 
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
+- Added: [#5557](https://github.com/ethereum/aleth/pull/5557) Improved debug logging of full sync.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
-
 
 ## [1.6.0] - Unreleased
 

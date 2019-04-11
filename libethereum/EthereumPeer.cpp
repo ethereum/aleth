@@ -95,7 +95,7 @@ void EthereumPeer::requestBlockHeaders(
     m_host->prep(m_id, c_ethCapability, s, GetBlockHeadersPacket, 4)
         << _startNumber << _count << _skip << (_reverse ? 1 : 0);
     LOG(m_logger) << "Requesting " << _count << " block headers starting from " << _startNumber
-                  << (_reverse ? " in reverse" : "");
+                  << (_reverse ? " in reverse" : "") << " from " << m_id;
     m_lastAskedHeaders = _count;
     m_host->sealAndSend(m_id, s);
 }
@@ -112,7 +112,7 @@ void EthereumPeer::requestBlockHeaders(
     m_host->prep(m_id, c_ethCapability, s, GetBlockHeadersPacket, 4)
         << _startHash << _count << _skip << (_reverse ? 1 : 0);
     LOG(m_logger) << "Requesting " << _count << " block headers starting from " << _startHash
-                  << (_reverse ? " in reverse" : "");
+                  << (_reverse ? " in reverse" : "") << " from " << m_id;
     m_lastAskedHeaders = _count;
     m_host->sealAndSend(m_id, s);
 }
@@ -148,6 +148,8 @@ void EthereumPeer::requestByHashes(
         m_host->prep(m_id, c_ethCapability, s, _packetType, _hashes.size());
         for (auto const& i : _hashes)
             s << i;
+        LOG(m_logger) << "Requesting " << _hashes.size() << " " << ::toString(_asking) << " from "
+                      << m_id;
         m_host->sealAndSend(m_id, s);
     }
     else
