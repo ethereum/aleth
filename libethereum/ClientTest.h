@@ -50,9 +50,10 @@ public:
     void rewindToBlock(unsigned _number);
     h256 importRawBlock(std::string const& _blockRLP);
     bool completeSync();
+    void setTestMiningBlockTimeout(unsigned _timeout) { m_singleBlockMaxMiningTimeInSeconds = _timeout; }
 
 protected:
-    unsigned const m_singleBlockMaxMiningTimeInSeconds = 5;
+    unsigned m_singleBlockMaxMiningTimeInSeconds = 5;
 };
 
 ClientTest& asClientTest(Interface& _c);

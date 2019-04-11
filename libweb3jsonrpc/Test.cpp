@@ -97,8 +97,9 @@ bool Test::test_setChainParams(Json::Value const& param1)
     }
 }
 
-bool Test::test_mineBlocks(int _number)
+bool Test::test_mineBlocks(int _number, int _timeout)
 {
+    asClientTest(m_eth).setTestMiningBlockTimeout(_timeout);
     if (!asClientTest(m_eth).mineBlocks(_number))  // Synchronous
         throw JsonRpcException("Mining failed.");
     return true;
