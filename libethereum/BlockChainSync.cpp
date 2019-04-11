@@ -223,9 +223,16 @@ bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
 
 void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 {
-    if (m_host.peer(_peerID).isConversing())
+    auto& peer = m_host.peer(_peerID);
+    if (!peer.statusReceived())
     {
-        LOG(m_loggerDetail) << "Can't sync with this peer - outstanding asks.";
+        LOG(m_loggerDetail) << "Can't sync with peer " << _peerID << " - Status not received yet.";
+        return;
+    }
+
+    if (peer.isConversing())
+    {
+        LOG(m_loggerDetail) << "Can't sync with peer " << _peerID << " - outstanding asks.";
         return;
     }
 
@@ -238,7 +245,6 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 
     u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
 
-    auto& peer = m_host.peer(_peerID);
     u256 peerTotalDifficulty = peer.totalDifficulty();
 
     if (_force || peerTotalDifficulty > syncingDifficulty)

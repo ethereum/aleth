@@ -37,6 +37,8 @@ public:
       : m_host(std::move(_host)), m_id(_peerID)
     {}
 
+    bool statusReceived() const { return m_protocolVersion != 0; }
+
     void setStatus(unsigned _protocolVersion, u256 const& _networkId, u256 const& _totalDifficulty,
         h256 const& _latestHash, h256 const& _genesisHash);
 
