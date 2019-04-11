@@ -5,7 +5,6 @@
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 
-[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...master
 
 ## [1.6.0] - Unreleased
 
@@ -14,6 +13,7 @@
 - Added: [#5514](https://github.com/ethereum/aleth/pull/5514) Improved logging in case of RPC method failures.
 - Added: [#5526](https://github.com/ethereum/aleth/pull/5526) Improved logging when loading chain config json containing syntax error.
 - Changed: [#5464](https://github.com/ethereum/aleth/pull/5464) Upgrade OS and compilers in the docker image for tests.
+- Changed: [#5560](https://github.com/ethereum/aleth/pull/5560) Upgrade [ethash](https://github.com/chfast/ethash) library to version 0.4.4.
 - Removed: [#5538](https://github.com/ethereum/aleth/pull/5538) Removed --private flag from aleth command-line arguments.
 - Fixed: [#5483](https://github.com/ethereum/aleth/pull/5483) Don't ping the same node more than once in a row; also fixes the assertion failure.
 - Fixed: [#5512](https://github.com/ethereum/aleth/pull/5512) Calling `eth_call` without `from` argument. 
@@ -23,6 +23,10 @@
 - Fixed: [#5523](https://github.com/ethereum/aleth/pull/5523) [#5533](https://github.com/ethereum/aleth/pull/5533) Fix syncing terminating prematurely because of race condition.
 - Fixed: [#5539](https://github.com/ethereum/aleth/pull/5539) Fix logic for determining if dao hard fork block header should be requested.
 - Fixed: [#5547](https://github.com/ethereum/aleth/pull/5547) Fix unnecessary slow-down of eth_flush RPC method.
+- Fixed: [#5548](https://github.com/ethereum/aleth/pull/5548) Fix rlp tool for long hexadecimal string inputs.
+- Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
+
+[1.7.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.0...master
 [1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...release/1.6
-[1.7.0]: https://github.com/ethereum/aleth/compare/release/1.6...master
+
