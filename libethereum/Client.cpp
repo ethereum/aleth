@@ -43,6 +43,8 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 namespace
 {
+constexpr std::chrono::seconds c_bqSyncTimeout{3600};
+
 std::string filtersToString(h256Hash const& _fs)
 {
     std::stringstream str;
@@ -150,6 +152,9 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
         _extNet.registerCapability(warpCapability);
         m_warpHost = warpCapability;
     }
+
+    DEV_WRITE_GUARDED(x_timeSinceLastBqSync)
+    m_timeSinceLastBqSync.restart();
 
     doWork(false);
 }
@@ -395,6 +400,7 @@ void Client::syncBlockQueue()
     {
         LOG(m_logger) << count << " blocks imported in " << unsigned(elapsed * 1000) << " ms ("
                       << (count / elapsed) << " blocks/s) in #" << bc().number();
+        DEV_WRITE_GUARDED(x_timeSinceLastBqSync) { m_timeSinceLastBqSync.restart(); }
     }
 
     if (elapsed > c_targetDuration * 1.1 && count > c_syncMin)
@@ -675,6 +681,23 @@ void Client::noteChanged(h256Hash const& _filters)
 
 void Client::doWork(bool _doWait)
 {
+    double timeSinceLastBqSyncSeconds;
+    DEV_READ_GUARDED(x_timeSinceLastBqSync)
+    timeSinceLastBqSyncSeconds = m_timeSinceLastBqSync.elapsed();
+    if (static_cast<int>(timeSinceLastBqSyncSeconds) > c_bqSyncTimeout.count())
+    {
+        cwarn << "Block queue sync timeout detected! Time since last block queue sync: "
+              << timeSinceLastBqSyncSeconds
+              << " seconds, timeout threshold: " << c_bqSyncTimeout.count() << " seconds";
+
+        // Force a debugger break
+        int* debugBreak = nullptr;
+        *debugBreak = 0;
+    }
+    else
+        LOG(m_loggerDetail) << "Time since last block queue sync: " << timeSinceLastBqSyncSeconds
+                            << " seconds";
+
     bool t = true;
     if (m_syncBlockQueue.compare_exchange_strong(t, false))
         syncBlockQueue();

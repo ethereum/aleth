@@ -378,6 +378,12 @@ protected:
     std::atomic<bool> m_syncTransactionQueue = {false};
     std::atomic<bool> m_syncBlockQueue = {false};
 
+    Timer m_timeSinceLastTxQueueSync;
+    SharedMutex x_timeSinceLastTxQueueSync;
+
+    Timer m_timeSinceLastBqSync;
+    SharedMutex x_timeSinceLastBqSync;
+
     bytes m_extraData;
 
     Signal<bytes const&> m_onBlockSealed;        ///< Called if we have sealed a new block
