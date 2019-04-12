@@ -11,6 +11,13 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::crypto;
 
+constexpr std::chrono::milliseconds RLPXHandshake::c_timeout;
+
+namespace
+{
+constexpr unsigned c_rlpxVersion = 4;
+}
+
 void RLPXHandshake::writeAuth()
 {
     LOG(m_logger) << "p2p.connect.egress sending auth to " << m_remote << "@"

@@ -17,8 +17,6 @@ namespace dev
 namespace p2p
 {
 
-static constexpr unsigned c_rlpxVersion = 4;
-
 /**
  * @brief Setup inbound or outbound connection for communication over RLPXFrameCoder.
  * RLPx Spec: https://github.com/ethereum/devp2p/blob/master/rlpx.md#encrypted-handshake
@@ -49,6 +47,10 @@ public:
     void cancel();
 
 protected:
+    /// Timeout for remote to respond to transition events. Enforced by m_idleTimer and refreshed by
+    /// transition().
+    static constexpr std::chrono::milliseconds c_timeout{1800};
+
     /// Sequential states of handshake
     enum State
     {
@@ -91,9 +93,6 @@ protected:
     /// Performs transition for m_nextState.
     virtual void transition(boost::system::error_code _ech = boost::system::error_code());
 
-    /// Timeout for remote to respond to transition events. Enforced by m_idleTimer and refreshed by transition().
-    boost::posix_time::milliseconds const c_timeout = boost::posix_time::milliseconds(1800);
-
     State m_nextState = New;		///< Current or expected state of transition.
     bool m_cancel = false;			///< Will be set to true if connection was canceled.
     
@@ -123,7 +122,7 @@ protected:
     std::unique_ptr<RLPXFrameCoder> m_io;
     
     std::shared_ptr<RLPXSocket> m_socket;		///< Socket.
-    boost::asio::deadline_timer m_idleTimer;	///< Timer which enforces c_timeout.
+    ba::steady_timer m_idleTimer;               ///< Timer which enforces c_timeout.
 
     Logger m_logger{createLogger(VerbosityTrace, "rlpx")};
 };
