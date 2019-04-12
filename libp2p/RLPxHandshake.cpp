@@ -13,7 +13,8 @@ using namespace dev::crypto;
 
 void RLPXHandshake::writeAuth()
 {
-    LOG(m_logger) << "p2p.connect.egress sending auth to " << m_socket->remoteEndpoint();
+    LOG(m_logger) << "p2p.connect.egress sending auth to " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
     m_auth.resize(Signature::size + h256::size + Public::size + h256::size + 1);
     bytesRef sig(&m_auth[0], Signature::size);
     bytesRef hepubk(&m_auth[Signature::size], h256::size);
@@ -39,7 +40,8 @@ void RLPXHandshake::writeAuth()
 
 void RLPXHandshake::writeAck()
 {
-    LOG(m_logger) << "p2p.connect.ingress sending ack to " << m_socket->remoteEndpoint();
+    LOG(m_logger) << "p2p.connect.ingress sending ack to " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
     m_ack.resize(Public::size + h256::size + 1);
     bytesRef epubk(&m_ack[0], Public::size);
     bytesRef nonce(&m_ack[Public::size], h256::size);
@@ -57,7 +59,8 @@ void RLPXHandshake::writeAck()
 
 void RLPXHandshake::writeAckEIP8()
 {
-    LOG(m_logger) << "p2p.connect.ingress sending EIP-8 ack to " << m_socket->remoteEndpoint();
+    LOG(m_logger) << "p2p.connect.ingress sending EIP-8 ack to " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
 
     RLPStream rlp;
     rlp.appendList(3)
@@ -92,7 +95,8 @@ void RLPXHandshake::setAuthValues(Signature const& _sig, Public const& _remotePu
 
 void RLPXHandshake::readAuth()
 {
-    LOG(m_logger) << "p2p.connect.ingress receiving auth from " << m_socket->remoteEndpoint();
+    LOG(m_logger) << "p2p.connect.ingress receiving auth from " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
     m_authCipher.resize(307);
     auto self(shared_from_this());
     ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, 307), [this, self](boost::system::error_code ec, std::size_t)
@@ -118,7 +122,7 @@ void RLPXHandshake::readAuthEIP8()
     assert(m_authCipher.size() == 307);
     uint16_t size(m_authCipher[0]<<8 | m_authCipher[1]);
     LOG(m_logger) << "p2p.connect.ingress receiving " << size << " bytes EIP-8 auth from "
-                  << m_socket->remoteEndpoint();
+                  << m_remote << "@" << m_socket->remoteEndpoint();
     m_authCipher.resize((size_t)size + 2);
     auto rest = ba::buffer(ba::buffer(m_authCipher) + 307);
     auto self(shared_from_this());
@@ -141,7 +145,7 @@ void RLPXHandshake::readAuthEIP8()
         }
         else
         {
-            LOG(m_logger) << "p2p.connect.ingress auth decrypt failed for "
+            LOG(m_logger) << "p2p.connect.ingress auth decrypt failed for " << m_remote << "@"
                           << m_socket->remoteEndpoint();
             m_nextState = Error;
             transition();
@@ -151,7 +155,8 @@ void RLPXHandshake::readAuthEIP8()
 
 void RLPXHandshake::readAck()
 {
-    LOG(m_logger) << "p2p.connect.egress receiving ack from " << m_socket->remoteEndpoint();
+    LOG(m_logger) << "p2p.connect.egress receiving ack from " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
     m_ackCipher.resize(210);
     auto self(shared_from_this());
     ba::async_read(m_socket->ref(), ba::buffer(m_ackCipher, 210), [this, self](boost::system::error_code ec, std::size_t)
@@ -174,8 +179,8 @@ void RLPXHandshake::readAckEIP8()
 {
     assert(m_ackCipher.size() == 210);
     uint16_t size(m_ackCipher[0]<<8 | m_ackCipher[1]);
-    LOG(m_logger) << "p2p.connect.egress receiving " << size << " bytes EIP-8 ack from "
-                  << m_socket->remoteEndpoint();
+    LOG(m_logger) << "p2p.connect.egress receiving " << size << " bytes EIP-8 ack from " << m_remote
+                  << "@" << m_socket->remoteEndpoint();
     m_ackCipher.resize((size_t)size + 2);
     auto rest = ba::buffer(ba::buffer(m_ackCipher) + 210);
     auto self(shared_from_this());
@@ -194,7 +199,7 @@ void RLPXHandshake::readAckEIP8()
         }
         else
         {
-            LOG(m_logger) << "p2p.connect.egress ack decrypt failed for "
+            LOG(m_logger) << "p2p.connect.egress ack decrypt failed for " << m_remote << "@"
                           << m_socket->remoteEndpoint();
             m_nextState = Error;
             transition();
@@ -214,7 +219,8 @@ void RLPXHandshake::error()
 {
     auto connected = m_socket->isConnected();
     if (connected && !m_socket->remoteEndpoint().address().is_unspecified())
-        LOG(m_logger) << "Disconnecting " << m_socket->remoteEndpoint() << " (Handshake Failed)";
+        LOG(m_logger) << "Disconnecting " << m_remote << "@" << m_socket->remoteEndpoint()
+                      << " (Handshake Failed)";
     else
         LOG(m_logger) << "Handshake Failed (Connection reset by peer)";
 
@@ -240,7 +246,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         if (!_ec)
         {
             if (!m_socket->remoteEndpoint().address().is_unspecified())
-                LOG(m_logger) << "Disconnecting " << m_socket->remoteEndpoint()
+                LOG(m_logger) << "Disconnecting " << m_remote << "@" << m_socket->remoteEndpoint()
                               << " (Handshake Timeout)";
             cancel();
         }
@@ -274,7 +280,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     {
         m_nextState = ReadHello;
         LOG(m_logger) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                      << " sending capabilities handshake";
+                      << " sending capabilities handshake to " << m_remote << "@"
+                      << m_socket->remoteEndpoint();
 
         /// This pointer will be freed if there is an error otherwise
         /// it will be passed to Host which will take ownership.
@@ -303,7 +310,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         m_nextState = StartSession;
         
         // read frame header
-        unsigned const handshakeSize = 32;
+        constexpr unsigned handshakeSize = 32;
         m_handshakeInBuffer.resize(handshakeSize);
         ba::async_read(m_socket->ref(), boost::asio::buffer(m_handshakeInBuffer, handshakeSize), [this, self](boost::system::error_code ec, std::size_t)
         {
@@ -328,7 +335,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                 }
 
                 LOG(m_logger) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                                 << " recvd hello header";
+                              << " recvd hello header from " << m_remote << "@"
+                              << m_socket->remoteEndpoint();
 
                 /// check frame size
                 bytes& header = m_handshakeInBuffer;
@@ -382,7 +390,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         {
                             cnetdetails
                                 << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                                << " hello frame: invalid packet type";
+                                << " hello frame: invalid packet type.";
                             m_nextState = Error;
                             transition();
                             return;
