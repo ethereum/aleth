@@ -47,8 +47,8 @@ public:
     void cancel();
 
 protected:
-    /// Timeout for remote to respond to transition events. Enforced by m_idleTimer and refreshed by
-    /// transition().
+    /// Timeout for a stage in the handshake to complete (the remote to respond to transition
+    /// events). Enforced by m_idleTimer and refreshed by transition().
     static constexpr std::chrono::milliseconds c_timeout{1800};
 
     /// Sequential states of handshake
@@ -126,9 +126,11 @@ protected:
     /// Used to read and write RLPx encrypted frames for last step of handshake authentication.
     /// Passed onto Host which will take ownership.
     std::unique_ptr<RLPXFrameCoder> m_io;
-    
-    std::shared_ptr<RLPXSocket> m_socket;		///< Socket.
-    ba::steady_timer m_idleTimer;               ///< Timer which enforces c_timeout.
+
+    std::shared_ptr<RLPXSocket> m_socket;
+
+    /// Timer which enforces c_timeout. Reset for each stage of the handshake.
+    ba::steady_timer m_idleTimer;
 
     Logger m_logger{createLogger(VerbosityDebug, "rlpx")};
     Logger m_errorLogger{createLogger(VerbosityError, "rlpx")};
