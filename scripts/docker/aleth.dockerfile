@@ -7,6 +7,7 @@
 # Build stage
 
 FROM alpine:latest AS builder
+ARG BuildType=Release
 RUN apk add --no-cache \
         linux-headers \
         g++ \
@@ -15,7 +16,7 @@ RUN apk add --no-cache \
         git
 ADD . /source
 WORKDIR /build
-RUN cmake /source -DVMTRACE=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DHUNTER_JOBS_NUMBER=$(nproc)
+RUN cmake /source -DVMTRACE=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${BuildType} -DHUNTER_JOBS_NUMBER=$(nproc)
 RUN make -j $(nproc) && make install
 
 # Target: testeth
