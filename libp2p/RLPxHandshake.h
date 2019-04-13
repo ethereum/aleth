@@ -96,6 +96,9 @@ protected:
     /// Get a string indicating if the connection is incoming or outgoing
     const char* connectionDirectionString() const;
 
+    /// Determine if the remote socket is still connected
+    bool remoteSocketConnected() const;
+
     State m_nextState = New;		///< Current or expected state of transition.
     bool m_cancel = false;			///< Will be set to true if connection was canceled.
     

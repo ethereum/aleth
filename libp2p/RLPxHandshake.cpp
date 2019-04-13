@@ -224,13 +224,12 @@ void RLPXHandshake::cancel()
 
 void RLPXHandshake::error()
 {
-    auto connected = m_socket->isConnected();
-    if (connected && !m_socket->remoteEndpoint().address().is_unspecified())
+    if (remoteSocketConnected())
         LOG(m_errorLogger) << connectionDirectionString() << "Disconnecting " << m_remote << "@"
                            << m_socket->remoteEndpoint() << " (Handshake Failed)";
     else
         LOG(m_errorLogger) << connectionDirectionString()
-                           << "Handshake Failed (Connection reset by peer)";
+                           << "Handshake Failed (Connection reset by peer " << m_remote << ")";
 
     cancel();
 }
@@ -248,7 +247,10 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         {
             errorStream << " (I/O Error: " << _ech.message() << ")";
         }
-        errorStream << " (" << m_remote << "@" << m_socket->remoteEndpoint() << ")";
+        errorStream << " (" << m_remote;
+        if (remoteSocketConnected())
+            errorStream << "@" << m_socket->remoteEndpoint();
+        errorStream << ")";
         LOG(m_errorLogger) << errorStream.str();
         return error();
     }
@@ -353,8 +355,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         return;
                     }
 
-                    LOG(m_logger) << connectionDirectionString() << "hello header from " << m_remote
-                                  << "@" << m_socket->remoteEndpoint();
+                    LOG(m_logger) << connectionDirectionString() << packetTypeToString(HelloPacket)
+                                  << " from " << m_remote << "@" << m_socket->remoteEndpoint();
 
                     /// check frame size
                     bytes& header = m_handshakeInBuffer;
@@ -381,7 +383,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     ba::async_read(m_socket->ref(),
                         boost::asio::buffer(m_handshakeInBuffer, m_handshakeInBuffer.size()),
                         [this, self, headerRLP](boost::system::error_code ec, std::size_t) {
-                            LOG(m_logger) << connectionDirectionString() << "frame from "
+                            LOG(m_logger) << connectionDirectionString() << "Frame from "
                                           << m_remote << "@" << m_socket->remoteEndpoint();
 
                             m_idleTimer.cancel();
@@ -403,7 +405,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 if (!m_io->authAndDecryptFrame(frame))
                                 {
                                     LOG(m_errorLogger) << connectionDirectionString()
-                                                       << "hello frame: decrypt failed";
+                                                       << "Hello frame: decrypt failed";
                                     m_nextState = Error;
                                     transition();
                                     return;
@@ -415,16 +417,17 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 {
                                     LOG(m_errorLogger)
                                         << connectionDirectionString()
-                                        << "hello frame: invalid packet type. Expected: "
+                                        << "Hello frame: invalid packet type. Expected: "
                                         << packetTypeToString(HelloPacket)
-                                        << ", received: " << packetTypeToString(packetType);
+                                        << ", received: " << packetTypeToString(packetType) << " ("
+                                        << m_remote << "@" << m_socket->remoteEndpoint() << ")";
                                     m_nextState = Error;
                                     transition();
                                     return;
                                 }
 
                                 LOG(m_logger) << connectionDirectionString()
-                                              << "hello frame: success. starting session with "
+                                              << "Hello frame: success. starting session with "
                                               << m_remote << "@" << m_socket->remoteEndpoint();
                                 try
                                 {
@@ -453,4 +456,10 @@ const char* RLPXHandshake::connectionDirectionString() const
         return "p2p.connect.egress: ";
     else
         return "p2p.connect.ingress: ";
+}
+
+bool RLPXHandshake::remoteSocketConnected() const
+{
+    return m_socket && m_socket->isConnected() &&
+           !m_socket->remoteEndpoint().address().is_unspecified();
 }
