@@ -23,6 +23,6 @@
 namespace dev
 {
 boost::program_options::options_description createLoggingProgramOptions(
-    unsigned _lineLength, LoggingOptions& _options);
+    unsigned _lineLength, LoggingOptions& _options, std::string const& logChannels = {});
 
 }  // namespace dev

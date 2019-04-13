@@ -21,8 +21,11 @@ namespace po = boost::program_options;
 
 namespace dev
 {
-po::options_description createLoggingProgramOptions(unsigned _lineLength, LoggingOptions& _options)
+po::options_description createLoggingProgramOptions(unsigned _lineLength, LoggingOptions& _options, std::string const& logChannels)
 {
+    std::string const logChannelsDescriptionGenerrator = "Space-separated list of the log channels to show (default: show all channels)." + logChannels;
+    const char* logChannelsDescription = logChannelsDescriptionGenerrator.c_str();
+
     po::options_description optionsDescr("LOGGING OPTIONS", _lineLength);
     auto addLoggingOption = optionsDescr.add_options();
     addLoggingOption("log-verbosity,v", po::value<int>(&_options.verbosity)->value_name("<0 - 4>"),
@@ -31,7 +34,7 @@ po::options_description createLoggingProgramOptions(unsigned _lineLength, Loggin
         po::value<std::vector<std::string>>(&_options.includeChannels)
             ->value_name("<channel_list>")
             ->multitoken(),
-        "Space-separated list of the log channels to show (default: show all channels).");
+        logChannelsDescription);
     addLoggingOption("log-exclude-channels",
         po::value<std::vector<std::string>>(&_options.excludeChannels)
             ->value_name("<channel_list>")

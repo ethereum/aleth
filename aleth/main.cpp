@@ -321,9 +321,11 @@ int main(int argc, char** argv)
     addImportExportOption("import-snapshot", po::value<string>()->value_name("<path>"),
         "Import blockchain and state data from the Parity Warp Sync snapshot\n");
 
+    ///List_logging_channels
+    std::string const logChannels = "\nblock blockhdr bq chain client debug discov error ethcap exec host impolite info net overlaydb peer rpc snap statedb sync timer tq trace vmtrace warn watch";
     LoggingOptions loggingOptions;
     po::options_description loggingProgramOptions(
-        createLoggingProgramOptions(c_lineWidth, loggingOptions));
+        createLoggingProgramOptions(c_lineWidth, loggingOptions, logChannels));
 
     po::options_description generalOptions("GENERAL OPTIONS", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();
