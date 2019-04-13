@@ -125,6 +125,7 @@ protected:
     ba::steady_timer m_idleTimer;               ///< Timer which enforces c_timeout.
 
     Logger m_logger{createLogger(VerbosityTrace, "rlpx")};
+    Logger m_errorLogger{createLogger(VerbosityError, "rlpx")};
 };
     
 }
