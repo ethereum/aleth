@@ -23,7 +23,9 @@ RUN make -j $(nproc) && make install
 #     docker build --target testeth -f scripts/docker/aleth.dockerfile .
 
 FROM alpine:latest AS testeth
+RUN adduser -D testeth
 RUN apk add --no-cache libstdc++
+USER testeth
 COPY --from=builder /build/test/testeth /usr/bin/
 ENTRYPOINT ["/usr/bin/testeth"]
 
