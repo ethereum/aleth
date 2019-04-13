@@ -130,7 +130,7 @@ protected:
     std::shared_ptr<RLPXSocket> m_socket;		///< Socket.
     ba::steady_timer m_idleTimer;               ///< Timer which enforces c_timeout.
 
-    Logger m_logger{createLogger(VerbosityTrace, "rlpx")};
+    Logger m_logger{createLogger(VerbosityDebug, "rlpx")};
     Logger m_errorLogger{createLogger(VerbosityError, "rlpx")};
 };
     

@@ -152,8 +152,8 @@ void RLPXHandshake::readAuthEIP8()
         }
         else
         {
-            LOG(m_errorLogger) << connectionDirectionString() << "auth decrypt failed for "
-                               << m_remote << "@" << m_socket->remoteEndpoint();
+            LOG(m_logger) << connectionDirectionString() << "auth decrypt failed for " << m_remote
+                          << "@" << m_socket->remoteEndpoint();
             m_nextState = Error;
             transition();
         }
@@ -206,8 +206,8 @@ void RLPXHandshake::readAckEIP8()
         }
         else
         {
-            LOG(m_errorLogger) << connectionDirectionString() << "ack decrypt failed for "
-                               << m_remote << "@" << m_socket->remoteEndpoint();
+            LOG(m_logger) << connectionDirectionString() << "ack decrypt failed for " << m_remote
+                          << "@" << m_socket->remoteEndpoint();
             m_nextState = Error;
             transition();
         }
@@ -225,11 +225,11 @@ void RLPXHandshake::cancel()
 void RLPXHandshake::error()
 {
     if (remoteSocketConnected())
-        LOG(m_errorLogger) << connectionDirectionString() << "Disconnecting " << m_remote << "@"
-                           << m_socket->remoteEndpoint() << " (Handshake Failed)";
+        LOG(m_logger) << connectionDirectionString() << "Disconnecting " << m_remote << "@"
+                      << m_socket->remoteEndpoint() << " (Handshake Failed)";
     else
-        LOG(m_errorLogger) << connectionDirectionString()
-                           << "Handshake Failed (Connection reset by peer " << m_remote << ")";
+        LOG(m_logger) << connectionDirectionString()
+                      << "Handshake Failed (Connection reset by peer " << m_remote << ")";
 
     cancel();
 }
@@ -251,7 +251,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         if (remoteSocketConnected())
             errorStream << "@" << m_socket->remoteEndpoint();
         errorStream << ")";
-        LOG(m_errorLogger) << errorStream.str();
+        LOG(m_logger) << errorStream.str();
         return error();
     }
     
@@ -263,8 +263,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         if (!_ec)
         {
             if (!m_socket->remoteEndpoint().address().is_unspecified())
-                LOG(m_errorLogger) << connectionDirectionString() << "Disconnecting " << m_remote
-                                   << "@" << m_socket->remoteEndpoint() << " (Handshake Timeout)";
+                LOG(m_logger) << connectionDirectionString() << "Disconnecting " << m_remote << "@"
+                              << m_socket->remoteEndpoint() << " (Handshake Timeout)";
             cancel();
         }
     });
@@ -341,7 +341,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     {
                         LOG(m_errorLogger)
                             << connectionDirectionString()
-                            << "Internal error in handshake: RLPXFrameCoder disappeared.";
+                            << "Internal error in handshake: RLPXFrameCoder disappeared ("
+                            << m_remote << "@" << m_socket->remoteEndpoint() << ")";
                         m_nextState = Error;
                         transition();
                         return;
@@ -365,8 +366,9 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     if (frameSize > 1024)
                     {
                         // all future frames: 16777216
-                        LOG(m_errorLogger) << connectionDirectionString()
-                                           << "hello frame is too large " << frameSize;
+                        LOG(m_logger) << connectionDirectionString() << "hello frame is too large "
+                                      << frameSize << " (" << m_remote << "@"
+                                      << m_socket->remoteEndpoint() << ")";
                         m_nextState = Error;
                         transition();
                         return;
@@ -394,9 +396,11 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                             {
                                 if (!m_io)
                                 {
-                                    LOG(m_errorLogger) << connectionDirectionString()
-                                                       << "Internal error in handshake: "
-                                                          "RLPXFrameCoder disappeared.";
+                                    LOG(m_errorLogger)
+                                        << connectionDirectionString()
+                                        << "Internal error in handshake: "
+                                           "RLPXFrameCoder disappeared ("
+                                        << m_remote << "@" << m_socket->remoteEndpoint() << ")";
                                     m_nextState = Error;
                                     transition();
                                     return;
@@ -404,8 +408,9 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 bytesRef frame(&m_handshakeInBuffer);
                                 if (!m_io->authAndDecryptFrame(frame))
                                 {
-                                    LOG(m_errorLogger) << connectionDirectionString()
-                                                       << "Hello frame: decrypt failed";
+                                    LOG(m_logger) << connectionDirectionString()
+                                                  << "Hello frame: decrypt failed (" << m_remote
+                                                  << "@" << m_socket->remoteEndpoint() << ")";
                                     m_nextState = Error;
                                     transition();
                                     return;
@@ -415,7 +420,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                     frame[0] == 0x80 ? HelloPacket : (PacketType)frame[0];
                                 if (packetType != HelloPacket)
                                 {
-                                    LOG(m_errorLogger)
+                                    LOG(m_logger)
                                         << connectionDirectionString()
                                         << "Hello frame: invalid packet type. Expected: "
                                         << packetTypeToString(HelloPacket)
@@ -437,9 +442,13 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 }
                                 catch (std::exception const& _e)
                                 {
-                                    LOG(m_errorLogger)
-                                        << connectionDirectionString()
-                                        << "Handshake causing an exception: " << _e.what();
+                                    stringstream errorStream;
+                                    errorStream << connectionDirectionString() << "Handshake with "
+                                                << m_remote;
+                                    if (remoteSocketConnected())
+                                        errorStream << "@" << m_socket->remoteEndpoint();
+                                    errorStream << " causing an exception: " << _e.what();
+                                    LOG(m_errorLogger) << errorStream.str();
                                     m_nextState = Error;
                                     transition();
                                 }
