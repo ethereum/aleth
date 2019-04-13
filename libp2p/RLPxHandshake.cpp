@@ -226,10 +226,11 @@ void RLPXHandshake::error()
 {
     auto connected = m_socket->isConnected();
     if (connected && !m_socket->remoteEndpoint().address().is_unspecified())
-        LOG(m_errorLogger) << "Disconnecting " << m_remote << "@" << m_socket->remoteEndpoint()
-                           << " (Handshake Failed)";
+        LOG(m_errorLogger) << connectionDirectionString() << "Disconnecting " << m_remote << "@"
+                           << m_socket->remoteEndpoint() << " (Handshake Failed)";
     else
-        LOG(m_errorLogger) << "Handshake Failed (Connection reset by peer)";
+        LOG(m_errorLogger) << connectionDirectionString()
+                           << "Handshake Failed (Connection reset by peer)";
 
     cancel();
 }
@@ -242,11 +243,12 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     if (_ech || m_nextState == Error || m_cancel)
     {
         stringstream errorStream;
-        errorStream << "Handshake Failed";
+        errorStream << connectionDirectionString() << "Handshake Failed";
         if (_ech)
         {
             errorStream << " (I/O Error: " << _ech.message() << ")";
         }
+        errorStream << " (" << m_remote << "@" << m_socket->remoteEndpoint() << ")";
         LOG(m_errorLogger) << errorStream.str();
         return error();
     }
@@ -259,8 +261,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         if (!_ec)
         {
             if (!m_socket->remoteEndpoint().address().is_unspecified())
-                LOG(m_errorLogger) << "Disconnecting " << m_remote << "@"
-                                   << m_socket->remoteEndpoint() << " (Handshake Timeout)";
+                LOG(m_errorLogger) << connectionDirectionString() << "Disconnecting " << m_remote
+                                   << "@" << m_socket->remoteEndpoint() << " (Handshake Timeout)";
             cancel();
         }
     });
@@ -390,7 +392,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                             {
                                 if (!m_io)
                                 {
-                                    LOG(m_errorLogger) << "Internal error in handshake: "
+                                    LOG(m_errorLogger) << connectionDirectionString()
+                                                       << "Internal error in handshake: "
                                                           "RLPXFrameCoder disappeared.";
                                     m_nextState = Error;
                                     transition();
@@ -432,6 +435,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 catch (std::exception const& _e)
                                 {
                                     LOG(m_errorLogger)
+                                        << connectionDirectionString()
                                         << "Handshake causing an exception: " << _e.what();
                                     m_nextState = Error;
                                     transition();

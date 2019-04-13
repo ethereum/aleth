@@ -261,6 +261,11 @@ inline boost::log::formatting_ostream& operator<<(
     return _strm;
 }
 
+inline std::ostream& operator<<(std::ostream& _strm, NodeID const& _id)
+{
+    _strm << "##" << _id.abridged();
+    return _strm;
+}
 
 /// Simple stream output for a NodeIPEndpoint.
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep);
