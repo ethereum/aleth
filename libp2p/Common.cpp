@@ -15,6 +15,27 @@ using namespace std;
 const NodeIPEndpoint UnspecifiedNodeIPEndpoint = NodeIPEndpoint{{}, 0, 0};
 const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
 
+const char* packetTypeToString(PacketType _packetType)
+{
+    switch (_packetType)
+    {
+    case HelloPacket:
+        return "HelloPacket";
+    case DisconnectPacket:
+        return "DisconnectPacket";
+    case PingPacket:
+        return "PingPacket";
+    case PongPacket:
+        return "PongPacket";
+    case GetPeersPacket:
+        return "GetPeersPacket";
+    case PeersPacket:
+        return "PeersPacket";
+    default:
+        return "UnknownPacket";
+    }
+}
+
 bool isPublicAddress(string const& _addressToCheck)
 {
     return _addressToCheck.empty() ? false :

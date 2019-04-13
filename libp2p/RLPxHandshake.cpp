@@ -239,7 +239,13 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     
     if (_ech || m_nextState == Error || m_cancel)
     {
-        LOG(m_errorLogger) << "Handshake Failed (I/O Error: " << _ech.message() << ")";
+        stringstream errorStream;
+        errorStream << "Handshake Failed";
+        if (_ech)
+        {
+            errorStream << " (I/O Error: " << _ech.message() << ")";
+        }
+        LOG(m_errorLogger) << errorStream.str();
         return error();
     }
     
@@ -285,8 +291,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     {
         m_nextState = ReadHello;
         LOG(m_logger) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                      << " capabilities \"Hello\" packet to " << m_remote << "@"
-                      << m_socket->remoteEndpoint();
+                      << " capabilities " << packetTypeToString(HelloPacket) << " to " << m_remote
+                      << "@" << m_socket->remoteEndpoint();
 
         /// This pointer will be freed if there is an error otherwise
         /// it will be passed to Host which will take ownership.
@@ -410,7 +416,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                         << (m_originated ? "p2p.connect.egress" :
                                                            "p2p.connect.ingress")
                                         << " hello frame: invalid packet type. Expected: "
-                                        << HelloPacket << ", received: " << packetType;
+                                        << packetTypeToString(HelloPacket)
+                                        << ", received: " << packetTypeToString(packetType);
                                     m_nextState = Error;
                                     transition();
                                     return;
