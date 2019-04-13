@@ -93,6 +93,9 @@ protected:
     /// Performs transition for m_nextState.
     virtual void transition(boost::system::error_code _ech = boost::system::error_code());
 
+    /// Get a string indicating if the connection is incoming or outgoing
+    const char* connectionDirectionString() const;
+
     State m_nextState = New;		///< Current or expected state of transition.
     bool m_cancel = false;			///< Will be set to true if connection was canceled.
     
