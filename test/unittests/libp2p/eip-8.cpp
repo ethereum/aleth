@@ -28,7 +28,7 @@ TEST(eip8, test_discovery_packets)
     auto ping1 =
         dynamic_cast<PingNode&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
     EXPECT_EQ(ping1.version, 4);
-    EXPECT_EQ(ping1.ts, 1136239445);
+    EXPECT_EQ(*ping1.timestamp, 1136239445);
     EXPECT_EQ(ping1.source, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 3322, 5544));
     EXPECT_EQ(ping1.destination, NodeIPEndpoint(bi::address::from_string("::1"), 2222, 3333));
 
@@ -49,7 +49,7 @@ TEST(eip8, test_discovery_packets)
     EXPECT_EQ(ping2.destination,
         NodeIPEndpoint(
             bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
-    EXPECT_EQ(ping2.ts, 1136239445);
+    EXPECT_EQ(*ping2.timestamp, 1136239445);
 
     packet = fromHex(
         "09b2428d83348d27cdf7064ad9024f526cebc19e4958f0fdad87c15eb598dd61d08423e0bf66b206"
@@ -63,7 +63,7 @@ TEST(eip8, test_discovery_packets)
         NodeIPEndpoint(
             bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
     EXPECT_EQ(pong.echo, h256("fbc914b16819237dcd8801d7e53f69e9719adecb3cc0e790c57e91ca4461c954"));
-    EXPECT_EQ(pong.ts, 1136239445);
+    EXPECT_EQ(*pong.timestamp, 1136239445);
 
     packet = fromHex(
         "c7c44041b9f7c7e41934417ebac9a8e1a4c6298f74553f2fcfdcae6ed6fe53163eb3d2b52e39fe91"
@@ -77,7 +77,7 @@ TEST(eip8, test_discovery_packets)
     EXPECT_EQ(
         findnode.target, Public("ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd313875"
                                 "74077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f"));
-    EXPECT_EQ(findnode.ts, 1136239445);
+    EXPECT_EQ(*findnode.timestamp, 1136239445);
 
     packet = fromHex(
         "c679fc8fe0b8b12f06577f2e802d34f6fa257e6137a995f6f4cbfc9ee50ed3710faf6e66f932c4c8"
@@ -116,7 +116,7 @@ TEST(eip8, test_discovery_packets)
     EXPECT_EQ(neighbours.neighbours[3].node,
         Public("8dcab8618c3253b558d459da53bd8fa68935a719aff8b811197101a4b2b47dd2d47295286fc00cc081b"
                "b542d760717d1bdd6bec2c37cd72eca367d6dd3b9df73"));
-    EXPECT_EQ(neighbours.ts, 1136239445);
+    EXPECT_EQ(*neighbours.timestamp, 1136239445);
 }
 
 class TestHandshake : public RLPXHandshake

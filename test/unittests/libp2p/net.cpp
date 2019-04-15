@@ -47,7 +47,8 @@ struct TestNodeTable: public NodeTable
     /// Constructor
     TestNodeTable(
         ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311)
-      : NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port), true /* discovery enabled */,
+      : NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port),
+            createV4ENR(_alias.secret(), _addr, _port, _port), true /* discovery enabled */,
             true /* allow local discovery */)
     {}
 
@@ -1421,7 +1422,10 @@ BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
 {
     ba::io_service io;
     auto const port = randomPortNumber();
-    NodeTable t(io, KeyPair::create(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), port, port));
+    auto const keyPair = KeyPair::create();
+    auto const addr = bi::address::from_string(c_localhostIp);
+    NodeTable t(io, keyPair, NodeIPEndpoint(addr, port, port),
+        createV4ENR(keyPair.secret(), addr, port, port));
     if (Node n = t.node(NodeID()))
         BOOST_REQUIRE(false);
 }
