@@ -53,7 +53,7 @@ void printHelp()
     cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(30) << "--vm <name|path> (=legacy)" << setw(25) << "Set VM type for VMTests suite. Available options are: interpreter, legacy.\n";
     cout << setw(30) << "--evmc <option>=<value>" << setw(25) << "EVMC option\n";
-    cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test. (Require build with VMTRACE=1)\n";
+    cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test\n";
     cout << setw(30) << "--jsontrace <Options>" << setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'\n";
     cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file\n";
     cout << setw(30) << "--exectimelog" << setw(25) << "Output execution time for each test suite\n";

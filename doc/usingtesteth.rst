@@ -75,7 +75,7 @@ Use following options:
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --vmtrace --verbosity 5``
    
-``--vmtrace`` prints a step by step execution log from the EVM. Make sure that you've run cmake with -DVMTRACE=1 flag.
+``--vmtrace`` prints a step by step execution log from the EVM.
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --jsontrace <CONFIG>``
    

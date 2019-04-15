@@ -8,7 +8,6 @@ macro(configure_project)
     option(BUILD_SHARED_LIBS "Build project libraries shared" OFF)
 
     # Features:
-    option(VMTRACE "Enable VM tracing" OFF)
     option(EVM_OPTIMIZE "Enable VM optimizations (can distort tracing)" ON)
     option(FATDB "Enable fat state database" ON)
     option(PARANOID "Enable additional checks when validating transactions (deprecated)" OFF)
@@ -30,10 +29,6 @@ macro(configure_project)
             message(WARNING "Paranoia requires debug - disabling for release build.")
             set(PARANOID OFF)
         endif ()
-        if (VMTRACE)
-            message(WARNING "VM Tracing requires debug - disabling for release build.")
-            set (VMTRACE OFF)
-        endif ()
     endif ()
 
     # FATDB is an option to include the reverse hashes for the trie,
@@ -44,10 +39,6 @@ macro(configure_project)
 
     if (PARANOID)
         add_definitions(-DETH_PARANOIA)
-    endif ()
-
-    if (VMTRACE)
-        add_definitions(-DETH_VMTRACE)
     endif ()
 
     # CI Builds should provide (for user builds this is totally optional)
@@ -78,7 +69,6 @@ macro(print_config)
     message("-- TARGET_PLATFORM  Target platform                          ${CMAKE_SYSTEM_NAME}")
     message("-- BUILD_SHARED_LIBS                                         ${BUILD_SHARED_LIBS}")
     message("--------------------------------------------------------------- features")
-    message("-- VMTRACE          VM execution tracing                     ${VMTRACE}")
     message("-- EVM_OPTIMIZE     Enable VM optimizations                  ${EVM_OPTIMIZE}")
     message("-- FATDB            Full database exploring                  ${FATDB}")
     message("-- DB               Database implementation                  LEVELDB")
