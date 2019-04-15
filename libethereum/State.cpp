@@ -602,13 +602,8 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
     ExecutionResult res;
     e.setResultRecipient(res);
 
-    auto onOp = _onOp;
-#if ETH_VMTRACE
-    if (!onOp)
-        onOp = e.simpleTrace();
-#endif
     u256 const startGasUsed = _envInfo.gasUsed();
-    bool const statusCode = executeTransaction(e, _t, onOp);
+    bool const statusCode = executeTransaction(e, _t, _onOp);
 
     bool removeEmptyAccounts = false;
     switch (_p)

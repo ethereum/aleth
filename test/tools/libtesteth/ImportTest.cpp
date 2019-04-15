@@ -18,6 +18,8 @@
  * Helper class for managing data when running state tests
  */
 
+#include <libevm/LegacyVM.h>
+#include <libethereum/ExtVM.h>
 #include <libethereum/ValidationSchemes.h>
 #include <test/tools/jsontests/BlockChainTests.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
@@ -268,6 +270,51 @@ void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, b
     BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::get().testName());
 }
 
+namespace
+{
+std::string dumpStackAndMemory(LegacyVM const& _vm)
+{
+    ostringstream o;
+    o << "\n    STACK\n";
+    for (auto i : _vm.stack())
+        o << (h256)i << "\n";
+    o << "    MEMORY\n"
+      << ((_vm.memory().size() > 1000) ? " mem size greater than 1000 bytes " :
+          memDump(_vm.memory()));
+    return o.str();
+};
+
+std::string dumpStorage(ExtVM const& _ext)
+{
+    ostringstream o;
+    o << "    STORAGE\n";
+    for (auto const& i : _ext.state().storage(_ext.myAddress))
+        o << showbase << hex << i.second.first << ": " << i.second.second << "\n";
+    return o.str();
+};
+
+OnOpFunc simpleTrace()
+{
+    static auto traceLogger = Logger{createLogger(VerbosityTrace, "vmtrace")};
+
+    return [](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize,
+               bigint gasCost, bigint gas, VMFace const* _vm, ExtVMFace const* voidExt) {
+        ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
+        auto vm = dynamic_cast<LegacyVM const*>(_vm);
+
+        ostringstream o;
+        if (vm)
+            LOG(traceLogger) << dumpStackAndMemory(*vm);
+        LOG(traceLogger) << dumpStorage(ext);
+        LOG(traceLogger) << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps
+                         << " : " << hex << setw(4) << setfill('0') << PC << " : "
+                         << instructionInfo(inst).name << " : " << dec << gas << " : -" << dec
+                         << gasCost << " : " << newMemSize << "x32"
+                         << " >";
+    };
+}
+}  // namespace
+
 std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
 {
     assert(m_envInfo);
@@ -290,7 +337,10 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
             cout << "{\"stateRoot\": \"" << initialState.rootHash().hex() << "\"}";
         }
         else
-            out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+        {
+            auto const vmtrace = Options::get().vmtrace ? simpleTrace() : nullptr;
+            out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted, vmtrace);
+        }
 
         // the changeLog might be broken under --jsontrace, because it uses intialState.execute with Permanence::Committed rather than Permanence::Uncommitted
         eth::ChangeLog changeLog = initialState.changeLog();

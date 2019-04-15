@@ -180,13 +180,8 @@ Options::Options(int argc, const char** argv)
         }
         else if (arg == "--vmtrace")
         {
-#if ETH_VMTRACE
             vmtrace = true;
             verbosity = VerbosityTrace;
-#else
-            cerr << "--vmtrace option requires a build with cmake -DVMTRACE=1\n";
-            exit(1);
-#endif
         }
         else if (arg == "--jsontrace")
         {
