@@ -89,7 +89,7 @@ enum PacketType
     UserPacket = 0x10
 };
 
-const char* packetTypeToString(PacketType _packetType);
+char const* packetTypeToString(PacketType _packetType);
 
 enum DisconnectReason
 {

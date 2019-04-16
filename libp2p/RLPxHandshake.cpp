@@ -367,9 +367,9 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                   << m_socket->remoteEndpoint() << ". Validating contents...";
 
                     /// check frame size
-                    bytes& header = m_handshakeInBuffer;
-                    uint32_t frameSize = (uint32_t)(header[2]) | (uint32_t)(header[1]) << 8 |
-                                         (uint32_t)(header[0]) << 16;
+                    bytes const& header = m_handshakeInBuffer;
+                    uint32_t const frameSize = (uint32_t)(header[2]) | (uint32_t)(header[1]) << 8 |
+                                               (uint32_t)(header[0]) << 16;
                     constexpr size_t expectedFrameSizeBytes = 1024;
                     if (frameSize > expectedFrameSizeBytes)
                     {
@@ -470,14 +470,6 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                 }
             });
     }
-}
-
-const char* RLPXHandshake::connectionDirectionString() const
-{
-    if (m_originated)
-        return "p2p.connect.egress: ";
-    else
-        return "p2p.connect.ingress: ";
 }
 
 bool RLPXHandshake::remoteSocketConnected() const

@@ -94,7 +94,10 @@ protected:
     virtual void transition(boost::system::error_code _ech = boost::system::error_code());
 
     /// Get a string indicating if the connection is incoming or outgoing
-    const char* connectionDirectionString() const;
+    inline char const* connectionDirectionString() const
+    {
+        return m_originated ? "egress" : "ingress";
+    }
 
     /// Determine if the remote socket is still connected
     bool remoteSocketConnected() const;
@@ -132,7 +135,7 @@ protected:
     /// Timer which enforces c_timeout. Reset for each stage of the handshake.
     ba::steady_timer m_idleTimer;
 
-    Logger m_logger{createLogger(VerbosityDebug, "rlpx")};
+    Logger m_logger{createLogger(VerbosityTrace, "rlpx")};
     Logger m_errorLogger{createLogger(VerbosityError, "rlpx")};
 };
     

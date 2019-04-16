@@ -15,7 +15,7 @@ using namespace std;
 const NodeIPEndpoint UnspecifiedNodeIPEndpoint = NodeIPEndpoint{{}, 0, 0};
 const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
 
-const char* packetTypeToString(PacketType _packetType)
+char const* packetTypeToString(PacketType _packetType)
 {
     switch (_packetType)
     {
