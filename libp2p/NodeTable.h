@@ -462,7 +462,7 @@ struct PingNode: DiscoveryDatagram
         source.interpretRLP(r[1]);
         destination.interpretRLP(r[2]);
         timestamp = r[3].toInt<uint32_t>();
-        if (r.itemCount() > 4)
+        if (r.itemCount() > 4 && r[4].isInt())
             seq = r[4].toInt<uint64_t>();
     }
 
@@ -498,7 +498,7 @@ struct Pong: DiscoveryDatagram
         destination.interpretRLP(r[0]);
         echo = (h256)r[1];
         timestamp = r[2].toInt<uint32_t>();
-        if (r.itemCount() > 3)
+        if (r.itemCount() > 3 && r[3].isInt())
             seq = r[3].toInt<uint64_t>();
     }
 
@@ -639,7 +639,7 @@ struct ENRResponse : DiscoveryDatagram
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
-        RLP r(_bytes, RLP::ThrowOnFail);
+        RLP r(_bytes, RLP::AllowNonCanon | RLP::ThrowOnFail);
         echo = (h256)r[0];
         enr = parseV4ENR(r[1]);
     }
