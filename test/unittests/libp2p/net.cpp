@@ -1236,6 +1236,59 @@ BOOST_AUTO_TEST_CASE(addNodePingsNodeOnlyOnce)
     BOOST_REQUIRE_EQUAL(sentPing->pingHash, sentPing2->pingHash);
 }
 
+BOOST_AUTO_TEST_CASE(validENRRequest)
+{
+    // NodeTable receiving ENRRequest
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
+
+    // socket sending ENRRequest
+    TestUDPSocketHost nodeSocketHost;
+    nodeSocketHost.start();
+    uint16_t nodePort = nodeSocketHost.port;
+
+    // Exchange Ping/Pongs before sending ENRRequest
+
+    // add a node to node table, initiating PING
+    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
+    auto nodeKeyPair = KeyPair::create();
+    auto nodePubKey = nodeKeyPair.pub();
+    nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+    // handle received PING
+    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
+    auto pingDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+
+    // send PONG
+    Pong pong(nodeTable->m_hostNodeEndpoint);
+    pong.echo = ping.echo;
+    pong.sign(nodeKeyPair.secret());
+    nodeSocketHost.socket->send(pong);
+
+    // wait for PONG to be received and handled
+    auto pongDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto pongDatagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
+    BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
+
+    // send ENRRequest
+    ENRRequest enrRequest(nodeTable->m_hostNodeEndpoint);
+    enrRequest.sign(nodeKeyPair.secret());
+    nodeSocketHost.socket->send(enrRequest);
+
+    // wait for ENRRequest to be received and handled
+    nodeTable->packetsReceived.pop(chrono::seconds(5));
+
+    auto enrResponsePacket = nodeSocketHost.packetsReceived.pop(chrono::seconds(5));
+    auto datagram =
+        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(enrResponsePacket));
+    BOOST_REQUIRE_EQUAL(datagram->typeName(), "ENRResponse");
+}
+
 class PacketsWithChangedEndpointFixture : public TestOutputHelperFixture
 {
 public:
