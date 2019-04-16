@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.6.0] - Unreleased
+## [1.6.0] - 2019-04-16
 
 - Added: [#5485](https://github.com/ethereum/aleth/pull/5485) aleth-bootnode now by default connects to official Ethereum bootnodes. This can be disabled with `--no-bootstrap` flag.
 - Added: [#5505](https://github.com/ethereum/aleth/pull/5505) Allow building with libc++ on Linux.
@@ -20,4 +20,4 @@
 - Fixed: [#5548](https://github.com/ethereum/aleth/pull/5548) Fix rlp tool for long hexadecimal string inputs.
 - Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
-[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...release/1.6
+[1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
