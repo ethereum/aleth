@@ -11,9 +11,19 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::crypto;
 
+constexpr std::chrono::milliseconds RLPXHandshake::c_timeout;
+
+namespace
+{
+constexpr unsigned c_rlpxVersion = 4;
+constexpr size_t c_ackCipherSizeBytes = 210;
+constexpr size_t c_authCipherSizeBytes = 307;
+}
+
 void RLPXHandshake::writeAuth()
 {
-    LOG(m_logger) << "p2p.connect.egress sending auth to " << m_socket->remoteEndpoint();
+    LOG(m_logger) << connectionDirectionString() << "auth to " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
     m_auth.resize(Signature::size + h256::size + Public::size + h256::size + 1);
     bytesRef sig(&m_auth[0], Signature::size);
     bytesRef hepubk(&m_auth[Signature::size], h256::size);
@@ -39,7 +49,8 @@ void RLPXHandshake::writeAuth()
 
 void RLPXHandshake::writeAck()
 {
-    LOG(m_logger) << "p2p.connect.ingress sending ack to " << m_socket->remoteEndpoint();
+    LOG(m_logger) << connectionDirectionString() << "ack to " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
     m_ack.resize(Public::size + h256::size + 1);
     bytesRef epubk(&m_ack[0], Public::size);
     bytesRef nonce(&m_ack[Public::size], h256::size);
@@ -57,8 +68,8 @@ void RLPXHandshake::writeAck()
 
 void RLPXHandshake::writeAckEIP8()
 {
-    LOG(m_logger) << "p2p.connect.ingress sending EIP-8 ack to " << m_socket->remoteEndpoint();
-
+    LOG(m_logger) << connectionDirectionString() << "EIP-8 ack to " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
     RLPStream rlp;
     rlp.appendList(3)
         << m_ecdheLocal.pub()
@@ -92,35 +103,36 @@ void RLPXHandshake::setAuthValues(Signature const& _sig, Public const& _remotePu
 
 void RLPXHandshake::readAuth()
 {
-    LOG(m_logger) << "p2p.connect.ingress receiving auth from " << m_socket->remoteEndpoint();
-    m_authCipher.resize(307);
+    LOG(m_logger) << connectionDirectionString() << "auth from " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
+    m_authCipher.resize(c_authCipherSizeBytes);
     auto self(shared_from_this());
-    ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, 307), [this, self](boost::system::error_code ec, std::size_t)
-    {
-        if (ec)
-            transition(ec);
-        else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_authCipher), m_auth))
-        {
-            bytesConstRef data(&m_auth);
-            Signature sig(data.cropped(0, Signature::size));
-            Public pubk(data.cropped(Signature::size + h256::size, Public::size));
-            h256 nonce(data.cropped(Signature::size + h256::size + Public::size, h256::size));
-            setAuthValues(sig, pubk, nonce, 4);
-            transition();
-        }
-        else
-            readAuthEIP8();
-    });
+    ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, c_authCipherSizeBytes),
+        [this, self](boost::system::error_code ec, std::size_t) {
+            if (ec)
+                transition(ec);
+            else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_authCipher), m_auth))
+            {
+                bytesConstRef data(&m_auth);
+                Signature sig(data.cropped(0, Signature::size));
+                Public pubk(data.cropped(Signature::size + h256::size, Public::size));
+                h256 nonce(data.cropped(Signature::size + h256::size + Public::size, h256::size));
+                setAuthValues(sig, pubk, nonce, 4);
+                transition();
+            }
+            else
+                readAuthEIP8();
+        });
 }
 
 void RLPXHandshake::readAuthEIP8()
 {
-    assert(m_authCipher.size() == 307);
+    assert(m_authCipher.size() == c_authCipherSizeBytes);
     uint16_t size(m_authCipher[0]<<8 | m_authCipher[1]);
-    LOG(m_logger) << "p2p.connect.ingress receiving " << size << " bytes EIP-8 auth from "
-                  << m_socket->remoteEndpoint();
+    LOG(m_logger) << connectionDirectionString() << size << " bytes EIP-8 auth from " << m_remote
+                  << "@" << m_socket->remoteEndpoint();
     m_authCipher.resize((size_t)size + 2);
-    auto rest = ba::buffer(ba::buffer(m_authCipher) + 307);
+    auto rest = ba::buffer(ba::buffer(m_authCipher) + c_authCipherSizeBytes);
     auto self(shared_from_this());
     ba::async_read(m_socket->ref(), rest, [this, self](boost::system::error_code ec, std::size_t)
     {
@@ -141,8 +153,8 @@ void RLPXHandshake::readAuthEIP8()
         }
         else
         {
-            LOG(m_logger) << "p2p.connect.ingress auth decrypt failed for "
-                          << m_socket->remoteEndpoint();
+            LOG(m_logger) << connectionDirectionString() << "auth decrypt failed for " << m_remote
+                          << "@" << m_socket->remoteEndpoint();
             m_nextState = Error;
             transition();
         }
@@ -151,33 +163,34 @@ void RLPXHandshake::readAuthEIP8()
 
 void RLPXHandshake::readAck()
 {
-    LOG(m_logger) << "p2p.connect.egress receiving ack from " << m_socket->remoteEndpoint();
-    m_ackCipher.resize(210);
+    LOG(m_logger) << connectionDirectionString() << "ack from " << m_remote << "@"
+                  << m_socket->remoteEndpoint();
+    m_ackCipher.resize(c_ackCipherSizeBytes);
     auto self(shared_from_this());
-    ba::async_read(m_socket->ref(), ba::buffer(m_ackCipher, 210), [this, self](boost::system::error_code ec, std::size_t)
-    {
-        if (ec)
-            transition(ec);
-        else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_ackCipher), m_ack))
-        {
-            bytesConstRef(&m_ack).cropped(0, Public::size).copyTo(m_ecdheRemote.ref());
-            bytesConstRef(&m_ack).cropped(Public::size, h256::size).copyTo(m_remoteNonce.ref());
-            m_remoteVersion = 4;
-            transition();
-        }
-        else
-            readAckEIP8();
-    });
+    ba::async_read(m_socket->ref(), ba::buffer(m_ackCipher, c_ackCipherSizeBytes),
+        [this, self](boost::system::error_code ec, std::size_t) {
+            if (ec)
+                transition(ec);
+            else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_ackCipher), m_ack))
+            {
+                bytesConstRef(&m_ack).cropped(0, Public::size).copyTo(m_ecdheRemote.ref());
+                bytesConstRef(&m_ack).cropped(Public::size, h256::size).copyTo(m_remoteNonce.ref());
+                m_remoteVersion = c_rlpxVersion;
+                transition();
+            }
+            else
+                readAckEIP8();
+        });
 }
 
 void RLPXHandshake::readAckEIP8()
 {
-    assert(m_ackCipher.size() == 210);
+    assert(m_ackCipher.size() == c_ackCipherSizeBytes);
     uint16_t size(m_ackCipher[0]<<8 | m_ackCipher[1]);
-    LOG(m_logger) << "p2p.connect.egress receiving " << size << " bytes EIP-8 ack from "
-                  << m_socket->remoteEndpoint();
+    LOG(m_logger) << connectionDirectionString() << size << " bytes EIP-8 ack from " << m_remote
+                  << "@" << m_socket->remoteEndpoint();
     m_ackCipher.resize((size_t)size + 2);
-    auto rest = ba::buffer(ba::buffer(m_ackCipher) + 210);
+    auto rest = ba::buffer(ba::buffer(m_ackCipher) + c_ackCipherSizeBytes);
     auto self(shared_from_this());
     ba::async_read(m_socket->ref(), rest, [this, self](boost::system::error_code ec, std::size_t)
     {
@@ -194,8 +207,8 @@ void RLPXHandshake::readAckEIP8()
         }
         else
         {
-            LOG(m_logger) << "p2p.connect.egress ack decrypt failed for "
-                          << m_socket->remoteEndpoint();
+            LOG(m_logger) << connectionDirectionString() << "ack decrypt failed for " << m_remote
+                          << "@" << m_socket->remoteEndpoint();
             m_nextState = Error;
             transition();
         }
@@ -212,11 +225,12 @@ void RLPXHandshake::cancel()
 
 void RLPXHandshake::error()
 {
-    auto connected = m_socket->isConnected();
-    if (connected && !m_socket->remoteEndpoint().address().is_unspecified())
-        LOG(m_logger) << "Disconnecting " << m_socket->remoteEndpoint() << " (Handshake Failed)";
+    if (remoteSocketConnected())
+        LOG(m_logger) << connectionDirectionString() << "Disconnecting " << m_remote << "@"
+                      << m_socket->remoteEndpoint() << " (Handshake Failed)";
     else
-        LOG(m_logger) << "Handshake Failed (Connection reset by peer)";
+        LOG(m_logger) << connectionDirectionString()
+                      << "Handshake Failed (Connection reset by peer " << m_remote << ")";
 
     cancel();
 }
@@ -228,7 +242,15 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     
     if (_ech || m_nextState == Error || m_cancel)
     {
-        LOG(m_logger) << "Handshake Failed (I/O Error: " << _ech.message() << ")";
+        stringstream errorStream;
+        errorStream << connectionDirectionString() << "Handshake Failed ";
+        if (_ech)
+            errorStream << "(I/O Error: " << _ech.message() << ") ";
+        errorStream << "(" << m_remote;
+        if (remoteSocketConnected())
+            errorStream << "@" << m_socket->remoteEndpoint();
+        errorStream << ")";
+        LOG(m_logger) << errorStream.str();
         return error();
     }
     
@@ -239,9 +261,12 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     {
         if (!_ec)
         {
-            if (!m_socket->remoteEndpoint().address().is_unspecified())
-                LOG(m_logger) << "Disconnecting " << m_socket->remoteEndpoint()
-                              << " (Handshake Timeout)";
+            std::stringstream errorStream;
+            errorStream << connectionDirectionString() << "Disconnecting " << m_remote;
+            if (remoteSocketConnected())
+                errorStream << "@" << m_socket->remoteEndpoint();
+            errorStream << " (Handshake Timeout)";
+            LOG(m_logger) << errorStream.str();
             cancel();
         }
     });
@@ -272,9 +297,11 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     }
     else if (m_nextState == WriteHello)
     {
+        // Send the p2p capability Hello frame
+        LOG(m_logger) << connectionDirectionString() << packetTypeToString(HelloPacket) << " to "
+                      << m_remote << "@" << m_socket->remoteEndpoint();
+
         m_nextState = ReadHello;
-        LOG(m_logger) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                      << " sending capabilities handshake";
 
         /// This pointer will be freed if there is an error otherwise
         /// it will be passed to Host which will take ownership.
@@ -298,112 +325,155 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     }
     else if (m_nextState == ReadHello)
     {
+        LOG(m_logger) << connectionDirectionString() << "Frame header from " << m_remote << "@"
+                      << m_socket->remoteEndpoint();
+
         // Authenticate and decrypt initial hello frame with initial RLPXFrameCoder
         // and request m_host to start session.
         m_nextState = StartSession;
         
         // read frame header
-        unsigned const handshakeSize = 32;
-        m_handshakeInBuffer.resize(handshakeSize);
-        ba::async_read(m_socket->ref(), boost::asio::buffer(m_handshakeInBuffer, handshakeSize), [this, self](boost::system::error_code ec, std::size_t)
-        {
-            if (ec)
-                transition(ec);
-            else
-            {
-                if (!m_io)
+        constexpr size_t handshakeSizeBytes = 32;
+        m_handshakeInBuffer.resize(handshakeSizeBytes);
+        ba::async_read(m_socket->ref(),
+            boost::asio::buffer(m_handshakeInBuffer, handshakeSizeBytes),
+            [this, self](boost::system::error_code ec, std::size_t) {
+                if (ec)
+                    transition(ec);
+                else
                 {
-                    LOG(m_logger) << "Internal error in handshake: RLPXFrameCoder disappeared.";
-                    m_nextState = Error;
-                    transition();
-                    return;
-
-                }
-                /// authenticate and decrypt header
-                if (!m_io->authAndDecryptHeader(bytesRef(m_handshakeInBuffer.data(), m_handshakeInBuffer.size())))
-                {
-                    m_nextState = Error;
-                    transition();
-                    return;
-                }
-
-                LOG(m_logger) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                                 << " recvd hello header";
-
-                /// check frame size
-                bytes& header = m_handshakeInBuffer;
-                uint32_t frameSize = (uint32_t)(header[2]) | (uint32_t)(header[1])<<8 | (uint32_t)(header[0])<<16;
-                if (frameSize > 1024)
-                {
-                    // all future frames: 16777216
-                    LOG(m_logger)
-                        << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                        << " hello frame is too large " << frameSize;
-                    m_nextState = Error;
-                    transition();
-                    return;
-                }
-                
-                /// rlp of header has protocol-type, sequence-id[, total-packet-size]
-                bytes headerRLP(header.size() - 3 - h128::size);	// this is always 32 - 3 - 16 = 13. wtf?
-                bytesConstRef(&header).cropped(3).copyTo(&headerRLP);
-                
-                /// read padded frame and mac
-                m_handshakeInBuffer.resize(frameSize + ((16 - (frameSize % 16)) % 16) + h128::size);
-                ba::async_read(m_socket->ref(), boost::asio::buffer(m_handshakeInBuffer, m_handshakeInBuffer.size()), [this, self, headerRLP](boost::system::error_code ec, std::size_t)
-                {
-                    m_idleTimer.cancel();
-                    
-                    if (ec)
-                        transition(ec);
-                    else
+                    if (!m_io)
                     {
-                        if (!m_io)
-                        {
-                            LOG(m_logger) << "Internal error in handshake: RLPXFrameCoder disappeared.";
-                            m_nextState = Error;
-                            transition();
-                            return;
-
-                        }
-                        bytesRef frame(&m_handshakeInBuffer);
-                        if (!m_io->authAndDecryptFrame(frame))
-                        {
-                            cnetdetails
-                                << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                                << " hello frame: decrypt failed";
-                            m_nextState = Error;
-                            transition();
-                            return;
-                        }
-                        
-                        PacketType packetType = frame[0] == 0x80 ? HelloPacket : (PacketType)frame[0];
-                        if (packetType != HelloPacket)
-                        {
-                            cnetdetails
-                                << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                                << " hello frame: invalid packet type";
-                            m_nextState = Error;
-                            transition();
-                            return;
-                        }
-
-                        cnetdetails << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress")
-                                    << " hello frame: success. starting session.";
-                        try
-                        {
-                            RLP rlp(frame.cropped(1), RLP::ThrowOnFail | RLP::FailIfTooSmall);
-                            m_host->startPeerSession(m_remote, rlp, move(m_io), m_socket);
-                        }
-                        catch (std::exception const& _e)
-                        {
-                            cnetlog << "Handshake causing an exception: " << _e.what();
-                            m_nextState = Error;
-                            transition();
-                        }
+                        LOG(m_errorLogger)
+                            << connectionDirectionString()
+                            << "Internal error in handshake: RLPXFrameCoder disappeared ("
+                            << m_remote << ")";
+                        m_nextState = Error;
+                        transition();
+                        return;
                     }
-                });
-            }
-        });
+
+                    /// authenticate and decrypt header
+                    if (!m_io->authAndDecryptHeader(
+                            bytesRef(m_handshakeInBuffer.data(), m_handshakeInBuffer.size())))
+                    {
+                        m_nextState = Error;
+                        transition();
+                        return;
+                    }
+
+                    LOG(m_logger) << connectionDirectionString()
+                                  << "Successfully decrypted frame header from " << m_remote << "@"
+                                  << m_socket->remoteEndpoint() << ". Validating contents...";
+
+                    /// check frame size
+                    bytes const& header = m_handshakeInBuffer;
+                    uint32_t const frameSize = (uint32_t)(header[2]) | (uint32_t)(header[1]) << 8 |
+                                               (uint32_t)(header[0]) << 16;
+                    constexpr size_t expectedFrameSizeBytes = 1024;
+                    if (frameSize > expectedFrameSizeBytes)
+                    {
+                        // all future frames: 16777216
+                        LOG(m_logger)
+                            << connectionDirectionString()
+                            << "Frame is too large! Expected size: " << expectedFrameSizeBytes
+                            << " bytes, actual size: " << frameSize << " bytes (" << m_remote << "@"
+                            << m_socket->remoteEndpoint() << ")";
+                        m_nextState = Error;
+                        transition();
+                        return;
+                    }
+
+                    /// rlp of header has protocol-type, sequence-id[, total-packet-size]
+                    bytes headerRLP(header.size() - 3 - h128::size);  // this is always 32 - 3 - 16
+                                                                      // = 13. wtf?
+                    bytesConstRef(&header).cropped(3).copyTo(&headerRLP);
+
+                    /// read padded frame and mac
+                    LOG(m_logger) << connectionDirectionString() << "Frame body from " << m_remote
+                                  << "@" << m_socket->remoteEndpoint();
+
+                    constexpr size_t byteBoundary = 16;
+                    m_handshakeInBuffer.resize(
+                        frameSize + ((byteBoundary - (frameSize % byteBoundary)) % byteBoundary) +
+                        h128::size);
+                    ba::async_read(m_socket->ref(),
+                        boost::asio::buffer(m_handshakeInBuffer, m_handshakeInBuffer.size()),
+                        [this, self, headerRLP](boost::system::error_code ec, std::size_t) {
+                            m_idleTimer.cancel();
+
+                            if (ec)
+                                transition(ec);
+                            else
+                            {
+                                if (!m_io)
+                                {
+                                    LOG(m_errorLogger) << connectionDirectionString()
+                                                       << "Internal error in handshake: "
+                                                          "RLPXFrameCoder disappeared ("
+                                                       << m_remote << ")";
+                                    m_nextState = Error;
+                                    transition();
+                                    return;
+                                }
+
+                                bytesRef frame(&m_handshakeInBuffer);
+                                if (!m_io->authAndDecryptFrame(frame))
+                                {
+                                    LOG(m_logger) << connectionDirectionString()
+                                                  << "Frame body decrypt failed (" << m_remote
+                                                  << "@" << m_socket->remoteEndpoint() << ")";
+                                    m_nextState = Error;
+                                    transition();
+                                    return;
+                                }
+
+                                PacketType packetType =
+                                    frame[0] == 0x80 ? HelloPacket : (PacketType)frame[0];
+                                if (packetType != HelloPacket)
+                                {
+                                    LOG(m_logger)
+                                        << connectionDirectionString()
+                                        << "Invalid packet type. Expected: "
+                                        << packetTypeToString(HelloPacket)
+                                        << ", received: " << packetTypeToString(packetType) << " ("
+                                        << m_remote << "@" << m_socket->remoteEndpoint() << ")";
+                                    m_nextState = Error;
+                                    transition();
+                                    return;
+                                }
+
+                                LOG(m_logger) << connectionDirectionString()
+                                              << packetTypeToString(HelloPacket)
+                                              << " verified. Starting session with " << m_remote
+                                              << "@" << m_socket->remoteEndpoint();
+                                try
+                                {
+                                    RLP rlp(
+                                        frame.cropped(1), RLP::ThrowOnFail | RLP::FailIfTooSmall);
+                                    m_host->startPeerSession(m_remote, rlp, move(m_io), m_socket);
+                                }
+                                catch (std::exception const& _e)
+                                {
+                                    stringstream errorStream;
+                                    errorStream << connectionDirectionString() << "Handshake with "
+                                                << m_remote;
+                                    if (remoteSocketConnected())
+                                        errorStream << "@" << m_socket->remoteEndpoint();
+                                    errorStream << " causing an exception: " << _e.what();
+                                    LOG(m_errorLogger) << errorStream.str();
+                                    m_nextState = Error;
+                                    transition();
+                                }
+                            }
+                        });
+                }
+            });
     }
+}
+
+bool RLPXHandshake::remoteSocketConnected() const
+{
+    return m_socket && m_socket->isConnected() &&
+           !m_socket->remoteEndpoint().address().is_unspecified();
 }
