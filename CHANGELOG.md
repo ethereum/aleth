@@ -9,7 +9,7 @@
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
 
-## [1.6.0] - Unreleased
+## [1.6.0] - 2019-04-16
 
 - Added: [#5485](https://github.com/ethereum/aleth/pull/5485) aleth-bootnode now by default connects to official Ethereum bootnodes. This can be disabled with `--no-bootstrap` flag.
 - Added: [#5505](https://github.com/ethereum/aleth/pull/5505) Allow building with libc++ on Linux.
@@ -31,5 +31,4 @@
 
 
 [1.7.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.0...master
-[1.6.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.1...release/1.6
-
+[1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
