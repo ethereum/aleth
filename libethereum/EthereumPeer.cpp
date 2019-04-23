@@ -62,8 +62,8 @@ std::string EthereumPeer::validate(
         error << "Protocol version mismatch. Host protocol version: " << _hostProtocolVersion
               << ", peer protocol version: " << m_protocolVersion;
     else if (m_genesisHash != _hostGenesisHash)
-        error << "Genesis hash mismatch. Host genesis hash: " << _hostGenesisHash
-              << ", peer genesis hash: " << m_genesisHash;
+        error << "Genesis hash mismatch. Host genesis hash: " << _hostGenesisHash.abridged()
+              << ", peer genesis hash: " << m_genesisHash.abridged();
     else if (m_asking != Asking::State && m_asking != Asking::Nothing)
         error << "Peer banned for unexpected status message.";
 
