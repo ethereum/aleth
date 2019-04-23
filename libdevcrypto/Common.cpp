@@ -89,6 +89,26 @@ Public dev::toPublic(Secret const& _secret)
     return Public{&serializedPubkey[1], Public::ConstructFromPointer};
 }
 
+Public dev::toPublic(PublicCompressed const& _publicCompressed)
+{
+    auto* ctx = getCtx();
+
+    secp256k1_pubkey rawPubkey;
+    if (!secp256k1_ec_pubkey_parse(
+            ctx, &rawPubkey, _publicCompressed.data(), PublicCompressed::size))
+        return {};
+
+    std::array<byte, 65> serializedPubkey;
+    size_t serializedPubkeySize = serializedPubkey.size();
+    secp256k1_ec_pubkey_serialize(
+        ctx, serializedPubkey.data(), &serializedPubkeySize, &rawPubkey, SECP256K1_EC_UNCOMPRESSED);
+    assert(serializedPubkeySize == serializedPubkey.size());
+    // Expect single byte header of value 0x04 -- uncompressed public key.
+    assert(serializedPubkey[0] == 0x04);
+    // Create the Public skipping the header.
+    return Public{&serializedPubkey[1], Public::ConstructFromPointer};
+}
+
 PublicCompressed dev::toPublicCompressed(Secret const& _secret)
 {
     PublicCompressed serializedPubkey;

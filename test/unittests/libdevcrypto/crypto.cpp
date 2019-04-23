@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 
 BOOST_AUTO_TEST_CASE(pubkeyOfZero)
 {
-    auto pub = toPublic({});
+    auto pub = toPublic(Secret{});
     BOOST_REQUIRE_EQUAL(pub, Public{});
 }
 
@@ -207,6 +207,14 @@ BOOST_AUTO_TEST_CASE(signAndVerify)
     h512 const sigWithoutV{sig};
 
     BOOST_REQUIRE(verify(pubCompressed, sigWithoutV, msg));
+}
+
+BOOST_AUTO_TEST_CASE(compressedToUncompressed)
+{
+    auto const kp = KeyPair::create();
+    auto const pubCompressed = toPublicCompressed(kp.secret());
+
+    BOOST_REQUIRE(toPublic(pubCompressed) == kp.pub());
 }
 
 BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
