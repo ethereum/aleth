@@ -1287,6 +1287,18 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
     auto datagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(enrResponsePacket));
     BOOST_REQUIRE_EQUAL(datagram->typeName(), "ENRResponse");
+
+    auto enrResponse = dynamic_cast<ENRResponse const&>(*datagram);
+    auto const& keyValuePairs = enrResponse.enr->keyValuePairs();
+    BOOST_REQUIRE_EQUAL(RLP{keyValuePairs.at("id")}.toString(), "v4");
+    PublicCompressed publicCompressed{RLP{keyValuePairs.at("secp256k1")}.toBytesConstRef()};
+    BOOST_REQUIRE(toPublic(publicCompressed) == nodeTable->m_hostNodeID);
+    bytes const localhostBytes{127, 0, 0, 1};
+    BOOST_REQUIRE(RLP{keyValuePairs.at("ip")}.toBytes() == localhostBytes);
+    BOOST_REQUIRE_EQUAL(
+        RLP{keyValuePairs.at("tcp")}.toInt(), nodeTable->m_hostNodeEndpoint.tcpPort());
+    BOOST_REQUIRE_EQUAL(
+        RLP{keyValuePairs.at("udp")}.toInt(), nodeTable->m_hostNodeEndpoint.udpPort());
 }
 
 class PacketsWithChangedEndpointFixture : public TestOutputHelperFixture
