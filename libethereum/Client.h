@@ -367,6 +367,9 @@ protected:
     Timer m_timeSinceLastBqSync;
     SharedMutex x_timeSinceLastBqSync;
 
+    Timer m_timeSinceLastBqSyncLog;
+    SharedMutex x_timeSinceLastBqSyncLog;
+
     bytes m_extraData;
 
     Signal<bytes const&> m_onBlockSealed;        ///< Called if we have sealed a new block

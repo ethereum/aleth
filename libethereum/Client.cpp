@@ -27,6 +27,7 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 namespace
 {
 constexpr std::chrono::seconds c_bqSyncTimeout{3600};
+constexpr std::chrono::seconds c_bqSyncLogTimeout{30};
 
 std::string filtersToString(h256Hash const& _fs)
 {
@@ -136,10 +137,10 @@ void Client::init(p2p::Host& _extNet, fs::path const& _dbPath,
         m_warpHost = warpCapability;
     }
 
-    DEV_WRITE_GUARDED(x_timeSinceLastBqSync)
-    m_timeSinceLastBqSync.restart();
+    DEV_WRITE_GUARDED(x_timeSinceLastBqSync) { m_timeSinceLastBqSync.restart(); }
+    DEV_WRITE_GUARDED(x_timeSinceLastBqSyncLog) { m_timeSinceLastBqSyncLog.restart(); }
 
-    doWork(false);
+    doWork(false /* wait TODO */);
 }
 
 ImportResult Client::queueBlock(bytes const& _block, bool _isSafe)
@@ -665,9 +666,14 @@ void Client::noteChanged(h256Hash const& _filters)
 void Client::doWork(bool _doWait)
 {
     double timeSinceLastBqSyncSeconds;
+    double timeSinceLastBqSyncLogSeconds;
     DEV_READ_GUARDED(x_timeSinceLastBqSync)
     {
         timeSinceLastBqSyncSeconds = m_timeSinceLastBqSync.elapsed();
+    }
+    DEV_READ_GUARDED(x_timeSinceLastBqSyncLog)
+    {
+        timeSinceLastBqSyncLogSeconds = m_timeSinceLastBqSyncLog.elapsed();
     }
     if (static_cast<int>(timeSinceLastBqSyncSeconds) > c_bqSyncTimeout.count())
     {
@@ -675,13 +681,14 @@ void Client::doWork(bool _doWait)
               << timeSinceLastBqSyncSeconds
               << " seconds, timeout threshold: " << c_bqSyncTimeout.count() << " seconds";
 
-        // Force a debugger break
-        int* debugBreak = nullptr;
-        *debugBreak = 0;
+        assert(false);
     }
-    else
+    else if (static_cast<int>(timeSinceLastBqSyncLogSeconds) > c_bqSyncLogTimeout.count())
+    {
+        DEV_READ_GUARDED(x_timeSinceLastBqSyncLog) { m_timeSinceLastBqSyncLog.restart(); }
         LOG(m_loggerDetail) << "Time since last block queue sync: " << timeSinceLastBqSyncSeconds
                             << " seconds";
+    }
 
     bool t = true;
     if (m_syncBlockQueue.compare_exchange_strong(t, false))
