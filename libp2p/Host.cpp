@@ -98,8 +98,8 @@ Host::Host(
     m_alias{_secretAndENR.first},
     m_enr{_secretAndENR.second},
     m_lastPing(chrono::steady_clock::time_point::min()),
-    m_lastPeerLogMessage(chrono::steady_clock::time_point::min()),
-    m_capabilityHost(createCapabilityHost(*this))
+    m_capabilityHost(createCapabilityHost(*this)),
+    m_lastPeerLogMessage(chrono::steady_clock::time_point::min())
 {
     cnetnote << "Id: " << id();
     cnetnote << "ENR: " << m_enr;
