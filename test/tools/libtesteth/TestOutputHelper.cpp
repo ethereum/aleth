@@ -18,12 +18,13 @@
  * Fixture class for boost output when running testeth
  */
 
-#include <boost/test/unit_test.hpp>
-#include <boost/io/ios_state.hpp>
 #include <libethashseal/Ethash.h>
 #include <libethcore/BasicAuthority.h>
-#include <test/tools/libtesteth/TestOutputHelper.h>
 #include <test/tools/libtesteth/Options.h>
+#include <test/tools/libtesteth/TestOutputHelper.h>
+#include <boost/filesystem.hpp>
+#include <boost/io/ios_state.hpp>
+#include <boost/test/unit_test.hpp>
 #include <numeric>
 
 using namespace std;
@@ -84,6 +85,7 @@ void TestOutputHelper::finishTest()
 
 void TestOutputHelper::printTestExecStats()
 {
+    checkUnfinishedTestFolders();
     if (Options::get().exectimelog)
     {
         boost::io::ios_flags_saver saver(cout);
@@ -99,4 +101,87 @@ void TestOutputHelper::printTestExecStats()
             std::cout << setw(45) << t.second << setw(25) << " time: " + toString(t.first) << "\n";
         saver.restore();
     }
+}
+
+// check if a boost path contain no test files
+bool pathHasTests(boost::filesystem::path const& _path)
+{
+    using fsIterator = boost::filesystem::directory_iterator;
+    for (fsIterator it(_path); it != fsIterator(); ++it)
+    {
+        // if the extention of a test file
+        if (boost::filesystem::is_regular_file(it->path()) &&
+            (it->path().extension() == ".json" || it->path().extension() == ".yml"))
+        {
+            // if the filename ends with Filler/Copier type
+            std::string const name = it->path().stem().filename().string();
+            std::string const suffix =
+                (name.length() > 7) ? name.substr(name.length() - 6) : string();
+            if (suffix == "Filler" || suffix == "Copier")
+                return true;
+        }
+    }
+    return false;
+}
+
+void TestOutputHelper::checkUnfinishedTestFolders()
+{
+    // -t SuiteName/caseName   parse caseName as filter
+    // rCurrentTestSuite is empty if run without -t argument
+    string filter;
+    size_t pos = Options::get().rCurrentTestSuite.find('/');
+    if (pos != string::npos)
+        filter = Options::get().rCurrentTestSuite.substr(pos + 1);
+
+    if (!filter.empty())
+    {
+        if (m_finishedTestFoldersMap.size() != 1)
+        {
+            std::cerr << "ERROR: Expected a single test to be passed: " << filter << "\n";
+            return;
+        }
+        std::map<boost::filesystem::path, FolderNameSet>::const_iterator it =
+            m_finishedTestFoldersMap.begin();
+        if (!pathHasTests(it->first / filter))
+            std::cerr << "WARNING: Test folder " << it->first / filter
+                      << " appears to have no tests!"
+                      << "\n";
+    }
+    else
+    {
+        for (auto const& allTestsIt : m_finishedTestFoldersMap)
+        {
+            boost::filesystem::path path = allTestsIt.first;
+            set<string> allFolders;
+            using fsIterator = boost::filesystem::directory_iterator;
+            for (fsIterator it(path); it != fsIterator(); ++it)
+            {
+                if (boost::filesystem::is_directory(*it))
+                {
+                    allFolders.insert(it->path().filename().string());
+                    if (!pathHasTests(it->path()))
+                        std::cerr << "WARNING: Test folder " << it->path()
+                                  << " appears to have no tests!"
+                                  << "\n";
+                }
+            }
+
+            std::vector<string> diff;
+            FolderNameSet finishedFolders = allTestsIt.second;
+            std::set_difference(allFolders.begin(), allFolders.end(), finishedFolders.begin(),
+                finishedFolders.end(), std::back_inserter(diff));
+            for (auto const& it : diff)
+            {
+                std::cerr << "WARNING: Test folder " << path / it << " appears to be unused!"
+                          << "\n";
+            }
+        }
+    }
+}
+
+void TestOutputHelper::markTestFolderAsFinished(
+    boost::filesystem::path const& _suitePath, string const& _folderName)
+{
+    // Mark test folder _folderName as finished for the test suite path _suitePath
+    m_finishedTestFoldersMap[_suitePath].emplace(_folderName);
 }

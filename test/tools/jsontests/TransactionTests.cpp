@@ -219,9 +219,11 @@ class TransactionTestFixture
 public:
     TransactionTestFixture()
     {
-        string const& casename = boost::unit_test::framework::current_test_case().p_name;
         test::TransactionTestSuite suite;
+        string const casename = boost::unit_test::framework::current_test_case().p_name;
+        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
         suite.runAllTestsInFolder(casename);
+        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
     }
 };
 
