@@ -34,6 +34,9 @@ constexpr chrono::seconds c_keepAliveTimeOut{1};
 
 /// Interval which m_runTimer is run when network is connected.
 constexpr chrono::milliseconds c_runTimerInterval{100};
+
+/// Interval at which active peer info is logged
+constexpr chrono::seconds c_logActivePeersInterval{30};
 }  // namespace
 
 HostNodeTableHandler::HostNodeTableHandler(Host& _host): m_host(_host) {}
@@ -95,6 +98,7 @@ Host::Host(
     m_alias{_secretAndENR.first},
     m_enr{_secretAndENR.second},
     m_lastPing(chrono::steady_clock::time_point::min()),
+    m_lastPeerLogMessage(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this))
 {
     cnetnote << "Id: " << id();
@@ -840,15 +844,32 @@ void Host::keepAlivePeers()
     if (!m_run || chrono::steady_clock::now() - c_keepAliveInterval < m_lastPing)
         return;
 
+    bool logActivePeers =
+        chrono::steady_clock::now() - c_logActivePeersInterval > m_lastPeerLogMessage;
+    std::vector<PeerSessionInfo> peerSessionInfos;
     RecursiveGuard l(x_sessions);
-    for (auto it = m_sessions.begin(); it != m_sessions.end();)
-        if (auto p = it->second.lock())
+    {
+        for (auto it = m_sessions.begin(); it != m_sessions.end();)
+            if (auto p = it->second.lock())
+            {
+                p->ping();
+                ++it;
+                if (logActivePeers)
+                    peerSessionInfos.push_back(p->info());
+            }
+            else
+                it = m_sessions.erase(it);
+    }
+
+    if (logActivePeers)
+    {
+        LOG(m_logger) << "Active peers: " << peerSessionInfos.size();
+        for (auto const& peerInfo : peerSessionInfos)
         {
-            p->ping();
-            ++it;
+            LOG(m_detailsLogger) << "Peer: " << peerInfo;
         }
-        else
-            it = m_sessions.erase(it);
+        m_lastPeerLogMessage = chrono::steady_clock::now();
+    }
 
     m_lastPing = chrono::steady_clock::now();
 }

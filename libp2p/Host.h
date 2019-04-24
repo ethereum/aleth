@@ -371,7 +371,12 @@ private:
 
     std::shared_ptr<CapabilityHostFace> m_capabilityHost;
 
+    /// When the last "active peers" message was logged - used to throttle
+    /// logging to once every c_logActivePeersInterval seconds
+    std::chrono::steady_clock::time_point m_lastPeerLogMessage;
+
     Logger m_logger{createLogger(VerbosityDebug, "net")};
+    Logger m_detailsLogger{createLogger(VerbosityTrace, "net")};
 };
 
 }
