@@ -3,6 +3,7 @@
 ## [1.7.0] - Unreleased
 
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
+- Added: [#5571](https://github.com/ethereum/aleth/pull/5571) Support Discovery v4 ENR Extension messages.
 - Added: [#5557](https://github.com/ethereum/aleth/pull/5557) Improved debug logging of full sync.
 - Added: [#5564](https://github.com/ethereum/aleth/pull/5564) Improved help output of Aleth by adding list of channels.
 - Added: [#5575](https://github.com/ethereum/aleth/pull/5575) Log active peer count and peer list every 30 seconds.
