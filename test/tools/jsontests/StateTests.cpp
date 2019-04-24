@@ -147,7 +147,8 @@ public:
         boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
 
         // Check specific test cases
-        static vector<string> timeConsumingTestSuites{string{"stQuadraticComplexityTest"}};
+        static vector<string> const timeConsumingTestSuites{
+            string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
         if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
         {
             std::cout << "Skipping " << casename << " because --all option is not specified.\n";
@@ -229,4 +230,5 @@ BOOST_AUTO_TEST_CASE(stBadOpcode){}
 //New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance){}
 BOOST_AUTO_TEST_CASE(stEWASMTests){}
+BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_SUITE_END()

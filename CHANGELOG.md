@@ -2,6 +2,7 @@
 
 ## [1.7.0] - Unreleased
 
+- Moved: [#5576](https://github.com/ethereum/aleth/pull/5576) Moved sstore_combinations tests and static_Call50000_sha256 to stTimeConsuming test suite. (require --all flag to run)
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
 - Added: [#5557](https://github.com/ethereum/aleth/pull/5557) Improved debug logging of full sync.
 - Added: [#5564](https://github.com/ethereum/aleth/pull/5564) Improved help output of Aleth by adding list of channels.
