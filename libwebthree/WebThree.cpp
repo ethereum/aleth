@@ -80,7 +80,7 @@ std::string WebThreeDirect::composeClientVersion(std::string const& _client)
 
 std::vector<PeerSessionInfo> WebThreeDirect::peers()
 {
-    return m_net.peerSessionInfo();
+    return m_net.peerSessionInfos();
 }
 
 size_t WebThreeDirect::peerCount() const

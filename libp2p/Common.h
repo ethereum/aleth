@@ -267,6 +267,16 @@ inline std::ostream& operator<<(std::ostream& _strm, NodeID const& _id)
     return _strm;
 }
 
+inline boost::log::formatting_ostream& operator<<(
+    boost::log::formatting_ostream& _strm, PeerSessionInfo const& _peerSessionInfo)
+{
+    _strm << _peerSessionInfo.id << "|" << _peerSessionInfo.clientVersion << "|"
+          << _peerSessionInfo.host << "|" << _peerSessionInfo.port << "|";
+    for (auto const& cap : _peerSessionInfo.caps)
+        _strm << "(" << cap.first << "," << cap.second << ")";
+    return _strm;
+}
+
 /// Simple stream output for a NodeIPEndpoint.
 std::ostream& operator<<(std::ostream& _out, NodeIPEndpoint const& _ep);
 
