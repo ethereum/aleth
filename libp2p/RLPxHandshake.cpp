@@ -21,23 +21,14 @@ constexpr size_t c_authCipherSizeBytes = 307;
 }
 
 RLPXHandshake::RLPXHandshake(Host* _host, std::shared_ptr<RLPXSocket> const& _socket)
-  : m_host(_host),
-    m_originated(false),
-    m_socket(_socket),
-    m_idleTimer(m_socket->ref().get_io_service())
-{
-    m_logger.add_attribute(
-        "Context", boost::log::attributes::constant<std::string>(connectionDirectionString()));
-    m_errorLogger.add_attribute(
-        "Context", boost::log::attributes::constant<std::string>(connectionDirectionString()));
-    crypto::Nonce::get().ref().copyTo(m_nonce.ref());
-}
+  : RLPXHandshake(_host, _socket, {})
+{}
 
 RLPXHandshake::RLPXHandshake(
     Host* _host, std::shared_ptr<RLPXSocket> const& _socket, NodeID _remote)
   : m_host(_host),
     m_remote(_remote),
-    m_originated(true),
+    m_originated(_remote),
     m_socket(_socket),
     m_idleTimer(m_socket->ref().get_io_service())
 {
