@@ -687,7 +687,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
     });
 }
 
-PeerSessionInfos Host::peerSessionInfo() const
+PeerSessionInfos Host::peerSessionInfos() const
 {
     if (!m_run)
         return PeerSessionInfos();
@@ -726,6 +726,7 @@ void Host::run(boost::system::error_code const& _ec)
         m_connecting.remove_if([](weak_ptr<RLPXHandshake> h){ return h.expired(); });
 
     keepAlivePeers();
+    logActivePeers();
 
     // At this time peers will be disconnected based on natural TCP timeout.
     // disconnectLatePeers needs to be updated for the assumption that Session
@@ -844,9 +845,6 @@ void Host::keepAlivePeers()
     if (!m_run || chrono::steady_clock::now() - c_keepAliveInterval < m_lastPing)
         return;
 
-    bool logActivePeers =
-        chrono::steady_clock::now() - c_logActivePeersInterval > m_lastPeerLogMessage;
-    std::vector<PeerSessionInfo> peerSessionInfos;
     RecursiveGuard l(x_sessions);
     {
         for (auto it = m_sessions.begin(); it != m_sessions.end();)
@@ -854,24 +852,25 @@ void Host::keepAlivePeers()
             {
                 p->ping();
                 ++it;
-                if (logActivePeers)
-                    peerSessionInfos.push_back(p->info());
             }
             else
                 it = m_sessions.erase(it);
     }
 
-    if (logActivePeers)
-    {
-        LOG(m_logger) << "Active peers: " << peerSessionInfos.size();
-        for (auto const& peerInfo : peerSessionInfos)
-        {
-            LOG(m_detailsLogger) << "Peer: " << peerInfo;
-        }
-        m_lastPeerLogMessage = chrono::steady_clock::now();
-    }
-
     m_lastPing = chrono::steady_clock::now();
+}
+
+void Host::logActivePeers()
+{
+    if (!m_run || chrono::steady_clock::now() - c_logActivePeersInterval < m_lastPeerLogMessage)
+        return;
+
+    LOG(m_infoLogger) << "Active peer count: " << peerCount();
+    if (m_netConfig.discovery)
+        LOG(m_infoLogger) << "Looking for peers...";
+
+    LOG(m_detailsLogger) << peerSessionInfos();
+    m_lastPeerLogMessage = chrono::steady_clock::now();
 }
 
 void Host::disconnectLatePeers()

@@ -168,7 +168,7 @@ public:
     void setPeerStretch(unsigned _n) { m_stretchPeers = _n; }
     
     /// Get peer information.
-    PeerSessionInfos peerSessionInfo() const;
+    PeerSessionInfos peerSessionInfos() const;
 
     /// Get number of peers connected.
     size_t peerCount() const;
@@ -269,6 +269,9 @@ private:
     
     /// Ping the peers to update the latency information and disconnect peers which have timed out.
     void keepAlivePeers();
+
+    /// Log count of active peers and information about each peer
+    void logActivePeers();
 
     /// Disconnect peers which didn't respond to keepAlivePeers ping prior to c_keepAliveTimeOut.
     void disconnectLatePeers();
@@ -377,6 +380,7 @@ private:
 
     Logger m_logger{createLogger(VerbosityDebug, "net")};
     Logger m_detailsLogger{createLogger(VerbosityTrace, "net")};
+    Logger m_infoLogger{createLogger(VerbosityInfo, "net")};
 };
 
 }

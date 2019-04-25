@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     BOOST_REQUIRE_EQUAL(host1peerCount, 1);
     BOOST_REQUIRE_EQUAL(host2peerCount, 1);
 
-    PeerSessionInfos sis1 = host1.peerSessionInfo();
-    PeerSessionInfos sis2 = host2.peerSessionInfo();
+    PeerSessionInfos sis1 = host1.peerSessionInfos();
+    PeerSessionInfos sis2 = host2.peerSessionInfos();
 
     BOOST_REQUIRE_EQUAL(sis1.size(), 1);
     BOOST_REQUIRE_EQUAL(sis2.size(), 1);

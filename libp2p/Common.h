@@ -272,7 +272,7 @@ inline boost::log::formatting_ostream& operator<<(
 {
     _strm << _peerSessionInfo.id << "|" << _peerSessionInfo.clientVersion << "|"
           << _peerSessionInfo.host << "|" << _peerSessionInfo.port << "|";
-    for (auto cap : _peerSessionInfo.caps)
+    for (auto const& cap : _peerSessionInfo.caps)
         _strm << "(" << cap.first << "," << cap.second << ")";
     return _strm;
 }
