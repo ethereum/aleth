@@ -869,7 +869,7 @@ void Host::logActivePeers()
     if (m_netConfig.discovery)
         LOG(m_infoLogger) << "Looking for peers...";
 
-    LOG(m_detailsLogger) << peerSessionInfos();
+    LOG(m_detailsLogger) << "Peers: " << peerSessionInfos();
     m_lastPeerLogMessage = chrono::steady_clock::now();
 }
 
