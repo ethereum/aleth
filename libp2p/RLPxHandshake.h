@@ -33,10 +33,10 @@ class RLPXHandshake: public std::enable_shared_from_this<RLPXHandshake>
 
 public:
     /// Setup incoming connection.
-    RLPXHandshake(Host* _host, std::shared_ptr<RLPXSocket> const& _socket): m_host(_host), m_originated(false), m_socket(_socket), m_idleTimer(m_socket->ref().get_io_service()) { crypto::Nonce::get().ref().copyTo(m_nonce.ref()); }
-    
+    RLPXHandshake(Host* _host, std::shared_ptr<RLPXSocket> const& _socket);
+
     /// Setup outbound connection.
-    RLPXHandshake(Host* _host, std::shared_ptr<RLPXSocket> const& _socket, NodeID _remote): m_host(_host), m_remote(_remote), m_originated(true), m_socket(_socket), m_idleTimer(m_socket->ref().get_io_service()) { crypto::Nonce::get().ref().copyTo(m_nonce.ref()); }
+    RLPXHandshake(Host* _host, std::shared_ptr<RLPXSocket> const& _socket, NodeID _remote);
 
     virtual ~RLPXHandshake() = default;
 
