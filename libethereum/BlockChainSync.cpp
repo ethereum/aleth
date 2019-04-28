@@ -213,7 +213,7 @@ bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
 {
     // DAO challenge
     u256 const daoHardfork = host().chain().sealEngine()->chainParams().daoHardforkBlock;
-    if (daoHardfork == 0 || daoHardfork == c_infiniteBlockNumber)
+    if (daoHardfork == 0 || daoHardfork == c_infiniteBlockNumber || host().chain().number() < daoHardfork)
         return false;
 
     m_daoChallengedPeers.insert(_peerID);
