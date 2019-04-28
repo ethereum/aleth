@@ -6,6 +6,7 @@
 - Added: [#5557](https://github.com/ethereum/aleth/pull/5557) Improved debug logging of full sync.
 - Added: [#5564](https://github.com/ethereum/aleth/pull/5564) Improved help output of Aleth by adding list of channels.
 - Added: [#5575](https://github.com/ethereum/aleth/pull/5575) Log active peer count and peer list every 30 seconds.
+- Added: [#5580](https://github.com/ethereum/aleth/pull/5580) Enable syncing from ETC nodes for blocks < dao hard fork block.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
