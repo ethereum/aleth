@@ -253,8 +253,8 @@ protected:
     void doDiscoveryRound(NodeID _target, unsigned _round,
         std::shared_ptr<std::set<std::shared_ptr<NodeEntry>>> _tried);
 
-    /// Returns nodes from node table which are closest to target.
-    std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID _target);
+    /// Returns s_bucketSize nodes from node table which are closest to target.
+    std::vector<std::shared_ptr<NodeEntry>> nearestNodeEntries(NodeID const& _target);
 
     /// Asynchronously drops _leastSeen node if it doesn't reply and adds _replacement node,
     /// otherwise _replacement is thrown away.
