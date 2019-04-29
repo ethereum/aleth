@@ -54,7 +54,7 @@ struct TestNodeTable: public NodeTable
     static vector<pair<Public, uint16_t>> createTestNodes(unsigned _count)
     {
         vector<pair<Public, uint16_t>> ret;
-        asserts(_count <= 1000);
+        asserts(_count <= 2000);
         
         ret.clear();
         for (unsigned i = 0; i < _count; i++)
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE(unexpectedFindNode)
 
 BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
 {
-    TestNodeTableHost nodeTableHost(1000);
+    TestNodeTableHost nodeTableHost(2000);
     auto& nodeTable = nodeTableHost.nodeTable;
 
     // socket receiving PING
