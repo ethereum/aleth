@@ -265,30 +265,26 @@ void NodeTable::doDiscoveryRound(
 
 vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID const& _target)
 {
-    vector<pair<int, shared_ptr<NodeEntry>>> nodesByDistanceToTarget;
-    for (auto const& bucket : m_buckets)
-        for (auto const& nodeWeakPtr : bucket.nodes)
-            if (auto node = nodeWeakPtr.lock())
-                nodesByDistanceToTarget.emplace_back(distance(_target, node->id()), node);
-
     auto const distanceToTargetLess = [](pair<int, shared_ptr<NodeEntry>> const& _node1,
                                           pair<int, shared_ptr<NodeEntry>> const& _node2) {
         return _node1.first < _node2.first;
     };
 
-    if (nodesByDistanceToTarget.size() <= s_bucketSize)
-        sort(nodesByDistanceToTarget.begin(), nodesByDistanceToTarget.end(), distanceToTargetLess);
-    else
-        partial_sort(nodesByDistanceToTarget.begin(),
-            nodesByDistanceToTarget.begin() + s_bucketSize, nodesByDistanceToTarget.end(),
-            distanceToTargetLess);
+    std::set<pair<int, shared_ptr<NodeEntry>>, decltype(distanceToTargetLess)>
+        nodesByDistanceToTarget(distanceToTargetLess);
+    for (auto const& bucket : m_buckets)
+        for (auto const& nodeWeakPtr : bucket.nodes)
+            if (auto node = nodeWeakPtr.lock())
+            {
+                nodesByDistanceToTarget.emplace(distance(_target, node->id()), node);
+
+                if (nodesByDistanceToTarget.size() > s_bucketSize)
+                    nodesByDistanceToTarget.erase(nodesByDistanceToTarget.rbegin().base());
+            }
 
     vector<shared_ptr<NodeEntry>> ret;
-    for (auto it = nodesByDistanceToTarget.begin();
-         it != nodesByDistanceToTarget.end() &&
-         it != nodesByDistanceToTarget.begin() + s_bucketSize;
-         ++it)
-        ret.emplace_back(move(it->second));
+    for (auto& distanceAndNode : nodesByDistanceToTarget)
+        ret.emplace_back(move(distanceAndNode.second));
 
     return ret;
 }
