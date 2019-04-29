@@ -2,13 +2,13 @@
 
 ## [1.7.0] - Unreleased
 
-- Moved: [#5576](https://github.com/ethereum/aleth/pull/5576) Moved sstore_combinations tests and static_Call50000_sha256 to stTimeConsuming test suite. (require --all flag to run)
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
 - Added: [#5557](https://github.com/ethereum/aleth/pull/5557) Improved debug logging of full sync.
 - Added: [#5564](https://github.com/ethereum/aleth/pull/5564) Improved help output of Aleth by adding list of channels.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
-- Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
+- Changed: [#5576](https://github.com/ethereum/aleth/pull/5576) Moved sstore_combinations and static_Call50000_sha256 tests to stTimeConsuming test suite. (testeth runs them only with `--all` flag)
+- Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 
 ## [1.6.0] - 2019-04-16
 
