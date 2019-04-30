@@ -203,6 +203,7 @@ void NodeTable::doDiscoveryRound(
     if (!m_socket->isOpen())
         return;
 
+    // send s_alpha FindNode packets to nodes we know, closest to target
     auto const nearestNodes = nearestNodeEntries(_node);
     auto newTriedCount = 0;
     for (auto const& nodeEntry : nearestNodes)
@@ -262,57 +263,29 @@ void NodeTable::doDiscoveryRound(
         });
 }
 
-vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID _target)
+vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID const& _target)
 {
-    // send s_alpha FindNode packets to nodes we know, closest to target
-    static unsigned lastBin = s_bins - 1;
-    unsigned head = distance(m_hostNodeID, _target);
-    unsigned tail = head == 0 ? lastBin : (head - 1) % s_bins;
+    auto const distanceToTargetLess = [](pair<int, shared_ptr<NodeEntry>> const& _node1,
+                                          pair<int, shared_ptr<NodeEntry>> const& _node2) {
+        return _node1.first < _node2.first;
+    };
 
-    map<unsigned, list<shared_ptr<NodeEntry>>> found;
+    std::multiset<pair<int, shared_ptr<NodeEntry>>, decltype(distanceToTargetLess)>
+        nodesByDistanceToTarget(distanceToTargetLess);
+    for (auto const& bucket : m_buckets)
+        for (auto const& nodeWeakPtr : bucket.nodes)
+            if (auto node = nodeWeakPtr.lock())
+            {
+                nodesByDistanceToTarget.emplace(distance(_target, node->id()), node);
 
-    // if d is 0, then we roll look forward, if last, we reverse, else, spread from d
-    if (head > 1 && tail != lastBin)
-        while (head != tail && head < s_bins)
-        {
-            Guard l(x_state);
-            for (auto const& n : m_buckets[head].nodes)
-                if (auto p = n.lock())
-                    found[distance(_target, p->id())].push_back(p);
-
-            if (tail)
-                for (auto const& n : m_buckets[tail].nodes)
-                    if (auto p = n.lock())
-                        found[distance(_target, p->id())].push_back(p);
-
-            head++;
-            if (tail)
-                tail--;
-        }
-    else if (head < 2)
-        while (head < s_bins)
-        {
-            Guard l(x_state);
-            for (auto const& n : m_buckets[head].nodes)
-                if (auto p = n.lock())
-                    found[distance(_target, p->id())].push_back(p);
-            head++;
-        }
-    else
-        while (tail > 0)
-        {
-            Guard l(x_state);
-            for (auto const& n : m_buckets[tail].nodes)
-                if (auto p = n.lock())
-                    found[distance(_target, p->id())].push_back(p);
-            tail--;
-        }
+                if (nodesByDistanceToTarget.size() > s_bucketSize)
+                    nodesByDistanceToTarget.erase(--nodesByDistanceToTarget.end());
+            }
 
     vector<shared_ptr<NodeEntry>> ret;
-    for (auto& nodes : found)
-        for (auto const& n : nodes.second)
-            if (ret.size() < s_bucketSize && n->endpoint() && isAllowedEndpoint(n->endpoint()))
-                ret.push_back(n);
+    for (auto& distanceAndNode : nodesByDistanceToTarget)
+        ret.emplace_back(move(distanceAndNode.second));
+
     return ret;
 }
 
