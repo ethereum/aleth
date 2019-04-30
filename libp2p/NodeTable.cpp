@@ -34,6 +34,7 @@ inline bool operator==(weak_ptr<NodeEntry> const& _weak, shared_ptr<NodeEntry> c
 NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
     bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID{_alias.pub()},
+    m_hostNodeIDHash{sha3(m_hostNodeID)},
     m_hostNodeEndpoint{_endpoint},
     m_secret{_alias.secret()},
     m_socket{make_shared<NodeSocket>(
@@ -111,7 +112,7 @@ bool NodeTable::addKnownNode(
     }
 
     auto entry = make_shared<NodeEntry>(
-        m_hostNodeID, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
+        m_hostNodeIDHash, _node.id, _node.endpoint, _lastPongReceivedTime, _lastPongSentTime);
 
     if (entry->hasValidEndpointProof())
     {
@@ -270,13 +271,15 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID const& _targe
         return _node1.first < _node2.first;
     };
 
+    h256 const targetHash = sha3(_target);
+
     std::multiset<pair<int, shared_ptr<NodeEntry>>, decltype(distanceToTargetLess)>
         nodesByDistanceToTarget(distanceToTargetLess);
     for (auto const& bucket : m_buckets)
         for (auto const& nodeWeakPtr : bucket.nodes)
             if (auto node = nodeWeakPtr.lock())
             {
-                nodesByDistanceToTarget.emplace(distance(_target, node->id()), node);
+                nodesByDistanceToTarget.emplace(distance(targetHash, node->nodeIDHash), node);
 
                 if (nodesByDistanceToTarget.size() > s_bucketSize)
                     nodesByDistanceToTarget.erase(--nodesByDistanceToTarget.end());
@@ -507,7 +510,7 @@ shared_ptr<NodeEntry> NodeTable::handlePong(
     {
         auto it = m_allNodes.find(sourceId);
         if (it == m_allNodes.end())
-            sourceNodeEntry = make_shared<NodeEntry>(m_hostNodeID, sourceId,
+            sourceNodeEntry = make_shared<NodeEntry>(m_hostNodeIDHash, sourceId,
                 NodeIPEndpoint{_from.address(), _from.port(), nodeValidation.tcpPort},
                 RLPXDatagramFace::secondsSinceEpoch(), 0 /* lastPongSentTime */);
         else

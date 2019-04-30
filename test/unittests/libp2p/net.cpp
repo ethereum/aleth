@@ -76,7 +76,7 @@ struct TestNodeTable: public NodeTable
             if (_count--)
             {
                 // manually add node for test
-                auto entry = make_shared<NodeEntry>(m_hostNodeID, n.first,
+                auto entry = make_shared<NodeEntry>(m_hostNodeIDHash, n.first,
                     NodeIPEndpoint(ourIp, n.second, n.second),
                     RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
                 noteActiveNode(move(entry));
@@ -96,7 +96,7 @@ struct TestNodeTable: public NodeTable
         while (testNode != _testNodes.end())
         {
             // manually add node for test
-            auto node(make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+            auto node(make_shared<NodeEntry>(m_hostNodeIDHash, testNode->first,
                 NodeIPEndpoint(ourIp, testNode->second, testNode->second),
                 RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch()));
             auto distance = node->distance;
@@ -128,14 +128,14 @@ struct TestNodeTable: public NodeTable
         {
             // manually add node for test
             // skip the nodes for other buckets
-            size_t const dist = distance(m_hostNodeID, testNode->first);
+            size_t const dist = distance(m_hostNodeIDHash, sha3(testNode->first));
             if (dist != _bucket + 1)
             {
                 ++testNode;
                 continue;
             }
 
-            auto entry = make_shared<NodeEntry>(m_hostNodeID, testNode->first,
+            auto entry = make_shared<NodeEntry>(m_hostNodeIDHash, testNode->first,
                 NodeIPEndpoint(ourIp, testNode->second, testNode->second),
                 RLPXDatagramFace::secondsSinceEpoch(), RLPXDatagramFace::secondsSinceEpoch());
             noteActiveNode(move(entry));
@@ -213,6 +213,7 @@ struct TestNodeTable: public NodeTable
     using NodeTable::m_allowLocalDiscovery;
     using NodeTable::m_hostNodeEndpoint;
     using NodeTable::m_hostNodeID;
+    using NodeTable::m_hostNodeIDHash;
     using NodeTable::m_socket;
     using NodeTable::nearestNodeEntries;
     using NodeTable::nodeEntry;
@@ -529,7 +530,7 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     {
         KeyPair k = KeyPair::create();
         newNodeId = k.pub();
-    } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
+    } while (NodeTable::distance(nodeTable->m_hostNodeIDHash, sha3(newNodeId)) != bucketIndex + 1);
 
     auto leastRecentlySeenNode = nodeTable->bucketFirstNode(bucketIndex);
 
@@ -563,15 +564,6 @@ BOOST_AUTO_TEST_CASE(nearestNodeEntriesOneNode)
     BOOST_REQUIRE_EQUAL(nearest.front()->id(), nodeTableHost.testNodes.front().first);
 }
 
-unsigned xorDistance(h256 const& _h1, h256 const& _h2)
-{
-    u256 d = _h1 ^ _h2;
-    unsigned ret = 0;
-    while (d >>= 1)
-        ++ret;
-    return ret;
-};
-
 BOOST_AUTO_TEST_CASE(nearestNodeEntriesOneDistantNode)
 {
     // specific case that was failing - one node in bucket #252, target corresponding to bucket #253
@@ -584,10 +576,10 @@ BOOST_AUTO_TEST_CASE(nearestNodeEntriesOneDistantNode)
 
     auto& nodeTable = nodeTableHost->nodeTable;
 
-    h256 const hostNodeIDHash = sha3(nodeTable->m_hostNodeID);
+    h256 const hostNodeIDHash = nodeTable->m_hostNodeIDHash;
 
     NodeID target = NodeID::random();
-    while (xorDistance(hostNodeIDHash, sha3(target)) != 254)
+    while (NodeTable::distance(hostNodeIDHash, sha3(target)) != 254)
         target = NodeID::random();
 
     vector<shared_ptr<NodeEntry>> const nearest = nodeTable->nearestNodeEntries(target);
@@ -616,7 +608,8 @@ BOOST_AUTO_TEST_CASE(nearestNodeEntriesManyNodes)
     for (auto const& nodeEntry : allNodeEntries)
     {
         NodeID const& nodeID = nodeEntry.id();
-        nodesByDistanceToTarget.emplace_back(xorDistance(targetNodeIDHash, sha3(nodeID)), nodeID);
+        nodesByDistanceToTarget.emplace_back(
+            NodeTable::distance(targetNodeIDHash, sha3(nodeID)), nodeID);
     }
     // stable sort to keep them in the order as they are in buckets
     // (the same order they are iterated in nearestNodeEntries implementation)
@@ -950,7 +943,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     {
         KeyPair newNodeKeyPair = KeyPair::create();
         newNodeId = newNodeKeyPair.pub();
-    } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
+    } while (NodeTable::distance(nodeTable->m_hostNodeIDHash, sha3(newNodeId)) != bucketIndex + 1);
 
     // add a node to node table, initiating eviction of nodeId
     // port doesn't matter, it won't be pinged because we're adding it as known
@@ -1010,7 +1003,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeDropped)
     {
         KeyPair newNodeKeyPair = KeyPair::create();
         newNodeId = newNodeKeyPair.pub();
-    } while (NodeTable::distance(nodeTableHost.m_alias.pub(), newNodeId) != bucketIndex + 1);
+    } while (NodeTable::distance(nodeTable->m_hostNodeIDHash, sha3(newNodeId)) != bucketIndex + 1);
 
     // add new node to node table
     // port doesn't matter, it won't be pinged because we're adding it as known
@@ -1351,8 +1344,8 @@ BOOST_AUTO_TEST_CASE(neighbours)
     NodeIPEndpoint neighbourEndpoint{boost::asio::ip::address::from_string("200.200.200.200"),
         c_defaultListenPort, c_defaultListenPort};
     vector<shared_ptr<NodeEntry>> nearest{
-        make_shared<NodeEntry>(nodeTable->m_hostNodeID, KeyPair::create().pub(), neighbourEndpoint,
-            RLPXDatagramFace::secondsSinceEpoch(), 0 /* pongSentTime */)};
+        make_shared<NodeEntry>(nodeTable->m_hostNodeIDHash, KeyPair::create().pub(),
+            neighbourEndpoint, RLPXDatagramFace::secondsSinceEpoch(), 0 /* pongSentTime */)};
     Neighbours neighbours{nodeTable->m_hostNodeEndpoint, nearest};
     neighbours.sign(nodeKeyPair.secret());
     nodeSocketHost2.socket->send(neighbours);
