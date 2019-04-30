@@ -270,7 +270,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID const& _targe
         return _node1.first < _node2.first;
     };
 
-    std::set<pair<int, shared_ptr<NodeEntry>>, decltype(distanceToTargetLess)>
+    std::multiset<pair<int, shared_ptr<NodeEntry>>, decltype(distanceToTargetLess)>
         nodesByDistanceToTarget(distanceToTargetLess);
     for (auto const& bucket : m_buckets)
         for (auto const& nodeWeakPtr : bucket.nodes)
@@ -279,7 +279,7 @@ vector<shared_ptr<NodeEntry>> NodeTable::nearestNodeEntries(NodeID const& _targe
                 nodesByDistanceToTarget.emplace(distance(_target, node->id()), node);
 
                 if (nodesByDistanceToTarget.size() > s_bucketSize)
-                    nodesByDistanceToTarget.erase(nodesByDistanceToTarget.rbegin().base());
+                    nodesByDistanceToTarget.erase(--nodesByDistanceToTarget.end());
             }
 
     vector<shared_ptr<NodeEntry>> ret;

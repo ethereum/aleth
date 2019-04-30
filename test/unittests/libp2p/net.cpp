@@ -210,13 +210,14 @@ struct TestNodeTable: public NodeTable
     concurrent_queue<bytes> packetsReceived;
 
 
-    using NodeTable::m_hostNodeID;
+    using NodeTable::m_allowLocalDiscovery;
     using NodeTable::m_hostNodeEndpoint;
+    using NodeTable::m_hostNodeID;
     using NodeTable::m_socket;
+    using NodeTable::nearestNodeEntries;
+    using NodeTable::nodeEntry;
     using NodeTable::noteActiveNode;
     using NodeTable::setRequestTimeToLive;
-    using NodeTable::nodeEntry;
-    using NodeTable::m_allowLocalDiscovery;
 };
 
 /**
@@ -548,6 +549,93 @@ BOOST_AUTO_TEST_CASE(noteActiveNodeEvictsTheNodeWhenBucketIsFull)
     BOOST_REQUIRE(evicted.is_initialized());
     BOOST_REQUIRE(evicted->replacementNodeEntry);
     BOOST_CHECK_EQUAL(evicted->replacementNodeEntry->id(), newNodeId);
+}
+
+BOOST_AUTO_TEST_CASE(nearestNodeEntriesOneNode)
+{
+    TestNodeTableHost nodeTableHost(1);
+    nodeTableHost.populate(1);
+
+    auto& nodeTable = nodeTableHost.nodeTable;
+    vector<shared_ptr<NodeEntry>> const nearest = nodeTable->nearestNodeEntries(NodeID::random());
+
+    BOOST_REQUIRE_EQUAL(nearest.size(), 1);
+    BOOST_REQUIRE_EQUAL(nearest.front()->id(), nodeTableHost.testNodes.front().first);
+}
+
+unsigned xorDistance(h256 const& _h1, h256 const& _h2)
+{
+    u256 d = _h1 ^ _h2;
+    unsigned ret = 0;
+    while (d >>= 1)
+        ++ret;
+    return ret;
+};
+
+BOOST_AUTO_TEST_CASE(nearestNodeEntriesOneDistantNode)
+{
+    // specific case that was failing - one node in bucket #252, target corresponding to bucket #253
+    unique_ptr<TestNodeTableHost> nodeTableHost;
+    do
+    {
+        nodeTableHost.reset(new TestNodeTableHost(1));
+        nodeTableHost->populate(1);
+    } while (nodeTableHost->nodeTable->bucketSize(252) != 1);
+
+    auto& nodeTable = nodeTableHost->nodeTable;
+
+    h256 const hostNodeIDHash = sha3(nodeTable->m_hostNodeID);
+
+    NodeID target = NodeID::random();
+    while (xorDistance(hostNodeIDHash, sha3(target)) != 254)
+        target = NodeID::random();
+
+    vector<shared_ptr<NodeEntry>> const nearest = nodeTable->nearestNodeEntries(target);
+
+    BOOST_REQUIRE_EQUAL(nearest.size(), 1);
+    BOOST_REQUIRE_EQUAL(nearest.front()->id(), nodeTableHost->testNodes.front().first);
+}
+
+BOOST_AUTO_TEST_CASE(nearestNodeEntriesManyNodes)
+{
+    unsigned constexpr nodeCount = 128;
+    TestNodeTableHost nodeTableHost(nodeCount);
+    nodeTableHost.populate(nodeCount);
+
+    auto& nodeTable = nodeTableHost.nodeTable;
+
+    NodeID const target = NodeID::random();
+    vector<shared_ptr<NodeEntry>> nearest = nodeTable->nearestNodeEntries(target);
+
+    BOOST_REQUIRE_EQUAL(nearest.size(), 16);
+
+    // get all nodes sorted by distance to target
+    list<NodeEntry> const allNodeEntries = nodeTable->snapshot();
+    h256 const targetNodeIDHash = sha3(target);
+    vector<pair<unsigned, NodeID>> nodesByDistanceToTarget;
+    for (auto const& nodeEntry : allNodeEntries)
+    {
+        NodeID const& nodeID = nodeEntry.id();
+        nodesByDistanceToTarget.emplace_back(xorDistance(targetNodeIDHash, sha3(nodeID)), nodeID);
+    }
+    // stable sort to keep them in the order as they are in buckets
+    // (the same order they are iterated in nearestNodeEntries implementation)
+    std::stable_sort(nodesByDistanceToTarget.begin(), nodesByDistanceToTarget.end(),
+        [](pair<unsigned, NodeID> const& _n1, pair<unsigned, NodeID> const& _n2) {
+            return _n1.first < _n2.first;
+        });
+    // get 16 with lowest distance
+    std::vector<NodeID> expectedNearestIDs;
+    std::transform(nodesByDistanceToTarget.begin(), nodesByDistanceToTarget.begin() + 16,
+        std::back_inserter(expectedNearestIDs),
+        [](pair<unsigned, NodeID> const& _n) { return _n.second; });
+
+
+    vector<NodeID> nearestIDs;
+    for (auto const& nodeEntry : nearest)
+        nearestIDs.push_back(nodeEntry->id());
+
+    BOOST_REQUIRE(nearestIDs == expectedNearestIDs);
 }
 
 BOOST_AUTO_TEST_CASE(unexpectedPong)
