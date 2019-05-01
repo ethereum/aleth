@@ -1,0 +1,6 @@
+#pragma once
+
+char const* c_allTestNames[] = 
+{
+@allTests@
+};

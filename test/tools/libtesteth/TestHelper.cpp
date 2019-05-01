@@ -637,6 +637,36 @@ string prepareLLLCVersionString()
     return "Error getting LLLC Version";
 }
 
+// A simple C++ implementation of the Levenshtein distance algorithm to measure the amount of
+// difference between two strings. https://gist.github.com/TheRayTracer/2644387
+size_t levenshteinDistance(char const* _s, size_t _n, char const* _t, size_t _m)
+{
+    ++_n;
+    ++_m;
+    size_t* d = new size_t[_n * _m];
+
+    memset(d, 0, sizeof(size_t) * _n * _m);
+    for (size_t i = 1, im = 0; i < _m; ++i, ++im)
+    {
+        for (size_t j = 1, jn = 0; j < _n; ++j, ++jn)
+        {
+            if (_s[jn] == _t[im])
+                d[(i * _n) + j] = d[((i - 1) * _n) + (j - 1)];
+            else
+            {
+                d[(i * _n) + j] = min(d[(i - 1) * _n + j] + 1, /* A deletion. */
+                    min(d[i * _n + (j - 1)] + 1,               /* An insertion. */
+                        d[(i - 1) * _n + (j - 1)] + 1));       /* A substitution. */
+            }
+        }
+    }
+
+    size_t r = d[_n * _m - 1];
+    delete[] d;
+    return r;
+}
+
+
 void copyFile(fs::path const& _source, fs::path const& _destination)
 {
     fs::ifstream src(_source, ios::binary);

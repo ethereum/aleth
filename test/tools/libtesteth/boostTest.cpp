@@ -11,12 +11,14 @@
 #define BOOST_TEST_MODULE EthereumTests
 #define BOOST_TEST_NO_MAIN
 
+#include <AllTestNames.h>
 #include <test/tools/jsontests/BlockChainTests.h>
 #include <test/tools/jsontests/StateTests.h>
 #include <test/tools/jsontests/TransactionTests.h>
 #include <test/tools/jsontests/vm.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <boost/test/included/unit_test.hpp>
+#include <boost/tokenizer.hpp>
 #include <clocale>
 #include <cstdlib>
 #include <iostream>
@@ -27,6 +29,7 @@ using namespace boost::unit_test;
 static std::ostringstream strCout;
 std::streambuf* oldCoutStreamBuf;
 std::streambuf* oldCerrStreamBuf;
+void printTestSuiteSuggestions(string const& _sMinusTArg);
 
 void customTestSuite()
 {
@@ -133,10 +136,46 @@ int main(int argc, const char* argv[])
         framework::master_test_suite().add(ts1);
     }
 
+    string sMinusTArg;
+    // unit_test_main delete this option from _argv
+    for (int i = 0; i < argc; i++)  // find -t boost arg
+    {
+        std::string const arg = std::string{argv[i]};
+        if (arg == "-t" && i + 1 < argc)
+        {
+            sMinusTArg = std::string{argv[i + 1]};
+            break;
+        }
+    }
+
     std::cout << "Running tests using path: " << test::getTestPath() << std::endl;
     int result = 0;
     auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
     result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+
+    // Print suggestions of a test case
+    if (result == boost::exit_exception_failure)  // test suite not found
+        printTestSuiteSuggestions(sMinusTArg);
     dev::test::TestOutputHelper::get().printTestExecStats();
     return result;
+}
+
+void printTestSuiteSuggestions(string const& _sMinusTArg)
+{
+    size_t allTestsElementIndex = 0;
+    // <index in availableTests, compared distance>
+    typedef std::pair<size_t, size_t> NameDistance;
+    // Use `vector` here because `set` does not work with sort
+    std::vector<NameDistance> distanceMap;
+    for (auto& it : c_allTestNames)
+    {
+        int const dist =
+            test::levenshteinDistance(_sMinusTArg.c_str(), _sMinusTArg.size(), it, strlen(it));
+        distanceMap.emplace_back(allTestsElementIndex++, dist);
+    }
+    std::sort(distanceMap.begin(), distanceMap.end(),
+        [](NameDistance const& _a, NameDistance const& _b) { return _a.second < _b.second; });
+    std::cerr << "Did you mean: \n";
+    for (size_t i = 0; i < 3 && i < distanceMap.size(); i++)
+        std::cerr << "-t " << c_allTestNames[distanceMap[i].first] << "\n";
 }
