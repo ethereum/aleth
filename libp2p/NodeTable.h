@@ -108,7 +108,8 @@ public:
     // Period during which we consider last PONG results to be valid before sending new PONG
     static constexpr uint32_t c_bondingTimeSeconds{12 * 60 * 60};
 
-    /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
+    /// Constructor requiring host for I/O, credentials, and IP Address, port to listen on 
+    /// and host ENR.
     NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
         ENR const& _enr, bool _enabled = true, bool _allowLocalDiscovery = false);
 
@@ -437,7 +438,7 @@ struct PingNode: DiscoveryDatagram
     PingNode(NodeIPEndpoint const& _src, NodeIPEndpoint const& _dest): DiscoveryDatagram(_dest), source(_src), destination(_dest) {}
     PingNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-    static const uint8_t type = 1;
+    static constexpr uint8_t type = 1;
     uint8_t packetType() const override { return type; }
 
     unsigned version = 0;
@@ -477,7 +478,7 @@ struct Pong: DiscoveryDatagram
     Pong(NodeIPEndpoint const& _dest): DiscoveryDatagram((bi::udp::endpoint)_dest), destination(_dest) {}
     Pong(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-    static const uint8_t type = 2;
+    static constexpr uint8_t type = 2;
     uint8_t packetType() const override { return type; }
 
     NodeIPEndpoint destination;
@@ -522,7 +523,7 @@ struct FindNode: DiscoveryDatagram
     FindNode(bi::udp::endpoint _to, h512 _target): DiscoveryDatagram(_to), target(_target) {}
     FindNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-    static const uint8_t type = 3;
+    static constexpr uint8_t type = 3;
     uint8_t packetType() const override { return type; }
 
     h512 target;
@@ -565,7 +566,7 @@ struct Neighbours: DiscoveryDatagram
         void streamRLP(RLPStream& _s) const { _s.appendList(4); endpoint.streamRLP(_s, NodeIPEndpoint::StreamInline); _s << node; }
     };
 
-    static const uint8_t type = 4;
+    static constexpr uint8_t type = 4;
     uint8_t packetType() const override { return type; }
 
     std::vector<Neighbour> neighbours;
@@ -592,13 +593,13 @@ struct Neighbours: DiscoveryDatagram
 struct ENRRequest : DiscoveryDatagram
 {
     // Constructor for outgoing packets
-    ENRRequest(bi::udp::endpoint _to) : DiscoveryDatagram{_to} {}
+    ENRRequest(bi::udp::endpoint const& _to) : DiscoveryDatagram{_to} {}
     // Constructor for incoming packets
     ENRRequest(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo)
       : DiscoveryDatagram{_from, _fromid, _echo}
     {}
 
-    static uint8_t const type = 5;
+    static constexpr uint8_t type = 5;
     uint8_t packetType() const override { return type; }
 
     void streamRLP(RLPStream& _s) const override
@@ -619,17 +620,17 @@ struct ENRResponse : DiscoveryDatagram
 {
     // Constructor for outgoing packets
     ENRResponse(bi::udp::endpoint const& _dest, ENR const& _enr)
-      : DiscoveryDatagram{_dest}, enr{_enr}
+      : DiscoveryDatagram{_dest}, enr{new ENR{_enr}}
     {}
     // Constructor for incoming packets
-    ENRResponse(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo)
-      : DiscoveryDatagram{_from, _fromid, _echo}
+    ENRResponse(bi::udp::endpoint const& _from, NodeID const& _fromID, h256 const& _echo)
+      : DiscoveryDatagram{_from, _fromID, _echo}
     {}
 
-    static uint8_t const type = 6;
+    static constexpr uint8_t type = 6;
     uint8_t packetType() const override { return type; }
 
-    boost::optional<ENR> enr;
+    std::unique_ptr<ENR> enr;
 
     void streamRLP(RLPStream& _s) const override
     {
@@ -641,7 +642,7 @@ struct ENRResponse : DiscoveryDatagram
     {
         RLP r(_bytes, RLP::AllowNonCanon | RLP::ThrowOnFail);
         echo = (h256)r[0];
-        enr = parseV4ENR(r[1]);
+        enr.reset(new ENR{parseV4ENR(r[1])});
     }
 
     std::string typeName() const override { return "ENRResponse"; }

@@ -687,7 +687,7 @@ std::shared_ptr<NodeEntry> NodeTable::handleENRRequest(
 
     auto const& in = dynamic_cast<ENRRequest const&>(_packet);
 
-    ENRResponse response(_from, m_hostENR);
+    ENRResponse response{_from, m_hostENR};
     LOG(m_logger) << response.typeName() << " to " << in.sourceid << "@" << _from;
     response.timestamp = nextRequestExpirationTime();
     response.echo = in.echo;
@@ -704,7 +704,7 @@ std::shared_ptr<NodeEntry> NodeTable::handleENRResponse(
     if (!sourceNodeEntry)
     {
         LOG(m_logger) << "Source node (" << _packet.sourceid << "@" << _from
-                      << ") not found in node table. Ignoring Neighbours packet.";
+                      << ") not found in node table. Ignoring ENRResponse packet.";
         return {};
     }
     if (sourceNodeEntry->endpoint() != _from)

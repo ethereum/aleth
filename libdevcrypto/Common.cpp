@@ -99,7 +99,7 @@ Public dev::toPublic(PublicCompressed const& _publicCompressed)
         return {};
 
     std::array<byte, 65> serializedPubkey;
-    size_t serializedPubkeySize = serializedPubkey.size();
+    auto serializedPubkeySize = serializedPubkey.size();
     secp256k1_ec_pubkey_serialize(
         ctx, serializedPubkey.data(), &serializedPubkeySize, &rawPubkey, SECP256K1_EC_UNCOMPRESSED);
     assert(serializedPubkeySize == serializedPubkey.size());

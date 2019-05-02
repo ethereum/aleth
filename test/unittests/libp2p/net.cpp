@@ -1246,22 +1246,23 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
     // socket sending ENRRequest
     TestUDPSocketHost nodeSocketHost;
     nodeSocketHost.start();
-    uint16_t nodePort = nodeSocketHost.port;
+    uint16_t const nodePort = nodeSocketHost.port;
 
     // Exchange Ping/Pongs before sending ENRRequest
 
     // add a node to node table, initiating PING
-    auto nodeEndpoint = NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
-    auto nodeKeyPair = KeyPair::create();
-    auto nodePubKey = nodeKeyPair.pub();
+    auto const nodeEndpoint =
+        NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
+    auto const nodeKeyPair = KeyPair::create();
+    auto const nodePubKey = nodeKeyPair.pub();
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto pingDatagram =
+    auto const pingDataReceived = nodeSocketHost.packetsReceived.pop();
+    auto const pingDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
     BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
-    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
     Pong pong(nodeTable->m_hostNodeEndpoint);
@@ -1270,8 +1271,8 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    auto pongDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
-    auto pongDatagram =
+    auto const pongDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
+    auto const pongDatagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
     BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
 
@@ -1283,12 +1284,12 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
     // wait for ENRRequest to be received and handled
     nodeTable->packetsReceived.pop(chrono::seconds(5));
 
-    auto enrResponsePacket = nodeSocketHost.packetsReceived.pop(chrono::seconds(5));
-    auto datagram =
+    auto const enrResponsePacket = nodeSocketHost.packetsReceived.pop(chrono::seconds(5));
+    auto const datagram =
         DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(enrResponsePacket));
     BOOST_REQUIRE_EQUAL(datagram->typeName(), "ENRResponse");
 
-    auto enrResponse = dynamic_cast<ENRResponse const&>(*datagram);
+    auto const& enrResponse = dynamic_cast<ENRResponse const&>(*datagram);
     auto const& keyValuePairs = enrResponse.enr->keyValuePairs();
     BOOST_REQUIRE_EQUAL(RLP{keyValuePairs.at("id")}.toString(), "v4");
     PublicCompressed publicCompressed{RLP{keyValuePairs.at("secp256k1")}.toBytesConstRef()};
