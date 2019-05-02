@@ -133,6 +133,9 @@ void setupLogging(LoggingOptions const& _options)
 
     boost::shared_ptr<std::ostream> stream{&std::cout, boost::null_deleter{}};
     sink->locked_backend()->add_stream(stream);
+    // Enable auto-flushing after each log record written
+    sink->locked_backend()->auto_flush(true);
+
     sink->set_filter([_options](boost::log::attribute_value_set const& _set) {
         if (_set[severity] > _options.verbosity)
             return false;
