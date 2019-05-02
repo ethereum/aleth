@@ -595,8 +595,8 @@ struct ENRRequest : DiscoveryDatagram
     // Constructor for outgoing packets
     ENRRequest(bi::udp::endpoint const& _to) : DiscoveryDatagram{_to} {}
     // Constructor for incoming packets
-    ENRRequest(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo)
-      : DiscoveryDatagram{_from, _fromid, _echo}
+    ENRRequest(bi::udp::endpoint const& _from, NodeID const& _fromID, h256 const& _echo)
+      : DiscoveryDatagram{_from, _fromID, _echo}
     {}
 
     static constexpr uint8_t type = 5;

@@ -325,6 +325,17 @@ struct TestNodeTableEventHandler : NodeTableEventHandler
     concurrent_queue<NodeID> scheduledForEviction;
 };
 
+template <class ReceiverType>
+std::unique_ptr<DiscoveryDatagram> waitForPacketReceived(ReceiverType& _receiver,
+    std::string const& _receiverType, chrono::seconds const& _timeout = chrono::seconds{5})
+{
+    auto const dataReceived = _receiver.packetsReceived.pop(_timeout);
+    auto datagram = DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(dataReceived));
+    BOOST_REQUIRE_EQUAL(datagram->typeName(), _receiverType);
+
+    return datagram;
+}
+
 BOOST_AUTO_TEST_CASE(isIPAddressType)
 {
     string wildcard = "0.0.0.0";
@@ -680,10 +691,7 @@ BOOST_AUTO_TEST_CASE(invalidPong)
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // validate received ping
-    auto const pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto const pingDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
-    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+    waitForPacketReceived(nodeSocketHost, "Ping");
 
     // send invalid pong (pong without ping hash)
     Pong pong(nodeTable->m_hostNodeEndpoint);
@@ -719,9 +727,7 @@ BOOST_AUTO_TEST_CASE(validPong)
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto pingDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
@@ -759,10 +765,7 @@ BOOST_AUTO_TEST_CASE(pongWithChangedNodeID)
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // handle received PING
-    auto const pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto const pingDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
-    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+    auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
     auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG with different NodeID
@@ -812,9 +815,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     BOOST_CHECK(!sentPing.is_initialized());
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto pingDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG after timeout
@@ -824,10 +825,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    auto pongDataReceived = nodeTable->packetsReceived.pop();
-    auto pongDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
-    BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
+    waitForPacketReceived(*nodeTable, "Pong");
 
     BOOST_CHECK(!nodeTable->nodeExists(nodePubKey));
     sentPing = nodeTable->nodeValidation(nodeEndpoint);
@@ -886,9 +884,7 @@ BOOST_AUTO_TEST_CASE(neighboursSentAfterFindNode)
     nodeTable->packetsReceived.pop(chrono::seconds(5));
 
     // Wait for the Neighbours packet to be received
-    auto packetReceived = nodeSocketHost.packetsReceived.pop(chrono::seconds(5));
-    auto datagram = DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived));
-    BOOST_CHECK_EQUAL(datagram->typeName(), "Neighbours");
+    waitForPacketReceived(nodeSocketHost, "Neighbours");
 
     // TODO: Validate the contents of the neighbours packet
 }
@@ -966,9 +962,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
     BOOST_REQUIRE(evicted.is_initialized());
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto pingDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
+    auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send valid PONG
@@ -1113,11 +1107,8 @@ BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
     // Add the TestUDPSocketHost to the node table, triggering a ping
     nodeTable->addNode(Node{nodeId, nodeEndpoint});
 
-    auto packetReceived1 = nodeSocketHost.packetsReceived.pop();
-    auto datagram1 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived1));
-    BOOST_CHECK_EQUAL(datagram1->typeName(), "Ping");
-    auto const& ping = dynamic_cast<PingNode const&>(*datagram1);
+    auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // Reply to the ping (which should trigger the node table to send a FindNode packet once the
     // next discovery pass starts)
@@ -1126,10 +1117,7 @@ BOOST_AUTO_TEST_CASE(findNodeIsSentAfterPong)
     pong.sign(nodeKeyPair.secret());
     nodeSocketHost.socket->send(pong);
 
-    auto packetReceived2 = nodeSocketHost.packetsReceived.pop();
-    auto datagram2 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived2));
-    BOOST_CHECK_EQUAL(datagram2->typeName(), "FindNode");
+    waitForPacketReceived(nodeSocketHost, "FindNode", chrono::seconds(20));
 }
 
 BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
@@ -1155,10 +1143,7 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     nodeTable1->addNode(node2);
 
     // Verify ping is received
-    auto packetReceived1 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
-    auto datagram1 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived1));
-    BOOST_REQUIRE_EQUAL(datagram1->typeName(), "Ping");
+    auto datagram1 = waitForPacketReceived(nodeSocketHost2, "Ping");
 
     // Send pong to trigger endpoint proof in node table
     Pong pong(nodeTable1->m_hostNodeEndpoint);
@@ -1168,10 +1153,7 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     nodeSocketHost2.socket->send(pong);
 
     // Receive FindNode packet
-    auto packetReceived3 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(20));
-    auto datagram3 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived3));
-    BOOST_REQUIRE_EQUAL(datagram3->typeName(), "FindNode");
+    waitForPacketReceived(nodeSocketHost2, "FindNode", chrono::seconds{20});
 
     // Ping the node table and verify that a pong is received but no ping is received after
     // (since the endpoint proof has already been completed)
@@ -1179,10 +1161,7 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     ping2.sign(nodeKeyPair2.secret());
     nodeSocketHost2.socket->send(ping2);
 
-    auto packetReceived4 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
-    auto datagram4 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived4));
-    BOOST_REQUIRE_EQUAL(datagram4->typeName(), "Pong");
+    waitForPacketReceived(nodeSocketHost2, "Pong");
 
     // Verify that another ping isn't sent
     BOOST_REQUIRE_THROW(nodeSocketHost2.packetsReceived.pop(chrono::seconds(3)), WaitTimeout);
@@ -1197,15 +1176,9 @@ BOOST_AUTO_TEST_CASE(pingNotSentAfterPongForKnownNode)
     ping3.sign(nodeKeyPair2.secret());
     nodeSocketHost2.socket->send(ping3);
 
-    auto packetReceived6 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
-    auto datagram6 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived4));
-    BOOST_CHECK_EQUAL(datagram4->typeName(), "Pong");
+    waitForPacketReceived(nodeSocketHost2, "Pong");
 
-    auto packetReceived7 = nodeSocketHost2.packetsReceived.pop(chrono::seconds(5));
-    auto datagram7 =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(packetReceived7));
-    BOOST_REQUIRE(datagram7->typeName() == "Ping");
+    waitForPacketReceived(nodeSocketHost2, "Ping");
 }
 
 BOOST_AUTO_TEST_CASE(addNodePingsNodeOnlyOnce)
@@ -1258,10 +1231,7 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
 
     // handle received PING
-    auto const pingDataReceived = nodeSocketHost.packetsReceived.pop();
-    auto const pingDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
-    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+    auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
     auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
@@ -1271,10 +1241,7 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
     nodeSocketHost.socket->send(pong);
 
     // wait for PONG to be received and handled
-    auto const pongDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
-    auto const pongDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
-    BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
+    waitForPacketReceived(*nodeTable, "Pong");
 
     // send ENRRequest
     ENRRequest enrRequest(nodeTable->m_hostNodeEndpoint);
@@ -1282,12 +1249,9 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
     nodeSocketHost.socket->send(enrRequest);
 
     // wait for ENRRequest to be received and handled
-    nodeTable->packetsReceived.pop(chrono::seconds(5));
+    waitForPacketReceived(*nodeTable, "ENRRequest");
 
-    auto const enrResponsePacket = nodeSocketHost.packetsReceived.pop(chrono::seconds(5));
-    auto const datagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(enrResponsePacket));
-    BOOST_REQUIRE_EQUAL(datagram->typeName(), "ENRResponse");
+    auto datagram = waitForPacketReceived(nodeSocketHost, "ENRResponse");
 
     auto const& enrResponse = dynamic_cast<ENRResponse const&>(*datagram);
     auto const& keyValuePairs = enrResponse.enr->keyValuePairs();
@@ -1322,10 +1286,7 @@ public:
         nodeTable->addNode(Node{nodePubKey, nodeEndpoint1});
 
         // handle received PING
-        auto pingDataReceived = nodeSocketHost1.packetsReceived.pop(chrono::seconds(5));
-        auto pingDatagram =
-            DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
-        BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+        auto pingDatagram = waitForPacketReceived(nodeSocketHost1, "Ping");
         auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
         // send PONG
@@ -1367,10 +1328,7 @@ BOOST_AUTO_TEST_CASE(addNode)
     nodeTable->addNode(Node{nodePubKey, nodeEndpoint2});
 
     // handle received PING
-    auto pingDataReceived = nodeSocketHost2.packetsReceived.pop();
-    auto pingDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pingDataReceived));
-    BOOST_REQUIRE_EQUAL(pingDatagram->typeName(), "Ping");
+    auto pingDatagram = waitForPacketReceived(nodeSocketHost2, "Ping");
     auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
@@ -1380,10 +1338,7 @@ BOOST_AUTO_TEST_CASE(addNode)
     nodeSocketHost2.socket->send(pong);
 
     // wait for PONG to be received and handled
-    auto pongDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
-    auto pongDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(pongDataReceived));
-    BOOST_REQUIRE_EQUAL(pongDatagram->typeName(), "Pong");
+    waitForPacketReceived(*nodeTable, "Pong");
 
     BOOST_REQUIRE_EQUAL(nodeEntry->endpoint(), nodeEndpoint2);
 }
@@ -1396,10 +1351,7 @@ BOOST_AUTO_TEST_CASE(findNode)
     nodeSocketHost2.socket->send(findNode);
 
     // Wait for FindNode to be received
-    auto findNodeDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
-    auto findNodeDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(findNodeDataReceived));
-    BOOST_REQUIRE_EQUAL(findNodeDatagram->typeName(), "FindNode");
+    waitForPacketReceived(*nodeTable, "FindNode");
 
     // Verify that no neighbours response is received
     BOOST_CHECK_THROW(nodeSocketHost2.packetsReceived.pop(chrono::seconds(5)), WaitTimeout);
@@ -1408,10 +1360,7 @@ BOOST_AUTO_TEST_CASE(findNode)
 BOOST_AUTO_TEST_CASE(neighbours)
 {
     // Wait for FindNode arriving to endpoint 1
-    auto findNodeDataReceived = nodeSocketHost1.packetsReceived.pop(chrono::seconds(10));
-    auto findNodeDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(findNodeDataReceived));
-    BOOST_REQUIRE_EQUAL(findNodeDatagram->typeName(), "FindNode");
+    auto findNodeDatagram = waitForPacketReceived(nodeSocketHost1, "FindNode", chrono::seconds{10});
     auto findNode = dynamic_cast<FindNode const&>(*findNodeDatagram);
 
     // send Neighbours through endpoint 2
@@ -1425,10 +1374,7 @@ BOOST_AUTO_TEST_CASE(neighbours)
     nodeSocketHost2.socket->send(neighbours);
 
     // Wait for Neighbours to be received
-    auto neighboursDataReceived = nodeTable->packetsReceived.pop(chrono::seconds(5));
-    auto neighboursDatagram =
-        DiscoveryDatagram::interpretUDP(bi::udp::endpoint{}, dev::ref(neighboursDataReceived));
-    BOOST_REQUIRE_EQUAL(neighboursDatagram->typeName(), "Neighbours");
+    waitForPacketReceived(*nodeTable, "Neighbours");
 
     // no Ping is sent to neighbour
     auto sentPing = nodeTable->nodeValidation(neighbourEndpoint);
