@@ -29,6 +29,8 @@ public:
     virtual CapDesc descriptor() const = 0;
     /// Number of messages supported by the subprotocol version.
     virtual unsigned messageCount() const = 0;
+    /// Convert supplied packet type to string - used for logging purposes
+    virtual char const* packetTypeToString(unsigned _packetType) const = 0;
     /// Time interval to run the background work loop at
     virtual std::chrono::milliseconds backgroundWorkInterval() const = 0;
     /// Called by the Host when new peer is connected.

@@ -312,7 +312,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     else if (m_nextState == WriteHello)
     {
         // Send the p2p capability Hello frame
-        LOG(m_logger) << packetTypeToString(HelloPacket) << " to " << m_remote << "@"
+        LOG(m_logger) << p2pPacketTypeToString(HelloPacket) << " to " << m_remote << "@"
                       << m_socket->remoteEndpoint();
 
         m_nextState = ReadHello;
@@ -436,21 +436,22 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                     return;
                                 }
 
-                                PacketType packetType =
-                                    frame[0] == 0x80 ? HelloPacket : (PacketType)frame[0];
+                                P2pPacketType packetType =
+                                    frame[0] == 0x80 ? HelloPacket : (P2pPacketType)frame[0];
                                 if (packetType != HelloPacket)
                                 {
                                     LOG(m_logger)
                                         << "Invalid packet type. Expected: "
-                                        << packetTypeToString(HelloPacket)
-                                        << ", received: " << packetTypeToString(packetType) << " ("
-                                        << m_remote << "@" << m_socket->remoteEndpoint() << ")";
+                                        << p2pPacketTypeToString(HelloPacket)
+                                        << ", received: " << p2pPacketTypeToString(packetType)
+                                        << " (" << m_remote << "@" << m_socket->remoteEndpoint()
+                                        << ")";
                                     m_nextState = Error;
                                     transition();
                                     return;
                                 }
 
-                                LOG(m_logger) << packetTypeToString(HelloPacket)
+                                LOG(m_logger) << p2pPacketTypeToString(HelloPacket)
                                               << " verified. Starting session with " << m_remote
                                               << "@" << m_socket->remoteEndpoint();
                                 try

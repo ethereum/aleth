@@ -115,7 +115,7 @@ public:
     boost::optional<unsigned> capabilityOffset(std::string const& _capabilityName) const override;
 
 private:
-    static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
+    static RLPStream& prep(RLPStream& _s, P2pPacketType _t, unsigned _args = 0);
 
     void send(bytes&& _msg);
 
@@ -132,11 +132,11 @@ private:
     void write();
 
     /// Deliver RLPX packet to Session or PeerCapability for interpretation.
-    bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
+    bool readPacket(uint16_t _capId, unsigned _t, RLP const& _r);
 
     /// Interpret an incoming Session packet.
-    bool interpret(PacketType _t, RLP const& _r);
-    
+    bool interpret(P2pPacketType _t, RLP const& _r);
+
     /// @returns true iff the _msg forms a valid message for sending or receiving on the network.
     static bool checkPacket(bytesConstRef _msg);
 
@@ -147,6 +147,8 @@ private:
 
     bool canHandle(
         std::string const& _capability, unsigned _messageCount, unsigned _packetType) const;
+
+    char const* capabilityPacketTypeToString(unsigned _packetType) const;
 
     Host* m_server;							///< The host that owns us. Never null.
 

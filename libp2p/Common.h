@@ -78,18 +78,16 @@ NET_GLOBAL_LOGGER(netlog, VerbosityDebug)
 NET_GLOBAL_LOGGER(netdetails, VerbosityTrace)
 #define cnetdetails LOG(dev::p2p::g_netdetailsLogger::get())
 
-enum PacketType
+enum P2pPacketType
 {
     HelloPacket = 0,
     DisconnectPacket,
     PingPacket,
     PongPacket,
-    GetPeersPacket,
-    PeersPacket,
     UserPacket = 0x10
 };
 
-char const* packetTypeToString(PacketType _packetType);
+char const* p2pPacketTypeToString(P2pPacketType _packetType);
 
 enum DisconnectReason
 {

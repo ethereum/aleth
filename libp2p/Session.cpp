@@ -82,16 +82,18 @@ int Session::rating() const
     return m_peer->m_rating;
 }
 
-bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
+bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
 {
     m_lastReceived = chrono::steady_clock::now();
-    clog(VerbosityTrace, "net") << "-> " << _packetType << " " << _r;
+    clog(VerbosityTrace, "net") << "Received " << capabilityPacketTypeToString(_packetType) << "("
+                                << _packetType << ")"
+                                << " from " << m_info.id << "@" << m_socket->remoteEndpoint();
     try // Generic try-catch block designed to capture RLP format errors - TODO: give decent diagnostics, make a bit more specific over what is caught.
     {
         // v4 frame headers are useless, offset packet type used
         // v5 protocol type is in header, packet type not offset
         if (_capId == 0 && _packetType < UserPacket)
-            return interpret(_packetType, _r);
+            return interpret(static_cast<P2pPacketType>(_packetType), _r);
 
         for (auto const& cap : m_capabilities)
         {
@@ -121,7 +123,7 @@ bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
     return true;
 }
 
-bool Session::interpret(PacketType _t, RLP const& _r)
+bool Session::interpret(P2pPacketType _t, RLP const& _r)
 {
     switch (_t)
     {
@@ -155,9 +157,6 @@ bool Session::interpret(PacketType _t, RLP const& _r)
                         << " ms";
         }
         break;
-    case GetPeersPacket:
-    case PeersPacket:
-        break;
     default:
         return false;
     }
@@ -171,7 +170,7 @@ void Session::ping()
     m_ping = std::chrono::steady_clock::now();
 }
 
-RLPStream& Session::prep(RLPStream& _s, PacketType _id, unsigned _args)
+RLPStream& Session::prep(RLPStream& _s, P2pPacketType _id, unsigned _args)
 {
     return _s.append((unsigned)_id).appendList(_args);
 }
@@ -371,7 +370,7 @@ void Session::doRead()
                     }
                     else
                     {
-                        auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
+                        auto packetType = (P2pPacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
                         RLP r(frame.cropped(1));
                         bool ok = readPacket(hProtocolId, packetType, r);
                         if (!ok)
@@ -438,4 +437,23 @@ boost::optional<unsigned> Session::capabilityOffset(std::string const& _capabili
 {
     auto it = m_capabilityOffsets.find(_capabilityName);
     return it == m_capabilityOffsets.end() ? boost::optional<unsigned>{} : it->second;
+}
+
+char const* Session::capabilityPacketTypeToString(unsigned _packetType) const
+{
+    if (_packetType < UserPacket)
+        return p2pPacketTypeToString(static_cast<P2pPacketType>(_packetType));
+    for (auto capIter : m_capabilities)
+    {
+        auto const& capName = capIter.first.first;
+        auto const& capVersion = capIter.first.second;
+        auto cap = capIter.second;
+        if (canHandle(capName, cap->messageCount(), _packetType))
+        {
+            auto offset = capabilityOffset(capName);
+            assert(offset);
+            return cap->packetTypeToString(_packetType - *offset);
+        }
+    }
+    return "Unknown";
 }

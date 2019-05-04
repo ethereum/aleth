@@ -15,24 +15,20 @@ using namespace std;
 const NodeIPEndpoint UnspecifiedNodeIPEndpoint = NodeIPEndpoint{{}, 0, 0};
 const Node UnspecifiedNode = Node{{}, UnspecifiedNodeIPEndpoint};
 
-char const* packetTypeToString(PacketType _packetType)
+char const* p2pPacketTypeToString(P2pPacketType _packetType)
 {
     switch (_packetType)
     {
     case HelloPacket:
-        return "HelloPacket";
+        return "Hello";
     case DisconnectPacket:
-        return "DisconnectPacket";
+        return "Disconnect";
     case PingPacket:
-        return "PingPacket";
+        return "Ping";
     case PongPacket:
-        return "PongPacket";
-    case GetPeersPacket:
-        return "GetPeersPacket";
-    case PeersPacket:
-        return "PeersPacket";
+        return "Pong";
     default:
-        return "UnknownPacket";
+        return "Unknown";
     }
 }
 
