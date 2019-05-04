@@ -129,6 +129,7 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
     {
     case DisconnectPacket:
     {
+        clog(VerbosityTrace, "p2pcap") << p2pPacketTypeToString(DisconnectPacket) << " from " << m_info.id << "@" << m_socket->remoteEndpoint();
         string reason = "Unspecified";
         auto r = (DisconnectReason)_r[0].toInt<int>();
         if (!_r[0].isInt())
@@ -136,7 +137,7 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
         else
         {
             reason = reasonOf(r);
-            cnetlog << "Disconnect (reason: " << reason << ") from " << m_info.id << "@"
+            clog(VerbosityDebug, "p2pcap") << "Disconnect (reason: " << reason << ") from " << m_info.id << "@"
                     << m_socket->remoteEndpoint();
             drop(DisconnectRequested);
         }
@@ -144,16 +145,18 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
     }
     case PingPacket:
     {
-        cnetdetails << "Pong to " << m_info.id << "@" << m_socket->remoteEndpoint();
+        clog(VerbosityTrace, "p2pcap") << "Ping from " << m_info.id << "@" << m_socket->remoteEndpoint();
+        clog(VerbosityTrace, "p2pcap") << "Pong to " << m_info.id << "@" << m_socket->remoteEndpoint();
         RLPStream s;
         sealAndSend(prep(s, PongPacket));
         break;
     }
     case PongPacket:
+        clog(VerbosityTrace, "p2pcap") << "Pong from " << m_info.id << "@" << m_socket->remoteEndpoint();
         DEV_GUARDED(x_info)
         {
             m_info.lastPing = std::chrono::steady_clock::now() - m_ping;
-            cnetdetails << "Ping latency: "
+            clog(VerbosityTrace, "p2pcap") << "Ping latency: "
                         << chrono::duration_cast<chrono::milliseconds>(m_info.lastPing).count()
                         << " ms";
         }
@@ -166,7 +169,7 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
 
 void Session::ping()
 {
-    cnetdetails << "Ping to " << m_info.id << "@" << m_socket->remoteEndpoint();
+    clog(VerbosityTrace, "p2pcap") << "Ping to " << m_info.id << "@" << m_socket->remoteEndpoint();
     RLPStream s;
     sealAndSend(prep(s, PingPacket));
     m_ping = std::chrono::steady_clock::now();
