@@ -371,7 +371,8 @@ void Host::startPeerSession(Public const& _id, RLP const& _helloRlp,
             auto capability = itCap->second.capability;
             session->registerCapability(capDesc, offset, capability);
 
-            cnetlog << "New session for capability " << capDesc.first << "; idOffset: " << offset;
+            cnetlog << "New session for capability " << capDesc.first << "; idOffset: " << offset
+                    << " with " << _id << "@" << _s->remoteEndpoint();
 
             capability->onConnect(_id, capDesc.second);
 
@@ -661,7 +662,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
     _p->m_lastAttempted = chrono::system_clock::now();
     
     bi::tcp::endpoint ep(_p->endpoint);
-    cnetdetails << "Attempting connection to node " << _p->id << "@" << ep << " from " << id();
+    cnetdetails << "Attempting connection to " << _p->id << "@" << ep << " from " << id();
     auto socket = make_shared<RLPXSocket>(m_ioService);
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
@@ -677,7 +678,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
         }
         else
         {
-            cnetdetails << "Connecting to " << _p->id << "@" << ep;
+            cnetdetails << "Starting RLPX handshake with " << _p->id << "@" << ep;
             auto handshake = make_shared<RLPXHandshake>(this, socket, _p->id);
             {
                 Guard l(x_connecting);

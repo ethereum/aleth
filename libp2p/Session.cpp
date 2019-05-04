@@ -86,8 +86,8 @@ bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
 {
     m_lastReceived = chrono::steady_clock::now();
     clog(VerbosityTrace, "net") << "Received " << capabilityPacketTypeToString(_packetType) << "("
-                                << _packetType << ")"
-                                << " from " << m_info.id << "@" << m_socket->remoteEndpoint();
+                                << _packetType << ") from " << m_info.id << "@"
+                                << m_socket->remoteEndpoint();
     try // Generic try-catch block designed to capture RLP format errors - TODO: give decent diagnostics, make a bit more specific over what is caught.
     {
         // v4 frame headers are useless, offset packet type used
@@ -136,14 +136,15 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
         else
         {
             reason = reasonOf(r);
-            cnetlog << "Disconnect (reason: " << reason << ")";
+            cnetlog << "Disconnect (reason: " << reason << ") from " << m_info.id << "@"
+                    << m_socket->remoteEndpoint();
             drop(DisconnectRequested);
         }
         break;
     }
     case PingPacket:
     {
-        cnetdetails << "Ping " << m_info.id;
+        cnetdetails << "Pong to " << m_info.id << "@" << m_socket->remoteEndpoint();
         RLPStream s;
         sealAndSend(prep(s, PongPacket));
         break;
@@ -152,7 +153,7 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
         DEV_GUARDED(x_info)
         {
             m_info.lastPing = std::chrono::steady_clock::now() - m_ping;
-            cnetdetails << "Latency: "
+            cnetdetails << "Ping latency: "
                         << chrono::duration_cast<chrono::milliseconds>(m_info.lastPing).count()
                         << " ms";
         }
@@ -165,6 +166,7 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
 
 void Session::ping()
 {
+    cnetdetails << "Ping to " << m_info.id << "@" << m_socket->remoteEndpoint();
     RLPStream s;
     sealAndSend(prep(s, PingPacket));
     m_ping = std::chrono::steady_clock::now();
@@ -194,7 +196,6 @@ bool Session::checkPacket(bytesConstRef _msg)
 void Session::send(bytes&& _msg)
 {
     bytesConstRef msg(&_msg);
-    clog(VerbosityTrace, "net") << "<- " << RLP(msg.cropped(1));
     if (!checkPacket(msg))
         cnetlog << "INVALID PACKET CONSTRUCTED!";
 
@@ -287,7 +288,8 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
-    cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ")";
+    cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_info.id
+                << "@" << m_socket->remoteEndpoint();
 
     if (m_socket->ref().is_open())
     {
