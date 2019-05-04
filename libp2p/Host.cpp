@@ -263,7 +263,7 @@ void Host::doneWorking()
 
 // Starts a new peer session after a successful handshake - agree on mutually-supported capablities,
 // start each mutually-supported capability, and send a ping to the node.
-void Host::startPeerSession(Public const& _id, RLP const& _helloRlp,
+void Host::startPeerSession(Public const& _id, RLP const& _hello,
     unique_ptr<RLPXFrameCoder>&& _io, shared_ptr<RLPXSocket> const& _s)
 {
     // session maybe ingress or egress so m_peers and node table entries may not exist
@@ -289,11 +289,11 @@ void Host::startPeerSession(Public const& _id, RLP const& _helloRlp,
         peer->m_lastConnected = chrono::system_clock::now();
     peer->endpoint.setAddress(_s->remoteEndpoint().address());
 
-    auto const protocolVersion = _helloRlp[0].toInt<unsigned>();
-    auto const clientVersion = _helloRlp[1].toString();
-    auto caps = _helloRlp[2].toVector<CapDesc>();
-    auto const listenPort = _helloRlp[3].toInt<unsigned short>();
-    auto const pub = _helloRlp[4].toHash<Public>();
+    auto const protocolVersion = _hello[0].toInt<unsigned>();
+    auto const clientVersion = _hello[1].toString();
+    auto caps = _hello[2].toVector<CapDesc>();
+    auto const listenPort = _hello[3].toInt<unsigned short>();
+    auto const pub = _hello[4].toHash<Public>();
 
     if (pub != _id)
     {
@@ -317,7 +317,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _helloRlp,
     // create session so disconnects are managed
     shared_ptr<SessionFace> session = make_shared<Session>(this, move(_io), _s, peer,
         PeerSessionInfo({_id, clientVersion, peer->endpoint.address().to_string(), listenPort,
-            chrono::steady_clock::duration(), _helloRlp[2].toSet<CapDesc>(),
+            chrono::steady_clock::duration(), _hello[2].toSet<CapDesc>(),
             map<string, string>()}));
     if (protocolVersion < dev::p2p::c_protocolVersion - 1)
     {

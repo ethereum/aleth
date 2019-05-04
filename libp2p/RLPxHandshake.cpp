@@ -437,7 +437,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 }
 
                                 P2pPacketType packetType =
-                                    frame[0] == 0x80 ? HelloPacket : (P2pPacketType)frame[0];
+                                    frame[0] == 0x80 ? HelloPacket : static_cast<P2pPacketType>(frame[0]);
                                 if (packetType != HelloPacket)
                                 {
                                     LOG(m_logger)

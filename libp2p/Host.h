@@ -204,7 +204,7 @@ public:
     bool haveNetwork() const { return m_run; }
     
     /// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
-    void startPeerSession(Public const& _id, RLP const& _helloRlp,
+    void startPeerSession(Public const& _id, RLP const& _hello,
         std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
 
     /// Get session by id

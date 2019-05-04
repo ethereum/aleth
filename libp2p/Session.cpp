@@ -375,7 +375,7 @@ void Session::doRead()
                     }
                     else
                     {
-                        auto packetType = (P2pPacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
+                        auto packetType = static_cast<P2pPacketType>(RLP(frame.cropped(0, 1)).toInt<unsigned>());
                         RLP r(frame.cropped(1));
                         bool ok = readPacket(hProtocolId, packetType, r);
                         if (!ok)
@@ -451,7 +451,6 @@ char const* Session::capabilityPacketTypeToString(unsigned _packetType) const
     for (auto capIter : m_capabilities)
     {
         auto const& capName = capIter.first.first;
-        auto const& capVersion = capIter.first.second;
         auto cap = capIter.second;
         if (canHandle(capName, cap->messageCount(), _packetType))
         {

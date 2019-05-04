@@ -22,6 +22,10 @@ public:
     unsigned version() const override { return 2; }
     CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return UserPacket + 1; }
+    char const* packetTypeToString(unsigned) const override
+    {
+        return "p2pTestCapabilityPacketType";
+    }
 
     chrono::milliseconds backgroundWorkInterval() const override
     {
