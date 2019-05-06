@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacket)
     bytesConstRef packet(out.data.data(), out.data.size());
     auto in = DiscoveryDatagram::interpretUDP(to, packet);
     int count = 0;
-    for (auto n: dynamic_cast<Neighbours&>(*in).neighbours)
+    for (auto& n : dynamic_cast<Neighbours&>(*in).neighbours)
     {
         BOOST_REQUIRE_EQUAL(testNodes[count].second, n.endpoint.udpPort());
         BOOST_REQUIRE_EQUAL(testNodes[count].first, n.node);
@@ -721,7 +721,7 @@ BOOST_AUTO_TEST_CASE(validPong)
 
     // handle received PING
     auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
-    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
     Pong pong(nodeTable->m_hostNodeEndpoint);
@@ -809,7 +809,7 @@ BOOST_AUTO_TEST_CASE(pingTimeout)
 
     // handle received PING
     auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
-    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG after timeout
     Pong pong(nodeTable->m_hostNodeEndpoint);
@@ -956,7 +956,7 @@ BOOST_AUTO_TEST_CASE(evictionWithOldNodeAnswering)
 
     // handle received PING
     auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
-    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send valid PONG
     Pong pong(nodeTable->m_hostNodeEndpoint);
@@ -1280,7 +1280,7 @@ public:
 
         // handle received PING
         auto pingDatagram = waitForPacketReceived(nodeSocketHost1, "Ping");
-        auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+        auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
         // send PONG
         Pong pong{nodeTable->m_hostNodeEndpoint};
@@ -1322,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(addNode)
 
     // handle received PING
     auto pingDatagram = waitForPacketReceived(nodeSocketHost2, "Ping");
-    auto ping = dynamic_cast<PingNode const&>(*pingDatagram);
+    auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
 
     // send PONG
     Pong pong{nodeTable->m_hostNodeEndpoint};
@@ -1353,8 +1353,7 @@ BOOST_AUTO_TEST_CASE(findNode)
 BOOST_AUTO_TEST_CASE(neighbours)
 {
     // Wait for FindNode arriving to endpoint 1
-    auto findNodeDatagram = waitForPacketReceived(nodeSocketHost1, "FindNode", chrono::seconds{10});
-    auto findNode = dynamic_cast<FindNode const&>(*findNodeDatagram);
+    waitForPacketReceived(nodeSocketHost1, "FindNode", chrono::seconds{10});
 
     // send Neighbours through endpoint 2
     NodeIPEndpoint neighbourEndpoint{boost::asio::ip::address::from_string("200.200.200.200"),
