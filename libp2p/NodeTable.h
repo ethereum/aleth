@@ -112,7 +112,14 @@ public:
         bool _enabled = true, bool _allowLocalDiscovery = false);
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
-    static int distance(NodeID const& _a, NodeID const& _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d >>= 1; ++ret) {}; return ret; }
+    static int distance(h256 const& _a, h256 const& _b)
+    {
+        u256 d = _a ^ _b;
+        unsigned ret = 0;
+        while (d >>= 1)
+            ++ret;
+        return ret;
+    }
 
     void stop()
     {
@@ -315,6 +322,7 @@ protected:
     std::unique_ptr<NodeTableEventHandler> m_nodeEventHandler;		///< Event handler for node events.
 
     NodeID const m_hostNodeID;
+    h256 const m_hostNodeIDHash;
     NodeIPEndpoint m_hostNodeEndpoint;
     Secret m_secret;												///< This nodes secret key.
 
@@ -355,10 +363,11 @@ protected:
  */
 struct NodeEntry
 {
-    NodeEntry(NodeID const& _src, Public const& _pubk, NodeIPEndpoint const& _gw,
+    NodeEntry(h256 const& _hostNodeIDHash, Public const& _pubk, NodeIPEndpoint const& _gw,
         uint32_t _pongReceivedTime, uint32_t _pongSentTime)
       : node(_pubk, _gw),
-        distance(NodeTable::distance(_src, _pubk)),
+        nodeIDHash(sha3(_pubk)),
+        distance(NodeTable::distance(_hostNodeIDHash, nodeIDHash)),
         lastPongReceivedTime(_pongReceivedTime),
         lastPongSentTime(_pongSentTime)
     {}
@@ -372,7 +381,8 @@ struct NodeEntry
     PeerType peerType() const { return node.peerType; }
 
     Node node;
-    int const distance = 0;  ///< Node's distance (xor of _src as integer).
+    h256 const nodeIDHash;
+    int const distance = 0;  ///< Node's distance (xor of _hostNodeIDHash as integer).
     uint32_t lastPongReceivedTime = 0;
     uint32_t lastPongSentTime = 0;
 };
