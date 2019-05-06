@@ -401,7 +401,7 @@ struct DiscoveryDatagram: public RLPXDatagramFace
 
     /// Constructor used for sending.
     DiscoveryDatagram(bi::udp::endpoint const& _to)
-      : RLPXDatagramFace(_to), timestamp(futureFromEpoch(c_timeToLiveS))
+      : RLPXDatagramFace(_to), expiration(futureFromEpoch(c_timeToLiveS))
     {}
 
     /// Constructor used for parsing inbound packets.
@@ -413,10 +413,11 @@ struct DiscoveryDatagram: public RLPXDatagramFace
 
     // Most discovery packets carry a timestamp, which must be greater
     // than the current local time. This prevents replay attacks.
-    boost::optional<uint32_t> timestamp;
+    // Optional because some packets (ENRResponse) don't have it
+    boost::optional<uint32_t> expiration;
     bool isExpired() const
     {
-        return timestamp.is_initialized() && secondsSinceEpoch() > *timestamp;
+        return expiration.is_initialized() && secondsSinceEpoch() > *expiration;
     }
 
     /// Decodes UDP packets.
@@ -452,7 +453,7 @@ struct PingNode: DiscoveryDatagram
         _s << dev::p2p::c_protocolVersion;
         source.streamRLP(_s);
         destination.streamRLP(_s);
-        _s << *timestamp;
+        _s << *expiration;
         if (seq.is_initialized())
             _s << *seq;
     }
@@ -462,7 +463,7 @@ struct PingNode: DiscoveryDatagram
         version = r[0].toInt<unsigned>();
         source.interpretRLP(r[1]);
         destination.interpretRLP(r[2]);
-        timestamp = r[3].toInt<uint32_t>();
+        expiration = r[3].toInt<uint32_t>();
         if (r.itemCount() > 4 && r[4].isInt())
             seq = r[4].toInt<uint64_t>();
     }
@@ -489,7 +490,7 @@ struct Pong: DiscoveryDatagram
         _s.appendList(seq.is_initialized() ? 4 : 3);
         destination.streamRLP(_s);
         _s << echo;
-        _s << *timestamp;
+        _s << *expiration;
         if (seq.is_initialized())
             _s << *seq;
     }
@@ -498,7 +499,7 @@ struct Pong: DiscoveryDatagram
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         destination.interpretRLP(r[0]);
         echo = (h256)r[1];
-        timestamp = r[2].toInt<uint32_t>();
+        expiration = r[2].toInt<uint32_t>();
         if (r.itemCount() > 3 && r[3].isInt())
             seq = r[3].toInt<uint64_t>();
     }
@@ -531,13 +532,13 @@ struct FindNode: DiscoveryDatagram
     void streamRLP(RLPStream& _s) const override
     {
         _s.appendList(2);
-        _s << target << *timestamp;
+        _s << target << *expiration;
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         target = r[0].toHash<h512>();
-        timestamp = r[1].toInt<uint32_t>();
+        expiration = r[1].toInt<uint32_t>();
     }
 
     std::string typeName() const override { return "FindNode"; }
@@ -577,14 +578,14 @@ struct Neighbours: DiscoveryDatagram
         _s.appendList(neighbours.size());
         for (auto const& n: neighbours)
             n.streamRLP(_s);
-        _s << *timestamp;
+        _s << *expiration;
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         for (auto const& n: r[0])
             neighbours.emplace_back(n);
-        timestamp = r[1].toInt<uint32_t>();
+        expiration = r[1].toInt<uint32_t>();
     }
 
     std::string typeName() const override { return "Neighbours"; }
@@ -605,12 +606,12 @@ struct ENRRequest : DiscoveryDatagram
     void streamRLP(RLPStream& _s) const override
     {
         _s.appendList(1);
-        _s << *timestamp;
+        _s << *expiration;
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon | RLP::ThrowOnFail);
-        timestamp = r[0].toInt<uint32_t>();
+        expiration = r[0].toInt<uint32_t>();
     }
 
     std::string typeName() const override { return "ENRRequest"; }

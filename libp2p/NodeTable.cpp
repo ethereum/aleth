@@ -221,7 +221,7 @@ void NodeTable::doDiscoveryRound(
             }
 
             FindNode p(nodeEntry->endpoint(), _node);
-            p.timestamp = nextRequestExpirationTime();
+            p.expiration = nextRequestExpirationTime();
             p.sign(m_secret);
             m_sentFindNodes.emplace_back(nodeEntry->id(), chrono::steady_clock::now());
             LOG(m_logger) << p.typeName() << " to " << nodeEntry->node << " (target: " << _node
@@ -303,7 +303,7 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
     }
 
     PingNode p{m_hostNodeEndpoint, _node.endpoint};
-    p.timestamp = nextRequestExpirationTime();
+    p.expiration = nextRequestExpirationTime();
     p.seq = m_hostENR.sequenceNumber();
     auto const pingHash = p.sign(m_secret);
     LOG(m_logger) << p.typeName() << " to " << _node;
@@ -618,7 +618,7 @@ std::shared_ptr<NodeEntry> NodeTable::handleFindNode(
     for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
     {
         Neighbours out(_from, nearest, offset, nlimit);
-        out.timestamp = nextRequestExpirationTime();
+        out.expiration = nextRequestExpirationTime();
         LOG(m_logger) << out.typeName() << " to " << in.sourceid << "@" << _from;
         out.sign(m_secret);
         if (out.data.size() > 1280)
@@ -641,7 +641,7 @@ std::shared_ptr<NodeEntry> NodeTable::handlePingNode(
     // Send PONG response.
     Pong p(sourceEndpoint);
     LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
-    p.timestamp = nextRequestExpirationTime();
+    p.expiration = nextRequestExpirationTime();
     p.echo = in.echo;
     p.seq = m_hostENR.sequenceNumber();
     p.sign(m_secret);
@@ -689,7 +689,7 @@ std::shared_ptr<NodeEntry> NodeTable::handleENRRequest(
 
     ENRResponse response{_from, m_hostENR};
     LOG(m_logger) << response.typeName() << " to " << in.sourceid << "@" << _from;
-    response.timestamp = nextRequestExpirationTime();
+    response.expiration = nextRequestExpirationTime();
     response.echo = in.echo;
     response.sign(m_secret);
     m_socket->send(response);
