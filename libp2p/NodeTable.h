@@ -8,8 +8,9 @@
 
 #include <boost/integer/static_log2.hpp>
 
-#include <libp2p/UDP.h>
 #include "Common.h"
+#include "ENR.h"
+#include <libp2p/UDP.h>
 
 namespace dev
 {
@@ -107,9 +108,10 @@ public:
     // Period during which we consider last PONG results to be valid before sending new PONG
     static constexpr uint32_t c_bondingTimeSeconds{12 * 60 * 60};
 
-    /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
+    /// Constructor requiring host for I/O, credentials, and IP Address, port to listen on 
+    /// and host ENR.
     NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
-        bool _enabled = true, bool _allowLocalDiscovery = false);
+        ENR const& _enr, bool _enabled = true, bool _allowLocalDiscovery = false);
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
     static int distance(h256 const& _a, h256 const& _b)
@@ -293,6 +295,10 @@ protected:
         bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
     std::shared_ptr<NodeEntry> handlePingNode(
         bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
+    std::shared_ptr<NodeEntry> handleENRRequest(
+        bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
+    std::shared_ptr<NodeEntry> handleENRResponse(
+        bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet);
 
     /// Called by m_socket when socket is disconnected.
     void onSocketDisconnected(UDPSocketFace*) override {}
@@ -324,6 +330,7 @@ protected:
     NodeID const m_hostNodeID;
     h256 const m_hostNodeIDHash;
     NodeIPEndpoint m_hostNodeEndpoint;
+    ENR const m_hostENR;
     Secret m_secret;												///< This nodes secret key.
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
@@ -404,7 +411,7 @@ struct DiscoveryDatagram: public RLPXDatagramFace
 
     /// Constructor used for sending.
     DiscoveryDatagram(bi::udp::endpoint const& _to)
-      : RLPXDatagramFace(_to), ts(futureFromEpoch(c_timeToLiveS))
+      : RLPXDatagramFace(_to), expiration(futureFromEpoch(c_timeToLiveS))
     {}
 
     /// Constructor used for parsing inbound packets.
@@ -414,10 +421,14 @@ struct DiscoveryDatagram: public RLPXDatagramFace
     NodeID sourceid; // sender public key (from signature)
     h256 echo;       // hash of encoded packet, for reply tracking
 
-    // All discovery packets carry a timestamp, which must be greater
+    // Most discovery packets carry a timestamp, which must be greater
     // than the current local time. This prevents replay attacks.
-    uint32_t ts = 0;
-    bool isExpired() const { return secondsSinceEpoch() > ts; }
+    // Optional because some packets (ENRResponse) don't have it
+    boost::optional<uint32_t> expiration;
+    bool isExpired() const
+    {
+        return expiration.is_initialized() && secondsSinceEpoch() > *expiration;
+    }
 
     /// Decodes UDP packets.
     static std::unique_ptr<DiscoveryDatagram> interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet);
@@ -425,7 +436,7 @@ struct DiscoveryDatagram: public RLPXDatagramFace
 
 /**
  * Ping packet: Sent to check if node is alive.
- * PingNode is cached and regenerated after ts + t, where t is timeout.
+ * PingNode is cached and regenerated after timestamp + t, where t is timeout.
  *
  * Ping is used to implement evict. When a new node is seen for
  * a given bucket which is full, the least-responsive node is pinged.
@@ -438,20 +449,23 @@ struct PingNode: DiscoveryDatagram
     PingNode(NodeIPEndpoint const& _src, NodeIPEndpoint const& _dest): DiscoveryDatagram(_dest), source(_src), destination(_dest) {}
     PingNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-    static const uint8_t type = 1;
+    static constexpr uint8_t type = 1;
     uint8_t packetType() const override { return type; }
 
     unsigned version = 0;
     NodeIPEndpoint source;
     NodeIPEndpoint destination;
+    boost::optional<uint64_t> seq;
 
     void streamRLP(RLPStream& _s) const override
     {
-        _s.appendList(4);
+        _s.appendList(seq.is_initialized() ? 5 : 4);
         _s << dev::p2p::c_protocolVersion;
         source.streamRLP(_s);
         destination.streamRLP(_s);
-        _s << ts;
+        _s << *expiration;
+        if (seq.is_initialized())
+            _s << *seq;
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
@@ -459,7 +473,9 @@ struct PingNode: DiscoveryDatagram
         version = r[0].toInt<unsigned>();
         source.interpretRLP(r[1]);
         destination.interpretRLP(r[2]);
-        ts = r[3].toInt<uint32_t>();
+        expiration = r[3].toInt<uint32_t>();
+        if (r.itemCount() > 4 && r[4].isInt())
+            seq = r[4].toInt<uint64_t>();
     }
 
     std::string typeName() const override { return "Ping"; }
@@ -473,24 +489,29 @@ struct Pong: DiscoveryDatagram
     Pong(NodeIPEndpoint const& _dest): DiscoveryDatagram((bi::udp::endpoint)_dest), destination(_dest) {}
     Pong(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-    static const uint8_t type = 2;
+    static constexpr uint8_t type = 2;
     uint8_t packetType() const override { return type; }
 
     NodeIPEndpoint destination;
+    boost::optional<uint64_t> seq;
 
     void streamRLP(RLPStream& _s) const override
     {
-        _s.appendList(3);
+        _s.appendList(seq.is_initialized() ? 4 : 3);
         destination.streamRLP(_s);
         _s << echo;
-        _s << ts;
+        _s << *expiration;
+        if (seq.is_initialized())
+            _s << *seq;
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         destination.interpretRLP(r[0]);
         echo = (h256)r[1];
-        ts = r[2].toInt<uint32_t>();
+        expiration = r[2].toInt<uint32_t>();
+        if (r.itemCount() > 3 && r[3].isInt())
+            seq = r[3].toInt<uint64_t>();
     }
 
     std::string typeName() const override { return "Pong"; }
@@ -498,7 +519,7 @@ struct Pong: DiscoveryDatagram
 
 /**
  * FindNode Packet: Request k-nodes, closest to the target.
- * FindNode is cached and regenerated after ts + t, where t is timeout.
+ * FindNode is cached and regenerated after timestamp + t, where t is timeout.
  * FindNode implicitly results in finding neighbours of a given node.
  *
  * RLP Encoded Items: 2
@@ -513,20 +534,21 @@ struct FindNode: DiscoveryDatagram
     FindNode(bi::udp::endpoint _to, h512 _target): DiscoveryDatagram(_to), target(_target) {}
     FindNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
-    static const uint8_t type = 3;
+    static constexpr uint8_t type = 3;
     uint8_t packetType() const override { return type; }
 
     h512 target;
 
     void streamRLP(RLPStream& _s) const override
     {
-        _s.appendList(2); _s << target << ts;
+        _s.appendList(2);
+        _s << target << *expiration;
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         target = r[0].toHash<h512>();
-        ts = r[1].toInt<uint32_t>();
+        expiration = r[1].toInt<uint32_t>();
     }
 
     std::string typeName() const override { return "FindNode"; }
@@ -555,7 +577,7 @@ struct Neighbours: DiscoveryDatagram
         void streamRLP(RLPStream& _s) const { _s.appendList(4); endpoint.streamRLP(_s, NodeIPEndpoint::StreamInline); _s << node; }
     };
 
-    static const uint8_t type = 4;
+    static constexpr uint8_t type = 4;
     uint8_t packetType() const override { return type; }
 
     std::vector<Neighbour> neighbours;
@@ -566,18 +588,75 @@ struct Neighbours: DiscoveryDatagram
         _s.appendList(neighbours.size());
         for (auto const& n: neighbours)
             n.streamRLP(_s);
-        _s << ts;
+        _s << *expiration;
     }
     void interpretRLP(bytesConstRef _bytes) override
     {
         RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
         for (auto const& n: r[0])
             neighbours.emplace_back(n);
-        ts = r[1].toInt<uint32_t>();
+        expiration = r[1].toInt<uint32_t>();
     }
 
     std::string typeName() const override { return "Neighbours"; }
 };
 
+struct ENRRequest : DiscoveryDatagram
+{
+    // Constructor for outgoing packets
+    ENRRequest(bi::udp::endpoint const& _to) : DiscoveryDatagram{_to} {}
+    // Constructor for incoming packets
+    ENRRequest(bi::udp::endpoint const& _from, NodeID const& _fromID, h256 const& _echo)
+      : DiscoveryDatagram{_from, _fromID, _echo}
+    {}
+
+    static constexpr uint8_t type = 5;
+    uint8_t packetType() const override { return type; }
+
+    void streamRLP(RLPStream& _s) const override
+    {
+        _s.appendList(1);
+        _s << *expiration;
+    }
+    void interpretRLP(bytesConstRef _bytes) override
+    {
+        RLP r(_bytes, RLP::AllowNonCanon | RLP::ThrowOnFail);
+        expiration = r[0].toInt<uint32_t>();
+    }
+
+    std::string typeName() const override { return "ENRRequest"; }
+};
+
+struct ENRResponse : DiscoveryDatagram
+{
+    // Constructor for outgoing packets
+    ENRResponse(bi::udp::endpoint const& _dest, ENR const& _enr)
+      : DiscoveryDatagram{_dest}, enr{new ENR{_enr}}
+    {}
+    // Constructor for incoming packets
+    ENRResponse(bi::udp::endpoint const& _from, NodeID const& _fromID, h256 const& _echo)
+      : DiscoveryDatagram{_from, _fromID, _echo}
+    {}
+
+    static constexpr uint8_t type = 6;
+    uint8_t packetType() const override { return type; }
+
+    std::unique_ptr<ENR> enr;
+
+    void streamRLP(RLPStream& _s) const override
+    {
+        _s.appendList(2);
+        _s << echo;
+        enr->streamRLP(_s);
+    }
+    void interpretRLP(bytesConstRef _bytes) override
+    {
+        RLP r(_bytes, RLP::AllowNonCanon | RLP::ThrowOnFail);
+        echo = (h256)r[0];
+        enr.reset(new ENR{parseV4ENR(r[1])});
+    }
+
+    std::string typeName() const override { return "ENRResponse"; }
+};
 }
 }

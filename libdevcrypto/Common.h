@@ -68,6 +68,9 @@ using Secrets = std::vector<Secret>;
 /// Convert a secret key into the public key equivalent.
 Public toPublic(Secret const& _secret);
 
+/// Convert a compressed public key into the uncompressed equivalent.
+Public toPublic(PublicCompressed const& _publicCompressed);
+
 /// Convert a secret key into the public key in compressed format.
 PublicCompressed toPublicCompressed(Secret const& _secret);
 

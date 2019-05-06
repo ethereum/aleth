@@ -800,13 +800,9 @@ void Host::startedWorking()
         m_listenPort = m_netConfig.listenPort;
 
     determinePublic();
-    auto nodeTable = make_shared<NodeTable>(
-        m_ioService,
-        m_alias,
+    auto nodeTable = make_shared<NodeTable>(m_ioService, m_alias,
         NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()),
-        m_netConfig.discovery,
-        m_netConfig.allowLocalDiscovery
-    );
+        m_enr, m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
     // Don't set an event handler if we don't have capabilities, because no capabilities
     // means there's no host state to update in response to node table events

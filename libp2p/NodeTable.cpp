@@ -32,10 +32,11 @@ inline bool operator==(weak_ptr<NodeEntry> const& _weak, shared_ptr<NodeEntry> c
 }
 
 NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
-    bool _enabled, bool _allowLocalDiscovery)
+    ENR const& _enr, bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID{_alias.pub()},
     m_hostNodeIDHash{sha3(m_hostNodeID)},
     m_hostNodeEndpoint{_endpoint},
+    m_hostENR{_enr},
     m_secret{_alias.secret()},
     m_socket{make_shared<NodeSocket>(
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)},
@@ -221,7 +222,7 @@ void NodeTable::doDiscoveryRound(
             }
 
             FindNode p(nodeEntry->endpoint(), _node);
-            p.ts = nextRequestExpirationTime();
+            p.expiration = nextRequestExpirationTime();
             p.sign(m_secret);
             m_sentFindNodes.emplace_back(nodeEntry->id(), chrono::steady_clock::now());
             LOG(m_logger) << p.typeName() << " to " << nodeEntry->node << " (target: " << _node
@@ -305,7 +306,8 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
     }
 
     PingNode p{m_hostNodeEndpoint, _node.endpoint};
-    p.ts = nextRequestExpirationTime();
+    p.expiration = nextRequestExpirationTime();
+    p.seq = m_hostENR.sequenceNumber();
     auto const pingHash = p.sign(m_secret);
     LOG(m_logger) << p.typeName() << " to " << _node;
     m_socket->send(p);
@@ -456,6 +458,14 @@ void NodeTable::onPacketReceived(
 
         case PingNode::type:
             sourceNodeEntry = handlePingNode(_from, *packet);
+            break;
+
+        case ENRRequest::type:
+            sourceNodeEntry = handleENRRequest(_from, *packet);
+            break;
+
+        case ENRResponse::type:
+            sourceNodeEntry = handleENRResponse(_from, *packet);
             break;
         }
 
@@ -611,7 +621,7 @@ std::shared_ptr<NodeEntry> NodeTable::handleFindNode(
     for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
     {
         Neighbours out(_from, nearest, offset, nlimit);
-        out.ts = nextRequestExpirationTime();
+        out.expiration = nextRequestExpirationTime();
         LOG(m_logger) << out.typeName() << " to " << in.sourceid << "@" << _from;
         out.sign(m_secret);
         if (out.data.size() > 1280)
@@ -634,8 +644,9 @@ std::shared_ptr<NodeEntry> NodeTable::handlePingNode(
     // Send PONG response.
     Pong p(sourceEndpoint);
     LOG(m_logger) << p.typeName() << " to " << in.sourceid << "@" << _from;
-    p.ts = nextRequestExpirationTime();
+    p.expiration = nextRequestExpirationTime();
     p.echo = in.echo;
+    p.seq = m_hostENR.sequenceNumber();
     p.sign(m_secret);
     m_socket->send(p);
 
@@ -649,6 +660,69 @@ std::shared_ptr<NodeEntry> NodeTable::handlePingNode(
 
     return sourceNodeEntry;
 }
+
+std::shared_ptr<NodeEntry> NodeTable::handleENRRequest(
+    bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet)
+{
+    std::shared_ptr<NodeEntry> sourceNodeEntry = nodeEntry(_packet.sourceid);
+    if (!sourceNodeEntry)
+    {
+        LOG(m_logger) << "Source node (" << _packet.sourceid << "@" << _from
+                      << ") not found in node table. Ignoring ENRRequest request.";
+        return {};
+    }
+    if (sourceNodeEntry->endpoint() != _from)
+    {
+        LOG(m_logger) << "ENRRequest packet from unexpected endpoint " << _from << " instead of "
+                      << sourceNodeEntry->endpoint();
+        return {};
+    }
+    if (!sourceNodeEntry->lastPongReceivedTime)
+    {
+        LOG(m_logger) << "Unexpected ENRRequest packet! Endpoint proof hasn't been performed yet.";
+        return {};
+    }
+    if (!sourceNodeEntry->hasValidEndpointProof())
+    {
+        LOG(m_logger) << "Unexpected ENRRequest packet! Endpoint proof has expired.";
+        return {};
+    }
+
+    auto const& in = dynamic_cast<ENRRequest const&>(_packet);
+
+    ENRResponse response{_from, m_hostENR};
+    LOG(m_logger) << response.typeName() << " to " << in.sourceid << "@" << _from;
+    response.expiration = nextRequestExpirationTime();
+    response.echo = in.echo;
+    response.sign(m_secret);
+    m_socket->send(response);
+
+    return sourceNodeEntry;
+}
+
+std::shared_ptr<NodeEntry> NodeTable::handleENRResponse(
+    bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet)
+{
+    std::shared_ptr<NodeEntry> sourceNodeEntry = nodeEntry(_packet.sourceid);
+    if (!sourceNodeEntry)
+    {
+        LOG(m_logger) << "Source node (" << _packet.sourceid << "@" << _from
+                      << ") not found in node table. Ignoring ENRResponse packet.";
+        return {};
+    }
+    if (sourceNodeEntry->endpoint() != _from)
+    {
+        LOG(m_logger) << "ENRResponse packet from unexpected endpoint " << _from << " instead of "
+                      << sourceNodeEntry->endpoint();
+        return {};
+    }
+
+    auto const& in = dynamic_cast<ENRResponse const&>(_packet);
+    LOG(m_logger) << "Received ENR: " << *in.enr;
+
+    return sourceNodeEntry;
+}
+
 
 void NodeTable::doDiscovery()
 {
@@ -768,6 +842,12 @@ unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint 
         break;
     case Neighbours::type:
         decoded.reset(new Neighbours(_from, sourceid, echo));
+        break;
+    case ENRRequest::type:
+        decoded.reset(new ENRRequest(_from, sourceid, echo));
+        break;
+    case ENRResponse::type:
+        decoded.reset(new ENRResponse(_from, sourceid, echo));
         break;
     default:
         LOG(g_discoveryWarnLogger::get()) << "Invalid packet (unknown packet type) from "
