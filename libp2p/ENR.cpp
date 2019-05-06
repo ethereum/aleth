@@ -29,7 +29,7 @@ bytes addressToBytes(Address const& _address)
 }
 }  // namespace
 
-ENR::ENR(RLP _rlp, VerifyFunction const& _verifyFunction)
+ENR::ENR(RLP const& _rlp, VerifyFunction const& _verifyFunction)
 {
     if (_rlp.data().size() > c_ENRMaxSizeBytes)
         BOOST_THROW_EXCEPTION(ENRIsTooBig());
@@ -110,7 +110,7 @@ ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint
     return ENR{0 /* sequence number */, keyValuePairs, signFunction};
 }
 
-ENR parseV4ENR(RLP _rlp)
+ENR parseV4ENR(RLP const& _rlp)
 {
     ENR::VerifyFunction verifyFunction = [](std::map<std::string, bytes> const& _keyValuePairs,
                                              bytesConstRef _signature, bytesConstRef _data) {

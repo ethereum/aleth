@@ -29,7 +29,7 @@ public:
         std::function<bool(std::map<std::string, bytes> const&, bytesConstRef, bytesConstRef)>;
 
     // Parse from RLP with given signature verification function
-    ENR(RLP _rlp, VerifyFunction const& _verifyFunction);
+    ENR(RLP const& _rlp, VerifyFunction const& _verifyFunction);
     // Create with given sign function
     ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues,
         SignFunction const& _signFunction);
@@ -54,7 +54,7 @@ private:
 
 ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint16_t _tcpPort,  uint16_t _udpPort);
 
-ENR parseV4ENR(RLP _rlp);
+ENR parseV4ENR(RLP const& _rlp);
 
 std::ostream& operator<<(std::ostream& _out, ENR const& _enr);
 
