@@ -660,7 +660,7 @@ struct ENRResponse : DiscoveryDatagram
     {
         RLP r(_bytes, RLP::AllowNonCanon | RLP::ThrowOnFail);
         echo = (h256)r[0];
-        enr.reset(new ENR{parseV4ENR(r[1])});
+        enr.reset(new ENR{IdentitySchemeV4::parseENR(r[1])});
     }
 
     std::string typeName() const override { return "ENRResponse"; }

@@ -378,8 +378,8 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(
     });
 
     // Spawn a client to execute the handshake.
-    auto host = make_shared<Host>(
-        "peer name", make_pair(_hostAlias, createV4ENR(_hostAlias, endpoint.address(), 0, 0)));
+    auto host = make_shared<Host>("peer name",
+        make_pair(_hostAlias, IdentitySchemeV4::createENR(_hostAlias, endpoint.address(), 0, 0)));
     auto client = make_shared<RLPXSocket>(io);
     shared_ptr<TestHandshake> handshake;
     if (_remoteID == NodeID())

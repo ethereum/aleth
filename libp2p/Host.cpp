@@ -1050,7 +1050,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
             secret = Secret{r[1][0].toBytes()};
             auto enrRlp = r[1][1];
 
-            return make_pair(secret, parseV4ENR(enrRlp));
+            return make_pair(secret, IdentitySchemeV4::parseENR(enrRlp));
         }
 
         // Support for older format without ENR
@@ -1067,8 +1067,8 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
     auto const address = _netConfig.publicIPAddress.empty() ?
                              bi::address{} :
                              bi::address::from_string(_netConfig.publicIPAddress);
-    return make_pair(
-        secret, createV4ENR(secret, address, _netConfig.listenPort, _netConfig.listenPort));
+    return make_pair(secret,
+        IdentitySchemeV4::createENR(secret, address, _netConfig.listenPort, _netConfig.listenPort));
 }
 
 bool Host::nodeTableHasNode(Public const& _id) const

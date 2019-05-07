@@ -12,7 +12,7 @@ namespace p2p
 namespace
 {
 constexpr char c_keyID[] = "id";
-constexpr char c_keySec256k1[] = "secp256k1";
+constexpr char c_keySecp256k1[] = "secp256k1";
 constexpr char c_keyIP[] = "ip";
 constexpr char c_keyTCP[] = "tcp";
 constexpr char c_keyUDP[] = "udp";
@@ -88,29 +88,57 @@ void ENR::streamContent(RLPStream& _s) const
     }
 }
 
-ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint16_t _tcpPort,  uint16_t _udpPort)
+ENR ENR::update(
+    std::map<std::string, bytes> const& _keyValuePairs, SignFunction const& _signFunction) const
 {
-    ENR::SignFunction signFunction = [&_secret](bytesConstRef _data) {
-        // dev::sign returns 65 bytes signature containing r,s,v values
-        Signature s = dev::sign(_secret, sha3(_data)); 
-        // The resulting 64-byte signature is encoded as the concatenation of the r and s signature values.
-        return bytes(&s[0], &s[64]);
-    };
+    return ENR(m_seq + 1, _keyValuePairs, _signFunction);
+}
 
+ENR IdentitySchemeV4::createENR(Secret const& _secret, boost::asio::ip::address const& _ip,
+    uint16_t _tcpPort, uint16_t _udpPort)
+{
+    ENR::SignFunction signFunction = [&_secret](
+                                         bytesConstRef _data) { return sign(_data, _secret); };
+
+    auto const keyValuePairs = createKeyValuePairs(_secret, _ip, _tcpPort, _udpPort);
+
+    return ENR{0 /* sequence number */, keyValuePairs, signFunction};
+}
+
+bytes IdentitySchemeV4::sign(bytesConstRef _data, Secret const& _secret)
+{
+    // dev::sign returns 65 bytes signature containing r,s,v values
+    Signature s = dev::sign(_secret, sha3(_data));
+    // The resulting 64-byte signature is encoded as the concatenation of the r and s signature
+    // values.
+    return bytes(&s[0], &s[64]);
+}
+
+std::map<std::string, bytes> IdentitySchemeV4::createKeyValuePairs(Secret const& _secret,
+    boost::asio::ip::address const& _ip, uint16_t _tcpPort, uint16_t _udpPort)
+{
     PublicCompressed const publicKey = toPublicCompressed(_secret);
 
     auto const address = _ip.is_v4() ? addressToBytes(_ip.to_v4()) : addressToBytes(_ip.to_v6());
 
     // Values are of different types (string, bytes, uint16_t),
     // so we store them as RLP representation
-    std::map<std::string, bytes> const keyValuePairs = {{c_keyID, rlp(c_IDV4)},
-        {c_keySec256k1, rlp(publicKey.asBytes())}, {c_keyIP, rlp(address)},
-        {c_keyTCP, rlp(_tcpPort)}, {c_keyUDP, rlp(_udpPort)}};
-
-    return ENR{0 /* sequence number */, keyValuePairs, signFunction};
+    return {{c_keyID, rlp(c_IDV4)}, {c_keySecp256k1, rlp(publicKey.asBytes())},
+        {c_keyIP, rlp(address)}, {c_keyTCP, rlp(_tcpPort)}, {c_keyUDP, rlp(_udpPort)}};
 }
 
-ENR parseV4ENR(RLP const& _rlp)
+ENR IdentitySchemeV4::updateENR(ENR const& _enr, Secret const& _secret,
+    boost::asio::ip::address const& _ip, uint16_t _tcpPort, uint16_t _udpPort)
+{
+    ENR::SignFunction signFunction = [&_secret](
+                                         bytesConstRef _data) { return sign(_data, _secret); };
+
+    auto const keyValuePairs = createKeyValuePairs(_secret, _ip, _tcpPort, _udpPort);
+
+    return _enr.update(keyValuePairs, signFunction);
+}
+
+ENR IdentitySchemeV4::parseENR(RLP const& _rlp)
 {
     ENR::VerifyFunction verifyFunction = [](std::map<std::string, bytes> const& _keyValuePairs,
                                              bytesConstRef _signature, bytesConstRef _data) {
@@ -121,7 +149,7 @@ ENR parseV4ENR(RLP const& _rlp)
         if (id != c_IDV4)
             return false;
 
-        auto itKey = _keyValuePairs.find(c_keySec256k1);
+        auto itKey = _keyValuePairs.find(c_keySecp256k1);
         if (itKey == _keyValuePairs.end())
             return false;
 

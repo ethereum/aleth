@@ -48,8 +48,8 @@ struct TestNodeTable: public NodeTable
     TestNodeTable(
         ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311)
       : NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port),
-            createV4ENR(_alias.secret(), _addr, _port, _port), true /* discovery enabled */,
-            true /* allow local discovery */)
+            IdentitySchemeV4::createENR(_alias.secret(), _addr, _port, _port),
+            true /* discovery enabled */, true /* allow local discovery */)
     {}
 
     static vector<pair<Public, uint16_t>> createTestNodes(unsigned _count)
@@ -1476,7 +1476,7 @@ BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
     auto const keyPair = KeyPair::create();
     auto const addr = bi::address::from_string(c_localhostIp);
     NodeTable t(io, keyPair, NodeIPEndpoint(addr, port, port),
-        createV4ENR(keyPair.secret(), addr, port, port));
+        IdentitySchemeV4::createENR(keyPair.secret(), addr, port, port));
     if (Node n = t.node(NodeID()))
         BOOST_REQUIRE(false);
 }

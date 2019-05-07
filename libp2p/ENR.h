@@ -41,6 +41,10 @@ public:
     // Serialize to given RLP stream
     void streamRLP(RLPStream& _s) const;
 
+    // Create new ENR succeeding current one with updated keyValuePairs
+    ENR update(
+        std::map<std::string, bytes> const& _keyValuePair, SignFunction const& _signFunction) const;
+
 private:
     uint64_t m_seq = 0;
     std::map<std::string, bytes> m_map;
@@ -51,10 +55,22 @@ private:
     void streamContent(RLPStream& _s) const;
 };
 
+class IdentitySchemeV4
+{
+public:
+    static ENR createENR(Secret const& _secret, boost::asio::ip::address const& _ip,
+        uint16_t _tcpPort, uint16_t _udpPort);
 
-ENR createV4ENR(Secret const& _secret, boost::asio::ip::address const& _ip, uint16_t _tcpPort,  uint16_t _udpPort);
+    static ENR updateENR(ENR const& _enr, Secret const& _secret,
+        boost::asio::ip::address const& _ip, uint16_t _tcpPort, uint16_t _udpPort);
 
-ENR parseV4ENR(RLP const& _rlp);
+    static ENR parseENR(RLP const& _rlp);
+
+private:
+    static bytes sign(bytesConstRef _data, Secret const& _secret);
+    static std::map<std::string, bytes> createKeyValuePairs(Secret const& _secret,
+        boost::asio::ip::address const& _ip, uint16_t _tcpPort, uint16_t _udpPort);
+};
 
 std::ostream& operator<<(std::ostream& _out, ENR const& _enr);
 
