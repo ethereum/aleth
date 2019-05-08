@@ -32,10 +32,10 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-size_t const c_maxKnownCount = 100000;
-size_t const c_maxKnownSize = 128 * 1024 * 1024;
-size_t const c_maxUnknownCount = 100000;
-size_t const c_maxUnknownSize = 512 * 1024 * 1024; // Block size can be ~50kb
+constexpr size_t c_maxKnownCount = 100000;
+constexpr size_t c_maxKnownSize = 128 * 1024 * 1024;
+constexpr size_t c_maxUnknownCount = 100000;
+constexpr size_t c_maxUnknownSize = 512 * 1024 * 1024;  // Block size can be ~50kb
 
 BlockQueue::BlockQueue()
 {
@@ -514,7 +514,8 @@ void BlockQueue::retryAllUnknown()
     m_moreToVerify.notify_all();
 }
 
-std::ostream& dev::eth::operator<<(std::ostream& _out, BlockQueueStatus const& _bqs)
+boost::log::formatting_ostream& dev::eth::operator<<(
+    boost::log::formatting_ostream& _out, BlockQueueStatus const& _bqs)
 {
     _out << "importing: " << _bqs.importing << endl;
     _out << "verified: " << _bqs.verified << endl;
