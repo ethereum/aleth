@@ -125,11 +125,12 @@ bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
 
 bool Session::interpret(P2pPacketType _t, RLP const& _r)
 {
+    clog(VerbosityTrace, "p2pcap")
+        << p2pPacketTypeToString(_t) << " from " << m_info.id << "@" << m_socket->remoteEndpoint();
     switch (_t)
     {
     case DisconnectPacket:
     {
-        clog(VerbosityTrace, "p2pcap") << p2pPacketTypeToString(DisconnectPacket) << " from " << m_info.id << "@" << m_socket->remoteEndpoint();
         string reason = "Unspecified";
         auto r = (DisconnectReason)_r[0].toInt<int>();
         if (!_r[0].isInt())
@@ -145,14 +146,12 @@ bool Session::interpret(P2pPacketType _t, RLP const& _r)
     }
     case PingPacket:
     {
-        clog(VerbosityTrace, "p2pcap") << "Ping from " << m_info.id << "@" << m_socket->remoteEndpoint();
         clog(VerbosityTrace, "p2pcap") << "Pong to " << m_info.id << "@" << m_socket->remoteEndpoint();
         RLPStream s;
         sealAndSend(prep(s, PongPacket));
         break;
     }
     case PongPacket:
-        clog(VerbosityTrace, "p2pcap") << "Pong from " << m_info.id << "@" << m_socket->remoteEndpoint();
         DEV_GUARDED(x_info)
         {
             m_info.lastPing = std::chrono::steady_clock::now() - m_ping;
@@ -199,6 +198,8 @@ bool Session::checkPacket(bytesConstRef _msg)
 void Session::send(bytes&& _msg)
 {
     bytesConstRef msg(&_msg);
+    clog(VerbosityTrace, "net") << "Sending " << capabilityPacketTypeToString(_msg[0]) << " to "
+                                << m_info.id << "@" << m_socket->remoteEndpoint();
     if (!checkPacket(msg))
         cnetlog << "INVALID PACKET CONSTRUCTED!";
 
