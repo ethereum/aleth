@@ -13,6 +13,8 @@ namespace p2p
 DEV_SIMPLE_EXCEPTION(ENRIsTooBig);
 DEV_SIMPLE_EXCEPTION(ENRSignatureIsInvalid);
 DEV_SIMPLE_EXCEPTION(ENRKeysAreNotUniqueSorted);
+DEV_SIMPLE_EXCEPTION(ENRUnknownIdentityScheme);
+DEV_SIMPLE_EXCEPTION(ENRUnsupportedIPAddress);
 
 /// Class representing Ethereum Node Record - see EIP-778
 class ENR
@@ -31,7 +33,7 @@ public:
     // Parse from RLP with given signature verification function
     ENR(RLP const& _rlp, VerifyFunction const& _verifyFunction);
     // Create with given sign function
-    ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValues,
+    ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValuePairs,
         SignFunction const& _signFunction);
 
     uint64_t sequenceNumber() const { return m_seq; }
@@ -55,6 +57,14 @@ private:
     void streamContent(RLPStream& _s) const;
 };
 
+struct IdentityV4Info
+{
+    PublicCompressed publicKey;
+    boost::asio::ip::address ip;
+    uint16_t tcpPort = 0;
+    uint16_t udpPort = 0;
+};
+
 class IdentitySchemeV4
 {
 public:
@@ -65,6 +75,8 @@ public:
         boost::asio::ip::address const& _ip, uint16_t _tcpPort, uint16_t _udpPort);
 
     static ENR parseENR(RLP const& _rlp);
+
+    static IdentityV4Info info(ENR const& _enr);
 
 private:
     static bytes sign(bytesConstRef _data, Secret const& _secret);

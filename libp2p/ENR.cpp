@@ -27,6 +27,14 @@ bytes addressToBytes(Address const& _address)
     auto const addressBytes = _address.to_bytes();
     return bytes(addressBytes.begin(), addressBytes.end());
 }
+
+template <std::size_t N>
+std::array<byte, N> bytesToAddress(bytesConstRef _bytes)
+{
+    std::array<byte, N> address;
+    std::copy(_bytes.begin(), _bytes.begin() + N, address.begin());
+    return address;
+}
 }  // namespace
 
 ENR::ENR(RLP const& _rlp, VerifyFunction const& _verifyFunction)
@@ -162,15 +170,65 @@ ENR IdentitySchemeV4::parseENR(RLP const& _rlp)
     return ENR{_rlp, verifyFunction};
 }
 
+IdentityV4Info IdentitySchemeV4::info(ENR const& _enr)
+{
+    auto const& keyValuePairs = _enr.keyValuePairs();
+
+    auto itID = keyValuePairs.find(c_keyID);
+    if (itID == keyValuePairs.end() || RLP(itID->second).toString(RLP::VeryStrict) != c_IDV4)
+        BOOST_THROW_EXCEPTION(ENRUnknownIdentityScheme());
+
+    IdentityV4Info info;
+    auto itKey = keyValuePairs.find(c_keySecp256k1);
+    if (itKey != keyValuePairs.end())
+        info.publicKey = RLP{itKey->second}.toHash<PublicCompressed>();
+
+    auto itIP = keyValuePairs.find(c_keyIP);
+    if (itIP != keyValuePairs.end())
+    {
+        auto rlpAddress = RLP{itIP->second};
+        auto const addressBytes = rlpAddress.toBytesConstRef();
+
+        if (rlpAddress.size() == 4)
+            info.ip = ba::ip::address_v4{bytesToAddress<4>(addressBytes)};
+        else if (rlpAddress.size() == 16)
+            info.ip = ba::ip::address_v6{bytesToAddress<16>(addressBytes)};
+        else
+            BOOST_THROW_EXCEPTION(ENRUnsupportedIPAddress());
+    }
+
+    auto itTCP = keyValuePairs.find(c_keyTCP);
+    if (itTCP != keyValuePairs.end())
+        info.tcpPort = RLP{itTCP->second}.toInt<uint16_t>();
+
+    auto itUDP = keyValuePairs.find(c_keyUDP);
+    if (itUDP != keyValuePairs.end())
+        info.udpPort = RLP{itUDP->second}.toInt<uint16_t>();
+
+    return info;
+}
+
 std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
 {
-    _out << "[ " << toHexPrefixed(_enr.signature()) << " seq=" << _enr.sequenceNumber() << " ";
-    for (auto const& keyValue : _enr.keyValuePairs())
+    _out << "[ seq=" << _enr.sequenceNumber() << " ";
+
+    try
     {
-        _out << keyValue.first << "=";
-        _out << toHexPrefixed(RLP{keyValue.second}.toBytes()) << " ";
+        IdentityV4Info const info = IdentitySchemeV4::info(_enr);
+        _out << "key=" << info.publicKey.abridged() << " ip=" << info.ip << " tcp=" << info.tcpPort
+             << " udp=" << info.udpPort;
     }
-    _out << "]";
+    catch (Exception const&)
+    {
+        // If failed to get V4 fields, just dump all values
+        for (auto const& keyValue : _enr.keyValuePairs())
+        {
+            _out << keyValue.first << "=";
+            _out << toHexPrefixed(RLP{keyValue.second}.toBytes()) << " ";
+        }
+    }
+
+    _out << " ]";
     return _out;
 }
 
