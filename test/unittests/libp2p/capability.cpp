@@ -24,6 +24,10 @@ public:
     unsigned version() const override { return 2; }
     CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return UserPacket + 1; }
+    char const* packetTypeToString(unsigned) const override
+    {
+        return "UserPacket";
+    }
     chrono::milliseconds backgroundWorkInterval() const override
     {
         return c_backgroundWorkInterval;

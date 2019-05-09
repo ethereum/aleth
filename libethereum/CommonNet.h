@@ -50,7 +50,7 @@ class TransactionQueue;
 class EthereumCapability;
 class EthereumPeer;
 
-enum SubprotocolPacketType: byte
+enum EthSubprotocolPacketType : byte
 {
     StatusPacket = 0x00,
     NewBlockHashesPacket = 0x01,
@@ -68,6 +68,8 @@ enum SubprotocolPacketType: byte
 
     PacketCount
 };
+
+char const* ethPacketTypeToString(EthSubprotocolPacketType _packetType);
 
 enum class Asking
 {

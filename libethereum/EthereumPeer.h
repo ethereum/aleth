@@ -91,7 +91,8 @@ public:
 
 private:
     // Request of type _packetType with _hashes as input parameters
-    void requestByHashes(h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType);
+    void requestByHashes(
+        h256s const& _hashes, Asking _asking, EthSubprotocolPacketType _packetType);
 
     std::shared_ptr<p2p::CapabilityHostFace> m_host;
 

@@ -134,7 +134,7 @@ void EthereumPeer::requestReceipts(h256s const& _blocks)
 }
 
 void EthereumPeer::requestByHashes(
-    h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType)
+    h256s const& _hashes, Asking _asking, EthSubprotocolPacketType _packetType)
 {
     if (m_asking != Asking::Nothing)
     {

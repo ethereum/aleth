@@ -92,6 +92,10 @@ public:
     unsigned version() const override { return c_protocolVersion; }
     p2p::CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return PacketCount; }
+    char const* packetTypeToString(unsigned _packetType) const override
+    {
+        return ethPacketTypeToString(static_cast<EthSubprotocolPacketType>(_packetType));
+    }
     std::chrono::milliseconds backgroundWorkInterval() const override;
 
     unsigned protocolVersion() const { return c_protocolVersion; }

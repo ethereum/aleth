@@ -1,24 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Session.h
- * @author Gav Wood <i@gavwood.com>
- * @author Alex Leverington <nessence@gmail.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #pragma once
 
@@ -133,7 +115,7 @@ public:
     boost::optional<unsigned> capabilityOffset(std::string const& _capabilityName) const override;
 
 private:
-    static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
+    static RLPStream& prep(RLPStream& _s, P2pPacketType _t, unsigned _args = 0);
 
     void send(bytes&& _msg);
 
@@ -150,11 +132,11 @@ private:
     void write();
 
     /// Deliver RLPX packet to Session or PeerCapability for interpretation.
-    bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
+    bool readPacket(uint16_t _capId, unsigned _t, RLP const& _r);
 
     /// Interpret an incoming Session packet.
-    bool interpret(PacketType _t, RLP const& _r);
-    
+    bool interpret(P2pPacketType _t, RLP const& _r);
+
     /// @returns true iff the _msg forms a valid message for sending or receiving on the network.
     static bool checkPacket(bytesConstRef _msg);
 
@@ -165,6 +147,8 @@ private:
 
     bool canHandle(
         std::string const& _capability, unsigned _messageCount, unsigned _packetType) const;
+
+    char const* capabilityPacketTypeToString(unsigned _packetType) const;
 
     Host* m_server;							///< The host that owns us. Never null.
 

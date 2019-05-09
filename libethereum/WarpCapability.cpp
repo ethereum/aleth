@@ -16,9 +16,28 @@ namespace eth
 
 std::chrono::milliseconds constexpr WarpCapability::c_backgroundWorkInterval;
 
+char const* warpPacketTypeToString(WarpSubprotocolPacketType _packetType)
+{
+    switch (_packetType)
+    {
+    case WarpStatusPacket:
+        return "WarpStatus";
+    case GetSnapshotManifestPacket:
+        return "GetSnapshotManifest";
+    case SnapshotManifestPacket:
+        return "SnapshotManifest";
+    case GetSnapshotDataPacket:
+        return "GetSnapshotData";
+    case SnapshotDataPacket:
+        return "SnapshotData";
+    default:
+        return "UnknownWarpPacket";
+    }
+}
+
 namespace
 {
-static size_t const c_freePeerBufferSize = 32;
+constexpr size_t c_freePeerBufferSize = 32;
 
 bool validateManifest(RLP const& _manifestRlp)
 {
@@ -380,18 +399,18 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
             m_peerObserver->onPeerStatus(_peerID);
             break;
         }
-        case GetSnapshotManifest:
+        case GetSnapshotManifestPacket:
         {
             if (!m_snapshot)
                 return false;
 
             RLPStream s;
-            m_host->prep(_peerID, name(), s, SnapshotManifest, 1)
+            m_host->prep(_peerID, name(), s, SnapshotManifestPacket, 1)
                 .appendRaw(m_snapshot->readManifest());
             m_host->sealAndSend(_peerID, s);
             break;
         }
-        case GetSnapshotData:
+        case GetSnapshotDataPacket:
         {
             if (!m_snapshot)
                 return false;
@@ -399,7 +418,7 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
             const h256 chunkHash = _r[0].toHash<h256>(RLP::VeryStrict);
 
             RLPStream s;
-            m_host->prep(_peerID, name(), s, SnapshotData, 1)
+            m_host->prep(_peerID, name(), s, SnapshotDataPacket, 1)
                 .append(m_snapshot->readCompressedChunk(chunkHash));
             m_host->sealAndSend(_peerID, s);
             break;
@@ -418,13 +437,13 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
             m_peerObserver->onPeerBlockHeaders(_peerID, _r);
             break;
         }
-        case SnapshotManifest:
+        case SnapshotManifestPacket:
         {
             setIdle(_peerID);
             m_peerObserver->onPeerManifest(_peerID, _r);
             break;
         }
-        case SnapshotData:
+        case SnapshotDataPacket:
         {
             setIdle(_peerID);
             m_peerObserver->onPeerData(_peerID, _r);
@@ -503,7 +522,7 @@ void WarpCapability::requestManifest(NodeID const& _peerID)
     assert(itPeerStatus->second.m_asking == Asking::Nothing);
     setAsking(_peerID, Asking::WarpManifest);
     RLPStream s;
-    m_host->prep(_peerID, name(), s, GetSnapshotManifest);
+    m_host->prep(_peerID, name(), s, GetSnapshotManifestPacket);
     m_host->sealAndSend(_peerID, s);
 }
 
@@ -517,7 +536,7 @@ bool WarpCapability::requestData(NodeID const& _peerID, h256 const& _chunkHash)
     setAsking(_peerID, Asking::WarpData);
     RLPStream s;
 
-    m_host->prep(_peerID, name(), s, GetSnapshotData, 1) << _chunkHash;
+    m_host->prep(_peerID, name(), s, GetSnapshotDataPacket, 1) << _chunkHash;
     m_host->sealAndSend(_peerID, s);
     return true;
 }

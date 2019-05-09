@@ -14,18 +14,20 @@ namespace eth
 {
 class SnapshotStorageFace;
 
-unsigned const c_WarpProtocolVersion = 1;
+constexpr unsigned c_WarpProtocolVersion = 1;
 
 enum WarpSubprotocolPacketType : byte
 {
     WarpStatusPacket = 0x00,
-    GetSnapshotManifest = 0x11,
-    SnapshotManifest = 0x12,
-    GetSnapshotData = 0x13,
-    SnapshotData = 0x14,
+    GetSnapshotManifestPacket = 0x11,
+    SnapshotManifestPacket = 0x12,
+    GetSnapshotDataPacket = 0x13,
+    SnapshotDataPacket = 0x14,
 
     WarpSubprotocolPacketCount
 };
+
+char const* warpPacketTypeToString(WarpSubprotocolPacketType _packetType);
 
 struct WarpPeerStatus
 {
@@ -77,6 +79,10 @@ public:
     unsigned version() const override { return c_WarpProtocolVersion; }
     p2p::CapDesc descriptor() const override { return {name(), version()}; }
     unsigned messageCount() const override { return WarpSubprotocolPacketCount; }
+    char const* packetTypeToString(unsigned _packetType) const override
+    {
+        return warpPacketTypeToString(static_cast<WarpSubprotocolPacketType>(_packetType));
+    }
     std::chrono::milliseconds backgroundWorkInterval() const override;
 
     u256 networkId() const { return m_networkId; }

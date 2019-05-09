@@ -261,8 +261,10 @@ void Host::doneWorking()
     m_sessions.clear();
 }
 
-// called after successful handshake
-void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXFrameCoder>&& _io, shared_ptr<RLPXSocket> const& _s)
+// Starts a new peer session after a successful handshake - agree on mutually-supported capablities,
+// start each mutually-supported capability, and send a ping to the node.
+void Host::startPeerSession(Public const& _id, RLP const& _hello,
+    unique_ptr<RLPXFrameCoder>&& _io, shared_ptr<RLPXSocket> const& _s)
 {
     // session maybe ingress or egress so m_peers and node table entries may not exist
     shared_ptr<Peer> peer;
@@ -287,11 +289,11 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
         peer->m_lastConnected = chrono::system_clock::now();
     peer->endpoint.setAddress(_s->remoteEndpoint().address());
 
-    auto protocolVersion = _rlp[0].toInt<unsigned>();
-    auto clientVersion = _rlp[1].toString();
-    auto caps = _rlp[2].toVector<CapDesc>();
-    auto listenPort = _rlp[3].toInt<unsigned short>();
-    auto pub = _rlp[4].toHash<Public>();
+    auto const protocolVersion = _hello[0].toInt<unsigned>();
+    auto const clientVersion = _hello[1].toString();
+    auto caps = _hello[2].toVector<CapDesc>();
+    auto const listenPort = _hello[3].toInt<unsigned short>();
+    auto const pub = _hello[4].toHash<Public>();
 
     if (pub != _id)
     {
@@ -309,13 +311,14 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
     for (auto cap: caps)
         capslog << "(" << cap.first << "," << dec << cap.second << ")";
 
-    cnetlog << "Hello: " << clientVersion << " V[" << protocolVersion << "]"
+    cnetlog << "Starting peer session with " << clientVersion << " V[" << protocolVersion << "]"
             << " " << _id << " " << showbase << capslog.str() << " " << dec << listenPort;
 
     // create session so disconnects are managed
     shared_ptr<SessionFace> session = make_shared<Session>(this, move(_io), _s, peer,
         PeerSessionInfo({_id, clientVersion, peer->endpoint.address().to_string(), listenPort,
-            chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), map<string, string>()}));
+            chrono::steady_clock::duration(), _hello[2].toSet<CapDesc>(),
+            map<string, string>()}));
     if (protocolVersion < dev::p2p::c_protocolVersion - 1)
     {
         session->disconnect(IncompatibleProtocol);
@@ -368,7 +371,8 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
             auto capability = itCap->second.capability;
             session->registerCapability(capDesc, offset, capability);
 
-            cnetlog << "New session for capability " << capDesc.first << "; idOffset: " << offset;
+            cnetlog << "New session for capability " << capDesc.first << "; idOffset: " << offset
+                    << " with " << _id << "@" << _s->remoteEndpoint();
 
             capability->onConnect(_id, capDesc.second);
 
@@ -377,8 +381,9 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 
         session->start();
     }
-    
-    LOG(m_logger) << "p2p.host.peer.register " << _id;
+
+    LOG(m_logger) << "Peer connection successfully established with " << _id << "@"
+                  << _s->remoteEndpoint();
 }
 
 void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
@@ -657,7 +662,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
     _p->m_lastAttempted = chrono::system_clock::now();
     
     bi::tcp::endpoint ep(_p->endpoint);
-    cnetdetails << "Attempting connection to node " << _p->id << "@" << ep << " from " << id();
+    cnetdetails << "Attempting connection to " << _p->id << "@" << ep << " from " << id();
     auto socket = make_shared<RLPXSocket>(m_ioService);
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
@@ -673,7 +678,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
         }
         else
         {
-            cnetdetails << "Connecting to " << _p->id << "@" << ep;
+            cnetdetails << "Starting RLPX handshake with " << _p->id << "@" << ep;
             auto handshake = make_shared<RLPXHandshake>(this, socket, _p->id);
             {
                 Guard l(x_connecting);

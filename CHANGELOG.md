@@ -8,6 +8,7 @@
 - Added: [#5564](https://github.com/ethereum/aleth/pull/5564) Improved help output of Aleth by adding list of channels.
 - Added: [#5575](https://github.com/ethereum/aleth/pull/5575) Log active peer count and peer list every 30 seconds.
 - Added: [#5580](https://github.com/ethereum/aleth/pull/5580) Enable syncing from ETC nodes for blocks < dao hard fork block.
+- Added: [#5591](https://github.com/ethereum/aleth/pull/5591) Network logging bugfixes and improvements and add p2pcap log channel.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
 - Changed: [#5576](https://github.com/ethereum/aleth/pull/5576) Moved sstore_combinations and static_Call50000_sha256 tests to stTimeConsuming test suite. (testeth runs them only with `--all` flag)

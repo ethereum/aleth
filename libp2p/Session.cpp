@@ -1,24 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Session.cpp
- * @author Gav Wood <i@gavwood.com>
- * @author Alex Leverington <nessence@gmail.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "Session.h"
 
@@ -100,16 +82,18 @@ int Session::rating() const
     return m_peer->m_rating;
 }
 
-bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
+bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
 {
     m_lastReceived = chrono::steady_clock::now();
-    clog(VerbosityTrace, "net") << "-> " << _packetType << " " << _r;
+    clog(VerbosityTrace, "net") << "Received " << capabilityPacketTypeToString(_packetType) << "("
+                                << _packetType << ") from " << m_info.id << "@"
+                                << m_socket->remoteEndpoint();
     try // Generic try-catch block designed to capture RLP format errors - TODO: give decent diagnostics, make a bit more specific over what is caught.
     {
         // v4 frame headers are useless, offset packet type used
         // v5 protocol type is in header, packet type not offset
         if (_capId == 0 && _packetType < UserPacket)
-            return interpret(_packetType, _r);
+            return interpret(static_cast<P2pPacketType>(_packetType), _r);
 
         for (auto const& cap : m_capabilities)
         {
@@ -139,8 +123,10 @@ bool Session::readPacket(uint16_t _capId, PacketType _packetType, RLP const& _r)
     return true;
 }
 
-bool Session::interpret(PacketType _t, RLP const& _r)
+bool Session::interpret(P2pPacketType _t, RLP const& _r)
 {
+    clog(VerbosityTrace, "p2pcap")
+        << p2pPacketTypeToString(_t) << " from " << m_info.id << "@" << m_socket->remoteEndpoint();
     switch (_t)
     {
     case DisconnectPacket:
@@ -152,14 +138,15 @@ bool Session::interpret(PacketType _t, RLP const& _r)
         else
         {
             reason = reasonOf(r);
-            cnetlog << "Disconnect (reason: " << reason << ")";
+            clog(VerbosityDebug, "p2pcap") << "Disconnect (reason: " << reason << ") from " << m_info.id << "@"
+                    << m_socket->remoteEndpoint();
             drop(DisconnectRequested);
         }
         break;
     }
     case PingPacket:
     {
-        cnetdetails << "Ping " << m_info.id;
+        clog(VerbosityTrace, "p2pcap") << "Pong to " << m_info.id << "@" << m_socket->remoteEndpoint();
         RLPStream s;
         sealAndSend(prep(s, PongPacket));
         break;
@@ -168,13 +155,10 @@ bool Session::interpret(PacketType _t, RLP const& _r)
         DEV_GUARDED(x_info)
         {
             m_info.lastPing = std::chrono::steady_clock::now() - m_ping;
-            cnetdetails << "Latency: "
+            clog(VerbosityTrace, "p2pcap") << "Ping latency: "
                         << chrono::duration_cast<chrono::milliseconds>(m_info.lastPing).count()
                         << " ms";
         }
-        break;
-    case GetPeersPacket:
-    case PeersPacket:
         break;
     default:
         return false;
@@ -184,12 +168,13 @@ bool Session::interpret(PacketType _t, RLP const& _r)
 
 void Session::ping()
 {
+    clog(VerbosityTrace, "p2pcap") << "Ping to " << m_info.id << "@" << m_socket->remoteEndpoint();
     RLPStream s;
     sealAndSend(prep(s, PingPacket));
     m_ping = std::chrono::steady_clock::now();
 }
 
-RLPStream& Session::prep(RLPStream& _s, PacketType _id, unsigned _args)
+RLPStream& Session::prep(RLPStream& _s, P2pPacketType _id, unsigned _args)
 {
     return _s.append((unsigned)_id).appendList(_args);
 }
@@ -213,7 +198,8 @@ bool Session::checkPacket(bytesConstRef _msg)
 void Session::send(bytes&& _msg)
 {
     bytesConstRef msg(&_msg);
-    clog(VerbosityTrace, "net") << "<- " << RLP(msg.cropped(1));
+    clog(VerbosityTrace, "net") << "Sending " << capabilityPacketTypeToString(_msg[0]) << " to "
+                                << m_info.id << "@" << m_socket->remoteEndpoint();
     if (!checkPacket(msg))
         cnetlog << "INVALID PACKET CONSTRUCTED!";
 
@@ -306,7 +292,8 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
-    cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ")";
+    cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_info.id
+                << "@" << m_socket->remoteEndpoint();
 
     if (m_socket->ref().is_open())
     {
@@ -389,7 +376,7 @@ void Session::doRead()
                     }
                     else
                     {
-                        auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt<unsigned>();
+                        auto packetType = static_cast<P2pPacketType>(RLP(frame.cropped(0, 1)).toInt<unsigned>());
                         RLP r(frame.cropped(1));
                         bool ok = readPacket(hProtocolId, packetType, r);
                         if (!ok)
@@ -456,4 +443,22 @@ boost::optional<unsigned> Session::capabilityOffset(std::string const& _capabili
 {
     auto it = m_capabilityOffsets.find(_capabilityName);
     return it == m_capabilityOffsets.end() ? boost::optional<unsigned>{} : it->second;
+}
+
+char const* Session::capabilityPacketTypeToString(unsigned _packetType) const
+{
+    if (_packetType < UserPacket)
+        return p2pPacketTypeToString(static_cast<P2pPacketType>(_packetType));
+    for (auto capIter : m_capabilities)
+    {
+        auto const& capName = capIter.first.first;
+        auto cap = capIter.second;
+        if (canHandle(capName, cap->messageCount(), _packetType))
+        {
+            auto offset = capabilityOffset(capName);
+            assert(offset);
+            return cap->packetTypeToString(_packetType - *offset);
+        }
+    }
+    return "Unknown";
 }
