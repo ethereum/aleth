@@ -102,7 +102,7 @@ ENR IdentitySchemeV4::createENR(Secret const& _secret, boost::asio::ip::address 
 
     auto const keyValuePairs = createKeyValuePairs(_secret, _ip, _tcpPort, _udpPort);
 
-    return ENR{0 /* sequence number */, keyValuePairs, signFunction};
+    return ENR{1 /* sequence number */, keyValuePairs, signFunction};
 }
 
 bytes IdentitySchemeV4::sign(bytesConstRef _data, Secret const& _secret)
