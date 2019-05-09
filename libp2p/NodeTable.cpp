@@ -556,11 +556,21 @@ shared_ptr<NodeEntry> NodeTable::handlePong(
             newUdpEndpoint.address(m_hostStaticIP);
 
         if (newUdpEndpoint != m_hostNodeEndpoint)
-        {
             m_hostNodeEndpoint = NodeIPEndpoint{
                 newUdpEndpoint.address(), newUdpEndpoint.port(), m_hostNodeEndpoint.tcpPort()};
-            LOG(m_logger) << "New external endpoint found: " << m_hostNodeEndpoint;
-        }
+        
+        if (m_hostENRInfo.ip != m_hostNodeEndpoint.address() ||
+            m_hostENRInfo.udpPort != pong.destination.udpPort())
+        {
+            {
+                Guard l(m_hostENRMutex);
+                m_hostENR =
+                    IdentitySchemeV4::updateENR(m_hostENR, m_secret, m_hostNodeEndpoint.address(),
+                        m_hostNodeEndpoint.tcpPort(), pong.destination.udpPort());
+                m_hostENRInfo = IdentitySchemeV4::info(m_hostENR);
+            }
+            clog(VerbosityInfo, "net") << "ENR updated: " << m_hostENR;
+        }        
     }
 
     return sourceNodeEntry;
