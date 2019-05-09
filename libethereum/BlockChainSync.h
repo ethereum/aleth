@@ -75,7 +75,8 @@ private:
     void continueSync();
 
     /// Enter waiting state
-    void pauseSync();
+    void pauseSync() { m_state = SyncState::Waiting; }
+    bool isSyncPaused() { return m_state == SyncState::Waiting; }
 
     EthereumCapability& host() { return m_host; }
     EthereumCapability const& host() const { return m_host; }
