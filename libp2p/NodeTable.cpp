@@ -44,6 +44,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     m_hostStaticIP{isAllowedEndpoint(_endpoint) ? _endpoint.address() : bi::address{}},
     m_hostNodeEndpoint{_endpoint},
     m_hostENR{_enr},
+    m_hostENRInfo{IdentitySchemeV4::info(m_hostENR)},
     m_secret{_alias.secret()},
     m_socket{make_shared<NodeSocket>(
         _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)},

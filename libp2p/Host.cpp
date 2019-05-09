@@ -96,13 +96,13 @@ Host::Host(
     m_tcp4Acceptor(m_ioService),
     m_runTimer(m_ioService),
     m_alias{_secretAndENR.first},
-    m_enr{_secretAndENR.second},
+    m_restoredENR{_secretAndENR.second},
     m_lastPing(chrono::steady_clock::time_point::min()),
     m_capabilityHost(createCapabilityHost(*this)),
     m_lastPeerLogMessage(chrono::steady_clock::time_point::min())
 {
-    cnetnote << "Id: " << id();
-    cnetnote << "ENR: " << m_enr;
+    LOG(m_infoLogger) << "Id: " << id();
+    LOG(m_infoLogger) << "ENR: " << m_restoredENR;
 }
 
 Host::Host(string const& _clientVersion, NetworkConfig const& _n, bytesConstRef _restoreNetwork)
@@ -433,10 +433,10 @@ bool Host::isHandshaking(NodeID const& _id) const
     return false;
 }
 
-void Host::determinePublic()
+bi::tcp::endpoint Host::determinePublic() const
 {
-    // set m_tcpPublic := listenIP (if public) > public > upnp > unspecified address.
-    
+    // return listenIP (if public) > public > upnp > unspecified address.
+
     auto ifAddresses = Network::getInterfaceAddresses();
     auto laddr = m_netConfig.listenIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.listenIPAddress);
     auto lset = !laddr.is_unspecified();
@@ -478,7 +478,24 @@ void Host::determinePublic()
     else if (pset)
         ep.address(paddr);
 
-    m_tcpPublic = ep;
+    return ep;
+}
+
+ENR Host::updateENR(
+    ENR const& _restoredENR, bi::tcp::endpoint const& _tcpPublic, uint16_t const& _listenPort)
+{
+    IdentityV4Info const info = IdentitySchemeV4::info(m_restoredENR);
+
+    auto const address = _tcpPublic.address().is_unspecified() ? info.ip : _tcpPublic.address();
+
+    if (info.ip == address && info.tcpPort == _listenPort && info.udpPort == _listenPort)
+        return _restoredENR;
+
+    ENR const newENR = IdentitySchemeV4::updateENR(
+        _restoredENR, m_alias.secret(), address, _listenPort, _listenPort);
+    LOG(m_infoLogger) << "ENR updated: " << newENR;
+
+    return newENR;
 }
 
 void Host::runAcceptor()
@@ -825,10 +842,12 @@ void Host::startedWorking()
     else
         m_listenPort = m_netConfig.listenPort;
 
-    determinePublic();
+    m_tcpPublic = determinePublic();
+    ENR const enr = updateENR(m_restoredENR, m_tcpPublic, listenPort());
+
     auto nodeTable = make_shared<NodeTable>(m_ioService, m_alias,
-        NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()),
-        m_enr, m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
+        NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()), enr,
+        m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
     // Don't set an event handler if we don't have capabilities, because no capabilities
     // means there's no host state to update in response to node table events
@@ -968,7 +987,7 @@ bytes Host::saveNetwork() const
 
     ret.appendList(2);
     ret << m_alias.secret().ref();
-    m_enr.streamRLP(ret);
+    enr().streamRLP(ret);
 
     ret.appendList(count);
     if (!!count)
@@ -1062,11 +1081,10 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
         secret = KeyPair::create().secret();
     }
 
-    // TODO(gumb0): update ENR in case new address given in config
-    // https://github.com/ethereum/aleth/issues/5551
     auto const address = _netConfig.publicIPAddress.empty() ?
                              bi::address{} :
                              bi::address::from_string(_netConfig.publicIPAddress);
+
     return make_pair(secret,
         IdentitySchemeV4::createENR(secret, address, _netConfig.listenPort, _netConfig.listenPort));
 }
