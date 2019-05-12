@@ -260,6 +260,8 @@ private:
     
     bool havePeerSession(NodeID const& _id) { return !!peerSession(_id); }
 
+    bool isConnecting(NodeID const& _id);
+
     /// Determines and sets m_tcpPublic to publicly advertised address.
     void determinePublic();
 
@@ -358,7 +360,9 @@ private:
     mutable std::unordered_map<NodeID, std::weak_ptr<SessionFace>> m_sessions;
     mutable RecursiveMutex x_sessions;
 
-    std::list<std::weak_ptr<RLPXHandshake>> m_connecting;               ///< Pending connections.
+    /// Pending connections. Completed handshakes are garbage-collected in run() (a handshake is
+    /// complete when there are no more shared_ptrs in handlers)
+    std::list<std::weak_ptr<RLPXHandshake>> m_connecting;
     Mutex x_connecting;													///< Mutex for m_connecting.
 
     unsigned m_idealPeerCount = 11;										///< Ideal number of peers to be connected to.
