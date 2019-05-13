@@ -259,6 +259,9 @@ Json::Value toJson(dev::eth::LocalisedTransaction const& _t)
         res["blockHash"] = toJS(_t.blockHash());
         res["transactionIndex"] = toJS(_t.transactionIndex());
         res["blockNumber"] = toJS(_t.blockNumber());
+        res["r"] = toJS(_t.signature().r);
+        res["s"] = toJS(_t.signature().s);
+        res["v"] = toJS(_t.signature().v);
     }
     return res;
 }
