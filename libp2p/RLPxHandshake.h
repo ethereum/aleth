@@ -46,6 +46,8 @@ public:
     /// Aborts the handshake.
     void cancel();
 
+    NodeID remote() const { return m_remote; }
+
 protected:
     /// Timeout for a stage in the handshake to complete (the remote to respond to transition
     /// events). Enforced by m_idleTimer and refreshed by transition().

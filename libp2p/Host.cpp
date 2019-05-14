@@ -421,6 +421,18 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
     }
 }
 
+bool Host::isHandshaking(NodeID const& _id) const
+{
+    Guard l(x_connecting);
+    for (auto const& cIter : m_connecting)
+    {
+        std::shared_ptr<RLPXHandshake> const connecting = cIter.lock();
+        if (connecting && connecting->remote() == _id)
+            return true;
+    }
+    return false;
+}
+
 void Host::determinePublic()
 {
     // set m_tcpPublic := listenIP (if public) > public > upnp > unspecified address.
@@ -638,15 +650,24 @@ void Host::connect(shared_ptr<Peer> const& _p)
         cwarn << "Network not running so cannot connect to peer " << _p->id << "@" << _p->address();
         return;
     }
+
     if (!haveCapabilities())
     {
         cwarn << "No capabilities registered so cannot connect to peer " << _p->id << "@" << _p->address();
         return;
     }
-    
+
+    if (isHandshaking(_p->id))
+    {
+        cwarn << "Aborted connection. RLPX handshake to peer already in progress: " << _p->id << "@"
+              << _p->endpoint;
+        return;
+    }
+
     if (havePeerSession(_p->id))
     {
-        cnetdetails << "Aborted connect. Node already connected.";
+        cnetdetails << "Aborted connection. Peer already connected: " << _p->id << "@"
+                    << _p->endpoint;
         return;
     }
 

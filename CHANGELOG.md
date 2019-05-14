@@ -15,6 +15,7 @@
 - Changed: [#5589](https://github.com/ethereum/aleth/pull/5589) Make aleth output always line-buffered even when redirected to file or pipe.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
+- Fixed: [#5599](https://github.com/ethereum/aleth/pull/5600) Prevent aleth from attempting concurrent connection to node which results in disconnect of original connection.
 
 ## [1.6.0] - 2019-04-16
 
