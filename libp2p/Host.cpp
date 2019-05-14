@@ -421,7 +421,7 @@ void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
     }
 }
 
-bool Host::isConnecting(NodeID const& _id)
+bool Host::isHandshaking(NodeID const& _id) const
 {
     Guard l(x_connecting);
     for (auto const& cIter : m_connecting)
@@ -657,9 +657,9 @@ void Host::connect(shared_ptr<Peer> const& _p)
         return;
     }
 
-    if (isConnecting(_p->id))
+    if (isHandshaking(_p->id))
     {
-        cwarn << "Aborted connection. Connection to peer already in progress: " << _p->id << "@"
+        cwarn << "Aborted connection. RLPX handshake to peer already in progress: " << _p->id << "@"
               << _p->endpoint;
         return;
     }
