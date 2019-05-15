@@ -18,6 +18,10 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_discoveryWarnLogger,
 
 // Cadence at which we timeout sent pings and evict unresponsive nodes
 constexpr chrono::milliseconds c_handleTimeoutsIntervalMs{5000};
+// Cadence at which we remove old records from EndpointTracker
+constexpr chrono::milliseconds c_removeOldEndpointStatementsIntervalMs{5000};
+// Change external endpoint after this number of peers report new one
+constexpr size_t c_minEndpointTrackStatements{10};
 
 }  // namespace
 
@@ -35,6 +39,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     ENR const& _enr, bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID{_alias.pub()},
     m_hostNodeIDHash{sha3(m_hostNodeID)},
+    m_hostStaticIP{isAllowedEndpoint(_endpoint) ? _endpoint.address() : bi::address{}},
     m_hostNodeEndpoint{_endpoint},
     m_hostENR{_enr},
     m_secret{_alias.secret()},
@@ -44,6 +49,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
     m_allowLocalDiscovery{_allowLocalDiscovery},
     m_discoveryTimer{make_shared<ba::steady_timer>(_io)},
     m_timeoutsTimer{make_shared<ba::steady_timer>(_io)},
+    m_endpointTrackingTimer{make_shared<ba::steady_timer>(_io)},
     m_io{_io}
 {
     for (unsigned i = 0; i < s_bins; i++)
@@ -60,6 +66,7 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
         m_socket->connect();
         doDiscovery();
         doHandleTimeouts();
+        doEndpointTracking();
     }
     catch (exception const& _e)
     {
@@ -484,6 +491,7 @@ void NodeTable::onPacketReceived(
     }
 }
 
+
 shared_ptr<NodeEntry> NodeTable::handlePong(
     bi::udp::endpoint const& _from, DiscoveryDatagram const& _packet)
 {
@@ -536,13 +544,20 @@ shared_ptr<NodeEntry> NodeTable::handlePong(
 
     m_sentPings.erase(_from);
 
-    // update our endpoint address and UDP port
-    DEV_GUARDED(x_nodes)
+    // update our external endpoint address and UDP port
+    if (m_endpointTracker.addEndpointStatement(_from, pong.destination) >=
+        c_minEndpointTrackStatements)
     {
-        if ((!m_hostNodeEndpoint || !isAllowedEndpoint(m_hostNodeEndpoint)) &&
-            isPublicAddress(pong.destination.address()))
-            m_hostNodeEndpoint.setAddress(pong.destination.address());
-        m_hostNodeEndpoint.setUdpPort(pong.destination.udpPort());
+        auto newUdpEndpoint = m_endpointTracker.bestEndpoint();
+        if (!m_hostStaticIP.is_unspecified())
+            newUdpEndpoint.address(m_hostStaticIP);
+
+        if (newUdpEndpoint != m_hostNodeEndpoint)
+        {
+            m_hostNodeEndpoint = NodeIPEndpoint{
+                newUdpEndpoint.address(), newUdpEndpoint.port(), m_hostNodeEndpoint.tcpPort()};
+            LOG(m_logger) << "New external endpoint found: " << m_hostNodeEndpoint;
+        }
     }
 
     return sourceNodeEntry;
@@ -799,6 +814,34 @@ void NodeTable::doHandleTimeouts()
 
         doHandleTimeouts();
     });
+}
+
+void NodeTable::doEndpointTracking()
+{
+    m_endpointTrackingTimer->expires_from_now(c_removeOldEndpointStatementsIntervalMs);
+    auto edpointTrackingTimer{m_endpointTrackingTimer};
+    m_endpointTrackingTimer->async_wait(
+        [this, edpointTrackingTimer](boost::system::error_code const& _ec) {
+            // We can't use m_logger if an error occurred because captured this might be already
+            // destroyed
+            if (_ec.value() == boost::asio::error::operation_aborted ||
+                edpointTrackingTimer->expires_at() == c_steadyClockMin)
+            {
+                clog(VerbosityDebug, "discov") << "endpoint tracking timer was probably cancelled";
+                return;
+            }
+            else if (_ec)
+            {
+                clog(VerbosityDebug, "discov")
+                    << "endpoint tracking timer encountered an error: " << _ec.value() << " "
+                    << _ec.message();
+                return;
+            }
+
+            m_endpointTracker.garbageCollectStatements();
+
+            doEndpointTracking();
+        });
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)

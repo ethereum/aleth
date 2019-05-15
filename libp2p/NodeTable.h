@@ -1,16 +1,15 @@
 // Aleth: Ethereum C++ client, tools and libraries.
-// Copyright 2018 Aleth Authors.
+// Copyright 2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
 #pragma once
 
-#include <algorithm>
-
-#include <boost/integer/static_log2.hpp>
-
 #include "Common.h"
 #include "ENR.h"
+#include "EndpointTracker.h"
 #include <libp2p/UDP.h>
+#include <boost/integer/static_log2.hpp>
+#include <algorithm>
 
 namespace dev
 {
@@ -127,18 +126,22 @@ public:
     {
         if (m_socket->isOpen())
         {
-            // We "cancel" the timers by setting c_steadyClockMin rather than calling cancel()
-            // because cancel won't set the boost error code if the timers have already expired and
-            // the handlers are in the ready queue.
-            //
-            // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
-            // timers
-            auto discoveryTimer{m_discoveryTimer};
-            m_io.post([discoveryTimer] { discoveryTimer->expires_at(c_steadyClockMin); });
-            auto timeoutsTimer{m_timeoutsTimer};
-            m_io.post([timeoutsTimer] { timeoutsTimer->expires_at(c_steadyClockMin); });
+            cancelTimer(m_discoveryTimer);
+            cancelTimer(m_timeoutsTimer);
+            cancelTimer(m_endpointTrackingTimer);
             m_socket->disconnect();
         }
+    }
+
+    void cancelTimer(std::shared_ptr<ba::steady_timer> _timer)
+    {
+        // We "cancel" the timers by setting c_steadyClockMin rather than calling cancel()
+        // because cancel won't set the boost error code if the timers have already expired and
+        // the handlers are in the ready queue.
+        //
+        // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
+        // timers
+        m_io.post([_timer] { _timer->expires_at(c_steadyClockMin); });
     }
 
     /// Set event handler for NodeEntryAdded and NodeEntryDropped events.
@@ -312,6 +315,9 @@ protected:
     /// bring in their replacements
     void doHandleTimeouts();
 
+    // Remove old records in m_endpointTracker.
+    void doEndpointTracking();
+
     // Useful only for tests.
     void setRequestTimeToLive(std::chrono::seconds const& _time) { m_requestTimeToLive = _time; }
     uint32_t nextRequestExpirationTime() const
@@ -329,6 +335,9 @@ protected:
 
     NodeID const m_hostNodeID;
     h256 const m_hostNodeIDHash;
+    // Host IP address given to constructor
+    bi::address const m_hostStaticIP;
+    // Dynamically updated host endpoint
     NodeIPEndpoint m_hostNodeEndpoint;
     ENR const m_hostENR;
     Secret m_secret;												///< This nodes secret key.
@@ -358,8 +367,11 @@ protected:
 
     bool m_allowLocalDiscovery;                                     ///< Allow nodes with local addresses to be included in the discovery process
 
+    EndpointTracker m_endpointTracker;
+
     std::shared_ptr<ba::steady_timer> m_discoveryTimer;
     std::shared_ptr<ba::steady_timer> m_timeoutsTimer;
+    std::shared_ptr<ba::steady_timer> m_endpointTrackingTimer;
 
     ba::io_service& m_io;
 };
