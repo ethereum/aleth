@@ -120,7 +120,6 @@ void RLPXHandshake::setAuthValues(Signature const& _sig, Public const& _remotePu
 
 void RLPXHandshake::readAuth()
 {
-    LOG(m_logger) << "auth from " << m_remote << "@" << m_socket->remoteEndpoint();
     m_authCipher.resize(c_authCipherSizeBytes);
     auto self(shared_from_this());
     ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, c_authCipherSizeBytes),
@@ -129,6 +128,7 @@ void RLPXHandshake::readAuth()
                 transition(ec);
             else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_authCipher), m_auth))
             {
+                LOG(m_logger) << "auth from " << m_remote << "@" << m_socket->remoteEndpoint();
                 bytesConstRef data(&m_auth);
                 Signature sig(data.cropped(0, Signature::size));
                 Public pubk(data.cropped(Signature::size + h256::size, Public::size));
@@ -179,7 +179,6 @@ void RLPXHandshake::readAuthEIP8()
 
 void RLPXHandshake::readAck()
 {
-    LOG(m_logger) << "ack from " << m_remote << "@" << m_socket->remoteEndpoint();
     m_ackCipher.resize(c_ackCipherSizeBytes);
     auto self(shared_from_this());
     ba::async_read(m_socket->ref(), ba::buffer(m_ackCipher, c_ackCipherSizeBytes),
@@ -188,6 +187,7 @@ void RLPXHandshake::readAck()
                 transition(ec);
             else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_ackCipher), m_ack))
             {
+                LOG(m_logger) << "ack from " << m_remote << "@" << m_socket->remoteEndpoint();
                 bytesConstRef(&m_ack).cropped(0, Public::size).copyTo(m_ecdheRemote.ref());
                 bytesConstRef(&m_ack).cropped(Public::size, h256::size).copyTo(m_remoteNonce.ref());
                 m_remoteVersion = c_rlpxVersion;
@@ -339,8 +339,6 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     }
     else if (m_nextState == ReadHello)
     {
-        LOG(m_logger) << "Frame header from " << m_remote << "@" << m_socket->remoteEndpoint();
-
         // Authenticate and decrypt initial hello frame with initial RLPXFrameCoder
         // and request m_host to start session.
         m_nextState = StartSession;
@@ -364,6 +362,9 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         transition();
                         return;
                     }
+
+                    LOG(m_logger) << "Frame header from " << m_remote << "@"
+                                  << m_socket->remoteEndpoint();
 
                     /// authenticate and decrypt header
                     if (!m_io->authAndDecryptHeader(
@@ -400,13 +401,13 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     bytesConstRef(&header).cropped(3).copyTo(&headerRLP);
 
                     /// read padded frame and mac
-                    LOG(m_logger) << "Frame body from " << m_remote << "@"
-                                  << m_socket->remoteEndpoint();
-
                     constexpr size_t byteBoundary = 16;
                     m_handshakeInBuffer.resize(
                         frameSize + ((byteBoundary - (frameSize % byteBoundary)) % byteBoundary) +
                         h128::size);
+
+                    LOG(m_logger) << "Frame header contents validated";
+
                     ba::async_read(m_socket->ref(),
                         boost::asio::buffer(m_handshakeInBuffer, m_handshakeInBuffer.size()),
                         [this, self, headerRLP](boost::system::error_code ec, std::size_t) {
@@ -425,7 +426,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                     transition();
                                     return;
                                 }
-
+                                LOG(m_logger) << "Frame body from " << m_remote << "@"
+                                              << m_socket->remoteEndpoint();
                                 bytesRef frame(&m_handshakeInBuffer);
                                 if (!m_io->authAndDecryptFrame(frame))
                                 {
