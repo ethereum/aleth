@@ -21,7 +21,7 @@ public:
     size_t addEndpointStatement(
         bi::udp::endpoint const& _sourceEndpoint, bi::udp::endpoint const& _externalEndpoint);
 
-    // Find endpoint with max number of statemens
+    // Find endpoint with max number of statements
     bi::udp::endpoint bestEndpoint() const;
 
     // Remove old statements
