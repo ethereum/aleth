@@ -24,8 +24,8 @@ public:
     // Find endpoint with max number of statements
     bi::udp::endpoint bestEndpoint() const;
 
-    // Remove old statements
-    void garbageCollectStatements();
+    // Remove statements older than _timeToLive
+    void garbageCollectStatements(std::chrono::seconds const& _timeToLive);
 
 private:
     using EndpointAndTimePoint =

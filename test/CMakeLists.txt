@@ -25,6 +25,7 @@ set(unittest_sources
 
     unittests/libp2p/capability.cpp
     unittests/libp2p/eip-8.cpp
+    unittests/libp2p/EndpointTrackerTest.cpp
     unittests/libp2p/ENRTest.cpp
     unittests/libp2p/rlpx.cpp
 

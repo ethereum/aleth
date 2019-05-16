@@ -8,11 +8,6 @@ namespace dev
 {
 namespace p2p
 {
-namespace
-{
-// Interval during which each endpoint statement is kept
-constexpr std::chrono::minutes c_statementTimeToLiveMin{5};
-}  // namespace
 
 // Register the statement about endpoint from one othe peers.
 // Returns number of currently kept statements in favor of _externalEndpoint
@@ -40,12 +35,12 @@ bi::udp::endpoint EndpointTracker::bestEndpoint() const
 }
 
 // Remove old statements
-void EndpointTracker::garbageCollectStatements()
+void EndpointTracker::garbageCollectStatements(std::chrono::seconds const& _timeToLive)
 {
-    auto const expiration = std::chrono::steady_clock::now() - c_statementTimeToLiveMin;
+    auto const expiration = std::chrono::steady_clock::now() - _timeToLive;
     for (auto it = m_statementsMap.begin(); it != m_statementsMap.end();)
     {
-        if (it->second.second > expiration)
+        if (it->second.second < expiration)
             it = removeStatement(it);
         else
             ++it;

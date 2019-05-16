@@ -22,6 +22,8 @@ constexpr chrono::milliseconds c_handleTimeoutsIntervalMs{5000};
 constexpr chrono::milliseconds c_removeOldEndpointStatementsIntervalMs{5000};
 // Change external endpoint after this number of peers report new one
 constexpr size_t c_minEndpointTrackStatements{10};
+// Interval during which each endpoint statement is kept
+constexpr std::chrono::minutes c_endpointStatementTimeToLiveMin{5};
 
 }  // namespace
 
@@ -800,7 +802,7 @@ void NodeTable::doHandleTimeouts()
 void NodeTable::doEndpointTracking()
 {
     runBackgroundTask(c_removeOldEndpointStatementsIntervalMs, m_endpointTrackingTimer,
-        [this]() { m_endpointTracker.garbageCollectStatements(); });
+        [this]() { m_endpointTracker.garbageCollectStatements(c_endpointStatementTimeToLiveMin); });
 }
 
 void NodeTable::runBackgroundTask(std::chrono::milliseconds const& _period,
