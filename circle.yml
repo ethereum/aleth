@@ -1,4 +1,3 @@
-
 common-steps:
 
   update-submodules: &update-submodules
@@ -153,18 +152,18 @@ jobs:
       - *test
       - *test-evmc-interpreter
 
-  linux-gcc6: &linux-gcc6
-    environment: &linux-gcc6-environment
-      BUILD_TYPE: RelWithDebInfo
-      CXX: g++-6
-      CC:  gcc-6
-      GCOV: gcov-6
+  linux-gcc8: &linux-gcc8
+    environment: &linux-gcc8-environment
+      BUILD_TYPE: Release
+      CXX: g++-8
+      CC:  gcc-8
+      GCOV: gcov-8
       GENERATOR: Ninja
       BUILD_PARALLEL_JOBS: 3
       TEST_PARALLEL_JOBS: 4
       CMAKE_OPTIONS: -DCOVERAGE=ON -DVMTRACE=ON
     docker:
-      - image: ethereum/cpp-build-env:7
+      - image: ethereum/cpp-build-env:11
     steps:
       - checkout
       - *update-submodules
@@ -182,9 +181,9 @@ jobs:
       - *upload-coverage-data
 
   linux-gcc6-nightly:
-    <<: *linux-gcc6
+    <<: *linux-gcc8
     environment:
-      <<: *linux-gcc6-environment
+      <<: *linux-gcc8-environment
       CMAKE_OPTIONS: -DCOVERAGE=ON -DVMTRACE=ON -DTESTETH_ARGS=--all
 
   macos-xcode90:
@@ -293,7 +292,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - linux-gcc6:
+      - linux-gcc8:
           filters:
             tags:
               only: /.*/
@@ -302,7 +301,7 @@ workflows:
           requires:
             - macos-xcode90
             - linux-clang6
-            - linux-gcc6
+            - linux-gcc8
           filters:
             branches:
               ignore: /.*/
@@ -313,7 +312,7 @@ workflows:
           requires:
             - macos-xcode90
             - linux-clang6
-            - linux-gcc6
+            - linux-gcc8
           filters:
             branches:
               only: docker
@@ -329,5 +328,5 @@ workflows:
             only:
             - master
     jobs:
-      - linux-gcc6-nightly
+      - linux-gcc8-nightly
       - docker-aleth-nightly
