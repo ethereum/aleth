@@ -133,17 +133,6 @@ public:
         }
     }
 
-    void cancelTimer(std::shared_ptr<ba::steady_timer> _timer)
-    {
-        // We "cancel" the timers by setting c_steadyClockMin rather than calling cancel()
-        // because cancel won't set the boost error code if the timers have already expired and
-        // the handlers are in the ready queue.
-        //
-        // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
-        // timers
-        m_io.post([_timer] { _timer->expires_at(c_steadyClockMin); });
-    }
-
     /// Set event handler for NodeEntryAdded and NodeEntryDropped events.
     void setEventHandler(NodeTableEventHandler* _handler) { m_nodeEventHandler.reset(_handler); }
 
@@ -187,7 +176,13 @@ public:
     /// Returns the Node to the corresponding node id or the empty Node if that id is not found.
     Node node(NodeID const& _id);
 
-// protected only for derived classes in tests
+
+    void runBackgroundTask(std::chrono::milliseconds const& _period,
+        std::shared_ptr<ba::steady_timer> _timer, std::function<void()> _f);
+
+    void cancelTimer(std::shared_ptr<ba::steady_timer> _timer);
+
+    // protected only for derived classes in tests
 protected:
     /**
      * NodeValidation is used to record information about the nodes that we have sent Ping to.

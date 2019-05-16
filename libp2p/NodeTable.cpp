@@ -750,7 +750,7 @@ void NodeTable::doDiscovery()
         if (_ec.value() == boost::asio::error::operation_aborted ||
             discoveryTimer->expires_at() == c_steadyClockMin)
         {
-            clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
+            clog(VerbosityDebug, "discov") << "Discovery timer was cancelled";
             return;
         }
         else if (_ec)
@@ -770,24 +770,7 @@ void NodeTable::doDiscovery()
 
 void NodeTable::doHandleTimeouts()
 {
-    m_timeoutsTimer->expires_from_now(c_handleTimeoutsIntervalMs);
-    auto timeoutsTimer{m_timeoutsTimer};
-    m_timeoutsTimer->async_wait([this, timeoutsTimer](boost::system::error_code const& _ec) {
-        // We can't use m_logger if an error occurred because captured this might be already
-        // destroyed
-        if (_ec.value() == boost::asio::error::operation_aborted ||
-            timeoutsTimer->expires_at() == c_steadyClockMin)
-        {
-            clog(VerbosityDebug, "discov") << "evictions timer was probably cancelled";
-            return;
-        }
-        else if (_ec)
-        {
-            clog(VerbosityDebug, "discov")
-                << "evictions timer encountered an error: " << _ec.value() << " " << _ec.message();
-            return;
-        }
-
+    runBackgroundTask(c_handleTimeoutsIntervalMs, m_timeoutsTimer, [this]() {
         vector<shared_ptr<NodeEntry>> nodesToActivate;
         for (auto it = m_sentPings.begin(); it != m_sentPings.end();)
         {
@@ -811,37 +794,50 @@ void NodeTable::doHandleTimeouts()
         // activate replacement nodes and put them into buckets
         for (auto const& n : nodesToActivate)
             noteActiveNode(n);
-
-        doHandleTimeouts();
     });
 }
 
 void NodeTable::doEndpointTracking()
 {
-    m_endpointTrackingTimer->expires_from_now(c_removeOldEndpointStatementsIntervalMs);
-    auto edpointTrackingTimer{m_endpointTrackingTimer};
-    m_endpointTrackingTimer->async_wait(
-        [this, edpointTrackingTimer](boost::system::error_code const& _ec) {
-            // We can't use m_logger if an error occurred because captured this might be already
-            // destroyed
-            if (_ec.value() == boost::asio::error::operation_aborted ||
-                edpointTrackingTimer->expires_at() == c_steadyClockMin)
-            {
-                clog(VerbosityDebug, "discov") << "endpoint tracking timer was probably cancelled";
-                return;
-            }
-            else if (_ec)
-            {
-                clog(VerbosityDebug, "discov")
-                    << "endpoint tracking timer encountered an error: " << _ec.value() << " "
-                    << _ec.message();
-                return;
-            }
+    runBackgroundTask(c_removeOldEndpointStatementsIntervalMs, m_endpointTrackingTimer,
+        [this]() { m_endpointTracker.garbageCollectStatements(); });
+}
 
-            m_endpointTracker.garbageCollectStatements();
+void NodeTable::runBackgroundTask(std::chrono::milliseconds const& _period,
+    std::shared_ptr<ba::steady_timer> _timer, std::function<void()> _f)
+{
+    _timer->expires_from_now(_period);
+    _timer->async_wait([=](boost::system::error_code const& _ec) {
+        // We can't use m_logger if an error occurred because captured this might be already
+        // destroyed
+        if (_ec.value() == boost::asio::error::operation_aborted ||
+            _timer->expires_at() == c_steadyClockMin)
+        {
+            clog(VerbosityDebug, "discov") << "Timer was cancelled";
+            return;
+        }
+        else if (_ec)
+        {
+            clog(VerbosityDebug, "discov")
+                << "Timer error detected: " << _ec.value() << " " << _ec.message();
+            return;
+        }
 
-            doEndpointTracking();
-        });
+        _f();
+
+        runBackgroundTask(_period, move(_timer), move(_f));
+    });
+}
+
+void NodeTable::cancelTimer(std::shared_ptr<ba::steady_timer> _timer)
+{
+    // We "cancel" the timers by setting c_steadyClockMin rather than calling cancel()
+    // because cancel won't set the boost error code if the timers have already expired and
+    // the handlers are in the ready queue.
+    //
+    // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
+    // timers
+    m_io.post([_timer] { _timer->expires_at(c_steadyClockMin); });
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)
