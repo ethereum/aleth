@@ -240,7 +240,7 @@ public:
     template <class T, size_t N>
     std::array<T, N> toArray(int _flags = LaissezFaire) const
     {
-        if (itemCountStrict() != N)
+        if (itemCount() != N)
         {
             if (_flags & ThrowOnFail)
                 BOOST_THROW_EXCEPTION(BadCast());
