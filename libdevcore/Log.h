@@ -128,11 +128,6 @@ inline Logger createLogger(int _severity, std::string const& _channel)
         boost::log::keywords::severity = _severity, boost::log::keywords::channel = _channel);
 }
 
-// Adds the context string to all log messages in the scope
-#define LOG_SCOPED_CONTEXT(context) \
-    BOOST_LOG_SCOPED_THREAD_ATTR("Prefix", boost::log::attributes::constant<std::string>(context));
-
-
 // Below overloads for both const and non-const references are needed, because without overload for
 // non-const reference generic operator<<(formatting_ostream& _strm, T& _value) will be preferred by
 // overload resolution.

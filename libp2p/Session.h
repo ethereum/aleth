@@ -135,7 +135,7 @@ private:
     bool readPacket(uint16_t _capId, unsigned _t, RLP const& _r);
 
     /// Interpret an incoming Session packet.
-    bool interpret(P2pPacketType _t, RLP const& _r);
+    bool interpretP2pCapabilityPacket(P2pPacketType _t, RLP const& _r);
 
     /// @returns true iff the _msg forms a valid message for sending or receiving on the network.
     static bool checkPacket(bytesConstRef _msg);
@@ -177,7 +177,12 @@ private:
 
     std::set<std::string> m_disabledCapabilities;
 
-    std::string const m_logContext;
+    Logger m_netLogger{createLogger(VerbosityDebug, "net")};
+    Logger m_netLoggerDetail{createLogger(VerbosityTrace, "net")};
+    Logger m_netLoggerError{createLogger(VerbosityError, "net")};
+
+    Logger m_capLogger{createLogger(VerbosityDebug, "p2pcap")};
+    Logger m_capLoggerDetail{createLogger(VerbosityTrace, "p2pcap")};
 };
 
 }
