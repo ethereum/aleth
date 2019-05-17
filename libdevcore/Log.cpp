@@ -48,7 +48,8 @@ using log_sink = boost::log::sinks::synchronous_sink<T>;
 namespace dev
 {
 BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
-BOOST_LOG_ATTRIBUTE_KEYWORD(context, "Context", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(prefix, "Prefix", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(suffix, "Suffix", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", int)
 BOOST_LOG_ATTRIBUTE_KEYWORD(threadName, "ThreadName", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
@@ -96,10 +97,13 @@ void formatter(boost::log::record_view const& _rec, boost::log::formatting_ostre
 
     _strm << EthNavy << std::setw(4) << std::left << _rec[threadName] << EthReset " ";
     _strm << std::setw(6) << std::left << _rec[channel] << " ";
-    if (boost::log::expressions::has_attr(context)(_rec))
-        _strm << EthNavy << _rec[context] << EthReset " ";
+    if (boost::log::expressions::has_attr(prefix)(_rec))
+        _strm << EthNavy << _rec[prefix] << EthReset " ";
 
     _strm << _rec[boost::log::expressions::smessage];
+
+    if (boost::log::expressions::has_attr(suffix)(_rec))
+        _strm << " " EthNavy << _rec[suffix] << EthReset;
 }
 
 }  // namespace
