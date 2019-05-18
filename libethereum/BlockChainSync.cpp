@@ -196,7 +196,7 @@ void BlockChainSync::onPeerStatus(EthereumPeer const& _peer)
 
     if (!disconnectReason.empty())
     {
-        LOG(m_logger) << "Peer not suitable for sync: " << disconnectReason;
+        LOG(m_logger) << "Peer (" << _peer.id() << ") not suitable for sync: " << disconnectReason;
         m_host.capabilityHost().disconnect(_peer.id(), p2p::UserReason);
         return;
     }
@@ -255,13 +255,15 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
     if (_force || peerTotalDifficulty > syncingDifficulty)
     {
         if (peerTotalDifficulty > syncingDifficulty)
-            LOG(m_logger) << "Discovered new highest difficulty";
+            LOG(m_logger) << "Discovered new highest difficulty (" << peerTotalDifficulty
+                          << ") from peer (" << peer.id() << ")";
 
         // start sync
         m_syncingTotalDifficulty = peerTotalDifficulty;
         if (m_state == SyncState::Idle || m_state == SyncState::NotSynced)
         {
             LOG(m_loggerInfo) << "Starting full sync";
+            LOG(m_logger) << "Syncing with peer " << peer.id();
             m_state = SyncState::Blocks;
         }
         peer.requestBlockHeaders(peer.latestHash(), 1, 0, false);
@@ -289,9 +291,8 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
     clearPeerDownload(_peerID);
     if (host().bq().knownFull())
     {
-        LOG(m_loggerDetail)
-            << "Waiting for block queue before downloading blocks. Block queue status: "
-            << host().bq().status();
+        LOG(m_loggerDetail) << "Waiting for block queue before downloading blocks from " << _peerID
+                            << ". Block queue status: " << host().bq().status();
         pauseSync();
         return;
     }
@@ -379,7 +380,10 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
             }
         }
         else
-            m_host.peer(_peerID).requestBlockHeaders(start, 1, 0, false);
+        {
+            LOG(m_loggerDetail) << "Requesting block headers from " << _peerID;
+            m_host.peer(_peerID).requestBlockHeaders(start, 1 /* count */, 0 /* skip */, false);
+        }
     }
 }
 
@@ -446,7 +450,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
     DEV_INVARIANT_CHECK;
     size_t itemCount = _r.itemCount();
     LOG(m_logger) << "BlocksHeaders (" << dec << itemCount << " entries) "
-                  << (itemCount ? "" : ": NoMoreHeaders");
+                  << (itemCount ? "" : ": NoMoreHeaders") << " from " << _peerID;
 
     if (m_daoChallengedPeers.find(_peerID) != m_daoChallengedPeers.end())
     {
@@ -462,17 +466,17 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
     clearPeerDownload(_peerID);
     if (m_state != SyncState::Blocks && m_state != SyncState::Waiting)
     {
-        LOG(m_logger) << "Ignoring unexpected blocks";
+        LOG(m_logger) << "Ignoring unexpected blocks from " << _peerID;
         return;
     }
     if (m_state == SyncState::Waiting)
     {
-        LOG(m_loggerDetail) << "Ignored blocks while waiting";
+        LOG(m_loggerDetail) << "Ignored blocks from " << _peerID << " while waiting";
         return;
     }
     if (itemCount == 0)
     {
-        LOG(m_loggerDetail) << "Peer does not have the blocks requested";
+        LOG(m_loggerDetail) << "Peer " << _peerID << " does not have the blocks requested";
         m_host.capabilityHost().updateRating(_peerID, -1);
     }
     for (unsigned i = 0; i < itemCount; i++)
@@ -481,17 +485,19 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
         unsigned blockNumber = static_cast<unsigned>(info.number());
         if (blockNumber < m_chainStartBlock)
         {
-            LOG(m_logger) << "Skipping too old header " << blockNumber;
+            LOG(m_logger) << "Skipping too old header " << blockNumber << " from " << _peerID;
             continue;
         }
         if (haveItem(m_headers, blockNumber))
         {
-            LOG(m_logger) << "Skipping header " << blockNumber << " (already downloaded)";
+            LOG(m_logger) << "Skipping header " << blockNumber << " (already downloaded) from "
+                          << _peerID;
             continue;
         }
         if (blockNumber <= m_lastImportedBlock && m_haveCommonHeader)
         {
-            LOG(m_logger) << "Skipping header " << blockNumber << " (already imported)";
+            LOG(m_logger) << "Skipping header " << blockNumber << " (already imported) from "
+                          << _peerID;
             continue;
         }
         if (blockNumber > m_highestBlock)
@@ -510,7 +516,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
                 // Start of the header chain in m_headers doesn't match our known chain,
                 // probably we've downloaded other fork
                 clog(VerbosityWarning, "sync")
-                    << "Unknown parent of the downloaded headers, restarting sync";
+                    << "Unknown parent of the downloaded headers, restarting sync with " << _peerID;
                 restartSync();
                 return;
             }
@@ -527,8 +533,9 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
                 if ((prevBlock && prevBlock->hash != info.parentHash()) || (blockNumber == m_lastImportedBlock + 1 && info.parentHash() != m_lastImportedBlockHash))
                 {
                     // mismatching parent id, delete the previous block and don't add this one
-                    clog(VerbosityWarning, "sync") << "Unknown block header " << blockNumber << " "
-                                                   << info.hash() << " (Restart syncing)";
+                    clog(VerbosityWarning, "sync")
+                        << "Unknown block header " << blockNumber << " " << info.hash()
+                        << " (Restart syncing with " << _peerID << ")";
                     m_host.capabilityHost().updateRating(_peerID, -1);
                     restartSync();
                     return ;
@@ -537,8 +544,8 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
                 Header const* nextBlock = findItem(m_headers, blockNumber + 1);
                 if (nextBlock && nextBlock->parent != info.hash())
                 {
-                    LOG(m_loggerDetail)
-                        << "Unknown block header " << blockNumber + 1 << " " << nextBlock->hash;
+                    LOG(m_loggerDetail) << "Unknown block header " << blockNumber + 1 << " "
+                                        << nextBlock->hash << " from " << _peerID;
                     // clear following headers
                     unsigned n = blockNumber + 1;
                     auto headers = m_headers.at(n);
@@ -590,20 +597,20 @@ void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
     DEV_INVARIANT_CHECK;
     size_t itemCount = _r.itemCount();
     LOG(m_logger) << "BlocksBodies (" << dec << itemCount << " entries) "
-                  << (itemCount ? "" : ": NoMoreBodies");
+                  << (itemCount ? "" : ": NoMoreBodies") << " from " << _peerID;
     clearPeerDownload(_peerID);
     if (m_state != SyncState::Blocks && m_state != SyncState::Waiting) {
-        LOG(m_logger) << "Ignoring unexpected blocks";
+        LOG(m_logger) << "Ignoring unexpected blocks from " << _peerID;
         return;
     }
     if (m_state == SyncState::Waiting)
     {
-        LOG(m_loggerDetail) << "Ignored blocks while waiting";
+        LOG(m_loggerDetail) << "Ignored blocks from " << _peerID << " while waiting";
         return;
     }
     if (itemCount == 0)
     {
-        LOG(m_loggerDetail) << "Peer does not have the blocks requested";
+        LOG(m_loggerDetail) << "Peer (" << _peerID << ") does not have the blocks requested";
         m_host.capabilityHost().updateRating(_peerID, -1);
     }
     for (unsigned i = 0; i < itemCount; i++)
@@ -617,13 +624,14 @@ void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
         auto iter = m_headerIdToNumber.find(id);
         if (iter == m_headerIdToNumber.end() || !haveItem(m_headers, iter->second))
         {
-            LOG(m_loggerDetail) << "Ignored unknown block body";
+            LOG(m_loggerDetail) << "Ignored unknown block body from " << _peerID;
             continue;
         }
         unsigned blockNumber = iter->second;
         if (haveItem(m_bodies, blockNumber))
         {
-            LOG(m_logger) << "Skipping already downloaded block body " << blockNumber;
+            LOG(m_logger) << "Skipping already downloaded block body " << blockNumber << " from "
+                          << _peerID;
             continue;
         }
         m_headerIdToNumber.erase(id);
@@ -755,7 +763,7 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
     unsigned blockNumber = static_cast<unsigned>(info.number());
     if (blockNumber > (m_lastImportedBlock + 1))
     {
-        LOG(m_loggerDetail) << "Received unknown new block";
+        LOG(m_loggerDetail) << "Received unknown new block from " << _peerID;
         // Update the hash of highest known block of the peer.
         // syncPeer will then request the highest block header to properly restart syncing
         peer.setLatestHash(h);
@@ -781,8 +789,9 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
         {
             if (!m_bodies.empty())
             {
-                LOG(m_loggerDetail)
-                    << "Block headers map is empty, but block bodies map is not. Force-clearing.";
+                LOG(m_loggerDetail) << "Block headers map is empty, but block bodies map is not. "
+                                       "Force-clearing (peer: "
+                                    << _peerID << ")";
                 m_bodies.clear();
             }
             completeSync();
@@ -815,7 +824,8 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
         u256 totalDifficulty = _r[1].toInt<u256>();
         if (totalDifficulty > peer.totalDifficulty())
         {
-            LOG(m_loggerDetail) << "Received block with no known parent. Peer needs syncing...";
+            LOG(m_loggerDetail) << "Received block with no known parent. Peer (" << _peerID
+                                << ") needs syncing...";
             syncPeer(_peerID, true);
         }
         break;
@@ -882,10 +892,12 @@ void BlockChainSync::onPeerNewHashes(
     auto& peer = m_host.peer(_peerID);
     if (peer.isConversing())
     {
-        LOG(m_loggerDetail) << "Ignoring new hashes since we're already downloading.";
+        LOG(m_loggerDetail) << "Ignoring new hashes since we're already downloading (peer: "
+                            << _peerID << ")";
         return;
     }
-    LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing.";
+    LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing (peer: " << _peerID
+                        << ")";
     unsigned knowns = 0;
     unsigned unknowns = 0;
     unsigned maxHeight = 0;
@@ -899,7 +911,7 @@ void BlockChainSync::onPeerNewHashes(
             knowns++;
         else if (status == QueueStatus::Bad)
         {
-            cwarn << "block hash bad!" << h << ". Bailing...";
+            cwarn << "block hash bad!" << h << ". Bailing... (peer: " << _peerID << ")";
             return;
         }
         else if (status == QueueStatus::Unknown)
@@ -914,10 +926,11 @@ void BlockChainSync::onPeerNewHashes(
         else
             knowns++;
     }
-    LOG(m_logger) << knowns << " knowns, " << unknowns << " unknowns";
+    LOG(m_logger) << knowns << " knowns, " << unknowns << " unknowns (peer: " << _peerID << ")";
     if (unknowns > 0)
     {
-        LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing.";
+        LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing with "
+                            << _peerID;
         syncPeer(_peerID, true);
     }
 }
