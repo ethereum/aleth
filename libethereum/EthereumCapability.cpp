@@ -241,9 +241,8 @@ public:
                 blockHash = {};
         }
 
-        auto nextHash = [this](h256 _h, unsigned _step)
-        {
-            static const unsigned c_blockNumberUsageLimit = 1000;
+        auto nextHash = [this](h256 _h, unsigned _step) {
+            constexpr unsigned c_blockNumberUsageLimit = 1000;
 
             const auto lastBlock = m_chain.number();
             const auto limitBlock = lastBlock > c_blockNumberUsageLimit ? lastBlock - c_blockNumberUsageLimit : 0; // find the number of the block below which we don't expect BC changes.
@@ -657,8 +656,9 @@ bool EthereumCapability::interpretCapabilityPacket(
             auto const latestHash = _r[3].toHash<h256>();
             auto const genesisHash = _r[4].toHash<h256>();
 
-            LOG(m_logger) << "Status: " << peerProtocolVersion << " / " << networkId << " / "
-                          << genesisHash << ", TD: " << totalDifficulty << " = " << latestHash;
+            LOG(m_logger) << "Status from " << _peerID << ": " << peerProtocolVersion << " / "
+                          << networkId << " / " << genesisHash << ", TD: " << totalDifficulty
+                          << " = " << latestHash;
 
             peer.setStatus(
                 peerProtocolVersion, networkId, totalDifficulty, latestHash, genesisHash);
@@ -686,7 +686,8 @@ bool EthereumCapability::interpretCapabilityPacket(
 
             if (skip > std::numeric_limits<unsigned>::max() - 1)
             {
-                cnetdetails << "Requested block skip is too big: " << skip;
+                cnetdetails << "Requested block skip is too big: " << skip << " (peer: " << _peerID
+                            << ")";
                 break;
             }
 
@@ -703,8 +704,8 @@ bool EthereumCapability::interpretCapabilityPacket(
         case BlockHeadersPacket:
         {
             if (peer.asking() != Asking::BlockHeaders)
-                LOG(m_loggerImpolite)
-                    << "Peer giving us block headers when we didn't ask for them.";
+                LOG(m_loggerImpolite) << "Peer (" << _peerID
+                                      << ") giving us block headers when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -715,11 +716,12 @@ bool EthereumCapability::interpretCapabilityPacket(
         case GetBlockBodiesPacket:
         {
             unsigned count = static_cast<unsigned>(_r.itemCount());
-            cnetlog << "GetBlockBodies (" << dec << count << " entries)";
+            cnetlog << "GetBlockBodies (" << dec << count << " entries) from " << _peerID;
 
             if (!count)
             {
-                LOG(m_loggerImpolite) << "Zero-entry GetBlockBodies: Not replying.";
+                LOG(m_loggerImpolite)
+                    << "Zero-entry GetBlockBodies: Not replying. (peer: " << _peerID << ")";
                 m_host->updateRating(_peerID, -10);
                 break;
             }
@@ -736,7 +738,8 @@ bool EthereumCapability::interpretCapabilityPacket(
         case BlockBodiesPacket:
         {
             if (peer.asking() != Asking::BlockBodies)
-                LOG(m_loggerImpolite) << "Peer giving us block bodies when we didn't ask for them.";
+                LOG(m_loggerImpolite) << "Peer (" << _peerID
+                                      << ") giving us block bodies when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -754,7 +757,7 @@ bool EthereumCapability::interpretCapabilityPacket(
             unsigned itemCount = _r.itemCount();
 
             cnetlog << "BlockHashes (" << dec << itemCount << " entries) "
-                    << (itemCount ? "" : " : NoMoreHashes");
+                    << (itemCount ? "" : " : NoMoreHashes") << " from " << _peerID;
 
             if (itemCount > c_maxIncomingNewHashes)
             {
@@ -774,11 +777,11 @@ bool EthereumCapability::interpretCapabilityPacket(
             unsigned count = static_cast<unsigned>(_r.itemCount());
             if (!count)
             {
-                LOG(m_loggerImpolite) << "Zero-entry GetNodeData: Not replying.";
+                LOG(m_loggerImpolite) << "Zero-entry GetNodeData: Not replying to " << _peerID;
                 m_host->updateRating(_peerID, -10);
                 break;
             }
-            cnetlog << "GetNodeData (" << dec << count << " entries)";
+            cnetlog << "GetNodeData (" << dec << count << " entries) from " << _peerID;
 
             strings const data = m_hostData->nodeData(_r);
 
@@ -795,11 +798,11 @@ bool EthereumCapability::interpretCapabilityPacket(
             unsigned count = static_cast<unsigned>(_r.itemCount());
             if (!count)
             {
-                LOG(m_loggerImpolite) << "Zero-entry GetReceipts: Not replying.";
+                LOG(m_loggerImpolite) << "Zero-entry GetReceipts: Not replying to " << _peerID;
                 m_host->updateRating(_peerID, -10);
                 break;
             }
-            cnetlog << "GetReceipts (" << dec << count << " entries)";
+            cnetlog << "GetReceipts (" << dec << count << " entries) from " << _peerID;
 
             pair<bytes, unsigned> const rlpAndItemCount = m_hostData->receipts(_r);
 
@@ -813,7 +816,8 @@ bool EthereumCapability::interpretCapabilityPacket(
         case NodeDataPacket:
         {
             if (peer.asking() != Asking::NodeData)
-                LOG(m_loggerImpolite) << "Peer giving us node data when we didn't ask for them.";
+                LOG(m_loggerImpolite)
+                    << "Peer (" << _peerID << ") giving us node data when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -824,7 +828,8 @@ bool EthereumCapability::interpretCapabilityPacket(
         case ReceiptsPacket:
         {
             if (peer.asking() != Asking::Receipts)
-                LOG(m_loggerImpolite) << "Peer giving us receipts when we didn't ask for them.";
+                LOG(m_loggerImpolite)
+                    << "Peer (" << _peerID << ") giving us receipts when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -838,12 +843,13 @@ bool EthereumCapability::interpretCapabilityPacket(
     }
     catch (Exception const&)
     {
-        cnetlog << "Peer causing an Exception: "
-                << boost::current_exception_diagnostic_information() << " " << _r;
+        cnetlog << "Peer " << _peerID
+                << " causing an Exception: " << boost::current_exception_diagnostic_information()
+                << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        cnetlog << "Peer causing an exception: " << _e.what() << " " << _r;
+        cnetlog << "Peer " << _peerID << " causing an exception: " << _e.what() << " " << _r;
     }
 
     return true;
