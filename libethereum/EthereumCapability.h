@@ -189,6 +189,8 @@ private:
     mutable std::mt19937_64 m_urng;  // Mersenne Twister psuedo-random number generator
 
     Logger m_logger{createLogger(VerbosityDebug, "ethcap")};
+    Logger m_loggerDetail{createLogger(VerbosityTrace, "ethcap")};
+    Logger m_loggerError{createLogger(VerbosityError, "ethcap")};
     /// Logger for messages about impolite behaivour of peers.
     Logger m_loggerImpolite{createLogger(VerbosityDebug, "impolite")};
 };
