@@ -90,8 +90,8 @@ protected:
     void readAckEIP8();
     
     /// Closes connection and ends transitions.
-    void error();
-    
+    void error(boost::system::error_code _ech = boost::system::error_code());
+
     /// Performs transition for m_nextState.
     virtual void transition(boost::system::error_code _ech = boost::system::error_code());
 

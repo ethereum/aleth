@@ -97,7 +97,7 @@ void RLPXHandshake::writeAck()
 
 void RLPXHandshake::writeAckEIP8()
 {
-    LOG(m_logger) << "EIP-8 to";
+    LOG(m_logger) << "EIP-8 ack to";
     RLPStream rlp;
     rlp.appendList(3)
         << m_ecdheLocal.pub()
@@ -155,7 +155,7 @@ void RLPXHandshake::readAuth()
 void RLPXHandshake::readAuthEIP8()
 {
     assert(m_authCipher.size() == c_authCipherSizeBytes);
-    uint16_t size(m_authCipher[0]<<8 | m_authCipher[1]);
+    uint16_t const size(m_authCipher[0] << 8 | m_authCipher[1]);
     LOG(m_logger) << size << " bytes EIP-8 auth from";
     m_authCipher.resize((size_t)size + 2);
     auto rest = ba::buffer(ba::buffer(m_authCipher) + c_authCipherSizeBytes);
@@ -210,7 +210,7 @@ void RLPXHandshake::readAck()
 void RLPXHandshake::readAckEIP8()
 {
     assert(m_ackCipher.size() == c_ackCipherSizeBytes);
-    uint16_t size(m_ackCipher[0]<<8 | m_ackCipher[1]);
+    uint16_t const size(m_ackCipher[0] << 8 | m_ackCipher[1]);
     LOG(m_logger) << size << " bytes EIP-8 ack from";
     m_ackCipher.resize((size_t)size + 2);
     auto rest = ba::buffer(ba::buffer(m_ackCipher) + c_ackCipherSizeBytes);
@@ -245,12 +245,18 @@ void RLPXHandshake::cancel()
     m_io.reset();
 }
 
-void RLPXHandshake::error()
+void RLPXHandshake::error(boost::system::error_code _ech)
 {
+    stringstream errorStream;
+    errorStream << "Handshake failed";
+    if (_ech)
+        errorStream << " (I/O error: " << _ech.message() << ")";
     if (remoteSocketConnected())
-        LOG(m_logger) << "Disconnecting (Handshake Failed)";
+        errorStream << ". Disconnecting...";
     else
-        LOG(m_logger) << "Handshake Failed (Connection reset by peer)";
+        errorStream << " (Connection reset by peer)";
+
+    LOG(m_logger) << errorStream.str();
 
     cancel();
 }
@@ -262,12 +268,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     
     if (_ech || m_nextState == Error || m_cancel)
     {
-        stringstream errorStream;
-        errorStream << "Handshake Failed ";
-        if (_ech)
-            errorStream << "(I/O Error: " << _ech.message() << ")";
-        LOG(m_logger) << errorStream.str();
-        return error();
+        return error(_ech);
     }
     
     auto self(shared_from_this());
