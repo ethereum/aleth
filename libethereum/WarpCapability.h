@@ -129,6 +129,9 @@ private:
     std::shared_ptr<WarpPeerObserverFace> m_peerObserver;
 
     std::unordered_map<NodeID, WarpPeerStatus> m_peers;
+
+    Logger m_logger{createLogger(VerbosityDebug, "warpcap")};
+    Logger m_loggerError{createLogger(VerbosityError, "warpcap")};
 };
 
 }  // namespace eth
