@@ -515,7 +515,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
             {
                 // Start of the header chain in m_headers doesn't match our known chain,
                 // probably we've downloaded other fork
-                clog(VerbosityWarning, "sync")
+                LOG(m_loggerWarning)
                     << "Unknown parent of the downloaded headers, restarting sync with " << _peerID;
                 restartSync();
                 return;
@@ -533,7 +533,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
                 if ((prevBlock && prevBlock->hash != info.parentHash()) || (blockNumber == m_lastImportedBlock + 1 && info.parentHash() != m_lastImportedBlockHash))
                 {
                     // mismatching parent id, delete the previous block and don't add this one
-                    clog(VerbosityWarning, "sync")
+                    LOG(m_loggerWarning)
                         << "Unknown block header " << blockNumber << " " << info.hash()
                         << " (Restart syncing with " << _peerID << ")";
                     m_host.capabilityHost().updateRating(_peerID, -1);
@@ -713,7 +713,7 @@ void BlockChainSync::collectBlocks()
 
     if (host().bq().unknownFull())
     {
-        clog(VerbosityWarning, "sync") << "Too many unknown blocks, restarting sync";
+        LOG(m_loggerWarning) << "Too many unknown blocks, restarting sync";
         restartSync();
         return;
     }
@@ -763,7 +763,8 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
     unsigned blockNumber = static_cast<unsigned>(info.number());
     if (blockNumber > (m_lastImportedBlock + 1))
     {
-        LOG(m_loggerDetail) << "Received unknown new block from " << _peerID;
+        LOG(m_loggerDetail) << "Received unknown new block (" << blockNumber << ") from "
+                            << _peerID;
         // Update the hash of highest known block of the peer.
         // syncPeer will then request the highest block header to properly restart syncing
         peer.setLatestHash(h);
@@ -824,7 +825,8 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
         u256 totalDifficulty = _r[1].toInt<u256>();
         if (totalDifficulty > peer.totalDifficulty())
         {
-            LOG(m_loggerDetail) << "Received block with no known parent. Peer (" << _peerID
+            LOG(m_loggerDetail) << "Received block (" << blockNumber
+                                << ") with no known parent. Peer (" << _peerID
                                 << ") needs syncing...";
             syncPeer(_peerID, true);
         }
@@ -892,12 +894,12 @@ void BlockChainSync::onPeerNewHashes(
     auto& peer = m_host.peer(_peerID);
     if (peer.isConversing())
     {
-        LOG(m_loggerDetail) << "Ignoring new hashes since we're already downloading (peer: "
-                            << _peerID << ")";
+        LOG(m_loggerDetail) << "Ignoring new hashes since we're already downloading from peer "
+                            << _peerID;
         return;
     }
-    LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing (peer: " << _peerID
-                        << ")";
+    LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing with peer "
+                        << _peerID;
     unsigned knowns = 0;
     unsigned unknowns = 0;
     unsigned maxHeight = 0;
@@ -911,7 +913,8 @@ void BlockChainSync::onPeerNewHashes(
             knowns++;
         else if (status == QueueStatus::Bad)
         {
-            cwarn << "block hash bad!" << h << ". Bailing... (peer: " << _peerID << ")";
+            LOG(m_loggerWarning) << "block hash bad!" << h << ". Bailing... (peer: " << _peerID
+                                 << ")";
             return;
         }
         else if (status == QueueStatus::Unknown)
@@ -929,7 +932,7 @@ void BlockChainSync::onPeerNewHashes(
     LOG(m_logger) << knowns << " knowns, " << unknowns << " unknowns (peer: " << _peerID << ")";
     if (unknowns > 0)
     {
-        LOG(m_loggerDetail) << "Not syncing and new block hash discovered: syncing with "
+        LOG(m_loggerDetail) << "Not syncing and new block hash discovered: start syncing with "
                             << _peerID;
         syncPeer(_peerID, true);
     }
