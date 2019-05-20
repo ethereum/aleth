@@ -311,8 +311,9 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
     for (auto cap: caps)
         capslog << "(" << cap.first << "," << dec << cap.second << ")";
 
-    cnetlog << "Starting peer session with " << clientVersion << " V[" << protocolVersion << "]"
-            << " " << _id << " " << showbase << capslog.str() << " " << dec << listenPort;
+    cnetlog << "Starting peer session with " << clientVersion << " (protocol: V" << protocolVersion
+            << ") " << _id << " " << showbase << "capabilities: " << capslog.str() << " " << dec
+            << "port: " << listenPort;
 
     // create session so disconnects are managed
     shared_ptr<SessionFace> session = make_shared<Session>(this, move(_io), _s, peer,
@@ -659,8 +660,8 @@ void Host::connect(shared_ptr<Peer> const& _p)
 
     if (isHandshaking(_p->id))
     {
-        cwarn << "Aborted connection. RLPX handshake to peer already in progress: " << _p->id << "@"
-              << _p->endpoint;
+        cwarn << "Aborted connection. RLPX handshake with peer already in progress: " << _p->id
+              << "@" << _p->endpoint;
         return;
     }
 

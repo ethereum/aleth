@@ -135,7 +135,7 @@ private:
     bool readPacket(uint16_t _capId, unsigned _t, RLP const& _r);
 
     /// Interpret an incoming Session packet.
-    bool interpretP2pCapabilityPacket(P2pPacketType _t, RLP const& _r);
+    bool interpretCapabilityPacket(P2pPacketType _t, RLP const& _r);
 
     /// @returns true iff the _msg forms a valid message for sending or receiving on the network.
     static bool checkPacket(bytesConstRef _msg);

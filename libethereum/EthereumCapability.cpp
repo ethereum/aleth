@@ -704,8 +704,8 @@ bool EthereumCapability::interpretCapabilityPacket(
         case BlockHeadersPacket:
         {
             if (peer.asking() != Asking::BlockHeaders)
-                LOG(m_loggerImpolite) << "Peer (" << _peerID
-                                      << ") giving us block headers when we didn't ask for them.";
+                LOG(m_loggerImpolite) << "Peer " << _peerID
+                                      << " giving us block headers when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -737,8 +737,8 @@ bool EthereumCapability::interpretCapabilityPacket(
         case BlockBodiesPacket:
         {
             if (peer.asking() != Asking::BlockBodies)
-                LOG(m_loggerImpolite) << "Peer (" << _peerID
-                                      << ") giving us block bodies when we didn't ask for them.";
+                LOG(m_loggerImpolite)
+                    << "Peer " << _peerID << " giving us block bodies when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -816,7 +816,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         {
             if (peer.asking() != Asking::NodeData)
                 LOG(m_loggerImpolite)
-                    << "Peer (" << _peerID << ") giving us node data when we didn't ask for them.";
+                    << "Peer " << _peerID << " giving us node data when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -828,7 +828,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         {
             if (peer.asking() != Asking::Receipts)
                 LOG(m_loggerImpolite)
-                    << "Peer (" << _peerID << ") giving us receipts when we didn't ask for them.";
+                    << "Peer " << _peerID << " giving us receipts when we didn't ask for them.";
             else
             {
                 setIdle(_peerID);
@@ -842,12 +842,12 @@ bool EthereumCapability::interpretCapabilityPacket(
     }
     catch (Exception const&)
     {
-        LOG(m_loggerError) << "Peer (" << _peerID << ") causing an exception: "
+        LOG(m_loggerError) << "Peer " << _peerID << " causing an exception: "
                            << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        LOG(m_loggerError) << "Peer (" << _peerID << ") causing an exception: " << _e.what() << " "
+        LOG(m_loggerError) << "Peer " << _peerID << " causing an exception: " << _e.what() << " "
                            << _r;
     }
 

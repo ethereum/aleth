@@ -252,7 +252,7 @@ void RLPXHandshake::error(boost::system::error_code _ech)
     if (_ech)
         errorStream << " (I/O error: " << _ech.message() << ")";
     if (remoteSocketConnected())
-        errorStream << ". Disconnecting...";
+        errorStream << ". Disconnecting from";
     else
         errorStream << " (Connection reset by peer)";
 
@@ -278,7 +278,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     {
         if (!_ec)
         {
-            LOG(m_logger) << "Disconnecting (Handshake Timeout)";
+            LOG(m_logger) << "Disconnecting (Handshake Timeout) from";
             cancel();
         }
     });

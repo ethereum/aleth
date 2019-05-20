@@ -457,12 +457,12 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
     }
     catch (Exception const&)
     {
-        LOG(m_loggerError) << "Warp Peer (" << _peerID << ") causing an exception: "
+        LOG(m_loggerError) << "Warp Peer " << _peerID << " causing an exception: "
                            << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        LOG(m_loggerError) << "Warp Peer (" << _peerID << ") causing an exception: " << _e.what()
+        LOG(m_loggerError) << "Warp Peer " << _peerID << " causing an exception: " << _e.what()
                            << " " << _r;
     }
 

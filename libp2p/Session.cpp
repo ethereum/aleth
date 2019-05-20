@@ -104,7 +104,7 @@ bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
         // v4 frame headers are useless, offset packet type used
         // v5 protocol type is in header, packet type not offset
         if (_capId == 0 && _packetType < UserPacket)
-            return interpretP2pCapabilityPacket(static_cast<P2pPacketType>(_packetType), _r);
+            return interpretCapabilityPacket(static_cast<P2pPacketType>(_packetType), _r);
 
         for (auto const& cap : m_capabilities)
         {
@@ -135,7 +135,7 @@ bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
     return true;
 }
 
-bool Session::interpretP2pCapabilityPacket(P2pPacketType _t, RLP const& _r)
+bool Session::interpretCapabilityPacket(P2pPacketType _t, RLP const& _r)
 {
     LOG(m_capLoggerDetail) << p2pPacketTypeToString(_t) << " from";
     switch (_t)
@@ -208,7 +208,7 @@ bool Session::checkPacket(bytesConstRef _msg)
 void Session::send(bytes&& _msg)
 {
     bytesConstRef msg(&_msg);
-    LOG(m_netLoggerDetail) << "Sending " << capabilityPacketTypeToString(_msg[0]) << " to";
+    LOG(m_netLoggerDetail) << capabilityPacketTypeToString(_msg[0]) << " to";
     if (!checkPacket(msg))
         LOG(m_netLoggerError) << "Invalid packet constructed. Size: " << msg.size()
                               << " bytes, message: " << toHex(msg);
@@ -282,8 +282,7 @@ void Session::drop(DisconnectReason _reason)
         try
         {
             boost::system::error_code ec;
-            LOG(m_netLoggerDetail)
-                << "Closing " << socket.remote_endpoint(ec) << " (" << reasonOf(_reason) << ")";
+            LOG(m_netLoggerDetail) << "Closing (" << reasonOf(_reason) << ") connection with";
             socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
             socket.close();
         }

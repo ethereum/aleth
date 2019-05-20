@@ -196,7 +196,7 @@ void BlockChainSync::onPeerStatus(EthereumPeer const& _peer)
 
     if (!disconnectReason.empty())
     {
-        LOG(m_logger) << "Peer (" << _peer.id() << ") not suitable for sync: " << disconnectReason;
+        LOG(m_logger) << "Peer " << _peer.id() << " not suitable for sync: " << disconnectReason;
         m_host.capabilityHost().disconnect(_peer.id(), p2p::UserReason);
         return;
     }
@@ -256,7 +256,7 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
     {
         if (peerTotalDifficulty > syncingDifficulty)
             LOG(m_logger) << "Discovered new highest difficulty (" << peerTotalDifficulty
-                          << ") from peer (" << peer.id() << ")";
+                          << ") from peer " << peer.id();
 
         // start sync
         m_syncingTotalDifficulty = peerTotalDifficulty;
@@ -610,7 +610,7 @@ void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
     }
     if (itemCount == 0)
     {
-        LOG(m_loggerDetail) << "Peer (" << _peerID << ") does not have the blocks requested";
+        LOG(m_loggerDetail) << "Peer " << _peerID << " does not have the blocks requested";
         m_host.capabilityHost().updateRating(_peerID, -1);
     }
     for (unsigned i = 0; i < itemCount; i++)
@@ -826,8 +826,8 @@ void BlockChainSync::onPeerNewBlock(NodeID const& _peerID, RLP const& _r)
         if (totalDifficulty > peer.totalDifficulty())
         {
             LOG(m_loggerDetail) << "Received block (" << blockNumber
-                                << ") with no known parent. Peer (" << _peerID
-                                << ") needs syncing...";
+                                << ") with no known parent. Peer " << _peerID
+                                << " needs syncing...";
             syncPeer(_peerID, true);
         }
         break;
