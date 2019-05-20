@@ -341,7 +341,6 @@ protected:
     NodeIPEndpoint m_hostNodeEndpoint;
     ENR m_hostENR;
     mutable Mutex m_hostENRMutex;
-    IdentityV4Info m_hostENRInfo;
     Secret m_secret;												///< This nodes secret key.
 
     mutable Mutex x_nodes;											///< LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.

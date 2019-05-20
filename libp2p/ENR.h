@@ -14,6 +14,7 @@ DEV_SIMPLE_EXCEPTION(ENRIsTooBig);
 DEV_SIMPLE_EXCEPTION(ENRSignatureIsInvalid);
 DEV_SIMPLE_EXCEPTION(ENRKeysAreNotUniqueSorted);
 DEV_SIMPLE_EXCEPTION(ENRUnknownIdentityScheme);
+DEV_SIMPLE_EXCEPTION(ENRSecp256k1NotFound);
 DEV_SIMPLE_EXCEPTION(ENRUnsupportedIPAddress);
 
 /// Class representing Ethereum Node Record - see EIP-778
@@ -37,8 +38,15 @@ public:
         SignFunction const& _signFunction);
 
     uint64_t sequenceNumber() const { return m_seq; }
-    std::map<std::string, bytes> const& keyValuePairs() const { return m_map; }
     bytes const& signature() const { return m_signature; }
+
+    std::map<std::string, bytes> const& keyValuePairs() const { return m_keyValuePairs; }
+
+    // Pre-defined keys
+    std::string id() const;
+    boost::asio::ip::address ip() const;
+    uint16_t tcpPort() const;
+    uint16_t udpPort() const;
 
     // Serialize to given RLP stream
     void streamRLP(RLPStream& _s) const;
@@ -49,20 +57,12 @@ public:
 
 private:
     uint64_t m_seq = 0;
-    std::map<std::string, bytes> m_map;
+    std::map<std::string, bytes> m_keyValuePairs;
     bytes m_signature;
 
     bytes content() const;
-    size_t contentRlpListItemCount() const { return m_map.size() * 2 + 1; }
+    size_t contentRlpListItemCount() const { return m_keyValuePairs.size() * 2 + 1; }
     void streamContent(RLPStream& _s) const;
-};
-
-struct IdentityV4Info
-{
-    PublicCompressed publicKey;
-    boost::asio::ip::address ip;
-    uint16_t tcpPort = 0;
-    uint16_t udpPort = 0;
 };
 
 class IdentitySchemeV4
@@ -76,7 +76,7 @@ public:
 
     static ENR parseENR(RLP const& _rlp);
 
-    static IdentityV4Info info(ENR const& _enr);
+    static PublicCompressed publicKey(ENR const& _enr);
 
 private:
     static bytes sign(bytesConstRef _data, Secret const& _secret);

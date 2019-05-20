@@ -56,18 +56,18 @@ ENR::ENR(RLP const& _rlp, VerifyFunction const& _verifyFunction)
     }
 
     // transfer to map, this will order them
-    m_map.insert(keyValuePairs.begin(), keyValuePairs.end());
+    m_keyValuePairs.insert(keyValuePairs.begin(), keyValuePairs.end());
 
-    if (!std::equal(keyValuePairs.begin(), keyValuePairs.end(), m_map.begin()))
+    if (!std::equal(keyValuePairs.begin(), keyValuePairs.end(), m_keyValuePairs.begin()))
         BOOST_THROW_EXCEPTION(ENRKeysAreNotUniqueSorted());
 
-    if (!_verifyFunction(m_map, dev::ref(m_signature), dev::ref(content())))
+    if (!_verifyFunction(m_keyValuePairs, dev::ref(m_signature), dev::ref(content())))
         BOOST_THROW_EXCEPTION(ENRSignatureIsInvalid());
 }
 
 ENR::ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValuePairs,
     SignFunction const& _signFunction)
-  : m_seq{_seq}, m_map{_keyValuePairs}, m_signature{_signFunction(dev::ref(content()))}
+  : m_seq{_seq}, m_keyValuePairs{_keyValuePairs}, m_signature{_signFunction(dev::ref(content()))}
 {
 }
 
@@ -89,7 +89,7 @@ void ENR::streamRLP(RLPStream& _s) const
 void ENR::streamContent(RLPStream& _s) const
 {
     _s << m_seq;
-    for (auto const& keyValue : m_map)
+    for (auto const& keyValue : m_keyValuePairs)
     {
         _s << keyValue.first;
         _s.appendRaw(keyValue.second);
@@ -100,6 +100,41 @@ ENR ENR::update(
     std::map<std::string, bytes> const& _keyValuePairs, SignFunction const& _signFunction) const
 {
     return ENR(m_seq + 1, _keyValuePairs, _signFunction);
+}
+
+std::string ENR::id() const
+{
+    auto itID = m_keyValuePairs.find(c_keyID);
+    return itID == m_keyValuePairs.end() ? "" : RLP(itID->second).toString(RLP::VeryStrict);
+}
+
+boost::asio::ip::address ENR::ip() const
+{
+    auto itIP = m_keyValuePairs.find(c_keyIP);
+    if (itIP == m_keyValuePairs.end())
+        return {};
+
+    auto rlpAddress = RLP{itIP->second};
+    auto const addressBytes = rlpAddress.toBytesConstRef();
+
+    if (rlpAddress.size() == 4)
+        return ba::ip::address_v4{bytesToAddress<4>(addressBytes)};
+    else if (rlpAddress.size() == 16)
+        return ba::ip::address_v6{bytesToAddress<16>(addressBytes)};
+    else
+        BOOST_THROW_EXCEPTION(ENRUnsupportedIPAddress());
+}
+
+uint16_t ENR::tcpPort() const
+{
+    auto itTCP = m_keyValuePairs.find(c_keyTCP);
+    return itTCP == m_keyValuePairs.end() ? 0 : RLP{itTCP->second}.toInt<uint16_t>();
+}
+
+uint16_t ENR::udpPort() const
+{
+    auto itUDP = m_keyValuePairs.find(c_keyUDP);
+    return itUDP == m_keyValuePairs.end() ? 0 : RLP{itUDP->second}.toInt<uint16_t>();
 }
 
 ENR IdentitySchemeV4::createENR(Secret const& _secret, boost::asio::ip::address const& _ip,
@@ -170,7 +205,7 @@ ENR IdentitySchemeV4::parseENR(RLP const& _rlp)
     return ENR{_rlp, verifyFunction};
 }
 
-IdentityV4Info IdentitySchemeV4::info(ENR const& _enr)
+PublicCompressed IdentitySchemeV4::publicKey(ENR const& _enr)
 {
     auto const& keyValuePairs = _enr.keyValuePairs();
 
@@ -178,45 +213,22 @@ IdentityV4Info IdentitySchemeV4::info(ENR const& _enr)
     if (itID == keyValuePairs.end() || RLP(itID->second).toString(RLP::VeryStrict) != c_IDV4)
         BOOST_THROW_EXCEPTION(ENRUnknownIdentityScheme());
 
-    IdentityV4Info info;
     auto itKey = keyValuePairs.find(c_keySecp256k1);
-    if (itKey != keyValuePairs.end())
-        info.publicKey = RLP{itKey->second}.toHash<PublicCompressed>();
+    if (itKey == keyValuePairs.end())
+        BOOST_THROW_EXCEPTION(ENRSecp256k1NotFound());
 
-    auto itIP = keyValuePairs.find(c_keyIP);
-    if (itIP != keyValuePairs.end())
-    {
-        auto rlpAddress = RLP{itIP->second};
-        auto const addressBytes = rlpAddress.toBytesConstRef();
-
-        if (rlpAddress.size() == 4)
-            info.ip = ba::ip::address_v4{bytesToAddress<4>(addressBytes)};
-        else if (rlpAddress.size() == 16)
-            info.ip = ba::ip::address_v6{bytesToAddress<16>(addressBytes)};
-        else
-            BOOST_THROW_EXCEPTION(ENRUnsupportedIPAddress());
-    }
-
-    auto itTCP = keyValuePairs.find(c_keyTCP);
-    if (itTCP != keyValuePairs.end())
-        info.tcpPort = RLP{itTCP->second}.toInt<uint16_t>();
-
-    auto itUDP = keyValuePairs.find(c_keyUDP);
-    if (itUDP != keyValuePairs.end())
-        info.udpPort = RLP{itUDP->second}.toInt<uint16_t>();
-
-    return info;
+    return RLP{itKey->second}.toHash<PublicCompressed>();
 }
 
 std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
 {
-    _out << "[ seq=" << _enr.sequenceNumber() << " ";
+    _out << "[ seq=" << _enr.sequenceNumber() << " "
+         << "id=" << _enr.id() << " ";
 
     try
     {
-        IdentityV4Info const info = IdentitySchemeV4::info(_enr);
-        _out << "key=" << info.publicKey.abridged() << " ip=" << info.ip << " tcp=" << info.tcpPort
-             << " udp=" << info.udpPort;
+        _out << "key=" << IdentitySchemeV4::publicKey(_enr).abridged() << " ip=" << _enr.ip()
+             << " tcp=" << _enr.tcpPort() << " udp=" << _enr.udpPort();
     }
     catch (Exception const&)
     {

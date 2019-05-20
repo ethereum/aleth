@@ -484,11 +484,11 @@ bi::tcp::endpoint Host::determinePublic() const
 ENR Host::updateENR(
     ENR const& _restoredENR, bi::tcp::endpoint const& _tcpPublic, uint16_t const& _listenPort)
 {
-    IdentityV4Info const info = IdentitySchemeV4::info(m_restoredENR);
+    auto const address =
+        _tcpPublic.address().is_unspecified() ? _restoredENR.ip() : _tcpPublic.address();
 
-    auto const address = _tcpPublic.address().is_unspecified() ? info.ip : _tcpPublic.address();
-
-    if (info.ip == address && info.tcpPort == _listenPort && info.udpPort == _listenPort)
+    if (_restoredENR.ip() == address && _restoredENR.tcpPort() == _listenPort &&
+        _restoredENR.udpPort() == _listenPort)
         return _restoredENR;
 
     ENR const newENR = IdentitySchemeV4::updateENR(
