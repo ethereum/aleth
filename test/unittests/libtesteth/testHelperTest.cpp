@@ -28,6 +28,7 @@ using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
 
+BOOST_AUTO_TEST_SUITE(TranslateNetworks)
 BOOST_AUTO_TEST_CASE(translateNetworks_gtConstantinople)
 {
     set<string> networks = {">Constantinople"};
@@ -104,5 +105,98 @@ BOOST_AUTO_TEST_CASE(translateNetworks_leFrontier)
             BOOST_REQUIRE(networks.count(test::netIdToString(net)) == 0);
     }
 }
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(TestHelper)
+BOOST_AUTO_TEST_CASE(levenshteinDistance_similar)
+{
+    char const* word1 = "someword";
+    char const* word2 = "soemword";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 2);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_similar2)
+{
+    char const* word1 = "sOmeWord";
+    char const* word2 = "someword";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 2);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_similar3)
+{
+    char const* word1 = "sOmeWoRd";
+    char const* word2 = "someword";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 3);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_similar4)
+{
+    char const* word1 = "sOmeWoRd";
+    char const* word2 = "soemword";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 5);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_AgtB)
+{
+    char const* word1 = "someword";
+    char const* word2 = "other";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 4);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_AgtB2)
+{
+    char const* word1 = "some long sentence here";
+    char const* word2 = "other shorter phrase";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 14);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_BgtA)
+{
+    char const* word1 = "other";
+    char const* word2 = "someword";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 4);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_BgtA2)
+{
+    char const* word1 = "other shorter phrase";
+    char const* word2 = "some long sentence here";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 14);
+}
+
+BOOST_AUTO_TEST_CASE(levenshteinDistance_different)
+{
+    char const* word1 = "abdefg";
+    char const* word2 = "hijklmn";
+    size_t distance = test::levenshteinDistance(word1, strlen(word1), word2, strlen(word2));
+    BOOST_CHECK_EQUAL(distance, 6);
+}
+
+BOOST_AUTO_TEST_CASE(getTestSuggestions)
+{
+    vector<string> const testList = {
+        "test1", "test2", "BlockSuite", "BlockSuite/TestCase", "GeneralBlockchainTests"};
+    auto list = test::testSuggestions(testList, "blocksuit");
+    BOOST_CHECK_EQUAL(test::inArray(list, string("BlockSuite")), true);
+}
+
+BOOST_AUTO_TEST_CASE(getTestSuggestions2)
+{
+    vector<string> const testList = {"test1", "test2", "BlockSuite", "BlockSuite/TestCase",
+        "GeneralBlockchainTests", "GeneralStateTests/stExample", "BCGeneralStateTests/stExample"};
+
+    auto list = test::testSuggestions(testList, "GeneralStateTests/stExample2");
+    BOOST_CHECK_EQUAL(test::inArray(list, string("GeneralStateTests/stExample")), true);
+    BOOST_CHECK_EQUAL(test::inArray(list, string("BCGeneralStateTests/stExample")), true);
+}
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

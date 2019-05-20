@@ -151,10 +151,10 @@ int main(int argc, const char* argv[])
     std::cout << "Running tests using path: " << test::getTestPath() << std::endl;
     int result = 0;
     auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
-    result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
 
-    // Print suggestions of a test case
-    if (result == boost::exit_exception_failure)  // test suite not found
+    result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+    // Print suggestions of a test case if test suite not found
+    if (result == boost::exit_exception_failure && !dev::test::inArray(c_allTestNames, sMinusTArg))
         printTestSuiteSuggestions(sMinusTArg);
     dev::test::TestOutputHelper::get().printTestExecStats();
     return result;
@@ -162,20 +162,8 @@ int main(int argc, const char* argv[])
 
 void printTestSuiteSuggestions(string const& _sMinusTArg)
 {
-    size_t allTestsElementIndex = 0;
-    // <index in availableTests, compared distance>
-    typedef std::pair<size_t, size_t> NameDistance;
-    // Use `vector` here because `set` does not work with sort
-    std::vector<NameDistance> distanceMap;
-    for (auto& it : c_allTestNames)
-    {
-        int const dist =
-            test::levenshteinDistance(_sMinusTArg.c_str(), _sMinusTArg.size(), it, strlen(it));
-        distanceMap.emplace_back(allTestsElementIndex++, dist);
-    }
-    std::sort(distanceMap.begin(), distanceMap.end(),
-        [](NameDistance const& _a, NameDistance const& _b) { return _a.second < _b.second; });
+    auto testList = test::testSuggestions(c_allTestNames, _sMinusTArg);
     std::cerr << "Did you mean: \n";
-    for (size_t i = 0; i < 3 && i < distanceMap.size(); i++)
-        std::cerr << "-t " << c_allTestNames[distanceMap[i].first] << "\n";
+    for (auto const& element : testList)
+        std::cerr << "-t " << element << "\n";
 }

@@ -666,6 +666,27 @@ size_t levenshteinDistance(char const* _s, size_t _n, char const* _t, size_t _m)
     return r;
 }
 
+std::vector<std::string> testSuggestions(
+    vector<string> const& _testList, std::string const& _sMinusTArg)
+{
+    vector<string> ret;
+    size_t allTestsElementIndex = 0;
+    // <index in availableTests, compared distance>
+    typedef std::pair<size_t, size_t> NameDistance;
+    // Use `vector` here because `set` does not work with sort
+    std::vector<NameDistance> distanceMap;
+    for (auto& it : _testList)
+    {
+        int const dist = test::levenshteinDistance(
+            _sMinusTArg.c_str(), _sMinusTArg.size(), it.c_str(), it.size());
+        distanceMap.emplace_back(allTestsElementIndex++, dist);
+    }
+    std::sort(distanceMap.begin(), distanceMap.end(),
+        [](NameDistance const& _a, NameDistance const& _b) { return _a.second < _b.second; });
+    for (size_t i = 0; i < 3 && i < distanceMap.size(); i++)
+        ret.push_back(_testList[distanceMap[i].first]);
+    return ret;
+}
 
 void copyFile(fs::path const& _source, fs::path const& _destination)
 {

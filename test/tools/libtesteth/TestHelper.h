@@ -132,6 +132,8 @@ json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
 json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMaskMap const& _map);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
+std::vector<std::string> testSuggestions(
+    std::vector<std::string> const& _testList, std::string const& _sMinusTArg);
 
 //Fill Test Functions
 bool createRandomTest();	//returns true if succeed, false if there was an error;
