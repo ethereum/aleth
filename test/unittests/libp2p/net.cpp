@@ -1259,6 +1259,53 @@ BOOST_AUTO_TEST_CASE(validENRRequest)
         RLP{keyValuePairs.at("udp")}.toInt(), nodeTable->m_hostNodeEndpoint.udpPort());
 }
 
+BOOST_AUTO_TEST_CASE(changingHostEndpoint)
+{
+    // NodeTable sending PING
+    TestNodeTableHost nodeTableHost(0);
+    nodeTableHost.start();
+    auto& nodeTable = nodeTableHost.nodeTable;
+
+    auto const originalHostEndpoint = nodeTable->m_hostNodeEndpoint;
+    uint16_t const newPort = originalHostEndpoint.udpPort() + 1;
+    auto const newHostEndpoint = NodeIPEndpoint{
+        bi::address::from_string(c_localhostIp), newPort, nodeTable->m_hostNodeEndpoint.tcpPort()};
+
+    for (int i = 0; i < 10; ++i)
+    {
+        BOOST_CHECK_EQUAL(nodeTable->m_hostNodeEndpoint, originalHostEndpoint);
+
+        // socket receiving PING
+        TestUDPSocketHost nodeSocketHost;
+        nodeSocketHost.start();
+        uint16_t nodePort = nodeSocketHost.port;
+
+        // add a node to node table, initiating PING
+        auto nodeEndpoint =
+            NodeIPEndpoint{bi::address::from_string(c_localhostIp), nodePort, nodePort};
+        auto nodeKeyPair = KeyPair::create();
+        auto nodePubKey = nodeKeyPair.pub();
+        nodeTable->addNode(Node{nodePubKey, nodeEndpoint});
+
+        // handle received PING
+        auto pingDatagram = waitForPacketReceived(nodeSocketHost, "Ping");
+        auto const& ping = dynamic_cast<PingNode const&>(*pingDatagram);
+
+        // send PONG
+        Pong pong(originalHostEndpoint);
+        pong.destination = newHostEndpoint;
+        pong.echo = ping.echo;
+        pong.sign(nodeKeyPair.secret());
+        nodeSocketHost.socket->send(pong);
+
+        // wait for PONG to be received and handled
+        nodeTable->packetsReceived.pop();
+    }
+
+    BOOST_REQUIRE_EQUAL(nodeTable->m_hostNodeEndpoint, newHostEndpoint);
+}
+
+
 class PacketsWithChangedEndpointFixture : public TestOutputHelperFixture
 {
 public:
