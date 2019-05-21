@@ -238,6 +238,23 @@ BOOST_AUTO_TEST_CASE(saveENR)
     BOOST_REQUIRE(enr1.signature() == enr2.signature());
 }
 
+BOOST_AUTO_TEST_CASE(updateENRfromConfig)
+{
+    NetworkConfig config("", "", 30303, false);
+    Host host1("Test", config);
+    ENR enr1 = host1.enr();
+
+    bytes store(host1.saveNetwork());
+
+    NetworkConfig config2("13.74.189.148", "", 30303, false);
+    Host host2("Test", config2, bytesConstRef(&store));
+    host2.start();
+    host2.stop();
+    ENR enr2 = host2.enr();
+
+    BOOST_REQUIRE_EQUAL(enr2.sequenceNumber(), enr1.sequenceNumber() + 1);
+    BOOST_REQUIRE_EQUAL(enr2.ip(), bi::address::from_string("13.74.189.148"));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

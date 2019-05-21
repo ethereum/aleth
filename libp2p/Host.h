@@ -368,7 +368,7 @@ private:
     /// Alias for network communication.
     KeyPair m_alias;
     /// Host's Ethereum Node Record restored from network.rlp
-    ENR m_restoredENR;
+    ENR const m_restoredENR;
     std::shared_ptr<NodeTable> m_nodeTable;									///< Node table (uses kademlia-like discovery).
     mutable std::mutex x_nodeTable;
     std::shared_ptr<NodeTable> nodeTable() const { Guard l(x_nodeTable); return m_nodeTable; }
