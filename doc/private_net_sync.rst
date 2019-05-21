@@ -160,7 +160,7 @@ Make note of the node's URL (which starts with ``enode://``) since you'll need t
     Mining Beneficiary: 84258fde-b0d9-747e-b70f-f55e14831192 - 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6
     INFO  04-01 20:34:40 p2p  info   UPnP device not found.
     WARN  04-01 20:34:40 p2p  warn   "_enabled" parameter is false, discovery is disabled
-    Node ID: enode://fb867844056920bbf0dd0945faff8a7a249d33726786ec367461a6c023cae62d7b2bb725a07e2f9832eb05be89e71cf81acf22022215b51a561929c37419531a@0.0.0.0:0
+    Node ID: enode://fb867844056920bbf0dd0945faff8a7a249d33726786ec367461a6c023cae62d7b2bb725a07e2f9832eb05be89e71cf81acf22022215b51a561929c37419531a@127.0.0.1:30303
 
 
 The node should start mining blocks after a minute or two:
@@ -187,7 +187,7 @@ The node should start mining blocks after a minute or two:
 
 --config        Specify the same chain config file
 --listen        Specify a different port
---peerset       Update the IP address in the node URL to ``127.0.0.1:<listen port>``
+--peerset       Specify URL of the first node
 --db-path       Path to save sync'd blocks. Aleth saves blocks by default to ``%APPDATA%\Ethereum`` on Windows and ``$HOME/.ethereum`` on Linux. You need to specify a different path for your second node otherwise you'll run into database access issues. See the `Common Problems`_ section for an example of this error.
 
 
@@ -208,7 +208,7 @@ The node should start mining blocks after a minute or two:
     Mining Beneficiary: 84258fde-b0d9-747e-b70f-f55e14831192 - 00fd4aaf9713f5bb664c20a462acc4ebc363d1a6
     INFO  04-01 20:47:59 p2p  info   UPnP device not found.
     WARN  04-01 20:47:59 p2p  warn   "_enabled" parameter is false, discovery is disabled
-    Node ID: enode://d4a0335d481fe816a7d580a298870066c3c24af60cd1c2875bd2598befedfbd5a43942f41e04f6e92d1081de72843f15ff5fb9c8f65cb31bdce1357514f02491@0.0.0.0:0
+    Node ID: enode://d4a0335d481fe816a7d580a298870066c3c24af60cd1c2875bd2598befedfbd5a43942f41e04f6e92d1081de72843f15ff5fb9c8f65cb31bdce1357514f02491@127.0.0.1:30305
     INFO  04-01 20:47:59 main rpc    JSON-RPC socket path: \\.\pipe\\geth.ipc
     JSONRPC Admin Session Key: rtsy5ehS1JA=
     INFO  04-01 20:47:59 p2p  sync   5def5843…|aleth/1.6.0-alpha.1-28+commit.32bb833e.dirty/windows/msvc19.0.24215.1/debug Starting full sync
