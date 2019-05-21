@@ -220,8 +220,25 @@ public:
     /// Get the public TCP endpoint.
     bi::tcp::endpoint const& tcpPublic() const { return m_tcpPublic; }
 
-    /// Get the public endpoint information.
-    std::string enode() const { return "enode://" + id().hex() + "@" + (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkConfig().publicIPAddress) + ":" + toString(m_tcpPublic.port()); }
+    /// Get the endpoint information.
+    std::string enode() const
+    {
+        std::string address;
+        if (!m_netConfig.publicIPAddress.empty())
+            address = m_netConfig.publicIPAddress;
+        else if (!m_tcpPublic.address().is_unspecified())
+            address = m_tcpPublic.address().to_string();
+        else
+            address = c_localhostIp;
+
+        std::string port;
+        if (m_tcpPublic.port())
+            port = toString(m_tcpPublic.port());
+        else
+            port = toString(m_netConfig.listenPort);
+
+        return "enode://" + id().hex() + "@" + address + ":" + port;
+    }
 
     /// Get the node information.
     p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkConfig().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
