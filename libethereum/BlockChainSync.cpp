@@ -380,10 +380,7 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
             }
         }
         else
-        {
-            LOG(m_loggerDetail) << "Requesting block headers from " << _peerID;
             m_host.peer(_peerID).requestBlockHeaders(start, 1 /* count */, 0 /* skip */, false);
-        }
     }
 }
 

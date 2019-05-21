@@ -90,10 +90,10 @@ protected:
     void readAckEIP8();
     
     /// Closes connection and ends transitions.
-    void error(boost::system::error_code _ech = boost::system::error_code());
+    void error(boost::system::error_code _ech = {});
 
     /// Performs transition for m_nextState.
-    virtual void transition(boost::system::error_code _ech = boost::system::error_code());
+    virtual void transition(boost::system::error_code _ech = {});
 
     /// Get a string indicating if the connection is incoming or outgoing
     inline char const* connectionDirectionString() const
