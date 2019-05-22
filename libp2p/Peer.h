@@ -54,8 +54,6 @@ class Peer: public Node
     friend class Session;		/// Allows Session to update score and rating.
     friend class Host;		/// For Host: saveNetwork(), restoreNetwork()
 
-    friend class RLPXHandshake;
-
 public:
     /// Construct Peer from Node.
     Peer(Node const& _node): Node(_node) {}
