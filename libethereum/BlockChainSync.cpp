@@ -144,11 +144,12 @@ BlockChainSync::BlockChainSync(EthereumCapability& _host)
     m_lastImportedBlock(m_startingBlock),
     m_lastImportedBlockHash(_host.chain().currentHash())
 {
-    m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
-    {
-        RecursiveGuard l(x_sync);
-        m_state = SyncState::Blocks;
-        continueSync();
+    m_bqRoomAvailable = host().bq().onRoomAvailable([this]() {
+        host().capabilityHost().postWork([this]() {
+            RecursiveGuard l(x_sync);
+            m_state = SyncState::Blocks;
+            continueSync();
+        });
     });
 }
 
