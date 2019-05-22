@@ -8,9 +8,8 @@ namespace dev
 {
 namespace p2p
 {
-
-// Register the statement about endpoint from one othe peers.
-// Returns number of currently kept statements in favor of _externalEndpoint
+/// Register the statement about endpoint from one othe peers.
+/// @returns number of currently kept statements in favor of @a _externalEndpoint
 size_t EndpointTracker::addEndpointStatement(
     bi::udp::endpoint const& _sourceEndpoint, bi::udp::endpoint const& _externalEndpoint)
 {
@@ -22,7 +21,7 @@ size_t EndpointTracker::addEndpointStatement(
     return addStatement(_sourceEndpoint, _externalEndpoint);
 }
 
-// Find endpoint with max number of statemens
+/// Find endpoint with max number of statemens
 bi::udp::endpoint EndpointTracker::bestEndpoint() const
 {
     size_t maxCount = 0;
@@ -34,7 +33,7 @@ bi::udp::endpoint EndpointTracker::bestEndpoint() const
     return bestEndpoint;
 }
 
-// Remove old statements
+/// Remove old statements
 void EndpointTracker::garbageCollectStatements(std::chrono::seconds const& _timeToLive)
 {
     auto const expiration = std::chrono::steady_clock::now() - _timeToLive;

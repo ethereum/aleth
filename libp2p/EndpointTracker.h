@@ -10,21 +10,21 @@ namespace dev
 {
 namespace p2p
 {
-// Class for keeping track of our external endpoint as seen by our peers.
-// Keeps track of what external endpoint is seen by every peer
-// and finds which endpoint is reported most often
+/// Class for keeping track of our external endpoint as seen by our peers.
+/// Keeps track of what external endpoint is seen by every peer
+/// and finds which endpoint is reported most often
 class EndpointTracker
 {
 public:
-    // Register the statement about endpoint from one of the peers.
-    // Returns number of currently kept statements in favor of _externalEndpoint
+    /// Register the statement about endpoint from one of the peers.
+    /// @returns number of currently kept statements in favor of @a _externalEndpoint
     size_t addEndpointStatement(
         bi::udp::endpoint const& _sourceEndpoint, bi::udp::endpoint const& _externalEndpoint);
 
-    // Find endpoint with max number of statements
+    /// Find endpoint with max number of statements
     bi::udp::endpoint bestEndpoint() const;
 
-    // Remove statements older than _timeToLive
+    /// Remove statements older than _timeToLive
     void garbageCollectStatements(std::chrono::seconds const& _timeToLive);
 
 private:
@@ -37,9 +37,9 @@ private:
 
     SourceToStatementMap::iterator removeStatement(SourceToStatementMap::iterator _it);
 
-    // Statements about our external endpoint, maps statement source peer => endpoint, timestamp
+    /// Statements about our external endpoint, maps statement source peer => endpoint, timestamp
     SourceToStatementMap m_statementsMap;
-    // map external endpoint => how many sources reported it
+    /// map external endpoint => how many sources reported it
     std::map<bi::udp::endpoint, size_t> m_endpointStatementCountMap;
 };
 
