@@ -133,7 +133,7 @@ void TestOutputHelper::checkUnfinishedTestFolders()
     if (pos != string::npos)
         filter = Options::get().rCurrentTestSuite.substr(pos + 1);
 
-    if (!filter.empty())
+    if (!filter.empty() && filter != "*")
     {
         if (m_finishedTestFoldersMap.size() > 1)
         {
