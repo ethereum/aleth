@@ -24,13 +24,18 @@ size_t EndpointTracker::addEndpointStatement(
 /// Find endpoint with max number of statemens
 bi::udp::endpoint EndpointTracker::bestEndpoint() const
 {
-    size_t maxCount = 0;
-    bi::udp::endpoint bestEndpoint;
-    for (auto const& endpointAndCount : m_endpointStatementCountMap)
-        if (endpointAndCount.second > maxCount)
-            std::tie(bestEndpoint, maxCount) = endpointAndCount;
+    if (m_endpointStatementCountMap.empty())
+        return {};
 
-    return bestEndpoint;
+    // find endpoint with max count
+    auto itMax =
+        std::max_element(m_endpointStatementCountMap.begin(), m_endpointStatementCountMap.end(),
+            [](std::pair<bi::udp::endpoint const, size_t> const& _endpointAndCount1,
+                std::pair<bi::udp::endpoint const, size_t> const& _endpointAndCount2) {
+                return _endpointAndCount1.second < _endpointAndCount2.second;
+            });
+
+    return itMax->first;
 }
 
 /// Remove old statements
