@@ -88,8 +88,8 @@ private:
     void clearPeerDownload();
     void collectBlocks();
     bool requestDaoForkBlockHeader(NodeID const& _peerID);
-    bool verifyDaoChallengeResponse(RLP const& _r);
-    void logImported(unsigned _success, unsigned _future, unsigned _got, unsigned _unknown);
+    bool verifyDaoChallengeResponse(RLP const& _r) const;
+    void logImported(unsigned _success, unsigned _future, unsigned _got, unsigned _unknown) const;
 
 private:
     struct Header
@@ -147,7 +147,7 @@ private:
     h256 m_lastImportedBlockHash;				///< Last imported block hash
     u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
-    Logger m_logger{createLogger(VerbosityDebug, "sync")};
+    mutable Logger m_logger{createLogger(VerbosityDebug, "sync")};
     Logger m_loggerInfo{createLogger(VerbosityInfo, "sync")};
     Logger m_loggerDetail{createLogger(VerbosityTrace, "sync")};
     Logger m_loggerWarning{createLogger(VerbosityWarning, "sync")};
