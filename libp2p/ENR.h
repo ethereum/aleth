@@ -24,16 +24,16 @@ public:
     // ENR class implementation is independent of Identity Scheme.
     // Identity Scheme specifics are passed to ENR as functions.
 
-    // Sign function gets serialized ENR contents and signs it according to some Identity Scheme
+    /// Sign function gets serialized ENR contents and signs it according to some Identity Scheme
     using SignFunction = std::function<bytes(bytesConstRef)>;
-    // Verify function gets ENR key-value pairs, signature, and serialized content and validates the
-    // signature according to some Identity Scheme
+    /// Verify function gets ENR key-value pairs, signature, and serialized content and validates the
+    /// signature according to some Identity Scheme
     using VerifyFunction =
         std::function<bool(std::map<std::string, bytes> const&, bytesConstRef, bytesConstRef)>;
 
-    // Parse from RLP with given signature verification function
+    /// Parse from RLP with given signature verification function
     ENR(RLP const& _rlp, VerifyFunction const& _verifyFunction);
-    // Create with given sign function
+    /// Create with given sign function
     ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValuePairs,
         SignFunction const& _signFunction);
 
@@ -42,16 +42,16 @@ public:
 
     std::map<std::string, bytes> const& keyValuePairs() const { return m_keyValuePairs; }
 
-    // Pre-defined keys
+    /// Pre-defined keys
     std::string id() const;
     boost::asio::ip::address ip() const;
     uint16_t tcpPort() const;
     uint16_t udpPort() const;
 
-    // Serialize to given RLP stream
+    /// Serialize to given RLP stream
     void streamRLP(RLPStream& _s) const;
 
-    // Create new ENR succeeding current one with updated keyValuePairs
+    /// Create new ENR succeeding current one with updated @a _keyValuePairs
     ENR update(
         std::map<std::string, bytes> const& _keyValuePair, SignFunction const& _signFunction) const;
 
