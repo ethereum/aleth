@@ -16,6 +16,7 @@
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
 - Fixed: [#5599](https://github.com/ethereum/aleth/pull/5600) Prevent aleth from attempting concurrent connection to node which results in disconnect of original connection.
+- Fixed: [#5609](https://github.com/ethereum/aleth/pull/5609) Log valid local enode-address when external IP is not known.
 
 ## [1.6.0] - 2019-04-16
 
