@@ -27,17 +27,13 @@ Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLP
     stringstream remoteInfoStream;
     remoteInfoStream << "(" << m_info.id << "@" << m_socket->remoteEndpoint() << ")";
 
-    m_netLogger.add_attribute(
-        "Suffix", boost::log::attributes::constant<std::string>(remoteInfoStream.str()));
-    m_netLoggerDetail.add_attribute(
-        "Suffix", boost::log::attributes::constant<std::string>(remoteInfoStream.str()));
-    m_netLoggerError.add_attribute(
-        "Suffix", boost::log::attributes::constant<std::string>(remoteInfoStream.str()));
+    auto const attr = boost::log::attributes::constant<std::string>{remoteInfoStream.str()};
+    m_netLogger.add_attribute("Suffix", attr);
+    m_netLoggerDetail.add_attribute("Suffix", attr);
+    m_netLoggerError.add_attribute("Suffix", attr);
 
-    m_capLogger.add_attribute(
-        "Suffix", boost::log::attributes::constant<std::string>(remoteInfoStream.str()));
-    m_capLoggerDetail.add_attribute(
-        "Suffix", boost::log::attributes::constant<std::string>(remoteInfoStream.str()));
+    m_capLogger.add_attribute("Suffix", attr);
+    m_capLoggerDetail.add_attribute("Suffix", attr);
 
     m_peer->m_lastDisconnect = NoDisconnect;
     m_lastReceived = m_connect = chrono::steady_clock::now();
@@ -126,9 +122,9 @@ bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
     }
     catch (std::exception const& _e)
     {
-        LOG(m_netLoggerError) << "Exception caught in p2p::Session::readPacket(): " << _e.what()
-                              << ". PacketType: " << capabilityPacketTypeToString(_packetType)
-                              << " (" << _packetType << "). RLP: " << _r;
+        LOG(m_netLogger) << "Exception caught in p2p::Session::readPacket(): " << _e.what()
+                         << ". PacketType: " << capabilityPacketTypeToString(_packetType) << " ("
+                         << _packetType << "). RLP: " << _r;
         disconnect(BadProtocol);
         return true;
     }
@@ -330,7 +326,7 @@ void Session::doRead()
                 return;
             else if (!m_io->authAndDecryptHeader(bytesRef(m_data.data(), length)))
             {
-                LOG(m_netLoggerError) << "Header decrypt failed";
+                LOG(m_netLogger) << "Header decrypt failed";
                 drop(BadProtocol);  // todo: better error
                 return;
             }

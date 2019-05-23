@@ -842,13 +842,13 @@ bool EthereumCapability::interpretCapabilityPacket(
     }
     catch (Exception const&)
     {
-        LOG(m_loggerError) << "Peer " << _peerID << " causing an exception: "
-                           << boost::current_exception_diagnostic_information() << " " << _r;
+        LOG(m_loggerWarn) << "Peer " << _peerID << " causing an exception: "
+                          << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        LOG(m_loggerError) << "Peer " << _peerID << " causing an exception: " << _e.what() << " "
-                           << _r;
+        LOG(m_loggerWarn) << "Peer " << _peerID << " causing an exception: " << _e.what() << " "
+                          << _r;
     }
 
     return true;
