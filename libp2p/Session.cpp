@@ -27,6 +27,8 @@ Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLP
     stringstream remoteInfoStream;
     remoteInfoStream << "(" << m_info.id << "@" << m_socket->remoteEndpoint() << ")";
 
+    m_logSuffix = remoteInfoStream.str();
+
     auto const attr = boost::log::attributes::constant<std::string>{remoteInfoStream.str()};
     m_netLogger.add_attribute("Suffix", attr);
     m_netLoggerDetail.add_attribute("Suffix", attr);
@@ -41,7 +43,8 @@ Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLP
 
 Session::~Session()
 {
-    LOG(m_netLogger) << "Closing peer session";
+    cnetlog << "Closing peer session with " << m_logSuffix;
+
     m_peer->m_lastConnected = m_peer->m_lastAttempted - chrono::seconds(1);
 
     // Read-chain finished for one reason or another.
@@ -100,7 +103,7 @@ bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
         // v4 frame headers are useless, offset packet type used
         // v5 protocol type is in header, packet type not offset
         if (_capId == 0 && _packetType < UserPacket)
-            return interpretCapabilityPacket(static_cast<P2pPacketType>(_packetType), _r);
+            return interpretP2pPacket(static_cast<P2pPacketType>(_packetType), _r);
 
         for (auto const& cap : m_capabilities)
         {
@@ -131,7 +134,7 @@ bool Session::readPacket(uint16_t _capId, unsigned _packetType, RLP const& _r)
     return true;
 }
 
-bool Session::interpretCapabilityPacket(P2pPacketType _t, RLP const& _r)
+bool Session::interpretP2pPacket(P2pPacketType _t, RLP const& _r)
 {
     LOG(m_capLoggerDetail) << p2pPacketTypeToString(_t) << " from";
     switch (_t)
@@ -174,7 +177,7 @@ bool Session::interpretCapabilityPacket(P2pPacketType _t, RLP const& _r)
 
 void Session::ping()
 {
-    LOG(m_capLoggerDetail) << "Ping to";
+    clog(VerbosityTrace, "p2pcap") << "Ping to " << m_logSuffix;
     RLPStream s;
     sealAndSend(prep(s, PingPacket));
     m_ping = std::chrono::steady_clock::now();
@@ -206,8 +209,8 @@ void Session::send(bytes&& _msg)
     bytesConstRef msg(&_msg);
     LOG(m_netLoggerDetail) << capabilityPacketTypeToString(_msg[0]) << " to";
     if (!checkPacket(msg))
-        LOG(m_netLoggerError) << "Invalid packet constructed. Size: " << msg.size()
-                              << " bytes, message: " << toHex(msg);
+        clog(VerbosityError, "net") << "Invalid packet constructed. Size: " << msg.size()
+                                    << " bytes, message: " << toHex(msg);
 
     if (!m_socket->ref().is_open())
         return;
@@ -295,7 +298,7 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
-    LOG(m_netLoggerDetail) << "Disconnecting (our reason: " << reasonOf(_reason) << ") from";
+    cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
 
     if (m_socket->ref().is_open())
     {
@@ -343,8 +346,8 @@ void Session::doRead()
             }
             catch (std::exception const& _e)
             {
-                LOG(m_netLoggerError) << "Exception decoding frame header RLP: " << _e.what() << " "
-                                      << bytesConstRef(m_data.data(), h128::size).cropped(3);
+                LOG(m_netLogger) << "Exception decoding frame header RLP: " << _e.what() << " "
+                                 << bytesConstRef(m_data.data(), h128::size).cropped(3);
                 drop(BadProtocol);
                 return;
             }
@@ -360,7 +363,7 @@ void Session::doRead()
                         return;
                     else if (!m_io->authAndDecryptFrame(bytesRef(m_data.data(), tlen)))
                     {
-                        LOG(m_netLoggerError) << "Frame decrypt failed";
+                        LOG(m_netLogger) << "Frame decrypt failed";
                         drop(BadProtocol);  // todo: better error
                         return;
                     }
@@ -368,8 +371,8 @@ void Session::doRead()
                     bytesConstRef frame(m_data.data(), hLength);
                     if (!checkPacket(frame))
                     {
-                        LOG(m_netLoggerError) << "Received invalid message. Size: " << frame.size()
-                                              << " bytes, message: " << toHex(frame) << endl;
+                        LOG(m_netLogger) << "Received invalid message. Size: " << frame.size()
+                                         << " bytes, message: " << toHex(frame) << endl;
                         disconnect(BadProtocol);
                         return;
                     }
@@ -379,7 +382,7 @@ void Session::doRead()
                         RLP r(frame.cropped(1));
                         bool ok = readPacket(hProtocolId, packetType, r);
                         if (!ok)
-                            LOG(m_netLoggerError)
+                            LOG(m_netLogger)
                                 << "Couldn't interpret " << p2pPacketTypeToString(packetType)
                                 << " (" << packetType << "). RLP: " << RLP(r);
                     }
@@ -392,7 +395,7 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
 {
     if (_ec && _ec.category() != boost::asio::error::get_misc_category() && _ec.value() != boost::asio::error::eof)
     {
-        LOG(m_netLoggerDetail) << "Error reading: " << _ec.message();
+        LOG(m_netLogger) << "Error reading: " << _ec.message();
         drop(TCPError);
         return false;
     }
@@ -437,8 +440,7 @@ bool Session::canHandle(
 
 void Session::disableCapability(std::string const& _capabilityName, std::string const& _problem)
 {
-    LOG(m_netLoggerDetail) << "DISABLE: Disabling capability '" << _capabilityName
-                           << "'. Reason: " << _problem;
+    cnetlog << "Disabling capability '" << _capabilityName << "'. Reason: " << _problem << " " << m_logSuffix;
     m_disabledCapabilities.insert(_capabilityName);
 }
 

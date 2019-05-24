@@ -123,10 +123,9 @@ public:
                 data.toBytesConstRef());
 
             LOG(m_logger) << "Saved chunk " << hash << " Chunks left: " << m_neededChunks.size()
-                          << " Requested chunks: " << m_requestedChunks.size()
                           << " (peer: " << _peerID << ")";
             if (m_neededChunks.empty() && m_requestedChunks.empty())
-                LOG(m_logger) << "Snapshot download complete from " << _peerID;
+                LOG(m_logger) << "Snapshot download complete";
         }
         else
             m_neededChunks.push_back(askedHash);
@@ -457,13 +456,13 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
     }
     catch (Exception const&)
     {
-        LOG(m_loggerError) << "Warp Peer " << _peerID << " causing an exception: "
-                           << boost::current_exception_diagnostic_information() << " " << _r;
+        LOG(m_loggerWarn) << "Warp Peer " << _peerID << " causing an exception: "
+                          << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        LOG(m_loggerError) << "Warp Peer " << _peerID << " causing an exception: " << _e.what()
-                           << " " << _r;
+        LOG(m_loggerWarn) << "Warp Peer " << _peerID << " causing an exception: " << _e.what()
+                          << " " << _r;
     }
 
     return true;

@@ -131,7 +131,7 @@ private:
     std::unordered_map<NodeID, WarpPeerStatus> m_peers;
 
     Logger m_logger{createLogger(VerbosityDebug, "warpcap")};
-    Logger m_loggerError{createLogger(VerbosityError, "warpcap")};
+    Logger m_loggerWarn{createLogger(VerbosityWarning, "warpcap")};
 };
 
 }  // namespace eth

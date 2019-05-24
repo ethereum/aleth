@@ -190,7 +190,6 @@ private:
 
     Logger m_logger{createLogger(VerbosityDebug, "ethcap")};
     Logger m_loggerDetail{createLogger(VerbosityTrace, "ethcap")};
-    Logger m_loggerError{createLogger(VerbosityError, "ethcap")};
     Logger m_loggerWarn{createLogger(VerbosityWarning, "ethcap")};
     /// Logger for messages about impolite behaivour of peers.
     Logger m_loggerImpolite{createLogger(VerbosityDebug, "impolite")};

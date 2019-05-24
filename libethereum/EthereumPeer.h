@@ -22,7 +22,8 @@ public:
         u256 const& /*_capabilityVersion*/)
       : m_host(std::move(_host)), m_id(_peerID)
     {
-        m_logger.add_attribute("Suffix", boost::log::attributes::constant<std::string>{m_id.hex()});
+        m_logger.add_attribute(
+            "Suffix", boost::log::attributes::constant<std::string>{m_id.abridged()});
     }
 
     bool statusReceived() const { return m_protocolVersion != 0; }
