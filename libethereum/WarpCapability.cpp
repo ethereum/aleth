@@ -123,9 +123,9 @@ public:
                 data.toBytesConstRef());
 
             LOG(m_logger) << "Saved chunk " << hash << " Chunks left: " << m_neededChunks.size()
-                          << " Requested chunks: " << m_requestedChunks.size();
+                          << " (peer: " << _peerID << ")";
             if (m_neededChunks.empty() && m_requestedChunks.empty())
-                LOG(m_logger) << "Snapshot download complete!";
+                LOG(m_logger) << "Snapshot download complete";
         }
         else
             m_neededChunks.push_back(askedHash);
@@ -288,7 +288,7 @@ private:
                 peerID = m_freePeers.value_pop();
             } while (!m_host.requestData(peerID, chunkHash));
 
-            LOG(m_logger) << "Requested chunk " << chunkHash;
+            LOG(m_logger) << "Requested chunk " << chunkHash << " from " << peerID;
 
             m_requestedChunks[peerID] = chunkHash;
             m_neededChunks.pop_front();
@@ -389,12 +389,13 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
             peerStatus.m_snapshotHash = _r[5].toHash<h256>();
             peerStatus.m_snapshotNumber = _r[6].toInt<u256>();
 
-            cnetlog << "Status: "
-                    << " protocol version " << peerStatus.m_protocolVersion << " networkId "
-                    << peerStatus.m_networkId << " genesis hash " << peerStatus.m_genesisHash
-                    << " total difficulty " << peerStatus.m_totalDifficulty << " latest hash "
-                    << peerStatus.m_latestHash << " snapshot hash " << peerStatus.m_snapshotHash
-                    << " snapshot number " << peerStatus.m_snapshotNumber;
+            LOG(m_logger) << "Status (from " << _peerID << "): "
+                          << " protocol version " << peerStatus.m_protocolVersion << " networkId "
+                          << peerStatus.m_networkId << " genesis hash " << peerStatus.m_genesisHash
+                          << " total difficulty " << peerStatus.m_totalDifficulty << " latest hash "
+                          << peerStatus.m_latestHash << " snapshot hash "
+                          << peerStatus.m_snapshotHash << " snapshot number "
+                          << peerStatus.m_snapshotNumber;
             setIdle(_peerID);
             m_peerObserver->onPeerStatus(_peerID);
             break;
@@ -455,12 +456,13 @@ bool WarpCapability::interpretCapabilityPacket(NodeID const& _peerID, unsigned _
     }
     catch (Exception const&)
     {
-        cnetlog << "Warp Peer causing an Exception: "
-                << boost::current_exception_diagnostic_information() << " " << _r;
+        LOG(m_loggerWarn) << "Warp Peer " << _peerID << " causing an exception: "
+                          << boost::current_exception_diagnostic_information() << " " << _r;
     }
     catch (std::exception const& _e)
     {
-        cnetlog << "Warp Peer causing an exception: " << _e.what() << " " << _r;
+        LOG(m_loggerWarn) << "Warp Peer " << _peerID << " causing an exception: " << _e.what()
+                          << " " << _r;
     }
 
     return true;

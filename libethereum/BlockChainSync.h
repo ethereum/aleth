@@ -150,6 +150,7 @@ private:
     Logger m_logger{createLogger(VerbosityDebug, "sync")};
     Logger m_loggerInfo{createLogger(VerbosityInfo, "sync")};
     Logger m_loggerDetail{createLogger(VerbosityTrace, "sync")};
+    Logger m_loggerWarning{createLogger(VerbosityWarning, "sync")};
 
 private:
     static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
