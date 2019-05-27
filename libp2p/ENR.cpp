@@ -23,10 +23,11 @@ constexpr size_t c_ENRMaxSizeBytes = 300;
 
 // Address can be either boost::asio::ip::address_v4 or boost::asio::ip::address_v6
 template <class Address>
-bytes addressToBytes(Address const& _address)
+bytes addressToRlpBytes(Address const& _address)
 {
-    auto const addressBytes = _address.to_bytes();
-    return bytes(addressBytes.begin(), addressBytes.end());
+    auto const addressArray = _address.to_bytes();
+    bytes const addressBytes(addressArray.begin(), addressArray.end());
+    return rlp(addressBytes);
 }
 
 template <std::size_t N>
@@ -170,12 +171,25 @@ std::map<std::string, bytes> IdentitySchemeV4::createKeyValuePairs(Secret const&
 {
     PublicCompressed const publicKey = toPublicCompressed(_secret);
 
-    auto const address = _ip.is_v4() ? addressToBytes(_ip.to_v4()) : addressToBytes(_ip.to_v6());
-
     // Values are of different types (string, bytes, uint16_t),
     // so we store them as RLP representation
-    return {{c_keyID, rlp(c_IDV4)}, {c_keySecp256k1, rlp(publicKey.asBytes())},
-        {c_keyIP, rlp(address)}, {c_keyTCP, rlp(_tcpPort)}, {c_keyUDP, rlp(_udpPort)}};
+    std::map<std::string, bytes> keyValuePairs{
+        {c_keyID, rlp(c_IDV4)}, {c_keySecp256k1, rlp(publicKey.asBytes())}};
+
+    if (_tcpPort != 0)
+        keyValuePairs[c_keyTCP] = rlp(_tcpPort);
+    if (_udpPort != 0)
+        keyValuePairs[c_keyUDP] = rlp(_udpPort);
+
+    if (_ip.is_unspecified())
+        return keyValuePairs;
+
+    if (_ip.is_v4())
+        keyValuePairs[c_keyIP] = addressToRlpBytes(_ip.to_v4());
+    else if (_ip.is_v6())
+        keyValuePairs[c_keyIP6] = addressToRlpBytes(_ip.to_v6());
+
+    return keyValuePairs;
 }
 
 ENR IdentitySchemeV4::updateENR(ENR const& _enr, Secret const& _secret,
