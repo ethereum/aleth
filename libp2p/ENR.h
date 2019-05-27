@@ -15,7 +15,7 @@ DEV_SIMPLE_EXCEPTION(ENRSignatureIsInvalid);
 DEV_SIMPLE_EXCEPTION(ENRKeysAreNotUniqueSorted);
 DEV_SIMPLE_EXCEPTION(ENRUnknownIdentityScheme);
 DEV_SIMPLE_EXCEPTION(ENRSecp256k1NotFound);
-DEV_SIMPLE_EXCEPTION(ENRUnsupportedIPAddress);
+DEV_SIMPLE_EXCEPTION(ENRInvalidAddress);
 
 /// Class representing Ethereum Node Record - see EIP-778
 class ENR
@@ -44,7 +44,8 @@ public:
 
     /// Pre-defined keys
     std::string id() const;
-    boost::asio::ip::address ip() const;
+    boost::asio::ip::address_v4 ip() const;
+    boost::asio::ip::address_v6 ip6() const;
     uint16_t tcpPort() const;
     uint16_t udpPort() const;
 

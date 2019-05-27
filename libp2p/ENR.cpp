@@ -14,6 +14,7 @@ namespace
 constexpr char c_keyID[] = "id";
 constexpr char c_keySecp256k1[] = "secp256k1";
 constexpr char c_keyIP[] = "ip";
+constexpr char c_keyIP6[] = "ip6";
 constexpr char c_keyTCP[] = "tcp";
 constexpr char c_keyUDP[] = "udp";
 constexpr char c_IDV4[] = "v4";
@@ -29,11 +30,15 @@ bytes addressToBytes(Address const& _address)
 }
 
 template <std::size_t N>
-std::array<byte, N> bytesToAddress(bytesConstRef _bytes)
+std::array<byte, N> rlpToAddressByteArray(RLP const& _rlp)
 {
-    std::array<byte, N> address;
-    std::copy_n(_bytes.begin(), N, address.begin());
-    return address;
+    auto const data = _rlp.toBytesConstRef();
+    if (data.size() != N)
+        BOOST_THROW_EXCEPTION(ENRInvalidAddress());
+
+    std::array<byte, N> arr;
+    std::copy_n(data.begin(), N, arr.begin());
+    return arr;
 }
 }  // namespace
 
@@ -108,21 +113,24 @@ std::string ENR::id() const
     return itID == m_keyValuePairs.end() ? "" : RLP(itID->second).toString(RLP::VeryStrict);
 }
 
-boost::asio::ip::address ENR::ip() const
+ba::ip::address_v4 ENR::ip() const
 {
     auto itIP = m_keyValuePairs.find(c_keyIP);
     if (itIP == m_keyValuePairs.end())
         return {};
 
-    auto rlpAddress = RLP{itIP->second};
-    auto const addressBytes = rlpAddress.toBytesConstRef();
+    RLP rlp{itIP->second};
+    return ba::ip::address_v4{rlpToAddressByteArray<4>(rlp)};
+}
 
-    if (rlpAddress.size() == 4)
-        return ba::ip::address_v4{bytesToAddress<4>(addressBytes)};
-    else if (rlpAddress.size() == 16)
-        return ba::ip::address_v6{bytesToAddress<16>(addressBytes)};
-    else
-        BOOST_THROW_EXCEPTION(ENRUnsupportedIPAddress());
+ba::ip::address_v6 ENR::ip6() const
+{
+    auto itIP6 = m_keyValuePairs.find(c_keyIP6);
+    if (itIP6 == m_keyValuePairs.end())
+        return {};
+
+    RLP rlp{itIP6->second};
+    return ba::ip::address_v6{rlpToAddressByteArray<16>(rlp)};
 }
 
 uint16_t ENR::tcpPort() const
