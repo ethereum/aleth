@@ -2,6 +2,7 @@
 // Copyright 2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
+#include <libdevcore/Base64.h>
 #include <libp2p/ENR.h>
 #include <gtest/gtest.h>
 
@@ -23,10 +24,10 @@ bool dummyVerifyFunction(std::map<std::string, bytes> const&, bytesConstRef, byt
 TEST(enr, parse)
 {
     // Test ENR from EIP-778
-    bytes rlp = fromHex(
-        "f884b8407098ad865b00a582051940cb9cf36836572411a47278783077011599ed5cd16b76f2635f4e234738f3"
-        "0813a89eb9137e3e3df5266e3a1f11df72ecf1145ccb9c01826964827634826970847f00000189736563703235"
-        "366b31a103ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31388375647082765f");
+    bytes rlp = fromBase64(
+        "+IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj"
+        "499SZuOh8R33Ls8RRcy5wBgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2"
+        "/oxVtw0RW/QAdpzBQA8yWM0xOIN1ZHCCdl8=");
     ENR enr = IdentitySchemeV4::parseENR(RLP{rlp});
 
     EXPECT_EQ(enr.signature(),
