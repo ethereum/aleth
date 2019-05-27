@@ -216,3 +216,38 @@ TEST(enr, publicKeyV4)
 
     EXPECT_EQ(IdentitySchemeV4::publicKey(enr), toPublicCompressed(keyPair.secret()));
 }
+
+TEST(enr, createV4ipv6)
+{
+    auto const keyPair = KeyPair::create();
+    auto const address = bi::address::from_string("fe80::1016:4b5f:c4d7:7a68");
+    ENR const enr = IdentitySchemeV4::createENR(keyPair.secret(), address, 3322, 5544);
+
+    auto keyValuePairs = enr.keyValuePairs();
+
+    EXPECT_FALSE(contains(keyValuePairs, std::string("ip")));
+    EXPECT_TRUE(contains(keyValuePairs, std::string("ip6")));
+
+    EXPECT_EQ(keyValuePairs["ip6"], rlp(bytes{0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+                                        0x16, 0x4b, 0x5f, 0xc4, 0xd7, 0x7a, 0x68}));
+
+    EXPECT_EQ(enr.ip6(), address);
+}
+
+TEST(enr, createV4addressUnknown)
+{
+    auto keyPair = KeyPair::create();
+    ENR enr = IdentitySchemeV4::createENR(keyPair.secret(), bi::address{}, 0, 0);
+
+    auto keyValuePairs = enr.keyValuePairs();
+
+    EXPECT_FALSE(contains(keyValuePairs, std::string("ip")));
+    EXPECT_FALSE(contains(keyValuePairs, std::string("ip6")));
+    EXPECT_FALSE(contains(keyValuePairs, std::string("tcp")));
+    EXPECT_FALSE(contains(keyValuePairs, std::string("udp")));
+
+    EXPECT_EQ(enr.ip(), ba::ip::address_v4{});
+    EXPECT_EQ(enr.ip6(), ba::ip::address_v6{});
+    EXPECT_EQ(enr.tcpPort(), 0);
+    EXPECT_EQ(enr.udpPort(), 0);
+}
