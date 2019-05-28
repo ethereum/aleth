@@ -28,8 +28,6 @@
 #include "RLPxHandshake.h"
 #include "RLPXPacket.h"
 
-static_assert(CRYPTOPP_VERSION == 565, "Wrong Crypto++ version");
-
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;

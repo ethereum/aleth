@@ -27,7 +27,7 @@
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
 
-static_assert(CRYPTOPP_VERSION == 565, "Wrong Crypto++ version");
+static_assert(CRYPTOPP_VERSION == 820, "Wrong Crypto++ version");
 
 using namespace dev;
 using namespace dev::crypto;
