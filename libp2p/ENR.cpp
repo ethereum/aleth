@@ -128,13 +128,13 @@ boost::asio::ip::address ENR::ip() const
 uint16_t ENR::tcpPort() const
 {
     auto itTCP = m_keyValuePairs.find(c_keyTCP);
-    return itTCP == m_keyValuePairs.end() ? 0 : RLP{itTCP->second}.toInt<uint16_t>();
+    return itTCP == m_keyValuePairs.end() ? 0 : RLP{itTCP->second}.toInt<uint16_t>(RLP::VeryStrict);
 }
 
 uint16_t ENR::udpPort() const
 {
     auto itUDP = m_keyValuePairs.find(c_keyUDP);
-    return itUDP == m_keyValuePairs.end() ? 0 : RLP{itUDP->second}.toInt<uint16_t>();
+    return itUDP == m_keyValuePairs.end() ? 0 : RLP{itUDP->second}.toInt<uint16_t>(RLP::VeryStrict);
 }
 
 ENR IdentitySchemeV4::createENR(Secret const& _secret, boost::asio::ip::address const& _ip,
@@ -229,9 +229,11 @@ std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
     {
         auto const pubKey = IdentitySchemeV4::publicKey(_enr);
         auto const address = _enr.ip();
+        auto const tcp = _enr.tcpPort();
+        auto const udp = _enr.udpPort();
 
-        _out << "key=" << pubKey.abridged() << " ip=" << address << " tcp=" << _enr.tcpPort()
-             << " udp=" << _enr.udpPort();
+        _out << "key=" << pubKey.abridged() << " ip=" << address << " tcp=" << tcp
+             << " udp=" << udp;
     }
     catch (Exception const&)
     {
