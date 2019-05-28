@@ -18,7 +18,6 @@
 #include <test/tools/jsontests/vm.h>
 #include <test/tools/libtesteth/TestHelper.h>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/tokenizer.hpp>
 #include <clocale>
 #include <cstdlib>
 #include <iostream>
@@ -162,7 +161,7 @@ int main(int argc, const char* argv[])
 
 void printTestSuiteSuggestions(string const& _sMinusTArg)
 {
-    auto testList = test::testSuggestions(c_allTestNames, _sMinusTArg);
+    auto const testList = test::testSuggestions(c_allTestNames, _sMinusTArg);
     std::cerr << "Did you mean: \n";
     for (auto const& element : testList)
         std::cerr << "-t " << element << "\n";
