@@ -32,7 +32,7 @@ template <std::size_t N>
 std::array<byte, N> bytesToAddress(bytesConstRef _bytes)
 {
     std::array<byte, N> address;
-    std::copy(_bytes.begin(), _bytes.begin() + N, address.begin());
+    std::copy_n(_bytes.begin(), N, address.begin());
     return address;
 }
 }  // namespace
@@ -99,7 +99,7 @@ void ENR::streamContent(RLPStream& _s) const
 ENR ENR::update(
     std::map<std::string, bytes> const& _keyValuePairs, SignFunction const& _signFunction) const
 {
-    return ENR(m_seq + 1, _keyValuePairs, _signFunction);
+    return ENR{m_seq + 1, _keyValuePairs, _signFunction};
 }
 
 std::string ENR::id() const
@@ -227,8 +227,11 @@ std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
 
     try
     {
-        _out << "key=" << IdentitySchemeV4::publicKey(_enr).abridged() << " ip=" << _enr.ip()
-             << " tcp=" << _enr.tcpPort() << " udp=" << _enr.udpPort();
+        auto const pubKey = IdentitySchemeV4::publicKey(_enr);
+        auto const address = _enr.ip();
+
+        _out << "key=" << pubKey.abridged() << " ip=" << address << " tcp=" << _enr.tcpPort()
+             << " udp=" << _enr.udpPort();
     }
     catch (Exception const&)
     {
