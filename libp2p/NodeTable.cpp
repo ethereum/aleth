@@ -42,11 +42,11 @@ NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint 
   : m_hostNodeID{_alias.pub()},
     m_hostNodeIDHash{sha3(m_hostNodeID)},
     m_hostStaticIP{isAllowedEndpoint(_endpoint) ? _endpoint.address() : bi::address{}},
-    m_hostNodeEndpoint{_endpoint},
+    m_hostNodeEndpoint{_enr.ip(), _enr.udpPort(), _enr.tcpPort()},
     m_hostENR{_enr},
     m_secret{_alias.secret()},
     m_socket{make_shared<NodeSocket>(
-        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)m_hostNodeEndpoint)},
+        _io, static_cast<UDPSocketEvents&>(*this), (bi::udp::endpoint)_endpoint)},
     m_requestTimeToLive{DiscoveryDatagram::c_timeToLiveS},
     m_allowLocalDiscovery{_allowLocalDiscovery},
     m_discoveryTimer{make_shared<ba::steady_timer>(_io)},
@@ -558,8 +558,14 @@ shared_ptr<NodeEntry> NodeTable::handlePong(
         {
             m_hostNodeEndpoint = NodeIPEndpoint{
                 newUdpEndpoint.address(), newUdpEndpoint.port(), m_hostNodeEndpoint.tcpPort()};
-            LOG(m_logger) << "New external endpoint found: " << m_hostNodeEndpoint;
-        }
+            {
+                Guard l(m_hostENRMutex);
+                m_hostENR =
+                    IdentitySchemeV4::updateENR(m_hostENR, m_secret, m_hostNodeEndpoint.address(),
+                        m_hostNodeEndpoint.tcpPort(), m_hostNodeEndpoint.udpPort());
+            }
+            clog(VerbosityInfo, "net") << "ENR updated: " << m_hostENR;
+        }        
     }
 
     return sourceNodeEntry;

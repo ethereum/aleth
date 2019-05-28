@@ -244,7 +244,11 @@ public:
     p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkConfig().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
 
     /// Get Ethereum Node Record of the host
-    ENR enr() const { return m_enr; }
+    ENR enr() const
+    {
+        Guard l(x_nodeTable);
+        return m_nodeTable ? m_nodeTable->hostENR() : m_restoredENR;
+    }
 
     /// Apply function to each session
     void forEachPeer(
@@ -279,8 +283,11 @@ private:
 
     bool isHandshaking(NodeID const& _id) const;
 
-    /// Determines and sets m_tcpPublic to publicly advertised address.
-    void determinePublic();
+    /// Determines publicly advertised address.
+    bi::tcp::endpoint determinePublic() const;
+
+    ENR updateENR(
+        ENR const& _restoredENR, bi::tcp::endpoint const& _tcpPublic, uint16_t const& _listenPort);
 
     void connect(std::shared_ptr<Peer> const& _p);
 
@@ -360,7 +367,8 @@ private:
     bi::tcp::endpoint m_tcpPublic;											///< Our public listening endpoint.
     /// Alias for network communication.
     KeyPair m_alias;
-    ENR m_enr;
+    /// Host's Ethereum Node Record restored from network.rlp
+    ENR const m_restoredENR;
     std::shared_ptr<NodeTable> m_nodeTable;									///< Node table (uses kademlia-like discovery).
     mutable std::mutex x_nodeTable;
     std::shared_ptr<NodeTable> nodeTable() const { Guard l(x_nodeTable); return m_nodeTable; }

@@ -27,7 +27,7 @@ TEST(enr, parse)
         "f884b8407098ad865b00a582051940cb9cf36836572411a47278783077011599ed5cd16b76f2635f4e234738f3"
         "0813a89eb9137e3e3df5266e3a1f11df72ecf1145ccb9c01826964827634826970847f00000189736563703235"
         "366b31a103ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31388375647082765f");
-    ENR enr = parseV4ENR(RLP{rlp});
+    ENR enr = IdentitySchemeV4::parseENR(RLP{rlp});
 
     EXPECT_EQ(enr.signature(),
         fromHex("7098ad865b00a582051940cb9cf36836572411a47278783077011599ed5cd16b76f2635f4e234738f3"
@@ -45,17 +45,43 @@ TEST(enr, createAndParse)
 {
     auto keyPair = KeyPair::create();
 
-    ENR enr1 = createV4ENR(keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
+    ENR enr1 = IdentitySchemeV4::createENR(
+        keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
 
     RLPStream s;
     enr1.streamRLP(s);
     bytes rlp = s.out();
 
-    ENR enr2 = parseV4ENR(RLP{rlp});
+    ENR enr2 = IdentitySchemeV4::parseENR(RLP{rlp});
 
     EXPECT_EQ(enr1.signature(), enr2.signature());
     EXPECT_EQ(enr1.sequenceNumber(), enr2.sequenceNumber());
     EXPECT_EQ(enr1.keyValuePairs(), enr2.keyValuePairs());
+}
+
+TEST(enr, update)
+{
+    auto keyPair = KeyPair::create();
+
+    ENR const enr1 = IdentitySchemeV4::createENR(
+        keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
+
+    EXPECT_EQ(enr1.sequenceNumber(), 1);
+
+    ENR const enr2 = IdentitySchemeV4::updateENR(
+        enr1, keyPair.secret(), bi::address::from_string("127.0.0.1"), 3323, 5545);
+
+    EXPECT_EQ(enr2.sequenceNumber(), 2);
+
+    RLPStream s;
+    enr2.streamRLP(s);
+    bytes rlp = s.out();
+
+    ENR enrParsed = IdentitySchemeV4::parseENR(RLP{rlp});
+
+    EXPECT_EQ(enrParsed.sequenceNumber(), 2);
+    EXPECT_EQ(enrParsed.tcpPort(), 3323);
+    EXPECT_EQ(enrParsed.udpPort(), 5545);
 }
 
 TEST(enr, parseTooBigRlp)
@@ -110,7 +136,8 @@ TEST(enr, parseInvalidSignature)
 {
     auto keyPair = KeyPair::create();
 
-    ENR enr1 = createV4ENR(keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
+    ENR enr1 = IdentitySchemeV4::createENR(
+        keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
 
     RLPStream s;
     enr1.streamRLP(s);
@@ -120,7 +147,7 @@ TEST(enr, parseInvalidSignature)
     auto signatureOffset = RLP{rlp}[0].payload().data() - rlp.data();
     rlp[signatureOffset]++;
 
-    EXPECT_THROW(parseV4ENR(RLP{rlp}), ENRSignatureIsInvalid);
+    EXPECT_THROW(IdentitySchemeV4::parseENR(RLP{rlp}), ENRSignatureIsInvalid);
 }
 
 TEST(enr, parseV4WithInvalidID)
@@ -133,7 +160,7 @@ TEST(enr, parseV4WithInvalidID)
     enr1.streamRLP(s);
     bytes rlp = s.out();
 
-    EXPECT_THROW(parseV4ENR(RLP{rlp}), ENRSignatureIsInvalid);
+    EXPECT_THROW(IdentitySchemeV4::parseENR(RLP{rlp}), ENRSignatureIsInvalid);
 }
 
 TEST(enr, parseV4WithNoPublicKey)
@@ -146,13 +173,14 @@ TEST(enr, parseV4WithNoPublicKey)
     enr1.streamRLP(s);
     bytes rlp = s.out();
 
-    EXPECT_THROW(parseV4ENR(RLP{rlp}), ENRSignatureIsInvalid);
+    EXPECT_THROW(IdentitySchemeV4::parseENR(RLP{rlp}), ENRSignatureIsInvalid);
 }
 
 TEST(enr, createV4)
 {
     auto keyPair = KeyPair::create();
-    ENR enr = createV4ENR(keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
+    ENR enr = IdentitySchemeV4::createENR(
+        keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
 
     auto keyValuePairs = enr.keyValuePairs();
 
@@ -165,4 +193,25 @@ TEST(enr, createV4)
     EXPECT_EQ(keyValuePairs["tcp"], rlp(3322));
     EXPECT_TRUE(contains(keyValuePairs, std::string("udp")));
     EXPECT_EQ(keyValuePairs["udp"], rlp(5544));
+}
+
+TEST(enr, predefinedKeys)
+{
+    auto keyPair = KeyPair::create();
+    ENR enr = IdentitySchemeV4::createENR(
+        keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
+
+    EXPECT_EQ(enr.id(), "v4");
+    EXPECT_EQ(enr.ip(), bi::address::from_string("127.0.0.1"));
+    EXPECT_EQ(enr.tcpPort(), 3322);
+    EXPECT_EQ(enr.udpPort(), 5544);
+}
+
+TEST(enr, publicKeyV4)
+{
+    auto keyPair = KeyPair::create();
+    ENR enr = IdentitySchemeV4::createENR(
+        keyPair.secret(), bi::address::from_string("127.0.0.1"), 3322, 5544);
+
+    EXPECT_EQ(IdentitySchemeV4::publicKey(enr), toPublicCompressed(keyPair.secret()));
 }
