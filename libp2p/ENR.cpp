@@ -250,12 +250,20 @@ std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
     try
     {
         auto const pubKey = IdentitySchemeV4::publicKey(_enr);
-        auto const address = _enr.ip();
+        auto const addressV4 = _enr.ip();
+        auto const addressV6 = _enr.ip6();
         auto const tcp = _enr.tcpPort();
         auto const udp = _enr.udpPort();
 
-        _out << "key=" << pubKey.abridged() << " ip=" << address << " tcp=" << tcp
-             << " udp=" << udp;
+        _out << "key=" << pubKey.abridged();
+        if (!addressV4.is_unspecified())
+            _out << " ip=" << addressV4;
+        if (!addressV6.is_unspecified())
+            _out << " ip6=" << addressV6;
+        if (tcp != 0)
+            _out << " tcp=" << tcp;
+        if (udp != 0)
+            _out << " udp=" << udp;
     }
     catch (Exception const&)
     {
