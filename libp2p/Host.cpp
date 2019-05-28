@@ -594,10 +594,9 @@ void Host::requirePeer(NodeID const& _nodeID, NodeIPEndpoint const& _endpoint)
         return;
     }
 
-
     {
         Guard l(x_requiredPeers);
-        m_requiredPeers.insert(_n);
+        m_requiredPeers.insert(_nodeID);
     }
 
     Node node(_nodeID, _endpoint, PeerType::Required);
@@ -615,7 +614,7 @@ void Host::requirePeer(NodeID const& _nodeID, NodeIPEndpoint const& _endpoint)
         }
     }
     // required for discovery
-    addNodeToNodeTable(*p);
+    addNodeToNodeTable(*peer);
 }
 
 bool Host::isRequiredPeer(NodeID const& _id) const
@@ -1118,3 +1117,13 @@ void Host::forEachPeer(
             return;
 }
 
+std::shared_ptr<Peer> Host::findPeer(
+    NodeID const& _nodeID, bi::address const& _address, unsigned short _tcpPort) const
+{
+    auto const itPeer = m_peers.find(_nodeID);
+    if (itPeer != m_peers.end() && itPeer->second->endpoint.address() == _address &&
+        itPeer->second->endpoint.tcpPort() == _tcpPort)
+        return itPeer->second;
+
+    return {};
+}
