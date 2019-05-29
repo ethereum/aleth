@@ -113,10 +113,20 @@ public:
     static_assert((unsigned)maxDatagramSize < 65507u, "UDP datagrams cannot be larger than 65507 bytes");
 
     /// Create socket for specific endpoint.
-    UDPSocket(ba::io_context& _io, UDPSocketEvents& _host, bi::udp::endpoint _endpoint): m_host(_host), m_endpoint(_endpoint), m_socket(_io) { m_started.store(false); m_closed.store(true); };
+    UDPSocket(ba::io_context& _io, UDPSocketEvents& _host, bi::udp::endpoint _endpoint)
+      : m_host(_host), m_endpoint(_endpoint), m_socket(_io)
+    {
+        m_started.store(false);
+        m_closed.store(true);
+    };
 
     /// Create socket which listens to all ports.
-    UDPSocket(ba::io_context& _io, UDPSocketEvents& _host, unsigned _port): m_host(_host), m_endpoint(bi::udp::v4(), _port), m_socket(_io) { m_started.store(false); m_closed.store(true); };
+    UDPSocket(ba::io_context& _io, UDPSocketEvents& _host, unsigned _port)
+      : m_host(_host), m_endpoint(bi::udp::v4(), _port), m_socket(_io)
+    {
+        m_started.store(false);
+        m_closed.store(true);
+    };
     virtual ~UDPSocket() { disconnect(); }
 
     /// Socket will begin listening for and delivering packets
