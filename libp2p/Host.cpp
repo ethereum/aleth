@@ -193,7 +193,7 @@ void Host::stopCapabilities()
     for (auto const& itCap : m_capabilities)
     {
         auto timer = itCap.second.backgroundWorkTimer;
-        m_ioContext.post([timer] { timer->expires_at(c_steadyClockMin); });
+        post(m_ioContext, [timer] { timer->expires_at(c_steadyClockMin); });
     }
 }
 

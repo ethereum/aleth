@@ -328,7 +328,7 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
 
 void NodeTable::schedulePing(Node const& _node)
 {
-    m_io.post([this, _node] { ping(_node, {}); });
+    post(m_io, [this, _node] { ping(_node, {}); });
 }
 
 void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replacement)
@@ -845,7 +845,7 @@ void NodeTable::cancelTimer(std::shared_ptr<ba::steady_timer> _timer)
     //
     // Note that we "cancel" via io_context::post to ensure thread safety when accessing the
     // timers
-    m_io.post([_timer] { _timer->expires_at(c_steadyClockMin); });
+    post(m_io, [_timer] { _timer->expires_at(c_steadyClockMin); });
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)

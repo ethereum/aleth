@@ -189,7 +189,7 @@ struct TestNodeTable: public NodeTable
     boost::optional<NodeValidation> nodeValidation(bi::udp::endpoint const& _endpoint)
     {
         promise<boost::optional<NodeValidation>> promise;
-        m_io.post([this, &promise, _endpoint] {
+        post(m_io, [this, &promise, _endpoint] {
             auto validation = m_sentPings.find(_endpoint);
             if (validation != m_sentPings.end())
                 promise.set_value(validation->second);

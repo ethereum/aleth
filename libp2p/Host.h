@@ -255,7 +255,7 @@ public:
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
 
     /// Execute work on the network thread
-    void postWork(std::function<void()> _f) { m_ioContext.post(_f); }
+    void postWork(std::function<void()> _f) { post(m_ioContext, std::move(_f)); }
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
