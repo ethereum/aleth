@@ -343,6 +343,9 @@ private:
     /// Stop registered capabilities, typically done when the network is being shut down.
     void stopCapabilities();
 
+    std::shared_ptr<Peer> findPeer(
+        NodeID const& _nodeID, bi::address const& _address, unsigned short _tcpPort) const;
+
     bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
     std::atomic<bool> m_run{false};													///< Whether network is running.
