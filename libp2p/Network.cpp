@@ -215,7 +215,7 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
 
 bi::tcp::endpoint Network::resolveHost(string const& _addr)
 {
-    static boost::asio::io_service s_resolverIoService;
+    static boost::asio::io_context s_resolverIoContext;
 
     vector<string> split;
     boost::split(split, _addr, boost::is_any_of(":"));
@@ -237,7 +237,7 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
     {
         boost::system::error_code ec;
         // resolve returns an iterator (host can resolve to multiple addresses)
-        bi::tcp::resolver r(s_resolverIoService);
+        bi::tcp::resolver r(s_resolverIoContext);
         auto it = r.resolve({bi::tcp::v4(), split[0], toString(port)}, ec);
         if (ec)
         {

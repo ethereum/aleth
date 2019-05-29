@@ -37,7 +37,7 @@ inline bool operator==(weak_ptr<NodeEntry> const& _weak, shared_ptr<NodeEntry> c
     return !_weak.owner_before(_shared) && !_shared.owner_before(_weak);
 }
 
-NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
+NodeTable::NodeTable(ba::io_context& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
     ENR const& _enr, bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID{_alias.pub()},
     m_hostNodeIDHash{sha3(m_hostNodeID)},
@@ -843,7 +843,7 @@ void NodeTable::cancelTimer(std::shared_ptr<ba::steady_timer> _timer)
     // because cancel won't set the boost error code if the timers have already expired and
     // the handlers are in the ready queue.
     //
-    // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
+    // Note that we "cancel" via io_context::post to ensure thread safety when accessing the
     // timers
     m_io.post([_timer] { _timer->expires_at(c_steadyClockMin); });
 }

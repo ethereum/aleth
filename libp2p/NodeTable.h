@@ -109,7 +109,7 @@ public:
 
     /// Constructor requiring host for I/O, credentials, and IP Address, port to listen on 
     /// and host ENR.
-    NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
+    NodeTable(ba::io_context& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
         ENR const& _enr, bool _enabled = true, bool _allowLocalDiscovery = false);
 
     /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
@@ -374,7 +374,7 @@ protected:
     std::shared_ptr<ba::steady_timer> m_timeoutsTimer;
     std::shared_ptr<ba::steady_timer> m_endpointTrackingTimer;
 
-    ba::io_service& m_io;
+    ba::io_context& m_io;
 };
 
 /**

@@ -39,14 +39,14 @@ public:
     void doneWorking() override { m_io.reset(); m_io.poll(); m_io.reset(); }
 
 protected:
-    ba::io_service m_io;
+    ba::io_context m_io;
 };
 
 struct TestNodeTable: public NodeTable
 {
     /// Constructor
     TestNodeTable(
-        ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311)
+        ba::io_context& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30311)
       : NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port),
             IdentitySchemeV4::createENR(_alias.secret(), _addr, _port, _port),
             true /* discovery enabled */, true /* allow local discovery */)
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(hostNoCapsNoTcpListener)
 
     {
         // Verify no TCP listener on the host port
-        io::io_service ioService;
+        io::io_context ioService;
         bi::tcp::acceptor tcp4Acceptor{ioService};
         auto const tcpListenPort = Network::tcp4Listen(tcp4Acceptor, NetworkConfig{ c_localhostIp, hostPort});
         BOOST_REQUIRE_EQUAL(tcpListenPort, hostPort);
@@ -1447,7 +1447,7 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
 
 (deadlineTimer)
 {
-    ba::io_service io;
+    ba::io_context io;
     ba::deadline_timer t(io);
     bool start = false;
     boost::system::error_code ec;
@@ -1478,7 +1478,7 @@ BOOST_AUTO_TEST_CASE(unspecifiedNode)
 
 BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
 {
-    ba::io_service io;
+    ba::io_context io;
     auto const port = randomPortNumber();
     auto const keyPair = KeyPair::create();
     auto const addr = bi::address::from_string(c_localhostIp);

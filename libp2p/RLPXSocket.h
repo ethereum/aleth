@@ -39,7 +39,7 @@ namespace p2p
 class RLPXSocket: public std::enable_shared_from_this<RLPXSocket>
 {
 public:
-	RLPXSocket(ba::io_service& _ioService): m_socket(_ioService) {}
+	RLPXSocket(ba::io_context& _ioService): m_socket(_ioService) {}
 	~RLPXSocket() { close(); }
 	
 	bool isConnected() const { return m_socket.is_open(); }

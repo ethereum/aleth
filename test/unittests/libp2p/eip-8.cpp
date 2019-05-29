@@ -362,7 +362,7 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(
     Secret _hostAlias, bytes _packet, NodeID _remoteID)
 {
     // Spawn a listener which sends the packet to any client.
-    ba::io_service io;
+    ba::io_context io;
     bi::tcp::acceptor acceptor(io);
     bi::tcp::endpoint endpoint(bi::address::from_string("127.0.0.1"), 0);
     acceptor.open(endpoint.protocol());

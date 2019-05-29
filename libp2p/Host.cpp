@@ -91,10 +91,10 @@ Host::Host(
     m_clientVersion(_clientVersion),
     m_netConfig(_n),
     m_ifAddresses(Network::getInterfaceAddresses()),
-    m_ioService(2),  // concurrency hint, suggests how many threads it should allow to run
+    m_ioContext(2),  // concurrency hint, suggests how many threads it should allow to run
                      // simultaneously
-    m_tcp4Acceptor(m_ioService),
-    m_runTimer(m_ioService),
+    m_tcp4Acceptor(m_ioContext),
+    m_runTimer(m_ioContext),
     m_alias{_secretAndENR.first},
     m_restoredENR{_secretAndENR.second},
     m_lastPing(chrono::steady_clock::time_point::min()),
@@ -137,7 +137,7 @@ void Host::start()
 
 void Host::stop()
 {
-    // called to force io_service to kill any remaining tasks it might have -
+    // called to force io_context to kill any remaining tasks it might have -
     // such tasks may involve socket reads from Capabilities that maintain references
     // to resources we're about to free.
 
@@ -148,7 +148,7 @@ void Host::stop()
 
     // stopping io service allows running manual network operations for shutdown
     // and also stops blocking worker thread, allowing worker thread to exit
-    m_ioService.stop();
+    m_ioContext.stop();
 
     // Close the node table socket and cancel deadline timers. This effectively stops
     // discovery, even during subsequent io service polling
@@ -193,7 +193,7 @@ void Host::stopCapabilities()
     for (auto const& itCap : m_capabilities)
     {
         auto timer = itCap.second.backgroundWorkTimer;
-        m_ioService.post([timer] { timer->expires_at(c_steadyClockMin); });
+        m_ioContext.post([timer] { timer->expires_at(c_steadyClockMin); });
     }
 }
 
@@ -204,8 +204,8 @@ void Host::doneWorking()
     if (!haveCapabilities())
         return;
 
-    // reset ioservice (allows manually polling network, below)
-    m_ioService.reset();
+    // reset io_context (allows manually polling network, below)
+    m_ioContext.reset();
 
     // shutdown acceptor
     m_tcp4Acceptor.cancel();
@@ -217,9 +217,9 @@ void Host::doneWorking()
     // This helps ensure a peer isn't stopped at the same time it's starting
     // and that socket for pending connection is closed.
     while (m_accepting)
-        m_ioService.poll();
+        m_ioContext.poll();
 
-    // (eth: stops syncing or block / tx broadcast). Capabilities will be cancelled when ioservice
+    // (eth: stops syncing or block / tx broadcast). Capabilities will be cancelled when io_context
     // is polled on pending handshake / peer disconnect
     stopCapabilities();
 
@@ -235,7 +235,7 @@ void Host::doneWorking()
                 }
         if (!n)
             break;
-        m_ioService.poll();
+        m_ioContext.poll();
     }
     
     // disconnect peers
@@ -253,7 +253,7 @@ void Host::doneWorking()
             break;
 
         // poll so that peers send out disconnect packets
-        m_ioService.poll();
+        m_ioContext.poll();
     }
 
     // finally, clear out peers (in case they're lingering)
@@ -508,7 +508,7 @@ void Host::runAcceptor()
         cnetdetails << "Listening on local port " << m_listenPort;
         m_accepting = true;
 
-        auto socket = make_shared<RLPXSocket>(m_ioService);
+        auto socket = make_shared<RLPXSocket>(m_ioContext);
         m_tcp4Acceptor.async_accept(socket->ref(), [=](boost::system::error_code ec)
         {
             m_accepting = false;
@@ -565,7 +565,7 @@ void Host::registerCapability(
         cwarn << "Capabilities must be registered before the network is started";
         return;
     }
-    m_capabilities[{_name, _version}] = {_cap, make_shared<ba::steady_timer>(m_ioService)};
+    m_capabilities[{_name, _version}] = {_cap, make_shared<ba::steady_timer>(m_ioContext)};
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)
@@ -702,7 +702,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
     
     bi::tcp::endpoint ep(_p->endpoint);
     cnetdetails << "Attempting connection to " << _p->id << "@" << ep << " from " << id();
-    auto socket = make_shared<RLPXSocket>(m_ioService);
+    auto socket = make_shared<RLPXSocket>(m_ioContext);
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
         _p->m_lastAttempted = chrono::system_clock::now();
@@ -846,7 +846,7 @@ void Host::startedWorking()
     m_tcpPublic = determinePublic();
     ENR const enr = updateENR(m_restoredENR, m_tcpPublic, listenPort());
 
-    auto nodeTable = make_shared<NodeTable>(m_ioService, m_alias,
+    auto nodeTable = make_shared<NodeTable>(m_ioContext, m_alias,
         NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()), enr,
         m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
@@ -873,7 +873,7 @@ void Host::doWork()
     try
     {
         if (m_run)
-            m_ioService.run();
+            m_ioContext.run();
     }
     catch (exception const& _e)
     {
