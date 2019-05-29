@@ -368,11 +368,11 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(
     acceptor.open(endpoint.protocol());
     acceptor.bind(endpoint);
     acceptor.listen();
-    auto server = std::make_shared<RLPXSocket>(io);
-    acceptor.async_accept(server->ref(), [_packet, server](boost::system::error_code const& _ec) {
+    acceptor.async_accept([_packet](boost::system::error_code const& _ec, bi::tcp::socket _socket) {
         throwErrorCode("accept error: ", _ec);
+        auto server = std::make_shared<RLPXSocket>(move(_socket));
         ba::async_write(server->ref(), ba::buffer(_packet),
-            [](const boost::system::error_code& _ec, std::size_t) {
+            [server](const boost::system::error_code& _ec, std::size_t) {
                 throwErrorCode("write error: ", _ec);
             });
     });
@@ -380,7 +380,7 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(
     // Spawn a client to execute the handshake.
     auto host = make_shared<Host>("peer name",
         make_pair(_hostAlias, IdentitySchemeV4::createENR(_hostAlias, endpoint.address(), 0, 0)));
-    auto client = make_shared<RLPXSocket>(io);
+    auto client = make_shared<RLPXSocket>(bi::tcp::socket{io});
     shared_ptr<TestHandshake> handshake;
     if (_remoteID == NodeID())
         handshake.reset(new TestHandshake(host.get(), client));

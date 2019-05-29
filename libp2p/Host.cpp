@@ -508,21 +508,18 @@ void Host::runAcceptor()
         cnetdetails << "Listening on local port " << m_listenPort;
         m_accepting = true;
 
-        auto socket = make_shared<RLPXSocket>(m_ioContext);
-        m_tcp4Acceptor.async_accept(socket->ref(), [=](boost::system::error_code ec)
-        {
+        m_tcp4Acceptor.async_accept([=](boost::system::error_code _ec, bi::tcp::socket _socket) {
             m_accepting = false;
-            if (ec || !m_tcp4Acceptor.is_open())
-            {
-                socket->close();
+            if (_ec || !m_tcp4Acceptor.is_open())
                 return;
-            }
+
+            auto socket = make_shared<RLPXSocket>(std::move(_socket));
             if (peerCount() > peerSlots(Ingress))
             {
                 cnetdetails << "Dropping incoming connect due to maximum peer count (" << Ingress
                             << " * ideal peer count): " << socket->remoteEndpoint();
                 socket->close();
-                if (ec.value() < 1)
+                if (_ec.value() < 1)
                     runAcceptor();
                 return;
             }
@@ -702,7 +699,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
     
     bi::tcp::endpoint ep(_p->endpoint);
     cnetdetails << "Attempting connection to " << _p->id << "@" << ep << " from " << id();
-    auto socket = make_shared<RLPXSocket>(m_ioContext);
+    auto socket = make_shared<RLPXSocket>(bi::tcp::socket{m_ioContext});
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
         _p->m_lastAttempted = chrono::system_clock::now();
