@@ -34,8 +34,7 @@ char const* p2pPacketTypeToString(P2pPacketType _packetType)
 
 bool isPublicAddress(string const& _addressToCheck)
 {
-    return _addressToCheck.empty() ? false :
-                                     isPublicAddress(bi::address::from_string(_addressToCheck));
+    return _addressToCheck.empty() ? false : isPublicAddress(bi::make_address(_addressToCheck));
 }
 
 bool isPublicAddress(bi::address const& _addressToCheck)
@@ -88,8 +87,7 @@ bool isPrivateAddress(bi::address const& _addressToCheck)
 
 bool isPrivateAddress(string const& _addressToCheck)
 {
-    return _addressToCheck.empty() ? false :
-                                     isPrivateAddress(bi::address::from_string(_addressToCheck));
+    return _addressToCheck.empty() ? false : isPrivateAddress(bi::make_address(_addressToCheck));
 }
 
 // Helper function to determine if an address is localhost
@@ -97,10 +95,10 @@ bool isLocalHostAddress(bi::address const& _addressToCheck)
 {
     // @todo: ivp6 link-local adresses (macos), ex: fe80::1%lo0
     static const set<bi::address> c_rejectAddresses = {
-        {bi::address_v4::from_string(c_localhostIp)},
-        {bi::address_v4::from_string("0.0.0.0")},
-        {bi::address_v6::from_string("::1")},
-        {bi::address_v6::from_string("::")},
+        {bi::make_address_v4(c_localhostIp)},
+        {bi::make_address_v4("0.0.0.0")},
+        {bi::make_address_v6("::1")},
+        {bi::make_address_v6("::")},
     };
 
     return c_rejectAddresses.find(_addressToCheck) != c_rejectAddresses.end();
@@ -108,8 +106,7 @@ bool isLocalHostAddress(bi::address const& _addressToCheck)
 
 bool isLocalHostAddress(string const& _addressToCheck)
 {
-    return _addressToCheck.empty() ? false :
-                                     isLocalHostAddress(bi::address::from_string(_addressToCheck));
+    return _addressToCheck.empty() ? false : isLocalHostAddress(bi::make_address(_addressToCheck));
 }
 
 string reasonOf(DisconnectReason _r)

@@ -113,8 +113,7 @@ TEST(p2p, capability)
 
     EXPECT_TRUE(host1.isStarted());
     EXPECT_TRUE(host2.isStarted());
-    host1.requirePeer(
-        host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
+    host1.requirePeer(host2.id(), NodeIPEndpoint(bi::make_address(localhost), port2, port2));
 
     // Wait for up to 12 seconds, to give the hosts time to connect to each other.
     for (unsigned i = 0; i < 12000; i += step)

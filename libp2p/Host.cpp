@@ -438,9 +438,13 @@ bi::tcp::endpoint Host::determinePublic() const
     // return listenIP (if public) > public > upnp > unspecified address.
 
     auto ifAddresses = Network::getInterfaceAddresses();
-    auto laddr = m_netConfig.listenIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.listenIPAddress);
+    auto laddr = m_netConfig.listenIPAddress.empty() ?
+                     bi::address() :
+                     bi::make_address(m_netConfig.listenIPAddress);
     auto lset = !laddr.is_unspecified();
-    auto paddr = m_netConfig.publicIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.publicIPAddress);
+    auto paddr = m_netConfig.publicIPAddress.empty() ?
+                     bi::address() :
+                     bi::make_address(m_netConfig.publicIPAddress);
     auto pset = !paddr.is_unspecified();
     
     bool listenIsPublic = lset && isPublicAddress(laddr);
@@ -843,7 +847,7 @@ void Host::startedWorking()
     ENR const enr = updateENR(m_restoredENR, m_tcpPublic, listenPort());
 
     auto nodeTable = make_shared<NodeTable>(m_ioContext, m_alias,
-        NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()), enr,
+        NodeIPEndpoint(bi::make_address(listenAddress()), listenPort(), listenPort()), enr,
         m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
     // Don't set an event handler if we don't have capabilities, because no capabilities
@@ -1080,7 +1084,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
 
     auto const address = _netConfig.publicIPAddress.empty() ?
                              bi::address{} :
-                             bi::address::from_string(_netConfig.publicIPAddress);
+                             bi::make_address(_netConfig.publicIPAddress);
 
     return make_pair(secret,
         IdentitySchemeV4::createENR(secret, address, _netConfig.listenPort, _netConfig.listenPort));
