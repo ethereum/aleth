@@ -171,8 +171,7 @@ void Host::scheduleCapabilityWorkLoop(CapabilityFace& _cap, shared_ptr<ba::stead
 {
     _timer->expires_from_now(_cap.backgroundWorkInterval());
     _timer->async_wait([this, _timer, &_cap](boost::system::error_code _ec) {
-        if (_timer->expires_at() == c_steadyClockMin ||
-            _ec == boost::asio::error::operation_aborted)
+        if (_timer->expiry() == c_steadyClockMin || _ec == boost::asio::error::operation_aborted)
         {
             LOG(m_logger) << "Timer was probably cancelled for capability: " << _cap.descriptor();
             return;

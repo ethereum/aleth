@@ -258,7 +258,7 @@ void NodeTable::doDiscoveryRound(
             // We can't use m_logger here if there's an error because captured this might already be
             // destroyed
             if (_ec.value() == boost::asio::error::operation_aborted ||
-                discoveryTimer->expires_at() == c_steadyClockMin)
+                discoveryTimer->expiry() == c_steadyClockMin)
             {
                 clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
                 return;
@@ -756,7 +756,7 @@ void NodeTable::doDiscovery()
         // We can't use m_logger if an error occurred because captured this might be already
         // destroyed
         if (_ec.value() == boost::asio::error::operation_aborted ||
-            discoveryTimer->expires_at() == c_steadyClockMin)
+            discoveryTimer->expiry() == c_steadyClockMin)
         {
             clog(VerbosityDebug, "discov") << "Discovery timer was cancelled";
             return;
@@ -819,7 +819,7 @@ void NodeTable::runBackgroundTask(std::chrono::milliseconds const& _period,
         // We can't use m_logger if an error occurred because captured this might be already
         // destroyed
         if (_ec.value() == boost::asio::error::operation_aborted ||
-            _timer->expires_at() == c_steadyClockMin)
+            _timer->expiry() == c_steadyClockMin)
         {
             clog(VerbosityDebug, "discov") << "Timer was cancelled";
             return;
