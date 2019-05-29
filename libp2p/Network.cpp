@@ -239,14 +239,14 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
         boost::system::error_code ec;
         // resolve returns an iterator (host can resolve to multiple addresses)
         bi::tcp::resolver r(s_resolverIoContext);
-        auto it = r.resolve({bi::tcp::v4(), split[0], toString(port)}, ec);
-        if (ec)
+        auto res = r.resolve(bi::tcp::v4(), split[0], toString(port), ec);
+        if (ec || res.empty())
         {
             cnetlog << "Error resolving host address... " << _addr << " : " << ec.message();
             return bi::tcp::endpoint();
         }
         else
-            ep = *it;
+            ep = *res;
     }
     return ep;
 }
