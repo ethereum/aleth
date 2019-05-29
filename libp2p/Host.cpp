@@ -205,7 +205,7 @@ void Host::doneWorking()
         return;
 
     // reset io_context (allows manually polling network, below)
-    m_ioContext.reset();
+    m_ioContext.restart();
 
     // shutdown acceptor
     m_tcp4Acceptor.cancel();

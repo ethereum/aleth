@@ -36,7 +36,12 @@ public:
     ~TestHost() override { m_io.stop(); terminate(); }
     void start() { startWorking(); }
     void doWork() override { m_io.run(); }
-    void doneWorking() override { m_io.reset(); m_io.poll(); m_io.reset(); }
+    void doneWorking() override
+    {
+        m_io.restart();
+        m_io.poll();
+        m_io.restart();
+    }
 
 protected:
     ba::io_context m_io;
