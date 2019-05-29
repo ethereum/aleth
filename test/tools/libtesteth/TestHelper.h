@@ -105,6 +105,7 @@ bytes importByteArray(std::string const& _str);
 void requireJsonFields(json_spirit::mObject const& _o, std::string const& _section,
     std::map<std::string, json_spirit::Value_type> const& _validationMap);
 void checkHexHasEvenLength(std::string const&);
+size_t levenshteinDistance(char const* _s, size_t _n, char const* _t, size_t _m);
 void copyFile(boost::filesystem::path const& _source, boost::filesystem::path const& _destination);
 eth::LogEntries importLog(json_spirit::mArray const& _o);
 std::string exportLog(eth::LogEntries const& _logs);
@@ -131,6 +132,8 @@ json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
 json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMaskMap const& _map);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
+std::vector<std::string> testSuggestions(
+    std::vector<std::string> const& _testList, std::string const& _sMinusTArg);
 
 //Fill Test Functions
 bool createRandomTest();	//returns true if succeed, false if there was an error;

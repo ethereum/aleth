@@ -1,0 +1,8 @@
+#pragma once
+#include <string>
+#include <vector>
+
+std::vector<std::string> const c_allTestNames 
+{
+@allTests@
+};
