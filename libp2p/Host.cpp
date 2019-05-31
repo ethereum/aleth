@@ -511,7 +511,7 @@ void Host::runAcceptor()
         cnetdetails << "Listening on local port " << m_listenPort;
         m_accepting = true;
 
-        m_tcp4Acceptor.async_accept([=](boost::system::error_code _ec, bi::tcp::socket _socket) {
+        m_tcp4Acceptor.async_accept([this](boost::system::error_code _ec, bi::tcp::socket _socket) {
             m_accepting = false;
             if (_ec || !m_tcp4Acceptor.is_open())
                 return;
