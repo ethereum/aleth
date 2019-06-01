@@ -31,6 +31,11 @@ void NoProof::init()
     ETH_REGISTER_SEAL_ENGINE(NoProof);
 }
 
+void NoReward::init()
+{
+    ETH_REGISTER_SEAL_ENGINE(NoReward);
+}
+
 void NoProof::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
 {
     SealEngineFace::populateFromParent(_bi, _parent);

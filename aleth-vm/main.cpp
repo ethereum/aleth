@@ -91,6 +91,7 @@ int main(int argc, char** argv)
 
     Ethash::init();
     NoProof::init();
+    NoReward::init();
 
     po::options_description transactionOptions("Transaction options", c_lineWidth);
     string const gasLimitDescription =
