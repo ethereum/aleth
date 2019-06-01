@@ -83,6 +83,8 @@ enum class Asking
     Nothing
 };
 
+char const* askingToString(Asking _a);
+
 enum class SyncState
 {
     NotSynced,          ///< Initial chain sync has not started yet

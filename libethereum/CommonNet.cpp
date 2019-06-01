@@ -67,5 +67,30 @@ char const* ethPacketTypeToString(EthSubprotocolPacketType _packetType)
         return "UnknownEthPacket";
     }
 }
+
+char const* askingToString(Asking _a)
+{
+    switch (_a)
+    {
+    case Asking::BlockHeaders:
+        return "BlockHeaders";
+    case Asking::BlockBodies:
+        return "BlockBodies";
+    case Asking::NodeData:
+        return "NodeData";
+    case Asking::Receipts:
+        return "Receipts";
+    case Asking::Nothing:
+        return "Nothing";
+    case Asking::State:
+        return "State";
+    case Asking::WarpManifest:
+        return "WarpManifest";
+    case Asking::WarpData:
+        return "WarpData";
+    }
+    return "?";
+}
+
 }  // namespace eth
 }  // namespace dev

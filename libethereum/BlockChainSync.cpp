@@ -232,7 +232,7 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 
     if (peer.isConversing())
     {
-        LOG(m_loggerDetail) << "Can't sync with peer " << _peerID << " - outstanding asks.";
+        LOG(m_loggerDetail) << "Can't sync with peer " << _peerID << " - outstanding asks (" << askingToString(peer.asking()) << ")";
         return;
     }
 

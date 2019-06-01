@@ -31,30 +31,6 @@ constexpr unsigned c_maxIncomingNewHashes = 1024;
 constexpr unsigned c_peerTimeoutSeconds = 10;
 constexpr int c_minBlockBroadcastPeers = 4;
 
-string toString(Asking _a)
-{
-    switch (_a)
-    {
-    case Asking::BlockHeaders:
-        return "BlockHeaders";
-    case Asking::BlockBodies:
-        return "BlockBodies";
-    case Asking::NodeData:
-        return "NodeData";
-    case Asking::Receipts:
-        return "Receipts";
-    case Asking::Nothing:
-        return "Nothing";
-    case Asking::State:
-        return "State";
-    case Asking::WarpManifest:
-        return "WarpManifest";
-    case Asking::WarpData:
-        return "WarpData";
-    }
-    return "?";
-}
-
 class EthereumPeerObserver: public EthereumPeerObserverFace
 {
 public:
@@ -905,7 +881,7 @@ void EthereumCapability::setAsking(NodeID const& _peerID, Asking _a)
     peerStatus.setAsking(_a);
     peerStatus.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
 
-    m_host->addNote(_peerID, "ask", ::toString(_a));
+    m_host->addNote(_peerID, "ask", askingToString(_a));
     m_host->addNote(_peerID, "sync",
         string(isCriticalSyncing(_peerID) ? "ONGOING" : "holding") +
             (needsSyncing(_peerID) ? " & needed" : ""));

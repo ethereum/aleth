@@ -14,30 +14,6 @@ using namespace dev::eth;
 namespace
 {
 std::string const c_ethCapability = "eth";
-
-string toString(Asking _a)
-{
-    switch (_a)
-    {
-    case Asking::BlockHeaders:
-        return "BlockHeaders";
-    case Asking::BlockBodies:
-        return "BlockBodies";
-    case Asking::NodeData:
-        return "NodeData";
-    case Asking::Receipts:
-        return "Receipts";
-    case Asking::Nothing:
-        return "Nothing";
-    case Asking::State:
-        return "State";
-    case Asking::WarpManifest:
-        return "WarpManifest";
-    case Asking::WarpData:
-        return "WarpData";
-    }
-    return "?";
-}
 }  // namespace
 
 void EthereumPeer::setStatus(unsigned _protocolVersion, u256 const& _networkId,
@@ -88,7 +64,7 @@ void EthereumPeer::requestBlockHeaders(
 {
     if (m_asking != Asking::Nothing)
     {
-        LOG(m_logger) << "Asking headers while requesting " << ::toString(m_asking);
+        LOG(m_logger) << "Asking headers while requesting " << askingToString(m_asking);
     }
     setAsking(Asking::BlockHeaders);
     RLPStream s;
@@ -105,7 +81,7 @@ void EthereumPeer::requestBlockHeaders(
 {
     if (m_asking != Asking::Nothing)
     {
-        LOG(m_logger) << "Asking headers while requesting " << ::toString(m_asking);
+        LOG(m_logger) << "Asking headers while requesting " << askingToString(m_asking);
     }
     setAsking(Asking::BlockHeaders);
     RLPStream s;
@@ -138,8 +114,8 @@ void EthereumPeer::requestByHashes(
 {
     if (m_asking != Asking::Nothing)
     {
-        LOG(m_logger) << "Asking " << ::toString(_asking) << " while requesting "
-                      << ::toString(m_asking);
+        LOG(m_logger) << "Asking " << askingToString(_asking) << " while requesting "
+                      << askingToString(m_asking);
     }
     setAsking(_asking);
     if (_hashes.size())
@@ -148,7 +124,7 @@ void EthereumPeer::requestByHashes(
         m_host->prep(m_id, c_ethCapability, s, _packetType, _hashes.size());
         for (auto const& i : _hashes)
             s << i;
-        LOG(m_logger) << "Requesting " << _hashes.size() << " " << ::toString(_asking) << " from "
+        LOG(m_logger) << "Requesting " << _hashes.size() << " " << askingToString(_asking) << " from "
                       << m_id;
         m_host->sealAndSend(m_id, s);
     }
