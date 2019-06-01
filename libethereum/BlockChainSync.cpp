@@ -154,6 +154,7 @@ BlockChainSync::BlockChainSync(EthereumCapability& _host)
 
 BlockChainSync::~BlockChainSync()
 {
+    RecursiveGuard l(x_sync);
     abortSync();
 }
 
@@ -215,7 +216,6 @@ bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
     if (daoHardfork == 0 || daoHardfork == c_infiniteBlockNumber || host().chain().number() < daoHardfork)
         return false;
 
-    RecursiveGuard l(x_sync);
     m_daoChallengedPeers.insert(_peerID);
     m_host.peer(_peerID).requestBlockHeaders(static_cast<unsigned>(daoHardfork), 1, 0, false);
     return true;
@@ -223,7 +223,6 @@ bool BlockChainSync::requestDaoForkBlockHeader(NodeID const& _peerID)
 
 void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
 {
-    RecursiveGuard l(x_sync);
     auto& peer = m_host.peer(_peerID);
     if (!peer.statusReceived())
     {
@@ -249,9 +248,9 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
     if (host().bq().isActive())
         td += host().bq().difficulty();
 
-    u256 const syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
+    u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
 
-    u256 const peerTotalDifficulty = peer.totalDifficulty();
+    u256 peerTotalDifficulty = peer.totalDifficulty();
 
     if (_force || peerTotalDifficulty > syncingDifficulty)
     {
@@ -290,7 +289,6 @@ void BlockChainSync::continueSync()
 void BlockChainSync::requestBlocks(NodeID const& _peerID)
 {
     clearPeerDownload(_peerID);
-    RecursiveGuard l(x_sync);
     if (host().bq().knownFull())
     {
         LOG(m_loggerDetail) << "Waiting for block queue before downloading blocks from " << _peerID
@@ -388,7 +386,6 @@ void BlockChainSync::requestBlocks(NodeID const& _peerID)
 
 void BlockChainSync::clearPeerDownload(NodeID const& _peerID)
 {
-    RecursiveGuard l(x_sync);
     auto syncPeer = m_headerSyncPeers.find(_peerID);
     if (syncPeer != m_headerSyncPeers.end())
     {
@@ -408,7 +405,6 @@ void BlockChainSync::clearPeerDownload(NodeID const& _peerID)
 
 void BlockChainSync::clearPeerDownload()
 {
-    RecursiveGuard l(x_sync);
     for (auto s = m_headerSyncPeers.begin(); s != m_headerSyncPeers.end();)
     {
         if (!m_host.capabilityHost().peerSessionInfo(s->first))
@@ -582,7 +578,7 @@ void BlockChainSync::onPeerBlockHeaders(NodeID const& _peerID, RLP const& _r)
     continueSync();
 }
 
-bool BlockChainSync::verifyDaoChallengeResponse(RLP const& _r) const
+bool BlockChainSync::verifyDaoChallengeResponse(RLP const& _r)
 {
     if (_r.itemCount() != 1)
         return false;
@@ -644,7 +640,6 @@ void BlockChainSync::onPeerBlockBodies(NodeID const& _peerID, RLP const& _r)
 
 void BlockChainSync::collectBlocks()
 {
-    RecursiveGuard l(x_sync);
     if (!m_haveCommonHeader || m_headers.empty() || m_bodies.empty())
         return;
 
@@ -742,7 +737,7 @@ void BlockChainSync::collectBlocks()
 }
 
 void BlockChainSync::logImported(
-    unsigned _success, unsigned _future, unsigned _got, unsigned _unknown) const
+    unsigned _success, unsigned _future, unsigned _got, unsigned _unknown)
 {
     LOG(m_logger) << dec << _success << " imported OK, " << _unknown << " with unknown parents, "
                   << _future << " with future timestamps, " << _got << " already known received.";
@@ -852,7 +847,6 @@ SyncStatus BlockChainSync::status() const
 
 void BlockChainSync::resetSync()
 {
-    RecursiveGuard l(x_sync);
     m_downloadingHeaders.clear();
     m_downloadingBodies.clear();
     m_headers.clear();
@@ -952,7 +946,6 @@ void BlockChainSync::onPeerAborting()
 
 bool BlockChainSync::invariants() const
 {
-    RecursiveGuard l(x_sync);
     if (!isSyncing() && !m_headers.empty())
         BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got headers while not syncing"));
     if (!isSyncing() && !m_bodies.empty())
