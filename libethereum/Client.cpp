@@ -26,7 +26,7 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 namespace
 {
-constexpr std::chrono::seconds c_bqSyncTimeout{14400}; // 4 hours
+constexpr std::chrono::seconds c_bqSyncTimeout{3600};
 constexpr std::chrono::seconds c_bqSyncLogTimeout{30};
 
 std::string filtersToString(h256Hash const& _fs)
