@@ -145,12 +145,10 @@ BlockChainSync::BlockChainSync(EthereumCapability& _host)
     m_lastImportedBlockHash(_host.chain().currentHash())
 {
     m_bqRoomAvailable = host().bq().onRoomAvailable([this]() {
-        host().capabilityHost().postWork([this]() {
             clog(VerbosityDebug, "sync") << "Block queue has room available now. Block queue status: " << host().bq().status();
             RecursiveGuard l(x_sync);
             m_state = SyncState::Blocks;
             continueSync();
-        });
     });
 }
 
