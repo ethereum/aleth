@@ -29,6 +29,7 @@
 #include <libdevcore/DBFactory.h>
 #include <libdevcore/TrieHash.h>
 #include <libevm/VMFactory.h>
+#include <libevm/LegacyVM.h>
 #include <boost/filesystem.hpp>
 #include <boost/timer.hpp>
 
@@ -610,6 +611,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 #endif
     u256 const startGasUsed = _envInfo.gasUsed();
     bool const statusCode = executeTransaction(e, _t, onOp);
+    g_currentOp = 0;
 
     bool removeEmptyAccounts = false;
     switch (_p)

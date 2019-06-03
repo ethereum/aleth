@@ -34,6 +34,7 @@
 #include <libdevcore/TrieHash.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Exceptions.h>
+#include <libevm/LegacyVM.h>
 
 #include <boost/exception/errinfo_nested_exception.hpp>
 #include <boost/filesystem.hpp>
@@ -706,6 +707,18 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
         td = pd.totalDifficulty + tdIncrease;
 
         performanceLogger.onStageFinished("enactment");
+
+        if (_block.info.number() % 10000 == 0)
+        {
+            std::string filename = "metrics_to_" + toString(_block.info.number());
+            std::ofstream f(filename);
+            f << "[";
+            for (auto const& meter : g_measurements)
+                f << "{\"Num\":" << meter.count << ",\"Time\":" << meter.time.count() << "},";
+            f.seekp(-1, ios_base::cur);
+            f << "]";
+            clog(VerbosityInfo, "chain") << "Dumped stats to " << filename;
+        }
 
 #if ETH_PARANOIA
         checkConsistency();

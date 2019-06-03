@@ -21,6 +21,10 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+std::array<OpcodeMeter, 256> dev::eth::g_measurements{};
+std::chrono::high_resolution_clock::time_point dev::eth::g_startTime;
+int dev::eth::g_currentOp = 0;
+
 uint64_t LegacyVM::memNeed(u256 const& _offset, u256 const& _size)
 {
     return toInt63(_size ? u512(_offset) + _size : u512(0));

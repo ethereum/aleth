@@ -217,5 +217,16 @@ private:
 #endif
 };
 
+struct OpcodeMeter
+{
+    uint64_t count = 0;
+    std::chrono::high_resolution_clock::duration time{0};
+};
+
+extern std::array<OpcodeMeter, 256> g_measurements;
+
+extern std::chrono::high_resolution_clock::time_point g_startTime;
+extern int g_currentOp;
+
 }
 }

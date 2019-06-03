@@ -425,7 +425,12 @@ namespace dev
     fetchInstruction(); \
     goto* jumpTable[(int)m_OP];
 #define CASE(name) \
-    name:
+    name: \
+    if (g_currentOp != 0) { \
+        g_measurements[g_currentOp].time += std::chrono::high_resolution_clock::now() - g_startTime; \
+        ++g_measurements[g_currentOp].count; }\
+    g_currentOp = (int)m_OP; \
+    g_startTime = std::chrono::high_resolution_clock::now();
 #define NEXT            \
     ++m_PC;             \
     fetchInstruction(); \
