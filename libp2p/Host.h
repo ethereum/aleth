@@ -255,7 +255,7 @@ public:
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;
 
     /// Execute work on the network thread
-    void postWork(std::function<void()> _f) { m_ioService.post(_f); }
+    void postWork(std::function<void()> _f) { post(m_ioContext, std::move(_f)); }
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
@@ -356,7 +356,7 @@ private:
 
     std::atomic<int> m_listenPort{-1};												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
 
-    io::io_service m_ioService;											///< IOService for network stuff.
+    io::io_context m_ioContext;
     bi::tcp::acceptor m_tcp4Acceptor;										///< Listening acceptor.
 
     /// Timer which, when network is running, calls run() every c_timerInterval ms.

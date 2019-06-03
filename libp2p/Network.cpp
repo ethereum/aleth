@@ -73,7 +73,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
         struct in_addr addr;
         memcpy(&addr, phe->h_addr_list[i], sizeof(struct in_addr));
         char *addrStr = inet_ntoa(addr);
-        bi::address address(bi::address::from_string(addrStr));
+        bi::address address(bi::make_address(addrStr));
         if (!isLocalHostAddress(address))
             addresses.insert(address.to_v4());
     }
@@ -129,7 +129,8 @@ int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkConfig const& _conf
     bi::address listenIP;
     try
     {
-        listenIP = _config.listenIPAddress.empty() ? bi::address_v4() : bi::address::from_string(_config.listenIPAddress);
+        listenIP = _config.listenIPAddress.empty() ? bi::address_v4() :
+                                                     bi::make_address(_config.listenIPAddress);
     }
     catch (...)
     {
@@ -198,7 +199,7 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
             }
 
         auto eIP = upnp->externalIP();
-        bi::address eIPAddr(bi::address::from_string(eIP));
+        bi::address eIPAddr(bi::make_address(eIP));
         if (extPort && eIP != string("0.0.0.0") && !isPrivateAddress(eIPAddr))
         {
             cnetnote << "Punched through NAT and mapped local port " << _listenPort << " onto external port " << extPort << ".";
@@ -215,7 +216,7 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
 
 bi::tcp::endpoint Network::resolveHost(string const& _addr)
 {
-    static boost::asio::io_service s_resolverIoService;
+    static boost::asio::io_context s_resolverIoContext;
 
     vector<string> split;
     boost::split(split, _addr, boost::is_any_of(":"));
@@ -229,7 +230,7 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
     catch(...) {}
 
     boost::system::error_code ec;
-    bi::address address = bi::address::from_string(split[0], ec);
+    bi::address address = bi::make_address(split[0], ec);
     bi::tcp::endpoint ep(bi::address(), port);
     if (!ec)
         ep.address(address);
@@ -237,15 +238,15 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
     {
         boost::system::error_code ec;
         // resolve returns an iterator (host can resolve to multiple addresses)
-        bi::tcp::resolver r(s_resolverIoService);
-        auto it = r.resolve({bi::tcp::v4(), split[0], toString(port)}, ec);
-        if (ec)
+        bi::tcp::resolver r(s_resolverIoContext);
+        auto res = r.resolve(bi::tcp::v4(), split[0], toString(port), ec);
+        if (ec || res.empty())
         {
             cnetlog << "Error resolving host address... " << _addr << " : " << ec.message();
             return bi::tcp::endpoint();
         }
         else
-            ep = *it;
+            ep = *res;
     }
     return ep;
 }

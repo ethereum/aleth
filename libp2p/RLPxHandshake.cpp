@@ -30,7 +30,7 @@ RLPXHandshake::RLPXHandshake(
     m_remote(_remote),
     m_originated(_remote),
     m_socket(_socket),
-    m_idleTimer(m_socket->ref().get_io_service())
+    m_idleTimer(m_socket->ref().get_executor())
 {
     auto const prefixAttr =
         boost::log::attributes::constant<std::string>{connectionDirectionString()};

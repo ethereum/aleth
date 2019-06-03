@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(host)
     }
 
     BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
-    host1.addNode(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp), host2port, host2port));
+    host1.addNode(node2, NodeIPEndpoint(bi::make_address(c_localhostIp), host2port, host2port));
 
     // Wait for up to 24 seconds, to give the hosts time to find each other
     for (unsigned i = 0; i < 24000; i += step)
@@ -171,14 +171,16 @@ BOOST_AUTO_TEST_CASE(saveNodes)
     
     Host& host = *hosts.front();
     for (auto const& h: hosts)
-        host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
+        host.addNode(h->id(),
+            NodeIPEndpoint(bi::make_address(c_localhostIp), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 1000 && host.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
 
     Host& host2 = *hosts.back();
     for (auto const& h: hosts)
-        host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string(c_localhostIp), h->listenPort(), h->listenPort()));
+        host2.addNode(h->id(),
+            NodeIPEndpoint(bi::make_address(c_localhostIp), h->listenPort(), h->listenPort()));
 
     for (unsigned i = 0; i < c_peers * 2000 && host2.peerCount() < c_peers; i += c_step)
         this_thread::sleep_for(chrono::milliseconds(c_step));
@@ -253,7 +255,7 @@ BOOST_AUTO_TEST_CASE(updateENRfromConfig)
     ENR enr2 = host2.enr();
 
     BOOST_REQUIRE_EQUAL(enr2.sequenceNumber(), enr1.sequenceNumber() + 1);
-    BOOST_REQUIRE_EQUAL(enr2.ip(), bi::address::from_string("13.74.189.148"));
+    BOOST_REQUIRE_EQUAL(enr2.ip(), bi::make_address("13.74.189.148"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -279,7 +281,7 @@ BOOST_AUTO_TEST_CASE(requirePeer)
     BOOST_REQUIRE(port2);
     BOOST_REQUIRE_NE(port1, port2);
 
-    host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
+    host1.requirePeer(node2, NodeIPEndpoint(bi::make_address(localhost), port2, port2));
 
     // Wait for up to 12 seconds, to give the hosts time to connect to each other.
     for (unsigned i = 0; i < 12000; i += step)
@@ -342,8 +344,8 @@ BOOST_AUTO_TEST_CASE(requirePeerNoNetwork)
     host1.registerCapability(make_shared<TestCap>());
     host2.registerCapability(make_shared<TestCap>());
 
-    host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(c_localhostIp),
-                                 0 /* tcp port */, 0 /* udp port */));
+    host1.requirePeer(
+        node2, NodeIPEndpoint(bi::make_address(c_localhostIp), 0 /* tcp port */, 0 /* udp port */));
 
     BOOST_REQUIRE(!host1.isRequiredPeer(node2));
 }
@@ -399,7 +401,8 @@ int peerTest(int argc, char** argv)
     Host ph("Test", NetworkConfig(listenPort));
 
     if (!remoteHost.empty() && !remoteAlias)
-        ph.addNode(remoteAlias, NodeIPEndpoint(bi::address::from_string(remoteHost), remotePort, remotePort));
+        ph.addNode(
+            remoteAlias, NodeIPEndpoint(bi::make_address(remoteHost), remotePort, remotePort));
 
     this_thread::sleep_for(chrono::milliseconds(200));
 

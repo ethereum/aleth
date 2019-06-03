@@ -263,7 +263,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
         /*add the stack*/
         Array a_stack;
         for (auto i : vm.stack())
-            a_stack.push_back((string)i);
+            a_stack.push_back(i.str());
 
         o_step.push_back(Pair("stack", a_stack));
 
@@ -277,12 +277,12 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
         /*add the storage*/
         Object storage;
         for (auto const& i : std::get<2>(ext.addresses.find(ext.myAddress)->second))
-            storage.push_back(Pair((string)i.first, (string)i.second));
+            storage.push_back(Pair(i.first.str(), i.second.str()));
 
         /*add all the other details*/
         o_step.push_back(Pair("storage", storage));
         o_step.push_back(Pair("depth", to_string(ext.depth)));
-        o_step.push_back(Pair("gas", (string)gas));
+        o_step.push_back(Pair("gas", gas.str()));
         o_step.push_back(Pair("address", toString(ext.myAddress)));
         o_step.push_back(Pair("step", steps));
         o_step.push_back(Pair("pc", pc));

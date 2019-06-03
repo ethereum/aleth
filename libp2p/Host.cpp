@@ -91,10 +91,10 @@ Host::Host(
     m_clientVersion(_clientVersion),
     m_netConfig(_n),
     m_ifAddresses(Network::getInterfaceAddresses()),
-    m_ioService(2),  // concurrency hint, suggests how many threads it should allow to run
+    m_ioContext(2),  // concurrency hint, suggests how many threads it should allow to run
                      // simultaneously
-    m_tcp4Acceptor(m_ioService),
-    m_runTimer(m_ioService),
+    m_tcp4Acceptor(m_ioContext),
+    m_runTimer(m_ioContext),
     m_alias{_secretAndENR.first},
     m_restoredENR{_secretAndENR.second},
     m_lastPing(chrono::steady_clock::time_point::min()),
@@ -137,7 +137,7 @@ void Host::start()
 
 void Host::stop()
 {
-    // called to force io_service to kill any remaining tasks it might have -
+    // called to force io_context to kill any remaining tasks it might have -
     // such tasks may involve socket reads from Capabilities that maintain references
     // to resources we're about to free.
 
@@ -148,7 +148,7 @@ void Host::stop()
 
     // stopping io service allows running manual network operations for shutdown
     // and also stops blocking worker thread, allowing worker thread to exit
-    m_ioService.stop();
+    m_ioContext.stop();
 
     // Close the node table socket and cancel deadline timers. This effectively stops
     // discovery, even during subsequent io service polling
@@ -171,8 +171,7 @@ void Host::scheduleCapabilityWorkLoop(CapabilityFace& _cap, shared_ptr<ba::stead
 {
     _timer->expires_from_now(_cap.backgroundWorkInterval());
     _timer->async_wait([this, _timer, &_cap](boost::system::error_code _ec) {
-        if (_timer->expires_at() == c_steadyClockMin ||
-            _ec == boost::asio::error::operation_aborted)
+        if (_timer->expiry() == c_steadyClockMin || _ec == boost::asio::error::operation_aborted)
         {
             LOG(m_logger) << "Timer was probably cancelled for capability: " << _cap.descriptor();
             return;
@@ -193,7 +192,7 @@ void Host::stopCapabilities()
     for (auto const& itCap : m_capabilities)
     {
         auto timer = itCap.second.backgroundWorkTimer;
-        m_ioService.post([timer] { timer->expires_at(c_steadyClockMin); });
+        post(m_ioContext, [timer] { timer->expires_at(c_steadyClockMin); });
     }
 }
 
@@ -204,8 +203,8 @@ void Host::doneWorking()
     if (!haveCapabilities())
         return;
 
-    // reset ioservice (allows manually polling network, below)
-    m_ioService.reset();
+    // reset io_context (allows manually polling network, below)
+    m_ioContext.restart();
 
     // shutdown acceptor
     m_tcp4Acceptor.cancel();
@@ -217,9 +216,9 @@ void Host::doneWorking()
     // This helps ensure a peer isn't stopped at the same time it's starting
     // and that socket for pending connection is closed.
     while (m_accepting)
-        m_ioService.poll();
+        m_ioContext.poll();
 
-    // (eth: stops syncing or block / tx broadcast). Capabilities will be cancelled when ioservice
+    // (eth: stops syncing or block / tx broadcast). Capabilities will be cancelled when io_context
     // is polled on pending handshake / peer disconnect
     stopCapabilities();
 
@@ -235,7 +234,7 @@ void Host::doneWorking()
                 }
         if (!n)
             break;
-        m_ioService.poll();
+        m_ioContext.poll();
     }
     
     // disconnect peers
@@ -253,7 +252,7 @@ void Host::doneWorking()
             break;
 
         // poll so that peers send out disconnect packets
-        m_ioService.poll();
+        m_ioContext.poll();
     }
 
     // finally, clear out peers (in case they're lingering)
@@ -439,9 +438,13 @@ bi::tcp::endpoint Host::determinePublic() const
     // return listenIP (if public) > public > upnp > unspecified address.
 
     auto ifAddresses = Network::getInterfaceAddresses();
-    auto laddr = m_netConfig.listenIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.listenIPAddress);
+    auto laddr = m_netConfig.listenIPAddress.empty() ?
+                     bi::address() :
+                     bi::make_address(m_netConfig.listenIPAddress);
     auto lset = !laddr.is_unspecified();
-    auto paddr = m_netConfig.publicIPAddress.empty() ? bi::address() : bi::address::from_string(m_netConfig.publicIPAddress);
+    auto paddr = m_netConfig.publicIPAddress.empty() ?
+                     bi::address() :
+                     bi::make_address(m_netConfig.publicIPAddress);
     auto pset = !paddr.is_unspecified();
     
     bool listenIsPublic = lset && isPublicAddress(laddr);
@@ -508,21 +511,18 @@ void Host::runAcceptor()
         cnetdetails << "Listening on local port " << m_listenPort;
         m_accepting = true;
 
-        auto socket = make_shared<RLPXSocket>(m_ioService);
-        m_tcp4Acceptor.async_accept(socket->ref(), [=](boost::system::error_code ec)
-        {
+        m_tcp4Acceptor.async_accept([this](boost::system::error_code _ec, bi::tcp::socket _socket) {
             m_accepting = false;
-            if (ec || !m_tcp4Acceptor.is_open())
-            {
-                socket->close();
+            if (_ec || !m_tcp4Acceptor.is_open())
                 return;
-            }
+
+            auto socket = make_shared<RLPXSocket>(std::move(_socket));
             if (peerCount() > peerSlots(Ingress))
             {
                 cnetdetails << "Dropping incoming connect due to maximum peer count (" << Ingress
                             << " * ideal peer count): " << socket->remoteEndpoint();
                 socket->close();
-                if (ec.value() < 1)
+                if (_ec.value() < 1)
                     runAcceptor();
                 return;
             }
@@ -565,7 +565,7 @@ void Host::registerCapability(
         cwarn << "Capabilities must be registered before the network is started";
         return;
     }
-    m_capabilities[{_name, _version}] = {_cap, make_shared<ba::steady_timer>(m_ioService)};
+    m_capabilities[{_name, _version}] = {_cap, make_shared<ba::steady_timer>(m_ioContext)};
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)
@@ -702,7 +702,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
     
     bi::tcp::endpoint ep(_p->endpoint);
     cnetdetails << "Attempting connection to " << _p->id << "@" << ep << " from " << id();
-    auto socket = make_shared<RLPXSocket>(m_ioService);
+    auto socket = make_shared<RLPXSocket>(bi::tcp::socket{m_ioContext});
     socket->ref().async_connect(ep, [=](boost::system::error_code const& ec)
     {
         _p->m_lastAttempted = chrono::system_clock::now();
@@ -846,8 +846,8 @@ void Host::startedWorking()
     m_tcpPublic = determinePublic();
     ENR const enr = updateENR(m_restoredENR, m_tcpPublic, listenPort());
 
-    auto nodeTable = make_shared<NodeTable>(m_ioService, m_alias,
-        NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()), enr,
+    auto nodeTable = make_shared<NodeTable>(m_ioContext, m_alias,
+        NodeIPEndpoint(bi::make_address(listenAddress()), listenPort(), listenPort()), enr,
         m_netConfig.discovery, m_netConfig.allowLocalDiscovery);
 
     // Don't set an event handler if we don't have capabilities, because no capabilities
@@ -873,7 +873,7 @@ void Host::doWork()
     try
     {
         if (m_run)
-            m_ioService.run();
+            m_ioContext.run();
     }
     catch (exception const& _e)
     {
@@ -1084,7 +1084,7 @@ std::pair<Secret, ENR> Host::restoreENR(bytesConstRef _b, NetworkConfig const& _
 
     auto const address = _netConfig.publicIPAddress.empty() ?
                              bi::address{} :
-                             bi::address::from_string(_netConfig.publicIPAddress);
+                             bi::make_address(_netConfig.publicIPAddress);
 
     return make_pair(secret,
         IdentitySchemeV4::createENR(secret, address, _netConfig.listenPort, _netConfig.listenPort));

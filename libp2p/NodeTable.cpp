@@ -37,7 +37,7 @@ inline bool operator==(weak_ptr<NodeEntry> const& _weak, shared_ptr<NodeEntry> c
     return !_weak.owner_before(_shared) && !_shared.owner_before(_weak);
 }
 
-NodeTable::NodeTable(ba::io_service& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
+NodeTable::NodeTable(ba::io_context& _io, KeyPair const& _alias, NodeIPEndpoint const& _endpoint,
     ENR const& _enr, bool _enabled, bool _allowLocalDiscovery)
   : m_hostNodeID{_alias.pub()},
     m_hostNodeIDHash{sha3(m_hostNodeID)},
@@ -258,7 +258,7 @@ void NodeTable::doDiscoveryRound(
             // We can't use m_logger here if there's an error because captured this might already be
             // destroyed
             if (_ec.value() == boost::asio::error::operation_aborted ||
-                discoveryTimer->expires_at() == c_steadyClockMin)
+                discoveryTimer->expiry() == c_steadyClockMin)
             {
                 clog(VerbosityDebug, "discov") << "Discovery timer was probably cancelled";
                 return;
@@ -328,7 +328,7 @@ void NodeTable::ping(Node const& _node, shared_ptr<NodeEntry> _replacementNodeEn
 
 void NodeTable::schedulePing(Node const& _node)
 {
-    m_io.post([this, _node] { ping(_node, {}); });
+    post(m_io, [this, _node] { ping(_node, {}); });
 }
 
 void NodeTable::evict(NodeEntry const& _leastSeen, shared_ptr<NodeEntry> _replacement)
@@ -756,7 +756,7 @@ void NodeTable::doDiscovery()
         // We can't use m_logger if an error occurred because captured this might be already
         // destroyed
         if (_ec.value() == boost::asio::error::operation_aborted ||
-            discoveryTimer->expires_at() == c_steadyClockMin)
+            discoveryTimer->expiry() == c_steadyClockMin)
         {
             clog(VerbosityDebug, "discov") << "Discovery timer was cancelled";
             return;
@@ -819,7 +819,7 @@ void NodeTable::runBackgroundTask(std::chrono::milliseconds const& _period,
         // We can't use m_logger if an error occurred because captured this might be already
         // destroyed
         if (_ec.value() == boost::asio::error::operation_aborted ||
-            _timer->expires_at() == c_steadyClockMin)
+            _timer->expiry() == c_steadyClockMin)
         {
             clog(VerbosityDebug, "discov") << "Timer was cancelled";
             return;
@@ -843,9 +843,9 @@ void NodeTable::cancelTimer(std::shared_ptr<ba::steady_timer> _timer)
     // because cancel won't set the boost error code if the timers have already expired and
     // the handlers are in the ready queue.
     //
-    // Note that we "cancel" via io_service::post to ensure thread safety when accessing the
+    // Note that we "cancel" via io_context::post to ensure thread safety when accessing the
     // timers
-    m_io.post([_timer] { _timer->expires_at(c_steadyClockMin); });
+    post(m_io, [_timer] { _timer->expires_at(c_steadyClockMin); });
 }
 
 unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)

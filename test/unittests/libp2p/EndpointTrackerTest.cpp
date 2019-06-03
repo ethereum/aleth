@@ -13,7 +13,7 @@ namespace
 {
     bi::udp::endpoint createEndpoint(std::string const& _address, uint16_t _port)
     {
-        return bi::udp::endpoint{bi::address::from_string(_address), _port};
+        return bi::udp::endpoint{bi::make_address(_address), _port};
     }
 }
 

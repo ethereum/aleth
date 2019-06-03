@@ -29,8 +29,8 @@ TEST(eip8, test_discovery_packets)
         dynamic_cast<PingNode&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
     EXPECT_EQ(ping1.version, 4);
     EXPECT_EQ(*ping1.expiration, 1136239445);
-    EXPECT_EQ(ping1.source, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 3322, 5544));
-    EXPECT_EQ(ping1.destination, NodeIPEndpoint(bi::address::from_string("::1"), 2222, 3333));
+    EXPECT_EQ(ping1.source, NodeIPEndpoint(bi::make_address("127.0.0.1"), 3322, 5544));
+    EXPECT_EQ(ping1.destination, NodeIPEndpoint(bi::make_address("::1"), 2222, 3333));
 
     packet = fromHex(
         "577be4349c4dd26768081f58de4c6f375a7a22f3f7adda654d1428637412c3d7fe917cadc56d4e5e"
@@ -44,11 +44,10 @@ TEST(eip8, test_discovery_packets)
     auto ping2 =
         dynamic_cast<PingNode&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
     EXPECT_EQ(ping2.version, 555);
-    EXPECT_EQ(ping2.source,
-        NodeIPEndpoint(bi::address::from_string("2001:db8:3c4d:15::abcd:ef12"), 3322, 5544));
+    EXPECT_EQ(
+        ping2.source, NodeIPEndpoint(bi::make_address("2001:db8:3c4d:15::abcd:ef12"), 3322, 5544));
     EXPECT_EQ(ping2.destination,
-        NodeIPEndpoint(
-            bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
+        NodeIPEndpoint(bi::make_address("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
     EXPECT_EQ(*ping2.expiration, 1136239445);
 
     packet = fromHex(
@@ -60,8 +59,7 @@ TEST(eip8, test_discovery_packets)
         "42124e");
     auto pong = dynamic_cast<Pong&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
     EXPECT_EQ(pong.destination,
-        NodeIPEndpoint(
-            bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
+        NodeIPEndpoint(bi::make_address("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 2222, 33338));
     EXPECT_EQ(pong.echo, h256("fbc914b16819237dcd8801d7e53f69e9719adecb3cc0e790c57e91ca4461c954"));
     EXPECT_EQ(*pong.expiration, 1136239445);
 
@@ -96,23 +94,21 @@ TEST(eip8, test_discovery_packets)
         dynamic_cast<Neighbours&>(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&packet)));
     EXPECT_EQ(neighbours.neighbours.size(), 4);
     EXPECT_EQ(neighbours.neighbours[0].endpoint,
-        NodeIPEndpoint(bi::address::from_string("99.33.22.55"), 4444, 4445));
+        NodeIPEndpoint(bi::make_address("99.33.22.55"), 4444, 4445));
     EXPECT_EQ(neighbours.neighbours[0].node,
         Public("3155e1427f85f10a5c9a7755877748041af1bcd8d474ec065eb33df57a97babf54bfd2103575fa82911"
                "5d224c523596b401065a97f74010610fce76382c0bf32"));
-    EXPECT_EQ(neighbours.neighbours[1].endpoint,
-        NodeIPEndpoint(bi::address::from_string("1.2.3.4"), 1, 1));
+    EXPECT_EQ(neighbours.neighbours[1].endpoint, NodeIPEndpoint(bi::make_address("1.2.3.4"), 1, 1));
     EXPECT_EQ(neighbours.neighbours[1].node,
         Public("312c55512422cf9b8a4097e9a6ad79402e87a15ae909a4bfefa22398f03d20951933beea1e4dfa6f968"
                "212385e829f04c2d314fc2d4e255e0d3bc08792b069db"));
     EXPECT_EQ(neighbours.neighbours[2].endpoint,
-        NodeIPEndpoint(bi::address::from_string("2001:db8:3c4d:15::abcd:ef12"), 3333, 3333));
+        NodeIPEndpoint(bi::make_address("2001:db8:3c4d:15::abcd:ef12"), 3333, 3333));
     EXPECT_EQ(neighbours.neighbours[2].node,
         Public("38643200b172dcfef857492156971f0e6aa2c538d8b74010f8e140811d53b98c765dd2d96126051913f"
                "44582e8c199ad7c6d6819e9a56483f637feaac9448aac"));
     EXPECT_EQ(neighbours.neighbours[3].endpoint,
-        NodeIPEndpoint(
-            bi::address::from_string("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 999, 1000));
+        NodeIPEndpoint(bi::make_address("2001:db8:85a3:8d3:1319:8a2e:370:7348"), 999, 1000));
     EXPECT_EQ(neighbours.neighbours[3].node,
         Public("8dcab8618c3253b558d459da53bd8fa68935a719aff8b811197101a4b2b47dd2d47295286fc00cc081b"
                "b542d760717d1bdd6bec2c37cd72eca367d6dd3b9df73"));
@@ -362,17 +358,17 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(
     Secret _hostAlias, bytes _packet, NodeID _remoteID)
 {
     // Spawn a listener which sends the packet to any client.
-    ba::io_service io;
+    ba::io_context io;
     bi::tcp::acceptor acceptor(io);
-    bi::tcp::endpoint endpoint(bi::address::from_string("127.0.0.1"), 0);
+    bi::tcp::endpoint endpoint(bi::make_address("127.0.0.1"), 0);
     acceptor.open(endpoint.protocol());
     acceptor.bind(endpoint);
     acceptor.listen();
-    auto server = std::make_shared<RLPXSocket>(io);
-    acceptor.async_accept(server->ref(), [_packet, server](boost::system::error_code const& _ec) {
+    acceptor.async_accept([_packet](boost::system::error_code const& _ec, bi::tcp::socket _socket) {
         throwErrorCode("accept error: ", _ec);
+        auto server = std::make_shared<RLPXSocket>(move(_socket));
         ba::async_write(server->ref(), ba::buffer(_packet),
-            [](const boost::system::error_code& _ec, std::size_t) {
+            [server](const boost::system::error_code& _ec, std::size_t) {
                 throwErrorCode("write error: ", _ec);
             });
     });
@@ -380,7 +376,7 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(
     // Spawn a client to execute the handshake.
     auto host = make_shared<Host>("peer name",
         make_pair(_hostAlias, IdentitySchemeV4::createENR(_hostAlias, endpoint.address(), 0, 0)));
-    auto client = make_shared<RLPXSocket>(io);
+    auto client = make_shared<RLPXSocket>(bi::tcp::socket{io});
     shared_ptr<TestHandshake> handshake;
     if (_remoteID == NodeID())
         handshake.reset(new TestHandshake(host.get(), client));
