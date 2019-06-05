@@ -49,6 +49,7 @@ struct BlockQueueStatus
     size_t future;
     size_t unknown;
     size_t bad;
+    size_t knownSize;
 };
 
 enum class QueueStatus

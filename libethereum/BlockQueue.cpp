@@ -380,8 +380,8 @@ BlockQueueStatus BlockQueue::status() const
 { 
     ReadGuard l(m_lock); 
     Guard l2(m_verification); 
-    return BlockQueueStatus{ m_drainingSet.size(), m_verified.count(), m_verifying.count(), m_unverified.count(), 
-        m_future.count(), m_unknown.count(), m_knownBad.size() };
+    return BlockQueueStatus{ m_drainingSet.size(), m_verified.count(), m_verifying.count(), m_unverified.count(),
+        m_future.count(), m_unknown.count(), m_knownBad.size(), knownSize() };
 }
 
 QueueStatus BlockQueue::blockStatus(h256 const& _h) const
@@ -524,6 +524,7 @@ boost::log::formatting_ostream& dev::eth::operator<<(
     _out << "future: " << _bqs.future << endl;
     _out << "unknown: " << _bqs.unknown << endl;
     _out << "bad: " << _bqs.bad << endl;
+    _out << "knownSize: " << _bqs.knownSize << endl;
 
     return _out;
 }
