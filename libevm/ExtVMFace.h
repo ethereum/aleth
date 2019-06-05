@@ -19,13 +19,13 @@
 
 #include "Instruction.h"
 
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/SHA3.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/Common.h>
 #include <libethcore/LogEntry.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/SHA3.h>
 
 #include <evmc/evmc.h>
 #include <evmc/helpers.h>
@@ -38,7 +38,6 @@ namespace dev
 {
 namespace eth
 {
-
 /// Reference to a slice of buffer that also owns the buffer.
 ///
 /// This is extension to the concept C++ STL library names as array_view
@@ -54,7 +53,7 @@ namespace eth
 /// with it was moved out of VM interface making VMs "stateless".
 ///
 /// The type is movable, but not copyable. Default constructor available.
-class owning_bytes_ref: public vector_ref<byte const>
+class owning_bytes_ref : public vector_ref<byte const>
 {
 public:
     owning_bytes_ref() = default;
@@ -62,8 +61,7 @@ public:
     /// @param _bytes  The buffer.
     /// @param _begin  The index of the first referenced byte.
     /// @param _size   The number of referenced bytes.
-    owning_bytes_ref(bytes&& _bytes, size_t _begin, size_t _size):
-            m_bytes(std::move(_bytes))
+    owning_bytes_ref(bytes&& _bytes, size_t _begin, size_t _size) : m_bytes(std::move(_bytes))
     {
         // Set the reference *after* the buffer is moved to avoid
         // pointer invalidation.
@@ -112,22 +110,24 @@ class ExtVMFace;
 class LastBlockHashesFace;
 class VMFace;
 
-using OnOpFunc = std::function<void(uint64_t /*steps*/, uint64_t /* PC */, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, bigint /*gas*/, VMFace const*, ExtVMFace const*)>;
+using OnOpFunc = std::function<void(uint64_t /*steps*/, uint64_t /* PC */, Instruction /*instr*/,
+    bigint /*newMemSize*/, bigint /*gasCost*/, bigint /*gas*/, VMFace const*, ExtVMFace const*)>;
 
 struct CallParameters
 {
     CallParameters() = default;
-    CallParameters(
-        Address _senderAddress,
-        Address _codeAddress,
-        Address _receiveAddress,
-        u256 _valueTransfer,
-        u256 _apparentValue,
-        u256 _gas,
-        bytesConstRef _data,
-        OnOpFunc _onOpFunc
-    ):    senderAddress(_senderAddress), codeAddress(_codeAddress), receiveAddress(_receiveAddress),
-        valueTransfer(_valueTransfer), apparentValue(_apparentValue), gas(_gas), data(_data), onOp(_onOpFunc)  {}
+    CallParameters(Address _senderAddress, Address _codeAddress, Address _receiveAddress,
+        u256 _valueTransfer, u256 _apparentValue, u256 _gas, bytesConstRef _data,
+        OnOpFunc _onOpFunc)
+      : senderAddress(_senderAddress),
+        codeAddress(_codeAddress),
+        receiveAddress(_receiveAddress),
+        valueTransfer(_valueTransfer),
+        apparentValue(_apparentValue),
+        gas(_gas),
+        data(_data),
+        onOp(_onOpFunc)
+    {}
     Address senderAddress;
     Address codeAddress;
     Address receiveAddress;
@@ -142,19 +142,19 @@ struct CallParameters
 class EnvInfo
 {
 public:
-    EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed):
-        m_headerInfo(_current),
-        m_lastHashes(_lh),
-        m_gasUsed(_gasUsed)
+    EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed)
+      : m_headerInfo(_current), m_lastHashes(_lh), m_gasUsed(_gasUsed)
     {}
-    // Constructor with custom gasLimit - used in some synthetic scenarios like eth_estimateGas    RPC method
-    EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed, u256 const& _gasLimit):
-        EnvInfo(_current, _lh, _gasUsed)
+    // Constructor with custom gasLimit - used in some synthetic scenarios like eth_estimateGas RPC
+    // method
+    EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed,
+        u256 const& _gasLimit)
+      : EnvInfo(_current, _lh, _gasUsed)
     {
         m_headerInfo.setGasLimit(_gasLimit);
     }
 
-    BlockHeader const& header() const { return m_headerInfo;  }
+    BlockHeader const& header() const { return m_headerInfo; }
 
     int64_t number() const { return m_headerInfo.number(); }
     Address const& author() const { return m_headerInfo.author(); }
@@ -193,14 +193,14 @@ struct CreateResult
     h160 address;
 
     CreateResult(evmc_status_code status, owning_bytes_ref&& output, h160 const& address)
-        : status{status}, output{std::move(output)}, address{address}
+      : status{status}, output{std::move(output)}, address{address}
     {}
 };
 
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
  */
-class ExtVMFace: public evmc_context
+class ExtVMFace : public evmc_context
 {
 public:
     /// Full constructor.
@@ -247,7 +247,10 @@ public:
     virtual CallResult call(CallParameters&) = 0;
 
     /// Revert any changes made (by any of the other calls).
-    virtual void log(h256s&& _topics, bytesConstRef _data) { sub.logs.push_back(LogEntry(myAddress, std::move(_topics), _data.toBytes())); }
+    virtual void log(h256s&& _topics, bytesConstRef _data)
+    {
+        sub.logs.push_back(LogEntry(myAddress, std::move(_topics), _data.toBytes()));
+    }
 
     /// Hash of a block if within the last 256 blocks, or h256() otherwise.
     virtual h256 blockHash(u256 _number) = 0;
@@ -271,7 +274,7 @@ public:
     bytesConstRef data;       ///< Current input data.
     bytes code;               ///< Current code that is executing.
     h256 codeHash;            ///< SHA3 hash of the executing code
-    u256 salt;                ///< Values used in new address construction by CREATE2 
+    u256 salt;                ///< Values used in new address construction by CREATE2
     SubState sub;             ///< Sub-band VM state (suicides, refund counter, logs).
     unsigned depth = 0;       ///< Depth of the present call.
     bool isCreate = false;    ///< Is this a CREATE call?
@@ -297,5 +300,5 @@ inline Address fromEvmC(evmc_address const& _addr)
 {
     return reinterpret_cast<Address const&>(_addr);
 }
-}
-}
+}  // namespace eth
+}  // namespace dev
