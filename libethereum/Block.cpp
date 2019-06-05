@@ -21,20 +21,19 @@
 
 #include "Block.h"
 
-#include <ctime>
-#include <boost/filesystem.hpp>
-#include <boost/timer.hpp>
-#include <libdevcore/CommonIO.h>
+#include "BlockChain.h"
+#include "Executive.h"
+#include "ExtVM.h"
+#include "GenesisInfo.h"
+#include "TransactionQueue.h"
 #include <libdevcore/Assertions.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/TrieHash.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/SealEngine.h>
 #include <libevm/VMFactory.h>
-#include "BlockChain.h"
-#include "ExtVM.h"
-#include "Executive.h"
-#include "TransactionQueue.h"
-#include "GenesisInfo.h"
+#include <boost/filesystem.hpp>
+#include <ctime>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;

@@ -26,7 +26,6 @@
 #include <functional>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/progress.hpp>
 
 #include <libethashseal/Ethash.h>
 #include <libethereum/State.h>
