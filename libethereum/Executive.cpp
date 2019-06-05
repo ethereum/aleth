@@ -26,7 +26,6 @@
 #include <libevm/VMFactory.h>
 
 #include <json/json.h>
-#include <boost/timer.hpp>
 
 #include <numeric>
 

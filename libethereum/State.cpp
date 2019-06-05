@@ -30,7 +30,6 @@
 #include <libdevcore/TrieHash.h>
 #include <libevm/VMFactory.h>
 #include <boost/filesystem.hpp>
-#include <boost/timer.hpp>
 
 using namespace std;
 using namespace dev;
