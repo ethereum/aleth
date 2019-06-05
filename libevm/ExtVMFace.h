@@ -27,8 +27,7 @@
 #include <libethcore/Common.h>
 #include <libethcore/LogEntry.h>
 
-#include <evmc/evmc.h>
-#include <evmc/helpers.h>
+#include <evmc/evmc.hpp>
 
 #include <boost/optional.hpp>
 #include <functional>
@@ -200,15 +199,13 @@ struct CreateResult
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
  */
-class ExtVMFace : public evmc_context
+class ExtVMFace : public evmc::Host
 {
 public:
     /// Full constructor.
     ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin,
         u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash,
         unsigned _depth, bool _isCreate, bool _staticCall);
-
-    virtual ~ExtVMFace() = default;
 
     ExtVMFace(ExtVMFace const&) = delete;
     ExtVMFace& operator=(ExtVMFace const&) = delete;
@@ -260,6 +257,35 @@ public:
 
     /// Return the EVM gas-price schedule for this execution context.
     virtual EVMSchedule const& evmSchedule() const { return DefaultSchedule; }
+
+
+    bool account_exists(const evmc_address& addr) noexcept override;
+
+    evmc_bytes32 get_storage(const evmc_address& addr, const evmc_bytes32& key) noexcept override;
+
+    evmc_storage_status set_storage(const evmc_address& _addr, const evmc_bytes32& _key,
+        const evmc_bytes32& _value) noexcept override;
+
+    evmc_uint256be get_balance(const evmc_address& _addr) noexcept override;
+
+    size_t get_code_size(const evmc_address& _addr) noexcept override;
+
+    evmc_bytes32 get_code_hash(const evmc_address& _addr) noexcept override;
+
+    size_t copy_code(const evmc_address& _addr, size_t _codeOffset, uint8_t* _bufferData,
+        size_t _bufferSize) noexcept override;
+
+    void selfdestruct(
+        const evmc_address& _addr, const evmc_address& _beneficiary) noexcept override;
+
+    evmc::result call(const evmc_message& _msg) noexcept override;
+
+    evmc_tx_context get_tx_context() noexcept override;
+
+    evmc_bytes32 get_block_hash(int64_t _blockNumber) noexcept override;
+
+    void emit_log(const evmc_address& _addr, const uint8_t* _data, size_t _dataSize,
+        const evmc_bytes32 _topics[], size_t _numTopics) noexcept override;
 
 private:
     EnvInfo const& m_envInfo;

@@ -6,8 +6,6 @@
 
 #include <libevm/VMFace.h>
 
-#include <evmc/evmc.hpp>
-
 namespace dev
 {
 namespace eth
