@@ -78,15 +78,6 @@ and used if it meets the minimum version requirement.
 > a fixed version of CMake and unpacks it to the given directory prefix.
 > Example usage: `scripts/install_cmake.sh --prefix /usr/local`.
 
-#### Install dependencies (Windows)
-
-We provide prebuilt dependencies to build the project. Download them
-with the [scripts\install_deps.bat](scripts/install_deps.bat) script.
-
-```shell
-scripts\install_deps.bat
-```
-
 #### Build
 
 Configure the project build with the following command to create the

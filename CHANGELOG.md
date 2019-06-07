@@ -11,6 +11,7 @@
 - Added: [#5591](https://github.com/ethereum/aleth/pull/5591) Network logging bugfixes and improvements and add p2pcap log channel.
 - Added: [#5588](https://github.com/ethereum/aleth/pull/5588) Testeth prints similar test suite name suggestions, when the name passed in `-t` argument is not found.
 - Added: [#5593](https://github.com/ethereum/aleth/pull/5593) Dynamically updating host ENR.
+- Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
 - Changed: [#5576](https://github.com/ethereum/aleth/pull/5576) Moved sstore_combinations and static_Call50000_sha256 tests to stTimeConsuming test suite. (testeth runs them only with `--all` flag)
