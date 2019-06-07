@@ -288,6 +288,8 @@ public:
         const evmc_bytes32 _topics[], size_t _numTopics) noexcept override;
 
 private:
+    evmc::result create(evmc_message const& _msg) noexcept;
+
     EnvInfo const& m_envInfo;
 
 public:

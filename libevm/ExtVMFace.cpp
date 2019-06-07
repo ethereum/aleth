@@ -155,7 +155,7 @@ evmc_bytes32 ExtVMFace::get_block_hash(int64_t _number) noexcept
     return toEvmC(blockHash(_number));
 }
 
-static evmc::result create(ExtVMFace& _env, evmc_message const& _msg) noexcept
+evmc::result ExtVMFace::create(evmc_message const& _msg) noexcept
 {
     u256 gas = _msg.gas;
     u256 value = fromEvmC(_msg.value);
@@ -164,9 +164,9 @@ static evmc::result create(ExtVMFace& _env, evmc_message const& _msg) noexcept
     Instruction opcode = _msg.kind == EVMC_CREATE ? Instruction::CREATE : Instruction::CREATE2;
 
     // ExtVM::create takes the sender address from .myAddress.
-    assert(fromEvmC(_msg.sender) == _env.myAddress);
+    assert(fromEvmC(_msg.sender) == myAddress);
 
-    CreateResult result = _env.create(value, gas, init, opcode, salt, {});
+    CreateResult result = create(value, gas, init, opcode, salt, {});
     evmc_result evmcResult = {};
     evmcResult.status_code = result.status;
     evmcResult.gas_left = static_cast<int64_t>(gas);
@@ -205,7 +205,7 @@ evmc::result ExtVMFace::call(evmc_message const& _msg) noexcept
 
     // Handle CREATE separately.
     if (_msg.kind == EVMC_CREATE || _msg.kind == EVMC_CREATE2)
-        return eth::create(*this, _msg);
+        return create(_msg);
 
     CallParameters params;
     params.gas = _msg.gas;
