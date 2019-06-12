@@ -36,7 +36,7 @@ bool EvmCHost::account_exists(evmc_address const& _addr) noexcept
 evmc_bytes32 EvmCHost::get_storage(evmc_address const& _addr, evmc_bytes32 const& _key) noexcept
 {
     (void)_addr;
-    assert(fromEvmC(_addr) == myAddress);
+    assert(fromEvmC(_addr) == m_extVM.myAddress);
     return toEvmC(m_extVM.store(fromEvmC(_key)));
 }
 
@@ -44,7 +44,7 @@ evmc_storage_status EvmCHost::set_storage(
     evmc_address const& _addr, evmc_bytes32 const& _key, evmc_bytes32 const& _value) noexcept
 {
     (void)_addr;
-    assert(fromEvmC(_addr) == myAddress);
+    assert(fromEvmC(_addr) == m_extVM.myAddress);
     u256 const index = fromEvmC(_key);
     u256 const newValue = fromEvmC(_value);
     u256 const currentValue = m_extVM.store(index);
@@ -123,7 +123,7 @@ size_t EvmCHost::copy_code(
 void EvmCHost::selfdestruct(evmc_address const& _addr, evmc_address const& _beneficiary) noexcept
 {
     (void)_addr;
-    assert(fromEvmC(_addr) == myAddress);
+    assert(fromEvmC(_addr) == m_extVM.myAddress);
     m_extVM.suicide(fromEvmC(_beneficiary));
 }
 
@@ -132,7 +132,7 @@ void EvmCHost::emit_log(evmc_address const& _addr, uint8_t const* _data, size_t 
     evmc_bytes32 const _topics[], size_t _numTopics) noexcept
 {
     (void)_addr;
-    assert(fromEvmC(_addr) == myAddress);
+    assert(fromEvmC(_addr) == m_extVM.myAddress);
     h256 const* pTopics = reinterpret_cast<h256 const*>(_topics);
     m_extVM.log(h256s{pTopics, pTopics + _numTopics}, bytesConstRef{_data, _dataSize});
 }
@@ -164,7 +164,7 @@ evmc::result EvmCHost::create(evmc_message const& _msg) noexcept
     Instruction opcode = _msg.kind == EVMC_CREATE ? Instruction::CREATE : Instruction::CREATE2;
 
     // ExtVM::create takes the sender address from .myAddress.
-    assert(fromEvmC(_msg.sender) == myAddress);
+    assert(fromEvmC(_msg.sender) == m_extVM.myAddress);
 
     CreateResult result = m_extVM.create(value, gas, init, opcode, salt, {});
     evmc_result evmcResult = {};
