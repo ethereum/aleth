@@ -112,10 +112,12 @@ void RLPXHandshake::writeAckEIP8()
     m_ackCipher.insert(m_ackCipher.begin(), prefix.begin(), prefix.end());
     
     auto self(shared_from_this());
-    ba::async_write(m_socket->ref(), ba::buffer(m_ackCipher), [this, self](boost::system::error_code ec, std::size_t)
-    {
-        transition(ec);
-    });
+    ba::async_write(m_socket->ref(), ba::buffer(m_ackCipher),
+        [this, self](boost::system::error_code ec, std::size_t) {
+            if (ec)
+                m_failureReason = TcpError;
+            transition(ec);
+        });
 }
 
 void RLPXHandshake::setAuthValues(Signature const& _sig, Public const& _remotePubk, h256 const& _remoteNonce, uint64_t _remoteVersion)
@@ -135,7 +137,10 @@ void RLPXHandshake::readAuth()
     ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, c_authCipherSizeBytes),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (ec)
+            {
+                m_failureReason = TcpError;
                 transition(ec);
+            }
             else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_authCipher), m_auth))
             {
                 LOG(m_logger) << "auth from";
@@ -163,7 +168,10 @@ void RLPXHandshake::readAuthEIP8()
     {
         bytesConstRef ct(&m_authCipher);
         if (ec)
+        {
+            m_failureReason = TcpError;
             transition(ec);
+        }
         else if (decryptECIES(m_host->m_alias.secret(), ct.cropped(0, 2), ct.cropped(2), m_auth))
         {
             RLP rlp(m_auth, RLP::ThrowOnFail | RLP::FailIfTooSmall);
@@ -180,6 +188,7 @@ void RLPXHandshake::readAuthEIP8()
         {
             LOG(m_logger) << "EIP-8 auth decrypt failed";
             m_nextState = Error;
+            m_failureReason = FrameDecryptionFailure;
             transition();
         }
     });
@@ -192,7 +201,10 @@ void RLPXHandshake::readAck()
     ba::async_read(m_socket->ref(), ba::buffer(m_ackCipher, c_ackCipherSizeBytes),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (ec)
+            {
+                m_failureReason = TcpError;
                 transition(ec);
+            }
             else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_ackCipher), m_ack))
             {
                 LOG(m_logger) << "ack from";
@@ -218,7 +230,10 @@ void RLPXHandshake::readAckEIP8()
     {
         bytesConstRef ct(&m_ackCipher);
         if (ec)
+        {
+            m_failureReason = TcpError;
             transition(ec);
+        }
         else if (decryptECIES(m_host->m_alias.secret(), ct.cropped(0, 2), ct.cropped(2), m_ack))
         {
             RLP rlp(m_ack, RLP::ThrowOnFail | RLP::FailIfTooSmall);
@@ -230,6 +245,7 @@ void RLPXHandshake::readAckEIP8()
         else
         {
             LOG(m_logger) << "EIP-8 ack decrypt failed";
+            m_failureReason = FrameDecryptionFailure;
             m_nextState = Error;
             transition();
         }
