@@ -28,33 +28,33 @@ static_assert(alignof(Address) == alignof(evmc_address), "Address types alignmen
 static_assert(sizeof(h256) == sizeof(evmc_uint256be), "Hash types size mismatch");
 static_assert(alignof(h256) == alignof(evmc_uint256be), "Hash types alignment mismatch");
 
-bool ExtVMFace::account_exists(evmc_address const& _addr) noexcept
+bool EvmCHost::account_exists(evmc_address const& _addr) noexcept
 {
-    return exists(fromEvmC(_addr));
+    return m_extVM.exists(fromEvmC(_addr));
 }
 
-evmc_bytes32 ExtVMFace::get_storage(evmc_address const& _addr, evmc_bytes32 const& _key) noexcept
+evmc_bytes32 EvmCHost::get_storage(evmc_address const& _addr, evmc_bytes32 const& _key) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == myAddress);
-    return toEvmC(store(fromEvmC(_key)));
+    return toEvmC(m_extVM.store(fromEvmC(_key)));
 }
 
-evmc_storage_status ExtVMFace::set_storage(
+evmc_storage_status EvmCHost::set_storage(
     evmc_address const& _addr, evmc_bytes32 const& _key, evmc_bytes32 const& _value) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == myAddress);
     u256 const index = fromEvmC(_key);
     u256 const newValue = fromEvmC(_value);
-    u256 const currentValue = store(index);
+    u256 const currentValue = m_extVM.store(index);
 
     if (newValue == currentValue)
         return EVMC_STORAGE_UNCHANGED;
 
-    EVMSchedule const& schedule = evmSchedule();
+    EVMSchedule const& schedule = m_extVM.evmSchedule();
     auto status = EVMC_STORAGE_MODIFIED;
-    u256 const originalValue = originalStorageValue(index);
+    u256 const originalValue = m_extVM.originalStorageValue(index);
     if (originalValue == currentValue || !schedule.eip1283Mode)
     {
         if (currentValue == 0)
@@ -62,7 +62,7 @@ evmc_storage_status ExtVMFace::set_storage(
         else if (newValue == 0)
         {
             status = EVMC_STORAGE_DELETED;
-            sub.refunds += schedule.sstoreRefundGas;
+            m_extVM.sub.refunds += schedule.sstoreRefundGas;
         }
     }
     else
@@ -71,44 +71,44 @@ evmc_storage_status ExtVMFace::set_storage(
         if (originalValue != 0)
         {
             if (currentValue == 0)
-                sub.refunds -= schedule.sstoreRefundGas;  // Can go negative.
+                m_extVM.sub.refunds -= schedule.sstoreRefundGas;  // Can go negative.
             if (newValue == 0)
-                sub.refunds += schedule.sstoreRefundGas;
+                m_extVM.sub.refunds += schedule.sstoreRefundGas;
         }
         if (originalValue == newValue)
         {
             if (originalValue == 0)
-                sub.refunds += schedule.sstoreRefundGas + schedule.sstoreRefundNonzeroGas;
+                m_extVM.sub.refunds += schedule.sstoreRefundGas + schedule.sstoreRefundNonzeroGas;
             else
-                sub.refunds += schedule.sstoreRefundNonzeroGas;
+                m_extVM.sub.refunds += schedule.sstoreRefundNonzeroGas;
         }
     }
 
-    setStore(index, newValue);  // Interface uses native endianness
+    m_extVM.setStore(index, newValue);  // Interface uses native endianness
 
     return status;
 }
 
-evmc_uint256be ExtVMFace::get_balance(evmc_address const& _addr) noexcept
+evmc_uint256be EvmCHost::get_balance(evmc_address const& _addr) noexcept
 {
-    return toEvmC(balance(fromEvmC(_addr)));
+    return toEvmC(m_extVM.balance(fromEvmC(_addr)));
 }
 
-size_t ExtVMFace::get_code_size(evmc_address const& _addr) noexcept
+size_t EvmCHost::get_code_size(evmc_address const& _addr) noexcept
 {
-    return codeSizeAt(fromEvmC(_addr));
+    return m_extVM.codeSizeAt(fromEvmC(_addr));
 }
 
-evmc_bytes32 ExtVMFace::get_code_hash(evmc_address const& _addr) noexcept
+evmc_bytes32 EvmCHost::get_code_hash(evmc_address const& _addr) noexcept
 {
-    return toEvmC(codeHashAt(fromEvmC(_addr)));
+    return toEvmC(m_extVM.codeHashAt(fromEvmC(_addr)));
 }
 
-size_t ExtVMFace::copy_code(
+size_t EvmCHost::copy_code(
     evmc_address const& _addr, size_t _codeOffset, byte* _bufferData, size_t _bufferSize) noexcept
 {
     Address addr = fromEvmC(_addr);
-    bytes const& c = codeAt(addr);
+    bytes const& c = m_extVM.codeAt(addr);
 
     // Handle "big offset" edge case.
     if (_codeOffset >= c.size())
@@ -120,42 +120,42 @@ size_t ExtVMFace::copy_code(
     return numToCopy;
 }
 
-void ExtVMFace::selfdestruct(evmc_address const& _addr, evmc_address const& _beneficiary) noexcept
+void EvmCHost::selfdestruct(evmc_address const& _addr, evmc_address const& _beneficiary) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == myAddress);
-    suicide(fromEvmC(_beneficiary));
+    m_extVM.suicide(fromEvmC(_beneficiary));
 }
 
 
-void ExtVMFace::emit_log(evmc_address const& _addr, uint8_t const* _data, size_t _dataSize,
+void EvmCHost::emit_log(evmc_address const& _addr, uint8_t const* _data, size_t _dataSize,
     evmc_bytes32 const _topics[], size_t _numTopics) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == myAddress);
     h256 const* pTopics = reinterpret_cast<h256 const*>(_topics);
-    log(h256s{pTopics, pTopics + _numTopics}, bytesConstRef{_data, _dataSize});
+    m_extVM.log(h256s{pTopics, pTopics + _numTopics}, bytesConstRef{_data, _dataSize});
 }
 
-evmc_tx_context ExtVMFace::get_tx_context() noexcept
+evmc_tx_context EvmCHost::get_tx_context() noexcept
 {
     evmc_tx_context result = {};
-    result.tx_gas_price = toEvmC(gasPrice);
-    result.tx_origin = toEvmC(origin);
-    result.block_coinbase = toEvmC(envInfo().author());
-    result.block_number = envInfo().number();
-    result.block_timestamp = envInfo().timestamp();
-    result.block_gas_limit = static_cast<int64_t>(envInfo().gasLimit());
-    result.block_difficulty = toEvmC(envInfo().difficulty());
+    result.tx_gas_price = toEvmC(m_extVM.gasPrice);
+    result.tx_origin = toEvmC(m_extVM.origin);
+    result.block_coinbase = toEvmC(m_extVM.envInfo().author());
+    result.block_number = m_extVM.envInfo().number();
+    result.block_timestamp = m_extVM.envInfo().timestamp();
+    result.block_gas_limit = static_cast<int64_t>(m_extVM.envInfo().gasLimit());
+    result.block_difficulty = toEvmC(m_extVM.envInfo().difficulty());
     return result;
 }
 
-evmc_bytes32 ExtVMFace::get_block_hash(int64_t _number) noexcept
+evmc_bytes32 EvmCHost::get_block_hash(int64_t _number) noexcept
 {
-    return toEvmC(blockHash(_number));
+    return toEvmC(m_extVM.blockHash(_number));
 }
 
-evmc::result ExtVMFace::create(evmc_message const& _msg) noexcept
+evmc::result EvmCHost::create(evmc_message const& _msg) noexcept
 {
     u256 gas = _msg.gas;
     u256 value = fromEvmC(_msg.value);
@@ -166,7 +166,7 @@ evmc::result ExtVMFace::create(evmc_message const& _msg) noexcept
     // ExtVM::create takes the sender address from .myAddress.
     assert(fromEvmC(_msg.sender) == myAddress);
 
-    CreateResult result = create(value, gas, init, opcode, salt, {});
+    CreateResult result = m_extVM.create(value, gas, init, opcode, salt, {});
     evmc_result evmcResult = {};
     evmcResult.status_code = result.status;
     evmcResult.gas_left = static_cast<int64_t>(gas);
@@ -199,7 +199,7 @@ evmc::result ExtVMFace::create(evmc_message const& _msg) noexcept
     return evmc::result{evmcResult};
 }
 
-evmc::result ExtVMFace::call(evmc_message const& _msg) noexcept
+evmc::result EvmCHost::call(evmc_message const& _msg) noexcept
 {
     assert(_msg.gas >= 0 && "Invalid gas value");
 
@@ -213,12 +213,12 @@ evmc::result ExtVMFace::call(evmc_message const& _msg) noexcept
     params.valueTransfer = _msg.kind == EVMC_DELEGATECALL ? 0 : params.apparentValue;
     params.senderAddress = fromEvmC(_msg.sender);
     params.codeAddress = fromEvmC(_msg.destination);
-    params.receiveAddress = _msg.kind == EVMC_CALL ? params.codeAddress : myAddress;
+    params.receiveAddress = _msg.kind == EVMC_CALL ? params.codeAddress : m_extVM.myAddress;
     params.data = {_msg.input_data, _msg.input_size};
     params.staticCall = (_msg.flags & EVMC_STATIC) != 0;
     params.onOp = {};
 
-    CallResult result = call(params);
+    CallResult result = m_extVM.call(params);
     evmc_result evmcResult = {};
     evmcResult.status_code = result.status;
     evmcResult.gas_left = static_cast<int64_t>(params.gas);

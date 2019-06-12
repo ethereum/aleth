@@ -199,7 +199,7 @@ struct CreateResult
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
  */
-class ExtVMFace : public evmc::Host
+class ExtVMFace
 {
 public:
     /// Full constructor.
@@ -209,6 +209,8 @@ public:
 
     ExtVMFace(ExtVMFace const&) = delete;
     ExtVMFace& operator=(ExtVMFace const&) = delete;
+
+    virtual ~ExtVMFace() = default;
 
     /// Read storage location.
     virtual u256 store(u256) { return 0; }
@@ -258,6 +260,30 @@ public:
     /// Return the EVM gas-price schedule for this execution context.
     virtual EVMSchedule const& evmSchedule() const { return DefaultSchedule; }
 
+private:
+    EnvInfo const& m_envInfo;
+
+public:
+    // TODO: make private
+    Address myAddress;  ///< Address associated with executing code (a contract, or contract-to-be).
+    Address caller;     ///< Address which sent the message (either equal to origin or a contract).
+    Address origin;     ///< Original transactor.
+    u256 value;         ///< Value (in Wei) that was passed to this address.
+    u256 gasPrice;      ///< Price of gas (that we already paid).
+    bytesConstRef data;       ///< Current input data.
+    bytes code;               ///< Current code that is executing.
+    h256 codeHash;            ///< SHA3 hash of the executing code
+    u256 salt;                ///< Values used in new address construction by CREATE2
+    SubState sub;             ///< Sub-band VM state (suicides, refund counter, logs).
+    unsigned depth = 0;       ///< Depth of the present call.
+    bool isCreate = false;    ///< Is this a CREATE call?
+    bool staticCall = false;  ///< Throw on state changing.
+};
+
+class EvmCHost : public evmc::Host
+{
+public:
+    explicit EvmCHost(ExtVMFace& _extVM) : m_extVM{_extVM} {}
 
     bool account_exists(const evmc_address& addr) noexcept override;
 
@@ -290,23 +316,8 @@ public:
 private:
     evmc::result create(evmc_message const& _msg) noexcept;
 
-    EnvInfo const& m_envInfo;
-
-public:
-    // TODO: make private
-    Address myAddress;  ///< Address associated with executing code (a contract, or contract-to-be).
-    Address caller;     ///< Address which sent the message (either equal to origin or a contract).
-    Address origin;     ///< Original transactor.
-    u256 value;         ///< Value (in Wei) that was passed to this address.
-    u256 gasPrice;      ///< Price of gas (that we already paid).
-    bytesConstRef data;       ///< Current input data.
-    bytes code;               ///< Current code that is executing.
-    h256 codeHash;            ///< SHA3 hash of the executing code
-    u256 salt;                ///< Values used in new address construction by CREATE2
-    SubState sub;             ///< Sub-band VM state (suicides, refund counter, logs).
-    unsigned depth = 0;       ///< Depth of the present call.
-    bool isCreate = false;    ///< Is this a CREATE call?
-    bool staticCall = false;  ///< Throw on state changing.
+private:
+    ExtVMFace& m_extVM;
 };
 
 inline evmc_address toEvmC(Address const& _addr)
