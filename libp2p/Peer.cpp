@@ -30,12 +30,12 @@ namespace dev
 
 namespace p2p
 {
-
-Peer::Peer(Peer const& _original):
-    Node(_original),
+Peer::Peer(Peer const& _original)
+  : Node(_original),
     m_lastConnected(_original.m_lastConnected),
     m_lastAttempted(_original.m_lastAttempted),
     m_lastDisconnect(_original.m_lastDisconnect),
+    m_lastHandshakeFailure(_original.m_lastHandshakeFailure),
     m_session(_original.m_session)
 {
     m_score = _original.m_score.load();
@@ -45,18 +45,33 @@ Peer::Peer(Peer const& _original):
 
 bool Peer::shouldReconnect() const
 {
-    return id && endpoint && chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
+    return id && endpoint &&
+           fallbackSeconds() != numeric_limits<unsigned>::max() &&
+           chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
 }
     
 unsigned Peer::fallbackSeconds() const
 {
     if (peerType == PeerType::Required)
         return 5;
+
+    switch (m_lastHandshakeFailure)
+    {
+        case FrameDecryptionFailure:
+        case ProtocolError:
+            return numeric_limits<unsigned>::max();
+        default:
+            break;
+    }
+
     switch (m_lastDisconnect)
     {
     case BadProtocol:
-        return 30 * (m_failedAttempts + 1);
     case UselessPeer:
+    case IncompatibleProtocol:
+    case UnexpectedIdentity:
+    case UserReason:
+        return numeric_limits<unsigned>::max();
     case TooManyPeers:
         return 25 * (m_failedAttempts + 1);
     case ClientQuit:

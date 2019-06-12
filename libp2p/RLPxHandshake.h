@@ -137,6 +137,8 @@ protected:
     /// Timer which enforces c_timeout. Reset for each stage of the handshake.
     ba::steady_timer m_idleTimer;
 
+    HandshakeFailureReason m_failureReason;
+
     Logger m_logger{createLogger(VerbosityTrace, "rlpx")};
     Logger m_errorLogger{createLogger(VerbosityError, "rlpx")};
 };

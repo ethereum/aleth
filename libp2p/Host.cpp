@@ -196,6 +196,25 @@ void Host::stopCapabilities()
     }
 }
 
+std::shared_ptr<Peer> Host::peer(NodeID const& _n) const
+{
+    RecursiveGuard l(x_sessions);
+    auto it = m_peers.find(_n);
+    if (it == m_peers.end())
+    {
+        LOG(m_logger) << "Peer " << _n << " not found";
+        return nullptr;
+    }
+    return it->second;
+}
+
+void Host::handshakeFailed(NodeID const& _n, HandshakeFailureReason _r)
+{
+    std::shared_ptr<Peer> p = peer(_n);
+    assert(p);
+    p->m_lastHandshakeFailure = _r;
+}
+
 void Host::doneWorking()
 {
     // Return early if we have no capabilities since there's nothing to do. We've already stopped
@@ -284,6 +303,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
             m_peers[_id] = peer;
         }
     }
+    peer->m_lastHandshakeFailure = NoFailure;
     if (peer->isOffline())
         peer->m_lastConnected = chrono::system_clock::now();
     peer->endpoint.setAddress(_s->remoteEndpoint().address());
@@ -783,15 +803,21 @@ void Host::run(boost::system::error_code const& _ec)
     unsigned reqConn = 0;
     {
         RecursiveGuard l(x_sessions);
-        for (auto const& p : m_peers)
         {
-            bool haveSession = havePeerSession(p.second->id);
-            bool required = p.second->peerType == PeerType::Required;
-            if (haveSession && required)
-                reqConn++;
-            else if (!haveSession && p.second->shouldReconnect() &&
-                        (!m_netConfig.pin || required))
-                toConnect.push_back(p.second);
+            for (auto p = m_peers.cbegin(); p != m_peers.cend(); p++)
+            {
+                bool haveSession = havePeerSession(p->second->id);
+                bool required = p->second->peerType == PeerType::Required;
+                if (haveSession && required)
+                    reqConn++;
+                else if (!haveSession)
+                {
+                    if (p->second->fallbackSeconds() == numeric_limits<unsigned>::max())
+                        p = m_peers.erase(p);
+                    else if (p->second->shouldReconnect() && (!m_netConfig.pin || required))
+                        toConnect.push_back(p->second);
+                }
+            }
         }
     }
 

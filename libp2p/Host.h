@@ -343,6 +343,11 @@ private:
     /// Stop registered capabilities, typically done when the network is being shut down.
     void stopCapabilities();
 
+    std::shared_ptr<Peer> peer(NodeID const& _n) const;
+
+    /// Set a handshake failure reason for a peer
+    void handshakeFailed(NodeID const& _n, HandshakeFailureReason _r);
+
     bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
     std::atomic<bool> m_run{false};													///< Whether network is running.
@@ -408,7 +413,7 @@ private:
     /// logging to once every c_logActivePeersInterval seconds
     std::chrono::steady_clock::time_point m_lastPeerLogMessage;
 
-    Logger m_logger{createLogger(VerbosityDebug, "net")};
+    mutable Logger m_logger{createLogger(VerbosityDebug, "net")};
     Logger m_detailsLogger{createLogger(VerbosityTrace, "net")};
     Logger m_infoLogger{createLogger(VerbosityInfo, "net")};
 };
