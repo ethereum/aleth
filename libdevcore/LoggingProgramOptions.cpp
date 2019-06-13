@@ -42,6 +42,8 @@ po::options_description createLoggingProgramOptions(
             ->value_name("<channel_list>")
             ->multitoken(),
         "Space-separated list of the log channels to hide.\n");
+    addLoggingOption("log-vmtrace", po::bool_switch(&_options.vmTrace),
+        "Enable VM trace log (requires log-verbosity 4).\n");
 
     return optionsDescr;
 }
