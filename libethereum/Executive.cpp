@@ -425,7 +425,6 @@ OnOpFunc Executive::simpleTrace()
         ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
         auto vm = dynamic_cast<LegacyVM const*>(_vm);
 
-        ostringstream o;
         if (vm)
             LOG(traceLogger) << dumpStackAndMemory(*vm);
         LOG(traceLogger) << dumpStorage(ext);
