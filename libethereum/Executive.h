@@ -168,6 +168,9 @@ public:
     /// @returns false iff go() must be called again to finish the transaction.
     bool go(OnOpFunc const& _onOp = OnOpFunc());
 
+    /// Operation function for providing a simple trace of the VM execution.
+    OnOpFunc simpleTrace();
+
     /// @returns gas remaining after the transaction/operation. Valid after the transaction has been executed.
     u256 gas() const { return m_gas; }
 
@@ -211,6 +214,7 @@ private:
 
     Logger m_execLogger{createLogger(VerbosityDebug, "exec")};
     Logger m_detailsLogger{createLogger(VerbosityTrace, "exec")};
+    Logger m_vmTraceLogger{createLogger(VerbosityTrace, "vmtrace")};
 };
 
 }

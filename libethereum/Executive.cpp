@@ -33,6 +33,32 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+namespace
+{
+std::string dumpStackAndMemory(LegacyVM const& _vm)
+{
+    ostringstream o;
+    o << "\n    STACK\n";
+    for (auto i : _vm.stack())
+        o << (h256)i << "\n";
+    o << "    MEMORY\n"
+      << ((_vm.memory().size() > 1000) ? " mem size greater than 1000 bytes " :
+                                         memDump(_vm.memory()));
+    return o.str();
+};
+
+std::string dumpStorage(ExtVM const& _ext)
+{
+    ostringstream o;
+    o << "    STORAGE\n";
+    for (auto const& i : _ext.state().storage(_ext.myAddress))
+        o << showbase << hex << i.second.first << ": " << i.second.second << "\n";
+    return o.str();
+};
+
+
+}  // namespace
+
 StandardTrace::StandardTrace():
     m_trace(Json::arrayValue)
 {}
@@ -388,6 +414,27 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
             _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth, true, false);
 
     return !m_ext;
+}
+
+OnOpFunc Executive::simpleTrace()
+{
+    Logger& traceLogger = m_vmTraceLogger;
+
+    return [&traceLogger](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize,
+               bigint gasCost, bigint gas, VMFace const* _vm, ExtVMFace const* voidExt) {
+        ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
+        auto vm = dynamic_cast<LegacyVM const*>(_vm);
+
+        ostringstream o;
+        if (vm)
+            LOG(traceLogger) << dumpStackAndMemory(*vm);
+        LOG(traceLogger) << dumpStorage(ext);
+        LOG(traceLogger) << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps
+                         << " : " << hex << setw(4) << setfill('0') << PC << " : "
+                         << instructionInfo(inst).name << " : " << dec << gas << " : -" << dec
+                         << gasCost << " : " << newMemSize << "x32"
+                         << " >";
+    };
 }
 
 bool Executive::go(OnOpFunc const& _onOp)
