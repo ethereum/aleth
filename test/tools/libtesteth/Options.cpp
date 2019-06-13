@@ -83,7 +83,7 @@ void printVersion()
 }
 }
 
-void Options::setVerbosity(int _level)
+void Options::setVerbosity(int _level, bool _vmTrace)
 {
     static boost::iostreams::stream<boost::iostreams::null_sink> nullOstream(
         (boost::iostreams::null_sink()));
@@ -98,6 +98,7 @@ void Options::setVerbosity(int _level)
     }
     else if (_level == 1 || _level == 2)
         logOptions.verbosity = VerbositySilent;
+    logOptions.vmTrace = _vmTrace;
     dev::setupLogging(logOptions);
 }
 
@@ -360,7 +361,7 @@ Options::Options(int argc, const char** argv)
     }
 
     // If no verbosity is set. use default
-    setVerbosity(verbosity == -1 ? 1 : verbosity);
+    setVerbosity(verbosity == -1 ? 1 : verbosity, vmtrace);
 }
 
 Options const& Options::get(int argc, const char** argv)

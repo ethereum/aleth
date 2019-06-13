@@ -71,7 +71,7 @@ public:
 private:
     Options(int argc = 0, const char** argv = 0);
     Options(Options const&) = delete;
-    void setVerbosity(int _level);
+    void setVerbosity(int _level, bool _vmTrace);
 };
 
 } //namespace test
