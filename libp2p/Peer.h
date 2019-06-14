@@ -70,6 +70,10 @@ public:
     /// Return true if connection attempt should be made to this peer or false if
     bool shouldReconnect() const;
 
+    /// A peer which should never be reconnected to - e.g. it's running on a different network, we
+    /// don't have any common capabilities
+    bool uselessPeer() const;
+
     /// Number of times connection has been attempted to peer.
     int failedAttempts() const { return m_failedAttempts; }
 

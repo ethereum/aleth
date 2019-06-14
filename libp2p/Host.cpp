@@ -211,7 +211,11 @@ std::shared_ptr<Peer> Host::peer(NodeID const& _n) const
 void Host::handshakeFailed(NodeID const& _n, HandshakeFailureReason _r)
 {
     std::shared_ptr<Peer> p = peer(_n);
-    assert(p);
+    if (!p)
+    {
+        cerror << "Peer " << _n << " not found";
+        return;
+    }
     p->m_lastHandshakeFailure = _r;
 }
 
@@ -812,7 +816,7 @@ void Host::run(boost::system::error_code const& _ec)
                     reqConn++;
                 else if (!haveSession)
                 {
-                    if (p->second->fallbackSeconds() == numeric_limits<unsigned>::max())
+                    if (p->second->uselessPeer())
                         p = m_peers.erase(p);
                     else if (p->second->shouldReconnect() && (!m_netConfig.pin || required))
                         toConnect.push_back(p->second);

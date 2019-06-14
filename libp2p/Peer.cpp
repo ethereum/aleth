@@ -49,9 +49,37 @@ bool Peer::shouldReconnect() const
            fallbackSeconds() != numeric_limits<unsigned>::max() &&
            chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
 }
-    
+
+bool Peer::uselessPeer() const
+{
+    switch (m_lastHandshakeFailure)
+    {
+    case FrameDecryptionFailure:
+    case ProtocolError:
+        return true;
+    default:
+        break;
+    }
+
+    switch (m_lastDisconnect)
+    {
+    case BadProtocol:
+    case UselessPeer:
+    case IncompatibleProtocol:
+    case UnexpectedIdentity:
+    case UserReason:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
+
 unsigned Peer::fallbackSeconds() const
 {
+    constexpr unsigned oneYearInSeconds{60 * 60 * 24 * 360};
+
     if (peerType == PeerType::Required)
         return 5;
 
@@ -59,7 +87,7 @@ unsigned Peer::fallbackSeconds() const
     {
         case FrameDecryptionFailure:
         case ProtocolError:
-            return numeric_limits<unsigned>::max();
+            return oneYearInSeconds;
         default:
             break;
     }
@@ -71,7 +99,7 @@ unsigned Peer::fallbackSeconds() const
     case IncompatibleProtocol:
     case UnexpectedIdentity:
     case UserReason:
-        return numeric_limits<unsigned>::max();
+        return oneYearInSeconds;
     case TooManyPeers:
         return 25 * (m_failedAttempts + 1);
     case ClientQuit:
