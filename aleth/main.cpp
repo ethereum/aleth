@@ -1011,7 +1011,7 @@ int main(int argc, char** argv)
 
         if (bootstrap)
             for (auto const& i : defaultBootNodes())
-                web3.requirePeer(i.first, i.second);
+                web3.addNode(i.first, i.second);
         if (!remoteHost.empty())
             web3.addNode(p2p::NodeID(), remoteHost + ":" + toString(remotePort));
     }
