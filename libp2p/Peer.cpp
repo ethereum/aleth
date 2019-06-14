@@ -52,6 +52,9 @@ bool Peer::shouldReconnect() const
 
 bool Peer::uselessPeer() const
 {
+    if (peerType == PeerType::Required)
+        return false;
+
     switch (m_lastHandshakeFailure)
     {
     case FrameDecryptionFailure:
