@@ -197,7 +197,7 @@ void BlockChainSync::onPeerStatus(EthereumPeer const& _peer)
     if (!disconnectReason.empty())
     {
         LOG(m_logger) << "Peer " << _peer.id() << " not suitable for sync: " << disconnectReason;
-        m_host.capabilityHost().disconnect(_peer.id(), p2p::UserReason);
+        m_host.capabilityHost().disconnect(_peer.id(), p2p::UselessPeer);
         return;
     }
 
