@@ -30,6 +30,19 @@ namespace dev
 
 namespace p2p
 {
+namespace
+{
+unsigned defaultFallbackSeconds(unsigned _failedAttempts)
+{
+    if (_failedAttempts < 5)
+        return _failedAttempts ? _failedAttempts * 5 : 5;
+    else if (_failedAttempts < 15)
+        return 25 + (_failedAttempts - 5) * 10;
+    else
+        return 25 + 100 + (_failedAttempts - 15) * 20;
+}
+}  // namespace
+
 Peer::Peer(Peer const& _original)
   : Node(_original),
     m_lastConnected(_original.m_lastConnected),
@@ -45,12 +58,11 @@ Peer::Peer(Peer const& _original)
 
 bool Peer::shouldReconnect() const
 {
-    return id && endpoint &&
-           fallbackSeconds() != numeric_limits<unsigned>::max() &&
+    return id && endpoint && !isUseless() &&
            chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
 }
 
-bool Peer::uselessPeer() const
+bool Peer::isUseless() const
 {
     if (peerType == PeerType::Required)
         return false;
@@ -66,18 +78,28 @@ bool Peer::uselessPeer() const
 
     switch (m_lastDisconnect)
     {
+    // Critical cases
     case BadProtocol:
     case UselessPeer:
     case IncompatibleProtocol:
     case UnexpectedIdentity:
-    case UserReason:
+    case DuplicatePeer:
+    case NullIdentity:
         return true;
+    // Potentially transient cases which can resolve quickly
+    case PingTimeout:
+    case TCPError:
+    case TooManyPeers:
+        return m_failedAttempts >= 10;
+    // Potentially transient cases which can take longer to resolve
+    case ClientQuit:
+    case UserReason:
+        return m_failedAttempts >= 25;
     default:
         break;
     }
     return false;
 }
-
 
 unsigned Peer::fallbackSeconds() const
 {
@@ -86,35 +108,20 @@ unsigned Peer::fallbackSeconds() const
     if (peerType == PeerType::Required)
         return 5;
 
-    switch (m_lastHandshakeFailure)
-    {
-        case FrameDecryptionFailure:
-        case ProtocolError:
-            return oneYearInSeconds;
-        default:
-            break;
-    }
+    if (isUseless())
+        return oneYearInSeconds;
 
     switch (m_lastDisconnect)
     {
-    case BadProtocol:
-    case UselessPeer:
-    case IncompatibleProtocol:
-    case UnexpectedIdentity:
-    case UserReason:
-        return oneYearInSeconds;
+    case TCPError:
+    case PingTimeout:
     case TooManyPeers:
-        return 25 * (m_failedAttempts + 1);
-    case ClientQuit:
         return 15 * (m_failedAttempts + 1);
-    case NoDisconnect:
+    case ClientQuit:
+    case UserReason:
+        return 25 * (m_failedAttempts + 1);
     default:
-        if (m_failedAttempts < 5)
-            return m_failedAttempts ? m_failedAttempts * 5 : 5;
-        else if (m_failedAttempts < 15)
-            return 25 + (m_failedAttempts - 5) * 10;
-        else
-            return 25 + 100 + (m_failedAttempts - 15) * 20;
+        return defaultFallbackSeconds(m_failedAttempts);
     }
 }
 

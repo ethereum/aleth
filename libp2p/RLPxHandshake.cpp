@@ -30,7 +30,8 @@ RLPXHandshake::RLPXHandshake(
     m_remote(_remote),
     m_originated(_remote),
     m_socket(_socket),
-    m_idleTimer(m_socket->ref().get_executor())
+    m_idleTimer(m_socket->ref().get_executor()),
+    m_failureReason{NoFailure}
 {
     auto const prefixAttr =
         boost::log::attributes::constant<std::string>{connectionDirectionString()};
@@ -114,8 +115,6 @@ void RLPXHandshake::writeAckEIP8()
     auto self(shared_from_this());
     ba::async_write(m_socket->ref(), ba::buffer(m_ackCipher),
         [this, self](boost::system::error_code ec, std::size_t) {
-            if (ec)
-                m_failureReason = TcpError;
             transition(ec);
         });
 }
@@ -137,10 +136,7 @@ void RLPXHandshake::readAuth()
     ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, c_authCipherSizeBytes),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (ec)
-            {
-                m_failureReason = TcpError;
                 transition(ec);
-            }
             else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_authCipher), m_auth))
             {
                 LOG(m_logger) << "auth from";
@@ -168,10 +164,7 @@ void RLPXHandshake::readAuthEIP8()
     {
         bytesConstRef ct(&m_authCipher);
         if (ec)
-        {
-            m_failureReason = TcpError;
             transition(ec);
-        }
         else if (decryptECIES(m_host->m_alias.secret(), ct.cropped(0, 2), ct.cropped(2), m_auth))
         {
             RLP rlp(m_auth, RLP::ThrowOnFail | RLP::FailIfTooSmall);
@@ -201,10 +194,7 @@ void RLPXHandshake::readAck()
     ba::async_read(m_socket->ref(), ba::buffer(m_ackCipher, c_ackCipherSizeBytes),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (ec)
-            {
-                m_failureReason = TcpError;
                 transition(ec);
-            }
             else if (decryptECIES(m_host->m_alias.secret(), bytesConstRef(&m_ackCipher), m_ack))
             {
                 LOG(m_logger) << "ack from";
@@ -230,10 +220,7 @@ void RLPXHandshake::readAckEIP8()
     {
         bytesConstRef ct(&m_ackCipher);
         if (ec)
-        {
-            m_failureReason = TcpError;
             transition(ec);
-        }
         else if (decryptECIES(m_host->m_alias.secret(), ct.cropped(0, 2), ct.cropped(2), m_ack))
         {
             RLP rlp(m_ack, RLP::ThrowOnFail | RLP::FailIfTooSmall);
@@ -262,8 +249,7 @@ void RLPXHandshake::cancel()
 
 void RLPXHandshake::error(boost::system::error_code _ech)
 {
-    if (m_originated)
-        m_host->handshakeFailed(m_remote, m_failureReason);
+    m_host->onHandshakeFailed(m_remote, m_failureReason);
 
     stringstream errorStream;
     errorStream << "Handshake failed";
@@ -286,6 +272,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     
     if (_ech || m_nextState == Error || m_cancel)
     {
+        if (_ech)
+            m_failureReason = TcpError;
         return error(_ech);
     }
     
@@ -351,8 +339,6 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         m_io->writeSingleFramePacket(&packet, m_handshakeOutBuffer);
         ba::async_write(m_socket->ref(), ba::buffer(m_handshakeOutBuffer),
             [this, self](boost::system::error_code ec, std::size_t) {
-                if (ec)
-                    m_failureReason = TcpError;
                 transition(ec);
             });
     }
@@ -369,10 +355,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
             boost::asio::buffer(m_handshakeInBuffer, handshakeSizeBytes),
             [this, self](boost::system::error_code ec, std::size_t) {
                 if (ec)
-                {
-                    m_failureReason = TcpError;
                     transition(ec);
-                }
                 else
                 {
                     if (!m_io)
@@ -436,10 +419,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                             m_idleTimer.cancel();
 
                             if (ec)
-                            {
-                                m_failureReason = TcpError;
                                 transition(ec);
-                            }
                             else
                             {
                                 if (!m_io)

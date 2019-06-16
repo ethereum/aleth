@@ -214,6 +214,9 @@ public:
         return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<SessionFace>();
     }
 
+    /// Set a handshake failure reason for a peer
+    void onHandshakeFailed(NodeID const& _n, HandshakeFailureReason _r);
+
     /// Get our current node ID.
     NodeID id() const { return m_alias.pub(); }
 
@@ -344,9 +347,6 @@ private:
     void stopCapabilities();
 
     std::shared_ptr<Peer> peer(NodeID const& _n) const;
-
-    /// Set a handshake failure reason for a peer
-    void handshakeFailed(NodeID const& _n, HandshakeFailureReason _r);
 
     bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 

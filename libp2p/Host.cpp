@@ -200,23 +200,7 @@ std::shared_ptr<Peer> Host::peer(NodeID const& _n) const
 {
     RecursiveGuard l(x_sessions);
     auto it = m_peers.find(_n);
-    if (it == m_peers.end())
-    {
-        LOG(m_logger) << "Peer " << _n << " not found";
-        return nullptr;
-    }
-    return it->second;
-}
-
-void Host::handshakeFailed(NodeID const& _n, HandshakeFailureReason _r)
-{
-    std::shared_ptr<Peer> p = peer(_n);
-    if (!p)
-    {
-        cerror << "Peer " << _n << " not found";
-        return;
-    }
-    p->m_lastHandshakeFailure = _r;
+    return it != m_peers.end() ? it->second : nullptr;
 }
 
 void Host::doneWorking()
@@ -294,7 +278,10 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
     {
         auto itPeer = m_peers.find(_id);
         if (itPeer != m_peers.end())
+        {
             peer = itPeer->second;
+            peer->m_lastHandshakeFailure = NoFailure;
+        }
         else
         {
             // peer doesn't exist, try to get port info from node table
@@ -307,7 +294,6 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
             m_peers[_id] = peer;
         }
     }
-    peer->m_lastHandshakeFailure = NoFailure;
     if (peer->isOffline())
         peer->m_lastConnected = chrono::system_clock::now();
     peer->endpoint.setAddress(_s->remoteEndpoint().address());
@@ -408,6 +394,13 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
 
     LOG(m_logger) << "Peer connection successfully established with " << _id << "@"
                   << _s->remoteEndpoint();
+}
+
+void Host::onHandshakeFailed(NodeID const& _n, HandshakeFailureReason _r)
+{
+    std::shared_ptr<Peer> p = peer(_n);
+    if (p)
+        p->m_lastHandshakeFailure = _r;
 }
 
 void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
@@ -807,21 +800,26 @@ void Host::run(boost::system::error_code const& _ec)
     unsigned reqConn = 0;
     {
         RecursiveGuard l(x_sessions);
+        auto p = m_peers.cbegin();
+        while (p != m_peers.cend())
         {
-            for (auto p = m_peers.cbegin(); p != m_peers.cend(); p++)
+            bool peerRemoved = false;
+            bool haveSession = havePeerSession(p->second->id);
+            bool required = p->second->peerType == PeerType::Required;
+            if (haveSession && required)
+                reqConn++;
+            else if (!haveSession)
             {
-                bool haveSession = havePeerSession(p->second->id);
-                bool required = p->second->peerType == PeerType::Required;
-                if (haveSession && required)
-                    reqConn++;
-                else if (!haveSession)
+                if (p->second->isUseless())
                 {
-                    if (p->second->uselessPeer())
-                        p = m_peers.erase(p);
-                    else if (p->second->shouldReconnect() && (!m_netConfig.pin || required))
-                        toConnect.push_back(p->second);
+                    peerRemoved = true;
+                    p = m_peers.erase(p);
                 }
+                else if (p->second->shouldReconnect() && (!m_netConfig.pin || required))
+                    toConnect.push_back(p->second);
             }
+            if (!peerRemoved)
+                p++;
         }
     }
 

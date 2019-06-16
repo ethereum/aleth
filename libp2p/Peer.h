@@ -72,7 +72,7 @@ public:
 
     /// A peer which should never be reconnected to - e.g. it's running on a different network, we
     /// don't have any common capabilities
-    bool uselessPeer() const;
+    bool isUseless() const;
 
     /// Number of times connection has been attempted to peer.
     int failedAttempts() const { return m_failedAttempts; }
@@ -84,8 +84,8 @@ public:
     void noteSessionGood() { m_failedAttempts = 0; }
 
 private:
-    /// Returns number of seconds to wait until attempting connection, based on attempted connection history, or
-    /// numeric_limits<unsigned>::max() if a connection should never be attempted.
+    /// Returns number of seconds to wait until attempting connection, based on attempted connection
+    /// history
     unsigned fallbackSeconds() const;
 
     std::atomic<int> m_score{0};									///< All time cumulative.
