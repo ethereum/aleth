@@ -89,6 +89,7 @@ void formatter(boost::log::record_view const& _rec, boost::log::formatting_ostre
         _strm << " " EthNavy << _rec[suffix] << EthReset;
 }
 
+std::atomic<bool> g_vmTraceEnabled{false};
 }  // namespace
 
 std::string getThreadName()
@@ -146,6 +147,13 @@ void setupLogging(LoggingOptions const& _options)
         boost::log::make_exception_handler<std::exception>([](std::exception const& _ex) {
         std::cerr << "Exception from the logging library: " << _ex.what() << '\n';
     }));
+
+    g_vmTraceEnabled = _options.vmTrace;
+}
+
+bool isVmTraceEnabled()
+{
+    return g_vmTraceEnabled;
 }
 
 }  // namespace dev

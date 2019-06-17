@@ -327,6 +327,11 @@ int main(int argc, char** argv)
     LoggingOptions loggingOptions;
     po::options_description loggingProgramOptions(
         createLoggingProgramOptions(c_lineWidth, loggingOptions, logChannels));
+    // log-vmtrace is needed only in aleth
+    auto addLoggingOption = loggingProgramOptions.add_options();
+    addLoggingOption("log-vmtrace", po::bool_switch(&loggingOptions.vmTrace),
+        "Enable VM trace log (requires log-verbosity 4).\n");
+
 
     po::options_description generalOptions("GENERAL OPTIONS", c_lineWidth);
     auto addGeneralOption = generalOptions.add_options();

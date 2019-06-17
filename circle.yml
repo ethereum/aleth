@@ -133,7 +133,7 @@ jobs:
       GENERATOR: Ninja
       BUILD_PARALLEL_JOBS: 8
       TEST_PARALLEL_JOBS: 8
-      CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON -DVMTRACE=ON
+      CMAKE_OPTIONS: -DALETH_INTERPRETER_SHARED=ON
     docker:
       - image: ethereum/cpp-build-env:7
     steps:
@@ -162,7 +162,7 @@ jobs:
       GENERATOR: Ninja
       BUILD_PARALLEL_JOBS: 3
       TEST_PARALLEL_JOBS: 4
-      CMAKE_OPTIONS: -DCOVERAGE=ON -DVMTRACE=ON
+      CMAKE_OPTIONS: -DCOVERAGE=ON
     docker:
       - image: ethereum/cpp-build-env:7
     steps:
@@ -185,7 +185,7 @@ jobs:
     <<: *linux-gcc6
     environment:
       <<: *linux-gcc6-environment
-      CMAKE_OPTIONS: -DCOVERAGE=ON -DVMTRACE=ON -DTESTETH_ARGS=--all
+      CMAKE_OPTIONS: -DCOVERAGE=ON -DTESTETH_ARGS=--all
 
   macos-xcode90:
     environment:
@@ -194,7 +194,6 @@ jobs:
       GENERATOR: Ninja
       BUILD_PARALLEL_JOBS: 8
       TEST_PARALLEL_JOBS: 8
-      CMAKE_OPTIONS: -DVMTRACE=ON
     macos:
       xcode: "9.0"
     steps:

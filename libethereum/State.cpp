@@ -603,10 +603,9 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
     e.setResultRecipient(res);
 
     auto onOp = _onOp;
-#if ETH_VMTRACE
-    if (!onOp)
+    if (isVmTraceEnabled() && !onOp)
         onOp = e.simpleTrace();
-#endif
+
     u256 const startGasUsed = _envInfo.gasUsed();
     bool const statusCode = executeTransaction(e, _t, onOp);
 

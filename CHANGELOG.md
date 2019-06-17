@@ -14,6 +14,7 @@
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
+- Changed: [#5570](https://github.com/ethereum/aleth/pull/5570) Now it's not necessary to recompile with VMTRACE flag to get VM trace log. Just use `testeth -- --vmtrace` or `aleth -v 4 --log-vmtrace`.
 - Changed: [#5576](https://github.com/ethereum/aleth/pull/5576) Moved sstore_combinations and static_Call50000_sha256 tests to stTimeConsuming test suite. (testeth runs them only with `--all` flag)
 - Changed: [#5589](https://github.com/ethereum/aleth/pull/5589) Make aleth output always line-buffered even when redirected to file or pipe.
 - Changed: [#5602](https://github.com/ethereum/aleth/pull/5602) Better predicting external IP address and UDP port.
