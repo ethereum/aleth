@@ -39,20 +39,20 @@ void printHelp()
     cout << "Usage: \n";
     cout << std::left;
     cout << "\nSetting test suite\n";
-    cout << setw(35) << "-t <TestSuite>" << setw(0) << "Execute test operations\n";
-    cout << setw(0) << "-t <TestSuite>/<TestCase>\n";
-    cout << setw(35) << "--testpath <PathToTheTestRepo>" << setw(0) << "Set path to the test folder\n";
+    cout << setw(35) << "-t <TestSuite>" << "Execute test operations\n";
+    cout << "-t <TestSuite>/<TestCase>\n";
+    cout << setw(35) << "--testpath <PathToTheTestRepo>" << "Set path to the test folder\n";
 
     cout << "\nDebugging\n";
     cout << setw(35) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests\n";
     cout << setw(35) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(35) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
-    cout << setw(35) << "--singletest <TestName>" << setw(0) << "Run on a single test\n";
-    cout << setw(35) << "--singletest <TestFile> <TestName>\n";
+    cout << setw(35) << "--singletest <TestName>" << "Run on a single test\n";
+    cout << setw(35) << "--singletest <TestFile> <TestName>" << "Run on a single test from file\n";
     cout << setw(35) << "--singlenet <networkId>" << setw(25) << "Run tests for a specific network (Frontier|Homestead|EIP150|EIP158|Byzantium|Constantinople|ConstantinopleFix)\n";
     cout << setw(35) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(35) << "--vm <name|path> (=legacy)" << setw(25) << "Set VM type for VMTests suite. Available options are: interpreter, legacy.\n";
-    cout << setw(35) << "--evmc <option>=<value>" << setw(0) << "EVMC option\n";
+    cout << setw(35) << "--evmc <option>=<value>" << "EVMC option\n";
     cout << setw(35) << "--vmtrace" << setw(25) << "Enable VM trace for the test.\n";
     cout << setw(35) << "--jsontrace <Options>" << setw(25) << "Enable VM trace to stdout in json format. Argument is a json config: '{ \"disableStorage\" : false, \"disableMemory\" : false, \"disableStack\" : false, \"fullStorage\" : true }'\n";
     cout << setw(35) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file\n";
@@ -63,12 +63,12 @@ void printHelp()
     cout << setw(35) << "--all" << setw(25) << "Enable all tests\n";
 
     cout << "\nTest Generation\n";
-    cout << setw(35) << "--filltests" << setw(0) << "Run test fillers\n";
+    cout << setw(35) << "--filltests" << "Run test fillers\n";
     cout << setw(35) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead\n";
     cout << setw(35) << "--showhash" << setw(25) << "Show filler hash debug information\n";
     cout << setw(35) << "--randomcode <MaxOpcodeNum>" << setw(25) << "Generate smart random EVM code\n";
     cout << setw(35) << "--createRandomTest" << setw(25) << "Create random test and output it to the console\n";
-    cout << setw(35) << "--createRandomTest <PathToOptions.json>" << setw(25) << "Use following options file for random code generation\n";
+    cout << setw(35) << "--createRandomTest <PathToOptions.json> " << setw(25) << "Use following options file for random code generation\n";
     cout << setw(35) << "--seed <uint>" << setw(25) << "Define a seed for random test\n";
     cout << setw(35) << "--options <PathTo.json>" << setw(25) << "Use following options file for random code generation\n";
     //cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
