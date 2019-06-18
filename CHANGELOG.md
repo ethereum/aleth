@@ -21,6 +21,7 @@
 - Changed: [#5602](https://github.com/ethereum/aleth/pull/5602) Better predicting external IP address and UDP port.
 - Changed: [#5605](https://github.com/ethereum/aleth/pull/5605) Network logging bugfixes and improvements and add warpcap log channel.
 - Changed: [#5628](https://github.com/ethereum/aleth/pull/5628) Don't try to endlessly reconnect to official Ethereum bootnodes.
+- Changed: [#5632](https://github.com/ethereum/aleth/pull/5632) RocksDB support is disabled by default. Enable with `-DROCKSB=ON` CMake option.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
 - Fixed: [#5599](https://github.com/ethereum/aleth/pull/5600) Prevent aleth from attempting concurrent connection to node which results in disconnect of original connection.

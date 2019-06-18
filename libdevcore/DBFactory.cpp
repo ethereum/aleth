@@ -18,9 +18,12 @@
 #include "DBFactory.h"
 #include "FileSystem.h"
 #include "LevelDB.h"
-#include "RocksDB.h"
 #include "MemoryDB.h"
 #include "libethcore/Exceptions.h"
+
+#if ALETH_ROCKSDB
+#include "RocksDB.h"
+#endif
 
 namespace dev
 {
@@ -48,7 +51,9 @@ struct DBKindTableEntry
 /// so linear search only to parse command line arguments is not a problem.
 DBKindTableEntry dbKindsTable[] = {
     {DatabaseKind::LevelDB, "leveldb"},
+#if ALETH_ROCKSDB
     {DatabaseKind::RocksDB, "rocksdb"},
+#endif
     {DatabaseKind::MemoryDB, "memorydb"},
 };
 
@@ -154,9 +159,11 @@ std::unique_ptr<DatabaseFace> DBFactory::create(DatabaseKind _kind, fs::path con
     case DatabaseKind::LevelDB:
         return std::unique_ptr<DatabaseFace>(new LevelDB(_path));
         break;
+#if ALETH_ROCKSDB
     case DatabaseKind::RocksDB:
         return std::unique_ptr<DatabaseFace>(new RocksDB(_path));
         break;
+#endif
     case DatabaseKind::MemoryDB:
         // Silently ignore path since the concept of a db path doesn't make sense
         // when using an in-memory database
