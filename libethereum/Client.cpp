@@ -467,7 +467,7 @@ void Client::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 {
     // remove transactions from m_tq nicely rather than relying on out of date nonce later on.
     for (auto const& h: _blocks)
-        LOG(m_loggerDetail) << "Live block: " << h;
+        LOG(m_loggerVerbose) << "Live block: " << h;
 
     if (auto h = m_host.lock())
         h->noteNewBlocks();
@@ -548,7 +548,7 @@ void Client::onChainChanged(ImportRoute const& _ir)
     onDeadBlocks(_ir.deadBlocks, changeds);
     for (auto const& t: _ir.goodTranactions)
     {
-        LOG(m_loggerDetail) << "Safely dropping transaction " << t.sha3();
+        LOG(m_loggerVerbose) << "Safely dropping transaction " << t.sha3();
         m_tq.dropGood(t);
     }
     onNewBlocks(_ir.liveBlocks, changeds);

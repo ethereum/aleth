@@ -156,13 +156,20 @@ void BlockQueue::verifierBody()
                     cerror << "Hash: " << work.hash << ", PreknownSize: " << preKnownSize
                            << " bytes, postKnownSize: " << postKnownSize << " bytes";
                 }
-                assert(preKnownSize <= postKnownSize);
+                if (preKnownSize > postKnownSize)
+                {
+                    cerror << "BQ: preknownSize(" << preKnownSize << " > postKnownSize(" << postKnownSize << ")";
+                    assert(false);
+                }
             }
         }
         if (ready)
         {
             if (startFull && !endFull)
+            {
+                cerror << "BQ: Verifier body resulted in a full -> not full state change!";
                 assert(false);
+            }
             m_onReady();
         }
     }

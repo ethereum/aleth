@@ -379,6 +379,7 @@ protected:
 
     Logger m_logger{createLogger(VerbosityInfo, "client")};
     Logger m_loggerDetail{createLogger(VerbosityDebug, "client")};
+    Logger m_loggerVerbose{ createLogger(VerbosityTrace, "client") };
 };
 
 }
