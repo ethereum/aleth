@@ -88,8 +88,12 @@ void BlockQueue::verifierBody()
     {
         UnverifiedBlock work;
 
+        // Used to check for block queue state change
+        bool startFull = false;
+        bool endFull = false;
         {
             unique_lock<Mutex> l(m_verification);
+            startFull = knownFull();
             m_moreToVerify.wait(l, [&](){ return !m_unverified.isEmpty() || m_deleting; });
             if (m_deleting)
                 return;
@@ -138,6 +142,7 @@ void BlockQueue::verifierBody()
                     m_verified.enqueue(move(res));
 
                 drainVerified_WITH_BOTH_LOCKS();
+                endFull = knownFull();
                 ready = true;
             }
             else
@@ -155,7 +160,11 @@ void BlockQueue::verifierBody()
             }
         }
         if (ready)
+        {
+            if (startFull && !endFull)
+                assert(false);
             m_onReady();
+        }
     }
 }
 
