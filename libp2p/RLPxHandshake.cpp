@@ -30,7 +30,8 @@ RLPXHandshake::RLPXHandshake(
     m_remote(_remote),
     m_originated(_remote),
     m_socket(_socket),
-    m_idleTimer(m_socket->ref().get_executor())
+    m_idleTimer(m_socket->ref().get_executor()),
+    m_failureReason{NoFailure}
 {
     auto const prefixAttr =
         boost::log::attributes::constant<std::string>{connectionDirectionString()};
@@ -112,10 +113,10 @@ void RLPXHandshake::writeAckEIP8()
     m_ackCipher.insert(m_ackCipher.begin(), prefix.begin(), prefix.end());
     
     auto self(shared_from_this());
-    ba::async_write(m_socket->ref(), ba::buffer(m_ackCipher), [this, self](boost::system::error_code ec, std::size_t)
-    {
-        transition(ec);
-    });
+    ba::async_write(m_socket->ref(), ba::buffer(m_ackCipher),
+        [this, self](boost::system::error_code ec, std::size_t) {
+            transition(ec);
+        });
 }
 
 void RLPXHandshake::setAuthValues(Signature const& _sig, Public const& _remotePubk, h256 const& _remoteNonce, uint64_t _remoteVersion)
@@ -180,6 +181,7 @@ void RLPXHandshake::readAuthEIP8()
         {
             LOG(m_logger) << "EIP-8 auth decrypt failed";
             m_nextState = Error;
+            m_failureReason = FrameDecryptionFailure;
             transition();
         }
     });
@@ -230,6 +232,7 @@ void RLPXHandshake::readAckEIP8()
         else
         {
             LOG(m_logger) << "EIP-8 ack decrypt failed";
+            m_failureReason = FrameDecryptionFailure;
             m_nextState = Error;
             transition();
         }
@@ -246,6 +249,8 @@ void RLPXHandshake::cancel()
 
 void RLPXHandshake::error(boost::system::error_code _ech)
 {
+    m_host->onHandshakeFailed(m_remote, m_failureReason);
+
     stringstream errorStream;
     errorStream << "Handshake failed";
     if (_ech)
@@ -267,6 +272,8 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     
     if (_ech || m_nextState == Error || m_cancel)
     {
+        if (_ech)
+            m_failureReason = TcpError;
         return error(_ech);
     }
     
@@ -278,7 +285,9 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         if (!_ec)
         {
             LOG(m_logger) << "Disconnecting (Handshake Timeout) from";
-            cancel();
+            m_failureReason = Timeout;
+            m_nextState = Error;
+            transition();
         }
     });
     
@@ -328,10 +337,10 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
         bytes packet;
         s.swapOut(packet);
         m_io->writeSingleFramePacket(&packet, m_handshakeOutBuffer);
-        ba::async_write(m_socket->ref(), ba::buffer(m_handshakeOutBuffer), [this, self](boost::system::error_code ec, std::size_t)
-        {
-            transition(ec);
-        });
+        ba::async_write(m_socket->ref(), ba::buffer(m_handshakeOutBuffer),
+            [this, self](boost::system::error_code ec, std::size_t) {
+                transition(ec);
+            });
     }
     else if (m_nextState == ReadHello)
     {
@@ -354,6 +363,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         LOG(m_errorLogger)
                             << "Internal error in handshake: RLPXFrameCoder disappeared ("
                             << m_remote << ")";
+                        m_failureReason = InternalError;
                         m_nextState = Error;
                         transition();
                         return;
@@ -365,6 +375,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                     if (!m_io->authAndDecryptHeader(
                             bytesRef(m_handshakeInBuffer.data(), m_handshakeInBuffer.size())))
                     {
+                        m_failureReason = FrameDecryptionFailure;
                         m_nextState = Error;
                         transition();
                         return;
@@ -383,6 +394,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                         LOG(m_logger)
                             << "Frame is too large! Expected size: " << expectedFrameSizeBytes
                             << " bytes, actual size: " << frameSize << " bytes";
+                        m_failureReason = ProtocolError;
                         m_nextState = Error;
                         transition();
                         return;
@@ -414,6 +426,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 {
                                     LOG(m_errorLogger) << "Internal error in handshake: "
                                                           "RLPXFrameCoder disappeared";
+                                    m_failureReason = InternalError;
                                     m_nextState = Error;
                                     transition();
                                     return;
@@ -423,6 +436,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 if (!m_io->authAndDecryptFrame(frame))
                                 {
                                     LOG(m_logger) << "Frame body decrypt failed";
+                                    m_failureReason = FrameDecryptionFailure;
                                     m_nextState = Error;
                                     transition();
                                     return;
@@ -436,6 +450,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                         << "Invalid packet type. Expected: "
                                         << p2pPacketTypeToString(HelloPacket)
                                         << ", received: " << p2pPacketTypeToString(packetType);
+                                    m_failureReason = ProtocolError;
                                     m_nextState = Error;
                                     transition();
                                     return;
@@ -453,6 +468,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
                                 {
                                     LOG(m_errorLogger)
                                         << "Handshake causing an exception: " << _e.what();
+                                    m_failureReason = UnknownFailure;
                                     m_nextState = Error;
                                     transition();
                                 }

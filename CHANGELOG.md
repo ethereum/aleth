@@ -11,6 +11,7 @@
 - Added: [#5591](https://github.com/ethereum/aleth/pull/5591) Network logging bugfixes and improvements and add p2pcap log channel.
 - Added: [#5588](https://github.com/ethereum/aleth/pull/5588) Testeth prints similar test suite name suggestions, when the name passed in `-t` argument is not found.
 - Added: [#5593](https://github.com/ethereum/aleth/pull/5593) Dynamically updating host ENR.
+- Added: [#5624](https://github.com/ethereum/aleth/pull/5624) Remove useless peers from peer list.
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.

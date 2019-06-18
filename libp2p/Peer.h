@@ -70,6 +70,10 @@ public:
     /// Return true if connection attempt should be made to this peer or false if
     bool shouldReconnect() const;
 
+    /// A peer which should never be reconnected to - e.g. it's running on a different network, we
+    /// don't have any common capabilities
+    bool isUseless() const;
+
     /// Number of times connection has been attempted to peer.
     int failedAttempts() const { return m_failedAttempts; }
 
@@ -80,7 +84,8 @@ public:
     void noteSessionGood() { m_failedAttempts = 0; }
 
 private:
-    /// Returns number of seconds to wait until attempting connection, based on attempted connection history.
+    /// Returns number of seconds to wait until attempting connection, based on attempted connection
+    /// history
     unsigned fallbackSeconds() const;
 
     std::atomic<int> m_score{0};									///< All time cumulative.
@@ -92,6 +97,7 @@ private:
     std::chrono::system_clock::time_point m_lastAttempted;
     std::atomic<unsigned> m_failedAttempts{0};
     DisconnectReason m_lastDisconnect = NoDisconnect;	///< Reason for disconnect that happened last.
+    HandshakeFailureReason m_lastHandshakeFailure = NoFailure; ///< Reason for most recent handshake failure
 
     /// Used by isOffline() and (todo) for peer to emit session information.
     std::weak_ptr<Session> m_session;
