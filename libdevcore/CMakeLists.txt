@@ -39,8 +39,6 @@ add_library(
     OverlayDB.h
     RLP.cpp
     RLP.h
-    RocksDB.cpp
-    RocksDB.h
     SHA3.cpp
     SHA3.h
     StateCacheDB.cpp
@@ -68,6 +66,10 @@ hunter_add_package(leveldb)
 find_package(leveldb CONFIG REQUIRED)
 target_link_libraries(devcore PRIVATE leveldb::leveldb)
 
-hunter_add_package(rocksdb)
-find_package(RocksDB CONFIG REQUIRED)
-target_link_libraries(devcore PRIVATE RocksDB::rocksdb)
+if(ROCKSDB)
+    hunter_add_package(rocksdb)
+    find_package(RocksDB CONFIG REQUIRED)
+    target_sources(devcore PRIVATE RocksDB.cpp RocksDB.h)
+    target_link_libraries(devcore PRIVATE RocksDB::rocksdb)
+    target_compile_definitions(devcore PRIVATE ALETH_ROCKSDB)
+endif()
