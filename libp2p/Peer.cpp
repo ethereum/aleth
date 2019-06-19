@@ -69,8 +69,8 @@ bool Peer::isUseless() const
 
     switch (m_lastHandshakeFailure)
     {
-    case FrameDecryptionFailure:
-    case ProtocolError:
+    case HandshakeFailureReason::FrameDecryptionFailure:
+    case HandshakeFailureReason::ProtocolError:
         return true;
     default:
         break;
