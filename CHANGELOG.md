@@ -12,6 +12,7 @@
 - Added: [#5588](https://github.com/ethereum/aleth/pull/5588) Testeth prints similar test suite name suggestions, when the name passed in `-t` argument is not found.
 - Added: [#5593](https://github.com/ethereum/aleth/pull/5593) Dynamically updating host ENR.
 - Added: [#5624](https://github.com/ethereum/aleth/pull/5624) Remove useless peers from peer list.
+- Added: [#5634](https://github.com/ethereum/aleth/pull/5634) Bootnodes for Rinkeby and Goerli
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
@@ -38,7 +39,7 @@
 - Changed: [#5560](https://github.com/ethereum/aleth/pull/5560) Upgrade [ethash](https://github.com/chfast/ethash) library to version 0.4.4.
 - Removed: [#5538](https://github.com/ethereum/aleth/pull/5538) Removed --private flag from aleth command-line arguments.
 - Fixed: [#5483](https://github.com/ethereum/aleth/pull/5483) Don't ping the same node more than once in a row; also fixes the assertion failure.
-- Fixed: [#5512](https://github.com/ethereum/aleth/pull/5512) Calling `eth_call` without `from` argument. 
+- Fixed: [#5512](https://github.com/ethereum/aleth/pull/5512) Calling `eth_call` without `from` argument.
 - Fixed: [#5502](https://github.com/ethereum/aleth/pull/5502) Fix Discovery terminating prematurely because of race condition.
 - Fixed: [#5452](https://github.com/ethereum/aleth/pull/5452) Correctly handle Discovery messages when the peer changes public key.
 - Fixed: [#5519](https://github.com/ethereum/aleth/pull/5519) Correctly handle Discovery messages with known public key but unknown endpoint.
