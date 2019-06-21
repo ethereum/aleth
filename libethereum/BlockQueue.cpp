@@ -87,13 +87,14 @@ void BlockQueue::verifierBody()
     while (!m_deleting)
     {
         UnverifiedBlock work;
-
-        // Used to check for block queue state change
-        bool startFull = false;
-        bool endFull = false;
         {
             unique_lock<Mutex> l(m_verification);
-            startFull = knownFull();
+
+            // size_t startSize = knownSize();
+            // size_t startCount = knownCount();
+            // size_t endSize = 0;
+            // size_t endCount = 0;
+
             m_moreToVerify.wait(l, [&](){ return !m_unverified.isEmpty() || m_deleting; });
             if (m_deleting)
                 return;
@@ -103,6 +104,14 @@ void BlockQueue::verifierBody()
             bi.setSha3Uncles(work.hash);
             bi.setParentHash(work.parentHash);
             m_verifying.enqueue(move(bi));
+
+            // endSize = knownSize();
+            // endCount = knownCount();
+            // if (endSize < startSize || endCount < startCount && bi.)
+            // {
+            //     LOG(m_loggerDbg) << "startSize(" << startSize << "), endSize(" << endSize << "), startCount(" << startCount << "), endCount(" << endCount << ")";
+            //     assert(false);
+            // }
         }
 
         VerifiedBlock res;
@@ -117,11 +126,24 @@ void BlockQueue::verifierBody()
             // has to be this order as that's how invariants() assumes.
             WriteGuard l2(m_lock);
             unique_lock<Mutex> l(m_verification);
+
+            size_t startCount = knownCount();
+            size_t startSize = knownSize();
+            size_t endCount = 0;
+            size_t endSize = 0; 
+
             m_readySet.erase(work.hash);
             m_knownBad.insert(work.hash);
             if (!m_verifying.remove(work.hash))
                 cwarn << "Unexpected exception when verifying block: " << _ex.what();
             drainVerified_WITH_BOTH_LOCKS();
+
+            if (endSize < startSize || endCount < startCount)
+            {
+                LOG(m_loggerDbg) << "startSize(" << startSize << "), endSize(" << endSize << "), startCount(" << startCount << "), endCount(" << endCount << ")";
+                assert(false);
+            }
+
             continue;
         }
 
@@ -129,6 +151,12 @@ void BlockQueue::verifierBody()
         {
             WriteGuard l2(m_lock);
             unique_lock<Mutex> l(m_verification);
+
+            size_t startCount = knownCount();
+            size_t startSize = knownSize();
+            size_t endCount = 0;
+            size_t endSize = 0;
+
             if (!m_verifying.isEmpty() && m_verifying.nextHash() == work.hash)
             {
                 // we're next!
@@ -142,34 +170,33 @@ void BlockQueue::verifierBody()
                     m_verified.enqueue(move(res));
 
                 drainVerified_WITH_BOTH_LOCKS();
-                endFull = knownFull();
                 ready = true;
             }
             else
             {
-                auto preKnownSize = knownSize();
+                auto const preKnownSize = knownSize();
+
                 if (!m_verifying.replace(work.hash, move(res)))
                     cwarn << "BlockQueue missing our job: was there a GM?";
-                auto postKnownSize = knownSize();
+
+                auto const postKnownSize = knownSize();
                 if (preKnownSize > postKnownSize)
                 {
-                    cerror << "Hash: " << work.hash << ", PreknownSize: " << preKnownSize
-                           << " bytes, postKnownSize: " << postKnownSize << " bytes";
-                }
-                if (preKnownSize > postKnownSize)
-                {
-                    cerror << "BQ: preknownSize(" << preKnownSize << " > postKnownSize(" << postKnownSize << ")";
+                    LOG(m_loggerDbg) << "preknownSize(" << preKnownSize << " > postKnownSize(" << postKnownSize << ")";
                     assert(false);
                 }
+            }
+
+            endCount = knownCount();
+            endSize = knownSize();
+            if (endSize < startSize || endCount < startCount)
+            {
+                LOG(m_loggerDbg) << "startSize(" << startSize << "), endSize(" << endSize << "), startCount(" << startCount << "), endCount(" << endCount << ")";
+                assert(false);
             }
         }
         if (ready)
         {
-            if (startFull && !endFull)
-            {
-                cerror << "BQ: Verifier body resulted in a full -> not full state change!";
-                assert(false);
-            }
             m_onReady();
         }
     }
@@ -426,6 +453,11 @@ QueueStatus BlockQueue::blockStatus(h256 const& _h) const
 bool BlockQueue::knownFull() const
 {
     Guard l(m_verification);
+    return knownSize() > c_maxKnownSize || knownCount() > c_maxKnownCount;
+}
+
+bool BlockQueue::knownFullNoLock() const
+{
     return knownSize() > c_maxKnownSize || knownCount() > c_maxKnownCount;
 }
 

@@ -273,6 +273,7 @@ public:
     template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
 
     bool knownFull() const;
+    bool knownFullNoLock() const;
     bool unknownFull() const;
     u256 difficulty() const;	// Total difficulty of queueud blocks
     bool isActive() const;
@@ -295,7 +296,9 @@ private:
     void drainVerified_WITH_BOTH_LOCKS();
 
     std::size_t knownSize() const;
+    std::size_t knownSizeNoLock() const;
     std::size_t knownCount() const;
+    std::size_t knownCountNoLock() const;
     std::size_t unknownSize() const;
     std::size_t unknownCount() const;
 
@@ -327,6 +330,7 @@ private:
 
     Logger m_logger{createLogger(VerbosityDebug, "bq")};
     Logger m_loggerDetail{createLogger(VerbosityTrace, "bq")};
+    Logger m_loggerDbg{ createLogger(VerbosityError, "bqdbg") };
 };
 
 boost::log::formatting_ostream& operator<<(
