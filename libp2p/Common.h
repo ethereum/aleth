@@ -110,15 +110,16 @@ enum DisconnectReason
 /// @returns the string form of the given disconnection reason.
 std::string reasonOf(DisconnectReason _r);
 
-enum HandshakeFailureReason
+enum class HandshakeFailureReason
 {
     NoFailure = 0,
     UnknownFailure,
     Timeout,
-    TcpError,
+    TCPError,
     FrameDecryptionFailure,
     InternalError,
-    ProtocolError
+    ProtocolError,
+    DisconnectRequested
 };
 
 using CapDesc = std::pair<std::string, unsigned>;

@@ -280,7 +280,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
         if (itPeer != m_peers.end())
         {
             peer = itPeer->second;
-            peer->m_lastHandshakeFailure = NoFailure;
+            peer->m_lastHandshakeFailure = HandshakeFailureReason::NoFailure;
         }
         else
         {

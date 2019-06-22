@@ -97,7 +97,8 @@ private:
     std::chrono::system_clock::time_point m_lastAttempted;
     std::atomic<unsigned> m_failedAttempts{0};
     DisconnectReason m_lastDisconnect = NoDisconnect;	///< Reason for disconnect that happened last.
-    HandshakeFailureReason m_lastHandshakeFailure = NoFailure; ///< Reason for most recent handshake failure
+    HandshakeFailureReason m_lastHandshakeFailure =
+        HandshakeFailureReason::NoFailure;  ///< Reason for most recent handshake failure
 
     /// Used by isOffline() and (todo) for peer to emit session information.
     std::weak_ptr<Session> m_session;
