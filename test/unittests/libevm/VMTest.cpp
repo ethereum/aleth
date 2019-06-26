@@ -57,7 +57,7 @@ public:
     void testCreate2worksInConstantinople()
     {
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         vm->exec(gas, extVm, OnOpFunc{});
 
@@ -69,7 +69,7 @@ public:
         se.reset(ChainParams(genesisInfo(Network::ByzantiumTest)).createSealEngine());
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         BOOST_REQUIRE_THROW(vm->exec(gas, extVm, OnOpFunc{}), BadInstruction);
     }
@@ -79,7 +79,7 @@ public:
         state.addBalance(expectedAddress, 1 * ether);
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         vm->exec(gas, extVm, OnOpFunc{});
 
@@ -88,10 +88,10 @@ public:
 
     void testCreate2doesntChangeContractIfAddressExists()
     {
-        state.setCode(expectedAddress, bytes{inputData});
+        state.setCode(expectedAddress, bytes{inputData}, 0);
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         vm->exec(gas, extVm, OnOpFunc{});
         BOOST_REQUIRE(state.code(expectedAddress) == inputData);
@@ -102,7 +102,7 @@ public:
         staticCall = true;
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         BOOST_REQUIRE_THROW(vm->exec(gas, extVm, OnOpFunc{}), DisallowedStateChange);
     }
@@ -117,7 +117,7 @@ public:
         state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         vm->exec(gas, extVm, OnOpFunc{});
         BOOST_REQUIRE(state.addressHasCode(expectedAddress));
@@ -137,7 +137,7 @@ public:
         state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         vm->exec(gas, extVm, OnOpFunc{});
         BOOST_REQUIRE_EQUAL(state.storage(expectedAddress, 1), 0);
@@ -147,7 +147,7 @@ public:
     void testCreate2costIncludesInitCodeHashing()
     {
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, ref(inputData),
-            ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         uint64_t gasBefore = 0;
         uint64_t gasAfter = 0;
@@ -189,6 +189,7 @@ public:
 
     u256 value = 0;
     u256 gasPrice = 1;
+    u256 version = 0;
     int depth = 0;
     bool isCreate = false;
     bool staticCall = false;
@@ -228,13 +229,13 @@ public:
     explicit ExtcodehashTestFixture(VMFace* _vm) : vm{_vm}
     {
         state.addBalance(address, 1 * ether);
-        state.setCode(extAddress, bytes{extCode});
+        state.setCode(extAddress, bytes{extCode}, 0);
     }
 
     void testExtcodehashWorksInConstantinople()
     {
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            extAddress.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+            extAddress.ref(), ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
@@ -244,7 +245,7 @@ public:
     void testExtcodehashHasCorrectCost()
     {
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            extAddress.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+            extAddress.ref(), ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         bigint gasBefore;
         bigint gasAfter;
@@ -267,7 +268,7 @@ public:
         se.reset(ChainParams(genesisInfo(Network::ByzantiumTest)).createSealEngine());
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            extAddress.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+            extAddress.ref(), ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         BOOST_REQUIRE_THROW(vm->exec(gas, extVm, OnOpFunc{}), BadInstruction);
     }
@@ -278,7 +279,8 @@ public:
         state.addBalance(addressWithEmptyCode, 1 * ether);
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            addressWithEmptyCode.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+            addressWithEmptyCode.ref(), ref(code), sha3(code), version, depth, isCreate,
+            staticCall);
 
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
@@ -291,7 +293,7 @@ public:
         Address addressNonExisting{0x1234};
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            addressNonExisting.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+            addressNonExisting.ref(), ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
@@ -303,7 +305,7 @@ public:
         Address addressPrecompile{0x1};
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            addressPrecompile.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+            addressPrecompile.ref(), ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
@@ -316,7 +318,7 @@ public:
         state.addBalance(addressPrecompile, 1 * ether);
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            addressPrecompile.ref(), ref(code), sha3(code), depth, isCreate, staticCall);
+            addressPrecompile.ref(), ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
@@ -337,7 +339,7 @@ public:
             bytes{1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc} + extAddress.ref();
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice,
-            ref(extAddressPrefixed), ref(code), sha3(code), depth, isCreate, staticCall);
+            ref(extAddressPrefixed), ref(code), sha3(code), version, depth, isCreate, staticCall);
 
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
@@ -355,6 +357,7 @@ public:
 
     u256 value = 0;
     u256 gasPrice = 1;
+    u256 version = 0;
     int depth = 0;
     bool isCreate = false;
     bool staticCall = false;
@@ -446,7 +449,7 @@ public:
 
         bytes const code = fromHex(_codeStr);
         ExtVM extVm(state, envInfo, *se, to, from, from, value, gasPrice, inputData, ref(code),
-            sha3(code), depth, isCreate, staticCall);
+            sha3(code), version, depth, isCreate, staticCall);
 
         u256 gasBefore = gas;
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
@@ -467,6 +470,7 @@ public:
 
     u256 value = 0;
     u256 gasPrice = 1;
+    u256 version = 0;
     int depth = 0;
     bool isCreate = false;
     bool staticCall = false;
