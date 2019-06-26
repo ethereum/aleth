@@ -41,6 +41,13 @@ void Account::setCode(bytes&& _code)
     m_codeHash = sha3(m_codeCache);
 }
 
+void Account::resetCode()
+{
+    m_codeCache.clear();
+    m_hasNewCode = false;
+    m_codeHash = EmptySHA3;
+}
+
 u256 Account::originalStorageValue(u256 const& _key, OverlayDB const& _db) const
 {
     auto it = m_storageOriginal.find(_key);
