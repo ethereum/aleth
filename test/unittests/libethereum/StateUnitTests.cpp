@@ -62,7 +62,8 @@ BOOST_AUTO_TEST_CASE(RollbackSetCode)
     auto savepoint = s.savepoint();
     s.createContract(addr);
     uint8_t codeData[] = {'c', 'o', 'd', 'e'};
-    s.setCode(addr, {std::begin(codeData), std::end(codeData)});
+    u256 version = 123;
+    s.setCode(addr, {std::begin(codeData), std::end(codeData)}, version);
     s.rollback(savepoint);
 
     BOOST_CHECK(!s.addressHasCode(addr));
