@@ -518,7 +518,10 @@ bytes const& State::code(Address const& _addr) const
 
 void State::setCode(Address const& _address, bytes&& _code)
 {
-    m_changeLog.emplace_back(_address, code(_address));
+    // rollback assumes that overwriting of the code never happens
+    // (not allowed in contract creation logic in Executive)
+    assert(!addressHasCode(_address));
+    m_changeLog.emplace_back(Change::Code, _address);
     m_cache[_address].setCode(std::move(_code));
 }
 
@@ -583,7 +586,7 @@ void State::rollback(size_t _savepoint)
             m_cache.erase(change.address);
             break;
         case Change::Code:
-            account.setCode(std::move(change.oldCode));
+            account.resetCode();
             break;
         case Change::Touch:
             account.untouch();

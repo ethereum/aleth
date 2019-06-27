@@ -173,6 +173,9 @@ public:
     /// Sets the code of the account. Used by "create" messages.
     void setCode(bytes&& _code);
 
+    /// Reset the code set by previous setCode
+    void resetCode();
+
     /// Specify to the object what the actual code is for the account. @a _code must have a SHA3
     /// equal to codeHash().
     void noteCode(bytesConstRef _code) { assert(sha3(_code) == m_codeHash); m_codeCache = _code.toBytes(); }

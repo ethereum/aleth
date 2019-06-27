@@ -116,13 +116,11 @@ struct Change
     Address address;  ///< Changed account address.
     u256 value;       ///< Change value, e.g. balance, storage and nonce.
     u256 key;         ///< Storage key. Last because used only in one case.
-    bytes oldCode;    ///< Code overwritten by CREATE, empty except in case of address collision.
 
     /// Helper constructor to make change log update more readable.
     Change(Kind _kind, Address const& _addr, u256 const& _value = 0):
             kind(_kind), address(_addr), value(_value)
     {
-        assert(_kind != Code); // For this the special constructor needs to be used.
     }
 
     /// Helper constructor especially for storage change log.
@@ -133,11 +131,6 @@ struct Change
     /// Helper constructor for nonce change log.
     Change(Address const& _addr, u256 const& _value):
             kind(Nonce), address(_addr), value(_value)
-    {}
-
-    /// Helper constructor especially for new code change log.
-    Change(Address const& _addr, bytes const& _oldCode):
-            kind(Code), address(_addr), oldCode(_oldCode)
     {}
 };
 
