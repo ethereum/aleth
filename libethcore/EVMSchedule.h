@@ -161,7 +161,9 @@ static const EVMSchedule ExperimentalSchedule = [] {
 
 inline EVMSchedule const& evmScheduleForAccountVersion(u256 const& _version)
 {
-    if (_version == IstanbulSchedule.version)
+    if (_version == 0)
+        return ConstantinopleFixSchedule;
+    else if (_version == IstanbulSchedule.version)
         return IstanbulSchedule;
     else
         return DefaultSchedule;
