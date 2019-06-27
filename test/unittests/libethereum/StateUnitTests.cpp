@@ -53,6 +53,20 @@ BOOST_AUTO_TEST_CASE(LoadAccountCode)
     ));
 }
 
+BOOST_AUTO_TEST_CASE(RollbackSetCode)
+{
+    Address addr{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
+    State s{0};
+    auto savepoint = s.savepoint();
+    s.createContract(addr);
+    uint8_t codeData[] = {'c', 'o', 'd', 'e'};
+    s.setCode(addr, {std::begin(codeData), std::end(codeData)});
+    s.rollback(savepoint);
+
+    BOOST_CHECK(!s.addressHasCode(addr));
+    BOOST_CHECK(!s.accountNonemptyAndExisting(addr));
+}
+
 class AddressRangeTestFixture : public TestOutputHelperFixture
 {
 public:
