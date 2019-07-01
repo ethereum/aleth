@@ -429,6 +429,9 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
         m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin,
             _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), _version, m_depth, true,
             false);
+    else
+        // code stays empty, but we set the version
+        m_s.setCode(m_newAddress, {}, _version);
 
     return !m_ext;
 }

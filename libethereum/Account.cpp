@@ -51,6 +51,7 @@ void Account::resetCode()
     m_codeCache.clear();
     m_hasNewCode = false;
     m_codeHash = EmptySHA3;
+    m_version = 0;
 }
 
 u256 Account::originalStorageValue(u256 const& _key, OverlayDB const& _db) const
