@@ -186,6 +186,9 @@ public:
     /// Revert all changes made to the state by this execution.
     void revert();
 
+    /// Used only in tests
+    ExtVM const& extVM() const { return *m_ext; }
+
 private:
     /// @returns false iff go() must be called (and thus a VM execution in required).
     bool createWithAddressFromNonceAndSender(Address const& _sender, u256 const& _endowment,

@@ -66,8 +66,11 @@ BOOST_AUTO_TEST_CASE(RollbackSetCode)
     s.setCode(addr, {std::begin(codeData), std::end(codeData)}, version);
     s.rollback(savepoint);
 
-    BOOST_CHECK(!s.addressHasCode(addr));
-    BOOST_CHECK(!s.accountNonemptyAndExisting(addr));
+    BOOST_CHECK(!s.addressInUse(addr));
+    BOOST_CHECK(s.version(addr) == 0);
+
+    // only state root exists in DB
+    BOOST_CHECK_EQUAL(s.db().keys().size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(SetEmptyCode)
@@ -98,6 +101,23 @@ BOOST_AUTO_TEST_CASE(CodeVersionZero)
     auto& loadedCode = s.code(addr);
     BOOST_CHECK(std::equal(std::begin(codeData), std::end(codeData), std::begin(loadedCode)));
     BOOST_CHECK_EQUAL(s.version(addr), version);
+}
+
+BOOST_AUTO_TEST_CASE(SetEmptyCodeNonZeroVersion)
+{
+    Address addr{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
+    State s{0};
+    s.createContract(addr);
+    s.setNonce(addr, 1);
+    u256 version = 123;
+    s.setCode(addr, {}, version);
+    s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
+
+    BOOST_CHECK(!s.addressHasCode(addr));
+    BOOST_CHECK_EQUAL(s.version(addr), version);
+
+    // empty code is not saved to DB
+    BOOST_CHECK(!s.db().exists(EmptySHA3));
 }
 
 class AddressRangeTestFixture : public TestOutputHelperFixture

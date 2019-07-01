@@ -21,6 +21,7 @@ set(unittest_sources
     unittests/libethcore/CommonJS.cpp
     unittests/libethcore/KeyManager.cpp
 
+    unittests/libethereum/ExecutiveTest.cpp
     unittests/libethereum/ValidationSchemes.cpp
 
     unittests/libp2p/capability.cpp
