@@ -400,13 +400,14 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
 shared_ptr<SessionFace> Host::peerSession(NodeID const& _id) const
 {
     RecursiveGuard l(x_sessions);
-    if (m_sessions.count(_id))
+    auto const it = m_sessions.find(_id);
+    if (it != m_sessions.end())
     {
-        auto const s = m_sessions[_id].lock();
+        auto const s = it->second.lock();
         if (s && s->isConnected())
             return s;
     }
-    return{};
+    return {};
 }
 
 void Host::onHandshakeFailed(NodeID const& _n, HandshakeFailureReason _r)
@@ -1175,7 +1176,7 @@ void Host::forEachPeer(
     vector<shared_ptr<SessionFace>> sessions;
     for (auto const& i : m_sessions)
     {
-        shared_ptr<SessionFace> s = i.second.lock();
+        auto const s = i.second.lock();
         if (s && s->isConnected())
         {
             vector<CapDesc> capabilities = s->capabilities();
