@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
     )";
     json_spirit::mValue input;
     json_spirit::read_string(s, input);
-    BlockchainTestSuite suite;
+    BlockchainValidTestSuite suite;
     json_spirit::mValue output = suite.doTests(input, true);
     BOOST_CHECK_MESSAGE(output.get_obj().size() == 2, "A wrong number of tests were generated.");
 }
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnSingleNetwork)
     )";
     json_spirit::mValue input;
     json_spirit::read_string(s, input);
-    BlockchainTestSuite suite;
+    BlockchainValidTestSuite suite;
     json_spirit::mValue output = suite.doTests(input, true);
     const string testname = "fillingExpectationOnSingleNetwork_EIP150";
     BOOST_CHECK_MESSAGE(output.get_obj().size() == 1, "A wrong number of tests were generated.");
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
     json_spirit::mValue input;
     json_spirit::read_string(s, input);
 
-    BlockchainTestSuite suite;
+    BlockchainValidTestSuite suite;
     json_spirit::mValue output = suite.doTests(input, true);
     BOOST_CHECK_MESSAGE(output.get_obj().size() == 1, "A wrong number of tests were generated.");
 }

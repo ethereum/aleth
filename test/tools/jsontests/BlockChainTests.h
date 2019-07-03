@@ -31,8 +31,7 @@ namespace dev
 {
 namespace test
 {
-
-class BlockchainTestSuite: public TestSuite
+class BlockchainInvalidTestSuite : public TestSuite
 {
 public:
     json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
@@ -40,7 +39,15 @@ public:
     boost::filesystem::path suiteFillerFolder() const override;
 };
 
-class BCGeneralStateTestsSuite: public BlockchainTestSuite
+class BlockchainValidTestSuite : public TestSuite
+{
+public:
+    json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
+};
+
+class BCGeneralStateTestsSuite : public BlockchainValidTestSuite
 {
     boost::filesystem::path suiteFolder() const override;
     boost::filesystem::path suiteFillerFolder() const override;
@@ -79,7 +86,8 @@ void checkJsonSectionForInvalidBlock(mObject& _blObj);
 void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
 bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, SealEngineFace const& _sealEngine);
-json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
+json_spirit::mObject fillBCTest(
+    json_spirit::mObject const& _input, bool _allowInvalidBlocks = false);
 void testBCTest(json_spirit::mObject const& _o);
 
 } } // Namespace Close
