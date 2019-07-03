@@ -396,6 +396,20 @@ void Host::startPeerSession(Public const& _id, RLP const& _hello,
                   << _s->remoteEndpoint();
 }
 
+/// Get session by id
+shared_ptr<SessionFace> Host::peerSession(NodeID const& _id) const
+{
+    RecursiveGuard l(x_sessions);
+    auto const it = m_sessions.find(_id);
+    if (it != m_sessions.end())
+    {
+        auto const s = it->second.lock();
+        if (s && s->isConnected())
+            return s;
+    }
+    return {};
+}
+
 void Host::onHandshakeFailed(NodeID const& _n, HandshakeFailureReason _r)
 {
     std::shared_ptr<Peer> p = peer(_n);
@@ -751,7 +765,7 @@ void Host::connect(shared_ptr<Peer> const& _p)
 PeerSessionInfos Host::peerSessionInfos() const
 {
     if (!m_run)
-        return PeerSessionInfos();
+        return {};
 
     vector<PeerSessionInfo> ret;
     RecursiveGuard l(x_sessions);
@@ -918,13 +932,16 @@ void Host::keepAlivePeers()
     RecursiveGuard l(x_sessions);
     {
         for (auto it = m_sessions.begin(); it != m_sessions.end();)
-            if (auto p = it->second.lock())
+        {
+            auto p = it->second.lock();
+            if (p && p->isConnected())
             {
                 p->ping();
                 ++it;
             }
             else
                 it = m_sessions.erase(it);
+        }
     }
 
     m_lastPing = chrono::steady_clock::now();
@@ -950,10 +967,13 @@ void Host::disconnectLatePeers()
         return;
 
     RecursiveGuard l(x_sessions);
-    for (auto p: m_sessions)
-        if (auto pp = p.second.lock())
+    for (auto p : m_sessions)
+    {
+        auto pp = p.second.lock();
+        if (pp && pp->isConnected())
             if (now - c_keepAliveTimeOut > m_lastPing && pp->lastReceived() < m_lastPing)
                 pp->disconnect(PingTimeout);
+    }
 }
 
 bytes Host::saveNetwork() const
@@ -1155,13 +1175,16 @@ void Host::forEachPeer(
     RecursiveGuard l(x_sessions);
     vector<shared_ptr<SessionFace>> sessions;
     for (auto const& i : m_sessions)
-        if (shared_ptr<SessionFace> s = i.second.lock())
+    {
+        auto const s = i.second.lock();
+        if (s && s->isConnected())
         {
             vector<CapDesc> capabilities = s->capabilities();
             for (auto const& cap : capabilities)
                 if (cap.first == _capabilityName)
                     sessions.emplace_back(move(s));
         }
+    }
 
     // order peers by rating, connection age
     auto sessionLess = [](shared_ptr<SessionFace> const& _left,

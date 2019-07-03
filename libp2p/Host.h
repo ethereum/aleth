@@ -208,11 +208,7 @@ public:
         std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
 
     /// Get session by id
-    std::shared_ptr<SessionFace> peerSession(NodeID const& _id) const
-    {
-        RecursiveGuard l(x_sessions);
-        return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<SessionFace>();
-    }
+    std::shared_ptr<SessionFace> peerSession(NodeID const& _id) const;
 
     /// Set a handshake failure reason for a peer
     void onHandshakeFailed(NodeID const& _n, HandshakeFailureReason _r);
