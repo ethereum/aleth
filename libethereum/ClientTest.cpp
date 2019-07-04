@@ -160,5 +160,10 @@ h256 ClientTest::importRawBlock(const string& _blockRLP)
         tie(ignore, moreToImport, ignore) = syncQueue(100000);
         this_thread::sleep_for(chrono::milliseconds(100));
     }
+
+    // check that it was really imported and not rejected as invalid
+    if (!bc().isKnown(blockHash))
+        BOOST_THROW_EXCEPTION(ImportBlockFailed());
+
     return blockHash;
 }

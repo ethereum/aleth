@@ -139,8 +139,14 @@ std::string Test::test_importRawBlock(string const& _blockRLP)
         ClientTest& client = asClientTest(m_eth);
         return toJS(client.importRawBlock(_blockRLP));
     }
-    catch (std::exception const& ex)
+    catch (ImportBlockFailed const& e)
     {
-        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR, ex.what()));
+        cwarn << diagnostic_information(e);
+        throw JsonRpcException("Block import failed.");
+    }
+    catch (std::exception const& e)
+    {
+        cwarn << e.what();
+        throw JsonRpcException(Errors::ERROR_RPC_INTERNAL_ERROR);
     }
 }
