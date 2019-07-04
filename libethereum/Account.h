@@ -98,6 +98,7 @@ public:
         m_storageRoot = EmptyTrie;
         m_balance = 0;
         m_nonce = 0;
+        m_version = 0;
         changed();
     }
 

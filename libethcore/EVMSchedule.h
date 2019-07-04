@@ -29,7 +29,7 @@ struct EVMSchedule
 {
     EVMSchedule(): tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
     EVMSchedule(bool _efcd, bool _hdc, unsigned const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
-    int version = 0;
+    unsigned version = 0;
     bool exceptionalFailedCodeDeposit = true;
     bool haveDelegateCall = true;
     bool eip150Mode = false;
