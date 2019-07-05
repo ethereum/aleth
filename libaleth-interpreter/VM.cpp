@@ -1356,17 +1356,20 @@ void VM::interpretCases()
             auto const status =
                 m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
 
-            if (status == EVMC_STORAGE_ADDED)
-                m_runGas = VMSchedule::sstoreSetGas;
-            else if (status == EVMC_STORAGE_MODIFIED || status == EVMC_STORAGE_DELETED)
-                m_runGas = VMSchedule::sstoreResetGas;
-            else if (status == EVMC_STORAGE_UNCHANGED && m_rev != EVMC_CONSTANTINOPLE)
-                m_runGas = VMSchedule::sstoreResetGas;
-            else
+            switch(status)
             {
-                assert(status == EVMC_STORAGE_UNCHANGED || status == EVMC_STORAGE_MODIFIED_AGAIN);
-                assert(m_rev == EVMC_CONSTANTINOPLE);
-                m_runGas = VMSchedule::sstoreUnchangedGas;
+            case EVMC_STORAGE_ADDED:
+                m_runGas = VMSchedule::sstoreSetGas;
+                break;
+            case EVMC_STORAGE_MODIFIED:
+            case EVMC_STORAGE_DELETED:
+                m_runGas = VMSchedule::sstoreResetGas;
+                break;
+            case EVMC_STORAGE_UNCHANGED:
+            case EVMC_STORAGE_MODIFIED_AGAIN:
+                m_runGas = m_rev == EVMC_CONSTANTINOPLE ? VMSchedule::sstoreUnchangedGas :
+                                                          VMSchedule::sstoreResetGas;
+                break;
             }
 
             updateIOGas();
