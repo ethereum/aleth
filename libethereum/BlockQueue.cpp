@@ -86,14 +86,17 @@ void BlockQueue::verifierBody()
 {
     while (!m_deleting)
     {
+        size_t startSize = 0;
+        size_t startCount = 0;
+        size_t endSize = 0;
+        size_t endCount = 0;
+
         UnverifiedBlock work;
         {
             unique_lock<Mutex> l(m_verification);
 
-            // size_t startSize = knownSize();
-            // size_t startCount = knownCount();
-            // size_t endSize = 0;
-            // size_t endCount = 0;
+            startSize = knownSize();
+            startCount = knownCount();
 
             m_moreToVerify.wait(l, [&](){ return !m_unverified.isEmpty() || m_deleting; });
             if (m_deleting)
@@ -127,10 +130,10 @@ void BlockQueue::verifierBody()
             WriteGuard l2(m_lock);
             unique_lock<Mutex> l(m_verification);
 
-            size_t startCount = knownCount();
+           /* size_t startCount = knownCount();
             size_t startSize = knownSize();
             size_t endCount = 0;
-            size_t endSize = 0; 
+            size_t endSize = 0; */
 
             m_readySet.erase(work.hash);
             m_knownBad.insert(work.hash);
@@ -138,11 +141,11 @@ void BlockQueue::verifierBody()
                 cwarn << "Unexpected exception when verifying block: " << _ex.what();
             drainVerified_WITH_BOTH_LOCKS();
 
-            if (endSize < startSize || endCount < startCount)
+          /*  if (endSize < startSize || endCount < startCount)
             {
                 LOG(m_loggerDbg) << "startSize(" << startSize << "), endSize(" << endSize << "), startCount(" << startCount << "), endCount(" << endCount << ")";
                 assert(false);
-            }
+            }*/
 
             continue;
         }
@@ -152,11 +155,11 @@ void BlockQueue::verifierBody()
             WriteGuard l2(m_lock);
             unique_lock<Mutex> l(m_verification);
 
-            size_t startCount = knownCount();
+          /*  size_t startCount = knownCount();
             size_t startSize = knownSize();
             size_t endCount = 0;
             size_t endSize = 0;
-
+*/
             if (!m_verifying.isEmpty() && m_verifying.nextHash() == work.hash)
             {
                 // we're next!
@@ -192,7 +195,6 @@ void BlockQueue::verifierBody()
             if (endSize < startSize || endCount < startCount)
             {
                 LOG(m_loggerDbg) << "startSize(" << startSize << "), endSize(" << endSize << "), startCount(" << startCount << "), endCount(" << endCount << ")";
-                assert(false);
             }
         }
         if (ready)
