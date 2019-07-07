@@ -288,10 +288,6 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         assert(isKnown(gb.hash()));
     }
 
-#if ETH_PARANOIA
-    checkConsistency();
-#endif
-
     // TODO: Implement ability to rebuild details map from DB.
     auto const l = m_extrasDB->lookup(db::Slice("best"));
     m_lastBlockHash = l.empty() ? m_genesisHash : h256(l, h256::FromBinary);
@@ -706,10 +702,6 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
         td = pd.totalDifficulty + tdIncrease;
 
         performanceLogger.onStageFinished("enactment");
-
-#if ETH_PARANOIA
-        checkConsistency();
-#endif // ETH_PARANOIA
     }
     catch (BadRoot& ex)
     {
@@ -919,30 +911,6 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
         cwarn << "Fail writing to extras database. Bombing out.";
         exit(-1);
     }
-
-#if ETH_PARANOIA
-    if (isKnown(_block.info.hash()) && !details(_block.info.hash()))
-    {
-        LOG(m_loggerError) << "Known block just inserted has no details.";
-        LOG(m_loggerError) << "Block: " << _block.info;
-        LOG(m_loggerError) << "DATABASE CORRUPTION: CRITICAL FAILURE";
-        exit(-1);
-    }
-
-    try
-    {
-        State canary(_db, BaseState::Empty);
-        canary.populateFromChain(*this, _block.info.hash());
-    }
-    catch (...)
-    {
-        LOG(m_loggerError) << "Failed to initialise State object form imported block.";
-        LOG(m_loggerError) << "Block: " << _block.info;
-        LOG(m_loggerError) << "DATABASE CORRUPTION: CRITICAL FAILURE";
-        exit(-1);
-    }
-#endif // ETH_PARANOIA
-
     if (m_lastBlockHash != newLastBlockHash)
         DEV_WRITE_GUARDED(x_lastBlockHash)
         {
@@ -961,10 +929,6 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
                 exit(-1);
             }
         }
-
-#if ETH_PARANOIA
-    checkConsistency();
-#endif // ETH_PARANOIA
 
     _performanceLogger.onStageFinished("checkBest");
 
