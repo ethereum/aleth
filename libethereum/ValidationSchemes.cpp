@@ -61,6 +61,7 @@ string const c_byzantiumForkBlock = "byzantiumForkBlock";
 string const c_eWASMForkBlock = "eWASMForkBlock";
 string const c_constantinopleForkBlock = "constantinopleForkBlock";
 string const c_constantinopleFixForkBlock = "constantinopleFixForkBlock";
+string const c_istanbulForkBlock = "istanbulForkBlock";
 string const c_experimentalForkBlock = "experimentalForkBlock";
 string const c_accountStartNonce = "accountStartNonce";
 string const c_maximumExtraDataSize = "maximumExtraDataSize";
