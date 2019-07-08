@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(SetEmptyCode)
     State s{0};
     s.createContract(addr);
     s.setNonce(addr, 1);
-    s.setCode(addr, {});
+    s.setCode(addr, {}, 0);
     s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
     BOOST_CHECK(!s.addressHasCode(addr));
