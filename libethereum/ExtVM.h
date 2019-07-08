@@ -108,12 +108,13 @@ public:
 private:
     EVMSchedule const& initEvmSchedule(int64_t _blockNumber, u256 const& _version) const
     {
-        // Run with a schedule according to hard fork if before Istanbul
-        // Run with a schedule according to account version if Istanbul and later
-        if (_blockNumber < m_sealEngine.chainParams().istanbulForkBlock)
-            return m_sealEngine.evmSchedule(_blockNumber);
+        // If _version is latest for the block, select corresponding latest schedule.
+        // Otherwise run with the latest schedule known to correspond to the _version.
+        EVMSchedule const& currentBlockSchedule = m_sealEngine.evmSchedule(_blockNumber);
+        if (currentBlockSchedule.accountVersion == _version)
+            return currentBlockSchedule;
         else
-            return evmScheduleForAccountVersion(_version);
+            return latestScheduleForAccountVersion(_version);
     }
 
 

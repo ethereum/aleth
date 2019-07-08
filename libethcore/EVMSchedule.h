@@ -159,7 +159,7 @@ static const EVMSchedule ExperimentalSchedule = [] {
     return schedule;
 }();
 
-inline EVMSchedule const& evmScheduleForAccountVersion(u256 const& _version)
+inline EVMSchedule const& latestScheduleForAccountVersion(u256 const& _version)
 {
     if (_version == 0)
         return ConstantinopleFixSchedule;
