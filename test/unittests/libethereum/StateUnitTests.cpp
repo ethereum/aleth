@@ -67,6 +67,20 @@ BOOST_AUTO_TEST_CASE(RollbackSetCode)
     BOOST_CHECK(!s.accountNonemptyAndExisting(addr));
 }
 
+BOOST_AUTO_TEST_CASE(SetEmptyCode)
+{
+    Address addr{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
+    State s{0};
+    s.createContract(addr);
+    s.setNonce(addr, 1);
+    s.setCode(addr, {});
+    s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
+
+    BOOST_CHECK(!s.addressHasCode(addr));
+
+    // empty code is not saved to DB
+    BOOST_CHECK(!s.db().exists(EmptySHA3));
+}
 class AddressRangeTestFixture : public TestOutputHelperFixture
 {
 public:
