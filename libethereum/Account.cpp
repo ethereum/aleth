@@ -36,9 +36,13 @@ namespace fs = boost::filesystem;
 
 void Account::setCode(bytes&& _code)
 {
-    m_codeCache = std::move(_code);
-    m_hasNewCode = true;
-    m_codeHash = sha3(m_codeCache);
+    auto const newHash = sha3(_code);
+    if (newHash != m_codeHash)
+    {
+        m_codeCache = std::move(_code);
+        m_hasNewCode = true;
+        m_codeHash = newHash;
+    }
 }
 
 void Account::resetCode()
