@@ -71,13 +71,13 @@ BOOST_AUTO_TEST_CASE(ScheduleAccordingToForkBeforeIstanbul)
         {}, {}, 0, 0, false, false);
 
     BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, 0);
-    BOOST_CHECK_EQUAL(&extVM.evmSchedule(), &ConstantinopleFixSchedule);
+    BOOST_CHECK(extVM.evmSchedule().haveCreate2 && !extVM.evmSchedule().eip1283Mode);
 }
 
-BOOST_AUTO_TEST_CASE(PetersburScheduleForVersionZeroInIstanbul)
+BOOST_AUTO_TEST_CASE(PetersburgScheduleForVersionZeroInIstanbul)
 {
     Block block = blockchain.genesisBlock(genesisDB);
-    block.sync(blockchain, preIstanbulBlockHash);
+    block.sync(blockchain, istanbulBlockHash);
 
     TestLastBlockHashes lastBlockHashes({});
     EnvInfo envInfo(block.info(), lastBlockHashes, 0);
@@ -87,13 +87,13 @@ BOOST_AUTO_TEST_CASE(PetersburScheduleForVersionZeroInIstanbul)
         {}, {}, version, 0, false, false);
 
     BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
-    BOOST_CHECK_EQUAL(&extVM.evmSchedule(), &ConstantinopleFixSchedule);
+    BOOST_CHECK(extVM.evmSchedule().haveCreate2 && !extVM.evmSchedule().eip1283Mode);
 }
 
 BOOST_AUTO_TEST_CASE(IstanbulScheduleForVersionOneInIstanbul)
 {
     Block block = blockchain.genesisBlock(genesisDB);
-    block.sync(blockchain, preIstanbulBlockHash);
+    block.sync(blockchain, istanbulBlockHash);
 
     TestLastBlockHashes lastBlockHashes({});
     EnvInfo envInfo(block.info(), lastBlockHashes, 0);
@@ -103,7 +103,6 @@ BOOST_AUTO_TEST_CASE(IstanbulScheduleForVersionOneInIstanbul)
         {}, {}, version, 0, false, false);
 
     BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
-    BOOST_CHECK_EQUAL(&extVM.evmSchedule(), &IstanbulSchedule);
 }
 
 
