@@ -269,7 +269,7 @@ int main(int argc, char** argv)
     {
         // Deploy the code on some fake account to be called later.
         Account account(0, 0);
-        auto const latestVersion = se->evmSchedule(envInfo.number()).version;
+        auto const latestVersion = se->evmSchedule(envInfo.number()).accountVersion;
         account.setCode(bytes{code}, latestVersion);
         std::unordered_map<Address, Account> map;
         map[contractDestination] = account;

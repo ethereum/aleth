@@ -358,7 +358,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address const& _txSender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
 {
     // Contract will be created with the version corresponding to latest hard fork
-    auto const latestVersion = m_sealEngine.evmSchedule(m_envInfo.number()).version;
+    auto const latestVersion = m_sealEngine.evmSchedule(m_envInfo.number()).accountVersion;
     return createWithAddressFromNonceAndSender(
         _txSender, _endowment, _gasPrice, _gas, _init, _origin, latestVersion);
 }

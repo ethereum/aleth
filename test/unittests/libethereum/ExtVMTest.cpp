@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ScheduleAccordingToForkBeforeIstanbul)
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
         {}, {}, 0, 0, false, false);
 
-    BOOST_CHECK_EQUAL(extVM.evmSchedule().version, 0);
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, 0);
     BOOST_CHECK_EQUAL(&extVM.evmSchedule(), &ConstantinopleFixSchedule);
 }
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(PetersburScheduleForVersionZeroInIstanbul)
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
         {}, {}, version, 0, false, false);
 
-    BOOST_CHECK_EQUAL(extVM.evmSchedule().version, version);
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
     BOOST_CHECK_EQUAL(&extVM.evmSchedule(), &ConstantinopleFixSchedule);
 }
 
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(IstanbulScheduleForVersionOneInIstanbul)
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
         {}, {}, version, 0, false, false);
 
-    BOOST_CHECK_EQUAL(extVM.evmSchedule().version, version);
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
     BOOST_CHECK_EQUAL(&extVM.evmSchedule(), &IstanbulSchedule);
 }
 

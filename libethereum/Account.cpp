@@ -51,6 +51,7 @@ void Account::resetCode()
     m_codeCache.clear();
     m_hasNewCode = false;
     m_codeHash = EmptySHA3;
+    // Reset the version, as it was set together with code
     m_version = 0;
 }
 

@@ -66,7 +66,7 @@ TEST_F(ExecutiveTest, createUsesLatestForkVersion)
     bool done = executive.create(txSender, txValue, gasPrice, gas, ref(code), txSender);
 
     EXPECT_FALSE(done);
-    EXPECT_EQ(executive.extVM().version, IstanbulSchedule.version);
+    EXPECT_EQ(executive.extVM().version, IstanbulSchedule.accountVersion);
 }
 
 TEST_F(ExecutiveTest, createOpcodeUsesParentVersion)

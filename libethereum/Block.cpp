@@ -684,7 +684,7 @@ void Block::updateBlockhashContract()
     {
         m_state.createContract(c_blockhashContractAddress);
         m_state.setCode(c_blockhashContractAddress, bytes(c_blockhashContractCode),
-            m_sealEngine->evmSchedule(blockNumber).version);
+            m_sealEngine->evmSchedule(blockNumber).accountVersion);
         m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
     }
 
