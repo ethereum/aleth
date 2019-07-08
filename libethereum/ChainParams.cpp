@@ -107,6 +107,7 @@ ChainParams ChainParams::loadConfig(
     setOptionalU256Parameter(cp.eWASMForkBlock, c_eWASMForkBlock);
     setOptionalU256Parameter(cp.constantinopleForkBlock, c_constantinopleForkBlock);
     setOptionalU256Parameter(cp.constantinopleFixForkBlock, c_constantinopleFixForkBlock);
+    setOptionalU256Parameter(cp.istanbulForkBlock, c_istanbulForkBlock);
     setOptionalU256Parameter(cp.daoHardforkBlock, c_daoHardforkBlock);
     setOptionalU256Parameter(cp.experimentalForkBlock, c_experimentalForkBlock);
     setOptionalU256Parameter(cp.minimumDifficulty, c_minimumDifficulty);

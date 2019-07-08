@@ -27,15 +27,16 @@ using namespace dev;
 #include "genesis/test/byzantiumNoProofTest.cpp"
 #include "genesis/test/byzantiumTest.cpp"
 #include "genesis/test/byzantiumTransitionTest.cpp"
+#include "genesis/test/constantinopleFixTest.cpp"
 #include "genesis/test/constantinopleNoProofTest.cpp"
 #include "genesis/test/constantinopleTest.cpp"
-#include "genesis/test/constantinopleFixTest.cpp"
 #include "genesis/test/eip150Test.cpp"
 #include "genesis/test/eip158Test.cpp"
 #include "genesis/test/experimentalTransitionTest.cpp"
 #include "genesis/test/frontierNoProofTest.cpp"
 #include "genesis/test/frontierTest.cpp"
 #include "genesis/test/homesteadTest.cpp"
+#include "genesis/test/istanbulTransitionTest.cpp"
 #include "genesis/test/mainNetworkNoProofTest.cpp"
 #include "genesis/test/mainNetworkTest.cpp"
 
@@ -77,6 +78,8 @@ std::string const& dev::eth::genesisInfo(Network _n)
         return c_genesisInfoExperimentalTransitionTest;
     case Network::ConstantinopleFixTest:
         return c_genesisInfoConstantinopleFixTest;
+    case Network::IstanbulTransitionTest:
+        return c_genesisInfoIstanbulTransitionTest;
 
 
     //Transition test genesis
@@ -108,6 +111,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
     case Network::ByzantiumTest:
     case Network::ConstantinopleTest:
     case Network::ConstantinopleFixTest:
+    case Network::IstanbulTransitionTest:
     case Network::ExperimentalTransitionTest:
         return c_genesisDefaultStateRoot;
     default:
