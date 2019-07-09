@@ -18,7 +18,7 @@
 #include "interpreter.h"
 #include "VM.h"
 
-#include <aleth/buildinfo.h>
+#include <aleth/version.h>
 
 namespace
 {
@@ -116,7 +116,7 @@ extern "C" evmc_instance* evmc_create_interpreter() noexcept
     static evmc_instance s_instance{
         EVMC_ABI_VERSION,
         "interpreter",
-        aleth_get_buildinfo()->project_version,
+        aleth_version,
         ::destroy,
         ::execute,
         getCapabilities,
