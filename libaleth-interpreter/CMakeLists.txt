@@ -11,13 +11,23 @@ set(
     VMConfig.h
     VMOpt.cpp
 )
+
+set(
+    dependencies
+    aleth-buildinfo
+    ethash::ethash
+    evmc::evmc
+    evmc::instructions
+    Boost::boost
+)
+
 add_library(aleth-interpreter STATIC ${sources})
-target_link_libraries(aleth-interpreter PRIVATE devcore aleth-buildinfo evmc::evmc evmc::instructions)
+target_link_libraries(aleth-interpreter PRIVATE ${dependencies})
 
 if(ALETH_INTERPRETER_SHARED)
     # Build aleth-interpreter additionally as a shared library to include it in the package
     add_library(aleth-interpreter-shared SHARED ${sources})
-    target_link_libraries(aleth-interpreter-shared PRIVATE devcore aleth-buildinfo evmc::evmc evmc::instructions)
+    target_link_libraries(aleth-interpreter-shared PRIVATE ${dependencies})
     set_target_properties(aleth-interpreter-shared PROPERTIES OUTPUT_NAME aleth-interpreter)
     install(TARGETS aleth-interpreter-shared EXPORT alethTargets
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
