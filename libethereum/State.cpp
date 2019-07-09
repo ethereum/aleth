@@ -175,8 +175,8 @@ Account* State::account(Address const& _addr)
     // version is 0 if absent from RLP
     auto const version = state[4] ? state[4].toInt<u256>() : 0;
 
-    auto i = m_cache.emplace(std::piecewise_construct, std::forward_as_tuple(_addr),
-        std::forward_as_tuple(nonce, balance, storageRoot, codeHash, version, Account::Unchanged));
+    auto i = m_cache.emplace(piecewise_construct, forward_as_tuple(_addr),
+        forward_as_tuple(nonce, balance, storageRoot, codeHash, version, Account::Unchanged));
     m_unchangedCacheEntries.push_back(_addr);
     return &i.first->second;
 }
@@ -526,7 +526,7 @@ void State::setCode(Address const& _address, bytes&& _code, u256 const& _version
     // (not allowed in contract creation logic in Executive)
     assert(!addressHasCode(_address));
     m_changeLog.emplace_back(Change::Code, _address);
-    m_cache[_address].setCode(std::move(_code), _version);
+    m_cache[_address].setCode(move(_code), _version);
 }
 
 h256 State::codeHash(Address const& _a) const
