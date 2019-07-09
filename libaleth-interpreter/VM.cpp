@@ -445,7 +445,9 @@ void VM::interpretCases()
 
             uint64_t inOff = (uint64_t)m_SP[0];
             uint64_t inSize = (uint64_t)m_SP[1];
-            m_SPP[0] = (u256)sha3(bytesConstRef(m_mem.data() + inOff, inSize));
+
+            const auto h = ethash::keccak256(m_mem.data() + inOff, inSize);
+            m_SPP[0] = static_cast<u256>(h256{h.bytes, h256::ConstructFromPointer});
         }
         NEXT
 
