@@ -553,17 +553,8 @@ template <class DB> void GenericTrieDB<DB>::iterator::next(NibbleSlice _key)
             }
             if (!rlp.isList() || (rlp.itemCount() != 2 && rlp.itemCount() != 17))
             {
-#if ETH_PARANOIA
-                cwarn << "BIG FAT ERROR. STATE TRIE CORRUPTED!!!!!";
-                cwarn << b.rlp.size() << toHex(b.rlp);
-                cwarn << rlp;
-                auto c = rlp.itemCount();
-                cwarn << c;
-                BOOST_THROW_EXCEPTION(InvalidTrie());
-#else
                 m_that = nullptr;
                 return;
-#endif
             }
             if (rlp.itemCount() == 2)
             {
@@ -688,17 +679,8 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
             }
             if (!(rlp.isList() && (rlp.itemCount() == 2 || rlp.itemCount() == 17)))
             {
-#if ETH_PARANOIA
-                cwarn << "BIG FAT ERROR. STATE TRIE CORRUPTED!!!!!";
-                cwarn << b.rlp.size() << toHex(b.rlp);
-                cwarn << rlp;
-                auto c = rlp.itemCount();
-                cwarn << c;
-                BOOST_THROW_EXCEPTION(InvalidTrie());
-#else
                 m_that = nullptr;
                 return;
-#endif
             }
             if (rlp.itemCount() == 2)
             {

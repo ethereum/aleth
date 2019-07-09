@@ -10,7 +10,6 @@ macro(configure_project)
     # Features:
     option(EVM_OPTIMIZE "Enable VM optimizations (can distort tracing)" ON)
     option(FATDB "Enable fat state database" ON)
-    option(PARANOID "Enable additional checks when validating transactions (deprecated)" OFF)
     option(MINIUPNPC "Build with UPnP support" OFF)
     option(FASTCTEST "Enable fast ctest" OFF)
     option(ROCKSDB "Build with rocksdb as optional database implementation" OFF)
@@ -24,22 +23,11 @@ macro(configure_project)
     # components
     option(TESTS "Build with tests" ON)
     option(TOOLS "Build additional tools" ON)
-    # Resolve any clashes between incompatible options.
-    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-        if (PARANOID)
-            message(WARNING "Paranoia requires debug - disabling for release build.")
-            set(PARANOID OFF)
-        endif ()
-    endif ()
 
     # FATDB is an option to include the reverse hashes for the trie,
     # i.e. it allows you to iterate over the contents of the state.
     if (FATDB)
         add_definitions(-DETH_FATDB)
-    endif ()
-
-    if (PARANOID)
-        add_definitions(-DETH_PARANOIA)
     endif ()
 
     # CI Builds should provide (for user builds this is totally optional)
@@ -73,7 +61,6 @@ macro(print_config)
     message("-- EVM_OPTIMIZE     Enable VM optimizations                  ${EVM_OPTIMIZE}")
     message("-- FATDB            Full database exploring                  ${FATDB}")
     message("-- ROCKSDB          RocksDB as optional DB implementation    ${ROCKSDB}")
-    message("-- PARANOID         -                                        ${PARANOID}")
     message("-- MINIUPNPC        -                                        ${MINIUPNPC}")
     message("------------------------------------------------------------- components")
     message("-- TESTS            Build tests                              ${TESTS}")

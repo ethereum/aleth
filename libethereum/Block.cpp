@@ -207,30 +207,6 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
     bool ret = false;
     // BLOCK
     BlockHeader bi = _bi ? _bi : _bc.info(_block);
-#if ETH_PARANOIA
-    if (!bi)
-        while (1)
-        {
-            try
-            {
-                auto b = _bc.block(_block);
-                bi.populate(b);
-                break;
-            }
-            catch (Exception const& _e)
-            {
-                // TODO: Slightly nicer handling? :-)
-                cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
-                cerr << diagnostic_information(_e) << endl;
-            }
-            catch (std::exception const& _e)
-            {
-                // TODO: Slightly nicer handling? :-)
-                cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
-                cerr << _e.what() << endl;
-            }
-        }
-#endif
     if (bi == m_currentBlock)
     {
         // We mined the last block.

@@ -140,7 +140,6 @@ bool OverlayDB::exists(h256 const& _h) const
 
 void OverlayDB::kill(h256 const& _h)
 {
-#if ETH_PARANOIA || 1
     if (!StateCacheDB::kill(_h))
     {
         if (m_db)
@@ -157,9 +156,6 @@ void OverlayDB::kill(h256 const& _h)
             }
         }
     }
-#else
-    StateCacheDB::kill(_h);
-#endif
 }
 
 }
