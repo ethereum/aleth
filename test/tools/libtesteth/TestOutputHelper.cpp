@@ -126,14 +126,20 @@ bool pathHasTests(boost::filesystem::path const& _path)
 
 void TestOutputHelper::checkUnfinishedTestFolders()
 {
+    // Unit tests does not mark test folders
+    if (m_finishedTestFoldersMap.size() == 0)
+        return;
+
     // -t SuiteName/caseName   parse caseName as filter
     // rCurrentTestSuite is empty if run without -t argument
     string filter;
-    size_t pos = Options::get().rCurrentTestSuite.find('/');
+    size_t pos = Options::get().rCurrentTestSuite.rfind('/');
     if (pos != string::npos)
         filter = Options::get().rCurrentTestSuite.substr(pos + 1);
 
-    if (!filter.empty())
+    std::map<boost::filesystem::path, FolderNameSet>::const_iterator singleTest =
+        m_finishedTestFoldersMap.begin();
+    if (!filter.empty() && boost::filesystem::exists(singleTest->first / filter))
     {
         if (m_finishedTestFoldersMap.size() > 1)
         {
@@ -141,16 +147,13 @@ void TestOutputHelper::checkUnfinishedTestFolders()
             return;
         }
 
-        // Unit tests does not mark test folders
-        if (m_finishedTestFoldersMap.size() == 0)
-            return;
-
-        std::map<boost::filesystem::path, FolderNameSet>::const_iterator it =
-            m_finishedTestFoldersMap.begin();
-        if (!pathHasTests(it->first / filter))
-            std::cerr << "WARNING: Test folder " << it->first / filter
+        if (!pathHasTests(singleTest->first / filter))
+        {
+            std::cerr << "WARNING: Test folder " << singleTest->first / filter
                       << " appears to have no tests!"
                       << "\n";
+            return;
+        }
     }
     else
     {
