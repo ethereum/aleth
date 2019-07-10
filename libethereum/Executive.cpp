@@ -35,6 +35,8 @@ using namespace dev::eth;
 
 namespace
 {
+Address const c_RipemdPrecompiledAddress{0x03};
+
 std::string dumpStackAndMemory(LegacyVM const& _vm)
 {
     ostringstream o;
@@ -304,19 +306,21 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 
     if (m_sealEngine.isPrecompiled(_p.codeAddress, m_envInfo.number()))
     {
+        // Empty RIPEMD contract needs to be deleted even in case of OOG
+        // because of the anomaly on the main net caused by buggy behavior by both Geth and Parity
+        // https://github.com/ethereum/go-ethereum/pull/3341/files#diff-2433aa143ee4772026454b8abd76b9dd
+        // https://github.com/ethereum/EIPs/issues/716
+        // https://github.com/ethereum/aleth/pull/5664
+        // We mark the account as touched here, so that is can be removed among other touched empty
+        // accounts (after tx finalization)
+        if (_p.receiveAddress == c_RipemdPrecompiledAddress)
+            m_s.unrevertableTouch(_p.codeAddress);
+
         bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
         if (_p.gas < g)
         {
             m_excepted = TransactionException::OutOfGasBase;
             // Bail from exception.
-
-            // Empty precompiled contracts need to be deleted even in case of OOG
-            // because the bug in both Geth and Parity led to deleting RIPEMD precompiled in this case
-            // see https://github.com/ethereum/go-ethereum/pull/3341/files#diff-2433aa143ee4772026454b8abd76b9dd
-            // We mark the account as touched here, so that is can be removed among other touched empty accounts (after tx finalization)
-            if (m_envInfo.number() >= m_sealEngine.chainParams().EIP158ForkBlock)
-                m_s.addBalance(_p.codeAddress, 0);
-
             return true;	// true actually means "all finished - nothing more to be done regarding go().
         }
         else
