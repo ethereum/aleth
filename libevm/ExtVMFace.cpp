@@ -202,6 +202,7 @@ evmc::result EvmCHost::create(evmc_message const& _msg) noexcept
 evmc::result EvmCHost::call(evmc_message const& _msg) noexcept
 {
     assert(_msg.gas >= 0 && "Invalid gas value");
+    assert(_msg.depth == static_cast<int>(m_extVM.depth) + 1);
 
     // Handle CREATE separately.
     if (_msg.kind == EVMC_CREATE || _msg.kind == EVMC_CREATE2)
