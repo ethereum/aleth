@@ -318,6 +318,9 @@ public:
     u256 const& requireAccountStartNonce() const;
     void noteAccountStartNonce(u256 const& _actual);
 
+    /// Mark account as touched and keep it touched even in case of rollback
+    void unrevertableTouch(Address const& _addr);
+
     /// Create a savepoint in the state changelog.
     /// @return The savepoint index that can be used in rollback() function.
     size_t savepoint() const;

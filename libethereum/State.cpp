@@ -564,6 +564,12 @@ u256 State::version(Address const& _a) const
     return a ? a->version() : 0;
 }
 
+void State::unrevertableTouch(Address const& _address)
+{
+    if (Account* a = account(_address))
+        a->unrevertableTouch();
+}
+
 size_t State::savepoint() const
 {
     return m_changeLog.size();

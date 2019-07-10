@@ -108,7 +108,9 @@ public:
     bool isAlive() const { return m_isAlive; }
 
     /// @returns true if the account is unchanged from creation.
-    bool isDirty() const { return !m_isUnchanged; }
+    bool isDirty() const { return !m_isUnchanged || m_isUnrevertablyTouched; }
+
+    void unrevertableTouch() { m_isUnrevertablyTouched = true; }
 
     void untouch() { m_isUnchanged = true; }
 
@@ -205,6 +207,9 @@ private:
 
     /// True if we've not made any alteration to the account having been given it's properties directly.
     bool m_isUnchanged = false;
+
+    /// True if account's touch status shouldn't be rolled back in case of revert
+    bool m_isUnrevertablyTouched = false;
 
     /// True if new code was deployed to the account
     bool m_hasNewCode = false;
