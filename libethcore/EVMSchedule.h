@@ -29,6 +29,7 @@ struct EVMSchedule
 {
     EVMSchedule(): tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
     EVMSchedule(bool _efcd, bool _hdc, unsigned const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
+    unsigned accountVersion = 0;
     bool exceptionalFailedCodeDeposit = true;
     bool haveDelegateCall = true;
     bool eip150Mode = false;
@@ -146,10 +147,31 @@ static const EVMSchedule ConstantinopleFixSchedule = [] {
     return schedule;
 }();
 
+static const EVMSchedule IstanbulSchedule = [] {
+    EVMSchedule schedule = ConstantinopleFixSchedule;
+    schedule.accountVersion = 1;
+    return schedule;
+}();
+
 static const EVMSchedule ExperimentalSchedule = [] {
-    EVMSchedule schedule = ConstantinopleSchedule;
+    EVMSchedule schedule = IstanbulSchedule;
     schedule.blockhashGas = 800;
     return schedule;
 }();
+
+inline EVMSchedule const& latestScheduleForAccountVersion(u256 const& _version)
+{
+    if (_version == 0)
+        return ConstantinopleFixSchedule;
+    else if (_version == IstanbulSchedule.accountVersion)
+        return IstanbulSchedule;
+    else
+    {
+        // This should not happen, as all existing accounts
+        // are created either with version 0 or with one of fork's versions
+        assert(false);
+        return DefaultSchedule;
+    }
+}
 }
 }

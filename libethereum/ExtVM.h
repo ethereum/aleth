@@ -41,12 +41,13 @@ public:
     /// Full constructor.
     ExtVM(State& _s, EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Address _myAddress,
         Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data,
-        bytesConstRef _code, h256 const& _codeHash, unsigned _depth, bool _isCreate,
-        bool _staticCall)
+        bytesConstRef _code, h256 const& _codeHash, u256 const& _version, unsigned _depth,
+        bool _isCreate, bool _staticCall)
       : ExtVMFace(_envInfo, _myAddress, _caller, _origin, _value, _gasPrice, _data, _code.toBytes(),
-            _codeHash, _depth, _isCreate, _staticCall),
+            _codeHash, _version, _depth, _isCreate, _staticCall),
         m_s(_s),
-        m_sealEngine(_sealEngine)
+        m_sealEngine(_sealEngine),
+        m_evmSchedule(initEvmSchedule(envInfo().number(), _version))
     {
         // Contract: processing account must exist. In case of CALL, the ExtVM
         // is created only if an account has code (so exist). In case of CREATE
@@ -97,10 +98,7 @@ public:
     void suicide(Address _a) final;
 
     /// Return the EVM gas-price schedule for this execution context.
-    EVMSchedule const& evmSchedule() const final
-    {
-        return m_sealEngine.evmSchedule(envInfo().number());
-    }
+    EVMSchedule const& evmSchedule() const final { return m_evmSchedule; }
 
     State const& state() const { return m_s; }
 
@@ -108,8 +106,21 @@ public:
     h256 blockHash(u256 _number) final;
 
 private:
+    EVMSchedule const& initEvmSchedule(int64_t _blockNumber, u256 const& _version) const
+    {
+        // If _version is latest for the block, select corresponding latest schedule.
+        // Otherwise run with the latest schedule known to correspond to the _version.
+        EVMSchedule const& currentBlockSchedule = m_sealEngine.evmSchedule(_blockNumber);
+        if (currentBlockSchedule.accountVersion == _version)
+            return currentBlockSchedule;
+        else
+            return latestScheduleForAccountVersion(_version);
+    }
+
+
     State& m_s;  ///< A reference to the base state.
     SealEngineFace const& m_sealEngine;
+    EVMSchedule const& m_evmSchedule;
 };
 
 }

@@ -342,9 +342,11 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         {
             bytes const& c = m_s.code(_p.codeAddress);
             h256 codeHash = m_s.codeHash(_p.codeAddress);
+            // Contract will be executed with the version stored in account
+            auto const version = m_s.version(_p.codeAddress);
             m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress,
                 _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash,
-                m_depth, false, _p.staticCall);
+                version, m_depth, false, _p.staticCall);
         }
     }
 
@@ -355,24 +357,38 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 
 bool Executive::create(Address const& _txSender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
 {
-    // Contract creation by an external account is the same as CREATE opcode
-    return createOpcode(_txSender, _endowment, _gasPrice, _gas, _init, _origin);
+    // Contract will be created with the version corresponding to latest hard fork
+    auto const latestVersion = m_sealEngine.evmSchedule(m_envInfo.number()).accountVersion;
+    return createWithAddressFromNonceAndSender(
+        _txSender, _endowment, _gasPrice, _gas, _init, _origin, latestVersion);
 }
 
 bool Executive::createOpcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
 {
+    // Contract will be created with the version equal to parent's version
+    return createWithAddressFromNonceAndSender(
+        _sender, _endowment, _gasPrice, _gas, _init, _origin, m_s.version(_sender));
+}
+
+bool Executive::createWithAddressFromNonceAndSender(Address const& _sender, u256 const& _endowment,
+    u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin,
+    u256 const& _version)
+{
     u256 nonce = m_s.getNonce(_sender);
     m_newAddress = right160(sha3(rlpList(_sender, nonce)));
-    return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+    return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin, _version);
 }
 
 bool Executive::create2Opcode(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin, u256 const& _salt)
 {
     m_newAddress = right160(sha3(bytes{0xff} +_sender.asBytes() + toBigEndian(_salt) + sha3(_init)));
-    return executeCreate(_sender, _endowment, _gasPrice, _gas, _init, _origin);
+    // Contract will be created with the version equal to parent's version
+    return executeCreate(
+        _sender, _endowment, _gasPrice, _gas, _init, _origin, m_s.version(_sender));
 }
 
-bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice, u256 const& _gas, bytesConstRef _init, Address const& _origin)
+bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u256 const& _gasPrice,
+    u256 const& _gas, bytesConstRef _init, Address const& _origin, u256 const& _version)
 {
     if (_sender != MaxAddress ||
         m_envInfo.number() < m_sealEngine.chainParams().experimentalForkBlock)  // EIP86
@@ -411,7 +427,11 @@ bool Executive::executeCreate(Address const& _sender, u256 const& _endowment, u2
     // Schedule _init execution if not empty.
     if (!_init.empty())
         m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin,
-            _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth, true, false);
+            _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), _version, m_depth, true,
+            false);
+    else
+        // code stays empty, but we set the version
+        m_s.setCode(m_newAddress, {}, _version);
 
     return !m_ext;
 }
@@ -476,7 +496,7 @@ bool Executive::go(OnOpFunc const& _onOp)
                 }
                 if (m_res)
                     m_res->output = out.toVector(); // copy output to execution result
-                m_s.setCode(m_ext->myAddress, out.toVector());
+                m_s.setCode(m_ext->myAddress, out.toVector(), m_ext->version);
             }
             else
                 m_output = vm->exec(m_gas, *m_ext, _onOp);

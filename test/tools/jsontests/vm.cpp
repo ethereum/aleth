@@ -36,8 +36,10 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace fs = boost::filesystem;
 
-FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-    ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, false, false, _depth)
+FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth)
+  :  /// TODO: XXX: remove the default argument & fix.
+    ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3,
+        0, _depth, false, false)
 {}
 
 CreateResult FakeExtVM::create(

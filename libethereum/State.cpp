@@ -168,11 +168,15 @@ Account* State::account(Address const& _addr)
     clearCacheIfTooLarge();
 
     RLP state(stateBack);
-    auto i = m_cache.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(_addr),
-        std::forward_as_tuple(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged)
-    );
+    auto const nonce = state[0].toInt<u256>();
+    auto const balance = state[1].toInt<u256>();
+    auto const storageRoot = state[2].toHash<h256>();
+    auto const codeHash = state[3].toHash<h256>();
+    // version is 0 if absent from RLP
+    auto const version = state[4] ? state[4].toInt<u256>() : 0;
+
+    auto i = m_cache.emplace(piecewise_construct, forward_as_tuple(_addr),
+        forward_as_tuple(nonce, balance, storageRoot, codeHash, version, Account::Unchanged));
     m_unchangedCacheEntries.push_back(_addr);
     return &i.first->second;
 }
@@ -516,13 +520,13 @@ bytes const& State::code(Address const& _addr) const
     return a->code();
 }
 
-void State::setCode(Address const& _address, bytes&& _code)
+void State::setCode(Address const& _address, bytes&& _code, u256 const& _version)
 {
     // rollback assumes that overwriting of the code never happens
     // (not allowed in contract creation logic in Executive)
     assert(!addressHasCode(_address));
     m_changeLog.emplace_back(Change::Code, _address);
-    m_cache[_address].setCode(std::move(_code));
+    m_cache[_address].setCode(move(_code), _version);
 }
 
 h256 State::codeHash(Address const& _a) const
@@ -552,6 +556,12 @@ size_t State::codeSize(Address const& _a) const
     }
     else
         return 0;
+}
+
+u256 State::version(Address const& _a) const
+{
+    Account const* a = account(_a);
+    return a ? a->version() : 0;
 }
 
 size_t State::savepoint() const
@@ -767,7 +777,11 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
                 _state.remove(i.first);
             else
             {
-                RLPStream s(4);
+                auto const version = i.second.version();
+
+                // version = 0: [nonce, balance, storageRoot, codeHash]
+                // version > 0: [nonce, balance, storageRoot, codeHash, version]
+                RLPStream s(version != 0 ? 5 : 4);
                 s << i.second.nonce() << i.second.balance();
 
                 if (i.second.storageOverlay().empty())
@@ -797,6 +811,9 @@ AddressHash dev::eth::commit(AccountMap const& _cache, SecureTrieDB<Address, DB>
                 }
                 else
                     s << i.second.codeHash();
+
+                if (version != 0)
+                    s << i.second.version();
 
                 _state.insert(i.first, &s.out());
             }

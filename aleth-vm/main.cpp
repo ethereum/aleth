@@ -259,13 +259,18 @@ int main(int argc, char** argv)
         }  // Ignore decoding errors.
     }
 
+    unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
+    LastBlockHashes lastBlockHashes;
+    EnvInfo const envInfo(blockHeader, lastBlockHashes, 0);
+
     Transaction t;
     Address contractDestination("1122334455667788991011121314151617181920");
     if (!code.empty())
     {
         // Deploy the code on some fake account to be called later.
         Account account(0, 0);
-        account.setCode(bytes{code});
+        auto const latestVersion = se->evmSchedule(envInfo.number()).accountVersion;
+        account.setCode(bytes{code}, latestVersion);
         std::unordered_map<Address, Account> map;
         map[contractDestination] = account;
         state.populateFrom(map);
@@ -278,9 +283,6 @@ int main(int argc, char** argv)
 
     state.addBalance(sender, value);
 
-    unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
-    LastBlockHashes lastBlockHashes;
-    EnvInfo const envInfo(blockHeader, lastBlockHashes, 0);
     Executive executive(state, envInfo, *se);
     ExecutionResult res;
     executive.setResultRecipient(res);

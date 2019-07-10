@@ -26,10 +26,92 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-class ExtVMTestFixture : public TestOutputHelperFixture
+class ExtVMIstanbulTestFixture : public TestOutputHelperFixture
 {
 public:
-    ExtVMTestFixture()
+    ExtVMIstanbulTestFixture()
+      : networkSelector(eth::Network::IstanbulTransitionTest),
+        testBlockchain(TestBlockChain::defaultGenesisBlock()),
+        genesisBlock(testBlockchain.testGenesis()),
+        genesisDB(genesisBlock.state().db()),
+        blockchain(testBlockchain.getInterface())
+    {
+        TestBlock testBlock;
+        // block 1 - before Istanbul
+        testBlock.mine(testBlockchain);
+        testBlockchain.addBlock(testBlock);
+        preIstanbulBlockHash = testBlock.blockHeader().hash();
+
+        // block 2 - first Istanbul block
+        testBlock.mine(testBlockchain);
+        testBlockchain.addBlock(testBlock);
+        istanbulBlockHash = testBlock.blockHeader().hash();
+    }
+
+    NetworkSelector networkSelector;
+    TestBlockChain testBlockchain;
+    TestBlock const& genesisBlock;
+    OverlayDB const& genesisDB;
+    BlockChain const& blockchain;
+    h256 preIstanbulBlockHash;
+    h256 istanbulBlockHash;
+};
+
+BOOST_FIXTURE_TEST_SUITE(ExtVmIstanbulSuite, ExtVMIstanbulTestFixture)
+
+BOOST_AUTO_TEST_CASE(ScheduleAccordingToForkBeforeIstanbul)
+{
+    Block block = blockchain.genesisBlock(genesisDB);
+    block.sync(blockchain, preIstanbulBlockHash);
+
+    TestLastBlockHashes lastBlockHashes({});
+    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
+        {}, {}, 0, 0, false, false);
+
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, 0);
+    BOOST_CHECK(extVM.evmSchedule().haveCreate2 && !extVM.evmSchedule().eip1283Mode);
+}
+
+BOOST_AUTO_TEST_CASE(PetersburgScheduleForVersionZeroInIstanbul)
+{
+    Block block = blockchain.genesisBlock(genesisDB);
+    block.sync(blockchain, istanbulBlockHash);
+
+    TestLastBlockHashes lastBlockHashes({});
+    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+    u256 const version = 0;
+    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
+        {}, {}, version, 0, false, false);
+
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
+    BOOST_CHECK(extVM.evmSchedule().haveCreate2 && !extVM.evmSchedule().eip1283Mode);
+}
+
+BOOST_AUTO_TEST_CASE(IstanbulScheduleForVersionOneInIstanbul)
+{
+    Block block = blockchain.genesisBlock(genesisDB);
+    block.sync(blockchain, istanbulBlockHash);
+
+    TestLastBlockHashes lastBlockHashes({});
+    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+    u256 const version = 1;
+    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
+        {}, {}, version, 0, false, false);
+
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+
+class ExtVMExperimentalTestFixture : public TestOutputHelperFixture
+{
+public:
+    ExtVMExperimentalTestFixture()
       : networkSelector(eth::Network::ExperimentalTransitionTest),
         testBlockchain(TestBlockChain::defaultGenesisBlock()),
         genesisBlock(testBlockchain.testGenesis()),
@@ -53,7 +135,7 @@ public:
     BlockChain const& blockchain;
 };
 
-BOOST_FIXTURE_TEST_SUITE(ExtVmSuite, ExtVMTestFixture)
+BOOST_FIXTURE_TEST_SUITE(ExtVmExperimentalSuite, ExtVMExperimentalTestFixture)
 
 BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
 {
@@ -64,7 +146,7 @@ BOOST_AUTO_TEST_CASE(BlockhashOutOfBoundsRetunsZero)
     EnvInfo envInfo(block.info(), lastBlockHashes, 0);
     Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
-        {}, {}, 0, false, false);
+        {}, {}, 0, 0, false, false);
 
     BOOST_CHECK_EQUAL(extVM.blockHash(100), h256());
 }
@@ -79,7 +161,7 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeExperimentalReliesOnLastHashes)
     EnvInfo envInfo(block.info(), lastBlockHashes, 0);
     Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
-        {}, {}, 0, false, false);
+        {}, {}, 0, 0, false, false);
     h256 hash = extVM.blockHash(1);
     BOOST_REQUIRE_EQUAL(hash, lastHashes[0]);
 }
@@ -102,7 +184,7 @@ BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInExperimental)
     EnvInfo envInfo(block.info(), lastBlockHashes, 0);
     Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
-        {}, {}, 0, false, false);
+        {}, {}, 0, 0, false, false);
 
     // older than 256 not available
     BOOST_CHECK_EQUAL(extVM.blockHash(1), h256());

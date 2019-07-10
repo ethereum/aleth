@@ -44,13 +44,15 @@ BOOST_AUTO_TEST_CASE(LoadAccountCode)
     State s{0};
     s.createContract(addr);
     uint8_t codeData[] = {'c', 'o', 'd', 'e'};
-    s.setCode(addr, {std::begin(codeData), std::end(codeData)});
+    u256 version = 123;
+    s.setCode(addr, {std::begin(codeData), std::end(codeData)}, version);
     s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
     auto& loadedCode = s.code(addr);
     BOOST_CHECK(std::equal(
             std::begin(codeData), std::end(codeData), std::begin(loadedCode)
     ));
+    BOOST_CHECK_EQUAL(s.version(addr), version);
 }
 
 BOOST_AUTO_TEST_CASE(RollbackSetCode)
@@ -60,11 +62,15 @@ BOOST_AUTO_TEST_CASE(RollbackSetCode)
     auto savepoint = s.savepoint();
     s.createContract(addr);
     uint8_t codeData[] = {'c', 'o', 'd', 'e'};
-    s.setCode(addr, {std::begin(codeData), std::end(codeData)});
+    u256 version = 123;
+    s.setCode(addr, {std::begin(codeData), std::end(codeData)}, version);
     s.rollback(savepoint);
 
-    BOOST_CHECK(!s.addressHasCode(addr));
-    BOOST_CHECK(!s.accountNonemptyAndExisting(addr));
+    BOOST_CHECK(!s.addressInUse(addr));
+    BOOST_CHECK(s.version(addr) == 0);
+
+    // only state root exists in DB
+    BOOST_CHECK_EQUAL(s.db().keys().size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(SetEmptyCode)
@@ -73,7 +79,7 @@ BOOST_AUTO_TEST_CASE(SetEmptyCode)
     State s{0};
     s.createContract(addr);
     s.setNonce(addr, 1);
-    s.setCode(addr, {});
+    s.setCode(addr, {}, 0);
     s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
     BOOST_CHECK(!s.addressHasCode(addr));
@@ -81,6 +87,39 @@ BOOST_AUTO_TEST_CASE(SetEmptyCode)
     // empty code is not saved to DB
     BOOST_CHECK(!s.db().exists(EmptySHA3));
 }
+
+BOOST_AUTO_TEST_CASE(CodeVersionZero)
+{
+    Address addr{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
+    State s{0};
+    s.createContract(addr);
+    uint8_t codeData[] = {'c', 'o', 'd', 'e'};
+    u256 version = 0;
+    s.setCode(addr, {std::begin(codeData), std::end(codeData)}, version);
+    s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
+
+    auto& loadedCode = s.code(addr);
+    BOOST_CHECK(std::equal(std::begin(codeData), std::end(codeData), std::begin(loadedCode)));
+    BOOST_CHECK_EQUAL(s.version(addr), version);
+}
+
+BOOST_AUTO_TEST_CASE(SetEmptyCodeNonZeroVersion)
+{
+    Address addr{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
+    State s{0};
+    s.createContract(addr);
+    s.setNonce(addr, 1);
+    u256 version = 123;
+    s.setCode(addr, {}, version);
+    s.commit(State::CommitBehaviour::RemoveEmptyAccounts);
+
+    BOOST_CHECK(!s.addressHasCode(addr));
+    BOOST_CHECK_EQUAL(s.version(addr), version);
+
+    // empty code is not saved to DB
+    BOOST_CHECK(!s.db().exists(EmptySHA3));
+}
+
 class AddressRangeTestFixture : public TestOutputHelperFixture
 {
 public:

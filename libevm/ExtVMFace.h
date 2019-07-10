@@ -205,7 +205,7 @@ public:
     /// Full constructor.
     ExtVMFace(EnvInfo const& _envInfo, Address _myAddress, Address _caller, Address _origin,
         u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash,
-        unsigned _depth, bool _isCreate, bool _staticCall);
+        u256 const& _version, unsigned _depth, bool _isCreate, bool _staticCall);
 
     ExtVMFace(ExtVMFace const&) = delete;
     ExtVMFace& operator=(ExtVMFace const&) = delete;
@@ -273,6 +273,7 @@ public:
     bytesConstRef data;       ///< Current input data.
     bytes code;               ///< Current code that is executing.
     h256 codeHash;            ///< SHA3 hash of the executing code
+    u256 version;             ///< Version of the VM to execute code
     u256 salt;                ///< Values used in new address construction by CREATE2
     SubState sub;             ///< Sub-band VM state (suicides, refund counter, logs).
     unsigned depth = 0;       ///< Depth of the present call.
