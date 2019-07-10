@@ -258,6 +258,7 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
     m_runGas = o_msg.gas;
     updateIOGas();
 
+    o_msg.depth = m_message->depth + 1;
     o_msg.destination = destination;
     o_msg.sender = m_message->destination;
     o_msg.input_data = m_mem.data() + size_t(inputOffset);
