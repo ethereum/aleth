@@ -60,7 +60,6 @@ private:
 	TestOutputHelper() {}
     void checkUnfinishedTestFolders();  // Checkup that all test folders are active during the test
                                         // run
-    std::string detectFilterForMinusTArgument();
     Timer m_timer;
 	size_t m_currTest;
 	size_t m_maxTests;
