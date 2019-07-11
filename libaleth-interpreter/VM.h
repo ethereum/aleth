@@ -134,6 +134,7 @@ private:
     const evmc_tx_context& getTxContext();
 
     void throwOutOfGas();
+    void throwInvalidInstruction();
     void throwBadInstruction();
     void throwBadJumpDestination();
     void throwBadStack(int _removed, int _added);
