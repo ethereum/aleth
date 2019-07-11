@@ -53,6 +53,7 @@ State::State(State const& _s):
     m_unchangedCacheEntries(_s.m_unchangedCacheEntries),
     m_nonExistingAccountsCache(_s.m_nonExistingAccountsCache),
     m_touched(_s.m_touched),
+    m_unrevertablyTouched(_s.m_unrevertablyTouched),
     m_accountStartNonce(_s.m_accountStartNonce)
 {}
 
@@ -126,6 +127,13 @@ void State::removeEmptyAccounts()
     for (auto& i: m_cache)
         if (i.second.isDirty() && i.second.isEmpty())
             i.second.kill();
+
+    for (auto const& _address : m_unrevertablyTouched)
+    {
+        Account* a = account(_address);
+        if (a && a->isEmpty())
+            a->kill();
+    }
 }
 
 State& State::operator=(State const& _s)
@@ -139,6 +147,7 @@ State& State::operator=(State const& _s)
     m_unchangedCacheEntries = _s.m_unchangedCacheEntries;
     m_nonExistingAccountsCache = _s.m_nonExistingAccountsCache;
     m_touched = _s.m_touched;
+    m_unrevertablyTouched = _s.m_unrevertablyTouched;
     m_accountStartNonce = _s.m_accountStartNonce;
     return *this;
 }
@@ -562,6 +571,11 @@ u256 State::version(Address const& _a) const
 {
     Account const* a = account(_a);
     return a ? a->version() : 0;
+}
+
+void State::unrevertableTouch(Address const& _address)
+{
+    m_unrevertablyTouched.insert(_address);
 }
 
 size_t State::savepoint() const
