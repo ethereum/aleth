@@ -56,7 +56,7 @@ void customTestSuite()
         }
         else if (opt.rCurrentTestSuite.find("BlockchainTests") != std::string::npos)
         {
-            dev::test::BlockchainTestSuite suite;
+            dev::test::BlockchainValidTestSuite suite;
             suite.runTestWithoutFiller(file);
         }
         else if (opt.rCurrentTestSuite.find("TransitionTests") != std::string::npos)

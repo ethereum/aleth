@@ -59,7 +59,8 @@ namespace test {
 eth::Network ChainBranch::s_tempBlockchainNetwork = eth::Network::MainNetwork;
 eth::Network TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 
-json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
+json_spirit::mValue doBCTest(
+    json_spirit::mValue const& _input, bool _fillin, bool _allowInvalidBlocks)
 {
     json_spirit::mObject tests;
     for (auto const& i : _input.get_obj())
@@ -122,7 +123,7 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
                     std::cout << "Filling " << newtestname << std::endl;
 
                 TestOutputHelper::get().setCurrentTestName(newtestname);
-                jObjOutput = fillBCTest(jObjOutput);
+                jObjOutput = fillBCTest(jObjOutput, _allowInvalidBlocks);
                 jObjOutput["network"] = test::netIdToString(network);
                 if (inputTest.count("_info"))
                     jObjOutput["_info"] = inputTest.at("_info");
@@ -161,13 +162,34 @@ json_spirit::mValue BlockchainTestSuite::doTests(json_spirit::mValue const& _inp
 
     return tests;
 }
-fs::path BlockchainTestSuite::suiteFolder() const
+
+json_spirit::mValue BlockchainValidTestSuite::doTests(
+    json_spirit::mValue const& _input, bool _fillin) const
 {
-    return "BlockchainTests";
+    return doBCTest(_input, _fillin, false);
 }
-fs::path BlockchainTestSuite::suiteFillerFolder() const
+
+json_spirit::mValue BlockchainInvalidTestSuite::doTests(
+    json_spirit::mValue const& _input, bool _fillin) const
 {
-    return "BlockchainTestsFiller";
+    return doBCTest(_input, _fillin, true);
+}
+
+fs::path BlockchainInvalidTestSuite::suiteFolder() const
+{
+    return fs::path("BlockchainTests") / "InvalidBlocks";
+}
+fs::path BlockchainInvalidTestSuite::suiteFillerFolder() const
+{
+    return fs::path("BlockchainTestsFiller") / "InvalidBlocks";
+}
+fs::path BlockchainValidTestSuite::suiteFolder() const
+{
+    return fs::path("BlockchainTests") / "ValidBlocks";
+}
+fs::path BlockchainValidTestSuite::suiteFillerFolder() const
+{
+    return fs::path("BlockchainTestsFiller") / "ValidBlocks";
 }
 fs::path BCGeneralStateTestsSuite::suiteFolder() const
 {
@@ -253,7 +275,7 @@ void ChainBranch::resetBlockchain()
     dev::test::TestBlockChain::s_sealEngineNetwork = s_tempBlockchainNetwork;
 }
 
-json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
+json_spirit::mObject fillBCTest(json_spirit::mObject const& _input, bool _allowInvalidBlocks)
 {
     json_spirit::mObject output;
     string const& testName = TestOutputHelper::get().testName();
@@ -389,6 +411,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
         blObj["uncleHeaders"] = aUncleList;
         blObj["transactions"] = writeTransactionsToJson(alterBlock.transactionQueue());
 
+        bool blockImportExceptionHappen = false;
         compareBlocks(block, alterBlock);
         try
         {
@@ -416,18 +439,24 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input)
             cnote << testName + "block import throw an exception: " << diagnostic_information(_e);
             checkExpectedException(blObj, _e);
             eraseJsonSectionForInvalidBlock(blObj);
+            blockImportExceptionHappen = true;
         }
         catch (std::exception const& _e)
         {
             cnote << testName + "block import throw an exception: " << _e.what();
             cout << testName + "block import thrown std exeption\n";
             eraseJsonSectionForInvalidBlock(blObj);
+            blockImportExceptionHappen = true;
         }
         catch (...)
         {
             cout << testName + "block import thrown unknown exeption\n";
             eraseJsonSectionForInvalidBlock(blObj);
+            blockImportExceptionHappen = true;
         }
+
+        if (!_allowInvalidBlocks && blockImportExceptionHappen)
+            BOOST_ERROR("Mined block expected to be valid! " + testName);
 
         blArray.push_back(blObj);  //json data
     }//each blocks
@@ -1003,11 +1032,12 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 }
 }
 
-class bcTestFixture {
+class bcValidTestFixture
+{
 public:
-    bcTestFixture()
+    bcValidTestFixture()
     {
-        test::BlockchainTestSuite suite;
+        test::BlockchainValidTestSuite suite;
         string const casename = boost::unit_test::framework::current_test_case().p_name;
         boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
 
@@ -1018,6 +1048,20 @@ public:
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
+
+        suite.runAllTestsInFolder(casename);
+        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+    }
+};
+
+class bcInvalidTestFixture
+{
+public:
+    bcInvalidTestFixture()
+    {
+        test::BlockchainInvalidTestSuite suite;
+        string const casename = boost::unit_test::framework::current_test_case().p_name;
+        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
 
         suite.runAllTestsInFolder(casename);
         test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
@@ -1057,34 +1101,44 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(BlockchainTests, bcTestFixture)
 
-BOOST_AUTO_TEST_CASE(bcStateTests){}
-BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest){}
-BOOST_AUTO_TEST_CASE(bcGasPricerTest){}
-BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest){}
-BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity){}
-BOOST_AUTO_TEST_CASE(bcUncleTest){}
-BOOST_AUTO_TEST_CASE(bcValidBlockTest){}
-BOOST_AUTO_TEST_CASE(bcWalletTest){}
-BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest){}
-BOOST_AUTO_TEST_CASE(bcMultiChainTest){}
-BOOST_AUTO_TEST_CASE(bcForkStressTest){}
-BOOST_AUTO_TEST_CASE(bcForgedTest){}
-BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest){}
-BOOST_AUTO_TEST_CASE(bcExploitTest){}
-BOOST_AUTO_TEST_CASE(bcUncleSpecialTests){}
+BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
+// Tests that contain only valid blocks and check that import is correct
+BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcValidTestFixture)
+BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+BOOST_AUTO_TEST_CASE(bcExploitTest) {}
+BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
+BOOST_AUTO_TEST_CASE(bcGasPricerTest) {}
+BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest) {}
+BOOST_AUTO_TEST_CASE(bcStateTests) {}
+BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {}
+BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
+BOOST_AUTO_TEST_CASE(bcUncleTest) {}
+BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
+BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
-//Transition from fork to fork tests
-BOOST_FIXTURE_TEST_SUITE(TransitionTests, bcTransitionFixture)
+// Tests that might have invalid blocks and check that those are rejected
+BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcInvalidTestFixture)
+BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+BOOST_AUTO_TEST_CASE(bcForgedTest) {}
+BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}
+BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity) {}
+BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
+BOOST_AUTO_TEST_CASE(bcUncleTest) {}
+BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_CASE(bcFrontierToHomestead){}
-BOOST_AUTO_TEST_CASE(bcHomesteadToDao){}
-BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150){}
-BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium){}
+// Transition from fork to fork tests
+BOOST_FIXTURE_TEST_SUITE(TransitionTests, bcTransitionFixture)
 BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinopleFix) {}
+BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium) {}
+BOOST_AUTO_TEST_CASE(bcFrontierToHomestead) {}
+BOOST_AUTO_TEST_CASE(bcHomesteadToDao) {}
+BOOST_AUTO_TEST_CASE(bcHomesteadToEIP150) {}
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 

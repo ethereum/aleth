@@ -35,6 +35,9 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace fs = boost::filesystem;
 
+const string c_pathToValidBlocks = "/BlockchainTests/ValidBlocks/";
+const string c_pathToInValidBlocks = "/BlockchainTests/InvalidBlocks/";
+
 namespace dev {  namespace test {
 
 void executeGasPricerTest(string const& name, double _etherPrice, double _blockFee, fs::path const& _bcTestPath, TransactionPriority _txPrio, u256 _expectedAsk, u256 _expectedBid, eth::Network _sealEngineNetwork = eth::Network::TransitionnetTest)
@@ -95,95 +98,95 @@ BOOST_AUTO_TEST_CASE(basicGasPricer_RPC_API_Test_Frontier)
 {
 	u256 _expectedAsk = 16056883295;
 	u256 _expectedBid = 1;
-	dev::test::executeGasPricerTest("RPC_API_Test_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/RPC_API_Test.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("RPC_API_Test_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/RPC_API_Test.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_RPC_API_Test_Homestead)
 {
 	u256 _expectedAsk = 16056864311;
 	u256 _expectedBid = 1;
-	dev::test::executeGasPricerTest("RPC_API_Test_Homestead", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/RPC_API_Test.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
+    dev::test::executeGasPricerTest("RPC_API_Test_Homestead", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/RPC_API_Test.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_bcValidBlockTest)
 {
-	dev::test::executeGasPricerTest("SimpleTx_Frontier", 30.679, 15.0, "/BlockchainTests/bcValidBlockTest/SimpleTx.json", TransactionPriority::Medium, 155632494086, 10);
+    dev::test::executeGasPricerTest("SimpleTx_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcValidBlockTest/SimpleTx.json", TransactionPriority::Medium, 155632494086, 10);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleTest_Frontier)
 {
 	u256 _expectedAsk = 155632494086;
 	u256 _expectedBid = 1;
-	dev::test::executeGasPricerTest("twoUncle_Frontier", 30.679, 15.0, "/BlockchainTests/bcUncleTest/twoUncle.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("twoUncle_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcUncleTest/twoUncle.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleTest_Homestead)
 {
     u256 _expectedAsk = 155632494086;
     u256 _expectedBid = 1;
-	dev::test::executeGasPricerTest("twoUncle_Homestead", 30.679, 15.0, "/BlockchainTests/bcUncleTest/twoUncle.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
+    dev::test::executeGasPricerTest("twoUncle_Homestead", 30.679, 15.0, c_pathToValidBlocks + "bcUncleTest/twoUncle.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleHeaderValidity_Frontier)
 {
 	u256 _expectedAsk = 155632494086;
 	u256 _expectedBid = 1;
-	dev::test::executeGasPricerTest("correct_Frontier", 30.679, 15.0, "/BlockchainTests/bcUncleHeaderValidity/correct.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("correct_Frontier", 30.679, 15.0, c_pathToInValidBlocks + "bcUncleHeaderValidity/correct.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleHeaderValidity_Homestead)
 {
 	u256 _expectedAsk = 155633980282;
 	u256 _expectedBid = 1;
-	dev::test::executeGasPricerTest("correct_Homestead", 30.679, 15.0, "/BlockchainTests/bcUncleHeaderValidity/correct.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
+    dev::test::executeGasPricerTest("correct_Homestead", 30.679, 15.0, c_pathToInValidBlocks + "bcUncleHeaderValidity/correct.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_notxs_frontier)
 {
 	u256 _expectedAsk = 155632494086;
 	u256 _expectedBid = 155632494086;
-	dev::test::executeGasPricerTest("notxs_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/notxs.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("notxs_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/notxs.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_notxs_homestead)
 {
     u256 _expectedAsk = 155632494086;
     u256 _expectedBid = 155632494086;
-    dev::test::executeGasPricerTest("notxs_Homestead", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/notxs.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
+    dev::test::executeGasPricerTest("notxs_Homestead", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/notxs.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowestPrio)
 {
     u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 10000000000000;
-	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Lowest, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/highGasUsage.json", TransactionPriority::Lowest, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowPrio)
 {
     u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 15734152261884;
-	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Low, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/highGasUsage.json", TransactionPriority::Low, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_MediumPrio)
 {
     u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 20000000000000;
-	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/highGasUsage.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighPrio)
 {
     u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 24265847738115;
-	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::High, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/highGasUsage.json", TransactionPriority::High, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighestPrio)
 {
     u256 _expectedAsk = 15731408053;
     u256 _expectedBid = 30000000000000;
-	dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest/highGasUsage.json", TransactionPriority::Highest, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
+    dev::test::executeGasPricerTest("highGasUsage_Frontier", 30.679, 15.0, c_pathToValidBlocks + "bcGasPricerTest/highGasUsage.json", TransactionPriority::Highest, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 BOOST_AUTO_TEST_SUITE_END()
