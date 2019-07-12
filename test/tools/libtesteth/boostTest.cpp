@@ -147,14 +147,18 @@ int main(int argc, const char* argv[])
         }
     }
 
+    // Print suggestions of a test case if test suite not found
+    if (!sMinusTArg.empty() && !dev::test::inArray(c_allTestNames, sMinusTArg))
+    {
+        std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
+        printTestSuiteSuggestions(sMinusTArg);
+        return -1;
+    }
+
     std::cout << "Running tests using path: " << test::getTestPath() << std::endl;
-    int result = 0;
     auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
 
-    result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
-    // Print suggestions of a test case if test suite not found
-    if (result == boost::exit_exception_failure && !dev::test::inArray(c_allTestNames, sMinusTArg))
-        printTestSuiteSuggestions(sMinusTArg);
+    auto result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
     dev::test::TestOutputHelper::get().printTestExecStats();
     return result;
 }
