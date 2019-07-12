@@ -152,14 +152,13 @@ int main(int argc, const char* argv[])
     {
         std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
         printTestSuiteSuggestions(sMinusTArg);
-        return 0;
+        return -1;
     }
 
     std::cout << "Running tests using path: " << test::getTestPath() << std::endl;
-    int result = 0;
     auto fakeInit = [](int, char* []) -> boost::unit_test::test_suite* { return nullptr; };
 
-    result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
+    auto result = unit_test_main(fakeInit, argc, const_cast<char**>(argv));
     dev::test::TestOutputHelper::get().printTestExecStats();
     return result;
 }
