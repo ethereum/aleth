@@ -59,6 +59,10 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
         result.gas_left = vm->m_io_gas;
         output = ex.output();  // This moves the output from the exception!
     }
+    catch (dev::eth::InvalidInstruction const&)
+    {
+        result.status_code = EVMC_INVALID_INSTRUCTION;
+    }
     catch (dev::eth::BadInstruction const&)
     {
         result.status_code = EVMC_UNDEFINED_INSTRUCTION;
@@ -1416,7 +1420,10 @@ void VM::interpretCases()
         CASE(INVALID)
         DEFAULT
         {
-            throwBadInstruction();
+            if (m_OP == Instruction::INVALID)
+                throwInvalidInstruction();
+            else
+                throwBadInstruction();
         }
     }
     WHILE_CASES

@@ -44,6 +44,11 @@ void VM::throwOutOfGas()
     BOOST_THROW_EXCEPTION(OutOfGas());
 }
 
+void VM::throwInvalidInstruction()
+{
+    BOOST_THROW_EXCEPTION(InvalidInstruction());
+}
+
 void VM::throwBadInstruction()
 {
     BOOST_THROW_EXCEPTION(BadInstruction());
