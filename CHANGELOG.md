@@ -33,6 +33,8 @@
 - Fixed: [#5644](https://github.com/ethereum/aleth/pull/5644) Avoid attempting to sync with disconnected peers.
 - Fixed: [#5647](https://github.com/ethereum/aleth/pull/5647) test_importRawBlock RPC method correctly fails in case of import failure.
 - Fixed: [#5664](https://github.com/ethereum/aleth/pull/5664) Behavior in corner case tests about touching empty Precompiles now agrees with geth's results.
+- Fixed: [#5662](https://github.com/ethereum/aleth/pull/5662) Correct depth value when aleth-interpreter invokes `evmc_host_interface::call` callback.
+- Fixed: [#5666](https://github.com/ethereum/aleth/pull/5666) aleth-interpreter returns `EVMC_INVALID_INSTRUCTION` when `INVALID` opcode is encountered and `EVMC_UNKNOWN_INSTRUCTION` for undefined opcodes.
 
 ## [1.6.0] - 2019-04-16
 
