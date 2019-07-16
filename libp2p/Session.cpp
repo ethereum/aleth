@@ -206,6 +206,9 @@ bool Session::checkPacket(bytesConstRef _msg)
 
 void Session::send(bytes&& _msg)
 {
+    if (m_dropped)
+        return;
+
     bytesConstRef msg(&_msg);
     LOG(m_netLoggerDetail) << capabilityPacketTypeToString(_msg[0]) << " to";
     if (!checkPacket(msg))
@@ -276,16 +279,6 @@ void Session::drop(DisconnectReason _reason)
 {
     if (m_dropped)
         return;
-    bi::tcp::socket& socket = m_socket->ref();
-    if (socket.is_open())
-        try
-        {
-            boost::system::error_code ec;
-            LOG(m_netLoggerDetail) << "Closing (" << reasonOf(_reason) << ") connection with";
-            socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-            socket.close();
-        }
-        catch (...) {}
 
     m_peer->m_lastDisconnect = _reason;
     if (_reason == BadProtocol)
@@ -300,11 +293,36 @@ void Session::disconnect(DisconnectReason _reason)
 {
     cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
 
-    if (m_socket->ref().is_open())
+    if (!m_dropped)
     {
         RLPStream s;
         prep(s, DisconnectPacket, 1) << (int)_reason;
         sealAndSend(s);
+        auto disconnectTimer = m_server->createTimer();
+        auto self = shared_from_this();
+        disconnectTimer->expires_from_now(std::chrono::seconds{2});
+        disconnectTimer->async_wait(
+            [disconnectTimer, self, this, _reason](boost::system::error_code _ec) {
+                if (_ec)
+                    LOG(m_netLoggerDetail)
+                        << "Error encountered when waiting after disconnect: " << _ec.message();
+                else
+                {
+                    bi::tcp::socket& socket = m_socket->ref();
+                    if (socket.is_open())
+                        try
+                        {
+                            boost::system::error_code ec;
+                            LOG(m_netLoggerDetail)
+                                << "Closing (" << reasonOf(_reason) << ") connection with";
+                            socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+                            socket.close();
+                        }
+                        catch (...)
+                        {
+                        }
+                }
+            });
     }
     drop(_reason);
 }

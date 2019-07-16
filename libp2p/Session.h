@@ -84,7 +84,7 @@ public:
 
     void ping() override;
 
-    bool isConnected() const override { return m_socket->ref().is_open(); }
+    bool isConnected() const override { return !m_dropped; }
 
     NodeID id() const override;
 

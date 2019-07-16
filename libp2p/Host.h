@@ -115,6 +115,11 @@ class Host: public Worker
     friend class Session;
 
 public:
+    std::shared_ptr<ba::steady_timer> createTimer()
+    {
+        return std::make_shared<ba::steady_timer>(m_ioContext);
+    }
+
     /// Start server, listening for connections on the given port.
     Host(
         std::string const& _clientVersion,
