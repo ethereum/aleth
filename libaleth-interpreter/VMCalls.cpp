@@ -227,12 +227,11 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
     evmc_address destination = toEvmC(asAddress(m_SP[1]));
-    int destinationExists = m_context->host->account_exists(m_context, &destination);
 
-    if (m_OP == Instruction::CALL && !destinationExists)
+    if (m_OP == Instruction::CALL && (m_SP[2] > 0 || m_rev < EVMC_SPURIOUS_DRAGON) &&
+        !m_context->host->account_exists(m_context, &destination))
     {
-        if (m_SP[2] > 0 || m_rev < EVMC_SPURIOUS_DRAGON)
-            m_runGas += VMSchedule::callNewAccount;
+        m_runGas += VMSchedule::callNewAccount;
     }
 
     if (haveValueArg && m_SP[2] > 0)
