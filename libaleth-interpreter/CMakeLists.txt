@@ -24,6 +24,10 @@ set(
 add_library(aleth-interpreter STATIC ${sources})
 target_link_libraries(aleth-interpreter PRIVATE ${dependencies})
 
+if(EVM_OPTIMIZE)
+    target_compile_definitions(aleth-interpreter PRIVATE EVM_OPTIMIZE)
+endif()
+
 if(ALETH_INTERPRETER_SHARED)
     # Build aleth-interpreter additionally as a shared library to include it in the package
     add_library(aleth-interpreter-shared SHARED ${sources})
@@ -34,6 +38,9 @@ if(ALETH_INTERPRETER_SHARED)
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
+    if(EVM_OPTIMIZE)
+        target_compile_definitions(aleth-interpreter-shared PRIVATE EVM_OPTIMIZE)
+    endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
