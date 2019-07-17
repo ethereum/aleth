@@ -21,22 +21,23 @@ namespace dev
 {
 namespace eth
 {
-std::array<evmc_instruction_metrics, 256> VM::c_metrics{{}};
-void VM::initMetrics()
+std::array<std::array<evmc_instruction_metrics, 256>, EVMC_MAX_REVISION + 1> VM::s_metrics;
+std::array<std::once_flag, EVMC_MAX_REVISION + 1> VM::s_metricsInitialized;
+
+void VM::initMetrics(evmc_revision _revision)
 {
-    static bool done = []() noexcept
-    {
-        // Copy the metrics of the top EVM revision.
-        std::memcpy(&c_metrics[0], evmc_get_instruction_metrics_table(EVMC_MAX_REVISION),
-            c_metrics.size() * sizeof(c_metrics[0]));
+    std::call_once(s_metricsInitialized[_revision], [_revision]() {
+        auto& metrics = s_metrics[_revision];
+
+        // Copy the metrics of the given EVM revision.
+        std::memcpy(&metrics[0], evmc_get_instruction_metrics_table(_revision),
+            metrics.size() * sizeof(metrics[0]));
 
         // Inject interpreter optimization opcodes.
-        c_metrics[uint8_t(Instruction::PUSHC)] = c_metrics[uint8_t(Instruction::PUSH1)];
-        c_metrics[uint8_t(Instruction::JUMPC)] = c_metrics[uint8_t(Instruction::JUMP)];
-        c_metrics[uint8_t(Instruction::JUMPCI)] = c_metrics[uint8_t(Instruction::JUMPI)];
-        return true;
-    }();
-    (void)done;
+        metrics[uint8_t(Instruction::PUSHC)] = metrics[uint8_t(Instruction::PUSH1)];
+        metrics[uint8_t(Instruction::JUMPC)] = metrics[uint8_t(Instruction::JUMP)];
+        metrics[uint8_t(Instruction::JUMPCI)] = s_metrics[_revision][uint8_t(Instruction::JUMPI)];
+    });
 }
 
 void VM::copyCode(int _extraBytes)
@@ -170,8 +171,8 @@ void VM::optimize()
 //
 void VM::initEntry()
 {
-    m_bounce = &VM::interpretCases;     
-    initMetrics();
+    m_bounce = &VM::interpretCases;
+    initMetrics(m_rev);
     optimize();
 }
 

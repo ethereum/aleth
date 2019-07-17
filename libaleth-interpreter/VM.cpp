@@ -244,7 +244,7 @@ void VM::logGasMem()
 void VM::fetchInstruction()
 {
     m_OP = Instruction(m_code[m_PC]);
-    auto const metric = c_metrics[static_cast<size_t>(m_OP)];
+    auto const metric = metrics(m_rev)[static_cast<size_t>(m_OP)];
     adjustStack(metric.num_stack_arguments, metric.num_stack_returned_items);
 
     // FEES...
