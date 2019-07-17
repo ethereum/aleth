@@ -298,7 +298,7 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
-    cnetdetails << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
+    clog(VerbosityTrace, "p2pcap") << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
 
     if (m_socket->ref().is_open())
     {
@@ -442,6 +442,11 @@ void Session::disableCapability(std::string const& _capabilityName, std::string 
 {
     cnetlog << "Disabling capability '" << _capabilityName << "'. Reason: " << _problem << " " << m_logSuffix;
     m_disabledCapabilities.insert(_capabilityName);
+    if (m_disabledCapabilities.size() == m_capabilities.size())
+    {
+        cnetlog << "All capabilities disabled. Disconnecting session.";
+        disconnect(DisconnectReason::UselessPeer);
+    }
 }
 
 boost::optional<unsigned> Session::capabilityOffset(std::string const& _capabilityName) const
