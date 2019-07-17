@@ -27,6 +27,7 @@
 - Changed: [#5648](https://github.com/ethereum/aleth/pull/5648) `BlockChainTests` suite is split into `BlockChainTests/ValidBlocks` and `BlockChainTests/InvalidBlocks`.
 - Changed: [#5678](https://github.com/ethereum/aleth/pull/5678) Enable optimizer in aleth-interpreter by default.
 - Changed: [#5675](https://github.com/ethereum/aleth/pull/5675) Disconnect from peer when syncing is disabled for peer.
+- Changed: [#5676](https://github.com/ethereum/aleth/pull/5676) When receiving large batches of new block hashes, process up to 1024 hashes instead of disabling the peer.
 - Removed: [#5631](https://github.com/ethereum/aleth/pull/5631) Removed PARANOID build option.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
