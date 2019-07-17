@@ -172,6 +172,7 @@ enum class Instruction : uint8_t
     PUSHC = 0xac,  ///< push value from constant pool
     JUMPC,         ///< alter the program counter - pre-verified
     JUMPCI,        ///< conditionally alter the program counter - pre-verified
+    UNDEFINED,     ///< Replaces PUSHC/JUMPC/JUMPCI in the original code
 
     JUMPTO = 0xb0,  ///< alter the program counter to a jumpdest
     JUMPIF,         ///< conditionally alter the program counter
