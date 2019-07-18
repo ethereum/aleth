@@ -258,6 +258,16 @@ public:
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
+    std::shared_ptr<ba::steady_timer> createTimer()
+    {
+        return std::make_shared<ba::steady_timer>(m_ioContext);
+    }
+
+    void pollAsyncTimerHandler()
+    {
+        m_ioContext.poll();
+    }
+
 protected:
     /*
      * Used by the host to run a capability's background work loop

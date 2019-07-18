@@ -305,8 +305,20 @@ void Session::disconnect(DisconnectReason _reason)
         RLPStream s;
         prep(s, DisconnectPacket, 1) << (int)_reason;
         sealAndSend(s);
+        auto disconnectTimer = m_server->createTimer();
+        auto self(shared_from_this());
+        disconnectTimer->expires_from_now(std::chrono::seconds(2));
+        disconnectTimer->async_wait([self, this, _reason](boost::system::error_code _ec) {
+            if(_ec)
+                LOG(m_netLoggerDetail)
+                    << "Error encountered while waiting after disconnect: " << _ec.message();
+            else
+                drop(_reason);
+        });
+        m_server->pollAsyncTimerHandler();
     }
-    drop(_reason);
+    else
+        drop(_reason);
 }
 
 void Session::start()
