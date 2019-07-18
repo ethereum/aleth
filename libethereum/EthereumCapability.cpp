@@ -760,8 +760,9 @@ bool EthereumCapability::interpretCapabilityPacket(
 
             if (itemCount > c_maxIncomingNewHashes)
             {
-                disablePeer(_peerID, "Too many new hashes");
-                break;
+                LOG(m_logger) << "Received too many hashes (" << itemCount << ") from " << _peerID
+                              << ", only processing first " << c_maxIncomingNewHashes << " hashes";
+                itemCount = c_maxIncomingNewHashes;
             }
 
             vector<pair<h256, u256>> hashes(itemCount);
