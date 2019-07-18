@@ -279,7 +279,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
     
     auto self(shared_from_this());
     assert(m_nextState != StartSession);
-    m_idleTimer.expires_from_now(c_timeout);
+    m_idleTimer.expires_after(c_timeout);
     m_idleTimer.async_wait([this, self](boost::system::error_code const& _ec)
     {
         if (!_ec)

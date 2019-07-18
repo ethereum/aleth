@@ -251,7 +251,7 @@ void NodeTable::doDiscoveryRound(
         return;
     }
 
-    m_discoveryTimer->expires_from_now(c_discoveryRoundIntervalMs);
+    m_discoveryTimer->expires_after(c_discoveryRoundIntervalMs);
     auto discoveryTimer{m_discoveryTimer};
     m_discoveryTimer->async_wait(
         [this, discoveryTimer, _node, _round, _tried](boost::system::error_code const& _ec) {
@@ -750,7 +750,7 @@ std::shared_ptr<NodeEntry> NodeTable::handleENRResponse(
 
 void NodeTable::doDiscovery()
 {
-    m_discoveryTimer->expires_from_now(c_bucketRefreshMs);
+    m_discoveryTimer->expires_after(c_bucketRefreshMs);
     auto discoveryTimer{m_discoveryTimer};
     m_discoveryTimer->async_wait([this, discoveryTimer](boost::system::error_code const& _ec) {
         // We can't use m_logger if an error occurred because captured this might be already
@@ -814,7 +814,7 @@ void NodeTable::doEndpointTracking()
 void NodeTable::runBackgroundTask(std::chrono::milliseconds const& _period,
     std::shared_ptr<ba::steady_timer> _timer, std::function<void()> _f)
 {
-    _timer->expires_from_now(_period);
+    _timer->expires_after(_period);
     _timer->async_wait([=](boost::system::error_code const& _ec) {
         // We can't use m_logger if an error occurred because captured this might be already
         // destroyed
