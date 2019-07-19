@@ -169,7 +169,7 @@ void Host::startCapabilities()
 
 void Host::scheduleCapabilityWorkLoop(CapabilityFace& _cap, shared_ptr<ba::steady_timer> _timer)
 {
-    _timer->expires_from_now(_cap.backgroundWorkInterval());
+    _timer->expires_after(_cap.backgroundWorkInterval());
     _timer->async_wait([this, _timer, &_cap](boost::system::error_code _ec) {
         if (_timer->expiry() == c_steadyClockMin || _ec == boost::asio::error::operation_aborted)
         {
@@ -860,7 +860,7 @@ void Host::run(boost::system::error_code const& _ec)
         return;
 
     auto runcb = [this](boost::system::error_code const& error) { run(error); };
-    m_runTimer.expires_from_now(c_runTimerInterval);
+    m_runTimer.expires_after(c_runTimerInterval);
     m_runTimer.async_wait(runcb);
 }
 
