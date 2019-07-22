@@ -150,6 +150,7 @@ static const EVMSchedule ConstantinopleFixSchedule = [] {
 static const EVMSchedule IstanbulSchedule = [] {
     EVMSchedule schedule = ConstantinopleFixSchedule;
     schedule.accountVersion = 1;
+    schedule.txDataNonZeroGas = 16;
     return schedule;
 }();
 
