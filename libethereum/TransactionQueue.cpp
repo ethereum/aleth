@@ -28,7 +28,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-const size_t c_maxVerificationQueueSize = 8192;
+constexpr size_t c_maxVerificationQueueSize = 8192;
+constexpr size_t c_maxDroppedTransactionCount = 1024;
 
 TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
     m_current(PriorityCompare { *this }),
@@ -328,6 +329,14 @@ void TransactionQueue::drop(h256 const& _txHash)
         return;
 
     UpgradeGuard ul(l);
+    if (m_dropped.size() == c_maxDroppedTransactionCount)
+    {
+        LOG(m_loggerDetail) << "Dropped transaction list is at capacity ("
+                            << c_maxDroppedTransactionCount
+                            << "), removing dropped transaction from list (txhash: "
+                            << *m_dropped.begin() << ")";
+        m_dropped.erase(m_dropped.begin());
+    }
     m_dropped.insert(_txHash);
     remove_WITH_LOCK(_txHash);
 }
