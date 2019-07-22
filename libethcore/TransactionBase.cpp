@@ -185,7 +185,7 @@ int64_t TransactionBase::baseGasRequired(bool _contractCreation, bytesConstRef _
     int64_t g = _contractCreation ? _es.txCreateGas : _es.txGas;
 
     // Calculate the cost of input data.
-    // No risk of overflow by using int64 until txDataNonZeroGas is quite small
+    // No risk of overflow by using int64 as long as txDataNonZeroGas is quite small
     // (the value not in billions).
     for (auto i: _data)
         g += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
