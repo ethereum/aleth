@@ -98,6 +98,24 @@ string dev::toBase64(bytesConstRef _in)
 	return ret;
 }
 
+std::string dev::toBase64url(bytesConstRef _in)
+{
+	std::string base64 = dev::toBase64(_in);
+	for(auto index = base64.find_first_of("+"); index != std::string::npos; index = base64.find_first_of("+"))
+	{
+		base64.replace(index, 1, "-");
+	}
+	for(auto index = base64.find_first_of("/"); index != std::string::npos; index = base64.find_first_of("+"))
+	{
+		base64.replace(index, 1, "_");
+	}
+	for(auto index = base64.find_first_of("="); index != std::string::npos; index = base64.find_first_of("+"))
+	{
+		base64.replace(index, 1, "");
+	}
+	return base64;
+}
+
 bytes dev::fromBase64(string const& encoded_string)
 {
 	auto in_len = encoded_string.size();

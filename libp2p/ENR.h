@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <libdevcore/Base64.h>
 #include "Common.h"
 
 namespace dev
@@ -36,6 +37,7 @@ public:
     /// Create with given sign function
     ENR(uint64_t _seq, std::map<std::string, bytes> const& _keyValuePairs,
         SignFunction const& _signFunction);
+    ENR() = default;
 
     uint64_t sequenceNumber() const { return m_seq; }
     bytes const& signature() const { return m_signature; }
@@ -56,6 +58,8 @@ public:
     ENR update(
         std::map<std::string, bytes> const& _keyValuePair, SignFunction const& _signFunction) const;
 
+    std::string encodeEnr();
+
 private:
     uint64_t m_seq = 0;
     std::map<std::string, bytes> m_keyValuePairs;
@@ -64,6 +68,7 @@ private:
     bytes content() const;
     size_t contentRlpListItemCount() const { return m_keyValuePairs.size() * 2 + 1; }
     void streamContent(RLPStream& _s) const;
+    Host* h;
 };
 
 class IdentitySchemeV4
