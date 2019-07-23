@@ -74,13 +74,9 @@ public:
 private:
     evmc_context* m_context = nullptr;
     evmc_revision m_rev = EVMC_FRONTIER;
+    std::array<evmc_instruction_metrics, 256>* m_metrics = nullptr;
     evmc_message const* m_message = nullptr;
     boost::optional<evmc_tx_context> m_tx_context;
-
-    static std::array<evmc_instruction_metrics, 256> const& metrics(evmc_revision _revision)
-    {
-        return s_metrics[_revision];
-    }
     static std::array<std::array<evmc_instruction_metrics, 256>, EVMC_MAX_REVISION + 1> s_metrics;
     static u256 exp256(u256 _base, u256 _exponent);
     void copyCode(int);

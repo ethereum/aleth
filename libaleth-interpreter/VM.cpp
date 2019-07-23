@@ -247,7 +247,7 @@ void VM::logGasMem()
 void VM::fetchInstruction()
 {
     m_OP = Instruction(m_code[m_PC]);
-    auto const metric = metrics(m_rev)[static_cast<size_t>(m_OP)];
+    auto const metric = (*m_metrics)[static_cast<size_t>(m_OP)];
     adjustStack(metric.num_stack_arguments, metric.num_stack_returned_items);
 
     // FEES...
@@ -273,6 +273,7 @@ owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc
 {
     m_context = _context;
     m_rev = _rev;
+    m_metrics = &s_metrics[m_rev];
     m_message = _msg;
     m_io_gas = uint64_t(_msg->gas);
     m_PC = 0;
