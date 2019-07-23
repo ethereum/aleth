@@ -180,25 +180,27 @@ string StandardTrace::multilineTrace() const
         [](std::string a, Json::Value b) { return a + Json::FastWriter().write(b); });
 }
 
-Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
-    m_s(_s.mutableState()),
-    m_envInfo(_s.info(), _bc.lastBlockHashes(), 0),
+Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level)
+  : m_s(_s.mutableState()),
+    m_envInfo(_s.info(), _bc.lastBlockHashes(), 0, _bc.chainID()),
     m_depth(_level),
     m_sealEngine(*_bc.sealEngine())
 {
 }
 
-Executive::Executive(Block& _s, LastBlockHashesFace const& _lh, unsigned _level):
-    m_s(_s.mutableState()),
-    m_envInfo(_s.info(), _lh, 0),
+Executive::Executive(Block& _s, LastBlockHashesFace const& _lh, unsigned _level)
+  : m_s(_s.mutableState()),
+    m_envInfo(_s.info(), _lh, 0, _s.sealEngine()->chainParams().chainID),
     m_depth(_level),
     m_sealEngine(*_s.sealEngine())
 {
 }
 
-Executive::Executive(State& io_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
-    m_s(createIntermediateState(io_s, _block, _txIndex, _bc)),
-    m_envInfo(_block.info(), _bc.lastBlockHashes(), _txIndex ? _block.receipt(_txIndex - 1).cumulativeGasUsed() : 0),
+Executive::Executive(
+    State& io_s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level)
+  : m_s(createIntermediateState(io_s, _block, _txIndex, _bc)),
+    m_envInfo(_block.info(), _bc.lastBlockHashes(),
+        _txIndex ? _block.receipt(_txIndex - 1).cumulativeGasUsed() : 0, _bc.chainID()),
     m_depth(_level),
     m_sealEngine(*_bc.sealEngine())
 {

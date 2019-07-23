@@ -181,11 +181,11 @@ public:
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
-    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
     Address address{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
         ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, se->chainParams().chainID, 0};
 
     u256 value = 0;
     u256 gasPrice = 1;
@@ -348,12 +348,12 @@ public:
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
-    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
     Address address{KeyPair::create().address()};
     Address extAddress{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
         ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, se->chainParams().chainID, 0};
 
     u256 value = 0;
     u256 gasPrice = 1;
@@ -461,12 +461,12 @@ public:
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
-    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
     Address from{KeyPair::create().address()};
     Address to{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
         ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, se->chainParams().chainID, 0};
 
     u256 value = 0;
     u256 gasPrice = 1;

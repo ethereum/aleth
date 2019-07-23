@@ -185,6 +185,8 @@ public:
 
     LastBlockHashesFace const& lastBlockHashes() const { return *m_lastBlockHashes;  }
 
+    int chainID() const { return m_params.chainID; }
+
     /** Get the block blooms for a number of blocks. Thread-safe.
      * @returns the object pertaining to the blocks:
      * level 0:

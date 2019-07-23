@@ -22,7 +22,7 @@ namespace dev
 {
 namespace eth
 {
-
+// clang-format off
 static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
 { //                                                   Args,  Ret,  GasPriceTier
     { Instruction::STOP,         { "STOP",                0,    0,  Tier::Zero } },
@@ -74,6 +74,7 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
     { Instruction::NUMBER,       { "NUMBER",              0,    1,  Tier::Base } },
     { Instruction::DIFFICULTY,   { "DIFFICULTY",          0,    1,  Tier::Base } },
     { Instruction::GASLIMIT,     { "GASLIMIT",            0,    1,  Tier::Base } },
+    { Instruction::CHAINID,      { "CHAINID",             0,    1,  Tier::Base } },
     { Instruction::POP,          { "POP",                 1,    0,  Tier::Base } },
     { Instruction::MLOAD,        { "MLOAD",               1,    1,  Tier::VeryLow } },
     { Instruction::MSTORE,       { "MSTORE",              2,    0,  Tier::VeryLow } },
@@ -215,8 +216,9 @@ static const std::map<Instruction,  InstructionInfo> c_instructionInfo =
     { Instruction::PUSHC,        { "PUSHC",               0,    1, Tier::VeryLow } },
     { Instruction::JUMPC,        { "JUMPC",               1,    0, Tier::Mid } },
     { Instruction::JUMPCI,       { "JUMPCI",              2,    0, Tier::High } },
-}; 
- 
+};
+// clang-format on
+
 InstructionInfo instructionInfo(Instruction _inst)
 {
     auto it = c_instructionInfo.find(_inst);

@@ -1439,6 +1439,19 @@ void LegacyVM::interpretCases()
         }
         NEXT
 
+        CASE(CHAINID)
+        {
+            ON_OP();
+
+            if (!m_schedule->haveChainID)
+                throwBadInstruction();
+
+            updateIOGas();
+
+            m_SPP[0] = m_ext->envInfo().chainID();
+        }
+        NEXT
+
         CASE(POP)
         {
             ON_OP();

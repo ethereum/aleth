@@ -386,7 +386,7 @@ void ImportTest::importEnv(json_spirit::mObject const& _o)
     header.setAuthor(Address(_o.at("currentCoinbase").get_str()));
 
     m_lastBlockHashes.reset(new TestLastBlockHashes(lastHashes(header.number())));
-    m_envInfo.reset(new EnvInfo(header, *m_lastBlockHashes, 0));
+    m_envInfo.reset(new EnvInfo(header, *m_lastBlockHashes, 0, 0));
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json

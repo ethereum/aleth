@@ -110,7 +110,7 @@ EnvInfo FakeExtVM::importEnv(mObject const& _o, LastBlockHashesFace const& _last
     blockHeader.setTimestamp(toInt64(_o.at("currentTimestamp")));
     blockHeader.setAuthor(Address(_o.at("currentCoinbase").get_str()));
     blockHeader.setNumber(toUint64(_o.at("currentNumber")));
-    return EnvInfo(blockHeader, _lastBlockHashes, 0);
+    return {blockHeader, _lastBlockHashes, 0, 0};
 }
 
 mObject FakeExtVM::exportState()
@@ -443,7 +443,7 @@ json_spirit::mValue VmTestSuite::doTests(json_spirit::mValue const& _input, bool
                 BOOST_REQUIRE_MESSAGE(testInput.count("logs") > 0, testname + " logs field is missing.");
                 BOOST_REQUIRE_MESSAGE(testInput.at("logs").type() == str_type, testname + " logs field is not a string.");
 
-                dev::test::FakeExtVM test(eth::EnvInfo{BlockHeader{}, lastBlockHashes, 0});
+                dev::test::FakeExtVM test(eth::EnvInfo{BlockHeader{}, lastBlockHashes, 0, 0});
                 test.importState(testInput.at("post").get_obj());
                 test.importCallCreates(testInput.at("callcreates").get_array());
 
