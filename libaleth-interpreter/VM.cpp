@@ -127,6 +127,9 @@ extern "C" evmc_instance* evmc_create_interpreter() noexcept
         nullptr,  // set_tracer
         nullptr,  // set_option
     };
+    static bool metricsInited = dev::eth::VM::initMetrics();
+    (void)metricsInited;
+
     return &s_instance;
 }
 
@@ -244,7 +247,7 @@ void VM::logGasMem()
 void VM::fetchInstruction()
 {
     m_OP = Instruction(m_code[m_PC]);
-    auto const metric = c_metrics[static_cast<size_t>(m_OP)];
+    auto const metric = (*m_metrics)[static_cast<size_t>(m_OP)];
     adjustStack(metric.num_stack_arguments, metric.num_stack_returned_items);
 
     // FEES...
@@ -270,6 +273,7 @@ owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc
 {
     m_context = _context;
     m_rev = _rev;
+    m_metrics = &s_metrics[m_rev];
     m_message = _msg;
     m_io_gas = uint64_t(_msg->gas);
     m_PC = 0;
