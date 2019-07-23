@@ -63,6 +63,8 @@ struct VMSchedule
 class VM
 {
 public:
+    static bool initMetrics();
+
     VM() = default;
 
     owning_bytes_ref exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
@@ -75,13 +77,11 @@ private:
     evmc_message const* m_message = nullptr;
     boost::optional<evmc_tx_context> m_tx_context;
 
-    static void initMetrics(evmc_revision _revision);
     static std::array<evmc_instruction_metrics, 256> const& metrics(evmc_revision _revision)
     {
         return s_metrics[_revision];
     }
     static std::array<std::array<evmc_instruction_metrics, 256>, EVMC_MAX_REVISION + 1> s_metrics;
-    static std::array<std::once_flag, EVMC_MAX_REVISION + 1> s_metricsInitialized;
     static u256 exp256(u256 _base, u256 _exponent);
     void copyCode(int);
     typedef void (VM::*MemFnPtr)();

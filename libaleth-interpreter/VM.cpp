@@ -127,6 +127,9 @@ extern "C" evmc_instance* evmc_create_interpreter() noexcept
         nullptr,  // set_tracer
         nullptr,  // set_option
     };
+    static bool metricsInited = dev::eth::VM::initMetrics();
+    (void)metricsInited;
+
     return &s_instance;
 }
 
