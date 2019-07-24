@@ -67,8 +67,10 @@ enum class Network
     ConstantinopleNoProofTest = 82,
     /// Byzantium + Constantinople + ConstantinopleFix active from block 0
     ConstantinopleFixTest = 83,
+    /// Istanbul active from block 0
+    IstanbulTest = 84,
     /// ConstantinopleFixTest + Istanbul active from block 2
-    IstanbulTransitionTest = 84,
+    IstanbulTransitionTest = 85,
 
     // TransitionTest networks
     FrontierToHomesteadAt5 = 100,
