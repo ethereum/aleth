@@ -50,7 +50,7 @@ public:
 
     EnvInfo createEnvInfo(BlockHeader const& _header) const
     {
-        return {_header, lastBlockHashes, blockchain.chainID(), 0};
+        return {_header, lastBlockHashes, 0, blockchain.chainID()};
     }
 
     NetworkSelector networkSelector;
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(BlockhashBeforeExperimentalReliesOnLastHashes)
 
     h256s lastHashes{h256("0xaaabbbccc"), h256("0xdddeeefff")};
     TestLastBlockHashes lastBlockHashes(lastHashes);
-    EnvInfo envInfo{block.info(), lastBlockHashes, blockchain.chainID(), 0};
+    EnvInfo envInfo{block.info(), lastBlockHashes, 0, blockchain.chainID()};
     Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
         {}, {}, 0, 0, false, false);

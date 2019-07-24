@@ -26,7 +26,7 @@ public:
     // called after blockHeader is set up
     EnvInfo envInfo() const
     {
-        return {blockHeader, lastBlockHashes, ethash.chainParams().chainID, 0};
+        return {blockHeader, lastBlockHashes, 0, ethash.chainParams().chainID};
     }
 
     Ethash ethash;
