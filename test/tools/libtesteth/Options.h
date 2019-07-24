@@ -44,7 +44,7 @@ public:
     bool exectimelog = false; ///< Print execution time for each test suite
     std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
     bool statediff = false;///< Fill full post state in General tests
-    bool fulloutput = false;///< Replace large output to just it's length
+    bool fullstate = false;        ///< Replace large state output to it's hash
     bool createRandomTest = false; ///< Generate random test
     boost::optional<uint64_t> randomTestSeed; ///< Define a seed for random test
     bool jsontrace = false; ///< Vmtrace to stdout in json format
