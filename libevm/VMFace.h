@@ -74,5 +74,11 @@ inline u256 fromAddress(Address _a)
 	return (u160)_a;
 }
 
+// Checks whether address is in the address range for precompiles according to EIP-1352
+inline bool isPrecompiledContract(Address const& _addr) noexcept
+{
+    static Address const c_maxPrecompiledAddress{0xffff};
+    return _addr <= c_maxPrecompiledAddress;
+}
 }
 }
