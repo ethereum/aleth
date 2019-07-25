@@ -275,6 +275,21 @@ void ChainBranch::resetBlockchain()
     dev::test::TestBlockChain::s_sealEngineNetwork = s_tempBlockchainNetwork;
 }
 
+bool isSmallState(State const& _state)
+{
+    if (_state.addresses().size() > 20)
+        return false;
+    size_t totalSize = 0;
+    for (auto const& accAddr : _state.addresses())
+    {
+        totalSize += _state.codeSize(accAddr.first) * 2;         // each byte represented by 2 chars
+        totalSize += _state.storage(accAddr.first).size() * 64;  // potentially expensive operation
+        if (totalSize > 1024000)                                 // 1MB
+            return false;
+    }
+    return true;
+}
+
 json_spirit::mObject fillBCTest(json_spirit::mObject const& _input, bool _allowInvalidBlocks)
 {
     json_spirit::mObject output;
@@ -471,7 +486,11 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input, bool _allowI
     }
 
     output["blocks"] = blArray;
-    output["postState"] = fillJsonWithState(testChain.topBlock().state());
+
+    if (Options::get().fullstate || isSmallState(testChain.topBlock().state()))
+        output["postState"] = fillJsonWithState(testChain.topBlock().state());
+    else
+        output["postState"] = toHexPrefixed(testChain.topBlock().blockHeader().stateRoot());
     output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 
     //make all values hex in pre section
@@ -628,9 +647,24 @@ void testBCTest(json_spirit::mObject const& _o)
 
     State postState(State::Null); //Compare post states
     BOOST_REQUIRE((_o.count("postState") > 0));
-    ImportTest::importState(_o.at("postState").get_obj(), postState);
-    ImportTest::compareStates(postState, testChain.topBlock().state());
-    ImportTest::compareStates(postState, blockchain.topBlock().state());
+    if (_o.at("postState").type() == json_spirit::Value_type::obj_type)
+    {
+        ImportTest::importState(_o.at("postState").get_obj(), postState);
+        ImportTest::compareStates(postState, testChain.topBlock().state());
+        ImportTest::compareStates(postState, blockchain.topBlock().state());
+    }
+    else
+    {
+        // Attempt to read hash instead of the full state
+        BOOST_REQUIRE(_o.at("postState").type() == json_spirit::Value_type::str_type);
+        auto postHash = h256{_o.at("postState").get_str()};
+        string message = testName +
+                         "Final StateRoot is different! (Look at expect section in the test /src "
+                         "Filler file, or run the test generation with --fullstate flag to get the "
+                         "full post state.";
+        BOOST_CHECK_MESSAGE(postHash == testChain.topBlock().state().rootHash(), message);
+        BOOST_CHECK_MESSAGE(postHash == blockchain.topBlock().state().rootHash(), message);
+    }
 }
 
 bigint calculateMiningReward(u256 const& _blNumber, u256 const& _unNumber1, u256 const& _unNumber2, SealEngineFace const& _sealEngine)

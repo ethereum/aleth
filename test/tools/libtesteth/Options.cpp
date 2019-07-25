@@ -71,7 +71,7 @@ void printHelp()
     cout << setw(35) << "--createRandomTest <PathToOptions.json> " << setw(25) << "Use following options file for random code generation\n";
     cout << setw(35) << "--seed <uint>" << setw(25) << "Define a seed for random test\n";
     cout << setw(35) << "--options <PathTo.json>" << setw(25) << "Use following options file for random code generation\n";
-    //cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field\n";
+    cout << setw(30) << "--fullstate" << setw(25) << "Do not compress large states to hash\n";
     cout << setw(35) << "--db <name> (=memorydb)" << setw(25) << "Use the supplied database for the block and state databases. Valid options: leveldb, rocksdb, memorydb\n";
     cout << setw(35) << "--help" << setw(25) << "Display list of command arguments\n";
     cout << setw(35) << "--version" << setw(25) << "Display build information\n";
@@ -237,8 +237,8 @@ Options::Options(int argc, const char** argv)
             singleTestNet = std::string{argv[++i]};
             ImportTest::checkAllowedNetwork(singleTestNet);
         }
-        else if (arg == "--fulloutput")
-            fulloutput = true;
+        else if (arg == "--fullstate")
+            fullstate = true;
         else if (arg == "--verbosity")
         {
             throwIfNoArgumentFollows();
