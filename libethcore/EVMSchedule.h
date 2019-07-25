@@ -42,6 +42,7 @@ struct EVMSchedule
     bool haveCreate2 = false;
     bool haveExtcodehash = false;
     bool haveChainID = false;
+    bool haveSelfbalance = false;
     std::array<unsigned, 8> tierStepGas;
     unsigned expGas = 10;
     unsigned expByteGas = 10;
@@ -155,6 +156,7 @@ static const EVMSchedule IstanbulSchedule = [] {
     schedule.balanceGas = 700;
     schedule.extcodehashGas = 700;
     schedule.haveChainID = true;
+    schedule.haveSelfbalance = true;
     return schedule;
 }();
 
