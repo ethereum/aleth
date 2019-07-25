@@ -151,6 +151,9 @@ static const EVMSchedule ConstantinopleFixSchedule = [] {
 static const EVMSchedule IstanbulSchedule = [] {
     EVMSchedule schedule = ConstantinopleFixSchedule;
     schedule.txDataNonZeroGas = 16;
+    schedule.sloadGas = 800;
+    schedule.balanceGas = 700;
+    schedule.extcodehashGas = 700;
     schedule.haveChainID = true;
     return schedule;
 }();
