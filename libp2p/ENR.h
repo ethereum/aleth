@@ -56,6 +56,8 @@ public:
     ENR update(
         std::map<std::string, bytes> const& _keyValuePair, SignFunction const& _signFunction) const;
 
+    std::string textEncoding() const;
+
 private:
     uint64_t m_seq = 0;
     std::map<std::string, bytes> m_keyValuePairs;

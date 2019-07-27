@@ -35,6 +35,7 @@ Json::Value AdminNet::admin_net_nodeInfo(std::string const& _session)
 	ret["listenAddr"] = i.address + ":" + toString(i.port);
 	ret["id"] = i.id.hex();
 	ret["enode"] = i.enode();
+	ret["enr"] = i.enr;
 	return ret;
 }
 

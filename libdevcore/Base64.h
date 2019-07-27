@@ -12,12 +12,12 @@
    freely, subject to the following restrictions:
 
    1. The origin of this source code must not be misrepresented; you must not
-	  claim that you wrote the original source code. If you use this source code
-	  in a product, an acknowledgment in the product documentation would be
-	  appreciated but is not required.
+      claim that you wrote the original source code. If you use this source code
+      in a product, an acknowledgment in the product documentation would be
+      appreciated but is not required.
 
    2. Altered source versions must be plainly marked as such, and must not be
-	  misrepresented as being the original source code.
+      misrepresented as being the original source code.
 
    3. This notice may not be removed or altered from any source distribution.
 
@@ -28,13 +28,13 @@
 /// DEVified by Gav Wood.
 #pragma once
 
-#include <string>
 #include "FixedHash.h"
+#include <string>
 
 namespace dev
 {
-
 std::string toBase64(bytesConstRef _in);
+std::string toBase64URLSafe(bytesConstRef _in);
 bytes fromBase64(std::string const& _in);
 
-}
+}  // namespace dev

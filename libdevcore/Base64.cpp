@@ -46,13 +46,8 @@ static inline byte find_base64_char_index(byte c)
 	else return 1 + find_base64_char_index('/');
 }
 
-string dev::toBase64(bytesConstRef _in)
+string toBase64Encoding(bytesConstRef _in, char const* c_base64_chars, bool _pad)
 {
-	static const char base64_chars[] =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"abcdefghijklmnopqrstuvwxyz"
-		"0123456789+/";
-
 	string ret;
 	int i = 0;
 	int j = 0;
@@ -73,7 +68,7 @@ string dev::toBase64(bytesConstRef _in)
 			char_array_4[3] = char_array_3[2] & 0x3f;
 
 			for (i = 0; i < 4; i++)
-				ret += base64_chars[char_array_4[i]];
+				ret += c_base64_chars[char_array_4[i]];
 			i = 0;
 		}
 	}
@@ -89,13 +84,33 @@ string dev::toBase64(bytesConstRef _in)
 		char_array_4[3] = char_array_3[2] & 0x3f;
 
 		for (j = 0; j < i + 1; j++)
-			ret += base64_chars[char_array_4[j]];
+			ret += c_base64_chars[char_array_4[j]];
 
-		while (i++ < 3)
+		while (i++ < 3 && _pad)
 			ret += '=';
 	}
 
 	return ret;
+}
+
+string dev::toBase64(bytesConstRef _in)
+{
+	static char const c_base64_chars[] =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz"
+		"0123456789+/";
+	bool const pad = true;
+	return toBase64Encoding(_in, c_base64_chars, pad);
+}
+
+string dev::toBase64URLSafe(bytesConstRef _in)
+{
+	static char const c_base64_chars[] =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz"
+		"0123456789-_";
+	bool const pad = false;
+	return toBase64Encoding(_in, c_base64_chars, pad);
 }
 
 bytes dev::fromBase64(string const& encoded_string)

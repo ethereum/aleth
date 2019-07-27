@@ -89,8 +89,8 @@ private:
 struct NodeInfo
 {
     NodeInfo() = default;
-    NodeInfo(NodeID const& _id, std::string const& _address, unsigned _port, std::string const& _version):
-        id(_id), address(_address), port(_port), version(_version) {}
+    NodeInfo(NodeID const& _id, std::string const& _address, unsigned _port, std::string const& _version, std::string const& _enr):
+        id(_id), address(_address), port(_port), version(_version), enr(_enr) {}
 
     std::string enode() const { return "enode://" + id.hex() + "@" + address + ":" + toString(port); }
 
@@ -98,6 +98,7 @@ struct NodeInfo
     std::string address;
     unsigned port;
     std::string version;
+    std::string enr;
 };
 
 /**
@@ -240,7 +241,14 @@ public:
     }
 
     /// Get the node information.
-    p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkConfig().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }
+    p2p::NodeInfo nodeInfo() const
+    { 
+        auto const e = enr();
+        return NodeInfo(id(),
+            (networkConfig().publicIPAddress.empty() ? m_tcpPublic.address().to_string() :
+                                                        networkConfig().publicIPAddress),
+            m_tcpPublic.port(), m_clientVersion, e.textEncoding());
+    }
 
     /// Get Ethereum Node Record of the host
     ENR enr() const
