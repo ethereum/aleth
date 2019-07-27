@@ -10,6 +10,7 @@ set(unittest_sources
     unittests/libdevcore/CommonJS.cpp
     unittests/libdevcore/core.cpp
     unittests/libdevcore/FixedHash.cpp
+    unittests/libdevcore/LruCache.cpp
     unittests/libdevcore/RangeMask.cpp
     unittests/libdevcore/RLP.cpp
 
@@ -40,7 +41,7 @@ set(unittest_sources
 add_executable(aleth-unittests ${unittest_sources})
 target_include_directories(aleth-unittests PRIVATE ${UTILS_INCLUDE_DIR})
 target_link_libraries(aleth-unittests PRIVATE
-    web3jsonrpc ethashseal devcrypto devcore
+    web3jsonrpc ethashseal devcrypto devcore libtestutils
     GTest::gtest GTest::main
 )
 gtest_add_tests(TARGET aleth-unittests TEST_PREFIX unittests/ TEST_LIST unittests)
