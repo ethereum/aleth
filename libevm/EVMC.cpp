@@ -14,7 +14,7 @@ namespace
 {
 evmc_revision toRevision(EVMSchedule const& _schedule) noexcept
 {
-    if (_schedule.accountVersion == IstanbulSchedule.accountVersion)
+    if (_schedule.txDataNonZeroGas == 16)
         return EVMC_ISTANBUL;
     if (_schedule.haveCreate2 && !_schedule.eip1283Mode)
         return EVMC_PETERSBURG;
