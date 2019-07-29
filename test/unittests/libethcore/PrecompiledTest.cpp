@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
         "03"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_EQUAL(static_cast<int>(res), 13056);
 }
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
         "0000000000000000000000000000000000000000000000000000000000000020"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"47428439751604713645494675459558567056699385719046375030561826409641217900517324"}, "Got: " + toString(res));
 }
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
         "998877665544332211998877665544332211" // M
         "9978" // Garbage that should be ignored
     );
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"12"}, "Got: " + toString(res));
 }
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
         "000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"5"}, "Got: " + toString(res));
 }
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximated)
         "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"1315"}, "Got: " + toString(res));
 }
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximatedPartialByte)
         "02ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"1285"}, "Got: " + toString(res));
 }
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximatedGhost)
         "000000000000000000000000000000000000000000000000000000000000000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"40"}, "Got: " + toString(res));
 }
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(modexpCostMidRange)
         "000000000000000000000000000000000000000000000000000000000000000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == ((74 * 74 / 4 + 96 * 74 - 3072) * 8) / 20, "Got: " + toString(res));
 }
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(modexpCostHighRange)
         "000000000000000000000000000000000000000000000000000000000000000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(bytesConstRef(in.data(), in.size()));
+    auto res = cost(ref(in), {}, {});
 
     BOOST_REQUIRE_MESSAGE(res == ((1025 * 1025 / 16 + 480 * 1025 - 199680) * 8) / 20, "Got: " + toString(res));
 }
