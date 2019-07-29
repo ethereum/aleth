@@ -124,8 +124,7 @@ BOOST_AUTO_TEST_CASE(ScheduleAccordingToForkBeforeExperimental)
     Block block = blockchain.genesisBlock(genesisDB);
     block.sync(blockchain, preExperimentalBlockHash);
 
-    TestLastBlockHashes lastBlockHashes({});
-    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    EnvInfo envInfo(createEnvInfo(block.info()));
     Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
         {}, {}, 0, 0, false, false);
@@ -140,8 +139,7 @@ BOOST_AUTO_TEST_CASE(IstanbulScheduleForVersionZeroInExperimental)
     Block block = blockchain.genesisBlock(genesisDB);
     block.sync(blockchain, experimentalBlockHash);
 
-    TestLastBlockHashes lastBlockHashes({});
-    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    EnvInfo envInfo(createEnvInfo(block.info()));
     Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
     u256 const version = 0;
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
@@ -157,8 +155,7 @@ BOOST_AUTO_TEST_CASE(ExperimentalScheduleForVersionOneInExperimental)
     Block block = blockchain.genesisBlock(genesisDB);
     block.sync(blockchain, experimentalBlockHash);
 
-    TestLastBlockHashes lastBlockHashes({});
-    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    EnvInfo envInfo(createEnvInfo(block.info()));
     Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
     u256 const version = 1;
     ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
