@@ -717,4 +717,72 @@ BOOST_AUTO_TEST_CASE(bench_bn256Pairing, *ut::label("bench"))
     benchmarkPrecompiled("alt_bn128_pairing_product", tests, 1000);
 }
 
+BOOST_AUTO_TEST_CASE(ecaddCostBeforeIstanbul)
+{
+    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_add");
+
+    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
+
+    auto res = cost({}, chainParams, 1);
+
+    BOOST_REQUIRE_EQUAL(static_cast<int>(res), 500);
+}
+
+BOOST_AUTO_TEST_CASE(ecaddCostIstanbul)
+{
+    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_add");
+
+    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
+
+    auto res = cost({}, chainParams, 2);
+
+    BOOST_REQUIRE_EQUAL(static_cast<int>(res), 150);
+}
+
+BOOST_AUTO_TEST_CASE(ecmulBeforeIstanbul)
+{
+    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_mul");
+
+    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
+
+    auto res = cost({}, chainParams, 1);
+
+    BOOST_REQUIRE_EQUAL(static_cast<int>(res), 40000);
+}
+
+BOOST_AUTO_TEST_CASE(ecmulCostIstanbul)
+{
+    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_mul");
+
+    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
+
+    auto res = cost({}, chainParams, 2);
+
+    BOOST_REQUIRE_EQUAL(static_cast<int>(res), 6000);
+}
+
+BOOST_AUTO_TEST_CASE(ecpairingCost)
+{
+    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_pairing_product");
+
+    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
+
+    bytes in{fromHex(
+        "0x1c76476f4def4bb94541d57ebba1193381ffa7aa76ada664dd31c16024c43f593034dd2920f673e204fee281"
+        "1c678745fc819b55d3e9d294e45c9b03a76aef41209dd15ebff5d46c4bd888e51a93cf99a7329636c63514396b"
+        "4a452003a35bf704bf11ca01483bfa8b34b43561848d28905960114c8ac04049af4b6315a416782bb8324af6cf"
+        "c93537a2ad1a445cfd0ca2a71acd7ac41fadbf933c2a51be344d120a2a4cf30c1bf9845f20c6fe39e07ea2cce6"
+        "1f0c9bb048165fe5e4de877550111e129f1cf1097710d41c4ac70fcdfa5ba2023c6ff1cbeac322de49d1b6df7c"
+        "2032c61a830e3c17286de9462bf242fca2883585b93870a73853face6a6bf411198e9393920d483a7260bfb731"
+        "fb5d25f1aa493335a9e71297e485b7aef312c21800deef121f1e76426a00665e5c4479674322d4f75edadd46de"
+        "bd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6d"
+        "eb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa")};
+
+    auto costBeforeIstanbul = cost(ref(in), chainParams, 1);
+    BOOST_CHECK_EQUAL(static_cast<int>(costBeforeIstanbul), in.size() / 192 * 80000 + 100000);
+
+    auto costIstanbul = cost(ref(in), chainParams, 2);
+    BOOST_CHECK_EQUAL(static_cast<int>(costIstanbul), in.size() / 192 * 34000 + 45000);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
