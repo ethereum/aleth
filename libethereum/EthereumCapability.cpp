@@ -938,6 +938,19 @@ void EthereumCapability::disablePeer(NodeID const& _peerID, std::string const& _
     m_host->disableCapability(_peerID, name(), _problem);
 }
 
+void EthereumCapability::removeSentTransactions(std::vector<h256> const& _txHashes)
+{
+    if (!_txHashes.empty())
+    {
+        // Function can be called from the client thread so we need to ensure that
+        // m_transactionsSent modifications occur on the network thread
+        m_host->postWork([_txHashes, this]() {
+            for (auto const& txHash : _txHashes)
+                m_transactionsSent.erase(txHash);
+        });
+    }
+}
+
 EthereumPeer const& EthereumCapability::peer(NodeID const& _peerID) const
 {
     return const_cast<EthereumCapability*>(this)->peer(_peerID);
