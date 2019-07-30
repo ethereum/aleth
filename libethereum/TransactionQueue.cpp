@@ -58,7 +58,7 @@ ImportResult TransactionQueue::check_WITH_LOCK(h256 const& _h, IfDropped _ik)
     if (m_known.count(_h))
         return ImportResult::AlreadyKnown;
 
-    if (m_dropped.contains(_h) && _ik == IfDropped::Ignore)
+    if (m_dropped.touch(_h) && _ik == IfDropped::Ignore)
         return ImportResult::AlreadyInChain;
 
     return ImportResult::Success;

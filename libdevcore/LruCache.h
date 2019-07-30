@@ -12,45 +12,13 @@ namespace dev
 template <class Key, class Value>
 class LruCache
 {
-    typedef Key key_type;
-    typedef Value value_type;
-    typedef std::list<std::pair<key_type, value_type>> list_type;
-    typedef std::unordered_map<key_type, typename list_type::const_iterator> map_type;
+    using key_type = Key;
+    using value_type = Value;
+    using list_type = std::list<std::pair<key_type, value_type>>;
+    using map_type = std::unordered_map<key_type, typename list_type::const_iterator>;
 
 public:
     explicit LruCache(size_t _capacity) : m_capacity(_capacity) {}
-
-    LruCache(LruCache<key_type, value_type> const& _l)
-    {
-        m_capacity = _l.m_capacity;
-        m_data = _l.m_data;
-        m_index = _l.m_index;
-    }
-
-    LruCache(LruCache<key_type, value_type>&& _l)
-    {
-        m_capacity = _l.m_capacity;
-        m_data = std::move(_l.m_data);
-        m_index = std::move(_l.m_index);
-    }
-
-    LruCache<key_type, value_type>& operator=(LruCache const& _l)
-    {
-        m_capacity = _l.m_capacity;
-        m_data = _l.m_data;
-        m_index = _l.m_index;
-
-        return *this;
-    }
-
-    LruCache<key_type, value_type>& operator=(LruCache&& _l)
-    {
-        m_capacity = _l.m_capacity;
-        m_data = std::move(_l.m_data);
-        m_index = std::move(_l.m_index);
-
-        return *this;
-    }
 
     size_t insert(key_type const& _key, value_type const& _val)
     {
@@ -66,9 +34,7 @@ public:
             m_index[_key] = m_data.begin();
         }
         else
-        {
             m_data.splice(m_data.begin(), m_data, cIter->second);
-        }
 
         return m_index.size();
     }

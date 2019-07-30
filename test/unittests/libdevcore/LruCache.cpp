@@ -66,9 +66,7 @@ TEST(LruCache, BasicOperations)
 
     // Reverse order and verify
     for (size_t i = 0; i < testData.size(); i++)
-    {
         lruCache.touch(testData[i].first);
-    }
     reverse(testData.begin(), testData.end());
     VerifyEquals(lruCache, testData);
 
