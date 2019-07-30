@@ -565,7 +565,7 @@ void Client::onChainChanged(ImportRoute const& _ir)
         goodTransactions.push_back(t.sha3());
     }
     auto h = m_host.lock();
-    if (h && goodTransactions.size())
+    if (h)
         h->removeSentTransactions(goodTransactions);
     onNewBlocks(_ir.liveBlocks, changeds);
     if (!isMajorSyncing())
