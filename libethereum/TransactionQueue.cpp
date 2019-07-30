@@ -11,13 +11,17 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+namespace
+{
 constexpr size_t c_maxVerificationQueueSize = 8192;
 constexpr size_t c_maxDroppedTransactionCount = 1024;
+}  // namespace
 
-TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
-    m_current(PriorityCompare { *this }),
-    m_limit(_limit),
-    m_futureLimit(_futureLimit)
+TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit)
+  : m_dropped{c_maxDroppedTransactionCount},
+    m_current{PriorityCompare{*this}},
+    m_limit{_limit},
+    m_futureLimit{_futureLimit}
 {
     unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;
     for (unsigned i = 0; i < verifierThreads; ++i)
@@ -54,7 +58,7 @@ ImportResult TransactionQueue::check_WITH_LOCK(h256 const& _h, IfDropped _ik)
     if (m_known.count(_h))
         return ImportResult::AlreadyKnown;
 
-    if (m_dropped.count(_h) && _ik == IfDropped::Ignore)
+    if (m_dropped.contains(_h) && _ik == IfDropped::Ignore)
         return ImportResult::AlreadyInChain;
 
     return ImportResult::Success;
@@ -312,15 +316,7 @@ void TransactionQueue::drop(h256 const& _txHash)
         return;
 
     UpgradeGuard ul(l);
-    if (m_dropped.size() == c_maxDroppedTransactionCount)
-    {
-        LOG(m_loggerDetail) << "Dropped transaction list is at capacity ("
-                            << c_maxDroppedTransactionCount
-                            << "), removing dropped transaction from list (txhash: "
-                            << *m_dropped.begin() << ")";
-        m_dropped.erase(m_dropped.begin());
-    }
-    m_dropped.insert(_txHash);
+    m_dropped.insert(_txHash, true /* placeholder value */);
     remove_WITH_LOCK(_txHash);
 }
 
