@@ -556,11 +556,17 @@ void Client::onChainChanged(ImportRoute const& _ir)
 //  ctrace << "onChainChanged()";
     h256Hash changeds;
     onDeadBlocks(_ir.deadBlocks, changeds);
+    vector<h256> goodTransactions;
+    goodTransactions.reserve(_ir.goodTranactions.size());
     for (auto const& t: _ir.goodTranactions)
     {
         LOG(m_loggerDetail) << "Safely dropping transaction " << t.sha3();
         m_tq.dropGood(t);
+        goodTransactions.push_back(t.sha3());
     }
+    auto h = m_host.lock();
+    if (h && goodTransactions.size())
+        h->removeSentTransactions(goodTransactions);
     onNewBlocks(_ir.liveBlocks, changeds);
     if (!isMajorSyncing())
         resyncStateFromChain();

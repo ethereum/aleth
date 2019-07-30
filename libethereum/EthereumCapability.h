@@ -136,6 +136,12 @@ public:
     EthereumPeer& peer(NodeID const& _peerID);
     void disablePeer(NodeID const& _peerID, std::string const& _problem);
 
+    /// Remove the supplied transaction hashes from the sent transactions list. Done when
+    /// the transactions have been confirmed to be a part of the blockchain so we no longer
+    /// need to explicitly track them to prevent sending them out to peers. Can be called safely
+    /// from any thread.
+    void removeSentTransactions(std::vector<h256> const& _txHashes);
+
 private:
     static char const* const c_stateNames[static_cast<int>(SyncState::Size)];
     static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
