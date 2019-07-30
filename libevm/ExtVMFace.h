@@ -314,8 +314,6 @@ public:
     evmc_tx_context get_tx_context() noexcept override;
 
     evmc::bytes32 get_block_hash(int64_t _blockNumber) noexcept override;
-    
-    evmc_bytes32 get_chain_id() noexcept override;
 
     void emit_log(const evmc::address& _addr, const uint8_t* _data, size_t _dataSize,
         const evmc::bytes32 _topics[], size_t _numTopics) noexcept override;

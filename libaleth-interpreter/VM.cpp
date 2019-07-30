@@ -1164,7 +1164,7 @@ void VM::interpretCases()
 
             updateIOGas();
 
-            m_SPP[0] = fromEvmC(m_context->host->get_chain_id(m_context));
+            m_SPP[0] = fromEvmC(getTxContext().chain_id);
         }
         NEXT
 

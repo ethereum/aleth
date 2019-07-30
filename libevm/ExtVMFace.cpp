@@ -142,22 +142,20 @@ evmc_tx_context EvmCHost::get_tx_context() noexcept
     evmc_tx_context result = {};
     result.tx_gas_price = toEvmC(m_extVM.gasPrice);
     result.tx_origin = toEvmC(m_extVM.origin);
-    result.block_coinbase = toEvmC(m_extVM.envInfo().author());
-    result.block_number = m_extVM.envInfo().number();
-    result.block_timestamp = m_extVM.envInfo().timestamp();
-    result.block_gas_limit = static_cast<int64_t>(m_extVM.envInfo().gasLimit());
-    result.block_difficulty = toEvmC(m_extVM.envInfo().difficulty());
+
+    auto const& envInfo = m_extVM.envInfo();
+    result.block_coinbase = toEvmC(envInfo.author());
+    result.block_number = envInfo.number();
+    result.block_timestamp = envInfo.timestamp();
+    result.block_gas_limit = static_cast<int64_t>(envInfo.gasLimit());
+    result.block_difficulty = toEvmC(envInfo.difficulty());
+    result.chain_id = toEvmC(envInfo.chainID());
     return result;
 }
 
 evmc::bytes32 EvmCHost::get_block_hash(int64_t _number) noexcept
 {
     return toEvmC(m_extVM.blockHash(_number));
-}
-
-evmc_bytes32 EvmCHost::get_chain_id() noexcept
-{
-    return toEvmC(m_extVM.envInfo().chainID());
 }
 
 evmc::result EvmCHost::create(evmc_message const& _msg) noexcept
