@@ -155,6 +155,11 @@ evmc::bytes32 EvmCHost::get_block_hash(int64_t _number) noexcept
     return toEvmC(m_extVM.blockHash(_number));
 }
 
+evmc_bytes32 EvmCHost::get_chain_id() noexcept
+{
+    return toEvmC(m_extVM.envInfo().chainID());
+}
+
 evmc::result EvmCHost::create(evmc_message const& _msg) noexcept
 {
     u256 gas = _msg.gas;

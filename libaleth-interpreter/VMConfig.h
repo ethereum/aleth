@@ -222,7 +222,7 @@ namespace eth
         &&NUMBER,                               \
         &&DIFFICULTY,                           \
         &&GASLIMIT,                             \
-        &&INVALID,                              \
+        &&CHAINID,                              \
         &&INVALID,                              \
         &&INVALID,                              \
         &&INVALID,                              \

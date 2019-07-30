@@ -1154,6 +1154,20 @@ void VM::interpretCases()
         }
         NEXT
 
+
+        CASE(CHAINID)
+        {
+            ON_OP();
+
+            if (m_rev < EVMC_ISTANBUL)
+                throwBadInstruction();
+
+            updateIOGas();
+
+            m_SPP[0] = fromEvmC(m_context->host->get_chain_id(m_context));
+        }
+        NEXT
+
         CASE(POP)
         {
             ON_OP();
