@@ -100,7 +100,7 @@ void LegacyVM::updateSSGas()
     u256 const currentValue = m_ext->store(m_SP[0]);
     u256 const newValue = m_SP[1];
 
-    if (m_schedule->eip1283Mode)
+    if (m_schedule->sstoreNetGasMetering())
         updateSSGasEIP1283(currentValue, newValue);
     else
         updateSSGasPreEIP1283(currentValue, newValue);
@@ -1676,6 +1676,10 @@ void LegacyVM::interpretCases()
 
             updateSSGas();
             updateIOGas();
+
+            if (m_schedule->sstoreThrowsIfGasBelowCallStipend() &&
+                m_io_gas <= m_schedule->callStipend)
+                throwOutOfGas();
 
             m_ext->setStore(m_SP[0], m_SP[1]);
         }

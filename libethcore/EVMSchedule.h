@@ -35,6 +35,7 @@ struct EVMSchedule
     bool eip150Mode = false;
     bool eip158Mode = false;
     bool eip1283Mode = false;
+    bool eip2200Mode = false;
     bool haveBitwiseShifting = false;
     bool haveRevert = false;
     bool haveReturnData = false;
@@ -85,6 +86,8 @@ struct EVMSchedule
     bool staticCallDepthLimit() const { return !eip150Mode; }
     bool emptinessIsNonexistence() const { return eip158Mode; }
     bool zeroValueTransferChargesNewAccountGas() const { return !eip158Mode; }
+    bool sstoreNetGasMetering() const { return eip1283Mode; }
+    bool sstoreThrowsIfGasBelowCallStipend() const { return eip2200Mode; }
 };
 
 static const EVMSchedule DefaultSchedule = EVMSchedule();
@@ -156,6 +159,7 @@ static const EVMSchedule IstanbulSchedule = [] {
     schedule.haveChainID = true;
     schedule.haveSelfbalance = true;
     schedule.eip1283Mode = true;
+    schedule.eip2200Mode = true;
     schedule.sstoreUnchangedGas = 800;
     return schedule;
 }();
