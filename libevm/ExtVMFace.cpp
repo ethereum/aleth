@@ -78,9 +78,9 @@ evmc_storage_status EvmCHost::set_storage(
         if (originalValue == newValue)
         {
             if (originalValue == 0)
-                m_extVM.sub.refunds += schedule.sstoreRefundGas + schedule.sstoreRefundNonzeroGas;
+                m_extVM.sub.refunds += schedule.sstoreSetGas - schedule.sstoreUnchangedGas;
             else
-                m_extVM.sub.refunds += schedule.sstoreRefundNonzeroGas;
+                m_extVM.sub.refunds += schedule.sstoreResetGas - schedule.sstoreUnchangedGas;
         }
     }
 

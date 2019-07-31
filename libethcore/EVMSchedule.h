@@ -53,7 +53,6 @@ struct EVMSchedule
     unsigned sstoreResetGas = 5000;
     unsigned sstoreUnchangedGas = 200;
     unsigned sstoreRefundGas = 15000;
-    unsigned sstoreRefundNonzeroGas = 4800;
     unsigned jumpdestGas = 1;
     unsigned logGas = 375;
     unsigned logDataGas = 8;
@@ -156,6 +155,8 @@ static const EVMSchedule IstanbulSchedule = [] {
     schedule.extcodehashGas = 700;
     schedule.haveChainID = true;
     schedule.haveSelfbalance = true;
+    schedule.eip1283Mode = true;
+    schedule.sstoreUnchangedGas = 800;
     return schedule;
 }();
 
