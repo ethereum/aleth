@@ -22,6 +22,7 @@
 #include <test/tools/jsontests/vm.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/TestOutputHelper.h>
+#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace dev;
@@ -395,78 +396,124 @@ public:
 class SstoreTestFixture : public TestOutputHelperFixture
 {
 public:
+    struct Case
+    {
+        char const* code;
+        u256 const originalValue;
+        u256 const expectedGasConsumed;
+        u256 const expectedRefund;
+    };
+
+    // clang-format off
+    std::array<Case, 17> const constantinopleCases = {{
+        { "0x60006000556000600055",           0, 412,   0     },
+        { "0x60006000556001600055",           0, 20212, 0     },
+        { "0x60016000556000600055",           0, 20212, 19800 },
+        { "0x60016000556002600055",           0, 20212, 0     },
+        { "0x60016000556001600055",           0, 20212, 0     },
+        { "0x60006000556000600055",           1, 5212,  15000 },
+        { "0x60006000556001600055",           1, 5212,  4800  },
+        { "0x60006000556002600055",           1, 5212,  0     },
+        { "0x60026000556000600055",           1, 5212,  15000 },
+        { "0x60026000556003600055",           1, 5212,  0     },
+        { "0x60026000556001600055",           1, 5212,  4800  },
+        { "0x60026000556002600055",           1, 5212,  0     },
+        { "0x60016000556000600055",           1, 5212,  15000 },
+        { "0x60016000556002600055",           1, 5212,  0     },
+        { "0x60016000556001600055",           1, 412,   0     },
+        { "0x600160005560006000556001600055", 0, 40218, 19800 },
+        { "0x600060005560016000556000600055", 1, 10218, 19800 },
+    }};
+
+    std::array<Case, 17> const petersburgCases = {{
+        { "0x60006000556000600055",           0, 10012, 0     },
+        { "0x60006000556001600055",           0, 25012, 0     },
+        { "0x60016000556000600055",           0, 25012, 15000 },
+        { "0x60016000556002600055",           0, 25012, 0     },
+        { "0x60016000556001600055",           0, 25012, 0     },
+        { "0x60006000556000600055",           1, 10012, 15000 },
+        { "0x60006000556001600055",           1, 25012, 15000 },
+        { "0x60006000556002600055",           1, 25012, 15000 },
+        { "0x60026000556000600055",           1, 10012, 15000 },
+        { "0x60026000556003600055",           1, 10012, 0     },
+        { "0x60026000556001600055",           1, 10012, 0     },
+        { "0x60026000556002600055",           1, 10012, 0     },
+        { "0x60016000556000600055",           1, 10012, 15000 },
+        { "0x60016000556002600055",           1, 10012, 0     },
+        { "0x60016000556001600055",           1, 10012, 0     },
+        { "0x600160005560006000556001600055", 0, 45018, 15000 },
+        { "0x600060005560016000556000600055", 1, 30018, 30000 },
+    }};
+
+    std::array<Case, 17> const istanbulCases = {{
+        { "0x60006000556000600055",           0, 1612,  0     },
+        { "0x60006000556001600055",           0, 20812, 0     },
+        { "0x60016000556000600055",           0, 20812, 19200 },
+        { "0x60016000556002600055",           0, 20812, 0     },
+        { "0x60016000556001600055",           0, 20812, 0     },
+        { "0x60006000556000600055",           1, 5812,  15000 },
+        { "0x60006000556001600055",           1, 5812,  4200  },
+        { "0x60006000556002600055",           1, 5812,  0     },
+        { "0x60026000556000600055",           1, 5812,  15000 },
+        { "0x60026000556003600055",           1, 5812,  0     },
+        { "0x60026000556001600055",           1, 5812,  4200  },
+        { "0x60026000556002600055",           1, 5812,  0     },
+        { "0x60016000556000600055",           1, 5812,  15000 },
+        { "0x60016000556002600055",           1, 5812,  0     },
+        { "0x60016000556001600055",           1, 1612,  0    },
+        { "0x600160005560006000556001600055", 0, 40818, 19200 },
+        { "0x600060005560016000556000600055", 1, 10818, 19200 },
+    }};
+    // clang-format on
+
     explicit SstoreTestFixture(VMFace* _vm) : vm{_vm}
     {
         state.addBalance(from, 1 * ether);
         state.addBalance(to, 1 * ether);
     }
 
-    void testEip1283Case1() { testGasConsumed("0x60006000556000600055", 0, 412, 0); }
-
-    void testEip1283Case2() { testGasConsumed("0x60006000556001600055", 0, 20212, 0); }
-
-    void testEip1283Case3() { testGasConsumed("0x60016000556000600055", 0, 20212, 19800); }
-
-    void testEip1283Case4() { testGasConsumed("0x60016000556002600055", 0, 20212, 0); }
-
-    void testEip1283Case5() { testGasConsumed("0x60016000556001600055", 0, 20212, 0); }
-
-    void testEip1283Case6() { testGasConsumed("0x60006000556000600055", 1, 5212, 15000); }
-
-    void testEip1283Case7() { testGasConsumed("0x60006000556001600055", 1, 5212, 4800); }
-
-    void testEip1283Case8() { testGasConsumed("0x60006000556002600055", 1, 5212, 0); }
-
-    void testEip1283Case9() { testGasConsumed("0x60026000556000600055", 1, 5212, 15000); }
-
-    void testEip1283Case10() { testGasConsumed("0x60026000556003600055", 1, 5212, 0); }
-
-    void testEip1283Case11() { testGasConsumed("0x60026000556001600055", 1, 5212, 4800); }
-
-    void testEip1283Case12() { testGasConsumed("0x60026000556002600055", 1, 5212, 0); }
-
-    void testEip1283Case13() { testGasConsumed("0x60016000556000600055", 1, 5212, 15000); }
-
-    void testEip1283Case14() { testGasConsumed("0x60016000556002600055", 1, 5212, 0); }
-
-    void testEip1283Case15() { testGasConsumed("0x60016000556001600055", 1, 412, 0); }
-
-    void testEip1283Case16()
-    {
-        testGasConsumed("0x600160005560006000556001600055", 0, 40218, 19800);
-    }
-
-    void testEip1283Case17()
-    {
-        testGasConsumed("0x600060005560016000556000600055", 1, 10218, 19800);
-    }
-
-    void testGasConsumed(std::string const& _codeStr, u256 const& _originalValue,
-        u256 const& _expectedGasConsumed, u256 const& _expectedRefund)
+    void testGasConsumed(SealEngineFace const& _se, EnvInfo const& _envInfo, std::string const& _codeStr,
+        u256 const& _originalValue, u256 const& _expectedGasConsumed, u256 const& _expectedRefund)
     {
         state.setStorage(to, 0, _originalValue);
         state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
         bytes const code = fromHex(_codeStr);
-        ExtVM extVm(state, envInfo, *se, to, from, from, value, gasPrice, inputData, ref(code),
+        ExtVM extVm(state, _envInfo, _se, to, from, from, value, gasPrice, inputData, ref(code),
             sha3(code), version, depth, isCreate, staticCall);
 
         u256 gasBefore = gas;
         owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
 
-        BOOST_CHECK_EQUAL(gasBefore - gas, _expectedGasConsumed);
-        BOOST_CHECK_EQUAL(extVm.sub.refunds, _expectedRefund);
+        BOOST_CHECK_MESSAGE(gasBefore - gas == _expectedGasConsumed,
+            boost::format("code: %1%, gas consumed: %2%, gas expected: %3%") % _codeStr %
+                (gasBefore - gas) % _expectedGasConsumed);
+        BOOST_CHECK_MESSAGE(extVm.sub.refunds == _expectedRefund,
+            boost::format("code: %1%, refund: %2%, refund expected: %3%") % _codeStr %
+                extVm.sub.refunds % _expectedRefund);
     }
 
+
+    void testAllCases(std::array<Case, 17> const& _cases, Network _network)
+    {
+        std::unique_ptr<SealEngineFace> se{ChainParams(genesisInfo(_network)).createSealEngine()};
+        EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
+
+        for (auto const& c : _cases)
+            testGasConsumed(*se, envInfo, c.code, c.originalValue, c.expectedGasConsumed, c.expectedRefund);
+    }
+
+    void testConstantinople() { testAllCases(constantinopleCases, Network::ConstantinopleTest); }
+
+    void testPetersburg() { testAllCases(petersburgCases, Network::ConstantinopleFixTest); }
+
+    void testIstanbul() { testAllCases(istanbulCases, Network::IstanbulTest); }
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
     Address from{KeyPair::create().address()};
     Address to{KeyPair::create().address()};
     State state{0};
-    std::unique_ptr<SealEngineFace> se{
-        ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
-    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
 
     u256 value = 0;
     u256 gasPrice = 1;
@@ -787,89 +834,19 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSstoreSuite, LegacyVMSstoreTestFixture)
 
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case1)
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreConstantinople)
 {
-    testEip1283Case1();
+    testConstantinople();
 }
 
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case2)
+BOOST_AUTO_TEST_CASE(LegacyVMSstorePetersburg)
 {
-    testEip1283Case2();
+    testPetersburg();
 }
 
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case3)
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreIstanbul)
 {
-    testEip1283Case3();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case4)
-{
-    testEip1283Case4();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case5)
-{
-    testEip1283Case5();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case6)
-{
-    testEip1283Case6();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case7)
-{
-    testEip1283Case7();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case8)
-{
-    testEip1283Case8();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case9)
-{
-    testEip1283Case9();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case10)
-{
-    testEip1283Case10();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case11)
-{
-    testEip1283Case11();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case12)
-{
-    testEip1283Case12();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case13)
-{
-    testEip1283Case13();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case14)
-{
-    testEip1283Case14();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case15)
-{
-    testEip1283Case15();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case16)
-{
-    testEip1283Case16();
-}
-
-BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case17)
-{
-    testEip1283Case17();
+    testIstanbul();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -997,89 +974,14 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSstoreSuite, AlethInterpreterSstoreTestFixture)
 
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case1)
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreConstantinople)
 {
-    testEip1283Case1();
+    testConstantinople();
 }
 
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case2)
+BOOST_AUTO_TEST_CASE(AlethInterpreterSstorePetersburg)
 {
-    testEip1283Case2();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case3)
-{
-    testEip1283Case3();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case4)
-{
-    testEip1283Case4();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case5)
-{
-    testEip1283Case5();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case6)
-{
-    testEip1283Case6();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case7)
-{
-    testEip1283Case7();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case8)
-{
-    testEip1283Case8();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case9)
-{
-    testEip1283Case9();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case10)
-{
-    testEip1283Case10();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case11)
-{
-    testEip1283Case11();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case12)
-{
-    testEip1283Case12();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case13)
-{
-    testEip1283Case13();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case14)
-{
-    testEip1283Case14();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case15)
-{
-    testEip1283Case15();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case16)
-{
-    testEip1283Case16();
-}
-
-BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case17)
-{
-    testEip1283Case17();
+    testPetersburg();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
