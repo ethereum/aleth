@@ -30,6 +30,10 @@ TEST(enr, parse)
         "/oxVtw0RW/QAdpzBQA8yWM0xOIN1ZHCCdl8=");
     ENR enr = IdentitySchemeV4::parseENR(RLP{rlp});
 
+    EXPECT_EQ(enr.textEncoding(),
+        "enr:-"
+        "IS4QHCYrYZbAKWCBRlAy5zzaDZXJBGkcnh4MHcBFZntXNFrdvJjX04jRzjzCBOonrkTfj499SZuOh8R33Ls8RRcy5w"
+        "BgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQPKY0yuDUmstAHYpMa2_oxVtw0RW_QAdpzBQA8yWM0xOIN1ZHCCdl8");
     EXPECT_EQ(enr.signature(),
         fromHex("7098ad865b00a582051940cb9cf36836572411a47278783077011599ed5cd16b76f2635f4e234738f3"
                 "0813a89eb9137e3e3df5266e3a1f11df72ecf1145ccb9c"));
