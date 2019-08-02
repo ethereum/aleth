@@ -60,7 +60,7 @@ State Debug::stateAt(std::string const& _blockHashOrNumber, int _txIndex) const
         // the final state of block (after applying rewards)
         state = block.state();
     else
-        throw jsonrpc::JsonRpcException("Transaction index " + toString(_txIndex) + " out of range for block " + _blockHashOrNumber);
+        throw jsonrpc::JsonRpcException("Transaction index " + toString(_txIndex) + " out of range (" + toString(txCount) + ") for block " + _blockHashOrNumber);
 
     return state;
 }
