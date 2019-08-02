@@ -205,6 +205,28 @@ set<eth::Network> ImportTest::getAllNetworksFromExpectSections(
     return networkSet;
 }
 
+void ImportTest::parseJsonStrValueIntoSet(json_spirit::mValue const& _json, set<string>& _out)
+{
+    if (_json.type() == json_spirit::array_type)
+    {
+        for (auto const& val : _json.get_array())
+            _out.emplace(val.get_str());
+    }
+    else
+        _out.emplace(_json.get_str());
+}
+
+void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& _out)
+{
+    if (_json.type() == json_spirit::array_type)
+    {
+        for (auto const& val : _json.get_array())
+            _out.push_back(val.get_int());
+    }
+    else
+        _out.push_back(_json.get_int());
+}
+
 bytes ImportTest::executeTest(bool _isFilling)
 {
     assert(m_envInfo);
@@ -231,7 +253,7 @@ bytes ImportTest::executeTest(bool _isFilling)
         if (isDisabledNetwork(net))
             continue;
 
-        for (auto& tr : m_transactions)
+        for (auto const& tr : m_transactions)
         {
             Options const& opt = Options::get();
             if(opt.trDataIndex != -1 && opt.trDataIndex != tr.dataInd)
@@ -241,10 +263,62 @@ bytes ImportTest::executeTest(bool _isFilling)
             if(opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd)
                 continue;
 
-            std::tie(tr.postState, tr.output, tr.changeLog) =
-                    executeTransaction(net, *m_envInfo, m_statePre, tr.transaction);
-            tr.netId = net;
-            transactionResults.push_back(tr);
+            // Skip transaction if there is no expect section for this transaction (noindex data,
+            // gas, val, network)
+            bool found = false;
+            json_spirit::mArray expects;
+            if (_isFilling)
+                expects = m_testInputObject.at("expect").get_array();
+            else
+                expects = m_testInputObject.at("post").get_obj().at(netIdToString(net)).get_array();
+
+            for (auto const& exp : expects)
+            {
+                json_spirit::mObject const& expSection = exp.get_obj();
+
+                if (_isFilling)
+                {
+                    set<string> networkSet;
+                    parseJsonStrValueIntoSet(expSection.at("network"), networkSet);
+                    networkSet = test::translateNetworks(networkSet);
+                    if (!networkSet.count(netIdToString(net)))
+                        continue;
+                }
+
+                vector<int> d;
+                vector<int> g;
+                vector<int> v;
+                BOOST_REQUIRE_MESSAGE(expSection.at("indexes").type() == jsonVType::obj_type,
+                    "indexes field expected to be json Object!");
+                json_spirit::mObject const& indexes = expSection.at("indexes").get_obj();
+                parseJsonIntValueIntoVector(indexes.at("data"), d);
+                parseJsonIntValueIntoVector(indexes.at("gas"), g);
+                parseJsonIntValueIntoVector(indexes.at("value"), v);
+                BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0,
+                    TestOutputHelper::get().testName() + " Indexes arrays not set!");
+                if ((inArray(d, tr.dataInd) || inArray(d, -1)) &&
+                    (inArray(g, tr.gasInd) || inArray(g, -1)) &&
+                    (inArray(v, tr.valInd) || inArray(v, -1)))
+                    found = true;
+                if (found)
+                    break;
+            }
+            if (!found)
+                continue;
+
+
+            transactionToExecute tr2 = tr;
+            std::tie(tr2.postState, tr2.output, tr2.changeLog) =
+                executeTransaction(net, *m_envInfo, m_statePre, tr.transaction);
+            tr2.netId = net;
+            if (Options::get().verbosity > 2)
+            {
+                std::cout << "Executed transaction: \n";
+                std::cerr << "Network: " << netIdToString(tr2.netId) << "\n";
+                std::cerr << "Indexes: d: " << tr2.dataInd << " g: " << tr2.gasInd
+                          << " v: " << tr2.valInd << "\n\n";
+            }
+            transactionResults.push_back(tr2);
         }
     }
 
@@ -597,28 +671,6 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
     }
 
     return wasError;
-}
-
-void ImportTest::parseJsonStrValueIntoSet(json_spirit::mValue const& _json, set<string>& _out)
-{
-    if (_json.type() == json_spirit::array_type)
-    {
-        for (auto const& val: _json.get_array())
-            _out.emplace(val.get_str());
-    }
-    else
-        _out.emplace(_json.get_str());
-}
-
-void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& _out)
-{
-    if (_json.type() == json_spirit::array_type)
-    {
-        for (auto const& val: _json.get_array())
-            _out.push_back(val.get_int());
-    }
-    else
-        _out.push_back(_json.get_int());
 }
 
 set<string> const& getAllowedNetworks()
