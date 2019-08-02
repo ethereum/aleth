@@ -21,15 +21,16 @@
 
 #pragma once
 
-#include <functional>
-#include <condition_variable>
-#include <thread>
-#include <deque>
+#include "Transaction.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/Log.h>
+#include <libdevcore/LruCache.h>
 #include <libethcore/Common.h>
-#include "Transaction.h"
+#include <condition_variable>
+#include <deque>
+#include <functional>
+#include <thread>
 
 namespace dev
 {
@@ -189,7 +190,11 @@ private:
     h256Hash m_known;            ///< Headers of transactions in both sets.
 
     std::unordered_map<h256, std::function<void(ImportResult)>> m_callbacks;	///< Called once.
-    h256Hash m_dropped;															///< Transactions that have previously been dropped
+
+    ///< Transactions that have previously been dropped. We technically only need to store the tx
+    ///< hash, but we also store bool as a placeholder value so that we can use an LRU cache to cap
+    ///< the number of transaction hashes stored.
+    LruCache<h256, bool> m_dropped;
 
     PriorityQueue m_current;
     std::unordered_map<h256, PriorityQueue::iterator> m_currentByHash;			///< Transaction hash to set ref

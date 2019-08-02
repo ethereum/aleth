@@ -1,23 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file TransactionQueue.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "TransactionQueue.h"
 
@@ -28,12 +11,17 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-const size_t c_maxVerificationQueueSize = 8192;
+namespace
+{
+constexpr size_t c_maxVerificationQueueSize = 8192;
+constexpr size_t c_maxDroppedTransactionCount = 1024;
+}  // namespace
 
-TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
-    m_current(PriorityCompare { *this }),
-    m_limit(_limit),
-    m_futureLimit(_futureLimit)
+TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit)
+  : m_dropped{c_maxDroppedTransactionCount},
+    m_current{PriorityCompare{*this}},
+    m_limit{_limit},
+    m_futureLimit{_futureLimit}
 {
     unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;
     for (unsigned i = 0; i < verifierThreads; ++i)
@@ -70,7 +58,7 @@ ImportResult TransactionQueue::check_WITH_LOCK(h256 const& _h, IfDropped _ik)
     if (m_known.count(_h))
         return ImportResult::AlreadyKnown;
 
-    if (m_dropped.count(_h) && _ik == IfDropped::Ignore)
+    if (m_dropped.touch(_h) && _ik == IfDropped::Ignore)
         return ImportResult::AlreadyInChain;
 
     return ImportResult::Success;
@@ -328,7 +316,7 @@ void TransactionQueue::drop(h256 const& _txHash)
         return;
 
     UpgradeGuard ul(l);
-    m_dropped.insert(_txHash);
+    m_dropped.insert(_txHash, true /* placeholder value */);
     remove_WITH_LOCK(_txHash);
 }
 

@@ -10,6 +10,7 @@ set(unittest_sources
     unittests/libdevcore/CommonJS.cpp
     unittests/libdevcore/core.cpp
     unittests/libdevcore/FixedHash.cpp
+    unittests/libdevcore/LruCache.cpp
     unittests/libdevcore/RangeMask.cpp
     unittests/libdevcore/RLP.cpp
 

@@ -33,6 +33,7 @@ add_library(
     Log.h
     LoggingProgramOptions.cpp
     LoggingProgramOptions.h
+    LruCache.h
     MemoryDB.cpp
     MemoryDB.h
     OverlayDB.cpp
