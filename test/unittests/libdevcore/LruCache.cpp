@@ -46,8 +46,7 @@ void VerifyEquals(LRU& _lruCache, VEC& _data)
     auto iter = _lruCache.begin();
     while (iter != _lruCache.cend() && i < _data.size())
     {
-        EXPECT_EQ(iter->first, _data[i].first);
-        EXPECT_EQ(iter->second, _data[i].second);
+        EXPECT_EQ(*iter, _data[i]);
         iter++;
         i++;
     }

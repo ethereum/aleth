@@ -70,23 +70,23 @@ public:
         return cIter != m_index.cend() && (*(cIter->second)).second == _value;
     }
 
-    bool empty() const { return m_index.empty(); }
+    bool empty() const noexcept { return m_index.empty(); }
 
-    size_t size() const { return m_index.size(); }
+    size_t size() const noexcept { return m_index.size(); }
 
-    size_t capacity() const { return m_capacity; }
+    size_t capacity() const noexcept { return m_capacity; }
 
-    void clear()
+    void clear() noexcept
     {
         m_index.clear();
         m_data.clear();
     }
 
     // Expose data iterator for testing purposes
-    typename list_type::const_iterator cbegin() const { return m_data.cbegin(); }
-    typename list_type::iterator begin() { return m_data.begin(); }
-    typename list_type::const_iterator cend() const { return m_data.cend(); }
-    typename list_type::iterator end() { return m_data.end(); }
+    typename list_type::const_iterator cbegin() const noexcept { return m_data.cbegin(); }
+    typename list_type::iterator begin() noexcept { return m_data.begin(); }
+    typename list_type::const_iterator cend() const noexcept { return m_data.cend(); }
+    typename list_type::iterator end() noexcept { return m_data.end(); }
 
 private:
     list_type m_data;
