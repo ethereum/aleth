@@ -388,7 +388,24 @@ void Client::syncBlockQueue()
     ImportRoute ir;
     unsigned count;
     Timer t;
-    tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
+
+    std::shared_ptr<VerifiedBlocks> verifiedBlocks = std::make_shared<VerifiedBlocks>();
+    m_bq.drain(*verifiedBlocks, m_syncAmount);
+
+    // Propagate new blocks to peers before importing them into the chain
+    auto h = m_host.lock();
+    if (!h)
+    {
+        // TODO: Can we ever hit this?
+        LOG(m_logger) << "Host unavailable??";
+        return;
+    }
+    h->propagateBlocks(verifiedBlocks);
+
+    h256s badBlockHashes;
+    tie(ir, count) = bc().sync(*verifiedBlocks, badBlockHashes, m_stateDB);
+    m_syncBlockQueue = m_bq.doneDrain(badBlockHashes);
+
     double elapsed = t.elapsed();
 
     if (count)
@@ -557,8 +574,8 @@ void Client::onChainChanged(ImportRoute const& _ir)
     h256Hash changeds;
     onDeadBlocks(_ir.deadBlocks, changeds);
     vector<h256> goodTransactions;
-    goodTransactions.reserve(_ir.goodTranactions.size());
-    for (auto const& t: _ir.goodTranactions)
+    goodTransactions.reserve(_ir.goodTransactions.size());
+    for (auto const& t: _ir.goodTransactions)
     {
         LOG(m_loggerDetail) << "Safely dropping transaction " << t.sha3();
         m_tq.dropGood(t);

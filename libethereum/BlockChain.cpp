@@ -419,19 +419,28 @@ string BlockChain::dumpDatabase() const
     return oss.str();
 }
 
-tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
+tuple<ImportRoute, bool, unsigned> BlockChain::sync(
+    BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
 {
-//  _bq.tick(*this);
+    //  _bq.tick(*this);
 
     VerifiedBlocks blocks;
     _bq.drain(blocks, _max);
 
+    h256s badBlockHashes;
+    std::tuple<ImportRoute, unsigned> importResult = sync(blocks, badBlockHashes, _stateDB);
+    bool moreBlocks = _bq.doneDrain(badBlockHashes);
+    return {get<0>(importResult), moreBlocks, get<1>(importResult)};
+}
+
+std::tuple<ImportRoute, unsigned> BlockChain::sync(
+    VerifiedBlocks const& _blocks, h256s& _badBlockHashes, OverlayDB const& _stateDB)
+{
     h256s fresh;
     h256s dead;
-    h256s badBlocks;
     Transactions goodTransactions;
     unsigned count = 0;
-    for (VerifiedBlock const& block: blocks)
+    for (VerifiedBlock const& block : _blocks)
     {
         do {
             try
@@ -442,8 +451,8 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
                     r = import(block.verified, _stateDB, (ImportRequirements::Everything & ~ImportRequirements::ValidSeal & ~ImportRequirements::CheckUncles) != 0);
                 fresh += r.liveBlocks;
                 dead += r.deadBlocks;
-                goodTransactions.reserve(goodTransactions.size() + r.goodTranactions.size());
-                std::move(std::begin(r.goodTranactions), std::end(r.goodTranactions), std::back_inserter(goodTransactions));
+                goodTransactions.reserve(goodTransactions.size() + r.goodTransactions.size());
+                std::move(std::begin(r.goodTransactions), std::end(r.goodTransactions), std::back_inserter(goodTransactions));
                 ++count;
             }
             catch (dev::eth::AlreadyHaveBlock const&)
@@ -454,9 +463,9 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
             catch (dev::eth::UnknownParent const&)
             {
                 cwarn << "ODD: Import queue contains block with unknown parent.";// << LogTag::Error << boost::current_exception_diagnostic_information();
-                // NOTE: don't reimport since the queue should guarantee everything in the right order.
-                // Can't continue - chain bad.
-                badBlocks.push_back(block.verified.info.hash());
+                                                                                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
+                                                                                 // Can't continue - chain bad.
+                _badBlockHashes.push_back(block.verified.info.hash());
             }
             catch (dev::eth::FutureTime const&)
             {
@@ -471,16 +480,16 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
             }
             catch (Exception& ex)
             {
-//              cnote << "Exception while importing block. Someone (Jeff? That you?) seems to be giving us dodgy blocks!";// << LogTag::Error << diagnostic_information(ex);
+                //              cnote << "Exception while importing block. Someone (Jeff? That you?) seems to be giving us dodgy blocks!";// << LogTag::Error << diagnostic_information(ex);
                 if (m_onBad)
                     m_onBad(ex);
                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
                 // Can't continue - chain  bad.
-                badBlocks.push_back(block.verified.info.hash());
+                _badBlockHashes.push_back(block.verified.info.hash());
             }
         } while (false);
     }
-    return make_tuple(ImportRoute{dead, fresh, goodTransactions}, _bq.doneDrain(badBlocks), count);
+    return {ImportRoute{dead, fresh, goodTransactions}, count};
 }
 
 pair<ImportResult, ImportRoute> BlockChain::attemptImport(bytes const& _block, OverlayDB const& _stateDB, bool _mustBeNew) noexcept

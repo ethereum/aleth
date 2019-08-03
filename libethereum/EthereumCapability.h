@@ -11,6 +11,7 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Common.h>
 #include <libethereum/BlockChainSync.h>
+#include <libethereum/VerifiedBlock.h>
 #include <libp2p/Capability.h>
 #include <libp2p/CapabilityHost.h>
 #include <libp2p/Common.h>
@@ -142,6 +143,11 @@ public:
     /// from any thread.
     void removeSentTransactions(std::vector<h256> const& _txHashes);
 
+    /// Send new blocks to peers. Should be done after we've verified the PoW but before we've
+    /// imported the blocks into the chain (in order to reduce the uncle rate). Actual sending of
+    /// blocks is done on the network thread.
+    void propagateBlocks(std::shared_ptr<VerifiedBlocks const> const& _blocks);
+
 private:
     static char const* const c_stateNames[static_cast<int>(SyncState::Size)];
     static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
@@ -154,7 +160,7 @@ private:
 
     /// Send top transactions (by nonce and gas price) to available peers
     void maintainTransactions();
-    void maintainBlocks(h256 const& _currentBlock);
+    void maintainBlockHashes(h256 const& _currentBlock);
     void onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId);
 
     /// Initialises the network peer-state, doing the stuff that needs to be once-only. @returns true if it really was first.
@@ -178,7 +184,7 @@ private:
 
     u256 m_networkId;
 
-    h256 m_latestBlockSent;
+    h256 m_latestBlockHashSent;
     h256Hash m_transactionsSent;
 
     std::atomic<bool> m_newTransactions = {false};
