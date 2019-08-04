@@ -43,6 +43,10 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 namespace
 {
+unsigned constexpr c_syncMin = 1;
+unsigned constexpr c_syncMax = 1000;
+double constexpr c_targetDuration = 1;
+
 std::string filtersToString(h256Hash const& _fs)
 {
     std::stringstream str;
@@ -377,10 +381,6 @@ void Client::appendFromBlock(h256 const& _block, BlockPolarity _polarity, h256Ha
     }
 }
 
-unsigned static const c_syncMin = 1;
-unsigned static const c_syncMax = 1000;
-double static const c_targetDuration = 1;
-
 void Client::syncBlockQueue()
 {
 //  cdebug << "syncBlockQueue()";
@@ -389,18 +389,14 @@ void Client::syncBlockQueue()
     unsigned count;
     Timer t;
 
-    std::shared_ptr<VerifiedBlocks> verifiedBlocks = std::make_shared<VerifiedBlocks>();
+    shared_ptr<VerifiedBlocks> verifiedBlocks = make_shared<VerifiedBlocks>();
     m_bq.drain(*verifiedBlocks, m_syncAmount);
 
-    // Propagate new blocks to peers before importing them into the chain
+    // Propagate new blocks to peers before importing them into the chain.
     auto h = m_host.lock();
-    if (!h)
-    {
-        // TODO: Can we ever hit this?
-        LOG(m_logger) << "Host unavailable??";
-        return;
-    }
-    h->propagateBlocks(verifiedBlocks);
+    assert(h);  // capability is owned by Host and should be available for the duration of the
+                // Client's lifetime
+    h->propagateNewBlocks(verifiedBlocks);
 
     h256s badBlockHashes;
     tie(ir, count) = bc().sync(*verifiedBlocks, badBlockHashes, m_stateDB);

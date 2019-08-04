@@ -101,10 +101,15 @@ public:
     void process();
 
     /// Sync the chain with any incoming blocks. All blocks should, if processed in order.
-    /// @returns fresh blocks, dead blocks and true iff there are additional blocks to be processed
-    /// waiting.
+    /// @returns tuple with three members - the first (ImportRoute) contains hashes of fresh blocks
+    /// and dead blocks as well as a list of imported transactions. The second is a bool which is
+    /// true iff there are additional blocks to be processed. The third is the imported block count.
     std::tuple<ImportRoute, bool, unsigned> sync(
         BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
+
+    /// Import the supplied blocks into the chain. Blocks should be processed in order.
+    /// @returns a tuple with two members - the first (ImportRoute) contains fresh blocks, dead
+    /// blocks and imported transactions. The second contains the imported block count.
     std::tuple<ImportRoute, unsigned> sync(
         VerifiedBlocks const& _blocks, h256s& _badBlockHashes, OverlayDB const& _stateDB);
 

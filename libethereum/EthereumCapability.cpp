@@ -26,11 +26,12 @@ std::chrono::milliseconds constexpr EthereumCapability::c_backgroundWorkInterval
 
 namespace
 {
-constexpr unsigned c_maxSendTransactions = 256;
-constexpr unsigned c_maxHeadersToSend = 1024;
-constexpr unsigned c_maxIncomingNewHashes = 1024;
+constexpr unsigned c_maxSendTransactionsCount = 256;
+constexpr unsigned c_maxSendHeadersCount = 1024;
+constexpr unsigned c_maxIncomingNewHashesCount = 1024;
 constexpr unsigned c_peerTimeoutSeconds = 10;
 constexpr int c_minBlockBroadcastPeers = 4;
+constexpr size_t c_maxSendNewBlocksCount = 20;
 
 string toString(Asking _a)
 {
@@ -412,13 +413,14 @@ EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host
     m_tq(_tq),
     m_bq(_bq),
     m_networkId(_networkId),
-    m_hostData(new EthereumHostData(m_chain, m_db))
+    m_hostData(new EthereumHostData(m_chain, m_db)),
+    m_latestBlockHashSent{_ch.currentHash()},
+    m_latestBlockSent{_ch.currentHash()}
 {
     // TODO: Composition would be better. Left like that to avoid initialization
     //       issues as BlockChainSync accesses other EthereumHost members.
     m_sync.reset(new BlockChainSync(*this));
     m_peerObserver.reset(new EthereumPeerObserver(m_sync, m_tq));
-    m_latestBlockHashSent = _ch.currentHash();
     m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
     std::random_device seed;
     m_urng = std::mt19937_64(seed());
@@ -433,8 +435,10 @@ bool EthereumCapability::ensureInitialised()
 {
     if (!m_latestBlockHashSent)
     {
+        assert(!m_latestBlockSent.load());
         // First time - just initialise.
         m_latestBlockHashSent = m_chain.currentHash();
+        m_latestBlockSent = m_chain.currentHash();
         LOG(m_logger) << "Initialising: latest=" << m_latestBlockHashSent;
 
         m_transactionsSent = m_tq.knownTransactions();
@@ -450,7 +454,8 @@ void EthereumCapability::reset()
     // reset() can be called from RPC handling thread,
     // but we access m_latestBlockHashSent and m_transactionsSent only from the network thread
     m_host->postWork([this]() {
-        m_latestBlockHashSent = h256();
+        m_latestBlockHashSent = {};
+        m_latestBlockSent.exchange({});
         m_transactionsSent.clear();
     });
 }
@@ -464,7 +469,7 @@ void EthereumCapability::maintainTransactions()
 {
     // Send any new transactions.
     unordered_map<NodeID, std::vector<size_t>> peerTransactions;
-    auto ts = m_tq.topTransactions(c_maxSendTransactions);
+    auto ts = m_tq.topTransactions(c_maxSendTransactionsCount);
     {
         for (size_t i = 0; i < ts.size(); ++i)
         {
@@ -537,14 +542,14 @@ std::pair<std::vector<NodeID>, std::vector<NodeID>> EthereumCapability::randomPa
 
 void EthereumCapability::maintainBlockHashes(h256 const& _currentHash)
 {
-    // Send any new blocks.
+    // Send any new block hashes
     auto detailsFrom = m_chain.details(m_latestBlockHashSent);
     auto detailsTo = m_chain.details(_currentHash);
     if (detailsFrom.totalDifficulty < detailsTo.totalDifficulty)
     {
-        if (diff(detailsFrom.number, detailsTo.number) < 20)
+        if (diff(detailsFrom.number, detailsTo.number) <= c_maxSendNewBlocksCount)
         {
-            // don't be sending more than 20 "new" blocks. if there are any more we were probably
+            // don't be sending more than c_maxSendNewBlocksCount "new" block hashes. if there are any more we were probably
             // waaaay behind.
             LOG(m_logger) << "Sending new block hashes (current is " << _currentHash << ", was "
                           << m_latestBlockHashSent << ")";
@@ -679,9 +684,9 @@ bool EthereumCapability::interpretCapabilityPacket(
             const auto skip = _r[2].toInt<u256>();
             const auto reverse = _r[3].toInt<bool>();
 
-            auto numHeadersToSend = maxHeaders <= c_maxHeadersToSend ?
+            auto numHeadersToSend = maxHeaders <= c_maxSendHeadersCount ?
                                         static_cast<unsigned>(maxHeaders) :
-                                        c_maxHeadersToSend;
+                                        c_maxSendHeadersCount;
 
             if (skip > std::numeric_limits<unsigned>::max() - 1)
             {
@@ -757,11 +762,11 @@ bool EthereumCapability::interpretCapabilityPacket(
             LOG(m_logger) << "BlockHashes (" << dec << itemCount << " entries) "
                           << (itemCount ? "" : " : NoMoreHashes") << " from " << _peerID;
 
-            if (itemCount > c_maxIncomingNewHashes)
+            if (itemCount > c_maxIncomingNewHashesCount)
             {
                 LOG(m_logger) << "Received too many hashes (" << itemCount << ") from " << _peerID
-                              << ", only processing first " << c_maxIncomingNewHashes << " hashes";
-                itemCount = c_maxIncomingNewHashes;
+                              << ", only processing first " << c_maxIncomingNewHashesCount << " hashes";
+                itemCount = c_maxIncomingNewHashesCount;
             }
 
             vector<pair<h256, u256>> hashes(itemCount);
@@ -952,13 +957,21 @@ void EthereumCapability::removeSentTransactions(std::vector<h256> const& _txHash
     }
 }
 
-void EthereumCapability::propagateBlocks(std::shared_ptr<VerifiedBlocks const> const& _blocks)
+void EthereumCapability::propagateNewBlocks(std::shared_ptr<VerifiedBlocks const> const& _newBlocks)
 {
-    if (_blocks->empty())
+    // Safe to call isSyncing() from a non-network thread since the underlying variable is
+    // std::atomic
+    if (_newBlocks->empty() || isSyncing())
         return;
 
-    m_host->postWork([this, _blocks]() {
-        auto const currentHash = _blocks->back().verified.info.hash();
+    // Check if we're too far behind
+    auto const currentHash = _newBlocks->back().verified.info.hash();
+    auto const detailsFrom = m_chain.details(m_latestBlockSent);
+    auto const detailsTo = m_chain.details(currentHash);
+    if (diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
+        return;
+
+    m_host->postWork([this, _newBlocks, currentHash]() {
         auto const peersWithoutBlock = selectPeers(
             [&](EthereumPeer const& _peer) { return !_peer.isBlockKnown(currentHash); });
 
@@ -967,7 +980,7 @@ void EthereumCapability::propagateBlocks(std::shared_ptr<VerifiedBlocks const> c
 
         std::vector<NodeID> const peersToSend = randomPeers(peersWithoutBlock, peersToSendNumber);
         for (NodeID const& peerID : peersToSend)
-            for (auto const& b : *_blocks)
+            for (auto const& b : *_newBlocks)
             {
                 RLPStream ts;
                 m_host->prep(peerID, name(), ts, NewBlockPacket, 2)
@@ -983,8 +996,11 @@ void EthereumCapability::propagateBlocks(std::shared_ptr<VerifiedBlocks const> c
                 }
             }
         if (!peersToSend.empty())
-            LOG(m_logger) << "Sent " << _blocks->size() << " block(s) to " << peersToSend.size()
+        {
+            m_latestBlockSent = currentHash;
+            LOG(m_logger) << "Sent " << _newBlocks->size() << " block(s) to " << peersToSend.size()
                           << " peers";
+        }
     });
 }
 

@@ -140,6 +140,6 @@ mt19937_64 g_randomGenerator(random_device{}());
 
 int randomNumber(int _min, int _max)
 {
-    return std::uniform_int_distribution<int>{_min, _max}(g_randomGenerator);
+    return uniform_int_distribution<int>{_min, _max}(g_randomGenerator);
 }
 }  // namespace dev

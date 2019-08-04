@@ -428,12 +428,12 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(
     _bq.drain(blocks, _max);
 
     h256s badBlockHashes;
-    std::tuple<ImportRoute, unsigned> importResult = sync(blocks, badBlockHashes, _stateDB);
-    bool moreBlocks = _bq.doneDrain(badBlockHashes);
+    tuple<ImportRoute, unsigned> const importResult = sync(blocks, badBlockHashes, _stateDB);
+    bool const moreBlocks = _bq.doneDrain(badBlockHashes);
     return {get<0>(importResult), moreBlocks, get<1>(importResult)};
 }
 
-std::tuple<ImportRoute, unsigned> BlockChain::sync(
+tuple<ImportRoute, unsigned> BlockChain::sync(
     VerifiedBlocks const& _blocks, h256s& _badBlockHashes, OverlayDB const& _stateDB)
 {
     h256s fresh;

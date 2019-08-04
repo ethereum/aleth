@@ -144,9 +144,9 @@ public:
     void removeSentTransactions(std::vector<h256> const& _txHashes);
 
     /// Send new blocks to peers. Should be done after we've verified the PoW but before we've
-    /// imported the blocks into the chain (in order to reduce the uncle rate). Actual sending of
-    /// blocks is done on the network thread.
-    void propagateBlocks(std::shared_ptr<VerifiedBlocks const> const& _blocks);
+    /// imported the blocks into the chain (in order to reduce the uncle rate). Thread-safe (actual
+    /// sending of blocks is done on the network thread).
+    void propagateNewBlocks(std::shared_ptr<VerifiedBlocks const> const& _newBlocks);
 
 private:
     static char const* const c_stateNames[static_cast<int>(SyncState::Size)];
@@ -184,7 +184,12 @@ private:
 
     u256 m_networkId;
 
+    // We need to keep track of sent blocks and block hashes separately since we propagate new
+    // blocks after we've verified their PoW (and a few other things i.e. they've been imported into
+    // the block queue and verified) but we propagate new block hashes after blocks have been
+    // imported into the chain
     h256 m_latestBlockHashSent;
+    std::atomic<h256> m_latestBlockSent = {h256{0}};
     h256Hash m_transactionsSent;
 
     std::atomic<bool> m_newTransactions = {false};
