@@ -46,7 +46,7 @@ static inline byte find_base64_char_index(byte c)
     else return 1 + find_base64_char_index('/');
 }
 
-string toBase64Encoding(bytesConstRef _in, char const* c_base64_chars, bool _pad)
+string toBase64Encoding(bytesConstRef _in, char const* _base64_chars, bool _pad)
 {
     string ret;
     int i = 0;
@@ -68,7 +68,7 @@ string toBase64Encoding(bytesConstRef _in, char const* c_base64_chars, bool _pad
             char_array_4[3] = char_array_3[2] & 0x3f;
 
             for (i = 0; i < 4; i++)
-                ret += c_base64_chars[char_array_4[i]];
+                ret += _base64_chars[char_array_4[i]];
             i = 0;
         }
     }
@@ -84,7 +84,7 @@ string toBase64Encoding(bytesConstRef _in, char const* c_base64_chars, bool _pad
         char_array_4[3] = char_array_3[2] & 0x3f;
 
         for (j = 0; j < i + 1; j++)
-            ret += c_base64_chars[char_array_4[j]];
+            ret += _base64_chars[char_array_4[j]];
 
         while (i++ < 3 && _pad)
             ret += '=';
