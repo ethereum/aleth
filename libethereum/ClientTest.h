@@ -52,7 +52,7 @@ public:
     bool completeSync();
 
 protected:
-    unsigned const m_singleBlockMaxMiningTimeInSeconds = 5;
+    unsigned const m_singleBlockMaxMiningTimeInSeconds = 60;
 };
 
 ClientTest& asClientTest(Interface& _c);

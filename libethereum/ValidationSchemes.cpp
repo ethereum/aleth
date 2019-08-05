@@ -118,6 +118,9 @@ void validateAccountObj(js::mObject const& _obj)
         requireJsonFields(_obj, "validateAccountObj",
             {{c_precompiled, {{js::obj_type}, JsonFieldPresence::Required}},
                 {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
+                {c_code, {{js::str_type}, JsonFieldPresence::Optional}},
+                {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
+                {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
                 {c_balance, {{js::str_type}, JsonFieldPresence::Optional}}});
     }
     else
