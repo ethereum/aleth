@@ -43,9 +43,9 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 namespace
 {
-unsigned constexpr c_syncMin = 1;
-unsigned constexpr c_syncMax = 1000;
-double constexpr c_targetDuration = 1;
+constexpr unsigned c_syncMin = 1;
+constexpr unsigned c_syncMax = 1000;
+constexpr double c_targetDuration = 1;
 
 std::string filtersToString(h256Hash const& _fs)
 {

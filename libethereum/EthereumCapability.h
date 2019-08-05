@@ -189,7 +189,7 @@ private:
     // the block queue and verified) but we propagate new block hashes after blocks have been
     // imported into the chain
     h256 m_latestBlockHashSent;
-    std::atomic<h256> m_latestBlockSent = {h256{0}};
+    h256 m_latestBlockSent;
     h256Hash m_transactionsSent;
 
     std::atomic<bool> m_newTransactions = {false};
