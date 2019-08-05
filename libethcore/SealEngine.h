@@ -161,11 +161,7 @@ class NoReward : public NoProof
 public:
     static std::string name() { return "NoReward"; }
     static void init();
-    u256 blockReward(u256 const& _blockNumber) const override
-    {
-        (void)_blockNumber;
-        return 0;
-    }
+    u256 blockReward(u256 const&) const override { return 0; }
 };
 }
 }
