@@ -26,88 +26,6 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-class ExtVMIstanbulTestFixture : public TestOutputHelperFixture
-{
-public:
-    ExtVMIstanbulTestFixture()
-      : networkSelector(eth::Network::IstanbulTransitionTest),
-        testBlockchain(TestBlockChain::defaultGenesisBlock()),
-        genesisBlock(testBlockchain.testGenesis()),
-        genesisDB(genesisBlock.state().db()),
-        blockchain(testBlockchain.getInterface())
-    {
-        TestBlock testBlock;
-        // block 1 - before Istanbul
-        testBlock.mine(testBlockchain);
-        testBlockchain.addBlock(testBlock);
-        preIstanbulBlockHash = testBlock.blockHeader().hash();
-
-        // block 2 - first Istanbul block
-        testBlock.mine(testBlockchain);
-        testBlockchain.addBlock(testBlock);
-        istanbulBlockHash = testBlock.blockHeader().hash();
-    }
-
-    NetworkSelector networkSelector;
-    TestBlockChain testBlockchain;
-    TestBlock const& genesisBlock;
-    OverlayDB const& genesisDB;
-    BlockChain const& blockchain;
-    h256 preIstanbulBlockHash;
-    h256 istanbulBlockHash;
-};
-
-BOOST_FIXTURE_TEST_SUITE(ExtVmIstanbulSuite, ExtVMIstanbulTestFixture)
-
-BOOST_AUTO_TEST_CASE(ScheduleAccordingToForkBeforeIstanbul)
-{
-    Block block = blockchain.genesisBlock(genesisDB);
-    block.sync(blockchain, preIstanbulBlockHash);
-
-    TestLastBlockHashes lastBlockHashes({});
-    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
-    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
-        {}, {}, 0, 0, false, false);
-
-    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, 0);
-    BOOST_CHECK(extVM.evmSchedule().haveCreate2 && !extVM.evmSchedule().eip1283Mode);
-}
-
-BOOST_AUTO_TEST_CASE(PetersburgScheduleForVersionZeroInIstanbul)
-{
-    Block block = blockchain.genesisBlock(genesisDB);
-    block.sync(blockchain, istanbulBlockHash);
-
-    TestLastBlockHashes lastBlockHashes({});
-    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
-    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-    u256 const version = 0;
-    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
-        {}, {}, version, 0, false, false);
-
-    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
-    BOOST_CHECK(extVM.evmSchedule().haveCreate2 && !extVM.evmSchedule().eip1283Mode);
-}
-
-BOOST_AUTO_TEST_CASE(IstanbulScheduleForVersionOneInIstanbul)
-{
-    Block block = blockchain.genesisBlock(genesisDB);
-    block.sync(blockchain, istanbulBlockHash);
-
-    TestLastBlockHashes lastBlockHashes({});
-    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
-    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
-    u256 const version = 1;
-    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
-        {}, {}, version, 0, false, false);
-
-    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
-}
-
-
-BOOST_AUTO_TEST_SUITE_END()
-
 class ExtVMExperimentalTestFixture : public TestOutputHelperFixture
 {
 public:
@@ -122,10 +40,12 @@ public:
         // block 1 - before Experimental
         testBlock.mine(testBlockchain);
         testBlockchain.addBlock(testBlock);
+        preExperimentalBlockHash = testBlock.blockHeader().hash();
 
         // block 2 - first Experimental block
         testBlock.mine(testBlockchain);
         testBlockchain.addBlock(testBlock);
+        experimentalBlockHash = testBlock.blockHeader().hash();
     }
 
     NetworkSelector networkSelector;
@@ -133,6 +53,8 @@ public:
     TestBlock const& genesisBlock;
     OverlayDB const& genesisDB;
     BlockChain const& blockchain;
+    h256 preExperimentalBlockHash;
+    h256 experimentalBlockHash;
 };
 
 BOOST_FIXTURE_TEST_SUITE(ExtVmExperimentalSuite, ExtVMExperimentalTestFixture)
@@ -191,6 +113,54 @@ BOOST_AUTO_TEST_CASE(BlockhashDoesntNeedLastHashesInExperimental)
 
     h256 hash = extVM.blockHash(200);
     BOOST_REQUIRE_EQUAL(hash, blockchain.numberHash(200));
+}
+
+BOOST_AUTO_TEST_CASE(ScheduleAccordingToForkBeforeExperimental)
+{
+    Block block = blockchain.genesisBlock(genesisDB);
+    block.sync(blockchain, preExperimentalBlockHash);
+
+    TestLastBlockHashes lastBlockHashes({});
+    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
+        {}, {}, 0, 0, false, false);
+
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, 0);
+    BOOST_CHECK(
+        extVM.evmSchedule().txDataNonZeroGas == 16 && extVM.evmSchedule().blockhashGas == 20);
+}
+
+BOOST_AUTO_TEST_CASE(IstanbulScheduleForVersionZeroInExperimental)
+{
+    Block block = blockchain.genesisBlock(genesisDB);
+    block.sync(blockchain, experimentalBlockHash);
+
+    TestLastBlockHashes lastBlockHashes({});
+    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+    u256 const version = 0;
+    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
+        {}, {}, version, 0, false, false);
+
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
+    BOOST_CHECK(
+        extVM.evmSchedule().txDataNonZeroGas == 16 && extVM.evmSchedule().blockhashGas == 20);
+}
+
+BOOST_AUTO_TEST_CASE(ExperimentalScheduleForVersionOneInExperimental)
+{
+    Block block = blockchain.genesisBlock(genesisDB);
+    block.sync(blockchain, experimentalBlockHash);
+
+    TestLastBlockHashes lastBlockHashes({});
+    EnvInfo envInfo(block.info(), lastBlockHashes, 0);
+    Address addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+    u256 const version = 1;
+    ExtVM extVM(block.mutableState(), envInfo, *blockchain.sealEngine(), addr, addr, addr, 0, 0, {},
+        {}, {}, version, 0, false, false);
+
+    BOOST_CHECK_EQUAL(extVM.evmSchedule().accountVersion, version);
 }
 
 

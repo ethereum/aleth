@@ -149,13 +149,13 @@ static const EVMSchedule ConstantinopleFixSchedule = [] {
 
 static const EVMSchedule IstanbulSchedule = [] {
     EVMSchedule schedule = ConstantinopleFixSchedule;
-    schedule.accountVersion = 1;
     schedule.txDataNonZeroGas = 16;
     return schedule;
 }();
 
 static const EVMSchedule ExperimentalSchedule = [] {
     EVMSchedule schedule = IstanbulSchedule;
+    schedule.accountVersion = 1;
     schedule.blockhashGas = 800;
     return schedule;
 }();
@@ -163,9 +163,9 @@ static const EVMSchedule ExperimentalSchedule = [] {
 inline EVMSchedule const& latestScheduleForAccountVersion(u256 const& _version)
 {
     if (_version == 0)
-        return ConstantinopleFixSchedule;
-    else if (_version == IstanbulSchedule.accountVersion)
         return IstanbulSchedule;
+    else if (_version == ExperimentalSchedule.accountVersion)
+        return ExperimentalSchedule;
     else
     {
         // This should not happen, as all existing accounts

@@ -13,7 +13,7 @@
 - Added: [#5593](https://github.com/ethereum/aleth/pull/5593) Dynamically updating host ENR.
 - Added: [#5624](https://github.com/ethereum/aleth/pull/5624) Remove useless peers from peer list.
 - Added: [#5634](https://github.com/ethereum/aleth/pull/5634) Bootnodes for Rinkeby and Goerli.
-- Added: [#5640](https://github.com/ethereum/aleth/pull/5640) Istanbul support: EIP-1702 Generalized Account Versioning Scheme.
+- Added: [#5640](https://github.com/ethereum/aleth/pull/5640) Support EIP-1702 Generalized Account Versioning Scheme (active only in Experimental fork.)
 - Added: [#5690](https://github.com/ethereum/aleth/issues/5690) Istanbul support: EIP-2028 transaction data gas cost reduction.
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
