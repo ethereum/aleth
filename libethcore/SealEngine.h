@@ -154,5 +154,14 @@ u256 calculateEthashDifficulty(
 
 u256 calculateGasLimit(ChainOperationParams const& _chainParams, BlockHeader const& _bi,
     u256 const& _gasFloorTarget = Invalid256);
+
+
+class NoReward : public NoProof
+{
+public:
+    static std::string name() { return "NoReward"; }
+    static void init();
+    u256 blockReward(u256 const&) const override { return 0; }
+};
 }
 }

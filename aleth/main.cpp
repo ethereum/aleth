@@ -115,6 +115,7 @@ int main(int argc, char** argv)
     // Init defaults
     Ethash::init();
     NoProof::init();
+    NoReward::init();
 
     /// Operating mode.
     OperationMode mode = OperationMode::Node;

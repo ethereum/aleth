@@ -61,7 +61,8 @@ void ClientTest::setChainParams(string const& _genesis)
     try
     {
         params = params.loadConfig(_genesis);
-        if (params.sealEngineName != NoProof::name() && params.sealEngineName != Ethash::name())
+        if (params.sealEngineName != NoProof::name() && params.sealEngineName != Ethash::name() &&
+            params.sealEngineName != NoReward::name())
             BOOST_THROW_EXCEPTION(
                 ChainParamsInvalid() << errinfo_comment("Seal engine is not supported!"));
 
