@@ -3,6 +3,7 @@
 // Licensed under the GNU General Public License, Version 3.
 
 #include "ENR.h"
+#include <libdevcore/Base64.h>
 #include <libdevcore/SHA3.h>
 
 namespace dev
@@ -277,6 +278,13 @@ std::ostream& operator<<(std::ostream& _out, ENR const& _enr)
 
     _out << " ]";
     return _out;
+}
+
+std::string ENR::textEncoding() const
+{
+    RLPStream s;
+    streamRLP(s);
+    return ("enr:" + toBase64URLSafe(ref(s.out())));
 }
 
 }  // namespace p2p
