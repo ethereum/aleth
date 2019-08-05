@@ -23,6 +23,12 @@ public:
         ethash.setChainParams(ChainParams{genesisInfo(eth::Network::IstanbulTransitionTest)});
     }
 
+    // called after blockHeader is set up
+    EnvInfo envInfo() const
+    {
+        return {blockHeader, lastBlockHashes, 0, ethash.chainParams().chainID};
+    }
+
     Ethash ethash;
     BlockHeader blockHeader;
     TestLastBlockHashes lastBlockHashes{{}};
@@ -39,14 +45,12 @@ public:
 
 TEST_F(ExecutiveTest, callUsesAccountVersion)
 {
-    EnvInfo envInfo(blockHeader, lastBlockHashes, 0);
-
     state.createContract(receiveAddress);
     u256 version = 1;
     state.setCode(receiveAddress, bytes{code}, version);
     state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
-    Executive executive(state, envInfo, ethash);
+    Executive executive(state, envInfo(), ethash);
 
     bool done = executive.call(receiveAddress, txSender, txValue, gasPrice, txData, gas);
 
@@ -59,9 +63,7 @@ TEST_F(ExecutiveTest, createUsesLatestForkVersion)
     // block in Istanbul fork
     blockHeader.setNumber(10);
 
-    EnvInfo envInfo(blockHeader, lastBlockHashes, 0);
-
-    Executive executive(state, envInfo, ethash);
+    Executive executive(state, envInfo(), ethash);
 
     bool done = executive.create(txSender, txValue, gasPrice, gas, ref(code), txSender);
 
@@ -71,14 +73,12 @@ TEST_F(ExecutiveTest, createUsesLatestForkVersion)
 
 TEST_F(ExecutiveTest, createOpcodeUsesParentVersion)
 {
-    EnvInfo envInfo(blockHeader, lastBlockHashes, 0);
-
     state.createContract(txSender);
     u256 version = 1;
     state.setCode(txSender, bytes{code}, version);
     state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
-    Executive executive(state, envInfo, ethash);
+    Executive executive(state, envInfo(), ethash);
 
     bool done = executive.createOpcode(txSender, txValue, gasPrice, gas, ref(code), txSender);
 
@@ -88,14 +88,12 @@ TEST_F(ExecutiveTest, createOpcodeUsesParentVersion)
 
 TEST_F(ExecutiveTest, create2OpcodeUsesParentVersion)
 {
-    EnvInfo envInfo(blockHeader, lastBlockHashes, 0);
-
     state.createContract(txSender);
     u256 version = 1;
     state.setCode(txSender, bytes{code}, version);
     state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
-    Executive executive(state, envInfo, ethash);
+    Executive executive(state, envInfo(), ethash);
 
     bool done = executive.create2Opcode(txSender, txValue, gasPrice, gas, ref(code), txSender, 0);
 
@@ -105,14 +103,12 @@ TEST_F(ExecutiveTest, create2OpcodeUsesParentVersion)
 
 TEST_F(ExecutiveTest, emptyInitCodeSetsParentVersion)
 {
-    EnvInfo envInfo(blockHeader, lastBlockHashes, 0);
-
     state.createContract(txSender);
     u256 version = 1;
     state.setCode(txSender, bytes{code}, version);
     state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
-    Executive executive(state, envInfo, ethash);
+    Executive executive(state, envInfo(), ethash);
 
     bytes initCode;
     bool done = executive.createOpcode(txSender, txValue, gasPrice, gas, ref(initCode), txSender);
@@ -124,14 +120,12 @@ TEST_F(ExecutiveTest, emptyInitCodeSetsParentVersion)
 
 TEST_F(ExecutiveTest, createdContractHasParentVersion)
 {
-    EnvInfo envInfo(blockHeader, lastBlockHashes, 0);
-
     state.createContract(txSender);
     u256 version = 1;
     state.setCode(txSender, bytes{code}, version);
     state.commit(State::CommitBehaviour::RemoveEmptyAccounts);
 
-    Executive executive(state, envInfo, ethash);
+    Executive executive(state, envInfo(), ethash);
 
     // mstore(0, 0x60)
     // return(0, 0x20)

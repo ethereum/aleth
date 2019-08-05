@@ -262,7 +262,7 @@ int main(int argc, char** argv)
 
     unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
     LastBlockHashes lastBlockHashes;
-    EnvInfo const envInfo(blockHeader, lastBlockHashes, 0);
+    EnvInfo const envInfo(blockHeader, lastBlockHashes, 0 /* gasUsed */, se->chainParams().chainID);
 
     Transaction t;
     Address contractDestination("1122334455667788991011121314151617181920");

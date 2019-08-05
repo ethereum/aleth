@@ -41,6 +41,7 @@ struct EVMSchedule
     bool haveStaticCall = false;
     bool haveCreate2 = false;
     bool haveExtcodehash = false;
+    bool haveChainID = false;
     std::array<unsigned, 8> tierStepGas;
     unsigned expGas = 10;
     unsigned expByteGas = 10;
@@ -150,6 +151,7 @@ static const EVMSchedule ConstantinopleFixSchedule = [] {
 static const EVMSchedule IstanbulSchedule = [] {
     EVMSchedule schedule = ConstantinopleFixSchedule;
     schedule.txDataNonZeroGas = 16;
+    schedule.haveChainID = true;
     return schedule;
 }();
 

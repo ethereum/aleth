@@ -181,11 +181,11 @@ public:
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
-    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
     Address address{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
         ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
 
     u256 value = 0;
     u256 gasPrice = 1;
@@ -348,12 +348,12 @@ public:
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
-    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
     Address address{KeyPair::create().address()};
     Address extAddress{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
         ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
 
     u256 value = 0;
     u256 gasPrice = 1;
@@ -461,12 +461,12 @@ public:
 
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
-    EnvInfo envInfo{blockHeader, lastBlockHashes, 0};
     Address from{KeyPair::create().address()};
     Address to{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
         ChainParams(genesisInfo(Network::ConstantinopleTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
 
     u256 value = 0;
     u256 gasPrice = 1;
@@ -490,6 +490,84 @@ class AlethInterpreterSstoreTestFixture : public SstoreTestFixture
 {
 public:
     AlethInterpreterSstoreTestFixture() : SstoreTestFixture{new EVMC{evmc_create_interpreter()}} {}
+};
+
+class ChainIDTestFixture : public TestOutputHelperFixture
+{
+public:
+    explicit ChainIDTestFixture(VMFace* _vm) : vm{_vm} { state.addBalance(address, 1 * ether); }
+
+    void testChainIDWorksInIstanbul()
+    {
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
+            sha3(code), version, depth, isCreate, staticCall);
+
+        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+
+        BOOST_REQUIRE_EQUAL(fromBigEndian<int>(ret), 1);
+    }
+
+    void testChainIDHasCorrectCost()
+    {
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
+            sha3(code), version, depth, isCreate, staticCall);
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (_instr == Instruction::CHAINID)
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+
+        vm->exec(gas, extVm, onOp);
+
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 2);
+    }
+
+    void testChainIDisInvalidBeforeIstanbul()
+    {
+        se.reset(ChainParams(genesisInfo(Network::ConstantinopleFixTest)).createSealEngine());
+        version = ConstantinopleFixSchedule.accountVersion;
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
+            sha3(code), version, depth, isCreate, staticCall);
+
+        BOOST_REQUIRE_THROW(vm->exec(gas, extVm, OnOpFunc{}), BadInstruction);
+    }
+
+
+    BlockHeader blockHeader{initBlockHeader()};
+    LastBlockHashes lastBlockHashes;
+    Address address{KeyPair::create().address()};
+    State state{0};
+    std::unique_ptr<SealEngineFace> se{
+        ChainParams(genesisInfo(Network::IstanbulTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
+
+    u256 value = 0;
+    u256 gasPrice = 1;
+    u256 version = IstanbulSchedule.accountVersion;
+    int depth = 0;
+    bool isCreate = false;
+    bool staticCall = false;
+    u256 gas = 1000000;
+
+    // let id : = chainid()
+    // mstore(0, id)
+    // return(0, 32)
+    bytes code = fromHex("468060005260206000f350");
+
+    std::unique_ptr<VMFace> vm;
+};
+
+class LegacyVMChainIDTestFixture : public ChainIDTestFixture
+{
+public:
+    LegacyVMChainIDTestFixture() : ChainIDTestFixture{new LegacyVM} {}
 };
 
 }  // namespace
@@ -671,6 +749,24 @@ BOOST_AUTO_TEST_CASE(LegacyVMSstoreEip1283Case17)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+BOOST_FIXTURE_TEST_SUITE(LegacyVMChainIDSuite, LegacyVMChainIDTestFixture)
+
+BOOST_AUTO_TEST_CASE(LegacyVMChainIDworksInIstanbul)
+{
+    testChainIDWorksInIstanbul();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMChainIDHasCorrectCost)
+{
+    testChainIDHasCorrectCost();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMChainIDisInvalidBeforeIstanbul)
+{
+    testChainIDisInvalidBeforeIstanbul();
+}
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSuite, TestOutputHelperFixture)

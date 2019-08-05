@@ -656,12 +656,13 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
     return make_pair(res, receipt);
 }
 
-void State::executeBlockTransactions(Block const& _block, unsigned _txCount, LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine)
+void State::executeBlockTransactions(Block const& _block, unsigned _txCount,
+    LastBlockHashesFace const& _lastHashes, SealEngineFace const& _sealEngine)
 {
     u256 gasUsed = 0;
     for (unsigned i = 0; i < _txCount; ++i)
     {
-        EnvInfo envInfo(_block.info(), _lastHashes, gasUsed);
+        EnvInfo envInfo(_block.info(), _lastHashes, gasUsed, _sealEngine.chainParams().chainID);
 
         Executive e(*this, envInfo, _sealEngine);
         executeTransaction(e, _block.pending()[i], OnOpFunc());

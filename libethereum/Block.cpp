@@ -629,7 +629,8 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
     return tdIncrease;
 }
 
-ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
+ExecutionResult Block::execute(
+    LastBlockHashesFace const& _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
     if (isSealed())
         BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
@@ -638,7 +639,9 @@ ExecutionResult Block::execute(LastBlockHashesFace const& _lh, Transaction const
     // transaction as possible.
     uncommitToSeal();
 
-    std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), *m_sealEngine, _t, _p, _onOp);
+    EnvInfo const envInfo{info(), _lh, gasUsed(), m_sealEngine->chainParams().chainID};
+    std::pair<ExecutionResult, TransactionReceipt> resultReceipt =
+        m_state.execute(envInfo, *m_sealEngine, _t, _p, _onOp);
 
     if (_p == Permanence::Committed)
     {

@@ -88,8 +88,9 @@ Json::Value Debug::traceBlock(Block const& _block, Json::Value const& _json)
         Transaction t = _block.pending()[k];
 
         u256 const gasUsed = k ? _block.receipt(k - 1).cumulativeGasUsed() : 0;
-        EnvInfo envInfo(_block.info(), m_eth.blockChain().lastBlockHashes(), gasUsed);
-        Executive e(s, envInfo, *m_eth.blockChain().sealEngine());
+        auto const& bc = m_eth.blockChain();
+        EnvInfo envInfo(_block.info(), bc.lastBlockHashes(), gasUsed, bc.chainID());
+        Executive e(s, envInfo, *bc.sealEngine());
 
         eth::ExecutionResult er;
         e.setResultRecipient(er);
