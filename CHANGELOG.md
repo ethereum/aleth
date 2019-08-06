@@ -15,8 +15,9 @@
 - Added: [#5634](https://github.com/ethereum/aleth/pull/5634) Bootnodes for Rinkeby and Goerli.
 - Added: [#5640](https://github.com/ethereum/aleth/pull/5640) Support EIP-1702 Generalized Account Versioning Scheme (active only in Experimental fork.)
 - Added: [#5691](https://github.com/ethereum/aleth/pull/5691) Istanbul support: EIP-2028 Transaction data gas cost reduction.
-- Added: [#5696](https://github.com/ethereum/aleth/pull/5708) [#5696](https://github.com/ethereum/aleth/pull/5708) Istanbul support: EIP-1344 ChainID opcode.
+- Added: [#5696](https://github.com/ethereum/aleth/pull/5696) [#5708](https://github.com/ethereum/aleth/pull/5708) Istanbul support: EIP-1344 ChainID opcode.
 - Added: [#5701](https://github.com/ethereum/aleth/issues/5701) Outputs ENR text representation in admin.nodeInfo RPC.
+- Added: [#5705](https://github.com/ethereum/aleth/pull/5705) Istanbul support: EIP 1108 Reduce alt_bn128 precompile gas costs.
 - Added: [#5707](https://github.com/ethereum/aleth/pull/5707) Aleth waits for 2 seconds after sending disconnect to peer before closing socket.
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
