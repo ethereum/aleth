@@ -229,6 +229,44 @@ vector<int> parseJsonIntValueIntoVector(json_spirit::mValue const& _json)
     return out;
 }
 
+bool ImportTest::findExpectSectionForTransaction(
+    transactionToExecute const& _tr, eth::Network const& _net, bool _isFilling)
+{
+    bool found = false;
+    json_spirit::mArray const& expects =
+        _isFilling ? m_testInputObject.at("expect").get_array() :
+                     m_testInputObject.at("post").get_obj().at(netIdToString(_net)).get_array();
+    for (auto const& exp : expects)
+    {
+        json_spirit::mObject const& expSection = exp.get_obj();
+
+        if (_isFilling)
+        {
+            set<string> networkSet;
+            parseJsonStrValueIntoSet(expSection.at("network"), networkSet);
+            networkSet = test::translateNetworks(networkSet);
+            if (!networkSet.count(netIdToString(_net)))
+                continue;
+        }
+
+        BOOST_REQUIRE_MESSAGE(expSection.at("indexes").type() == jsonVType::obj_type,
+            "indexes field expected to be json Object!");
+        json_spirit::mObject const& indexes = expSection.at("indexes").get_obj();
+        vector<int> d = parseJsonIntValueIntoVector(indexes.at("data"));
+        vector<int> g = parseJsonIntValueIntoVector(indexes.at("gas"));
+        vector<int> v = parseJsonIntValueIntoVector(indexes.at("value"));
+        BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0,
+            TestOutputHelper::get().testName() + " Indexes arrays not set!");
+        if ((inArray(d, _tr.dataInd) || inArray(d, -1)) &&
+            (inArray(g, _tr.gasInd) || inArray(g, -1)) &&
+            (inArray(v, _tr.valInd) || inArray(v, -1)))
+            found = true;
+        if (found)
+            break;
+    }
+    return found;
+}
+
 bytes ImportTest::executeTest(bool _isFilling)
 {
     assert(m_envInfo);
@@ -265,57 +303,25 @@ bytes ImportTest::executeTest(bool _isFilling)
             if(opt.trValueIndex != -1 && opt.trValueIndex != tr.valInd)
                 continue;
 
-            // Skip transaction if there is no expect section for this transaction (noindex data,
-            // gas, val, network)
-            bool found = false;
-            json_spirit::mArray const& expects =
-                _isFilling ?
-                    m_testInputObject.at("expect").get_array() :
-                    m_testInputObject.at("post").get_obj().at(netIdToString(net)).get_array();
-            for (auto const& exp : expects)
-            {
-                json_spirit::mObject const& expSection = exp.get_obj();
-
-                if (_isFilling)
-                {
-                    set<string> networkSet;
-                    parseJsonStrValueIntoSet(expSection.at("network"), networkSet);
-                    networkSet = test::translateNetworks(networkSet);
-                    if (!networkSet.count(netIdToString(net)))
-                        continue;
-                }
-
-                BOOST_REQUIRE_MESSAGE(expSection.at("indexes").type() == jsonVType::obj_type,
-                    "indexes field expected to be json Object!");
-                json_spirit::mObject const& indexes = expSection.at("indexes").get_obj();
-                vector<int> d = parseJsonIntValueIntoVector(indexes.at("data"));
-                vector<int> g = parseJsonIntValueIntoVector(indexes.at("gas"));
-                vector<int> v = parseJsonIntValueIntoVector(indexes.at("value"));
-                BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0,
-                    TestOutputHelper::get().testName() + " Indexes arrays not set!");
-                if ((inArray(d, tr.dataInd) || inArray(d, -1)) &&
-                    (inArray(g, tr.gasInd) || inArray(g, -1)) &&
-                    (inArray(v, tr.valInd) || inArray(v, -1)))
-                    found = true;
-                if (found)
-                    break;
-            }
-            if (!found)
+            // Skip transaction if there is no expect section for this transaction
+            // (noindex data, gas, val, network)
+            if (!findExpectSectionForTransaction(tr, net, _isFilling))
                 continue;
 
-
-            transactionToExecute tr2 = tr;
-            std::tie(tr2.postState, tr2.output, tr2.changeLog) =
+            transactionToExecute transactionResult = tr;
+            std::tie(transactionResult.postState, transactionResult.output,
+                transactionResult.changeLog) =
                 executeTransaction(net, *m_envInfo, m_statePre, tr.transaction);
-            tr2.netId = net;
+            transactionResult.netId = net;
             if (Options::get().verbosity > 2)
             {
                 std::cout << "Executed transaction: \n";
-                std::cerr << "Network: " << netIdToString(tr2.netId) << "\n";
-                std::cerr << "Indexes: d: " << tr2.dataInd << " g: " << tr2.gasInd
-                          << " v: " << tr2.valInd << "\n\n";
+                std::cerr << "Network: " << netIdToString(transactionResult.netId) << "\n";
+                std::cerr << "Indexes: d: " << transactionResult.dataInd
+                          << " g: " << transactionResult.gasInd
+                          << " v: " << transactionResult.valInd << "\n\n";
             }
-            transactionResults.push_back(tr2);
+            transactionResults.push_back(transactionResult);
         }
     }
 
