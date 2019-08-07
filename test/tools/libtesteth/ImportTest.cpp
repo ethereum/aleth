@@ -44,6 +44,19 @@ vector<h256> lastHashes(u256 _currentBlockNumber)
         ret.push_back(sha3(toString(_currentBlockNumber - i)));
     return ret;
 }
+
+vector<int> parseJsonIntValueIntoVector(json_spirit::mValue const& _json)
+{
+    vector<int> out;
+    if (_json.type() == json_spirit::array_type)
+    {
+        for (auto const& val : _json.get_array())
+            out.push_back(val.get_int());
+    }
+    else
+        out.push_back(_json.get_int());
+    return out;
+}
 }
 
 ImportTest::ImportTest(json_spirit::mObject const& _input, json_spirit::mObject& _output):
@@ -216,23 +229,9 @@ void ImportTest::parseJsonStrValueIntoSet(json_spirit::mValue const& _json, set<
         _out.emplace(_json.get_str());
 }
 
-vector<int> parseJsonIntValueIntoVector(json_spirit::mValue const& _json)
-{
-    vector<int> out;
-    if (_json.type() == json_spirit::array_type)
-    {
-        for (auto const& val : _json.get_array())
-            out.push_back(val.get_int());
-    }
-    else
-        out.push_back(_json.get_int());
-    return out;
-}
-
 bool ImportTest::findExpectSectionForTransaction(
-    transactionToExecute const& _tr, eth::Network const& _net, bool _isFilling)
+    transactionToExecute const& _tr, eth::Network const& _net, bool _isFilling) const
 {
-    bool found = false;
     json_spirit::mArray const& expects =
         _isFilling ? m_testInputObject.at("expect").get_array() :
                      m_testInputObject.at("post").get_obj().at(netIdToString(_net)).get_array();
@@ -260,11 +259,9 @@ bool ImportTest::findExpectSectionForTransaction(
         if ((inArray(d, _tr.dataInd) || inArray(d, -1)) &&
             (inArray(g, _tr.gasInd) || inArray(g, -1)) &&
             (inArray(v, _tr.valInd) || inArray(v, -1)))
-            found = true;
-        if (found)
-            break;
+            return true;
     }
-    return found;
+    return false;
 }
 
 bytes ImportTest::executeTest(bool _isFilling)
