@@ -291,34 +291,33 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
+    if (m_dropped)
+        return;
+
     clog(VerbosityTrace, "p2pcap") << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
 
-    if (!m_dropped)
-    {
-        RLPStream s;
-        prep(s, DisconnectPacket, 1) << (int)_reason;
-        sealAndSend(s);
-        auto disconnectTimer = m_server->createTimer();
-        auto self(shared_from_this());
-        disconnectTimer->expires_after(std::chrono::seconds(2));
-        disconnectTimer->async_wait([self, this, _reason](boost::system::error_code) {
-            bi::tcp::socket& socket = m_socket->ref();
-            if (socket.is_open())
+    RLPStream s;
+    prep(s, DisconnectPacket, 1) << (int)_reason;
+    sealAndSend(s);
+    auto disconnectTimer = m_server->createTimer();
+    auto self(shared_from_this());
+    disconnectTimer->expires_after(std::chrono::seconds(2));
+    disconnectTimer->async_wait([self, this, _reason](boost::system::error_code) {
+        bi::tcp::socket& socket = m_socket->ref();
+        if (socket.is_open())
             try
             {
                 boost::system::error_code ec;
-                LOG(m_netLoggerDetail)
-                    << "Closing (" << reasonOf(_reason) << ") connection with";
+                LOG(m_netLoggerDetail) << "Closing (" << reasonOf(_reason) << ") connection with";
                 socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
                 socket.close();
             }
             catch (...)
             {
             }
-        });
-    }
-    else
-        drop(_reason);
+    });
+
+    drop(_reason);
 }
 
 void Session::start()
