@@ -299,23 +299,24 @@ void Session::disconnect(DisconnectReason _reason)
     RLPStream s;
     prep(s, DisconnectPacket, 1) << (int)_reason;
     sealAndSend(s);
-    auto disconnectTimer = m_server->createTimer();
+
     auto self(shared_from_this());
-    disconnectTimer->expires_after(std::chrono::seconds(2));
-    disconnectTimer->async_wait([self, this, _reason](boost::system::error_code) {
-        bi::tcp::socket& socket = m_socket->ref();
-        if (socket.is_open())
-            try
-            {
-                boost::system::error_code ec;
-                LOG(m_netLoggerDetail) << "Closing (" << reasonOf(_reason) << ") connection with";
-                socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-                socket.close();
-            }
-            catch (...)
-            {
-            }
-    });
+    m_disconnectTimer = m_server->createTimer(
+        std::chrono::seconds(2), [self, this, _reason](boost::system::error_code) {
+            bi::tcp::socket& socket = m_socket->ref();
+            if (socket.is_open())
+                try
+                {
+                    boost::system::error_code ec;
+                    LOG(m_netLoggerDetail)
+                        << "Closing (" << reasonOf(_reason) << ") connection with";
+                    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+                    socket.close();
+                }
+                catch (...)
+                {
+                }
+        });
 
     drop(_reason);
 }

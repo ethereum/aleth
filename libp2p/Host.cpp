@@ -1200,3 +1200,11 @@ void Host::forEachPeer(
             return;
 }
 
+std::unique_ptr<ba::steady_timer> Host::createTimer(std::chrono::seconds const& _expiryTime,
+    std::function<void(const boost::system::error_code& error)>&& _f)
+{
+    std::unique_ptr<ba::steady_timer> timer{new ba::steady_timer{m_ioContext}};
+    timer->expires_after(_expiryTime);
+    timer->async_wait(_f);
+    return timer;
+}
