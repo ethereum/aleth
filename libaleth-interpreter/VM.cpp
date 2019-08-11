@@ -33,84 +33,70 @@ evmc_capabilities_flagset getCapabilities(evmc_instance* _instance) noexcept
     return EVMC_CAPABILITY_EVM1;
 }
 
-void delete_output(const evmc_result* result)
-{
-    delete[] result->output_data;
-}
-
 evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
     const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
 {
     (void)_instance;
     std::unique_ptr<dev::eth::VM> vm{new dev::eth::VM};
 
-    evmc_result result = {};
+    evmc_status_code status_code{};
+    int64_t gas_left = 0;
     dev::eth::owning_bytes_ref output;
 
     try
     {
         output = vm->exec(_context, _rev, _msg, _code, _codeSize);
-        result.status_code = EVMC_SUCCESS;
-        result.gas_left = vm->m_io_gas;
+        status_code = EVMC_SUCCESS;
+        gas_left = vm->m_io_gas;
     }
     catch (dev::eth::RevertInstruction& ex)
     {
-        result.status_code = EVMC_REVERT;
-        result.gas_left = vm->m_io_gas;
+        status_code = EVMC_REVERT;
+        gas_left = vm->m_io_gas;
         output = ex.output();  // This moves the output from the exception!
     }
     catch (dev::eth::InvalidInstruction const&)
     {
-        result.status_code = EVMC_INVALID_INSTRUCTION;
+        status_code = EVMC_INVALID_INSTRUCTION;
     }
     catch (dev::eth::BadInstruction const&)
     {
-        result.status_code = EVMC_UNDEFINED_INSTRUCTION;
+        status_code = EVMC_UNDEFINED_INSTRUCTION;
     }
     catch (dev::eth::OutOfStack const&)
     {
-        result.status_code = EVMC_STACK_OVERFLOW;
+        status_code = EVMC_STACK_OVERFLOW;
     }
     catch (dev::eth::StackUnderflow const&)
     {
-        result.status_code = EVMC_STACK_UNDERFLOW;
+        status_code = EVMC_STACK_UNDERFLOW;
     }
     catch (dev::eth::BufferOverrun const&)
     {
-        result.status_code = EVMC_INVALID_MEMORY_ACCESS;
+        status_code = EVMC_INVALID_MEMORY_ACCESS;
     }
     catch (dev::eth::OutOfGas const&)
     {
-        result.status_code = EVMC_OUT_OF_GAS;
+        status_code = EVMC_OUT_OF_GAS;
     }
     catch (dev::eth::BadJumpDestination const&)
     {
-        result.status_code = EVMC_BAD_JUMP_DESTINATION;
+        status_code = EVMC_BAD_JUMP_DESTINATION;
     }
     catch (dev::eth::DisallowedStateChange const&)
     {
-        result.status_code = EVMC_STATIC_MODE_VIOLATION;
+        status_code = EVMC_STATIC_MODE_VIOLATION;
     }
     catch (dev::eth::VMException const&)
     {
-        result.status_code = EVMC_FAILURE;
+        status_code = EVMC_FAILURE;
     }
     catch (...)
     {
-        result.status_code = EVMC_INTERNAL_ERROR;
+        status_code = EVMC_INTERNAL_ERROR;
     }
 
-    if (!output.empty())
-    {
-        // Make a copy of the output.
-        auto outputData = new uint8_t[output.size()];
-        std::memcpy(outputData, output.data(), output.size());
-        result.output_data = outputData;
-        result.output_size = output.size();
-        result.release = delete_output;
-    }
-
-    return result;
+    return evmc::make_result(status_code, gas_left, output.data(), output.size());
 }
 }  // namespace
 
