@@ -136,7 +136,7 @@ bool isFalse(std::string const& _m)
     return _m == "off" || _m == "no" || _m == "false" || _m == "0";
 }
 
-mt19937_64 g_randomGenerator(random_device{}());
+mt19937_64 g_randomGenerator{random_device{}()};
 
 int randomNumber(int _min, int _max)
 {

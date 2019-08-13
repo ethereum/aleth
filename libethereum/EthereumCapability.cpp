@@ -93,7 +93,7 @@ public:
         }
         catch (Exception&)
         {
-            cwarn << "Exception on peer destruciton: "
+            cwarn << "Exception on peer destruction: "
                   << boost::current_exception_diagnostic_information();
         }
     }
@@ -388,7 +388,7 @@ private:
 
 std::vector<NodeID> randomPeers(std::vector<NodeID> const& _peers, size_t _count)
 {
-    if (_peers.size() >= _count || _peers.empty())
+    if (_peers.size() <= _count || _peers.empty())
         return _peers;
 
     std::vector<NodeID> peers{_peers};
@@ -545,44 +545,43 @@ void EthereumCapability::maintainBlockHashes(h256 const& _currentHash)
     // Send any new block hashes
     auto const detailsFrom = m_chain.details(m_latestBlockHashSent);
     auto const detailsTo = m_chain.details(_currentHash);
-    if (detailsFrom.totalDifficulty < detailsTo.totalDifficulty)
+    if (detailsFrom.totalDifficulty >= detailsTo.totalDifficulty ||
+        // don't be sending more than c_maxSendNewBlocksCount "new" block hashes. if there are any
+        // more we were probably waaaay behind.
+        diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
+        return;
+
+    LOG(m_logger) << "Sending new block hashes (current is " << _currentHash << ", was "
+                    << m_latestBlockHashSent << ")";
+
+    h256s const blockHashes =
+        std::get<0>(m_chain.treeRoute(m_latestBlockHashSent, _currentHash, false, false, true));
+
+    auto const peersWithoutBlock = selectPeers(
+        [&](EthereumPeer const& _peer) { return !_peer.isBlockKnown(_currentHash); });
+    for (NodeID const& peerID : peersWithoutBlock)
     {
-        if (diff(detailsFrom.number, detailsTo.number) <= c_maxSendNewBlocksCount)
+        RLPStream ts;
+        m_host->prep(peerID, name(), ts, NewBlockHashesPacket, blockHashes.size());
+        for (auto const& bh : blockHashes)
         {
-            // don't be sending more than c_maxSendNewBlocksCount "new" block hashes. if there are any more we were probably
-            // waaaay behind.
-            LOG(m_logger) << "Sending new block hashes (current is " << _currentHash << ", was "
-                          << m_latestBlockHashSent << ")";
-
-            h256s blocks =
-                get<0>(m_chain.treeRoute(m_latestBlockHashSent, _currentHash, false, false, true));
-
-            auto const peersWithoutBlock = selectPeers(
-                [&](EthereumPeer const& _peer) { return !_peer.isBlockKnown(_currentHash); });
-            for (NodeID const& peerID : peersWithoutBlock)
-            {
-                RLPStream ts;
-                m_host->prep(peerID, name(), ts, NewBlockHashesPacket, blocks.size());
-                for (auto const& b : blocks)
-                {
-                    ts.appendList(2);
-                    ts.append(b);
-                    ts.append(m_chain.number(b));
-                }
-
-                auto itPeer = m_peers.find(peerID);
-                if (itPeer != m_peers.end())
-                {
-                    m_host->sealAndSend(peerID, ts);
-                    itPeer->second.clearKnownBlocks();
-                }
-            }
-            if (!peersWithoutBlock.empty())
-                LOG(m_logger) << "Announced " << blocks.size() << " block(s) to "
-                              << peersWithoutBlock.size() << " peers";
+            ts.appendList(2);
+            ts.append(bh);
+            ts.append(m_chain.number(bh));
         }
-        m_latestBlockHashSent = _currentHash;
+
+        auto itPeer = m_peers.find(peerID);
+        if (itPeer != m_peers.end())
+        {
+            m_host->sealAndSend(peerID, ts);
+            itPeer->second.clearKnownBlocks();
+        }
     }
+    if (!peersWithoutBlock.empty())
+        LOG(m_logger) << "Announced " << blockHashes.size() << " block(s) to "
+                        << peersWithoutBlock.size() << " peers";
+
+    m_latestBlockHashSent = _currentHash;
 }
 
 bool EthereumCapability::isSyncing() const
@@ -957,7 +956,7 @@ void EthereumCapability::removeSentTransactions(std::vector<h256> const& _txHash
     }
 }
 
-void EthereumCapability::propagateNewBlocks(shared_ptr<VerifiedBlocks const> const& _newBlocks)
+void EthereumCapability::propagateNewBlocks(std::shared_ptr<VerifiedBlocks const> const& _newBlocks)
 {
     // Safe to call isSyncing() from a non-network thread since the underlying variable is
     // std::atomic
@@ -965,8 +964,9 @@ void EthereumCapability::propagateNewBlocks(shared_ptr<VerifiedBlocks const> con
         return;
 
     m_host->postWork([this, _newBlocks]() {
-        // Verify that we're not too far behind - we perform this check on the network thread rather
-        // than before posting the work to simplify the synchronization story
+        // Verify that we're not too far behind - we perform this check on the network thread to
+        // simplify the synchronization story (since otherwise we'd need to synchronize access to
+        // m_latestBlockSent)
         auto const latestHash = _newBlocks->back().verified.info.hash();
         auto const detailsFrom = m_chain.details(m_latestBlockSent);
         auto const detailsTo = m_chain.details(latestHash);

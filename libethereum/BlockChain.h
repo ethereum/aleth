@@ -111,7 +111,7 @@ public:
     /// @returns a tuple with two members - the first (ImportRoute) contains fresh blocks, dead
     /// blocks and imported transactions. The second contains the imported block count.
     std::tuple<ImportRoute, unsigned> sync(
-        VerifiedBlocks const& _blocks, h256s& _badBlockHashes, OverlayDB const& _stateDB);
+        VerifiedBlocks const& _blocks, h256s& o_badBlockHashes, OverlayDB const& _stateDB);
 
     /// Attempt to import the given block directly into the BlockChain and sync with the state DB.
     /// @returns the block hashes of any blocks that came into/went out of the canonical block chain.

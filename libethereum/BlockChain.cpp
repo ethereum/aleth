@@ -428,13 +428,13 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(
     _bq.drain(blocks, _max);
 
     h256s badBlockHashes;
-    tuple<ImportRoute, unsigned> const importResult = sync(blocks, badBlockHashes, _stateDB);
+    std::tuple<ImportRoute, unsigned> const importResult = sync(blocks, badBlockHashes, _stateDB);
     bool const moreBlocks = _bq.doneDrain(badBlockHashes);
-    return {get<0>(importResult), moreBlocks, get<1>(importResult)};
+    return {std::get<0>(importResult), moreBlocks, std::get<1>(importResult)};
 }
 
 tuple<ImportRoute, unsigned> BlockChain::sync(
-    VerifiedBlocks const& _blocks, h256s& _badBlockHashes, OverlayDB const& _stateDB)
+    VerifiedBlocks const& _blocks, h256s& o_badBlockHashes, OverlayDB const& _stateDB)
 {
     h256s fresh;
     h256s dead;
@@ -463,9 +463,9 @@ tuple<ImportRoute, unsigned> BlockChain::sync(
             catch (dev::eth::UnknownParent const&)
             {
                 cwarn << "ODD: Import queue contains block with unknown parent.";// << LogTag::Error << boost::current_exception_diagnostic_information();
-                                                                                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
-                                                                                 // Can't continue - chain bad.
-                _badBlockHashes.push_back(block.verified.info.hash());
+                // NOTE: don't reimport since the queue should guarantee everything in the right order.
+                // Can't continue - chain bad.
+                o_badBlockHashes.push_back(block.verified.info.hash());
             }
             catch (dev::eth::FutureTime const&)
             {
@@ -480,12 +480,12 @@ tuple<ImportRoute, unsigned> BlockChain::sync(
             }
             catch (Exception& ex)
             {
-                //              cnote << "Exception while importing block. Someone (Jeff? That you?) seems to be giving us dodgy blocks!";// << LogTag::Error << diagnostic_information(ex);
+                // cnote << "Exception while importing block. Someone (Jeff? That you?) seems to be giving us dodgy blocks!";// << LogTag::Error << diagnostic_information(ex);
                 if (m_onBad)
                     m_onBad(ex);
                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
                 // Can't continue - chain  bad.
-                _badBlockHashes.push_back(block.verified.info.hash());
+                o_badBlockHashes.push_back(block.verified.info.hash());
             }
         } while (false);
     }

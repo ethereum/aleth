@@ -43,9 +43,9 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 namespace
 {
-constexpr unsigned c_syncMin = 1;
-constexpr unsigned c_syncMax = 1000;
-constexpr double c_targetDuration = 1;
+constexpr unsigned c_syncMinBlockCount = 1;
+constexpr unsigned c_syncMaxBlockCount = 1000;
+constexpr double c_targetDurationS = 1;
 
 std::string filtersToString(h256Hash const& _fs)
 {
@@ -389,7 +389,7 @@ void Client::syncBlockQueue()
     unsigned count;
     Timer t;
 
-    shared_ptr<VerifiedBlocks> verifiedBlocks = make_shared<VerifiedBlocks>();
+    std::shared_ptr<VerifiedBlocks> verifiedBlocks = std::make_shared<VerifiedBlocks>();
     m_bq.drain(*verifiedBlocks, m_syncAmount);
 
     // Propagate new blocks to peers before importing them into the chain.
@@ -399,7 +399,7 @@ void Client::syncBlockQueue()
     h->propagateNewBlocks(verifiedBlocks);
 
     h256s badBlockHashes;
-    tie(ir, count) = bc().sync(*verifiedBlocks, badBlockHashes, m_stateDB);
+    std::tie(ir, count) = bc().sync(*verifiedBlocks, badBlockHashes, m_stateDB);
     m_syncBlockQueue = m_bq.doneDrain(badBlockHashes);
 
     double elapsed = t.elapsed();
@@ -410,10 +410,10 @@ void Client::syncBlockQueue()
                       << (count / elapsed) << " blocks/s) in #" << bc().number();
     }
 
-    if (elapsed > c_targetDuration * 1.1 && count > c_syncMin)
-        m_syncAmount = max(c_syncMin, count * 9 / 10);
-    else if (count == m_syncAmount && elapsed < c_targetDuration * 0.9 && m_syncAmount < c_syncMax)
-        m_syncAmount = min(c_syncMax, m_syncAmount * 11 / 10 + 1);
+    if (elapsed > c_targetDurationS * 1.1 && count > c_syncMinBlockCount)
+        m_syncAmount = max(c_syncMinBlockCount, count * 9 / 10);
+    else if (count == m_syncAmount && elapsed < c_targetDurationS * 0.9 && m_syncAmount < c_syncMaxBlockCount)
+        m_syncAmount = min(c_syncMaxBlockCount, m_syncAmount * 11 / 10 + 1);
     if (ir.liveBlocks.empty())
         return;
     onChainChanged(ir);
