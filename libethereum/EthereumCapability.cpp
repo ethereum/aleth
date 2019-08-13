@@ -970,7 +970,8 @@ void EthereumCapability::propagateNewBlocks(std::shared_ptr<VerifiedBlocks const
         auto const latestHash = _newBlocks->back().verified.info.hash();
         auto const detailsFrom = m_chain.details(m_latestBlockSent);
         auto const detailsTo = m_chain.details(latestHash);
-        if (diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
+        if (detailsFrom.totalDifficulty >= detailsTo.totalDifficulty ||
+            diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
             return;
 
         auto const peersWithoutBlock = selectPeers(
