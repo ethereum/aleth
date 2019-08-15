@@ -28,12 +28,12 @@ static_assert(alignof(Address) == alignof(evmc_address), "Address types alignmen
 static_assert(sizeof(h256) == sizeof(evmc_uint256be), "Hash types size mismatch");
 static_assert(alignof(h256) == alignof(evmc_uint256be), "Hash types alignment mismatch");
 
-bool EvmCHost::account_exists(evmc_address const& _addr) noexcept
+bool EvmCHost::account_exists(evmc::address const& _addr) noexcept
 {
     return m_extVM.exists(fromEvmC(_addr));
 }
 
-evmc_bytes32 EvmCHost::get_storage(evmc_address const& _addr, evmc_bytes32 const& _key) noexcept
+evmc::bytes32 EvmCHost::get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
@@ -41,7 +41,7 @@ evmc_bytes32 EvmCHost::get_storage(evmc_address const& _addr, evmc_bytes32 const
 }
 
 evmc_storage_status EvmCHost::set_storage(
-    evmc_address const& _addr, evmc_bytes32 const& _key, evmc_bytes32 const& _value) noexcept
+    evmc::address const& _addr, evmc::bytes32 const& _key, evmc::bytes32 const& _value) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
@@ -89,23 +89,23 @@ evmc_storage_status EvmCHost::set_storage(
     return status;
 }
 
-evmc_uint256be EvmCHost::get_balance(evmc_address const& _addr) noexcept
+evmc_uint256be EvmCHost::get_balance(evmc::address const& _addr) noexcept
 {
     return toEvmC(m_extVM.balance(fromEvmC(_addr)));
 }
 
-size_t EvmCHost::get_code_size(evmc_address const& _addr) noexcept
+size_t EvmCHost::get_code_size(evmc::address const& _addr) noexcept
 {
     return m_extVM.codeSizeAt(fromEvmC(_addr));
 }
 
-evmc_bytes32 EvmCHost::get_code_hash(evmc_address const& _addr) noexcept
+evmc::bytes32 EvmCHost::get_code_hash(evmc::address const& _addr) noexcept
 {
     return toEvmC(m_extVM.codeHashAt(fromEvmC(_addr)));
 }
 
 size_t EvmCHost::copy_code(
-    evmc_address const& _addr, size_t _codeOffset, byte* _bufferData, size_t _bufferSize) noexcept
+    evmc::address const& _addr, size_t _codeOffset, byte* _bufferData, size_t _bufferSize) noexcept
 {
     Address addr = fromEvmC(_addr);
     bytes const& c = m_extVM.codeAt(addr);
@@ -120,7 +120,7 @@ size_t EvmCHost::copy_code(
     return numToCopy;
 }
 
-void EvmCHost::selfdestruct(evmc_address const& _addr, evmc_address const& _beneficiary) noexcept
+void EvmCHost::selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
@@ -128,8 +128,8 @@ void EvmCHost::selfdestruct(evmc_address const& _addr, evmc_address const& _bene
 }
 
 
-void EvmCHost::emit_log(evmc_address const& _addr, uint8_t const* _data, size_t _dataSize,
-    evmc_bytes32 const _topics[], size_t _numTopics) noexcept
+void EvmCHost::emit_log(evmc::address const& _addr, uint8_t const* _data, size_t _dataSize,
+    evmc::bytes32 const _topics[], size_t _numTopics) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
@@ -150,7 +150,7 @@ evmc_tx_context EvmCHost::get_tx_context() noexcept
     return result;
 }
 
-evmc_bytes32 EvmCHost::get_block_hash(int64_t _number) noexcept
+evmc::bytes32 EvmCHost::get_block_hash(int64_t _number) noexcept
 {
     return toEvmC(m_extVM.blockHash(_number));
 }

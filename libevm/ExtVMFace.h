@@ -289,33 +289,34 @@ class EvmCHost : public evmc::Host
 public:
     explicit EvmCHost(ExtVMFace& _extVM) : m_extVM{_extVM} {}
 
-    bool account_exists(const evmc_address& addr) noexcept override;
+    bool account_exists(const evmc::address& addr) noexcept override;
 
-    evmc_bytes32 get_storage(const evmc_address& addr, const evmc_bytes32& key) noexcept override;
+    evmc::bytes32 get_storage(
+        const evmc::address& addr, const evmc::bytes32& key) noexcept override;
 
-    evmc_storage_status set_storage(const evmc_address& _addr, const evmc_bytes32& _key,
-        const evmc_bytes32& _value) noexcept override;
+    evmc_storage_status set_storage(const evmc::address& _addr, const evmc::bytes32& _key,
+        const evmc::bytes32& _value) noexcept override;
 
-    evmc_uint256be get_balance(const evmc_address& _addr) noexcept override;
+    evmc_uint256be get_balance(const evmc::address& _addr) noexcept override;
 
-    size_t get_code_size(const evmc_address& _addr) noexcept override;
+    size_t get_code_size(const evmc::address& _addr) noexcept override;
 
-    evmc_bytes32 get_code_hash(const evmc_address& _addr) noexcept override;
+    evmc::bytes32 get_code_hash(const evmc::address& _addr) noexcept override;
 
-    size_t copy_code(const evmc_address& _addr, size_t _codeOffset, uint8_t* _bufferData,
+    size_t copy_code(const evmc::address& _addr, size_t _codeOffset, uint8_t* _bufferData,
         size_t _bufferSize) noexcept override;
 
     void selfdestruct(
-        const evmc_address& _addr, const evmc_address& _beneficiary) noexcept override;
+        const evmc::address& _addr, const evmc::address& _beneficiary) noexcept override;
 
     evmc::result call(const evmc_message& _msg) noexcept override;
 
     evmc_tx_context get_tx_context() noexcept override;
 
-    evmc_bytes32 get_block_hash(int64_t _blockNumber) noexcept override;
+    evmc::bytes32 get_block_hash(int64_t _blockNumber) noexcept override;
 
-    void emit_log(const evmc_address& _addr, const uint8_t* _data, size_t _dataSize,
-        const evmc_bytes32 _topics[], size_t _numTopics) noexcept override;
+    void emit_log(const evmc::address& _addr, const uint8_t* _data, size_t _dataSize,
+        const evmc::bytes32 _topics[], size_t _numTopics) noexcept override;
 
 private:
     evmc::result create(evmc_message const& _msg) noexcept;
@@ -324,7 +325,7 @@ private:
     ExtVMFace& m_extVM;
 };
 
-inline evmc_address toEvmC(Address const& _addr)
+inline evmc::address toEvmC(Address const& _addr)
 {
     return reinterpret_cast<evmc_address const&>(_addr);
 }
@@ -339,7 +340,7 @@ inline u256 fromEvmC(evmc_uint256be const& _n)
     return fromBigEndian<u256>(_n.bytes);
 }
 
-inline Address fromEvmC(evmc_address const& _addr)
+inline Address fromEvmC(evmc::address const& _addr)
 {
     return reinterpret_cast<Address const&>(_addr);
 }
