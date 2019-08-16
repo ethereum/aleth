@@ -206,6 +206,9 @@ bool Session::checkPacket(bytesConstRef _msg)
 
 void Session::send(bytes&& _msg)
 {
+    if (m_dropped)
+        return;
+
     bytesConstRef msg(&_msg);
     LOG(m_netLoggerDetail) << capabilityPacketTypeToString(_msg[0]) << " to";
     if (!checkPacket(msg))
@@ -276,16 +279,6 @@ void Session::drop(DisconnectReason _reason)
 {
     if (m_dropped)
         return;
-    bi::tcp::socket& socket = m_socket->ref();
-    if (socket.is_open())
-        try
-        {
-            boost::system::error_code ec;
-            LOG(m_netLoggerDetail) << "Closing (" << reasonOf(_reason) << ") connection with";
-            socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-            socket.close();
-        }
-        catch (...) {}
 
     m_peer->m_lastDisconnect = _reason;
     if (_reason == BadProtocol)
@@ -298,14 +291,22 @@ void Session::drop(DisconnectReason _reason)
 
 void Session::disconnect(DisconnectReason _reason)
 {
+    if (m_dropped)
+        return;
+
     clog(VerbosityTrace, "p2pcap") << "Disconnecting (our reason: " << reasonOf(_reason) << ") from " << m_logSuffix;
 
-    if (m_socket->ref().is_open())
-    {
-        RLPStream s;
-        prep(s, DisconnectPacket, 1) << (int)_reason;
-        sealAndSend(s);
-    }
+    RLPStream s;
+    prep(s, DisconnectPacket, 1) << (int)_reason;
+    sealAndSend(s);
+
+    auto self(shared_from_this());
+    // The empty handler will keep the Session alive for the supplied amount of time, after
+    // which Host will garbage-collect the Session which will invoke the Session dtor and close the
+    // socket
+    m_disconnectTimer =
+        m_server->createTimer(std::chrono::seconds(2), [self](boost::system::error_code) {});
+
     drop(_reason);
 }
 

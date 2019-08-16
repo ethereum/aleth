@@ -84,7 +84,7 @@ public:
 
     void ping() override;
 
-    bool isConnected() const override { return m_socket->ref().is_open(); }
+    bool isConnected() const override { return !m_dropped; }
 
     NodeID id() const override;
 
@@ -176,6 +176,8 @@ private:
     std::unordered_map<std::string, unsigned> m_capabilityOffsets;
 
     std::set<std::string> m_disabledCapabilities;
+
+    std::unique_ptr<ba::steady_timer> m_disconnectTimer;
 
     std::string m_logSuffix;
 
