@@ -331,15 +331,19 @@ void LegacyVM::interpretCases()
             if (m_ext->staticCall)
                 throwDisallowedStateChange();
 
+            // Self-destructs only have gas cost starting with EIP 150
             m_runGas = toInt63(m_schedule->suicideGas);
-            Address dest = asAddress(m_SP[0]);
 
-            // After EIP158 zero-value suicides do not have to pay account creation gas.
-            if (m_ext->balance(m_ext->myAddress) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
-                // After EIP150 hard fork charge additional cost of sending
-                // ethers to non-existing account.
-                if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
+            Address const dest = asAddress(m_SP[0]);
+            // Starting with EIP150, self-destructs need to pay both gas cost and account creation
+            // gas cost. Starting with EIP158, 0-value self-destructs don't need to pay this account
+            // creation cost.
+            if (m_schedule->eip150Mode &&
+                (!m_schedule->eip158Mode || m_ext->balance(m_ext->myAddress) > 0))
+            {
+                if (!m_ext->exists(dest))
                     m_runGas += m_schedule->callNewAccountGas;
+            }
 
             updateIOGas();
             m_ext->suicide(dest);

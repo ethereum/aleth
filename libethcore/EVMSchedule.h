@@ -83,7 +83,6 @@ struct EVMSchedule
     boost::optional<u256> blockRewardOverwrite;
 
     bool staticCallDepthLimit() const { return !eip150Mode; }
-    bool suicideChargesNewAccountGas() const { return eip150Mode; }
     bool emptinessIsNonexistence() const { return eip158Mode; }
     bool zeroValueTransferChargesNewAccountGas() const { return !eip158Mode; }
 };
