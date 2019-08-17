@@ -155,8 +155,7 @@ private:
     std::vector<NodeID> selectPeers(
         std::function<bool(EthereumPeer const&)> const& _predicate) const;
 
-    std::pair<std::vector<NodeID>, std::vector<NodeID>> randomPartitionPeers(
-        std::vector<NodeID> const& _peers, std::size_t _number) const;
+    std::vector<NodeID> randomPeers(std::vector<NodeID> const& _peers, size_t _count) const;
 
     /// Send top transactions (by nonce and gas price) to available peers
     void maintainTransactions();

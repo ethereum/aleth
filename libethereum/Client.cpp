@@ -386,6 +386,7 @@ void Client::syncBlockQueue()
 //  cdebug << "syncBlockQueue()";
 
     ImportRoute ir;
+    h256s badBlockHashes;
     unsigned count;
     Timer t;
 
@@ -398,8 +399,7 @@ void Client::syncBlockQueue()
                 // Client's lifetime
     h->propagateNewBlocks(verifiedBlocks);
 
-    h256s badBlockHashes;
-    std::tie(ir, count) = bc().sync(*verifiedBlocks, badBlockHashes, m_stateDB);
+    std::tie(ir, badBlockHashes, count) = bc().sync(*verifiedBlocks, m_stateDB);
     m_syncBlockQueue = m_bq.doneDrain(badBlockHashes);
 
     double elapsed = t.elapsed();

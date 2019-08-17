@@ -317,6 +317,4 @@ private:
 
 bool isTrue(std::string const& _m);
 bool isFalse(std::string const& _m);
-
-int randomNumber(int _min = INT_MIN, int _max = INT_MAX);
 }  // namespace dev

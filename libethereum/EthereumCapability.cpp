@@ -7,7 +7,6 @@
 #include "BlockChainSync.h"
 #include "BlockQueue.h"
 #include "TransactionQueue.h"
-#include <libdevcore/Common.h>
 #include <libethcore/Exceptions.h>
 #include <libp2p/Common.h>
 #include <libp2p/Host.h>
@@ -212,14 +211,14 @@ public:
                         top = n + step * (numHeadersToSend - 1);
                     }
                     assert(top <= lastBlock && "invalid top block calculated");
-                    blockHash = m_chain.numberHash(static_cast<unsigned>(
-                        top));  // override start block hash with the hash of the top block we have
+                    // override start block hash with the hash of the top block we have
+                    blockHash = m_chain.numberHash(static_cast<unsigned>(top));
                 }
                 else
                     blockHash = {};
             }
         }
-        else  // block id is a number
+        else // block id is a number
         {
             auto n = _blockId.toInt<bigint>();
             cnetlog << "GetBlockHeaders (" << n << " max: " << _maxHeaders << " skip: " << _skip
@@ -239,8 +238,8 @@ public:
                         top = n + step * (numHeadersToSend - 1);
                     }
                     assert(top <= lastBlock && "invalid top block calculated");
-                    blockHash = m_chain.numberHash(static_cast<unsigned>(
-                        top));  // override start block hash with the hash of the top block we have
+                    // override start block hash with the hash of the top block we have
+                    blockHash = m_chain.numberHash(static_cast<unsigned>(top));
                 }
             }
             else if (n <= std::numeric_limits<unsigned>::max())
@@ -253,21 +252,23 @@ public:
             constexpr unsigned c_blockNumberUsageLimit = 1000;
 
             const auto lastBlock = m_chain.number();
+            // find the number of the block below which we don't expect BC changes.
             const auto limitBlock =
                 lastBlock > c_blockNumberUsageLimit ?
                     lastBlock - c_blockNumberUsageLimit :
-                    0;  // find the number of the block below which we don't expect BC changes.
+                    0;
 
-            while (_step)  // parent hash traversal
+            while (_step) // parent hash traversal
             {
                 auto details = m_chain.details(_h);
                 if (details.number < limitBlock)
-                    break;  // stop using parent hash traversal, fallback to using block numbers
+                    // stop using parent hash traversal, fallback to using block numbers
+                    break;
                 _h = details.parent;
                 --_step;
             }
 
-            if (_step)  // still need lower block
+            if (_step) // still need lower block
             {
                 auto n = m_chain.number(_h);
                 if (n >= _step)
@@ -385,23 +386,6 @@ private:
     BlockChain const& m_chain;
     OverlayDB const& m_db;
 };
-
-std::vector<NodeID> randomPeers(std::vector<NodeID> const& _peers, size_t _count)
-{
-    if (_peers.size() <= _count || _peers.empty())
-        return _peers;
-
-    std::vector<NodeID> peers{_peers};
-    std::vector<NodeID> randomPeers;
-    while (_count-- && !peers.empty())
-    {
-        auto const cIter = peers.begin() + randomNumber(0, peers.size() - 1);
-        randomPeers.push_back(*cIter);
-        peers.erase(cIter);
-    }
-
-    return randomPeers;
-}
 }  // namespace
 
 EthereumCapability::EthereumCapability(shared_ptr<p2p::CapabilityHostFace> _host,
@@ -523,21 +507,18 @@ vector<NodeID> EthereumCapability::selectPeers(
     return allowed;
 }
 
-std::pair<std::vector<NodeID>, std::vector<NodeID>> EthereumCapability::randomPartitionPeers(
-    std::vector<NodeID> const& _peers, std::size_t _number) const
+std::vector<NodeID> EthereumCapability::randomPeers(
+    std::vector<NodeID> const& _peers, size_t _count) const
 {
-    vector<NodeID> part1(_peers);
-    vector<NodeID> part2;
+    std::vector<NodeID> peers{_peers};
+    if (peers.empty())
+        return peers;
 
-    if (_number >= _peers.size())
-        return std::make_pair(part1, part2);
-
-    std::shuffle(part1.begin(), part1.end(), m_urng);
-
-    // Remove elements from the end of the shuffled part1 vector and move them to part2.
-    std::move(part1.begin() + _number, part1.end(), std::back_inserter(part2));
-    part1.erase(part1.begin() + _number, part1.end());
-    return std::make_pair(move(part1), move(part2));
+    if (_count > peers.size())
+        _count = peers.size();
+    auto itEnd = peers.begin() + _count;
+    std::shuffle(peers.begin(), itEnd, m_urng);
+    return {peers.begin(), itEnd};
 }
 
 void EthereumCapability::maintainBlockHashes(h256 const& _currentHash)
@@ -545,10 +526,13 @@ void EthereumCapability::maintainBlockHashes(h256 const& _currentHash)
     // Send any new block hashes
     auto const detailsFrom = m_chain.details(m_latestBlockHashSent);
     auto const detailsTo = m_chain.details(_currentHash);
-    if (detailsFrom.totalDifficulty >= detailsTo.totalDifficulty ||
-        // don't be sending more than c_maxSendNewBlocksCount "new" block hashes. if there are any
-        // more we were probably waaaay behind.
-        diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
+
+    if (detailsFrom.totalDifficulty >= detailsTo.totalDifficulty)
+        return;
+    
+    // don't be sending more than c_maxSendNewBlocksCount "new" block hashes. if there are any
+    // more we were probably waaaay behind.
+    if (diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
         return;
 
     LOG(m_logger) << "Sending new block hashes (current is " << _currentHash << ", was "
@@ -970,8 +954,10 @@ void EthereumCapability::propagateNewBlocks(std::shared_ptr<VerifiedBlocks const
         auto const latestHash = _newBlocks->back().verified.info.hash();
         auto const detailsFrom = m_chain.details(m_latestBlockSent);
         auto const detailsTo = m_chain.details(latestHash);
-        if (detailsFrom.totalDifficulty >= detailsTo.totalDifficulty ||
-            diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
+        if (detailsFrom.totalDifficulty >= detailsTo.totalDifficulty)
+            return;
+
+        if (diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
             return;
 
         auto const peersWithoutBlock = selectPeers(

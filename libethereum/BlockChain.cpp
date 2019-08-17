@@ -427,19 +427,19 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(
     VerifiedBlocks blocks;
     _bq.drain(blocks, _max);
 
-    h256s badBlockHashes;
-    std::tuple<ImportRoute, unsigned> const importResult = sync(blocks, badBlockHashes, _stateDB);
-    bool const moreBlocks = _bq.doneDrain(badBlockHashes);
-    return {std::get<0>(importResult), moreBlocks, std::get<1>(importResult)};
+    std::tuple<ImportRoute, h256s, unsigned> const importResult = sync(blocks, _stateDB);
+    bool const moreBlocks = _bq.doneDrain(std::get<1>(importResult));
+    return {std::get<0>(importResult), moreBlocks, std::get<2>(importResult)};
 }
 
-tuple<ImportRoute, unsigned> BlockChain::sync(
-    VerifiedBlocks const& _blocks, h256s& o_badBlockHashes, OverlayDB const& _stateDB)
+tuple<ImportRoute, h256s, unsigned> BlockChain::sync(
+    VerifiedBlocks const& _blocks, OverlayDB const& _stateDB)
 {
     h256s fresh;
     h256s dead;
     Transactions goodTransactions;
     unsigned count = 0;
+    h256s badBlockHashes;
     for (VerifiedBlock const& block : _blocks)
     {
         do {
@@ -465,7 +465,7 @@ tuple<ImportRoute, unsigned> BlockChain::sync(
                 cwarn << "ODD: Import queue contains block with unknown parent.";// << LogTag::Error << boost::current_exception_diagnostic_information();
                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
                 // Can't continue - chain bad.
-                o_badBlockHashes.push_back(block.verified.info.hash());
+                badBlockHashes.push_back(block.verified.info.hash());
             }
             catch (dev::eth::FutureTime const&)
             {
@@ -485,11 +485,11 @@ tuple<ImportRoute, unsigned> BlockChain::sync(
                     m_onBad(ex);
                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
                 // Can't continue - chain  bad.
-                o_badBlockHashes.push_back(block.verified.info.hash());
+                badBlockHashes.push_back(block.verified.info.hash());
             }
         } while (false);
     }
-    return {ImportRoute{dead, fresh, goodTransactions}, count};
+    return {ImportRoute{dead, fresh, goodTransactions}, badBlockHashes, count};
 }
 
 pair<ImportResult, ImportRoute> BlockChain::attemptImport(bytes const& _block, OverlayDB const& _stateDB, bool _mustBeNew) noexcept

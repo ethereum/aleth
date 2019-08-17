@@ -108,10 +108,11 @@ public:
         BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
 
     /// Import the supplied blocks into the chain. Blocks should be processed in order.
-    /// @returns a tuple with two members - the first (ImportRoute) contains fresh blocks, dead
-    /// blocks and imported transactions. The second contains the imported block count.
-    std::tuple<ImportRoute, unsigned> sync(
-        VerifiedBlocks const& _blocks, h256s& o_badBlockHashes, OverlayDB const& _stateDB);
+    /// @returns a tuple with three members - the first (ImportRoute) contains fresh blocks, dead
+    /// blocks and imported transactions. The second contains hashes of bad blocks. The third
+    /// contains the imported block count.
+    std::tuple<ImportRoute, h256s, unsigned> sync(
+        VerifiedBlocks const& _blocks, OverlayDB const& _stateDB);
 
     /// Attempt to import the given block directly into the BlockChain and sync with the state DB.
     /// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
