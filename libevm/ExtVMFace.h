@@ -297,7 +297,7 @@ public:
     evmc_storage_status set_storage(const evmc::address& _addr, const evmc::bytes32& _key,
         const evmc::bytes32& _value) noexcept override;
 
-    evmc_uint256be get_balance(const evmc::address& _addr) noexcept override;
+    evmc::uint256be get_balance(const evmc::address& _addr) noexcept override;
 
     size_t get_code_size(const evmc::address& _addr) noexcept override;
 

@@ -89,7 +89,7 @@ evmc_storage_status EvmCHost::set_storage(
     return status;
 }
 
-evmc_uint256be EvmCHost::get_balance(evmc::address const& _addr) noexcept
+evmc::uint256be EvmCHost::get_balance(evmc::address const& _addr) noexcept
 {
     return toEvmC(m_extVM.balance(fromEvmC(_addr)));
 }
