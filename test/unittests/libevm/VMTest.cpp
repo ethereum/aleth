@@ -509,6 +509,29 @@ public:
 
     void testIstanbul() { testAllCases(istanbulCases, Network::IstanbulTest); }
 
+    void sstoreBelowStipend(Network _network)
+    {
+        // sstore(0, 0)
+        bytes const code = fromHex("6000600055");
+
+        std::unique_ptr<SealEngineFace> se{ChainParams(genesisInfo(_network)).createSealEngine()};
+        EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
+        ExtVM extVm(state, envInfo, *se, to, from, from, value, gasPrice, inputData, ref(code),
+            sha3(code), version, depth, isCreate, staticCall);
+
+        u256 gas = 2300;
+        vm->exec(gas, extVm, OnOpFunc{});
+    }
+
+    void testSstoreBelowStipend()
+    {
+        sstoreBelowStipend(Network::ConstantinopleTest);  // shouldn't throw
+
+        BOOST_CHECK_THROW(sstoreBelowStipend(Network::ConstantinopleFixTest), OutOfGas);
+
+        BOOST_CHECK_THROW(sstoreBelowStipend(Network::IstanbulTest), OutOfGas);
+    }
+
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
     Address from{KeyPair::create().address()};
@@ -847,6 +870,11 @@ BOOST_AUTO_TEST_CASE(LegacyVMSstorePetersburg)
 BOOST_AUTO_TEST_CASE(LegacyVMSstoreIstanbul)
 {
     testIstanbul();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMSstoreBelowStipend)
+{
+    testSstoreBelowStipend();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
