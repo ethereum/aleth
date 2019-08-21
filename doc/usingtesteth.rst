@@ -58,7 +58,7 @@ Currently network names <NET_NAME> are following: Frontier, Homestead, EIP150, E
 
 The main test suites are <TEST_SUITE>: GeneralStateTests, BlockchainTests, TransitionTests, TransactionTests, VMTests
 
-<TEST_CASE> correspond to a folder name in the tests repo. And <TEST_NAME> correspond to the filename in that folder describing a specific test. 
+<TEST_CASE> correspond to a folder name in the tests repo. And <TEST_NAME> correspond to the filename in that folder describing a specific test or an absolute path to the test file. 
 
 GeneralStateTests has a single transaction being executed on a given pre state to produce a post state. 
 This transaction has arrays <data>, <value>, <gasLimit>. So a single test execute transaction with different arguments taken from those arrays to test different conditions on the same pre state. To run a transaction from the GeneralStateTests with the specified arguments use: 
