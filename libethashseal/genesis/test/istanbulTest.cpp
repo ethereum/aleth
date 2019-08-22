@@ -46,8 +46,8 @@ R"E(
         "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
         "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
         "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" } },
-        "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
-        "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
+        "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add" } },
+        "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul" } },
         "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" } }
     }
 }

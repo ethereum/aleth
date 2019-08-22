@@ -20,10 +20,11 @@
  */
 
 #include "Precompiled.h"
+#include "ChainOperationParams.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
-#include <libdevcrypto/Hash.h>
 #include <libdevcrypto/Common.h>
+#include <libdevcrypto/Hash.h>
 #include <libdevcrypto/LibSnark.h>
 #include <libethcore/Common.h>
 using namespace std;
@@ -172,7 +173,7 @@ namespace
     }
 }
 
-ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in, ChainOperationParams const&, u256 const&)
 {
     bigint const baseLength(parseBigEndianRightPadded(_in, 0, 32));
     bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
@@ -189,9 +190,21 @@ ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in)
     return dev::crypto::alt_bn128_G1_add(_in);
 }
 
+ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_G1_add)
+(bytesConstRef /*_in*/, ChainOperationParams const& _chainParams, u256 const& _blockNumber)
+{
+    return _blockNumber < _chainParams.istanbulForkBlock ? 500 : 150;
+}
+
 ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in)
 {
     return dev::crypto::alt_bn128_G1_mul(_in);
+}
+
+ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_G1_mul)
+(bytesConstRef /*_in*/, ChainOperationParams const& _chainParams, u256 const& _blockNumber)
+{
+    return _blockNumber < _chainParams.istanbulForkBlock ? 40000 : 6000;
 }
 
 ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
@@ -199,9 +212,11 @@ ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
     return dev::crypto::alt_bn128_pairing_product(_in);
 }
 
-ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
+ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)
+(bytesConstRef _in, ChainOperationParams const& _chainParams, u256 const& _blockNumber)
 {
-    return 100000 + (_in.size() / 192) * 80000;
+    auto const k = _in.size() / 192;
+    return _blockNumber < _chainParams.istanbulForkBlock ? 100000 + k * 80000 : 45000 + k * 34000;
 }
 
 }
