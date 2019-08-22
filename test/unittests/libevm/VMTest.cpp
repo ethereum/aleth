@@ -570,6 +570,13 @@ public:
     LegacyVMChainIDTestFixture() : ChainIDTestFixture{new LegacyVM} {}
 };
 
+class AlethInterpreterChainIDTestFixture : public ChainIDTestFixture
+{
+public:
+    AlethInterpreterChainIDTestFixture() : ChainIDTestFixture{new EVMC{evmc_create_interpreter()}}
+    {}
+};
+
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -935,6 +942,19 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterSstoreEip1283Case17)
     testEip1283Case17();
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(AlethInterpreterChainIDSuite, AlethInterpreterChainIDTestFixture)
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterChainIDworksInIstanbul)
+{
+    testChainIDWorksInIstanbul();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterChainIDisInvalidBeforeIstanbul)
+{
+    testChainIDisInvalidBeforeIstanbul();
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
