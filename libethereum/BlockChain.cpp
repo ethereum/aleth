@@ -1,23 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file BlockChain.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "BlockChain.h"
 
@@ -436,19 +419,28 @@ string BlockChain::dumpDatabase() const
     return oss.str();
 }
 
-tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
+tuple<ImportRoute, bool, unsigned> BlockChain::sync(
+    BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
 {
-//  _bq.tick(*this);
+    //  _bq.tick(*this);
 
     VerifiedBlocks blocks;
     _bq.drain(blocks, _max);
 
+    std::tuple<ImportRoute, h256s, unsigned> const importResult = sync(blocks, _stateDB);
+    bool const moreBlocks = _bq.doneDrain(std::get<1>(importResult));
+    return {std::get<0>(importResult), moreBlocks, std::get<2>(importResult)};
+}
+
+tuple<ImportRoute, h256s, unsigned> BlockChain::sync(
+    VerifiedBlocks const& _blocks, OverlayDB const& _stateDB)
+{
     h256s fresh;
     h256s dead;
-    h256s badBlocks;
     Transactions goodTransactions;
     unsigned count = 0;
-    for (VerifiedBlock const& block: blocks)
+    h256s badBlockHashes;
+    for (VerifiedBlock const& block : _blocks)
     {
         do {
             try
@@ -459,8 +451,8 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
                     r = import(block.verified, _stateDB, (ImportRequirements::Everything & ~ImportRequirements::ValidSeal & ~ImportRequirements::CheckUncles) != 0);
                 fresh += r.liveBlocks;
                 dead += r.deadBlocks;
-                goodTransactions.reserve(goodTransactions.size() + r.goodTranactions.size());
-                std::move(std::begin(r.goodTranactions), std::end(r.goodTranactions), std::back_inserter(goodTransactions));
+                goodTransactions.reserve(goodTransactions.size() + r.goodTransactions.size());
+                std::move(std::begin(r.goodTransactions), std::end(r.goodTransactions), std::back_inserter(goodTransactions));
                 ++count;
             }
             catch (dev::eth::AlreadyHaveBlock const&)
@@ -473,7 +465,7 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
                 cwarn << "ODD: Import queue contains block with unknown parent.";// << LogTag::Error << boost::current_exception_diagnostic_information();
                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
                 // Can't continue - chain bad.
-                badBlocks.push_back(block.verified.info.hash());
+                badBlockHashes.push_back(block.verified.info.hash());
             }
             catch (dev::eth::FutureTime const&)
             {
@@ -488,16 +480,16 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
             }
             catch (Exception& ex)
             {
-//              cnote << "Exception while importing block. Someone (Jeff? That you?) seems to be giving us dodgy blocks!";// << LogTag::Error << diagnostic_information(ex);
+                // cnote << "Exception while importing block. Someone (Jeff? That you?) seems to be giving us dodgy blocks!";// << LogTag::Error << diagnostic_information(ex);
                 if (m_onBad)
                     m_onBad(ex);
                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
                 // Can't continue - chain  bad.
-                badBlocks.push_back(block.verified.info.hash());
+                badBlockHashes.push_back(block.verified.info.hash());
             }
         } while (false);
     }
-    return make_tuple(ImportRoute{dead, fresh, goodTransactions}, _bq.doneDrain(badBlocks), count);
+    return {ImportRoute{dead, fresh, goodTransactions}, badBlockHashes, count};
 }
 
 pair<ImportResult, ImportRoute> BlockChain::attemptImport(bytes const& _block, OverlayDB const& _stateDB, bool _mustBeNew) noexcept

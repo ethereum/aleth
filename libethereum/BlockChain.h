@@ -1,23 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file BlockChain.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #pragma once
 
@@ -118,8 +101,18 @@ public:
     void process();
 
     /// Sync the chain with any incoming blocks. All blocks should, if processed in order.
-    /// @returns fresh blocks, dead blocks and true iff there are additional blocks to be processed waiting.
-    std::tuple<ImportRoute, bool, unsigned> sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
+    /// @returns tuple with three members - the first (ImportRoute) contains hashes of fresh blocks
+    /// and dead blocks as well as a list of imported transactions. The second is a bool which is
+    /// true iff there are additional blocks to be processed. The third is the imported block count.
+    std::tuple<ImportRoute, bool, unsigned> sync(
+        BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
+
+    /// Import the supplied blocks into the chain. Blocks should be processed in order.
+    /// @returns a tuple with three members - the first (ImportRoute) contains fresh blocks, dead
+    /// blocks and imported transactions. The second contains hashes of bad blocks. The third
+    /// contains the imported block count.
+    std::tuple<ImportRoute, h256s, unsigned> sync(
+        VerifiedBlocks const& _blocks, OverlayDB const& _stateDB);
 
     /// Attempt to import the given block directly into the BlockChain and sync with the state DB.
     /// @returns the block hashes of any blocks that came into/went out of the canonical block chain.

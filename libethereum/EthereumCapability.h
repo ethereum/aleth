@@ -11,6 +11,7 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Common.h>
 #include <libethereum/BlockChainSync.h>
+#include <libethereum/VerifiedBlock.h>
 #include <libp2p/Capability.h>
 #include <libp2p/CapabilityHost.h>
 #include <libp2p/Common.h>
@@ -142,6 +143,11 @@ public:
     /// from any thread.
     void removeSentTransactions(std::vector<h256> const& _txHashes);
 
+    /// Send new blocks to peers. Should be done after we've verified the PoW but before we've
+    /// imported the blocks into the chain (in order to reduce the uncle rate). Thread-safe (actual
+    /// sending of blocks is done on the network thread).
+    void propagateNewBlocks(std::shared_ptr<VerifiedBlocks const> const& _newBlocks);
+
 private:
     static char const* const c_stateNames[static_cast<int>(SyncState::Size)];
     static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
@@ -149,12 +155,11 @@ private:
     std::vector<NodeID> selectPeers(
         std::function<bool(EthereumPeer const&)> const& _predicate) const;
 
-    std::pair<std::vector<NodeID>, std::vector<NodeID>> randomPartitionPeers(
-        std::vector<NodeID> const& _peers, std::size_t _number) const;
+    std::vector<NodeID> randomPeers(std::vector<NodeID> const& _peers, size_t _count) const;
 
     /// Send top transactions (by nonce and gas price) to available peers
     void maintainTransactions();
-    void maintainBlocks(h256 const& _currentBlock);
+    void maintainBlockHashes(h256 const& _currentBlock);
     void onTransactionImported(ImportResult _ir, h256 const& _h, h512 const& _nodeId);
 
     /// Initialises the network peer-state, doing the stuff that needs to be once-only. @returns true if it really was first.
@@ -178,6 +183,11 @@ private:
 
     u256 m_networkId;
 
+    // We need to keep track of sent blocks and block hashes separately since we propagate new
+    // blocks after we've verified their PoW (and a few other things i.e. they've been imported into
+    // the block queue and verified) but we propagate new block hashes after blocks have been
+    // imported into the chain
+    h256 m_latestBlockHashSent;
     h256 m_latestBlockSent;
     h256Hash m_transactionsSent;
 

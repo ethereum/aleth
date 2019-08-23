@@ -43,6 +43,10 @@ static_assert(BOOST_VERSION >= 106400, "Wrong boost headers version");
 
 namespace
 {
+constexpr unsigned c_syncMinBlockCount = 1;
+constexpr unsigned c_syncMaxBlockCount = 1000;
+constexpr double c_targetDurationS = 1;
+
 std::string filtersToString(h256Hash const& _fs)
 {
     std::stringstream str;
@@ -377,18 +381,29 @@ void Client::appendFromBlock(h256 const& _block, BlockPolarity _polarity, h256Ha
     }
 }
 
-unsigned static const c_syncMin = 1;
-unsigned static const c_syncMax = 1000;
-double static const c_targetDuration = 1;
-
 void Client::syncBlockQueue()
 {
 //  cdebug << "syncBlockQueue()";
 
     ImportRoute ir;
+    h256s badBlockHashes;
     unsigned count;
     Timer t;
-    tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
+
+    // The verified blocks list needs to be a shared_ptr since we propagate them on the network
+    // thread and import them into our local chain on the client thread.
+    std::shared_ptr<VerifiedBlocks> verifiedBlocks = std::make_shared<VerifiedBlocks>();
+    m_bq.drain(*verifiedBlocks, m_syncAmount);
+
+    // Propagate new blocks to peers before importing them into the chain.
+    auto h = m_host.lock();
+    assert(h);  // capability is owned by Host and should be available for the duration of the
+                // Client's lifetime
+    h->propagateNewBlocks(verifiedBlocks);
+
+    std::tie(ir, badBlockHashes, count) = bc().sync(*verifiedBlocks, m_stateDB);
+    m_syncBlockQueue = m_bq.doneDrain(badBlockHashes);
+
     double elapsed = t.elapsed();
 
     if (count)
@@ -397,10 +412,10 @@ void Client::syncBlockQueue()
                       << (count / elapsed) << " blocks/s) in #" << bc().number();
     }
 
-    if (elapsed > c_targetDuration * 1.1 && count > c_syncMin)
-        m_syncAmount = max(c_syncMin, count * 9 / 10);
-    else if (count == m_syncAmount && elapsed < c_targetDuration * 0.9 && m_syncAmount < c_syncMax)
-        m_syncAmount = min(c_syncMax, m_syncAmount * 11 / 10 + 1);
+    if (elapsed > c_targetDurationS * 1.1 && count > c_syncMinBlockCount)
+        m_syncAmount = max(c_syncMinBlockCount, count * 9 / 10);
+    else if (count == m_syncAmount && elapsed < c_targetDurationS * 0.9 && m_syncAmount < c_syncMaxBlockCount)
+        m_syncAmount = min(c_syncMaxBlockCount, m_syncAmount * 11 / 10 + 1);
     if (ir.liveBlocks.empty())
         return;
     onChainChanged(ir);
@@ -557,8 +572,8 @@ void Client::onChainChanged(ImportRoute const& _ir)
     h256Hash changeds;
     onDeadBlocks(_ir.deadBlocks, changeds);
     vector<h256> goodTransactions;
-    goodTransactions.reserve(_ir.goodTranactions.size());
-    for (auto const& t: _ir.goodTranactions)
+    goodTransactions.reserve(_ir.goodTransactions.size());
+    for (auto const& t: _ir.goodTransactions)
     {
         LOG(m_loggerDetail) << "Safely dropping transaction " << t.sha3();
         m_tq.dropGood(t);

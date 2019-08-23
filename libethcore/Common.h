@@ -90,7 +90,7 @@ struct ImportRoute
 {
 	h256s deadBlocks;
 	h256s liveBlocks;
-	std::vector<Transaction> goodTranactions;
+	std::vector<Transaction> goodTransactions;
 };
 
 enum class ImportResult
