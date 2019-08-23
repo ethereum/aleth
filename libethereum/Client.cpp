@@ -390,6 +390,8 @@ void Client::syncBlockQueue()
     unsigned count;
     Timer t;
 
+    // The verified blocks list needs to be a shared_ptr since we propagate them on the network
+    // thread and import them into our local chain on the client thread.
     std::shared_ptr<VerifiedBlocks> verifiedBlocks = std::make_shared<VerifiedBlocks>();
     m_bq.drain(*verifiedBlocks, m_syncAmount);
 

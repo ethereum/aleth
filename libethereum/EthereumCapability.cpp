@@ -436,7 +436,8 @@ void EthereumCapability::reset()
     m_sync->abortSync();
 
     // reset() can be called from RPC handling thread,
-    // but we access m_latestBlockHashSent and m_transactionsSent only from the network thread
+    // but we access m_latestBlockHashSent, m_latestBlockSent, and m_transactionsSent only from the
+    // network thread
     m_host->postWork([this]() {
         m_latestBlockHashSent = {};
         m_latestBlockSent = {};
@@ -511,14 +512,11 @@ std::vector<NodeID> EthereumCapability::randomPeers(
     std::vector<NodeID> const& _peers, size_t _count) const
 {
     std::vector<NodeID> peers{_peers};
-    if (peers.empty())
+    if (peers.empty() || _count >= _peers.size())
         return peers;
 
-    if (_count > peers.size())
-        _count = peers.size();
-    auto itEnd = peers.begin() + _count;
-    std::shuffle(peers.begin(), itEnd, m_urng);
-    return {peers.begin(), itEnd};
+    std::shuffle(peers.begin(), peers.end(), m_urng);
+    return {peers.begin(), peers.begin() + _count};
 }
 
 void EthereumCapability::maintainBlockHashes(h256 const& _currentHash)
@@ -533,7 +531,10 @@ void EthereumCapability::maintainBlockHashes(h256 const& _currentHash)
     // don't be sending more than c_maxSendNewBlocksCount "new" block hashes. if there are any
     // more we were probably waaaay behind.
     if (diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
+    {
+        m_latestBlockHashSent = _currentHash;
         return;
+    }
 
     LOG(m_logger) << "Sending new block hashes (current is " << _currentHash << ", was "
                     << m_latestBlockHashSent << ")";
@@ -950,7 +951,7 @@ void EthereumCapability::propagateNewBlocks(std::shared_ptr<VerifiedBlocks const
     m_host->postWork([this, _newBlocks]() {
         // Verify that we're not too far behind - we perform this check on the network thread to
         // simplify the synchronization story (since otherwise we'd need to synchronize access to
-        // m_latestBlockSent)
+        // m_latestBlockSent).
         auto const latestHash = _newBlocks->back().verified.info.hash();
         auto const detailsFrom = m_chain.details(m_latestBlockSent);
         auto const detailsTo = m_chain.details(latestHash);
@@ -958,7 +959,10 @@ void EthereumCapability::propagateNewBlocks(std::shared_ptr<VerifiedBlocks const
             return;
 
         if (diff(detailsFrom.number, detailsTo.number) > c_maxSendNewBlocksCount)
+        {
+            m_latestBlockSent = latestHash;
             return;
+        }
 
         auto const peersWithoutBlock = selectPeers(
             [&](EthereumPeer const& _peer) { return !_peer.isBlockKnown(latestHash); });
