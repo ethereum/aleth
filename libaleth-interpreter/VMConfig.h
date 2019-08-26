@@ -223,7 +223,7 @@ namespace eth
         &&DIFFICULTY,                           \
         &&GASLIMIT,                             \
         &&CHAINID,                              \
-        &&INVALID,                              \
+        &&SELFBALANCE,                          \
         &&INVALID,                              \
         &&INVALID,                              \
         &&INVALID,                              \
