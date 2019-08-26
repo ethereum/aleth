@@ -377,7 +377,6 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 5000 : 0;
             evmc_address destination = toEvmC(asAddress(m_SP[0]));
 
             // After EIP158 zero-value suicides do not have to pay account creation gas.
@@ -911,7 +910,6 @@ void VM::interpretCases()
 
         CASE(BALANCE)
         {
-            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 400 : 20;
             ON_OP();
             updateIOGas();
 
@@ -994,7 +992,6 @@ void VM::interpretCases()
 
         CASE(EXTCODESIZE)
         {
-            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 20;
             ON_OP();
             updateIOGas();
 
@@ -1060,7 +1057,6 @@ void VM::interpretCases()
         CASE(EXTCODECOPY)
         {
             ON_OP();
-            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 20;
             uint64_t copyMemSize = toInt63(m_SP[3]);
             m_copyMemSize = copyMemSize;
             updateMem(memNeed(m_SP[1], m_SP[3]));
@@ -1359,7 +1355,6 @@ void VM::interpretCases()
 
         CASE(SLOAD)
         {
-            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 200 : 50;
             ON_OP();
             updateIOGas();
 
