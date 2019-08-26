@@ -89,14 +89,15 @@ cmake ..               # Configure the project.
 cmake --build .        # Build all default targets.
 ```
 
-On **Windows** we support up to Visual Studio 2017. You should generate a Visual Studio solution file (.sln) for the 64-bit architecture by adding
-`-G "Visual Studio 15 2017 Win64"` argument to the CMake configuration command.
-After configuration is completed, the `aleth.sln` can be found in the
+On **Windows** we support Visual Studio 2015, 2017, and 2019. You should generate a Visual Studio solution file (`.sln`) for the 64-bit architecture via the following command:
+
+* **Visual Studio 2015**: `cmake .. -G "Visual Studio 14 2015 Win64"`
+* **Visual Studio 2017**: `cmake .. -G "Visual Studio 15 2017 Win64"`
+* **Visual Studio 2019**: `cmake .. -G "Visual Studio 16 2019" -A x64`
+
+After the necessary dependencies have been downloaded and built and the solution has been generated, `aleth.sln` can be found in the
 `build` directory.
 
-```shell
-cmake .. -G "Visual Studio 15 2017 Win64"
-```
 #### Common Issues Building on Windows
 ##### LINK : fatal error LNK1158: cannot run 'rc.exe'
 Rc.exe is the [Microsoft Resource Compiler](https://docs.microsoft.com/en-us/windows/desktop/menurc/resource-compiler). It's distributed with the [Windows SDK](https://developer.microsoft.com/en-US/windows/downloads/windows-10-sdk) and is required for generating the Visual Studio solution file. It can be found in the following directory: ```%ProgramFiles(x86)%\Windows Kits\<OS major version>\bin\<OS full version>\<arch>\```
