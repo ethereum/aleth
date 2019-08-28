@@ -57,6 +57,13 @@ vector<int> parseJsonIntValueIntoVector(json_spirit::mValue const& _json)
         out.push_back(_json.get_int());
     return out;
 }
+
+int mainnetChainID()
+{
+    static auto const c_mainnetChainID =
+        ChainParams(genesisInfo(eth::Network::MainNetworkTest)).chainID;
+    return c_mainnetChainID;
+}
 }
 
 ImportTest::ImportTest(json_spirit::mObject const& _input, json_spirit::mObject& _output):
@@ -460,7 +467,8 @@ void ImportTest::importEnv(json_spirit::mObject const& _o)
     header.setAuthor(Address(_o.at("currentCoinbase").get_str()));
 
     m_lastBlockHashes.reset(new TestLastBlockHashes(lastHashes(header.number())));
-    m_envInfo.reset(new EnvInfo(header, *m_lastBlockHashes, 0, 0));
+
+    m_envInfo.reset(new EnvInfo(header, *m_lastBlockHashes, 0, mainnetChainID()));
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
