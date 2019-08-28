@@ -377,8 +377,6 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            // Self-destructs only have gas cost starting with Tangerine Whistle
-            m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 5000 : 0;
             evmc_address const destination = toEvmC(asAddress(m_SP[0]));
 
             // Starting with EIP150 (Tangerine Whistle), self-destructs need to pay account creation
