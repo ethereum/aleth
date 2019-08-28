@@ -48,6 +48,7 @@
 - Fixed: [#5666](https://github.com/ethereum/aleth/pull/5666) aleth-interpreter returns `EVMC_INVALID_INSTRUCTION` when `INVALID` opcode is encountered and `EVMC_UNKNOWN_INSTRUCTION` for undefined opcodes.
 - Fixed: [#5706](https://github.com/ethereum/aleth/pull/5706) Stop tracking sent transactions after they've been imported into the blockchain.
 - Fixed: [#5687](https://github.com/ethereum/aleth/pull/5687) Limit transaction queue's dropped transaction history to 1024 transactions.
+- Fixed: [#5718](https://github.com/ethereum/aleth/pull/5718) Avoid checking contract balance or destination account existence when executing self-destruct operations on Frontier and Homestead.
 
 ## [1.6.0] - 2019-04-16
 

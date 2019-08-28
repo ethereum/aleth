@@ -377,19 +377,19 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            evmc_address destination = toEvmC(asAddress(m_SP[0]));
+            evmc_address const destination = toEvmC(asAddress(m_SP[0]));
 
-            // After EIP158 zero-value suicides do not have to pay account creation gas.
-            u256 const balance =
-                fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
-            if (balance > 0 || m_rev < EVMC_SPURIOUS_DRAGON)
+            // Starting with EIP150 (Tangerine Whistle), self-destructs need to pay account creation
+            // gas. Starting with EIP158 (Spurious Dragon), 0-value suicides don't have to pay this
+            // charge.
+            if (m_rev >= EVMC_TANGERINE_WHISTLE)
             {
-                // After EIP150 hard fork charge additional cost of sending
-                // ethers to non-existing account.
-                int destinationExists =
-                    m_context->host->account_exists(m_context, &destination);
-                if (m_rev >= EVMC_TANGERINE_WHISTLE && !destinationExists)
-                    m_runGas += VMSchedule::callNewAccount;
+                if (m_rev == EVMC_TANGERINE_WHISTLE ||
+                    fromEvmC(m_context->host->get_balance(m_context, &m_message->destination)) > 0)
+                {
+                    if (!m_context->host->account_exists(m_context, &destination))
+                        m_runGas += VMSchedule::callNewAccount;
+                }
             }
 
             updateIOGas();
