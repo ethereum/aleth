@@ -42,9 +42,12 @@ Or just the test suite:
 
    ``./testeth -t <TEST_SUITE>``
    
-To run a specific test from the test case:
+To run a specific test from a test case (reference by name):
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --singletest <TEST_NAME>``
+   
+To run a specific test from a test case (reference by test case file path):
+   ``./testeth -t GeneralStateTests -- --singletest <TEST_FILE_PATH>``
    
 Tests has cases designed for different network rules. Such as initial frontier rules, homestead rules and other fork updates. That is to make sure that your client could sync up from the very begining to the recent top block. Block fork numbers are declared in genesis config in the file:
 
