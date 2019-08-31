@@ -42,10 +42,16 @@ Or just the test suite:
 
    ``./testeth -t <TEST_SUITE>``
    
-To run a specific test from the test case:
+To run a specific test from a test case (reference by name):
 
    ``./testeth -t <TEST_SUITE>/<TEST_CASE> -- --singletest <TEST_NAME>``
    
+To run a specific test from a test case (reference by test case file path):
+   ``./testeth -t <TEST_TYPE> -- --singletest <TEST_FILE_PATH> <TEST_NAME>``
+   
+   where the valid choices for <TEST_TYPE> are same as for <TEST_SUITE>: `GeneralStateTests`, `BlockchainTests`, `TransitionTests`, `TransactionTests`, `VMTests`
+
+
 Tests has cases designed for different network rules. Such as initial frontier rules, homestead rules and other fork updates. That is to make sure that your client could sync up from the very begining to the recent top block. Block fork numbers are declared in genesis config in the file:
 
 https://github.com/ethereum/cpp-ethereum/blob/develop/libethashseal/genesis/mainNetwork.cpp
@@ -58,7 +64,7 @@ Currently network names <NET_NAME> are following: Frontier, Homestead, EIP150, E
 
 The main test suites are <TEST_SUITE>: GeneralStateTests, BlockchainTests, TransitionTests, TransactionTests, VMTests
 
-<TEST_CASE> correspond to a folder name in the tests repo. And <TEST_NAME> correspond to the filename in that folder describing a specific test. 
+<TEST_CASE> correspond to a folder name in the tests repo. And <TEST_NAME> correspond to the filename in that folder describing a specific test or an absolute path to the test file. 
 
 GeneralStateTests has a single transaction being executed on a given pre state to produce a post state. 
 This transaction has arrays <data>, <value>, <gasLimit>. So a single test execute transaction with different arguments taken from those arrays to test different conditions on the same pre state. To run a transaction from the GeneralStateTests with the specified arguments use: 
