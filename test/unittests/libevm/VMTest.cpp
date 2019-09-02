@@ -655,6 +655,12 @@ public:
     LegacyVMSelfBalanceFixture() : SelfBalanceFixture{new LegacyVM} {}
 };
 
+class AlethInterpreterSelfBalanceFixture : public SelfBalanceFixture
+{
+public:
+    AlethInterpreterSelfBalanceFixture() : SelfBalanceFixture{new EVMC{evmc_create_interpreter()}}
+    {}
+};
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -1050,6 +1056,19 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterChainIDworksInIstanbul)
 BOOST_AUTO_TEST_CASE(AlethInterpreterChainIDisInvalidBeforeIstanbul)
 {
     testChainIDisInvalidBeforeIstanbul();
+}
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSelfBalanceSuite, AlethInterpreterSelfBalanceFixture)
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSelfBalanceworksInIstanbul)
+{
+    testSelfBalanceWorksInIstanbul();
+}
+
+BOOST_AUTO_TEST_CASE(AlethInterpreterSelfBalanceisInvalidBeforeIstanbul)
+{
+    testSelfBalanceisInvalidBeforeIstanbul();
 }
 BOOST_AUTO_TEST_SUITE_END()
 

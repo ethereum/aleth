@@ -1164,6 +1164,19 @@ void VM::interpretCases()
         }
         NEXT
 
+        CASE(SELFBALANCE)
+        {
+            ON_OP();
+
+            if (m_rev < EVMC_ISTANBUL)
+                throwBadInstruction();
+
+            updateIOGas();
+
+            m_SPP[0] = fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
+        }
+        NEXT
+
         CASE(POP)
         {
             ON_OP();
