@@ -1456,6 +1456,19 @@ void LegacyVM::interpretCases()
         }
         NEXT
 
+        CASE(SELFBALANCE)
+        {
+            ON_OP();
+
+            if (!m_schedule->haveSelfbalance)
+                throwBadInstruction();
+
+            updateIOGas();
+
+            m_SPP[0] = m_ext->balance(m_ext->myAddress);
+        }
+        NEXT
+
         CASE(POP)
         {
             ON_OP();
