@@ -782,13 +782,13 @@ public:
         BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 700 + 15);
     }
 
-    void testStaticCallCostEqualToCallBeforeIstanbul()
+    void testStaticCallCostEqualToCallBeforeBerlin()
     {
         // let r := staticcall(10000, 0x4, 0, 0, 0, 0)
         bytes code = fromHex("60006000600060006004612710fa50");
 
-        se.reset(ChainParams(genesisInfo(Network::ConstantinopleFixTest)).createSealEngine());
-        version = ConstantinopleFixSchedule.accountVersion;
+        se.reset(ChainParams(genesisInfo(Network::IstanbulTest)).createSealEngine());
+        version = IstanbulSchedule.accountVersion;
 
         ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
             sha3(code), version, depth, isCreate, staticCall);
@@ -810,7 +810,7 @@ public:
         BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 700 + 15);
     }
 
-    void testStaticCallHasCorrectCostInIstanbul()
+    void testStaticCallHasCorrectCostInBerlin()
     {
         // let r := staticcall(10000, 0x4, 0, 0, 0, 0)
         bytes code = fromHex("60006000600060006004612710fa50");
@@ -841,12 +841,12 @@ public:
     Address address{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
-        ChainParams(genesisInfo(Network::IstanbulTest)).createSealEngine()};
+        ChainParams(genesisInfo(Network::BerlinTest)).createSealEngine()};
     EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
 
     u256 value = 0;
     u256 gasPrice = 1;
-    u256 version = IstanbulSchedule.accountVersion;
+    u256 version = BerlinSchedule.accountVersion;
     int depth = 0;
     bool isCreate = false;
     bool staticCall = false;
@@ -1022,14 +1022,14 @@ BOOST_AUTO_TEST_CASE(LegacyVMCallHasCorrectCost)
     testCallHasCorrectCost();
 }
 
-BOOST_AUTO_TEST_CASE(LegacyVMStaticCallCostEqualToCallBeforeIstanbul)
+BOOST_AUTO_TEST_CASE(LegacyVMStaticCallCostEqualToCallBeforeBerlin)
 {
-    testStaticCallCostEqualToCallBeforeIstanbul();
+    testStaticCallCostEqualToCallBeforeBerlin();
 }
 
-BOOST_AUTO_TEST_CASE(LegacyVMStaticCallHasCorrectCostInIstanbul)
+BOOST_AUTO_TEST_CASE(LegacyVMStaticCallHasCorrectCostInBerlin)
 {
-    testStaticCallHasCorrectCostInIstanbul();
+    testStaticCallHasCorrectCostInBerlin();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
