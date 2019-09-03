@@ -61,6 +61,7 @@ extern std::string const c_eWASMForkBlock;
 extern std::string const c_constantinopleForkBlock;
 extern std::string const c_constantinopleFixForkBlock;
 extern std::string const c_istanbulForkBlock;
+extern std::string const c_berlinForkBlock;
 extern std::string const c_experimentalForkBlock;
 extern std::string const c_accountStartNonce;
 extern std::string const c_maximumExtraDataSize;
