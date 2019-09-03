@@ -577,25 +577,32 @@ public:
     {}
 };
 
-class SelfBalanceFixture : public TestOutputHelperFixture
+class BalanceFixture : public TestOutputHelperFixture
 {
 public:
-    explicit SelfBalanceFixture(VMFace* _vm) : vm{_vm} { state.addBalance(address, 1 * ether); }
+    explicit BalanceFixture(VMFace* _vm) : vm{_vm} { state.addBalance(address, 1 * ether); }
 
     void testSelfBalanceWorksInIstanbul()
     {
-        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
-            sha3(code), version, depth, isCreate, staticCall);
+        ExtVM extVmSelfBalance(state, envInfo, *se, address, address, address, value, gasPrice, {},
+            ref(codeSelfBalance), sha3(codeSelfBalance), version, depth, isCreate, staticCall);
 
-        owning_bytes_ref ret = vm->exec(gas, extVm, OnOpFunc{});
+        owning_bytes_ref retSelfBalance = vm->exec(gas, extVmSelfBalance, OnOpFunc{});
 
-        BOOST_REQUIRE_EQUAL(fromBigEndian<u256>(ret), 1 * ether);
+        BOOST_REQUIRE_EQUAL(fromBigEndian<u256>(retSelfBalance), 1 * ether);
+
+        ExtVM extVmBalance(state, envInfo, *se, address, address, address, value, gasPrice, {},
+            ref(codeBalance), sha3(codeBalance), version, depth, isCreate, staticCall);
+
+        owning_bytes_ref retBalance = vm->exec(gas, extVmBalance, OnOpFunc{});
+
+        BOOST_REQUIRE_EQUAL(fromBigEndian<u256>(retBalance), fromBigEndian<u256>(retSelfBalance));
     }
 
     void testSelfBalanceHasCorrectCost()
     {
-        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
-            sha3(code), version, depth, isCreate, staticCall);
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {},
+            ref(codeSelfBalance), sha3(codeSelfBalance), version, depth, isCreate, staticCall);
 
         bigint gasBefore;
         bigint gasAfter;
@@ -613,13 +620,34 @@ public:
         BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 5);
     }
 
+    void testBalanceHasCorrectCost()
+    {
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {},
+            ref(codeBalance), sha3(codeBalance), version, depth, isCreate, staticCall);
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (_instr == Instruction::BALANCE)
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+
+        vm->exec(gas, extVm, onOp);
+
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 700);
+    }
+
     void testSelfBalanceisInvalidBeforeIstanbul()
     {
         se.reset(ChainParams(genesisInfo(Network::ConstantinopleFixTest)).createSealEngine());
         version = ConstantinopleFixSchedule.accountVersion;
 
-        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
-            sha3(code), version, depth, isCreate, staticCall);
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {},
+            ref(codeSelfBalance), sha3(codeSelfBalance), version, depth, isCreate, staticCall);
 
         BOOST_REQUIRE_THROW(vm->exec(gas, extVm, OnOpFunc{}), BadInstruction);
     }
@@ -644,22 +672,27 @@ public:
     // let b : = selfbalance()
     // mstore(0, b)
     // return(0, 32)
-    bytes code = fromHex("478060005260206000f350");
+    bytes codeSelfBalance = fromHex("478060005260206000f350");
+
+    // let a := caller()
+    // let b := balance(a)
+    // mstore(0, b)
+    // return(0, 32)
+    bytes codeBalance = fromHex("3380318060005260206000f35050");
 
     std::unique_ptr<VMFace> vm;
 };
 
-class LegacyVMSelfBalanceFixture : public SelfBalanceFixture
+class LegacyVMBalanceFixture : public BalanceFixture
 {
 public:
-    LegacyVMSelfBalanceFixture() : SelfBalanceFixture{new LegacyVM} {}
+    LegacyVMBalanceFixture() : BalanceFixture{new LegacyVM} {}
 };
 
-class AlethInterpreterSelfBalanceFixture : public SelfBalanceFixture
+class AlethInterpreterBalanceFixture : public BalanceFixture
 {
 public:
-    AlethInterpreterSelfBalanceFixture() : SelfBalanceFixture{new EVMC{evmc_create_interpreter()}}
-    {}
+    AlethInterpreterBalanceFixture() : BalanceFixture{new EVMC{evmc_create_interpreter()}} {}
 };
 }  // namespace
 
@@ -858,7 +891,7 @@ BOOST_AUTO_TEST_CASE(LegacyVMChainIDisInvalidBeforeIstanbul)
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(LegacyVMSelfBalanceSuite, LegacyVMSelfBalanceFixture)
+BOOST_FIXTURE_TEST_SUITE(LegacyVMSelfBalanceSuite, LegacyVMBalanceFixture)
 
 BOOST_AUTO_TEST_CASE(LegacyVMSelfBalanceworksInIstanbul)
 {
@@ -1059,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterChainIDisInvalidBeforeIstanbul)
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSelfBalanceSuite, AlethInterpreterSelfBalanceFixture)
+BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSelfBalanceSuite, AlethInterpreterBalanceFixture)
 
 BOOST_AUTO_TEST_CASE(AlethInterpreterSelfBalanceworksInIstanbul)
 {
