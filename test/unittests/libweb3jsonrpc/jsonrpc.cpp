@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(web3_sha3)
     BOOST_CHECK_EQUAL("0xc6888fa159d67f77c2f3d7a402e199802766bd7e8d4d1ecd2274fc920265d56a", result);
 }
 
-BOOST_AUTO_TEST_CASE(debugAccountRangeAtFinalBlockState)
+BOOST_AUTO_TEST_CASE(debugAccountRangeFinalBlockState)
 {
     // mine to get some balance at coinbase
     dev::eth::mine(*(web3->ethereum()), 1);
@@ -617,11 +617,11 @@ BOOST_AUTO_TEST_CASE(debugAccountRangeAtFinalBlockState)
     string receiverHash = toString(sha3(receiver));
 
     // receiver doesn't exist in the beginning of the 2nd block
-    Json::Value result = rpcClient->debug_accountRangeAt("2", 0, "0", 100);
+    Json::Value result = rpcClient->debug_accountRange("2", 0, "0", 100);
     BOOST_CHECK(!result["addressMap"].isMember(receiverHash));
 
     // receiver exists in the end of the 2nd block
-    result = rpcClient->debug_accountRangeAt("2", 1, "0", 100);
+    result = rpcClient->debug_accountRange("2", 1, "0", 100);
     BOOST_CHECK(result["addressMap"].isMember(receiverHash));
     BOOST_CHECK_EQUAL(result["addressMap"][receiverHash], toString(receiver));
 }

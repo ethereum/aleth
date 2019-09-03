@@ -145,7 +145,7 @@ Json::Value Debug::debug_traceBlockByNumber(int _blockNumber, Json::Value const&
     return ret;
 }
 
-Json::Value Debug::debug_accountRangeAt(
+Json::Value Debug::debug_accountRange(
     string const& _blockHashOrNumber, int _txIndex, string const& _addressHash, int _maxResults)
 {
     Json::Value ret(Json::objectValue);

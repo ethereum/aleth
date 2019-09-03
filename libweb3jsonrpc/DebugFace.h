@@ -14,7 +14,7 @@ namespace dev {
             public:
                 DebugFace()
                 {
-                    this->bindAndAddMethod(jsonrpc::Procedure("debug_accountRangeAt", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING,"param4",jsonrpc::JSON_INTEGER, NULL), &dev::rpc::DebugFace::debug_accountRangeAtI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("debug_accountRange", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING,"param4",jsonrpc::JSON_INTEGER, NULL), &dev::rpc::DebugFace::debug_accountRangeI);
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_traceTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::DebugFace::debug_traceTransactionI);
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_storageRangeAt", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING,"param4",jsonrpc::JSON_STRING,"param5",jsonrpc::JSON_INTEGER, NULL), &dev::rpc::DebugFace::debug_storageRangeAtI);
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_preimage", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::DebugFace::debug_preimageI);
@@ -22,9 +22,9 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_traceBlockByHash", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::DebugFace::debug_traceBlockByHashI);
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_traceCall", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_OBJECT,"param2",jsonrpc::JSON_STRING,"param3",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::DebugFace::debug_traceCallI);
                 }
-                inline virtual void debug_accountRangeAtI(const Json::Value &request, Json::Value &response)
+                inline virtual void debug_accountRangeI(const Json::Value &request, Json::Value &response)
                 {
-                    response = this->debug_accountRangeAt(request[0u].asString(), request[1u].asInt(), request[2u].asString(), request[3u].asInt());
+                    response = this->debug_accountRange(request[0u].asString(), request[1u].asInt(), request[2u].asString(), request[3u].asInt());
                 }
                 inline virtual void debug_traceTransactionI(const Json::Value &request, Json::Value &response)
                 {
@@ -50,7 +50,7 @@ namespace dev {
                 {
                     response = this->debug_traceCall(request[0u], request[1u].asString(), request[2u]);
                 }
-                virtual Json::Value debug_accountRangeAt(const std::string& param1, int param2, const std::string& param3, int param4) = 0;
+                virtual Json::Value debug_accountRange(const std::string& param1, int param2, const std::string& param3, int param4) = 0;
                 virtual Json::Value debug_traceTransaction(const std::string& param1, const Json::Value& param2) = 0;
                 virtual Json::Value debug_storageRangeAt(const std::string& param1, int param2, const std::string& param3, const std::string& param4, int param5) = 0;
                 virtual std::string debug_preimage(const std::string& param1) = 0;
