@@ -959,14 +959,14 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value debug_accountRangeAt(const std::string& param1, int param2, const std::string& param3, int param4) throw (jsonrpc::JsonRpcException)
+        Json::Value debug_accountRange(const std::string& param1, int param2, const std::string& param3, int param4) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             p.append(param2);
             p.append(param3);
             p.append(param4);
-            Json::Value result = this->CallMethod("debug_accountRangeAt", p);
+            Json::Value result = this->CallMethod("debug_accountRange", p);
             if (result.isObject())
                 return result;
             else
