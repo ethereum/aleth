@@ -29,7 +29,7 @@ Hunter version.
 Hunter has an option to download cached binaries from specified cache server
 instead of building packages from source. This option is enabled by default.
 Because checksums of binaries are not know up front the main project can be at
-risk in case the cache server is compromised. In cpp-ethereum we decided to
+risk in case the cache server is compromised. In aleth we decided to
 use only the cache server controlled by Ethereum C++ team located in
 https://github.com/ethereum/hunter-cache.
 

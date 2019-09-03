@@ -151,7 +151,7 @@ public:
 // With any tests in a broken state, the automation is not useful, because
 // we do not see the working -> broken transition occur.
 //
-// See https://github.com/ethereum/cpp-ethereum/issues/3273
+// See https://github.com/ethereum/aleth/issues/3273
 
 #if !defined(_WIN32)
 TEST(eip8, test_handshake_plain_auth)
@@ -177,7 +177,7 @@ TEST(eip8, test_handshake_plain_auth)
 // With any tests in a broken state, the automation is not useful, because
 // we do not see the working -> broken transition occur.
 //
-// See https://github.com/ethereum/cpp-ethereum/issues/3273
+// See https://github.com/ethereum/aleth/issues/3273
 
 #if !defined(_WIN32)
 TEST(eip8, test_handshake_eip8_auth1)
@@ -206,7 +206,7 @@ TEST(eip8, test_handshake_eip8_auth1)
 // With any tests in a broken state, the automation is not useful, because
 // we do not see the working -> broken transition occur.
 //
-// See https://github.com/ethereum/cpp-ethereum/issues/3273
+// See https://github.com/ethereum/aleth/issues/3273
 
 #if !defined(_WIN32)
 TEST(eip8, test_handshake_eip8_auth2)
@@ -236,7 +236,7 @@ TEST(eip8, test_handshake_eip8_auth2)
 // With any tests in a broken state, the automation is not useful, because
 // we do not see the working -> broken transition occur.
 //
-// See https://github.com/ethereum/cpp-ethereum/issues/3273
+// See https://github.com/ethereum/aleth/issues/3273
 
 #if !defined(_WIN32)
 TEST(eip8, test_handshake_eip8_ack_plain)
@@ -263,7 +263,7 @@ TEST(eip8, test_handshake_eip8_ack_plain)
 // With any tests in a broken state, the automation is not useful, because
 // we do not see the working -> broken transition occur.
 //
-// See https://github.com/ethereum/cpp-ethereum/issues/3273
+// See https://github.com/ethereum/aleth/issues/3273
 
 #if !defined(_WIN32)
 TEST(eip8, test_handshake_eip8_ack1)
@@ -297,7 +297,7 @@ TEST(eip8, test_handshake_eip8_ack1)
 // With any tests in a broken state, the automation is not useful, because
 // we do not see the working -> broken transition occur.
 //
-// See https://github.com/ethereum/cpp-ethereum/issues/3273
+// See https://github.com/ethereum/aleth/issues/3273
 
 #if !defined(_WIN32)
 TEST(eip8, test_handshake_eip8_ack2)

@@ -70,7 +70,7 @@ concatenation.
 
    where ``chunkId = index * 255 + level``. See comment to
    `BlockChain::blocksBlooms()
-   method <https://github.com/ethereum/cpp-ethereum/blob/db7278413edf701901d2a054b32a31c2722708d5/libethereum/BlockChain.h#L193-L206>`__
+   method <https://github.com/ethereum/aleth/blob/db7278413edf701901d2a054b32a31c2722708d5/libethereum/BlockChain.h#L193-L206>`__
    for details.
 
 -  Additional records, one instance of each:

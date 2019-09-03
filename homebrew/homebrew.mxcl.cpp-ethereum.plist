@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>homebrew.mxcl.cpp-ethereum</string>
+    <string>homebrew.mxcl.aleth</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
@@ -12,9 +12,9 @@
     <integer>300</integer>
     <key>ProgramArguments</key>
     <array>
-        <string>@@HOMEBREW_PREFIX@@/opt/cpp-ethereum/bin/eth</string>
+        <string>@@HOMEBREW_PREFIX@@/opt/aleth/bin/eth</string>
         <string>-d</string>
-        <string>@@HOMEBREW_CELLAR@@/cpp-ethereum/0.9.41-61/.ethereum</string>
+        <string>@@HOMEBREW_CELLAR@@/aleth/0.9.41-61/.ethereum</string>
         <string>-b</string>
     </array>
     <key>WorkingDirectory</key>

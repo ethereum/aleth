@@ -1,7 +1,7 @@
 # The Windows platform has not historically had any standard packaging system for delivering
 # versioned releases of libraries.  Homebrew and PPA perform that function for macOS and Ubuntu
 # respectively, and there are analogous standards for other Linux distros.  In the absense of
-# such a standard, we have chosen to make a "fake packaging system" for cpp-ethereum, which is
+# such a standard, we have chosen to make a "fake packaging system" for aleth, which is
 # implemented in https://github.com/ethereum/cpp-dependencies.
 #
 # NOTE - In the last couple of years, the NuGet packaging system, first created for delivery
@@ -22,7 +22,7 @@
 
 if (MSVC)
 	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
-		message(FATAL_ERROR "ERROR - As of the 1.3.0 release, cpp-ethereum only supports Visual Studio 2015 or newer.\nPlease download from https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx.")
+		message(FATAL_ERROR "ERROR - As of the 1.3.0 release, aleth only supports Visual Studio 2015 or newer.\nPlease download from https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx.")
 	else()
 		get_filename_component(ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../deps/x64" ABSOLUTE)
 	endif()

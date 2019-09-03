@@ -1,4 +1,4 @@
-// Copyright 2018 cpp-ethereum Authors.
+// Copyright 2018 aleth Authors.
 // Licensed under the GNU General Public License v3. See the LICENSE file.
 
 #include "EVMC.h"

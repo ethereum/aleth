@@ -1,6 +1,6 @@
 # eth: The Command-Line Interface Client
 
-`eth` is the cpp-ethereum CLI (Command line Interface) client. To use it, you should open a terminal on your system. `eth` normally just runs in the background. If you want an interactive console (you do!), it has an option: `console` (it has two others - `import` and `export`. We'll get to those later. So now, start `eth`:
+`eth` is the aleth CLI (Command line Interface) client. To use it, you should open a terminal on your system. `eth` normally just runs in the background. If you want an interactive console (you do!), it has an option: `console` (it has two others - `import` and `export`. We'll get to those later. So now, start `eth`:
 
 ```
 eth console

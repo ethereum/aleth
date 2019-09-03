@@ -5,7 +5,7 @@ Using Testeth
 
 Ethereum cpp-client testeth tool for creation and execution of ethereum tests.
 
-To run tests you should open folder (see also `Installing and building <https://github.com/ethereum/cpp-ethereum#building-from-source>`_)
+To run tests you should open folder (see also `Installing and building <https://github.com/ethereum/aleth#building-from-source>`_)
 
    ``/build/test``
 
@@ -14,7 +14,7 @@ and execute a command:
    ``./testeth`` 
    
 This will run all test cases automatically.
-By default `testeth` will look for the test repository cloned in cpp-ethereum submodule ``cpp-ethereum/test/jsontests`` assuming that the build folder is ``cpp-ethereum/build``
+By default `testeth` will look for the test repository cloned in aleth submodule ``aleth/test/jsontests`` assuming that the build folder is ``aleth/build``
 
 If environment variable ``ETHEREUM_TEST_PATH`` is set in /etc/environment file, ``testeth`` will use path to the test repo from that variable. Example:
 
@@ -54,7 +54,7 @@ To run a specific test from a test case (reference by test case file path):
 
 Tests has cases designed for different network rules. Such as initial frontier rules, homestead rules and other fork updates. That is to make sure that your client could sync up from the very begining to the recent top block. Block fork numbers are declared in genesis config in the file:
 
-https://github.com/ethereum/cpp-ethereum/blob/develop/libethashseal/genesis/mainNetwork.cpp
+https://github.com/ethereum/aleth/blob/develop/libethashseal/genesis/mainNetwork.cpp
 
 If you need to debug a specific test on a specific network rules use this command:
 

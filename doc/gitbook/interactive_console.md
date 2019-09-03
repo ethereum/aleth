@@ -227,7 +227,7 @@ true
   ℹ  13:36:50|eth  Closing state DB
  ⚡   13:36:50|ethsync  Worker stopping 582 ms
  ⚡   13:36:50|p2p  Worker stopping 581 ms
-lefteris@archlenovo ~/ew/cpp-ethereum$
+lefteris@archlenovo ~/ew/aleth$
 ```
 
 #### Changing the log verbosity

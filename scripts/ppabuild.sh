@@ -34,7 +34,7 @@ fi
 arch=amd64
 mainrepo=webthree-umbrella
 now=$(date +"%Y%m%d")
-project="cpp-ethereum"
+project="aleth"
 ppabranch=develop
 if [ "${distribution}" = "wily" ]; then
 	ppabranch=wily

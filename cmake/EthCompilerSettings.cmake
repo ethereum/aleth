@@ -1,12 +1,12 @@
 #------------------------------------------------------------------------------
 # EthCompilerSettings.cmake
 #
-# CMake file for cpp-ethereum project which specifies our compiler settings
+# CMake file for aleth project which specifies our compiler settings
 # for each supported platform and build configuration.
 #
-# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
+# The documentation for aleth is hosted at http://aleth.org
 #
-# Copyright (c) 2014-2016 cpp-ethereum contributors.
+# Copyright (c) 2014-2016 aleth contributors.
 #------------------------------------------------------------------------------
 
 # Clang seeks to be command-line compatible with GCC as much as possible, so

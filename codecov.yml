@@ -6,7 +6,7 @@ coverage:
     gitter:
       default:
         threshold: 0
-        url: https://gitter.im/ethereum/cpp-ethereum-development
+        url: https://gitter.im/ethereum/aleth-development
   status:
     patch:
       default:

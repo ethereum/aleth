@@ -1,4 +1,4 @@
-name: cpp-ethereum
+name: aleth
 version: master
 summary: blockchain app platform
 description: Ethereum C++ project
@@ -13,7 +13,7 @@ apps:
     command: ethvm
 
 parts:
-  cpp-ethereum:
+  aleth:
     source: .
     source-type: git
     plugin: cmake

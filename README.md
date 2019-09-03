@@ -1,7 +1,7 @@
 # Aleth – Ethereum C++ client, tools and libraries
 
 > The collection of C++ libraries and tools for Ethereum,
-> formerly known as _cpp-ethereum_ project.
+> formerly known as _aleth_ project.
 > This includes the full Ethereum client **aleth**.
 
 
@@ -16,14 +16,14 @@
 
 ## Usage
 
-The Ethereum Documentation site hosts the **[aleth homepage](http://cpp-ethereum.org)**, which
+The Ethereum Documentation site hosts the **[aleth homepage](http://aleth.org)**, which
 has a Quick Start section.
 
 
 Operating system | Status
 ---------------- | ----------
 Ubuntu and macOS | [![TravisCI](https://img.shields.io/travis/ethereum/aleth/develop.svg)](https://travis-ci.org/ethereum/aleth)
-Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/cpp-ethereum/develop.svg)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
+Windows          | [![AppVeyor](https://img.shields.io/appveyor/ci/ethereum/aleth/develop.svg)](https://ci.appveyor.com/project/ethereum/aleth)
 
 
 ## Install
@@ -252,7 +252,7 @@ Details on how to run and debug the tests can be found [here](doc/usingtesteth.r
 ## Documentation
 
 - [Internal documentation for developers](doc/index.rst).
-- [Outdated documentation for end users](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/).
+- [Outdated documentation for end users](http://www.ethdocs.org/en/latest/ethereum-clients/aleth/).
 
 
 ## License

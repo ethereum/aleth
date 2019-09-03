@@ -1,26 +1,26 @@
 
 REM ---------------------------------------------------------------------------
-REM Batch file for running the unit-tests for cpp-ethereum for Windows.
+REM Batch file for running the unit-tests for aleth for Windows.
 REM
-REM The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
+REM The documentation for aleth is hosted at http://aleth.org
 REM
 REM ---------------------------------------------------------------------------
-REM This file is part of cpp-ethereum.
+REM This file is part of aleth.
 REM
-REM cpp-ethereum is free software: you can redistribute it and/or modify
+REM aleth is free software: you can redistribute it and/or modify
 REM it under the terms of the GNU General Public License as published by
 REM the Free Software Foundation, either version 3 of the License, or
 REM (at your option) any later version.
 REM
-REM cpp-ethereum is distributed in the hope that it will be useful,
+REM aleth is distributed in the hope that it will be useful,
 REM but WITHOUT ANY WARRANTY; without even the implied warranty of
 REM MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 REM GNU General Public License for more details.
 REM
 REM You should have received a copy of the GNU General Public License
-REM along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+REM along with aleth.  If not, see <http://www.gnu.org/licenses/>
 REM
-REM Copyright (c) 2016 cpp-ethereum contributors.
+REM Copyright (c) 2016 aleth contributors.
 REM ---------------------------------------------------------------------------
 
 set TESTS=%1

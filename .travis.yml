@@ -1,25 +1,25 @@
 #------------------------------------------------------------------------------
-# TravisCI configuration file for cpp-ethereum.
+# TravisCI configuration file for aleth.
 #
-# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
+# The documentation for aleth is hosted at http://aleth.org
 #
 # ------------------------------------------------------------------------------
-# This file is part of cpp-ethereum.
+# This file is part of aleth.
 #
-# cpp-ethereum is free software: you can redistribute it and/or modify
+# aleth is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# cpp-ethereum is distributed in the hope that it will be useful,
+# aleth is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+# along with aleth.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2016 cpp-ethereum contributors.
+# (c) 2016 aleth contributors.
 #------------------------------------------------------------------------------
 
 language: cpp
@@ -109,8 +109,8 @@ deploy:
     - provider: releases
       api_key:
           secure: HHcAWFjVNwf8b83KVQnEa172Eo7aur+scVCq4BzgPDXnF+v4GDXT7PAaXyWBwIyrFoIJduPCojsiIBP8QZwtjaKgnywnREjaLc0syTCLSeUHcp/+jPRdickvfgHJWG06sU7ZST8/HnGmoOqV/BUlGhHiqma1oJfGEJ6aaG4oza77ZYAxLPxwq9NOuTHVGJwlphcfeevcU3F0C/mxDEEMEz66lDolp4DCP5L4muHlrOCZ+HSjRwz5/anVNVWNO/nM1I0wmI2TRAS0RPzwClVD8iiGJHhZ/WdgenG4nosBG9UQjd/56LLKI25bIJijz/tpe89pCRUJtMYtcXR5C7w8Is05a1GMedBAiT7Bu35qHbpxJeqcw26DJL4U3+IeHfymXpK/E3RAj16bj+mtxxYSEzaae7obCm1rDA1LnPTI94kAea2ZNOUucDK5FaROX/uBXk422xrQTdJpEpg4TLa7GmQGdtyJC0OnzaOTXWg87lbVMq1PndDLE3STqXT5J/wj/WfUtXlN38x9aX7wwrmyCXY3WJ1zzShAgRO9YjRRosMBkahGDj5l75w9KX8yW3C5txcxjPVGSxQIl+bv9FPrBJmU1WOOPYQlHm92JQJus8BXXQCuhg3mEsZQfmGpgrS82NUB15V1nZB3xCXniKcKnQirzbRXLg8wjlPbT9DKGbc=
-      file: $TRAVIS_BUILD_DIR/cpp-ethereum-$ZIP_SUFFIX.zip
+      file: $TRAVIS_BUILD_DIR/aleth-$ZIP_SUFFIX.zip
       skip_cleanup: true
       on:
-          repo: ethereum/cpp-ethereum
+          repo: ethereum/aleth
           branch: release

@@ -1,18 +1,18 @@
 /*
-    This file is part of cpp-ethereum.
+    This file is part of aleth.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
+    aleth is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
+    aleth is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    along with aleth.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file fullblockchain.cpp
  * @author Dimitry Khokhlov <dimitry@ethdev.com>
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)
 Often broken test disabled 5th September 2016, until we have time to
 troubleshoot the root cause.
 
-See https://github.com/ethereum/cpp-ethereum/issues/3256.
+See https://github.com/ethereum/aleth/issues/3256.
 
 (Mining_3_mineBlockWithUncles)
 {
@@ -149,7 +149,7 @@ See https://github.com/ethereum/cpp-ethereum/issues/3256.
 Often broken test disabled 5th September 2016, until we have time to
 troubleshoot the root cause.
 
-See https://github.com/ethereum/cpp-ethereum/issues/3059.
+See https://github.com/ethereum/aleth/issues/3059.
 
 (Mining_4_BlockQueueSyncing)
 {

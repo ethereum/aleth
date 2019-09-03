@@ -6,7 +6,7 @@
 
 When using Ethereum you will own one or more `keys`. These are special files that allow you access to a particular account. Such access might allow you to spend funds, register a name or transfer an asset. Keys are standardised and compatible across major clients. They are always protected by password-based encryption. Also they do not directly identify the actual account that the key represents. To determine this, the key must be decrypted through providing the correct password.
 
-In cpp-ethereum, your *wallet* keeps a track of each key that you own along with what *address* it represents. An address is just way of referring to a particular *account* in Ethereum. It, too, is protected by a password, which is generally provided when the client begins.
+In aleth, your *wallet* keeps a track of each key that you own along with what *address* it represents. An address is just way of referring to a particular *account* in Ethereum. It, too, is protected by a password, which is generally provided when the client begins.
 
 While all clients have keys, some do not have wallets; these clients typically store the address in the key in plain view. This substantially reduces privacy.
 

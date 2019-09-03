@@ -1436,7 +1436,7 @@ BOOST_FIXTURE_TEST_SUITE(netTypes, TestOutputHelperFixture)
  to be testing timing-specific behaviour within Boost code which
  we did not author.
 
- See https://github.com/ethereum/cpp-ethereum/issues/3253.
+ See https://github.com/ethereum/aleth/issues/3253.
 
  TODO - Work out why this test was written in the first place,
  and why it has started failing.   Re-add it or remove it.
