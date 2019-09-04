@@ -35,5 +35,11 @@ public:
 	boost::filesystem::path suiteFillerFolder() const override;
 };
 
+class StateTestSuiteLegacyConstantinople : public StateTestSuite
+{
+public:
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
+};
 }
 }
