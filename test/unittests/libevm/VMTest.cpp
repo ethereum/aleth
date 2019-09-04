@@ -891,7 +891,7 @@ BOOST_AUTO_TEST_CASE(LegacyVMChainIDisInvalidBeforeIstanbul)
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(LegacyVMSelfBalanceSuite, LegacyVMBalanceFixture)
+BOOST_FIXTURE_TEST_SUITE(LegacyVMBalanceSuite, LegacyVMBalanceFixture)
 
 BOOST_AUTO_TEST_CASE(LegacyVMSelfBalanceworksInIstanbul)
 {
@@ -901,6 +901,11 @@ BOOST_AUTO_TEST_CASE(LegacyVMSelfBalanceworksInIstanbul)
 BOOST_AUTO_TEST_CASE(LegacyVMSelfBalanceHasCorrectCost)
 {
     testSelfBalanceHasCorrectCost();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMBalanceHasCorrectCost)
+{
+    testBalanceHasCorrectCost();
 }
 
 BOOST_AUTO_TEST_CASE(LegacyVMSelfBalanceisInvalidBeforeIstanbul)
@@ -1092,7 +1097,7 @@ BOOST_AUTO_TEST_CASE(AlethInterpreterChainIDisInvalidBeforeIstanbul)
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSelfBalanceSuite, AlethInterpreterBalanceFixture)
+BOOST_FIXTURE_TEST_SUITE(AlethInterpreterBalanceSuite, AlethInterpreterBalanceFixture)
 
 BOOST_AUTO_TEST_CASE(AlethInterpreterSelfBalanceworksInIstanbul)
 {
