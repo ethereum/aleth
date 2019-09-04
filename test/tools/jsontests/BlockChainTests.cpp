@@ -193,11 +193,11 @@ fs::path BlockchainValidTestSuite::suiteFillerFolder() const
 }
 fs::path BCGeneralStateTestsSuite::suiteFolder() const
 {
-    return fs::path("BlockchainTests") / "GeneralStateTests";
+    return "BlockchainTests/GeneralStateTests";
 }
 fs::path BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
-    return fs::path("BlockchainTestsFiller") / "GeneralStateTests";
+    return "GeneralStateTestsFiller";
 }
 json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {
@@ -1244,6 +1244,7 @@ BOOST_AUTO_TEST_CASE(stBadOpcode){}
 
 //New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance){}
+BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 BOOST_AUTO_TEST_CASE(stTimeConsuming){}
 BOOST_AUTO_TEST_SUITE_END()
 

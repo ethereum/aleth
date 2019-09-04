@@ -53,6 +53,13 @@ class BCGeneralStateTestsSuite : public BlockchainValidTestSuite
     boost::filesystem::path suiteFillerFolder() const override;
 };
 
+class BCGeneralStateTestsSuiteLegacyConstantinople : public BCGeneralStateTestsSuite
+{
+    boost::filesystem::path suiteFolder() const override;
+    boost::filesystem::path suiteFillerFolder() const override;
+};
+
+
 class TransitionTestsSuite: public TestSuite
 {
     json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
