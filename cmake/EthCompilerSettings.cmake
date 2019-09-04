@@ -4,7 +4,6 @@
 # CMake file for aleth project which specifies our compiler settings
 # for each supported platform and build configuration.
 #
-# The documentation for aleth is hosted at http://aleth.org
 #
 # Copyright (c) 2014-2016 aleth contributors.
 #------------------------------------------------------------------------------
