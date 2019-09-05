@@ -31,7 +31,7 @@ template <class T>
 class LegacyTestFixtureBase
 {
 public:
-    LegacyTestFixtureBase()
+    LegacyTestFixtureBase(bool _onlyRunIfOptionsAllSet)
     {
         T suite;
         if (Options::get().fillchain || Options::get().filltests)
@@ -39,7 +39,16 @@ public:
 
         string casename = boost::unit_test::framework::current_test_case().p_name;
         boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-        if (!test::Options::get().all)
+        static vector<string> const timeConsumingTestSuites{
+            string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
+
+        bool skipTheTest = false;
+        if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
+            skipTheTest = true;
+        if (_onlyRunIfOptionsAllSet && !Options::get().all)
+            skipTheTest = true;
+
+        if (skipTheTest)
         {
             std::cout << "Skipping " << casename << " because --all option is not specified.\n";
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
@@ -53,11 +62,15 @@ public:
 class LegacyConstantinopleGeneralStateTestFixture
   : public LegacyTestFixtureBase<StateTestSuiteLegacyConstantinople>
 {
+public:
+    LegacyConstantinopleGeneralStateTestFixture() : LegacyTestFixtureBase(false) {}
 };
 
 class LegacyConstantinopleBCGeneralStateTestFixture
   : public LegacyTestFixtureBase<BCGeneralStateTestsSuiteLegacyConstantinople>
 {
+public:
+    LegacyConstantinopleBCGeneralStateTestFixture() : LegacyTestFixtureBase(true) {}
 };
 
 
