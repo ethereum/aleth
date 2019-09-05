@@ -47,6 +47,7 @@ struct VMSchedule
     static constexpr int64_t sstoreSetGas = 20000;
     static constexpr int64_t sstoreResetGas = 5000;
     static constexpr int64_t sstoreUnchangedGas = 200;
+    static constexpr int64_t sstoreRefundGas = 15000;
     static constexpr int64_t jumpdestGas = 1;
     static constexpr int64_t logGas = 375;
     static constexpr int64_t logDataGas = 8;
@@ -71,6 +72,7 @@ public:
         uint8_t const* _code, size_t _codeSize);
 
     uint64_t m_io_gas = 0;
+    int64_t m_gas_refunded = 0;
 private:
     evmc_context* m_context = nullptr;
     evmc_revision m_rev = EVMC_FRONTIER;

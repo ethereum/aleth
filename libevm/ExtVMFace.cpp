@@ -62,7 +62,7 @@ evmc_storage_status EvmCHost::set_storage(
         else if (newValue == 0)
         {
             status = EVMC_STORAGE_DELETED;
-            m_extVM.sub.refunds += schedule.sstoreRefundGas;
+//            m_extVM.sub.refunds += schedule.sstoreRefundGas;
         }
     }
     else
@@ -70,17 +70,17 @@ evmc_storage_status EvmCHost::set_storage(
         status = EVMC_STORAGE_MODIFIED_AGAIN;
         if (originalValue != 0)
         {
-            if (currentValue == 0)
-                m_extVM.sub.refunds -= schedule.sstoreRefundGas;  // Can go negative.
-            if (newValue == 0)
-                m_extVM.sub.refunds += schedule.sstoreRefundGas;
+//            if (currentValue == 0)
+//                m_extVM.sub.refunds -= schedule.sstoreRefundGas;  // Can go negative.
+//            if (newValue == 0)
+//                m_extVM.sub.refunds += schedule.sstoreRefundGas;
         }
         if (originalValue == newValue)
         {
-            if (originalValue == 0)
-                m_extVM.sub.refunds += schedule.sstoreRefundGas + schedule.sstoreRefundNonzeroGas;
-            else
-                m_extVM.sub.refunds += schedule.sstoreRefundNonzeroGas;
+//            if (originalValue == 0)
+//                m_extVM.sub.refunds += schedule.sstoreRefundGas + schedule.sstoreRefundNonzeroGas;
+//            else
+//                m_extVM.sub.refunds += schedule.sstoreRefundNonzeroGas;
         }
     }
 
@@ -226,6 +226,7 @@ evmc::result EvmCHost::call(evmc_message const& _msg) noexcept
     evmc_result evmcResult = {};
     evmcResult.status_code = result.status;
     evmcResult.gas_left = static_cast<int64_t>(params.gas);
+    evmcResult.gas_refunded = m_extVM.sub.refunds;
 
     // Pass the output to the EVM without a copy. The EVM will delete it
     // when finished with it.

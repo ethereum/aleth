@@ -52,6 +52,7 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
         output = vm->exec(_context, _rev, _msg, _code, _codeSize);
         result.status_code = EVMC_SUCCESS;
         result.gas_left = vm->m_io_gas;
+        result.gas_refunded = vm->m_gas_refunded;
     }
     catch (dev::eth::RevertInstruction& ex)
     {
@@ -1394,8 +1395,11 @@ void VM::interpretCases()
                 m_runGas = VMSchedule::sstoreSetGas;
                 break;
             case EVMC_STORAGE_MODIFIED:
+                m_runGas = VMSchedule::sstoreResetGas;
+                break;
             case EVMC_STORAGE_DELETED:
                 m_runGas = VMSchedule::sstoreResetGas;
+                m_gas_refunded += VMSchedule::sstoreRefundGas;
                 break;
             case EVMC_STORAGE_UNCHANGED:
             case EVMC_STORAGE_MODIFIED_AGAIN:

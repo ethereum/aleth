@@ -191,6 +191,9 @@ void VM::caseCall()
         m_SPP[0] = result.status_code == EVMC_SUCCESS ? 1 : 0;
         m_io_gas += result.gas_left;
 
+        // Aggregate refunds. This should be 0 in case of status code other than EVMC_SUCCESS.
+        m_gas_refunded += result.gas_refunded;
+
         if (result.release)
             result.release(&result);
     }

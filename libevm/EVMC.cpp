@@ -89,6 +89,7 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     {
     case EVMC_SUCCESS:
         io_gas = r.gas_left;
+        _ext.sub.refunds = r.gas_refunded;
         return output;
 
     case EVMC_REVERT:
