@@ -171,11 +171,11 @@ size_t EvmCHost::copy_code(evmc::address const& _addr, size_t _codeOffset, byte*
     return numToCopy;
 }
 
-void EvmCHost::selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept
+bool EvmCHost::selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
-    m_extVM.selfdestruct(fromEvmC(_beneficiary));
+    return m_extVM.selfdestruct(fromEvmC(_beneficiary));
 }
 
 
@@ -277,6 +277,7 @@ evmc::result EvmCHost::call(evmc_message const& _msg) noexcept
     evmc_result evmcResult = {};
     evmcResult.status_code = result.status;
     evmcResult.gas_left = static_cast<int64_t>(params.gas);
+    evmcResult.gas_refunded = m_extVM.sub.refunds;
 
     // Pass the output to the EVM without a copy. The EVM will delete it
     // when finished with it.
