@@ -285,7 +285,7 @@ public:
     h256 codeHash;            ///< SHA3 hash of the executing code
     u256 version;             ///< Version of the VM to execute code
     u256 salt;                ///< Values used in new address construction by CREATE2
-    SubState sub;             ///< Sub-band VM state (suicides, refund counter, logs).
+    SubState sub;             ///< Sub-band VM state (selfdestructs, refund counter, logs).
     unsigned depth = 0;       ///< Depth of the present call.
     bool isCreate = false;    ///< Is this a CREATE call?
     bool staticCall = false;  ///< Throw on state changing.
