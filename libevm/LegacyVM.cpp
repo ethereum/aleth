@@ -346,7 +346,7 @@ void LegacyVM::interpretCases()
             }
 
             updateIOGas();
-            m_ext->suicide(dest);
+            m_ext->selfdestruct(dest);
             m_bounce = 0;
         }
         BREAK

@@ -124,7 +124,7 @@ void EvmCHost::selfdestruct(evmc::address const& _addr, evmc::address const& _be
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
-    m_extVM.suicide(fromEvmC(_beneficiary));
+    m_extVM.selfdestruct(fromEvmC(_beneficiary));
 }
 
 
