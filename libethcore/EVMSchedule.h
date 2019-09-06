@@ -77,7 +77,7 @@ struct EVMSchedule
     unsigned extcodecopyGas = 20;
     unsigned extcodehashGas = 400;
     unsigned balanceGas = 20;
-    unsigned suicideGas = 0;
+    unsigned selfdestructGas = 0;
     unsigned blockhashGas = 20;
     unsigned maxCodeSize = unsigned(-1);
 
@@ -101,7 +101,7 @@ static const EVMSchedule EIP150Schedule = []
     schedule.balanceGas = 400;
     schedule.sloadGas = 200;
     schedule.callGas = 700;
-    schedule.suicideGas = 5000;
+    schedule.selfdestructGas = 5000;
     return schedule;
 }();
 
