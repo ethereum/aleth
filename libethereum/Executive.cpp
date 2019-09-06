@@ -562,7 +562,7 @@ bool Executive::finalize()
     {
         // Accumulate refunds for suicides.
         m_ext->sub.refunds +=
-            m_ext->evmSchedule().suicideRefundGas * m_ext->sub.selfdestructs.size();
+            m_ext->evmSchedule().selfdestructRefundGas * m_ext->sub.selfdestructs.size();
 
         // Refunds must be applied before the miner gets the fees.
         assert(m_ext->sub.refunds >= 0);
