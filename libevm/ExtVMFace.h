@@ -240,7 +240,14 @@ public:
     virtual bool exists(Address) { return false; }
 
     /// Selfdestruct the associated contract and give proceeds to the given address.
-    virtual void selfdestruct(Address) { sub.selfdestructs.insert(myAddress); }
+    ///
+    /// @param beneficiary  The address of the account which will receive ETH
+    ///                     from the selfdestructed account.
+    virtual void selfdestruct(Address beneficiary)
+    {
+        (void)beneficiary;
+        sub.selfdestructs.insert(myAddress);
+    }
 
     /// Create a new (contract) account.
     virtual CreateResult create(u256, u256&, bytesConstRef, Instruction, u256, OnOpFunc const&) = 0;
