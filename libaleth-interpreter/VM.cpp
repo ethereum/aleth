@@ -1160,7 +1160,7 @@ void VM::interpretCases()
 
             updateIOGas();
 
-            m_SPP[0] = fromEvmC(getTxContext().chain_id);
+            m_SPP[0] = getTxContext().chain_id;
         }
         NEXT
 

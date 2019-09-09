@@ -149,7 +149,7 @@ evmc_tx_context EvmCHost::get_tx_context() noexcept
     result.block_timestamp = envInfo.timestamp();
     result.block_gas_limit = static_cast<int64_t>(envInfo.gasLimit());
     result.block_difficulty = toEvmC(envInfo.difficulty());
-    result.chain_id = toEvmC(u256{envInfo.chainID()});
+    result.chain_id = envInfo.chainID();
     return result;
 }
 
