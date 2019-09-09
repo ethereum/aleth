@@ -19,6 +19,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
+#include <test/tools/jsontests/Common.h>
 #include <test/tools/libtesteth/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
@@ -30,16 +31,16 @@ namespace test
 class StateTestSuite: public TestSuite
 {
 public:
-	json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
-	boost::filesystem::path suiteFolder() const override;
-	boost::filesystem::path suiteFillerFolder() const override;
-};
-
-class StateTestSuiteLegacyConstantinople : public StateTestSuite
-{
-public:
+    json_spirit::mValue doTests(json_spirit::mValue const& _input, bool _fillin) const override;
     boost::filesystem::path suiteFolder() const override;
     boost::filesystem::path suiteFillerFolder() const override;
+};
+
+
+class GeneralTestFixture : public StateTestFixtureBase<StateTestSuite>
+{
+public:
+    GeneralTestFixture() : StateTestFixtureBase(TestExecution::STANDARD) {}
 };
 }
 }
