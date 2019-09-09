@@ -36,6 +36,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
@@ -136,29 +137,6 @@ fs::path StateTestSuite::suiteFillerFolder() const
 }
 
 } }// Namespace Close
-
-class GeneralTestFixture
-{
-public:
-	GeneralTestFixture()
-	{
-        test::StateTestSuite suite;
-        string casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        // Check specific test cases
-        static vector<string> const timeConsumingTestSuites{
-            string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
-        if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
-        {
-            std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
 
 
 BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralTestFixture)

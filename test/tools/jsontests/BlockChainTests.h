@@ -21,8 +21,9 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
-#include <test/tools/libtesteth/TestSuite.h>
+#include <test/tools/jsontests/Common.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
+#include <test/tools/libtesteth/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
 using namespace dev;
@@ -53,12 +54,11 @@ class BCGeneralStateTestsSuite : public BlockchainValidTestSuite
     boost::filesystem::path suiteFillerFolder() const override;
 };
 
-class BCGeneralStateTestsSuiteLegacyConstantinople : public BCGeneralStateTestsSuite
+class bcGeneralTestsFixture : public StateTestFixtureBase<BCGeneralStateTestsSuite>
 {
-    boost::filesystem::path suiteFolder() const override;
-    boost::filesystem::path suiteFillerFolder() const override;
+public:
+    bcGeneralTestsFixture() : StateTestFixtureBase(TestExecution::REQUIRE_OPTION_ALL) {}
 };
-
 
 class TransitionTestsSuite: public TestSuite
 {

@@ -33,6 +33,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 namespace fs = boost::filesystem;
 
 namespace
@@ -1113,28 +1114,6 @@ public:
         test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
     }
 };
-
-class bcGeneralTestsFixture
-{
-public:
-    bcGeneralTestsFixture()
-    {
-        test::BCGeneralStateTestsSuite suite;
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        //skip this test suite if not run with --all flag (cases are already tested in state tests)
-        if (!test::Options::get().all)
-        {
-            cnote << "Skipping hive test " << casename << ". Use --all to run it.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
 
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
