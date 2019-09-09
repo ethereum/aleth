@@ -101,7 +101,7 @@ public:
     u256 daoHardforkBlock = c_infiniteBlockNumber;
     u256 experimentalForkBlock = c_infiniteBlockNumber;
     u256 istanbulForkBlock = c_infiniteBlockNumber;
-    int chainID = 0;    // Distinguishes different chains (mainnet, Ropsten, etc).
+    uint64_t chainID = 0;  // Distinguishes different chains (mainnet, Ropsten, etc).
     int networkID = 0;  // Distinguishes different sub protocols.
 
     u256 minimumDifficulty;

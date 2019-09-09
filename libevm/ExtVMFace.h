@@ -142,13 +142,13 @@ class EnvInfo
 {
 public:
     EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed,
-        u256 const& _chainID)
+        uint64_t _chainID)
       : m_headerInfo(_current), m_lastHashes(_lh), m_gasUsed(_gasUsed), m_chainID(_chainID)
     {}
     // Constructor with custom gasLimit - used in some synthetic scenarios like eth_estimateGas RPC
     // method
     EnvInfo(BlockHeader const& _current, LastBlockHashesFace const& _lh, u256 const& _gasUsed,
-        u256 const& _gasLimit, u256 const& _chainID)
+        u256 const& _gasLimit, uint64_t _chainID)
       : EnvInfo(_current, _lh, _gasUsed, _chainID)
     {
         m_headerInfo.setGasLimit(_gasLimit);
@@ -163,13 +163,13 @@ public:
     u256 const& gasLimit() const { return m_headerInfo.gasLimit(); }
     LastBlockHashesFace const& lastHashes() const { return m_lastHashes; }
     u256 const& gasUsed() const { return m_gasUsed; }
-    u256 const& chainID() const { return m_chainID; }
+    uint64_t chainID() const { return m_chainID; }
 
 private:
     BlockHeader m_headerInfo;
     LastBlockHashesFace const& m_lastHashes;
     u256 m_gasUsed;
-    u256 m_chainID;
+    uint64_t m_chainID;
 };
 
 /// Represents a call result.
