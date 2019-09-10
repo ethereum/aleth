@@ -11,6 +11,7 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/Common.h>
+#include <libethcore/EVMSchedule.h>
 #include <libethcore/LogEntry.h>
 
 #include <evmc/evmc.hpp>
