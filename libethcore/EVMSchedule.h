@@ -158,7 +158,6 @@ static const EVMSchedule IstanbulSchedule = [] {
 
 static const EVMSchedule BerlinSchedule = [] {
     EVMSchedule schedule = IstanbulSchedule;
-    schedule.precompileStaticCallGas = 40;
     schedule.callSelfGas = 40;
     return schedule;
 }();
