@@ -2,6 +2,7 @@
 
 ## [1.7.0] - Unreleased
 
+- Added: [#5735](https://github.com/ethereum/aleth/pull/5735) LegacyTests suite to the testeth
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
 - Added: [#5571](https://github.com/ethereum/aleth/pull/5571) Support Discovery v4 ENR Extension messages.
 - Added: [#5557](https://github.com/ethereum/aleth/pull/5557) Improved debug logging of full sync.

@@ -19,7 +19,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
-#include <test/tools/jsontests/Common.h>
+#include <test/tools/jsontests/StateTestFixtureBase.h>
 #include <test/tools/libtesteth/TestSuite.h>
 #include <boost/filesystem/path.hpp>
 
@@ -40,7 +40,7 @@ public:
 class GeneralTestFixture : public StateTestFixtureBase<StateTestSuite>
 {
 public:
-    GeneralTestFixture() : StateTestFixtureBase(TestExecution::STANDARD) {}
+    GeneralTestFixture() : StateTestFixtureBase(TestExecution::Standard) {}
 };
 }
 }
