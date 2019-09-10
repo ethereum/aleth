@@ -21,7 +21,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
-#include <test/tools/jsontests/Common.h>
+#include <test/tools/jsontests/StateTestFixtureBase.h>
 #include <test/tools/libtesteth/BlockChainHelper.h>
 #include <test/tools/libtesteth/TestSuite.h>
 #include <boost/filesystem/path.hpp>
@@ -57,7 +57,7 @@ class BCGeneralStateTestsSuite : public BlockchainValidTestSuite
 class bcGeneralTestsFixture : public StateTestFixtureBase<BCGeneralStateTestsSuite>
 {
 public:
-    bcGeneralTestsFixture() : StateTestFixtureBase(TestExecution::REQUIRE_OPTION_ALL) {}
+    bcGeneralTestsFixture() : StateTestFixtureBase(TestExecution::RequireOptionAll) {}
 };
 
 class TransitionTestsSuite: public TestSuite
