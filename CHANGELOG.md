@@ -20,7 +20,6 @@
 - Added: [#5701](https://github.com/ethereum/aleth/issues/5701) Outputs ENR text representation in admin.nodeInfo RPC.
 - Added: [#5705](https://github.com/ethereum/aleth/pull/5705) Istanbul support: EIP 1108 Reduce alt_bn128 precompile gas costs.
 - Added: [#5707](https://github.com/ethereum/aleth/pull/5707) Aleth waits for 2 seconds after sending disconnect to peer before closing socket.
-- Changed: [#5735](https://github.com/ethereum/aleth/pull/5735) Tests <= ConstantinopleFix moved to `-t LegacyTests suite` in the testeth
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
@@ -38,6 +37,7 @@
 - Changed: [#5719](https://github.com/ethereum/aleth/pull/5719) Enable support for Visual Studio 2017 on Windows.
 - Changed: [#5713](https://github.com/ethereum/aleth/pull/5713) Propagate new blocks after PoW check rather than after import into the blockchain.
 - Changed: [#5734](https://github.com/ethereum/aleth/pull/5734) debug_accountRangeAt RPC method is renamed to debug_accountRange to conform with geth and retesteth requirements.
+- Changed: [#5735](https://github.com/ethereum/aleth/pull/5735) `testeth -t GeneralStateTests` and `testeth -t BCGeneralStateTests` commands now don't run the tests for the forks before Istanbul. To run those tests use a separate `LegacyTests` suite with commands `testeth -t LegacyTests/Constantinople/GeneralStateTests` and `testeth -t LegacyTests/Constantinople/BCGeneralStateTests -- --all`
 - Removed: [#5631](https://github.com/ethereum/aleth/pull/5631) Removed PARANOID build option.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
