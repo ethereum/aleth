@@ -2,7 +2,6 @@
 
 ## [1.7.0] - Unreleased
 
-- Added: [#5735](https://github.com/ethereum/aleth/pull/5735) LegacyTests suite to the testeth
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
 - Added: [#5571](https://github.com/ethereum/aleth/pull/5571) Support Discovery v4 ENR Extension messages.
 - Added: [#5557](https://github.com/ethereum/aleth/pull/5557) Improved debug logging of full sync.
@@ -21,6 +20,7 @@
 - Added: [#5701](https://github.com/ethereum/aleth/issues/5701) Outputs ENR text representation in admin.nodeInfo RPC.
 - Added: [#5705](https://github.com/ethereum/aleth/pull/5705) Istanbul support: EIP 1108 Reduce alt_bn128 precompile gas costs.
 - Added: [#5707](https://github.com/ethereum/aleth/pull/5707) Aleth waits for 2 seconds after sending disconnect to peer before closing socket.
+- Changed: [#5735](https://github.com/ethereum/aleth/pull/5735) Tests <= ConstantinopleFix moved to `-t LegacyTests suite` in the testeth
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.

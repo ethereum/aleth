@@ -57,7 +57,7 @@ class BCGeneralStateTestsSuite : public BlockchainValidTestSuite
 class bcGeneralTestsFixture : public StateTestFixtureBase<BCGeneralStateTestsSuite>
 {
 public:
-    bcGeneralTestsFixture() : StateTestFixtureBase(TestExecution::RequireOptionAll) {}
+    bcGeneralTestsFixture() : StateTestFixtureBase({TestExecution::RequireOptionAll}) {}
 };
 
 class TransitionTestsSuite: public TestSuite

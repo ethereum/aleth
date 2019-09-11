@@ -40,7 +40,7 @@ public:
 class GeneralTestFixture : public StateTestFixtureBase<StateTestSuite>
 {
 public:
-    GeneralTestFixture() : StateTestFixtureBase(TestExecution::Standard) {}
+    GeneralTestFixture() : StateTestFixtureBase({}) {}
 };
 }
 }

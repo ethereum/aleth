@@ -30,9 +30,7 @@ namespace test
 enum class TestExecution
 {
     RequireOptionAll,
-    RequireOptionAllNotRefillable,
-    NotRefillable,
-    Standard
+    NotRefillable
 };
 
 static std::vector<std::string> const c_timeConsumingTestSuites{
@@ -42,11 +40,10 @@ template <class T>
 class StateTestFixtureBase
 {
 public:
-    StateTestFixtureBase(TestExecution const& _execFlag)
+    explicit StateTestFixtureBase(std::set<TestExecution> const& _execFlags)
     {
         T suite;
-        if ((_execFlag == TestExecution::RequireOptionAllNotRefillable ||
-                _execFlag == TestExecution::NotRefillable) &&
+        if (_execFlags.count(TestExecution::NotRefillable) &&
             (Options::get().fillchain || Options::get().filltests))
             BOOST_FAIL("Tests are sealed and not refillable!");
 
@@ -56,9 +53,7 @@ public:
         bool skipTheTest = false;
         if (test::inArray(c_timeConsumingTestSuites, casename) && !test::Options::get().all)
             skipTheTest = true;
-        else if ((_execFlag == TestExecution::RequireOptionAll ||
-                     _execFlag == TestExecution::RequireOptionAllNotRefillable) &&
-                 !Options::get().all)
+        else if (_execFlags.count(TestExecution::RequireOptionAll) && !Options::get().all)
             skipTheTest = true;
 
         if (skipTheTest)
