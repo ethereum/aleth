@@ -77,10 +77,9 @@ public:
     /// @throws InvalidSValue if the signature has an invalid S value.
     void checkLowS() const;
 
-    /// @throws InvalidSValue if the chain id is neither -4 nor equal to @a chainId
-    /// Note that "-4" is the chain ID of the pre-155 rules, which should also be considered valid
-    /// after EIP155
-    void checkChainId(int chainId = -4) const;
+    /// @throws InvalidSignature if the transaction is replay protected
+    /// and chain id is not equal to @a _chainId
+    void checkChainId(uint64_t _chainId) const;
 
     /// @returns true if transaction is non-null.
     explicit operator bool() const { return m_type != NullTransaction; }
@@ -126,13 +125,13 @@ public:
     void setNonce(u256 const& _n) { clearSignature(); m_nonce = _n; }
 
     /// @returns true if the transaction was signed
-    bool hasSignature() const { return m_vrs.is_initialized(); }
+    bool hasSignature() const { return m_vrs.has_value(); }
 
     /// @returns true if the transaction was signed with zero signature
     bool hasZeroSignature() const { return m_vrs && isZeroSignature(m_vrs->r, m_vrs->s); }
 
     /// @returns true if the transaction uses EIP155 replay protection
-    bool isReplayProtected() const { return m_chainId != -4; }
+    bool isReplayProtected() const { return m_chainId.has_value(); }
 
     /// @returns the signature of the transaction (the signature has the sender encoded in it)
     /// @throws TransactionIsUnsigned if signature was not initialized
@@ -168,7 +167,9 @@ protected:
     u256 m_gas;							///< The total gas to convert, paid for from sender's account. Any unused gas gets refunded once the contract is ended.
     bytes m_data;						///< The data associated with the transaction, or the initialiser if it's a creation transaction.
     boost::optional<SignatureStruct> m_vrs;	///< The signature of the transaction. Encodes the sender.
-    int m_chainId = -4;					///< EIP155 value for calculating transaction hash https://github.com/ethereum/EIPs/issues/155
+    /// EIP155 value for calculating transaction hash
+    /// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+    boost::optional<uint64_t> m_chainId;
 
     mutable h256 m_hashWith;			///< Cached hash of transaction with signature.
     mutable boost::optional<Address> m_sender;  ///< Cached sender, determined from signature.
