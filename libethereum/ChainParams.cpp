@@ -115,9 +115,9 @@ ChainParams ChainParams::loadConfig(
     setOptionalU256Parameter(cp.durationLimit, c_durationLimit);
 
     if (params.count(c_chainID))
-        cp.chainID = uint64_t(fromBigEndian<u256>(fromHex(params.at(c_chainID).get_str())));
+        cp.chainID = fromBigEndian<uint64_t>(fromHex(params.at(c_chainID).get_str()));
     if (params.count(c_networkID))
-        cp.networkID = int(fromBigEndian<u256>(fromHex(params.at(c_networkID).get_str())));
+        cp.networkID = fromBigEndian<int>(fromHex(params.at(c_networkID).get_str()));
     cp.allowFutureBlocks = params.count(c_allowFutureBlocks);
 
     // genesis
