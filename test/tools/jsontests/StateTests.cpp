@@ -101,9 +101,7 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 				{
 					BOOST_REQUIRE_MESSAGE(exp.type() == obj_type, " post field should contain an array of objects for each network.");
 					if (!Options::get().singleTestNet.empty() && i->first != Options::get().singleTestNet)
-						continue;
-					if (test::isDisabledNetwork(test::stringToNetId(i->first)))
-						continue;
+                        continue;
 					if (importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first))
 						foundResults = true;
 				}

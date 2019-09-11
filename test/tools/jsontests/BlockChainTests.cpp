@@ -91,8 +91,6 @@ json_spirit::mValue doBCTest(
             //create a blockchain test for each network
             for (auto& network : allnetworks)
             {
-                if (test::isDisabledNetwork(network))
-                    continue;
                 if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
                     continue;
 
@@ -153,8 +151,6 @@ json_spirit::mValue doBCTest(
                                   " testname: " + TestOutputHelper::get().testName()
                                   );
             dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
-            if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
-                continue;
             if (Options::get().verbosity > 1)
                 std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
             testBCTest(inputTest);
@@ -213,8 +209,6 @@ json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _in
         BOOST_REQUIRE_MESSAGE(o.count("network"), "network not found " + testname);
 
         dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
-        if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
-            continue;
 
         if (!TestOutputHelper::get().checkTest(testname))
         {

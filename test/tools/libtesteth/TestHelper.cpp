@@ -151,12 +151,6 @@ eth::Network stringToNetId(string const& _netname)
     return eth::Network::FrontierTest;
 }
 
-bool isDisabledNetwork(eth::Network)
-{
-    // Do not disable any networks when running tests
-    return false;
-}
-
 set<eth::Network> const& getNetworks()
 {
     // Networks for the test case execution when filling the tests
