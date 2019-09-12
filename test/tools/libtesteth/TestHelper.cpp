@@ -114,6 +114,8 @@ string netIdToString(eth::Network _netId)
         return "Constantinople";
     case eth::Network::ConstantinopleFixTest:
         return "ConstantinopleFix";
+    case eth::Network::IstanbulTest:
+        return "Istanbul";
     case eth::Network::FrontierToHomesteadAt5:
         return "FrontierToHomesteadAt5";
     case eth::Network::HomesteadToDaoAt5:
@@ -138,10 +140,10 @@ eth::Network stringToNetId(string const& _netname)
     static vector<eth::Network> const networks{
         {eth::Network::FrontierTest, eth::Network::HomesteadTest, eth::Network::EIP150Test,
             eth::Network::EIP158Test, eth::Network::ByzantiumTest, eth::Network::ConstantinopleTest,
-            eth::Network::ConstantinopleFixTest, eth::Network::FrontierToHomesteadAt5,
-            eth::Network::HomesteadToDaoAt5, eth::Network::HomesteadToEIP150At5,
-            eth::Network::EIP158ToByzantiumAt5, eth::Network::ByzantiumToConstantinopleFixAt5,
-            eth::Network::TransitionnetTest}};
+            eth::Network::ConstantinopleFixTest, eth::Network::IstanbulTest,
+            eth::Network::FrontierToHomesteadAt5, eth::Network::HomesteadToDaoAt5,
+            eth::Network::HomesteadToEIP150At5, eth::Network::EIP158ToByzantiumAt5,
+            eth::Network::ByzantiumToConstantinopleFixAt5, eth::Network::TransitionnetTest}};
 
     for (auto const& net : networks)
         if (netIdToString(net) == _netname)
@@ -157,7 +159,7 @@ set<eth::Network> const& getNetworks()
     static set<eth::Network> const networks{
         {eth::Network::FrontierTest, eth::Network::HomesteadTest, eth::Network::EIP150Test,
             eth::Network::EIP158Test, eth::Network::ByzantiumTest, eth::Network::ConstantinopleTest,
-            eth::Network::ConstantinopleFixTest}};
+            eth::Network::ConstantinopleFixTest, eth::Network::IstanbulTest}};
     return networks;
 }
 

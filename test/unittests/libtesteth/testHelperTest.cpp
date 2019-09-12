@@ -29,6 +29,13 @@ using namespace dev::test;
 BOOST_FIXTURE_TEST_SUITE(TestHelperSuite, TestOutputHelperFixture)
 
 BOOST_AUTO_TEST_SUITE(TranslateNetworks)
+BOOST_AUTO_TEST_CASE(translateNetworks_gteIstanbul)
+{
+    set<string> networks = {">=Istanbul"};
+    networks = test::translateNetworks(networks);
+    BOOST_CHECK(contains(networks, "Istanbul"));
+}
+
 BOOST_AUTO_TEST_CASE(translateNetworks_gtConstantinople)
 {
     set<string> networks = {">Constantinople"};
