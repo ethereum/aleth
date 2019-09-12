@@ -151,28 +151,6 @@ eth::Network stringToNetId(string const& _netname)
     return eth::Network::FrontierTest;
 }
 
-bool isDisabledNetwork(eth::Network _net)
-{
-    Options const& opt = Options::get();
-    if (opt.all || opt.filltests || opt.createRandomTest || !opt.singleTestNet.empty())
-    {
-        return false;
-    }
-    switch (_net)
-    {
-    case eth::Network::FrontierTest:
-    case eth::Network::HomesteadTest:
-    case eth::Network::FrontierToHomesteadAt5:
-    case eth::Network::HomesteadToDaoAt5:
-    case eth::Network::HomesteadToEIP150At5:
-    case eth::Network::ConstantinopleTest:  // Disable initial constantinople version
-        return true;
-    default:
-        break;
-    }
-    return false;
-}
-
 set<eth::Network> const& getNetworks()
 {
     // Networks for the test case execution when filling the tests

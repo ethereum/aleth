@@ -36,6 +36,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 namespace fs = boost::filesystem;
 
 namespace dev {  namespace test {
@@ -100,9 +101,7 @@ json_spirit::mValue StateTestSuite::doTests(json_spirit::mValue const& _input, b
 				{
 					BOOST_REQUIRE_MESSAGE(exp.type() == obj_type, " post field should contain an array of objects for each network.");
 					if (!Options::get().singleTestNet.empty() && i->first != Options::get().singleTestNet)
-						continue;
-					if (test::isDisabledNetwork(test::stringToNetId(i->first)))
-						continue;
+                        continue;
 					if (importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first))
 						foundResults = true;
 				}
@@ -136,29 +135,6 @@ fs::path StateTestSuite::suiteFillerFolder() const
 }
 
 } }// Namespace Close
-
-class GeneralTestFixture
-{
-public:
-	GeneralTestFixture()
-	{
-        test::StateTestSuite suite;
-        string casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        // Check specific test cases
-        static vector<string> const timeConsumingTestSuites{
-            string{"stTimeConsuming"}, string{"stQuadraticComplexityTest"}};
-        if (test::inArray(timeConsumingTestSuites, casename) && !test::Options::get().all)
-        {
-            std::cout << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
 
 
 BOOST_FIXTURE_TEST_SUITE(GeneralStateTests, GeneralTestFixture)

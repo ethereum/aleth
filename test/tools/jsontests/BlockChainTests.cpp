@@ -33,6 +33,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 namespace fs = boost::filesystem;
 
 namespace
@@ -90,8 +91,6 @@ json_spirit::mValue doBCTest(
             //create a blockchain test for each network
             for (auto& network : allnetworks)
             {
-                if (test::isDisabledNetwork(network))
-                    continue;
                 if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
                     continue;
 
@@ -152,8 +151,6 @@ json_spirit::mValue doBCTest(
                                   " testname: " + TestOutputHelper::get().testName()
                                   );
             dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
-            if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
-                continue;
             if (Options::get().verbosity > 1)
                 std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
             testBCTest(inputTest);
@@ -193,11 +190,11 @@ fs::path BlockchainValidTestSuite::suiteFillerFolder() const
 }
 fs::path BCGeneralStateTestsSuite::suiteFolder() const
 {
-    return fs::path("BlockchainTests") / "GeneralStateTests";
+    return "BlockchainTests/GeneralStateTests";
 }
 fs::path BCGeneralStateTestsSuite::suiteFillerFolder() const
 {
-    return fs::path("BlockchainTestsFiller") / "GeneralStateTests";
+    return "GeneralStateTestsFiller";
 }
 json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _input, bool _fillin) const
 {
@@ -212,8 +209,6 @@ json_spirit::mValue TransitionTestsSuite::doTests(json_spirit::mValue const& _in
         BOOST_REQUIRE_MESSAGE(o.count("network"), "network not found " + testname);
 
         dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
-        if (test::isDisabledNetwork(dev::test::TestBlockChain::s_sealEngineNetwork))
-            continue;
 
         if (!TestOutputHelper::get().checkTest(testname))
         {
@@ -1114,28 +1109,6 @@ public:
     }
 };
 
-class bcGeneralTestsFixture
-{
-public:
-    bcGeneralTestsFixture()
-    {
-        test::BCGeneralStateTestsSuite suite;
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        //skip this test suite if not run with --all flag (cases are already tested in state tests)
-        if (!test::Options::get().all)
-        {
-            cnote << "Skipping hive test " << casename << ". Use --all to run it.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
@@ -1244,6 +1217,7 @@ BOOST_AUTO_TEST_CASE(stBadOpcode){}
 
 //New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance){}
+BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 BOOST_AUTO_TEST_CASE(stTimeConsuming){}
 BOOST_AUTO_TEST_SUITE_END()
 

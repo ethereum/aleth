@@ -160,7 +160,7 @@ jobs:
       CC:  gcc-6
       GCOV: gcov-6
       GENERATOR: Ninja
-      BUILD_PARALLEL_JOBS: 3
+      BUILD_PARALLEL_JOBS: 2
       TEST_PARALLEL_JOBS: 4
       CMAKE_OPTIONS: -DCOVERAGE=ON
     docker:

@@ -75,7 +75,6 @@ std::string prepareLLLCVersionString();
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});
 std::string netIdToString(eth::Network _netId);
 eth::Network stringToNetId(std::string const& _netname);
-bool isDisabledNetwork(eth::Network _net);
 std::set<eth::Network> const& getNetworks();
 
 /// translate network names in expect section field
