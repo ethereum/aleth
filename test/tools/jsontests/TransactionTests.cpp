@@ -59,9 +59,7 @@ mObject getExpectSection(mValue const& _expect, eth::Network _network)
         if (networks.count(test::netIdToString(_network)))
             objVector.push_back(obj);
     }
-    if (objVector.size() == 0)
-        BOOST_ERROR("Expect network '" + test::netIdToString(_network) +
-                    "' not found with getExpectSection()");
+    BOOST_REQUIRE_MESSAGE(!objVector.empty(), "Expect network '" + test::netIdToString(_network) + "' not found with getExpectSection()");
     BOOST_REQUIRE_MESSAGE(objVector.size() == 1, "Expect network should occur once in expect section of transaction test filler! (" + test::netIdToString(_network) + ") " + TestOutputHelper::get().testName());
     return objVector.at(0);
 }
