@@ -39,14 +39,15 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
         m_gasPrice = rlp[1].toInt<u256>();
         m_gas = rlp[2].toInt<u256>();
         if (!rlp[3].isData())
-            BOOST_THROW_EXCEPTION(
-                InvalidTransactionFormat() << errinfo_comment("recepient RLP must be an array"));
+            BOOST_THROW_EXCEPTION(InvalidTransactionFormat()
+                                  << errinfo_comment("recepient RLP must be a byte array"));
         m_type = rlp[3].isEmpty() ? ContractCreation : MessageCall;
         m_receiveAddress = rlp[3].isEmpty() ? Address() : rlp[3].toHash<Address>(RLP::VeryStrict);
         m_value = rlp[4].toInt<u256>();
 
         if (!rlp[5].isData())
-            BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("transaction data RLP must be an array"));
+            BOOST_THROW_EXCEPTION(InvalidTransactionFormat()
+                                  << errinfo_comment("transaction data RLP must be a byte array"));
 
         m_data = rlp[5].toBytes();
 
