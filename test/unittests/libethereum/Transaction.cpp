@@ -39,6 +39,21 @@ BOOST_AUTO_TEST_CASE(TransactionGasRequired)
     BOOST_CHECK_EQUAL(tr.baseGasRequired(IstanbulSchedule), 14 * 16 + 21000);
 }
 
+BOOST_AUTO_TEST_CASE(TransactionWithEmptyRecepient)
+{
+    // recipient RLP is 0x80 (empty array)
+    auto txRlp = fromHex(
+        "0xf84c8014830493e080808026a02f23977c68f851bbec8619510a4acdd34805270d97f5714b003efe7274914c"
+        "a2a05874022b26e0d88807bdcc59438f86f5a82e24afefad5b6a67ae853896fe2b37");
+    Transaction tx(txRlp, CheckTransaction::None);  // shouldn't throw
+
+    // recipient RLP is 0xc0 (empty list)
+    txRlp = fromHex(
+        "0xf84c8014830493e0c0808026a02f23977c68f851bbec8619510a4acdd34805270d97f5714b003efe7274914c"
+        "a2a05874022b26e0d88807bdcc59438f86f5a82e24afefad5b6a67ae853896fe2b37");
+    BOOST_REQUIRE_THROW(Transaction(txRlp, CheckTransaction::None), InvalidTransactionFormat);
+}
+
 BOOST_AUTO_TEST_CASE(ExecutionResultOutput)
 {
     std::stringstream buffer;
