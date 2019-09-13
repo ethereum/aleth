@@ -420,7 +420,7 @@ bytesSec SecretStore::decrypt(string const& _v, string const& _pass)
 			macExp = sha3(derivedKey.ref().cropped(16, 16).toBytes() + cipherText);
 		if (mac != macExp)
 		{
-			cwarn << "Invalid key - MAC mismatch; expected" << toString(macExp) << ", got" << toString(mac);
+			cwarn << "Invalid key - MAC mismatch; expected " << toString(macExp) << ", got " << toString(mac);
 			return bytesSec();
 		}
 	}

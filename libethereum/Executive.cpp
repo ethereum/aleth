@@ -223,6 +223,7 @@ void Executive::initialize(Transaction const& _transaction)
     m_baseGasRequired = m_t.baseGasRequired(m_sealEngine.evmSchedule(m_envInfo.number()));
     try
     {
+        cwarn << "Header::GasLimit: " << m_envInfo.header().gasLimit();
         m_sealEngine.verifyTransaction(ImportRequirements::Everything, m_t, m_envInfo.header(), m_envInfo.gasUsed());
     }
     catch (Exception const& ex)
@@ -254,14 +255,13 @@ void Executive::initialize(Transaction const& _transaction)
         }
 
         // Avoid unaffordable transactions.
-        bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
-        bigint totalCost = m_t.value() + gasCost;
+        bigint const gasCost = (bigint)m_t.gas() * m_t.gasPrice();
+        bigint const totalCost = m_t.value() + gasCost;
         if (m_s.balance(m_t.sender()) < totalCost)
         {
             LOG(m_execLogger) << "Not enough cash: Require > " << totalCost << " = " << m_t.gas()
                               << " * " << m_t.gasPrice() << " + " << m_t.value() << " Got"
                               << m_s.balance(m_t.sender()) << " for sender: " << m_t.sender();
-            m_excepted = TransactionException::NotEnoughCash;
             m_excepted = TransactionException::NotEnoughCash;
             BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().hex()));
         }
@@ -318,7 +318,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         if (_p.receiveAddress == c_RipemdPrecompiledAddress)
             m_s.unrevertableTouch(_p.codeAddress);
 
-        bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
+        bigint const g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
         if (_p.gas < g)
         {
             m_excepted = TransactionException::OutOfGasBase;
@@ -331,7 +331,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
             bytes output;
             bool success;
             tie(success, output) = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
-            size_t outputSize = output.size();
+            size_t const outputSize = output.size();
             m_output = owning_bytes_ref{std::move(output), 0, outputSize};
             if (!success)
             {
@@ -347,7 +347,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         if (m_s.addressHasCode(_p.codeAddress))
         {
             bytes const& c = m_s.code(_p.codeAddress);
-            h256 codeHash = m_s.codeHash(_p.codeAddress);
+            h256 const codeHash = m_s.codeHash(_p.codeAddress);
             // Contract will be executed with the version stored in account
             auto const version = m_s.version(_p.codeAddress);
             m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress,

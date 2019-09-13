@@ -91,6 +91,7 @@ pair<bool, Secret> SimpleAccountHolder::authenticate(dev::eth::TransactionSkelet
 {
 	pair<bool, Secret> ret;
 	bool locked = true;
+	auto const numUnlockedAccounts = m_unlockedAccounts.size();
 	if (m_unlockedAccounts.count(_t.from))
 	{
 		chrono::steady_clock::time_point start = m_unlockedAccounts[_t.from].first;

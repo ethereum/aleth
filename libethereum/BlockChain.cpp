@@ -1521,6 +1521,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
             try
             {
                 Transaction t(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);
+                cwarn << "Header::GasLimit(): " << h.gasLimit();
                 m_sealEngine->verifyTransaction(_ir, t, h, 0); // the gasUsed vs blockGasLimit is checked later in enact function
                 res.transactions.push_back(t);
             }

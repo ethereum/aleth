@@ -31,7 +31,7 @@ using namespace std;
 using namespace jsonrpc;
 using namespace dev;
 
-int const c_bufferSize = 1024;
+constexpr int c_bufferSize = 1024;
 
 template <class S> IpcServerBase<S>::IpcServerBase(string const& _path):
     m_path(_path)
@@ -137,7 +137,7 @@ template <class S> void IpcServerBase<S>::GenerateResponse(S _connection)
                 {
                     std::string r = request.substr(0, i + 1);
                     request.erase(0, i + 1);
-                    clog(VerbosityTrace, "rpc") << r;
+                    clog(VerbosityWarning, "rpc") << r;
                     OnRequest(r, reinterpret_cast<void*>((intptr_t)_connection));
                     i = 0;
                     continue;

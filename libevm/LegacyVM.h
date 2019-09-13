@@ -47,7 +47,10 @@ public:
 private:
 
     u256* m_io_gas_p = 0;
+
+    // Amount of gas left in the transaction
     uint64_t m_io_gas = 0;
+
     ExtVMFace* m_ext = 0;
     OnOpFunc m_onOp;
 
@@ -99,8 +102,14 @@ private:
 #endif
 
     // metering and memory state
+
+    // amount of gas required by the transaction at the current point in execution
     uint64_t m_runGas = 0;
+
+    // TODO:? 
     uint64_t m_newMemSize = 0;
+
+    // TODO:? 
     uint64_t m_copyMemSize = 0;
 
     // initialize interpreter

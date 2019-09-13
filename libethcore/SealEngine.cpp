@@ -188,7 +188,7 @@ u256 SealEngineBase::blockReward(u256 const& _blockNumber) const
 u256 calculateEthashDifficulty(
     ChainOperationParams const& _chainParams, BlockHeader const& _bi, BlockHeader const& _parent)
 {
-    const unsigned c_expDiffPeriod = 100000;
+    constexpr unsigned c_expDiffPeriod = 100000;
 
     if (!_bi.number())
         throw GenesisBlockCannotBeCalculated();
@@ -246,14 +246,20 @@ u256 calculateEthashDifficulty(
 u256 calculateGasLimit(
     ChainOperationParams const& _chainParams, BlockHeader const& _bi, u256 const& _gasFloorTarget)
 {
-    u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
-    u256 gasLimit = _bi.gasLimit();
-    u256 boundDivisor = _chainParams.gasLimitBoundDivisor;
+    u256 const gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
+    // cwarn << "gasFloorTarget: " << gasFloorTarget;
+    u256 const gasLimit = _bi.gasLimit();
+    // cwarn << "Block Header gas limit: " << gasLimit;
+    u256 const boundDivisor = _chainParams.gasLimitBoundDivisor;
+    // cwarn << "BoundDivisor: " << boundDivisor;
+    u256 ret = 0;
     if (gasLimit < gasFloorTarget)
-        return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
+        ret = min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
     else
-        return max<u256>(gasFloorTarget,
+        ret = max<u256>(gasFloorTarget,
             gasLimit - gasLimit / boundDivisor + 1 + (_bi.gasUsed() * 6 / 5) / boundDivisor);
+    // cwarn << "Calculated gas limit: " << ret;
+    return ret;
 }
 }
 }  // namespace dev eth

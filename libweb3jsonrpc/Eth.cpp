@@ -765,7 +765,7 @@ string dev::rpc::exceptionToErrorMessage()
 	{
 		ret = "Invalid transaction signature.";
 	}
-	// Acount holder exceptions
+	// Account holder exceptions
 	catch (AccountLocked const&)
 	{
 		ret = "Account is locked.";
