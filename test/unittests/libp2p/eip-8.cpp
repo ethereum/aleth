@@ -4,7 +4,6 @@
 
 /// @file
 /// Forward-compatibility tests checking EIP-8 compliance.
-
 #include <libp2p/Host.h>
 #include <libp2p/NodeTable.h>
 #include <libp2p/RLPXSocket.h>

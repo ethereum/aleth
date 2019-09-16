@@ -1,7 +1,6 @@
-/// Aleth: Ethereum C++ client, tools and libraries.
+// Aleth: Ethereum C++ client, tools and libraries.
 // Copyright 2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
-
 #include "Log.h"
 
 #ifdef __APPLE__

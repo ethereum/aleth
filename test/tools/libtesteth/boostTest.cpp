@@ -1,13 +1,11 @@
 // Aleth: Ethereum C++ client, tools and libraries.
-// Copyright 2018 Aleth Authors.
+// Copyright 2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
 /** @file
  * Stub for generating main boost.test module.
  * Original code taken from boost sources.
  */
-
-
 #define BOOST_TEST_MODULE EthereumTests
 #define BOOST_TEST_NO_MAIN
 
