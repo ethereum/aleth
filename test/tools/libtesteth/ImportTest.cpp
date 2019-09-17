@@ -806,13 +806,13 @@ bool ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
                 else if (_expects.count("hash"))
                 {
                     // checking filled state test against client
-                    BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() ==
-                                        toHexPrefixed(tr.postState.rootHash().asBytes()),
-                                        TestOutputHelper::get().testName() + " on " +
-                                        test::netIdToString(tr.netId) +
-                                        ": Expected another postState hash! expected: " +
-                                        _expects.at("hash").get_str() + " actual: " +
-                                        toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
+                    BOOST_CHECK_MESSAGE(
+                        _expects.at("hash").get_str() == toHex(tr.postState.rootHash().asBytes()),
+                        TestOutputHelper::get().testName() + " on " +
+                            test::netIdToString(tr.netId) +
+                            ": Expected another postState hash! expected: " +
+                            _expects.at("hash").get_str() + " actual: " +
+                            toHexPrefixed(tr.postState.rootHash().asBytes()) + " in " + trInfo);
                     if (_expects.count("logs"))
                         BOOST_CHECK_MESSAGE(
                                     _expects.at("logs").get_str() == exportLog(tr.output.second.log()),

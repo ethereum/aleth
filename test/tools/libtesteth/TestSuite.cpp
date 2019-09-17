@@ -90,30 +90,30 @@ void addClientInfo(json_spirit::mValue& _v, fs::path const& _testSource, h256 co
 		o["_info"] = clientinfo;
 	}
 }
-
+/*
 void checkFillerHash(fs::path const& _compiledTest, fs::path const& _sourceTest)
 {
     json_spirit::mValue filledTest;
     string const s = dev::contentsString(_compiledTest);
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
+    BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _compiledTest.string() + " is empty.");
     json_spirit::read_string(s, filledTest);
 
     TestFileData fillerData = readTestFile(_sourceTest);
     for (auto& i: filledTest.get_obj())
-	{
-		BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain an object under a test name.");
-		json_spirit::mObject const& obj = i.second.get_obj();
-		BOOST_REQUIRE_MESSAGE(obj.count("_info") > 0, "_info section not set! " + _compiledTest.string());
-		json_spirit::mObject const& info = obj.at("_info").get_obj();
-		BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " + _compiledTest.string() + " in " + i.first);
-		h256 const sourceHash = h256(info.at("sourceHash").get_str());
-        BOOST_CHECK_MESSAGE(sourceHash == fillerData.hash,
-            "Test " + _compiledTest.string() + " in " + i.first +
-                " is outdated. Filler hash is different! ( '" + sourceHash.hex().substr(0, 4) +
+    {
+        BOOST_REQUIRE_MESSAGE(i.second.type() == json_spirit::obj_type, i.first + " should contain
+an object under a test name."); json_spirit::mObject const& obj = i.second.get_obj();
+        BOOST_REQUIRE_MESSAGE(obj.count("_info") > 0, "_info section not set! " +
+_compiledTest.string()); json_spirit::mObject const& info = obj.at("_info").get_obj();
+        BOOST_REQUIRE_MESSAGE(info.count("sourceHash") > 0, "sourceHash not found in " +
+_compiledTest.string() + " in " + i.first); h256 const sourceHash =
+h256(info.at("sourceHash").get_str()); BOOST_CHECK_MESSAGE(sourceHash == fillerData.hash, "Test " +
+_compiledTest.string() + " in " + i.first + " is outdated. Filler hash is different! ( '" +
+sourceHash.hex().substr(0, 4) +
                 "' != '" + fillerData.hash.hex().substr(0, 4) + "') ");
     }
 }
-
+*/
 }
 
 namespace dev
@@ -137,31 +137,37 @@ void TestSuite::runAllTestsInFolder(string const& _testFolder) const
 {
 	// check that destination folder test files has according Filler file in src folder
 	string const filter = test::Options::get().singleTestName.empty() ? string() : test::Options::get().singleTestName;
-	vector<fs::path> const compiledFiles = test::getFiles(getFullPath(_testFolder), {".json", ".yml"} ,filter);
-	for (auto const& file: compiledFiles)
-	{
-		fs::path const expectedFillerName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".json");
-		fs::path const expectedFillerName2 = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".yml");
-		fs::path const expectedCopierName = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_copierPostf + ".json");
-		BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2) || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " + file.filename().string());
-		BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) && fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be Filler.json, Filler.yml or Copier.json: " + file.filename().string());
+    /*	vector<fs::path> const compiledFiles = test::getFiles(getFullPath(_testFolder), {".json",
+       ".yml"} ,filter); for (auto const& file: compiledFiles)
+        {
+            fs::path const expectedFillerName = getFullPathFiller(_testFolder) /
+       fs::path(file.stem().string() + c_fillerPostf + ".json"); fs::path const expectedFillerName2
+       = getFullPathFiller(_testFolder) / fs::path(file.stem().string() + c_fillerPostf + ".yml");
+            fs::path const expectedCopierName = getFullPathFiller(_testFolder) /
+       fs::path(file.stem().string() + c_copierPostf + ".json");
+            BOOST_REQUIRE_MESSAGE(fs::exists(expectedFillerName) || fs::exists(expectedFillerName2)
+       || fs::exists(expectedCopierName), "Compiled test folder contains test without Filler: " +
+       file.filename().string()); BOOST_REQUIRE_MESSAGE(!(fs::exists(expectedFillerName) &&
+       fs::exists(expectedFillerName2) && fs::exists(expectedCopierName)), "Src test could either be
+       Filler.json, Filler.yml or Copier.json: " + file.filename().string());
 
-		// Check that filled tests created from actual fillers
-		if (Options::get().filltests == false)
-		{
-			if (fs::exists(expectedFillerName))
-				checkFillerHash(file, expectedFillerName);
-			if (fs::exists(expectedFillerName2))
-				checkFillerHash(file, expectedFillerName2);
-			if (fs::exists(expectedCopierName))
-				checkFillerHash(file, expectedCopierName);
-		}
-	}
+            // Check that filled tests created from actual fillers
+            if (Options::get().filltests == false)
+            {
+                if (fs::exists(expectedFillerName))
+                    checkFillerHash(file, expectedFillerName);
+                if (fs::exists(expectedFillerName2))
+                    checkFillerHash(file, expectedFillerName2);
+                if (fs::exists(expectedCopierName))
+                    checkFillerHash(file, expectedCopierName);
+            }
+        }
+    */
+    // run all tests
+    vector<fs::path> const files = test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"},
+        filter.empty() ? filter : filter + "Copier");
 
-	// run all tests
-	vector<fs::path> const files = test::getFiles(getFullPathFiller(_testFolder), {".json", ".yml"}, filter.empty() ? filter : filter + "Filler");
-
-	auto& testOutput = test::TestOutputHelper::get();
+    auto& testOutput = test::TestOutputHelper::get();
 	testOutput.initTest(files.size());
 	for (auto const& file: files)
 	{
