@@ -560,7 +560,7 @@ bool Executive::finalize()
 {
     if (m_ext)
     {
-        // Accumulate refunds for suicides.
+        // Accumulate refunds for selfdestructs.
         m_ext->sub.refunds +=
             m_ext->evmSchedule().selfdestructRefundGas * m_ext->sub.selfdestructs.size();
 

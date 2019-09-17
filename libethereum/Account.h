@@ -87,8 +87,8 @@ public:
     }
 
 
-    /// Kill this account. Useful for the suicide opcode. Following this call, isAlive() returns
-    /// false.
+    /// Kill this account. Useful for the SELFDESTRUCT instruction.
+    /// Following this call, isAlive() returns false.
     void kill()
     {
         m_isAlive = false;
@@ -102,9 +102,9 @@ public:
         changed();
     }
 
-    /// @returns true iff this object represents an account in the state. Returns false if this object
-    /// represents an account that should no longer exist in the trie (an account that never existed or was
-    /// suicided).
+    /// @returns true iff this object represents an account in the state.
+    /// Returns false if this object represents an account that should no longer exist in the trie
+    /// (an account that never existed or was selfdestructed).
     bool isAlive() const { return m_isAlive; }
 
     /// @returns true if the account is unchanged from creation.

@@ -342,7 +342,7 @@ void ImportTest::checkBalance(eth::State const& _pre, eth::State const& _post, b
     for (auto const& addr : _post.addresses())
         postBalance += addr.second;
 
-    //account could destroy ether if it suicides to itself
+    //account could destroy ether if it selfdestructs to itself
     BOOST_REQUIRE_MESSAGE(preBalance + _miningReward >= postBalance, "Error when comparing states: preBalance + miningReward < postBalance (" + toString(preBalance) + " < " + toString(postBalance) + ") " + TestOutputHelper::get().testName());
 }
 
@@ -379,7 +379,7 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
 
         if (!removeEmptyAccounts)
         {
-            // Touch here bacuse coinbase might be suicided above
+            // Touch here bacuse coinbase might be selfdestructed above
             initialState.addBalance(_env.author(), 0);  // imitate mining reward
             initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
         }

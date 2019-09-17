@@ -380,8 +380,8 @@ void VM::interpretCases()
             evmc_address const destination = toEvmC(asAddress(m_SP[0]));
 
             // Starting with EIP150 (Tangerine Whistle), self-destructs need to pay account creation
-            // gas. Starting with EIP158 (Spurious Dragon), 0-value suicides don't have to pay this
-            // charge.
+            // gas. Starting with EIP158 (Spurious Dragon),
+            // 0-value selfdestructs don't have to pay this charge.
             if (m_rev >= EVMC_TANGERINE_WHISTLE)
             {
                 if (m_rev == EVMC_TANGERINE_WHISTLE ||
