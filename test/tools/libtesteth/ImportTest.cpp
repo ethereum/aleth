@@ -239,6 +239,7 @@ void ImportTest::parseJsonStrValueIntoSet(json_spirit::mValue const& _json, set<
 bool ImportTest::findExpectSectionForTransaction(
     transactionToExecute const& _tr, eth::Network const& _net, bool _isFilling) const
 {
+    // if running a filled test and there is no post state for _net, return false
     if (!_isFilling && !m_testInputObject.at("post").get_obj().count(netIdToString(_net)))
         return false;
 
