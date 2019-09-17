@@ -34,7 +34,8 @@ void printHelp()
     cout << setw(35) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(35) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(35) << "--singletest <TestName>" << "Run on a single test\n";
-    cout << setw(35) << "--singletest <TestFile> <TestName>" << "Run on a single test from file\n";
+    cout << setw(35) << "--singletest <TestFile>" << "Run tests from file. Require -t <TestSuite>\n";
+    cout << setw(35) << "--singletest <TestFile> <TestName>" << "Run on a single test from file. Require -t <TestSuite>\n";
     cout << setw(35) << "--singlenet <networkId>" << setw(25) << "Run tests for a specific network (Frontier|Homestead|EIP150|EIP158|Byzantium|Constantinople|ConstantinopleFix)\n";
     cout << setw(35) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(35) << "--vm <name|path> (=legacy)" << setw(25) << "Set VM type for VMTests suite. Available options are: interpreter, legacy.\n";
@@ -198,13 +199,13 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--singletest")
         {
             throwIfNoArgumentFollows();
-            singleTest = true;
             auto name1 = std::string{argv[++i]};
             if (i + 1 < argc) // two params
             {
                 auto name2 = std::string{argv[++i]};
                 if (name2[0] == '-') // not param, another option
                 {
+                    singleTest = true;
                     singleTestName = std::move(name1);
                     i--;
                 }
@@ -215,7 +216,15 @@ Options::Options(int argc, const char** argv)
                 }
             }
             else
-                singleTestName = std::move(name1);
+            {
+                if (boost::filesystem::exists(name1))
+                    singleTestFile = std::move(name1);
+                else
+                {
+                    singleTest = true;
+                    singleTestName = std::move(name1);
+                }
+            }
         }
         else if (arg == "--singlenet")
         {

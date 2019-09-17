@@ -146,7 +146,8 @@ int main(int argc, const char* argv[])
     }
 
     // Print suggestions of a test case if test suite not found
-    if (!sMinusTArg.empty() && !dev::test::inArray(c_allTestNames, sMinusTArg))
+    if (!sMinusTArg.empty() && !dev::test::inArray(c_allTestNames, sMinusTArg) &&
+        sMinusTArg != "customTestSuite")
     {
         std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
         printTestSuiteSuggestions(sMinusTArg);
