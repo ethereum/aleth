@@ -63,13 +63,18 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
         else
         {
             if (v > 36)
-                m_chainId = (v - 35) / 2;
+            {
+                auto const chainId = (v - 35) / 2;
+                if (chainId > std::numeric_limits<uint64_t>::max())
+                    BOOST_THROW_EXCEPTION(InvalidSignature());
+                m_chainId = static_cast<uint64_t>(chainId);
+            }
             // only values 27 and 28 are allowed for non-replay protected transactions
             else if (v != 27 && v != 28)
                 BOOST_THROW_EXCEPTION(InvalidSignature());
 
             auto const recoveryID =
-                m_chainId.has_value() ? byte{v - (*m_chainId * 2 + 35)} : byte{v - 27};
+                m_chainId.has_value() ? byte{v - (u256{*m_chainId} * 2 + 35)} : byte{v - 27};
             m_vrs = SignatureStruct{r, s, recoveryID};
 
             if (_checkSig >= CheckTransaction::Cheap && !m_vrs->isValid())
