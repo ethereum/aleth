@@ -418,7 +418,7 @@ namespace dev
         &&INVALID,                              \
         &&REVERT,                               \
         &&INVALID,                              \
-        &&SUICIDE,                              \
+        &&SELFDESTRUCT,                         \
     };
 
 #define DO_CASES        \

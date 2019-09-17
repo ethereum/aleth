@@ -325,7 +325,7 @@ void LegacyVM::interpretCases()
         }
         BREAK;
 
-        CASE(SUICIDE)
+        CASE(SELFDESTRUCT)
         {
             ON_OP();
             if (m_ext->staticCall)

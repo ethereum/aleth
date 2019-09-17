@@ -371,7 +371,7 @@ void VM::interpretCases()
         }
         BREAK;
 
-        CASE(SUICIDE)
+        CASE(SELFDESTRUCT)
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
