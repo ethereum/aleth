@@ -68,6 +68,42 @@ BOOST_AUTO_TEST_CASE(TransactionNotReplayProtected)
     BOOST_REQUIRE(txRlpStream.out() == txRlp);
 }
 
+BOOST_AUTO_TEST_CASE(TransactionChainIDMax64Bit)
+{
+    // recoveryID = 0, v = 36893488147419103265
+    auto txRlp1 = fromHex(
+        "0xf86e808698852840a46f82d6d894095e7baea6a6c7c4c2dfeb977efac326af552d8780808902000000000000"
+        "0021a098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f"
+        "789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3");
+    Transaction tx1{txRlp1, CheckTransaction::None};
+    tx1.checkChainId(std::numeric_limits<uint64_t>::max());
+
+    // recoveryID = 1, v = 36893488147419103266
+    auto txRlp2 = fromHex(
+        "0xf86e808698852840a46f82d6d894095e7baea6a6c7c4c2dfeb977efac326af552d8780808902000000000000"
+        "0022a098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f"
+        "789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3");
+    Transaction tx2{txRlp2, CheckTransaction::None};
+    tx2.checkChainId(std::numeric_limits<uint64_t>::max());
+}
+
+BOOST_AUTO_TEST_CASE(TransactionChainIDBiggerThan64Bit)
+{
+    // recoveryID = 0, v = 184467440737095516439
+    auto txRlp1 = fromHex(
+        "0xf86a03018255f094b94f5374fce5edbc8e2a8697c15331677e6ebf0b0a825544890a0000000000000117a098"
+        "ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa08887321be575c8095f789dd4c7"
+        "43dfe42c1820f9231f98a962b210e3ac2452a3");
+    BOOST_REQUIRE_THROW(Transaction(txRlp1, CheckTransaction::None), InvalidSignature);
+
+    // recoveryID = 1, v = 184467440737095516440
+    auto txRlp2 = fromHex(
+        "0xf86a03018255f094b94f5374fce5edbc8e2a8697c15331677e6ebf0b0a825544890a0000000000000118a098"
+        "ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa08887321be575c8095f789dd4c7"
+        "43dfe42c1820f9231f98a962b210e3ac2452a3");
+    BOOST_REQUIRE_THROW(Transaction(txRlp2, CheckTransaction::None), InvalidSignature);
+}
+
 BOOST_AUTO_TEST_CASE(TransactionReplayProtected)
 {
     auto txRlp = fromHex(
