@@ -23,6 +23,7 @@
 #include "ChainOperationParams.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
+#include <libdevcrypto/Blake2.h>
 #include <libdevcrypto/Common.h>
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/LibSnark.h>
@@ -219,4 +220,28 @@ ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)
     return _blockNumber < _chainParams.istanbulForkBlock ? 100000 + k * 80000 : 45000 + k * 34000;
 }
 
+ETH_REGISTER_PRECOMPILED(blake2_compression)(bytesConstRef _in)
+{
+    if (_in.size() != 213)
+        return {false, {}};
+
+    auto const rounds = fromBigEndian<uint32_t>(_in.cropped(0, 4));
+    auto const stateVectorRef = _in.cropped(4, 8 * 8);
+    auto const messageBlockVectorRef = _in.cropped(4 + 8 * 8, 16 * 8);
+    auto const offsetCounter0 = _in.cropped(4 + 8 * 8 + 16 * 8, 8);
+    auto const offsetCounter1 = _in.cropped(4 + 8 * 8 + 16 * 8 + 8, 8);
+    byte const finalBlockIndicator = _in[4 + 8 * 8 + 16 * 8 + 8 + 8];
+    if (finalBlockIndicator != 0 && finalBlockIndicator != 1)
+        return {false, {}};
+
+    return {true, dev::crypto::blake2FCompression(rounds, stateVectorRef, offsetCounter0,
+                      offsetCounter1, finalBlockIndicator, messageBlockVectorRef)};
+}
+
+ETH_REGISTER_PRECOMPILED_PRICER(blake2_compression)
+(bytesConstRef _in, ChainOperationParams const&, u256 const&)
+{
+    auto const rounds = fromBigEndian<uint32_t>(_in.cropped(0, 4));
+    return rounds;
+}
 }
