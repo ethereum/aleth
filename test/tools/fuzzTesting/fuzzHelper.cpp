@@ -402,7 +402,7 @@ std::string RandomCodeBase::fillArguments(eth::Instruction _opcode, RandomCodeOp
 			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrState)));//address
 			code += getPushCode((unsigned)randomUniInt());	//gaslimit
 			return code;
-		case eth::Instruction::SUICIDE: //(SUICIDE address)
+		case eth::Instruction::SELFDESTRUCT: //(SELFDESTRUCT address)
 			code += getPushCode(toString(_options.getRandomAddress()));
 			return code;
 		case eth::Instruction::RETURN:  //(RETURN memlen1 memlen2)

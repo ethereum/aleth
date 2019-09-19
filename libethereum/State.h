@@ -267,7 +267,7 @@ public:
     /// Sets the code of the account. Must only be called during / after contract creation.
     void setCode(Address const& _address, bytes&& _code, u256 const& _version);
 
-    /// Delete an account (used for processing suicides).
+    /// Delete an account (used for processing selfdestructs).
     void kill(Address _a);
 
     /// Get the storage of an account.

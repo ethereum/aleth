@@ -94,8 +94,8 @@ public:
             return m_s.addressInUse(_a);
     }
 
-    /// Suicide the associated contract to the given address.
-    void suicide(Address _a) final;
+    /// Selfdestruct the associated contract to the given address.
+    void selfdestruct(Address _a) final;
 
     /// Return the EVM gas-price schedule for this execution context.
     EVMSchedule const& evmSchedule() const final { return m_evmSchedule; }

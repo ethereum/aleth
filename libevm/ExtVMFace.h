@@ -85,13 +85,13 @@ private:
 
 struct SubState
 {
-    std::set<Address> suicides;  ///< Any accounts that have suicided.
-    LogEntries logs;             ///< Any logs.
-    int64_t refunds = 0;         ///< Refund counter for storage changes.
+    std::set<Address> selfdestructs;  ///< Any accounts that have selfdestructed.
+    LogEntries logs;                  ///< Any logs.
+    int64_t refunds = 0;              ///< Refund counter for storage changes.
 
     SubState& operator+=(SubState const& _s)
     {
-        suicides += _s.suicides;
+        selfdestructs += _s.selfdestructs;
         refunds += _s.refunds;
         logs += _s.logs;
         return *this;
@@ -99,7 +99,7 @@ struct SubState
 
     void clear()
     {
-        suicides.clear();
+        selfdestructs.clear();
         logs.clear();
         refunds = 0;
     }
@@ -239,8 +239,15 @@ public:
     /// Does the account exist?
     virtual bool exists(Address) { return false; }
 
-    /// Suicide the associated contract and give proceeds to the given address.
-    virtual void suicide(Address) { sub.suicides.insert(myAddress); }
+    /// Selfdestruct the associated contract and give proceeds to the given address.
+    ///
+    /// @param beneficiary  The address of the account which will receive ETH
+    ///                     from the selfdestructed account.
+    virtual void selfdestruct(Address beneficiary)
+    {
+        (void)beneficiary;
+        sub.selfdestructs.insert(myAddress);
+    }
 
     /// Create a new (contract) account.
     virtual CreateResult create(u256, u256&, bytesConstRef, Instruction, u256, OnOpFunc const&) = 0;
@@ -278,7 +285,7 @@ public:
     h256 codeHash;            ///< SHA3 hash of the executing code
     u256 version;             ///< Version of the VM to execute code
     u256 salt;                ///< Values used in new address construction by CREATE2
-    SubState sub;             ///< Sub-band VM state (suicides, refund counter, logs).
+    SubState sub;             ///< Sub-band VM state (selfdestructs, refund counter, logs).
     unsigned depth = 0;       ///< Depth of the present call.
     bool isCreate = false;    ///< Is this a CREATE call?
     bool staticCall = false;  ///< Throw on state changing.

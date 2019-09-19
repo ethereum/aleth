@@ -407,7 +407,7 @@ namespace eth
         &&INVALID,                              \
         &&REVERT,                               \
         &&INVALID,                              \
-        &&SUICIDE,                              \
+        &&SELFDESTRUCT,                         \
     };
 
 #define DO_CASES        \

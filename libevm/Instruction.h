@@ -231,7 +231,7 @@ enum class Instruction : uint8_t
                         ///< throw)
     REVERT = 0xfd,  ///< stop execution and revert state changes, without consuming all provided gas
     INVALID = 0xfe,  ///< dedicated invalid instruction
-    SUICIDE = 0xff   ///< halt execution and register account for later deletion
+    SELFDESTRUCT = 0xff  ///< halt execution and register account for later deletion
 };
 
 enum class Tier : unsigned

@@ -325,14 +325,14 @@ void LegacyVM::interpretCases()
         }
         BREAK;
 
-        CASE(SUICIDE)
+        CASE(SELFDESTRUCT)
         {
             ON_OP();
             if (m_ext->staticCall)
                 throwDisallowedStateChange();
 
             // Self-destructs only have gas cost starting with EIP 150
-            m_runGas = toInt63(m_schedule->suicideGas);
+            m_runGas = toInt63(m_schedule->selfdestructGas);
 
             Address const dest = asAddress(m_SP[0]);
             // Starting with EIP150, self-destructs need to pay both gas cost and account creation
@@ -346,7 +346,7 @@ void LegacyVM::interpretCases()
             }
 
             updateIOGas();
-            m_ext->suicide(dest);
+            m_ext->selfdestruct(dest);
             m_bounce = 0;
         }
         BREAK
