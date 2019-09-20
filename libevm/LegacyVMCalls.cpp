@@ -208,6 +208,9 @@ bool LegacyVM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
     if (haveValueArg && m_SP[2] > 0)
         m_runGas += toInt63(m_schedule->callValueTransferGas);
 
+    if (m_ext->myAddress == destinationAddr && m_schedule->reducedCallToSelfGas())
+        m_runGas -= (m_schedule->callGas - m_schedule->callSelfGas);
+
     size_t const sizesOffset = haveValueArg ? 3 : 2;
     u256 inputOffset  = m_SP[sizesOffset];
     u256 inputSize    = m_SP[sizesOffset + 1];
