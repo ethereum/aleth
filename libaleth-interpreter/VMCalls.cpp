@@ -192,7 +192,13 @@ void VM::caseCall()
 
 bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
 {
-    m_runGas = m_rev >= EVMC_TANGERINE_WHISTLE ? 700 : 40;
+    auto const destination = intx::be::trunc<evmc::address>(m_SP[1]);
+
+    // Check for call-to-self (eip1380) and adjust gas accordingly
+    if (m_rev >= EVMC_BERLIN && m_message->destination == destination)
+        m_runGas = VMSchedule::callSelfGas;
+    else
+        m_runGas = evmc_get_instruction_metrics_table(m_rev)[static_cast<size_t>(m_OP)].gas_cost;
 
     switch (m_OP)
     {
@@ -213,8 +219,6 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
         o_msg.flags = EVMC_STATIC;
 
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
-
-    auto const destination = intx::be::trunc<evmc::address>(m_SP[1]);
 
     if (m_OP == Instruction::CALL && (m_SP[2] > 0 || m_rev < EVMC_SPURIOUS_DRAGON) &&
         !m_context->host->account_exists(m_context, &destination))
