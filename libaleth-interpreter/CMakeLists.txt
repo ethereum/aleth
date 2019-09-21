@@ -1,6 +1,8 @@
 # Aleth: Ethereum C++ client, tools and libraries.
 # Copyright 2018-2019 Aleth Authors.
 # Licensed under the GNU General Public License, Version 3. See the LICENSE file.
+hunter_add_package(intx)
+find_package(intx CONFIG REQUIRED)
 
 set(
     sources
@@ -19,6 +21,7 @@ set(
     evmc::evmc
     evmc::instructions
     Boost::boost
+    intx::intx
 )
 
 add_library(aleth-interpreter STATIC ${sources})

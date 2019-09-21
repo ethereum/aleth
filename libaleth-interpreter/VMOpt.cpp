@@ -82,7 +82,7 @@ void VM::optimize()
     TRACE_STR(1, "Do first pass optimizations")
     for (size_t pc = 0; pc < nBytes; ++pc)
     {
-        u256 val = 0;
+        intx::uint256 val = 0;
         Instruction op = Instruction(m_code[pc]);
 
         if ((byte)Instruction::PUSH1 <= (byte)op && (byte)op <= (byte)Instruction::PUSH32)
@@ -161,27 +161,6 @@ void VM::initEntry()
 {
     m_bounce = &VM::interpretCases;
     optimize();
-}
-
-
-// Implementation of EXP.
-//
-// This implements exponentiation by squaring algorithm.
-// Is faster than boost::multiprecision::powm() because it avoids explicit
-// mod operation.
-// Do not inline it.
-u256 VM::exp256(u256 _base, u256 _exponent)
-{
-    using boost::multiprecision::limb_type;
-    u256 result = 1;
-    while (_exponent)
-    {
-        if (static_cast<limb_type>(_exponent) & 1)    // If exponent is odd.
-            result *= _base;
-        _base *= _base;
-        _exponent >>= 1;
-    }
-    return result;
 }
 }
 }
