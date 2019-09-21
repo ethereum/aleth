@@ -30,6 +30,7 @@
 - Added: [#5755](https://github.com/ethereum/aleth/pull/5755) testeth now runs `stChainId`, `stSLoadTest`, `stSelfBalance` tests for Istanbul.
 - Added: [#5758](https://github.com/ethereum/aleth/pull/5758) Istanbul support: activation in Ropsten config.
 - Added: [#5762](https://github.com/ethereum/aleth/pull/5762) aleth-vm supports `--network Istanbul` option.
+- Added: [#5752](https://github.com/ethereum/aleth/pull/5752) Implement EIP1380 (reduced gas costs for call-to-self) in LegacyVM.
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
