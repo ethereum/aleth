@@ -37,10 +37,10 @@ BlockHeader initBlockHeader()
     return blockHeader;
 }
 
-class Create2TestFixture: public TestOutputHelperFixture
+class Create2TestFixture : public TestOutputHelperFixture
 {
 public:
-    explicit Create2TestFixture(VMFace* _vm): vm{_vm} { state.addBalance(address, 1 * ether); }
+    explicit Create2TestFixture(VMFace* _vm) : vm{_vm} { state.addBalance(address, 1 * ether); }
 
     void testCreate2worksInConstantinople()
     {
@@ -199,16 +199,17 @@ public:
     std::unique_ptr<VMFace> vm;
 };
 
-class LegacyVMCreate2TestFixture: public Create2TestFixture
+class LegacyVMCreate2TestFixture : public Create2TestFixture
 {
 public:
-    LegacyVMCreate2TestFixture(): Create2TestFixture{new LegacyVM} {}
+    LegacyVMCreate2TestFixture() : Create2TestFixture{new LegacyVM} {}
 };
 
-class AlethInterpreterCreate2TestFixture: public Create2TestFixture
+class AlethInterpreterCreate2TestFixture : public Create2TestFixture
 {
 public:
-    AlethInterpreterCreate2TestFixture(): Create2TestFixture{new EVMC{evmc_create_interpreter()}} {}
+    AlethInterpreterCreate2TestFixture() : Create2TestFixture{new EVMC{evmc_create_interpreter()}}
+    {}
 };
 
 class ExtcodehashTestFixture : public TestOutputHelperFixture
@@ -835,7 +836,6 @@ public:
         BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 40 + 15);
     }
 
-
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
     Address address{KeyPair::create().address()};
@@ -860,6 +860,87 @@ class LegacyVMPrecompileCallFixture : public PrecompileCallFixture
 public:
     LegacyVMPrecompileCallFixture() : PrecompileCallFixture{new LegacyVM} {}
 };
+class CallSelfFixture : public TestOutputHelperFixture
+{
+public:
+    explicit CallSelfFixture(VMFace* _vm) : vm{_vm} { state.addBalance(address, 1 * ether); }
+
+    void testCallSelf()
+    {
+        constexpr size_t codeElementCount = 4;
+        bytes codeArray[] = {
+            // staticcall must come first (we need to pass if the code performs a
+            // static call to the extVm ctor so we determine this by array index)
+            // let foo : = staticcall(50000, address(), 0, 0, 0, 0, 0)
+            fromHex("60006000600060003061c350fa50"),
+            // let foo:= call(50000, address(), 0, 0, 0, 0, 0)
+            fromHex("600060006000600060003061c350f150"),
+            // let foo := delegatecall(50000, address(), 0, 0, 0, 0)
+            fromHex("60006000600060003061c350f450"),
+            // let foo : = callcode(50000, address(), 0, 0, 0, 0, 0)
+            fromHex("600060006000600060003061c350f250")};
+
+        for (size_t i = 0; i < codeElementCount; i++)
+        {
+            ExtVM extVm{state, envInfo, *se, address, address, address, value, gasPrice, {},
+                ref(codeArray[i]), sha3(codeArray[i]), version, static_cast<unsigned int>(depth),
+                isCreate, !i /* static call? */};
+
+            bigint gasBefore;
+            bigint gasAfter;
+            auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                            Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/,
+                            bigint _gas, VMFace const*, ExtVMFace const*) {
+                if (CallSelfFixture::IsCallOp(_instr))
+                    gasBefore = _gas;
+                else if (gasBefore != 0 && gasAfter == 0)
+                    gasAfter = _gas;
+            };
+            vm->exec(gas, extVm, onOp);
+            BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, extVm.evmSchedule().callSelfGas);
+        }
+    }
+
+    BlockHeader const blockHeader{initBlockHeader()};
+    LastBlockHashes const lastBlockHashes;
+    Address const address{KeyPair::create().address()};
+    State state{0};
+    std::unique_ptr<SealEngineFace> se{
+        ChainParams(genesisInfo(Network::IstanbulTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
+
+    u256 const value = 0;
+    u256 const gasPrice = 1;
+    u256 const version = ExperimentalSchedule.accountVersion;
+    int const depth = 0;
+    bool const isCreate = false;
+    u256 gas = 1000000;
+
+    std::unique_ptr<VMFace> vm;
+
+private:
+    static bool IsCallOp(Instruction _instr)
+    {
+        switch (_instr)
+        {
+        case Instruction::CALL:
+        case Instruction::CALLCODE:
+        case Instruction::DELEGATECALL:
+        case Instruction::STATICCALL:
+            return true;
+        default:
+            break;
+        }
+        return false;
+    }
+};
+
+class LegacyVMCallSelfFixture : public CallSelfFixture
+{
+public:
+    LegacyVMCallSelfFixture() : CallSelfFixture{new LegacyVM} {};
+};
+
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -1033,6 +1114,15 @@ BOOST_AUTO_TEST_CASE(LegacyVMStaticCallHasCorrectCostInBerlin)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+BOOST_FIXTURE_TEST_SUITE(LegacyVMCallSelfSuite, LegacyVMCallSelfFixture)
+
+BOOST_AUTO_TEST_CASE(LegacyVMCallSelfCorrectGasCost)
+{
+    testCallSelf();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSuite, TestOutputHelperFixture)
