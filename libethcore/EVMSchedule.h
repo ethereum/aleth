@@ -159,8 +159,13 @@ static const EVMSchedule IstanbulSchedule = [] {
     return schedule;
 }();
 
-static const EVMSchedule ExperimentalSchedule = [] {
+static const EVMSchedule BerlinSchedule = [] {
     EVMSchedule schedule = IstanbulSchedule;
+    return schedule;
+}();
+
+static const EVMSchedule ExperimentalSchedule = [] {
+    EVMSchedule schedule = BerlinSchedule;
     schedule.accountVersion = 1;
     schedule.blockhashGas = 800;
     return schedule;
@@ -169,7 +174,7 @@ static const EVMSchedule ExperimentalSchedule = [] {
 inline EVMSchedule const& latestScheduleForAccountVersion(u256 const& _version)
 {
     if (_version == 0)
-        return IstanbulSchedule;
+        return BerlinSchedule;
     else if (_version == ExperimentalSchedule.accountVersion)
         return ExperimentalSchedule;
     else
