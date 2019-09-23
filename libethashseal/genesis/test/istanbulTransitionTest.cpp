@@ -48,7 +48,8 @@ R"E(
         "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" } },
         "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add" } },
         "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul" } },
-        "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product"} }
+        "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product"} },
+		"0000000000000000000000000000000000000009": { "precompiled": { "name": "blake2_compression", "startingBlock": "0x02" } }
     }
 }
 )E";
