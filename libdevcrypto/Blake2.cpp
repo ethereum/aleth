@@ -14,12 +14,9 @@ namespace
 {
 DEV_SIMPLE_EXCEPTION(InvalidInputSize);
 
-enum blake2b_constant
-{
-    BLAKE2B_BLOCKBYTES = 128,
-};
+constexpr size_t BLAKE2B_BLOCKBYTES = 128;
 
-typedef struct blake2b_state__
+struct blake2b_state
 {
     uint64_t h[8];
     uint64_t t[2];
@@ -28,10 +25,10 @@ typedef struct blake2b_state__
     size_t buflen;
     size_t outlen;
     uint8_t last_node;
-} blake2b_state;
+};
 
 // clang-format off
-const uint64_t blake2b_IV[8] =
+constexpr uint64_t blake2b_IV[8] =
 {
   0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
   0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
@@ -39,7 +36,7 @@ const uint64_t blake2b_IV[8] =
   0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL
 };
 
-const uint8_t blake2b_sigma[12][16] =
+constexpr uint8_t blake2b_sigma[12][16] =
 {
   {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 } ,
   { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 } ,
@@ -61,7 +58,7 @@ inline uint64_t load64(const void* src) noexcept
     return w;
 }
 
-inline uint64_t rotr64(const uint64_t w, const unsigned c) noexcept
+inline constexpr uint64_t rotr64(uint64_t w, unsigned c) noexcept
 {
     return (w >> c) | (w << (64 - c));
 }
@@ -98,17 +95,12 @@ void blake2b_compress(
 {
     uint64_t m[16];
     uint64_t v[16];
-    size_t i;
 
-    for (i = 0; i < 16; ++i)
-    {
+    for (size_t i = 0; i < 16; ++i)
         m[i] = load64(block + i * sizeof(m[i]));
-    }
 
-    for (i = 0; i < 8; ++i)
-    {
+    for (size_t i = 0; i < 8; ++i)
         v[i] = S->h[i];
-    }
 
     v[8] = blake2b_IV[0];
     v[9] = blake2b_IV[1];
@@ -122,10 +114,8 @@ void blake2b_compress(
     for (uint32_t r = 0; r < rounds; ++r)
         ROUND(r, v, m);
 
-    for (i = 0; i < 8; ++i)
-    {
+    for (size_t i = 0; i < 8; ++i)
         S->h[i] = S->h[i] ^ v[i] ^ v[i + 8];
-    }
 }
 
 }  // namespace
@@ -143,8 +133,8 @@ bytes blake2FCompression(uint32_t _rounds, bytesConstRef _stateVector, bytesCons
     if (_t0.size() != sizeof(s.t[0]) || _t1.size() != sizeof(s.t[1]))
         BOOST_THROW_EXCEPTION(InvalidInputSize());
 
-    s.t[0] = *reinterpret_cast<uint64_t const*>(_t0.data());
-    s.t[1] = *reinterpret_cast<uint64_t const*>(_t1.data());
+    s.t[0] = load64(_t0.data());
+    s.t[1] = load64(_t1.data());
     s.f[0] = _lastBlock ? std::numeric_limits<uint64_t>::max() : 0;
 
     if (_messageBlockVector.size() != BLAKE2B_BLOCKBYTES)
