@@ -56,33 +56,9 @@ const uint8_t blake2b_sigma[12][16] =
 
 inline uint64_t load64(const void* src) noexcept
 {
-#if defined(NATIVE_LITTLE_ENDIAN)
     uint64_t w;
     memcpy(&w, src, sizeof w);
     return w;
-#else
-    const uint8_t* p = (const uint8_t*)src;
-    return ((uint64_t)(p[0]) << 0) | ((uint64_t)(p[1]) << 8) | ((uint64_t)(p[2]) << 16) |
-           ((uint64_t)(p[3]) << 24) | ((uint64_t)(p[4]) << 32) | ((uint64_t)(p[5]) << 40) |
-           ((uint64_t)(p[6]) << 48) | ((uint64_t)(p[7]) << 56);
-#endif
-}
-
-inline void store64(void* dst, uint64_t w) noexcept
-{
-#if defined(NATIVE_LITTLE_ENDIAN)
-    memcpy(dst, &w, sizeof w);
-#else
-    uint8_t* p = (uint8_t*)dst;
-    p[0] = (uint8_t)(w >> 0);
-    p[1] = (uint8_t)(w >> 8);
-    p[2] = (uint8_t)(w >> 16);
-    p[3] = (uint8_t)(w >> 24);
-    p[4] = (uint8_t)(w >> 32);
-    p[5] = (uint8_t)(w >> 40);
-    p[6] = (uint8_t)(w >> 48);
-    p[7] = (uint8_t)(w >> 56);
-#endif
 }
 
 inline uint64_t rotr64(const uint64_t w, const unsigned c) noexcept
@@ -90,8 +66,8 @@ inline uint64_t rotr64(const uint64_t w, const unsigned c) noexcept
     return (w >> c) | (w << (64 - c));
 }
 
-inline void G(
-    uint8_t r, uint8_t i, uint64_t& a, uint64_t& b, uint64_t& c, uint64_t& d, uint64_t* m) noexcept
+inline void G(uint8_t r, uint8_t i, uint64_t& a, uint64_t& b, uint64_t& c, uint64_t& d,
+    const uint64_t* m) noexcept
 {
     a = a + b + m[blake2b_sigma[r][2 * i + 0]];
     d = rotr64(d ^ a, 32);
@@ -103,7 +79,7 @@ inline void G(
     b = rotr64(b ^ c, 63);
 }
 
-inline void ROUND(uint32_t round, uint64_t* v, uint64_t* m) noexcept
+inline void ROUND(uint32_t round, uint64_t* v, const uint64_t* m) noexcept
 {
     uint8_t const r = round % 10;
     G(r, 0, v[0], v[4], v[8], v[12], m);
@@ -166,11 +142,10 @@ bytes blake2FCompression(uint32_t _rounds, bytesConstRef _stateVector, bytesCons
         BOOST_THROW_EXCEPTION(InvalidInputSize());
 
     blake2b_state s{};
-    for (size_t i = 0; i < 8; ++i)
-        s.h[i] = load64(&_stateVector[i * sizeof(uint64_t)]);
+    std::memcpy(&s.h, _stateVector.data(), _stateVector.size());
 
-    s.t[0] = load64(_t0.data());
-    s.t[1] = load64(_t1.data());
+    s.t[0] = *reinterpret_cast<uint64_t const*>(_t0.data());
+    s.t[1] = *reinterpret_cast<uint64_t const*>(_t1.data());
     s.f[0] = _lastBlock ? (uint64_t)-1 : 0;
 
     uint8_t block[BLAKE2B_BLOCKBYTES];
@@ -179,8 +154,7 @@ bytes blake2FCompression(uint32_t _rounds, bytesConstRef _stateVector, bytesCons
     blake2b_compress(_rounds, &s, block);
 
     bytes result(64);
-    for (size_t i = 0; i < 8; ++i)
-        store64(&result[i * sizeof(uint64_t)], s.h[i]);
+    std::memcpy(&result[0], &s.h[0], result.size());
 
     return result;
 }
