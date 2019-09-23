@@ -1,5 +1,5 @@
 # Aleth: Ethereum C++ client, tools and libraries.
-# Copyright 2019 Aleth Authors.
+# Copyright 2013-2019 Aleth Authors.
 # Licensed under the GNU General Public License, Version 3. See the LICENSE file.
 
 cmake_minimum_required(VERSION 3.9.3)
