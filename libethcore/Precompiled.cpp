@@ -222,20 +222,32 @@ ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)
 
 ETH_REGISTER_PRECOMPILED(blake2_compression)(bytesConstRef _in)
 {
-    if (_in.size() != 213)
+    static constexpr size_t roundsSize = 4;
+    static constexpr size_t stateVectorSize = 8 * 8;
+    static constexpr size_t messageBlockSize = 16 * 8;
+    static constexpr size_t offsetCounterSize = 8;
+    static constexpr size_t finalBlockIndicatorSize = 1;
+    static constexpr size_t totalInputSize = roundsSize + stateVectorSize + messageBlockSize +
+                                             2 * offsetCounterSize + finalBlockIndicatorSize;
+
+    if (_in.size() != totalInputSize)
         return {false, {}};
 
-    auto const rounds = fromBigEndian<uint32_t>(_in.cropped(0, 4));
-    auto const stateVectorRef = _in.cropped(4, 8 * 8);
-    auto const messageBlockVectorRef = _in.cropped(4 + 8 * 8, 16 * 8);
-    auto const offsetCounter0 = _in.cropped(4 + 8 * 8 + 16 * 8, 8);
-    auto const offsetCounter1 = _in.cropped(4 + 8 * 8 + 16 * 8 + 8, 8);
-    byte const finalBlockIndicator = _in[4 + 8 * 8 + 16 * 8 + 8 + 8];
+    auto const rounds = fromBigEndian<uint32_t>(_in.cropped(0, roundsSize));
+    auto const stateVector = _in.cropped(roundsSize, stateVectorSize);
+    auto const messageBlockVector = _in.cropped(roundsSize + stateVectorSize, messageBlockSize);
+    auto const offsetCounter0 =
+        _in.cropped(roundsSize + stateVectorSize + messageBlockSize, offsetCounterSize);
+    auto const offsetCounter1 = _in.cropped(
+        roundsSize + stateVectorSize + messageBlockSize + offsetCounterSize, offsetCounterSize);
+    uint8_t const finalBlockIndicator =
+        _in[roundsSize + stateVectorSize + messageBlockSize + 2 * offsetCounterSize];
+
     if (finalBlockIndicator != 0 && finalBlockIndicator != 1)
         return {false, {}};
 
-    return {true, dev::crypto::blake2FCompression(rounds, stateVectorRef, offsetCounter0,
-                      offsetCounter1, finalBlockIndicator, messageBlockVectorRef)};
+    return {true, dev::crypto::blake2FCompression(rounds, stateVector, offsetCounter0,
+                      offsetCounter1, finalBlockIndicator, messageBlockVector)};
 }
 
 ETH_REGISTER_PRECOMPILED_PRICER(blake2_compression)

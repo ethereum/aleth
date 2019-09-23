@@ -134,26 +134,28 @@ void blake2b_compress(
 bytes blake2FCompression(uint32_t _rounds, bytesConstRef _stateVector, bytesConstRef _t0,
     bytesConstRef _t1, bool _lastBlock, bytesConstRef _messageBlockVector)
 {
-    if (_stateVector.size() != 64)
-        BOOST_THROW_EXCEPTION(InvalidInputSize());
-    if (_messageBlockVector.size() != 128)
-        BOOST_THROW_EXCEPTION(InvalidInputSize());
-    if (_t0.size() != 8 || _t1.size() != 8)
+    if (_stateVector.size() != sizeof(blake2b_state::h))
         BOOST_THROW_EXCEPTION(InvalidInputSize());
 
     blake2b_state s{};
     std::memcpy(&s.h, _stateVector.data(), _stateVector.size());
 
+    if (_t0.size() != sizeof(s.t[0]) || _t1.size() != sizeof(s.t[1]))
+        BOOST_THROW_EXCEPTION(InvalidInputSize());
+
     s.t[0] = *reinterpret_cast<uint64_t const*>(_t0.data());
     s.t[1] = *reinterpret_cast<uint64_t const*>(_t1.data());
-    s.f[0] = _lastBlock ? (uint64_t)-1 : 0;
+    s.f[0] = _lastBlock ? std::numeric_limits<uint64_t>::max() : 0;
+
+    if (_messageBlockVector.size() != BLAKE2B_BLOCKBYTES)
+        BOOST_THROW_EXCEPTION(InvalidInputSize());
 
     uint8_t block[BLAKE2B_BLOCKBYTES];
     std::copy(_messageBlockVector.begin(), _messageBlockVector.end(), &block[0]);
 
     blake2b_compress(_rounds, &s, block);
 
-    bytes result(64);
+    bytes result(sizeof(s.h));
     std::memcpy(&result[0], &s.h[0], result.size());
 
     return result;
