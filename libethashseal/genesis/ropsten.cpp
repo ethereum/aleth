@@ -29,6 +29,7 @@ R"E(
         "byzantiumForkBlock": "0x19f0a0",
         "constantinopleForkBlock": "0x408b70",
         "constantinopleFixForkBlock": "0x4b5e82",
+        "istanbulForkBlock": "0x62f756",
         "chainID": "0x03",
         "maximumExtraDataSize": "0x20",
         "tieBreakingGas": false,
@@ -60,6 +61,7 @@ R"E(
         "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "startingBlock": "0x19f0a0", "linear": { "base": 500, "word": 0 } } },
         "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "startingBlock": "0x19f0a0", "linear": { "base": 40000, "word": 0 } } },
         "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product", "startingBlock": "0x19f0a0" } },
+		"0000000000000000000000000000000000000009": { "precompiled": { "name": "blake2_compression", "startingBlock": "0x62f756" } },
         )E" + R"E(
         "0x0000000000000000000000000000000000000011": {
             "balance": "0"
