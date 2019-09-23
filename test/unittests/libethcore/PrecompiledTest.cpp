@@ -884,15 +884,27 @@ constexpr PrecompiledTest blake2FCompressionTests[] = {
         "test7",
     },
     {
-        "ffffffff48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f"
+        "000004b048c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f"
         "6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000"
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "000000000000000000000000000000000300000000000000000000000000000001",
-        "fc59093aafa9ab43daae0e914c57635c5402d8e3d2130eb9b3cc181de7f0ecf9b22bf99a7815ce16419e200e01"
-        "846e6b5df8cc7703041bbceb571de6631d2615",
-        "test8",
+        "bedc7f4e18165dc34600826ea6857a373d9afa25d7b6f2c7365f5e9e7f7b654ca2486da7248a6a3f1fd2fc4b00"
+        "233e6144a130296edf049b605d8c52b6463f70",
+        "test_1200rounds",
     }};
+
+constexpr PrecompiledTest blake2FCompressionLargeTests[] = {{
+    "ffffffff48c9bdf267e6096a3ba7ca8485ae67bb2bf894fe72f36e3cf1361d5f3af54fa5d182e6ad7f520e511f"
+    "6c3e2b8c68059b6bbd41fbabd9831f79217e1319cde05b61626300000000000000000000000000000000000000"
+    "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    "000000000000000000000000000000000300000000000000000000000000000001",
+    "fc59093aafa9ab43daae0e914c57635c5402d8e3d2130eb9b3cc181de7f0ecf9b22bf99a7815ce16419e200e01"
+    "846e6b5df8cc7703041bbceb571de6631d2615",
+    "test8",
+}};
+
 
 BOOST_AUTO_TEST_CASE(blake2compression)
 {
@@ -912,6 +924,13 @@ BOOST_AUTO_TEST_CASE(bench_blake2compression, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{blake2FCompressionTests,
         sizeof(blake2FCompressionTests) / sizeof(blake2FCompressionTests[0])};
+    benchmarkPrecompiled("blake2_compression", tests, 100000);
+}
+
+BOOST_AUTO_TEST_CASE(bench_blake2compression_maxrounds, *ut::label("bench"))
+{
+    vector_ref<const PrecompiledTest> tests{blake2FCompressionLargeTests,
+        sizeof(blake2FCompressionLargeTests) / sizeof(blake2FCompressionLargeTests[0])};
     benchmarkPrecompiled("blake2_compression", tests, 1);
 }
 
