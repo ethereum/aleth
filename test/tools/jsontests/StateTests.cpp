@@ -180,6 +180,7 @@ BOOST_AUTO_TEST_CASE(stExtCodeHash){}
 BOOST_AUTO_TEST_CASE(stSStoreTest){}
 
 BOOST_AUTO_TEST_CASE(stEIP2200) {}
+BOOST_AUTO_TEST_CASE(stBlake2) {}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}
