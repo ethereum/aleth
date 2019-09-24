@@ -42,7 +42,7 @@ evmc_storage_status EvmCHost::set_storage(
     EVMSchedule const& schedule = m_extVM.evmSchedule();
     auto status = EVMC_STORAGE_MODIFIED;
     u256 const originalValue = m_extVM.originalStorageValue(index);
-    if (originalValue == currentValue || !schedule.eip1283Mode)
+    if (originalValue == currentValue || !schedule.sstoreNetGasMetering())
     {
         if (currentValue == 0)
             status = EVMC_STORAGE_ADDED;
