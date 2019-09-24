@@ -1369,6 +1369,9 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
+            if (m_rev >= EVMC_ISTANBUL && m_io_gas <= VMSchedule::callStipend)
+                throwOutOfGas();
+
             evmc_uint256be const key = toEvmC(m_SP[0]);
             evmc_uint256be const value = toEvmC(m_SP[1]);
             auto const status =
@@ -1385,8 +1388,9 @@ void VM::interpretCases()
                 break;
             case EVMC_STORAGE_UNCHANGED:
             case EVMC_STORAGE_MODIFIED_AGAIN:
-                m_runGas = m_rev == EVMC_CONSTANTINOPLE ? VMSchedule::sstoreUnchangedGas :
-                                                          VMSchedule::sstoreResetGas;
+                m_runGas = (m_rev == EVMC_CONSTANTINOPLE || m_rev >= EVMC_ISTANBUL) ?
+                               (*m_metrics)[OP_SLOAD].gas_cost :
+                               VMSchedule::sstoreResetGas;
                 break;
             }
 
