@@ -84,10 +84,13 @@ void LegacyVM::adjustStack(unsigned _removed, unsigned _added)
 
 void LegacyVM::updateSSGas()
 {
+    if (m_schedule->sstoreThrowsIfGasBelowCallStipend() && m_io_gas <= m_schedule->callStipend)
+        throwOutOfGas();
+
     u256 const currentValue = m_ext->store(m_SP[0]);
     u256 const newValue = m_SP[1];
 
-    if (m_schedule->eip1283Mode)
+    if (m_schedule->sstoreNetGasMetering())
         updateSSGasEIP1283(currentValue, newValue);
     else
         updateSSGasPreEIP1283(currentValue, newValue);
@@ -137,10 +140,10 @@ void LegacyVM::updateSSGasEIP1283(u256 const& _currentValue, u256 const& _newVal
             if (originalValue == _newValue)
             {
                 if (originalValue == 0)
-                    m_ext->sub.refunds +=
-                        m_schedule->sstoreRefundGas + m_schedule->sstoreRefundNonzeroGas;
+                    m_ext->sub.refunds += m_schedule->sstoreSetGas - m_schedule->sstoreUnchangedGas;
                 else
-                    m_ext->sub.refunds += m_schedule->sstoreRefundNonzeroGas;
+                    m_ext->sub.refunds +=
+                        m_schedule->sstoreResetGas - m_schedule->sstoreUnchangedGas;
             }
         }
     }
