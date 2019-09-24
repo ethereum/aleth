@@ -867,10 +867,9 @@ public:
 
     void testCallSelf()
     {
+        constexpr size_t staticCallCodeIndex = 0;
         constexpr size_t codeElementCount = 4;
-        bytes codeArray[] = {
-            // staticcall must come first (we need to pass if the code performs a
-            // static call to the extVm ctor so we determine this by array index)
+        bytes const codeArray[] = {
             // let foo : = staticcall(50000, address(), 0, 0, 0, 0, 0)
             fromHex("60006000600060003061c350fa50"),
             // let foo:= call(50000, address(), 0, 0, 0, 0, 0)
@@ -884,7 +883,7 @@ public:
         {
             ExtVM extVm{state, envInfo, *se, address, address, address, value, gasPrice, {},
                 ref(codeArray[i]), sha3(codeArray[i]), version, static_cast<unsigned int>(depth),
-                isCreate, !i /* static call? */};
+                isCreate, i == staticCallCodeIndex};
 
             bigint gasBefore;
             bigint gasAfter;

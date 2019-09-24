@@ -190,8 +190,13 @@ bool LegacyVM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
     assert(callParams->valueTransfer == 0);
     assert(callParams->apparentValue == 0);
 
+    auto const destinationAddr = asAddress(m_SP[1]);
+
+    auto const callGas =
+        (destinationAddr == m_ext->myAddress) ? m_schedule->callSelfGas : m_schedule->callGas;
+    m_runGas = toInt63(callGas);
+
     callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
-    Address const destinationAddr = asAddress(m_SP[1]);
 
     if (callParams->staticCall && isPrecompiledContract(destinationAddr))
         m_runGas = toInt63(m_schedule->precompileStaticCallGas);
@@ -207,9 +212,6 @@ bool LegacyVM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 
     if (haveValueArg && m_SP[2] > 0)
         m_runGas += toInt63(m_schedule->callValueTransferGas);
-
-    if (m_ext->myAddress == destinationAddr && m_schedule->reducedCallToSelfGas())
-        m_runGas -= (m_schedule->callGas - m_schedule->callSelfGas);
 
     size_t const sizesOffset = haveValueArg ? 3 : 2;
     u256 inputOffset  = m_SP[sizesOffset];
