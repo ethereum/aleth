@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(TransactionGasRequired)
     BOOST_CHECK_EQUAL(tr.baseGasRequired(IstanbulSchedule), 14 * 16 + 21000);
 }
 
-BOOST_AUTO_TEST_CASE(TransactionWithEmptyRecepient)
+BOOST_AUTO_TEST_CASE(TransactionWithEmptyRecipient)
 {
     // recipient RLP is 0x80 (empty array)
     auto txRlp = fromHex(
@@ -36,6 +36,71 @@ BOOST_AUTO_TEST_CASE(TransactionWithEmptyRecepient)
         "0xf84c8014830493e0c0808026a02f23977c68f851bbec8619510a4acdd34805270d97f5714b003efe7274914c"
         "a2a05874022b26e0d88807bdcc59438f86f5a82e24afefad5b6a67ae853896fe2b37");
     BOOST_REQUIRE_THROW(Transaction(txRlp, CheckTransaction::None), InvalidTransactionFormat);
+}
+
+BOOST_AUTO_TEST_CASE(TransactionNotReplayProtected)
+{
+    auto txRlp = fromHex(
+        "0xf86d800182521c94095e7baea6a6c7c4c2dfeb977efac326af552d870a8e0358ac39584bc98a7c979f984b03"
+        "1ba048b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353a0efffd310ac743f371de3"
+        "b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804");
+    Transaction tx(txRlp, CheckTransaction::None);
+    tx.checkChainId(1234);  // any chain ID is accepted for not replay protected tx
+
+    RLPStream txRlpStream;
+    tx.streamRLP(txRlpStream);
+    BOOST_REQUIRE(txRlpStream.out() == txRlp);
+}
+
+BOOST_AUTO_TEST_CASE(TransactionChainIDMax64Bit)
+{
+    // recoveryID = 0, v = 36893488147419103265
+    auto txRlp1 = fromHex(
+        "0xf86e808698852840a46f82d6d894095e7baea6a6c7c4c2dfeb977efac326af552d8780808902000000000000"
+        "0021a098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f"
+        "789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3");
+    Transaction tx1{txRlp1, CheckTransaction::None};
+    tx1.checkChainId(std::numeric_limits<uint64_t>::max());
+
+    // recoveryID = 1, v = 36893488147419103266
+    auto txRlp2 = fromHex(
+        "0xf86e808698852840a46f82d6d894095e7baea6a6c7c4c2dfeb977efac326af552d8780808902000000000000"
+        "0022a098ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa01887321be575c8095f"
+        "789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3");
+    Transaction tx2{txRlp2, CheckTransaction::None};
+    tx2.checkChainId(std::numeric_limits<uint64_t>::max());
+}
+
+BOOST_AUTO_TEST_CASE(TransactionChainIDBiggerThan64Bit)
+{
+    // recoveryID = 0, v = 184467440737095516439
+    auto txRlp1 = fromHex(
+        "0xf86a03018255f094b94f5374fce5edbc8e2a8697c15331677e6ebf0b0a825544890a0000000000000117a098"
+        "ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa08887321be575c8095f789dd4c7"
+        "43dfe42c1820f9231f98a962b210e3ac2452a3");
+    BOOST_REQUIRE_THROW(Transaction(txRlp1, CheckTransaction::None), InvalidSignature);
+
+    // recoveryID = 1, v = 184467440737095516440
+    auto txRlp2 = fromHex(
+        "0xf86a03018255f094b94f5374fce5edbc8e2a8697c15331677e6ebf0b0a825544890a0000000000000118a098"
+        "ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4aa08887321be575c8095f789dd4c7"
+        "43dfe42c1820f9231f98a962b210e3ac2452a3");
+    BOOST_REQUIRE_THROW(Transaction(txRlp2, CheckTransaction::None), InvalidSignature);
+}
+
+BOOST_AUTO_TEST_CASE(TransactionReplayProtected)
+{
+    auto txRlp = fromHex(
+        "0xf86c098504a817c800825208943535353535353535353535353535353535353535880de0b6b3a76400008025"
+        "a028ef61340bd939bc2195fe537567866003e1a15d3c71ff63e1590620aa636276a067cbe9d8997f761aecb703"
+        "304b3800ccf555c9f3dc64214b297fb1966a3b6d83");
+    Transaction tx(txRlp, CheckTransaction::None);
+    tx.checkChainId(1);
+    BOOST_REQUIRE_THROW(tx.checkChainId(123), InvalidSignature);
+
+    RLPStream txRlpStream;
+    tx.streamRLP(txRlpStream);
+    BOOST_REQUIRE(txRlpStream.out() == txRlp);
 }
 
 BOOST_AUTO_TEST_CASE(ExecutionResultOutput)
