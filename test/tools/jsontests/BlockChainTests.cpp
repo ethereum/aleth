@@ -469,7 +469,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input, bool _allowI
     if (Options::get().fullstate || isSmallState(testChain.topBlock().state()))
         output["postState"] = fillJsonWithState(testChain.topBlock().state());
     else
-        output["postState"] = toHexPrefixed(testChain.topBlock().blockHeader().stateRoot());
+        output["postStateHash"] = toHexPrefixed(testChain.topBlock().blockHeader().stateRoot());
     output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 
     //make all values hex in pre section
@@ -625,9 +625,10 @@ void testBCTest(json_spirit::mObject const& _o)
                         testName + "State root in chain from RLP blocks != State root in chain from Field blocks!");
 
     State postState(State::Null); //Compare post states
-    BOOST_REQUIRE((_o.count("postState") > 0));
-    if (_o.at("postState").type() == json_spirit::Value_type::obj_type)
+
+    if (_o.count("postState") > 0)
     {
+        BOOST_REQUIRE(_o.at("postState").type() == json_spirit::Value_type::obj_type);
         ImportTest::importState(_o.at("postState").get_obj(), postState);
         ImportTest::compareStates(postState, testChain.topBlock().state());
         ImportTest::compareStates(postState, blockchain.topBlock().state());
@@ -635,8 +636,9 @@ void testBCTest(json_spirit::mObject const& _o)
     else
     {
         // Attempt to read hash instead of the full state
-        BOOST_REQUIRE(_o.at("postState").type() == json_spirit::Value_type::str_type);
-        auto postHash = h256{_o.at("postState").get_str()};
+        BOOST_REQUIRE(_o.count("postStateHash") > 0);
+        BOOST_REQUIRE(_o.at("postStateHash").type() == json_spirit::Value_type::str_type);
+        auto postHash = h256{_o.at("postStateHash").get_str()};
         string message = testName +
                          "Final StateRoot is different! (Look at expect section in the test /src "
                          "Filler file, or run the test generation with --fullstate flag to get the "
@@ -1203,5 +1205,8 @@ BOOST_AUTO_TEST_CASE(stBadOpcode){}
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance){}
 BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 BOOST_AUTO_TEST_CASE(stTimeConsuming){}
+BOOST_AUTO_TEST_CASE(stChainId) {}
+BOOST_AUTO_TEST_CASE(stSLoadTest) {}
+BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_SUITE_END()
 
