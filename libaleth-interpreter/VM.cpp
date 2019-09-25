@@ -8,12 +8,12 @@
 
 namespace
 {
-void destroy(evmc_instance* _instance)
+void destroy(evmc_vm* _instance)
 {
     (void)_instance;
 }
 
-evmc_capabilities_flagset getCapabilities(evmc_instance* _instance) noexcept
+evmc_capabilities_flagset getCapabilities(evmc_vm* _instance) noexcept
 {
     (void)_instance;
     return EVMC_CAPABILITY_EVM1;
@@ -24,7 +24,7 @@ void delete_output(const evmc_result* result)
     delete[] result->output_data;
 }
 
-evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revision _rev,
+evmc_result execute(evmc_vm* _instance, evmc_host_context* _context, evmc_revision _rev,
     const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
 {
     (void)_instance;
@@ -100,23 +100,17 @@ evmc_result execute(evmc_instance* _instance, evmc_context* _context, evmc_revis
 }
 }  // namespace
 
-extern "C" evmc_instance* evmc_create_interpreter() noexcept
+extern "C" evmc_vm* evmc_create_interpreter() noexcept
 {
     // TODO: Allow creating multiple instances with different configurations.
-    static evmc_instance s_instance{
-        EVMC_ABI_VERSION,
-        "interpreter",
-        aleth_version,
-        ::destroy,
-        ::execute,
-        getCapabilities,
-        nullptr,  // set_tracer
+    static evmc_vm s_vm{
+        EVMC_ABI_VERSION, "interpreter", aleth_version, ::destroy, ::execute, getCapabilities,
         nullptr,  // set_option
     };
     static bool metricsInited = dev::eth::VM::initMetrics();
     (void)metricsInited;
 
-    return &s_instance;
+    return &s_vm;
 }
 
 
@@ -234,7 +228,8 @@ void VM::fetchInstruction()
 {
     m_OP = Instruction(m_code[m_PC]);
     auto const metric = (*m_metrics)[static_cast<size_t>(m_OP)];
-    adjustStack(metric.num_stack_arguments, metric.num_stack_returned_items);
+    adjustStack(
+        metric.stack_height_required, metric.stack_height_required + metric.stack_height_change);
 
     // FEES...
     m_runGas = metric.gas_cost;
@@ -254,7 +249,7 @@ evmc_tx_context const& VM::getTxContext()
 //
 // interpreter entry point
 
-owning_bytes_ref VM::exec(evmc_context* _context, evmc_revision _rev, const evmc_message* _msg,
+owning_bytes_ref VM::exec(evmc_host_context* _context, evmc_revision _rev, const evmc_message* _msg,
     uint8_t const* _code, size_t _codeSize)
 {
     m_context = _context;
