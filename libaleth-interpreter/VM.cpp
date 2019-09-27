@@ -893,7 +893,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            evmc_address address = intx::be::trunc<evmc::address>(m_SP[0]);
+            auto const address = intx::be::trunc<evmc::address>(m_SP[0]);
             m_SPP[0] = intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &address));
         }
         NEXT
@@ -976,7 +976,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            evmc_address address = intx::be::trunc<evmc::address>(m_SP[0]);
+            auto const address = intx::be::trunc<evmc::address>(m_SP[0]);
 
             m_SPP[0] = m_context->host->get_code_size(m_context, &address);
         }
@@ -1019,7 +1019,7 @@ void VM::interpretCases()
 
             updateIOGas();
 
-            evmc_address address = intx::be::trunc<evmc::address>(m_SP[0]);
+            auto const address = intx::be::trunc<evmc::address>(m_SP[0]);
             m_SPP[0] = intx::be::load<intx::uint256>(m_context->host->get_code_hash(m_context, &address));
         }
         NEXT
@@ -1043,7 +1043,7 @@ void VM::interpretCases()
             updateMem(memNeed(m_SP[1], m_SP[3]));
             updateIOGas();
 
-            evmc_address address = intx::be::trunc<evmc::address>(m_SP[0]);
+            auto const address = intx::be::trunc<evmc::address>(m_SP[0]);
 
             size_t memoryOffset = static_cast<size_t>(m_SP[1]);
             constexpr size_t codeOffsetMax = std::numeric_limits<size_t>::max();
@@ -1352,7 +1352,7 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            evmc_uint256be key = intx::be::store<evmc_uint256be>(m_SP[0]);
+            auto const key = intx::be::store<evmc_uint256be>(m_SP[0]);
             m_SPP[0] =
                 intx::be::load<intx::uint256>(m_context->host->get_storage(m_context, &m_message->destination, &key));
         }
@@ -1367,8 +1367,8 @@ void VM::interpretCases()
             if (m_rev >= EVMC_ISTANBUL && m_io_gas <= VMSchedule::callStipend)
                 throwOutOfGas();
 
-            evmc_uint256be const key = intx::be::store<evmc_uint256be>(m_SP[0]);
-            evmc_uint256be const value = intx::be::store<evmc_uint256be>(m_SP[1]);
+            auto const key = intx::be::store<evmc_uint256be>(m_SP[0]);
+            auto const value = intx::be::store<evmc_uint256be>(m_SP[1]);
             auto const status =
                 m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
 
