@@ -343,7 +343,7 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
-            evmc_address const destination = intx::be::trunc<evmc::address>(m_SP[0]);
+            auto const destination = intx::be::trunc<evmc::address>(m_SP[0]);
 
             // Starting with EIP150 (Tangerine Whistle), self-destructs need to pay account creation
             // gas. Starting with EIP158 (Spurious Dragon),

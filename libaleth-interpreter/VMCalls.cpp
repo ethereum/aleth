@@ -119,7 +119,7 @@ void VM::caseCreate()
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
-    intx::uint256 const balance = intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &m_message->destination));
+    auto const balance = intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &m_message->destination));
     if (balance >= endowment && m_message->depth < 1024)
     {
         evmc_message msg = {};
@@ -212,7 +212,7 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
 
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
-    evmc_address destination = intx::be::trunc<evmc::address>(m_SP[1]);
+    auto const destination = intx::be::trunc<evmc::address>(m_SP[1]);
 
     if (m_OP == Instruction::CALL && (m_SP[2] > 0 || m_rev < EVMC_SPURIOUS_DRAGON) &&
         !m_context->host->account_exists(m_context, &destination))
@@ -263,7 +263,7 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
             o_msg.value = intx::be::store<evmc_uint256be>(m_SP[2]);
             o_msg.gas += VMSchedule::callStipend;
             {
-                intx::uint256 const balance =
+                auto const balance =
                     intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &m_message->destination));
                 balanceOk = balance >= value;
             }
