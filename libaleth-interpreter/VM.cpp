@@ -648,9 +648,9 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            bool lhs_neg = static_cast<bool>(m_SP[0] >> 255);
-            bool rhs_neg = static_cast<bool>(m_SP[1] >> 255);
-            m_SPP[0] = (lhs_neg ^ rhs_neg) ? lhs_neg : m_SP[0] < m_SP[1];
+            bool const lhsNeg = static_cast<bool>(m_SP[0] >> 255);
+            bool const rhsNeg = static_cast<bool>(m_SP[1] >> 255);
+            m_SPP[0] = (lhsNeg != rhsNeg) ? lhsNeg : m_SP[0] < m_SP[1];
         }
         NEXT
 
@@ -659,9 +659,9 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            bool lhs_neg = static_cast<bool>(m_SP[0] >> 255);
-            bool rhs_neg = static_cast<bool>(m_SP[1] >> 255);
-            m_SPP[0] = (lhs_neg ^ rhs_neg) ? rhs_neg : m_SP[0] > m_SP[1];
+            bool const lhsNeg = static_cast<bool>(m_SP[0] >> 255);
+            bool const rhsNeg = static_cast<bool>(m_SP[1] >> 255);
+            m_SPP[0] = (lhsNeg != rhsNeg) ? rhsNeg : m_SP[0] > m_SP[1];
         }
         NEXT
 
