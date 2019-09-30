@@ -10,26 +10,27 @@ branches:
     - /release\/.+/
     - appveyor
     - hunter
-os: Visual Studio 2015
+os: Visual Studio 2017
 configuration:
   - RelWithDebInfo
 environment:
   TESTS: On
   GITHUB_USER_PASSWORD:
     secure: 7TuNppxpvI3M/IF1PfvzZ8LluCeCQAsdFoJY+KhNv/pe/rAw5HEsTjqdbyM1mEtd
-cache:
-  - build/deps -> cmake/ProjectLibFF.cmake
+# Cache disabled for Visual Studio 2017 migration
+#cache:
+#  - build/deps -> cmake/ProjectLibFF.cmake
 install:
   - git submodule update --init --recursive
 
   # Python 3
-  - set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+  - set PATH=C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%
   - pip install requests gitpython
 
 before_build: |
   if not exist build mkdir build
   cd build
-  cmake -G "Visual Studio 14 2015 Win64" ..
+  cmake -G "Visual Studio 15 2017 Win64" ..
 build_script: |
   cmake --build . --config %CONFIGURATION% --target package
 test_script:

@@ -2,6 +2,8 @@
 
 ## [1.8.0] - Unreleased
 
+- Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14. 
+
 ## [1.7.0] - Unreleased
 
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
