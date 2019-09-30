@@ -751,6 +751,115 @@ class AlethInterpreterBalanceFixture : public BalanceFixture
 public:
     AlethInterpreterBalanceFixture() : BalanceFixture{new EVMC{evmc_create_interpreter()}} {}
 };
+
+class PrecompileCallFixture : public TestOutputHelperFixture
+{
+public:
+    explicit PrecompileCallFixture(VMFace* _vm) : vm{_vm} { state.addBalance(address, 1 * ether); }
+
+    void testCallHasCorrectCost()
+    {
+        // let r := call(10000, 0x4, 0, 0, 0, 0, 0)
+        bytes code = fromHex("600060006000600060006004612710f150");
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
+            sha3(code), version, depth, isCreate, staticCall);
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (_instr == Instruction::CALL)
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+
+        vm->exec(gas, extVm, onOp);
+
+        // 700 for CALL and 15 for identity precompile with empty input
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 700 + 15);
+    }
+
+    void testStaticCallCostEqualToCallBeforeBerlin()
+    {
+        // let r := staticcall(10000, 0x4, 0, 0, 0, 0)
+        bytes code = fromHex("60006000600060006004612710fa50");
+
+        se.reset(ChainParams(genesisInfo(Network::IstanbulTest)).createSealEngine());
+        version = IstanbulSchedule.accountVersion;
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
+            sha3(code), version, depth, isCreate, staticCall);
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (_instr == Instruction::STATICCALL)
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+
+        vm->exec(gas, extVm, onOp);
+
+        // 700 for STATICCALL and 15 for identity precompile with empty input
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 700 + 15);
+    }
+
+    void testStaticCallHasCorrectCostInBerlin()
+    {
+        // let r := staticcall(10000, 0x4, 0, 0, 0, 0)
+        bytes code = fromHex("60006000600060006004612710fa50");
+
+        ExtVM extVm(state, envInfo, *se, address, address, address, value, gasPrice, {}, ref(code),
+            sha3(code), version, depth, isCreate, staticCall);
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (_instr == Instruction::STATICCALL)
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+
+        vm->exec(gas, extVm, onOp);
+
+        // 40 for STATICCALL and 15 for identity precompile with empty input
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 40 + 15);
+    }
+
+
+    BlockHeader blockHeader{initBlockHeader()};
+    LastBlockHashes lastBlockHashes;
+    Address address{KeyPair::create().address()};
+    State state{0};
+    std::unique_ptr<SealEngineFace> se{
+        ChainParams(genesisInfo(Network::BerlinTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
+
+    u256 value = 0;
+    u256 gasPrice = 1;
+    u256 version = BerlinSchedule.accountVersion;
+    int depth = 0;
+    bool isCreate = false;
+    bool staticCall = false;
+    u256 gas = 1000000;
+
+    std::unique_ptr<VMFace> vm;
+};
+
+class LegacyVMPrecompileCallFixture : public PrecompileCallFixture
+{
+public:
+    LegacyVMPrecompileCallFixture() : PrecompileCallFixture{new LegacyVM} {}
+};
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -906,6 +1015,24 @@ BOOST_AUTO_TEST_CASE(LegacyVMSelfBalanceisInvalidBeforeIstanbul)
 }
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_FIXTURE_TEST_SUITE(LegacyVMPrecompileCallSuite, LegacyVMPrecompileCallFixture)
+
+BOOST_AUTO_TEST_CASE(LegacyVMCallHasCorrectCost)
+{
+    testCallHasCorrectCost();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMStaticCallCostEqualToCallBeforeBerlin)
+{
+    testStaticCallCostEqualToCallBeforeBerlin();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMStaticCallHasCorrectCostInBerlin)
+{
+    testStaticCallHasCorrectCostInBerlin();
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSuite, TestOutputHelperFixture)
