@@ -10,6 +10,7 @@ using namespace dev;
 #include "genesis/ropsten.cpp"
 
 //Test configurations
+#include "genesis/test/berlinTest.cpp"
 #include "genesis/test/byzantiumNoProofTest.cpp"
 #include "genesis/test/byzantiumTest.cpp"
 #include "genesis/test/byzantiumTransitionTest.cpp"
@@ -69,6 +70,8 @@ std::string const& dev::eth::genesisInfo(Network _n)
         return c_genesisInfoIstanbulTest;
     case Network::IstanbulTransitionTest:
         return c_genesisInfoIstanbulTransitionTest;
+    case Network::BerlinTest:
+        return c_genesisInfoBerlinTest;
 
 
     //Transition test genesis
@@ -103,6 +106,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
     case Network::IstanbulTest:
     case Network::IstanbulTransitionTest:
     case Network::ExperimentalTransitionTest:
+    case Network::BerlinTest:
         return c_genesisDefaultStateRoot;
     default:
         throw std::invalid_argument("Invalid network value");

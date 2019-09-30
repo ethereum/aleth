@@ -58,6 +58,9 @@ enum class Network
     IstanbulTest = 84,
     /// ConstantinopleFixTest + Istanbul active from block 2
     IstanbulTransitionTest = 85,
+    /// Berlin active from block 0
+    BerlinTest = 86,
+
 
     // TransitionTest networks
     FrontierToHomesteadAt5 = 100,
