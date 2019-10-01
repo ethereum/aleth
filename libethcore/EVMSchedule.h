@@ -156,6 +156,7 @@ static const EVMSchedule IstanbulSchedule = [] {
 static const EVMSchedule BerlinSchedule = [] {
     EVMSchedule schedule = IstanbulSchedule;
     schedule.precompileStaticCallGas = 40;
+    schedule.callSelfGas = 40;
     return schedule;
 }();
 
@@ -163,7 +164,6 @@ static const EVMSchedule ExperimentalSchedule = [] {
     EVMSchedule schedule = BerlinSchedule;
     schedule.accountVersion = 1;
     schedule.blockhashGas = 800;
-    schedule.callSelfGas = 40;
     return schedule;
 }();
 

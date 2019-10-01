@@ -1009,12 +1009,12 @@ public:
     Address const newAddress{KeyPair::create().address()};
     State state{0};
     std::unique_ptr<SealEngineFace> se{
-        ChainParams(genesisInfo(Network::IstanbulTest)).createSealEngine()};
+        ChainParams(genesisInfo(Network::BerlinTest)).createSealEngine()};
     EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
 
     u256 const value = 0;
     u256 const gasPrice = 1;
-    u256 const version = ExperimentalSchedule.accountVersion;
+    u256 const version = BerlinSchedule.accountVersion;
     int const depth = 0;
     bool const isCreate = false;
     u256 gas = 1000000;
