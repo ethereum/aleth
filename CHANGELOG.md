@@ -3,6 +3,7 @@
 ## [1.8.0] - Unreleased
 
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
+- Added: [#5752](https://github.com/ethereum/aleth/pull/5752) Implement EIP1380 (reduced gas costs for call-to-self) in LegacyVM.
 - Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14. 
 
 ## [1.7.0] - Unreleased
@@ -30,7 +31,6 @@
 - Added: [#5755](https://github.com/ethereum/aleth/pull/5755) testeth now runs `stChainId`, `stSLoadTest`, `stSelfBalance` tests for Istanbul.
 - Added: [#5758](https://github.com/ethereum/aleth/pull/5758) Istanbul support: activation in Ropsten config.
 - Added: [#5762](https://github.com/ethereum/aleth/pull/5762) aleth-vm supports `--network Istanbul` option.
-- Added: [#5752](https://github.com/ethereum/aleth/pull/5752) Implement EIP1380 (reduced gas costs for call-to-self) in LegacyVM.
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
