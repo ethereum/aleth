@@ -170,17 +170,16 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
 //
 // set current SP to SP', adjust SP' per _removed and _added items
 //
-void VM::adjustStack(int _removed, int _added)
+void VM::adjustStack(int _required, int _change)
 {
     m_SP = m_SPP;
 
     // adjust stack and check bounds
-    m_SPP += _removed;
-    if (m_stackEnd < m_SPP)
-        throwBadStack(_removed, _added);
-    m_SPP -= _added;
+    if (m_stackEnd < m_SP + _required)
+        throwBadStack(_required, _change);
+    m_SPP -= _change;
     if (m_SPP < m_stack)
-        throwBadStack(_removed, _added);
+        throwBadStack(_required, _change);
 }
 
 uint64_t VM::gasForMem(u512 const& _size)
@@ -228,8 +227,7 @@ void VM::fetchInstruction()
 {
     m_OP = Instruction(m_code[m_PC]);
     auto const metric = (*m_metrics)[static_cast<size_t>(m_OP)];
-    adjustStack(
-        metric.stack_height_required, metric.stack_height_required + metric.stack_height_change);
+    adjustStack(metric.stack_height_required, metric.stack_height_change);
 
     // FEES...
     m_runGas = metric.gas_cost;
