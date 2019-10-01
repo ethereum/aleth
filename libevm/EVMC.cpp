@@ -32,9 +32,9 @@ evmc_revision toRevision(EVMSchedule const& _schedule) noexcept
 }
 }  // namespace
 
-EVMC::EVMC(evmc_instance* _instance) noexcept : evmc::vm(_instance)
+EVMC::EVMC(evmc_vm* _vm) noexcept : evmc::VM(_vm)
 {
-    assert(_instance != nullptr);
+    assert(_vm != nullptr);
     assert(is_abi_compatible());
 
     // Set the options.
