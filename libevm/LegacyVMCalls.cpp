@@ -190,18 +190,13 @@ bool LegacyVM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
     assert(callParams->valueTransfer == 0);
     assert(callParams->apparentValue == 0);
 
-    auto const destinationAddr = asAddress(m_SP[1]);
-
-    auto const callGas =
-        (destinationAddr == m_ext->myAddress) ? m_schedule->callSelfGas : m_schedule->callGas;
-    m_runGas = toInt63(callGas);
-
     callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
-
+    auto const destinationAddr = asAddress(m_SP[1]);
     if (callParams->staticCall && isPrecompiledContract(destinationAddr))
-        m_runGas = toInt63(m_schedule->precompileStaticCallGas);
+        m_runGas += toInt63(m_schedule->precompileStaticCallGas);
     else
-        m_runGas = toInt63(m_schedule->callGas);
+        m_runGas += toInt63(
+            (destinationAddr == m_ext->myAddress) ? m_schedule->callSelfGas : m_schedule->callGas);
 
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
