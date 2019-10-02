@@ -48,6 +48,7 @@ struct EVMSchedule
     unsigned createGas = 32000;
     unsigned callGas = 40;
     unsigned precompileStaticCallGas = 700;
+    unsigned callSelfGas = 40;
     unsigned callStipend = 2300;
     unsigned callValueTransferGas = 9000;
     unsigned callNewAccountGas = 25000;
@@ -91,6 +92,7 @@ static const EVMSchedule EIP150Schedule = []
     schedule.balanceGas = 400;
     schedule.sloadGas = 200;
     schedule.callGas = 700;
+    schedule.callSelfGas = 700;
     schedule.selfdestructGas = 5000;
     return schedule;
 }();
@@ -154,6 +156,7 @@ static const EVMSchedule IstanbulSchedule = [] {
 static const EVMSchedule BerlinSchedule = [] {
     EVMSchedule schedule = IstanbulSchedule;
     schedule.precompileStaticCallGas = 40;
+    schedule.callSelfGas = 40;
     return schedule;
 }();
 

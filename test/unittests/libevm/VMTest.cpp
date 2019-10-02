@@ -835,7 +835,6 @@ public:
         BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, 40 + 15);
     }
 
-
     BlockHeader blockHeader{initBlockHeader()};
     LastBlockHashes lastBlockHashes;
     Address address{KeyPair::create().address()};
@@ -860,6 +859,191 @@ class LegacyVMPrecompileCallFixture : public PrecompileCallFixture
 public:
     LegacyVMPrecompileCallFixture() : PrecompileCallFixture{new LegacyVM} {}
 };
+
+class CallFixture : public TestOutputHelperFixture
+{
+public:
+    explicit CallFixture(VMFace* _vm) : vm{_vm}
+    {
+        state.addBalance(myAddress, 2 * ether);
+        state.addBalance(otherAddress, 2 * ether);
+    }
+
+    void testCallCorrectCost(bool _createNewAccount = false, bool _callSelf = false)
+    {
+        assert(!_createNewAccount || !_callSelf);
+
+        // Note: Code passes destination address in via input data. rshift 96 bytes so that correct
+        // 20 bytes are selected during bits -> address conversion in VM (which is BE)
+        //
+        //	let destination : = shr(96, calldataload(0))
+        //  let foo : = call(50000, destination, 1000000000000000000, 0, 0, 0, 0)
+        auto const codeBytes =
+            fromHex("60003560601c6000600060006000670de0b6b3a76400008561c350f15050");
+        auto calleeAddress = otherAddress;
+        if (_createNewAccount)
+            calleeAddress = newAddress;
+        else if (_callSelf)
+            calleeAddress = myAddress;
+        ExtVM extVm{state, envInfo, *se, myAddress, myAddress, myAddress, value, gasPrice,
+            calleeAddress.ref(), ref(codeBytes), sha3(codeBytes), version,
+            static_cast<unsigned int>(depth), isCreate, false /* static call */};
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (CallFixture::IsCallOp(_instr))
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+        vm->exec(gas, extVm, onOp);
+        // Subtract the call stipend gas since there's no code at the address being called
+        unsigned int gasExpected =
+            extVm.evmSchedule().callValueTransferGas - extVm.evmSchedule().callStipend;
+        if (_callSelf)
+            gasExpected += extVm.evmSchedule().callSelfGas;
+        else
+        {
+            gasExpected += extVm.evmSchedule().callGas;
+            if (_createNewAccount)
+                gasExpected += extVm.evmSchedule().callNewAccountGas;
+        }
+
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, gasExpected);
+    }
+
+    void testCallCodeCorrectCost(bool _callSelf = false)
+    {
+        // Note: Code passes destination address in via input data. rshift 96 bytes so that correct
+        // 20 bytes are selected during bits -> address conversion in VM (which is BE)
+        //
+        // let destination : = shr(96, calldataload(0))
+        // let foo : = callcode(50000, destination, 0, 0, 0, 0, 0)
+        auto const codeBytes = fromHex("60003560601c600060006000600060008561c350f25050");
+        auto calleeAddress = !_callSelf ? otherAddress : myAddress;
+        ExtVM extVm{state, envInfo, *se, myAddress, myAddress, myAddress, value, gasPrice,
+            calleeAddress.ref(), ref(codeBytes), sha3(codeBytes), version,
+            static_cast<unsigned int>(depth), isCreate, false /* static call */};
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (CallFixture::IsCallOp(_instr))
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+        vm->exec(gas, extVm, onOp);
+        auto const gasExpected =
+            !_callSelf ? extVm.evmSchedule().callGas : extVm.evmSchedule().callSelfGas;
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, gasExpected);
+    }
+
+    void testStaticCallCorrectCost(bool _callSelf = false)
+    {
+        // Note: Code passes destination address in via input data. rshift 96 bytes so that correct
+        // 20 bytes are selected during bits -> address conversion in VM (which is BE)
+        //
+        // let destination : = shr(96, calldataload(0))
+        // let foo : = staticcall(50000, destination, 0, 0, 0, 0)
+        auto calleeAddress = !_callSelf ? otherAddress : myAddress;
+        auto const codeBytes = fromHex("60003560601c60006000600060008461c350fa5050");
+        ExtVM extVm{state, envInfo, *se, myAddress, myAddress, myAddress, value, gasPrice,
+            calleeAddress.ref(), ref(codeBytes), sha3(codeBytes), version,
+            static_cast<unsigned int>(depth), isCreate, true /* static call */};
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (CallFixture::IsCallOp(_instr))
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+        vm->exec(gas, extVm, onOp);
+        auto const gasExpected =
+            !_callSelf ? extVm.evmSchedule().callGas : extVm.evmSchedule().callSelfGas;
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, gasExpected);
+    }
+
+    void testDelegateCallCorrectCost(bool _callSelf = false)
+    {
+        // Note: Code passes destination address in via input data. rshift 96 bytes so that correct
+        // 20 bytes are selected during bits -> address conversion in VM (which is BE)
+        //
+        // let destination : = shr(96, calldataload(0))
+        // let foo : = delegatecall(50000, destination, 0, 0, 0, 0)
+        auto const codeBytes = fromHex("60003560601c60006000600060008461c350f45050");
+        auto const calleeAddress = !_callSelf ? otherAddress : myAddress;
+        ExtVM extVm{state, envInfo, *se, myAddress, myAddress, myAddress, value, gasPrice,
+            calleeAddress.ref(), ref(codeBytes), sha3(codeBytes), version,
+            static_cast<unsigned int>(depth), isCreate, false /* static call */};
+
+        bigint gasBefore;
+        bigint gasAfter;
+        auto onOp = [&gasBefore, &gasAfter](uint64_t /*steps*/, uint64_t /* PC */,
+                        Instruction _instr, bigint /*newMemSize*/, bigint /*gasCost*/, bigint _gas,
+                        VMFace const*, ExtVMFace const*) {
+            if (CallFixture::IsCallOp(_instr))
+                gasBefore = _gas;
+            else if (gasBefore != 0 && gasAfter == 0)
+                gasAfter = _gas;
+        };
+        vm->exec(gas, extVm, onOp);
+        auto const gasExpected =
+            !_callSelf ? extVm.evmSchedule().callGas : extVm.evmSchedule().callSelfGas;
+        BOOST_REQUIRE_EQUAL(gasBefore - gasAfter, gasExpected);
+    }
+
+    BlockHeader const blockHeader{initBlockHeader()};
+    LastBlockHashes const lastBlockHashes;
+    Address const myAddress{KeyPair::create().address()};
+    Address const otherAddress{KeyPair::create().address()};
+    Address const newAddress{KeyPair::create().address()};
+    State state{0};
+    std::unique_ptr<SealEngineFace> se{
+        ChainParams(genesisInfo(Network::BerlinTest)).createSealEngine()};
+    EnvInfo envInfo{blockHeader, lastBlockHashes, 0, se->chainParams().chainID};
+
+    u256 const value = 0;
+    u256 const gasPrice = 1;
+    u256 const version = BerlinSchedule.accountVersion;
+    int const depth = 0;
+    bool const isCreate = false;
+    u256 gas = 1000000;
+
+    std::unique_ptr<VMFace> vm;
+
+private:
+    static bool IsCallOp(Instruction _instr)
+    {
+        switch (_instr)
+        {
+        case Instruction::CALL:
+        case Instruction::CALLCODE:
+        case Instruction::DELEGATECALL:
+        case Instruction::STATICCALL:
+            return true;
+        default:
+            break;
+        }
+        return false;
+    }
+};
+
+class LegacyVMCallFixture : public CallFixture
+{
+public:
+    LegacyVMCallFixture() : CallFixture{new LegacyVM} {};
+};
+
 }  // namespace
 
 BOOST_FIXTURE_TEST_SUITE(LegacyVMSuite, TestOutputHelperFixture)
@@ -1033,6 +1217,55 @@ BOOST_AUTO_TEST_CASE(LegacyVMStaticCallHasCorrectCostInBerlin)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+BOOST_FIXTURE_TEST_SUITE(LegacyVMCallSuite, LegacyVMCallFixture)
+
+BOOST_AUTO_TEST_CASE(LegacyVMCallCorrectCost)
+{
+    testCallCorrectCost();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMCallNewAccountCorrectCost)
+{
+    testCallCorrectCost(true /* create new account? */);
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMCallSelfCorrectCost)
+{
+    testCallCorrectCost(false /* create new account? */, true /* call self */);
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMCallCodeCorrectCost)
+{
+    testCallCodeCorrectCost();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMCallCodeSelfCorrectCost)
+{
+    testCallCodeCorrectCost(true /* call self */);
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMStaticCallCorrectCost)
+{
+    testStaticCallCorrectCost();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMStaticCallSelfCorrectCost)
+{
+    testStaticCallCorrectCost(true /* call self */);
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMTestDelegateCallCorrectCost)
+{
+    testDelegateCallCorrectCost();
+}
+
+BOOST_AUTO_TEST_CASE(LegacyVMTestDelegateCallSelfCorrectCost)
+{
+    testDelegateCallCorrectCost(true /* call self */);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(AlethInterpreterSuite, TestOutputHelperFixture)
