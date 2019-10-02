@@ -69,9 +69,11 @@ void VM::throwRevertInstruction(owning_bytes_ref&& _output)
     throw RevertInstruction(std::move(_output));
 }
 
-void VM::throwBufferOverrun(bigint const& _endOfAccess)
+void VM::throwBufferOverrun(intx::uint512 const& _endOfAccess)
 {
-    BOOST_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
+    BOOST_THROW_EXCEPTION(
+        BufferOverrun() << RequirementError(
+            bigint(std::string("0x") + intx::hex(_endOfAccess)), bigint(m_returnData.size())));
 }
 
 int64_t VM::verifyJumpDest(intx::uint256 const& _dest, bool _throw)

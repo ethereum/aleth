@@ -760,10 +760,11 @@ void VM::interpretCases()
             ON_OP();
             updateIOGas();
 
-            static intx::uint256 const hibit = intx::uint256(1) << 255;
-            static intx::uint256 const allbits = ~intx::uint256(0);
+            using namespace intx;
+            static constexpr uint256 hibit = 1_u256 << 255;
+            static constexpr uint256 allbits = ~0_u256;
 
-            intx::uint256 shiftee = m_SP[1];
+            uint256 shiftee = m_SP[1];
             if (m_SP[0] >= 256)
             {
                 if (shiftee & hibit)
@@ -806,10 +807,12 @@ void VM::interpretCases()
 
             if (m_SP[0] < 31)
             {
+                using namespace intx;
+
                 unsigned testBit = static_cast<unsigned>(m_SP[0]) * 8 + 7;
-                intx::uint256& number = m_SP[1];
-                intx::uint256 mask = ((intx::uint256(1) << testBit) - 1);
-                if (number & (intx::uint256(1) << testBit))
+                uint256& number = m_SP[1];
+                uint256 mask = ((1_u256 << testBit) - 1);
+                if (number & (1_u256 << testBit))
                     number |= ~mask;
                 else
                     number &= mask;
@@ -929,7 +932,7 @@ void VM::interpretCases()
             if (intx::uint512(m_SP[0]) + 31 < dataSize)
                 m_SP[0] = intx::be::unsafe::load<intx::uint256>(data + (size_t)m_SP[0]);
             else if (m_SP[0] >= dataSize)
-                m_SP[0] = intx::uint256(0);
+                m_SP[0] = 0;
             else
             {
                 uint8_t r[32];
@@ -1001,7 +1004,7 @@ void VM::interpretCases()
                 throwBadInstruction();
             intx::uint512 const endOfAccess = intx::uint512(m_SP[1]) + intx::uint512(m_SP[2]);
             if (m_returnData.size() < endOfAccess)
-                throwBufferOverrun(bigint{std::string("0x") + intx::hex(endOfAccess)});
+                throwBufferOverrun(endOfAccess);
 
             m_copyMemSize = toInt63(m_SP[2]);
             updateMem(memNeed(m_SP[0], m_SP[2]));
