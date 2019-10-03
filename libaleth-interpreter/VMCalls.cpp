@@ -7,10 +7,10 @@ namespace dev
 {
 namespace eth
 {
-void VM::copyDataToMemory(bytesConstRef _data, u256*_sp)
+void VM::copyDataToMemory(bytesConstRef _data, intx::uint256*_sp)
 {
     auto offset = static_cast<size_t>(_sp[0]);
-    s512 bigIndex = _sp[1];
+    intx::uint512 bigIndex = _sp[1];
     auto index = static_cast<size_t>(bigIndex);
     auto size = static_cast<size_t>(_sp[2]);
 
@@ -69,12 +69,14 @@ void VM::throwRevertInstruction(owning_bytes_ref&& _output)
     throw RevertInstruction(std::move(_output));
 }
 
-void VM::throwBufferOverrun(bigint const& _endOfAccess)
+void VM::throwBufferOverrun(intx::uint512 const& _endOfAccess)
 {
-    BOOST_THROW_EXCEPTION(BufferOverrun() << RequirementError(_endOfAccess, bigint(m_returnData.size())));
+    BOOST_THROW_EXCEPTION(
+        BufferOverrun() << RequirementError(
+            bigint(std::string("0x") + intx::hex(_endOfAccess)), bigint(m_returnData.size())));
 }
 
-int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
+int64_t VM::verifyJumpDest(intx::uint256 const& _dest, bool _throw)
 {
     // check for overflow
     if (_dest <= 0x7FFFFFFFFFFFFFFF) {
@@ -101,16 +103,16 @@ void VM::caseCreate()
     m_runGas = VMSchedule::createGas;
 
     // Collect arguments.
-    u256 const endowment = m_SP[0];
-    u256 const initOff = m_SP[1];
-    u256 const initSize = m_SP[2];
+    intx::uint256 const endowment = m_SP[0];
+    intx::uint256 const initOff = m_SP[1];
+    intx::uint256 const initSize = m_SP[2];
 
-    u256 salt;
+    intx::uint256 salt;
     if (m_OP == Instruction::CREATE2)
     {
         salt = m_SP[3];
         // charge for hashing initCode = GSHA3WORD * ceil(len(init_code) / 32)
-        m_runGas += toInt63((u512{initSize} + 31) / 32 * uint64_t{VMSchedule::sha3WordGas});
+        m_runGas += toInt63((intx::uint512{initSize} + 31) / 32 * uint64_t{VMSchedule::sha3WordGas});
     }
 
     updateMem(memNeed(initOff, initSize));
@@ -119,7 +121,7 @@ void VM::caseCreate()
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
-    u256 const balance = fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
+    auto const balance = intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &m_message->destination));
     if (balance >= endowment && m_message->depth < 1024)
     {
         evmc_message msg = {};
@@ -133,16 +135,16 @@ void VM::caseCreate()
 
         msg.input_data = &m_mem[off];
         msg.input_size = size;
-        msg.create2_salt = toEvmC(salt);
+        msg.create2_salt = intx::be::store<evmc_uint256be>(salt);
         msg.sender = m_message->destination;
         msg.depth = m_message->depth + 1;
         msg.kind = m_OP == Instruction::CREATE ? EVMC_CREATE : EVMC_CREATE2;  // FIXME: In EVMC move the kind to the top.
-        msg.value = toEvmC(endowment);
+        msg.value = intx::be::store<evmc_uint256be>(endowment);
 
         evmc_result result = m_context->host->call(m_context, &msg);
 
         if (result.status_code == EVMC_SUCCESS)
-            m_SPP[0] = fromAddress(fromEvmC(result.create_address));
+            m_SPP[0] = intx::be::load<intx::uint256>(result.create_address);
         else
             m_SPP[0] = 0;
         m_returnData.assign(result.output_data, result.output_data + result.output_size);
@@ -212,7 +214,7 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
 
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
-    evmc_address destination = toEvmC(asAddress(m_SP[1]));
+    auto const destination = intx::be::trunc<evmc::address>(m_SP[1]);
 
     if (m_OP == Instruction::CALL && (m_SP[2] > 0 || m_rev < EVMC_SPURIOUS_DRAGON) &&
         !m_context->host->account_exists(m_context, &destination))
@@ -224,10 +226,10 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
         m_runGas += VMSchedule::valueTransferGas;
 
     size_t const sizesOffset = haveValueArg ? 3 : 2;
-    u256 inputOffset  = m_SP[sizesOffset];
-    u256 inputSize    = m_SP[sizesOffset + 1];
-    u256 outputOffset = m_SP[sizesOffset + 2];
-    u256 outputSize   = m_SP[sizesOffset + 3];
+    intx::uint256 inputOffset  = m_SP[sizesOffset];
+    intx::uint256 inputSize    = m_SP[sizesOffset + 1];
+    intx::uint256 outputOffset = m_SP[sizesOffset + 2];
+    intx::uint256 outputSize   = m_SP[sizesOffset + 3];
     uint64_t inputMemNeed = memNeed(inputOffset, inputSize);
     uint64_t outputMemNeed = memNeed(outputOffset, outputSize);
 
@@ -236,11 +238,11 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
     updateIOGas();
 
     // "Static" costs already applied. Calculate call gas.
-    u256 callGas = m_SP[0];
+    intx::uint256 callGas = m_SP[0];
     if (m_rev >= EVMC_TANGERINE_WHISTLE)
     {
         // Apply "all but one 64th" rule.
-        u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
+        intx::uint256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
         callGas = std::min(callGas, maxAllowedCallGas);
     }
 
@@ -257,14 +259,14 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
     bool balanceOk = true;
     if (haveValueArg)
     {
-        u256 value = m_SP[2];
+        intx::uint256 value = m_SP[2];
         if (value > 0)
         {
-            o_msg.value = toEvmC(m_SP[2]);
+            o_msg.value = intx::be::store<evmc_uint256be>(m_SP[2]);
             o_msg.gas += VMSchedule::callStipend;
             {
-                u256 const balance =
-                    fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
+                auto const balance =
+                    intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &m_message->destination));
                 balanceOk = balance >= value;
             }
         }

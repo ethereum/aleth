@@ -6,6 +6,7 @@
 #include "VMConfig.h"
 
 #include <libevm/VMFace.h>
+#include <intx/intx.hpp>
 
 #include <evmc/evmc.h>
 #include <evmc/instructions.h>
@@ -62,7 +63,6 @@ private:
     evmc_message const* m_message = nullptr;
     boost::optional<evmc_tx_context> m_tx_context;
     static std::array<std::array<evmc_instruction_metrics, 256>, EVMC_MAX_REVISION + 1> s_metrics;
-    static u256 exp256(u256 _base, u256 _exponent);
     void copyCode(int);
     typedef void (VM::*MemFnPtr)();
     MemFnPtr m_bounce = nullptr;
@@ -83,18 +83,18 @@ private:
     bytes m_returnData;
 
     // space for data stack, grows towards smaller addresses from the end
-    u256 m_stack[VMSchedule::stackLimit];
-    u256 *m_stackEnd = &m_stack[VMSchedule::stackLimit];
+    intx::uint256 m_stack[VMSchedule::stackLimit];
+    intx::uint256 *m_stackEnd = &m_stack[VMSchedule::stackLimit];
     size_t stackSize() { return m_stackEnd - m_SP; }
     
     // constant pool
-    std::vector<u256> m_pool;
+    std::vector<intx::uint256> m_pool;
 
     // interpreter state
     Instruction m_OP;         // current operation
     uint64_t m_PC = 0;        // program counter
-    u256* m_SP = m_stackEnd;  // stack pointer
-    u256* m_SPP = m_SP;       // stack pointer prime (next SP)
+    intx::uint256* m_SP = m_stackEnd;  // stack pointer
+    intx::uint256* m_SPP = m_SP;       // stack pointer prime (next SP)
 
     // metering and memory state
     uint64_t m_runGas = 0;
@@ -113,8 +113,8 @@ private:
     bool caseCallSetup(evmc_message& _msg, bytesRef& o_output);
     void caseCall();
 
-    void copyDataToMemory(bytesConstRef _data, u256*_sp);
-    uint64_t memNeed(u256 const& _offset, u256 const& _size);
+    void copyDataToMemory(bytesConstRef _data, intx::uint256*_sp);
+    uint64_t memNeed(intx::uint256 const& _offset, intx::uint256 const& _size);
 
     const evmc_tx_context& getTxContext();
 
@@ -125,15 +125,15 @@ private:
     void throwBadStack(int _removed, int _added);
     void throwRevertInstruction(owning_bytes_ref&& _output);
     void throwDisallowedStateChange();
-    void throwBufferOverrun(bigint const& _enfOfAccess);
+    void throwBufferOverrun(intx::uint512 const& _enfOfAccess);
 
     std::vector<uint64_t> m_beginSubs;
     std::vector<uint64_t> m_jumpDests;
-    int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
+    int64_t verifyJumpDest(intx::uint256 const& _dest, bool _throw = true);
 
     void onOperation() {}
     void adjustStack(int _removed, int _added);
-    uint64_t gasForMem(u512 const& _size);
+    uint64_t gasForMem(intx::uint512 const& _size);
     void updateIOGas();
     void updateGas();
     void updateMem(uint64_t _newMem);
