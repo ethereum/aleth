@@ -197,8 +197,6 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
     // Check for call-to-self (eip1380) and adjust gas accordingly
     if (m_rev >= EVMC_BERLIN && m_message->destination == destination)
         m_runGas = VMSchedule::callSelfGas;
-    else
-        m_runGas = evmc_get_instruction_metrics_table(m_rev)[static_cast<size_t>(m_OP)].gas_cost;
 
     switch (m_OP)
     {
