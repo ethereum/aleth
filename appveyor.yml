@@ -17,9 +17,8 @@ environment:
   TESTS: On
   GITHUB_USER_PASSWORD:
     secure: 7TuNppxpvI3M/IF1PfvzZ8LluCeCQAsdFoJY+KhNv/pe/rAw5HEsTjqdbyM1mEtd
-# Cache disabled for Visual Studio 2017 migration
-#cache:
-#  - build/deps -> cmake/ProjectLibFF.cmake
+cache:
+  - build/deps -> cmake\Project**.cmake
 install:
   - git submodule update --init --recursive
 
