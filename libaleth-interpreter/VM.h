@@ -43,6 +43,7 @@ struct VMSchedule
     static constexpr int64_t valueTransferGas = 9000;
     static constexpr int64_t callStipend = 2300;
     static constexpr int64_t callNewAccount = 25000;
+    static constexpr int64_t callSelfGas = 40;
 };
 
 class VM
