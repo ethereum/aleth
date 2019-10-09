@@ -12,7 +12,7 @@ Security aspects
 ----------------
 
 A project that uses Hunter first downloads the hunter package itself. This is
-done with a help of HunterGate CMake module. A copy of the HunterGate module
+done with the help of HunterGate CMake module. A copy of the HunterGate module
 is included in the main project. The HunterGate is ordered to download specified
 release of Hunter and to check whenever the downloaded sources match the
 checksum provided to the HunterGate invocation.
