@@ -118,7 +118,7 @@ Our day-to-day development chat happens on the
 All contributions are welcome! We try to keep a list of tasks that are suitable
 for newcomers under the tag
 [help wanted](https://github.com/ethereum/aleth/labels/help%20wanted).
-If you have any questions, please do not hestitate to ask us about more information.
+If you have any questions, please do not hesitate to ask us about more information.
 
 Please read [CONTRIBUTING](CONTRIBUTING.md) and [CODING_STYLE](CODING_STYLE.md)
 thoroughly before making alterations to the code base.
