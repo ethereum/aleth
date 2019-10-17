@@ -194,9 +194,15 @@ void BlockChain::init(ChainParams const& _p)
 
 unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 {
-    fs::path path = _path.empty() ? db::databasePath() : _path;
-    fs::path chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
-    fs::path extrasPath = chainPath / fs::path(toString(c_databaseVersion));
+    fs::path const path = _path.empty() ? db::databasePath() : _path;
+    fs::path const chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
+    fs::path const chainSubPathBlocks = chainPath / fs::path("blocks");
+    fs::path const extrasPath = chainPath / fs::path(toString(c_databaseVersion));
+    fs::path const extrasSubPathExtras = extrasPath / fs::path("extras");
+    fs::path const extrasSubPathOldExtras = extrasPath / fs::path("extras.old");
+    fs::path const extrasSubPathOldDetails = extrasPath / fs::path("details.old");
+    fs::path const extrasSubPathState = extrasPath / fs::path("state");
+    fs::path const extrasSubPathMinor = extrasPath / fs::path("minor");
     unsigned lastMinor = c_minorProtocolVersion;
 
     if (db::isDiskDatabase())
@@ -204,61 +210,64 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         fs::create_directories(extrasPath);
         DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
 
-        bytes status = contents(extrasPath / fs::path("minor"));
+        bytes const status = contents(extrasSubPathMinor);
         if (!status.empty())
             DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));
         if (c_minorProtocolVersion != lastMinor)
         {
-            cnote << "Killing extras database (DB minor version:" << lastMinor << " != our miner version: " << c_minorProtocolVersion << ").";
-            DEV_IGNORE_EXCEPTIONS(fs::remove_all(extrasPath / fs::path("details.old")));
-            fs::rename(extrasPath / fs::path("extras"), extrasPath / fs::path("extras.old"));
-            fs::remove_all(extrasPath / fs::path("state"));
-            writeFile(extrasPath / fs::path("minor"), rlp(c_minorProtocolVersion));
+            cnote << "Killing extras database " << extrasPath << " (DB minor version:" << lastMinor
+                  << " != our minor version: " << c_minorProtocolVersion << ").";
+            DEV_IGNORE_EXCEPTIONS(fs::remove_all(extrasSubPathOldDetails));
+            fs::rename(extrasSubPathExtras, extrasSubPathOldExtras);
+            fs::remove_all(extrasSubPathState);
+            writeFile(extrasSubPathMinor, rlp(c_minorProtocolVersion));
             lastMinor = (unsigned)RLP(status);
         }
 
         if (_we == WithExisting::Kill)
         {
-            cnote << "Killing blockchain & extras database (WithExisting::Kill).";
-            fs::remove_all(chainPath / fs::path("blocks"));
-            fs::remove_all(extrasPath / fs::path("extras"));
+            cnote << "Killing blockchain (" << chainSubPathBlocks << ") & extras ("
+                  << extrasSubPathExtras << ") databases (WithExisting::Kill).";
+            fs::remove_all(chainSubPathBlocks);
+            fs::remove_all(extrasSubPathExtras);
         }
     }
 
     try
     {
-        m_blocksDB = db::DBFactory::create(chainPath / fs::path("blocks"));
-        m_extrasDB = db::DBFactory::create(extrasPath / fs::path("extras"));
+        m_blocksDB = db::DBFactory::create(chainSubPathBlocks);
+        m_extrasDB = db::DBFactory::create(extrasSubPathExtras);
     }
     catch (db::DatabaseError const& ex)
     {
-        // Check the exact reason of errror, in case of IOError we can display user-friendly message
-        if (*boost::get_error_info<db::errinfo_dbStatusCode>(ex) != db::DatabaseStatus::IOError)
-            throw;
-
+        fs::path const dbPath = !m_blocksDB.get() ? chainSubPathBlocks : extrasSubPathExtras;
         if (db::isDiskDatabase())
         {
-            if (fs::space(chainPath / fs::path("blocks")).available < 1024)
+            db::DatabaseStatus const dbStatus =
+                *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
+            if (fs::space(path).available < 1024)
             {
-                cwarn << "Not enough available space found on hard drive. Please free some up and then re-run. Bailing.";
+                cwarn << "Failed to create database (" << dbPath
+                      << "). Not enough available space found on hard drive. Please free some up "
+                         "and re-run.";
                 BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
             }
-            else
+            else if (dbStatus == db::DatabaseStatus::Corruption)
             {
-                cwarn <<
-                    "Database " <<
-                    (chainPath / fs::path("blocks")) <<
-                    "or " <<
-                    (extrasPath / fs::path("extras")) <<
-                    "already open. You appear to have another instance of ethereum running. Bailing.";
+                cwarn << "Database corrupted (" << dbPath << ")";
+                BOOST_THROW_EXCEPTION(DatabaseCorruption());
+            }
+            else if (dbStatus == db::DatabaseStatus::IOError)
+            {
+                cwarn << "Database already open (" << dbPath
+                      << "). You appear to have another instance of ethereum running.";
                 BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
             }
         }
-        else
-        {
-            cwarn << "Unknown database error occurred during in-memory database creation";
-            throw;
-        }
+
+        cwarn << "Unknown error occurred when creating database (" << dbPath
+              << "). Exception details: " << ex.what();
+        throw;
     }
 
     if (_we != WithExisting::Verify && !details(m_genesisHash))
