@@ -247,25 +247,25 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
                 *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
             if (fs::space(path).available < 1024)
             {
-                cwarn << "Failed to create database (" << dbPath
+                cerr << "Failed to create database (" << dbPath
                       << "). Not enough available space found on hard drive. Please free some up "
                          "and re-run.";
                 BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
             }
             else if (dbStatus == db::DatabaseStatus::Corruption)
             {
-                cwarn << "Database corrupted (" << dbPath << ")";
+                cerr << "Database corrupted (" << dbPath << ")";
                 BOOST_THROW_EXCEPTION(DatabaseCorruption());
             }
             else if (dbStatus == db::DatabaseStatus::IOError)
             {
-                cwarn << "Database already open (" << dbPath
+                cerr << "Database already open (" << dbPath
                       << "). You appear to have another instance of ethereum running.";
                 BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
             }
         }
 
-        cwarn << "Unknown error occurred when creating database (" << dbPath
+        cerr << "Unknown error occurred when creating database (" << dbPath
               << "). Exception details: " << ex.what();
         throw;
     }
