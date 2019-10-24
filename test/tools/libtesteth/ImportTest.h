@@ -35,7 +35,7 @@ public:
         StateTest,
         BlockchainTest
     };
-    static std::set<eth::Network> getAllNetworksFromExpectSections(
+    static std::set<std::string> getAllNetworksFromExpectSections(
         json_spirit::mArray const& _expects, testType _testType);
 
 
@@ -57,9 +57,12 @@ public:
 private:
     struct transactionToExecute;
     using ExecOutput = std::pair<eth::ExecutionResult, eth::TransactionReceipt>;
-	std::tuple<eth::State, ExecOutput, eth::ChangeLog> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
+    std::tuple<eth::State, ExecOutput, eth::ChangeLog> executeTransaction(
+        std::string const& _sealEngineNetwork, eth::EnvInfo const& _env,
+        eth::State const& _preState, eth::Transaction const& _tr);
     bool findExpectSectionForTransaction(
-        transactionToExecute const& _tr, eth::Network const& _net, bool _isFilling) const;
+        transactionToExecute const& _tr, std::string const& _net, bool _isFilling) const;
+    void validateNetworkNames(std::set<std::string> const& _names) const;
 
     std::unique_ptr<eth::LastBlockHashesFace const> m_lastBlockHashes;
 	std::unique_ptr<eth::EnvInfo> m_envInfo;
@@ -68,17 +71,24 @@ private:
 	//General State Tests
 	struct transactionToExecute
 	{
-		transactionToExecute(int d, int g, int v, eth::Transaction const& t):
-			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork),
-			output(std::make_pair(eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries()))) {}
-		int dataInd;
+        transactionToExecute(int d, int g, int v, eth::Transaction const& t)
+          : dataInd(d),
+            gasInd(g),
+            valInd(v),
+            transaction(t),
+            postState(0),
+            netId("other"),
+            output(std::make_pair(
+                eth::ExecutionResult(), eth::TransactionReceipt(h256(), u256(), eth::LogEntries())))
+        {}
+        int dataInd;
 		int gasInd;
 		int valInd;
 		eth::Transaction transaction;
 		eth::State postState;
 		eth::ChangeLog changeLog;
-		eth::Network netId;
-		ExecOutput output;
+        std::string netId;
+        ExecOutput output;
 	};
 	std::vector<transactionToExecute> m_transactions;
 	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;
@@ -87,7 +97,7 @@ private:
 
     /// Create blockchain test fillers for specified _networks and test information (env, pre, txs)
     /// of Importtest then fill blockchain fillers into tests.
-    void makeBlockchainTestFromStateTest(std::set<eth::Network> const& _networks) const;
+    void makeBlockchainTestFromStateTest(std::set<std::string> const& _networks) const;
 
     json_spirit::mObject const& m_testInputObject;
 	json_spirit::mObject& m_testOutputObject;

@@ -69,17 +69,18 @@ json_spirit::mValue doBCTest(
         if (_fillin)
         {
             BOOST_REQUIRE(inputTest.count("expect") > 0);
-            set<eth::Network> allnetworks = ImportTest::getAllNetworksFromExpectSections(
-                        inputTest.at("expect").get_array(), ImportTest::testType::BlockchainTest);
+            set<std::string> allnetworks = ImportTest::getAllNetworksFromExpectSections(
+                inputTest.at("expect").get_array(), ImportTest::testType::BlockchainTest);
 
             //create a blockchain test for each network
             for (auto& network : allnetworks)
             {
-                if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
+                if (!Options::get().singleTestNet.empty() &&
+                    Options::get().singleTestNet != network)
                     continue;
 
-                dev::test::TestBlockChain::s_sealEngineNetwork = network;
-                string newtestname = testname + "_" + test::netIdToString(network);
+                dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(network);
+                string newtestname = testname + "_" + network;
 
                 json_spirit::mObject jObjOutput = inputTest;
                 // prepare the corresponding expect section for the test
@@ -92,7 +93,7 @@ json_spirit::mValue doBCTest(
                     json_spirit::mObject const& expectObj = expect.get_obj();
                     ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
                     netlist = test::translateNetworks(netlist);
-                    if (netlist.count(test::netIdToString(network)) || netlist.count("ALL"))
+                    if (netlist.count(network) || netlist.count("ALL"))
                     {
                         jObjOutput["expect"] = expectObj.at("result");
                         found = true;
@@ -107,7 +108,7 @@ json_spirit::mValue doBCTest(
 
                 TestOutputHelper::get().setCurrentTestName(newtestname);
                 jObjOutput = fillBCTest(jObjOutput, _allowInvalidBlocks);
-                jObjOutput["network"] = test::netIdToString(network);
+                jObjOutput["network"] = network;
                 if (inputTest.count("_info"))
                     jObjOutput["_info"] = inputTest.at("_info");
                 tests[newtestname] = jObjOutput;

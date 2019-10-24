@@ -14,12 +14,34 @@
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Precompiled.h>
 #include <libethcore/SealEngine.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace dev;
 using namespace eth;
 using namespace eth::validation;
 namespace js = json_spirit;
+
+namespace
+{
+u256 findMaxForkBlockNumber(js::mObject const& _params)
+{
+    u256 maxForkBlockNumber = 0;
+    for (auto const& paramKeyValue : _params)
+    {
+        auto const& key = paramKeyValue.first;
+        if (boost::algorithm::ends_with(key, c_forkBlockSuffix))
+        {
+            auto const& value = paramKeyValue.second;
+            auto const blockNumber = fromBigEndian<u256>(fromHex(value.get_str()));
+            if (blockNumber < c_infiniteBlockNumber && blockNumber > maxForkBlockNumber)
+                maxForkBlockNumber = blockNumber;
+        }
+    }
+
+    return maxForkBlockNumber;
+}
+}  // namespace
 
 ChainParams::ChainParams()
 {
@@ -83,7 +105,9 @@ ChainParams ChainParams::loadConfig(
     setOptionalU256Parameter(cp.minGasLimit, c_minGasLimit);
     setOptionalU256Parameter(cp.maxGasLimit, c_maxGasLimit);
     setOptionalU256Parameter(cp.gasLimitBoundDivisor, c_gasLimitBoundDivisor);
+
     setOptionalU256Parameter(cp.homesteadForkBlock, c_homesteadForkBlock);
+    setOptionalU256Parameter(cp.daoHardforkBlock, c_daoHardforkBlock);
     setOptionalU256Parameter(cp.EIP150ForkBlock, c_EIP150ForkBlock);
     setOptionalU256Parameter(cp.EIP158ForkBlock, c_EIP158ForkBlock);
     setOptionalU256Parameter(cp.byzantiumForkBlock, c_byzantiumForkBlock);
@@ -92,8 +116,10 @@ ChainParams ChainParams::loadConfig(
     setOptionalU256Parameter(cp.constantinopleFixForkBlock, c_constantinopleFixForkBlock);
     setOptionalU256Parameter(cp.istanbulForkBlock, c_istanbulForkBlock);
     setOptionalU256Parameter(cp.berlinForkBlock, c_berlinForkBlock);
-    setOptionalU256Parameter(cp.daoHardforkBlock, c_daoHardforkBlock);
     setOptionalU256Parameter(cp.experimentalForkBlock, c_experimentalForkBlock);
+
+    cp.lastForkBlock = findMaxForkBlockNumber(params);
+
     setOptionalU256Parameter(cp.minimumDifficulty, c_minimumDifficulty);
     setOptionalU256Parameter(cp.difficultyBoundDivisor, c_difficultyBoundDivisor);
     setOptionalU256Parameter(cp.durationLimit, c_durationLimit);

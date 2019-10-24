@@ -39,6 +39,7 @@ extern std::string const c_shouldnotexist;
 extern std::string const c_minGasLimit;
 extern std::string const c_maxGasLimit;
 extern std::string const c_gasLimitBoundDivisor;
+extern std::string const c_forkBlockSuffix;
 extern std::string const c_homesteadForkBlock;
 extern std::string const c_daoHardforkBlock;
 extern std::string const c_EIP150ForkBlock;
