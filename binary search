@@ -1,0 +1,48 @@
+#include<iostream>
+using namespace std;
+int main()
+{
+    int n;
+    cout<<"enter size of array\n";
+    cin>>n;
+    int arr[n],loc=-1,i;
+    cout<<"enter  "<<n<<"  elements\n";
+    for(i=0;i<n;i++)
+    {
+        cin>>arr[i];
+    }
+    int data,bg,end,mid;
+    cout<<"enter data to search\n";
+    cin>>data;
+    bg=0;
+    end=n-1;
+    mid=(bg+end)/2;
+    while(bg<=end)  // 0 1 2 3 4 5 6 7
+    {
+        if(data>arr[mid])
+        {
+            bg=mid+1;
+            mid=(bg+end)/2;
+        }
+        else if(data<arr[mid])
+        {
+            end=mid-1;
+            mid=(bg+end)/2;
+        }
+        else if(data==arr[mid])
+        {
+            loc=mid;
+            cout<<"data is found\n";
+            break;
+        }
+    }
+    if(loc==mid)
+    {
+    cout<<"loacation is\n";
+    cout<<loc;
+    }
+    else
+    {
+        cout<<"data is not found\n";
+    }
+}
