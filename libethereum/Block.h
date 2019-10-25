@@ -35,12 +35,6 @@ class TransactionQueue;
 struct VerifiedBlockRef;
 class LastBlockHashesFace;
 
-struct PopulationStatistics
-{
-    double verify;
-    double enact;
-};
-
 DEV_SIMPLE_EXCEPTION(ChainOperationWithUnknownBlockChain);
 DEV_SIMPLE_EXCEPTION(InvalidOperationOnSealedBlock);
 
@@ -190,7 +184,7 @@ public:
     // State-change operations
 
     /// Construct state object from arbitrary point in blockchain.
-    PopulationStatistics populateFromChain(BlockChain const& _bc, h256 const& _hash, ImportRequirements::value _ir = ImportRequirements::None);
+    void populateFromChain(BlockChain const& _bc, h256 const& _hash);
 
     /// Execute a given transaction.
     /// This will append @a _t to the transaction list and change the state accordingly.

@@ -179,18 +179,6 @@ h256 AdminEth::blockHash(string const& _blockNumberOrHash) const
     }
 }
 
-Json::Value AdminEth::admin_eth_reprocess(string const& _blockNumberOrHash, string const& _session)
-{
-    RPC_ADMIN;
-    Json::Value ret;
-    PopulationStatistics ps;
-    m_eth.block(blockHash(_blockNumberOrHash), &ps);
-    ret["enact"] = ps.enact;
-    ret["verify"] = ps.verify;
-    ret["total"] = ps.verify + ps.enact;
-    return ret;
-}
-
 Json::Value AdminEth::admin_eth_vmTrace(string const& _blockNumberOrHash, int _txIndex, string const& _session)
 {
     RPC_ADMIN;

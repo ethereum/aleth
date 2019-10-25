@@ -100,10 +100,6 @@ public:
     /// Get the gas bid price
     u256 gasBidPrice() const override { return m_gp->bid(); }
 
-    // [PRIVATE API - only relevant for base clients, not available in general]
-    /// Get the block.
-    dev::eth::Block block(h256 const& _blockHash, PopulationStatistics* o_stats) const;
-
     /// Get the object representing the current state of Ethereum.
     dev::eth::Block postState() const { ReadGuard l(x_postSeal); return m_postSeal; }
     /// Get the object representing the current canonical blockchain.

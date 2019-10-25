@@ -136,7 +136,7 @@ void Block::noteChain(BlockChain const& _bc)
     }
 }
 
-PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const& _h, ImportRequirements::value _ir)
+void Block::populateFromChain(BlockChain const& _bc, h256 const& _h)
 {
     if (!_bc.isKnown(_h))
     {
@@ -147,17 +147,32 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
     auto const& blockBytes = _bc.block(_h);
     m_currentBytes = blockBytes;
 
+    // Set block headers
     auto const& blockHeader = BlockHeader{blockBytes};
     m_currentBlock = blockHeader;
 
-    // Set state root and precommit state
-    m_state.setRoot(blockHeader.stateRoot());
-    m_precommit = m_state;
-
     if (blockHeader.number())
-        m_previousBlock = _bc.info(blockHeader.hash());
+        m_previousBlock = _bc.info(blockHeader.parentHash());
     else
         m_previousBlock = m_currentBlock;
+
+    // Set state root and precommit state
+    //
+    // First check for database corruption by looking up the state root in the state database. Note
+    // that we don't technically need to do this since if the state DB is corrupt setting a new
+    // state root will throw anyway, but checking here enables us to log a user-friendly error
+    // message.
+    if (m_state.db().lookup(blockHeader.stateRoot()).empty())
+    {
+        cerr << "Unable to populate block " << blockHeader.hash() << " - state root "
+             << blockHeader.stateRoot() << " not found in database.";
+        cerr << "Database corrupt: contains block without state root: " << blockHeader;
+        cerr << "Try rescuing the database by running: eth --rescue";
+        BOOST_THROW_EXCEPTION(InvalidStateRoot() << errinfo_target(blockHeader.stateRoot()));
+    }
+
+    m_state.setRoot(blockHeader.stateRoot());
+    m_precommit = m_state;
 
     RLP blockRLP{blockBytes};
     auto const& txListRLP = blockRLP[1];
@@ -174,8 +189,6 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 
     m_committedToSeal = false;
     m_sealEngine = _bc.sealEngine();
-
-    return PopulationStatistics{};
 }
 
 bool Block::sync(BlockChain const& _bc)
