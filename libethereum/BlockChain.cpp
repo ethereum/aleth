@@ -199,10 +199,6 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
     fs::path const chainSubPathBlocks = chainPath / fs::path("blocks");
     fs::path const extrasPath = chainPath / fs::path(toString(c_databaseVersion));
     fs::path const extrasSubPathExtras = extrasPath / fs::path("extras");
-    fs::path const extrasSubPathOldExtras = extrasPath / fs::path("extras.old");
-    fs::path const extrasSubPathOldDetails = extrasPath / fs::path("details.old");
-    fs::path const extrasSubPathState = extrasPath / fs::path("state");
-    fs::path const extrasSubPathMinor = extrasPath / fs::path("minor");
     unsigned lastMinor = c_minorProtocolVersion;
 
     if (db::isDiskDatabase())
@@ -210,6 +206,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         fs::create_directories(extrasPath);
         DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
 
+        fs::path const extrasSubPathMinor = extrasPath / fs::path("minor");
         bytes const status = contents(extrasSubPathMinor);
         if (!status.empty())
             DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));
@@ -217,9 +214,9 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         {
             cnote << "Killing extras database " << extrasPath << " (DB minor version:" << lastMinor
                   << " != our minor version: " << c_minorProtocolVersion << ").";
-            DEV_IGNORE_EXCEPTIONS(fs::remove_all(extrasSubPathOldDetails));
-            fs::rename(extrasSubPathExtras, extrasSubPathOldExtras);
-            fs::remove_all(extrasSubPathState);
+            DEV_IGNORE_EXCEPTIONS(fs::remove_all(extrasPath / fs::path("details.old")));
+            fs::rename(extrasSubPathExtras, extrasPath / fs::path("extras.old"));
+            fs::remove_all(extrasPath / fs::path("state"));
             writeFile(extrasSubPathMinor, rlp(c_minorProtocolVersion));
             lastMinor = (unsigned)RLP(status);
         }
