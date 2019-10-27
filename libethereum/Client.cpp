@@ -901,6 +901,7 @@ ExecutionResult Client::call(Address const& _from, u256 _value, Address _dest, b
     try
     {
         Block temp = blockByNumber(_blockNumber);
+        temp.unseal();  // Unseal block since we're going to be executing a transaction
         u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
         u256 gas = _gas == Invalid256 ? gasLimitRemaining() : _gas;
         u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
