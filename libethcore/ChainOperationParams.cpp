@@ -6,7 +6,6 @@
 #include "ChainOperationParams.h"
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Log.h>
-#include <libethcore/EVMSchedule.h>
 
 using namespace std;
 using namespace dev;
@@ -38,17 +37,13 @@ ChainOperationParams::ChainOperationParams():
 
 EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blockNumber) const
 {
-    EVMSchedule const& fixedForkSchedule = constScheduleForBlockNumber(_blockNumber);
-
-    if (_blockNumber < lastForkBlock)
-        return fixedForkSchedule;
-
-    static EVMSchedule const lastForkWithAdditionalEIPsSchedule =
-        addEIPs(fixedForkSchedule, lastForkAdditionalEIPs);
-    return lastForkWithAdditionalEIPsSchedule;
+    if (_blockNumber >= lastForkBlock)
+        return lastForkWithAdditionalEIPsSchedule;
+    else
+        return fixedScheduleForBlockNumber(_blockNumber);
 }
 
-EVMSchedule const& ChainOperationParams::constScheduleForBlockNumber(u256 const& _blockNumber) const
+EVMSchedule const& ChainOperationParams::fixedScheduleForBlockNumber(u256 const& _blockNumber) const
 {
     if (_blockNumber >= experimentalForkBlock)
         return ExperimentalSchedule;

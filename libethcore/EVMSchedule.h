@@ -184,6 +184,6 @@ inline EVMSchedule const& latestScheduleForAccountVersion(u256 const& _version)
     }
 }
 
-EVMSchedule addEIPs(EVMSchedule const& _schedule, AdditionalEIPs const& _eips);
+EVMSchedule addEIPsToSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips);
 }
 }

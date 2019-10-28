@@ -59,15 +59,15 @@ ChainParams createChainParamsForNetwork(string const& _networkName)
     assert(networkAndEIPs.size() >= 1);  // assuming it was already validated earlier
     Network const network = stringToNetId(networkAndEIPs.front());
 
-    ChainParams chainParams(genesisInfo(network));
     // parse EIP numbers
+    AdditionalEIPs eips;
     for (auto it = networkAndEIPs.begin() + 1; it != networkAndEIPs.end(); ++it)
     {
         if (*it == "2046")
-            chainParams.lastForkAdditionalEIPs.eip2046 = true;
+            eips.eip2046 = true;
     }
 
-    return chainParams;
+    return ChainParams{genesisInfo(network), eips};
 }
 }
 

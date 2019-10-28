@@ -812,9 +812,9 @@ public:
         // let r := staticcall(10000, 0x4, 0, 0, 0, 0)
         bytes code = fromHex("60006000600060006004612710fa50");
 
-        ChainParams cp{genesisInfo(Network::IstanbulTest)};
-        cp.lastForkBlock = cp.istanbulForkBlock;
-        cp.lastForkAdditionalEIPs.eip2046 = true;
+        AdditionalEIPs eips;
+        eips.eip2046 = true;
+        ChainParams cp{genesisInfo(Network::IstanbulTest), eips};
 
         se.reset(cp.createSealEngine());
 

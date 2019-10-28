@@ -9,7 +9,7 @@ namespace dev
 {
 namespace eth
 {
-EVMSchedule addEIPs(EVMSchedule const& _schedule, AdditionalEIPs const& _eips)
+EVMSchedule addEIPsToSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips)
 {
     EVMSchedule modifiedSchedule = _schedule;
     if (_eips.eip2046)

@@ -6,6 +6,7 @@
 #pragma once
 
 #include <libdevcore/Common.h>
+#include <libethcore/EVMSchedule.h>
 #include <libethcore/Precompiled.h>
 
 #include "Common.h"
@@ -82,10 +83,9 @@ struct ChainOperationParams
 private:
     u256 m_blockReward;
 
-    EVMSchedule const& constScheduleForBlockNumber(u256 const& _blockNumber) const;
-
 public:
     EVMSchedule const& scheduleForBlockNumber(u256 const& _blockNumber) const;
+    EVMSchedule const& fixedScheduleForBlockNumber(u256 const& _blockNumber) const;
     u256 blockReward(EVMSchedule const& _schedule) const;
     void setBlockReward(u256 const& _newBlockReward);
     u256 maximumExtraDataSize = 32;
@@ -117,6 +117,8 @@ public:
 
     /// Precompiled contracts as specified in the chain params.
     std::unordered_map<Address, PrecompiledContract> precompiled;
+
+    EVMSchedule lastForkWithAdditionalEIPsSchedule;
 };
 
 }
