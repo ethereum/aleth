@@ -27,39 +27,38 @@ void VM::copyDataToMemory(bytesConstRef _data, intx::uint256*_sp)
 
 void VM::throwOutOfGas()
 {
-    BOOST_THROW_EXCEPTION(OutOfGas());
+    throw EVMC_OUT_OF_GAS;
 }
 
 void VM::throwInvalidInstruction()
 {
-    BOOST_THROW_EXCEPTION(InvalidInstruction());
+    throw EVMC_INVALID_INSTRUCTION;
 }
 
 void VM::throwBadInstruction()
 {
-    BOOST_THROW_EXCEPTION(BadInstruction());
+    throw EVMC_UNDEFINED_INSTRUCTION;
 }
 
 void VM::throwBadJumpDestination()
 {
-    BOOST_THROW_EXCEPTION(BadJumpDestination());
+    throw EVMC_BAD_JUMP_DESTINATION;
 }
 
 void VM::throwDisallowedStateChange()
 {
-    BOOST_THROW_EXCEPTION(DisallowedStateChange());
+    throw EVMC_STATIC_MODE_VIOLATION;
 }
 
 // throwBadStack is called from fetchInstruction() -> adjustStack()
 // its the only exception that can happen before ON_OP() log is done for an opcode case in VM.cpp
 // so the call to m_onFail is needed here
-void VM::throwBadStack(int _required, int _change)
+void VM::throwBadStack(int _required)
 {
-    bigint size = m_stackEnd - m_SPP;
-    if (size < _required)
-        BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_required, size));
+    if (m_stackEnd - m_SPP < _required)
+        throw EVMC_STACK_UNDERFLOW;
     else
-        BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)_change, size));
+        throw EVMC_STACK_OVERFLOW;
 }
 
 void VM::throwRevertInstruction(owning_bytes_ref&& _output)
@@ -69,11 +68,9 @@ void VM::throwRevertInstruction(owning_bytes_ref&& _output)
     throw RevertInstruction(std::move(_output));
 }
 
-void VM::throwBufferOverrun(intx::uint512 const& _endOfAccess)
+void VM::throwBufferOverrun()
 {
-    BOOST_THROW_EXCEPTION(
-        BufferOverrun() << RequirementError(
-            bigint(std::string("0x") + intx::hex(_endOfAccess)), bigint(m_returnData.size())));
+    throw EVMC_INVALID_MEMORY_ACCESS;
 }
 
 int64_t VM::verifyJumpDest(intx::uint256 const& _dest, bool _throw)

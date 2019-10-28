@@ -39,43 +39,15 @@ evmc_result execute(evmc_vm* _instance, evmc_host_context* _context, evmc_revisi
         result.status_code = EVMC_SUCCESS;
         result.gas_left = vm->m_io_gas;
     }
+    catch (evmc_status_code statusCode)
+    {
+        result.status_code = statusCode;
+    }
     catch (dev::eth::RevertInstruction& ex)
     {
         result.status_code = EVMC_REVERT;
         result.gas_left = vm->m_io_gas;
         output = ex.output();  // This moves the output from the exception!
-    }
-    catch (dev::eth::InvalidInstruction const&)
-    {
-        result.status_code = EVMC_INVALID_INSTRUCTION;
-    }
-    catch (dev::eth::BadInstruction const&)
-    {
-        result.status_code = EVMC_UNDEFINED_INSTRUCTION;
-    }
-    catch (dev::eth::OutOfStack const&)
-    {
-        result.status_code = EVMC_STACK_OVERFLOW;
-    }
-    catch (dev::eth::StackUnderflow const&)
-    {
-        result.status_code = EVMC_STACK_UNDERFLOW;
-    }
-    catch (dev::eth::BufferOverrun const&)
-    {
-        result.status_code = EVMC_INVALID_MEMORY_ACCESS;
-    }
-    catch (dev::eth::OutOfGas const&)
-    {
-        result.status_code = EVMC_OUT_OF_GAS;
-    }
-    catch (dev::eth::BadJumpDestination const&)
-    {
-        result.status_code = EVMC_BAD_JUMP_DESTINATION;
-    }
-    catch (dev::eth::DisallowedStateChange const&)
-    {
-        result.status_code = EVMC_STATIC_MODE_VIOLATION;
     }
     catch (dev::eth::VMException const&)
     {
@@ -163,10 +135,10 @@ void VM::adjustStack(int _required, int _change)
 
     // adjust stack and check bounds
     if (m_stackEnd < m_SP + _required)
-        throwBadStack(_required, _change);
+        throwBadStack(_required);
     m_SPP -= _change;
     if (m_SPP < m_stack)
-        throwBadStack(_required, _change);
+        throwBadStack(_required);
 }
 
 uint64_t VM::gasForMem(intx::uint512 const& _size)
@@ -1004,7 +976,7 @@ void VM::interpretCases()
                 throwBadInstruction();
             intx::uint512 const endOfAccess = intx::uint512(m_SP[1]) + intx::uint512(m_SP[2]);
             if (m_returnData.size() < endOfAccess)
-                throwBufferOverrun(endOfAccess);
+                throwBufferOverrun();
 
             m_copyMemSize = toInt63(m_SP[2]);
             updateMem(memNeed(m_SP[0], m_SP[2]));

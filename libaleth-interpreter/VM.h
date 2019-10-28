@@ -119,14 +119,14 @@ private:
 
     const evmc_tx_context& getTxContext();
 
-    void throwOutOfGas();
-    void throwInvalidInstruction();
-    void throwBadInstruction();
-    void throwBadJumpDestination();
-    void throwBadStack(int _removed, int _added);
-    void throwRevertInstruction(owning_bytes_ref&& _output);
-    void throwDisallowedStateChange();
-    void throwBufferOverrun(intx::uint512 const& _enfOfAccess);
+    static void throwOutOfGas();
+    static void throwInvalidInstruction();
+    static void throwBadInstruction();
+    static void throwBadJumpDestination();
+    void throwBadStack(int _removed);
+    static void throwRevertInstruction(owning_bytes_ref&& _output);
+    static void throwDisallowedStateChange();
+    static void throwBufferOverrun();
 
     std::vector<uint64_t> m_beginSubs;
     std::vector<uint64_t> m_jumpDests;
