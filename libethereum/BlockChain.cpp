@@ -194,11 +194,11 @@ void BlockChain::init(ChainParams const& _p)
 
 unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 {
-    fs::path const path = _path.empty() ? db::databasePath() : _path;
-    fs::path const chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
-    fs::path const chainSubPathBlocks = chainPath / fs::path("blocks");
-    fs::path const extrasPath = chainPath / fs::path(toString(c_databaseVersion));
-    fs::path const extrasSubPathExtras = extrasPath / fs::path("extras");
+    auto const path = _path.empty() ? db::databasePath() : _path;
+    auto const chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
+    auto const chainSubPathBlocks = chainPath / fs::path("blocks");
+    auto const extrasPath = chainPath / fs::path(toString(c_databaseVersion));
+    auto const extrasSubPathExtras = extrasPath / fs::path("extras");
     unsigned lastMinor = c_minorProtocolVersion;
 
     if (db::isDiskDatabase())
@@ -206,7 +206,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         fs::create_directories(extrasPath);
         DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
 
-        fs::path const extrasSubPathMinor = extrasPath / fs::path("minor");
+        auto const extrasSubPathMinor = extrasPath / fs::path("minor");
         bytes const status = contents(extrasSubPathMinor);
         if (!status.empty())
             DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));
@@ -237,33 +237,34 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
     }
     catch (db::DatabaseError const& ex)
     {
-        fs::path const dbPath = !m_blocksDB.get() ? chainSubPathBlocks : extrasSubPathExtras;
+        // Determine which database open call failed
+        auto const dbPath = !m_blocksDB.get() ? chainSubPathBlocks : extrasSubPathExtras;
+        cerr << "Error opening database: " << dbPath;
+
         if (db::isDiskDatabase())
         {
-            db::DatabaseStatus const dbStatus =
-                *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
+            db::DatabaseStatus const dbStatus = *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
             if (fs::space(path).available < 1024)
             {
-                cerr << "Failed to create database (" << dbPath
-                      << "). Not enough available space found on hard drive. Please free some up "
-                         "and re-run.";
+                cerr << "Not enough available space found on hard drive. Please free some up and "
+                        "re-run.";
                 BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
             }
             else if (dbStatus == db::DatabaseStatus::Corruption)
             {
-                cerr << "Database corrupted (" << dbPath << ")";
+                cerr << "Database corruption detected. Please see the exception for corruption "
+                        "details. Exception: "
+                    << ex.what();
                 BOOST_THROW_EXCEPTION(DatabaseCorruption());
             }
             else if (dbStatus == db::DatabaseStatus::IOError)
             {
-                cerr << "Database already open (" << dbPath
-                      << "). You appear to have another instance of ethereum running.";
+                cerr << "Database already open. You appear to have another instance of Aleth running.";
                 BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
             }
         }
-
-        cerr << "Unknown error occurred when creating database (" << dbPath
-              << "). Exception details: " << ex.what();
+        
+        cerr << "Unknown error occurred. Exception details: " << ex.what();
         throw;
     }
 
