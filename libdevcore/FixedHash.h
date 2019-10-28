@@ -219,6 +219,7 @@ public:
     using ConstructFromStringType = typename FixedHash<T>::ConstructFromStringType;
     using ConstructFromPointerType = typename FixedHash<T>::ConstructFromPointerType;
     SecureFixedHash() = default;
+    SecureFixedHash(SecureFixedHash const&) = default;
     explicit SecureFixedHash(bytes const& _b, ConstructFromHashType _t = FixedHash<T>::FailIfDifferent): FixedHash<T>(_b, _t) {}
     explicit SecureFixedHash(bytesConstRef _b, ConstructFromHashType _t = FixedHash<T>::FailIfDifferent): FixedHash<T>(_b, _t) {}
     explicit SecureFixedHash(bytesSec const& _b, ConstructFromHashType _t = FixedHash<T>::FailIfDifferent): FixedHash<T>(_b.ref(), _t) {}
