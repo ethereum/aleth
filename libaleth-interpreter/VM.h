@@ -5,13 +5,12 @@
 
 #include "VMConfig.h"
 
-#include <libevm/VMFace.h>
 #include <intx/intx.hpp>
-
 #include <evmc/evmc.h>
 #include <evmc/instructions.h>
-
 #include <boost/optional.hpp>
+
+#include <libevm/ExtVMFace.h>
 
 namespace dev
 {
@@ -56,6 +55,9 @@ public:
     owning_bytes_ref exec(evmc_host_context* _context, evmc_revision _rev, const evmc_message* _msg,
         uint8_t const* _code, size_t _codeSize);
 
+    // return bytes
+    owning_bytes_ref m_output;
+
     uint64_t m_io_gas = 0;
 private:
     evmc_host_context* m_context = nullptr;
@@ -68,9 +70,6 @@ private:
     typedef void (VM::*MemFnPtr)();
     MemFnPtr m_bounce = nullptr;
     uint64_t m_nSteps = 0;
-
-    // return bytes
-    owning_bytes_ref m_output;
 
     // space for memory
     bytes m_mem;
@@ -124,7 +123,7 @@ private:
     static void throwBadInstruction();
     static void throwBadJumpDestination();
     void throwBadStack(int _removed);
-    static void throwRevertInstruction(owning_bytes_ref&& _output);
+    void throwRevertInstruction(uint64_t _offset, uint64_t _size);
     static void throwDisallowedStateChange();
     static void throwBufferOverrun();
 

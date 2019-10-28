@@ -42,16 +42,11 @@ evmc_result execute(evmc_vm* _instance, evmc_host_context* _context, evmc_revisi
     catch (evmc_status_code statusCode)
     {
         result.status_code = statusCode;
-    }
-    catch (dev::eth::RevertInstruction& ex)
-    {
-        result.status_code = EVMC_REVERT;
-        result.gas_left = vm->m_io_gas;
-        output = ex.output();  // This moves the output from the exception!
-    }
-    catch (dev::eth::VMException const&)
-    {
-        result.status_code = EVMC_FAILURE;
+        if (statusCode == EVMC_REVERT)
+        {
+            result.gas_left = vm->m_io_gas;
+            output = std::move(vm->m_output);
+        }
     }
     catch (...)
     {
@@ -302,10 +297,7 @@ void VM::interpretCases()
             updateMem(memNeed(m_SP[0], m_SP[1]));
             updateIOGas();
 
-            uint64_t b = (uint64_t)m_SP[0];
-            uint64_t s = (uint64_t)m_SP[1];
-            owning_bytes_ref output{std::move(m_mem), b, s};
-            throwRevertInstruction(std::move(output));
+            throwRevertInstruction(static_cast<uint64_t>(m_SP[0]), static_cast<uint64_t>(m_SP[1]));
         }
         BREAK;
 

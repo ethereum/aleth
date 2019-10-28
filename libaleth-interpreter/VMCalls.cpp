@@ -61,11 +61,10 @@ void VM::throwBadStack(int _required)
         throw EVMC_STACK_OVERFLOW;
 }
 
-void VM::throwRevertInstruction(owning_bytes_ref&& _output)
+void VM::throwRevertInstruction(uint64_t _offset, uint64_t _size)
 {
-    // We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and
-    // RevertInstruction has no copy constructor
-    throw RevertInstruction(std::move(_output));
+    m_output = owning_bytes_ref{std::move(m_mem), _offset, _size};
+    throw EVMC_REVERT;
 }
 
 void VM::throwBufferOverrun()
