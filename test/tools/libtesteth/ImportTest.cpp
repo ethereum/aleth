@@ -721,8 +721,12 @@ set<string> const& getAllowedNetworks()
 
 void ImportTest::checkAllowedNetwork(string const& _network)
 {
+    // name may contain network_name+EIPs
+    vector<string> networkAndEIPs;
+    boost::algorithm::split(networkAndEIPs, _network, boost::is_any_of("+"));
+
     set<string> const& allowedNetowks = getAllowedNetworks();
-    if (!allowedNetowks.count(_network))
+    if (networkAndEIPs.empty() || !allowedNetowks.count(networkAndEIPs.front()))
     {
         // Can't use boost at this point
         std::cerr << TestOutputHelper::get().testName() + " Specified Network not found: "
