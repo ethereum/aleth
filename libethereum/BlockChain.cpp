@@ -239,32 +239,32 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
     {
         // Determine which database open call failed
         auto const dbPath = !m_blocksDB.get() ? chainSubPathBlocks : extrasSubPathExtras;
-        cerr << "Error opening database: " << dbPath;
+        cerror << "Error opening database: " << dbPath;
 
         if (db::isDiskDatabase())
         {
             db::DatabaseStatus const dbStatus = *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
             if (fs::space(path).available < 1024)
             {
-                cerr << "Not enough available space found on hard drive. Please free some up and "
+                cerror << "Not enough available space found on hard drive. Please free some up and "
                         "re-run.";
                 BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
             }
             else if (dbStatus == db::DatabaseStatus::Corruption)
             {
-                cerr << "Database corruption detected. Please see the exception for corruption "
+                cerror << "Database corruption detected. Please see the exception for corruption "
                         "details. Exception: "
                     << ex.what();
                 BOOST_THROW_EXCEPTION(DatabaseCorruption());
             }
             else if (dbStatus == db::DatabaseStatus::IOError)
             {
-                cerr << "Database already open. You appear to have another instance of Aleth running.";
+                cerror << "Database already open. You appear to have another instance of Aleth running.";
                 BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
             }
         }
         
-        cerr << "Unknown error occurred. Exception details: " << ex.what();
+        cerror << "Unknown error occurred. Exception details: " << ex.what();
         throw;
     }
 
