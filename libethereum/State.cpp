@@ -87,7 +87,7 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
                 clog(VerbosityError, "statedb")
                     << "Database corruption detected. Please see the exception for corruption "
                        "details. Exception: "
-                    << ex.what();
+                    << boost::diagnostic_information(ex);
                 BOOST_THROW_EXCEPTION(DatabaseCorruption());
             }
             else if (dbStatus == db::DatabaseStatus::IOError)
