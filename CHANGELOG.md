@@ -57,6 +57,7 @@
 - Fixed: [#5706](https://github.com/ethereum/aleth/pull/5706) Stop tracking sent transactions after they've been imported into the blockchain.
 - Fixed: [#5687](https://github.com/ethereum/aleth/pull/5687) Limit transaction queue's dropped transaction history to 1024 transactions.
 - Fixed: [#5718](https://github.com/ethereum/aleth/pull/5718) Avoid checking contract balance or destination account existence when executing self-destruct operations on Frontier and Homestead.
+- Fixed: [#5803](https://github.com/ethereum/aleth/pull/5803) Client version string reported by RPC and devp2p now better matches the format used by other clients. This will allow aleth to be correctly listed on ethernodes.org.
 
 ## [1.6.0] - 2019-04-16
 
