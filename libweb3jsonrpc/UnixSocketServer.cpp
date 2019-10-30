@@ -27,7 +27,7 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-size_t const c_socketPathMaxLength = sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]);
+size_t const c_socketPathMaxLength = sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]) - 1;
 
 fs::path getIpcPathOrDataDir()
 {
