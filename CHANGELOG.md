@@ -2,6 +2,7 @@
 
 ## [1.8.0] - Unreleased
 
+- Added: [#XXXX](https://github.com/ethereum/aleth/pull/XXXX) EIP XXXX: EXTSLOAD opcode.
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
 - Added: [#5752](https://github.com/ethereum/aleth/pull/5752) [#5753](https://github.com/ethereum/aleth/pull/5753) Implement EIP1380 (reduced gas costs for call-to-self).
 - Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14. 

@@ -231,7 +231,7 @@ namespace eth
         &&MSIZE,                                \
         &&GAS,                                  \
         &&JUMPDEST,                             \
-        &&BEGINDATA,                            \
+        &&EXTSLOAD,                             \
         &&BEGINSUB,                             \
         &&INVALID,                              \
         &&INVALID,                              \
