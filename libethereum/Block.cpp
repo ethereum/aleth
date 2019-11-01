@@ -140,15 +140,14 @@ void Block::populateFromChain(BlockChain const& _bc, h256 const& _h)
 {
     if (!_bc.isKnown(_h))
     {
-        cerr << "Invalid block given for state population: " << _h;
+        cwarn << "Invalid block given for state population: " << _h;
         BOOST_THROW_EXCEPTION(BlockNotFound() << errinfo_target(_h));
     }
 
     auto const& blockBytes = _bc.block(_h);
-    m_currentBytes = blockBytes;
 
     // Set block headers
-    auto const& blockHeader = BlockHeader{blockBytes};
+    auto const blockHeader = BlockHeader{blockBytes};
     m_currentBlock = blockHeader;
 
     if (blockHeader.number())
