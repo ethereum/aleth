@@ -243,10 +243,6 @@ public:
     /// @returns true if sealed - in this case you can no longer append transactions.
     bool isSealed() const { return !m_currentBytes.empty(); }
 
-    /// Clears the block bytes - typically used in cases where we want to mutate a sealed
-    /// block's state (e.g. eth_call)
-    void unseal() { m_currentBytes.clear(); }
-
     /// Get the complete current block, including valid nonce.
     /// Only valid when isSealed() is true.
     bytes const& blockData() const { return m_currentBytes; }

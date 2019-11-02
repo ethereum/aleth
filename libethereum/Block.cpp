@@ -182,8 +182,6 @@ void Block::populateFromChain(BlockChain const& _bc, h256 const& _h)
     }
     m_receipts = _bc.receipts(_h).receipts;
 
-    m_currentTxs = txListRLP.data().toBytes();
-    m_currentUncles = blockRLP[2].data().toBytes();
     m_author = blockHeader.author();
 
     m_committedToSeal = false;
