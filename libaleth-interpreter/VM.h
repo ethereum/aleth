@@ -122,7 +122,6 @@ private:
     static void throwInvalidInstruction();
     static void throwBadInstruction();
     static void throwBadJumpDestination();
-    void throwBadStack(int _removed);
     void throwRevertInstruction(uint64_t _offset, uint64_t _size);
     static void throwDisallowedStateChange();
     static void throwBufferOverrun();

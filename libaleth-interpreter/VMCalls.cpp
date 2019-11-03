@@ -50,17 +50,6 @@ void VM::throwDisallowedStateChange()
     throw EVMC_STATIC_MODE_VIOLATION;
 }
 
-// throwBadStack is called from fetchInstruction() -> adjustStack()
-// its the only exception that can happen before ON_OP() log is done for an opcode case in VM.cpp
-// so the call to m_onFail is needed here
-void VM::throwBadStack(int _required)
-{
-    if (m_stackEnd - m_SPP < _required)
-        throw EVMC_STACK_UNDERFLOW;
-    else
-        throw EVMC_STACK_OVERFLOW;
-}
-
 void VM::throwRevertInstruction(uint64_t _offset, uint64_t _size)
 {
     m_output = owning_bytes_ref{std::move(m_mem), _offset, _size};
