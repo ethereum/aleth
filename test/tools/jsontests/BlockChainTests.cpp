@@ -1062,7 +1062,7 @@ public:
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
-BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcValidTestFixture<test::BlockchainValidTestSuite>)
+BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcTestFixture<test::BlockchainValidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcExploitTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
@@ -1078,7 +1078,7 @@ BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Tests that might have invalid blocks and check that those are rejected
-BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcInvalidTestFixture<test::BlockchainInvalidTestSuite>)
+BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcTestFixture<test::BlockchainInvalidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}

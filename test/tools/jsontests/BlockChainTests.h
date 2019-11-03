@@ -45,10 +45,10 @@ public:
 };
 
 template <class T>
-class bcValidTestFixture
+class bcTestFixture
 {
 public:
-    bcValidTestFixture(std::set<TestExecution> const& _execFlags = {})
+    bcTestFixture(std::set<TestExecution> const& _execFlags = {})
     {
         T suite;
         if (_execFlags.count(TestExecution::NotRefillable) &&
@@ -56,7 +56,7 @@ public:
             BOOST_FAIL("Tests are sealed and not refillable!");
 
         string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
+        boost::filesystem::path const suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
 
         // skip wallet test as it takes too much time (250 blocks) run it with --all flag
         if (casename == "bcWalletTest" && !test::Options::get().all)
@@ -65,25 +65,6 @@ public:
             test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
             return;
         }
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-template <class T>
-class bcInvalidTestFixture
-{
-public:
-    bcInvalidTestFixture(std::set<TestExecution> const& _execFlags = {})
-    {
-        T suite;
-        if (_execFlags.count(TestExecution::NotRefillable) &&
-            (Options::get().fillchain || Options::get().filltests))
-            BOOST_FAIL("Tests are sealed and not refillable!");
-
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
 
         suite.runAllTestsInFolder(casename);
         test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);

@@ -37,7 +37,7 @@ class BCGeneralStateTestsSuiteLegacyConstantinople : public BCGeneralStateTestsS
     }
 };
 
-class BlockchainInvalidTestSuiteLegacyConstantinople : public BlockchainInvalidTestSuite
+class LegacyConstantinopleBlockchainInvalidTestSuite : public BlockchainInvalidTestSuite
 {
     boost::filesystem::path suiteFolder() const override
     {
@@ -49,7 +49,7 @@ class BlockchainInvalidTestSuiteLegacyConstantinople : public BlockchainInvalidT
     }
 };
 
-class BlockchainValidTestSuiteLegacyConstantinople : public BlockchainValidTestSuite
+class LegacyConstantinopleBlockchainValidTestSuite : public BlockchainValidTestSuite
 {
     boost::filesystem::path suiteFolder() const override
     {
@@ -81,19 +81,19 @@ public:
 };
 
 class LegacyConstantinoplebcInvalidTestFixture
-  : public bcInvalidTestFixture<BlockchainInvalidTestSuiteLegacyConstantinople>
+  : public bcTestFixture<LegacyConstantinopleBlockchainInvalidTestSuite>
 {
 public:
     LegacyConstantinoplebcInvalidTestFixture()
-      : bcInvalidTestFixture({TestExecution::NotRefillable})
+      : bcTestFixture({TestExecution::NotRefillable})
     {}
 };
 
 class LegacyConstantinoplebcValidTestFixture
-  : public bcValidTestFixture<BlockchainValidTestSuiteLegacyConstantinople>
+  : public bcTestFixture<LegacyConstantinopleBlockchainValidTestSuite>
 {
 public:
-    LegacyConstantinoplebcValidTestFixture() : bcValidTestFixture({TestExecution::NotRefillable}) {}
+    LegacyConstantinoplebcValidTestFixture() : bcTestFixture({TestExecution::NotRefillable}) {}
 };
 
 
