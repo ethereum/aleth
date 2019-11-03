@@ -148,7 +148,7 @@ uint64_t VM::gasForMem(intx::uint512 const& _size)
 void VM::updateIOGas()
 {
     if (m_io_gas < m_runGas)
-        throwOutOfGas();
+        throw EVMC_OUT_OF_GAS;
     m_io_gas -= m_runGas;
 }
 
@@ -158,7 +158,7 @@ void VM::updateGas()
         m_runGas += toInt63(gasForMem(m_newMemSize) - gasForMem(m_mem.size()));
     m_runGas += (VMSchedule::copyGas * ((m_copyMemSize + 31) / 32));
     if (m_io_gas < m_runGas)
-        throwOutOfGas();
+        throw EVMC_OUT_OF_GAS;
 }
 
 void VM::updateMem(uint64_t _newMem)
@@ -239,9 +239,9 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_BAD_JUMP_DESTINATION;
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             m_bounce = &VM::caseCreate;
         }
@@ -251,7 +251,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             m_bounce = &VM::caseCreate;
         }
@@ -264,11 +264,11 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_OP == Instruction::DELEGATECALL && m_rev < EVMC_HOMESTEAD)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
             if (m_OP == Instruction::STATICCALL && m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
             if (m_OP == Instruction::CALL && m_message->flags & EVMC_STATIC && m_SP[2] != 0)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
             m_bounce = &VM::caseCall;
         }
         BREAK
@@ -291,14 +291,16 @@ void VM::interpretCases()
         {
             // Pre-byzantium
             if (m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             m_copyMemSize = 0;
             updateMem(memNeed(m_SP[0], m_SP[1]));
             updateIOGas();
 
-            throwRevertInstruction(static_cast<uint64_t>(m_SP[0]), static_cast<uint64_t>(m_SP[1]));
+            m_output = owning_bytes_ref{
+                std::move(m_mem), static_cast<uint64_t>(m_SP[0]), static_cast<uint64_t>(m_SP[1])};
+            throw EVMC_REVERT;
         }
         BREAK;
 
@@ -306,7 +308,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             auto const destination = intx::be::trunc<evmc::address>(m_SP[0]);
 
@@ -393,7 +395,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -410,7 +412,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -430,7 +432,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -451,7 +453,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -472,7 +474,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -681,7 +683,7 @@ void VM::interpretCases()
         {
             // Pre-constantinople
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -697,7 +699,7 @@ void VM::interpretCases()
         {
             // Pre-constantinople
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -713,7 +715,7 @@ void VM::interpretCases()
         {
             // Pre-constantinople
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -781,7 +783,7 @@ void VM::interpretCases()
             CASE(JUMPTO) CASE(JUMPIF) CASE(JUMPV) CASE(JUMPSUB) CASE(JUMPSUBV) CASE(RETURNSUB)
                 CASE(BEGINSUB) CASE(BEGINDATA) CASE(GETLOCAL) CASE(PUTLOCAL)
         {
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
         }
         CONTINUE
 
@@ -817,7 +819,7 @@ void VM::interpretCases()
         CASE(XPUT)
         CASE(XGET)
         CASE(XSWIZZLE)
-        CASE(XSHUFFLE) { throwBadInstruction(); }
+        CASE(XSHUFFLE) { throw EVMC_UNDEFINED_INSTRUCTION; }
         CONTINUE
 
         CASE(ADDRESS)
@@ -905,7 +907,7 @@ void VM::interpretCases()
             CASE(RETURNDATASIZE)
         {
             if (m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -950,10 +952,10 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
             intx::uint512 const endOfAccess = intx::uint512(m_SP[1]) + intx::uint512(m_SP[2]);
             if (m_returnData.size() < endOfAccess)
-                throwBufferOverrun();
+                throw EVMC_INVALID_MEMORY_ACCESS;
 
             m_copyMemSize = toInt63(m_SP[2]);
             updateMem(memNeed(m_SP[0], m_SP[2]));
@@ -967,7 +969,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             updateIOGas();
 
@@ -1091,7 +1093,7 @@ void VM::interpretCases()
             ON_OP();
 
             if (m_rev < EVMC_ISTANBUL)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             updateIOGas();
 
@@ -1104,7 +1106,7 @@ void VM::interpretCases()
             ON_OP();
 
             if (m_rev < EVMC_ISTANBUL)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             updateIOGas();
 
@@ -1138,7 +1140,7 @@ void VM::interpretCases()
             m_SPP[0] = m_pool[off];
             TRACE_VAL(2, "Retrieved pooled const", m_SPP[0]);
 #else
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
 #endif
         }
         CONTINUE
@@ -1225,7 +1227,7 @@ void VM::interpretCases()
 
             m_PC = uint64_t(m_SP[0]);
 #else
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
 #endif
         }
         CONTINUE
@@ -1241,7 +1243,7 @@ void VM::interpretCases()
             else
                 ++m_PC;
 #else
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
 #endif
         }
         CONTINUE
@@ -1304,10 +1306,10 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             if (m_rev >= EVMC_ISTANBUL && m_io_gas <= VMSchedule::callStipend)
-                throwOutOfGas();
+                throw EVMC_OUT_OF_GAS;
 
             auto const key = intx::be::store<evmc_uint256be>(m_SP[0]);
             auto const value = intx::be::store<evmc_uint256be>(m_SP[1]);
@@ -1373,9 +1375,9 @@ void VM::interpretCases()
             CASE(INVALID) DEFAULT
         {
             if (m_OP == Instruction::INVALID)
-                throwInvalidInstruction();
+                throw EVMC_INVALID_INSTRUCTION;
             else
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
         }
     }
     WHILE_CASES

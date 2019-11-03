@@ -22,45 +22,6 @@ void VM::copyDataToMemory(bytesConstRef _data, intx::uint256*_sp)
         std::memset(m_mem.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);
 }
 
-
-// consolidate exception throws to avoid spraying boost code all over interpreter
-
-void VM::throwOutOfGas()
-{
-    throw EVMC_OUT_OF_GAS;
-}
-
-void VM::throwInvalidInstruction()
-{
-    throw EVMC_INVALID_INSTRUCTION;
-}
-
-void VM::throwBadInstruction()
-{
-    throw EVMC_UNDEFINED_INSTRUCTION;
-}
-
-void VM::throwBadJumpDestination()
-{
-    throw EVMC_BAD_JUMP_DESTINATION;
-}
-
-void VM::throwDisallowedStateChange()
-{
-    throw EVMC_STATIC_MODE_VIOLATION;
-}
-
-void VM::throwRevertInstruction(uint64_t _offset, uint64_t _size)
-{
-    m_output = owning_bytes_ref{std::move(m_mem), _offset, _size};
-    throw EVMC_REVERT;
-}
-
-void VM::throwBufferOverrun()
-{
-    throw EVMC_INVALID_MEMORY_ACCESS;
-}
-
 int64_t VM::verifyJumpDest(intx::uint256 const& _dest, bool _throw)
 {
     // check for overflow
@@ -73,7 +34,7 @@ int64_t VM::verifyJumpDest(intx::uint256 const& _dest, bool _throw)
             return pc;
     }
     if (_throw)
-        throwBadJumpDestination();
+        throw EVMC_BAD_JUMP_DESTINATION;
     return -1;
 }
 

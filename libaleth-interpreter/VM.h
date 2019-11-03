@@ -118,14 +118,6 @@ private:
 
     const evmc_tx_context& getTxContext();
 
-    static void throwOutOfGas();
-    static void throwInvalidInstruction();
-    static void throwBadInstruction();
-    static void throwBadJumpDestination();
-    void throwRevertInstruction(uint64_t _offset, uint64_t _size);
-    static void throwDisallowedStateChange();
-    static void throwBufferOverrun();
-
     std::vector<uint64_t> m_beginSubs;
     std::vector<uint64_t> m_jumpDests;
     int64_t verifyJumpDest(intx::uint256 const& _dest, bool _throw = true);
@@ -146,7 +138,7 @@ private:
     {
         // check for overflow
         if (v > 0x7FFFFFFFFFFFFFFF)
-            throwOutOfGas();
+            throw EVMC_OUT_OF_GAS;
         uint64_t w = uint64_t(v);
         return w;
     }
@@ -155,7 +147,7 @@ private:
     {
         // check for overflow
         if (v > 0x7FFF)
-            throwOutOfGas();
+            throw EVMC_OUT_OF_GAS;
         uint64_t w = uint64_t(v);
         return w;
     }
