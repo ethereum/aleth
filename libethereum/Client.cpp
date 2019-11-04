@@ -759,37 +759,19 @@ void Client::prepareForTransaction()
     startWorking();
 }
 
-Block Client::block(h256 const& _block) const
+Block Client::block(h256 const& _blockHash) const
 {
     try
     {
-        Block ret(bc(), m_stateDB);
-        ret.populateFromChain(bc(), _block);
-        return ret;
-    }
-    catch (Exception& ex)
-    {
-        ex << errinfo_block(bc().block(_block));
-        onBadBlock(ex);
-        return Block(bc());
-    }
-}
-
-Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
-{
-    try
-    {
-        Block ret(bc(), m_stateDB);
-        PopulationStatistics s = ret.populateFromChain(bc(), _blockHash);
-        if (o_stats)
-            swap(s, *o_stats);
+        Block ret{bc(), m_stateDB};
+        ret.populateFromChain(bc(), _blockHash);
         return ret;
     }
     catch (Exception& ex)
     {
         ex << errinfo_block(bc().block(_blockHash));
         onBadBlock(ex);
-        return Block(bc());
+        return Block{bc()};
     }
 }
 

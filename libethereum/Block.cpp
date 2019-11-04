@@ -136,47 +136,56 @@ void Block::noteChain(BlockChain const& _bc)
     }
 }
 
-PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const& _h, ImportRequirements::value _ir)
+void Block::populateFromChain(BlockChain const& _bc, h256 const& _h)
 {
-    noteChain(_bc);
-
-    PopulationStatistics ret { 0.0, 0.0 };
-
     if (!_bc.isKnown(_h))
     {
-        // Might be worth throwing here.
         cwarn << "Invalid block given for state population: " << _h;
         BOOST_THROW_EXCEPTION(BlockNotFound() << errinfo_target(_h));
     }
 
-    auto b = _bc.block(_h);
-    BlockHeader bi(b);		// No need to check - it's already in the DB.
-    if (bi.number())
-    {
-        // Non-genesis:
+    auto const& blockBytes = _bc.block(_h);
 
-        // 1. Start at parent's end state (state root).
-        BlockHeader bip(_bc.block(bi.parentHash()));
-        sync(_bc, bi.parentHash(), bip);
+    // Set block headers
+    auto const blockHeader = BlockHeader{blockBytes};
+    m_currentBlock = blockHeader;
 
-        // 2. Enact the block's transactions onto this state.
-        m_author = bi.author();
-        Timer t;
-        auto vb = _bc.verifyBlock(&b, function<void(Exception&)>(), _ir | ImportRequirements::TransactionBasic);
-        ret.verify = t.elapsed();
-        t.restart();
-        enact(vb, _bc);
-        ret.enact = t.elapsed();
-    }
+    if (blockHeader.number())
+        m_previousBlock = _bc.info(blockHeader.parentHash());
     else
+        m_previousBlock = m_currentBlock;
+
+    // Set state root and precommit state
+    //
+    // First check for database corruption by looking up the state root in the state database. Note
+    // that we don't technically need to do this since if the state DB is corrupt setting a new
+    // state root will throw anyway, but checking here enables us to log a user-friendly error
+    // message.
+    if (m_state.db().lookup(blockHeader.stateRoot()).empty())
     {
-        // Genesis required:
-        // We know there are no transactions, so just populate directly.
-        m_state = State(m_state.accountStartNonce(), m_state.db(), BaseState::Empty);	// TODO: try with PreExisting.
-        sync(_bc, _h, bi);
+        cerr << "Unable to populate block " << blockHeader.hash() << " - state root "
+             << blockHeader.stateRoot() << " not found in database.";
+        cerr << "Database corrupt: contains block without state root: " << blockHeader;
+        cerr << "Try rescuing the database by running: eth --rescue";
+        BOOST_THROW_EXCEPTION(InvalidStateRoot() << errinfo_target(blockHeader.stateRoot()));
     }
 
-    return ret;
+    m_state.setRoot(blockHeader.stateRoot());
+    m_precommit = m_state;
+
+    RLP blockRLP{blockBytes};
+    auto const& txListRLP = blockRLP[1];
+    for (auto const& txRLP : txListRLP)
+    {
+        m_transactions.push_back(Transaction{txRLP.data(), CheckTransaction::None});
+        m_transactionSet.insert(m_transactions.back().sha3());
+    }
+    m_receipts = _bc.receipts(_h).receipts;
+
+    m_author = blockHeader.author();
+
+    m_committedToSeal = false;
+    m_sealEngine = _bc.sealEngine();
 }
 
 bool Block::sync(BlockChain const& _bc)
