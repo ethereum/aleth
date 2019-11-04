@@ -18,6 +18,7 @@ R"E(
         "byzantiumForkBlock": "0x42ae50",
         "constantinopleForkBlock": "0x6f1580",
         "constantinopleFixForkBlock": "0x6f1580",
+        "istanbulForkBlock": "0x8a61c8",
         "networkID" : "0x01",
         "chainID": "0x01",
         "maximumExtraDataSize": "0x20",
@@ -49,6 +50,7 @@ R"E(
         "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "startingBlock": "0x42ae50", "linear": { "base": 500, "word": 0 } } },
         "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "startingBlock": "0x42ae50", "linear": { "base": 40000, "word": 0 } } },
         "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product", "startingBlock": "0x42ae50" } },
+		"0000000000000000000000000000000000000009": { "precompiled": { "name": "blake2_compression", "startingBlock": "0x8a61c8" } },
         "3282791d6fd713f1e94f4bfd565eaa78b3a0599d": {
         "balance": "1337000000000000000000"
         },
