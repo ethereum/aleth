@@ -59,10 +59,14 @@ ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
     *this = loadConfig(_json, _stateRoot);
 }
 
-ChainParams::ChainParams(std::string const& _s, AdditionalEIPs const& _additionalEIPs)
-  : ChainParams(_s)
+ChainParams::ChainParams(std::string const& _configJson, AdditionalEIPs const& _additionalEIPs)
+  : ChainParams(_configJson)
 {
-    *this = addEIPs(_additionalEIPs);
+    lastForkAdditionalEIPs = _additionalEIPs;
+
+    // create EVM schedule
+    EVMSchedule const& lastForkSchedule = forkScheduleForBlockNumber(lastForkBlock);
+    lastForkWithAdditionalEIPsSchedule = EVMSchedule{lastForkSchedule, _additionalEIPs};
 }
 
 ChainParams ChainParams::loadConfig(
@@ -125,7 +129,7 @@ ChainParams ChainParams::loadConfig(
     setOptionalU256Parameter(cp.experimentalForkBlock, c_experimentalForkBlock);
 
     cp.lastForkBlock = findMaxForkBlockNumber(params);
-    cp.lastForkWithAdditionalEIPsSchedule = cp.fixedScheduleForBlockNumber(cp.lastForkBlock);
+    cp.lastForkWithAdditionalEIPsSchedule = cp.forkScheduleForBlockNumber(cp.lastForkBlock);
 
     setOptionalU256Parameter(cp.minimumDifficulty, c_minimumDifficulty);
     setOptionalU256Parameter(cp.difficultyBoundDivisor, c_difficultyBoundDivisor);
@@ -177,18 +181,6 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
         cp.sealRLP = rlp(mixHash) + rlp(nonce);
     }
     cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot();
-    return cp;
-}
-
-ChainParams ChainParams::addEIPs(AdditionalEIPs const& _eips) const
-{
-    ChainParams cp(*this);
-    cp.lastForkAdditionalEIPs = _eips;
-
-    // create EVM schedule
-    EVMSchedule const& lastForkSchedule = cp.fixedScheduleForBlockNumber(cp.lastForkBlock);
-    cp.lastForkWithAdditionalEIPsSchedule = addEIPsToSchedule(lastForkSchedule, _eips);
-
     return cp;
 }
 

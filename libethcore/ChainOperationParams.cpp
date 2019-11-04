@@ -40,10 +40,10 @@ EVMSchedule const& ChainOperationParams::scheduleForBlockNumber(u256 const& _blo
     if (_blockNumber >= lastForkBlock)
         return lastForkWithAdditionalEIPsSchedule;
     else
-        return fixedScheduleForBlockNumber(_blockNumber);
+        return forkScheduleForBlockNumber(_blockNumber);
 }
 
-EVMSchedule const& ChainOperationParams::fixedScheduleForBlockNumber(u256 const& _blockNumber) const
+EVMSchedule const& ChainOperationParams::forkScheduleForBlockNumber(u256 const& _blockNumber) const
 {
     if (_blockNumber >= experimentalForkBlock)
         return ExperimentalSchedule;

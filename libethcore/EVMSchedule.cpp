@@ -9,13 +9,11 @@ namespace dev
 {
 namespace eth
 {
-EVMSchedule addEIPsToSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips)
+EVMSchedule::EVMSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips)
+  : EVMSchedule(_schedule)
 {
-    EVMSchedule modifiedSchedule = _schedule;
     if (_eips.eip2046)
-        modifiedSchedule.precompileStaticCallGas = 40;
-
-    return modifiedSchedule;
+        precompileStaticCallGas = 40;
 }
 }  // namespace eth
 }  // namespace dev

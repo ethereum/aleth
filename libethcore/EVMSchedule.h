@@ -19,6 +19,8 @@ struct EVMSchedule
 {
     EVMSchedule(): tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
     EVMSchedule(bool _efcd, bool _hdc, unsigned const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
+    // construct schedule with additional EIPs on top
+    EVMSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips);
     unsigned accountVersion = 0;
     bool exceptionalFailedCodeDeposit = true;
     bool haveDelegateCall = true;
@@ -183,7 +185,5 @@ inline EVMSchedule const& latestScheduleForAccountVersion(u256 const& _version)
         return DefaultSchedule;
     }
 }
-
-EVMSchedule addEIPsToSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips);
 }
 }

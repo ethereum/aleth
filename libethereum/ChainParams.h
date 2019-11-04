@@ -22,8 +22,9 @@ struct ChainParams: public ChainOperationParams
 {
     ChainParams();
     ChainParams(ChainParams const& /*_org*/) = default;
-    ChainParams(std::string const& _s, h256 const& _stateRoot = h256());
-    ChainParams(std::string const& _s, AdditionalEIPs const& _additionalEIPs);
+    ChainParams(std::string const& _configJson, h256 const& _stateRoot = h256());
+    /// params with additional EIPs activated on top of the last fork block
+    ChainParams(std::string const& _configJson, AdditionalEIPs const& _additionalEIPs);
     ChainParams(bytes const& _genesisRLP, AccountMap const& _state)
     {
         populateFromGenesis(_genesisRLP, _state);
@@ -58,9 +59,6 @@ struct ChainParams: public ChainOperationParams
     /// load config
     ChainParams loadConfig(std::string const& _json, h256 const& _stateRoot = {},
         const boost::filesystem::path& _configPath = {}) const;
-
-    /// Activatie additional EIPs on top of the last fork block
-    ChainParams addEIPs(AdditionalEIPs const& _eips) const;
 
 private:
     void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);
