@@ -323,6 +323,7 @@ void LegacyVM::interpretCases()
 
             // Self-destructs only have gas cost starting with EIP 150
             m_runGas = toInt63(m_schedule->selfdestructGas);
+            updateIOGas();
 
             Address const dest = asAddress(m_SP[0]);
             // Starting with EIP150, self-destructs need to pay both gas cost and account creation
@@ -332,10 +333,12 @@ void LegacyVM::interpretCases()
                 (!m_schedule->eip158Mode || m_ext->balance(m_ext->myAddress) > 0))
             {
                 if (!m_ext->exists(dest))
-                    m_runGas += m_schedule->callNewAccountGas;
+                {
+                    m_runGas = m_schedule->callNewAccountGas;
+                    updateIOGas();
+                }
             }
 
-            updateIOGas();
             m_ext->selfdestruct(dest);
             m_bounce = 0;
         }
