@@ -343,6 +343,8 @@ void VM::interpretCases()
             if (m_message->flags & EVMC_STATIC)
                 throwDisallowedStateChange();
 
+            updateIOGas();
+
             auto const destination = intx::be::trunc<evmc::address>(m_SP[0]);
 
             // Starting with EIP150 (Tangerine Whistle), self-destructs need to pay account creation
@@ -354,11 +356,13 @@ void VM::interpretCases()
                     fromEvmC(m_context->host->get_balance(m_context, &m_message->destination)) > 0)
                 {
                     if (!m_context->host->account_exists(m_context, &destination))
-                        m_runGas += VMSchedule::callNewAccount;
+                    {
+                        m_runGas = VMSchedule::callNewAccount;
+                        updateIOGas();
+                    }
                 }
             }
 
-            updateIOGas();
             m_context->host->selfdestruct(m_context, &m_message->destination, &destination);
             m_bounce = nullptr;
         }
