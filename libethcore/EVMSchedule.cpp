@@ -12,6 +12,8 @@ namespace eth
 EVMSchedule::EVMSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips)
   : EVMSchedule(_schedule)
 {
+    if (_eips.eip1380)
+        callSelfGas = 40;
     if (_eips.eip2046)
         precompileStaticCallGas = 40;
 }

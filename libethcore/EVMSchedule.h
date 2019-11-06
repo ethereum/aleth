@@ -160,7 +160,6 @@ static const EVMSchedule IstanbulSchedule = [] {
 
 static const EVMSchedule BerlinSchedule = [] {
     EVMSchedule schedule = IstanbulSchedule;
-    schedule.callSelfGas = 40;
     return schedule;
 }();
 

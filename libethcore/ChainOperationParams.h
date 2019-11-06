@@ -56,6 +56,7 @@ constexpr int64_t c_infiniteBlockNumber = std::numeric_limits<int64_t>::max();
 
 struct AdditionalEIPs
 {
+    bool eip1380 = false;
     bool eip2046 = false;
 };
 
