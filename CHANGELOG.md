@@ -5,6 +5,7 @@
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
 - Added: [#5741](https://github.com/ethereum/aleth/pull/5741) Support for individual EIP activation to facilitate EIP-centric network upgrade process.
 - Added: [#5752](https://github.com/ethereum/aleth/pull/5752) [#5753](https://github.com/ethereum/aleth/pull/5753) Implement EIP1380 (reduced gas costs for call-to-self).
+- Changed: [#5750](https://github.com/ethereum/aleth/pull/5750) Use `testeth -t <SUITE_NAME> -- --testfile <PATH>` to run the tests from file at any path. Use `testeth -t <SUITE_NAME> -- --testfile <PATH> --singletest <TEST_NAME>` to run only single test from any file.
 - Changed: [#5801](https://github.com/ethereum/aleth/pull/5801) `testeth -t BlockchainTests` command now doesn't run the tests for the forks before Istanbul. To run those tests use a separate LegacyTests suite with command `testeth -t LegacyTests/Constantinople/BlockchainTests`.
 - Changed: [#5807](https://github.com/ethereum/aleth/pull/5807) Optimize selfdestruct opcode in LegacyVM by reducing state accesses in certain out-of-gas scenarios.
 - Changed: [#5806](https://github.com/ethereum/aleth/pull/5806) Optimize selfdestruct opcode in aleth-interpreter by reducing state accesses in certain out-of-gas scenarios.
