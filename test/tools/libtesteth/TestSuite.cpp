@@ -224,8 +224,8 @@ void TestSuite::executeTest(string const& _testFolder, fs::path const& _testFile
 		}
 		else
 		{
-			if (!Options::get().singleTest)
-				cnote << "Populating tests...";
+            if (Options::get().singleTestName.empty())
+                cnote << "Populating tests...";
 
             TestFileData fillerData = readTestFile(_testFileName);
             removeComments(fillerData.data);

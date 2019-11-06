@@ -34,8 +34,11 @@ void printHelp()
     cout << setw(35) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests\n";
     cout << setw(35) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests\n";
     cout << setw(35) << "--singletest <TestName>" << "Run on a single test\n";
-    cout << setw(35) << "--singletest <TestFile> <TestName>" << "Run on a single test from file\n";
     cout << setw(35) << "--singlenet <networkId>" << setw(25) << "Run tests for a specific network (Frontier|Homestead|EIP150|EIP158|Byzantium|Constantinople|ConstantinopleFix)\n";
+    cout << setw(35) << "--testfile <TestFile>"
+         << "Run tests from a file. Requires -t <TestSuite>\n";
+    cout << setw(35) << "--testfile <TestFile> --singletest <TestName>"
+         << "Run on a single test from a file. Requires -t <TestSuite>\n";
     cout << setw(35) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed\n";
     cout << setw(35) << "--vm <name|path> (=legacy)" << setw(25) << "Set VM type for VMTests suite. Available options are: interpreter, legacy.\n";
     cout << setw(35) << "--evmc <option>=<value>" << "EVMC option\n";
@@ -198,30 +201,23 @@ Options::Options(int argc, const char** argv)
         else if (arg == "--singletest")
         {
             throwIfNoArgumentFollows();
-            singleTest = true;
-            auto name1 = std::string{argv[++i]};
-            if (i + 1 < argc) // two params
-            {
-                auto name2 = std::string{argv[++i]};
-                if (name2[0] == '-') // not param, another option
-                {
-                    singleTestName = std::move(name1);
-                    i--;
-                }
-                else
-                {
-                    singleTestFile = std::move(name1);
-                    singleTestName = std::move(name2);
-                }
-            }
-            else
-                singleTestName = std::move(name1);
+            singleTestName = std::string{argv[++i]};
         }
         else if (arg == "--singlenet")
         {
             throwIfNoArgumentFollows();
             singleTestNet = std::string{argv[++i]};
             ImportTest::checkAllowedNetwork(singleTestNet);
+        }
+        else if (arg == "--testfile")
+        {
+            throwIfNoArgumentFollows();
+            singleTestFile = std::string{argv[++i]};
+            if (!boost::filesystem::exists(singleTestFile))
+            {
+                cerr << "Test file not found: " << singleTestFile << "\n";
+                exit(1);
+            }
         }
         else if (arg == "--fullstate")
             fullstate = true;
@@ -329,8 +325,8 @@ Options::Options(int argc, const char** argv)
     //check restricted options
     if (createRandomTest)
     {
-        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || singleTest || all ||
-            stats || filltests || fillchain)
+        if (trValueIndex >= 0 || trGasIndex >= 0 || trDataIndex >= 0 || !singleTestName.empty() ||
+            all || stats || filltests || fillchain)
         {
             cerr << "--createRandomTest cannot be used with any of the options: " <<
                     "trValueIndex, trGasIndex, trDataIndex, singleTest, all, " <<

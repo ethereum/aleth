@@ -36,10 +36,11 @@ void TestOutputHelper::initTest(size_t _maxTests)
 
 bool TestOutputHelper::checkTest(std::string const& _testName)
 {
-	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
-		return false;
+    if (!test::Options::get().singleTestName.empty() &&
+        test::Options::get().singleTestName != _testName)
+        return false;
 
-	m_currentTestName = _testName;
+    m_currentTestName = _testName;
 	return true;
 }
 

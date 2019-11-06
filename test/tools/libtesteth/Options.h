@@ -40,8 +40,7 @@ public:
 
     /// Test selection
     /// @{
-    bool singleTest = false;
-    boost::optional<std::string> singleTestFile;
+    std::string singleTestFile;
     std::string singleTestName;
     std::string singleTestNet;
     int trDataIndex;	///< GeneralState data

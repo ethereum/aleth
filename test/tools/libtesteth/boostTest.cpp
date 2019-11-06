@@ -44,9 +44,9 @@ void customTestSuite()
     }
 
     // if running a singletest
-    if (opt.singleTestFile.is_initialized())
+    if (!opt.singleTestFile.empty())
     {
-        boost::filesystem::path file(opt.singleTestFile.get());
+        boost::filesystem::path const file(opt.singleTestFile);
         if (opt.rCurrentTestSuite.find("GeneralStateTests") != std::string::npos)
         {
             dev::test::StateTestSuite suite;
@@ -93,7 +93,7 @@ int main(int argc, const char* argv[])
     }
 
     dev::test::Options const& opt = dev::test::Options::get();
-    if (opt.createRandomTest || opt.singleTestFile.is_initialized())
+    if (opt.createRandomTest || !opt.singleTestFile.empty())
     {
         bool testSuiteFound = false;
         for (int i = 0; i < argc; i++)
@@ -114,7 +114,7 @@ int main(int argc, const char* argv[])
             std::cerr << "createRandomTest requires a test suite to be set -t <TestSuite>\n";
             return -1;
         }
-        if (!testSuiteFound && opt.singleTestFile.is_initialized())
+        if (!testSuiteFound && !opt.singleTestFile.empty())
         {
             std::cerr
                 << "singletest <file> <testname>  requires a test suite to be set -t <TestSuite>\n";
@@ -146,7 +146,8 @@ int main(int argc, const char* argv[])
     }
 
     // Print suggestions of a test case if test suite not found
-    if (!sMinusTArg.empty() && !dev::test::inArray(c_allTestNames, sMinusTArg))
+    if (!sMinusTArg.empty() && !dev::test::inArray(c_allTestNames, sMinusTArg) &&
+        sMinusTArg != "customTestSuite")
     {
         std::cerr << "Error: '" + sMinusTArg + "' suite not found! \n";
         printTestSuiteSuggestions(sMinusTArg);

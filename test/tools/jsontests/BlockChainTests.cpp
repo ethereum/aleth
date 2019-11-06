@@ -122,7 +122,8 @@ json_spirit::mValue doBCTest(
                 Options const& opt = test::Options::get();
 
                 // Select BC Test by singleTest
-                if (opt.singleTest && !boost::algorithm::starts_with(testname, opt.singleTestName))
+                if (!opt.singleTestName.empty() &&
+                    !boost::algorithm::starts_with(testname, opt.singleTestName))
                     continue;
 
                 // Select BC Test by singleNet
