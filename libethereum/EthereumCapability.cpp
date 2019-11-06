@@ -611,8 +611,11 @@ void EthereumCapability::onTransactionImported(
 void EthereumCapability::onConnect(NodeID const& _peerID, u256 const& _peerCapabilityVersion)
 {
     m_host->addNote(_peerID, "manners", m_host->isRude(_peerID, name()) ? "RUDE" : "nice");
-
     EthereumPeer peer{m_host, _peerID, _peerCapabilityVersion};
+	if (m_peers.count(_peerID))
+	{
+		LOG(m_loggerWarn) << "Peer already found in peers list: " << _peerID;
+	}
     m_peers.emplace(_peerID, peer);
     peer.requestStatus(m_networkId, m_chain.details().totalDifficulty, m_chain.currentHash(),
         m_chain.genesisHash());
