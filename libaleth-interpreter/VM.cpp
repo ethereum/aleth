@@ -24,8 +24,9 @@ void delete_output(const evmc_result* result)
     delete[] result->output_data;
 }
 
-evmc_result execute(evmc_vm* _instance, evmc_host_context* _context, evmc_revision _rev,
-    const evmc_message* _msg, uint8_t const* _code, size_t _codeSize) noexcept
+evmc_result execute(evmc_vm* _instance, const evmc_host_interface* _host,
+    evmc_host_context* _context, evmc_revision _rev, const evmc_message* _msg, uint8_t const* _code,
+    size_t _codeSize) noexcept
 {
     (void)_instance;
     std::unique_ptr<dev::eth::VM> vm{new dev::eth::VM};
@@ -35,7 +36,7 @@ evmc_result execute(evmc_vm* _instance, evmc_host_context* _context, evmc_revisi
 
     try
     {
-        output = vm->exec(_context, _rev, _msg, _code, _codeSize);
+        output = vm->exec(_host, _context, _rev, _msg, _code, _codeSize);
         result.status_code = EVMC_SUCCESS;
         result.gas_left = vm->m_io_gas;
     }
@@ -238,7 +239,7 @@ void VM::fetchInstruction()
 evmc_tx_context const& VM::getTxContext()
 {
     if (!m_tx_context)
-        m_tx_context.emplace(m_context->host->get_tx_context(m_context));
+        m_tx_context.emplace(m_host->get_tx_context(m_context));
     return m_tx_context.value();
 }
 
@@ -247,9 +248,10 @@ evmc_tx_context const& VM::getTxContext()
 //
 // interpreter entry point
 
-owning_bytes_ref VM::exec(evmc_host_context* _context, evmc_revision _rev, const evmc_message* _msg,
-    uint8_t const* _code, size_t _codeSize)
+owning_bytes_ref VM::exec(const evmc_host_interface* _host, evmc_host_context* _context,
+    evmc_revision _rev, const evmc_message* _msg, uint8_t const* _code, size_t _codeSize)
 {
+    m_host = _host;
     m_context = _context;
     m_rev = _rev;
     m_metrics = &s_metrics[m_rev];
@@ -364,15 +366,15 @@ void VM::interpretCases()
             if (m_rev >= EVMC_TANGERINE_WHISTLE)
             {
                 if (m_rev == EVMC_TANGERINE_WHISTLE ||
-                    fromEvmC(m_context->host->get_balance(m_context, &m_message->destination)) > 0)
+                    fromEvmC(m_host->get_balance(m_context, &m_message->destination)) > 0)
                 {
-                    if (!m_context->host->account_exists(m_context, &destination))
+                    if (!m_host->account_exists(m_context, &destination))
                         m_runGas += VMSchedule::callNewAccount;
                 }
             }
 
             updateIOGas();
-            m_context->host->selfdestruct(m_context, &m_message->destination, &destination);
+            m_host->selfdestruct(m_context, &m_message->destination, &destination);
             m_bounce = nullptr;
         }
         BREAK
@@ -449,8 +451,7 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            m_context->host->emit_log(
-                m_context, &m_message->destination, data, dataSize, nullptr, 0);
+            m_host->emit_log(m_context, &m_message->destination, data, dataSize, nullptr, 0);
         }
         NEXT
 
@@ -469,8 +470,7 @@ void VM::interpretCases()
             evmc_uint256be topics[] = {toEvmC(m_SP[2])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->host->emit_log(
-                m_context, &m_message->destination, data, dataSize, topics, numTopics);
+            m_host->emit_log(m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
@@ -489,8 +489,7 @@ void VM::interpretCases()
             evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->host->emit_log(
-                m_context, &m_message->destination, data, dataSize, topics, numTopics);
+            m_host->emit_log(m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
@@ -509,8 +508,7 @@ void VM::interpretCases()
             evmc_uint256be topics[] = {toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->host->emit_log(
-                m_context, &m_message->destination, data, dataSize, topics, numTopics);
+            m_host->emit_log(m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
@@ -530,8 +528,7 @@ void VM::interpretCases()
                 toEvmC(m_SP[2]), toEvmC(m_SP[3]), toEvmC(m_SP[4]), toEvmC(m_SP[5])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
-            m_context->host->emit_log(
-                m_context, &m_message->destination, data, dataSize, topics, numTopics);
+            m_host->emit_log(m_context, &m_message->destination, data, dataSize, topics, numTopics);
         }
         NEXT
 
@@ -893,7 +890,7 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
-            m_SPP[0] = fromEvmC(m_context->host->get_balance(m_context, &address));
+            m_SPP[0] = fromEvmC(m_host->get_balance(m_context, &address));
         }
         NEXT
 
@@ -976,7 +973,7 @@ void VM::interpretCases()
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
 
-            m_SPP[0] = m_context->host->get_code_size(m_context, &address);
+            m_SPP[0] = m_host->get_code_size(m_context, &address);
         }
         NEXT
 
@@ -1018,7 +1015,7 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_address address = toEvmC(asAddress(m_SP[0]));
-            m_SPP[0] = fromEvmC(m_context->host->get_code_hash(m_context, &address));
+            m_SPP[0] = fromEvmC(m_host->get_code_hash(m_context, &address));
         }
         NEXT
 
@@ -1049,8 +1046,8 @@ void VM::interpretCases()
                 m_SP[2] > codeOffsetMax ? codeOffsetMax : static_cast<size_t>(m_SP[2]);
             size_t size = static_cast<size_t>(copyMemSize);
 
-            size_t numCopied = m_context->host->copy_code(
-                m_context, &address, codeOffset, &m_mem[memoryOffset], size);
+            size_t numCopied =
+                m_host->copy_code(m_context, &address, codeOffset, &m_mem[memoryOffset], size);
 
             std::fill_n(&m_mem[memoryOffset + numCopied], size - numCopied, 0);
         }
@@ -1077,7 +1074,7 @@ void VM::interpretCases()
 
             if (number < blockNumber && number >= std::max(int64_t(256), blockNumber) - 256)
             {
-                m_SPP[0] = fromEvmC(m_context->host->get_block_hash(m_context, int64_t(number)));
+                m_SPP[0] = fromEvmC(m_host->get_block_hash(m_context, int64_t(number)));
             }
             else
                 m_SPP[0] = 0;
@@ -1152,7 +1149,7 @@ void VM::interpretCases()
 
             updateIOGas();
 
-            m_SPP[0] = fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
+            m_SPP[0] = fromEvmC(m_host->get_balance(m_context, &m_message->destination));
         }
         NEXT
 
@@ -1351,8 +1348,7 @@ void VM::interpretCases()
             updateIOGas();
 
             evmc_uint256be key = toEvmC(m_SP[0]);
-            m_SPP[0] =
-                fromEvmC(m_context->host->get_storage(m_context, &m_message->destination, &key));
+            m_SPP[0] = fromEvmC(m_host->get_storage(m_context, &m_message->destination, &key));
         }
         NEXT
 
@@ -1368,7 +1364,7 @@ void VM::interpretCases()
             evmc_uint256be const key = toEvmC(m_SP[0]);
             evmc_uint256be const value = toEvmC(m_SP[1]);
             auto const status =
-                m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
+                m_host->set_storage(m_context, &m_message->destination, &key, &value);
 
             switch(status)
             {
