@@ -5,15 +5,16 @@
 
 #pragma once
 
+#include "BlockDetails.h"
+#include "GasPricer.h"
+#include "LogFilter.h"
+#include "Transaction.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/Common.h>
+#include <libethcore/EVMSchedule.h>
 #include <libethcore/SealEngine.h>
-#include "GasPricer.h"
-#include "LogFilter.h"
-#include "Transaction.h"
-#include "BlockDetails.h"
 
 namespace dev
 {

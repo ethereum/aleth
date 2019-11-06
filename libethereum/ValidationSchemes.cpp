@@ -40,6 +40,7 @@ string const c_shouldnotexist = "shouldnotexist";
 string const c_minGasLimit = "minGasLimit";
 string const c_maxGasLimit = "maxGasLimit";
 string const c_gasLimitBoundDivisor = "gasLimitBoundDivisor";
+string const c_forkBlockSuffix = "ForkBlock";
 string const c_homesteadForkBlock = "homesteadForkBlock";
 string const c_daoHardforkBlock = "daoHardforkBlock";
 string const c_EIP150ForkBlock = "EIP150ForkBlock";

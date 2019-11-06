@@ -4,18 +4,23 @@
 
 #pragma once
 
-#include <array>
+#include <libdevcore/Common.h>
+#include <libethcore/Common.h>
 #include <boost/optional.hpp>
+#include <array>
 
 namespace dev
 {
 namespace eth
 {
+struct AdditionalEIPs;
 
 struct EVMSchedule
 {
     EVMSchedule(): tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
     EVMSchedule(bool _efcd, bool _hdc, unsigned const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
+    // construct schedule with additional EIPs on top
+    EVMSchedule(EVMSchedule const& _schedule, AdditionalEIPs const& _eips);
     unsigned accountVersion = 0;
     bool exceptionalFailedCodeDeposit = true;
     bool haveDelegateCall = true;
@@ -155,7 +160,6 @@ static const EVMSchedule IstanbulSchedule = [] {
 
 static const EVMSchedule BerlinSchedule = [] {
     EVMSchedule schedule = IstanbulSchedule;
-    schedule.precompileStaticCallGas = 40;
     schedule.callSelfGas = 40;
     return schedule;
 }();
