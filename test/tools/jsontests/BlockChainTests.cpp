@@ -1047,42 +1047,6 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 }
 }
 
-class bcValidTestFixture
-{
-public:
-    bcValidTestFixture()
-    {
-        test::BlockchainValidTestSuite suite;
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        //skip wallet test as it takes too much time (250 blocks) run it with --all flag
-        if (casename == "bcWalletTest" && !test::Options::get().all)
-        {
-            cnote << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-class bcInvalidTestFixture
-{
-public:
-    bcInvalidTestFixture()
-    {
-        test::BlockchainInvalidTestSuite suite;
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
 class bcTransitionFixture {
 public:
     bcTransitionFixture()
@@ -1098,7 +1062,7 @@ public:
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
-BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcValidTestFixture)
+BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcTestFixture<test::BlockchainValidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcExploitTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
@@ -1114,7 +1078,7 @@ BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Tests that might have invalid blocks and check that those are rejected
-BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcInvalidTestFixture)
+BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcTestFixture<test::BlockchainInvalidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}

@@ -19,8 +19,8 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace fs = boost::filesystem;
 
-const string c_pathToValidBlocks = "/BlockchainTests/ValidBlocks/";
-const string c_pathToInValidBlocks = "/BlockchainTests/InvalidBlocks/";
+const string c_pathToValidBlocks = "/LegacyTests/Constantinople/BlockchainTests/ValidBlocks/";
+const string c_pathToInValidBlocks = "/LegacyTests/Constantinople/BlockchainTests/InvalidBlocks/";
 
 namespace dev {  namespace test {
 
