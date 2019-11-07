@@ -208,7 +208,7 @@ public:
 class AlethInterpreterCreate2TestFixture: public Create2TestFixture
 {
 public:
-    AlethInterpreterCreate2TestFixture(): Create2TestFixture{new EVMC{evmc_create_interpreter()}} {}
+    AlethInterpreterCreate2TestFixture(): Create2TestFixture{new EVMC{evmc_create_aleth_interpreter()}} {}
 };
 
 class ExtcodehashTestFixture : public TestOutputHelperFixture
@@ -376,7 +376,7 @@ class AlethInterpreterExtcodehashTestFixture : public ExtcodehashTestFixture
 {
 public:
     AlethInterpreterExtcodehashTestFixture()
-      : ExtcodehashTestFixture{new EVMC{evmc_create_interpreter()}}
+      : ExtcodehashTestFixture{new EVMC{evmc_create_aleth_interpreter()}}
     {}
 };
 
@@ -546,7 +546,7 @@ public:
 class AlethInterpreterSstoreTestFixture : public SstoreTestFixture
 {
 public:
-    AlethInterpreterSstoreTestFixture() : SstoreTestFixture{new EVMC{evmc_create_interpreter()}} {}
+    AlethInterpreterSstoreTestFixture() : SstoreTestFixture{new EVMC{evmc_create_aleth_interpreter()}} {}
 };
 
 class ChainIDTestFixture : public TestOutputHelperFixture
@@ -630,7 +630,7 @@ public:
 class AlethInterpreterChainIDTestFixture : public ChainIDTestFixture
 {
 public:
-    AlethInterpreterChainIDTestFixture() : ChainIDTestFixture{new EVMC{evmc_create_interpreter()}}
+    AlethInterpreterChainIDTestFixture() : ChainIDTestFixture{new EVMC{evmc_create_aleth_interpreter()}}
     {}
 };
 
@@ -749,7 +749,7 @@ public:
 class AlethInterpreterBalanceFixture : public BalanceFixture
 {
 public:
-    AlethInterpreterBalanceFixture() : BalanceFixture{new EVMC{evmc_create_interpreter()}} {}
+    AlethInterpreterBalanceFixture() : BalanceFixture{new EVMC{evmc_create_aleth_interpreter()}} {}
 };
 }  // namespace
 

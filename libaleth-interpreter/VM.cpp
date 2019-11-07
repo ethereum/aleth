@@ -101,7 +101,7 @@ evmc_result execute(evmc_vm* _instance, const evmc_host_interface* _host,
 }
 }  // namespace
 
-extern "C" evmc_vm* evmc_create_interpreter() noexcept
+extern "C" evmc_vm* evmc_create_aleth_interpreter() noexcept
 {
     // TODO: Allow creating multiple instances with different configurations.
     static evmc_vm s_vm{
