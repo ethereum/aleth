@@ -63,6 +63,8 @@ ChainParams createChainParamsForNetwork(string const& _networkName)
     AdditionalEIPs eips;
     for (auto it = networkAndEIPs.begin() + 1; it != networkAndEIPs.end(); ++it)
     {
+        if (*it == "1380")
+            eips.eip1380 = true;
         if (*it == "2046")
             eips.eip2046 = true;
     }
