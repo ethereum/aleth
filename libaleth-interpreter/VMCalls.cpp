@@ -22,60 +22,6 @@ void VM::copyDataToMemory(bytesConstRef _data, intx::uint256*_sp)
         std::memset(m_mem.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);
 }
 
-
-// consolidate exception throws to avoid spraying boost code all over interpreter
-
-void VM::throwOutOfGas()
-{
-    BOOST_THROW_EXCEPTION(OutOfGas());
-}
-
-void VM::throwInvalidInstruction()
-{
-    BOOST_THROW_EXCEPTION(InvalidInstruction());
-}
-
-void VM::throwBadInstruction()
-{
-    BOOST_THROW_EXCEPTION(BadInstruction());
-}
-
-void VM::throwBadJumpDestination()
-{
-    BOOST_THROW_EXCEPTION(BadJumpDestination());
-}
-
-void VM::throwDisallowedStateChange()
-{
-    BOOST_THROW_EXCEPTION(DisallowedStateChange());
-}
-
-// throwBadStack is called from fetchInstruction() -> adjustStack()
-// its the only exception that can happen before ON_OP() log is done for an opcode case in VM.cpp
-// so the call to m_onFail is needed here
-void VM::throwBadStack(int _required, int _change)
-{
-    bigint size = m_stackEnd - m_SPP;
-    if (size < _required)
-        BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_required, size));
-    else
-        BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)_change, size));
-}
-
-void VM::throwRevertInstruction(owning_bytes_ref&& _output)
-{
-    // We can't use BOOST_THROW_EXCEPTION here because it makes a copy of exception inside and
-    // RevertInstruction has no copy constructor
-    throw RevertInstruction(std::move(_output));
-}
-
-void VM::throwBufferOverrun(intx::uint512 const& _endOfAccess)
-{
-    BOOST_THROW_EXCEPTION(
-        BufferOverrun() << RequirementError(
-            bigint(std::string("0x") + intx::hex(_endOfAccess)), bigint(m_returnData.size())));
-}
-
 int64_t VM::verifyJumpDest(intx::uint256 const& _dest, bool _throw)
 {
     // check for overflow
@@ -88,7 +34,7 @@ int64_t VM::verifyJumpDest(intx::uint256 const& _dest, bool _throw)
             return pc;
     }
     if (_throw)
-        throwBadJumpDestination();
+        throw EVMC_BAD_JUMP_DESTINATION;
     return -1;
 }
 

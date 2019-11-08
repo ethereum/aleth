@@ -5,13 +5,12 @@
 
 #include "VMConfig.h"
 
-#include <libevm/VMFace.h>
 #include <intx/intx.hpp>
-
 #include <evmc/evmc.h>
 #include <evmc/instructions.h>
-
 #include <boost/optional.hpp>
+
+#include <libevm/ExtVMFace.h>
 
 namespace dev
 {
@@ -56,6 +55,9 @@ public:
     owning_bytes_ref exec(evmc_host_context* _context, evmc_revision _rev, const evmc_message* _msg,
         uint8_t const* _code, size_t _codeSize);
 
+    // return bytes
+    owning_bytes_ref m_output;
+
     uint64_t m_io_gas = 0;
 private:
     evmc_host_context* m_context = nullptr;
@@ -68,9 +70,6 @@ private:
     typedef void (VM::*MemFnPtr)();
     MemFnPtr m_bounce = nullptr;
     uint64_t m_nSteps = 0;
-
-    // return bytes
-    owning_bytes_ref m_output;
 
     // space for memory
     bytes m_mem;
@@ -119,15 +118,6 @@ private:
 
     const evmc_tx_context& getTxContext();
 
-    void throwOutOfGas();
-    void throwInvalidInstruction();
-    void throwBadInstruction();
-    void throwBadJumpDestination();
-    void throwBadStack(int _removed, int _added);
-    void throwRevertInstruction(owning_bytes_ref&& _output);
-    void throwDisallowedStateChange();
-    void throwBufferOverrun(intx::uint512 const& _enfOfAccess);
-
     std::vector<uint64_t> m_beginSubs;
     std::vector<uint64_t> m_jumpDests;
     int64_t verifyJumpDest(intx::uint256 const& _dest, bool _throw = true);
@@ -148,7 +138,7 @@ private:
     {
         // check for overflow
         if (v > 0x7FFFFFFFFFFFFFFF)
-            throwOutOfGas();
+            throw EVMC_OUT_OF_GAS;
         uint64_t w = uint64_t(v);
         return w;
     }
@@ -157,7 +147,7 @@ private:
     {
         // check for overflow
         if (v > 0x7FFF)
-            throwOutOfGas();
+            throw EVMC_OUT_OF_GAS;
         uint64_t w = uint64_t(v);
         return w;
     }

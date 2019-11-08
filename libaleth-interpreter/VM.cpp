@@ -1,8 +1,8 @@
 // Aleth: Ethereum C++ client, tools and libraries.
 // Copyright 2014-2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
-#include "interpreter.h"
 #include "VM.h"
+#include "interpreter.h"
 
 #include <aleth/version.h>
 
@@ -39,47 +39,14 @@ evmc_result execute(evmc_vm* _instance, evmc_host_context* _context, evmc_revisi
         result.status_code = EVMC_SUCCESS;
         result.gas_left = vm->m_io_gas;
     }
-    catch (dev::eth::RevertInstruction& ex)
+    catch (evmc_status_code statusCode)
     {
-        result.status_code = EVMC_REVERT;
-        result.gas_left = vm->m_io_gas;
-        output = ex.output();  // This moves the output from the exception!
-    }
-    catch (dev::eth::InvalidInstruction const&)
-    {
-        result.status_code = EVMC_INVALID_INSTRUCTION;
-    }
-    catch (dev::eth::BadInstruction const&)
-    {
-        result.status_code = EVMC_UNDEFINED_INSTRUCTION;
-    }
-    catch (dev::eth::OutOfStack const&)
-    {
-        result.status_code = EVMC_STACK_OVERFLOW;
-    }
-    catch (dev::eth::StackUnderflow const&)
-    {
-        result.status_code = EVMC_STACK_UNDERFLOW;
-    }
-    catch (dev::eth::BufferOverrun const&)
-    {
-        result.status_code = EVMC_INVALID_MEMORY_ACCESS;
-    }
-    catch (dev::eth::OutOfGas const&)
-    {
-        result.status_code = EVMC_OUT_OF_GAS;
-    }
-    catch (dev::eth::BadJumpDestination const&)
-    {
-        result.status_code = EVMC_BAD_JUMP_DESTINATION;
-    }
-    catch (dev::eth::DisallowedStateChange const&)
-    {
-        result.status_code = EVMC_STATIC_MODE_VIOLATION;
-    }
-    catch (dev::eth::VMException const&)
-    {
-        result.status_code = EVMC_FAILURE;
+        result.status_code = statusCode;
+        if (statusCode == EVMC_REVERT)
+        {
+            result.gas_left = vm->m_io_gas;
+            output = std::move(vm->m_output);
+        }
     }
     catch (...)
     {
@@ -130,7 +97,7 @@ uint64_t VM::memNeed(intx::uint256 const& _offset, intx::uint256 const& _size)
 uint64_t VM::decodeJumpDest(const byte* const _code, uint64_t& _pc)
 {
     // turn 2 MSB-first bytes in the code into a native-order integer
-    uint64_t dest      = _code[_pc++];
+    uint64_t dest = _code[_pc++];
     dest = (dest << 8) | _code[_pc++];
     return dest;
 }
@@ -143,13 +110,14 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte _voff)
     //     byte table[n_jumps][2]
     //
     uint64_t pc = _pc;
-    byte n = _code[++pc];           // byte after opcode is number of jumps
-    if (_voff >= n) _voff = n - 1;  // if offset overflows use default jump
-    pc += _voff * 2;                // adjust inout pc before index destination in table
+    byte n = _code[++pc];  // byte after opcode is number of jumps
+    if (_voff >= n)
+        _voff = n - 1;  // if offset overflows use default jump
+    pc += _voff * 2;    // adjust inout pc before index destination in table
 
     uint64_t dest = decodeJumpDest(_code, pc);
 
-    _pc += 1 + n * 2;               // adust inout _pc to opcode after table
+    _pc += 1 + n * 2;  // adust inout _pc to opcode after table
     return dest;
 }
 
@@ -163,10 +131,10 @@ void VM::adjustStack(int _required, int _change)
 
     // adjust stack and check bounds
     if (m_stackEnd < m_SP + _required)
-        throwBadStack(_required, _change);
+        throw EVMC_STACK_UNDERFLOW;
     m_SPP -= _change;
     if (m_SPP < m_stack)
-        throwBadStack(_required, _change);
+        throw EVMC_STACK_OVERFLOW;
 }
 
 uint64_t VM::gasForMem(intx::uint512 const& _size)
@@ -180,7 +148,7 @@ uint64_t VM::gasForMem(intx::uint512 const& _size)
 void VM::updateIOGas()
 {
     if (m_io_gas < m_runGas)
-        throwOutOfGas();
+        throw EVMC_OUT_OF_GAS;
     m_io_gas -= m_runGas;
 }
 
@@ -190,7 +158,7 @@ void VM::updateGas()
         m_runGas += toInt63(gasForMem(m_newMemSize) - gasForMem(m_mem.size()));
     m_runGas += (VMSchedule::copyGas * ((m_copyMemSize + 31) / 32));
     if (m_io_gas < m_runGas)
-        throwOutOfGas();
+        throw EVMC_OUT_OF_GAS;
 }
 
 void VM::updateMem(uint64_t _newMem)
@@ -203,7 +171,7 @@ void VM::updateMem(uint64_t _newMem)
 
 void VM::logGasMem()
 {
-    unsigned n = (unsigned) m_OP - (unsigned) Instruction::LOG0;
+    unsigned n = (unsigned)m_OP - (unsigned)Instruction::LOG0;
     constexpr int64_t logDataGas = VMSchedule::logDataGas;
     m_runGas = toInt63(
         VMSchedule::logGas + VMSchedule::logTopicGas * n + logDataGas * intx::uint512(m_SP[1]));
@@ -271,9 +239,9 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_BAD_JUMP_DESTINATION;
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             m_bounce = &VM::caseCreate;
         }
@@ -283,7 +251,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             m_bounce = &VM::caseCreate;
         }
@@ -296,11 +264,11 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_OP == Instruction::DELEGATECALL && m_rev < EVMC_HOMESTEAD)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
             if (m_OP == Instruction::STATICCALL && m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
             if (m_OP == Instruction::CALL && m_message->flags & EVMC_STATIC && m_SP[2] != 0)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
             m_bounce = &VM::caseCall;
         }
         BREAK
@@ -323,17 +291,16 @@ void VM::interpretCases()
         {
             // Pre-byzantium
             if (m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             m_copyMemSize = 0;
             updateMem(memNeed(m_SP[0], m_SP[1]));
             updateIOGas();
 
-            uint64_t b = (uint64_t)m_SP[0];
-            uint64_t s = (uint64_t)m_SP[1];
-            owning_bytes_ref output{std::move(m_mem), b, s};
-            throwRevertInstruction(std::move(output));
+            m_output = owning_bytes_ref{
+                std::move(m_mem), static_cast<uint64_t>(m_SP[0]), static_cast<uint64_t>(m_SP[1])};
+            throw EVMC_REVERT;
         }
         BREAK;
 
@@ -341,7 +308,7 @@ void VM::interpretCases()
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             updateIOGas();
 
@@ -391,7 +358,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(MSTORE)
+            CASE(MSTORE)
         {
             ON_OP();
             updateMem(toInt63(m_SP[0]) + 32);
@@ -401,7 +368,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(MSTORE8)
+            CASE(MSTORE8)
         {
             ON_OP();
             updateMem(toInt63(m_SP[0]) + 1);
@@ -411,7 +378,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SHA3)
+            CASE(SHA3)
         {
             ON_OP();
             constexpr int64_t sha3Gas = VMSchedule::sha3Gas;
@@ -428,11 +395,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(LOG0)
+            CASE(LOG0)
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -445,11 +412,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(LOG1)
+            CASE(LOG1)
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -465,11 +432,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(LOG2)
+            CASE(LOG2)
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -478,9 +445,7 @@ void VM::interpretCases()
             size_t dataSize = size_t(m_SP[1]);
 
             evmc_uint256be topics[] = {
-                intx::be::store<evmc_uint256be>(m_SP[2]),
-                intx::be::store<evmc_uint256be>(m_SP[3])
-            };
+                intx::be::store<evmc_uint256be>(m_SP[2]), intx::be::store<evmc_uint256be>(m_SP[3])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
             m_context->host->emit_log(
@@ -488,11 +453,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(LOG3)
+            CASE(LOG3)
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -500,11 +465,8 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            evmc_uint256be topics[] = {
-                intx::be::store<evmc_uint256be>(m_SP[2]),
-                intx::be::store<evmc_uint256be>(m_SP[3]),
-                intx::be::store<evmc_uint256be>(m_SP[4])
-            };
+            evmc_uint256be topics[] = {intx::be::store<evmc_uint256be>(m_SP[2]),
+                intx::be::store<evmc_uint256be>(m_SP[3]), intx::be::store<evmc_uint256be>(m_SP[4])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
             m_context->host->emit_log(
@@ -512,11 +474,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(LOG4)
+            CASE(LOG4)
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             logGasMem();
             updateIOGas();
@@ -524,12 +486,9 @@ void VM::interpretCases()
             uint8_t const* data = m_mem.data() + size_t(m_SP[0]);
             size_t dataSize = size_t(m_SP[1]);
 
-            evmc_uint256be topics[] = {
-                intx::be::store<evmc_uint256be>(m_SP[2]),
-                intx::be::store<evmc_uint256be>(m_SP[3]),
-                intx::be::store<evmc_uint256be>(m_SP[4]),
-                intx::be::store<evmc_uint256be>(m_SP[5])
-            };
+            evmc_uint256be topics[] = {intx::be::store<evmc_uint256be>(m_SP[2]),
+                intx::be::store<evmc_uint256be>(m_SP[3]), intx::be::store<evmc_uint256be>(m_SP[4]),
+                intx::be::store<evmc_uint256be>(m_SP[5])};
             size_t numTopics = sizeof(topics) / sizeof(topics[0]);
 
             m_context->host->emit_log(
@@ -537,11 +496,12 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(EXP)
+            CASE(EXP)
         {
             intx::uint256 expon = m_SP[1];
             const int64_t byteCost = m_rev >= EVMC_SPURIOUS_DRAGON ? 50 : 10;
-            m_runGas = toInt63(VMSchedule::stepGas5 + byteCost * intx::count_significant_words<uint8_t>(expon));
+            m_runGas = toInt63(
+                VMSchedule::stepGas5 + byteCost * intx::count_significant_words<uint8_t>(expon));
             ON_OP();
             updateIOGas();
 
@@ -550,31 +510,31 @@ void VM::interpretCases()
         }
         NEXT
 
-        //
-        // ordinary instructions
-        //
+            //
+            // ordinary instructions
+            //
 
-        CASE(ADD)
+            CASE(ADD)
         {
             ON_OP();
             updateIOGas();
 
-            //pops two items and pushes their sum mod 2^256.
+            // pops two items and pushes their sum mod 2^256.
             m_SPP[0] = m_SP[0] + m_SP[1];
         }
         NEXT
 
-        CASE(MUL)
+            CASE(MUL)
         {
             ON_OP();
             updateIOGas();
 
-            //pops two items and pushes their product mod 2^256.
+            // pops two items and pushes their product mod 2^256.
             m_SPP[0] = m_SP[0] * m_SP[1];
         }
         NEXT
 
-        CASE(SUB)
+            CASE(SUB)
         {
             ON_OP();
             updateIOGas();
@@ -583,7 +543,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(DIV)
+            CASE(DIV)
         {
             ON_OP();
             updateIOGas();
@@ -592,7 +552,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SDIV)
+            CASE(SDIV)
         {
             ON_OP();
             updateIOGas();
@@ -602,7 +562,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(MOD)
+            CASE(MOD)
         {
             ON_OP();
             updateIOGas();
@@ -611,7 +571,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SMOD)
+            CASE(SMOD)
         {
             ON_OP();
             updateIOGas();
@@ -620,7 +580,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(NOT)
+            CASE(NOT)
         {
             ON_OP();
             updateIOGas();
@@ -629,7 +589,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(LT)
+            CASE(LT)
         {
             ON_OP();
             updateIOGas();
@@ -638,7 +598,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(GT)
+            CASE(GT)
         {
             ON_OP();
             updateIOGas();
@@ -647,7 +607,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SLT)
+            CASE(SLT)
         {
             ON_OP();
             updateIOGas();
@@ -658,7 +618,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SGT)
+            CASE(SGT)
         {
             ON_OP();
             updateIOGas();
@@ -669,7 +629,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(EQ)
+            CASE(EQ)
         {
             ON_OP();
             updateIOGas();
@@ -678,7 +638,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(ISZERO)
+            CASE(ISZERO)
         {
             ON_OP();
             updateIOGas();
@@ -687,7 +647,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(AND)
+            CASE(AND)
         {
             ON_OP();
             updateIOGas();
@@ -696,7 +656,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(OR)
+            CASE(OR)
         {
             ON_OP();
             updateIOGas();
@@ -705,7 +665,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(XOR)
+            CASE(XOR)
         {
             ON_OP();
             updateIOGas();
@@ -714,7 +674,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(BYTE)
+            CASE(BYTE)
         {
             ON_OP();
             updateIOGas();
@@ -723,11 +683,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SHL)
+            CASE(SHL)
         {
             // Pre-constantinople
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -739,11 +699,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SHR)
+            CASE(SHR)
         {
             // Pre-constantinople
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -755,11 +715,11 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SAR)
+            CASE(SAR)
         {
             // Pre-constantinople
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -786,7 +746,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(ADDMOD)
+            CASE(ADDMOD)
         {
             ON_OP();
             updateIOGas();
@@ -795,7 +755,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(MULMOD)
+            CASE(MULMOD)
         {
             ON_OP();
             updateIOGas();
@@ -804,7 +764,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SIGNEXTEND)
+            CASE(SIGNEXTEND)
         {
             ON_OP();
             updateIOGas();
@@ -824,18 +784,10 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(JUMPTO)
-        CASE(JUMPIF)
-        CASE(JUMPV)
-        CASE(JUMPSUB)
-        CASE(JUMPSUBV)
-        CASE(RETURNSUB)
-        CASE(BEGINSUB)
-        CASE(BEGINDATA)
-        CASE(GETLOCAL)
-        CASE(PUTLOCAL)
+            CASE(JUMPTO) CASE(JUMPIF) CASE(JUMPV) CASE(JUMPSUB) CASE(JUMPSUBV) CASE(RETURNSUB)
+                CASE(BEGINSUB) CASE(BEGINDATA) CASE(GETLOCAL) CASE(PUTLOCAL)
         {
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
         }
         CONTINUE
 
@@ -871,10 +823,7 @@ void VM::interpretCases()
         CASE(XPUT)
         CASE(XGET)
         CASE(XSWIZZLE)
-        CASE(XSHUFFLE)
-        {
-            throwBadInstruction();
-        }
+        CASE(XSHUFFLE) { throw EVMC_UNDEFINED_INSTRUCTION; }
         CONTINUE
 
         CASE(ADDRESS)
@@ -886,7 +835,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(ORIGIN)
+            CASE(ORIGIN)
         {
             ON_OP();
             updateIOGas();
@@ -895,18 +844,19 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(BALANCE)
+            CASE(BALANCE)
         {
             ON_OP();
             updateIOGas();
 
             auto const address = intx::be::trunc<evmc::address>(m_SP[0]);
-            m_SPP[0] = intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &address));
+            m_SPP[0] =
+                intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &address));
         }
         NEXT
 
 
-        CASE(CALLER)
+            CASE(CALLER)
         {
             ON_OP();
             updateIOGas();
@@ -915,7 +865,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(CALLVALUE)
+            CASE(CALLVALUE)
         {
             ON_OP();
             updateIOGas();
@@ -925,7 +875,7 @@ void VM::interpretCases()
         NEXT
 
 
-        CASE(CALLDATALOAD)
+            CASE(CALLDATALOAD)
         {
             ON_OP();
             updateIOGas();
@@ -940,7 +890,8 @@ void VM::interpretCases()
             else
             {
                 uint8_t r[32];
-                for (uint64_t i = (uint64_t)m_SP[0], e = (uint64_t)m_SP[0] + (uint64_t)32, j = 0; i < e; ++i, ++j)
+                for (uint64_t i = (uint64_t)m_SP[0], e = (uint64_t)m_SP[0] + (uint64_t)32, j = 0;
+                     i < e; ++i, ++j)
                     r[j] = i < dataSize ? data[i] : 0;
                 m_SP[0] = intx::be::load<intx::uint256>(r);
             };
@@ -948,7 +899,7 @@ void VM::interpretCases()
         NEXT
 
 
-        CASE(CALLDATASIZE)
+            CASE(CALLDATASIZE)
         {
             ON_OP();
             updateIOGas();
@@ -957,10 +908,10 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(RETURNDATASIZE)
+            CASE(RETURNDATASIZE)
         {
             if (m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             ON_OP();
             updateIOGas();
@@ -969,7 +920,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(CODESIZE)
+            CASE(CODESIZE)
         {
             ON_OP();
             updateIOGas();
@@ -978,7 +929,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(EXTCODESIZE)
+            CASE(EXTCODESIZE)
         {
             ON_OP();
             updateIOGas();
@@ -989,7 +940,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(CALLDATACOPY)
+            CASE(CALLDATACOPY)
         {
             ON_OP();
             m_copyMemSize = toInt63(m_SP[2]);
@@ -1001,14 +952,14 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(RETURNDATACOPY)
+            CASE(RETURNDATACOPY)
         {
             ON_OP();
             if (m_rev < EVMC_BYZANTIUM)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
             intx::uint512 const endOfAccess = intx::uint512(m_SP[1]) + intx::uint512(m_SP[2]);
             if (m_returnData.size() < endOfAccess)
-                throwBufferOverrun(endOfAccess);
+                throw EVMC_INVALID_MEMORY_ACCESS;
 
             m_copyMemSize = toInt63(m_SP[2]);
             updateMem(memNeed(m_SP[0], m_SP[2]));
@@ -1018,20 +969,21 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(EXTCODEHASH)
+            CASE(EXTCODEHASH)
         {
             ON_OP();
             if (m_rev < EVMC_CONSTANTINOPLE)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             updateIOGas();
 
             auto const address = intx::be::trunc<evmc::address>(m_SP[0]);
-            m_SPP[0] = intx::be::load<intx::uint256>(m_context->host->get_code_hash(m_context, &address));
+            m_SPP[0] =
+                intx::be::load<intx::uint256>(m_context->host->get_code_hash(m_context, &address));
         }
         NEXT
 
-        CASE(CODECOPY)
+            CASE(CODECOPY)
         {
             ON_OP();
             m_copyMemSize = toInt63(m_SP[2]);
@@ -1042,7 +994,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(EXTCODECOPY)
+            CASE(EXTCODECOPY)
         {
             ON_OP();
             uint64_t copyMemSize = toInt63(m_SP[3]);
@@ -1066,7 +1018,7 @@ void VM::interpretCases()
         NEXT
 
 
-        CASE(GASPRICE)
+            CASE(GASPRICE)
         {
             ON_OP();
             updateIOGas();
@@ -1075,7 +1027,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(BLOCKHASH)
+            CASE(BLOCKHASH)
         {
             ON_OP();
             m_runGas = VMSchedule::stepGas6;
@@ -1086,14 +1038,15 @@ void VM::interpretCases()
 
             if (number < blockNumber && number >= std::max(int64_t(256), blockNumber) - 256)
             {
-                m_SPP[0] = intx::be::load<intx::uint256>(m_context->host->get_block_hash(m_context, int64_t(number)));
+                m_SPP[0] = intx::be::load<intx::uint256>(
+                    m_context->host->get_block_hash(m_context, int64_t(number)));
             }
             else
                 m_SPP[0] = 0;
         }
         NEXT
 
-        CASE(COINBASE)
+            CASE(COINBASE)
         {
             ON_OP();
             updateIOGas();
@@ -1102,7 +1055,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(TIMESTAMP)
+            CASE(TIMESTAMP)
         {
             ON_OP();
             updateIOGas();
@@ -1111,7 +1064,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(NUMBER)
+            CASE(NUMBER)
         {
             ON_OP();
             updateIOGas();
@@ -1120,7 +1073,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(DIFFICULTY)
+            CASE(DIFFICULTY)
         {
             ON_OP();
             updateIOGas();
@@ -1129,7 +1082,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(GASLIMIT)
+            CASE(GASLIMIT)
         {
             ON_OP();
             updateIOGas();
@@ -1139,12 +1092,12 @@ void VM::interpretCases()
         NEXT
 
 
-        CASE(CHAINID)
+            CASE(CHAINID)
         {
             ON_OP();
 
             if (m_rev < EVMC_ISTANBUL)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             updateIOGas();
 
@@ -1152,20 +1105,21 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(SELFBALANCE)
+            CASE(SELFBALANCE)
         {
             ON_OP();
 
             if (m_rev < EVMC_ISTANBUL)
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
 
             updateIOGas();
 
-            m_SPP[0] = intx::be::load<intx::uint256>(m_context->host->get_balance(m_context, &m_message->destination));
+            m_SPP[0] = intx::be::load<intx::uint256>(
+                m_context->host->get_balance(m_context, &m_message->destination));
         }
         NEXT
 
-        CASE(POP)
+            CASE(POP)
         {
             ON_OP();
             updateIOGas();
@@ -1174,7 +1128,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(PUSHC)
+            CASE(PUSHC)
         {
 #if EVM_USE_CONSTANT_POOL
             ON_OP();
@@ -1190,7 +1144,7 @@ void VM::interpretCases()
             m_SPP[0] = m_pool[off];
             TRACE_VAL(2, "Retrieved pooled const", m_SPP[0]);
 #else
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
 #endif
         }
         CONTINUE
@@ -1277,7 +1231,7 @@ void VM::interpretCases()
 
             m_PC = uint64_t(m_SP[0]);
 #else
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
 #endif
         }
         CONTINUE
@@ -1293,7 +1247,7 @@ void VM::interpretCases()
             else
                 ++m_PC;
 #else
-            throwBadInstruction();
+            throw EVMC_UNDEFINED_INSTRUCTION;
 #endif
         }
         CONTINUE
@@ -1323,27 +1277,14 @@ void VM::interpretCases()
 
             // the stack slot being copied into may no longer hold a uint256
             // so we construct a new one in the memory, rather than assign
-            new(m_SPP) intx::uint256(m_SP[n]);
+            new (m_SPP) intx::uint256(m_SP[n]);
         }
         NEXT
 
 
-        CASE(SWAP1)
-        CASE(SWAP2)
-        CASE(SWAP3)
-        CASE(SWAP4)
-        CASE(SWAP5)
-        CASE(SWAP6)
-        CASE(SWAP7)
-        CASE(SWAP8)
-        CASE(SWAP9)
-        CASE(SWAP10)
-        CASE(SWAP11)
-        CASE(SWAP12)
-        CASE(SWAP13)
-        CASE(SWAP14)
-        CASE(SWAP15)
-        CASE(SWAP16)
+            CASE(SWAP1) CASE(SWAP2) CASE(SWAP3) CASE(SWAP4) CASE(SWAP5) CASE(SWAP6) CASE(SWAP7)
+                CASE(SWAP8) CASE(SWAP9) CASE(SWAP10) CASE(SWAP11) CASE(SWAP12) CASE(SWAP13)
+                    CASE(SWAP14) CASE(SWAP15) CASE(SWAP16)
         {
             ON_OP();
             updateIOGas();
@@ -1354,32 +1295,32 @@ void VM::interpretCases()
         NEXT
 
 
-        CASE(SLOAD)
+            CASE(SLOAD)
         {
             ON_OP();
             updateIOGas();
 
             auto const key = intx::be::store<evmc_uint256be>(m_SP[0]);
-            m_SPP[0] =
-                intx::be::load<intx::uint256>(m_context->host->get_storage(m_context, &m_message->destination, &key));
+            m_SPP[0] = intx::be::load<intx::uint256>(
+                m_context->host->get_storage(m_context, &m_message->destination, &key));
         }
         NEXT
 
-        CASE(SSTORE)
+            CASE(SSTORE)
         {
             ON_OP();
             if (m_message->flags & EVMC_STATIC)
-                throwDisallowedStateChange();
+                throw EVMC_STATIC_MODE_VIOLATION;
 
             if (m_rev >= EVMC_ISTANBUL && m_io_gas <= VMSchedule::callStipend)
-                throwOutOfGas();
+                throw EVMC_OUT_OF_GAS;
 
             auto const key = intx::be::store<evmc_uint256be>(m_SP[0]);
             auto const value = intx::be::store<evmc_uint256be>(m_SP[1]);
             auto const status =
                 m_context->host->set_storage(m_context, &m_message->destination, &key, &value);
 
-            switch(status)
+            switch (status)
             {
             case EVMC_STORAGE_ADDED:
                 m_runGas = VMSchedule::sstoreSetGas;
@@ -1400,7 +1341,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(PC)
+            CASE(PC)
         {
             ON_OP();
             updateIOGas();
@@ -1409,7 +1350,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(MSIZE)
+            CASE(MSIZE)
         {
             ON_OP();
             updateIOGas();
@@ -1418,7 +1359,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(GAS)
+            CASE(GAS)
         {
             ON_OP();
             updateIOGas();
@@ -1427,7 +1368,7 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(JUMPDEST)
+            CASE(JUMPDEST)
         {
             m_runGas = VMSchedule::jumpdestGas;
             ON_OP();
@@ -1435,16 +1376,15 @@ void VM::interpretCases()
         }
         NEXT
 
-        CASE(INVALID)
-        DEFAULT
+            CASE(INVALID) DEFAULT
         {
             if (m_OP == Instruction::INVALID)
-                throwInvalidInstruction();
+                throw EVMC_INVALID_INSTRUCTION;
             else
-                throwBadInstruction();
+                throw EVMC_UNDEFINED_INSTRUCTION;
         }
     }
     WHILE_CASES
 }
-}
-}
+}  // namespace eth
+}  // namespace dev
