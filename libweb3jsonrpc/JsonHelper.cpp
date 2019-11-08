@@ -112,7 +112,7 @@ Json::Value toJson(dev::eth::Transaction const& _t, std::pair<h256, unsigned> _l
         res["blockHash"] = toJS(_location.first);
         res["transactionIndex"] = toJS(_location.second);
         res["blockNumber"] = toJS(_blockNumber);
-        res["v"] = toJS(_t.signature().v);
+        res["v"] = toJS(_t.rawV());
         res["r"] = toJS(_t.signature().r);
         res["s"] = toJS(_t.signature().s);
     }
@@ -213,7 +213,7 @@ Json::Value toJson(dev::eth::Transaction const& _t)
     res["sighash"] = toJS(_t.sha3(WithoutSignature));
     res["r"] = toJS(_t.signature().r);
     res["s"] = toJS(_t.signature().s);
-    res["v"] = toJS(_t.signature().v);
+    res["v"] = toJS(_t.rawV());
     return res;
 }
 
@@ -243,7 +243,7 @@ Json::Value toJson(dev::eth::LocalisedTransaction const& _t)
         res["blockNumber"] = toJS(_t.blockNumber());
         res["r"] = toJS(_t.signature().r);
         res["s"] = toJS(_t.signature().s);
-        res["v"] = toJS(_t.signature().v);
+        res["v"] = toJS(_t.rawV());
     }
     return res;
 }

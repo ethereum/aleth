@@ -134,6 +134,16 @@ SignatureStruct const& TransactionBase::signature() const
     return *m_vrs;
 }
 
+u256 TransactionBase::rawV() const
+{
+    if (!m_vrs)
+        BOOST_THROW_EXCEPTION(TransactionIsUnsigned());
+
+    int const vOffset = m_chainId.has_value() ? *m_chainId * 2 + 35 : 27;
+    return m_vrs->v + vOffset;
+}
+
+
 void TransactionBase::sign(Secret const& _priv)
 {
     auto sig = dev::sign(_priv, sha3(WithoutSignature));
@@ -163,10 +173,8 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
         if (hasZeroSignature())
             _s << *m_chainId;
         else
-        {
-            int const vOffset = m_chainId.has_value() ? *m_chainId * 2 + 35 : 27;
-            _s << (m_vrs->v + vOffset);
-        }
+            _s << rawV();
+
         _s << (u256)m_vrs->r << (u256)m_vrs->s;
     }
     else if (_forEip155hash)

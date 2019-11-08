@@ -137,6 +137,10 @@ public:
     /// @throws TransactionIsUnsigned if signature was not initialized
     SignatureStruct const& signature() const;
 
+    /// @returns v value of the transaction (has chainID and recoveryID encoded in it)
+    /// @throws TransactionIsUnsigned if signature was not initialized
+    u256 rawV() const;
+
     void sign(Secret const& _priv);			///< Sign the transaction.
 
     /// @returns amount of gas required for the basic payment.
