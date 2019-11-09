@@ -264,7 +264,7 @@ public:
                 if (details.number < limitBlock)
                     // stop using parent hash traversal, fallback to using block numbers
                     break;
-                _h = details.parent;
+                _h = details.parentHash;
                 --_step;
             }
 

@@ -17,15 +17,16 @@ namespace eth
 
 // TODO: OPTIMISE: constructors take bytes, RLP used only in necessary classes.
 
-static const unsigned c_bloomIndexSize = 16;
-static const unsigned c_bloomIndexLevels = 2;
+constexpr unsigned c_bloomIndexSize = 16;
+constexpr unsigned c_bloomIndexLevels = 2;
 
-static const unsigned c_invalidNumber = (unsigned)-1;
+constexpr unsigned c_invalidNumber = (unsigned)-1;
 
 struct BlockDetails
 {
 	BlockDetails(): number(c_invalidNumber), totalDifficulty(Invalid256) {}
-	BlockDetails(unsigned _n, u256 _tD, h256 _p, h256s _c): number(_n), totalDifficulty(_tD), parent(_p), children(_c) {}
+	BlockDetails(unsigned _number, u256 _totalDifficulty, h256 _parentHash, h256s _childHashes, unsigned _blockSizeBytes) : number{ _number }, totalDifficulty{ _totalDifficulty }, parentHash{ _parentHash }, childHashes{ _childHashes
+	}, blockSizeBytes{_blockSizeBytes}{}
 	BlockDetails(RLP const& _r);
 	bytes rlp() const;
 
@@ -34,10 +35,15 @@ struct BlockDetails
 
 	unsigned number = c_invalidNumber;
 	u256 totalDifficulty = Invalid256;
-	h256 parent;
-	h256s children;
+	h256 parentHash;
+	h256s childHashes;
 
-	mutable unsigned size;
+    // Size of the BlockDetails RLP (in bytes). Used for computing blockchain memory usage
+    // statistics. Field name must be 'size' as BlockChain::getHashSize depends on this
+    mutable unsigned size;
+
+    // Size of the block RLP data in bytes
+    unsigned blockSizeBytes;
 };
 
 struct BlockLogBlooms

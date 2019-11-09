@@ -574,8 +574,8 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
                 // cB.p^6	-----------/  6
                 // cB.p^7	-------------/
                 // cB.p^8
-                auto expectedUncleParent = _bc.details(m_currentBlock.parentHash()).parent;
-                for (unsigned i = 1; i < depth; expectedUncleParent = _bc.details(expectedUncleParent).parent, ++i) {}
+                auto expectedUncleParent = _bc.details(m_currentBlock.parentHash()).parentHash;
+                for (unsigned i = 1; i < depth; expectedUncleParent = _bc.details(expectedUncleParent).parentHash, ++i) {}
                 if (expectedUncleParent != uncleParent.hash())
                 {
                     UncleParentNotInChain ex;
@@ -720,9 +720,9 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
                               << ", parent = " << m_previousBlock.parentHash();
         h256Hash excluded = _bc.allKinFrom(m_currentBlock.parentHash(), 6);
         auto p = m_previousBlock.parentHash();
-        for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2; ++gen, p = _bc.details(p).parent)
+        for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2; ++gen, p = _bc.details(p).parentHash)
         {
-            auto us = _bc.details(p).children;
+            auto us = _bc.details(p).childHashes;
             assert(us.size() >= 1);	// must be at least 1 child of our grandparent - it's our own parent!
             for (auto const& u: us)
                 if (!excluded.count(u))	// ignore any uncles/mainline blocks that we know about.

@@ -345,17 +345,28 @@ Json::Value Eth::eth_getBlockByHash(string const& _blockHash, bool _includeTrans
 {
 	try
 	{
-		h256 h = jsToFixed<32>(_blockHash);
+		h256 const h = jsToFixed<32>(_blockHash);
 		if (!client()->isKnown(h))
 			return Json::Value(Json::nullValue);
 
-		if (_includeTransactions)
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
-		else
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
-	}
-	catch (...)
-	{
+        Json::Value ret;
+        auto const blockDetails = client()->blockDetails(h);
+        if (_includeTransactions)
+            ret = toJson(client()->blockInfo(h), blockDetails,
+                client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
+        else
+            ret = toJson(client()->blockInfo(h), blockDetails,
+                client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
+
+        // We need to explicitly set the "size" field to the block size in bytes since the
+        // BlockDetails "size" field refers to something else (size of BlockDetails RLP) and cannot
+        // be changed
+        ret["size"] = toJS(blockDetails.blockSizeBytes);
+
+		return ret;
+    }
+    catch (...)
+    {
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
@@ -364,15 +375,26 @@ Json::Value Eth::eth_getBlockByNumber(string const& _blockNumber, bool _includeT
 {
 	try
 	{
-		BlockNumber h = jsToBlockNumber(_blockNumber);
+		BlockNumber const h = jsToBlockNumber(_blockNumber);
 		if (!client()->isKnown(h))
 			return Json::Value(Json::nullValue);
 
-		if (_includeTransactions)
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
-		else
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
-	}
+        Json::Value ret;
+        auto const blockDetails = client()->blockDetails(h);
+        if (_includeTransactions)
+            ret = toJson(client()->blockInfo(h), blockDetails, client()->uncleHashes(h),
+                client()->transactions(h), client()->sealEngine());
+        else
+            ret = toJson(client()->blockInfo(h), blockDetails, client()->uncleHashes(h),
+                client()->transactionHashes(h), client()->sealEngine());
+
+        // We need to explicitly set the "size" field to the block size in bytes since the
+        // BlockDetails "size" field refers to something else (size of BlockDetails RLP) and cannot
+        // be changed
+        ret["size"] = toJS(blockDetails.blockSizeBytes);
+
+        return ret;
+    }
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));

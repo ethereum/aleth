@@ -229,7 +229,6 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
                 LOG(m_loggerInfo) << "Version from " << extrasSubPathMinor << " (" << lastMinor
                                   << ") != Aleth's version (" << c_databaseMinorVersion << ")";
                 writeMinorVersion = true;
-                lastMinor = (unsigned)RLP(minorVersionBytes);
             }
         }
         else
@@ -278,9 +277,12 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
 
     if (_we != WithExisting::Verify && !rebuildNeeded && !details(m_genesisHash))
     {
-        BlockHeader gb(m_params.genesisBlock());
+        bytes const genesisBlockBytes = m_params.genesisBlock();
+        BlockHeader gb(genesisBlockBytes);
         // Insert details of genesis block.
-        m_details[m_genesisHash] = BlockDetails(0, gb.difficulty(), h256(), {});
+        m_details[m_genesisHash] =
+            BlockDetails{0 /* number */, gb.difficulty(), h256{} /* parent */, {} /* children */,
+                static_cast<unsigned>(genesisBlockBytes.size())};
         auto r = m_details[m_genesisHash].rlp();
         m_extrasDB->insert(toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(r));
         assert(isKnown(gb.hash()));
@@ -289,8 +291,9 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     // TODO: Implement ability to rebuild details map from DB.
     auto const l = m_extrasDB->lookup(db::Slice("best"));
     m_lastBlockHash = l.empty() ? m_genesisHash : h256(l, h256::FromBinary);
-
-    m_lastBlockNumber = number(m_lastBlockHash);
+    // We need to retrieve the block number from the blocks database rather than from the extras
+    // database because the extras database format may have changed
+    m_lastBlockNumber = info(m_lastBlockHash).number();
 
     ctrace << "Opened blockchain DB. Latest: " << currentHash()
            << (!rebuildNeeded ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
@@ -384,12 +387,12 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 
     // Manually insert the genesis block details so that they're available during import of the
     // first block.
-    auto const genesisDetails = BlockDetails{0, s.info().difficulty(), h256(), {}};
+    auto const genesisDetails = BlockDetails{0 /* block number */, s.info().difficulty(),
+        h256{} /* children */, {}, static_cast<unsigned>(s.blockData().size())};
     m_details[m_genesisHash] = genesisDetails;
     auto const genesisDetailsRlp = genesisDetails.rlp();
     m_extrasDB->insert(
         toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(genesisDetailsRlp));
-
     LOG(m_loggerInfo) << "Rebuilding the extras and state databases by reimporting blocks 0 -> "
                       << originalNumber << ", this will probably take a while";
     h256 lastHash = m_lastBlockHash;
@@ -635,8 +638,8 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     details(_block.info.parentHash());
     DEV_WRITE_GUARDED(x_details)
     {
-        if (!dev::contains(m_details[_block.info.parentHash()].children, _block.info.hash()))
-            m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+        if (!dev::contains(m_details[_block.info.parentHash()].childHashes, _block.info.hash()))
+            m_details[_block.info.parentHash()].childHashes.push_back(_block.info.hash());
     }
 
     blocksWriteBatch->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
@@ -644,7 +647,9 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     extrasWriteBatch->insert(toSlice(_block.info.parentHash(), ExtraDetails),
         (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
-    BlockDetails bd((unsigned)pd.number + 1, pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {});
+    BlockDetails bd{static_cast<unsigned>(pd.number + 1),
+        pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {} /* children */,
+        static_cast<unsigned>(_block.block.size())};
     extrasWriteBatch->insert(
         toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(bd.rlp()));
     extrasWriteBatch->insert(
@@ -804,7 +809,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
         // done here.
         details(_block.info.parentHash());
         DEV_WRITE_GUARDED(x_details)
-            m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+            m_details[_block.info.parentHash()].childHashes.push_back(_block.info.hash());
 
         _performanceLogger.onStageFinished("collation");
 
@@ -813,7 +818,9 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
         extrasWriteBatch->insert(toSlice(_block.info.parentHash(), ExtraDetails),
             (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
-        BlockDetails const details((unsigned)_block.info.number(), _totalDifficulty, _block.info.parentHash(), {});
+        BlockDetails const details{static_cast<unsigned>(_block.info.number()), _totalDifficulty,
+            _block.info.parentHash(), {} /* children */,
+            static_cast<unsigned>(_block.block.size())};
         extrasWriteBatch->insert(
             toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(details.rlp()));
 
@@ -912,7 +919,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
         LOG(m_logger) << "   Imported and best " << _totalDifficulty << " (#"
                       << _block.info.number() << "). Has "
-                      << (details(_block.info.parentHash()).children.size() - 1)
+                      << (details(_block.info.parentHash()).childHashes.size() - 1)
                       << " siblings. Route: " << route;
     }
     else
@@ -1128,7 +1135,7 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
     {
         if (_pre)
             ret.push_back(from);
-        from = details(from).parent;
+        from = details(from).parentHash;
         fn--;
     }
 
@@ -1138,10 +1145,10 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
     {
         if (_post)
             back.push_back(to);
-        to = details(to).parent;
+        to = details(to).parentHash;
         tn--;
     }
-    for (;; from = details(from).parent, to = details(to).parent)
+    for (;; from = details(from).parentHash, to = details(to).parentHash)
     {
         if (_pre && (from != to || _common))
             ret.push_back(from);
@@ -1279,13 +1286,13 @@ void BlockChain::checkConsistency()
         {
             h256 h((byte const*)_key.data(), h256::ConstructFromPointer);
             auto dh = details(h);
-            auto p = dh.parent;
+            auto p = dh.parentHash;
             if (p != h256() && p != m_genesisHash)  // TODO: for some reason the genesis details
                                                     // with the children get squished. not sure
                                                     // why.
             {
                 auto dp = details(p);
-                if (asserts(contains(dp.children, h)))
+                if (asserts(contains(dp.childHashes, h)))
                     cnote << "Apparently the database is corrupt. Not much we can do at this "
                              "stage...";
                 if (assertsEqual(dp.number, dh.number - 1))
@@ -1387,9 +1394,9 @@ h256Hash BlockChain::allKinFrom(h256 const& _parent, unsigned _generations) cons
     h256 p = _parent;
     h256Hash ret = { p };
     // p and (details(p).parent: i == 5) is likely to be overkill, but can't hurt to be cautious.
-    for (unsigned i = 0; i < _generations && p != m_genesisHash; ++i, p = details(p).parent)
+    for (unsigned i = 0; i < _generations && p != m_genesisHash; ++i, p = details(p).parentHash)
     {
-        ret.insert(details(p).parent);
+        ret.insert(details(p).parentHash);
         auto b = block(p);
         for (auto i: RLP(b)[2])
             ret.insert(sha3(i.data()));
