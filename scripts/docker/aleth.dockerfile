@@ -16,7 +16,8 @@ RUN apk add --no-cache \
 RUN adduser -D builder
 USER builder
 COPY --chown=builder:builder . /source
-WORKDIR /build
+RUN mkdir /home/builder/build
+WORKDIR /home/builder/build
 RUN cmake /source -DVMTRACE=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DHUNTER_JOBS_NUMBER=$(nproc)
 RUN make -j $(nproc)
 
@@ -31,7 +32,7 @@ FROM alpine:latest AS testeth
 RUN adduser -D testeth
 RUN apk add --no-cache libstdc++
 USER testeth
-COPY --from=builder /build/test/testeth /usr/bin/
+COPY --from=builder /home/builder/build/test/testeth /usr/bin/
 ENTRYPOINT ["/usr/bin/testeth"]
 
 
