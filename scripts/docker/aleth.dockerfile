@@ -13,10 +13,15 @@ RUN apk add --no-cache \
         cmake \
         make \
         git
-ADD . /source
+RUN adduser -D builder
+USER builder
+COPY --chown=builder:builder . /source
 WORKDIR /build
 RUN cmake /source -DVMTRACE=ON -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DHUNTER_JOBS_NUMBER=$(nproc)
-RUN make -j $(nproc) && make install
+RUN make -j $(nproc)
+
+USER root
+RUN make install
 
 # Target: testeth
 # This is not the last stage so build it as
