@@ -1,5 +1,5 @@
 # For running this container as non-root user, see
-# https://github.com/ethereum/cpp-ethereum/blob/develop/scripts/docker-eth
+# https://github.com/ethereum/aleth/blob/develop/scripts/docker-eth
 # or call `docker run` like this:
 #
 ##    mkdir -p ~/.ethereum ~/.web3
@@ -22,13 +22,13 @@ RUN apk add --no-cache \
         linux-headers \
         leveldb-dev --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
     && sed -i -E -e 's|#warning|//#warning|' /usr/include/sys/poll.h \
-    && git clone --recursive https://github.com/ethereum/cpp-ethereum --branch develop --single-branch --depth 1 \
+    && git clone --recursive https://github.com/ethereum/aleth --branch develop --single-branch --depth 1 \
     && mkdir /build && cd /build \
-    && cmake /cpp-ethereum -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTOOLS=Off -DTESTS=Off \
+    && cmake /aleth -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTOOLS=Off -DTESTS=Off \
     && make eth \
     && make install \
     && cd / && rm /build -rf \
-    && rm /cpp-ethereum -rf \
+    && rm /aleth -rf \
     && apk del .build-deps \
     && rm /var/cache/apk/* -f
 
