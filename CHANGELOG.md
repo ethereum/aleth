@@ -56,6 +56,7 @@
 - Changed: [#5713](https://github.com/ethereum/aleth/pull/5713) Propagate new blocks after PoW check rather than after import into the blockchain.
 - Changed: [#5734](https://github.com/ethereum/aleth/pull/5734) debug_accountRangeAt RPC method is renamed to debug_accountRange to conform with geth and retesteth requirements.
 - Changed: [#5735](https://github.com/ethereum/aleth/pull/5735) `testeth -t GeneralStateTests` and `testeth -t BCGeneralStateTests` commands now don't run the tests for the forks before Istanbul. To run those tests use a separate `LegacyTests` suite with commands `testeth -t LegacyTests/Constantinople/GeneralStateTests` and `testeth -t LegacyTests/Constantinople/BCGeneralStateTests -- --all`
+- Changed: [#5810](https://github.com/ethereum/aleth/pull/5810) [EVMC] has been upgraded to version 7.0.0.
 - Removed: [#5631](https://github.com/ethereum/aleth/pull/5631) Removed PARANOID build option.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
@@ -70,6 +71,7 @@
 - Fixed: [#5706](https://github.com/ethereum/aleth/pull/5706) Stop tracking sent transactions after they've been imported into the blockchain.
 - Fixed: [#5687](https://github.com/ethereum/aleth/pull/5687) Limit transaction queue's dropped transaction history to 1024 transactions.
 - Fixed: [#5718](https://github.com/ethereum/aleth/pull/5718) Avoid checking contract balance or destination account existence when executing self-destruct operations on Frontier and Homestead.
+- Fixed: [#5803](https://github.com/ethereum/aleth/pull/5803) Client version string reported by RPC and devp2p now better matches the format used by other clients. This will allow aleth to be correctly listed on ethernodes.org.
 
 ## [1.6.0] - 2019-04-16
 
@@ -95,3 +97,5 @@
 [1.8.0]: https://github.com/ethereum/aleth/compare/v1.7.0-rc.0...master
 [1.7.0]: https://github.com/ethereum/aleth/compare/v1.6.0...master
 [1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
+
+[EVMC]: https://github.com/ethereum/evmc

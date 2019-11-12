@@ -61,7 +61,7 @@ WebThreeDirect::~WebThreeDirect()
 std::string WebThreeDirect::composeClientVersion(std::string const& _client)
 {
     const auto* buildinfo = aleth_get_buildinfo();
-    return _client + "/" + buildinfo->project_version + "/" + buildinfo->system_name + "/" +
+    return _client + "/v" + buildinfo->project_version + "/" + buildinfo->system_name + "/" +
            buildinfo->compiler_id + buildinfo->compiler_version + "/" + buildinfo->build_type;
 }
 

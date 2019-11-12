@@ -53,11 +53,12 @@ public:
 
     VM() = default;
 
-    owning_bytes_ref exec(evmc_host_context* _context, evmc_revision _rev, const evmc_message* _msg,
-        uint8_t const* _code, size_t _codeSize);
+    owning_bytes_ref exec(const evmc_host_interface* _host, evmc_host_context* _context,
+        evmc_revision _rev, const evmc_message* _msg, uint8_t const* _code, size_t _codeSize);
 
     uint64_t m_io_gas = 0;
 private:
+    const evmc_host_interface* m_host = nullptr;
     evmc_host_context* m_context = nullptr;
     evmc_revision m_rev = EVMC_FRONTIER;
     std::array<evmc_instruction_metrics, 256>* m_metrics = nullptr;
