@@ -119,7 +119,7 @@ void VM::caseCreate()
     // Clear the return data buffer. This will not free the memory.
     m_returnData.clear();
 
-    u256 const balance = fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
+    u256 const balance = fromEvmC(m_host->get_balance(m_context, &m_message->destination));
     if (balance >= endowment && m_message->depth < 1024)
     {
         evmc_message msg = {};
@@ -139,7 +139,7 @@ void VM::caseCreate()
         msg.kind = m_OP == Instruction::CREATE ? EVMC_CREATE : EVMC_CREATE2;  // FIXME: In EVMC move the kind to the top.
         msg.value = toEvmC(endowment);
 
-        evmc_result result = m_context->host->call(m_context, &msg);
+        evmc_result result = m_host->call(m_context, &msg);
 
         if (result.status_code == EVMC_SUCCESS)
             m_SPP[0] = fromAddress(fromEvmC(result.create_address));
@@ -169,7 +169,7 @@ void VM::caseCall()
     bytesRef output;
     if (caseCallSetup(msg, output))
     {
-        evmc_result result = m_context->host->call(m_context, &msg);
+        evmc_result result = m_host->call(m_context, &msg);
 
         m_returnData.assign(result.output_data, result.output_data + result.output_size);
         bytesConstRef{&m_returnData}.copyTo(output);
@@ -215,7 +215,7 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
     evmc_address destination = toEvmC(asAddress(m_SP[1]));
 
     if (m_OP == Instruction::CALL && (m_SP[2] > 0 || m_rev < EVMC_SPURIOUS_DRAGON) &&
-        !m_context->host->account_exists(m_context, &destination))
+        !m_host->account_exists(m_context, &destination))
     {
         m_runGas += VMSchedule::callNewAccount;
     }
@@ -264,7 +264,7 @@ bool VM::caseCallSetup(evmc_message& o_msg, bytesRef& o_output)
             o_msg.gas += VMSchedule::callStipend;
             {
                 u256 const balance =
-                    fromEvmC(m_context->host->get_balance(m_context, &m_message->destination));
+                    fromEvmC(m_host->get_balance(m_context, &m_message->destination));
                 balanceOk = balance >= value;
             }
         }
