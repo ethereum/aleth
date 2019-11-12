@@ -43,6 +43,7 @@
 - Changed: [#5713](https://github.com/ethereum/aleth/pull/5713) Propagate new blocks after PoW check rather than after import into the blockchain.
 - Changed: [#5734](https://github.com/ethereum/aleth/pull/5734) debug_accountRangeAt RPC method is renamed to debug_accountRange to conform with geth and retesteth requirements.
 - Changed: [#5735](https://github.com/ethereum/aleth/pull/5735) `testeth -t GeneralStateTests` and `testeth -t BCGeneralStateTests` commands now don't run the tests for the forks before Istanbul. To run those tests use a separate `LegacyTests` suite with commands `testeth -t LegacyTests/Constantinople/GeneralStateTests` and `testeth -t LegacyTests/Constantinople/BCGeneralStateTests -- --all`
+- Changed: [#5810](https://github.com/ethereum/aleth/pull/5810) [EVMC] has been upgraded to version 7.0.0.
 - Removed: [#5631](https://github.com/ethereum/aleth/pull/5631) Removed PARANOID build option.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
@@ -82,3 +83,5 @@
 
 [1.7.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.0...master
 [1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
+
+[EVMC]: https://github.com/ethereum/evmc
