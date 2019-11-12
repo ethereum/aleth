@@ -14,7 +14,7 @@ Security aspects
 A project which uses Hunter first downloads the Hunter client. This is
 done with the help of the HunterGate CMake module. A copy of the HunterGate module
 is included in the main project. The module is instructed to download a specified
-Hunter release and verify the downloaded source matches the checksum provided to the HunterGate invocation, after which the downloaded source is compiled.
+Hunter release and verify the downloaded source matches the checksum provided to the HunterGate invocation.
 
 A Hunter release contains a full list of (a specific version) of packages and checksums. Each downloaded package source checksum is compared against the corresponding checksum in the Hunter release.
 
