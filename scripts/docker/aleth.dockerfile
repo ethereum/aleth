@@ -13,7 +13,7 @@ RUN apk add --no-cache \
         cmake \
         make \
         git
-ADD . /source
+COPY . /source
 WORKDIR /build
 RUN cmake /source -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DHUNTER_JOBS_NUMBER=$(nproc)
 RUN make -j $(nproc) && make install
