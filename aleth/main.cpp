@@ -677,7 +677,7 @@ int main(int argc, char** argv)
     {
         try
         {
-            chainParams = chainParams.loadConfig(configJSON, {}, configPath);
+            chainParams = ChainParams{configJSON, {}, configPath};
             chainConfigIsSet = true;
         }
         catch (...)
