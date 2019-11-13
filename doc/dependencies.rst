@@ -11,25 +11,16 @@ See documentation at https://docs.hunter.sh.
 Security aspects
 ----------------
 
-A project that uses Hunter first downloads the hunter package itself. This is
-done with a help of HunterGate CMake module. A copy of the HunterGate module
-is included in the main project. The HunterGate is ordered to download specified
-release of Hunter and to check whenever the downloaded sources match the
-checksum provided to the HunterGate invocation.
+A project which uses Hunter first downloads the Hunter client. This is
+done with the help of the HunterGate CMake module. A copy of the HunterGate module
+is included in the main project. The module is instructed to download a specified
+Hunter release and verify the downloaded source matches the checksum provided to the HunterGate invocation.
 
-A Hunter release contains a full list of provided packages and their versions,
-also with checksums. Every downloaded source code of a package is verified with
-the checksum.
+A Hunter release contains a full list of (a specific version) of packages and checksums. Each downloaded package source checksum is compared against the corresponding checksum in the Hunter release.
 
-The HunterGate and selected release of Hunter can be audited to check that
-the expected source code of dependencies is downloaded. The audit of any new
-Hunter release has to be repeated in case the main project is to upgrade the
-Hunter version.
+The HunterGate and selected Hunter release can be audited to verify that
+the expected dependency source code is downloaded. This audit must be repeated for each release in case the main project upgrades Hunter.
 
-Hunter has an option to download cached binaries from specified cache server
-instead of building packages from source. This option is enabled by default.
-Because checksums of binaries are not know up front the main project can be at
-risk in case the cache server is compromised. In cpp-ethereum we decided to
-use only the cache server controlled by Ethereum C++ team located in
-https://github.com/ethereum/hunter-cache.
+Hunter has an option to download package binaries from a specified cache server instead of building packages from source. This option is enabled by default. Because checksums of binaries are not known up front, a compromised cache server is an attack vector. In Aleth we decided to
+use the cache server controlled by our team located here: https://github.com/ethereum/hunter-cache.
 
