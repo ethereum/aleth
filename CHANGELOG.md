@@ -13,7 +13,7 @@
 - Fixed: [#5792](https://github.com/ethereum/aleth/pull/5792) Faster and cheaper execution of RPC functions which query blockchain state (e.g. getBalance).
 - Fixed: [#5811](https://github.com/ethereum/aleth/pull/5811) RPC methods querying transactions (`eth_getTransactionByHash`, `eth_getBlockByNumber`) return correct `v` value.
 
-## [1.7.0] - Unreleased
+## [1.7.0] - 2019-11-14
 
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
 - Added: [#5571](https://github.com/ethereum/aleth/pull/5571) Support Discovery v4 ENR Extension messages.
@@ -95,7 +95,7 @@
 
 
 [1.8.0]: https://github.com/ethereum/aleth/compare/v1.7.0-rc.0...master
-[1.7.0]: https://github.com/ethereum/aleth/compare/v1.6.0...master
+[1.7.0]: https://github.com/ethereum/aleth/releases/tat/v1.7.0
 [1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
 
 [EVMC]: https://github.com/ethereum/evmc
