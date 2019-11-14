@@ -41,10 +41,9 @@ ClientTest::~ClientTest()
 
 void ClientTest::setChainParams(string const& _genesis)
 {
-    ChainParams params;
     try
     {
-        params = ChainParams{_genesis};
+        ChainParams const params{_genesis};
         if (params.sealEngineName != NoProof::name() && params.sealEngineName != Ethash::name() &&
             params.sealEngineName != NoReward::name())
             BOOST_THROW_EXCEPTION(
