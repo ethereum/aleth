@@ -315,7 +315,7 @@ private:
     /// Initialise everything and ready for openning the database.
     void init(ChainParams const& _p);
     /// Open the database.
-    unsigned open(boost::filesystem::path const& _path, WithExisting _we);
+    bool open(boost::filesystem::path const& _path, WithExisting _we);
     /// Open the database, rebuilding if necessary.
     void open(boost::filesystem::path const& _path, WithExisting _we, ProgressCallback const& _pc);
     /// Finalise everything and close the database.
@@ -414,6 +414,8 @@ private:
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "chain")};
     mutable Logger m_loggerDetail{createLogger(VerbosityTrace, "chain")};
+	mutable Logger m_loggerInfo{ createLogger(VerbosityInfo, "chain") };
+	mutable Logger m_loggerWarn{ createLogger(VerbosityWarning, "chain") };
     mutable Logger m_loggerError{createLogger(VerbosityError, "chain")};
 
     friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
