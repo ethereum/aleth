@@ -91,4 +91,49 @@ BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsAuthor)
     BOOST_CHECK_EQUAL(testClient->author(), Address("0000000000000010000000000000000000000000"));
 }
 
+BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsCustomPrecompiles)
+{
+    ClientTest* testClient = asClientTest(getWeb3()->ethereum());
+    testClient->setChainParams(c_configString);
+
+    auto const ecrecoverAddress = Address{0x01};
+    auto const sha256Address = Address{0x02};
+
+    BOOST_CHECK_EQUAL(
+        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0);
+    BOOST_CHECK(contains(testClient->chainParams().precompiled, sha256Address));
+
+    std::string const configWithCustomPrecompiles = R"({
+        "sealEngine": "NoProof",
+        "params": {
+            "accountStartNonce": "0x00",
+            "maximumExtraDataSize": "0x1000000",
+            "blockReward": "0x",
+            "allowFutureBlocks": true,
+            "homesteadForkBlock": "0x118c30",
+            "daoHardforkBlock": "0x1d4c00",
+            "EIP150ForkBlock": "0x259518",
+            "EIP158ForkBlock": "0x28d138"
+        },
+        "genesis": {
+            "nonce": "0x0000000000000042",
+            "author": "0000000000000010000000000000000000000000",
+            "timestamp": "0x00",
+            "extraData": "0x",
+            "gasLimit": "0x1000000000000",
+            "difficulty": "0x020000",
+            "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "accounts": {
+            "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 }, "startingBlock": "0x28d138" } }
+        }
+    })";
+
+    testClient->setChainParams(configWithCustomPrecompiles);
+
+    BOOST_CHECK_EQUAL(
+        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0x28d138);
+    BOOST_CHECK(!contains(testClient->chainParams().precompiled, sha256Address));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
