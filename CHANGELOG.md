@@ -12,6 +12,7 @@
 - Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14.
 - Fixed: [#5792](https://github.com/ethereum/aleth/pull/5792) Faster and cheaper execution of RPC functions which query blockchain state (e.g. getBalance).
 - Fixed: [#5811](https://github.com/ethereum/aleth/pull/5811) RPC methods querying transactions (`eth_getTransactionByHash`, `eth_getBlockByNumber`) return correct `v` value.
+- Fixed: [#5821](https://github.com/ethereum/aleth/pull/5821) `test_setChainParams` correctly initializes custom configuration of precompiled contracts.
 
 ## [1.7.0] - 2019-11-14
 
