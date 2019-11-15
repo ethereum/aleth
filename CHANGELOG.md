@@ -13,6 +13,7 @@
 - Fixed: [#5792](https://github.com/ethereum/aleth/pull/5792) Faster and cheaper execution of RPC functions which query blockchain state (e.g. getBalance).
 - Fixed: [#5811](https://github.com/ethereum/aleth/pull/5811) RPC methods querying transactions (`eth_getTransactionByHash`, `eth_getBlockByNumber`) return correct `v` value.
 - Fixed: [#5821](https://github.com/ethereum/aleth/pull/5821) `test_setChainParams` correctly initializes custom configuration of precompiled contracts.
+- Fixed: [#5826](https://github.com/ethereum/aleth/pull/5826) Fix blocking bug in database rebuild functionality - users can now rebuild their databases via Aleth's '-R' switch.
 
 ## [1.7.0] - 2019-11-14
 
