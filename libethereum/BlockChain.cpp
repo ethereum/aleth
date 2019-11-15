@@ -374,8 +374,12 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
         (db::Slice)dev::ref(m_details[m_lastBlockHash].rlp()));
 
     // Manually insert the genesis block details so that they're available during import of the
-    // first block
-    m_details[m_genesisHash] = BlockDetails{0, s.info().difficulty(), h256(), {}};
+    // first block.
+    auto const genesisDetails = BlockDetails{0, s.info().difficulty(), h256(), {}};
+    m_details[m_genesisHash] = genesisDetails;
+    auto const genesisDetailsRlp = genesisDetails.rlp();
+    m_extrasDB->insert(
+        toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(genesisDetailsRlp));
 
     LOG(m_loggerInfo) << "Rebuilding the extras and state databases by reimporting blocks 0 -> "
                       << originalNumber << ", this will probably take a while";
