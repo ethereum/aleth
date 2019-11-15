@@ -192,35 +192,18 @@ void BlockChain::init(ChainParams const& _p)
     genesis();
 }
 
-unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
+bool BlockChain::open(fs::path const& _path, WithExisting _we)
 {
     auto const path = _path.empty() ? db::databasePath() : _path;
     auto const chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
     auto const chainSubPathBlocks = chainPath / fs::path("blocks");
     auto const extrasPath = chainPath / fs::path(toString(c_databaseVersion));
     auto const extrasSubPathExtras = extrasPath / fs::path("extras");
-    unsigned lastMinor = c_minorProtocolVersion;
+    unsigned lastMinor = c_databaseMinorVersion;
+    bool rebuildNeeded = false;
 
     if (db::isDiskDatabase())
     {
-        fs::create_directories(extrasPath);
-        DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
-
-        auto const extrasSubPathMinor = extrasPath / fs::path("minor");
-        bytes const status = contents(extrasSubPathMinor);
-        if (!status.empty())
-            DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));
-        if (c_minorProtocolVersion != lastMinor)
-        {
-            cnote << "Killing extras database " << extrasPath << " (DB minor version:" << lastMinor
-                  << " != our minor version: " << c_minorProtocolVersion << ").";
-            DEV_IGNORE_EXCEPTIONS(fs::remove_all(extrasPath / fs::path("details.old")));
-            fs::rename(extrasSubPathExtras, extrasPath / fs::path("extras.old"));
-            fs::remove_all(extrasPath / fs::path("state"));
-            writeFile(extrasSubPathMinor, rlp(c_minorProtocolVersion));
-            lastMinor = (unsigned)RLP(status);
-        }
-
         if (_we == WithExisting::Kill)
         {
             cnote << "Killing blockchain (" << chainSubPathBlocks << ") & extras ("
@@ -228,6 +211,31 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
             fs::remove_all(chainSubPathBlocks);
             fs::remove_all(extrasSubPathExtras);
         }
+
+        fs::create_directories(extrasPath);
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
+
+        auto const extrasSubPathMinor = extrasPath / fs::path("minor");
+        bytes const minorVersionBytes = contents(extrasSubPathMinor);
+        bool writeMinorVersion = false;
+        if (!minorVersionBytes.empty())
+        {
+            DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(minorVersionBytes));
+            if (c_databaseMinorVersion != lastMinor)
+            {
+                rebuildNeeded = true;
+                LOG(m_loggerInfo) << "Database minor version change detected, the extras and state "
+                                     "databases will be rebuilt.";
+                LOG(m_loggerInfo) << "Version from " << extrasSubPathMinor << " (" << lastMinor
+                                  << ") != Aleth's version (" << c_databaseMinorVersion << ")";
+                writeMinorVersion = true;
+                lastMinor = (unsigned)RLP(minorVersionBytes);
+            }
+        }
+        else
+            writeMinorVersion = true;
+        if (writeMinorVersion)
+            writeFile(extrasSubPathMinor, rlp(c_databaseMinorVersion));
     }
 
     try
@@ -268,7 +276,7 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
         throw;
     }
 
-    if (_we != WithExisting::Verify && !details(m_genesisHash))
+    if (_we != WithExisting::Verify && !rebuildNeeded && !details(m_genesisHash))
     {
         BlockHeader gb(m_params.genesisBlock());
         // Insert details of genesis block.
@@ -284,13 +292,14 @@ unsigned BlockChain::open(fs::path const& _path, WithExisting _we)
 
     m_lastBlockNumber = number(m_lastBlockHash);
 
-    ctrace << "Opened blockchain DB. Latest: " << currentHash() << (lastMinor == c_minorProtocolVersion ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
-    return lastMinor;
+    ctrace << "Opened blockchain DB. Latest: " << currentHash()
+           << (!rebuildNeeded ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
+    return rebuildNeeded;
 }
 
 void BlockChain::open(fs::path const& _path, WithExisting _we, ProgressCallback const& _pc)
 {
-    if (open(_path, _we) != c_minorProtocolVersion || _we == WithExisting::Verify)
+    if (open(_path, _we) || _we == WithExisting::Verify)
         rebuild(_path, _pc);
 }
 

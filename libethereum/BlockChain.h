@@ -314,8 +314,8 @@ private:
 
     /// Initialise everything and ready for openning the database.
     void init(ChainParams const& _p);
-    /// Open the database.
-    unsigned open(boost::filesystem::path const& _path, WithExisting _we);
+    /// Open the database. Returns whether or not the database needs to be rebuilt.
+    bool open(boost::filesystem::path const& _path, WithExisting _we);
     /// Open the database, rebuilding if necessary.
     void open(boost::filesystem::path const& _path, WithExisting _we, ProgressCallback const& _pc);
     /// Finalise everything and close the database.
