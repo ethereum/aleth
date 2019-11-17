@@ -76,6 +76,8 @@ DEV_SIMPLE_EXCEPTION(UnknownError);
 DEV_SIMPLE_EXCEPTION(InvalidDatabaseKind);
 DEV_SIMPLE_EXCEPTION(DatabaseAlreadyOpen);
 DEV_SIMPLE_EXCEPTION(DatabaseCorruption);
+DEV_SIMPLE_EXCEPTION(DatabaseExists);
+DEV_SIMPLE_EXCEPTION(DatabaseRebuildFailed);
 
 DEV_SIMPLE_EXCEPTION(DAGCreationFailure);
 DEV_SIMPLE_EXCEPTION(DAGComputeFailure);
