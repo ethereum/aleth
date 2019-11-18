@@ -20,6 +20,7 @@
 - Fixed: [#5826](https://github.com/ethereum/aleth/pull/5826) Fix blocking bug in database rebuild functionality - users can now rebuild their databases via Aleth's '-R' switch.
 - Fixed: [#5827](https://github.com/ethereum/aleth/pull/5827) Detect database upgrades and automatically rebuild the database when they occur.
 - Fixed: [#5852](https://github.com/ethereum/aleth/pull/5852) Output correct original opcodes instead of synthetic `PUSHC`/`JUMPC`/`JUMPCI` in VM trace.
+- Fixed: [#5829](https://github.com/ethereum/aleth/pull/5829) web3.eth.getBlock now returns block size in bytes. This requires a (automatic) database rebuild which can take a while depending on how many blocks are in the local chain.
 
 ## [1.7.2] - 2019-11-22
 
