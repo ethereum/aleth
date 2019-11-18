@@ -720,7 +720,8 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
                               << ", parent = " << m_previousBlock.parentHash();
         h256Hash excluded = _bc.allKinFrom(m_currentBlock.parentHash(), 6);
         auto p = m_previousBlock.parentHash();
-        for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2; ++gen, p = _bc.details(p).parentHash)
+        for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2;
+             ++gen, p = _bc.details(p).parentHash)
         {
             auto us = _bc.details(p).childHashes;
             assert(us.size() >= 1);	// must be at least 1 child of our grandparent - it's our own parent!

@@ -12,12 +12,12 @@ using namespace dev::eth;
 
 BlockDetails::BlockDetails(RLP const& _r)
 {
-	number = _r[0].toInt<unsigned>();
-	totalDifficulty = _r[1].toInt<u256>();
-	parentHash = _r[2].toHash<h256>();
-	childHashes = _r[3].toVector<h256>();
-	size = _r.size();
-	blockSizeBytes = _r[4].toInt<unsigned>();
+    number = _r[0].toInt<unsigned>();
+    totalDifficulty = _r[1].toInt<u256>();
+    parentHash = _r[2].toHash<h256>();
+    childHashes = _r[3].toVector<h256>();
+    size = _r.size();
+    blockSizeBytes = _r[4].toInt<size_t>();
 }
 
 bytes BlockDetails::rlp() const

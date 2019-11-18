@@ -351,19 +351,16 @@ Json::Value Eth::eth_getBlockByHash(string const& _blockHash, bool _includeTrans
 
         Json::Value ret;
         auto const blockDetails = client()->blockDetails(h);
+        auto const blockHeader = client()->blockInfo(h);
+        auto const uncleHashes = client()->uncleHashes(h);
+        auto* sealEngine = client()->sealEngine();
         if (_includeTransactions)
-            ret = toJson(client()->blockInfo(h), blockDetails,
-                client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactions(h), sealEngine);
         else
-            ret = toJson(client()->blockInfo(h), blockDetails,
-                client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
-
-        // We need to explicitly set the "size" field to the block size in bytes since the
-        // BlockDetails "size" field refers to something else (size of BlockDetails RLP) and cannot
-        // be changed
-        ret["size"] = toJS(blockDetails.blockSizeBytes);
-
-		return ret;
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactionHashes(h), sealEngine);
+        return ret;
     }
     catch (...)
     {
@@ -381,18 +378,15 @@ Json::Value Eth::eth_getBlockByNumber(string const& _blockNumber, bool _includeT
 
         Json::Value ret;
         auto const blockDetails = client()->blockDetails(h);
+        auto const blockHeader = client()->blockInfo(h);
+        auto const uncleHashes = client()->uncleHashes(h);
+        auto* sealEngine = client()->sealEngine();
         if (_includeTransactions)
-            ret = toJson(client()->blockInfo(h), blockDetails, client()->uncleHashes(h),
-                client()->transactions(h), client()->sealEngine());
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactions(h), sealEngine);
         else
-            ret = toJson(client()->blockInfo(h), blockDetails, client()->uncleHashes(h),
-                client()->transactionHashes(h), client()->sealEngine());
-
-        // We need to explicitly set the "size" field to the block size in bytes since the
-        // BlockDetails "size" field refers to something else (size of BlockDetails RLP) and cannot
-        // be changed
-        ret["size"] = toJS(blockDetails.blockSizeBytes);
-
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactionHashes(h), sealEngine);
         return ret;
     }
 	catch (...)

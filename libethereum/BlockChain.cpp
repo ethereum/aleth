@@ -206,8 +206,11 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     {
         if (_we == WithExisting::Kill)
         {
-            LOG(m_loggerInfo) << "Deleting all databases. This will require a resync from genesis.";
-            fs::remove_all(chainPath);
+            LOG(m_loggerInfo)
+                << "Deleting chain databases. This will require a resync from genesis.";
+            fs::remove_all(chainSubPathBlocks);
+            fs::remove_all(extrasSubPathExtras);
+            fs::remove_all(extrasPath / fs::path("extras.old"));
         }
 
         fs::create_directories(extrasPath);
@@ -230,8 +233,7 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
         else
         {
             LOG(m_loggerDetail) << "Creating database minor version file: " << extrasSubPathMinor
-                                << " (current database minor version: " << c_databaseMinorVersion
-                                << ")";
+                                << " (minor version: " << c_databaseMinorVersion << ")";
             writeFile(extrasSubPathMinor, rlp(c_databaseMinorVersion));
         }
     }
@@ -280,11 +282,10 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     if (_we != WithExisting::Verify && !rebuildNeeded && !details(m_genesisHash))
     {
         bytes const genesisBlockBytes = m_params.genesisBlock();
-        BlockHeader gb(genesisBlockBytes);
+        BlockHeader gb{genesisBlockBytes};
         // Insert details of genesis block.
-        m_details[m_genesisHash] =
-            BlockDetails{0 /* number */, gb.difficulty(), h256{} /* parent */, {} /* children */,
-                static_cast<unsigned>(genesisBlockBytes.size())};
+        m_details[m_genesisHash] = BlockDetails{0 /* number */, gb.difficulty(),
+            h256{} /* parent */, {} /* children */, genesisBlockBytes.size()};
         auto r = m_details[m_genesisHash].rlp();
         m_extrasDB->insert(toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(r));
         assert(isKnown(gb.hash()));
@@ -399,12 +400,12 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 
     // Manually insert the genesis block details so that they're available during import of the
     // first block.
-    auto const genesisDetails =
-        BlockDetails{0 /* block number */, s.info().difficulty(), h256{} /* parent */,
-            {} /* children */, static_cast<unsigned>(m_params.genesisBlock().size())};
+    auto const genesisDetails = BlockDetails{0 /* block number */, s.info().difficulty(),
+        h256{} /* parent */, {} /* children */, m_params.genesisBlock().size()};
     m_details[m_genesisHash] = genesisDetails;
+    auto const genesisDetailsRlp = genesisDetails.rlp();
     m_extrasDB->insert(
-        toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(genesisDetails.rlp()));
+        toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(genesisDetailsRlp));
 
     LOG(m_loggerInfo) << "Rebuilding the extras and state databases by reimporting blocks 0 -> "
                       << originalNumber << ", this will probably take a while";
@@ -673,7 +674,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 
     BlockDetails bd{static_cast<unsigned>(pd.number + 1),
         pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {} /* children */,
-        static_cast<unsigned>(_block.block.size())};
+        _block.block.size()};
     extrasWriteBatch->insert(
         toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(bd.rlp()));
     extrasWriteBatch->insert(
@@ -843,8 +844,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
             (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
         BlockDetails const details{static_cast<unsigned>(_block.info.number()), _totalDifficulty,
-            _block.info.parentHash(), {} /* children */,
-            static_cast<unsigned>(_block.block.size())};
+            _block.info.parentHash(), {} /* children */, _block.block.size()};
         extrasWriteBatch->insert(
             toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(details.rlp()));
 
