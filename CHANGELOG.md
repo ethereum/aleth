@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.8.0] - Unreleased
+# [1.8.0] - Unreleased
 
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
 - Added: [#5741](https://github.com/ethereum/aleth/pull/5741) Support for individual EIP activation to facilitate EIP-centric network upgrade process.
@@ -15,6 +15,10 @@
 - Fixed: [#5821](https://github.com/ethereum/aleth/pull/5821) `test_setChainParams` correctly initializes custom configuration of precompiled contracts.
 - Fixed: [#5826](https://github.com/ethereum/aleth/pull/5826) Fix blocking bug in database rebuild functionality - users can now rebuild their databases via Aleth's '-R' switch.
 - Fixed: [#5827](https://github.com/ethereum/aleth/pull/5827) Detect database upgrades and automatically rebuild the database when they occur.
+
+## [1.7.1] - 2019-11-18
+
+- Fixed: [#5830](https://github.com/ethereum/aleth/pull/5830) Fix cost of ECADD and ECMULL for Istanbul in Mainnet and Ropsten chain configs.
 
 ## [1.7.0] - 2019-11-14
 
@@ -97,8 +101,9 @@
 - Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
 
-[1.8.0]: https://github.com/ethereum/aleth/compare/v1.7.0-rc.0...master
-[1.7.0]: https://github.com/ethereum/aleth/releases/tat/v1.7.0
+[1.8.0]: https://github.com/ethereum/aleth/compare/v1.7.1...master
+[1.7.1]: https://github.com/ethereum/aleth/releases/tag/v1.7.1
+[1.7.0]: https://github.com/ethereum/aleth/releases/tag/v1.7.0
 [1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
 
 [EVMC]: https://github.com/ethereum/evmc
