@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.7.1] - Unreleased
+
+- Fixed: [#5830](https://github.com/ethereum/aleth/pull/5830) Fix cost of ECADD and ECMULL for Istanbul in Mainnet and Ropsten chain configs.
+
 ## [1.7.0] - 2019-11-14
 
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
@@ -81,7 +85,8 @@
 - Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
 
-[1.7.0]: https://github.com/ethereum/aleth/releases/tat/v1.7.0
+[1.7.1]: https://github.com/ethereum/aleth/compare/v1.7.0...release/1.7.1
+[1.7.0]: https://github.com/ethereum/aleth/releases/tag/v1.7.0
 [1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
 
 [EVMC]: https://github.com/ethereum/evmc
