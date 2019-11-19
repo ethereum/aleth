@@ -7,6 +7,7 @@
 #include <libethcore/KeyManager.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
+#include <libethereum/StandardTrace.h>
 using namespace std;
 using namespace dev;
 using namespace dev::rpc;
