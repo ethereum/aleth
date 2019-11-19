@@ -17,7 +17,7 @@ namespace eth
 class EthereumPeer
 {
 public:
-    EthereumPeer() = default;
+    EthereumPeer() = delete;
     EthereumPeer(std::shared_ptr<p2p::CapabilityHostFace> _host, NodeID const& _peerID,
         u256 const& /*_capabilityVersion*/)
       : m_host(std::move(_host)), m_id(_peerID)
