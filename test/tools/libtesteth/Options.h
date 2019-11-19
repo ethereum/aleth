@@ -5,10 +5,10 @@
 /// @file
 /// Class for handling testeth custom options
 #pragma once
-#include <test/tools/libtestutils/Common.h>
-#include <test/tools/libtesteth/JsonSpiritHeaders.h>
 #include <libdevcore/Exceptions.h>
-#include <libethereum/Executive.h>
+#include <libethereum/StandardTrace.h>
+#include <test/tools/libtesteth/JsonSpiritHeaders.h>
+#include <test/tools/libtestutils/Common.h>
 
 namespace dev
 {

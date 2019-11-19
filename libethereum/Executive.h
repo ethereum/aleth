@@ -5,18 +5,10 @@
 #pragma once
 
 #include "Transaction.h"
-
 #include <libdevcore/Log.h>
 #include <libethcore/Common.h>
-#include <libevm/VMFace.h>
-
-#include <json/json.h>
+#include <libevm/ExtVMFace.h>
 #include <functional>
-
-namespace Json
-{
-    class Value;
-}
 
 namespace dev
 {
@@ -32,43 +24,6 @@ class BlockChain;
 class ExtVM;
 class SealEngineFace;
 struct Manifest;
-
-class StandardTrace
-{
-public:
-    struct DebugOptions
-    {
-        bool disableStorage = false;
-        bool disableMemory = false;
-        bool disableStack = false;
-        bool fullStorage = false;
-    };
-
-    StandardTrace();
-    void operator()(uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize,
-        bigint _gasCost, bigint _gas, VMFace const* _vm, ExtVMFace const* _extVM);
-
-    void setShowMnemonics() { m_showMnemonics = true; }
-    void setOptions(DebugOptions _options) { m_options = _options; }
-
-    Json::Value jsonValue() const { return m_trace; }
-    std::string styledJson() const;
-    std::string multilineTrace() const;
-
-    OnOpFunc onOp()
-    {
-        return [=](uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize,
-                   bigint _gasCost, bigint _gas, VMFace const* _vm, ExtVMFace const* _extVM) {
-            (*this)(_steps, _PC, _inst, _newMemSize, _gasCost, _gas, _vm, _extVM);
-        };
-    }
-
-private:
-    bool m_showMnemonics = false;
-    std::vector<Instruction> m_lastInst;
-    Json::Value m_trace;
-    DebugOptions m_options;
-};
 
 /**
  * @brief Message-call/contract-creation executor; useful for executing transactions.
