@@ -95,8 +95,9 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
         r["storage"] = storage;
     }
 
+    r["op"] = static_cast<uint8_t>(inst);
     if (m_showMnemonics)
-        r["op"] = instructionInfo(inst).name;
+        r["opName"] = instructionInfo(inst).name;
     r["pc"] = toString(PC);
     r["gas"] = toString(gas);
     r["gasCost"] = toString(gasCost);
