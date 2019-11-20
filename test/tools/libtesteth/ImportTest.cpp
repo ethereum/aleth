@@ -396,10 +396,19 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
             st.setOptions(Options::get().jsontraceOptions);
             out = initialState.execute(_env, *se.get(), _tr, Permanence::Committed, st.onOp());
             cout << st.multilineTrace();
-            cout << "{\"stateRoot\": \"" << initialState.rootHash().hex() << "\"}";
         }
         else
             out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
+
+        if (Options::get().jsontrace || !Options::get().singleTestFile.empty())
+        {
+            cout << R"({"output": ")" << toHex(out.first.output) << R"(", "gasUsed": ")"
+                 << out.first.gasUsed;
+            if (out.first.excepted != TransactionException::None)
+                cout << R"(", "error": ")" << out.first.excepted;
+            cout << "\"}\n";
+            cout << R"({"stateRoot": ")" << initialState.rootHash().hex() << "\"}\n";
+        }
 
         // the changeLog might be broken under --jsontrace, because it uses intialState.execute with Permanence::Committed rather than Permanence::Uncommitted
         eth::ChangeLog changeLog = initialState.changeLog();

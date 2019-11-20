@@ -74,7 +74,10 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, TransactionException cons
 		case TransactionException::OutOfGas: _out << "OutOfGas"; break;
 		case TransactionException::OutOfStack: _out << "OutOfStack"; break;
 		case TransactionException::StackUnderflow: _out << "StackUnderflow"; break;
-		default: _out << "Unknown"; break;
+        case TransactionException::RevertInstruction:
+            _out << "RevertInstruction";
+            break;
+        default: _out << "Unknown"; break;
 	}
 	return _out;
 }

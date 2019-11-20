@@ -13,23 +13,13 @@ namespace eth
 {
 namespace
 {
-bool changesMemory(Instruction _inst)
-{
-    return _inst == Instruction::MSTORE || _inst == Instruction::MSTORE8 ||
-           _inst == Instruction::MLOAD || _inst == Instruction::CREATE ||
-           _inst == Instruction::CALL || _inst == Instruction::CALLCODE ||
-           _inst == Instruction::SHA3 || _inst == Instruction::CALLDATACOPY ||
-           _inst == Instruction::CODECOPY || _inst == Instruction::EXTCODECOPY ||
-           _inst == Instruction::DELEGATECALL;
-}
-}  // namespace
-
-StandardTrace::StandardTrace() : m_trace(Json::arrayValue) {}
-
 bool changesStorage(Instruction _inst)
 {
     return _inst == Instruction::SSTORE;
 }
+}  // namespace
+
+StandardTrace::StandardTrace() : m_trace(Json::arrayValue) {}
 
 void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, bigint newMemSize,
     bigint gasCost, bigint gas, VMFace const* _vm, ExtVMFace const* voidExt)
@@ -78,15 +68,21 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
         m_lastInst.resize(ext.depth + 1);
     }
 
-    Json::Value memJson(Json::arrayValue);
-    if (vm && !m_options.disableMemory && (changesMemory(lastInst) || newContext))
+    if (vm)
     {
-        for (unsigned i = 0; i < vm->memory().size(); i += 32)
+        bytes const& memory = vm->memory();
+
+        Json::Value memJson(Json::arrayValue);
+        if (!m_options.disableMemory)
         {
-            bytesConstRef memRef(vm->memory().data() + i, 32);
-            memJson.append(toHex(memRef));
+            for (unsigned i = 0; i < memory.size(); i += 32)
+            {
+                bytesConstRef memRef(memory.data() + i, 32);
+                memJson.append(toHex(memRef));
+            }
+            r["memory"] = memJson;
         }
-        r["memory"] = memJson;
+        r["memSize"] = static_cast<uint64_t>(memory.size());
     }
 
     if (!m_options.disableStorage &&
@@ -99,12 +95,13 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
         r["storage"] = storage;
     }
 
+    r["op"] = static_cast<uint8_t>(inst);
     if (m_showMnemonics)
-        r["op"] = instructionInfo(inst).name;
+        r["opName"] = instructionInfo(inst).name;
     r["pc"] = toString(PC);
     r["gas"] = toString(gas);
     r["gasCost"] = toString(gasCost);
-    r["depth"] = toString(ext.depth);
+    r["depth"] = toString(ext.depth + 1);  // depth in standard trace is 1-based
     if (!!newMemSize)
         r["memexpand"] = toString(newMemSize);
 
