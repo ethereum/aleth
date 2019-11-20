@@ -15,6 +15,7 @@
 - Fixed: [#5821](https://github.com/ethereum/aleth/pull/5821) `test_setChainParams` correctly initializes custom configuration of precompiled contracts.
 - Fixed: [#5826](https://github.com/ethereum/aleth/pull/5826) Fix blocking bug in database rebuild functionality - users can now rebuild their databases via Aleth's '-R' switch.
 - Fixed: [#5827](https://github.com/ethereum/aleth/pull/5827) Detect database upgrades and automatically rebuild the database when they occur.
+- Fixed: [#5834](https://github.com/ethereum/aleth/pull/5834) Fix segmentation fault during sync.
 
 ## [1.7.1] - 2019-11-18
 

@@ -629,8 +629,8 @@ void EthereumCapability::onDisconnect(NodeID const& _peerID)
 bool EthereumCapability::interpretCapabilityPacket(
     NodeID const& _peerID, unsigned _id, RLP const& _r)
 {
-    auto& peer = m_peers[_peerID];
-    peer.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
+    auto& remotePeer = peer(_peerID);
+    remotePeer.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
 
     try
     {
@@ -648,10 +648,10 @@ bool EthereumCapability::interpretCapabilityPacket(
                           << networkId << " / " << genesisHash << ", TD: " << totalDifficulty
                           << " = " << latestHash;
 
-            peer.setStatus(
+            remotePeer.setStatus(
                 peerProtocolVersion, networkId, totalDifficulty, latestHash, genesisHash);
             setIdle(_peerID);
-            m_peerObserver->onPeerStatus(peer);
+            m_peerObserver->onPeerStatus(remotePeer);
             break;
         }
         case TransactionsPacket:
@@ -691,7 +691,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         }
         case BlockHeadersPacket:
         {
-            if (peer.asking() != Asking::BlockHeaders)
+            if (remotePeer.asking() != Asking::BlockHeaders)
                 LOG(m_loggerImpolite) << "Peer " << _peerID
                                       << " giving us block headers when we didn't ask for them.";
             else
@@ -724,7 +724,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         }
         case BlockBodiesPacket:
         {
-            if (peer.asking() != Asking::BlockBodies)
+            if (remotePeer.asking() != Asking::BlockBodies)
                 LOG(m_loggerImpolite)
                     << "Peer " << _peerID << " giving us block bodies when we didn't ask for them.";
             else
@@ -803,7 +803,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         }
         case NodeDataPacket:
         {
-            if (peer.asking() != Asking::NodeData)
+            if (remotePeer.asking() != Asking::NodeData)
                 LOG(m_loggerImpolite)
                     << "Peer " << _peerID << " giving us node data when we didn't ask for them.";
             else
@@ -815,7 +815,7 @@ bool EthereumCapability::interpretCapabilityPacket(
         }
         case ReceiptsPacket:
         {
-            if (peer.asking() != Asking::Receipts)
+            if (remotePeer.asking() != Asking::Receipts)
                 LOG(m_loggerImpolite)
                     << "Peer " << _peerID << " giving us receipts when we didn't ask for them.";
             else
