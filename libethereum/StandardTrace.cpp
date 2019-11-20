@@ -82,7 +82,7 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
             }
             r["memory"] = memJson;
         }
-        r["memSize"] = memory.size();
+        r["memSize"] = static_cast<uint64_t>(memory.size());
     }
 
     if (!m_options.disableStorage &&
