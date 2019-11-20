@@ -196,13 +196,14 @@ Json::Value AdminEth::admin_eth_vmTrace(string const& _blockNumberOrHash, int _t
         Executive e(s, block, _txIndex, m_eth.blockChain());
         try
         {
-            StandardTrace st;
+            Json::Value traceJson{Json::arrayValue};
+            StandardTrace st{traceJson};
             st.setShowMnemonics();
             e.initialize(t);
             if (!e.execute())
                 e.go(st.onOp());
             e.finalize();
-            ret["structLogs"] = st.jsonValue();
+            ret["structLogs"] = traceJson;
         }
         catch(Exception const& _e)
         {

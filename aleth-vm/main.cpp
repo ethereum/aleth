@@ -82,7 +82,8 @@ int main(int argc, char** argv)
     u256 gas = maxBlockGasLimit();
     u256 gasPrice = 0;
     bool styledJson = true;
-    StandardTrace st;
+    Json::Value traceJson{Json::arrayValue};
+    StandardTrace st{traceJson};
     Network networkName = Network::MainNetworkTest;
     BlockHeader blockHeader;  // fake block to be executed in
     blockHeader.setGasLimit(maxBlockGasLimit());
@@ -353,7 +354,16 @@ int main(int argc, char** argv)
         }
     }
     else if (mode == Mode::Trace)
-        cout << (styledJson ? st.styledJson() : st.multilineTrace());
+    {
+        if (styledJson)
+            cout << Json::StyledWriter().write(traceJson);
+        else
+        {
+            Json::FastWriter writer;
+            for (auto const& traceOp : traceJson)
+                cout << writer.write(traceOp);
+        }
+    }
     else if (mode == Mode::OutputOnly)
         cout << toHex(output) << '\n';
     else if (mode == Mode::Test)

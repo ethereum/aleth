@@ -391,11 +391,10 @@ std::tuple<eth::State, ImportTest::ExecOutput, eth::ChangeLog> ImportTest::execu
         removeEmptyAccounts = m_envInfo->number() >= se->chainParams().EIP158ForkBlock;
         if (Options::get().jsontrace)
         {
-            StandardTrace st;
+            StandardTrace st{cout};
             st.setShowMnemonics();
             st.setOptions(Options::get().jsontraceOptions);
             out = initialState.execute(_env, *se.get(), _tr, Permanence::Committed, st.onOp());
-            cout << st.multilineTrace();
         }
         else
             out = initialState.execute(_env, *se.get(), _tr, Permanence::Uncommitted);
