@@ -147,8 +147,31 @@ void ChainParams::loadConfig(
     // genesis state
     string genesisStateStr = js::write_string(obj[c_accounts], false);
 
-    genesisState =
-        jsonToAccountMap(genesisStateStr, accountStartNonce, nullptr, &precompiled, _configPath);
+    genesisState = jsonToAccountMap(genesisStateStr, accountStartNonce, nullptr, _configPath);
+
+    precompiled.insert(
+        {Address{0x1}, PrecompiledContract{3000, 0, PrecompiledRegistrar::executor("ecrecover")}});
+    precompiled.insert(
+        {Address{0x2}, PrecompiledContract{60, 12, PrecompiledRegistrar::executor("sha256")}});
+    precompiled.insert(
+        {Address{0x3}, PrecompiledContract{600, 120, PrecompiledRegistrar::executor("ripemd160")}});
+    precompiled.insert(
+        {Address{0x4}, PrecompiledContract{15, 3, PrecompiledRegistrar::executor("identity")}});
+    precompiled.insert(
+        {Address{0x5}, PrecompiledContract{PrecompiledRegistrar::pricer("modexp"),
+                           PrecompiledRegistrar::executor("modexp"), byzantiumForkBlock}});
+    precompiled.insert({Address{0x6},
+        PrecompiledContract{PrecompiledRegistrar::pricer("alt_bn128_G1_add"),
+            PrecompiledRegistrar::executor("alt_bn128_G1_add"), byzantiumForkBlock}});
+    precompiled.insert({Address{0x7},
+        PrecompiledContract{PrecompiledRegistrar::pricer("alt_bn128_G1_mul"),
+            PrecompiledRegistrar::executor("alt_bn128_G1_mul"), byzantiumForkBlock}});
+    precompiled.insert({Address{0x8},
+        PrecompiledContract{PrecompiledRegistrar::pricer("alt_bn128_pairing_product"),
+            PrecompiledRegistrar::executor("alt_bn128_pairing_product"), byzantiumForkBlock}});
+    precompiled.insert({Address{0x9},
+        PrecompiledContract{PrecompiledRegistrar::pricer("blake2_compression"),
+            PrecompiledRegistrar::executor("blake2_compression"), istanbulForkBlock}});
 
     stateRoot = _stateRoot ? _stateRoot : calculateStateRoot(true);
 }
