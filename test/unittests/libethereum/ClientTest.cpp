@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsAuthor)
     BOOST_CHECK_EQUAL(testClient->author(), Address("0000000000000010000000000000000000000000"));
 }
 
-BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsCustomPrecompiles)
+BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsPrecompilesAreIgnored)
 {
     ClientTest* testClient = asClientTest(getWeb3()->ethereum());
     testClient->setChainParams(c_configString);
@@ -132,8 +132,8 @@ BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsCustomPrecompiles)
     testClient->setChainParams(configWithCustomPrecompiles);
 
     BOOST_CHECK_EQUAL(
-        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0x28d138);
-    BOOST_CHECK(!contains(testClient->chainParams().precompiled, sha256Address));
+        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0);
+    BOOST_CHECK(contains(testClient->chainParams().precompiled, sha256Address));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
