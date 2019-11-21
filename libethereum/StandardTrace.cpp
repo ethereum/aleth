@@ -5,7 +5,6 @@
 #include "StandardTrace.h"
 #include "ExtVM.h"
 #include <libevm/LegacyVM.h>
-#include <numeric>
 
 namespace dev
 {
@@ -17,9 +16,8 @@ bool changesStorage(Instruction _inst)
 {
     return _inst == Instruction::SSTORE;
 }
-}  // namespace
 
-StandardTrace::StandardTrace() : m_trace(Json::arrayValue) {}
+}  // namespace
 
 void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, bigint newMemSize,
     bigint gasCost, bigint gas, VMFace const* _vm, ExtVMFace const* voidExt)
@@ -105,23 +103,10 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
     if (!!newMemSize)
         r["memexpand"] = toString(newMemSize);
 
-    m_trace.append(r);
-}
-
-std::string StandardTrace::styledJson() const
-{
-    return Json::StyledWriter().write(m_trace);
-}
-
-std::string StandardTrace::multilineTrace() const
-{
-    if (m_trace.empty())
-        return {};
-
-    // Each opcode trace on a separate line
-    return std::accumulate(std::next(m_trace.begin()), m_trace.end(),
-        Json::FastWriter().write(m_trace[0]),
-        [](std::string a, Json::Value b) { return a + Json::FastWriter().write(b); });
+    if (m_outValue)
+        m_outValue->append(r);
+    else
+        *m_outStream << m_fastWriter.write(r) << std::flush;
 }
 }  // namespace eth
 }  // namespace dev
