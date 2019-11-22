@@ -35,7 +35,7 @@ ENTRYPOINT ["/usr/bin/testeth"]
 FROM alpine:latest AS aleth
 RUN apk add --no-cache python3 libstdc++
 RUN adduser -D aleth
-COPY --from=builder /usr/bin/aleth /source/scripts/aleth.py /source/scripts/dopple.py /usr/bin/
+COPY --from=builder /usr/bin/aleth* /source/scripts/aleth.py /source/scripts/dopple.py /usr/bin/
 COPY --from=builder /usr/share/aleth/ /usr/share/aleth/
 USER aleth
 EXPOSE 8545
