@@ -96,10 +96,10 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
     r["op"] = static_cast<uint8_t>(inst);
     if (m_showMnemonics)
         r["opName"] = instructionInfo(inst).name;
-    r["pc"] = toString(PC);
+    r["pc"] = PC;
     r["gas"] = toString(gas);
     r["gasCost"] = toString(gasCost);
-    r["depth"] = toString(ext.depth + 1);  // depth in standard trace is 1-based
+    r["depth"] = ext.depth + 1;  // depth in standard trace is 1-based
     if (!!newMemSize)
         r["memexpand"] = toString(newMemSize);
 
