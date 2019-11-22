@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.7.2] - Unreleased
+## [1.7.2] - 2019-11-22
 
 - Fixed: [#5834](https://github.com/ethereum/aleth/pull/5834) Fix segmentation fault during sync.
 - Fixed: [#5841](https://github.com/ethereum/aleth/pull/5841) Revert the change introduced in 1.7.0 to wait 2 secods after sending `Disconnect` to peer before closing the socket, as it caused instabilty during sync.
@@ -90,7 +90,7 @@
 - Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
 
-[1.7.2]: https://github.com/ethereum/aleth/compare/v1.7.1..release/1.7
+[1.7.2]: https://github.com/ethereum/aleth/releases/tag/v1.7.2
 [1.7.1]: https://github.com/ethereum/aleth/releases/tag/v1.7.1
 [1.7.0]: https://github.com/ethereum/aleth/releases/tag/v1.7.0
 [1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
