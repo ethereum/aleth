@@ -230,6 +230,13 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
                                   << ") != Aleth's version (" << c_databaseMinorVersion << ")";
             }
         }
+        else if (fs::exists(extrasSubPathExtras))
+        {
+            LOG(m_loggerInfo) << "Database minor version file not found (" << extrasSubPathMinor
+                              << ") but extras database exists (" << extrasSubPathExtras
+                              << "), assuming extras database needs to be upgraded.";
+            rebuildNeeded = true;
+        }
         else
         {
             LOG(m_loggerDetail) << "Creating database minor version file: " << extrasSubPathMinor
