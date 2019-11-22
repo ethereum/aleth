@@ -266,9 +266,9 @@ public:
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
 
-    /// Execute work on the network thread after an @a _expiryDelay delay.
+    /// Execute work on the network thread after @a _expiryTime delay.
     /// Returned timer should be kept alive until delay is over.
-    std::unique_ptr<ba::steady_timer> createTimer(std::chrono::seconds const& _expiryDelay,
+    std::unique_ptr<ba::steady_timer> createTimer(std::chrono::seconds const& _expiryTime,
         std::function<void(const boost::system::error_code& error)>&& _f);
 
 protected:

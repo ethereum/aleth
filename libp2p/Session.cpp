@@ -301,11 +301,22 @@ void Session::disconnect(DisconnectReason _reason)
     sealAndSend(s);
 
     auto self(shared_from_this());
-    // The empty handler will keep the Session alive for the supplied amount of time, after
-    // which Host will garbage-collect the Session which will invoke the Session dtor and close the
-    // socket
-    m_disconnectTimer =
-        m_server->createTimer(std::chrono::seconds(2), [self](boost::system::error_code) {});
+    m_disconnectTimer = m_server->createTimer(
+        std::chrono::seconds(2), [self, this, _reason](boost::system::error_code) {
+            bi::tcp::socket& socket = m_socket->ref();
+            if (socket.is_open())
+                try
+                {
+                    boost::system::error_code ec;
+                    LOG(m_netLoggerDetail)
+                        << "Closing (" << reasonOf(_reason) << ") connection with";
+                    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+                    socket.close();
+                }
+                catch (...)
+                {
+                }
+        });
 
     drop(_reason);
 }
