@@ -177,8 +177,6 @@ private:
 
     std::set<std::string> m_disabledCapabilities;
 
-    std::unique_ptr<ba::steady_timer> m_disconnectTimer;
-
     std::string m_logSuffix;
 
     Logger m_netLogger{createLogger(VerbosityDebug, "net")};
