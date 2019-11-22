@@ -3,6 +3,7 @@
 ## [1.7.2] - Unreleased
 
 - Fixed: [#5834](https://github.com/ethereum/aleth/pull/5834) Fix segmentation fault during sync.
+- Fixed: [#5841](https://github.com/ethereum/aleth/pull/5841) Revert the change introduced in 1.7.0 to wait 2 secods after sending `Disconnect` to peer before closing the socket, as it caused instabilty during sync.
 
 ## [1.7.1] - 2019-11-18
 
@@ -27,6 +28,7 @@
 - Added: [#5700](https://github.com/ethereum/aleth/pull/5700) [#5725](https://github.com/ethereum/aleth/pull/5725) Istanbul support: EIP 1884 Repricing for trie-size-dependent opcodes.
 - Added: [#5701](https://github.com/ethereum/aleth/issues/5701) Outputs ENR text representation in admin.nodeInfo RPC.
 - Added: [#5705](https://github.com/ethereum/aleth/pull/5705) Istanbul support: EIP 1108 Reduce alt_bn128 precompile gas costs.
+- Added: [#5707](https://github.com/ethereum/aleth/pull/5707) Aleth waits for 2 seconds after sending disconnect to peer before closing socket.
 - Added: [#5709](https://github.com/ethereum/aleth/pull/5709) [#5728](https://github.com/ethereum/aleth/pull/5728) Istanbul support: EIP-2200 Structured Definitions for Net Gas Metering.
 - Added: [#5751](https://github.com/ethereum/aleth/pull/5751) Istanbul support: EIP-152 Add BLAKE2 compression function `F` precompile.
 - Added: [#5755](https://github.com/ethereum/aleth/pull/5755) testeth now runs `stChainId`, `stSLoadTest`, `stSelfBalance` tests for Istanbul.
