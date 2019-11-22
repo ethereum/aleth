@@ -3,6 +3,7 @@
 ## [1.7.2] - Unreleased
 
 - Fixed: [#5834](https://github.com/ethereum/aleth/pull/5834) Fix segmentation fault during sync.
+- Fixed: [#5841](https://github.com/ethereum/aleth/pull/5841) Revert the change introduced in 1.7.0 to wait 2 secods after sending `Disconnect` to peer before closing the socket, as it caused instabilty during sync.
 
 ## [1.7.1] - 2019-11-18
 
