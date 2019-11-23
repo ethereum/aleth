@@ -73,7 +73,7 @@ public:
 int main(int argc, char** argv)
 {
     setDefaultOrCLocale();
-    string inputFile;
+    string codeFile;
     Mode mode = Mode::Statistics;
     State state(0);
     Address sender = Address(69);
@@ -113,6 +113,7 @@ int main(int argc, char** argv)
     addTransactionOption("input", po::value<string>(), "<d> Transaction code should be <d>");
     addTransactionOption("code", po::value<string>(),
         "<d> Contract code <d>. Makes transaction a call to this contract");
+    addTransactionOption("codefile", po::value<string>(), "<d> File containing EVM code <d>. If '-' is specified, code is read from stdin");
 
     po::options_description networkOptions("Network options", c_lineWidth);
     networkOptions.add_options()("network", po::value<string>(),
@@ -174,8 +175,6 @@ int main(int argc, char** argv)
             mode = Mode::Trace;
         else if (arg == "test")
             mode = Mode::Test;
-        else if (inputFile.empty())
-            inputFile = arg;  // Assign input file name only once.
         else
         {
             cerr << "Unknown argument: " << arg << '\n';
@@ -240,22 +239,24 @@ int main(int argc, char** argv)
         data = fromHex(vm["input"].as<string>());
     if (vm.count("code"))
         code = fromHex(vm["code"].as<string>());
+    if (vm.count("codefile"))
+        codeFile = vm["codefile"].as<string>();
 
     // Read code from input file.
-    if (!inputFile.empty())
+    if (!codeFile.empty())
     {
         if (!code.empty())
-            cerr << "--code argument overwritten by input file " << inputFile << '\n';
+            cerr << "--code argument overwritten by input file " << codeFile << '\n';
 
-        if (inputFile == "-")
-            for (int i = cin.get(); i != -1; i = cin.get())
-                code.push_back(static_cast<byte>(i));
+        string codeStr = "";
+        if (codeFile == "-")
+            std::getline(std::cin, codeStr);
         else
-            code = contents(inputFile);
+            code = contents(codeFile);
 
         try  // Try decoding from hex.
         {
-            std::string strCode{reinterpret_cast<char const*>(code.data()), code.size()};
+            std::string strCode = codeFile == "-" ? codeStr : string(reinterpret_cast<char const*>(code.data()), code.size());
             strCode.erase(strCode.find_last_not_of(" \t\n\r") + 1);  // Right trim.
             code = fromHex(strCode, WhenError::Throw);
         }
