@@ -54,10 +54,6 @@ static std::string const c_genesisConfigString = R"(
         "mixHash" : "0x00"
     },
     "accounts": {
-        "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
-        "0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
-        "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-        "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
         "0x095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
             "balance" : "0x0de0b6b3a7640000",
             "code" : "0x6001600101600055",
