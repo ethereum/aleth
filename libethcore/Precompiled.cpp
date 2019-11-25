@@ -34,6 +34,19 @@ PrecompiledPricer const& PrecompiledRegistrar::pricer(std::string const& _name)
 
 namespace
 {
+bigint linearPricer(unsigned _base, unsigned _word, bytesConstRef _in)
+{
+    bigint const s = _in.size();
+    bigint const b = _base;
+    bigint const w = _word;
+    return b + (s + 31) / 32 * w;
+}
+
+ETH_REGISTER_PRECOMPILED_PRICER(ecrecover)
+(bytesConstRef /*_in*/, ChainOperationParams const& /*_chainParams*/, u256 const& /*_blockNumber*/)
+{
+    return 3000;
+}
 
 ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in)
 {
@@ -69,14 +82,32 @@ ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in)
     return {true, {}};
 }
 
+ETH_REGISTER_PRECOMPILED_PRICER(sha256)
+(bytesConstRef _in, ChainOperationParams const& /*_chainParams*/, u256 const& /*_blockNumber*/)
+{
+    return linearPricer(60, 12, _in);
+}
+
 ETH_REGISTER_PRECOMPILED(sha256)(bytesConstRef _in)
 {
     return {true, dev::sha256(_in).asBytes()};
 }
 
+ETH_REGISTER_PRECOMPILED_PRICER(ripemd160)
+(bytesConstRef _in, ChainOperationParams const& /*_chainParams*/, u256 const& /*_blockNumber*/)
+{
+    return linearPricer(600, 120, _in);
+}
+
 ETH_REGISTER_PRECOMPILED(ripemd160)(bytesConstRef _in)
 {
     return {true, h256(dev::ripemd160(_in), h256::AlignRight).asBytes()};
+}
+
+ETH_REGISTER_PRECOMPILED_PRICER(identity)
+(bytesConstRef _in, ChainOperationParams const& /*_chainParams*/, u256 const& /*_blockNumber*/)
+{
+    return linearPricer(15, 3, _in);
 }
 
 ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)

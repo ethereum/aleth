@@ -20,22 +20,7 @@ struct EVMSchedule;
 class PrecompiledContract
 {
 public:
-    PrecompiledContract() = default;
-    PrecompiledContract(
-        PrecompiledPricer const& _cost,
-        PrecompiledExecutor const& _exec,
-        u256 const& _startingBlock = 0
-    ):
-        m_cost(_cost),
-        m_execute(_exec),
-        m_startingBlock(_startingBlock)
-    {}
-    PrecompiledContract(
-        unsigned _base,
-        unsigned _word,
-        PrecompiledExecutor const& _exec,
-        u256 const& _startingBlock = 0
-    );
+    PrecompiledContract(std::string const& _name, u256 const& _startingBlock = 0);
 
     bigint cost(
         bytesConstRef _in, ChainOperationParams const& _chainParams, u256 const& _blockNumber) const

@@ -48,10 +48,10 @@ ChainParams::ChainParams()
     for (unsigned i = 1; i <= 4; ++i)
         genesisState[Address(i)] = Account(0, 1);
     // Setup default precompiled contracts as equal to genesis of Frontier.
-    precompiled.insert(make_pair(Address(1), PrecompiledContract(3000, 0, PrecompiledRegistrar::executor("ecrecover"))));
-    precompiled.insert(make_pair(Address(2), PrecompiledContract(60, 12, PrecompiledRegistrar::executor("sha256"))));
-    precompiled.insert(make_pair(Address(3), PrecompiledContract(600, 120, PrecompiledRegistrar::executor("ripemd160"))));
-    precompiled.insert(make_pair(Address(4), PrecompiledContract(15, 3, PrecompiledRegistrar::executor("identity"))));
+    precompiled.insert(make_pair(Address(1), PrecompiledContract("ecrecover")));
+    precompiled.insert(make_pair(Address(2), PrecompiledContract("sha256")));
+    precompiled.insert(make_pair(Address(3), PrecompiledContract("ripemd160")));
+    precompiled.insert(make_pair(Address(4), PrecompiledContract("identity")));
 }
 
 ChainParams::ChainParams(
@@ -149,29 +149,17 @@ void ChainParams::loadConfig(
 
     genesisState = jsonToAccountMap(genesisStateStr, accountStartNonce, nullptr, _configPath);
 
+    precompiled.insert({Address{0x1}, PrecompiledContract{"ecrecover"}});
+    precompiled.insert({Address{0x2}, PrecompiledContract{"sha256"}});
+    precompiled.insert({Address{0x3}, PrecompiledContract{"ripemd160"}});
+    precompiled.insert({Address{0x4}, PrecompiledContract{"identity"}});
+    precompiled.insert({Address{0x5}, PrecompiledContract{"modexp", byzantiumForkBlock}});
+    precompiled.insert({Address{0x6}, PrecompiledContract{"alt_bn128_G1_add", byzantiumForkBlock}});
+    precompiled.insert({Address{0x7}, PrecompiledContract{"alt_bn128_G1_mul", byzantiumForkBlock}});
     precompiled.insert(
-        {Address{0x1}, PrecompiledContract{3000, 0, PrecompiledRegistrar::executor("ecrecover")}});
+        {Address{0x8}, PrecompiledContract{"alt_bn128_pairing_product", byzantiumForkBlock}});
     precompiled.insert(
-        {Address{0x2}, PrecompiledContract{60, 12, PrecompiledRegistrar::executor("sha256")}});
-    precompiled.insert(
-        {Address{0x3}, PrecompiledContract{600, 120, PrecompiledRegistrar::executor("ripemd160")}});
-    precompiled.insert(
-        {Address{0x4}, PrecompiledContract{15, 3, PrecompiledRegistrar::executor("identity")}});
-    precompiled.insert(
-        {Address{0x5}, PrecompiledContract{PrecompiledRegistrar::pricer("modexp"),
-                           PrecompiledRegistrar::executor("modexp"), byzantiumForkBlock}});
-    precompiled.insert({Address{0x6},
-        PrecompiledContract{PrecompiledRegistrar::pricer("alt_bn128_G1_add"),
-            PrecompiledRegistrar::executor("alt_bn128_G1_add"), byzantiumForkBlock}});
-    precompiled.insert({Address{0x7},
-        PrecompiledContract{PrecompiledRegistrar::pricer("alt_bn128_G1_mul"),
-            PrecompiledRegistrar::executor("alt_bn128_G1_mul"), byzantiumForkBlock}});
-    precompiled.insert({Address{0x8},
-        PrecompiledContract{PrecompiledRegistrar::pricer("alt_bn128_pairing_product"),
-            PrecompiledRegistrar::executor("alt_bn128_pairing_product"), byzantiumForkBlock}});
-    precompiled.insert({Address{0x9},
-        PrecompiledContract{PrecompiledRegistrar::pricer("blake2_compression"),
-            PrecompiledRegistrar::executor("blake2_compression"), istanbulForkBlock}});
+        {Address{0x9}, PrecompiledContract{"blake2_compression", istanbulForkBlock}});
 
     stateRoot = _stateRoot ? _stateRoot : calculateStateRoot(true);
 }
