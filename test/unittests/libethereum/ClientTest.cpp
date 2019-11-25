@@ -16,35 +16,6 @@ using namespace dev::test;
 using namespace dev::p2p;
 namespace fs = boost::filesystem;
 
-class TestClientFixture : public TestOutputHelperFixture
-{
-public:
-    TestClientFixture()
-    {
-        ChainParams chainParams;
-        chainParams.sealEngineName = NoProof::name();
-        chainParams.allowFutureBlocks = true;
-
-        fs::path dir = fs::temp_directory_path();
-
-        string listenIP = "127.0.0.1";
-        unsigned short listenPort = 30303;
-        auto netPrefs = NetworkConfig(listenIP, listenPort, false);
-        netPrefs.discovery = false;
-        netPrefs.pin = false;
-
-        auto nodesState = contents(dir / fs::path("network.rlp"));
-        bool testingMode = true;
-        m_web3.reset(new dev::WebThreeDirect(WebThreeDirect::composeClientVersion("eth"), dir, dir,
-            chainParams, WithExisting::Kill, netPrefs, &nodesState, testingMode));
-    }
-
-    dev::WebThreeDirect* getWeb3() { return m_web3.get(); }
-
-    private:
-    std::unique_ptr<dev::WebThreeDirect> m_web3;
-};
-
 // genesis config string from solidity
 static std::string const c_configString = R"(
 {
@@ -80,21 +51,44 @@ static std::string const c_configString = R"(
 }
 )";
 
+class TestClientFixture : public TestOutputHelperFixture
+{
+public:
+    TestClientFixture()
+    {
+        ChainParams chainParams{c_configString};
+
+        fs::path dir = fs::temp_directory_path();
+
+        string listenIP = "127.0.0.1";
+        unsigned short listenPort = 30303;
+        auto netPrefs = NetworkConfig(listenIP, listenPort, false);
+        netPrefs.discovery = false;
+        netPrefs.pin = false;
+
+        auto nodesState = contents(dir / fs::path("network.rlp"));
+        bool testingMode = true;
+        m_web3.reset(new dev::WebThreeDirect(WebThreeDirect::composeClientVersion("eth"), dir, dir,
+            chainParams, WithExisting::Kill, netPrefs, &nodesState, testingMode));
+    }
+
+    dev::WebThreeDirect* getWeb3() { return m_web3.get(); }
+
+private:
+    std::unique_ptr<dev::WebThreeDirect> m_web3;
+};
 
 BOOST_FIXTURE_TEST_SUITE(ClientTestSuite, TestClientFixture)
 
 BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsAuthor)
 {
     ClientTest* testClient = asClientTest(getWeb3()->ethereum());
-    BOOST_CHECK_EQUAL(testClient->author(), Address("0000000000000000000000000000000000000000"));
-    testClient->setChainParams(c_configString);
     BOOST_CHECK_EQUAL(testClient->author(), Address("0000000000000010000000000000000000000000"));
 }
 
 BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsCustomPrecompiles)
 {
     ClientTest* testClient = asClientTest(getWeb3()->ethereum());
-    testClient->setChainParams(c_configString);
 
     auto const ecrecoverAddress = Address{0x01};
     auto const sha256Address = Address{0x02};

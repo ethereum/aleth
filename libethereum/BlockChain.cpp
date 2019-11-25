@@ -152,11 +152,11 @@ static const unsigned c_maxCacheSize = 1024 * 1024 * 64;
 static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 
 
-BlockChain::BlockChain(ChainParams const& _p, fs::path const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
-    m_lastBlockHashes(new LastBlockHashes(*this)),
-    m_dbPath(_dbPath)
+BlockChain::BlockChain(
+    ChainParams const& _p, fs::path const& _dbPath, WithExisting _we, ProgressCallback const& _pc)
+  : m_lastBlockHashes(new LastBlockHashes(*this)), m_params(_p), m_dbPath(_dbPath)
 {
-    init(_p);
+    init();
     open(_dbPath, _we, _pc);
 }
 
@@ -179,14 +179,13 @@ BlockHeader const& BlockChain::genesis() const
     return m_genesis;
 }
 
-void BlockChain::init(ChainParams const& _p)
+void BlockChain::init()
 {
     // initialise deathrow.
     m_cacheUsage.resize(c_collectionQueueSize);
     m_lastCollection = chrono::system_clock::now();
 
     // Initialise with the genesis as the last block on the longest chain.
-    m_params = _p;
     m_sealEngine.reset(m_params.createSealEngine());
     m_genesis.clear();
     genesis();
@@ -306,7 +305,8 @@ void BlockChain::open(fs::path const& _path, WithExisting _we, ProgressCallback 
 void BlockChain::reopen(ChainParams const& _p, WithExisting _we, ProgressCallback const& _pc)
 {
     close();
-    init(_p);
+    m_params = _p;
+    init();
     open(m_dbPath, _we, _pc);
 }
 

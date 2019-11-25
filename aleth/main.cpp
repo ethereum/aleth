@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     bool ipc = true;
 
     string jsonAdmin;
-    ChainParams chainParams;
+    std::unique_ptr<ChainParams> chainParams;
 
     bool upnp = true;
     WithExisting withExisting = WithExisting::Trust;
@@ -199,7 +199,6 @@ int main(int argc, char** argv)
     MinerCLI miner(MinerCLI::OperationMode::None);
 
     bool listenSet = false;
-    bool chainConfigIsSet = false;
     fs::path configPath;
     string configJSON;
 
@@ -503,16 +502,14 @@ int main(int argc, char** argv)
             return AlethErrors::BadExtraDataOption;
         }
     }
+
     if (vm.count("mainnet"))
-    {
-        chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
-        chainConfigIsSet = true;
-    }
+        chainParams = std::make_unique<ChainParams>(
+            genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
     if (vm.count("ropsten"))
-    {
-        chainParams = ChainParams(genesisInfo(eth::Network::Ropsten), genesisStateRoot(eth::Network::Ropsten));
-        chainConfigIsSet = true;
-    }
+        chainParams = std::make_unique<ChainParams>(
+            genesisInfo(eth::Network::Ropsten), genesisStateRoot(eth::Network::Ropsten));
+
     if (vm.count("ask"))
     {
         try
@@ -679,8 +676,7 @@ int main(int argc, char** argv)
     {
         try
         {
-            chainParams = ChainParams{configJSON, {}, configPath};
-            chainConfigIsSet = true;
+            chainParams = std::make_unique<ChainParams>(configJSON, h256{}, configPath);
         }
         catch (...)
         {
@@ -694,9 +690,10 @@ int main(int argc, char** argv)
     setupLogging(loggingOptions);
 
 
-    if (!chainConfigIsSet)
+    if (!chainParams)
         // default to mainnet if not already set with any of `--mainnet`, `--ropsten`, `--genesis`, `--config`
-        chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
+        chainParams = std::make_unique<ChainParams>(
+            genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 
     if (loggingOptions.verbosity > 0)
         cout << EthGrayBold "aleth, a C++ Ethereum client" EthReset << "\n";
@@ -754,10 +751,10 @@ int main(int argc, char** argv)
     auto nodesState = contents(getDataDir() / fs::path(c_networkConfigFileName));
 
     if (testingMode)
-        chainParams.allowFutureBlocks = true;
+        chainParams->allowFutureBlocks = true;
 
     dev::WebThreeDirect web3(WebThreeDirect::composeClientVersion("aleth"), db::databasePath(),
-        snapshotPath, chainParams, withExisting, netPrefs, &nodesState, testingMode);
+        snapshotPath, *chainParams, withExisting, netPrefs, &nodesState, testingMode);
 
     if (!extraData.empty())
         web3.ethereum()->setExtraData(extraData);

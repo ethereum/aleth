@@ -42,8 +42,7 @@ BOOST_AUTO_TEST_CASE(Personal)
 
     // 'allowFutureBlocks = true' is required to mine multiple blocks,
     // otherwise mining will hang after the first block
-    ChainParams chainParams;
-    chainParams.sealEngineName = NoProof::name();
+    ChainParams chainParams{genesisInfo(eth::Network::MainNetworkNoProofTest)};
     chainParams.allowFutureBlocks = true;
     chainParams.difficulty = chainParams.minimumDifficulty;
     chainParams.gasLimit = chainParams.maxGasLimit;

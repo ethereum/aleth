@@ -20,7 +20,6 @@ class SealEngineFace;
 
 struct ChainParams: public ChainOperationParams
 {
-    ChainParams();
     ChainParams(ChainParams const& /*_org*/) = default;
     ChainParams(std::string const& _configJson, h256 const& _stateRoot = {},
         boost::filesystem::path const& _configPath = {});

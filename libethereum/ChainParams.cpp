@@ -43,17 +43,6 @@ u256 findMaxForkBlockNumber(js::mObject const& _params)
 }
 }  // namespace
 
-ChainParams::ChainParams()
-{
-    for (unsigned i = 1; i <= 4; ++i)
-        genesisState[Address(i)] = Account(0, 1);
-    // Setup default precompiled contracts as equal to genesis of Frontier.
-    precompiled.insert(make_pair(Address(1), PrecompiledContract(3000, 0, PrecompiledRegistrar::executor("ecrecover"))));
-    precompiled.insert(make_pair(Address(2), PrecompiledContract(60, 12, PrecompiledRegistrar::executor("sha256"))));
-    precompiled.insert(make_pair(Address(3), PrecompiledContract(600, 120, PrecompiledRegistrar::executor("ripemd160"))));
-    precompiled.insert(make_pair(Address(4), PrecompiledContract(15, 3, PrecompiledRegistrar::executor("identity"))));
-}
-
 ChainParams::ChainParams(
     string const& _json, h256 const& _stateRoot, boost::filesystem::path const& _configPath)
 {

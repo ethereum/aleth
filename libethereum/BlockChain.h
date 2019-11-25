@@ -313,7 +313,7 @@ private:
     static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 
     /// Initialise everything and ready for openning the database.
-    void init(ChainParams const& _p);
+    void init();
     /// Open the database. Returns whether or not the database needs to be rebuilt.
     bool open(boost::filesystem::path const& _path, WithExisting _we);
     /// Open the database, rebuilding if necessary.

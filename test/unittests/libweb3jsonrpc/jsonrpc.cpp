@@ -111,8 +111,7 @@ struct JsonRpcFixture : public TestOutputHelperFixture
     JsonRpcFixture()
     {
         dev::p2p::NetworkConfig nprefs;
-        ChainParams chainParams;
-        chainParams.sealEngineName = NoProof::name();
+        ChainParams chainParams{genesisInfo(eth::Network::MainNetworkNoProofTest)};
         chainParams.allowFutureBlocks = true;
         chainParams.difficulty = chainParams.minimumDifficulty;
         chainParams.gasLimit = chainParams.maxGasLimit;
