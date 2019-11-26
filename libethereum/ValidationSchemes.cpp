@@ -69,7 +69,7 @@ void validateConfigJson(js::mObject const& _obj)
         {{c_sealEngine, {{js::str_type}, JsonFieldPresence::Required}},
             {c_params, {{js::obj_type}, JsonFieldPresence::Required}},
             {c_genesis, {{js::obj_type}, JsonFieldPresence::Required}},
-            {c_accounts, {{js::obj_type}, JsonFieldPresence::Required}}});
+            {c_accounts, {{js::obj_type}, JsonFieldPresence::Optional}}});
 
     requireJsonFields(_obj.at(c_genesis).get_obj(), "ChainParams::loadConfig::genesis",
         {{c_author, {{js::str_type}, JsonFieldPresence::Required}},
@@ -81,9 +81,12 @@ void validateConfigJson(js::mObject const& _obj)
             {c_mixHash, {{js::str_type}, JsonFieldPresence::Required}},
             {c_parentHash, {{js::str_type}, JsonFieldPresence::Optional}}});
 
-    js::mObject const& accounts = _obj.at(c_accounts).get_obj();
-    for (auto const& acc : accounts)
-        validateAccountObj(acc.second.get_obj());
+    if (_obj.count(c_accounts) != 0)
+    {
+        js::mObject const& accounts = _obj.at(c_accounts).get_obj();
+        for (auto const& acc : accounts)
+            validateAccountObj(acc.second.get_obj());
+    }
 }
 
 void validateAccountMaskObj(js::mObject const& _obj)
