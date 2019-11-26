@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     blockHeader.setGasLimit(maxBlockGasLimit());
     blockHeader.setTimestamp(0);
     bytes data;
-    bytes code;
+    string code;
 
     Ethash::init();
     NoProof::init();
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
     addTransactionOption("input", po::value<string>(), "<d> Transaction code should be <d>");
     addTransactionOption("code", po::value<string>(),
         "<d> Contract code <d>. Makes transaction a call to this contract");
-    addTransactionOption("codefile", po::value<string>(), "<d> File containing EVM code <d>. If '-' is specified, code is read from stdin");
+    addTransactionOption("codefile", po::value<string>(), "<path> File containing EVM code <path>. If '-' is specified, code is read from stdin");
 
     po::options_description networkOptions("Network options", c_lineWidth);
     networkOptions.add_options()("network", po::value<string>(),
@@ -238,31 +238,28 @@ int main(int argc, char** argv)
     if (vm.count("input"))
         data = fromHex(vm["input"].as<string>());
     if (vm.count("code"))
-        code = fromHex(vm["code"].as<string>());
+        code = vm["code"].as<string>();
     if (vm.count("codefile"))
         codeFile = vm["codefile"].as<string>();
 
     // Read code from input file.
     if (!codeFile.empty())
     {
+        if (vm.count("code"))
+        {
+            cerr << "Options --code and --codefile shouldn't be used at the same time" << '\n';
+            return AlethErrors::BadConfigOption;
+        }
+
         if (!code.empty())
             cerr << "--code argument overwritten by input file " << codeFile << '\n';
 
-        string codeStr = "";
         if (codeFile == "-")
-            std::getline(std::cin, codeStr);
+            std::getline(std::cin, code);
         else
-            code = contents(codeFile);
+            code = contentsString(codeFile);
 
-        try  // Try decoding from hex.
-        {
-            std::string strCode = codeFile == "-" ? codeStr : string(reinterpret_cast<char const*>(code.data()), code.size());
-            strCode.erase(strCode.find_last_not_of(" \t\n\r") + 1);  // Right trim.
-            code = fromHex(strCode, WhenError::Throw);
-        }
-        catch (BadHexCharacter const&)
-        {
-        }  // Ignore decoding errors.
+        code.erase(code.find_last_not_of(" \t\n\r") + 1);  // Right trim.
     }
 
     unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
@@ -276,7 +273,7 @@ int main(int argc, char** argv)
         // Deploy the code on some fake account to be called later.
         Account account(0, 0);
         auto const latestVersion = se->evmSchedule(envInfo.number()).accountVersion;
-        account.setCode(bytes{code}, latestVersion);
+        account.setCode(bytes{static_cast<byte>(*code.c_str())}, latestVersion);
         std::unordered_map<Address, Account> map;
         map[contractDestination] = account;
         state.populateFrom(map);
