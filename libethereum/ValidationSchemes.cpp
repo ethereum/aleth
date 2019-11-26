@@ -101,44 +101,32 @@ void validateAccountMaskObj(js::mObject const& _obj)
 
 void validateAccountObj(js::mObject const& _obj)
 {
-    if (_obj.count(c_precompiled))
+    // Extendable account description. Check typo errors and fields type.
+    requireJsonFields(_obj, "validateAccountObj",
+        {{c_code, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
+            {c_balance, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_codeFromFile, {{js::str_type}, JsonFieldPresence::Optional}},
+            // "precompiled" accounts in configs are deprecated
+            {c_precompiled, {{js::obj_type}, JsonFieldPresence::Optional}}});
+
+    // At least one field must be set
+    if (_obj.empty())
     {
-        // A precompiled contract
-        requireJsonFields(_obj, "validateAccountObj",
-            {{c_precompiled, {{js::obj_type}, JsonFieldPresence::Required}},
-                {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_code, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
-                {c_balance, {{js::str_type}, JsonFieldPresence::Optional}}});
+        string comment =
+            "Error in validateAccountObj: At least one field must be set (code, nonce, "
+            "storage, balance, wei, codeFromFile)!";
+        BOOST_THROW_EXCEPTION(MissingField() << errinfo_comment(comment));
     }
-    else
+
+    // c_code, c_codeFromFile could not coexist
+    if (_obj.count(c_code) && _obj.count(c_codeFromFile))
     {
-        // Extendable account description. Check typo errors and fields type.
-        requireJsonFields(_obj, "validateAccountObj",
-            {{c_code, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
-                {c_balance, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_codeFromFile, {{js::str_type}, JsonFieldPresence::Optional}}});
-
-        // At least one field must be set
-        if (_obj.empty())
-        {
-            string comment =
-                "Error in validateAccountObj: At least one field must be set (code, nonce, "
-                "storage, balance, wei, codeFromFile)!";
-            BOOST_THROW_EXCEPTION(MissingField() << errinfo_comment(comment));
-        }
-
-        // c_code, c_codeFromFile could not coexist
-        if (_obj.count(c_code) && _obj.count(c_codeFromFile))
-        {
-            string comment =
-                "Error in validateAccountObj: field 'code' contradicts field 'codeFromFile'!";
-            BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
-        }
+        string comment =
+            "Error in validateAccountObj: field 'code' contradicts field 'codeFromFile'!";
+        BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
     }
 
     // c_wei, c_balance could not coexist

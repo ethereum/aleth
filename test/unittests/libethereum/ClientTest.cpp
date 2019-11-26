@@ -68,14 +68,6 @@ static std::string const c_configString = R"(
         "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
     },
     "accounts": {
-        "0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
-        "0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
-        "0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-        "0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-        "0000000000000000000000000000000000000005": { "wei": "1", "precompiled": { "name": "modexp" } },
-        "0000000000000000000000000000000000000006": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } } },
-        "0000000000000000000000000000000000000007": { "wei": "1", "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } } },
-        "0000000000000000000000000000000000000008": { "wei": "1", "precompiled": { "name": "alt_bn128_pairing_product" } }
     }
 }
 )";
@@ -91,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsAuthor)
     BOOST_CHECK_EQUAL(testClient->author(), Address("0000000000000010000000000000000000000000"));
 }
 
-BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsCustomPrecompiles)
+BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsPrecompilesAreIgnored)
 {
     ClientTest* testClient = asClientTest(getWeb3()->ethereum());
     testClient->setChainParams(c_configString);
@@ -132,8 +124,8 @@ BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsCustomPrecompiles)
     testClient->setChainParams(configWithCustomPrecompiles);
 
     BOOST_CHECK_EQUAL(
-        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0x28d138);
-    BOOST_CHECK(!contains(testClient->chainParams().precompiled, sha256Address));
+        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0);
+    BOOST_CHECK(contains(testClient->chainParams().precompiled, sha256Address));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
