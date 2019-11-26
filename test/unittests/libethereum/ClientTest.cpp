@@ -66,8 +66,6 @@ static std::string const c_configString = R"(
         "gasLimit": "0x1000000000000",
         "difficulty": "0x020000",
         "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-    },
-    "accounts": {
     }
 }
 )";

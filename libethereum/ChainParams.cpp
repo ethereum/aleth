@@ -145,9 +145,11 @@ void ChainParams::loadConfig(
     string genesisStr = js::write_string(obj[c_genesis], false);
     loadGenesis(genesisStr, _stateRoot);
     // genesis state
-    string genesisStateStr = js::write_string(obj[c_accounts], false);
-
-    genesisState = jsonToAccountMap(genesisStateStr, accountStartNonce, nullptr, _configPath);
+    if (contains(obj, c_accounts))
+    {
+        string genesisStateStr = js::write_string(obj[c_accounts], false);
+        genesisState = jsonToAccountMap(genesisStateStr, accountStartNonce, nullptr, _configPath);
+    }
 
     precompiled.insert({Address{0x1}, PrecompiledContract{"ecrecover"}});
     precompiled.insert({Address{0x2}, PrecompiledContract{"sha256"}});

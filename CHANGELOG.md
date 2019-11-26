@@ -12,6 +12,7 @@
 - Changed: [#5837](https://github.com/ethereum/aleth/pull/5837) [#5839](https://github.com/ethereum/aleth/pull/5839) [#5845](https://github.com/ethereum/aleth/pull/5845) [#5846](https://github.com/ethereum/aleth/pull/5846) Output format of `testeth --jsontrace` command changed to better match output of geth's evm tool and to integrate with evmlab project.
 - Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14.
 - Removed: [#5840](https://github.com/ethereum/aleth/pull/5840) The list of precompiled contracts is not required in config files anymore.
+- Removed: [#5850](https://github.com/ethereum/aleth/pull/5850) accounts section is now optional in config files.
 - Fixed: [#5792](https://github.com/ethereum/aleth/pull/5792) Faster and cheaper execution of RPC functions which query blockchain state (e.g. getBalance).
 - Fixed: [#5811](https://github.com/ethereum/aleth/pull/5811) RPC methods querying transactions (`eth_getTransactionByHash`, `eth_getBlockByNumber`) return correct `v` value.
 - Fixed: [#5821](https://github.com/ethereum/aleth/pull/5821) `test_setChainParams` correctly initializes custom configuration of precompiled contracts.
