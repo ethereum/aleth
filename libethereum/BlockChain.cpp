@@ -198,9 +198,9 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     unsigned lastMinor = c_databaseMinorVersion;
     bool rebuildNeeded = false;
 
-    db_paths::setDatabasePaths(_path, m_genesisHash);
     if (db::isDiskDatabase())
     {
+        db_paths::setDatabasePaths(_path, m_genesisHash);
         if (_we == WithExisting::Kill)
         {
             LOG(m_loggerInfo)
@@ -234,6 +234,7 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
         }
         else
         {
+            // First launch with new database
             LOG(m_loggerDetail) << "Creating database minor version file: "
                                 << db_paths::extrasDatabaseMinorVersionPath()
                                 << " (minor version: " << c_databaseMinorVersion << ")";
@@ -249,11 +250,11 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     catch (db::DatabaseError const& ex)
     {
         // Determine which database open call failed
-        auto const dbPath = !m_blocksDB.get() ? db_paths::blocksDatabasePath() : db_paths::extrasDatabasePath();
-        LOG(m_loggerError) << "Error opening database: " << dbPath;
-
+        auto const dbPath =
+            !m_blocksDB.get() ? db_paths::blocksDatabasePath() : db_paths::extrasDatabasePath();
         if (db::isDiskDatabase())
         {
+            LOG(m_loggerError) << "Error occurred when opening database: " << dbPath;
             db::DatabaseStatus const dbStatus = *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
             if (fs::space(db_paths::rootPath()).available < 1024)
             {
@@ -278,7 +279,8 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
             }
         }
 
-        LOG(m_loggerError) << "Unknown error occurred. Exception details: " << ex.what();
+        LOG(m_loggerError) << "Unknown error occurred when opening database. Exception details: "
+                           << ex.what();
         throw;
     }
 
@@ -301,8 +303,7 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     // database because the extras database format may have changed
     m_lastBlockNumber = info(m_lastBlockHash).number();
 
-    LOG(m_loggerInfo) << "Opened blockchain database (" << db_paths::chainPath()
-                      << "). Latest: " << currentHash()
+    LOG(m_loggerInfo) << "Opened blockchain database. Latest block hash: " << currentHash()
                       << (!rebuildNeeded ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
     return rebuildNeeded;
 }
@@ -377,12 +378,12 @@ void BlockChain::rebuild(
         BOOST_THROW_EXCEPTION(DatabaseExists());
     }
     fs::rename(db_paths::extrasDatabasePath(), db_paths::extrasDatabaseTemporaryPath());
-    std::unique_ptr<db::DatabaseFace> oldExtrasDB(db::DBFactory::create(db_paths::extrasDatabaseTemporaryPath()));
+    std::unique_ptr<db::DatabaseFace> oldExtrasDB(
+        db::DBFactory::create(db_paths::extrasDatabaseTemporaryPath()));
     m_extrasDB = db::DBFactory::create(db_paths::extrasDatabasePath());
 
     // Open a fresh state DB
-    Block s = genesisBlock(
-        State::openDB(db_paths::rootPath().string(), m_genesisHash, WithExisting::Kill));
+    Block s = genesisBlock(State::openDB(db_paths::rootPath(), m_genesisHash, WithExisting::Kill));
 
     // Clear all memos ready for replay.
     m_details.clear();

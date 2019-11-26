@@ -44,27 +44,29 @@ State::State(State const& _s):
 
 OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
-    db_paths::setDatabasePaths(_basePath);
-    if (db::isDiskDatabase() && _we == WithExisting::Kill)
+    if (db::isDiskDatabase())
     {
-        clog(VerbosityInfo, "statedb")
-            << "Deleting state database: " << db_paths::stateDatabasePath();
-        fs::remove_all(db_paths::stateDatabasePath());
+        db_paths::setDatabasePaths(_basePath, _genesisHash);
+        if (_we == WithExisting::Kill)
+        {
+            clog(VerbosityInfo, "statedb")
+                << "Deleting state database: " << db_paths::stateDatabasePath();
+            fs::remove_all(db_paths::stateDatabasePath());
+        }
     }
 
     try
     {
-        clog(VerbosityTrace, "statedb") << "Opening state database (and creating if not present): "
-                                        << db_paths::stateDatabasePath();
+        clog(VerbosityTrace, "statedb") << "Opening state database";
         std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(db_paths::stateDatabasePath());
         return OverlayDB(std::move(db));
     }
     catch (boost::exception const& ex)
     {
-        clog(VerbosityError, "statedb")
-            << "Error opening state database: " << db_paths::stateDatabasePath();
         if (db::isDiskDatabase())
         {
+            clog(VerbosityError, "statedb")
+                << "Error opening state database: " << db_paths::stateDatabasePath();
             db::DatabaseStatus const dbStatus =
                 *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
             if (fs::space(db_paths::stateDatabasePath()).available < 1024)
@@ -89,8 +91,9 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
                 BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
             }
         }
-        clog(VerbosityError, "statedb") << "Unknown error encountered. Exception details: "
-                                        << boost::diagnostic_information(ex);
+        clog(VerbosityError, "statedb")
+            << "Unknown error encountered when opening state database. Exception details: "
+            << boost::diagnostic_information(ex);
         throw;
     }
 }

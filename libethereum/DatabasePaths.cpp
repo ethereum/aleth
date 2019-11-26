@@ -30,11 +30,8 @@ bool databasePathsSet()
 
 void setDatabasePaths(fs::path const& _rootPath, h256 const& _genesisHash)
 {
-    if (_genesisHash == h256{})
-    {
-        BOOST_THROW_EXCEPTION(InvalidHash());
-    }
-
+    // Allow empty hashes since they are required by tests
+    
     g_rootPath = _rootPath.empty() ? db::databasePath() : _rootPath;
     g_chainPath = g_rootPath / fs::path(toHex(_genesisHash.ref().cropped(0, 4)));
     g_stateDbPath = g_chainPath / fs::path("state");
