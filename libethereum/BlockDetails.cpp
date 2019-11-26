@@ -22,5 +22,8 @@ BlockDetails::BlockDetails(RLP const& _r)
 
 bytes BlockDetails::rlp() const
 {
-    return rlpList(number, totalDifficulty, parentHash, childHashes, blockSizeBytes);
+    auto const detailsRlp =
+        rlpList(number, totalDifficulty, parentHash, childHashes, blockSizeBytes);
+    size = detailsRlp.size();
+    return detailsRlp;
 }

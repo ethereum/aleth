@@ -232,7 +232,8 @@ public:
 
     /// Run through database and verify all blocks by reevaluating.
     /// Will call _progress with the progress in this operation first param done, second total.
-    void rebuild(boost::filesystem::path const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>());
+    void rebuild(boost::filesystem::path const& _path,
+        ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>());
 
     /// Alter the head of the chain to some prior block along it.
     void rewind(unsigned _newHead);
@@ -409,8 +410,6 @@ private:
 
     std::function<void(Exception&)> m_onBad;                                    ///< Called if we have a block that doesn't verify.
     std::function<void(BlockHeader const&)> m_onBlockImport;                                        ///< Called if we have imported a new block into the db
-
-    boost::filesystem::path m_dbPath;
 
     mutable Logger m_logger{createLogger(VerbosityDebug, "chain")};
     mutable Logger m_loggerDetail{createLogger(VerbosityTrace, "chain")};

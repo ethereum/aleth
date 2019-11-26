@@ -57,6 +57,7 @@ DEV_SIMPLE_EXCEPTION(InvalidLogBloom);
 DEV_SIMPLE_EXCEPTION(InvalidNonce);
 DEV_SIMPLE_EXCEPTION(InvalidBlockHeaderItemCount);
 DEV_SIMPLE_EXCEPTION(InvalidBlockNonce);
+DEV_SIMPLE_EXCEPTION(InvalidHash);
 DEV_SIMPLE_EXCEPTION(InvalidParentHash);
 DEV_SIMPLE_EXCEPTION(InvalidUncleParentHash);
 DEV_SIMPLE_EXCEPTION(InvalidNumber);
@@ -78,6 +79,7 @@ DEV_SIMPLE_EXCEPTION(DatabaseAlreadyOpen);
 DEV_SIMPLE_EXCEPTION(DatabaseCorruption);
 DEV_SIMPLE_EXCEPTION(DatabaseExists);
 DEV_SIMPLE_EXCEPTION(DatabaseRebuildFailed);
+DEV_SIMPLE_EXCEPTION(DatabasePathsNotSet);
 
 DEV_SIMPLE_EXCEPTION(DAGCreationFailure);
 DEV_SIMPLE_EXCEPTION(DAGComputeFailure);

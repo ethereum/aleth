@@ -8,6 +8,7 @@
 #include "BlockChain.h"
 #include "ExtVM.h"
 #include "TransactionQueue.h"
+#include "DatabasePaths.h"
 #include <libdevcore/Assertions.h>
 #include <libdevcore/DBFactory.h>
 #include <libdevcore/TrieHash.h>
@@ -18,6 +19,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
+namespace db_paths = database_paths;
 
 State::State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs):
     m_db(_db),
@@ -42,40 +44,30 @@ State::State(State const& _s):
 
 OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
-    auto const path = _basePath.empty() ? db::databasePath() : _basePath;
-    auto const chainPath = path / fs::path(toHex(_genesisHash.ref().cropped(0, 4))) /
-                           fs::path(toString(c_databaseVersion));
-    auto const statePath = chainPath / fs::path("state");
-
-    if (db::isDiskDatabase())
+    db_paths::setDatabasePaths(_basePath);
+    if (db::isDiskDatabase() && _we == WithExisting::Kill)
     {
-        if (_we == WithExisting::Kill)
-        {
-            clog(VerbosityDebug, "statedb")
-                << "Killing state database (" << statePath << ") (WithExisting::Kill)";
-            fs::remove_all(statePath);
-        }
-
-        clog(VerbosityDebug, "statedb") << "Verifying path exists (and creating if not present): " << chainPath;
-        fs::create_directories(chainPath);
-        clog(VerbosityDebug, "statedb") << "Ensuring permissions are set for path: " << chainPath;
-        DEV_IGNORE_EXCEPTIONS(fs::permissions(chainPath, fs::owner_all));
+        clog(VerbosityInfo, "statedb")
+            << "Deleting state database: " << db_paths::stateDatabasePath();
+        fs::remove_all(db_paths::stateDatabasePath());
     }
 
     try
     {
-        clog(VerbosityTrace, "statedb") << "Opening state database: " << statePath;
-        std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(statePath);
+        clog(VerbosityTrace, "statedb") << "Opening state database (and creating if not present): "
+                                        << db_paths::stateDatabasePath();
+        std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(db_paths::stateDatabasePath());
         return OverlayDB(std::move(db));
     }
     catch (boost::exception const& ex)
     {
-        clog(VerbosityError, "statedb") << "Error opening state database: " << statePath;
+        clog(VerbosityError, "statedb")
+            << "Error opening state database: " << db_paths::stateDatabasePath();
         if (db::isDiskDatabase())
         {
             db::DatabaseStatus const dbStatus =
                 *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
-            if (fs::space(statePath).available < 1024)
+            if (fs::space(db_paths::stateDatabasePath()).available < 1024)
             {
                 clog(VerbosityError, "statedb")
                     << "Not enough available space found on hard drive. Please free some up and "
