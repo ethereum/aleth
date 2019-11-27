@@ -117,7 +117,8 @@ private:
     std::vector<uint64_t> m_jumpDests;
     int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
 
-    void onOperation();
+    void onOperation() { onOperation(m_OP); }
+    void onOperation(Instruction _instr);
     void adjustStack(unsigned _removed, unsigned _added);
     uint64_t gasForMem(u512 const& _size);
     void updateSSGas();

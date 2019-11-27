@@ -58,10 +58,10 @@ uint64_t LegacyVM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte 
 //
 // for tracing, checking, metering, measuring ...
 //
-void LegacyVM::onOperation()
+void LegacyVM::onOperation(Instruction _instr)
 {
     if (m_onOp)
-        (m_onOp)(++m_nSteps, m_PC, m_OP,
+        (m_onOp)(++m_nSteps, m_PC, _instr,
             m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
             m_runGas, m_io_gas, this, m_ext);
 }
@@ -1474,7 +1474,8 @@ void LegacyVM::interpretCases()
         CASE(PUSHC)
         {
 #if EVM_USE_CONSTANT_POOL
-            ON_OP();
+            auto const originalOp = static_cast<byte>(Instruction::PUSH1) + m_code[m_PC + 3] + 1;
+            onOperation(static_cast<Instruction>(originalOp));
             updateIOGas();
 
             // get val at two-byte offset into const pool and advance pc by one-byte remainder
@@ -1569,7 +1570,7 @@ void LegacyVM::interpretCases()
         CASE(JUMPC)
         {
 #if EVM_REPLACE_CONST_JUMP
-            ON_OP();
+            onOperation(Instruction::JUMP);
             updateIOGas();
 
             m_PC = uint64_t(m_SP[0]);
@@ -1582,7 +1583,7 @@ void LegacyVM::interpretCases()
         CASE(JUMPCI)
         {
 #if EVM_REPLACE_CONST_JUMP
-            ON_OP();
+            onOperation(Instruction::JUMPI);
             updateIOGas();
 
             if (m_SP[1])
