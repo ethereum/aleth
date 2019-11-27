@@ -5,12 +5,12 @@
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
 - Added: [#5741](https://github.com/ethereum/aleth/pull/5741) Support for individual EIP activation to facilitate EIP-centric network upgrade process.
 - Added: [#5752](https://github.com/ethereum/aleth/pull/5752) [#5753](https://github.com/ethereum/aleth/pull/5753) [#5809](https://github.com/ethereum/aleth/pull/5809) Implement EIP1380 (reduced gas costs for call-to-self).
-- Added: [#5848](https://github.com/ethereum/aleth/pull/5848) Add "codefile" parameter into aleth-vm options. `aleth-vm --codefile <PATH>` now reads bytecode file from path and `aleth-vm --codefile - <bytecode>` now reads bytcode from input.
 - Changed: [#5750](https://github.com/ethereum/aleth/pull/5750) Use `testeth -t <SUITE_NAME> -- --testfile <PATH>` to run the tests from file at any path. Use `testeth -t <SUITE_NAME> -- --testfile <PATH> --singletest <TEST_NAME>` to run only single test from any file.
 - Changed: [#5801](https://github.com/ethereum/aleth/pull/5801) `testeth -t BlockchainTests` command now doesn't run the tests for the forks before Istanbul. To run those tests use a separate LegacyTests suite with command `testeth -t LegacyTests/Constantinople/BlockchainTests`.
 - Changed: [#5807](https://github.com/ethereum/aleth/pull/5807) Optimize selfdestruct opcode in LegacyVM by reducing state accesses in certain out-of-gas scenarios.
 - Changed: [#5806](https://github.com/ethereum/aleth/pull/5806) Optimize selfdestruct opcode in aleth-interpreter by reducing state accesses in certain out-of-gas scenarios.
 - Changed: [#5837](https://github.com/ethereum/aleth/pull/5837) [#5839](https://github.com/ethereum/aleth/pull/5839) [#5845](https://github.com/ethereum/aleth/pull/5845) [#5846](https://github.com/ethereum/aleth/pull/5846) Output format of `testeth --jsontrace` command changed to better match output of geth's evm tool and to integrate with evmlab project.
+- Changed: [#5848](https://github.com/ethereum/aleth/pull/5848) `aleth-vm --codefile <PATH>` now reads bytecode file from path and `aleth-vm --codefile - <bytecode>` now reads bytecode from standard input.
 - Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14.
 - Fixed: [#5792](https://github.com/ethereum/aleth/pull/5792) Faster and cheaper execution of RPC functions which query blockchain state (e.g. getBalance).
 - Fixed: [#5811](https://github.com/ethereum/aleth/pull/5811) RPC methods querying transactions (`eth_getTransactionByHash`, `eth_getBlockByNumber`) return correct `v` value.

@@ -113,7 +113,8 @@ int main(int argc, char** argv)
     addTransactionOption("input", po::value<string>(), "<d> Transaction code should be <d>");
     addTransactionOption("code", po::value<string>(),
         "<d> Contract code <d>. Makes transaction a call to this contract");
-    addTransactionOption("codefile", po::value<string>(), "<path> File containing EVM code <path>. If '-' is specified, code is read from stdin");
+    addTransactionOption("codefile", po::value<string>(),
+        "<path> File containing contract code. If '-' is specified, code is read from stdin");
 
     po::options_description networkOptions("Network options", c_lineWidth);
     networkOptions.add_options()("network", po::value<string>(),
@@ -146,8 +147,7 @@ int main(int argc, char** argv)
             ->notifier([&](int64_t _t) { blockHeader.setTimestamp(_t); }),
         "<n> Set timestamp");
 
-    po::options_description allowedOptions(
-        "Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
+    po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test]");
     allowedOptions.add(vmProgramOptions(c_lineWidth))
         .add(networkOptions)
         .add(optionsForTrace)
@@ -248,7 +248,7 @@ int main(int argc, char** argv)
         if (!code.empty())
         {
             cerr << "Options --code and --codefile shouldn't be used at the same time" << '\n';
-            return AlethErrors::BadConfigOption;
+            return AlethErrors::ArgumentProcessingFailure;
         }
 
         if (codeFile == "-")
@@ -270,14 +270,15 @@ int main(int argc, char** argv)
         Account account(0, 0);
         auto const latestVersion = se->evmSchedule(envInfo.number()).accountVersion;
 
-        bytes codeBytes{};
+        bytes codeBytes;
         try
         {
             codeBytes = fromHex(code, WhenError::Throw);
-        }catch (BadHexCharacter const& e)
+        }
+        catch (BadHexCharacter const&)
         {
-            cerr << "Exception: " << e.what() << '\n';
-            return AlethErrors::BadFormatOption;
+            cerr << "Provided code contains invalid characters.\n";
+            return AlethErrors::ArgumentProcessingFailure;
         }
 
         account.setCode(bytes{codeBytes}, latestVersion);
