@@ -245,7 +245,7 @@ int main(int argc, char** argv)
     // Read code from input file.
     if (!codeFile.empty())
     {
-        if (vm.count("code"))
+        if (!code.empty())
         {
             cerr << "Options --code and --codefile shouldn't be used at the same time" << '\n';
             return AlethErrors::BadConfigOption;
@@ -255,14 +255,7 @@ int main(int argc, char** argv)
             std::getline(std::cin, code);
         else
             code = contentsString(codeFile);
-
-        try  // Try decoding from hex.
-        {
-            code.erase(code.find_last_not_of(" \t\n\r") + 1);  // Right trim.
-        }
-        catch (BadHexCharacter const&)
-        {
-        }  // Ignore decoding errors./ Right trim.
+        code.erase(code.find_last_not_of(" \t\n\r") + 1);  // Right trim.
     }
 
     unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
@@ -276,7 +269,18 @@ int main(int argc, char** argv)
         // Deploy the code on some fake account to be called later.
         Account account(0, 0);
         auto const latestVersion = se->evmSchedule(envInfo.number()).accountVersion;
-        account.setCode(fromHex(code, WhenError::Throw), latestVersion);
+
+        bytes codeBytes{};
+        try
+        {
+            codeBytes = fromHex(code, WhenError::Throw);
+        }catch (BadHexCharacter const& e)
+        {
+            cerr << "Exception: " << e.what() << '\n';
+            return AlethErrors::BadFormatOption;
+        }
+
+        account.setCode(bytes{codeBytes}, latestVersion);
         std::unordered_map<Address, Account> map;
         map[contractDestination] = account;
         state.populateFrom(map);
