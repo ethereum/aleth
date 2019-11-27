@@ -251,15 +251,18 @@ int main(int argc, char** argv)
             return AlethErrors::BadConfigOption;
         }
 
-        if (!code.empty())
-            cerr << "--code argument overwritten by input file " << codeFile << '\n';
-
         if (codeFile == "-")
             std::getline(std::cin, code);
         else
             code = contentsString(codeFile);
 
-        code.erase(code.find_last_not_of(" \t\n\r") + 1);  // Right trim.
+        try  // Try decoding from hex.
+        {
+            code.erase(code.find_last_not_of(" \t\n\r") + 1);  // Right trim.
+        }
+        catch (BadHexCharacter const&)
+        {
+        }  // Ignore decoding errors./ Right trim.
     }
 
     unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
@@ -273,7 +276,7 @@ int main(int argc, char** argv)
         // Deploy the code on some fake account to be called later.
         Account account(0, 0);
         auto const latestVersion = se->evmSchedule(envInfo.number()).accountVersion;
-        account.setCode(bytes{static_cast<byte>(*code.c_str())}, latestVersion);
+        account.setCode(fromHex(code, WhenError::Throw), latestVersion);
         std::unordered_map<Address, Account> map;
         map[contractDestination] = account;
         state.populateFrom(map);
