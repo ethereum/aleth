@@ -53,6 +53,13 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
                 << "Deleting state database: " << db_paths::stateDatabasePath();
             fs::remove_all(db_paths::stateDatabasePath());
         }
+
+        clog(VerbosityDebug, "statedb")
+            << "Verifying path exists (and creating if not present): " << db_paths::chainPath();
+        fs::create_directories(db_paths::chainPath());
+        clog(VerbosityDebug, "statedb")
+            << "Ensuring permissions are set for path: " << db_paths::chainPath();
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(db_paths::chainPath(), fs::owner_all));
     }
 
     try
