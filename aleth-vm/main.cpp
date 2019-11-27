@@ -73,7 +73,7 @@ public:
 int main(int argc, char** argv)
 {
     setDefaultOrCLocale();
-    string inputFile;
+    string codeFile;
     Mode mode = Mode::Statistics;
     State state(0);
     Address sender = Address(69);
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     blockHeader.setGasLimit(maxBlockGasLimit());
     blockHeader.setTimestamp(0);
     bytes data;
-    bytes code;
+    string code;
 
     Ethash::init();
     NoProof::init();
@@ -113,6 +113,8 @@ int main(int argc, char** argv)
     addTransactionOption("input", po::value<string>(), "<d> Transaction code should be <d>");
     addTransactionOption("code", po::value<string>(),
         "<d> Contract code <d>. Makes transaction a call to this contract");
+    addTransactionOption("codefile", po::value<string>(),
+        "<path> File containing contract code. If '-' is specified, code is read from stdin");
 
     po::options_description networkOptions("Network options", c_lineWidth);
     networkOptions.add_options()("network", po::value<string>(),
@@ -145,8 +147,7 @@ int main(int argc, char** argv)
             ->notifier([&](int64_t _t) { blockHeader.setTimestamp(_t); }),
         "<n> Set timestamp");
 
-    po::options_description allowedOptions(
-        "Usage ethvm <options> [trace|stats|output|test] (<file>|-)");
+    po::options_description allowedOptions("Usage ethvm <options> [trace|stats|output|test]");
     allowedOptions.add(vmProgramOptions(c_lineWidth))
         .add(networkOptions)
         .add(optionsForTrace)
@@ -174,8 +175,6 @@ int main(int argc, char** argv)
             mode = Mode::Trace;
         else if (arg == "test")
             mode = Mode::Test;
-        else if (inputFile.empty())
-            inputFile = arg;  // Assign input file name only once.
         else
         {
             cerr << "Unknown argument: " << arg << '\n';
@@ -239,29 +238,24 @@ int main(int argc, char** argv)
     if (vm.count("input"))
         data = fromHex(vm["input"].as<string>());
     if (vm.count("code"))
-        code = fromHex(vm["code"].as<string>());
+        code = vm["code"].as<string>();
+    if (vm.count("codefile"))
+        codeFile = vm["codefile"].as<string>();
 
     // Read code from input file.
-    if (!inputFile.empty())
+    if (!codeFile.empty())
     {
         if (!code.empty())
-            cerr << "--code argument overwritten by input file " << inputFile << '\n';
-
-        if (inputFile == "-")
-            for (int i = cin.get(); i != -1; i = cin.get())
-                code.push_back(static_cast<byte>(i));
-        else
-            code = contents(inputFile);
-
-        try  // Try decoding from hex.
         {
-            std::string strCode{reinterpret_cast<char const*>(code.data()), code.size()};
-            strCode.erase(strCode.find_last_not_of(" \t\n\r") + 1);  // Right trim.
-            code = fromHex(strCode, WhenError::Throw);
+            cerr << "Options --code and --codefile shouldn't be used at the same time" << '\n';
+            return AlethErrors::ArgumentProcessingFailure;
         }
-        catch (BadHexCharacter const&)
-        {
-        }  // Ignore decoding errors.
+
+        if (codeFile == "-")
+            std::getline(std::cin, code);
+        else
+            code = contentsString(codeFile);
+        code.erase(code.find_last_not_of(" \t\n\r") + 1);  // Right trim.
     }
 
     unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
@@ -275,7 +269,19 @@ int main(int argc, char** argv)
         // Deploy the code on some fake account to be called later.
         Account account(0, 0);
         auto const latestVersion = se->evmSchedule(envInfo.number()).accountVersion;
-        account.setCode(bytes{code}, latestVersion);
+
+        bytes codeBytes;
+        try
+        {
+            codeBytes = fromHex(code, WhenError::Throw);
+        }
+        catch (BadHexCharacter const&)
+        {
+            cerr << "Provided code contains invalid characters.\n";
+            return AlethErrors::ArgumentProcessingFailure;
+        }
+
+        account.setCode(bytes{codeBytes}, latestVersion);
         std::unordered_map<Address, Account> map;
         map[contractDestination] = account;
         state.populateFrom(map);
