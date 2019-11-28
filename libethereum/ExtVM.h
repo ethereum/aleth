@@ -42,6 +42,8 @@ public:
         assert(m_s.addressInUse(_myAddress));
     }
 
+    // TODO another constructor for precompiles VM
+
     /// Read storage location.
     u256 store(u256 _n) final { return m_s.storage(myAddress, _n); }
 

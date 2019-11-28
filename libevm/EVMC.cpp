@@ -119,6 +119,9 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     case EVMC_STATIC_MODE_VIOLATION:
         BOOST_THROW_EXCEPTION(DisallowedStateChange());
 
+    case EVMC_PRECOMPILE_FAILURE:
+        BOOST_THROW_EXCEPTION(PrecompileFailure());
+
     case EVMC_REJECTED:
         cwarn << "Execution rejected by EVMC, executing with default VM implementation";
         return VMFactory::create(VMKind::Legacy)->exec(io_gas, _ext, _onOp);

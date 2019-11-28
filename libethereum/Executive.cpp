@@ -9,8 +9,10 @@
 #include "Interface.h"
 #include "StandardTrace.h"
 #include "State.h"
+#include <libaleth-precompiles/PrecompilesVM.h>
 #include <libdevcore/CommonIO.h>
 #include <libethcore/CommonJS.h>
+#include <libevm/EVMC.h>
 #include <libevm/LegacyVM.h>
 #include <libevm/VMFactory.h>
 
@@ -183,27 +185,32 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         if (_p.receiveAddress == c_RipemdPrecompiledAddress)
             m_s.unrevertableTouch(_p.codeAddress);
 
-        bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
-        if (_p.gas < g)
+        auto precompilesVM = make_unique<EVMC>(evmc_create_aleth_precompiles_vm());
+
+        auto extVM = make_unique<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress,
+            _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, bytesConstRef{},
+            h256{}, 0, m_depth, false, _p.staticCall);
+
+        try
+        {
+            m_gas = _p.gas;
+            m_output = precompilesVM->exec(m_gas, *extVM, {});
+        }
+        catch (OutOfGas const&)
         {
             m_excepted = TransactionException::OutOfGasBase;
-            // Bail from exception.
             return true;	// true actually means "all finished - nothing more to be done regarding go().
         }
-        else
+        catch (PrecompileFailure const&)
         {
-            m_gas = (u256)(_p.gas - g);
-            bytes output;
-            bool success;
-            tie(success, output) = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
-            size_t outputSize = output.size();
-            m_output = owning_bytes_ref{std::move(output), 0, outputSize};
-            if (!success)
-            {
-                m_gas = 0;
-                m_excepted = TransactionException::OutOfGas;
-                return true;	// true means no need to run go().
-            }
+            m_gas = 0;
+            m_excepted = TransactionException::OutOfGas;
+            return true;  // true means no need to run go().
+        }
+        catch (std::exception const& _e)
+        {
+            cerror << "Unexpected std::exception in VM." << _e.what();
+            exit(1);
         }
     }
     else
