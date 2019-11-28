@@ -11,17 +11,26 @@ namespace dev
 {
 namespace eth
 {
-namespace database_paths
+class DatabasePaths
 {
-bool databasePathsSet();
-void setDatabasePaths(boost::filesystem::path const& _rootPath, h256 const& _genesisHash);
-boost::filesystem::path rootPath();
-boost::filesystem::path chainPath();
-boost::filesystem::path blocksDatabasePath();
-boost::filesystem::path stateDatabasePath();
-boost::filesystem::path extrasDatabasePath();
-boost::filesystem::path extrasDatabaseTemporaryPath();
-boost::filesystem::path extrasDatabaseMinorVersionPath();
-}  // namespace database_paths
+public:
+    DatabasePaths(boost::filesystem::path const& _rootPath, h256 const& _genesisHash) noexcept;
+    boost::filesystem::path const& rootPath() const noexcept;
+    boost::filesystem::path const& chainPath() const noexcept;
+    boost::filesystem::path const& blocksPath() const noexcept;
+    boost::filesystem::path const& statePath() const noexcept;
+    boost::filesystem::path const& extrasPath() const noexcept;
+    boost::filesystem::path const& extrasTemporaryPath() const noexcept;
+    boost::filesystem::path const& extrasMinorVersionPath() const noexcept;
+
+private:
+    boost::filesystem::path m_rootPath;
+    boost::filesystem::path m_chainPath;
+    boost::filesystem::path m_blocksPath;
+    boost::filesystem::path m_statePath;
+    boost::filesystem::path m_extrasPath;
+    boost::filesystem::path m_extrasTemporaryPath;
+    boost::filesystem::path m_extrasMinorVersionPath;
+};
 }  // namespace eth
 }  // namespace dev

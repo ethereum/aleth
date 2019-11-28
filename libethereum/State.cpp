@@ -19,7 +19,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
-namespace db_paths = database_paths;
 
 State::State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs):
     m_db(_db),
@@ -44,28 +43,27 @@ State::State(State const& _s):
 
 OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
+    DatabasePaths const dbPaths{_basePath, _genesisHash};
     if (db::isDiskDatabase())
     {
-        db_paths::setDatabasePaths(_basePath, _genesisHash);
         if (_we == WithExisting::Kill)
         {
-            clog(VerbosityInfo, "statedb")
-                << "Deleting state database: " << db_paths::stateDatabasePath();
-            fs::remove_all(db_paths::stateDatabasePath());
+            clog(VerbosityInfo, "statedb") << "Deleting state database: " << dbPaths.statePath();
+            fs::remove_all(dbPaths.statePath());
         }
 
         clog(VerbosityDebug, "statedb")
-            << "Verifying path exists (and creating if not present): " << db_paths::chainPath();
-        fs::create_directories(db_paths::chainPath());
+            << "Verifying path exists (and creating if not present): " << dbPaths.chainPath();
+        fs::create_directories(dbPaths.chainPath());
         clog(VerbosityDebug, "statedb")
-            << "Ensuring permissions are set for path: " << db_paths::chainPath();
-        DEV_IGNORE_EXCEPTIONS(fs::permissions(db_paths::chainPath(), fs::owner_all));
+            << "Ensuring permissions are set for path: " << dbPaths.chainPath();
+        DEV_IGNORE_EXCEPTIONS(fs::permissions(dbPaths.chainPath(), fs::owner_all));
     }
 
     try
     {
         clog(VerbosityTrace, "statedb") << "Opening state database";
-        std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(db_paths::stateDatabasePath());
+        std::unique_ptr<db::DatabaseFace> db = db::DBFactory::create(dbPaths.statePath());
         return OverlayDB(std::move(db));
     }
     catch (boost::exception const& ex)
@@ -73,10 +71,10 @@ OverlayDB State::openDB(fs::path const& _basePath, h256 const& _genesisHash, Wit
         if (db::isDiskDatabase())
         {
             clog(VerbosityError, "statedb")
-                << "Error opening state database: " << db_paths::stateDatabasePath();
+                << "Error opening state database: " << dbPaths.statePath();
             db::DatabaseStatus const dbStatus =
                 *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
-            if (fs::space(db_paths::stateDatabasePath()).available < 1024)
+            if (fs::space(dbPaths.statePath()).available < 1024)
             {
                 clog(VerbosityError, "statedb")
                     << "Not enough available space found on hard drive. Please free some up and "

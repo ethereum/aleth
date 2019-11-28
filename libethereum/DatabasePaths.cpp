@@ -4,79 +4,61 @@
 
 #include "DatabasePaths.h"
 #include "libdevcore/CommonIO.h"
-#include "libdevcore/DBFactory.h"
-#include "libethcore/Exceptions.h"
+#include "libethcore/Common.h"
 
 namespace dev
 {
 namespace eth
 {
-namespace database_paths
-{
 namespace fs = boost::filesystem;
 
-fs::path g_rootPath;
-fs::path g_chainPath;
-fs::path g_blocksDbPath;
-fs::path g_stateDbPath;
-fs::path g_extrasDbPath;
-fs::path g_extrasDbTempPath;
-fs::path g_extrasDbMinorVersionPath;
-
-bool databasePathsSet()
+DatabasePaths::DatabasePaths(fs::path const& _rootPath, h256 const& _genesisHash) noexcept
 {
-    return !g_rootPath.empty();
+    // Allow an empty root path and empty genesis hash since they are required by the tests
+    m_rootPath = _rootPath;
+    m_chainPath = m_rootPath / fs::path(toHex(_genesisHash.ref().cropped(0, 4)));
+    m_statePath = m_chainPath / fs::path("state");
+    m_blocksPath = m_chainPath / fs::path("blocks");
+
+    auto const extrasRootPath = m_chainPath / fs::path(toString(c_databaseVersion));
+    m_extrasPath = extrasRootPath / fs::path("extras");
+    m_extrasTemporaryPath = extrasRootPath / fs::path("extras.old");
+    m_extrasMinorVersionPath = m_extrasPath / fs::path("minor");
 }
 
-void setDatabasePaths(fs::path const& _rootPath, h256 const& _genesisHash)
+fs::path const& DatabasePaths::rootPath() const noexcept
 {
-    // Allow empty hashes since they are required by tests
-    
-    g_rootPath = _rootPath.empty() ? db::databasePath() : _rootPath;
-    g_chainPath = g_rootPath / fs::path(toHex(_genesisHash.ref().cropped(0, 4)));
-    g_stateDbPath = g_chainPath / fs::path("state");
-    g_blocksDbPath = g_chainPath / fs::path("blocks");
-
-    auto const extrasRootPath = g_chainPath / fs::path(toString(c_databaseVersion));
-    g_extrasDbPath = extrasRootPath / fs::path("extras");
-    g_extrasDbTempPath = extrasRootPath / fs::path("extras.old");
-    g_extrasDbMinorVersionPath = g_extrasDbPath / fs::path("minor");
+    return m_rootPath;
 }
 
-fs::path rootPath()
+fs::path const& DatabasePaths::chainPath() const noexcept
 {
-    return g_rootPath;
+    return m_chainPath;
 }
 
-fs::path chainPath()
+fs::path const& DatabasePaths::statePath() const noexcept
 {
-    return g_chainPath;
+    return m_statePath;
 }
 
-fs::path stateDatabasePath()
+fs::path const& DatabasePaths::blocksPath() const noexcept
 {
-    return g_stateDbPath;
+    return m_blocksPath;
 }
 
-fs::path blocksDatabasePath()
+fs::path const& DatabasePaths::extrasPath() const noexcept
 {
-    return g_blocksDbPath;
+    return m_extrasPath;
 }
 
-fs::path extrasDatabasePath()
+fs::path const& DatabasePaths::extrasTemporaryPath() const noexcept
 {
-    return g_extrasDbPath;
+    return m_extrasTemporaryPath;
 }
 
-fs::path extrasDatabaseTemporaryPath()
+fs::path const& DatabasePaths::extrasMinorVersionPath() const noexcept
 {
-    return g_extrasDbTempPath;
+    return m_extrasMinorVersionPath;
 }
-
-fs::path extrasDatabaseMinorVersionPath()
-{
-    return g_extrasDbMinorVersionPath;
-}
-}  // namespace database_paths
 }  // namespace eth
 }  // namespace dev

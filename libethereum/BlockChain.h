@@ -8,22 +8,23 @@
 #include "BlockDetails.h"
 #include "BlockQueue.h"
 #include "ChainParams.h"
+#include "DatabasePaths.h"
 #include "LastBlockHashesFace.h"
 #include "State.h"
 #include "Transaction.h"
 #include "VerifiedBlock.h"
-#include <libdevcore/db.h>
 #include <libdevcore/Exceptions.h>
-#include <libdevcore/Log.h>
 #include <libdevcore/Guards.h>
+#include <libdevcore/Log.h>
+#include <libdevcore/db.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Common.h>
 #include <libethcore/SealEngine.h>
+#include <boost/filesystem/path.hpp>
 #include <chrono>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
-#include <boost/filesystem/path.hpp>
 
 namespace std
 {
@@ -407,6 +408,8 @@ private:
     mutable BlockHeader m_genesis;  // mutable because they're effectively memos.
     mutable bytes m_genesisHeaderBytes; // mutable because they're effectively memos.
     mutable h256 m_genesisHash;     // mutable because they're effectively memos.
+
+    std::unique_ptr<DatabasePaths> m_dbPaths; // Paths for various databases (e.g. blocks, extras)
 
     std::function<void(Exception&)> m_onBad;                                    ///< Called if we have a block that doesn't verify.
     std::function<void(BlockHeader const&)> m_onBlockImport;                                        ///< Called if we have imported a new block into the db

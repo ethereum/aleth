@@ -26,7 +26,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
-namespace db_paths = dev::eth::database_paths;
 
 #define ETH_TIMED_IMPORTS 1
 
@@ -200,17 +199,19 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
 
     if (db::isDiskDatabase())
     {
-        db_paths::setDatabasePaths(_path, m_genesisHash);
+        if (!m_dbPaths || m_dbPaths->rootPath() != _path)
+            m_dbPaths = make_unique<DatabasePaths>(_path, m_genesisHash);
+
         if (_we == WithExisting::Kill)
         {
             LOG(m_loggerInfo)
                 << "Deleting chain databases. This will require a resync from genesis.";
-            fs::remove_all(db_paths::blocksDatabasePath());
-            fs::remove_all(db_paths::extrasDatabasePath());
-            fs::remove_all(db_paths::extrasDatabaseTemporaryPath());
+            fs::remove_all(m_dbPaths->blocksPath());
+            fs::remove_all(m_dbPaths->extrasPath());
+            fs::remove_all(m_dbPaths->extrasTemporaryPath());
         }
 
-        bytes const minorVersionBytes = contents(db_paths::extrasDatabaseMinorVersionPath());
+        bytes const minorVersionBytes = contents(m_dbPaths->extrasMinorVersionPath());
         if (!minorVersionBytes.empty())
         {
             DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(minorVersionBytes));
@@ -219,16 +220,16 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
                 rebuildNeeded = true;
                 LOG(m_loggerInfo) << "Database minor version change detected, the extras and state "
                                      "databases will be rebuilt.";
-                LOG(m_loggerInfo) << "Version from " << db_paths::extrasDatabaseMinorVersionPath()
+                LOG(m_loggerInfo) << "Version from " << m_dbPaths->extrasMinorVersionPath()
                                   << " (" << lastMinor << ") != Aleth's version ("
                                   << c_databaseMinorVersion << ")";
             }
         }
-        else if (fs::exists(db_paths::extrasDatabasePath()))
+        else if (fs::exists(m_dbPaths->extrasPath()))
         {
             LOG(m_loggerInfo) << "Database minor version file not found ("
-                              << db_paths::extrasDatabaseMinorVersionPath()
-                              << ") but extras database exists (" << db_paths::extrasDatabasePath()
+                              << m_dbPaths->extrasMinorVersionPath()
+                              << ") but extras database exists (" << m_dbPaths->extrasPath()
                               << "), assuming extras database needs to be upgraded.";
             rebuildNeeded = true;
         }
@@ -236,27 +237,27 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
         {
             // First launch with new database
             LOG(m_loggerDetail) << "Creating database minor version file: "
-                                << db_paths::extrasDatabaseMinorVersionPath()
+                                << m_dbPaths->extrasMinorVersionPath()
                                 << " (minor version: " << c_databaseMinorVersion << ")";
-            writeFile(db_paths::extrasDatabaseMinorVersionPath(), rlp(c_databaseMinorVersion));
+            writeFile(m_dbPaths->extrasMinorVersionPath(), rlp(c_databaseMinorVersion));
         }
     }
 
     try
     {
-        m_blocksDB = db::DBFactory::create(db_paths::blocksDatabasePath());
-        m_extrasDB = db::DBFactory::create(db_paths::extrasDatabasePath());
+        m_blocksDB = db::DBFactory::create(m_dbPaths->blocksPath());
+        m_extrasDB = db::DBFactory::create(m_dbPaths->extrasPath());
     }
     catch (db::DatabaseError const& ex)
     {
         // Determine which database open call failed
         auto const dbPath =
-            !m_blocksDB.get() ? db_paths::blocksDatabasePath() : db_paths::extrasDatabasePath();
+            !m_blocksDB.get() ? m_dbPaths->blocksPath() : m_dbPaths->extrasPath();
         if (db::isDiskDatabase())
         {
             LOG(m_loggerError) << "Error occurred when opening database: " << dbPath;
             db::DatabaseStatus const dbStatus = *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
-            if (fs::space(db_paths::rootPath()).available < 1024)
+            if (fs::space(m_dbPaths->rootPath()).available < 1024)
             {
                 LOG(m_loggerError)
                     << "Not enough available space found on hard drive. Please free some up and "
@@ -287,13 +288,14 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
     if (_we != WithExisting::Verify && !rebuildNeeded && !details(m_genesisHash))
     {
         bytes const genesisBlockBytes = m_params.genesisBlock();
-        BlockHeader gb{genesisBlockBytes};
+        BlockHeader const genesisHeader{genesisBlockBytes};
         // Insert details of genesis block.
-        m_details[m_genesisHash] = BlockDetails{0 /* number */, gb.difficulty(),
+        m_details[m_genesisHash] = BlockDetails{0 /* number */, genesisHeader.difficulty(),
             h256{} /* parent */, {} /* children */, genesisBlockBytes.size()};
-        auto r = m_details[m_genesisHash].rlp();
-        m_extrasDB->insert(toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(r));
-        assert(isKnown(gb.hash()));
+        auto const genesisDetailsRlp = m_details[m_genesisHash].rlp();
+        m_extrasDB->insert(
+            toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(genesisDetailsRlp));
+        assert(isKnown(genesisHeader.hash()));
     }
 
     // TODO: Implement ability to rebuild details map from DB.
@@ -318,7 +320,7 @@ void BlockChain::reopen(ChainParams const& _p, WithExisting _we, ProgressCallbac
 {
     close();
     init(_p);
-    open(db_paths::rootPath(), _we, _pc);
+    open(m_dbPaths->rootPath(), _we, _pc);
 }
 
 void BlockChain::close()
@@ -354,7 +356,8 @@ void BlockChain::rebuild(
         return;
     }
 
-    db_paths::setDatabasePaths(_path, m_genesisHash);
+    if (!m_dbPaths || m_dbPaths->rootPath() != _path)
+        m_dbPaths = make_unique<DatabasePaths>(_path, m_genesisHash);
 
     unsigned const originalNumber = m_lastBlockNumber;
 
@@ -365,25 +368,25 @@ void BlockChain::rebuild(
 
     // Keep extras DB around, but under a temp name
     m_extrasDB.reset();
-    LOG(m_loggerInfo) << "Renaming extras path " << db_paths::extrasDatabasePath() << " to "
-                      << db_paths::extrasDatabaseTemporaryPath();
-    if (fs::exists(db_paths::extrasDatabaseTemporaryPath()))
+    LOG(m_loggerInfo) << "Renaming extras path " << m_dbPaths->extrasPath() << " to "
+                      << m_dbPaths->extrasTemporaryPath();
+    if (fs::exists(m_dbPaths->extrasTemporaryPath()))
     {
         LOG(m_loggerError)
-            << "Temporary extras path " << db_paths::extrasDatabaseTemporaryPath()
+            << "Temporary extras path " << m_dbPaths->extrasTemporaryPath()
             << " already exists (this usually happens because an in-progress rebuild was "
                "prematurely terminated).";
         LOG(m_loggerError) << "Please re-run Aleth the --kill option to delete all databases. This "
                               "will remove all chain data and require you to resync from genesis.";
         BOOST_THROW_EXCEPTION(DatabaseExists());
     }
-    fs::rename(db_paths::extrasDatabasePath(), db_paths::extrasDatabaseTemporaryPath());
-    std::unique_ptr<db::DatabaseFace> oldExtrasDB(
-        db::DBFactory::create(db_paths::extrasDatabaseTemporaryPath()));
-    m_extrasDB = db::DBFactory::create(db_paths::extrasDatabasePath());
+    fs::rename(m_dbPaths->extrasPath(), m_dbPaths->extrasTemporaryPath());
+    std::unique_ptr<db::DatabaseFace> oldExtrasDB{
+        db::DBFactory::create(m_dbPaths->extrasTemporaryPath())};
+    m_extrasDB = db::DBFactory::create(m_dbPaths->extrasPath());
 
     // Open a fresh state DB
-    Block s = genesisBlock(State::openDB(db_paths::rootPath(), m_genesisHash, WithExisting::Kill));
+    Block s = genesisBlock(State::openDB(m_dbPaths->rootPath(), m_genesisHash, WithExisting::Kill));
 
     // Clear all memos ready for replay.
     m_details.clear();
@@ -452,14 +455,13 @@ void BlockChain::rebuild(
         if (_progress)
             _progress(d, originalNumber);
     }
-    LOG(m_loggerInfo) << "Removing old extras database: "
-                      << db_paths::extrasDatabaseTemporaryPath();
+    LOG(m_loggerInfo) << "Removing old extras database: " << m_dbPaths->extrasTemporaryPath();
     oldExtrasDB.reset();
-    fs::remove_all(db_paths::extrasDatabaseTemporaryPath());
+    fs::remove_all(m_dbPaths->extrasTemporaryPath());
     if (!rebuildFailed)
     {
         LOG(m_loggerInfo) << "Rebuild complete! Reimported " << originalNumber << " blocks!";
-        writeFile(db_paths::extrasDatabaseMinorVersionPath(), rlp(c_databaseMinorVersion));
+        writeFile(m_dbPaths->extrasMinorVersionPath(), rlp(c_databaseMinorVersion));
     }
     else
     {
