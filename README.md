@@ -130,7 +130,7 @@ All development goes in develop branch.
 
 ```
 NAME:
-   aleth 1.5.2
+   aleth 1.7.2
 USAGE:
    aleth [options]
 
@@ -144,7 +144,6 @@ WALLET USAGE:
 CLIENT MODE (default):
   --mainnet                               Use the main network protocol
   --ropsten                               Use the Ropsten testnet
-  --private <name>                        Use a private chain
   --test                                  Testing mode; disable PoW and provide test rpc interface
   --config <file>                         Configure specialised blockchain using given JSON information
 
@@ -221,7 +220,7 @@ IMPORT/EXPORT MODES:
   --import-snapshot <path>    Import blockchain and state data from the Parity Warp Sync snapshot
 
 DATABASE OPTIONS:
-  --db <name> (=leveldb)                   Select database implementation. Available options are: leveldb, rocksdb, memorydb.
+  --db <name> (=leveldb)      Select database implementation. Available options are: leveldb, memorydb.
   --db-path <path> (=$HOME/.ethereum) Database path (for non-memory database options)
 
 VM OPTIONS:
@@ -231,10 +230,14 @@ VM OPTIONS:
 LOGGING OPTIONS:
   -v [ --log-verbosity ] <0 - 4>        Set the log verbosity from 0 to 4 (default: 2).
   --log-channels <channel_list>         Space-separated list of the log channels to show (default: show all channels).
+                                        Channels: block blockhdr bq chain client debug discov error ethcap exec host impolite info net overlaydb p2pcap peer
+                                        rlpx rpc snap statedb sync timer tq trace vmtrace warn warpcap watch
   --log-exclude-channels <channel_list> Space-separated list of the log channels to hide.
 
+  --log-vmtrace                         Enable VM trace log (requires log-verbosity 4).
+
 GENERAL OPTIONS:
-  -d [ --data-dir ] <path> Load configuration files and keystore from path (default: /home/mwo2/.ethereum)
+  -d [ --data-dir ] <path> Load configuration files and keystore from path (default: $HOME/.ethereum)
   -V [ --version ]         Show the version and exit
   -h [ --help ]            Show this help message and exit
 ```
