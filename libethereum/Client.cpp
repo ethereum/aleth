@@ -63,7 +63,8 @@ Client::Client(ChainParams const& _params, int _networkID, p2p::Host& _host,
   : Worker("eth", 0),
     m_bc(_params, _dbPath, _forceAction,
         [](unsigned d, unsigned t) {
-            std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r";
+            clog(VerbosityInfo, "eth")
+                << "Rebuilding extras database: Processed " << d << " of " << t << " blocks...\r";
         }),
     m_tq(_l),
     m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
