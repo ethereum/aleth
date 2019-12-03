@@ -27,6 +27,7 @@ using namespace dev;
 #include "genesis/test/istanbulTransitionTest.cpp"
 #include "genesis/test/mainNetworkNoProofTest.cpp"
 #include "genesis/test/mainNetworkTest.cpp"
+#include "genesis/test/muirGlacierTest.cpp"
 
 //Transition configurations
 #include "genesis/test/ByzantiumToConstantinopleFixAt5Test.cpp"
@@ -70,6 +71,8 @@ std::string const& dev::eth::genesisInfo(Network _n)
         return c_genesisInfoIstanbulTest;
     case Network::IstanbulTransitionTest:
         return c_genesisInfoIstanbulTransitionTest;
+    case Network::MuirGlacierTest:
+        return c_genesisInfoMuirGlacierTest;
     case Network::BerlinTest:
         return c_genesisInfoBerlinTest;
 
@@ -105,6 +108,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
     case Network::ConstantinopleFixTest:
     case Network::IstanbulTest:
     case Network::IstanbulTransitionTest:
+    case Network::MuirGlacierTest:
     case Network::ExperimentalTransitionTest:
     case Network::BerlinTest:
         return c_genesisDefaultStateRoot;

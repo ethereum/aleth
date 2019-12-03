@@ -58,8 +58,10 @@ enum class Network
     IstanbulTest = 84,
     /// ConstantinopleFixTest + Istanbul active from block 2
     IstanbulTransitionTest = 85,
+    /// Muir Glacier active from block 0
+    MuirGlacierTest = 86,
     /// Berlin active from block 0
-    BerlinTest = 86,
+    BerlinTest = 87,
 
 
     // TransitionTest networks

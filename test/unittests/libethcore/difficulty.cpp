@@ -193,6 +193,48 @@ BOOST_AUTO_TEST_CASE(difficultyConstantinople)
     testDifficulty(testFileFullName, sealEngine);
 }
 
+BOOST_AUTO_TEST_CASE(difficultyMuirGlacier)
+{
+    fs::path const testFileFullName =
+        test::getTestPath() / fs::path("BasicTests/difficultyEIP2384.json");
+
+    Ethash sealEngine;
+    sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MuirGlacierTest)));
+
+    if (dev::test::Options::get().filltests)
+        fillDifficulty(testFileFullName, sealEngine);
+
+    testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyMuirGlacier_random)
+{
+    fs::path const testFileFullName =
+        test::getTestPath() / fs::path("BasicTests/difficultyEIP2384_random.json");
+
+    Ethash sealEngine;
+    sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MuirGlacierTest)));
+
+    if (dev::test::Options::get().filltests)
+        fillDifficulty(testFileFullName, sealEngine);
+
+    testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyMuirGlacier_random_to20M)
+{
+    fs::path const testFileFullName =
+        test::getTestPath() / fs::path("BasicTests/difficultyEIP2384_random_to20M.json");
+
+    Ethash sealEngine;
+    sealEngine.setChainParams(ChainParams(genesisInfo(eth::Network::MuirGlacierTest)));
+
+    if (dev::test::Options::get().filltests)
+        fillDifficulty(testFileFullName, sealEngine);
+
+    testDifficulty(testFileFullName, sealEngine);
+}
+
 BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 {
 	fs::path const testFileFullName = test::getTestPath() / fs::path("BasicTests/difficultyMainNetwork.json");

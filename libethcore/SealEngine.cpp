@@ -204,8 +204,16 @@ u256 calculateEthashDifficulty(
     bigint o = target;
     unsigned exponentialIceAgeBlockNumber = unsigned(_parent.number() + 1);
 
+    // EIP-2384 Istanbul/Berlin Difficulty Bomb Delay
+    if (_bi.number() >= _chainParams.muirGlacierForkBlock)
+    {
+        if (exponentialIceAgeBlockNumber >= 9000000)
+            exponentialIceAgeBlockNumber -= 9000000;
+        else
+            exponentialIceAgeBlockNumber = 0;
+    }
     // EIP-1234 Constantinople Ice Age delay
-    if (_bi.number() >= _chainParams.constantinopleForkBlock)
+    else if (_bi.number() >= _chainParams.constantinopleForkBlock)
     {
         if (exponentialIceAgeBlockNumber >= 5000000)
             exponentialIceAgeBlockNumber -= 5000000;
