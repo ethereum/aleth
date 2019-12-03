@@ -94,6 +94,7 @@ public:
     u256 daoHardforkBlock = c_infiniteBlockNumber;
     u256 experimentalForkBlock = c_infiniteBlockNumber;
     u256 istanbulForkBlock = c_infiniteBlockNumber;
+    u256 muirGlacierForkBlock = c_infiniteBlockNumber;
     u256 berlinForkBlock = c_infiniteBlockNumber;
     u256 lastForkBlock = c_infiniteBlockNumber;
     AdditionalEIPs lastForkAdditionalEIPs;

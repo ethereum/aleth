@@ -158,8 +158,10 @@ static const EVMSchedule IstanbulSchedule = [] {
     return schedule;
 }();
 
+static const EVMSchedule& MuirGlacierSchedule = IstanbulSchedule;
+
 static const EVMSchedule BerlinSchedule = [] {
-    EVMSchedule schedule = IstanbulSchedule;
+    EVMSchedule schedule = MuirGlacierSchedule;
     return schedule;
 }();
 

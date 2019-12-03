@@ -125,6 +125,7 @@ void ChainParams::loadConfig(
     setOptionalU256Parameter(constantinopleForkBlock, c_constantinopleForkBlock);
     setOptionalU256Parameter(constantinopleFixForkBlock, c_constantinopleFixForkBlock);
     setOptionalU256Parameter(istanbulForkBlock, c_istanbulForkBlock);
+    setOptionalU256Parameter(muirGlacierForkBlock, c_muirGlacierForkBlock);
     setOptionalU256Parameter(berlinForkBlock, c_berlinForkBlock);
     setOptionalU256Parameter(experimentalForkBlock, c_experimentalForkBlock);
 
