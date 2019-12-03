@@ -33,3 +33,11 @@ hunter_config(
     SHA1 152b849610d91a9dfa1401293f43230c2e0c33f8
     CMAKE_ARGS BUILD_GMOCK=OFF gtest_force_shared_crt=ON
 )
+
+if (MSVC)
+    hunter_config(
+        libscrypt
+        VERSION ${HUNTER_libscrypt_VERSION}
+        CMAKE_ARGS CMAKE_C_FLAGS=-D_CRT_SECURE_NO_WARNINGS
+    )
+endif()
