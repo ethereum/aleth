@@ -17,6 +17,7 @@
 #include <libdevcore/TrieHash.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/Exceptions.h>
+#include <libethereum/DatabasePaths.h>
 
 #include <boost/exception/errinfo_nested_exception.hpp>
 #include <boost/filesystem.hpp>
@@ -153,8 +154,7 @@ static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 
 
 BlockChain::BlockChain(ChainParams const& _p, fs::path const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
-    m_lastBlockHashes(new LastBlockHashes(*this)),
-    m_dbPath(_dbPath)
+    m_lastBlockHashes(new LastBlockHashes(*this))
 {
     init(_p);
     open(_dbPath, _we, _pc);
@@ -194,30 +194,24 @@ void BlockChain::init(ChainParams const& _p)
 
 bool BlockChain::open(fs::path const& _path, WithExisting _we)
 {
-    auto const path = _path.empty() ? db::databasePath() : _path;
-    auto const chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
-    auto const chainSubPathBlocks = chainPath / fs::path("blocks");
-    auto const extrasPath = chainPath / fs::path(toString(c_databaseVersion));
-    auto const extrasSubPathExtras = extrasPath / fs::path("extras");
     unsigned lastMinor = c_databaseMinorVersion;
     bool rebuildNeeded = false;
 
     if (db::isDiskDatabase())
     {
+        if (!m_dbPaths || m_dbPaths->rootPath() != _path)
+            m_dbPaths = make_unique<DatabasePaths>(_path, m_genesisHash);
+
         if (_we == WithExisting::Kill)
         {
-            cnote << "Killing blockchain (" << chainSubPathBlocks << ") & extras ("
-                  << extrasSubPathExtras << ") databases (WithExisting::Kill).";
-            fs::remove_all(chainSubPathBlocks);
-            fs::remove_all(extrasSubPathExtras);
+            LOG(m_loggerInfo)
+                << "Deleting chain databases. This will require a resync from genesis.";
+            fs::remove_all(m_dbPaths->blocksPath());
+            fs::remove_all(m_dbPaths->extrasPath());
+            fs::remove_all(m_dbPaths->extrasTemporaryPath());
         }
 
-        fs::create_directories(extrasPath);
-        DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));
-
-        auto const extrasSubPathMinor = extrasPath / fs::path("minor");
-        bytes const minorVersionBytes = contents(extrasSubPathMinor);
-        bool writeMinorVersion = false;
+        bytes const minorVersionBytes = contents(m_dbPaths->extrasMinorVersionPath());
         if (!minorVersionBytes.empty())
         {
             DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(minorVersionBytes));
@@ -226,74 +220,93 @@ bool BlockChain::open(fs::path const& _path, WithExisting _we)
                 rebuildNeeded = true;
                 LOG(m_loggerInfo) << "Database minor version change detected, the extras and state "
                                      "databases will be rebuilt.";
-                LOG(m_loggerInfo) << "Version from " << extrasSubPathMinor << " (" << lastMinor
-                                  << ") != Aleth's version (" << c_databaseMinorVersion << ")";
-                writeMinorVersion = true;
-                lastMinor = (unsigned)RLP(minorVersionBytes);
+                LOG(m_loggerInfo) << "Version from " << m_dbPaths->extrasMinorVersionPath()
+                                  << " (" << lastMinor << ") != Aleth's version ("
+                                  << c_databaseMinorVersion << ")";
             }
         }
+        else if (fs::exists(m_dbPaths->extrasPath()))
+        {
+            LOG(m_loggerInfo) << "Database minor version file not found ("
+                              << m_dbPaths->extrasMinorVersionPath()
+                              << ") but extras database exists (" << m_dbPaths->extrasPath()
+                              << "), assuming extras database needs to be upgraded.";
+            rebuildNeeded = true;
+        }
         else
-            writeMinorVersion = true;
-        if (writeMinorVersion)
-            writeFile(extrasSubPathMinor, rlp(c_databaseMinorVersion));
+        {
+            // First launch with new database
+            LOG(m_loggerDetail) << "Creating database minor version file: "
+                                << m_dbPaths->extrasMinorVersionPath()
+                                << " (minor version: " << c_databaseMinorVersion << ")";
+            writeFile(m_dbPaths->extrasMinorVersionPath(), rlp(c_databaseMinorVersion));
+        }
     }
 
     try
     {
-        m_blocksDB = db::DBFactory::create(chainSubPathBlocks);
-        m_extrasDB = db::DBFactory::create(extrasSubPathExtras);
+        m_blocksDB = db::DBFactory::create(m_dbPaths->blocksPath());
+        m_extrasDB = db::DBFactory::create(m_dbPaths->extrasPath());
     }
     catch (db::DatabaseError const& ex)
     {
         // Determine which database open call failed
-        auto const dbPath = !m_blocksDB.get() ? chainSubPathBlocks : extrasSubPathExtras;
-        cerror << "Error opening database: " << dbPath;
-
+        auto const dbPath =
+            !m_blocksDB.get() ? m_dbPaths->blocksPath() : m_dbPaths->extrasPath();
         if (db::isDiskDatabase())
         {
+            LOG(m_loggerError) << "Error occurred when opening database: " << dbPath;
             db::DatabaseStatus const dbStatus = *boost::get_error_info<db::errinfo_dbStatusCode>(ex);
-            if (fs::space(path).available < 1024)
+            if (fs::space(m_dbPaths->rootPath()).available < 1024)
             {
-                cerror << "Not enough available space found on hard drive. Please free some up and "
-                        "re-run.";
+                LOG(m_loggerError)
+                    << "Not enough available space found on hard drive. Please free some up and "
+                       "re-run.";
                 BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());
             }
             else if (dbStatus == db::DatabaseStatus::Corruption)
             {
-                cerror << "Database corruption detected. Please see the exception for corruption "
-                        "details. Exception: "
+                LOG(m_loggerError)
+                    << "Database corruption detected. Please see the exception for corruption "
+                       "details. Exception: "
                     << ex.what();
                 BOOST_THROW_EXCEPTION(DatabaseCorruption());
             }
             else if (dbStatus == db::DatabaseStatus::IOError)
             {
-                cerror << "Database already open. You appear to have another instance of Aleth running.";
+                LOG(m_loggerError) << "Database already open. You appear to have another instance "
+                                      "of Aleth running.";
                 BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
             }
         }
-        
-        cerror << "Unknown error occurred. Exception details: " << ex.what();
+
+        LOG(m_loggerError) << "Unknown error occurred when opening database. Exception details: "
+                           << ex.what();
         throw;
     }
 
     if (_we != WithExisting::Verify && !rebuildNeeded && !details(m_genesisHash))
     {
-        BlockHeader gb(m_params.genesisBlock());
+        bytes const genesisBlockBytes = m_params.genesisBlock();
+        BlockHeader const genesisHeader{genesisBlockBytes};
         // Insert details of genesis block.
-        m_details[m_genesisHash] = BlockDetails(0, gb.difficulty(), h256(), {});
-        auto r = m_details[m_genesisHash].rlp();
-        m_extrasDB->insert(toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(r));
-        assert(isKnown(gb.hash()));
+        m_details[m_genesisHash] = BlockDetails{0 /* number */, genesisHeader.difficulty(),
+            h256{} /* parent */, {} /* children */, genesisBlockBytes.size()};
+        auto const genesisDetailsRlp = m_details[m_genesisHash].rlp();
+        m_extrasDB->insert(
+            toSlice(m_genesisHash, ExtraDetails), (db::Slice)dev::ref(genesisDetailsRlp));
+        assert(isKnown(genesisHeader.hash()));
     }
 
     // TODO: Implement ability to rebuild details map from DB.
     auto const l = m_extrasDB->lookup(db::Slice("best"));
     m_lastBlockHash = l.empty() ? m_genesisHash : h256(l, h256::FromBinary);
+    // We need to retrieve the block number from the blocks database rather than from the extras
+    // database because the extras database format may have changed
+    m_lastBlockNumber = info(m_lastBlockHash).number();
 
-    m_lastBlockNumber = number(m_lastBlockHash);
-
-    ctrace << "Opened blockchain DB. Latest: " << currentHash()
-           << (!rebuildNeeded ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
+    LOG(m_loggerInfo) << "Opened blockchain database. Latest block hash: " << currentHash()
+                      << (!rebuildNeeded ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
     return rebuildNeeded;
 }
 
@@ -307,7 +320,7 @@ void BlockChain::reopen(ChainParams const& _p, WithExisting _we, ProgressCallbac
 {
     close();
     init(_p);
-    open(m_dbPath, _we, _pc);
+    open(m_dbPaths->rootPath(), _we, _pc);
 }
 
 void BlockChain::close()
@@ -333,7 +346,8 @@ void BlockChain::close()
     m_lastBlockHashes->clear();
 }
 
-void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, unsigned)> const& _progress)
+void BlockChain::rebuild(
+    fs::path const& _path, std::function<void(unsigned, unsigned)> const& _progress)
 {
     if (!db::isDiskDatabase())
     {
@@ -342,11 +356,8 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
         return;
     }
 
-    fs::path path = _path.empty() ? db::databasePath() : _path;
-    auto const chainPath = path / fs::path(toHex(m_genesisHash.ref().cropped(0, 4)));
-    auto const extrasPath = chainPath / fs::path(toString(c_databaseVersion));
-    auto const extrasSubPathExtras = extrasPath / fs::path("extras");
-    auto const extrasSubPathOldExtras = extrasPath / fs::path("extras.old");
+    if (!m_dbPaths || m_dbPaths->rootPath() != _path)
+        m_dbPaths = make_unique<DatabasePaths>(_path, m_genesisHash);
 
     unsigned const originalNumber = m_lastBlockNumber;
 
@@ -357,14 +368,25 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 
     // Keep extras DB around, but under a temp name
     m_extrasDB.reset();
-    LOG(m_loggerDetail) << "Renaming extras path " << extrasSubPathExtras << " to "
-                        << extrasSubPathOldExtras;
-    fs::rename(extrasSubPathExtras, extrasSubPathOldExtras);
-    std::unique_ptr<db::DatabaseFace> oldExtrasDB(db::DBFactory::create(extrasSubPathOldExtras));
-    m_extrasDB = db::DBFactory::create(extrasSubPathExtras);
+    LOG(m_loggerInfo) << "Renaming extras path " << m_dbPaths->extrasPath() << " to "
+                      << m_dbPaths->extrasTemporaryPath();
+    if (fs::exists(m_dbPaths->extrasTemporaryPath()))
+    {
+        LOG(m_loggerError)
+            << "Temporary extras path " << m_dbPaths->extrasTemporaryPath()
+            << " already exists (this usually happens because an in-progress rebuild was "
+               "prematurely terminated).";
+        LOG(m_loggerError) << "Please re-run Aleth the --kill option to delete all databases. This "
+                              "will remove all chain data and require you to resync from genesis.";
+        BOOST_THROW_EXCEPTION(DatabaseExists());
+    }
+    fs::rename(m_dbPaths->extrasPath(), m_dbPaths->extrasTemporaryPath());
+    std::unique_ptr<db::DatabaseFace> oldExtrasDB{
+        db::DBFactory::create(m_dbPaths->extrasTemporaryPath())};
+    m_extrasDB = db::DBFactory::create(m_dbPaths->extrasPath());
 
     // Open a fresh state DB
-    Block s = genesisBlock(State::openDB(path.string(), m_genesisHash, WithExisting::Kill));
+    Block s = genesisBlock(State::openDB(m_dbPaths->rootPath(), m_genesisHash, WithExisting::Kill));
 
     // Clear all memos ready for replay.
     m_details.clear();
@@ -384,7 +406,8 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
 
     // Manually insert the genesis block details so that they're available during import of the
     // first block.
-    auto const genesisDetails = BlockDetails{0, s.info().difficulty(), h256(), {}};
+    auto const genesisDetails = BlockDetails{0 /* block number */, s.info().difficulty(),
+        h256{} /* parent */, {} /* children */, m_params.genesisBlock().size()};
     m_details[m_genesisHash] = genesisDetails;
     auto const genesisDetailsRlp = genesisDetails.rlp();
     m_extrasDB->insert(
@@ -394,6 +417,8 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
                       << originalNumber << ", this will probably take a while";
     h256 lastHash = m_lastBlockHash;
     Timer t;
+    bool rebuildFailed = false;
+    string exceptionInfo;
     for (unsigned d = 1; d <= originalNumber; ++d)
     {
         if (!(d % 1000))
@@ -422,21 +447,30 @@ void BlockChain::rebuild(fs::path const& _path, std::function<void(unsigned, uns
         }
         catch (...)
         {
-            LOG(m_loggerError) << "Rebuild failed with error: "
-                               << boost::current_exception_diagnostic_information();
-            LOG(m_loggerError)
-                << "Please re-run Aleth with --kill option to delete all databases. This will "
-                   "remove all local chain data and require you to resync from genesis.";
+            rebuildFailed = true;
+            exceptionInfo = boost::current_exception_diagnostic_information();
             break;
         }
 
         if (_progress)
             _progress(d, originalNumber);
     }
-    LOG(m_loggerInfo) << "Rebuild complete! Reimported " << originalNumber << " blocks!";
-    LOG(m_loggerDetail) << "Removing old extras database: " << extrasSubPathOldExtras;
+    LOG(m_loggerInfo) << "Removing old extras database: " << m_dbPaths->extrasTemporaryPath();
     oldExtrasDB.reset();
-    fs::remove_all(extrasSubPathOldExtras);
+    fs::remove_all(m_dbPaths->extrasTemporaryPath());
+    if (!rebuildFailed)
+    {
+        LOG(m_loggerInfo) << "Rebuild complete! Reimported " << originalNumber << " blocks!";
+        writeFile(m_dbPaths->extrasMinorVersionPath(), rlp(c_databaseMinorVersion));
+    }
+    else
+    {
+        LOG(m_loggerError) << "Rebuild failed with error: " << exceptionInfo;
+        LOG(m_loggerError)
+            << "Please re-run Aleth with the --kill option to delete all databases. This will "
+               "remove all local chain data and require you to resync from genesis.";
+        BOOST_THROW_EXCEPTION(DatabaseRebuildFailed());
+    }
 }
 
 string BlockChain::dumpDatabase() const
@@ -635,8 +669,8 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     details(_block.info.parentHash());
     DEV_WRITE_GUARDED(x_details)
     {
-        if (!dev::contains(m_details[_block.info.parentHash()].children, _block.info.hash()))
-            m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+        if (!dev::contains(m_details[_block.info.parentHash()].childHashes, _block.info.hash()))
+            m_details[_block.info.parentHash()].childHashes.push_back(_block.info.hash());
     }
 
     blocksWriteBatch->insert(toSlice(_block.info.hash()), db::Slice(_block.block));
@@ -644,7 +678,9 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
     extrasWriteBatch->insert(toSlice(_block.info.parentHash(), ExtraDetails),
         (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
-    BlockDetails bd((unsigned)pd.number + 1, pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {});
+    BlockDetails bd{static_cast<unsigned>(pd.number + 1),
+        pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {} /* children */,
+        _block.block.size()};
     extrasWriteBatch->insert(
         toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(bd.rlp()));
     extrasWriteBatch->insert(
@@ -804,7 +840,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
         // done here.
         details(_block.info.parentHash());
         DEV_WRITE_GUARDED(x_details)
-            m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+            m_details[_block.info.parentHash()].childHashes.push_back(_block.info.hash());
 
         _performanceLogger.onStageFinished("collation");
 
@@ -813,7 +849,8 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
         extrasWriteBatch->insert(toSlice(_block.info.parentHash(), ExtraDetails),
             (db::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
 
-        BlockDetails const details((unsigned)_block.info.number(), _totalDifficulty, _block.info.parentHash(), {});
+        BlockDetails const details{static_cast<unsigned>(_block.info.number()), _totalDifficulty,
+            _block.info.parentHash(), {} /* children */, _block.block.size()};
         extrasWriteBatch->insert(
             toSlice(_block.info.hash(), ExtraDetails), (db::Slice)dev::ref(details.rlp()));
 
@@ -912,7 +949,7 @@ ImportRoute BlockChain::insertBlockAndExtras(VerifiedBlockRef const& _block, byt
 
         LOG(m_logger) << "   Imported and best " << _totalDifficulty << " (#"
                       << _block.info.number() << "). Has "
-                      << (details(_block.info.parentHash()).children.size() - 1)
+                      << (details(_block.info.parentHash()).childHashes.size() - 1)
                       << " siblings. Route: " << route;
     }
     else
@@ -1128,7 +1165,7 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
     {
         if (_pre)
             ret.push_back(from);
-        from = details(from).parent;
+        from = details(from).parentHash;
         fn--;
     }
 
@@ -1138,10 +1175,10 @@ tuple<h256s, h256, unsigned> BlockChain::treeRoute(h256 const& _from, h256 const
     {
         if (_post)
             back.push_back(to);
-        to = details(to).parent;
+        to = details(to).parentHash;
         tn--;
     }
-    for (;; from = details(from).parent, to = details(to).parent)
+    for (;; from = details(from).parentHash, to = details(to).parentHash)
     {
         if (_pre && (from != to || _common))
             ret.push_back(from);
@@ -1279,13 +1316,13 @@ void BlockChain::checkConsistency()
         {
             h256 h((byte const*)_key.data(), h256::ConstructFromPointer);
             auto dh = details(h);
-            auto p = dh.parent;
+            auto p = dh.parentHash;
             if (p != h256() && p != m_genesisHash)  // TODO: for some reason the genesis details
                                                     // with the children get squished. not sure
                                                     // why.
             {
                 auto dp = details(p);
-                if (asserts(contains(dp.children, h)))
+                if (asserts(contains(dp.childHashes, h)))
                     cnote << "Apparently the database is corrupt. Not much we can do at this "
                              "stage...";
                 if (assertsEqual(dp.number, dh.number - 1))
@@ -1387,9 +1424,9 @@ h256Hash BlockChain::allKinFrom(h256 const& _parent, unsigned _generations) cons
     h256 p = _parent;
     h256Hash ret = { p };
     // p and (details(p).parent: i == 5) is likely to be overkill, but can't hurt to be cautious.
-    for (unsigned i = 0; i < _generations && p != m_genesisHash; ++i, p = details(p).parent)
+    for (unsigned i = 0; i < _generations && p != m_genesisHash; ++i, p = details(p).parentHash)
     {
-        ret.insert(details(p).parent);
+        ret.insert(details(p).parentHash);
         auto b = block(p);
         for (auto i: RLP(b)[2])
             ret.insert(sha3(i.data()));

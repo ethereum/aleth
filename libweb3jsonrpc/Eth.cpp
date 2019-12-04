@@ -345,17 +345,25 @@ Json::Value Eth::eth_getBlockByHash(string const& _blockHash, bool _includeTrans
 {
 	try
 	{
-		h256 h = jsToFixed<32>(_blockHash);
+		h256 const h = jsToFixed<32>(_blockHash);
 		if (!client()->isKnown(h))
 			return Json::Value(Json::nullValue);
 
-		if (_includeTransactions)
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
-		else
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
-	}
-	catch (...)
-	{
+        Json::Value ret;
+        auto const blockDetails = client()->blockDetails(h);
+        auto const blockHeader = client()->blockInfo(h);
+        auto const uncleHashes = client()->uncleHashes(h);
+        auto* sealEngine = client()->sealEngine();
+        if (_includeTransactions)
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactions(h), sealEngine);
+        else
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactionHashes(h), sealEngine);
+        return ret;
+    }
+    catch (...)
+    {
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
@@ -364,15 +372,23 @@ Json::Value Eth::eth_getBlockByNumber(string const& _blockNumber, bool _includeT
 {
 	try
 	{
-		BlockNumber h = jsToBlockNumber(_blockNumber);
+		BlockNumber const h = jsToBlockNumber(_blockNumber);
 		if (!client()->isKnown(h))
 			return Json::Value(Json::nullValue);
 
-		if (_includeTransactions)
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
-		else
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
-	}
+        Json::Value ret;
+        auto const blockDetails = client()->blockDetails(h);
+        auto const blockHeader = client()->blockInfo(h);
+        auto const uncleHashes = client()->uncleHashes(h);
+        auto* sealEngine = client()->sealEngine();
+        if (_includeTransactions)
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactions(h), sealEngine);
+        else
+            ret = toJson(
+                blockHeader, blockDetails, uncleHashes, client()->transactionHashes(h), sealEngine);
+        return ret;
+    }
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));

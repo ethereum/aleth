@@ -417,9 +417,11 @@ BlockHeader ClientBase::pendingInfo() const
 
 BlockDetails ClientBase::pendingDetails() const
 {
-    auto pm = postSeal().info();
-    auto li = Interface::blockDetails(LatestBlock);
-    return BlockDetails((unsigned)pm.number(), li.totalDifficulty + pm.difficulty(), pm.parentHash(), h256s{});
+    auto const pendingHeader = postSeal().info();
+    auto const latestDetails = Interface::blockDetails(LatestBlock);
+    return BlockDetails{static_cast<unsigned>(pendingHeader.number()),
+        latestDetails.totalDifficulty + pendingHeader.difficulty(), pendingHeader.parentHash(),
+        h256s{} /* children */, postSeal().blockData().size()};
 }
 
 Addresses ClientBase::addresses(BlockNumber _block) const
