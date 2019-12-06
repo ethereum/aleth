@@ -283,31 +283,31 @@ class EvmCHost : public evmc::Host
 public:
     explicit EvmCHost(ExtVMFace& _extVM) : m_extVM{_extVM} {}
 
-    bool account_exists(const evmc::address& addr) noexcept override;
+    bool account_exists(const evmc::address& _addr) const noexcept override;
 
-    evmc::bytes32 get_storage(
-        const evmc::address& addr, const evmc::bytes32& key) noexcept override;
+    evmc::bytes32 get_storage(const evmc::address& _addr, const evmc::bytes32& _key) const
+        noexcept override;
 
     evmc_storage_status set_storage(const evmc::address& _addr, const evmc::bytes32& _key,
         const evmc::bytes32& _value) noexcept override;
 
-    evmc::uint256be get_balance(const evmc::address& _addr) noexcept override;
+    evmc::uint256be get_balance(const evmc::address& _addr) const noexcept override;
 
-    size_t get_code_size(const evmc::address& _addr) noexcept override;
+    size_t get_code_size(const evmc::address& _addr) const noexcept override;
 
-    evmc::bytes32 get_code_hash(const evmc::address& _addr) noexcept override;
+    evmc::bytes32 get_code_hash(const evmc::address& _addr) const noexcept override;
 
     size_t copy_code(const evmc::address& _addr, size_t _codeOffset, uint8_t* _bufferData,
-        size_t _bufferSize) noexcept override;
+        size_t _bufferSize) const noexcept override;
 
     void selfdestruct(
         const evmc::address& _addr, const evmc::address& _beneficiary) noexcept override;
 
     evmc::result call(const evmc_message& _msg) noexcept override;
 
-    evmc_tx_context get_tx_context() noexcept override;
+    evmc_tx_context get_tx_context() const noexcept override;
 
-    evmc::bytes32 get_block_hash(int64_t _blockNumber) noexcept override;
+    evmc::bytes32 get_block_hash(int64_t _blockNumber) const noexcept override;
 
     void emit_log(const evmc::address& _addr, const uint8_t* _data, size_t _dataSize,
         const evmc::bytes32 _topics[], size_t _numTopics) noexcept override;

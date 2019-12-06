@@ -15,12 +15,13 @@ static_assert(alignof(Address) == alignof(evmc_address), "Address types alignmen
 static_assert(sizeof(h256) == sizeof(evmc_uint256be), "Hash types size mismatch");
 static_assert(alignof(h256) == alignof(evmc_uint256be), "Hash types alignment mismatch");
 
-bool EvmCHost::account_exists(evmc::address const& _addr) noexcept
+bool EvmCHost::account_exists(evmc::address const& _addr) const noexcept
 {
     return m_extVM.exists(fromEvmC(_addr));
 }
 
-evmc::bytes32 EvmCHost::get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) noexcept
+evmc::bytes32 EvmCHost::get_storage(evmc::address const& _addr, evmc::bytes32 const& _key) const
+    noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
@@ -76,23 +77,23 @@ evmc_storage_status EvmCHost::set_storage(
     return status;
 }
 
-evmc::uint256be EvmCHost::get_balance(evmc::address const& _addr) noexcept
+evmc::uint256be EvmCHost::get_balance(evmc::address const& _addr) const noexcept
 {
     return toEvmC(m_extVM.balance(fromEvmC(_addr)));
 }
 
-size_t EvmCHost::get_code_size(evmc::address const& _addr) noexcept
+size_t EvmCHost::get_code_size(evmc::address const& _addr) const noexcept
 {
     return m_extVM.codeSizeAt(fromEvmC(_addr));
 }
 
-evmc::bytes32 EvmCHost::get_code_hash(evmc::address const& _addr) noexcept
+evmc::bytes32 EvmCHost::get_code_hash(evmc::address const& _addr) const noexcept
 {
     return toEvmC(m_extVM.codeHashAt(fromEvmC(_addr)));
 }
 
-size_t EvmCHost::copy_code(
-    evmc::address const& _addr, size_t _codeOffset, byte* _bufferData, size_t _bufferSize) noexcept
+size_t EvmCHost::copy_code(evmc::address const& _addr, size_t _codeOffset, byte* _bufferData,
+    size_t _bufferSize) const noexcept
 {
     Address addr = fromEvmC(_addr);
     bytes const& c = m_extVM.codeAt(addr);
@@ -124,7 +125,7 @@ void EvmCHost::emit_log(evmc::address const& _addr, uint8_t const* _data, size_t
     m_extVM.log(h256s{pTopics, pTopics + _numTopics}, bytesConstRef{_data, _dataSize});
 }
 
-evmc_tx_context EvmCHost::get_tx_context() noexcept
+evmc_tx_context EvmCHost::get_tx_context() const noexcept
 {
     evmc_tx_context result = {};
     result.tx_gas_price = toEvmC(m_extVM.gasPrice);
@@ -140,7 +141,7 @@ evmc_tx_context EvmCHost::get_tx_context() noexcept
     return result;
 }
 
-evmc::bytes32 EvmCHost::get_block_hash(int64_t _number) noexcept
+evmc::bytes32 EvmCHost::get_block_hash(int64_t _number) const noexcept
 {
     return toEvmC(m_extVM.blockHash(_number));
 }
