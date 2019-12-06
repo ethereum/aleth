@@ -109,11 +109,10 @@ void Executive::initialize(Transaction const& _transaction)
             m_excepted = TransactionException::InvalidSignature;
             throw;
         }
-        if (m_t.nonce() < nonceReq)
+        if (m_t.nonce() != nonceReq)
         {
-            LOG(m_execLogger) << "Sender: " << m_t.sender().hex()
-                              << " Invalid Nonce: Required nonce >= " << nonceReq << ", received "
-                              << m_t.nonce();
+            LOG(m_execLogger) << "Sender: " << m_t.sender().hex() << " Invalid Nonce: Required "
+                              << nonceReq << ", received " << m_t.nonce();
             m_excepted = TransactionException::InvalidNonce;
             BOOST_THROW_EXCEPTION(
                 InvalidNonce() << RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));
