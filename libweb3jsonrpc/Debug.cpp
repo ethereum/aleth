@@ -163,10 +163,10 @@ Json::Value Debug::debug_accountRange(
 
         Json::Value addressList(Json::objectValue);
         for (auto const& record : addressMap.first)
-            addressList[toString(record.first)] = toString(record.second);
+            addressList[toHexPrefixed(record.first)] = toHexPrefixed(record.second);
 
         ret["addressMap"] = addressList;
-        ret["nextKey"] = toString(addressMap.second);
+        ret["nextKey"] = toHexPrefixed(addressMap.second);
     }
     catch (Exception const& _e)
     {
