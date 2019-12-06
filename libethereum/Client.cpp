@@ -875,10 +875,17 @@ h256 Client::importTransaction(Transaction const& _t)
         Executive e(m_postSeal, bc());
         e.initialize(_t);
     }
-    catch (InvalidNonce const&)
+    catch (InvalidNonce const& e)
     {
+        // Too low nonce is invalid for sure
+        bigint const& req = *boost::get_error_info<errinfo_required>(e);
+        bigint const& got = *boost::get_error_info<errinfo_got>(e);
+        if (req > got)
+            throw;
+
         // Checking against pending block doesn't take into account transactions from the same
         // sender, that are currently in Transaction Queue.
+        // If nonce is too high, it could be that previous transactions are in TQ.
         // We'll let TQ deal with nonces, it will order pending transactions by nonce.
     }
     ImportResult res = m_tq.import(_t.rlp());
