@@ -437,8 +437,9 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInvalidNonce)
     auto txHash = rpcClient->eth_sendRawTransaction(signedTx["raw"].asString());
     BOOST_REQUIRE(!txHash.empty());
 
-    auto invalidNonce =
-        jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest")) - 1;
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    auto invalidNonce = 0;
     t["nonce"] = jsToDecimal(toJS(invalidNonce));
 
     signedTx = rpcClient->eth_signTransaction(t);
@@ -473,39 +474,6 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInsufficientGas)
 
     BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()),
         "Transaction gas amount is less than the intrinsic gas amount for this transaction type.");
-}
-
-BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorDuplicateTransaction)
-{
-    auto senderAddress = coinbase.address();
-    auto receiver = KeyPair::create();
-
-    // Mine to generate a non-zero account balance
-    const int blocksToMine = 1;
-    const int blockNumber = 1;
-    const u256 blockReward = 5 * dev::eth::ether;
-    dev::eth::mine(*(web3->ethereum()), blocksToMine);
-    BOOST_CHECK_EQUAL(blockReward, web3->ethereum()->balanceAt(senderAddress, blockNumber));
-
-    Json::Value t;
-    t["from"] = toJS(senderAddress);
-    t["to"] = toJS(receiver.address());
-    t["value"] = jsToDecimal(toJS(10000 * dev::eth::szabo));
-
-    auto signedTx = rpcClient->eth_signTransaction(t);
-    BOOST_REQUIRE(!signedTx["raw"].empty());
-
-    auto txHash = rpcClient->eth_sendRawTransaction(signedTx["raw"].asString());
-    BOOST_REQUIRE(!txHash.empty());
-
-    auto txNonce = jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest"));
-    t["nonce"] = jsToDecimal(toJS(txNonce));
-
-    signedTx = rpcClient->eth_signTransaction(t);
-    BOOST_REQUIRE(!signedTx["raw"].empty());
-
-    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()),
-        "Same transaction already exists in the pending transaction queue.");
 }
 
 BOOST_AUTO_TEST_CASE(eth_signTransaction)
