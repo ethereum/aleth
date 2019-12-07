@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(debugAccountRangeFinalBlockState)
 
     dev::eth::mine(*(web3->ethereum()), 1);
 
-    string receiverHash = toString(sha3(receiver));
+    string const receiverHash = toHexPrefixed(sha3(receiver));
 
     // receiver doesn't exist in the beginning of the 2nd block
     Json::Value result = rpcClient->debug_accountRange("2", 0, "0", 100);
@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(debugAccountRangeFinalBlockState)
     // receiver exists in the end of the 2nd block
     result = rpcClient->debug_accountRange("2", 1, "0", 100);
     BOOST_CHECK(result["addressMap"].isMember(receiverHash));
-    BOOST_CHECK_EQUAL(result["addressMap"][receiverHash], toString(receiver));
+    BOOST_CHECK_EQUAL(result["addressMap"][receiverHash], toHexPrefixed(receiver));
 }
 
 BOOST_AUTO_TEST_CASE(debugStorageRangeAtFinalBlockState)
