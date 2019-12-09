@@ -11,6 +11,7 @@
 - Changed: [#5806](https://github.com/ethereum/aleth/pull/5806) Optimize selfdestruct opcode in aleth-interpreter by reducing state accesses in certain out-of-gas scenarios.
 - Changed: [#5837](https://github.com/ethereum/aleth/pull/5837) [#5839](https://github.com/ethereum/aleth/pull/5839) [#5845](https://github.com/ethereum/aleth/pull/5845) [#5846](https://github.com/ethereum/aleth/pull/5846) Output format of `testeth --jsontrace` command changed to better match output of geth's evm tool and to integrate with evmlab project.
 - Changed: [#5848](https://github.com/ethereum/aleth/pull/5848) `aleth-vm --codefile <PATH>` now reads bytecode file from path and `aleth-vm --codefile - <bytecode>` now reads bytecode from standard input.
+- Changed: [#5864](https://github.com/ethereum/aleth/pull/5864) Allow a user to send multiple transactions before a new block is mined.
 - Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14.
 - Removed: [#5840](https://github.com/ethereum/aleth/pull/5840) The list of precompiled contracts is not required in config files anymore.
 - Removed: [#5850](https://github.com/ethereum/aleth/pull/5850) accounts section is now optional in config files.

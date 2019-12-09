@@ -869,11 +869,25 @@ h256 Client::importTransaction(Transaction const& _t)
 
     // Use the Executive to perform basic validation of the transaction
     // (e.g. transaction signature, account balance) using the state of
-    // the latest block in the client's blockchain. This can throw but
-    // we'll catch the exception at the RPC level.
-    Block currentBlock = block(bc().currentHash());
-    Executive e(currentBlock, bc());
-    e.initialize(_t);
+    // the pending block. This can throw but we'll catch the exception at the RPC level.
+    try
+    {
+        Executive e(m_postSeal, bc());
+        e.initialize(_t);
+    }
+    catch (InvalidNonce const& e)
+    {
+        // Too low nonce is invalid for sure
+        bigint const& req = *boost::get_error_info<errinfo_required>(e);
+        bigint const& got = *boost::get_error_info<errinfo_got>(e);
+        if (req > got)
+            throw;
+
+        // Checking against pending block doesn't take into account transactions from the same
+        // sender, that are currently in Transaction Queue.
+        // If nonce is too high, it could be that previous transactions are in TQ.
+        // We'll let TQ deal with nonces, it will order pending transactions by nonce.
+    }
     ImportResult res = m_tq.import(_t.rlp());
     switch (res)
     {

@@ -263,6 +263,7 @@ BOOST_AUTO_TEST_CASE(eth_sendTransaction)
     auto address = coinbase.address();
     auto countAt = jsToU256(rpcClient->eth_getTransactionCount(toJS(address), "latest"));
 
+    // Verify initial account state
     BOOST_CHECK_EQUAL(countAt, web3->ethereum()->countAt(address));
     BOOST_CHECK_EQUAL(countAt, 0);
     auto balance = web3->ethereum()->balanceAt(address, 0);
@@ -309,6 +310,65 @@ BOOST_AUTO_TEST_CASE(eth_sendTransaction)
     BOOST_CHECK_EQUAL(jsToU256(balanceString2), txAmount);
     BOOST_CHECK_EQUAL(txAmount, balance2);
 }
+
+BOOST_AUTO_TEST_CASE(eth_sendMultipleTransactions)
+{
+    // Send multiple transactions from the same account before mining a block, should succeed
+    auto const senderAddress = coinbase.address();
+    auto countAt = jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest"));
+
+    // Verify initial account state
+    BOOST_CHECK_EQUAL(countAt, web3->ethereum()->countAt(senderAddress));
+    BOOST_CHECK_EQUAL(countAt, 0);
+    auto senderBalance = web3->ethereum()->balanceAt(senderAddress, 0);
+    string senderBalanceString = rpcClient->eth_getBalance(toJS(senderAddress), "latest");
+    BOOST_CHECK_EQUAL(toJS(senderBalance), senderBalanceString);
+    BOOST_CHECK_EQUAL(jsToDecimal(senderBalanceString), "0");
+
+    // Mine a block and verify balance changes
+    dev::eth::mine(*(web3->ethereum()), 1);
+    BOOST_CHECK_EQUAL(web3->ethereum()->blockByNumber(LatestBlock).author(), senderAddress);
+    senderBalance = web3->ethereum()->balanceAt(senderAddress, LatestBlock);
+    senderBalanceString = rpcClient->eth_getBalance(toJS(senderAddress), "latest");
+
+    BOOST_REQUIRE_GT(senderBalance, 0);
+    BOOST_CHECK_EQUAL(toJS(senderBalance), senderBalanceString);
+
+    // Create and send a tx
+    auto const txAmount = senderBalance / 3u;
+    auto const gasPrice = 10 * dev::eth::szabo;
+    auto const gas = EVMSchedule().txGas;
+    auto const receiver = KeyPair::create();
+
+    Json::Value t;
+    t["from"] = toJS(senderAddress);
+    t["value"] = jsToDecimal(toJS(txAmount));
+    t["to"] = toJS(receiver.address());
+    t["data"] = toJS(bytes());
+    t["gas"] = toJS(gas);
+    t["gasPrice"] = toJS(gasPrice);
+
+    std::string txHash = rpcClient->eth_sendTransaction(t);
+    BOOST_REQUIRE(!txHash.empty());
+
+    // Send the tx again
+    txHash = rpcClient->eth_sendTransaction(t);
+
+    accountHolder->setAccounts({});
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    countAt = jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest"));
+    auto const receiverBalance = web3->ethereum()->balanceAt(receiver.address());
+    string const receiverBalanceString =
+        rpcClient->eth_getBalance(toJS(receiver.address()), "latest");
+
+    BOOST_CHECK_EQUAL(countAt, web3->ethereum()->countAt(senderAddress));
+    BOOST_CHECK_EQUAL(countAt, 2);
+    BOOST_CHECK_EQUAL(toJS(receiverBalance), receiverBalanceString);
+    BOOST_CHECK_EQUAL(jsToU256(receiverBalanceString), 2 * txAmount);
+    BOOST_CHECK_EQUAL(txAmount * 2, receiverBalance);
+}
+
 
 BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_validTransaction)
 {
@@ -377,8 +437,9 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInvalidNonce)
     auto txHash = rpcClient->eth_sendRawTransaction(signedTx["raw"].asString());
     BOOST_REQUIRE(!txHash.empty());
 
-    auto invalidNonce =
-        jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest")) - 1;
+    dev::eth::mine(*(web3->ethereum()), 1);
+
+    auto invalidNonce = 0;
     t["nonce"] = jsToDecimal(toJS(invalidNonce));
 
     signedTx = rpcClient->eth_signTransaction(t);
@@ -413,39 +474,6 @@ BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorInsufficientGas)
 
     BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()),
         "Transaction gas amount is less than the intrinsic gas amount for this transaction type.");
-}
-
-BOOST_AUTO_TEST_CASE(eth_sendRawTransaction_errorDuplicateTransaction)
-{
-    auto senderAddress = coinbase.address();
-    auto receiver = KeyPair::create();
-
-    // Mine to generate a non-zero account balance
-    const int blocksToMine = 1;
-    const int blockNumber = 1;
-    const u256 blockReward = 5 * dev::eth::ether;
-    dev::eth::mine(*(web3->ethereum()), blocksToMine);
-    BOOST_CHECK_EQUAL(blockReward, web3->ethereum()->balanceAt(senderAddress, blockNumber));
-
-    Json::Value t;
-    t["from"] = toJS(senderAddress);
-    t["to"] = toJS(receiver.address());
-    t["value"] = jsToDecimal(toJS(10000 * dev::eth::szabo));
-
-    auto signedTx = rpcClient->eth_signTransaction(t);
-    BOOST_REQUIRE(!signedTx["raw"].empty());
-
-    auto txHash = rpcClient->eth_sendRawTransaction(signedTx["raw"].asString());
-    BOOST_REQUIRE(!txHash.empty());
-
-    auto txNonce = jsToU256(rpcClient->eth_getTransactionCount(toJS(senderAddress), "latest"));
-    t["nonce"] = jsToDecimal(toJS(txNonce));
-
-    signedTx = rpcClient->eth_signTransaction(t);
-    BOOST_REQUIRE(!signedTx["raw"].empty());
-
-    BOOST_CHECK_EQUAL(sendingRawShouldFail(signedTx["raw"].asString()),
-        "Same transaction already exists in the pending transaction queue.");
 }
 
 BOOST_AUTO_TEST_CASE(eth_signTransaction)
