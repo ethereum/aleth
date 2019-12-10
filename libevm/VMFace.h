@@ -59,6 +59,14 @@ public:
 
 	/// VM implementation
 	virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) = 0;
+
+    /// Executes code without providing it access to the state.
+    ///
+    /// This method is useful for special cases like calling precompiles from EVMC module, where
+    /// execution is guaranteed not to require any Host access.
+    virtual owning_bytes_ref exec(u256& io_gas, Address const& _myAddress, Address const& _caller,
+        u256 const& _value, bytesConstRef _data, unsigned _depth, bool _isCreate,
+        bool _isStaticCall, EVMSchedule const& _schedule) = 0;
 };
 
 /// Helpers:

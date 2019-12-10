@@ -16,7 +16,13 @@ namespace eth
 class LegacyVM: public VMFace
 {
 public:
-    virtual owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
+    owning_bytes_ref exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
+
+    owning_bytes_ref exec(u256&, Address const&, Address const&, u256 const&, bytesConstRef,
+        unsigned, bool, bool, EVMSchedule const&) override final
+    {
+        BOOST_THROW_EXCEPTION(InterfaceNotSupported{});
+    }
 
 #if EIP_615
     // invalid code will throw an exeption

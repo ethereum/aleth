@@ -187,14 +187,14 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 
         auto precompilesVM = make_unique<EVMC>(evmc_create_aleth_precompiles_vm());
 
-        auto extVM = make_unique<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress,
-            _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, bytesConstRef{},
-            h256{}, 0, m_depth, false, _p.staticCall);
-
         try
         {
             m_gas = _p.gas;
-            m_output = precompilesVM->exec(m_gas, *extVM, {});
+
+            auto const& schedule = m_sealEngine.evmSchedule(m_envInfo.number());
+            bool const isCreate = false;
+            m_output = precompilesVM->exec(m_gas, _p.receiveAddress, _p.senderAddress,
+                _p.apparentValue, _p.data, m_depth, isCreate, _p.staticCall, schedule);
         }
         catch (OutOfGas const&)
         {
