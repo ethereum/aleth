@@ -142,14 +142,14 @@ Json::Value Eth::eth_pendingTransactions()
 
 string Eth::eth_getTransactionCount(string const& _address, string const& _blockNumber)
 {
-	try
-	{
-		return toJS(client()->countAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));
-	}
-	catch (...)
-	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
-	}
+    try
+    {
+        return toString(client()->countAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));
+    }
+    catch (...)
+    {
+        BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+    }
 }
 
 Json::Value Eth::eth_getBlockTransactionCountByHash(string const& _blockHash)
