@@ -7,6 +7,7 @@
 #include <jsonrpccpp/common/errors.h>
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonJS.h>
+#include <libethcore/Exceptions.h>
 #include <libethereum/ChainParams.h>
 #include <libethereum/ClientTest.h>
 
@@ -115,6 +116,35 @@ bool Test::test_rewindToBlock(int _number)
     return true;
 }
 
+string ImportResultToString(ImportResult const& _res)
+{
+    switch (_res)
+    {
+    case ImportResult::AlreadyInChain:
+        return "AlreadyInChain";
+    case ImportResult::AlreadyKnown:
+        return "AlreadyKnown";
+    case ImportResult::BadChain:
+        return "BadChain";
+    case ImportResult::FutureTimeKnown:
+        return "FutureTimeKnown";
+    case ImportResult::FutureTimeUnknown:
+        return "FutureTimeUnknown";
+    case ImportResult::Malformed:
+        return "Malformed";
+    case ImportResult::OverbidGasPrice:
+        return "OverbidGasPrice";
+    case ImportResult::Success:
+        return "Success";
+    case ImportResult::UnknownParent:
+        return "UnknownParent";
+    case ImportResult::ZeroSignature:
+        return "ZeroSignature";
+    default:
+        return "unknown";
+    }
+    return "unknown";
+}
 std::string Test::test_importRawBlock(string const& _blockRLP)
 {
     try
@@ -125,7 +155,8 @@ std::string Test::test_importRawBlock(string const& _blockRLP)
     catch (ImportBlockFailed const& e)
     {
         cwarn << diagnostic_information(e);
-        throw JsonRpcException("Block import failed.");
+        ImportResult const& res = *boost::get_error_info<dev::eth::errinfo_importResult>(e);
+        throw JsonRpcException("Block import failed: " + ImportResultToString(res));
     }
     catch (std::exception const& e)
     {
