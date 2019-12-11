@@ -246,7 +246,9 @@ GENERAL OPTIONS:
 The Aleth project includes the following tools in addition to the Aleth client:
 * **[aleth-bootnode](aleth-bootnode/)**: A C++ Ethereum discovery bootnode implementation
 * **[aleth-key](aleth-key/)**: A rudimentary wallet
-* **[aleth-vm](aleth-vm/)**: A VM-tracing tool
+* **[aleth-vm](aleth-vm/)**: An EVM bytecode runner tool
+* **[rlp](rlp/)**: A RLP encoder/decoder tool
+* **[testeth](test/)**: A consensus test generator/runner tool
 
 ## Mining
 
