@@ -242,6 +242,14 @@ GENERAL OPTIONS:
   -h [ --help ]            Show this help message and exit
 ```
 
+## Tools
+The Aleth project includes the following tools in addition to the Aleth client:
+* **[aleth-bootnode](aleth-bootnode/)**: A C++ Ethereum discovery bootnode implementation
+* **[aleth-key](aleth-key/)**: A rudimentary wallet
+* **[aleth-vm](aleth-vm/)**: An EVM bytecode runner tool
+* **[rlp](rlp/)**: A RLP encoder/decoder tool
+* **[testeth](test/)**: A consensus test generator/runner tool
+
 ## Mining
 
 This project is **not suitable for Ethereum mining** because the support for GPU mining
@@ -250,12 +258,10 @@ has been dropped some time ago including the ethminer tool. Use the ethminer too
 ## Testing
 Details on how to run and debug the tests can be found [here](doc/usingtesteth.rst)
 
-
 ## Documentation
 
 - [Internal documentation for developers](doc/index.rst).
 - [Outdated documentation for end users](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/).
-
 
 ## License
 
