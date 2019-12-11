@@ -251,7 +251,7 @@ public:
     QueueStatus blockStatus(h256 const& _h) const;
 
     Handler<> onReady(std::function<void(void)> _t) { return m_onReady.add(_t); }
-    Handler<> onRoomAvailable(std::function<void(void)> _t) { return m_onRoomAvailable.add(_t); }
+    Handler<> onBlocksDrained(std::function<void(void)> _t) { return m_onBlocksDrained.add(_t); }
 
     template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
 
@@ -293,7 +293,7 @@ private:
     SizedBlockMap<time_t> m_future;										///< Set of blocks that are not yet valid. Ordered by timestamp
     h256Hash m_futureSet;  ///< Set of all blocks that are not yet valid.
     Signal<> m_onReady;													///< Called when a subsequent call to import blocks will return a non-empty container. Be nice and exit fast.
-    Signal<> m_onRoomAvailable;											///< Called when space for new blocks becomes availabe after a drain. Be nice and exit fast.
+    Signal<> m_onBlocksDrained;											///< Called when blocks have been drained from the block queue. Be nice and exit fast.
 
     mutable Mutex m_verification;										///< Mutex that allows writing to m_verified, m_verifying and m_unverified.
     std::condition_variable m_moreToVerify;								///< Signaled when m_unverified has a new entry.

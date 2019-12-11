@@ -416,11 +416,9 @@ std::size_t BlockQueue::unknownCount() const
 
 void BlockQueue::drain(VerifiedBlocks& o_out, unsigned _max)
 {
-    bool wasFull = false;
     DEV_WRITE_GUARDED(m_lock)
     {
         DEV_INVARIANT_CHECK;
-        wasFull = knownFull();
         if (m_drainingSet.empty())
         {
             m_drainingDifficulty = 0;
@@ -437,8 +435,7 @@ void BlockQueue::drain(VerifiedBlocks& o_out, unsigned _max)
             }
         }
     }
-    if (wasFull && !knownFull())
-        m_onRoomAvailable();
+    m_onBlocksDrained();
 }
 
 bool BlockQueue::invariants() const
