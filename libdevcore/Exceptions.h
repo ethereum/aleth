@@ -7,6 +7,7 @@
 #include "FixedHash.h"
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception/errinfo_api_function.hpp>
+#include <boost/exception/errinfo_nested_exception.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/exception/info_tuple.hpp>
@@ -78,4 +79,5 @@ using errinfo_externalFunction = boost::errinfo_api_function;
 using errinfo_interface = boost::error_info<struct tag_interface, std::string>;
 using errinfo_path = boost::error_info<struct tag_path, std::string>;
 using errinfo_nodeID = boost::error_info<struct tag_nodeID, h512>;
+using errinfo_nestedException = boost::errinfo_nested_exception;
 }
