@@ -124,7 +124,12 @@ private:
     };
 
     EthereumCapability& m_host;
-    Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
+
+    // Triggered once blocks have been drained from the block queue,  potentially freeing up space
+    // for more blocks. Note that the block queue can still be full after a drain, depending on how
+    // many blocks are in the queue vs how many are being drained.
+    Handler<> m_bqBlocksDrained;
+
     mutable RecursiveMutex x_sync;
     /// Peers to which we've sent DAO request
     std::set<NodeID> m_daoChallengedPeers;

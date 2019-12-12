@@ -144,14 +144,18 @@ BlockChainSync::BlockChainSync(EthereumCapability& _host)
     m_lastImportedBlock(m_startingBlock),
     m_lastImportedBlockHash(_host.chain().currentHash())
 {
-    m_bqRoomAvailable = host().bq().onRoomAvailable([this]() {
-        // Ensure that syncing occurs on the network thread (since the block queue onRoomAvailable
-        // handler can be called on the client thread)
-        host().capabilityHost().postWork([this]() {
-            RecursiveGuard l(x_sync);
-            m_state = SyncState::Blocks;
-            continueSync();
-        });
+    m_bqBlocksDrained = host().bq().onBlocksDrained([this]() {
+        if (isSyncPaused() && !host().bq().knownFull())
+        {
+            // Draining freed up space in the block queue. Let's resume syncing.
+            // Ensure that syncing occurs on the network thread (since the block queue handler is
+            // called on the client thread
+            host().capabilityHost().postWork([this]() {
+                RecursiveGuard l(x_sync);
+                m_state = SyncState::Blocks;
+                continueSync();
+            });
+        }
     });
 }
 
@@ -250,10 +254,8 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
     u256 td = host().chain().details().totalDifficulty;
     if (host().bq().isActive())
         td += host().bq().difficulty();
-
-    u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
-
-    u256 peerTotalDifficulty = peer.totalDifficulty();
+    u256 const syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
+    u256 const peerTotalDifficulty = peer.totalDifficulty();
 
     if (_force || peerTotalDifficulty > syncingDifficulty)
     {
@@ -269,7 +271,9 @@ void BlockChainSync::syncPeer(NodeID const& _peerID, bool _force)
             LOG(m_logger) << "Syncing with peer " << peer.id();
             m_state = SyncState::Blocks;
         }
-        peer.requestBlockHeaders(peer.latestHash(), 1, 0, false);
+        
+        // Request tip of peer's chain
+        peer.requestBlockHeaders(peer.latestHash(), 1 /* count */, 0 /* skip */, false /* reverse */);
         peer.setWaitingForTransactions(true);
         return;
     }
