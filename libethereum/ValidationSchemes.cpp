@@ -50,6 +50,7 @@ string const c_eWASMForkBlock = "eWASMForkBlock";
 string const c_constantinopleForkBlock = "constantinopleForkBlock";
 string const c_constantinopleFixForkBlock = "constantinopleFixForkBlock";
 string const c_istanbulForkBlock = "istanbulForkBlock";
+string const c_muirGlacierForkBlock = "muirGlacierForkBlock";
 string const c_berlinForkBlock = "berlinForkBlock";
 string const c_experimentalForkBlock = "experimentalForkBlock";
 string const c_accountStartNonce = "accountStartNonce";

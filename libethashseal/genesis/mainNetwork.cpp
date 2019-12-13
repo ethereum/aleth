@@ -6,7 +6,7 @@
 
 static dev::h256 const c_genesisStateRootMainNetwork("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544");
 static std::string const c_genesisInfoMainNetwork = std::string() +
-R"E(
+                                                    R"E(
 {
     "sealEngine": "Ethash",
     "params": {
@@ -19,6 +19,7 @@ R"E(
         "constantinopleForkBlock": "0x6f1580",
         "constantinopleFixForkBlock": "0x6f1580",
         "istanbulForkBlock": "0x8a61c8",
+        "muirGlacierForkBlock": "0x8c6180",
         "networkID" : "0x01",
         "chainID": "0x01",
         "maximumExtraDataSize": "0x20",

@@ -44,6 +44,8 @@ EVMSchedule const& ChainOperationParams::forkScheduleForBlockNumber(u256 const& 
         return ExperimentalSchedule;
     else if (_blockNumber >= berlinForkBlock)
         return BerlinSchedule;
+    else if (_blockNumber >= muirGlacierForkBlock)
+        return MuirGlacierSchedule;
     else if (_blockNumber >= istanbulForkBlock)
         return IstanbulSchedule;
     else if (_blockNumber >= constantinopleFixForkBlock)

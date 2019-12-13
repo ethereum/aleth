@@ -5,7 +5,7 @@
 #include "../GenesisInfo.h"
 
 static std::string const c_genesisInfoRopsten = std::string() +
-R"E(
+                                                R"E(
 {
     "sealEngine": "Ethash",
     "params": {
@@ -18,6 +18,7 @@ R"E(
         "constantinopleForkBlock": "0x408b70",
         "constantinopleFixForkBlock": "0x4b5e82",
         "istanbulForkBlock": "0x62f756",
+        "muirGlacierForkBlock": "0x6c993d",
         "chainID": "0x03",
         "maximumExtraDataSize": "0x20",
         "tieBreakingGas": false,
