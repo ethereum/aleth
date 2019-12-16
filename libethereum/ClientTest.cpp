@@ -31,7 +31,20 @@ ClientTest::ClientTest(ChainParams const& _params, int _networkID, p2p::Host& _h
     TransactionQueue::Limits const& _limits)
   : Client(
         _params, _networkID, _host, _gpForAdoption, _dbPath, std::string(), _forceAction, _limits)
-{}
+{
+    m_bq.setOnBad([this](Exception& ex) {
+        {
+            Guard guard(m_badBlockMutex);
+            // To preserve original exception type we need to use current_exception().
+            // This assumes we're inside catch.
+            m_lastImportError = boost::current_exception();
+            bytes const* block = boost::get_error_info<errinfo_block>(ex);
+            m_lastBadBlock = block ? *block : bytes{};
+        }
+
+        Client::onBadBlock(ex);
+    });
+}
 
 ClientTest::~ClientTest()
 {
@@ -131,9 +144,19 @@ h256 ClientTest::importRawBlock(const string& _blockRLP)
 {
     bytes blockBytes = jsToBytes(_blockRLP, OnFailed::Throw);
     h256 blockHash = BlockHeader::headerHashFromBlock(blockBytes);
+
     ImportResult result = queueBlock(blockBytes, true);
     if (result != ImportResult::Success)
-        BOOST_THROW_EXCEPTION(ImportBlockFailed() << errinfo_importResult(result));
+    {
+        auto ex = ImportBlockFailed{} << errinfo_importResult(result);
+        if (result == ImportResult::Malformed)
+        {
+            Guard guard(m_badBlockMutex);
+            if (blockBytes == m_lastBadBlock)
+                ex << errinfo_nestedException(m_lastImportError);
+        }
+        BOOST_THROW_EXCEPTION(ex);
+    }
 
     if (auto h = m_host.lock())
         h->noteNewBlocks();
