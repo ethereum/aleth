@@ -32,24 +32,28 @@ ClientTest::ClientTest(ChainParams const& _params, int _networkID, p2p::Host& _h
   : Client(
         _params, _networkID, _host, _gpForAdoption, _dbPath, std::string(), _forceAction, _limits)
 {
-    m_bq.setOnBad([this](Exception& ex) {
-        {
-            Guard guard(m_badBlockMutex);
-            // To preserve original exception type we need to use current_exception().
-            // This assumes we're inside catch.
-            m_lastImportError = boost::current_exception();
-            bytes const* block = boost::get_error_info<errinfo_block>(ex);
-            m_lastBadBlock = block ? *block : bytes{};
-        }
-
-        Client::onBadBlock(ex);
-    });
+    m_bq.setOnBad([this](Exception& _ex) { onBadBlock(_ex); });
+    bc().setOnBad([this](Exception& _ex) { onBadBlock(_ex); });
 }
 
 ClientTest::~ClientTest()
 {
     m_signalled.notify_all(); // to wake up the thread from Client::doWork()
     terminate();
+}
+
+void ClientTest::onBadBlock(Exception& _ex)
+{
+    {
+        Guard guard(m_badBlockMutex);
+        // To preserve original exception type we need to use current_exception().
+        // This assumes we're inside catch.
+        m_lastImportError = boost::current_exception();
+        bytes const* block = boost::get_error_info<errinfo_block>(_ex);
+        m_lastBadBlock = block ? *block : bytes{};
+    }
+
+    Client::onBadBlock(_ex);
 }
 
 void ClientTest::setChainParams(string const& _genesis)
@@ -149,12 +153,7 @@ h256 ClientTest::importRawBlock(const string& _blockRLP)
     if (result != ImportResult::Success)
     {
         auto ex = ImportBlockFailed{} << errinfo_importResult(result);
-        if (result == ImportResult::Malformed)
-        {
-            Guard guard(m_badBlockMutex);
-            if (blockBytes == m_lastBadBlock)
-                ex << errinfo_nestedException(m_lastImportError);
-        }
+        addNestedBadBlockException(blockBytes, ex);
         BOOST_THROW_EXCEPTION(ex);
     }
 
@@ -170,7 +169,18 @@ h256 ClientTest::importRawBlock(const string& _blockRLP)
 
     // check that it was really imported and not rejected as invalid
     if (!bc().isKnown(blockHash))
-        BOOST_THROW_EXCEPTION(ImportBlockFailed());
+    {
+        auto ex = ImportBlockFailed{};
+        addNestedBadBlockException(blockBytes, ex);
+        BOOST_THROW_EXCEPTION(ex);
+    }
 
     return blockHash;
+}
+
+void ClientTest::addNestedBadBlockException(bytes const& _blockBytes, Exception& io_ex)
+{
+    Guard guard(m_badBlockMutex);
+    if (_blockBytes == m_lastBadBlock)
+        io_ex << errinfo_nestedException(m_lastImportError);
 }

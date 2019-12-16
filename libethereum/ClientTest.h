@@ -34,13 +34,15 @@ public:
     void rewindToBlock(unsigned _number);
     /// Import block data
     /// @returns hash of the imported block
-    /// @throws ImportBlockFailed if import failed. If block is rejected by BlockQueue validation,
-    /// exception contains errinfo_importResult with the reason. If the reason is
-    /// ImportResult::Malformed, exception contains nested exception with exact validation error.
+    /// @throws ImportBlockFailed if import failed. If block is rejected as invalid, exception
+    /// contains nested exception with exact validation error.
     h256 importRawBlock(std::string const& _blockRLP);
     bool completeSync();
 
-protected:
+private:
+    void onBadBlock(Exception& _ex);
+    void addNestedBadBlockException(bytes const& _blockBytes, Exception& io_ex);
+
     unsigned const m_singleBlockMaxMiningTimeInSeconds = 60;
     boost::exception_ptr m_lastImportError;
     bytes m_lastBadBlock;
