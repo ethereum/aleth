@@ -1,11 +1,11 @@
 # Changelog
 
-## [1.8.0] - Unreleased
+## [1.8.0] - 2019-12-16
 
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
 - Added: [#5741](https://github.com/ethereum/aleth/pull/5741) Support for individual EIP activation to facilitate EIP-centric network upgrade process.
 - Added: [#5752](https://github.com/ethereum/aleth/pull/5752) [#5753](https://github.com/ethereum/aleth/pull/5753) [#5809](https://github.com/ethereum/aleth/pull/5809) Implement EIP1380 (reduced gas costs for call-to-self).
-- Added: [#5859](https://github.com/ethereum/aleth/pull/5859) EIP-2384 Istanbul/Berlin Difficulty Bomb Delay and Muir Glacier fork support.
+- Added: [#5859](https://github.com/ethereum/aleth/pull/5859) EIP-2384 Istanbul/Berlin Difficulty Bomb Delay and **Muir Glacier** fork support.
 - Changed: [#5750](https://github.com/ethereum/aleth/pull/5750) Use `testeth -t <SUITE_NAME> -- --testfile <PATH>` to run the tests from file at any path. Use `testeth -t <SUITE_NAME> -- --testfile <PATH> --singletest <TEST_NAME>` to run only single test from any file.
 - Changed: [#5801](https://github.com/ethereum/aleth/pull/5801) `testeth -t BlockchainTests` command now doesn't run the tests for the forks before Istanbul. To run those tests use a separate LegacyTests suite with command `testeth -t LegacyTests/Constantinople/BlockchainTests`.
 - Changed: [#5807](https://github.com/ethereum/aleth/pull/5807) Optimize selfdestruct opcode in LegacyVM by reducing state accesses in certain out-of-gas scenarios.
@@ -116,7 +116,7 @@
 - Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
 
-[1.8.0]: https://github.com/ethereum/aleth/compare/v1.7.2...master
+[1.8.0]: https://github.com/ethereum/aleth/releases/tag/v1.8.0
 [1.7.2]: https://github.com/ethereum/aleth/releases/tag/v1.7.2
 [1.7.1]: https://github.com/ethereum/aleth/releases/tag/v1.7.1
 [1.7.0]: https://github.com/ethereum/aleth/releases/tag/v1.7.0
