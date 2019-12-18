@@ -189,12 +189,12 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 
         try
         {
-            m_gas = _p.gas;
-
+            auto gas = _p.gas;
             auto const& schedule = m_sealEngine.evmSchedule(m_envInfo.number());
             bool const isCreate = false;
-            m_output = precompilesVM->exec(m_gas, _p.receiveAddress, _p.senderAddress,
+            m_output = precompilesVM->exec(gas, _p.codeAddress, _p.senderAddress,
                 _p.apparentValue, _p.data, m_depth, isCreate, _p.staticCall, schedule);
+            m_gas = gas;
         }
         catch (OutOfGas const&)
         {
