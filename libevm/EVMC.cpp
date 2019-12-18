@@ -161,9 +161,6 @@ owning_bytes_ref EVMC::exec(u256& io_gas, Address const& _myAddress, Address con
     auto const mode = toRevision(_schedule);
 
     auto r = execute(mode, msg, nullptr, 0);
-    // FIXME: Copy the output for now, but copyless version possible.
-    auto output =
-        owning_bytes_ref{{&r.output_data[0], &r.output_data[r.output_size]}, 0, r.output_size};
 
     return processResult(io_gas, r);
 }
