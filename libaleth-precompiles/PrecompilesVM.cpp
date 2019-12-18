@@ -272,7 +272,7 @@ evmc_result execute(evmc_vm*, const evmc_host_interface*, evmc_host_context*,
     auto const gasCost = precompile.first(input, _rev);
     auto const gasLeft = _msg->gas - gasCost;
     if (gasLeft < 0)
-        return evmc::make_result(EVMC_SUCCESS, 0, nullptr, 0);
+        return evmc::make_result(EVMC_OUT_OF_GAS, 0, nullptr, 0);
 
     // Execute.
     auto const res = precompile.second(input);
