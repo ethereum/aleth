@@ -255,16 +255,25 @@ std::pair<bool, bytes> blake2Compression(bytesConstRef _in)
 evmc_result execute(evmc_vm*, const evmc_host_interface*, evmc_host_context*,
     enum evmc_revision _rev, const evmc_message* _msg, const uint8_t*, size_t) noexcept
 {
-    static std::array<std::pair<Pricer, Executor>, 9> const precompiles = {
-        {{ecrecoverPrice, ecrecover}, {sha256Price, sha256}, {ripemd160Price, ripemd160},
-            {identityPrice, identity}, {modexpPrice, modexp},
-            {alt_bn128_G1_addPrice, alt_bn128_G1_add}, {alt_bn128_G1_mulPrice, alt_bn128_G1_mul},
-            {alt_bn128_pairing_productPrice, alt_bn128_pairing_product},
-            {blake2CompressionPrice, blake2Compression}}};
+    static constexpr std::pair<Pricer, Executor> c_precompiles[] = {{ecrecoverPrice, ecrecover},
+        {sha256Price, sha256}, {ripemd160Price, ripemd160}, {identityPrice, identity},
+        {modexpPrice, modexp}, {alt_bn128_G1_addPrice, alt_bn128_G1_add},
+        {alt_bn128_G1_mulPrice, alt_bn128_G1_mul},
+        {alt_bn128_pairing_productPrice, alt_bn128_pairing_product},
+        {blake2CompressionPrice, blake2Compression}};
+    static constexpr size_t c_precompilesSize = sizeof(c_precompiles) / sizeof(c_precompiles[0]);
+    static_assert(c_precompilesSize < 0xFF, "Assuming no more than 256 precompiles");
+    static constexpr evmc::address c_maxPrecompileAddress =
+        evmc_address{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, c_precompilesSize}};
 
-    // TODO check range
+    // check that address is within the range of defined precompiles
+    auto const destination = evmc::address{_msg->destination};
+    if (destination == evmc::address{} || c_maxPrecompileAddress < destination)
+        return evmc::make_result(EVMC_REJECTED, 0, nullptr, 0);
 
-    auto const precompile = precompiles[_msg->destination.bytes[sizeof(_msg->destination) - 1] - 1];
+    // convert address to array index
+    auto const precompileAddressLSB = _msg->destination.bytes[sizeof(_msg->destination) - 1];
+    auto const precompile = c_precompiles[precompileAddressLSB - 1];
 
     bytesConstRef input{_msg->input_data, _msg->input_size};
 
