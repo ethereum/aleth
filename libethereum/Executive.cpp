@@ -44,6 +44,13 @@ std::string dumpStorage(ExtVM const& _ext)
         o << showbase << hex << i.second.first << ": " << i.second.second << "\n";
     return o.str();
 };
+
+EVMC& precompilesVM()
+{
+    static EVMC precompilesVM{evmc_create_aleth_precompiles_vm(), {}};
+    return precompilesVM;
+}
+
 }  // namespace
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level)
@@ -185,15 +192,13 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         if (_p.receiveAddress == c_RipemdPrecompiledAddress)
             m_s.unrevertableTouch(_p.codeAddress);
 
-        auto precompilesVM = make_unique<EVMC>(evmc_create_aleth_precompiles_vm());
-
         try
         {
             auto gas = _p.gas;
             auto const& schedule = m_sealEngine.evmSchedule(m_envInfo.number());
             bool const isCreate = false;
-            m_output = precompilesVM->exec(gas, _p.codeAddress, _p.senderAddress,
-                _p.apparentValue, _p.data, m_depth, isCreate, _p.staticCall, schedule);
+            m_output = precompilesVM().exec(gas, _p.codeAddress, _p.senderAddress, _p.apparentValue,
+                _p.data, m_depth, isCreate, _p.staticCall, schedule);
             m_gas = gas;
         }
         catch (OutOfGas const&)
