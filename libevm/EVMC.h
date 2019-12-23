@@ -5,6 +5,9 @@
 #pragma once
 
 #include <libevm/VMFace.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace dev
 {
@@ -14,7 +17,7 @@ namespace eth
 class EVMC : public evmc::VM, public VMFace
 {
 public:
-    explicit EVMC(evmc_vm* _vm) noexcept;
+    EVMC(evmc_vm* _vm, std::vector<std::pair<std::string, std::string>> const& _options) noexcept;
 
     owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) final;
 };
