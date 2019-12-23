@@ -32,13 +32,14 @@ evmc_revision toRevision(EVMSchedule const& _schedule) noexcept
 }
 }  // namespace
 
-EVMC::EVMC(evmc_vm* _vm) noexcept : evmc::VM(_vm)
+EVMC::EVMC(evmc_vm* _vm, std::vector<std::pair<std::string, std::string>> const& _options) noexcept
+  : evmc::VM(_vm)
 {
     assert(_vm != nullptr);
     assert(is_abi_compatible());
 
     // Set the options.
-    for (auto& pair : evmcOptions())
+    for (auto& pair : _options)
     {
         auto result = set_option(pair.first.c_str(), pair.second.c_str());
         switch (result)
