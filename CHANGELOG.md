@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.0] - Unreleased
+
+- Added: [#5868](https://github.com/ethereum/aleth/pull/5868) `test_importRawBlock` RPC method reports the detailed reason when import fails.
+
 ## [1.8.0] - 2019-12-16
 
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
@@ -116,6 +120,7 @@
 - Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
 
+[1.9.0]: https://github.com/ethereum/aleth/compare/v1.8.0...master
 [1.8.0]: https://github.com/ethereum/aleth/releases/tag/v1.8.0
 [1.7.2]: https://github.com/ethereum/aleth/releases/tag/v1.7.2
 [1.7.1]: https://github.com/ethereum/aleth/releases/tag/v1.7.1
