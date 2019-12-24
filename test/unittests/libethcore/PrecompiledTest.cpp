@@ -4,9 +4,10 @@
 
 /// @file
 /// Precompiled contract implemetations testing.
-#include <boost/test/unit_test.hpp>
+#include <libaleth-precompiles/PrecompilesVM.h>
+#include <libevm/EVMC.h>
 #include <test/tools/libtesteth/TestHelper.h>
-#include <libethcore/Precompiled.h>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev;
@@ -14,12 +15,152 @@ using namespace dev::eth;
 using namespace dev::test;
 namespace ut = boost::unit_test;
 
-BOOST_FIXTURE_TEST_SUITE(PrecompiledTests, TestOutputHelperFixture)
+namespace
+{
+Address const c_ecrecover{0x1};
+Address const c_modexp{0x5};
+Address const c_alt_bn128_G1_add{0x6};
+Address const c_alt_bn128_G1_mul{0x7};
+Address const c_alt_bn128_pairing_product{0x8};
+Address const c_blake2_compression{0x9};
+
+struct PrecompiledTest
+{
+    const char* input;
+    const char* expected;
+    const char* name;
+};
+
+class PrecompiledFixture : public TestOutputHelperFixture
+{
+public:
+    std::pair<bool, bytes> exec(Address const& _address, bytesConstRef _data)
+    {
+        try
+        {
+            owning_bytes_ref res = precompilesVM.exec(
+                gas, _address, sender, value, _data, depth, isCreate, staticCall, schedule);
+
+            return {true, res.takeBytes()};
+        }
+        catch (Exception const&)
+        {
+            return {false, {}};
+        }
+    }
+
+    u256 price(Address const& _address, bytesConstRef _data)
+    {
+        u256 gasBefore = gas;
+        try
+        {
+            precompilesVM.exec(
+                gas, _address, sender, value, _data, depth, isCreate, staticCall, schedule);
+        }
+        catch (Exception const&)
+        {
+        }
+        return gasBefore - gas;
+    }
+
+    bool runsOutOfGas(Address const& _address, bytesConstRef _data)
+    {
+        try
+        {
+            precompilesVM.exec(
+                gas, _address, sender, value, _data, depth, isCreate, staticCall, schedule);
+        }
+        catch (OutOfGas const&)
+        {
+            return true;  // true actually means "all finished - nothing more to be done regarding
+                          // go().
+        }
+        catch (Exception const&)
+        {
+        }
+        return false;
+    }
+
+    void benchmarkPrecompiled(
+        Address const& _address, vector_ref<const PrecompiledTest> tests, int n)
+    {
+        if (!Options::get().all)
+        {
+            std::cout << "Skipping benchmark test because --all option is not specified.\n";
+            return;
+        }
+
+
+        Timer timer;
+
+        for (auto&& test : tests)
+        {
+            bytes input = fromHex(test.input);
+            bytesConstRef inputRef = &input;
+
+            auto res = exec(_address, inputRef);
+            BOOST_REQUIRE_MESSAGE(res.first, test.name);
+            BOOST_REQUIRE_EQUAL(toHex(res.second), test.expected);
+
+            timer.restart();
+            for (int i = 0; i < n; ++i)
+                exec(_address, inputRef);
+            auto d = timer.duration() / n;
+
+            auto t = std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
+            std::cout << ut::framework::current_test_case().p_name << "/" << test.name << ": " << t
+                      << " ns\n";
+        }
+    }
+
+    void testPrecompiled(Address const& _address, vector_ref<const PrecompiledTest> tests)
+    {
+        for (auto&& test : tests)
+        {
+            bytes input = fromHex(test.input);
+            bytesConstRef inputRef = &input;
+
+            auto res = exec(_address, inputRef);
+            BOOST_REQUIRE_MESSAGE(res.first, test.name);
+            BOOST_REQUIRE_EQUAL(toHex(res.second), test.expected);
+
+            std::cout << ut::framework::current_test_case().p_name << "/" << test.name
+                      << " PASSED\n";
+        }
+    }
+
+    void testPrecompiledFail(Address const& _address, vector_ref<const PrecompiledTest> tests)
+    {
+        for (auto&& test : tests)
+        {
+            bytes input = fromHex(test.input);
+            bytesConstRef inputRef = &input;
+
+            auto res = exec(_address, inputRef);
+            BOOST_REQUIRE_MESSAGE(!res.first, test.name);
+
+            std::cout << ut::framework::current_test_case().p_name << "/" << test.name
+                      << " PASSED\n";
+        }
+    }
+
+
+    EVMC precompilesVM{evmc_create_aleth_precompiles_vm(), {}};
+    u256 gas = std::numeric_limits<int64_t>::max();
+    Address sender;
+    int value = 0;
+    int depth = 0;
+    bool isCreate = false;
+    bool staticCall = true;
+    EVMSchedule schedule = DefaultSchedule;
+};
+}  // namespace
+
+
+BOOST_FIXTURE_TEST_SUITE(PrecompiledTests, PrecompiledFixture)
 
 BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000020"
@@ -27,7 +168,7 @@ BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
         "03"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
@@ -36,15 +177,13 @@ BOOST_AUTO_TEST_CASE(modexpFermatTheorem)
 
 BOOST_AUTO_TEST_CASE(modexpZeroBase)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000000"
         "0000000000000000000000000000000000000000000000000000000000000020"
         "0000000000000000000000000000000000000000000000000000000000000020"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
@@ -53,8 +192,6 @@ BOOST_AUTO_TEST_CASE(modexpZeroBase)
 
 BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000002"
@@ -63,7 +200,7 @@ BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
         "ffff"
         "8000000000000000000000000000000000000000000000000000000000000000"
         "07");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("3b01b01ac41f2d6e917c6d6a221ce793802469026d9ab7578fa2e79e4da6aaab");
@@ -72,8 +209,6 @@ BOOST_AUTO_TEST_CASE(modexpExtraByteIgnored)
 
 BOOST_AUTO_TEST_CASE(modexpRightPadding)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000002"
@@ -81,7 +216,7 @@ BOOST_AUTO_TEST_CASE(modexpRightPadding)
         "03"
         "ffff"
         "80");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("3b01b01ac41f2d6e917c6d6a221ce793802469026d9ab7578fa2e79e4da6aaab");
@@ -90,14 +225,12 @@ BOOST_AUTO_TEST_CASE(modexpRightPadding)
 
 BOOST_AUTO_TEST_CASE(modexpMissingValues)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000002"
         "0000000000000000000000000000000000000000000000000000000000000020"
         "03");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
@@ -106,15 +239,13 @@ BOOST_AUTO_TEST_CASE(modexpMissingValues)
 
 BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000000"
         "0000000000000000000000000000000000000000000000000000000000000020"
         "03"
         "8000000000000000000000000000000000000000000000000000000000000000");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
@@ -123,8 +254,6 @@ BOOST_AUTO_TEST_CASE(modexpEmptyValue)
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000001"
@@ -132,7 +261,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
         "00"
         "00"
         "80");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000001");
@@ -141,8 +270,6 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZero)
 
 BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000001"
@@ -150,7 +277,7 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
         "00"
         "00"
         "00");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     bytes expected = fromHex("0000000000000000000000000000000000000000000000000000000000000000");
@@ -159,15 +286,13 @@ BOOST_AUTO_TEST_CASE(modexpZeroPowerZeroModZero)
 
 BOOST_AUTO_TEST_CASE(modexpModLengthZero)
 {
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000000"
         "01"
         "01");
-    auto res = exec(bytesConstRef(in.data(), in.size()));
+    auto res = exec(c_modexp, ref(in));
 
     BOOST_REQUIRE(res.first);
     BOOST_REQUIRE(res.second.empty());
@@ -175,8 +300,6 @@ BOOST_AUTO_TEST_CASE(modexpModLengthZero)
 
 BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000001"
         "0000000000000000000000000000000000000000000000000000000000000020"
@@ -184,30 +307,24 @@ BOOST_AUTO_TEST_CASE(modexpCostFermatTheorem)
         "03"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2e"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_EQUAL(static_cast<int>(res), 13056);
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostTooLarge)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000000"
         "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
         "0000000000000000000000000000000000000000000000000000000000000020"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"
         "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd");
-    auto res = cost(ref(in), {}, {});
-
-    BOOST_REQUIRE_MESSAGE(res == bigint{"47428439751604713645494675459558567056699385719046375030561826409641217900517324"}, "Got: " + toString(res));
+    BOOST_REQUIRE(runsOutOfGas(c_modexp, ref(in)));
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000008" // length of B
         "0000000000000000000000000000000000000000000000000000000000000000" // length of E
@@ -217,15 +334,13 @@ BOOST_AUTO_TEST_CASE(modexpCostEmptyExponent)
         "998877665544332211998877665544332211" // M
         "9978" // Garbage that should be ignored
     );
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"12"}, "Got: " + toString(res));
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000000" // length of B
         "0000000000000000000000000000000000000000000000000000000000000003" // length of E
@@ -234,15 +349,13 @@ BOOST_AUTO_TEST_CASE(modexpCostZeroExponent)
         "000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"5"}, "Got: " + toString(res));
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximated)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000003" // length of B
         "0000000000000000000000000000000000000000000000000000000000000021" // length of E
@@ -251,15 +364,13 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximated)
         "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"1315"}, "Got: " + toString(res));
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximatedPartialByte)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000003" // length of B
         "0000000000000000000000000000000000000000000000000000000000000021" // length of E
@@ -268,15 +379,13 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximatedPartialByte)
         "02ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"1285"}, "Got: " + toString(res));
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostApproximatedGhost)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000003" // length of B
         "0000000000000000000000000000000000000000000000000000000000000021" // length of E
@@ -285,15 +394,13 @@ BOOST_AUTO_TEST_CASE(modexpCostApproximatedGhost)
         "000000000000000000000000000000000000000000000000000000000000000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_MESSAGE(res == bigint{"40"}, "Got: " + toString(res));
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostMidRange)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000003" // length of B
         "0000000000000000000000000000000000000000000000000000000000000021" // length of E
@@ -302,15 +409,13 @@ BOOST_AUTO_TEST_CASE(modexpCostMidRange)
         "000000000000000000000000000000000000000000000000000000000000000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_MESSAGE(res == ((74 * 74 / 4 + 96 * 74 - 3072) * 8) / 20, "Got: " + toString(res));
 }
 
 BOOST_AUTO_TEST_CASE(modexpCostHighRange)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("modexp");
-
     bytes in = fromHex(
         "0000000000000000000000000000000000000000000000000000000000000003" // length of B
         "0000000000000000000000000000000000000000000000000000000000000021" // length of E
@@ -319,7 +424,7 @@ BOOST_AUTO_TEST_CASE(modexpCostHighRange)
         "000000000000000000000000000000000000000000000000000000000000000000" // E
         "112233445566778899aa" // M
     );
-    auto res = cost(ref(in), {}, {});
+    auto res = price(c_modexp, ref(in));
 
     BOOST_REQUIRE_MESSAGE(res == ((1025 * 1025 / 16 + 480 * 1025 - 199680) * 8) / 20, "Got: " + toString(res));
 }
@@ -330,13 +435,6 @@ BOOST_AUTO_TEST_CASE(modexpCostHighRange)
 /// They are ported from go-ethereum, so formatting is not perfect.
 /// https://github.com/ethereum/go-ethereum/blob/master/core/vm/contracts_test.go.
 /// @{
-
-struct PrecompiledTest
-{
-    const char* input;
-    const char* expected;
-    const char* name;
-};
 
 constexpr PrecompiledTest ecrecoverTests[] =
 {
@@ -638,154 +736,72 @@ constexpr PrecompiledTest bn256PairingTests[] =
     },
 };
 
-namespace
-{
-void benchmarkPrecompiled(char const name[], vector_ref<const PrecompiledTest> tests, int n)
-{
-    if (!Options::get().all)
-    {
-        std::cout << "Skipping benchmark test because --all option is not specified.\n";
-        return;
-    }
-
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor(name);
-    Timer timer;
-
-    for (auto&& test : tests)
-    {
-        bytes input = fromHex(test.input);
-        bytesConstRef inputRef = &input;
-
-        auto res = exec(inputRef);
-        BOOST_REQUIRE_MESSAGE(res.first, test.name);
-        BOOST_REQUIRE_EQUAL(toHex(res.second), test.expected);
-
-        timer.restart();
-        for (int i = 0; i < n; ++i)
-            exec(inputRef);
-        auto d = timer.duration() / n;
-
-        auto t = std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
-        std::cout << ut::framework::current_test_case().p_name << "/" << test.name << ": " << t << " ns\n";
-    }
-}
-
-void testPrecompiled(char const name[], vector_ref<const PrecompiledTest> tests)
-{
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor(name);
-
-    for (auto&& test : tests)
-    {
-        bytes input = fromHex(test.input);
-        bytesConstRef inputRef = &input;
-
-        auto res = exec(inputRef);
-        BOOST_REQUIRE_MESSAGE(res.first, test.name);
-        BOOST_REQUIRE_EQUAL(toHex(res.second), test.expected);
-
-        std::cout << ut::framework::current_test_case().p_name << "/" << test.name << " PASSED\n";
-    }
-}
-
-void testPrecompiledFail(char const name[], vector_ref<const PrecompiledTest> tests)
-{
-    PrecompiledExecutor exec = PrecompiledRegistrar::executor(name);
-
-    for (auto&& test : tests)
-    {
-        bytes input = fromHex(test.input);
-        bytesConstRef inputRef = &input;
-
-        auto res = exec(inputRef);
-        BOOST_REQUIRE_MESSAGE(!res.first, test.name);
-
-        std::cout << ut::framework::current_test_case().p_name << "/" << test.name << " PASSED\n";
-    }
-}
-}
-
 /// @}
 
 BOOST_AUTO_TEST_CASE(bench_ecrecover, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{ecrecoverTests, sizeof(ecrecoverTests) / sizeof(ecrecoverTests[0])};
-    benchmarkPrecompiled("ecrecover", tests, 100000);
+    benchmarkPrecompiled(c_ecrecover, tests, 100000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_modexp, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{modexpTests, sizeof(modexpTests) / sizeof(modexpTests[0])};
-    benchmarkPrecompiled("modexp", tests, 10000);
+    benchmarkPrecompiled(c_modexp, tests, 10000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_bn256Add, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{bn256AddTests, sizeof(bn256AddTests) / sizeof(bn256AddTests[0])};
-    benchmarkPrecompiled("alt_bn128_G1_add", tests, 1000000);
+    benchmarkPrecompiled(c_alt_bn128_G1_add, tests, 1000000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_bn256ScalarMul, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{bn256ScalarMulTests, sizeof(bn256ScalarMulTests) / sizeof(bn256ScalarMulTests[0])};
-    benchmarkPrecompiled("alt_bn128_G1_mul", tests, 10000);
+    benchmarkPrecompiled(c_alt_bn128_G1_mul, tests, 10000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_bn256Pairing, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{bn256PairingTests, sizeof(bn256PairingTests) / sizeof(bn256PairingTests[0])};
-    benchmarkPrecompiled("alt_bn128_pairing_product", tests, 1000);
+    benchmarkPrecompiled(c_alt_bn128_pairing_product, tests, 1000);
 }
 
 BOOST_AUTO_TEST_CASE(ecaddCostBeforeIstanbul)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_add");
-
-    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
-
-    auto res = cost({}, chainParams, 1);
+    schedule = ConstantinopleSchedule;
+    auto res = price(c_alt_bn128_G1_add, {});
 
     BOOST_REQUIRE_EQUAL(static_cast<int>(res), 500);
 }
 
 BOOST_AUTO_TEST_CASE(ecaddCostIstanbul)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_add");
-
-    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
-
-    auto res = cost({}, chainParams, 2);
+    schedule = IstanbulSchedule;
+    auto res = price(c_alt_bn128_G1_add, {});
 
     BOOST_REQUIRE_EQUAL(static_cast<int>(res), 150);
 }
 
 BOOST_AUTO_TEST_CASE(ecmulBeforeIstanbul)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_mul");
-
-    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
-
-    auto res = cost({}, chainParams, 1);
+    schedule = ConstantinopleSchedule;
+    auto res = price(c_alt_bn128_G1_mul, {});
 
     BOOST_REQUIRE_EQUAL(static_cast<int>(res), 40000);
 }
 
 BOOST_AUTO_TEST_CASE(ecmulCostIstanbul)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_G1_mul");
-
-    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
-
-    auto res = cost({}, chainParams, 2);
+    schedule = IstanbulSchedule;
+    auto res = price(c_alt_bn128_G1_mul, {});
 
     BOOST_REQUIRE_EQUAL(static_cast<int>(res), 6000);
 }
 
 BOOST_AUTO_TEST_CASE(ecpairingCost)
 {
-    PrecompiledPricer cost = PrecompiledRegistrar::pricer("alt_bn128_pairing_product");
-
-    ChainParams chainParams{genesisInfo(eth::Network::IstanbulTransitionTest)};
-
     bytes in{fromHex(
         "0x1c76476f4def4bb94541d57ebba1193381ffa7aa76ada664dd31c16024c43f593034dd2920f673e204fee281"
         "1c678745fc819b55d3e9d294e45c9b03a76aef41209dd15ebff5d46c4bd888e51a93cf99a7329636c63514396b"
@@ -797,10 +813,12 @@ BOOST_AUTO_TEST_CASE(ecpairingCost)
         "bd5cd992f6ed090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b12c85ea5db8c6d"
         "eb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa")};
 
-    auto costBeforeIstanbul = cost(ref(in), chainParams, 1);
+    schedule = ConstantinopleSchedule;
+    auto costBeforeIstanbul = price(c_alt_bn128_pairing_product, ref(in));
     BOOST_CHECK_EQUAL(static_cast<int>(costBeforeIstanbul), in.size() / 192 * 80000 + 100000);
 
-    auto costIstanbul = cost(ref(in), chainParams, 2);
+    schedule = IstanbulSchedule;
+    auto costIstanbul = price(c_alt_bn128_pairing_product, ref(in));
     BOOST_CHECK_EQUAL(static_cast<int>(costIstanbul), in.size() / 192 * 34000 + 45000);
 }
 
@@ -896,28 +914,28 @@ BOOST_AUTO_TEST_CASE(blake2compression)
 {
     vector_ref<const PrecompiledTest> tests{blake2FCompressionTests,
         sizeof(blake2FCompressionTests) / sizeof(blake2FCompressionTests[0])};
-    testPrecompiled("blake2_compression", tests);
+    testPrecompiled(c_blake2_compression, tests);
 }
 
 BOOST_AUTO_TEST_CASE(blake2compressionFail)
 {
     vector_ref<const PrecompiledTest> tests{blake2FCompressionFailTests,
         sizeof(blake2FCompressionFailTests) / sizeof(blake2FCompressionFailTests[0])};
-    testPrecompiledFail("blake2_compression", tests);
+    testPrecompiledFail(c_blake2_compression, tests);
 }
 
 BOOST_AUTO_TEST_CASE(bench_blake2compression, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{blake2FCompressionTests,
         sizeof(blake2FCompressionTests) / sizeof(blake2FCompressionTests[0])};
-    benchmarkPrecompiled("blake2_compression", tests, 100000);
+    benchmarkPrecompiled(c_blake2_compression, tests, 100000);
 }
 
 BOOST_AUTO_TEST_CASE(bench_blake2compression_maxrounds, *ut::label("bench"))
 {
     vector_ref<const PrecompiledTest> tests{blake2FCompressionLargeTests,
         sizeof(blake2FCompressionLargeTests) / sizeof(blake2FCompressionLargeTests[0])};
-    benchmarkPrecompiled("blake2_compression", tests, 1);
+    benchmarkPrecompiled(c_blake2_compression, tests, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -11,13 +11,6 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-PrecompiledContract::PrecompiledContract(
-    std::string const& _name, u256 const& _startingBlock /*= 0*/)
-  : m_cost(PrecompiledRegistrar::pricer(_name)),
-    m_execute(PrecompiledRegistrar::executor(_name)),
-    m_startingBlock(_startingBlock)
-{}
-
 ChainOperationParams::ChainOperationParams():
     m_blockReward("0x4563918244F40000"),
     minGasLimit(0x1388),
