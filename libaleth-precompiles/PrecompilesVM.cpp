@@ -11,7 +11,6 @@
 #include <libdevcrypto/Common.h>
 #include <libdevcrypto/Hash.h>
 #include <libdevcrypto/LibSnark.h>
-#include <libethcore/Common.h>
 
 namespace dev
 {

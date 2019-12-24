@@ -13,6 +13,8 @@ set(
     aleth-buildinfo
     evmc::evmc
     Boost::boost
+    devcore
+    devcrypto
 )
 
 add_library(aleth-precompiles STATIC ${sources})
