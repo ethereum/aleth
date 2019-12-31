@@ -811,6 +811,7 @@ int main(int argc, char** argv)
         double last = 0;
         unsigned lastImported = 0;
         unsigned imported = 0;
+        unsigned moreImported = 0;
         while (in.peek() != -1)
         {
             bytes block(8);
@@ -847,10 +848,13 @@ int main(int argc, char** argv)
         while (moreToImport)
         {
             this_thread::sleep_for(chrono::seconds(1));
-            tie(ignore, moreToImport, ignore) = web3.ethereum()->syncQueue(100000);
+            tuple<ImportRoute, bool, unsigned> r = web3.ethereum()->syncQueue(100000);
+            moreToImport = get<1>(r);
+            moreImported += get<2>(r);
         }
         double e = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - t).count() / 1000.0;
-        cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")\n";
+        unsigned totalImported = imported + moreImported;
+        cout << totalImported << " imported in " << e << " seconds at " << (round(totalImported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")\n";
         return AlethErrors::Success;
     }
 
