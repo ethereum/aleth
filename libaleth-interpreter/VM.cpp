@@ -39,6 +39,7 @@ evmc_result execute(evmc_vm* _instance, const evmc_host_interface* _host,
         output = vm->exec(_host, _context, _rev, _msg, _code, _codeSize);
         result.status_code = EVMC_SUCCESS;
         result.gas_left = vm->m_io_gas;
+        result.gas_refunded = vm->m_gas_refunded;
     }
     catch (dev::eth::RevertInstruction& ex)
     {
@@ -365,7 +366,13 @@ void VM::interpretCases()
                 }
             }
 
-            m_host->selfdestruct(m_context, &m_message->destination, &destination);
+            std::cerr << "SELFD " << fromEvmC(m_message->destination);
+            if (m_host->selfdestruct(m_context, &m_message->destination, &destination))
+            {
+                m_gas_refunded += 15000;
+                std::cerr << " REF";
+            }
+            std::cerr << "\n";
             m_bounce = nullptr;
         }
         BREAK
@@ -1376,20 +1383,66 @@ void VM::interpretCases()
             auto const status =
                 m_host->set_storage(m_context, &m_message->destination, &key, &value);
 
-            switch(status)
+            const auto netStorageCost = (m_rev == EVMC_CONSTANTINOPLE || m_rev >= EVMC_ISTANBUL);
+            if (!netStorageCost)
             {
-            case EVMC_STORAGE_ADDED:
-                m_runGas = VMSchedule::sstoreSetGas;
-                break;
-            case EVMC_STORAGE_MODIFIED:
-            case EVMC_STORAGE_DELETED:
-                m_runGas = VMSchedule::sstoreResetGas;
-                break;
-            default:
-                m_runGas = (m_rev == EVMC_CONSTANTINOPLE || m_rev >= EVMC_ISTANBUL) ?
-                               (*m_metrics)[OP_SLOAD].gas_cost :
-                               VMSchedule::sstoreResetGas;
-                break;
+                switch (status)
+                {
+                case EVMC_STORAGE_ADDED:
+                    m_runGas = VMSchedule::sstoreSetGas;
+                    break;
+                case EVMC_STORAGE_DELETED:
+                    m_runGas = VMSchedule::sstoreResetGas;
+                    m_gas_refunded += VMSchedule::sstoreRefundGas;
+                    break;
+                default:
+                    m_runGas = VMSchedule::sstoreResetGas;
+                    break;
+                }
+            }
+            else
+            {
+                const auto sstoreUnchangedGas = (*m_metrics)[OP_SLOAD].gas_cost;
+                switch (status)
+                {
+                case EVMC_STORAGE_UNCHANGED:
+                    m_runGas = sstoreUnchangedGas;
+                    break;
+                case EVMC_STORAGE_ADDED:
+                    m_runGas = VMSchedule::sstoreSetGas;
+                    break;
+                case EVMC_STORAGE_MODIFIED:
+                    m_runGas = VMSchedule::sstoreResetGas;
+                    break;
+                case EVMC_STORAGE_DELETED:
+                    m_runGas = VMSchedule::sstoreResetGas;
+                    m_gas_refunded += VMSchedule::sstoreRefundGas;
+                    break;
+                case EVMC_DIRTY_ADDED_TO_DELETED:
+                    m_runGas = sstoreUnchangedGas;
+                    m_gas_refunded = VMSchedule::sstoreSetGas - sstoreUnchangedGas;
+                    break;
+                case EVMC_DIRTY_DELETED_REVERTED:
+                    m_runGas = sstoreUnchangedGas;
+                    m_gas_refunded += VMSchedule::sstoreResetGas - sstoreUnchangedGas -
+                                      VMSchedule::sstoreRefundGas;
+                    break;
+                case EVMC_DIRTY_DELETED_TO_ADDED:
+                    m_runGas = sstoreUnchangedGas;
+                    m_gas_refunded += -VMSchedule::sstoreRefundGas;
+                    break;
+                case EVMC_DIRTY_MODIFIED_TO_DELETED:
+                    m_runGas = sstoreUnchangedGas;
+                    m_gas_refunded += VMSchedule::sstoreRefundGas;
+                    break;
+                case EVMC_DIRTY_MODIFIED_REVERTED:
+                    m_runGas = sstoreUnchangedGas;
+                    m_gas_refunded += VMSchedule::sstoreResetGas - sstoreUnchangedGas;
+                    break;
+                case EVMC_DIRTY_MODIFIED_AGAIN:
+                    m_runGas = sstoreUnchangedGas;
+                    break;
+                }
             }
 
             updateIOGas();
