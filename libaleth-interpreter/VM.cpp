@@ -1385,8 +1385,7 @@ void VM::interpretCases()
             case EVMC_STORAGE_DELETED:
                 m_runGas = VMSchedule::sstoreResetGas;
                 break;
-            case EVMC_STORAGE_UNCHANGED:
-            case EVMC_STORAGE_MODIFIED_AGAIN:
+            default:
                 m_runGas = (m_rev == EVMC_CONSTANTINOPLE || m_rev >= EVMC_ISTANBUL) ?
                                (*m_metrics)[OP_SLOAD].gas_cost :
                                VMSchedule::sstoreResetGas;
