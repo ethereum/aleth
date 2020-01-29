@@ -692,7 +692,7 @@ public:
 			<< "    --force-nonce <n>  Override the nonce for any transactions to be signed." << endl
 			<< endl
 			<< "Encryption configuration:" << endl
-			<< "    --kdf <kdfname>  Specify KDF to use when encrypting (default: sc	rypt)" << endl
+			<< "    --kdf <kdfname>  Specify KDF to use when encrypting (default: scrypt)" << endl
 			<< "    --kdf-param <name> <value>  Specify a parameter for the KDF." << endl
 //			<< "    --cipher <ciphername>  Specify cipher to use when encrypting (default: aes-128-ctr)" << endl
 //			<< "    --cipher-param <name> <value>  Specify a parameter for the cipher." << endl
