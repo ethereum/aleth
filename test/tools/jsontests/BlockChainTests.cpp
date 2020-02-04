@@ -1049,22 +1049,10 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 }
 }
 
-class bcTransitionFixture {
-public:
-    bcTransitionFixture()
-    {
-        test::TransitionTestsSuite suite;
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
-BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcTestFixture<test::BlockchainValidTestSuite>)
+BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcTestFixtureNotRefillable<test::BlockchainValidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcExploitTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
@@ -1080,7 +1068,7 @@ BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Tests that might have invalid blocks and check that those are rejected
-BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcTestFixture<test::BlockchainInvalidTestSuite>)
+BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcTestFixtureNotRefillable<test::BlockchainInvalidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}
@@ -1091,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(bcUncleTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Transition from fork to fork tests
-BOOST_FIXTURE_TEST_SUITE(TransitionTests, bcTransitionFixture)
+BOOST_FIXTURE_TEST_SUITE(TransitionTests, bcTestFixtureNotRefillable<test::TransitionTestsSuite>)
 BOOST_AUTO_TEST_CASE(bcByzantiumToConstantinopleFix) {}
 BOOST_AUTO_TEST_CASE(bcEIP158ToByzantium) {}
 BOOST_AUTO_TEST_CASE(bcFrontierToHomestead) {}
