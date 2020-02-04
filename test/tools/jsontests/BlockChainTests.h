@@ -41,14 +41,16 @@ class BCGeneralStateTestsSuite : public BlockchainValidTestSuite
 class bcGeneralTestsFixture : public StateTestFixtureBase<BCGeneralStateTestsSuite>
 {
 public:
-    bcGeneralTestsFixture() : StateTestFixtureBase({TestExecution::RequireOptionAll}) {}
+    bcGeneralTestsFixture()
+      : StateTestFixtureBase({TestExecution::RequireOptionAll, TestExecution::NotRefillable})
+    {}
 };
 
 template <class T>
 class bcTestFixture
 {
 public:
-    bcTestFixture(std::set<TestExecution> const& _execFlags = {})
+    bcTestFixture(std::set<TestExecution> const& _execFlags)
     {
         T suite;
         if (_execFlags.count(TestExecution::NotRefillable) &&
@@ -69,6 +71,13 @@ public:
         suite.runAllTestsInFolder(casename);
         test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
     }
+};
+
+template <class T>
+class bcTestFixtureNotRefillable : public bcTestFixture<T>
+{
+public:
+    bcTestFixtureNotRefillable() : bcTestFixture<T>({TestExecution::NotRefillable}) {}
 };
 
 class TransitionTestsSuite: public TestSuite
