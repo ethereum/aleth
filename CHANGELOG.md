@@ -2,6 +2,7 @@
 
 ## [1.9.0] - Unreleased
 
+- Added: [#5893](https://github.com/ethereum/aleth/pull/5893) testeth: RlpTests treat empty `out` field as invalid.
 - Added: [#5868](https://github.com/ethereum/aleth/pull/5868) `test_importRawBlock` RPC method reports the detailed reason when import fails.
 - Removed: [#5885](https://github.com/ethereum/aleth/pull/5885) Discontinue `testeth --filltests` support for BlockchainTests, TransitionTests, BCGeneralStateTests.
 
