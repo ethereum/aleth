@@ -257,6 +257,13 @@ public:
         return m_nodeTable ? m_nodeTable->hostENR() : m_restoredENR;
     }
 
+    void updateForkID(FixedHash<4> const& _forkHash, uint64_t _forkNext)
+    {
+        Guard l(x_nodeTable);
+        if (m_nodeTable)
+            m_nodeTable->updateENRForkID(_forkHash, _forkNext);
+    }
+
     /// Apply function to each session
     void forEachPeer(
         std::string const& _capabilityName, std::function<bool(NodeID const&)> _f) const;

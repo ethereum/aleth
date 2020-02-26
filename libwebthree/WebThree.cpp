@@ -34,6 +34,9 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
         m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, m_net,
             shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
 
+    m_chainChangedHandler =
+        m_ethereum->setOnChainChanged([this](h256s const&, h256s const&) { onChainChanged(); });
+
     m_ethereum->startWorking();
     const auto* buildinfo = aleth_get_buildinfo();
     m_ethereum->setExtraData(rlpList(0, string{buildinfo->project_version}.substr(0, 5) + "++" +
@@ -105,3 +108,9 @@ void WebThreeDirect::addPeer(NodeSpec const& _s, PeerType _t)
     m_net.addPeer(_s, _t);
 }
 
+void WebThreeDirect::onChainChanged()
+{
+    const auto forkHash = m_ethereum->blockChain().forkHash();
+    const auto forkNext = m_ethereum->blockChain().nextForkBlockNumber();
+    m_net.updateForkID(forkHash, forkNext);
+}
