@@ -87,6 +87,10 @@ void doRlpTests(json_spirit::mValue const& _input)
             bytes payloadToDecode = fromHex(o.at("out").get_str());
             RLP payload(payloadToDecode);
 
+            // treat null rlp as invalid
+            if (payload.isNull())
+                BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("RLPTests: field `out` is set to Null"));
+
             // attempt to read all the contents of RLP
             ostringstream() << payload;
 
