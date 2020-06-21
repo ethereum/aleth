@@ -539,8 +539,7 @@ void testBCTest(json_spirit::mObject const& _o)
         BOOST_REQUIRE_MESSAGE(blObj.count("blockHeader"),
                               "blockHeader field is not found. "
                               "filename: " + TestOutputHelper::get().testFile().string() +
-                              " testname: " + TestOutputHelper::get().testName()
-                              );
+                              " testname: " + TestOutputHelper::get().testName());
 
         //Check Provided Header against block in RLP
         TestBlock blockFromFields(blObj["blockHeader"].get_obj());
@@ -549,8 +548,7 @@ void testBCTest(json_spirit::mObject const& _o)
         BOOST_REQUIRE_MESSAGE(blObj.count("transactions"),
                               "transactions field is not found. "
                               "filename: " + TestOutputHelper::get().testFile().string() +
-                              " testname: " + TestOutputHelper::get().testName()
-                              );
+                              " testname: " + TestOutputHelper::get().testName());
         for (auto const& txObj: blObj["transactions"].get_array())
         {
             TestTransaction transaction(txObj.get_obj());
