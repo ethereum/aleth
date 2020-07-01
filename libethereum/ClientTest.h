@@ -43,7 +43,7 @@ private:
     void onBadBlock(Exception& _ex);
     void addNestedBadBlockException(bytes const& _blockBytes, Exception& io_ex);
 
-    unsigned const m_singleBlockMaxMiningTimeInSeconds = 60;
+    unsigned const m_singleBlockMaxMiningTimeInSeconds = 3600;
     boost::exception_ptr m_lastImportError;
     bytes m_lastBadBlock;
     Mutex m_badBlockMutex;
