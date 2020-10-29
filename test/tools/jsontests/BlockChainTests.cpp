@@ -136,7 +136,10 @@ json_spirit::mValue doBCTest(
                                   "\"network\" field is not found. filename: " + TestOutputHelper::get().testFile().string() +
                                   " testname: " + TestOutputHelper::get().testName()
                                   );
-            dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(inputTest.at("network").get_str());
+            string const c_network = inputTest.at("network").get_str();
+            if (test::isAfterSupportNetwork(c_network))
+                continue;
+            dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(c_network);
             if (Options::get().verbosity > 1)
                 std::cout << "Running " << TestOutputHelper::get().testName() << std::endl;
             testBCTest(inputTest);
