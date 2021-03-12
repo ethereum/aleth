@@ -321,12 +321,12 @@ workflows:
 
   nightly:
     triggers:
-    - schedule:
-        cron: "0 0 * * *"
-        filters:
-          branches:
-            only:
-            - master
+#    - schedule:
+#        cron: "0 0 * * *"
+#        filters:
+#          branches:
+#            only:
+#            - master
     jobs:
       - linux-gcc6-nightly
       - docker-aleth-nightly
