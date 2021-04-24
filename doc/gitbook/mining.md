@@ -4,7 +4,7 @@ Mining is a common term for securing the Ethereum network and validating new tra
 
 We use a custom-made algorithm named Ethash, a combination of the Hashimoto and Dagger algorithms, designed by Tim Hughes, Vitalik Buterin and Matthew Wampler-Doty. It is memory-bandwidth-hard making is an excellent candidate for GPU mining but a bad candidate for custom hardware. We plan on switching to a proof-of-stake algorithm inover the course of the next 9 months with the Serenity release of Ethereum.
 
-Because the algorithm is memory hard, you'll need 2GB of RAM per GPU with which you wish to mine, at least for the forseeable future. (The dataset starts at 1GB and grows every few days, so you might be able to get away with 1.5GB for the first few months, if such graphics cards exist.)
+Because the algorithm is memory hard, you'll need 2GB of RAM per GPU with which you wish to mine, at least for the foreseeable future. (The dataset starts at 1GB and grows every few days, so you might be able to get away with 1.5GB for the first few months, if such graphics cards exist.)
 
 ASICs and FPGAs is be strongly discouraged by being rendered financially inefficient, which was confirmed in an independent audit. Don't expect to see them on the market, and if you do, proceed with extreme caution.
 

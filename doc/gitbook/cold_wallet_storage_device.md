@@ -94,4 +94,4 @@ Imported key 055dde03-47ff-dded-8950-0fe39b1fa101
   Raw hex: 0092e965928626f8880629cec353d3fd7ca5974f
 ```
 
-In both cases, we'll be able to see the key in e.g. AlethZero as one of our own, though we will not be able to sign with it without entering the passphrase. Assuming you never enter the passphrase on the hot machine (but rather do all signing on the CWSD) then you should be reasonably safe. Just be warned that the security of the secret is lieing on the network security of your hot machine *and* the strength of your key's passphrase. I really wouldn't count on the former.
+In both cases, we'll be able to see the key in e.g. AlethZero as one of our own, though we will not be able to sign with it without entering the passphrase. Assuming you never enter the passphrase on the hot machine (but rather do all signing on the CWSD) then you should be reasonably safe. Just be warned that the security of the secret is lying on the network security of your hot machine *and* the strength of your key's passphrase. I really wouldn't count on the former.
