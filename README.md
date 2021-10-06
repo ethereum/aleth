@@ -4,6 +4,7 @@
 > formerly known as _cpp-ethereum_ project.
 > This includes the full Ethereum client **aleth**.
 
+## ⚠️ **This project has been discontinued and is no longer maintained.** 
 
 ## Contact
 
