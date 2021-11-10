@@ -1432,6 +1432,18 @@ void VM::interpretCases()
         }
         NEXT
 
+        CASE(EXTSLOAD)
+        {
+            ON_OP();
+            updateIOGas();
+
+            auto const address = intx::be::trunc<evmc::address>(m_SP[0]);
+            auto const key = intx::be::store<evmc_uint256be>(m_SP[1]);
+            m_SPP[0] =
+                intx::be::load<intx::uint256>(m_context->host->get_storage(m_context, &address, &key));
+        }
+        NEXT
+
         CASE(INVALID)
         DEFAULT
         {
