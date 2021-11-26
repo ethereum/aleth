@@ -25,6 +25,7 @@ protected:
     size_t Read(int _connection, void* _data, size_t _size) override;
 
     sockaddr_un m_address;
+    int m_exitChannel[2];
     std::atomic<int> m_socket{0};
 };
 

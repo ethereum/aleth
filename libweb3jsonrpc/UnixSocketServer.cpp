@@ -5,6 +5,9 @@
 #if !defined(_WIN32)
 
 #include "UnixSocketServer.h"
+#include <algorithm>
+#include <iostream>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -37,16 +40,45 @@ fs::path getIpcPathOrDataDir()
 		return getDataDir();
 	return path;
 }
+
+/**
+ * Waits for one of the file descriptors to become readable.
+ * @retval true One file descriptor became available.
+ * @retval false Most likely an error occured, or a timeout.
+ */
+static bool waitForReadable(std::initializer_list<int> sockets)
+{
+	fd_set in, out, err;
+	FD_ZERO(&in);
+	FD_ZERO(&out);
+	FD_ZERO(&err);
+
+	int const maxfd = *std::max_element(sockets.begin(), sockets.end());
+	for (int fd : sockets)
+		FD_SET(fd, &in);
+
+	return select(maxfd + 1, &in, &out, &err, nullptr) > 0;
+}
+
 }
 
 UnixDomainSocketServer::UnixDomainSocketServer(string const& _appId):
-	IpcServerBase((getIpcPathOrDataDir() / fs::path(_appId + ".ipc")).string().substr(0, c_socketPathMaxLength))
+	IpcServerBase((getIpcPathOrDataDir() / fs::path(_appId + ".ipc")).string().substr(0, c_socketPathMaxLength)),
+	m_exitChannel{-1, -1}
 {
+	if (pipe(m_exitChannel) < 0)
+		abort(); // I don't like. Replace me with throw.
+
+	fcntl(m_exitChannel[0], F_SETFL, fcntl(m_exitChannel[0], F_GETFL) | O_NONBLOCK);
+	fcntl(m_exitChannel[1], F_SETFL, fcntl(m_exitChannel[1], F_GETFL) | O_NONBLOCK);
 }
 
 UnixDomainSocketServer::~UnixDomainSocketServer()
 {
 	StopListening();
+
+	::close(m_exitChannel[0]);
+	::close(m_exitChannel[1]);
 }
 
 bool UnixDomainSocketServer::StartListening()
@@ -75,6 +107,10 @@ bool UnixDomainSocketServer::StartListening()
 
 bool UnixDomainSocketServer::StopListening()
 {
+	int dummy = 0x90;
+	if (::write(m_exitChannel[1], &dummy, sizeof(dummy)) < 0)
+		cerr << "Failed to notify UNIX domain server loop. " << strerror(errno) << "\n";
+
 	shutdown(m_socket, SHUT_RDWR);
 	close(m_socket);
 	m_socket = -1;
@@ -91,6 +127,13 @@ void UnixDomainSocketServer::Listen()
 	socklen_t addressLen = sizeof(m_address);
 	while (m_running)
 	{
+		// Block until either m_socket is readable or skip tail and recheck for m_running.
+		// We do this test before calling accept() in order to gracefully exit
+		// this function when an external thread has set m_running to true
+		// (such as a signal handler in the main thread).
+		if (!waitForReadable({m_socket, m_exitChannel[0]}))
+			continue;
+
 		int connection = accept(m_socket, (sockaddr*) &(m_address), &addressLen);
 		if (connection > 0)
 		{
