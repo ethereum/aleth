@@ -12,7 +12,6 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/TrieDB.h>
 #include <libethcore/BlockHeader.h>
-#include <libethcore/Precompiled.h>
 #include <libethcore/SealEngine.h>
 #include <boost/algorithm/string.hpp>
 
@@ -48,10 +47,10 @@ ChainParams::ChainParams()
     for (unsigned i = 1; i <= 4; ++i)
         genesisState[Address(i)] = Account(0, 1);
     // Setup default precompiled contracts as equal to genesis of Frontier.
-    precompiled.insert(make_pair(Address(1), PrecompiledContract("ecrecover")));
-    precompiled.insert(make_pair(Address(2), PrecompiledContract("sha256")));
-    precompiled.insert(make_pair(Address(3), PrecompiledContract("ripemd160")));
-    precompiled.insert(make_pair(Address(4), PrecompiledContract("identity")));
+    precompiledStartingBlocks.insert(make_pair(Address(1), 0));
+    precompiledStartingBlocks.insert(make_pair(Address(2), 0));
+    precompiledStartingBlocks.insert(make_pair(Address(3), 0));
+    precompiledStartingBlocks.insert(make_pair(Address(4), 0));
 }
 
 ChainParams::ChainParams(
@@ -152,17 +151,15 @@ void ChainParams::loadConfig(
         genesisState = jsonToAccountMap(genesisStateStr, accountStartNonce, nullptr, _configPath);
     }
 
-    precompiled.insert({Address{0x1}, PrecompiledContract{"ecrecover"}});
-    precompiled.insert({Address{0x2}, PrecompiledContract{"sha256"}});
-    precompiled.insert({Address{0x3}, PrecompiledContract{"ripemd160"}});
-    precompiled.insert({Address{0x4}, PrecompiledContract{"identity"}});
-    precompiled.insert({Address{0x5}, PrecompiledContract{"modexp", byzantiumForkBlock}});
-    precompiled.insert({Address{0x6}, PrecompiledContract{"alt_bn128_G1_add", byzantiumForkBlock}});
-    precompiled.insert({Address{0x7}, PrecompiledContract{"alt_bn128_G1_mul", byzantiumForkBlock}});
-    precompiled.insert(
-        {Address{0x8}, PrecompiledContract{"alt_bn128_pairing_product", byzantiumForkBlock}});
-    precompiled.insert(
-        {Address{0x9}, PrecompiledContract{"blake2_compression", istanbulForkBlock}});
+    precompiledStartingBlocks.insert({Address{0x1}, 0});
+    precompiledStartingBlocks.insert({Address{0x2}, 0});
+    precompiledStartingBlocks.insert({Address{0x3}, 0});
+    precompiledStartingBlocks.insert({Address{0x4}, 0});
+    precompiledStartingBlocks.insert({Address{0x5}, byzantiumForkBlock});
+    precompiledStartingBlocks.insert({Address{0x6}, byzantiumForkBlock});
+    precompiledStartingBlocks.insert({Address{0x7}, byzantiumForkBlock});
+    precompiledStartingBlocks.insert({Address{0x8}, byzantiumForkBlock});
+    precompiledStartingBlocks.insert({Address{0x9}, istanbulForkBlock});
 
     stateRoot = _stateRoot ? _stateRoot : calculateStateRoot(true);
 }

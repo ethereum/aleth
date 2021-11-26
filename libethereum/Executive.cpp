@@ -9,8 +9,10 @@
 #include "Interface.h"
 #include "StandardTrace.h"
 #include "State.h"
+#include <libaleth-precompiles/PrecompilesVM.h>
 #include <libdevcore/CommonIO.h>
 #include <libethcore/CommonJS.h>
+#include <libevm/EVMC.h>
 #include <libevm/LegacyVM.h>
 #include <libevm/VMFactory.h>
 
@@ -42,6 +44,13 @@ std::string dumpStorage(ExtVM const& _ext)
         o << showbase << hex << i.second.first << ": " << i.second.second << "\n";
     return o.str();
 };
+
+EVMC& precompilesVM()
+{
+    static EVMC precompilesVM{evmc_create_aleth_precompiles_vm(), {}};
+    return precompilesVM;
+}
+
 }  // namespace
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level)
@@ -183,27 +192,30 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
         if (_p.receiveAddress == c_RipemdPrecompiledAddress)
             m_s.unrevertableTouch(_p.codeAddress);
 
-        bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
-        if (_p.gas < g)
+        try
+        {
+            auto gas = _p.gas;
+            auto const& schedule = m_sealEngine.evmSchedule(m_envInfo.number());
+            bool const isCreate = false;
+            m_output = precompilesVM().exec(gas, _p.codeAddress, _p.senderAddress, _p.apparentValue,
+                _p.data, m_depth, isCreate, _p.staticCall, schedule);
+            m_gas = gas;
+        }
+        catch (OutOfGas const&)
         {
             m_excepted = TransactionException::OutOfGasBase;
-            // Bail from exception.
             return true;	// true actually means "all finished - nothing more to be done regarding go().
         }
-        else
+        catch (PrecompileFailure const&)
         {
-            m_gas = (u256)(_p.gas - g);
-            bytes output;
-            bool success;
-            tie(success, output) = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, m_envInfo.number());
-            size_t outputSize = output.size();
-            m_output = owning_bytes_ref{std::move(output), 0, outputSize};
-            if (!success)
-            {
-                m_gas = 0;
-                m_excepted = TransactionException::OutOfGas;
-                return true;	// true means no need to run go().
-            }
+            m_gas = 0;
+            m_excepted = TransactionException::OutOfGas;
+            return true;  // true means no need to run go().
+        }
+        catch (std::exception const& _e)
+        {
+            cerror << "Unexpected std::exception in VM." << _e.what();
+            exit(1);
         }
     }
     else

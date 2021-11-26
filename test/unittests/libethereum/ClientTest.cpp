@@ -89,9 +89,8 @@ BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsPrecompilesAreIgnored)
     auto const ecrecoverAddress = Address{0x01};
     auto const sha256Address = Address{0x02};
 
-    BOOST_CHECK_EQUAL(
-        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0);
-    BOOST_CHECK(contains(testClient->chainParams().precompiled, sha256Address));
+    BOOST_CHECK_EQUAL(testClient->chainParams().precompiledStartingBlocks.at(ecrecoverAddress), 0);
+    BOOST_CHECK(contains(testClient->chainParams().precompiledStartingBlocks, sha256Address));
 
     std::string const configWithCustomPrecompiles = R"({
         "sealEngine": "NoProof",
@@ -121,9 +120,8 @@ BOOST_AUTO_TEST_CASE(ClientTest_setChainParamsPrecompilesAreIgnored)
 
     testClient->setChainParams(configWithCustomPrecompiles);
 
-    BOOST_CHECK_EQUAL(
-        testClient->chainParams().precompiled.at(ecrecoverAddress).startingBlock(), 0);
-    BOOST_CHECK(contains(testClient->chainParams().precompiled, sha256Address));
+    BOOST_CHECK_EQUAL(testClient->chainParams().precompiledStartingBlocks.at(ecrecoverAddress), 0);
+    BOOST_CHECK(contains(testClient->chainParams().precompiledStartingBlocks, sha256Address));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -7,7 +7,6 @@
 
 #include <libdevcore/Common.h>
 #include <libethcore/EVMSchedule.h>
-#include <libethcore/Precompiled.h>
 
 #include "Common.h"
 
@@ -16,26 +15,6 @@ namespace dev
 namespace eth
 {
 struct EVMSchedule;
-
-class PrecompiledContract
-{
-public:
-    PrecompiledContract(std::string const& _name, u256 const& _startingBlock = 0);
-
-    bigint cost(
-        bytesConstRef _in, ChainOperationParams const& _chainParams, u256 const& _blockNumber) const
-    {
-        return m_cost(_in, _chainParams, _blockNumber);
-    }
-    std::pair<bool, bytes> execute(bytesConstRef _in) const { return m_execute(_in); }
-
-    u256 const& startingBlock() const { return m_startingBlock; }
-
-private:
-    PrecompiledPricer m_cost;
-    PrecompiledExecutor m_execute;
-    u256 m_startingBlock = 0;
-};
 
 constexpr int64_t c_infiniteBlockNumber = std::numeric_limits<int64_t>::max();
 
@@ -106,8 +85,8 @@ public:
     u256 durationLimit;
     bool allowFutureBlocks = false;
 
-    /// Precompiled contracts as specified in the chain params.
-    std::unordered_map<Address, PrecompiledContract> precompiled;
+    /// Precompiled contracts' starting blocks
+    std::unordered_map<Address, u256> precompiledStartingBlocks;
 
     EVMSchedule lastForkWithAdditionalEIPsSchedule;
 };
