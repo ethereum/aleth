@@ -41,37 +41,100 @@ evmc_storage_status EvmCHost::set_storage(
         return EVMC_STORAGE_UNCHANGED;
 
     EVMSchedule const& schedule = m_extVM.evmSchedule();
-    auto status = EVMC_STORAGE_MODIFIED;
+
+    evmc_storage_status status;
+    int refunds = 0;
+    int expected = 0;
+
     u256 const originalValue = m_extVM.originalStorageValue(index);
-    if (originalValue == currentValue || !schedule.sstoreNetGasMetering())
+
+
+    if (originalValue == currentValue)
     {
         if (currentValue == 0)
             status = EVMC_STORAGE_ADDED;
         else if (newValue == 0)
         {
             status = EVMC_STORAGE_DELETED;
-            m_extVM.sub.refunds += schedule.sstoreRefundGas;
+            refunds = schedule.sstoreRefundGas;
+            expected += schedule.sstoreRefundGas;
         }
+        else
+            status = EVMC_STORAGE_MODIFIED;
     }
     else
     {
-        status = EVMC_STORAGE_MODIFIED_AGAIN;
+        if (originalValue == 0)
+        {
+            if (newValue == 0)
+            {
+                status = EVMC_DIRTY_ADDED_TO_DELETED;
+                refunds = schedule.sstoreSetGas - schedule.sstoreUnchangedGas;
+            }
+            else
+            {
+                status = EVMC_DIRTY_MODIFIED_AGAIN;
+            }
+        }
+        else
+        {
+            if (currentValue == 0)
+            {
+                if (newValue == originalValue)
+                {
+                    status = EVMC_DIRTY_DELETED_REVERTED;
+                    refunds = schedule.sstoreResetGas - schedule.sstoreUnchangedGas -
+                              schedule.sstoreRefundGas;
+                }
+                else
+                {
+                    status = EVMC_DIRTY_DELETED_TO_ADDED;
+                    refunds = -schedule.sstoreRefundGas;  // Can go negative.
+                }
+            }
+            else if (newValue == 0)
+            {
+                status = EVMC_DIRTY_MODIFIED_TO_DELETED;
+                refunds = schedule.sstoreRefundGas;
+            }
+            else if (newValue == originalValue)
+            {
+                status = EVMC_DIRTY_MODIFIED_REVERTED;
+                refunds = schedule.sstoreResetGas - schedule.sstoreUnchangedGas;
+            }
+            else
+            {
+                status = EVMC_DIRTY_MODIFIED_AGAIN;
+            }
+        }
+
+
         if (originalValue != 0)
         {
             if (currentValue == 0)
-                m_extVM.sub.refunds -= schedule.sstoreRefundGas;  // Can go negative.
+                expected += -(int)schedule.sstoreRefundGas;
             if (newValue == 0)
-                m_extVM.sub.refunds += schedule.sstoreRefundGas;
+                expected += (int)schedule.sstoreRefundGas;
         }
         if (originalValue == newValue)
         {
             if (originalValue == 0)
-                m_extVM.sub.refunds += schedule.sstoreSetGas - schedule.sstoreUnchangedGas;
+                expected += (int)(schedule.sstoreSetGas - schedule.sstoreUnchangedGas);
             else
-                m_extVM.sub.refunds += schedule.sstoreResetGas - schedule.sstoreUnchangedGas;
+            {
+                expected += (int)(schedule.sstoreResetGas - schedule.sstoreUnchangedGas);
+            }
         }
     }
 
+    if (refunds != expected)
+    {
+        std::cerr << refunds << " " << expected << "\n";
+        std::cerr << originalValue << " " << currentValue << " " << newValue << "\n";
+    }
+    assert(refunds == expected);
+
+    m_extVM.sub.refunds += refunds;
     m_extVM.setStore(index, newValue);  // Interface uses native endianness
 
     return status;
@@ -108,11 +171,11 @@ size_t EvmCHost::copy_code(evmc::address const& _addr, size_t _codeOffset, byte*
     return numToCopy;
 }
 
-void EvmCHost::selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept
+bool EvmCHost::selfdestruct(evmc::address const& _addr, evmc::address const& _beneficiary) noexcept
 {
     (void)_addr;
     assert(fromEvmC(_addr) == m_extVM.myAddress);
-    m_extVM.selfdestruct(fromEvmC(_beneficiary));
+    return m_extVM.selfdestruct(fromEvmC(_beneficiary));
 }
 
 
@@ -214,6 +277,7 @@ evmc::result EvmCHost::call(evmc_message const& _msg) noexcept
     evmc_result evmcResult = {};
     evmcResult.status_code = result.status;
     evmcResult.gas_left = static_cast<int64_t>(params.gas);
+    evmcResult.gas_refunded = m_extVM.sub.refunds;
 
     // Pass the output to the EVM without a copy. The EVM will delete it
     // when finished with it.

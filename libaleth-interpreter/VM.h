@@ -30,8 +30,11 @@ struct VMSchedule
     static constexpr int64_t stepGas6 = 20;
     static constexpr int64_t sha3Gas = 30;
     static constexpr int64_t sha3WordGas = 6;
+    static constexpr int64_t sloadGas = 50;
     static constexpr int64_t sstoreSetGas = 20000;
     static constexpr int64_t sstoreResetGas = 5000;
+    static constexpr int64_t sstoreUnchangedGas = 200;
+    static constexpr int64_t sstoreRefundGas = 15000;
     static constexpr int64_t jumpdestGas = 1;
     static constexpr int64_t logGas = 375;
     static constexpr int64_t logDataGas = 8;
@@ -57,6 +60,7 @@ public:
         evmc_revision _rev, const evmc_message* _msg, uint8_t const* _code, size_t _codeSize);
 
     uint64_t m_io_gas = 0;
+    int64_t m_gas_refunded = 0;
 private:
     const evmc_host_interface* m_host = nullptr;
     evmc_host_context* m_context = nullptr;

@@ -84,7 +84,16 @@ owning_bytes_ref EVMC::exec(u256& io_gas, ExtVMFace& _ext, const OnOpFunc& _onOp
     EvmCHost host{_ext};
     auto r = execute(host, mode, msg, _ext.code.data(), _ext.code.size());
     // FIXME: Copy the output for now, but copyless version possible.
-    auto output = owning_bytes_ref{{&r.output_data[0], &r.output_data[r.output_size]}, 0, r.output_size};
+    auto output =
+        owning_bytes_ref{{&r.output_data[0], &r.output_data[r.output_size]}, 0, r.output_size};
+
+    if (_ext.sub.refunds != r.gas_refunded)
+    {
+        auto err_msg = "Incorrect gas refund. Expected: " + std::to_string(_ext.sub.refunds) +
+                       ". Got: " + std::to_string(r.gas_refunded);
+        cwarn << err_msg;
+        BOOST_THROW_EXCEPTION(InternalVMError{} << errinfo_comment(err_msg));
+    }
 
     switch (r.status_code)
     {
