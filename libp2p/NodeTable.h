@@ -187,6 +187,23 @@ public:
 
     void cancelTimer(std::shared_ptr<ba::steady_timer> _timer);
 
+    void updateENRForkID(FixedHash<4> const& _forkHash, uint64_t _forkNext)
+    {
+        if (_forkHash != m_hostForkHash && _forkNext != m_hostForkNext)
+        {
+            m_hostForkHash = _forkHash;
+            m_hostForkNext = _forkNext;
+
+            {
+                Guard l(m_hostENRMutex);
+                // TODO include forkHash and forkNext in ENR
+                m_hostENR = IdentitySchemeV4::updateENR(m_hostENR, m_secret, m_hostNodeEndpoint.address(),
+                                                        m_hostNodeEndpoint.tcpPort(), m_hostNodeEndpoint.udpPort());
+            }
+            clog(VerbosityInfo, "net") << "ENR updated: " << m_hostENR;
+        }
+    }
+
     // protected only for derived classes in tests
 protected:
     /**
@@ -339,6 +356,8 @@ protected:
     bi::address const m_hostStaticIP;
     // Dynamically updated host endpoint
     NodeIPEndpoint m_hostNodeEndpoint;
+    FixedHash<4> m_hostForkHash;
+    uint64_t m_hostForkNext = 0;
     ENR m_hostENR;
     mutable Mutex m_hostENRMutex;
     Secret m_secret;												///< This nodes secret key.

@@ -170,11 +170,15 @@ public:
     bool isNetworkStarted() const override { return m_net.isStarted(); }
 
 private:
+    void onChainChanged();
+
     std::string m_clientVersion;                    ///< Our end-application client's name/version.
 
     std::unique_ptr<eth::Client> m_ethereum;        ///< Client for Ethereum ("eth") protocol.
 
     p2p::Host m_net;                                ///< Should run in background and send us events when blocks found and allow us to send blocks as required.
+
+    eth::Handler<h256s const&, h256s const&> m_chainChangedHandler;
 };
 
 

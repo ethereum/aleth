@@ -311,6 +311,9 @@ public:
     /// Change the chain start block.
     void setChainStartBlockNumber(unsigned _number);
 
+    FixedHash<4> forkHash() const { return {}; }
+    unsigned nextForkBlockNumber() const { return 0; }
+
 private:
     static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 

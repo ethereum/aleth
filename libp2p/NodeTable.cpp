@@ -560,6 +560,7 @@ shared_ptr<NodeEntry> NodeTable::handlePong(
                 newUdpEndpoint.address(), newUdpEndpoint.port(), m_hostNodeEndpoint.tcpPort()};
             {
                 Guard l(m_hostENRMutex);
+                // TODO include m_hostForkHash and m_hostForkNext in ENR
                 m_hostENR =
                     IdentitySchemeV4::updateENR(m_hostENR, m_secret, m_hostNodeEndpoint.address(),
                         m_hostNodeEndpoint.tcpPort(), m_hostNodeEndpoint.udpPort());
