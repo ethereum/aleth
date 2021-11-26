@@ -116,8 +116,10 @@ h256 BlockHeader::hash(IncludeSeal _i) const
 
 void BlockHeader::streamRLPFields(RLPStream& _s) const
 {
+    bigint nnn = m_number;     // Fix rlp stream issue with uint65_t
+    bigint ttt = m_timestamp;  // Fix rlp stream issue with uint65_t
     _s	<< m_parentHash << m_sha3Uncles << m_author << m_stateRoot << m_transactionsRoot << m_receiptsRoot << m_logBloom
-        << m_difficulty << m_number << m_gasLimit << m_gasUsed << m_timestamp << m_extraData;
+        << m_difficulty << nnn << m_gasLimit << m_gasUsed << ttt << m_extraData;
 }
 
 void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const

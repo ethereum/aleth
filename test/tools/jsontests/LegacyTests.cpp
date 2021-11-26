@@ -76,7 +76,6 @@ BOOST_AUTO_TEST_CASE(stBadOpcode) {}
 
 // New Tests
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
-BOOST_AUTO_TEST_CASE(stEWASMTests) {}
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_SUITE_END()  // GeneralStateTests Constantinople Legacy
 

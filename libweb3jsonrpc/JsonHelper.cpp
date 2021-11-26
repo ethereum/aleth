@@ -83,7 +83,7 @@ Json::Value toJson(dev::eth::BlockHeader const& _bi, SealEngineFace* _sealer)
         res["number"] = toJS(_bi.number());
         res["gasUsed"] = toJS(_bi.gasUsed());
         res["gasLimit"] = toJS(_bi.gasLimit());
-        res["extraData"] = toJS(_bi.extraData());
+        res["extraData"] = _bi.extraData().empty() ? "0x" : toJS(_bi.extraData());
         res["logsBloom"] = toJS(_bi.logBloom());
         res["timestamp"] = toJS(_bi.timestamp());
         // TODO: remove once JSONRPC spec is updated to use "author" over "miner".
@@ -113,8 +113,8 @@ Json::Value toJson(dev::eth::Transaction const& _t, std::pair<h256, unsigned> _l
         res["transactionIndex"] = toJS(_location.second);
         res["blockNumber"] = toJS(_blockNumber);
         res["v"] = toJS(_t.rawV());
-        res["r"] = toJS(_t.signature().r);
-        res["s"] = toJS(_t.signature().s);
+        res["r"] = toJS(dev::u256(_t.signature().r));
+        res["s"] = toJS(dev::u256(_t.signature().s));
     }
     return res;
 }

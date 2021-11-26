@@ -56,6 +56,7 @@ protected:
 };
 
 // helping functions
+bool isAfterSupportNetwork(std::string const&);
 std::string prepareVersionString();
 std::string prepareLLLCVersionString();
 std::vector<boost::filesystem::path> getFiles(boost::filesystem::path const& _dirPath, std::set<std::string> _extentionMask, std::string const& _particularFile = {});

@@ -135,7 +135,9 @@ eth::Network stringToNetId(string const& _netname)
         if (netIdToString(net) == _netname)
             return net;
 
-    BOOST_ERROR(TestOutputHelper::get().testName() + " network not found: " + _netname);
+    string const message = TestOutputHelper::get().testName() + " network not found: " + _netname;
+    std::cerr << message << " using Frontier instead or skipping" << std::endl;
+    //BOOST_ERROR(message);
     return eth::Network::FrontierTest;
 }
 
@@ -216,6 +218,15 @@ set<string> translateNetworks(set<string> const& _networks)
         }
     }
     return out;
+}
+
+bool isAfterSupportNetwork(std::string const& net)
+{
+    static vector<string> c_unsupportedNets = { "Berlin" };
+    for (auto const& n : c_unsupportedNets)
+        if (n == net)
+            return true;
+    return false;
 }
 
 string exportLog(eth::LogEntries const& _logs)
