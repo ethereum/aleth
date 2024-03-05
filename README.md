@@ -112,3 +112,5 @@ make -j8
 ```
 
 You can then find the executable in the ethminer subfolder
+
+1670.69.524
