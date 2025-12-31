@@ -1,24 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file JsonHelper.cpp
- * @authors:
- *   Gav Wood <i@gavwood.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2015-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "JsonHelper.h"
 
@@ -130,7 +112,7 @@ Json::Value toJson(dev::eth::Transaction const& _t, std::pair<h256, unsigned> _l
         res["blockHash"] = toJS(_location.first);
         res["transactionIndex"] = toJS(_location.second);
         res["blockNumber"] = toJS(_blockNumber);
-        res["v"] = toJS(_t.signature().v);
+        res["v"] = toJS(_t.rawV());
         res["r"] = toJS(_t.signature().r);
         res["s"] = toJS(_t.signature().s);
     }
@@ -231,7 +213,7 @@ Json::Value toJson(dev::eth::Transaction const& _t)
     res["sighash"] = toJS(_t.sha3(WithoutSignature));
     res["r"] = toJS(_t.signature().r);
     res["s"] = toJS(_t.signature().s);
-    res["v"] = toJS(_t.signature().v);
+    res["v"] = toJS(_t.rawV());
     return res;
 }
 
@@ -261,7 +243,7 @@ Json::Value toJson(dev::eth::LocalisedTransaction const& _t)
         res["blockNumber"] = toJS(_t.blockNumber());
         res["r"] = toJS(_t.signature().r);
         res["s"] = toJS(_t.signature().s);
-        res["v"] = toJS(_t.signature().v);
+        res["v"] = toJS(_t.rawV());
     }
     return res;
 }

@@ -1,6 +1,6 @@
-// Copyright 2018 cpp-ethereum Authors.
-// Licensed under the GNU General Public License v3. See the LICENSE file.
-
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2014-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 #include "EVMC.h"
 
 #include <libdevcore/Log.h>
@@ -32,9 +32,9 @@ evmc_revision toRevision(EVMSchedule const& _schedule) noexcept
 }
 }  // namespace
 
-EVMC::EVMC(evmc_instance* _instance) noexcept : evmc::vm(_instance)
+EVMC::EVMC(evmc_vm* _vm) noexcept : evmc::VM(_vm)
 {
-    assert(_instance != nullptr);
+    assert(_vm != nullptr);
     assert(is_abi_compatible());
 
     // Set the options.

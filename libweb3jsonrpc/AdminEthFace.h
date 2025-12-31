@@ -25,7 +25,6 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_newAccount", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_OBJECT,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::admin_eth_newAccountI);
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_setMiningBenefactor", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::admin_eth_setMiningBenefactorI);
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_inspect", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::admin_eth_inspectI);
-                    this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_reprocess", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::admin_eth_reprocessI);
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_vmTrace", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::admin_eth_vmTraceI);
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_getReceiptByHashAndIndex", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::admin_eth_getReceiptByHashAndIndexI);
                     this->bindAndAddMethod(jsonrpc::Procedure("miner_start", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_INTEGER, NULL), &dev::rpc::AdminEthFace::miner_startI);
@@ -80,10 +79,6 @@ namespace dev {
                 {
                     response = this->admin_eth_inspect(request[0u].asString(), request[1u].asString());
                 }
-                inline virtual void admin_eth_reprocessI(const Json::Value &request, Json::Value &response)
-                {
-                    response = this->admin_eth_reprocess(request[0u].asString(), request[1u].asString());
-                }
                 inline virtual void admin_eth_vmTraceI(const Json::Value &request, Json::Value &response)
                 {
                     response = this->admin_eth_vmTrace(request[0u].asString(), request[1u].asInt(), request[2u].asString());
@@ -129,7 +124,6 @@ namespace dev {
                 virtual Json::Value admin_eth_newAccount(const Json::Value& param1, const std::string& param2) = 0;
                 virtual bool admin_eth_setMiningBenefactor(const std::string& param1, const std::string& param2) = 0;
                 virtual Json::Value admin_eth_inspect(const std::string& param1, const std::string& param2) = 0;
-                virtual Json::Value admin_eth_reprocess(const std::string& param1, const std::string& param2) = 0;
                 virtual Json::Value admin_eth_vmTrace(const std::string& param1, int param2, const std::string& param3) = 0;
                 virtual Json::Value admin_eth_getReceiptByHashAndIndex(const std::string& param1, int param2, const std::string& param3) = 0;
                 virtual bool miner_start(int param1) = 0;

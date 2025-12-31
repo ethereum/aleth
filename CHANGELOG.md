@@ -1,6 +1,36 @@
 # Changelog
 
-## [1.7.0] - Unreleased
+## [1.8.0] - Unreleased
+
+- Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
+- Added: [#5741](https://github.com/ethereum/aleth/pull/5741) Support for individual EIP activation to facilitate EIP-centric network upgrade process.
+- Added: [#5752](https://github.com/ethereum/aleth/pull/5752) [#5753](https://github.com/ethereum/aleth/pull/5753) [#5809](https://github.com/ethereum/aleth/pull/5809) Implement EIP1380 (reduced gas costs for call-to-self).
+- Changed: [#5750](https://github.com/ethereum/aleth/pull/5750) Use `testeth -t <SUITE_NAME> -- --testfile <PATH>` to run the tests from file at any path. Use `testeth -t <SUITE_NAME> -- --testfile <PATH> --singletest <TEST_NAME>` to run only single test from any file.
+- Changed: [#5801](https://github.com/ethereum/aleth/pull/5801) `testeth -t BlockchainTests` command now doesn't run the tests for the forks before Istanbul. To run those tests use a separate LegacyTests suite with command `testeth -t LegacyTests/Constantinople/BlockchainTests`.
+- Changed: [#5807](https://github.com/ethereum/aleth/pull/5807) Optimize selfdestruct opcode in LegacyVM by reducing state accesses in certain out-of-gas scenarios.
+- Changed: [#5806](https://github.com/ethereum/aleth/pull/5806) Optimize selfdestruct opcode in aleth-interpreter by reducing state accesses in certain out-of-gas scenarios.
+- Changed: [#5837](https://github.com/ethereum/aleth/pull/5837) [#5839](https://github.com/ethereum/aleth/pull/5839) [#5845](https://github.com/ethereum/aleth/pull/5845) [#5846](https://github.com/ethereum/aleth/pull/5846) Output format of `testeth --jsontrace` command changed to better match output of geth's evm tool and to integrate with evmlab project.
+- Changed: [#5848](https://github.com/ethereum/aleth/pull/5848) `aleth-vm --codefile <PATH>` now reads bytecode file from path and `aleth-vm --codefile - <bytecode>` now reads bytecode from standard input.
+- Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14.
+- Removed: [#5840](https://github.com/ethereum/aleth/pull/5840) The list of precompiled contracts is not required in config files anymore.
+- Removed: [#5850](https://github.com/ethereum/aleth/pull/5850) accounts section is now optional in config files.
+- Fixed: [#5792](https://github.com/ethereum/aleth/pull/5792) Faster and cheaper execution of RPC functions which query blockchain state (e.g. getBalance).
+- Fixed: [#5811](https://github.com/ethereum/aleth/pull/5811) RPC methods querying transactions (`eth_getTransactionByHash`, `eth_getBlockByNumber`) return correct `v` value.
+- Fixed: [#5821](https://github.com/ethereum/aleth/pull/5821) `test_setChainParams` correctly initializes custom configuration of precompiled contracts.
+- Fixed: [#5826](https://github.com/ethereum/aleth/pull/5826) Fix blocking bug in database rebuild functionality - users can now rebuild their databases via Aleth's '-R' switch.
+- Fixed: [#5827](https://github.com/ethereum/aleth/pull/5827) Detect database upgrades and automatically rebuild the database when they occur.
+- Fixed: [#5852](https://github.com/ethereum/aleth/pull/5852) Output correct original opcodes instead of synthetic `PUSHC`/`JUMPC`/`JUMPCI` in VM trace.
+
+## [1.7.2] - 2019-11-22
+
+- Fixed: [#5834](https://github.com/ethereum/aleth/pull/5834) Fix segmentation fault during sync.
+- Fixed: [#5841](https://github.com/ethereum/aleth/pull/5841) Revert the change introduced in 1.7.0 to wait 2 secods after sending `Disconnect` to peer before closing the socket, as it caused instabilty during sync.
+
+## [1.7.1] - 2019-11-18
+
+- Fixed: [#5830](https://github.com/ethereum/aleth/pull/5830) Fix cost of ECADD and ECMULL for Istanbul in Mainnet and Ropsten chain configs.
+
+## [1.7.0] - 2019-11-14
 
 - Added: [#5537](https://github.com/ethereum/aleth/pull/5537) Creating Ethereum Node Record (ENR) at program start.
 - Added: [#5571](https://github.com/ethereum/aleth/pull/5571) Support Discovery v4 ENR Extension messages.
@@ -20,6 +50,11 @@
 - Added: [#5701](https://github.com/ethereum/aleth/issues/5701) Outputs ENR text representation in admin.nodeInfo RPC.
 - Added: [#5705](https://github.com/ethereum/aleth/pull/5705) Istanbul support: EIP 1108 Reduce alt_bn128 precompile gas costs.
 - Added: [#5707](https://github.com/ethereum/aleth/pull/5707) Aleth waits for 2 seconds after sending disconnect to peer before closing socket.
+- Added: [#5709](https://github.com/ethereum/aleth/pull/5709) [#5728](https://github.com/ethereum/aleth/pull/5728) Istanbul support: EIP-2200 Structured Definitions for Net Gas Metering.
+- Added: [#5751](https://github.com/ethereum/aleth/pull/5751) Istanbul support: EIP-152 Add BLAKE2 compression function `F` precompile.
+- Added: [#5755](https://github.com/ethereum/aleth/pull/5755) testeth now runs `stChainId`, `stSLoadTest`, `stSelfBalance` tests for Istanbul.
+- Added: [#5758](https://github.com/ethereum/aleth/pull/5758) Istanbul support: activation in Ropsten config.
+- Added: [#5762](https://github.com/ethereum/aleth/pull/5762) aleth-vm supports `--network Istanbul` option.
 - Changed: [#5532](https://github.com/ethereum/aleth/pull/5532) The leveldb is upgraded to 1.22. This is breaking change on Windows and the old databases are not compatible.
 - Changed: [#5559](https://github.com/ethereum/aleth/pull/5559) Update peer validation error messages.
 - Changed: [#5568](https://github.com/ethereum/aleth/pull/5568) Improve rlpx handshake log messages and create new rlpx log channel.
@@ -38,6 +73,7 @@
 - Changed: [#5713](https://github.com/ethereum/aleth/pull/5713) Propagate new blocks after PoW check rather than after import into the blockchain.
 - Changed: [#5734](https://github.com/ethereum/aleth/pull/5734) debug_accountRangeAt RPC method is renamed to debug_accountRange to conform with geth and retesteth requirements.
 - Changed: [#5735](https://github.com/ethereum/aleth/pull/5735) `testeth -t GeneralStateTests` and `testeth -t BCGeneralStateTests` commands now don't run the tests for the forks before Istanbul. To run those tests use a separate `LegacyTests` suite with commands `testeth -t LegacyTests/Constantinople/GeneralStateTests` and `testeth -t LegacyTests/Constantinople/BCGeneralStateTests -- --all`
+- Changed: [#5810](https://github.com/ethereum/aleth/pull/5810) [EVMC] has been upgraded to version 7.0.0.
 - Removed: [#5631](https://github.com/ethereum/aleth/pull/5631) Removed PARANOID build option.
 - Fixed: [#5562](https://github.com/ethereum/aleth/pull/5562) Don't send header request messages to peers that haven't sent us Status yet.
 - Fixed: [#5581](https://github.com/ethereum/aleth/pull/5581) Fixed finding neighbour nodes in Discovery.
@@ -52,6 +88,7 @@
 - Fixed: [#5706](https://github.com/ethereum/aleth/pull/5706) Stop tracking sent transactions after they've been imported into the blockchain.
 - Fixed: [#5687](https://github.com/ethereum/aleth/pull/5687) Limit transaction queue's dropped transaction history to 1024 transactions.
 - Fixed: [#5718](https://github.com/ethereum/aleth/pull/5718) Avoid checking contract balance or destination account existence when executing self-destruct operations on Frontier and Homestead.
+- Fixed: [#5803](https://github.com/ethereum/aleth/pull/5803) Client version string reported by RPC and devp2p now better matches the format used by other clients. This will allow aleth to be correctly listed on ethernodes.org.
 
 ## [1.6.0] - 2019-04-16
 
@@ -74,5 +111,10 @@
 - Fixed: [#5181](https://github.com/ethereum/aleth/issues/5181) Fix building on PowerPC architecture where -mtune=generic is not available.
 
 
-[1.7.0]: https://github.com/ethereum/aleth/compare/v1.6.0-alpha.0...master
+[1.8.0]: https://github.com/ethereum/aleth/compare/v1.7.2...master
+[1.7.2]: https://github.com/ethereum/aleth/releases/tag/v1.7.2
+[1.7.1]: https://github.com/ethereum/aleth/releases/tag/v1.7.1
+[1.7.0]: https://github.com/ethereum/aleth/releases/tag/v1.7.0
 [1.6.0]: https://github.com/ethereum/aleth/releases/tag/v1.6.0
+
+[EVMC]: https://github.com/ethereum/evmc

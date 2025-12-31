@@ -1,23 +1,7 @@
-/*
-    This file is part of cpp-ethereum.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2014-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Account.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
@@ -87,8 +71,8 @@ public:
     }
 
 
-    /// Kill this account. Useful for the suicide opcode. Following this call, isAlive() returns
-    /// false.
+    /// Kill this account. Useful for the SELFDESTRUCT instruction.
+    /// Following this call, isAlive() returns false.
     void kill()
     {
         m_isAlive = false;
@@ -102,9 +86,9 @@ public:
         changed();
     }
 
-    /// @returns true iff this object represents an account in the state. Returns false if this object
-    /// represents an account that should no longer exist in the trie (an account that never existed or was
-    /// suicided).
+    /// @returns true iff this object represents an account in the state.
+    /// Returns false if this object represents an account that should no longer exist in the trie
+    /// (an account that never existed or was selfdestructed).
     bool isAlive() const { return m_isAlive; }
 
     /// @returns true if the account is unchanged from creation.
@@ -286,11 +270,7 @@ private:
 using AccountMap = std::unordered_map<Address, Account>;
 using AccountMaskMap = std::unordered_map<Address, AccountMask>;
 
-class PrecompiledContract;
-using PrecompiledContractMap = std::unordered_map<Address, PrecompiledContract>;
-
 AccountMap jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce = 0,
-	AccountMaskMap* o_mask = nullptr, PrecompiledContractMap* o_precompiled = nullptr,
-	const boost::filesystem::path& _configPath = {});
+    AccountMaskMap* o_mask = nullptr, const boost::filesystem::path& _configPath = {});
 }
 }

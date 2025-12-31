@@ -1,26 +1,9 @@
-/*
-This file is part of cpp-ethereum.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2014-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-cpp-ethereum is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-cpp-ethereum is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file vm.h
- * @author Christoph Jentzsch <jentzsch.simulationsoftware@gmail.com>
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * vm test functions.
- */
-
+/// @file
+/// vm test functions.
 #pragma once
 
 #include <test/tools/libtesteth/TestHelper.h>
@@ -56,7 +39,11 @@ public:
     virtual void setStore(u256 _n, u256 _v) override { std::get<2>(addresses[myAddress])[_n] = _v; }
     virtual bool exists(Address _a) override { return !!addresses.count(_a); }
     virtual u256 balance(Address _a) override { return std::get<0>(addresses[_a]); }
-    virtual void suicide(Address _a) override { std::get<0>(addresses[_a]) += std::get<0>(addresses[myAddress]); addresses.erase(myAddress); }
+    virtual void selfdestruct(Address _a) override
+    {
+        std::get<0>(addresses[_a]) += std::get<0>(addresses[myAddress]);
+        addresses.erase(myAddress);
+    }
     virtual bytes const& codeAt(Address _a) override { return std::get<3>(addresses[_a]); }
     virtual size_t codeSizeAt(Address _a) override { return std::get<3>(addresses[_a]).size(); }
     eth::CreateResult create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::Instruction _op, u256 _salt, eth::OnOpFunc const&) override;

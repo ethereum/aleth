@@ -1,5 +1,5 @@
 // Aleth: Ethereum C++ client, tools and libraries.
-// Copyright 2019 Aleth Authors.
+// Copyright 2015-2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
 #include <thread>
@@ -217,8 +217,10 @@ int main(int argc, char** argv)
     addClientOption("admin", po::value<string>()->value_name("<password>"),
         "Specify admin session key for JSON-RPC (default: auto-generated and printed at "
         "start-up)");
-    addClientOption("kill,K", "Kill the blockchain first");
-    addClientOption("rebuild,R", "Rebuild the blockchain from the existing database");
+    addClientOption("kill,K", "Kill the blockchain first. This will remove all blocks and state.");
+    addClientOption("rebuild,R",
+        "Rebuild the blockchain from the existing database. This involves reimporting all blocks "
+        "and will probably take a while.");
     addClientOption("rescue", "Attempt to rescue a corrupt database\n");
     addClientOption("import-presale", po::value<string>()->value_name("<file>"),
         "Import a pre-sale key; you'll need to specify the password to this key");
@@ -677,7 +679,7 @@ int main(int argc, char** argv)
     {
         try
         {
-            chainParams = chainParams.loadConfig(configJSON, {}, configPath);
+            chainParams = ChainParams{configJSON, {}, configPath};
             chainConfigIsSet = true;
         }
         catch (...)

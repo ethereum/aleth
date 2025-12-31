@@ -1,23 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Client.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2014-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "Client.h"
 #include "Block.h"
@@ -776,37 +759,19 @@ void Client::prepareForTransaction()
     startWorking();
 }
 
-Block Client::block(h256 const& _block) const
+Block Client::block(h256 const& _blockHash) const
 {
     try
     {
-        Block ret(bc(), m_stateDB);
-        ret.populateFromChain(bc(), _block);
-        return ret;
-    }
-    catch (Exception& ex)
-    {
-        ex << errinfo_block(bc().block(_block));
-        onBadBlock(ex);
-        return Block(bc());
-    }
-}
-
-Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
-{
-    try
-    {
-        Block ret(bc(), m_stateDB);
-        PopulationStatistics s = ret.populateFromChain(bc(), _blockHash);
-        if (o_stats)
-            swap(s, *o_stats);
+        Block ret{bc(), m_stateDB};
+        ret.populateFromChain(bc(), _blockHash);
         return ret;
     }
     catch (Exception& ex)
     {
         ex << errinfo_block(bc().block(_blockHash));
         onBadBlock(ex);
-        return Block(bc());
+        return Block{bc()};
     }
 }
 

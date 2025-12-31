@@ -1,22 +1,6 @@
-/*
-This file is part of cpp-ethereum.
-
-cpp-ethereum is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-cpp-ethereum is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file BlockChainTests.h
- * BlockChainTests functions.
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2017-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #pragma once
 #include <libethashseal/Ethash.h>
@@ -58,6 +42,33 @@ class bcGeneralTestsFixture : public StateTestFixtureBase<BCGeneralStateTestsSui
 {
 public:
     bcGeneralTestsFixture() : StateTestFixtureBase({TestExecution::RequireOptionAll}) {}
+};
+
+template <class T>
+class bcTestFixture
+{
+public:
+    bcTestFixture(std::set<TestExecution> const& _execFlags = {})
+    {
+        T suite;
+        if (_execFlags.count(TestExecution::NotRefillable) &&
+            (Options::get().fillchain || Options::get().filltests))
+            BOOST_FAIL("Tests are sealed and not refillable!");
+
+        string const casename = boost::unit_test::framework::current_test_case().p_name;
+        boost::filesystem::path const suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
+
+        // skip wallet test as it takes too much time (250 blocks) run it with --all flag
+        if (casename == "bcWalletTest" && !test::Options::get().all)
+        {
+            cnote << "Skipping " << casename << " because --all option is not specified.\n";
+            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+            return;
+        }
+
+        suite.runAllTestsInFolder(casename);
+        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
+    }
 };
 
 class TransitionTestsSuite: public TestSuite

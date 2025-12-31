@@ -1,23 +1,6 @@
-/*
-	This file is part of cpp-ethereum.
-
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file fuzzHelper.cpp
- * @author Dimitry Khokhlov <winsvega@mail.ru>
- * @date 2015
- */
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2015-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include <chrono>
 #include <boost/filesystem/path.hpp>
@@ -402,7 +385,7 @@ std::string RandomCodeBase::fillArguments(eth::Instruction _opcode, RandomCodeOp
 			code += getPushCode(toString(_options.getRandomAddress(RandomCodeOptions::AddressType::PrecompiledOrState)));//address
 			code += getPushCode((unsigned)randomUniInt());	//gaslimit
 			return code;
-		case eth::Instruction::SUICIDE: //(SUICIDE address)
+		case eth::Instruction::SELFDESTRUCT: //(SELFDESTRUCT address)
 			code += getPushCode(toString(_options.getRandomAddress()));
 			return code;
 		case eth::Instruction::RETURN:  //(RETURN memlen1 memlen2)

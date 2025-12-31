@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2014-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #pragma once
 
@@ -130,7 +117,8 @@ private:
     std::vector<uint64_t> m_jumpDests;
     int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
 
-    void onOperation();
+    void onOperation() { onOperation(m_OP); }
+    void onOperation(Instruction _instr);
     void adjustStack(unsigned _removed, unsigned _added);
     uint64_t gasForMem(u512 const& _size);
     void updateSSGas();

@@ -42,7 +42,7 @@ add_executable(aleth-unittests ${unittest_sources})
 target_include_directories(aleth-unittests PRIVATE ${UTILS_INCLUDE_DIR})
 target_link_libraries(aleth-unittests PRIVATE
     web3jsonrpc ethashseal devcrypto devcore
-    GTest::gtest GTest::main
+    GTest::gtest GTest::gtest_main
 )
 gtest_add_tests(TARGET aleth-unittests TEST_PREFIX unittests/ TEST_LIST unittests)
 set_tests_properties(${unittests} PROPERTIES TIMEOUT ${timeout})

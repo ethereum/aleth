@@ -1,20 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2016-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 #include "LegacyVM.h"
 
 using namespace std;
@@ -204,13 +190,16 @@ bool LegacyVM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
     assert(callParams->valueTransfer == 0);
     assert(callParams->apparentValue == 0);
 
-    m_runGas = toInt63(m_schedule->callGas);
-
     callParams->staticCall = (m_OP == Instruction::STATICCALL || m_ext->staticCall);
+    auto const destinationAddr = asAddress(m_SP[1]);
+    if (callParams->staticCall && isPrecompiledContract(destinationAddr))
+        m_runGas += toInt63(m_schedule->precompileStaticCallGas);
+    else
+        m_runGas += toInt63(
+            (destinationAddr == m_ext->myAddress) ? m_schedule->callSelfGas : m_schedule->callGas);
 
     bool const haveValueArg = m_OP == Instruction::CALL || m_OP == Instruction::CALLCODE;
 
-    Address destinationAddr = asAddress(m_SP[1]);
     if (m_OP == Instruction::CALL &&
         (m_SP[2] > 0 || m_schedule->zeroValueTransferChargesNewAccountGas()) &&
         !m_ext->exists(destinationAddr))

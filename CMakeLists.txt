@@ -1,5 +1,5 @@
 # Aleth: Ethereum C++ client, tools and libraries.
-# Copyright 2019 Aleth Authors.
+# Copyright 2013-2019 Aleth Authors.
 # Licensed under the GNU General Public License, Version 3. See the LICENSE file.
 
 cmake_minimum_required(VERSION 3.9.3)
@@ -14,7 +14,7 @@ include(CableBuildType)
 include(CableToolchains)
 include(GNUInstallDirs)
 
-cable_configure_toolchain(DEFAULT cxx11-pic)
+cable_configure_toolchain(DEFAULT cxx14-pic)
 
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
@@ -47,7 +47,7 @@ HunterGate(
 cable_set_build_type(DEFAULT RelWithDebInfo CONFIGURATION_TYPES Debug;Release;RelWithDebInfo)
 
 project(aleth)
-set(PROJECT_VERSION 1.7.0-alpha.1)
+set(PROJECT_VERSION 1.8.0-alpha.1)
 
 cable_add_buildinfo_library(PROJECT_NAME aleth)
 

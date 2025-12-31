@@ -26,6 +26,7 @@ Enter and confirm a new password for this account when prompted.
       "byzantiumForkBlock": "0x00",
       "constantinopleForkBlock": "0x00",
       "constantinopleFixForkBlock": "0x00",
+      "istanbulForkBlock": "0x00",
       "minGasLimit": "0x5208",
       "maxGasLimit": "0x7fffffffffffffff",
       "tieBreakingGas": false,
@@ -49,14 +50,6 @@ Enter and confirm a new password for this account when prompted.
       "gasLimit": "0x989680"
     },
     "accounts": {
-      "0000000000000000000000000000000000000001": { "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000002": { "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000003": { "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000004": { "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000005": { "precompiled": { "name": "modexp" }, "balance": "0x01" },
-      "0000000000000000000000000000000000000006": { "precompiled": { "name": "alt_bn128_G1_add", "linear": { "base": 500, "word": 0 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000007": { "precompiled": { "name": "alt_bn128_G1_mul", "linear": { "base": 40000, "word": 0 } }, "balance": "0x01" },
-      "0000000000000000000000000000000000000008": { "precompiled": { "name": "alt_bn128_pairing_product" }, "balance": "0x01" },
       "008a78302c6fe24cc74008c7bdae27b7243a7066" /* <= Enter your account address here */: {
           "balance" : "0x200000000000000000000000000000000000000000000000000000000000000"
       }
@@ -64,7 +57,7 @@ Enter and confirm a new password for this account when prompted.
   }
   
   
-This includes all forks activated at genesis, all precompiled contracts existing on the main net, and the initial balance for your account.
+This includes all forks activated at genesis and the initial balance for your account.
 
 Note that this format can change occasionally. For the latest format, please consult the source files in https://github.com/ethereum/aleth/tree/master/libethashseal/genesis.
 

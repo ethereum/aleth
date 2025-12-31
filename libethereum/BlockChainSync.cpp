@@ -1,5 +1,5 @@
-/// Aleth: Ethereum C++ client, tools and libraries.
-// Copyright 2019 Aleth Authors.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2015-2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
 #include "BlockChainSync.h"
@@ -144,11 +144,14 @@ BlockChainSync::BlockChainSync(EthereumCapability& _host)
     m_lastImportedBlock(m_startingBlock),
     m_lastImportedBlockHash(_host.chain().currentHash())
 {
-    m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
-    {
-        RecursiveGuard l(x_sync);
-        m_state = SyncState::Blocks;
-        continueSync();
+    m_bqRoomAvailable = host().bq().onRoomAvailable([this]() {
+        // Ensure that syncing occurs on the network thread (since the block queue onRoomAvailable
+        // handler can be called on the client thread)
+        host().capabilityHost().postWork([this]() {
+            RecursiveGuard l(x_sync);
+            m_state = SyncState::Blocks;
+            continueSync();
+        });
     });
 }
 

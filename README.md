@@ -89,9 +89,8 @@ cmake ..               # Configure the project.
 cmake --build .        # Build all default targets.
 ```
 
-On **Windows** we support Visual Studio 2015, 2017, and 2019. You should generate a Visual Studio solution file (`.sln`) for the 64-bit architecture via the following command:
+On **Windows** we support Visual Studio 2017, and 2019. You should generate a Visual Studio solution file (`.sln`) for the 64-bit architecture via the following command:
 
-* **Visual Studio 2015**: `cmake .. -G "Visual Studio 14 2015 Win64"`
 * **Visual Studio 2017**: `cmake .. -G "Visual Studio 15 2017 Win64"`
 * **Visual Studio 2019**: `cmake .. -G "Visual Studio 16 2019" -A x64`
 
@@ -119,7 +118,7 @@ Our day-to-day development chat happens on the
 All contributions are welcome! We try to keep a list of tasks that are suitable
 for newcomers under the tag
 [help wanted](https://github.com/ethereum/aleth/labels/help%20wanted).
-If you have any questions, please do not hestitate to ask us about more information.
+If you have any questions, please do not hesitate to ask us about more information.
 
 Please read [CONTRIBUTING](CONTRIBUTING.md) and [CODING_STYLE](CODING_STYLE.md)
 thoroughly before making alterations to the code base.

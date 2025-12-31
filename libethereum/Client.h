@@ -1,23 +1,7 @@
-/*
-    This file is part of cpp-ethereum.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2014-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Client.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
 #pragma once
 
@@ -115,10 +99,6 @@ public:
     u256 gasLimitRemaining() const override { return m_postSeal.gasLimitRemaining(); }
     /// Get the gas bid price
     u256 gasBidPrice() const override { return m_gp->bid(); }
-
-    // [PRIVATE API - only relevant for base clients, not available in general]
-    /// Get the block.
-    dev::eth::Block block(h256 const& _blockHash, PopulationStatistics* o_stats) const;
 
     /// Get the object representing the current state of Ethereum.
     dev::eth::Block postState() const { ReadGuard l(x_postSeal); return m_postSeal; }

@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2015-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 #include "ValidationSchemes.h"
 #include <libdevcore/JsonUtils.h>
 #include <string>
@@ -53,6 +40,7 @@ string const c_shouldnotexist = "shouldnotexist";
 string const c_minGasLimit = "minGasLimit";
 string const c_maxGasLimit = "maxGasLimit";
 string const c_gasLimitBoundDivisor = "gasLimitBoundDivisor";
+string const c_forkBlockSuffix = "ForkBlock";
 string const c_homesteadForkBlock = "homesteadForkBlock";
 string const c_daoHardforkBlock = "daoHardforkBlock";
 string const c_EIP150ForkBlock = "EIP150ForkBlock";
@@ -62,6 +50,7 @@ string const c_eWASMForkBlock = "eWASMForkBlock";
 string const c_constantinopleForkBlock = "constantinopleForkBlock";
 string const c_constantinopleFixForkBlock = "constantinopleFixForkBlock";
 string const c_istanbulForkBlock = "istanbulForkBlock";
+string const c_berlinForkBlock = "berlinForkBlock";
 string const c_experimentalForkBlock = "experimentalForkBlock";
 string const c_accountStartNonce = "accountStartNonce";
 string const c_maximumExtraDataSize = "maximumExtraDataSize";
@@ -80,7 +69,7 @@ void validateConfigJson(js::mObject const& _obj)
         {{c_sealEngine, {{js::str_type}, JsonFieldPresence::Required}},
             {c_params, {{js::obj_type}, JsonFieldPresence::Required}},
             {c_genesis, {{js::obj_type}, JsonFieldPresence::Required}},
-            {c_accounts, {{js::obj_type}, JsonFieldPresence::Required}}});
+            {c_accounts, {{js::obj_type}, JsonFieldPresence::Optional}}});
 
     requireJsonFields(_obj.at(c_genesis).get_obj(), "ChainParams::loadConfig::genesis",
         {{c_author, {{js::str_type}, JsonFieldPresence::Required}},
@@ -92,9 +81,12 @@ void validateConfigJson(js::mObject const& _obj)
             {c_mixHash, {{js::str_type}, JsonFieldPresence::Required}},
             {c_parentHash, {{js::str_type}, JsonFieldPresence::Optional}}});
 
-    js::mObject const& accounts = _obj.at(c_accounts).get_obj();
-    for (auto const& acc : accounts)
-        validateAccountObj(acc.second.get_obj());
+    if (_obj.count(c_accounts) != 0)
+    {
+        js::mObject const& accounts = _obj.at(c_accounts).get_obj();
+        for (auto const& acc : accounts)
+            validateAccountObj(acc.second.get_obj());
+    }
 }
 
 void validateAccountMaskObj(js::mObject const& _obj)
@@ -112,44 +104,32 @@ void validateAccountMaskObj(js::mObject const& _obj)
 
 void validateAccountObj(js::mObject const& _obj)
 {
-    if (_obj.count(c_precompiled))
+    // Extendable account description. Check typo errors and fields type.
+    requireJsonFields(_obj, "validateAccountObj",
+        {{c_code, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
+            {c_balance, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
+            {c_codeFromFile, {{js::str_type}, JsonFieldPresence::Optional}},
+            // "precompiled" accounts in configs are deprecated
+            {c_precompiled, {{js::obj_type}, JsonFieldPresence::Optional}}});
+
+    // At least one field must be set
+    if (_obj.empty())
     {
-        // A precompiled contract
-        requireJsonFields(_obj, "validateAccountObj",
-            {{c_precompiled, {{js::obj_type}, JsonFieldPresence::Required}},
-                {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_code, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
-                {c_balance, {{js::str_type}, JsonFieldPresence::Optional}}});
+        string comment =
+            "Error in validateAccountObj: At least one field must be set (code, nonce, "
+            "storage, balance, wei, codeFromFile)!";
+        BOOST_THROW_EXCEPTION(MissingField() << errinfo_comment(comment));
     }
-    else
+
+    // c_code, c_codeFromFile could not coexist
+    if (_obj.count(c_code) && _obj.count(c_codeFromFile))
     {
-        // Extendable account description. Check typo errors and fields type.
-        requireJsonFields(_obj, "validateAccountObj",
-            {{c_code, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_nonce, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_storage, {{js::obj_type}, JsonFieldPresence::Optional}},
-                {c_balance, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_wei, {{js::str_type}, JsonFieldPresence::Optional}},
-                {c_codeFromFile, {{js::str_type}, JsonFieldPresence::Optional}}});
-
-        // At least one field must be set
-        if (_obj.empty())
-        {
-            string comment =
-                "Error in validateAccountObj: At least one field must be set (code, nonce, "
-                "storage, balance, wei, codeFromFile)!";
-            BOOST_THROW_EXCEPTION(MissingField() << errinfo_comment(comment));
-        }
-
-        // c_code, c_codeFromFile could not coexist
-        if (_obj.count(c_code) && _obj.count(c_codeFromFile))
-        {
-            string comment =
-                "Error in validateAccountObj: field 'code' contradicts field 'codeFromFile'!";
-            BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
-        }
+        string comment =
+            "Error in validateAccountObj: field 'code' contradicts field 'codeFromFile'!";
+        BOOST_THROW_EXCEPTION(UnknownField() << errinfo_comment(comment));
     }
 
     // c_wei, c_balance could not coexist

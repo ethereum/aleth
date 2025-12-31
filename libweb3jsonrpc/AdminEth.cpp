@@ -7,6 +7,7 @@
 #include <libethcore/KeyManager.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
+#include <libethereum/StandardTrace.h>
 using namespace std;
 using namespace dev;
 using namespace dev::rpc;
@@ -179,18 +180,6 @@ h256 AdminEth::blockHash(string const& _blockNumberOrHash) const
     }
 }
 
-Json::Value AdminEth::admin_eth_reprocess(string const& _blockNumberOrHash, string const& _session)
-{
-    RPC_ADMIN;
-    Json::Value ret;
-    PopulationStatistics ps;
-    m_eth.block(blockHash(_blockNumberOrHash), &ps);
-    ret["enact"] = ps.enact;
-    ret["verify"] = ps.verify;
-    ret["total"] = ps.verify + ps.enact;
-    return ret;
-}
-
 Json::Value AdminEth::admin_eth_vmTrace(string const& _blockNumberOrHash, int _txIndex, string const& _session)
 {
     RPC_ADMIN;
@@ -207,13 +196,14 @@ Json::Value AdminEth::admin_eth_vmTrace(string const& _blockNumberOrHash, int _t
         Executive e(s, block, _txIndex, m_eth.blockChain());
         try
         {
-            StandardTrace st;
+            Json::Value traceJson{Json::arrayValue};
+            StandardTrace st{traceJson};
             st.setShowMnemonics();
             e.initialize(t);
             if (!e.execute())
                 e.go(st.onOp());
             e.finalize();
-            ret["structLogs"] = st.jsonValue();
+            ret["structLogs"] = traceJson;
         }
         catch(Exception const& _e)
         {

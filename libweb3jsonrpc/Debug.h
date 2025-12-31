@@ -1,13 +1,16 @@
 #pragma once
-#include <libethereum/Executive.h>
 #include "DebugFace.h"
+#include <libethereum/StandardTrace.h>
 
 namespace dev
 {
 
 namespace eth
 {
+class Block;
 class Client;
+class Executive;
+class State;
 
 StandardTrace::DebugOptions debugOptions(Json::Value const& _json);
 }

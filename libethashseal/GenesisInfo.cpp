@@ -1,21 +1,7 @@
 
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2015-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 #include "GenesisInfo.h"
 using namespace dev;
 
@@ -24,6 +10,7 @@ using namespace dev;
 #include "genesis/ropsten.cpp"
 
 //Test configurations
+#include "genesis/test/berlinTest.cpp"
 #include "genesis/test/byzantiumNoProofTest.cpp"
 #include "genesis/test/byzantiumTest.cpp"
 #include "genesis/test/byzantiumTransitionTest.cpp"
@@ -83,6 +70,8 @@ std::string const& dev::eth::genesisInfo(Network _n)
         return c_genesisInfoIstanbulTest;
     case Network::IstanbulTransitionTest:
         return c_genesisInfoIstanbulTransitionTest;
+    case Network::BerlinTest:
+        return c_genesisInfoBerlinTest;
 
 
     //Transition test genesis
@@ -117,6 +106,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
     case Network::IstanbulTest:
     case Network::IstanbulTransitionTest:
     case Network::ExperimentalTransitionTest:
+    case Network::BerlinTest:
         return c_genesisDefaultStateRoot;
     default:
         throw std::invalid_argument("Invalid network value");

@@ -150,5 +150,36 @@ BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance) {}
 BOOST_AUTO_TEST_CASE(stTimeConsuming) {}
 BOOST_AUTO_TEST_SUITE_END()  // BCGeneralStateTests Constantinople Legacy
 
+
+BOOST_AUTO_TEST_SUITE(BlockchainTests)
+// Tests that contain only valid blocks and check that import is correct
+BOOST_FIXTURE_TEST_SUITE(ValidBlocks, LegacyConstantinoplebcValidTestFixture)
+BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+BOOST_AUTO_TEST_CASE(bcExploitTest) {}
+BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
+BOOST_AUTO_TEST_CASE(bcGasPricerTest) {}
+BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+BOOST_AUTO_TEST_CASE(bcRandomBlockhashTest) {}
+BOOST_AUTO_TEST_CASE(bcStateTests) {}
+BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {}
+BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
+BOOST_AUTO_TEST_CASE(bcUncleTest) {}
+BOOST_AUTO_TEST_CASE(bcValidBlockTest) {}
+BOOST_AUTO_TEST_CASE(bcWalletTest) {}
+BOOST_AUTO_TEST_SUITE_END()
+
+// Tests that might have invalid blocks and check that those are rejected
+BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, LegacyConstantinoplebcInvalidTestFixture)
+BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
+BOOST_AUTO_TEST_CASE(bcForgedTest) {}
+BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}
+BOOST_AUTO_TEST_CASE(bcMultiChainTest) {}
+BOOST_AUTO_TEST_CASE(bcUncleHeaderValidity) {}
+BOOST_AUTO_TEST_CASE(bcUncleSpecialTests) {}
+BOOST_AUTO_TEST_CASE(bcUncleTest) {}
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()  // BlockchainTests
+
+
 BOOST_AUTO_TEST_SUITE_END()  // Constantinople
 BOOST_AUTO_TEST_SUITE_END()  // LegacyTests

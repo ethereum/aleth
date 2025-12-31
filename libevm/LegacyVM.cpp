@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2014-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "LegacyVM.h"
 
@@ -71,10 +58,10 @@ uint64_t LegacyVM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, byte 
 //
 // for tracing, checking, metering, measuring ...
 //
-void LegacyVM::onOperation()
+void LegacyVM::onOperation(Instruction _instr)
 {
     if (m_onOp)
-        (m_onOp)(++m_nSteps, m_PC, m_OP,
+        (m_onOp)(++m_nSteps, m_PC, _instr,
             m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
             m_runGas, m_io_gas, this, m_ext);
 }
@@ -97,10 +84,13 @@ void LegacyVM::adjustStack(unsigned _removed, unsigned _added)
 
 void LegacyVM::updateSSGas()
 {
+    if (m_schedule->sstoreThrowsIfGasBelowCallStipend() && m_io_gas <= m_schedule->callStipend)
+        throwOutOfGas();
+
     u256 const currentValue = m_ext->store(m_SP[0]);
     u256 const newValue = m_SP[1];
 
-    if (m_schedule->eip1283Mode)
+    if (m_schedule->sstoreNetGasMetering())
         updateSSGasEIP1283(currentValue, newValue);
     else
         updateSSGasPreEIP1283(currentValue, newValue);
@@ -150,10 +140,10 @@ void LegacyVM::updateSSGasEIP1283(u256 const& _currentValue, u256 const& _newVal
             if (originalValue == _newValue)
             {
                 if (originalValue == 0)
-                    m_ext->sub.refunds +=
-                        m_schedule->sstoreRefundGas + m_schedule->sstoreRefundNonzeroGas;
+                    m_ext->sub.refunds += m_schedule->sstoreSetGas - m_schedule->sstoreUnchangedGas;
                 else
-                    m_ext->sub.refunds += m_schedule->sstoreRefundNonzeroGas;
+                    m_ext->sub.refunds +=
+                        m_schedule->sstoreResetGas - m_schedule->sstoreUnchangedGas;
             }
         }
     }
@@ -325,14 +315,15 @@ void LegacyVM::interpretCases()
         }
         BREAK;
 
-        CASE(SUICIDE)
+        CASE(SELFDESTRUCT)
         {
             ON_OP();
             if (m_ext->staticCall)
                 throwDisallowedStateChange();
 
             // Self-destructs only have gas cost starting with EIP 150
-            m_runGas = toInt63(m_schedule->suicideGas);
+            m_runGas = toInt63(m_schedule->selfdestructGas);
+            updateIOGas();
 
             Address const dest = asAddress(m_SP[0]);
             // Starting with EIP150, self-destructs need to pay both gas cost and account creation
@@ -342,11 +333,13 @@ void LegacyVM::interpretCases()
                 (!m_schedule->eip158Mode || m_ext->balance(m_ext->myAddress) > 0))
             {
                 if (!m_ext->exists(dest))
-                    m_runGas += m_schedule->callNewAccountGas;
+                {
+                    m_runGas = m_schedule->callNewAccountGas;
+                    updateIOGas();
+                }
             }
 
-            updateIOGas();
-            m_ext->suicide(dest);
+            m_ext->selfdestruct(dest);
             m_bounce = 0;
         }
         BREAK
@@ -1481,7 +1474,8 @@ void LegacyVM::interpretCases()
         CASE(PUSHC)
         {
 #if EVM_USE_CONSTANT_POOL
-            ON_OP();
+            auto const originalOp = static_cast<byte>(Instruction::PUSH1) + m_code[m_PC + 3] + 1;
+            onOperation(static_cast<Instruction>(originalOp));
             updateIOGas();
 
             // get val at two-byte offset into const pool and advance pc by one-byte remainder
@@ -1576,7 +1570,7 @@ void LegacyVM::interpretCases()
         CASE(JUMPC)
         {
 #if EVM_REPLACE_CONST_JUMP
-            ON_OP();
+            onOperation(Instruction::JUMP);
             updateIOGas();
 
             m_PC = uint64_t(m_SP[0]);
@@ -1589,7 +1583,7 @@ void LegacyVM::interpretCases()
         CASE(JUMPCI)
         {
 #if EVM_REPLACE_CONST_JUMP
-            ON_OP();
+            onOperation(Instruction::JUMPI);
             updateIOGas();
 
             if (m_SP[1])

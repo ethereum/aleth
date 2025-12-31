@@ -1,20 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2016-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 #include "VM.h"
 
 namespace dev
@@ -96,7 +82,7 @@ void VM::optimize()
     TRACE_STR(1, "Do first pass optimizations")
     for (size_t pc = 0; pc < nBytes; ++pc)
     {
-        u256 val = 0;
+        intx::uint256 val = 0;
         Instruction op = Instruction(m_code[pc]);
 
         if ((byte)Instruction::PUSH1 <= (byte)op && (byte)op <= (byte)Instruction::PUSH32)
@@ -175,27 +161,6 @@ void VM::initEntry()
 {
     m_bounce = &VM::interpretCases;
     optimize();
-}
-
-
-// Implementation of EXP.
-//
-// This implements exponentiation by squaring algorithm.
-// Is faster than boost::multiprecision::powm() because it avoids explicit
-// mod operation.
-// Do not inline it.
-u256 VM::exp256(u256 _base, u256 _exponent)
-{
-    using boost::multiprecision::limb_type;
-    u256 result = 1;
-    while (_exponent)
-    {
-        if (static_cast<limb_type>(_exponent) & 1)    // If exponent is odd.
-            result *= _base;
-        _base *= _base;
-        _exponent >>= 1;
-    }
-    return result;
 }
 }
 }

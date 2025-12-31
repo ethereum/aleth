@@ -1,21 +1,6 @@
-# ------------------------------------------------------------------------------
-# This file is part of cpp-ethereum.
-#
-# cpp-ethereum is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# cpp-ethereum is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
-#
-# (c) 2016 cpp-ethereum contributors.
-#------------------------------------------------------------------------------
+# Aleth: Ethereum C++ client, tools and libraries.
+# Copyright 2016-2019 Aleth Authors.
+# Licensed under the GNU General Public License, Version 3.
 
 branches:
   only:
@@ -25,7 +10,7 @@ branches:
     - /release\/.+/
     - appveyor
     - hunter
-os: Visual Studio 2015
+os: Visual Studio 2017
 configuration:
   - RelWithDebInfo
 environment:
@@ -33,18 +18,18 @@ environment:
   GITHUB_USER_PASSWORD:
     secure: 7TuNppxpvI3M/IF1PfvzZ8LluCeCQAsdFoJY+KhNv/pe/rAw5HEsTjqdbyM1mEtd
 cache:
-  - build/deps -> cmake/ProjectLibFF.cmake
+  - build/deps -> cmake\Project**.cmake
 install:
   - git submodule update --init --recursive
 
   # Python 3
-  - set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+  - set PATH=C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%
   - pip install requests gitpython
 
 before_build: |
   if not exist build mkdir build
   cd build
-  cmake -G "Visual Studio 14 2015 Win64" ..
+  cmake -G "Visual Studio 15 2017 Win64" ..
 build_script: |
   cmake --build . --config %CONFIGURATION% --target package
 test_script:

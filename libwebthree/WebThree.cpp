@@ -1,19 +1,6 @@
-/*
-    This file is part of cpp-ethereum.
-
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2015-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
 #include "WebThree.h"
 
@@ -74,7 +61,7 @@ WebThreeDirect::~WebThreeDirect()
 std::string WebThreeDirect::composeClientVersion(std::string const& _client)
 {
     const auto* buildinfo = aleth_get_buildinfo();
-    return _client + "/" + buildinfo->project_version + "/" + buildinfo->system_name + "/" +
+    return _client + "/v" + buildinfo->project_version + "/" + buildinfo->system_name + "/" +
            buildinfo->compiler_id + buildinfo->compiler_version + "/" + buildinfo->build_type;
 }
 

@@ -1,5 +1,5 @@
 // Aleth: Ethereum C++ client, tools and libraries.
-// Copyright 2019 Aleth Authors.
+// Copyright 2014-2019 Aleth Authors.
 // Licensed under the GNU General Public License, Version 3.
 
 #pragma once
@@ -265,11 +265,6 @@ public:
     void postWork(std::function<void()> _f) { post(m_ioContext, std::move(_f)); }
 
     std::shared_ptr<CapabilityHostFace> capabilityHost() const { return m_capabilityHost; }
-
-    /// Execute work on the network thread after an @a _expiryDelay delay.
-    /// Returned timer should be kept alive until delay is over.
-    std::unique_ptr<ba::steady_timer> createTimer(std::chrono::seconds const& _expiryDelay,
-        std::function<void(const boost::system::error_code& error)>&& _f);
 
 protected:
     /*

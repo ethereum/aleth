@@ -1,26 +1,10 @@
-/*
-    This file is part of cpp-ethereum.
+// Aleth: Ethereum C++ client, tools and libraries.
+// Copyright 2015-2019 Aleth Authors.
+// Licensed under the GNU General Public License, Version 3.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file blockchain.cpp
- * @author Christoph Jentzsch <cj@ethdev.com>, Dimitry Khokhlov <dimitry@ethdev.com>
- * @date 2015
- * Generation of a blockchain tests. Parse blockchain test fillers.
- * Simulating block import checking the post state.
- */
-
+/// @file
+/// Generation of a blockchain tests. Parse blockchain test fillers.
+/// Simulating block import checking the post state.
 #include <libdevcore/FileSystem.h>
 #include <test/tools/fuzzTesting/fuzzHelper.h>
 #include <test/tools/jsontests/BlockChainTests.h>
@@ -85,17 +69,18 @@ json_spirit::mValue doBCTest(
         if (_fillin)
         {
             BOOST_REQUIRE(inputTest.count("expect") > 0);
-            set<eth::Network> allnetworks = ImportTest::getAllNetworksFromExpectSections(
-                        inputTest.at("expect").get_array(), ImportTest::testType::BlockchainTest);
+            set<std::string> allnetworks = ImportTest::getAllNetworksFromExpectSections(
+                inputTest.at("expect").get_array(), ImportTest::testType::BlockchainTest);
 
             //create a blockchain test for each network
             for (auto& network : allnetworks)
             {
-                if (!Options::get().singleTestNet.empty() && Options::get().singleTestNet != test::netIdToString(network))
+                if (!Options::get().singleTestNet.empty() &&
+                    Options::get().singleTestNet != network)
                     continue;
 
-                dev::test::TestBlockChain::s_sealEngineNetwork = network;
-                string newtestname = testname + "_" + test::netIdToString(network);
+                dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(network);
+                string newtestname = testname + "_" + network;
 
                 json_spirit::mObject jObjOutput = inputTest;
                 // prepare the corresponding expect section for the test
@@ -108,7 +93,7 @@ json_spirit::mValue doBCTest(
                     json_spirit::mObject const& expectObj = expect.get_obj();
                     ImportTest::parseJsonStrValueIntoSet(expectObj.at("network"), netlist);
                     netlist = test::translateNetworks(netlist);
-                    if (netlist.count(test::netIdToString(network)) || netlist.count("ALL"))
+                    if (netlist.count(network) || netlist.count("ALL"))
                     {
                         jObjOutput["expect"] = expectObj.at("result");
                         found = true;
@@ -123,7 +108,7 @@ json_spirit::mValue doBCTest(
 
                 TestOutputHelper::get().setCurrentTestName(newtestname);
                 jObjOutput = fillBCTest(jObjOutput, _allowInvalidBlocks);
-                jObjOutput["network"] = test::netIdToString(network);
+                jObjOutput["network"] = network;
                 if (inputTest.count("_info"))
                     jObjOutput["_info"] = inputTest.at("_info");
                 tests[newtestname] = jObjOutput;
@@ -137,7 +122,8 @@ json_spirit::mValue doBCTest(
                 Options const& opt = test::Options::get();
 
                 // Select BC Test by singleTest
-                if (opt.singleTest && !boost::algorithm::starts_with(testname, opt.singleTestName))
+                if (!opt.singleTestName.empty() &&
+                    !boost::algorithm::starts_with(testname, opt.singleTestName))
                     continue;
 
                 // Select BC Test by singleNet
@@ -485,7 +471,7 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input, bool _allowI
     if (Options::get().fullstate || isSmallState(testChain.topBlock().state()))
         output["postState"] = fillJsonWithState(testChain.topBlock().state());
     else
-        output["postState"] = toHexPrefixed(testChain.topBlock().blockHeader().stateRoot());
+        output["postStateHash"] = toHexPrefixed(testChain.topBlock().blockHeader().stateRoot());
     output["lastblockhash"] = toHexPrefixed(testChain.topBlock().blockHeader().hash(WithSeal));
 
     //make all values hex in pre section
@@ -641,9 +627,10 @@ void testBCTest(json_spirit::mObject const& _o)
                         testName + "State root in chain from RLP blocks != State root in chain from Field blocks!");
 
     State postState(State::Null); //Compare post states
-    BOOST_REQUIRE((_o.count("postState") > 0));
-    if (_o.at("postState").type() == json_spirit::Value_type::obj_type)
+
+    if (_o.count("postState") > 0)
     {
+        BOOST_REQUIRE(_o.at("postState").type() == json_spirit::Value_type::obj_type);
         ImportTest::importState(_o.at("postState").get_obj(), postState);
         ImportTest::compareStates(postState, testChain.topBlock().state());
         ImportTest::compareStates(postState, blockchain.topBlock().state());
@@ -651,8 +638,9 @@ void testBCTest(json_spirit::mObject const& _o)
     else
     {
         // Attempt to read hash instead of the full state
-        BOOST_REQUIRE(_o.at("postState").type() == json_spirit::Value_type::str_type);
-        auto postHash = h256{_o.at("postState").get_str()};
+        BOOST_REQUIRE(_o.count("postStateHash") > 0);
+        BOOST_REQUIRE(_o.at("postStateHash").type() == json_spirit::Value_type::str_type);
+        auto postHash = h256{_o.at("postStateHash").get_str()};
         string message = testName +
                          "Final StateRoot is different! (Look at expect section in the test /src "
                          "Filler file, or run the test generation with --fullstate flag to get the "
@@ -1061,42 +1049,6 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 }
 }
 
-class bcValidTestFixture
-{
-public:
-    bcValidTestFixture()
-    {
-        test::BlockchainValidTestSuite suite;
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        //skip wallet test as it takes too much time (250 blocks) run it with --all flag
-        if (casename == "bcWalletTest" && !test::Options::get().all)
-        {
-            cnote << "Skipping " << casename << " because --all option is not specified.\n";
-            test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-            return;
-        }
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
-class bcInvalidTestFixture
-{
-public:
-    bcInvalidTestFixture()
-    {
-        test::BlockchainInvalidTestSuite suite;
-        string const casename = boost::unit_test::framework::current_test_case().p_name;
-        boost::filesystem::path suiteFillerPath = suite.getFullPathFiller(casename).parent_path();
-
-        suite.runAllTestsInFolder(casename);
-        test::TestOutputHelper::get().markTestFolderAsFinished(suiteFillerPath, casename);
-    }
-};
-
 class bcTransitionFixture {
 public:
     bcTransitionFixture()
@@ -1112,7 +1064,7 @@ public:
 BOOST_AUTO_TEST_SUITE(BlockchainTests)
 
 // Tests that contain only valid blocks and check that import is correct
-BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcValidTestFixture)
+BOOST_FIXTURE_TEST_SUITE(ValidBlocks, bcTestFixture<test::BlockchainValidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcExploitTest) {}
 BOOST_AUTO_TEST_CASE(bcForkStressTest) {}
@@ -1128,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(bcWalletTest) {}
 BOOST_AUTO_TEST_SUITE_END()
 
 // Tests that might have invalid blocks and check that those are rejected
-BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcInvalidTestFixture)
+BOOST_FIXTURE_TEST_SUITE(InvalidBlocks, bcTestFixture<test::BlockchainInvalidTestSuite>)
 BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest) {}
 BOOST_AUTO_TEST_CASE(bcForgedTest) {}
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest) {}
@@ -1219,5 +1171,8 @@ BOOST_AUTO_TEST_CASE(stBadOpcode){}
 BOOST_AUTO_TEST_CASE(stArgsZeroOneBalance){}
 BOOST_AUTO_TEST_CASE(stCodeCopyTest){}
 BOOST_AUTO_TEST_CASE(stTimeConsuming){}
+BOOST_AUTO_TEST_CASE(stChainId) {}
+BOOST_AUTO_TEST_CASE(stSLoadTest) {}
+BOOST_AUTO_TEST_CASE(stSelfBalance) {}
 BOOST_AUTO_TEST_SUITE_END()
 
