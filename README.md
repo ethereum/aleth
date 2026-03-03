@@ -1,8 +1,8 @@
 # Aleth – Ethereum C++ client, tools and libraries
 
-> The collection of C++ libraries and tools for Ethereum,
-> formerly known as _cpp-ethereum_ project.
-> This includes the full Ethereum client **aleth**.
+ The collection of C++ libraries and tools for Ethereum,
+ formerly known as _cpp-ethereum_ project.
+ This includes the full Ethereum client **aleth**.
 
 ## ⚠️ **This project has been discontinued and is no longer maintained.** 
 
