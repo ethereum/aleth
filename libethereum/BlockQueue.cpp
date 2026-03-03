@@ -15,10 +15,22 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+namespace
+{
 constexpr size_t c_maxKnownCount = 100000;
 constexpr size_t c_maxKnownSize = 128 * 1024 * 1024;
 constexpr size_t c_maxUnknownCount = 100000;
 constexpr size_t c_maxUnknownSize = 512 * 1024 * 1024;  // Block size can be ~50kb
+
+void ForceBreak()
+{
+    #if defined(_WIN32)
+        DebugBreak();
+    #else
+        raise(SIGTRAP);
+    #endif
+}
+}
 
 BlockQueue::BlockQueue()
 {
@@ -63,6 +75,7 @@ void BlockQueue::clear()
     m_futureSet.clear();
     m_difficulty = 0;
     m_drainingDifficulty = 0;
+    ForceBreak();
 }
 
 void BlockQueue::verifierBody()
@@ -92,6 +105,7 @@ void BlockQueue::verifierBody()
         }
         catch (std::exception const& _ex)
         {
+            ForceBreak();
             // bad block.
             // has to be this order as that's how invariants() assumes.
             WriteGuard l2(m_lock);
@@ -262,6 +276,7 @@ void BlockQueue::updateBad_WITH_LOCK(h256 const& _bad)
             });
             for (auto& b: badVerified)
             {
+                ForceBreak();
                 m_knownBad.insert(b.verified.info.hash());
                 m_readySet.erase(b.verified.info.hash());
                 collectUnknownBad_WITH_BOTH_LOCKS(b.verified.info.hash());
@@ -274,6 +289,7 @@ void BlockQueue::updateBad_WITH_LOCK(h256 const& _bad)
             });
             for (auto& b: badUnverified)
             {
+                ForceBreak();
                 m_knownBad.insert(b.hash);
                 m_readySet.erase(b.hash);
                 collectUnknownBad_WITH_BOTH_LOCKS(b.hash);
@@ -286,6 +302,7 @@ void BlockQueue::updateBad_WITH_LOCK(h256 const& _bad)
             });
             for (auto& b: badVerifying)
             {
+                ForceBreak();
                 h256 const& h = b.blockData.size() != 0 ? b.verified.info.hash() : b.verified.info.sha3Uncles();
                 m_knownBad.insert(h);
                 m_readySet.erase(h);
